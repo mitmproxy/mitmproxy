@@ -1,7 +1,7 @@
-mitmproxy is an interactive SSL-capable intercepting HTTP proxy. It lets you to
-observe, modify and replay requests and responses on the fly. The underlying
-library that mitmproxy is built on can also be used to do these things
-programmatically. 
+__mitmproxy__ is an interactive SSL-capable intercepting HTTP proxy. It lets
+you to observe, modify and replay requests and responses on the fly. The
+underlying library that mitmproxy is built on can also be used to do these
+things programmatically. 
 
 By default, mitmproxy starts up with a mutt-like interactive curses interface -
 the help page (which you can view by pressing "?") should tell you everything
@@ -9,10 +9,22 @@ you need to know. Note that requests and responses are stored in-memory until
 you delete them, so leaving mitmproxy running indefinitely or requesting very
 large amounts of data through it is a bad idea.
 
-mitmproxy intercepts SSL requests by simply assuming that all CONNECT requests
-are https. The connection from the browser is wrapped in SSL, and we read the
-request by pretending to be the connecting server. We then open an SSL request
-to the destination server, and replay the request.
+SSL
+---
+
+The first time mitmproxy is started, it will generate a bogus SSL certificate
+(the default location is ~/.mitmproxy/cert.pem). This certificate will be used
+for the browser-side of intercepted traffic. Because it won't match any domain
+you visit, and won't verify against any certificate authority, you will have to
+add an exception for each site you visit. SSL requests are intercepted by
+simply assuming that all CONNECT requests are https. The connection from the
+browser is wrapped in SSL, and we read the request by pretending to be the
+connecting server. We then open an SSL request to the destination server, and
+replay the request.
+
+
+Download
+--------
 
 Releases can be found here: http://corte.si/software
 
@@ -22,6 +34,7 @@ Source is hosted here: http://github.com/cortesi/mitmproxy
 Requirements
 ------------
 
+* SSL certificates are generated using [openssl](http://www.openssl.org/)
 * The curses interface relies on a current version of the
 [urwid](http://excess.org/urwid/) library.
 * The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
