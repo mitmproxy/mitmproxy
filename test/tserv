@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+"""
+    A simple program for testing the test HTTP/S servers.
+"""
+from optparse import OptionParser, OptionGroup
+import sslserv, serv
+
+if __name__ == "__main__":
+    parser = OptionParser(
+                usage = "%prog [options] output",
+                version="%prog 0.1",
+            )
+    parser.add_option(
+        "-s", "--ssl", action="store_true",
+        dest="ssl", default=False
+    )
+    options, args = parser.parse_args()
+
+    if options.ssl:
+        port = 8443
+        print "Running on port %s"%port
+        s = sslserv.make(port)
+    else:
+        port = 8080
+        print "Running on port %s"%port
+        s = serv.make(port)
+    try:
+        s.serve_forever()
+    except KeyboardInterrupt:
+        pass

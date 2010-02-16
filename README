@@ -1,0 +1,38 @@
+mitmproxy is an interactive SSL-capable intercepting HTTP proxy. It lets you to
+observe, modify and replay requests and responses on the fly. The underlying
+library that mitmproxy is built on can also be used to do these things
+programmatically. 
+
+By default, mitmproxy starts up with a mutt-like interactive curses interface -
+the help page (which you can view by pressing "?") should tell you everything
+you need to know. Note that requests and responses are stored in-memory until
+you delete them, so leaving mitmproxy running indefinitely or requesting very
+large amounts of data through it is a bad idea.
+
+mitmproxy intercepts SSL requests by simply assuming that all CONNECT requests
+are https. The connection from the browser is wrapped in SSL, and we read the
+request by pretending to be the connecting server. We then open an SSL request
+to the destination server, and replay the request.
+
+Releases can be found here: http://corte.si/software
+
+Source is hosted here: http://github.com/cortesi/mitmproxy
+
+
+Requirements
+------------
+
+* The curses interface relies on a current version of the
+[urwid](http://excess.org/urwid/) library.
+* The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
+  library.
+
+You should also make sure that your console environment is set up with the
+following: 
+    
+* EDITOR environment variable to determine the external editor.
+* PAGER environment variable to determine the external pager.
+* Appropriate entries in your mailcap files to determine external
+  viewers for request and response contents.
+
+

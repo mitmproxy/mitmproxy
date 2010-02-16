@@ -1,0 +1,17 @@
+
+Future:
+
+    - Strings view.
+    - Field parsing and editing.
+    - On-the-fly generation of keys, signed with a CA
+    - Pass-through fast-track for things that don't match filter?
+    - Reading contents from file
+    - Saving contents to file
+    - Shortcut for viewing in pager
+    - Serializing and de-serializing requests and responses.
+
+
+Bugs:
+    
+    - In some circumstances, long URLs in list view are line-broken oddly.
+    - Termination sometimes hangs.

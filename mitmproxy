@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2010  Aldo Cortesi
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys, os.path
+from libmproxy import proxy, controller, console, utils
+from optparse import OptionParser, OptionGroup
+
+
+if __name__ == '__main__':
+    parser = OptionParser(
+                usage = "%prog [options] output",
+                version="%prog 0.1",
+            )
+    parser.add_option(
+        "-d", "--dump", action="store_true",
+        dest="dump", default=False,
+        help = "Just dump data to screen."
+    )
+    parser.add_option(
+        "-c", "--cert", action="store",
+        type = "str", dest="cert", default="~/.mitmproxy/cert.pem",
+        help = "SSL certificate file."
+    )
+    parser.add_option(
+        "-p", "--port", action="store",
+        type = "int", dest="port", default=8080,
+        help = "Port."
+    )
+    parser.add_option("-q", "--quiet",
+                      action="store_true", dest="quiet",
+                      help="Quiet.")
+    parser.add_option("-v", "--verbose",
+                      action="count", dest="verbose", default=1,
+                      help="Increase verbosity. Can be passed multiple times.")
+    options, args = parser.parse_args()
+
+    if options.quiet:
+        options.verbose = 0
+
+    certpath = os.path.expanduser(options.cert)
+    
+    if not os.path.exists(certpath):
+        print >> sys.stderr, "Creating bogus certificate at %s"%options.cert
+        utils.make_bogus_cert(certpath)
+
+    proxy.config = proxy.Config(
+        certpath
+    )
+    server = proxy.ProxyServer(options.port)
+    if options.dump:
+        m = controller.DumpMaster(server, options.verbose)
+    else:
+        m = console.ConsoleMaster(server, options.verbose)
+    if options.verbose > 0:
+        print >> sys.stderr, "Running on port %s"%options.port
+    m.run()

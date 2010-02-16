@@ -1,0 +1,95 @@
+body {
+    -x-system-font:none;
+    font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
+    color: #555555;
+    font-size: 1.3em;
+}
+
+a {
+    color: #3F8ED8;
+}
+
+#hd {
+    margin: 0;
+    border-bottom: 1px solid #999;
+}
+#hd h1 {
+    letter-spacing: 3px;
+    font-size: 2.5em;
+    line-height: 100%;
+    margin: 0.3em 0;
+    font-weight: normal;
+}
+
+#bd {
+    padding: 20px;
+}
+
+#bd h1 {
+    font-size: 1.6em;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#bd h2 {
+    font-size: 1.2em;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#ft {
+    color: #aaa;
+        border-top: 1px solid #aaa;
+        clear: both;
+        margin: 0 0 2em 0;
+        font-size: 0.8em;
+        letter-spacing: 0.5px;
+}
+
+.pageindex {
+    font-size: 1.5em;
+}
+
+.pageindex ul {
+    list-style-image:none;
+    list-style-position:outside;
+    list-style-type:none;
+    margin: 0px;
+}
+
+.pageindex li { 
+    list-style-image:none;
+    list-style-position:outside;
+    list-style-type:none;
+    margin: 0; 
+}
+
+.pageindex li.active {
+    padding-left: 4px;
+    border-left: 5px solid #ff0000;
+}
+
+.pageindex li.inactive{
+    border-left: none;
+    margin-left: 9px;
+}
+
+.pageindex li li a {
+    display: block;
+    background-color: transparent;
+    margin: 0;
+    border-top: none;
+    border-bottom: none;
+}
+
+.pageindex ul ul {
+    margin-left: 20px;
+    padding: 0;
+    list-style-type: none;
+}
+
+
+.faq .question {
+    font-size: 1.1em;
+    font-weight: bold;
+}

@@ -1,0 +1,8 @@
+MANIFEST
+/build
+/dist
+/tmp
+/doc
+*.py[cd]
+*.swp
+*.swo

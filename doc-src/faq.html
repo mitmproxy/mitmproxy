@@ -1,0 +1,17 @@
+
+<div class="faq">
+
+    <p class="question">On some sites I see a lot of "Connection from.."
+    entries that never complete.</p>
+
+    <p> This is probably because the page requests resources from SSL-protected
+    domains. These requests are intercepted by mitmproxy, but because we're
+    using a bogus certificate, the browser-side of the connection hangs. The
+    browser doesn't prompt you to add a certificate trust exception for remote
+    page components, only for the primary domain being visited. </p>
+    
+    <p> To solve this, use something like FireBug to find out which page
+    components are hanging. Visit the relevant domains using your browser, and
+    add a certificate trust exception for each one. </p>
+
+</div>
