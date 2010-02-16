@@ -66,32 +66,25 @@ def findPackages(path, dataExclude=[]):
 
 
 
-long_description = """
-A man-in-the-middle intercepting proxy written in Python.
-
-Features
-========
-    
-    * Intercept HTTP and HTTPS traffic.
-    * Modify, manipulate and replay requests and responses on the fly.
-"""
+long_description = file("README").read()
 packages, package_data = findPackages("libmproxy")
-print packages, package_data
 version = "0.1"
 setup(
         name = "mitmproxy",
         version = version,
-        description = "An interactive intercepting proxy server.",
+        description = "An interactive SSL-capable intercepting HTTP proxy for penetration testers and software developers.",
         long_description = long_description,
         author = "Aldo Cortesi",
         author_email = "aldo@corte.si",
-        url = "http://corte.si/software/mitmproxy",
+        url = "http://corte.si/software",
         packages = packages,
         package_data = package_data,
         scripts = ["mitmproxy"],
         classifiers = [
             "Development Status :: 4 - Beta",
             "Programming Language :: Python",
-            "Operating System :: OS Independent",
+            "Topic :: Security",
+            "Topic :: Internet :: WWW/HTTP",
+            "Topic :: Software Development :: Testing"
         ]
 )
