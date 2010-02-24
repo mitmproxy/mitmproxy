@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import Queue, mailcap, mimetypes, tempfile, os, subprocess, threading
+import os.path
 import cStringIO
 import urwid.curses_display
 import urwid
@@ -259,6 +260,18 @@ class ConnectionView(urwid.WidgetWrap):
                 self.flow.request.method = i[0].upper()
         self.master.refresh_connection(self.flow)
 
+    def save_connection(self, path):
+        if self.viewing == self.REQ:
+            c = self.flow.request
+        else:
+            c = self.flow.response
+        path = os.path.expanduser(path)
+        f = file(path, "w")
+        f.write(str(c.headers))
+        f.write("\r\n")
+        f.write(str(c.content))
+        f.close()
+
     def edit(self, part):
         if self.viewing == self.REQ:
             conn = self.flow.request
@@ -328,6 +341,11 @@ class ConnectionView(urwid.WidgetWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.refresh_connection(self.flow)
+        elif key == "S":
+            if self.viewing == self.REQ:
+                self.master.prompt("Save request: ", self.save_connection)
+            else:
+                self.master.prompt("Save response: ", self.save_connection)
         elif key == "v":
             if self.viewing == self.REQ:
                 conn = self.flow.request
@@ -793,6 +811,7 @@ class ConsoleMaster(controller.Master):
         keys = [
             ("b", "toggle hexdump view"),
             ("e", "edit response/request"),
+            ("S", "save request or response"),
             ("v", "view contents in external viewer"),
             ("tab", "toggle response/request view"),
         ]
