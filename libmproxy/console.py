@@ -540,11 +540,12 @@ class Flow:
         self.intercepting = True
 
     def accept_intercept(self):
-        if not self.request.acked:
-            self.request.ack()
-        elif self.response and not self.response.acked:
-            self.response.ack()
-        self.intercepting = False
+        if self.request:
+            if not self.request.acked:
+                self.request.ack()
+            elif self.response and not self.response.acked:
+                self.response.ack()
+            self.intercepting = False
 
 
 class State:
