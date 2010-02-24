@@ -66,7 +66,7 @@ class ConnectionItem(urwid.WidgetWrap):
 
     def intercept(self):
         self.intercepting = True
-        self.w = self.get_text()
+        self._w = self.get_text()
 
     def get_text(self, nofocus=False):
         return urwid.Text(self.flow.get_text(nofocus))
@@ -126,11 +126,11 @@ class ConnectionListView(urwid.ListWalker):
 class ConnectionViewHeader(urwid.WidgetWrap):
     def __init__(self, flow):
         self.flow = flow
-        self.w = urwid.Text(flow.get_text(nofocus=True, padding=0))
+        self._w = urwid.Text(flow.get_text(nofocus=True, padding=0))
 
     def refresh_connection(self, f):
         if f == self.flow:
-            self.w = urwid.Text(f.get_text(nofocus=True, padding=0))
+            self._w = urwid.Text(f.get_text(nofocus=True, padding=0))
 
 
 class ConnectionView(urwid.WidgetWrap):
@@ -224,13 +224,13 @@ class ConnectionView(urwid.WidgetWrap):
     def view_request(self):
         self.viewing = self.REQ
         body = self._conn_text(self.flow.request)
-        self.w = self.wrap_body(self.REQ, body)
+        self._w = self.wrap_body(self.REQ, body)
 
     def view_response(self):
         if self.flow.response:
             self.viewing = self.RESP
             body = self._conn_text(self.flow.response)
-            self.w = self.wrap_body(self.RESP, body)
+            self._w = self.wrap_body(self.RESP, body)
 
     def refresh_connection(self, c=None):
         if c == self.flow:
@@ -307,7 +307,7 @@ class ConnectionView(urwid.WidgetWrap):
                 self.view_request()
         elif key in ("up", "down", "page up", "page down"):
             # Why doesn't this just work??
-            self.w.body.keypress(size, key)
+            self._w.body.keypress(size, key)
         elif key == "a":
             self.flow.accept_intercept()
             self.master.view_connection(self.flow)
@@ -395,10 +395,10 @@ class ActionBar(urwid.WidgetWrap):
         return True
 
     def prompt(self, prompt):
-        self.w = urwid.Edit(prompt)
+        self._w = urwid.Edit(prompt)
 
     def message(self, message):
-        self.w = urwid.Text(message)
+        self._w = urwid.Text(message)
 
 
 class StatusBar(urwid.WidgetWrap):
@@ -406,7 +406,7 @@ class StatusBar(urwid.WidgetWrap):
         self.master, self.text = master, text
         self.ab = ActionBar()
         self.ib = urwid.AttrWrap(urwid.Text(""), 'foot')
-        self.w = urwid.Pile([self.ib, self.ab])
+        self._w = urwid.Pile([self.ib, self.ab])
         self.redraw()
 
     def redraw(self):
