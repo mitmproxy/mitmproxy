@@ -14,7 +14,5 @@ Future:
 
 Bugs:
     
-    - Exception handling for regular expression compiler in filt.py.
-    - Fix crash on illegal regular expression on libmproxy/filt.py:76
     - In some circumstances, long URLs in list view are line-broken oddly.
     - Termination sometimes hangs.

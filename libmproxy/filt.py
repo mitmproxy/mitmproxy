@@ -73,8 +73,10 @@ class FResp(_Action):
 class _Rex(_Action):
     def __init__(self, expr):
         self.expr = expr
-        self.re = re.compile(self.expr)
-
+        try:
+            self.re = re.compile(self.expr)
+        except:
+            self.re = False
 
 def _check_content_type(expr, o):
     val = o.headers.get("content-type")
@@ -186,7 +188,11 @@ class FUrl(_Rex):
     def make(klass, s, loc, toks):
         if len(toks) > 1:
             toks = toks[1:]
-        return klass(*toks)
+        ret_klass = klass(*toks)
+        if ret_klass.re:
+            return ret_klass
+        else:
+            return False
 
     def __call__(self, o):
         if o.is_response():
