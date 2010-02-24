@@ -429,7 +429,7 @@ class StatusBar(urwid.WidgetWrap):
         return True
 
     def get_edit_text(self):
-        return self.ab.w.get_edit_text()
+        return self.ab._w.get_edit_text()
 
     def prompt(self, prompt):
         self.ab.prompt(prompt)
