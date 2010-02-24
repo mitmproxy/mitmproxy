@@ -961,6 +961,7 @@ class ConsoleMaster(controller.Master):
                 size = self.drawscreen()
                 self.statusbar.redraw()
                 self.tick(q)
+                self.ui.set_input_timeouts(max_wait=0.1)
                 keys = self.ui.get_input()
                 for k in keys:
                     if self.prompting:

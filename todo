@@ -9,11 +9,11 @@ Future:
     - Saving contents to file
     - Shortcut for viewing in pager
     - Serializing and de-serializing requests and responses.
+    - Use real non-blocking input handling to minimize cpu load.
 
 
 Bugs:
     
-    - get_input() is blocking the complete program.
     - Exception handling for regular expression compiler in filt.py.
     - Fix crash cause on undefined request in libmproxy/console.py:543
     - Fix crash on illegal regular expression on libmproxy/filt.py:76
