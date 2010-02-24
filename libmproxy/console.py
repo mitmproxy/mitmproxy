@@ -266,11 +266,14 @@ class ConnectionView(urwid.WidgetWrap):
         else:
             c = self.flow.response
         path = os.path.expanduser(path)
-        f = file(path, "w")
-        f.write(str(c.headers))
-        f.write("\r\n")
-        f.write(str(c.content))
-        f.close()
+        try:
+            f = file(path, "w")
+            f.write(str(c.headers))
+            f.write("\r\n")
+            f.write(str(c.content))
+            f.close()
+        except IOError, v:
+            self.master.statusbar.message(str(v))
 
     def edit(self, part):
         if self.viewing == self.REQ:
