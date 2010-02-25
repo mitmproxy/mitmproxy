@@ -52,9 +52,14 @@ class Master:
 
     def tick(self, q):
         try:
-            # Small timeout to prevent pegging the CPU
-            msg = q.get(timeout=0.01)
-            self.handle(msg)
+            # This endless loop is running until the 'Queue.Empty'
+            # exception is thrown. If more than one request is in
+            # the queue, this speeds up every request by 0.1 seconds,
+            # because get_input(..) function is not blocking.
+            while True:
+                # Small timeout to prevent pegging the CPU
+                msg = q.get(timeout=0.01)
+                self.handle(msg)
         except Queue.Empty:
             pass
 
