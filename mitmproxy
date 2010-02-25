@@ -43,6 +43,10 @@ if __name__ == '__main__':
     parser.add_option("-q", "--quiet",
                       action="store_true", dest="quiet",
                       help="Quiet.")
+    parser.add_option(
+        "-t", "--terminal-backround", action="store_true", dest="terminal_background",
+        default=False, help="Uses the standard terminal background instead of setting an own. (Useful for transparent terminals etc.)")
+
     parser.add_option("-v", "--verbose",
                       action="count", dest="verbose", default=1,
                       help="Increase verbosity. Can be passed multiple times.")
@@ -64,7 +68,7 @@ if __name__ == '__main__':
     if options.dump:
         m = controller.DumpMaster(server, options.verbose)
     else:
-        m = console.ConsoleMaster(server, options.verbose)
+        m = console.ConsoleMaster(server, options.verbose, options.terminal_background)
     if options.verbose > 0:
         print >> sys.stderr, "Running on port %s"%options.port
     m.run()

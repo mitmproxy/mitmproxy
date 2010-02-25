@@ -714,30 +714,7 @@ class State:
 #begin nocover
 
 class ConsoleMaster(controller.Master):
-    palette = [
-        ('body', 'black', 'dark cyan', 'standout'),
-        ('foot', 'light gray', 'black'),
-        ('title', 'white', 'black',),
-        ('editline', 'white', 'black',),
-
-        # Help
-        ('key', 'light cyan', 'black', 'underline'),
-        ('head', 'white', 'black'),
-        ('text', 'light gray', 'black'),
-
-        # List and Connections
-        ('method', 'dark cyan', 'black'),
-        ('focus', 'yellow', 'black'),
-        ('goodcode', 'light green', 'black'),
-        ('error', 'light red', 'black'),
-        ('header', 'dark cyan', 'black'),
-        ('heading', 'white', 'dark blue'),
-        ('inactive', 'dark gray', 'black'),
-        ('ack', 'light red', 'black'),
-
-        # Hex view
-        ('offset', 'dark cyan', 'black'),
-    ]
+    palette = []
     footer_text_default = [
         ('key', "?"), ":help ",
         ('key', "q"), ":exit ",
@@ -747,13 +724,45 @@ class ConsoleMaster(controller.Master):
         ('key', "?"), ":help ",
         ('key', "q"), ":back ",
     ]
-    def __init__(self, server, config):
+    def __init__(self, server, config, terminal_background):
+        self.set_palette(terminal_background)
         controller.Master.__init__(self, server)
         self.config = config
         self.state = State()
 
         self.stickycookie = None
         self.stickyhosts = {}
+
+    def set_palette(self, terminal_background):
+        if terminal_background:
+            background_color = 'default'
+        else:
+            background_color = 'black'
+
+        self.palette = [
+            ('body', 'black', 'dark cyan', 'standout'),
+            ('foot', 'light gray', background_color),
+            ('title', 'white', background_color,),
+            ('editline', 'white', background_color,),
+
+            # Help
+            ('key', 'light cyan', background_color, 'underline'),
+            ('head', 'white', background_color),
+            ('text', 'light gray', background_color),
+
+            # List and Connections
+            ('method', 'dark cyan', background_color),
+            ('focus', 'yellow', background_color),
+            ('goodcode', 'light green', background_color),
+            ('error', 'light red', background_color),
+            ('header', 'dark cyan', background_color),
+            ('heading', 'white', 'dark blue'),
+            ('inactive', 'dark gray', background_color),
+            ('ack', 'light red', background_color),
+
+            # Hex view
+            ('offset', 'dark cyan', background_color),
+        ]
 
     def run(self):
         self.ui = urwid.curses_display.Screen()
