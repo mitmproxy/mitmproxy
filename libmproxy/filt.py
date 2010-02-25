@@ -76,7 +76,7 @@ class _Rex(_Action):
         try:
             self.re = re.compile(self.expr)
         except:
-            self.re = False
+            self = None
 
 def _check_content_type(expr, o):
     val = o.headers.get("content-type")
@@ -188,11 +188,7 @@ class FUrl(_Rex):
     def make(klass, s, loc, toks):
         if len(toks) > 1:
             toks = toks[1:]
-        ret_klass = klass(*toks)
-        if ret_klass.re:
-            return ret_klass
-        else:
-            return False
+        return klass(*toks)
 
     def __call__(self, o):
         if o.is_response():
