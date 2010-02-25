@@ -244,8 +244,18 @@ class ConnectionView(urwid.WidgetWrap):
         os.write(fd, data)
         os.close(fd)
         c = os.environ.get("EDITOR")
+        #If no EDITOR is set, assume 'vi'
+        if not c:
+            c = "vi"
         cmd = [c, name]
-        ret = subprocess.call(cmd)
+        try:
+            ret = subprocess.call(cmd)
+        except:
+            self.master.statusbar.message("Can't start editor: %s" % c)
+            self.master.ui._curs_set(1)
+            self.master.ui.clear()
+            os.unlink(name)
+            return data
         # Not sure why, unless we do this we get a visible cursor after
         # spawning 'less'.
         self.master.ui._curs_set(1)
