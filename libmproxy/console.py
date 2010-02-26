@@ -714,6 +714,12 @@ class State:
 #begin nocover
 
 class ConsoleMaster(controller.Master):
+    beep    = {
+        'intercepting_request':False,
+        'request':False,
+        'intercepting_response':False,
+        'response':False
+        }
     palette = []
     footer_text_default = [
         ('key', "?"), ":help ",
@@ -724,15 +730,22 @@ class ConsoleMaster(controller.Master):
         ('key', "?"), ":help ",
         ('key', "q"), ":back ",
     ]
-    def __init__(self, server, config, terminal_background):
-        self.set_palette(terminal_background)
+    def __init__(self, server, options):
+        self.set_palette(options.terminal_background)
+        self.beep = {
+            'intercepting_request':options.beep_intercepted_request,
+            'intercepting_response':options.beep_intercepted_response}
         controller.Master.__init__(self, server)
-        self.config = config
+        self.config = options.verbose
         self.state = State()
 
         self.stickycookie = None
         self.stickyhosts = {}
 
+    def check_beep(self, source):
+        if self.beep.get(source, False):
+            urwid.curses_display.curses.beep()
+ 
     def set_palette(self, terminal_background):
         if terminal_background:
             background_color = 'default'
@@ -1084,8 +1097,10 @@ class ConsoleMaster(controller.Master):
                     f.request.headers["cookie"] = self.stickyhosts[hid]
 
             if f.match(self.state.intercept):
+                self.check_beep('intercepting_request')
                 f.intercept()
             else:
+                self.check_beep('request')
                 r.ack()
             self.sync_list_view()
             self.refresh_connection(f)
@@ -1101,8 +1116,10 @@ class ConsoleMaster(controller.Master):
                     self.stickyhosts[hid] = f.response.headers["set-cookie"]
 
             if f.match(self.state.intercept):
+                self.check_beep('intercepting_response')
                 f.intercept()
             else:
+                self.check_beep('response')
                 r.ack()
             self.sync_list_view()
             self.refresh_connection(f)

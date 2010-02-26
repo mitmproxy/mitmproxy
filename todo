@@ -10,6 +10,8 @@ Future:
     - Shortcut for viewing in pager
     - Serializing and de-serializing requests and responses.
     - Use real non-blocking input handling to minimize cpu load.
+    - Give the ability to beep on certain events. (On intercepted
+      request/response already working.)
 
 
 Bugs:

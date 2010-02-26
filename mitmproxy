@@ -26,6 +26,14 @@ if __name__ == '__main__':
                 version="%prog 0.1",
             )
     parser.add_option(
+        "", "--bireq", action="store_true",
+        dest="beep_intercepted_request", default=False,
+        help = "Beep on intercepted request")
+    parser.add_option(
+        "", "--bires", action="store_true",
+        dest="beep_intercepted_response", default=False,
+        help = "Beep on intercepted response")
+    parser.add_option(
         "-d", "--dump", action="store_true",
         dest="dump", default=False,
         help = "Just dump data to screen."
@@ -68,7 +76,7 @@ if __name__ == '__main__':
     if options.dump:
         m = controller.DumpMaster(server, options.verbose)
     else:
-        m = console.ConsoleMaster(server, options.verbose, options.terminal_background)
+        m = console.ConsoleMaster(server, options)
     if options.verbose > 0:
         print >> sys.stderr, "Running on port %s"%options.port
     m.run()
