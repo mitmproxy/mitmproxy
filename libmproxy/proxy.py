@@ -320,7 +320,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         headers.read(self.rfile)
         if method == 'POST' and not headers.has_key('content-length'):
             raise ProxyError(400, "Missing Content-Length for POST method")
-        if headers.has_key("content-length"):
+        if headers.has_key("content-length") and int(headers["content-length"][0]):
             content = self.rfile.read(int(headers["content-length"][0]))
         else:
             content = ""
