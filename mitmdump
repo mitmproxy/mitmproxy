@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os.path
-from libmproxy import proxy, controller, console, utils
+from libmproxy import proxy, dump, utils
 from optparse import OptionParser, OptionGroup
 
 
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         certpath
     )
     server = proxy.ProxyServer(options.port)
-    m = controller.DumpMaster(server, options.verbose)
+    m = dump.DumpMaster(server, options.verbose)
     if options.verbose > 0:
         print >> sys.stderr, "Running on port %s"%options.port
     m.run()
