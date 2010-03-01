@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import Queue, mailcap, mimetypes, tempfile, os, subprocess, threading
-import os.path
+import os.path, sys
 import cStringIO
 import urwid.curses_display
 import urwid
@@ -609,6 +609,8 @@ class State:
         if not f:
             return False
         f.request = req
+        if self.focus is None:
+            self.set_focus(0)
         return f
 
     def add_response(self, resp):
@@ -618,6 +620,8 @@ class State:
         f.response = resp
         f.waiting = False
         f.backup()
+        if self.focus is None:
+            self.set_focus(0)
         return f
 
     def add_error(self, err):
@@ -661,7 +665,7 @@ class State:
         return self.flow_map.get(connection)
 
     def get_focus(self):
-        if not self.view:
+        if not self.view or self.focus is None:
             return None, None
         return self.view[self.focus], self.focus
 
@@ -761,6 +765,26 @@ class ConsoleMaster(controller.Master):
         self.set_palette()
         controller.Master.__init__(self, server)
         self.state = State()
+
+        r = self.set_limit(options.limit)
+        if r:
+            print >> sys.stderr, "Limit error:", r
+            sys.exit(1)
+
+        r = self.set_intercept(options.intercept)
+        if r:
+            print >> sys.stderr, "Intercept error:", r
+            sys.exit(1)
+
+        r = self.set_beep(options.beep)
+        if r:
+            print >> sys.stderr, "Beep error:", r
+            sys.exit(1)
+
+        r = self.set_stickycookie(options.sticky)
+        if r:
+            print >> sys.stderr, "Sticky cookies error:", r
+            sys.exit(1)
 
         self.stickycookie = None
         self.stickyhosts = {}
@@ -974,7 +998,6 @@ class ConsoleMaster(controller.Master):
             self.state.set_limit(f)
         else:
             self.state.set_limit(None)
-        self.sync_list_view()
 
     def set_intercept(self, txt):
         if txt:
@@ -983,7 +1006,6 @@ class ConsoleMaster(controller.Master):
                 return "Invalid filter expression."
         else:
             self.state.intercept = None
-        self.sync_list_view()
 
     def set_beep(self, txt):
         if txt:
@@ -1040,9 +1062,11 @@ class ConsoleMaster(controller.Master):
                             self.view_help()
                         elif k == "l":
                             self.prompt("Limit: ", self.set_limit)
+                            self.sync_list_view()
                             k = None
                         elif k == "i":
                             self.prompt("Intercept: ", self.set_intercept)
+                            self.sync_list_view()
                             k = None
                         elif k == "B":
                             self.prompt("Beep: ", self.set_beep)

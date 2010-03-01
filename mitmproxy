@@ -25,16 +25,46 @@ if __name__ == '__main__':
                 usage = "%prog [options] output",
                 version="%prog 0.1",
             )
+
     parser.add_option(
         "-c", "--cert", action="store",
         type = "str", dest="cert", default="~/.mitmproxy/cert.pem",
         help = "SSL certificate file."
     )
+
     parser.add_option(
         "-p", "--port", action="store",
         type = "int", dest="port", default=8080,
         help = "Port."
     )
+
+    group = OptionGroup(
+                        parser,
+                        "Filters",
+                        "See help in mitmproxy for filter expression syntax."
+                    )
+    group.add_option(
+        "-B", "--beep", action="store",
+        type = "str", dest="beep", default=None,
+        help = "Beep filter expression."
+    )
+    group.add_option(
+        "-l", "--limit", action="store",
+        type = "str", dest="limit", default=None,
+        help = "Limit filter expression."
+    )
+    group.add_option(
+        "-i", "--intercept", action="store",
+        type = "str", dest="intercept", default=None,
+        help = "Intercept filter expression."
+    )
+    group.add_option(
+        "-s", "--sticky", action="store",
+        type = "str", dest="sticky", default=None,
+        help = "Sticky cookie filter expression."
+    )
+    parser.add_option_group(group)
+
     options, args = parser.parse_args()
     certpath = os.path.expanduser(options.cert)
     
