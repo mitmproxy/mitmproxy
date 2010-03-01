@@ -586,6 +586,7 @@ class State:
         # These are compiled filt expressions:
         self.limit = None
         self.intercept = None
+        self.beep = None
 
     def add_browserconnect(self, f):
         self.flow_list.insert(0, f)
@@ -734,12 +735,6 @@ class State:
 #begin nocover
 
 class ConsoleMaster(controller.Master):
-    beep    = {
-        'intercepting_request':False,
-        'request':False,
-        'intercepting_response':False,
-        'response':False
-        }
     palette = []
     footer_text_default = [
         ('key', "?"), ":help ",
@@ -752,9 +747,6 @@ class ConsoleMaster(controller.Master):
     ]
     def __init__(self, server, options):
         self.set_palette(options.terminal_background)
-        self.beep = {
-            'intercepting_request':options.beep_intercepted_request,
-            'intercepting_response':options.beep_intercepted_response}
         controller.Master.__init__(self, server)
         self.config = options.verbose
         self.state = State()
@@ -762,10 +754,6 @@ class ConsoleMaster(controller.Master):
         self.stickycookie = None
         self.stickyhosts = {}
 
-    def check_beep(self, source):
-        if self.beep.get(source, False):
-            urwid.curses_display.curses.beep()
- 
     def set_palette(self, terminal_background):
         if terminal_background:
             background_color = 'default'
@@ -842,6 +830,7 @@ class ConsoleMaster(controller.Master):
         text.extend([("head", "Global keys:\n")])
         keys = [
             ("a", "accept intercepted request or response"),
+            ("B", "set beep filter pattern"),
             ("i", "set interception pattern"),
             ("j, k", "up, down"),
             ("l", "set limit filter pattern"),
@@ -989,6 +978,14 @@ class ConsoleMaster(controller.Master):
             self.state.intercept = None
         self.sync_list_view()
 
+    def set_beep(self, txt):
+        if txt:
+            self.state.beep = filt.parse(txt)
+            if not self.state.beep:
+                return "Invalid filter expression."
+        else:
+            self.state.beep = None
+
     def set_stickycookie(self, txt):
         if txt:
             self.stickycookie = filt.parse(txt)
@@ -1039,6 +1036,9 @@ class ConsoleMaster(controller.Master):
                             k = None
                         elif k == "i":
                             self.prompt("Intercept: ", self.set_intercept)
+                            k = None
+                        elif k == "B":
+                            self.prompt("Beep: ", self.set_beep)
                             k = None
                         elif k == "C":
                             self.clear_connections()
@@ -1115,12 +1115,11 @@ class ConsoleMaster(controller.Master):
                     self.stickyhosts[hid] = f.request.headers["cookie"]
                 elif hid in self.stickyhosts:
                     f.request.headers["cookie"] = self.stickyhosts[hid]
-
+            if f.match(self.state.beep):
+                urwid.curses_display.curses.beep()
             if f.match(self.state.intercept):
-                self.check_beep('intercepting_request')
                 f.intercept()
             else:
-                self.check_beep('request')
                 r.ack()
             self.sync_list_view()
             self.refresh_connection(f)
@@ -1135,11 +1134,11 @@ class ConsoleMaster(controller.Master):
                 if f.response.headers.has_key("set-cookie"):
                     self.stickyhosts[hid] = f.response.headers["set-cookie"]
 
+            if f.match(self.state.beep):
+                urwid.curses_display.curses.beep()
             if f.match(self.state.intercept):
-                self.check_beep('intercepting_response')
                 f.intercept()
             else:
-                self.check_beep('response')
                 r.ack()
             self.sync_list_view()
             self.refresh_connection(f)
