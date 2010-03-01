@@ -1117,6 +1117,16 @@ class ConsoleMaster(controller.Master):
             self.sync_list_view()
             self.refresh_connection(f)
 
+    def process_flow(self, f, r):
+        if f.match(self.state.beep):
+            urwid.curses_display.curses.beep()
+        if f.match(self.state.intercept) and not f.is_replay():
+            f.intercept()
+        else:
+            r.ack()
+        self.sync_list_view()
+        self.refresh_connection(f)
+
     def handle_request(self, r):
         f = self.state.add_request(r)
         if not f:
@@ -1128,14 +1138,7 @@ class ConsoleMaster(controller.Master):
                     self.stickyhosts[hid] = f.request.headers["cookie"]
                 elif hid in self.stickyhosts:
                     f.request.headers["cookie"] = self.stickyhosts[hid]
-            if f.match(self.state.beep):
-                urwid.curses_display.curses.beep()
-            if f.match(self.state.intercept):
-                f.intercept()
-            else:
-                r.ack()
-            self.sync_list_view()
-            self.refresh_connection(f)
+            self.process_flow(f, r)
 
     def handle_response(self, r):
         f = self.state.add_response(r)
@@ -1146,12 +1149,5 @@ class ConsoleMaster(controller.Master):
                 hid = (f.request.host, f.request.port)
                 if f.response.headers.has_key("set-cookie"):
                     self.stickyhosts[hid] = f.response.headers["set-cookie"]
+            self.process_flow(f, r)
 
-            if f.match(self.state.beep):
-                urwid.curses_display.curses.beep()
-            if f.match(self.state.intercept):
-                f.intercept()
-            else:
-                r.ack()
-            self.sync_list_view()
-            self.refresh_connection(f)
