@@ -35,10 +35,17 @@ if __name__ == '__main__':
         type = "int", dest="port", default=8080,
         help = "Port."
     )
-    parser.add_option(
-        "-t", "--terminal-backround", action="store_true", dest="terminal_background",
-        default=False, help="Uses the standard terminal background instead of setting an own. Useful for transparent terminals.")
+    parser.add_option("-q", "--quiet",
+                      action="store_true", dest="quiet",
+                      help="Quiet.")
+    parser.add_option("-v", "--verbose",
+                      action="count", dest="verbose", default=1,
+                      help="Increase verbosity. Can be passed multiple times.")
     options, args = parser.parse_args()
+
+    if options.quiet:
+        options.verbose = 0
+
     certpath = os.path.expanduser(options.cert)
     
     if not os.path.exists(certpath):
@@ -49,5 +56,7 @@ if __name__ == '__main__':
         certpath
     )
     server = proxy.ProxyServer(options.port)
-    m = console.ConsoleMaster(server, options)
+    m = controller.DumpMaster(server, options.verbose)
+    if options.verbose > 0:
+        print >> sys.stderr, "Running on port %s"%options.port
     m.run()
