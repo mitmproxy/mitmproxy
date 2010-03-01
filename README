@@ -36,8 +36,8 @@ Requirements
 
 * A recent [Python](http://www.python.org) interpreter.
 * SSL certificates are generated using [openssl](http://www.openssl.org/)
-* The curses interface relies on a current version of the
-[urwid](http://excess.org/urwid/) library.
+* The curses interface relies on version 0.9.8 or newer of the
+  [urwid](http://excess.org/urwid/) library.
 * The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
   library.
 
