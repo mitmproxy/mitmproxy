@@ -35,9 +35,6 @@ if __name__ == '__main__':
         type = "int", dest="port", default=8080,
         help = "Port."
     )
-    parser.add_option(
-        "-t", "--terminal-backround", action="store_true", dest="terminal_background",
-        default=False, help="Uses the standard terminal background instead of setting an own. Useful for transparent terminals.")
     options, args = parser.parse_args()
     certpath = os.path.expanduser(options.cert)
     

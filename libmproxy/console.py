@@ -758,43 +758,37 @@ class ConsoleMaster(controller.Master):
         ('key', "q"), ":back ",
     ]
     def __init__(self, server, options):
-        self.set_palette(options.terminal_background)
+        self.set_palette()
         controller.Master.__init__(self, server)
-        self.config = options.verbose
         self.state = State()
 
         self.stickycookie = None
         self.stickyhosts = {}
 
-    def set_palette(self, terminal_background):
-        if terminal_background:
-            background_color = 'default'
-        else:
-            background_color = 'black'
-
+    def set_palette(self):
         self.palette = [
             ('body', 'black', 'dark cyan', 'standout'),
-            ('foot', 'light gray', background_color),
-            ('title', 'white', background_color,),
-            ('editline', 'white', background_color,),
+            ('foot', 'light gray', 'default'),
+            ('title', 'white', 'default',),
+            ('editline', 'white', 'default',),
 
             # Help
-            ('key', 'light cyan', background_color, 'underline'),
-            ('head', 'white', background_color),
-            ('text', 'light gray', background_color),
+            ('key', 'light cyan', 'default', 'underline'),
+            ('head', 'white', 'default'),
+            ('text', 'light gray', 'default'),
 
             # List and Connections
-            ('method', 'dark cyan', background_color),
-            ('focus', 'yellow', background_color),
-            ('goodcode', 'light green', background_color),
-            ('error', 'light red', background_color),
-            ('header', 'dark cyan', background_color),
+            ('method', 'dark cyan', 'default'),
+            ('focus', 'yellow', 'default'),
+            ('goodcode', 'light green', 'default'),
+            ('error', 'light red', 'default'),
+            ('header', 'dark cyan', 'default'),
             ('heading', 'white', 'dark blue'),
-            ('inactive', 'dark gray', background_color),
-            ('ack', 'light red', background_color),
+            ('inactive', 'dark gray', 'default'),
+            ('ack', 'light red', 'default'),
 
             # Hex view
-            ('offset', 'dark cyan', background_color),
+            ('offset', 'dark cyan', 'default'),
         ]
 
     def run(self):
