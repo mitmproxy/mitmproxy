@@ -98,6 +98,9 @@ class ConnectionItem(WWrap):
         if key == "a":
             self.flow.accept_intercept()
             self.master.sync_list_view()
+        elif key == "A":
+            self.master.accept_all()
+            self.master.sync_list_view()
         elif key == "d":
             if not self.state.delete_flow(self.flow):
                 self.master.statusbar.message("Can't delete connection mid-intercept.")
@@ -340,6 +343,9 @@ class ConnectionView(WWrap):
             self.w.body.keypress(size, key)
         elif key == "a":
             self.flow.accept_intercept()
+            self.master.view_connection(self.flow)
+        elif key == "A":
+            self.master.accept_all()
             self.master.view_connection(self.flow)
         elif key == "b":
             self.binary = not self.binary
@@ -693,6 +699,10 @@ class State:
         for i in self.flow_list[:]:
             self.delete_flow(i)
 
+    def accept_all(self):
+        for i in self.flow_list[:]:
+            i.accept_intercept()
+
     def kill_flow(self, f):
         f.kill()
         self.delete_flow(f)
@@ -829,7 +839,8 @@ class ConsoleMaster(controller.Master):
         text = []
         text.extend([("head", "Global keys:\n")])
         keys = [
-            ("a", "accept intercepted request or response"),
+            ("A", "accept all intercepted connections"),
+            ("a", "accept this intercepted connection"),
             ("B", "set beep filter pattern"),
             ("i", "set interception pattern"),
             ("j, k", "up, down"),
@@ -956,8 +967,8 @@ class ConsoleMaster(controller.Master):
     def prompt_cancel(self):
         self.prompt_done()
 
-    def search(self, txt):
-        pass
+    def accept_all(self):
+        self.state.accept_all()
 
     def set_limit(self, txt):
         if txt:
