@@ -294,6 +294,8 @@ class ConnectionView(WWrap):
         self.master.refresh_connection(self.flow)
 
     def save_connection(self, path):
+        if not path:
+            return 
         if self.viewing == self.REQ:
             c = self.flow.request
         else:
