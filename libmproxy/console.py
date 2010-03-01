@@ -1096,6 +1096,16 @@ class ConsoleMaster(controller.Master):
         if hasattr(self.statusbar, "refresh_connection"):
             self.statusbar.refresh_connection(c)
 
+    def process_flow(self, f, r):
+        if f.match(self.state.beep):
+            urwid.curses_display.curses.beep()
+        if f.match(self.state.intercept) and not f.is_replay():
+            f.intercept()
+        else:
+            r.ack()
+        self.sync_list_view()
+        self.refresh_connection(f)
+
     # Handlers
     def handle_browserconnection(self, r):
         f = Flow(r)
@@ -1110,16 +1120,6 @@ class ConsoleMaster(controller.Master):
         else:
             self.sync_list_view()
             self.refresh_connection(f)
-
-    def process_flow(self, f, r):
-        if f.match(self.state.beep):
-            urwid.curses_display.curses.beep()
-        if f.match(self.state.intercept) and not f.is_replay():
-            f.intercept()
-        else:
-            r.ack()
-        self.sync_list_view()
-        self.refresh_connection(f)
 
     def handle_request(self, r):
         f = self.state.add_request(r)

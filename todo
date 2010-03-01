@@ -1,6 +1,6 @@
 
 Future:
-
+    
     - Strings view.
     - Field parsing and editing.
     - On-the-fly generation of keys, signed with a CA
@@ -10,7 +10,11 @@ Future:
     - Serializing and de-serializing requests and responses.
     - Use real non-blocking input handling to minimize cpu load.
     - Upstream proxies.
-
+    - mitmdump
+        - Filters
+        - Sticky cookies
+        - Pipe to script
+        - After we add serialization of flows, command-line replay
 
 Bugs:
     
