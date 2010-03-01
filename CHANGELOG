@@ -1,0 +1,24 @@
+
+
+1 March 2010: mitmproxy 0.2 
+
+    * Big speed and responsiveness improvements, thanks to Thomas Roth
+    
+    * Support urwid 0.9.9
+    *
+    * Terminal beeping based on filter expressions
+    
+    * Filter expressions for terminal beeps, limits, interceptions and sticky
+      cookies can now be passed on the command line.
+
+    * Save requests and responses to file
+    
+    * Split off non-interactive dump functionality into a new tool called
+      mitmdump
+    
+    * "A" will now accept all intercepted connections
+    
+    * Lots of bugfixes
+
+    
+
