@@ -192,6 +192,15 @@ class FileLike:
     def flush(self):
         pass
 
+    def read(self, length):
+	result = ''
+	while len(result) < length:
+	    data = self.o.read(length)
+	    if not data:
+		break
+	    result += data
+	return result
+	    
     def readline(self):
         result = ''
         while True:
