@@ -412,6 +412,9 @@ class ConnectionView(WWrap):
     def set_resp_code(self, code):
         response = self.flow.response
         response.code = code
+        import BaseHTTPServer
+        if BaseHTTPServer.BaseHTTPRequestHandler.responses.has_key(int(code)):
+            response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[int(code)][0]
         self.master.refresh_connection(self.flow)
 
     def set_resp_msg(self, msg):
@@ -1309,8 +1312,7 @@ class ConsoleMaster(controller.Master):
         if not f:
             r.ack()
         else:
-            self.sync_list_view()
-            self.refresh_connection(f)
+            self.process_flow(f, r)
 
     def handle_request(self, r):
         f = self.state.add_request(r)
