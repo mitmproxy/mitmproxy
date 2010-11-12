@@ -378,11 +378,17 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             if request is None:
                 self.finish()
                 return
-            server = ServerConnection(request)
-            response = server.read_response()
-            response = response.send(self.mqueue)
+            if request.is_response():
+                response = request
+                request = False
+                response = response.send(self.mqueue)
+            else:
+                server = ServerConnection(request)
+                response = server.read_response()
+                response = response.send(self.mqueue)
+                if response is None:
+                    server.terminate()
             if response is None:
-                server.terminate()
                 self.finish()
                 return
             self.send_response(response)

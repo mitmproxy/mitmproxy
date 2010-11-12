@@ -403,6 +403,22 @@ class ConnectionView(WWrap):
         except IOError, v:
             self.master.statusbar.message(v.strerror)
 
+    def set_url(self, url):
+        request = self.flow.request
+        if not request.set_url(url):
+            return "Invalid URL."
+        self.master.refresh_connection(self.flow)
+
+    def set_resp_code(self, code):
+        response = self.flow.response
+        response.code = code
+        self.master.refresh_connection(self.flow)
+
+    def set_resp_msg(self, msg):
+        response = self.flow.response
+        response.msg = msg
+        self.master.refresh_connection(self.flow)
+        
     def edit(self, part):
         if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             conn = self.flow.request
@@ -419,14 +435,18 @@ class ConnectionView(WWrap):
             headers.read(fp)
             conn.headers = headers
         elif part == "u" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-            conn = self.flow.request
-            url = self._spawn_editor(conn.url())
-            url = url.strip()
-            if not conn.set_url(url):
-                return "Invalid URL."
+            self.master.prompt_edit("URL", conn.url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             self.master.prompt_onekey("Method", self.methods, self.edit_method)
-            key = None
+        elif part == "c" and self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
+            self.master.prompt_edit("Code", conn.code, self.set_resp_code)
+        elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
+            self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
+        elif part == "r" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
+            if not conn.acked:
+                response = proxy.Response(conn, "200", "HTTP/1.1", "OK", utils.Headers(), "")
+                conn.ack(response)
+            self.view_response()
         self.master.refresh_connection(self.flow)
 
     def _changeview(self, v):
@@ -472,7 +492,8 @@ class ConnectionView(WWrap):
                         ("header", "h"),
                         ("body", "b"),
                         ("url", "u"),
-                        ("method", "m")
+                        ("method", "m"),
+                        ("reply", "r")
                     ),
                     self.edit
                 )
@@ -480,6 +501,8 @@ class ConnectionView(WWrap):
                 self.master.prompt_onekey(
                     "Edit response",
                     (
+                        ("code", "c"),
+                        ("message", "m"),
                         ("header", "h"),
                         ("body", "b"),
                     ),
@@ -613,8 +636,8 @@ class ActionBar(WWrap):
     def path_prompt(self, prompt, text):
         self.w = PathEdit(prompt, text)
 
-    def prompt(self, prompt):
-        self.w = urwid.Edit(prompt)
+    def prompt(self, prompt, text = ""):
+        self.w = urwid.Edit(prompt, text)
 
     def message(self, message):
         self.w = urwid.Text(message)
@@ -663,8 +686,8 @@ class StatusBar(WWrap):
     def path_prompt(self, prompt, text):
         return self.ab.path_prompt(prompt, text)
 
-    def prompt(self, prompt):
-        return self.ab.prompt(prompt)
+    def prompt(self, prompt, text = ""):
+        self.ab.prompt(prompt, text)
 
     def message(self, msg, expire=None):
         if expire:
@@ -1058,6 +1081,11 @@ class ConsoleMaster(controller.Master):
         self.statusbar.prompt(prompt)
         self.view.set_focus("footer")
         self.prompting = (callback, args)
+
+    def prompt_edit(self, prompt, text, callback):
+        self.statusbar.prompt(prompt, text)
+        self.view.set_focus("footer")
+        self.prompting = callback
 
     def prompt_onekey(self, prompt, keys, callback):
         """
