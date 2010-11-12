@@ -447,7 +447,7 @@ class ConnectionView(WWrap):
             self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
         elif part == "r" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             if not conn.acked:
-                response = proxy.Response(conn, "200", "HTTP/1.1", "OK", utils.Headers(), "")
+                response = proxy.Response(conn, "200", "OK", utils.Headers(), "")
                 conn.ack(response)
             self.view_response()
         self.master.refresh_connection(self.flow)

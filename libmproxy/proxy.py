@@ -26,6 +26,45 @@ class Config:
         self.pemfile = pemfile
 
 
+def read_chunked(fp):
+    content = ""
+    while 1:
+        line = fp.readline()
+        if line == "":
+            raise IOError("Connection closed")
+        if line == '\r\n' or line == '\n':
+            continue
+        length = int(line,16)
+        if not length:
+            break
+        content += fp.read(length)
+        line = fp.readline()
+        if line != '\r\n':
+            raise IOError("Malformed chunked body")
+    while 1:
+        line = fp.readline()
+        if line == "":
+            raise IOError("Connection closed")
+        if line == '\r\n' or line == '\n':
+            break
+    return content
+    
+
+def read_http_body(rfile, connection, headers, all):
+    if headers.has_key('transfer-encoding'):
+        if not ",".join(headers["transfer-encoding"]) == "chunked":
+            raise IOError('Invalid transfer-encoding')
+        content = read_chunked(rfile)
+    elif headers.has_key("content-length"):
+        content = rfile.read(int(headers["content-length"][0]))
+    elif all:
+        content = rfile.read()
+        connection.close = True
+    else:
+        content = None
+    return content
+
+
 def parse_url(url):
     """
         Returns a (scheme, host, port, path) tuple, or None on error.
@@ -48,7 +87,7 @@ def parse_url(url):
     return scheme, host, port, path
 
 
-def parse_proxy_request(request):
+def parse_request_line(request):
     """
         Parse a proxy request line. Return (method, scheme, host, port, path).
         Raise ProxyError on error.
@@ -57,31 +96,40 @@ def parse_proxy_request(request):
         method, url, protocol = string.split(request)
     except ValueError:
         raise ProxyError(400, "Can't parse request")
-    if method in ['GET', 'HEAD', 'POST']:
-        if url.startswith("/"):
+    if method == 'CONNECT':
+        scheme = None
+        path = None
+        try:
+            host, port = url.split(":")
+        except ValueError:
+            raise ProxyError(400, "Can't parse request")
+        port = int(port)
+    else:
+        if url.startswith("/") or url == "*":
             scheme, port, host, path = None, None, None, url
         else:
             parts = parse_url(url)
             if not parts:
                 raise ProxyError(400, "Invalid url: %s"%url)
             scheme, host, port, path = parts
-    elif method == 'CONNECT':
-        scheme = None
-        path = None
-        host, port = url.split(":")
-        port = int(port)
-    else:
-        raise ProxyError(501, "Unknown request method: %s" % method)
-    return method, scheme, host, port, path
+    if not protocol.startswith("HTTP/"):
+        raise ProxyError(400, "Unsupported protocol")
+    major,minor = protocol.split('/')[1].split('.')
+    major = int(major)
+    minor = int(minor)
+    if major != 1:
+        raise ProxyError(400, "Unsupported protocol")
+    return method, scheme, host, port, path, minor
 
 
 class Request(controller.Msg):
-    FMT = '%s %s HTTP/1.0\r\n%s\r\n%s'
+    FMT = '%s %s HTTP/1.1\r\n%s\r\n%s'
     def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
         self.client_conn = client_conn
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
         self.timestamp = timestamp or time.time()
+        self.close = False
         controller.Msg.__init__(self)
 
     def get_state(self):
@@ -118,12 +166,15 @@ class Request(controller.Msg):
         c.headers = self.headers.copy()
         return c
 
-    def url(self):
+    def hostport(self):
         if (self.port, self.scheme) in [(80, "http"), (443, "https")]:
             host = self.host
         else:
             host = "%s:%s"%(self.host, self.port)
-        return "%s://%s%s"%(self.scheme, host, self.path)
+        return host
+
+    def url(self):
+        return "%s://%s%s"%(self.scheme, self.hostport(), self.path)
 
     def set_url(self, url):
         parts = parse_url(url)
@@ -148,16 +199,26 @@ class Request(controller.Msg):
         utils.try_del(headers, 'proxy-connection')
         utils.try_del(headers, 'keep-alive')
         utils.try_del(headers, 'connection')
-        headers["connection"] = ["close"]
-        data = (self.method, self.path, str(headers), self.content)
+        utils.try_del(headers, 'content-length')
+        utils.try_del(headers, 'transfer-encoding')
+        if not headers.has_key('host'):
+            headers["host"] = [self.hostport()]
+        content = self.content
+        if content is not None:
+            headers["content-length"] = [str(len(content))]
+        else:
+            content = ""
+        if self.close:
+            headers["connection"] = ["close"]
+        data = (self.method, self.path, str(headers), content)
         return self.FMT%data
 
 
 class Response(controller.Msg):
     FMT = '%s\r\n%s\r\n%s'
-    def __init__(self, request, code, proto, msg, headers, content, timestamp=None):
+    def __init__(self, request, code, msg, headers, content, timestamp=None):
         self.request = request
-        self.code, self.proto, self.msg = code, proto, msg
+        self.code, self.msg = code, msg
         self.headers, self.content = headers, content
         self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
@@ -196,7 +257,7 @@ class Response(controller.Msg):
         return True
 
     def short(self):
-        return "%s %s"%(self.code, self.proto)
+        return "%s %s"%(self.code, self.msg)
 
     def assemble(self):
         """
@@ -208,9 +269,16 @@ class Response(controller.Msg):
         utils.try_del(headers, 'proxy-connection')
         utils.try_del(headers, 'connection')
         utils.try_del(headers, 'keep-alive')
-        headers["connection"] = ["close"]
-        proto = "%s %s %s"%(self.proto, self.code, self.msg)
-        data = (proto, str(headers), self.content)
+        utils.try_del(headers, 'transfer-encoding')
+        content = self.content
+        if content is not None:
+            headers["content-length"] = [str(len(content))]
+        else:
+            content = ""
+        if self.request.client_conn.close:
+            headers["connection"] = ["close"]
+        proto = "HTTP/1.1 %s %s"%(self.code, self.msg)
+        data = (proto, str(headers), content)
         return self.FMT%data
 
 
@@ -221,6 +289,7 @@ class ClientConnection(controller.Msg):
             been replayed from within mitmproxy.
         """
         self.address = address
+        self.close = False
         controller.Msg.__init__(self)
 
     def get_state(self):
@@ -306,46 +375,54 @@ class FileLike:
 
 class ServerConnection:
     def __init__(self, request):
-        self.request = request
+        self.host = request.host
+        self.port = request.port
+        self.scheme = request.scheme
+        self.close = False
         self.server, self.rfile, self.wfile = None, None, None
         self.connect()
-        self.send_request()
 
     def connect(self):
         try:
-            addr = socket.gethostbyname(self.request.host)
+            addr = socket.gethostbyname(self.host)
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if self.request.scheme == "https":
+            if self.scheme == "https":
                 server = ssl.wrap_socket(server)
-            server.connect((addr, self.request.port))
+            server.connect((addr, self.port))
         except socket.error, err:
-            raise ProxyError(200, 'Error connecting to "%s": %s' % (self.request.host, err))
+            raise ProxyError(504, 'Error connecting to "%s": %s' % (self.host, err))
         self.server = server
         self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
 
-    def send_request(self):
+    def send_request(self, request):
+        self.request = request
+        request.close = self.close
         try:
-            self.wfile.write(self.request.assemble())
+            self.wfile.write(request.assemble())
             self.wfile.flush()
         except socket.error, err:
-            raise ProxyError(500, 'Error sending data to "%s": %s' % (request.host, err))
+            raise ProxyError(504, 'Error sending data to "%s": %s' % (request.host, err))
 
     def read_response(self):
-        proto = self.rfile.readline()
-        if not proto:
-            raise ProxyError(200, "Blank server response.")
-        parts = proto.strip().split(" ", 2)
+        line = self.rfile.readline()
+        if line == "\r\n" or line == "\n": # Possible leftover from previous message
+            line = self.rfile.readline()
+        if not line:
+            raise ProxyError(502, "Blank server response.")
+        parts = line.strip().split(" ", 2)
         if not len(parts) == 3:
-            raise ProxyError(200, "Invalid server response: %s."%proto)
+            raise ProxyError(502, "Invalid server response: %s."%line)
         proto, code, msg = parts
         code = int(code)
         headers = utils.Headers()
         headers.read(self.rfile)
-        if headers.has_key("content-length"):
-            content = self.rfile.read(int(headers["content-length"][0]))
+        if code >= 100 and code <= 199:
+            return self.read_response()
+        if self.request.method == "HEAD" or code == 204 or code == 304:
+            content = None
         else:
-            content = self.rfile.read()
-        return Response(self.request, code, proto, msg, headers, content)
+            content = read_http_body(self.rfile, self, headers, True)
+        return Response(self.request, code, msg, headers, content)
 
     def terminate(self):
         try:
@@ -362,14 +439,22 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self):
-        server = None
         cc = ClientConnection(self.client_address)
         cc.send(self.mqueue)
+        while not cc.close:
+            self.handle_request(cc)
+        self.finish()
+
+    def handle_request(self, cc):
+        server = None
         try:
             request = self.read_request(cc)
+            if request is None:
+                cc.close = True
+                return
             request = request.send(self.mqueue)
             if request is None:
-                self.finish()
+                cc.close = True
                 return
             if request.is_response():
                 response = request
@@ -377,12 +462,13 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 response = response.send(self.mqueue)
             else:
                 server = ServerConnection(request)
+                server.send_request(request)
                 response = server.read_response()
                 response = response.send(self.mqueue)
                 if response is None:
                     server.terminate()
             if response is None:
-                self.finish()
+                cc.close = True
                 return
             self.send_response(response)
         except IOError:
@@ -390,22 +476,24 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         except ProxyError, e:
             err = Error(cc, e.msg)
             err.send(self.mqueue)
+            cc.close = True
             self.send_error(e.code, e.msg)
         if server:
             server.terminate()
-        self.finish()
 
     def read_request(self, client_conn):
-        request = self.rfile.readline()
-        method, scheme, host, port, path = parse_proxy_request(request)
-        if not host:
-            raise ProxyError(200, 'Invalid request: %s'%request)
+        line = self.rfile.readline()
+        if line == "\r\n" or line == "\n": # Possible leftover from previous message
+            line = self.rfile.readline()
+        if line == "":
+            return None
+        method, scheme, host, port, path, httpminor = parse_request_line(line)
         if method == "CONNECT":
             # Discard additional headers sent to the proxy. Should I expose
             # these to users?
             while 1:
                 d = self.rfile.readline()
-                if not d.strip():
+                if d == '\r\n' or d == '\n':
                     break
             self.wfile.write(
                         'HTTP/1.1 200 Connection established\r\n' +
@@ -423,16 +511,44 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             )
             self.rfile = FileLike(self.connection)
             self.wfile = FileLike(self.connection)
-            method, _, _, _, path = parse_proxy_request(self.rfile.readline())
+            method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())
+        if scheme is None:
             scheme = "https"
         headers = utils.Headers()
         headers.read(self.rfile)
-        if method == 'POST' and not headers.has_key('content-length'):
-            raise ProxyError(400, "Missing Content-Length for POST method")
-        if headers.has_key("content-length") and int(headers["content-length"][0]):
-            content = self.rfile.read(int(headers["content-length"][0]))
-        else:
-            content = ""
+        if host is None and headers.has_key("host"):
+            netloc = headers["host"][0]
+            if ':' in netloc:
+                host, port = string.split(netloc, ':')
+                port = int(port)
+            else:
+                host = netloc
+                if scheme == "https":
+                    port = 443
+                else:
+                    port = 80
+            port = int(port)
+        if host is None:
+            raise ProxyError(400, 'Invalid request: %s'%request)
+        if headers.has_key('expect'):
+            expect = ",".join(headers['expect'])
+            if expect == "100-continue" and httpminor >= 1:
+                self.wfile.write('HTTP/1.1 100 Continue\r\n')
+                self.wfile.write('Proxy-agent: %s\r\n'%NAME)
+                self.wfile.write('\r\n')
+                del headers['expect']
+            else:
+                raise ProxyError(417, 'Unmet expect: %s'%expect)
+        if httpminor == 0:
+            client_conn.close = True
+        if headers.has_key('connection'):
+            for value in ",".join(headers['connection']).split(","):
+                value = value.strip()
+                if value == "close":
+                    client_conn.close = True
+                if value == "keep-alive":
+                    client_conn.close = False
+        content = read_http_body(self.rfile, client_conn, headers, False)
         return Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
@@ -455,15 +571,14 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         try:
             import BaseHTTPServer
             response = BaseHTTPServer.BaseHTTPRequestHandler.responses[code][0]
-            self.wfile.write("HTTP/1.0 %s %s\r\n" % (code, response))
+            self.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
             self.wfile.write("Server: %s\r\n"%NAME)
+            self.wfile.write("Connection: close\r\n")
             self.wfile.write("Content-type: text/html\r\n")
             self.wfile.write("\r\n")
             self.wfile.write('<html><head>\n<title>%d %s</title>\n</head>\n'
                     '<body>\n%s\n</body>\n</html>' % (code, response, body))
             self.wfile.flush()
-            self.wfile.close()
-            self.rfile.close()
         except IOError:
             pass
 
