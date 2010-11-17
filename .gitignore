@@ -8,3 +8,5 @@ MANIFEST
 *.swo
 mitmproxyc
 mitmdumpc
+mitmplaybackc
+mitmrecordc
