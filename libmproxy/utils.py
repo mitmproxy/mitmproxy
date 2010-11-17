@@ -138,6 +138,13 @@ def _caseless(s):
     return s.lower()
 
 
+def try_del(dict, key):
+    try:
+        del dict[key]
+    except KeyError:
+        pass
+
+
 class MultiDict:
     """
         Simple wrapper around a dictionary to make holding multiple objects per

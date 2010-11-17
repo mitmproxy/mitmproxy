@@ -26,13 +26,6 @@ class Config:
         self.pemfile = pemfile
 
 
-def try_del(dict, key):
-    try:
-        del dict[key]
-    except KeyError:
-        pass
-
-
 def parse_url(url):
     """
         Returns a (scheme, host, port, path) tuple, or None on error.
@@ -151,10 +144,10 @@ class Request(controller.Msg):
             modifications to make sure interception works properly.
         """
         headers = self.headers.copy()
-        try_del(headers, 'accept-encoding')
-        try_del(headers, 'proxy-connection')
-        try_del(headers, 'keep-alive')
-        try_del(headers, 'connection')
+        utils.try_del(headers, 'accept-encoding')
+        utils.try_del(headers, 'proxy-connection')
+        utils.try_del(headers, 'keep-alive')
+        utils.try_del(headers, 'connection')
         headers["connection"] = ["close"]
         data = (self.method, self.path, str(headers), self.content)
         return self.FMT%data
@@ -211,10 +204,10 @@ class Response(controller.Msg):
             modifications to make sure interception works properly.
         """
         headers = self.headers.copy()
-        try_del(headers, 'accept-encoding')
-        try_del(headers, 'proxy-connection')
-        try_del(headers, 'connection')
-        try_del(headers, 'keep-alive')
+        utils.try_del(headers, 'accept-encoding')
+        utils.try_del(headers, 'proxy-connection')
+        utils.try_del(headers, 'connection')
+        utils.try_del(headers, 'keep-alive')
         headers["connection"] = ["close"]
         proto = "%s %s %s"%(self.proto, self.code, self.msg)
         data = (proto, str(headers), self.content)
