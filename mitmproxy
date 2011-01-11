@@ -72,6 +72,23 @@ if __name__ == '__main__':
     )
     parser.add_option_group(group)
 
+    group = OptionGroup(
+                        parser,
+                        "Recorder",
+                        "Options controlling recorder behavior"
+                    )
+    group.add_option(
+        "-w", "--store", action="store",
+        type = "str", dest="cache", default=None,
+        help = "Session store location"
+    )
+    group.add_option(
+        "-C", "--cookies", action="append",
+        type = "str", dest="cookies", default=[],
+        help = "Persistent client cookies already set or generated in client"
+    )
+    parser.add_option_group(group)
+
     options, args = parser.parse_args()
     certpath = os.path.expanduser(options.cert)
     
@@ -82,6 +99,11 @@ if __name__ == '__main__':
     proxy.config = proxy.Config(
         certpath
     )
+    if options.cache is not None:
+        utils.mkdir_p(options.cache)
+        if os.path.exists(options.cache + "/index.txt"):
+            print >> sys.stderr, "ERROR: data already recorded in %s"%options.cache
+            sys.exit(1)
     server = proxy.ProxyServer(options.port, options.addr)
     m = console.ConsoleMaster(server, options)
 

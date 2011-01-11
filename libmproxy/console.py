@@ -19,6 +19,7 @@ import cStringIO
 import urwid.curses_display
 import urwid
 import controller, utils, filt, proxy, flow
+import recorder
 
 
 class Stop(Exception): pass
@@ -707,6 +708,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.beep = None
+        self.store = None
 
         self.view_body_mode = VIEW_BODY_RAW
         self.view_flow_mode = VIEW_FLOW_REQUEST
@@ -727,6 +729,8 @@ class ConsoleState(flow.State):
         return flow.State.add_request(self, req)
 
     def add_response(self, resp):
+        if self.store is not None:
+            self.store.save_response(resp)
         f = flow.State.add_response(self, resp)
         if self.focus is None:
             self.set_focus(0)
@@ -736,6 +740,9 @@ class ConsoleState(flow.State):
         ret = flow.State.set_limit(self, limit)
         self.set_focus(self.focus)
         return ret
+
+    def start_recording(self, recorder):
+        self.store = recorder
 
     def get_focus(self):
         if not self.view or self.focus is None:
@@ -814,6 +821,9 @@ class ConsoleMaster(controller.Master):
 
         self.stickycookie = None
         self.stickyhosts = {}
+
+        if options.cache is not None:
+            self.state.start_recording(recorder.Recorder(options))
 
     def spawn_external_viewer(self, data, contenttype):
         if contenttype:

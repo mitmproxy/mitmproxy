@@ -12,7 +12,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap
+import re, os, subprocess, datetime, textwrap, errno
 
 
 def format_timestamp(s):
@@ -341,3 +341,12 @@ def make_bogus_cert(path):
         stdin=subprocess.PIPE
     )
     
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST:
+            pass
+        else:
+            raise
+

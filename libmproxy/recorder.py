@@ -101,7 +101,10 @@ class Recorder:
             for cookie in options.cookies:
                 self.cookies[cookie] = True
         except AttributeError: pass
-        self.verbosity = options.verbose
+        try:
+            self.verbosity = options.verbose
+        except AttributeError:
+            self.verbosity = False
         self.storedir = options.cache
         self.patterns = []
         self.indexfp = None
@@ -253,6 +256,7 @@ class Recorder:
             print >> self.indexfp, 'cookies:', ','.join(self.cookies)
         print >> self.indexfp , path
         print >> self.indexfp , ""
+        self.indexfp.flush()
 
 
     def get_response(self, request):
