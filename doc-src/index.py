@@ -1,10 +1,11 @@
 import countershape
-from countershape import Page, Directory, PythonModule
+from countershape import Page, Directory, PythonModule, markup
 import countershape.grok
 
+
 this.layout = countershape.Layout("_layout.html")
-this.markup = "markdown"
 ns.docTitle = "mitmproxy"
+this.markup = markup.Markdown()
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
 ns.copyright = "Aldo Cortesi 2010"

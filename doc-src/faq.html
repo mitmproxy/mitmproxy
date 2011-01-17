@@ -14,4 +14,58 @@
     components are hanging. Visit the relevant domains using your browser, and
     add a certificate trust exception for each one. </p>
 
+
+    <p class="question">I'm pentesting an non-browser app that checks SSL
+    certificate validity. How do I make it trust the MITMProxy certificate?</p>
+
+
+    <p> Here's a quick and easy procedure you can use for Windows 7, as long as
+    the app in question uses the global Windows certificate repository. </p>
+
+    <ul>
+
+        <li> First copy the file <b>libmproxy/resources/bogus_template</b>
+        from the MITMProxy source, and edit it to include your target domain in
+        the CN parameter. The result should look like this:
+
+<pre>[ req ]
+prompt = no
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]
+C               = NZ
+ST              = none
+L               = none
+O               = none
+OU              = none
+CN              = target.domain.com
+emailAddress    = none</pre>
+        </li>
+
+        <li> Next, use your bogus template to generate a certificate, and
+        install it for MITMPRoxy to use:
+
+<pre>openssl req -config ./my_bogus_template -x509 -nodes -days 9999 -newkey rsa:1024 -keyout mycert -out mycert
+
+cp mycert ~/.mitmproxy/cert.pem</pre>
+        </li>
+
+        <li> Fire up MITMProxy, and configure Firefox on the Windows box to use
+        it. Browse to the target domain, and you should see a big warning about
+        an untrusted certificate. Use Firefox to export the certificate ("Add
+        Exception", "Get Certificate", then "View", tab to "Details" and click
+        "Export").  </li>
+
+        <li> From the command console, fire up <b>certmgr</b>. Select "Trusted
+        Root Certification Authorities", then on the top menu, "Action", "All
+        Tasks", and "Import". When prompted, select the certificate file you've
+        just saved from Firefox.</li>
+
+        <li> And that's it - your certificate should now be trusted for that
+        domain. Happy pentesting.</li>
+
+    </ul>
+
+
+
 </div>

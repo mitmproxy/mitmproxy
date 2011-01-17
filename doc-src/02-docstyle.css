@@ -93,3 +93,9 @@ a {
     font-size: 1.1em;
     font-weight: bold;
 }
+
+pre {
+    padding: 10px;
+    background-color: #e0e0e0;
+    margin: 10px;
+}
