@@ -23,10 +23,18 @@ connecting server. We then open an SSL request to the destination server, and
 replay the request.
 
 
+Documentation
+-------------
+
+A rendered version of the docs for the latest release can be found here:
+
+http://corte.si/projects
+
+
 Download
 --------
 
-Releases can be found here: http://corte.si/software
+Releases can be found here: http://corte.si/projects
 
 Source is hosted here: http://github.com/cortesi/mitmproxy
 
