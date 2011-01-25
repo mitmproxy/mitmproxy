@@ -1,4 +1,4 @@
-from libmproxy import console, proxy, utils, filt
+from libmproxy import console, proxy, utils, filt, flow
 import libpry
 
 def treq(conn=None):
@@ -19,14 +19,14 @@ def tresp(req=None):
 
 def tflow():
     bc = proxy.BrowserConnection("address", 22)
-    return console.Flow(bc)
+    return console.ConsoleFlow(bc)
 
 
 class uState(libpry.AutoTree):
     def test_backup(self):
         bc = proxy.BrowserConnection("address", 22)
-        c = console.State()
-        f = console.Flow(bc)
+        c = console.ConsoleState()
+        f = console.ConsoleFlow(bc)
         c.add_browserconnect(f)
 
         f.backup()
@@ -39,8 +39,8 @@ class uState(libpry.AutoTree):
                 connect -> request -> response
         """
         bc = proxy.BrowserConnection("address", 22)
-        c = console.State()
-        f = console.Flow(bc)
+        c = console.ConsoleState()
+        f = console.ConsoleFlow(bc)
         c.add_browserconnect(f)
         assert c.lookup(bc)
         assert c.get_focus() == (f, 0)
@@ -66,8 +66,8 @@ class uState(libpry.AutoTree):
 
     def test_err(self):
         bc = proxy.BrowserConnection("address", 22)
-        c = console.State()
-        f = console.Flow(bc)
+        c = console.ConsoleState()
+        f = console.ConsoleFlow(bc)
         c.add_browserconnect(f)
         e = proxy.Error(bc, "message")
         assert c.add_error(e)
@@ -76,7 +76,7 @@ class uState(libpry.AutoTree):
         assert not c.add_error(e)
 
     def test_view(self):
-        c = console.State()
+        c = console.ConsoleState()
 
         f = tflow()
         c.add_browserconnect(f)
@@ -102,10 +102,10 @@ class uState(libpry.AutoTree):
 
                 connect -> request -> response
         """
-        c = console.State()
+        c = console.ConsoleState()
 
         bc = proxy.BrowserConnection("address", 22)
-        f = console.Flow(bc)
+        f = console.ConsoleFlow(bc)
         c.add_browserconnect(f)
         assert c.get_focus() == (f, 0)
         assert c.get_from_pos(0) == (f, 0)
@@ -113,7 +113,7 @@ class uState(libpry.AutoTree):
         assert c.get_next(0) == (None, None)
 
         bc2 = proxy.BrowserConnection("address", 22)
-        f2 = console.Flow(bc2)
+        f2 = console.ConsoleFlow(bc2)
         c.add_browserconnect(f2)
         assert c.get_focus() == (f, 1)
         assert c.get_next(0) == (f, 1)
@@ -143,7 +143,7 @@ class uState(libpry.AutoTree):
         state.add_response(r)
 
     def test_focus_view(self):
-        c = console.State()
+        c = console.ConsoleState()
         self._add_request(c)
         self._add_response(c)
         self._add_request(c)
@@ -155,7 +155,7 @@ class uState(libpry.AutoTree):
         assert c.focus == 2
 
     def test_delete_last(self):
-        c = console.State()
+        c = console.ConsoleState()
         f1 = tflow()
         f2 = tflow()
         c.add_browserconnect(f1)
@@ -165,14 +165,14 @@ class uState(libpry.AutoTree):
         assert c.focus == 0
 
     def test_kill_flow(self):
-        c = console.State()
+        c = console.ConsoleState()
         f = tflow()
         c.add_browserconnect(f)
         c.kill_flow(f)
         assert not c.flow_list
 
     def test_clear(self):
-        c = console.State()
+        c = console.ConsoleState()
         f = tflow()
         c.add_browserconnect(f)
         f.intercepting = True
@@ -212,7 +212,7 @@ class uFlow(libpry.AutoTree):
         f.focus = True
         assert f.get_text()
 
-        f.connection = console.ReplayConnection()
+        f.connection = flow.ReplayConnection()
         assert f.get_text()
 
         f.response = None
@@ -250,6 +250,11 @@ class uFlow(libpry.AutoTree):
         assert not f.response.acked
         f.accept_intercept()
         assert f.response.acked
+
+    def test_serialization(self):
+        f = console.ConsoleFlow(None)
+        f.request = treq()
+
 
 
 class uformat_keyvals(libpry.AutoTree):

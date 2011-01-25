@@ -13,12 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import Queue, mailcap, mimetypes, tempfile, os, subprocess, threading
+import Queue, mailcap, mimetypes, tempfile, os, subprocess
 import os.path, sys
 import cStringIO
 import urwid.curses_display
 import urwid
-import controller, utils, filt, proxy
+import controller, utils, filt, proxy, flow
 
 
 class Stop(Exception): pass
@@ -61,21 +61,6 @@ class WWrap(urwid.WidgetWrap):
         def get_w(self):
             return self._w
         w = property(get_w, set_w)
-
-
-class ReplayThread(threading.Thread):
-    def __init__(self, flow, masterq):
-        self.flow, self.masterq = flow, masterq
-        threading.Thread.__init__(self)
-
-    def run(self):
-        try:
-            server = proxy.ServerConnection(self.flow.request)
-            response = server.read_response()
-            response.send(self.masterq)
-        except proxy.ProxyError, v:
-            err = proxy.Error(self.flow.connection, v.msg)
-            err.send(self.masterq)
 
 
 class ConnectionItem(WWrap):
@@ -478,44 +463,10 @@ class StatusBar(WWrap):
 
 #end nocover
 
-class ReplayConnection:
-    pass
-
-
-class Flow:
+class ConsoleFlow(flow.Flow):
     def __init__(self, connection):
-        self.connection = connection
-        self.request, self.response, self.error = None, None, None
-        self.waiting = True
+        flow.Flow.__init__(self, connection)
         self.focus = False
-        self.intercepting = False
-        self._backup = None
-
-    def backup(self):
-        if not self._backup:
-            self._backup = [
-                self.connection.copy() if self.connection else None,
-                self.request.copy() if self.request else None,
-                self.response.copy() if self.response else None,
-                self.error.copy() if self.error else None,
-            ]
-
-    def revert(self):
-        if self._backup:
-            self.waiting = False
-            restore = [i.copy() if i else None for i in self._backup]
-            self.connection, self.request, self.response, self.error = restore
-
-    def match(self, pattern):
-        if pattern:
-            if self.response:
-                return pattern(self.response)
-            elif self.request:
-                return pattern(self.request)
-        return False
-
-    def is_replay(self):
-        return isinstance(self.connection, ReplayConnection)
 
     def get_text(self, nofocus=False, padding=3):
         if not self.request and not self.response:
@@ -564,74 +515,35 @@ class Flow:
             txt.insert(0, " "*padding)
         return txt
 
-    def kill(self):
-        if self.intercepting:
-            if not self.request.acked:
-                self.request.kill = True
-                self.request.ack()
-            elif self.response and not self.response.acked:
-                self.response.kill = True
-                self.response.ack()
-            self.intercepting = False
 
-    def intercept(self):
-        self.intercepting = True
-
-    def accept_intercept(self):
-        if self.request:
-            if not self.request.acked:
-                self.request.ack()
-            elif self.response and not self.response.acked:
-                self.response.ack()
-            self.intercepting = False
-
-
-class State:
+class ConsoleState(flow.State):
     def __init__(self):
-        self.flow_map = {}
-        self.flow_list = []
-        self.focus = None
-        # These are compiled filt expressions:
-        self.limit = None
-        self.intercept = None
+        flow.State.__init__(self)
+        self.focus = False
         self.beep = None
 
     def add_browserconnect(self, f):
-        self.flow_list.insert(0, f)
-        self.flow_map[f.connection] = f
+        flow.State.add_browserconnect(self, f)
         if self.focus is None:
             self.set_focus(0)
         else:
             self.set_focus(self.focus + 1)
 
     def add_request(self, req):
-        f = self.flow_map.get(req.connection)
-        if not f:
-            return False
-        f.request = req
         if self.focus is None:
             self.set_focus(0)
-        return f
+        return flow.State.add_request(self, req)
 
     def add_response(self, resp):
-        f = self.flow_map.get(resp.request.connection)
-        if not f:
-            return False
-        f.response = resp
-        f.waiting = False
-        f.backup()
+        f = flow.State.add_response(self, resp)
         if self.focus is None:
             self.set_focus(0)
         return f
 
-    def add_error(self, err):
-        f = self.flow_map.get(err.connection)
-        if not f:
-            return False
-        f.error = err
-        f.waiting = False
-        f.backup()
-        return f
+    def set_limit(self, limit):
+        ret = flow.State.set_limit(self, limit)
+        self.set_focus(self.focus)
+        return ret
 
     @property
     def view(self):
@@ -639,30 +551,6 @@ class State:
             return [i for i in self.flow_list if i.match(self.limit)]
         else:
             return self.flow_list[:]
-
-    def set_limit(self, limit):
-        """
-            Limit is a compiled filter expression, or None.
-        """
-        self.limit = limit
-        self.set_focus(self.focus)
-
-    def get_connection(self, itm):
-        if isinstance(itm, (proxy.BrowserConnection, ReplayConnection)):
-            return itm
-        elif hasattr(itm, "connection"):
-            return itm.connection
-        elif hasattr(itm, "request"):
-            return itm.request.connection
-
-    def lookup(self, itm):
-        """
-            Checks for matching connection, using a Flow, Replay Connection,
-            BrowserConnection, Request, Response or Error object. Returns None
-            if not found.
-        """
-        connection = self.get_connection(itm)
-        return self.flow_map.get(connection)
 
     def get_focus(self):
         if not self.view or self.focus is None:
@@ -693,59 +581,10 @@ class State:
 
     def delete_flow(self, f):
         if not f.intercepting:
-            c = self.get_connection(f)
             self.view[self.focus].focus = False
-            del self.flow_map[c]
-            self.flow_list.remove(f)
-            self.set_focus(self.focus)
-            return True
-        return False
-
-    def clear(self):
-        for i in self.flow_list[:]:
-            self.delete_flow(i)
-
-    def accept_all(self):
-        for i in self.flow_list[:]:
-            i.accept_intercept()
-
-    def kill_flow(self, f):
-        f.kill()
-        self.delete_flow(f)
-
-    def revert(self, f):
-        """
-            Replaces the matching connection object with a ReplayConnection object.
-        """
-        conn = self.get_connection(f)
-        del self.flow_map[conn]
-        f.revert()
-        self.flow_map[f.connection] = f
-
-    def replay(self, f, masterq):
-        """
-            Replaces the matching connection object with a ReplayConnection object.
-
-            Returns None if successful, or error message if not.
-        """
-        #begin nocover
-        if f.intercepting:
-            return "Can't replay while intercepting..."
-        if f.request:
-            f.backup()
-            conn = self.get_connection(f)
-            del self.flow_map[conn]
-            rp = ReplayConnection()
-            f.connection = rp
-            f.request.connection = rp
-            if f.request.content:
-                f.request.headers["content-length"] = [str(len(f.request.content))]
-            f.response = None
-            f.error = None
-            self.flow_map[rp] = f
-            rt = ReplayThread(f, masterq)
-            rt.start()
-        #end nocover
+        ret = flow.State.delete_flow(self, f)
+        self.set_focus(self.focus)
+        return ret
 
 
 #begin nocover
@@ -764,7 +603,7 @@ class ConsoleMaster(controller.Master):
     def __init__(self, server, options):
         self.set_palette()
         controller.Master.__init__(self, server)
-        self.state = State()
+        self.state = ConsoleState()
 
         r = self.set_limit(options.limit)
         if r:
@@ -1132,7 +971,7 @@ class ConsoleMaster(controller.Master):
 
     # Handlers
     def handle_browserconnection(self, r):
-        f = Flow(r)
+        f = ConsoleFlow(r)
         self.state.add_browserconnect(f)
         r.ack()
         self.sync_list_view()

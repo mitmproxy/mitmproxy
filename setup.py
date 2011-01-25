@@ -1,5 +1,6 @@
 from distutils.core import setup
 import fnmatch, os.path
+from libmproxy import VERSION
 
 def _fnmatch(name, patternList):
     for i in patternList:
@@ -68,10 +69,9 @@ def findPackages(path, dataExclude=[]):
 
 long_description = file("README").read()
 packages, package_data = findPackages("libmproxy")
-version = "0.2"
 setup(
         name = "mitmproxy",
-        version = version,
+        version = VERSION,
         description = "An interactive SSL-capable intercepting HTTP proxy for penetration testers and software developers.",
         long_description = long_description,
         author = "Aldo Cortesi",

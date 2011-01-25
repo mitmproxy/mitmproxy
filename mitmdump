@@ -17,13 +17,14 @@
 
 import sys, os.path
 from libmproxy import proxy, dump, utils
+from libmproxy import VERSION
 from optparse import OptionParser, OptionGroup
 
 
 if __name__ == '__main__':
     parser = OptionParser(
-                usage = "%prog [options] output",
-                version="%prog 0.1",
+                usage = "%prog [options]",
+                version="%%prog %s"%VERSION,
             )
     parser.add_option(
         "-c", "--cert", action="store",
