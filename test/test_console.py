@@ -288,9 +288,39 @@ class uformat_keyvals(libpry.AutoTree):
             ]
         )
 
+class uPathCompleter(libpry.AutoTree):
+    def test_completion(self):
+        c = console._PathCompleter(True)
+        c.reset()
+        c.lookup = [
+            ("a", "x/a"),
+            ("aa", "x/aa"),
+        ]
+        assert c.complete("a") == "a"
+        assert c.final == "x/a"
+        assert c.complete("a") == "aa"
+        assert c.complete("a") == "a"
+
+        c = console._PathCompleter(True)
+        r = c.complete("l")
+        assert c.final.endswith(r)
+
+        c.reset()
+        assert c.complete("/nonexistent") == "/nonexistent"
+        assert c.final == "/nonexistent"
+        c.reset()
+        assert c.complete("~") != "~"
+
+        c.reset()
+        s = "thisisatotallynonexistantpathforsure"
+        assert c.complete(s) == s
+        assert c.final == s
+
+
 
 tests = [
     uFlow(),
     uformat_keyvals(),
-    uState()
+    uState(), 
+    uPathCompleter()
 ]
