@@ -109,6 +109,8 @@ class ConnectionItem(WWrap):
 class ConnectionListView(urwid.ListWalker):
     def __init__(self, master, state):
         self.master, self.state = master, state
+        if self.state.flow_list:
+            self.set_focus(0)
 
     def get_focus(self):
         f, i = self.state.get_focus()
@@ -572,6 +574,7 @@ class ConsoleMaster(controller.Master):
         ('key', "q"), ":back ",
     ]
     def __init__(self, server, options):
+        self.conn_list_view = None
         self.set_palette()
         controller.Master.__init__(self, server)
         self.state = ConsoleState()
@@ -689,8 +692,9 @@ class ConsoleMaster(controller.Master):
             self.statusbar.message(str(v))
             return
         self.state.load_flows(data, ConsoleFlow)
-        self.conn_list_view.set_focus(0)
-        self.sync_list_view()
+        if self.conn_list_view:
+            self.conn_list_view.set_focus(0)
+            self.sync_list_view()
 
     def helptext(self):
         text = []

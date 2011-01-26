@@ -78,4 +78,6 @@ if __name__ == '__main__':
     )
     server = proxy.ProxyServer(options.port)
     m = console.ConsoleMaster(server, options)
+    for i in args:
+        m.load_flows(i)
     m.run()

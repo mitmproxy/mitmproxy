@@ -212,7 +212,8 @@ class State:
             Replaces the matching connection object with a ReplayConnection object.
         """
         conn = self.get_connection(f)
-        del self.flow_map[conn]
+        if conn in self.flow_map:
+            del self.flow_map[conn]
         f.revert()
         self.flow_map[f.connection] = f
 
