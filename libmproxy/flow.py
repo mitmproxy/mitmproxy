@@ -2,6 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
+import json
 import proxy, threading
 
 class ReplayConnection:
@@ -27,7 +28,6 @@ class Flow:
     def __init__(self, connection):
         self.connection = connection
         self.request, self.response, self.error = None, None, None
-        self.waiting = True
         self.intercepting = False
         self._backup = None
 
@@ -40,7 +40,7 @@ class Flow:
 
     @classmethod
     def from_state(klass, state):
-        f = Flow(ReplayConnection)
+        f = klass(None)
         if state["request"]:
             f.request = proxy.Request.from_state(state["request"])
         if state["response"]:
@@ -63,7 +63,6 @@ class Flow:
 
     def revert(self):
         if self._backup:
-            self.waiting = False
             restore = [i.copy() if i else None for i in self._backup]
             self.connection, self.request, self.response, self.error = restore
 
@@ -133,7 +132,6 @@ class State:
         if not f:
             return False
         f.response = resp
-        f.waiting = False
         f.backup()
         return f
 
@@ -146,15 +144,30 @@ class State:
         if not f:
             return None
         f.error = err
-        f.waiting = False
         f.backup()
         return f
+
+    def dump_flows(self):
+        data = [i.get_state() for i in self.view]
+        return json.dumps(data)
+
+    def load_flows(self, js, klass):
+        data = json.loads(js)
+        data = [klass.from_state(i) for i in data]
+        self.flow_list.extend(data)
 
     def set_limit(self, limit):
         """
             Limit is a compiled filter expression, or None.
         """
         self.limit = limit
+
+    @property
+    def view(self):
+        if self.limit:
+            return tuple([i for i in self.flow_list if i.match(self.limit)])
+        else:
+            return tuple(self.flow_list[:])
 
     def get_connection(self, itm):
         if isinstance(itm, (proxy.BrowserConnection, ReplayConnection)):
@@ -176,7 +189,8 @@ class State:
     def delete_flow(self, f):
         if not f.intercepting:
             c = self.get_connection(f)
-            del self.flow_map[c]
+            if c in self.flow_map:
+                del self.flow_map[c]
             self.flow_list.remove(f)
             return True
         return False
@@ -214,7 +228,8 @@ class State:
         if f.request:
             f.backup()
             conn = self.get_connection(f)
-            del self.flow_map[conn]
+            if conn in self.flow_map:
+                del self.flow_map[conn]
             rp = ReplayConnection()
             f.connection = rp
             f.request.connection = rp

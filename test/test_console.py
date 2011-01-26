@@ -57,7 +57,6 @@ class uState(libpry.AutoTree):
         resp = tresp(req)
         assert c.add_response(resp)
         assert len(c.flow_list) == 1
-        assert f.waiting == False
         assert c.lookup(resp)
 
         newresp = tresp()
@@ -182,6 +181,20 @@ class uState(libpry.AutoTree):
         f.intercepting = False
         c.clear()
         assert len(c.flow_list) == 0
+
+    def test_dump_flows(self):
+        c = console.ConsoleState()
+        self._add_request(c)
+        self._add_response(c)
+        self._add_request(c)
+        self._add_response(c)
+        self._add_request(c)
+        self._add_response(c)
+
+        dump = c.dump_flows()
+        c.clear()
+        c.load_flows(dump, console.ConsoleFlow)
+        assert isinstance(c.flow_list[0], console.ConsoleFlow)
 
 
 class uFlow(libpry.AutoTree):

@@ -73,8 +73,8 @@ class ConnectionItem(WWrap):
         self.intercepting = True
         self.w = self.get_text()
 
-    def get_text(self, nofocus=False):
-        return urwid.Text(self.flow.get_text(nofocus))
+    def get_text(self):
+        return urwid.Text(self.flow.get_text())
 
     def selectable(self):
         return True
@@ -278,23 +278,6 @@ class ConnectionView(WWrap):
                 self.flow.request.method = i[0].upper()
         self.master.refresh_connection(self.flow)
 
-    def save_connection(self, path):
-        if not path:
-            return 
-        if self.viewing == self.REQ:
-            c = self.flow.request
-        else:
-            c = self.flow.response
-        path = os.path.expanduser(path)
-        try:
-            f = file(path, "w")
-            f.write(str(c.headers))
-            f.write("\r\n")
-            f.write(str(c.content))
-            f.close()
-        except IOError, v:
-            self.master.statusbar.message(str(v))
-
     def edit(self, part):
         if self.viewing == self.REQ:
             conn = self.flow.request
@@ -368,10 +351,7 @@ class ConnectionView(WWrap):
             self.state.revert(self.flow)
             self.master.refresh_connection(self.flow)
         elif key == "S":
-            if self.viewing == self.REQ:
-                self.master.prompt("Save request: ", self.save_connection)
-            else:
-                self.master.prompt("Save response: ", self.save_connection)
+            self.master.prompt("Save all: ", self.save_flows)
         elif key == "v":
             if self.viewing == self.REQ:
                 conn = self.flow.request
@@ -519,7 +499,7 @@ class ConsoleFlow(flow.Flow):
 class ConsoleState(flow.State):
     def __init__(self):
         flow.State.__init__(self)
-        self.focus = False
+        self.focus = None
         self.beep = None
 
     def add_browserconnect(self, f):
@@ -544,13 +524,6 @@ class ConsoleState(flow.State):
         ret = flow.State.set_limit(self, limit)
         self.set_focus(self.focus)
         return ret
-
-    @property
-    def view(self):
-        if self.limit:
-            return [i for i in self.flow_list if i.match(self.limit)]
-        else:
-            return self.flow_list[:]
 
     def get_focus(self):
         if not self.view or self.focus is None:
@@ -580,8 +553,6 @@ class ConsoleState(flow.State):
         return self.get_from_pos(pos-1)
 
     def delete_flow(self, f):
-        if not f.intercepting:
-            self.view[self.focus].focus = False
         ret = flow.State.delete_flow(self, f)
         self.set_focus(self.focus)
         return ret
@@ -694,6 +665,33 @@ class ConsoleMaster(controller.Master):
         self.nested = True
         self.make_view()
 
+    def save_flows(self, path):
+        if not path:
+            return 
+        data = self.state.dump_flows()
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, "wb")
+            f.write(data)
+            f.close()
+        except IOError, v:
+            self.statusbar.message(str(v))
+
+    def load_flows(self, path):
+        if not path:
+            return 
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, "r")
+            data = f.read()
+            f.close()
+        except IOError, v:
+            self.statusbar.message(str(v))
+            return
+        self.state.load_flows(data, ConsoleFlow)
+        self.conn_list_view.set_focus(0)
+        self.sync_list_view()
+
     def helptext(self):
         text = []
         text.extend([("head", "Global keys:\n")])
@@ -701,13 +699,15 @@ class ConsoleMaster(controller.Master):
             ("A", "accept all intercepted connections"),
             ("a", "accept this intercepted connection"),
             ("B", "set beep filter pattern"),
+            ("c", "set sticky cookie expression"),
             ("i", "set interception pattern"),
             ("j, k", "up, down"),
             ("l", "set limit filter pattern"),
+            ("L", "load saved flows"),
             ("q", "quit / return to connection list"),
             ("r", "replay request"),
-            ("s", "set sticky cookie expression"),
             ("R", "revert changes to request"),
+            ("S", "save flows matching current limit"),
             ("page up/down", "page up/down"),
             ("space", "page down"),
             ("enter", "view connection"),
@@ -923,7 +923,13 @@ class ConsoleMaster(controller.Master):
                                 self.view_connlist()
                             else:
                                 raise Stop
-                        elif k == "s":
+                        elif k == "S":
+                            self.prompt("Save flows: ", self.save_flows)
+                            k = None
+                        elif k == "L":
+                            self.prompt("Load flows: ", self.load_flows)
+                            k = None
+                        elif k == "c":
                             self.prompt("Sticky cookie: ", self.set_stickycookie)
                             k = None
                     if k:
