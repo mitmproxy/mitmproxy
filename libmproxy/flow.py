@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import json
+from contrib import bson
 import proxy, threading
 
 class ReplayConnection:
@@ -148,12 +148,14 @@ class State:
         return f
 
     def dump_flows(self):
-        data = [i.get_state() for i in self.view]
-        return json.dumps(data)
+        data = dict(
+                flows =[i.get_state() for i in self.view]
+               )
+        return bson.dumps(data)
 
     def load_flows(self, js, klass):
-        data = json.loads(js)
-        data = [klass.from_state(i) for i in data]
+        data = bson.loads(js)
+        data = [klass.from_state(i) for i in data["flows"]]
         self.flow_list.extend(data)
 
     def set_limit(self, limit):
