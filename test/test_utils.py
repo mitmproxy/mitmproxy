@@ -102,6 +102,14 @@ class uMultiDict(libpry.AutoTree):
         assert ("foo", 2) in l
         assert ("bar", 3) in l
 
+    def test_getset_state(self):
+        self.md.append("foo", 1)
+        self.md.append("foo", 2)
+        self.md.append("bar", 3)
+        state = self.md.get_state()
+        nd = utils.MultiDict.from_state(state)
+        assert nd == self.md
+
 
 class uHeaders(libpry.AutoTree):
     def setUp(self):
@@ -176,6 +184,13 @@ class uHeaders(libpry.AutoTree):
         assert h.match_re("two: due")
         assert not h.match_re("nonono")
 
+    def test_getset_state(self):
+        self.hd.append("foo", 1)
+        self.hd.append("foo", 2)
+        self.hd.append("bar", 3)
+        state = self.hd.get_state()
+        nd = utils.Headers.from_state(state)
+        assert nd == self.hd
 
 
 class uisStringLike(libpry.AutoTree):

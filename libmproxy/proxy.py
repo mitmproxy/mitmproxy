@@ -88,6 +88,33 @@ class Request(controller.Msg):
         self.kill = False
         controller.Msg.__init__(self)
 
+    def get_state(self):
+        return dict(
+            host = self.host,
+            port = self.port,
+            scheme = self.scheme,
+            method = self.method,
+            path = self.path,
+            headers = self.headers.get_state(),
+            content = self.content
+        )
+
+    @classmethod
+    def from_state(klass, state):
+        return klass(
+            None,
+            state["host"],
+            state["port"],
+            state["scheme"],
+            state["method"],
+            state["path"],
+            utils.Headers.from_state(state["headers"]),
+            state["content"]
+        )
+
+    def __eq__(self, other):
+        return self.get_state() == other.get_state()
+
     def copy(self):
         c = copy.copy(self)
         c.headers = self.headers.copy()
@@ -137,6 +164,29 @@ class Response(controller.Msg):
         self.kill = False
         controller.Msg.__init__(self)
 
+    def get_state(self):
+        return dict(
+            code = self.code,
+            proto = self.proto,
+            msg = self.msg,
+            headers = self.headers.get_state(),
+            content = self.content
+        )
+
+    @classmethod
+    def from_state(klass, request, state):
+        return klass(
+            request,
+            state["code"],
+            state["proto"],
+            state["msg"],
+            utils.Headers.from_state(state["headers"]),
+            state["content"]
+        )
+
+    def __eq__(self, other):
+        return self.get_state() == other.get_state()
+
     def copy(self):
         c = copy.copy(self)
         c.headers = self.headers.copy()
@@ -180,6 +230,21 @@ class Error(controller.Msg):
 
     def copy(self):
         return copy.copy(self)
+
+    def get_state(self):
+        return dict(
+            msg = self.msg,
+        )
+
+    @classmethod
+    def from_state(klass, state):
+        return klass(
+            None,
+            state["msg"],
+        )
+
+    def __eq__(self, other):
+        return self.get_state() == other.get_state()
 
 
 class FileLike:

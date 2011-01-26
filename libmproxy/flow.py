@@ -31,6 +31,27 @@ class Flow:
         self.intercepting = False
         self._backup = None
 
+    def get_state(self):
+        return dict(
+            request = self.request.get_state() if self.request else None,
+            response = self.response.get_state() if self.response else None,
+            error = self.error.get_state() if self.error else None,
+        )
+
+    @classmethod
+    def from_state(klass, state):
+        f = Flow(ReplayConnection)
+        if state["request"]:
+            f.request = proxy.Request.from_state(state["request"])
+        if state["response"]:
+            f.response = proxy.Response.from_state(f.request, state["response"])
+        if state["error"]:
+            f.error = proxy.Error.from_state(state["error"])
+        return f
+
+    def __eq__(self, other):
+        return self.get_state() == other.get_state()
+
     def backup(self):
         if not self._backup:
             self._backup = [

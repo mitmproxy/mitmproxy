@@ -51,7 +51,7 @@ class Master:
 
     def tick(self, q):
         try:
-            # This endless loop is running until the 'Queue.Empty'
+            # This endless loop runs until the 'Queue.Empty'
             # exception is thrown. If more than one request is in
             # the queue, this speeds up every request by 0.1 seconds,
             # because get_input(..) function is not blocking.

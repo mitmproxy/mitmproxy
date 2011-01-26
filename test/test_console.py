@@ -196,6 +196,15 @@ class uFlow(libpry.AutoTree):
         f.backup()
         f.revert()
 
+    def test_getset_state(self):
+        f = tflow()
+        state = f.get_state() 
+        assert f == console.ConsoleFlow.from_state(state)
+        f.response = tresp()
+        f.request = f.response.request
+        state = f.get_state() 
+        assert f == console.ConsoleFlow.from_state(state)
+
     def test_simple(self):
         f = tflow()
         assert f.get_text()

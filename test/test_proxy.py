@@ -225,6 +225,14 @@ class uRequest(libpry.AutoTree):
         assert r.short()
         assert r.assemble()
 
+    def test_getset_state(self):
+        h = utils.Headers()
+        h["test"] = ["test"]
+        c = proxy.BrowserConnection("addr", 2222)
+        r = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
+        state = r.get_state()
+        assert proxy.Request.from_state(state) == r
+
 
 class uResponse(libpry.AutoTree):
     def test_simple(self):
@@ -235,6 +243,24 @@ class uResponse(libpry.AutoTree):
         resp = proxy.Response(req, 200, "HTTP", "msg", h.copy(), "content")
         assert resp.short()
         assert resp.assemble()
+
+    def test_getset_state(self):
+        h = utils.Headers()
+        h["test"] = ["test"]
+        c = proxy.BrowserConnection("addr", 2222)
+        r = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
+        req = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
+        resp = proxy.Response(req, 200, "HTTP", "msg", h.copy(), "content")
+
+        state = resp.get_state()
+        assert proxy.Response.from_state(req, state) == resp
+
+
+class uError(libpry.AutoTree):
+    def test_getset_state(self):
+        e = proxy.Error(None, "Error")
+        state = e.get_state()
+        assert proxy.Error.from_state(state) == e
 
 
 class uProxyError(libpry.AutoTree):
@@ -252,6 +278,7 @@ tests = [
     uConfig(),
     u_parse_proxy_request(),
     u_parse_url(),
+    uError(),
     _TestServers(), [
         uSanity(),
         uProxy(),

@@ -156,6 +156,16 @@ class MultiDict:
             for j in self[i]:
                 yield (i, j)
 
+    def get_state(self):
+        return list(self.itemPairs())
+
+    @classmethod
+    def from_state(klass, state):
+        md = klass()
+        for i in state:
+            md.append(*i)
+        return md
+
 
 class Headers(MultiDict):
     """
