@@ -80,10 +80,7 @@ if __name__ == '__main__':
     m = console.ConsoleMaster(server, options)
 
     for i in args:
-        msg = m.load_flows(i)
-        if msg:
-            print >> sys.stderr, msg
-            sys.exit(1)
+        m.load_flows(i)
     m.run()
 
 

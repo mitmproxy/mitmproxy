@@ -341,7 +341,7 @@ class ConnectionView(WWrap):
             if not conn.set_url(url):
                 return "Invalid URL."
         elif part == "m" and self.viewing == self.REQ:
-            self.master.prompt_onekey("Method ", self.methods, self.edit_method)
+            self.master.prompt_onekey("Method", self.methods, self.edit_method)
             key = None
         self.master.refresh_connection(self.flow)
 
@@ -372,7 +372,7 @@ class ConnectionView(WWrap):
         elif key == "e":
             if self.viewing == self.REQ:
                 self.master.prompt_onekey(
-                    "Edit request ",
+                    "Edit request",
                     (
                         ("header", "h"),
                         ("body", "b"),
@@ -383,7 +383,7 @@ class ConnectionView(WWrap):
                 )
             else:
                 self.master.prompt_onekey(
-                    "Edit response ",
+                    "Edit response",
                     (
                         ("header", "h"),
                         ("body", "b"),
@@ -946,7 +946,7 @@ class ConsoleMaster(controller.Master):
             Keys are a set of (word, key) tuples. The appropriate key in the
             word is highlighted. 
         """
-        prompt = [prompt, "("]
+        prompt = [prompt, " ("]
         mkup = []
         for i, e in enumerate(keys):
             parts = e[0].split(e[1], 1)
@@ -1076,7 +1076,15 @@ class ConsoleMaster(controller.Master):
                             if self.nested:
                                 self.view_connlist()
                             else:
-                                raise Stop
+                                self.prompt_onekey(
+                                    "Quit",
+                                    (
+                                        ("yes", "y"),
+                                        ("no", "n"),
+                                    ),
+                                    self.quit,
+                                )
+                                k = None
                         elif k == "S":
                             self.path_prompt("Save flows: ", self.save_flows)
                             k = None
@@ -1090,6 +1098,10 @@ class ConsoleMaster(controller.Master):
                         self.view.keypress(size, k)
         except (Stop, KeyboardInterrupt):
             pass
+
+    def quit(self, a):
+        if a != "n":
+            raise Stop
 
     def shutdown(self):
         for i in self.state.flow_list:
