@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import Queue, mailcap, mimetypes, tempfile, os, subprocess, glob
+import Queue, mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import cStringIO
 import urwid.curses_display
@@ -528,11 +528,14 @@ class ActionBar(WWrap):
 class StatusBar(WWrap):
     def __init__(self, master, text):
         self.master, self.text = master, text
+        self.expire = None
         self.ab = ActionBar()
         self.ib = urwid.AttrWrap(urwid.Text(""), 'foot')
         self.w = urwid.Pile([self.ib, self.ab])
 
     def redraw(self):
+        if self.expire and time.time() > self.expire:
+            self.message("")
         status = urwid.Columns([
             urwid.Text([('title', "mproxy:%s"%self.master.server.port)]),
             urwid.Text(
@@ -561,7 +564,11 @@ class StatusBar(WWrap):
     def prompt(self, prompt):
         return self.ab.prompt(prompt)
 
-    def message(self, msg):
+    def message(self, msg, expire=None):
+        if expire:
+            self.expire = time.time() + float(expire)/1000
+        else:
+            self.expire = None
         self.ab.message(msg)
 
 
@@ -827,6 +834,7 @@ class ConsoleMaster(controller.Master):
         if self.conn_list_view:
             self.conn_list_view.set_focus(0)
             self.sync_list_view()
+        return "Flows loaded from %s"%path
 
     def helptext(self):
         text = []
@@ -967,7 +975,7 @@ class ConsoleMaster(controller.Master):
         self.prompt_done()
         msg = p(txt, *args)
         if msg:
-            self.statusbar.message(msg)
+            self.statusbar.message(msg, 1000)
 
     def prompt_cancel(self):
         self.prompt_done()

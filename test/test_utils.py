@@ -229,7 +229,7 @@ class uprettybody(libpry.AutoTree):
         assert utils.prettybody(s)
 
         s = "".join([chr(i) for i in range(256)])
-        print utils.prettybody(s)
+        assert utils.prettybody(s)
 
 
 
