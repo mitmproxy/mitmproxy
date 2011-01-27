@@ -295,7 +295,7 @@ class ConnectionView(WWrap):
             f.write(str(c.content))
             f.close()
         except IOError, v:
-            self.master.statusbar.message(str(v))
+            self.master.statusbar.message(v.strerror)
 
     def edit(self, part):
         if self.viewing == self.REQ:
@@ -772,7 +772,7 @@ class ConsoleMaster(controller.Master):
             f.write(data)
             f.close()
         except IOError, v:
-            self.statusbar.message(str(v))
+            self.statusbar.message(v.strerror)
 
     def save_one_flow(self, path, flow):
         data = flow.dump()
@@ -791,8 +791,7 @@ class ConsoleMaster(controller.Master):
             data = f.read()
             f.close()
         except IOError, v:
-            self.statusbar.message(str(v))
-            return
+            return v.strerror
         self.state.load_flows(data, ConsoleFlow)
         if self.conn_list_view:
             self.conn_list_view.set_focus(0)
