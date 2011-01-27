@@ -33,6 +33,12 @@ class Flow:
         self.intercepting = False
         self._backup = None
 
+    def dump(self):
+        data = dict(
+                flows = [self.get_state()]
+               )
+        return bson.dumps(data)
+
     def get_state(self):
         return dict(
             request = self.request.get_state() if self.request else None,

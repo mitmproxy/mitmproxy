@@ -98,6 +98,8 @@ class ConnectionItem(WWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.sync_list_view()
+        elif key == "s":
+            self.master.prompt("Save this flow: ", self.master.save_one_flow, self.flow)
         elif key == "z":
             self.master.kill_connection(self.flow)
         elif key == "enter":
@@ -352,8 +354,8 @@ class ConnectionView(WWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.refresh_connection(self.flow)
-        elif key == "S":
-            self.master.prompt("Save all: ", self.save_flows)
+        elif key == "s":
+            self.master.prompt("Save this flow: ", self.master.save_one_flow, self.flow)
         elif key == "v":
             if self.viewing == self.REQ:
                 conn = self.flow.request
@@ -741,10 +743,9 @@ class ConsoleMaster(controller.Master):
         self.nested = True
         self.make_view()
 
-    def save_flows(self, path):
+    def _write_flows(self, path, data):
         if not path:
             return 
-        data = self.state.dump_flows()
         path = os.path.expanduser(path)
         try:
             f = file(path, "wb")
@@ -752,6 +753,14 @@ class ConsoleMaster(controller.Master):
             f.close()
         except IOError, v:
             self.statusbar.message(str(v))
+
+    def save_one_flow(self, path, flow):
+        data = flow.dump()
+        return self._write_flows(path, data)
+
+    def save_flows(self, path):
+        data = self.state.dump_flows()
+        return self._write_flows(path, data)
 
     def load_flows(self, path):
         if not path:
@@ -784,7 +793,7 @@ class ConsoleMaster(controller.Master):
             ("q", "quit / return to connection list"),
             ("r", "replay request"),
             ("R", "revert changes to request"),
-            ("S", "save flows matching current limit"),
+            ("S", "save all flows matching current limit"),
             ("page up/down", "page up/down"),
             ("space", "page down"),
             ("enter", "view connection"),
@@ -795,6 +804,7 @@ class ConsoleMaster(controller.Master):
         keys = [
             ("C", "clear connection list"),
             ("d", "delete connection from view"),
+            ("s", "save this t flow"),
             ("z", "kill and delete connection, even if it's mid-intercept"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
@@ -803,7 +813,7 @@ class ConsoleMaster(controller.Master):
         keys = [
             ("b", "toggle hexdump view"),
             ("e", "edit response/request"),
-            ("S", "save request or response"),
+            ("s", "save this flow"),
             ("v", "view contents in external viewer"),
             ("tab", "toggle response/request view"),
         ]
@@ -859,15 +869,15 @@ class ConsoleMaster(controller.Master):
         self.nested = True
         self.make_view()
 
-    def path_prompt(self, prompt, callback):
+    def path_prompt(self, prompt, callback, *args):
         self.statusbar.path_prompt(prompt)
         self.view.set_focus("footer")
-        self.prompting = callback
+        self.prompting = (callback, args)
 
-    def prompt(self, prompt, callback):
+    def prompt(self, prompt, callback, *args):
         self.statusbar.prompt(prompt)
         self.view.set_focus("footer")
-        self.prompting = callback
+        self.prompting = (callback, args)
 
     def prompt_onekey(self, prompt, keys, callback):
         """
@@ -899,9 +909,9 @@ class ConsoleMaster(controller.Master):
     def prompt_execute(self, txt=None):
         if not txt:
             txt = self.statusbar.get_edit_text()
-        p = self.prompting
+        p, args = self.prompting
         self.prompt_done()
-        msg = p(txt)
+        msg = p(txt, *args)
         if msg:
             self.statusbar.message(msg)
 
