@@ -144,6 +144,9 @@ class ConnectionViewHeader(WWrap):
         if f == self.flow:
             self.w = urwid.Text(f.get_text(nofocus=True, padding=0))
 
+VIEW_NORMAL = 0
+VIEW_BINARY = 1
+VIEW_PRETTY = 2
 
 class ConnectionView(WWrap):
     REQ = 0
@@ -160,7 +163,6 @@ class ConnectionView(WWrap):
     ]
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
-        self.binary = False
         self.view_request()
 
     def _tab(self, content, active):
@@ -202,6 +204,35 @@ class ConnectionView(WWrap):
                 )
         return f
 
+    def _view_normal(self, conn, txt):
+        for i in conn.content.splitlines():
+            txt.append(
+                ("text", i),
+            )
+            txt.append(
+                ("text", "\n"),
+            )
+
+    def _view_binary(self, conn, txt):
+        for offset, hex, s in utils.hexdump(conn.content):
+            txt.extend([
+                ("offset", offset),
+                " ",
+                ("text", hex),
+                "   ",
+                ("text", s),
+                "\n"
+            ])
+
+    def _view_pretty(self, conn, txt):
+        for i in utils.prettybody(conn.content):
+            txt.append(
+                ("text", i),
+            )
+            txt.append(
+                ("text", "\n"),
+            )
+
     def _conn_text(self, conn):
         txt = []
         txt.extend(
@@ -213,24 +244,14 @@ class ConnectionView(WWrap):
         )
         txt.append("\n\n")
         if conn.content:
-            if self.binary or utils.isBin(conn.content):
-                for offset, hex, s in utils.hexdump(conn.content):
-                    txt.extend([
-                        ("offset", offset),
-                        " ",
-                        ("text", hex),
-                        "   ",
-                        ("text", s),
-                        "\n"
-                    ])
+            if utils.isBin(conn.content):
+                self._view_binary(conn, txt)
+            elif self.state.viewmode == VIEW_BINARY:
+                self._view_binary(conn, txt)
+            elif self.state.viewmode == VIEW_PRETTY:
+                self._view_pretty(conn, txt)
             else:
-                for i in conn.content.splitlines():
-                    txt.append(
-                        ("text", i),
-                    )
-                    txt.append(
-                        ("text", "\n"),
-                    )
+                self._view_normal(conn, txt)
         return urwid.ListBox([urwid.Text(txt)])
 
     def view_request(self):
@@ -337,7 +358,13 @@ class ConnectionView(WWrap):
             self.master.accept_all()
             self.master.view_connection(self.flow)
         elif key == "b":
-            self.binary = not self.binary
+            self.state.viewmode = VIEW_BINARY
+            self.master.refresh_connection(self.flow)
+        elif key == "n":
+            self.state.viewmode = VIEW_NORMAL
+            self.master.refresh_connection(self.flow)
+        elif key == "p":
+            self.state.viewmode = VIEW_PRETTY
             self.master.refresh_connection(self.flow)
         elif key == "e":
             if self.viewing == self.REQ:
@@ -595,6 +622,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.beep = None
+        self.viewmode = VIEW_NORMAL
 
     def add_browserconnect(self, f):
         flow.State.add_browserconnect(self, f)
@@ -830,7 +858,10 @@ class ConsoleMaster(controller.Master):
 
         text.extend([("head", "\n\nConnection view keys:\n")])
         keys = [
-            ("b", "toggle hexdump view"),
+            ("b", "view hexdump"),
+            ("n", "view normal"),
+            ("p", "view prettyprint"),
+            ("", ""),
             ("e", "edit response/request"),
             ("s", "save this flow"),
             ("v", "view contents in external viewer"),

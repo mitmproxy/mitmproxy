@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import re, os, subprocess
+from contrib import BeautifulSoup
 
 def isBin(s):
     """
@@ -40,6 +41,15 @@ def cleanBin(s):
             parts.append(".")
     return "".join(parts)
     
+
+def prettybody(s):
+    """
+        Return a list of pretty-printed lines.
+    """
+    s = BeautifulSoup.BeautifulStoneSoup(s)
+    s = s.prettify()
+    return s.split("\n")
+
 
 def hexdump(s):
     """

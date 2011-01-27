@@ -222,6 +222,12 @@ class umake_bogus_cert(libpry.AutoTree):
         assert "PRIVATE KEY" in d
         assert "CERTIFICATE" in d
 
+
+class uprettybody(libpry.AutoTree):
+    def test_all(self):
+        s = "<html><p></p></html>"
+        assert utils.prettybody(s)
+
     
 tests = [
     umake_bogus_cert(),
@@ -233,4 +239,5 @@ tests = [
     uMultiDict(),
     uHeaders(),
     uData(),
+    uprettybody(),
 ]

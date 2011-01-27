@@ -1,20 +1,21 @@
 
-Future:
+Futures:
+
+    - Timestamps
     
-    - Strings view.
-    - Field parsing and editing.
+    - Strings view for binary responses.
+    - Post and URL field parsing and editing.
     - On-the-fly generation of keys, signed with a CA
     - Pass-through fast-track for things that don't match filter?
     - Reading contents from file
     - Shortcut for viewing in pager
     - Serializing and de-serializing requests and responses.
-    - Use real non-blocking input handling to minimize cpu load.
     - Upstream proxies.
     - mitmdump
         - Filters
         - Sticky cookies
         - Pipe to script
-        - After we add serialization of flows, command-line replay
+        - Command-line replay or serialized flows
 
 Bugs:
     
