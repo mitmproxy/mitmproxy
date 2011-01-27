@@ -282,6 +282,21 @@ class ConnectionView(WWrap):
                 self.flow.request.method = i[0].upper()
         self.master.refresh_connection(self.flow)
 
+    def save_body(self, path):
+        if not path:
+            return
+        if self.viewing == self.REQ:
+            c = self.flow.request
+        else:
+            c = self.flow.response
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, "wb")
+            f.write(str(c.content))
+            f.close()
+        except IOError, v:
+            self.master.statusbar.message(str(v))
+
     def edit(self, part):
         if self.viewing == self.REQ:
             conn = self.flow.request
@@ -391,6 +406,11 @@ class ConnectionView(WWrap):
                 self.master.ui._curs_set(1)
                 self.master.ui.clear()
                 os.unlink(name)
+        elif key == "w":
+            if self.viewing == self.REQ:
+                self.master.prompt("Save request body: ", self.save_body)
+            else:
+                self.master.prompt("Save response body: ", self.save_body)
         return key
 
 
@@ -815,6 +835,7 @@ class ConsoleMaster(controller.Master):
             ("e", "edit response/request"),
             ("s", "save this flow"),
             ("v", "view contents in external viewer"),
+            ("w", "save request or response body"),
             ("tab", "toggle response/request view"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
