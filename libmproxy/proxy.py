@@ -305,9 +305,11 @@ class ServerConnection:
 
     def read_response(self):
         proto = self.rfile.readline()
+        if not proto:
+            raise ProxyError(200, "Blank server response.")
         parts = proto.strip().split(" ", 2)
         if not len(parts) == 3:
-            raise ProxyError(200, "Invalid server response.")
+            raise ProxyError(200, "Invalid server response: %s."%proto)
         proto, code, msg = parts
         code = int(code)
         headers = utils.Headers()
@@ -415,21 +417,25 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.terminate(self.connection, self.wfile, self.rfile)
 
     def send_error(self, code, body):
-        import BaseHTTPServer
-        response = BaseHTTPServer.BaseHTTPRequestHandler.responses[code][0]
-        self.wfile.write("HTTP/1.0 %s %s\r\n" % (code, response))
-        self.wfile.write("Server: %s\r\n"%NAME)
-        self.wfile.write("Content-type: text/html\r\n")
-        self.wfile.write("\r\n")
-        self.wfile.write('<html><head>\n<title>%d %s</title>\n</head>\n'
-                '<body>\n%s\n</body>\n</html>' % (code, response, body))
-        self.wfile.flush()
-        self.wfile.close()
-        self.rfile.close()
+        try:
+            import BaseHTTPServer
+            response = BaseHTTPServer.BaseHTTPRequestHandler.responses[code][0]
+            self.wfile.write("HTTP/1.0 %s %s\r\n" % (code, response))
+            self.wfile.write("Server: %s\r\n"%NAME)
+            self.wfile.write("Content-type: text/html\r\n")
+            self.wfile.write("\r\n")
+            self.wfile.write('<html><head>\n<title>%d %s</title>\n</head>\n'
+                    '<body>\n%s\n</body>\n</html>' % (code, response, body))
+            self.wfile.flush()
+            self.wfile.close()
+            self.rfile.close()
+        except IOError:
+            pass
 
 
 ServerBase = SocketServer.ThreadingTCPServer
 class ProxyServer(ServerBase):
+    request_queue_size = 20
     allow_reuse_address = True
     def __init__(self, port):
         self.port = port

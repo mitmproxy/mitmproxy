@@ -9,6 +9,7 @@ class ReplayConnection:
     pass
 
 
+# begin nocover
 class ReplayThread(threading.Thread):
     def __init__(self, flow, masterq):
         self.flow, self.masterq = flow, masterq
@@ -22,6 +23,7 @@ class ReplayThread(threading.Thread):
         except proxy.ProxyError, v:
             err = proxy.Error(self.flow.connection, v.msg)
             err.send(self.masterq)
+# end nocover
 
 
 class Flow:
