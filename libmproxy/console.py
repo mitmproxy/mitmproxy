@@ -714,6 +714,9 @@ class ConsoleMaster(controller.Master):
 
         self.ui.run_wrapper(self.loop)
         # If True, quit just pops out to connection list view.
+        print >> sys.stderr, "Shutting down..."
+        sys.stderr.flush()
+        self.shutdown()
         self.nested = False
 
     def make_view(self):
@@ -1015,7 +1018,6 @@ class ConsoleMaster(controller.Master):
                         self.view.keypress(size, k)
         except (Stop, KeyboardInterrupt):
             pass
-        self.shutdown()
 
     def shutdown(self):
         for i in self.state.flow_list:

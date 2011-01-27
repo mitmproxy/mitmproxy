@@ -85,7 +85,6 @@ class Request(controller.Msg):
         self.connection = connection
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
-        self.kill = False
         controller.Msg.__init__(self)
 
     def get_state(self):
@@ -161,7 +160,6 @@ class Response(controller.Msg):
         self.request = request
         self.code, self.proto, self.msg = code, proto, msg
         self.headers, self.content = headers, content
-        self.kill = False
         controller.Msg.__init__(self)
 
     def get_state(self):
@@ -341,13 +339,13 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         try:
             request = self.read_request(bc)
             request = request.send(self.mqueue)
-            if request.kill:
+            if request is None:
                 self.finish()
                 return
             server = ServerConnection(request)
             response = server.read_response()
             response = response.send(self.mqueue)
-            if response.kill:
+            if response is None:
                 server.terminate()
                 self.finish()
                 return
@@ -405,6 +403,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.wfile.flush()
 
     def terminate(self, connection, wfile, rfile):
+        self.request.close()
         try:
             if not getattr(wfile, "closed", False):
                 wfile.flush()

@@ -29,8 +29,11 @@ class Msg:
 
     def send(self, masterq):
         self.acked = False
-        masterq.put(self)
-        return self.q.get()
+        try:
+            masterq.put(self, timeout=3)
+            return self.q.get(timeout=3)
+        except (Queue.Empty, Queue.Full):
+            return None
 
 
 class Slave(threading.Thread):

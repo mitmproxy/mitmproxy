@@ -78,14 +78,13 @@ class Flow:
         return isinstance(self.connection, ReplayConnection)
 
     def kill(self):
-        if self.intercepting:
-            if not self.request.acked:
-                self.request.kill = True
-                self.request.ack()
-            elif self.response and not self.response.acked:
-                self.response.kill = True
-                self.response.ack()
-            self.intercepting = False
+        if self.request and not self.request.acked:
+            self.request.kill = True
+            self.request.ack()
+        elif self.response and not self.response.acked:
+            self.response.kill = True
+            self.response.ack()
+        self.intercepting = False
 
     def intercept(self):
         self.intercepting = True
