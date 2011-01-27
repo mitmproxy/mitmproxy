@@ -47,8 +47,9 @@ def prettybody(s):
         Return a list of pretty-printed lines.
     """
     s = BeautifulSoup.BeautifulStoneSoup(s)
-    s = s.prettify()
-    return s.split("\n")
+    s = s.prettify().strip()
+    parts = s.split("\n")
+    return [repr(i)[1:-1] for i in parts]
 
 
 def hexdump(s):

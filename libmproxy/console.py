@@ -244,14 +244,17 @@ class ConnectionView(WWrap):
         )
         txt.append("\n\n")
         if conn.content:
-            if utils.isBin(conn.content):
-                self._view_binary(conn, txt)
-            elif self.state.viewmode == VIEW_BINARY:
+            if self.state.viewmode == VIEW_BINARY:
                 self._view_binary(conn, txt)
             elif self.state.viewmode == VIEW_PRETTY:
+                self.master.statusbar.update("Calculating pretty mode...")
                 self._view_pretty(conn, txt)
+                self.master.statusbar.update("")
             else:
-                self._view_normal(conn, txt)
+                if utils.isBin(conn.content):
+                    self._view_binary(conn, txt)
+                else:
+                    self._view_normal(conn, txt)
         return urwid.ListBox([urwid.Text(txt)])
 
     def view_request(self):
@@ -528,7 +531,6 @@ class StatusBar(WWrap):
         self.ab = ActionBar()
         self.ib = urwid.AttrWrap(urwid.Text(""), 'foot')
         self.w = urwid.Pile([self.ib, self.ab])
-        self.redraw()
 
     def redraw(self):
         status = urwid.Columns([
@@ -541,6 +543,7 @@ class StatusBar(WWrap):
                 align="right"),
         ])
         self.ib.set_w(status)
+        self.master.drawscreen()
 
     def update(self, text):
         self.text = text

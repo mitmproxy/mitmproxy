@@ -228,6 +228,11 @@ class uprettybody(libpry.AutoTree):
         s = "<html><p></p></html>"
         assert utils.prettybody(s)
 
+        s = "".join([chr(i) for i in range(256)])
+        print utils.prettybody(s)
+
+
+
     
 tests = [
     umake_bogus_cert(),
