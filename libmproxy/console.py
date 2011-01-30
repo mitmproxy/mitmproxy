@@ -358,6 +358,15 @@ class ConnectionView(WWrap):
             key = None
         self.master.refresh_connection(self.flow)
 
+    def _changeview(self, v):
+        if v == "r":
+            self.state.view_body_mode = VIEW_BODY_RAW
+        elif v == "h":
+            self.state.view_body_mode = VIEW_BODY_BINARY
+        elif v == "i":
+            self.state.view_body_mode = VIEW_BODY_INDENT
+        self.master.refresh_connection(self.flow)
+
     def keypress(self, size, key):
         if key == "tab":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
@@ -373,15 +382,17 @@ class ConnectionView(WWrap):
         elif key == "A":
             self.master.accept_all()
             self.master.view_flow(self.flow)
-        elif key == "b":
-            self.state.view_body_mode = VIEW_BODY_BINARY
-            self.master.refresh_connection(self.flow)
-        elif key == "r":
-            self.state.view_body_mode = VIEW_BODY_RAW
-            self.master.refresh_connection(self.flow)
-        elif key == "I":
-            self.state.view_body_mode = VIEW_BODY_INDENT
-            self.master.refresh_connection(self.flow)
+        elif key == "m":
+            self.master.prompt_onekey(
+                    "View",
+                    (
+                        ("raw", "r"),
+                        ("indent", "i"),
+                        ("hex", "h"),
+                    ),
+                    self._changeview
+            )
+            key = None
         elif key == "e":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.master.prompt_onekey(
@@ -931,18 +942,14 @@ class ConsoleMaster(controller.Master):
 
         text.extend([("head", "\n\nConnection view keys:\n")])
         keys = [
-            ("b", "view hexdump"),
-            ("r", "view raw"),
-            ("I", "view indented"),
-            None,
-            ("space", "next flow"),
-            ("p", "previous flow"),
-            None,
             ("e", "edit response/request"),
+            ("m", "change view mode (raw, indent, hex)"),
+            ("p", "previous flow"),
             ("s", "save this flow"),
             ("v", "view contents in external viewer"),
             ("w", "save request or response body"),
             ("tab", "toggle response/request view"),
+            ("space", "next flow"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
