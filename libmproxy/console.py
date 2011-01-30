@@ -622,7 +622,7 @@ class ConsoleFlow(flow.Flow):
                 txt.append(
                    ("ack", "!") if self.intercepting and not self.response.acked else " "
                 )
-                txt.append("-> ")
+                txt.append("<- ")
                 if self.response.code in [200, 304]:
                     txt.append(("goodcode", str(self.response.code)))
                 else:
@@ -720,6 +720,9 @@ class ConsoleMaster(controller.Master):
         ('key', "?"), ":help ",
         ('key', "q"), ":exit ",
     ]
+    footer_text_help = [
+        ('key', "q"), ":back",
+    ]
     footer_text_connview = [
         ('key', "tab"), ":toggle view ",
         ('key', "?"), ":help ",
@@ -813,6 +816,7 @@ class ConsoleMaster(controller.Master):
         self.view.set_focus("body")
 
     def view_help(self):
+        self.statusbar = StatusBar(self, self.footer_text_help)
         self.body = self.helptext()
         self.header = None
         self.viewstate = VIEW_HELP
