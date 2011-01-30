@@ -232,7 +232,6 @@ class uprettybody(libpry.AutoTree):
         assert utils.prettybody(s)
 
 
-
     
 tests = [
     umake_bogus_cert(),

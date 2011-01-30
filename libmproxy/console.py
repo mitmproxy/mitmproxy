@@ -27,17 +27,20 @@ class Stop(Exception): pass
 def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     ret = []
     if lst:
-        pad = max(len(i[0]) for i in lst) + space
+        pad = max(len(i[0]) for i in lst if i) + space
         for i in lst:
-            ret.extend(
-                [
-                    " "*indent,
-                    (key, i[0]),
-                    " "*(pad-len(i[0])),
-                    (val, i[1]),
-                    "\n"
-                ]
-            )
+            if i is None:
+                ret.extend("\n")
+            else:
+                ret.extend(
+                    [
+                        " "*indent,
+                        (key, i[0]),
+                        " "*(pad-len(i[0])),
+                        (val, i[1]),
+                        "\n"
+                    ]
+                )
     return ret
 
 
@@ -104,7 +107,7 @@ class ConnectionItem(WWrap):
             self.master.kill_connection(self.flow)
         elif key == "enter":
             if self.flow.request:
-                self.master.view_connection(self.flow)
+                self.master.view_flow(self.flow)
         return key
 
 
@@ -144,9 +147,12 @@ class ConnectionViewHeader(WWrap):
         if f == self.flow:
             self.w = urwid.Text(f.get_text(nofocus=True, padding=0))
 
-VIEW_NORMAL = 0
-VIEW_BINARY = 1
-VIEW_PRETTY = 2
+VIEW_BODY_RAW = 0
+VIEW_BODY_BINARY = 1
+VIEW_BODY_INDENT = 2
+
+VIEW_FLOW_REQUEST = 0
+VIEW_FLOW_RESPONSE = 1
 
 class ConnectionView(WWrap):
     REQ = 0
@@ -163,7 +169,10 @@ class ConnectionView(WWrap):
     ]
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
-        self.view_request()
+        if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
+            self.view_request()
+        else:
+            self.view_response()
 
     def _tab(self, content, active):
         if active:
@@ -182,7 +191,7 @@ class ConnectionView(WWrap):
             qt = "Request (intercepted)"
         else:
             qt = "Request"
-        if active == self.REQ:
+        if active == VIEW_FLOW_REQUEST:
             parts.append(self._tab(qt, True))
         else:
             parts.append(self._tab(qt, False))
@@ -192,7 +201,7 @@ class ConnectionView(WWrap):
                 st = "Response (intercepted)"
             else:
                 st = "Response"
-            if active == self.RESP:
+            if active == VIEW_FLOW_RESPONSE:
                 parts.append(self._tab(st, True))
             else:
                 parts.append(self._tab(st, False))
@@ -244,9 +253,9 @@ class ConnectionView(WWrap):
         )
         txt.append("\n\n")
         if conn.content:
-            if self.state.viewmode == VIEW_BINARY:
+            if self.state.view_body_mode == VIEW_BODY_BINARY:
                 self._view_binary(conn, txt)
-            elif self.state.viewmode == VIEW_PRETTY:
+            elif self.state.view_body_mode == VIEW_BODY_INDENT:
                 self.master.statusbar.update("Calculating pretty mode...")
                 self._view_pretty(conn, txt)
                 self.master.statusbar.update("")
@@ -258,19 +267,19 @@ class ConnectionView(WWrap):
         return urwid.ListBox([urwid.Text(txt)])
 
     def view_request(self):
-        self.viewing = self.REQ
+        self.state.view_flow_mode = VIEW_FLOW_REQUEST
         body = self._conn_text(self.flow.request)
-        self.w = self.wrap_body(self.REQ, body)
+        self.w = self.wrap_body(VIEW_FLOW_REQUEST, body)
 
     def view_response(self):
         if self.flow.response:
-            self.viewing = self.RESP
+            self.state.view_flow_mode = VIEW_FLOW_RESPONSE
             body = self._conn_text(self.flow.response)
-            self.w = self.wrap_body(self.RESP, body)
+            self.w = self.wrap_body(VIEW_FLOW_RESPONSE, body)
 
     def refresh_connection(self, c=None):
         if c == self.flow:
-            if self.viewing == self.REQ:
+            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.view_request()
             else:
                 self.view_response()
@@ -309,7 +318,7 @@ class ConnectionView(WWrap):
     def save_body(self, path):
         if not path:
             return
-        if self.viewing == self.REQ:
+        if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             c = self.flow.request
         else:
             c = self.flow.response
@@ -322,7 +331,7 @@ class ConnectionView(WWrap):
             self.master.statusbar.message(v.strerror)
 
     def edit(self, part):
-        if self.viewing == self.REQ:
+        if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             conn = self.flow.request
         else:
             conn = self.flow.response
@@ -334,20 +343,20 @@ class ConnectionView(WWrap):
             fp = cStringIO.StringIO(headertext)
             headers.read(fp)
             conn.headers = headers
-        elif part == "u" and self.viewing == self.REQ:
+        elif part == "u" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             conn = self.flow.request
             url = self._spawn_editor(conn.url())
             url = url.strip()
             if not conn.set_url(url):
                 return "Invalid URL."
-        elif part == "m" and self.viewing == self.REQ:
+        elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             self.master.prompt_onekey("Method", self.methods, self.edit_method)
             key = None
         self.master.refresh_connection(self.flow)
 
     def keypress(self, size, key):
         if key == "tab":
-            if self.viewing == self.REQ:
+            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.view_response()
             else:
                 self.view_request()
@@ -356,21 +365,21 @@ class ConnectionView(WWrap):
             self.w.body.keypress(size, key)
         elif key == "a":
             self.flow.accept_intercept()
-            self.master.view_connection(self.flow)
+            self.master.view_flow(self.flow)
         elif key == "A":
             self.master.accept_all()
-            self.master.view_connection(self.flow)
+            self.master.view_flow(self.flow)
         elif key == "b":
-            self.state.viewmode = VIEW_BINARY
+            self.state.view_body_mode = VIEW_BODY_BINARY
             self.master.refresh_connection(self.flow)
-        elif key == "n":
-            self.state.viewmode = VIEW_NORMAL
+        elif key == "r":
+            self.state.view_body_mode = VIEW_BODY_RAW
             self.master.refresh_connection(self.flow)
-        elif key == "p":
-            self.state.viewmode = VIEW_PRETTY
+        elif key == "I":
+            self.state.view_body_mode = VIEW_BODY_INDENT
             self.master.refresh_connection(self.flow)
         elif key == "e":
-            if self.viewing == self.REQ:
+            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.master.prompt_onekey(
                     "Edit request",
                     (
@@ -402,7 +411,7 @@ class ConnectionView(WWrap):
         elif key == "s":
             self.master.prompt("Save this flow: ", self.master.save_one_flow, self.flow)
         elif key == "v":
-            if self.viewing == self.REQ:
+            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 conn = self.flow.request
             else:
                 conn = self.flow.response
@@ -437,7 +446,7 @@ class ConnectionView(WWrap):
                 self.master.ui.clear()
                 os.unlink(name)
         elif key == "w":
-            if self.viewing == self.REQ:
+            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.master.prompt("Save request body: ", self.save_body)
             else:
                 self.master.prompt("Save response body: ", self.save_body)
@@ -632,7 +641,9 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.beep = None
-        self.viewmode = VIEW_NORMAL
+
+        self.view_body_mode = VIEW_BODY_RAW
+        self.view_flow_mode = VIEW_FLOW_REQUEST
 
     def add_browserconnect(self, f):
         flow.State.add_browserconnect(self, f)
@@ -691,6 +702,9 @@ class ConsoleState(flow.State):
 
 
 #begin nocover
+VIEW_CONNLIST = 0
+VIEW_FLOW = 1
+VIEW_HELP = 2
 
 class ConsoleMaster(controller.Master):
     palette = []
@@ -777,7 +791,9 @@ class ConsoleMaster(controller.Master):
         print >> sys.stderr, "Shutting down..."
         sys.stderr.flush()
         self.shutdown()
-        self.nested = False
+
+        self.viewstate = VIEW_CONNLIST
+        self.currentflow = None
 
     def make_view(self):
         self.view = urwid.Frame(
@@ -787,18 +803,26 @@ class ConsoleMaster(controller.Master):
                     )
         self.view.set_focus("body")
 
+    def view_help(self):
+        self.body = self.helptext()
+        self.header = None
+        self.viewstate = VIEW_HELP
+        self.make_view()
+
     def view_connlist(self):
         self.body = urwid.ListBox(self.conn_list_view)
         self.statusbar = StatusBar(self, self.footer_text_default)
         self.header = None
-        self.nested = False
+        self.viewstate = VIEW_CONNLIST
+        self.currentflow = None
         self.make_view()
 
-    def view_connection(self, flow):
+    def view_flow(self, flow):
         self.statusbar = StatusBar(self, self.footer_text_connview)
         self.body = ConnectionView(self, self.state, flow)
         self.header = ConnectionViewHeader(flow)
-        self.nested = True
+        self.viewstate = VIEW_FLOW
+        self.currentflow = flow
         self.make_view()
 
     def _write_flows(self, path, data):
@@ -853,7 +877,6 @@ class ConsoleMaster(controller.Master):
             ("R", "revert changes to request"),
             ("S", "save all flows matching current limit"),
             ("page up/down", "page up/down"),
-            ("space", "page down"),
             ("enter", "view connection"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
@@ -864,15 +887,19 @@ class ConsoleMaster(controller.Master):
             ("d", "delete connection from view"),
             ("s", "save this t flow"),
             ("z", "kill and delete connection, even if it's mid-intercept"),
+            ("space", "page down"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
         text.extend([("head", "\n\nConnection view keys:\n")])
         keys = [
             ("b", "view hexdump"),
-            ("n", "view normal"),
-            ("p", "view prettyprint"),
-            ("", ""),
+            ("r", "view raw"),
+            ("I", "view indented"),
+            None,
+            ("space", "next flow"),
+            ("p", "previous flow"),
+            None,
             ("e", "edit response/request"),
             ("s", "save this flow"),
             ("v", "view contents in external viewer"),
@@ -924,12 +951,6 @@ class ConsoleMaster(controller.Master):
         ]
         text.extend(format_keyvals(examples, key="key", val="text", indent=4))
         return urwid.ListBox([urwid.Text(text)])
-
-    def view_help(self):
-        self.body = self.helptext()
-        self.header = None
-        self.nested = True
-        self.make_view()
 
     def path_prompt(self, prompt, callback, *args):
         self.statusbar.path_prompt(prompt)
@@ -1072,9 +1093,14 @@ class ConsoleMaster(controller.Master):
                             k = "up"
                         elif k == " ":
                             k = "page down"
-                        elif k in ('q','Q'):
-                            if self.nested:
+                        elif k in ("q","Q"):
+                            if self.viewstate == VIEW_FLOW:
                                 self.view_connlist()
+                            elif self.viewstate == VIEW_HELP:
+                                if self.currentflow:
+                                    self.view_flow(self.currentflow)
+                                else:
+                                    self.view_connlist()
                             else:
                                 self.prompt_onekey(
                                     "Quit",
