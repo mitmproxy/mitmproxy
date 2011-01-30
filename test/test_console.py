@@ -19,14 +19,14 @@ def tresp(req=None):
 
 def tflow():
     bc = proxy.BrowserConnection("address", 22)
-    return console.ConsoleFlow(bc)
+    return flow.Flow(bc)
 
 
 class uState(libpry.AutoTree):
     def test_backup(self):
         bc = proxy.BrowserConnection("address", 22)
         c = console.ConsoleState()
-        f = console.ConsoleFlow(bc)
+        f = flow.Flow(bc)
         c.add_browserconnect(f)
 
         f.backup()
@@ -40,7 +40,7 @@ class uState(libpry.AutoTree):
         """
         bc = proxy.BrowserConnection("address", 22)
         c = console.ConsoleState()
-        f = console.ConsoleFlow(bc)
+        f = flow.Flow(bc)
         c.add_browserconnect(f)
         assert c.lookup(bc)
         assert c.get_focus() == (f, 0)
@@ -66,7 +66,7 @@ class uState(libpry.AutoTree):
     def test_err(self):
         bc = proxy.BrowserConnection("address", 22)
         c = console.ConsoleState()
-        f = console.ConsoleFlow(bc)
+        f = flow.Flow(bc)
         c.add_browserconnect(f)
         e = proxy.Error(bc, "message")
         assert c.add_error(e)
@@ -104,7 +104,7 @@ class uState(libpry.AutoTree):
         c = console.ConsoleState()
 
         bc = proxy.BrowserConnection("address", 22)
-        f = console.ConsoleFlow(bc)
+        f = flow.Flow(bc)
         c.add_browserconnect(f)
         assert c.get_focus() == (f, 0)
         assert c.get_from_pos(0) == (f, 0)
@@ -112,7 +112,7 @@ class uState(libpry.AutoTree):
         assert c.get_next(0) == (None, None)
 
         bc2 = proxy.BrowserConnection("address", 22)
-        f2 = console.ConsoleFlow(bc2)
+        f2 = flow.Flow(bc2)
         c.add_browserconnect(f2)
         assert c.get_focus() == (f, 1)
         assert c.get_next(0) == (f, 1)
@@ -193,8 +193,8 @@ class uState(libpry.AutoTree):
 
         dump = c.dump_flows()
         c.clear()
-        c.load_flows(dump, console.ConsoleFlow)
-        assert isinstance(c.flow_list[0], console.ConsoleFlow)
+        c.load_flows(dump)
+        assert isinstance(c.flow_list[0], flow.Flow)
 
 
 class uFlow(libpry.AutoTree):
@@ -212,36 +212,44 @@ class uFlow(libpry.AutoTree):
     def test_getset_state(self):
         f = tflow()
         state = f.get_state() 
-        assert f == console.ConsoleFlow.from_state(state)
+        assert f == flow.Flow.from_state(state)
         f.response = tresp()
         f.request = f.response.request
         state = f.get_state() 
-        assert f == console.ConsoleFlow.from_state(state)
+        assert f == flow.Flow.from_state(state)
 
     def test_simple(self):
         f = tflow()
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
 
         f.request = treq()
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
 
         f.response = tresp()
         f.response.headers["content-type"] = ["text/html"]
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
         f.response.code = 404
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
 
         f.focus = True
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
 
         f.connection = flow.ReplayConnection()
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
 
         f.response = None
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
 
         f.error = proxy.Error(200, "test")
-        assert f.get_text()
+        assert console.format_flow(f, True)
+        assert console.format_flow(f, False)
 
     def test_kill(self):
         f = tflow()
@@ -274,7 +282,7 @@ class uFlow(libpry.AutoTree):
         assert f.response.acked
 
     def test_serialization(self):
-        f = console.ConsoleFlow(None)
+        f = flow.Flow(None)
         f.request = treq()
 
 

@@ -33,6 +33,12 @@ class Flow:
         self.intercepting = False
         self._backup = None
 
+    def run_script(self):
+        """
+            Run a script on a flow, returning the modified flow.
+        """
+        pass
+
     def dump(self):
         data = dict(
                 flows = [self.get_state()]
@@ -160,9 +166,9 @@ class State:
                )
         return bson.dumps(data)
 
-    def load_flows(self, js, klass):
+    def load_flows(self, js):
         data = bson.loads(js)
-        data = [klass.from_state(i) for i in data["flows"]]
+        data = [Flow.from_state(i) for i in data["flows"]]
         self.flow_list.extend(data)
 
     def set_limit(self, limit):

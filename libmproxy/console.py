@@ -44,6 +44,55 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     return ret
 
 
+def format_flow(flow, focus, padding=3):
+    if not flow.request and not flow.response:
+        txt = [
+            ("title", " Connection from %s..."%(flow.connection.address)),
+        ]
+    else:
+        txt = [
+            ("ack", "!") if flow.intercepting and not flow.request.acked else " ",
+            ("method", flow.request.method),
+            " ",
+            (
+                "text" if (flow.response or flow.error) else "title",
+                flow.request.url(),
+            ),
+        ]
+        if flow.response or flow.error or flow.is_replay():
+            txt.append("\n" + " "*(padding+2))
+            if flow.is_replay():
+                txt.append(("method", "[replay] "))
+            if not (flow.response or flow.error):
+                txt.append(("text", "waiting for response..."))
+
+        if flow.response:
+            txt.append(
+               ("ack", "!") if flow.intercepting and not flow.response.acked else " "
+            )
+            txt.append("<- ")
+            if flow.response.code in [200, 304]:
+                txt.append(("goodcode", str(flow.response.code)))
+            else:
+                txt.append(("error", str(flow.response.code)))
+            t = flow.response.headers.get("content-type")
+            if t:
+                t = t[0].split(";")[0]
+                txt.append(("text", " %s"%t))
+            if flow.response.content:
+                txt.append(", %s"%utils.pretty_size(len(flow.response.content)))
+        elif flow.error:
+            txt.append(
+               ("error", flow.error.msg)
+            )
+    if focus:
+        txt.insert(0, ("focus", ">>" + " "*(padding-2)))
+    else:
+        txt.insert(0, " "*padding)
+    return txt
+
+
+
 #begin nocover
 
 def int_version(v):
@@ -67,8 +116,9 @@ class WWrap(urwid.WidgetWrap):
 
 
 class ConnectionItem(WWrap):
-    def __init__(self, master, state, flow):
+    def __init__(self, master, state, flow, focus):
         self.master, self.state, self.flow = master, state, flow
+        self.focus = focus
         w = self.get_text()
         WWrap.__init__(self, w)
 
@@ -77,7 +127,7 @@ class ConnectionItem(WWrap):
         self.w = self.get_text()
 
     def get_text(self):
-        return urwid.Text(self.flow.get_text())
+        return urwid.Text(format_flow(self.flow, self.focus))
 
     def selectable(self):
         return True
@@ -123,7 +173,7 @@ class ConnectionListView(urwid.ListWalker):
 
     def get_focus(self):
         f, i = self.state.get_focus()
-        f = ConnectionItem(self.master, self.state, f) if f else None
+        f = ConnectionItem(self.master, self.state, f, True) if f else None
         return f, i
 
     def set_focus(self, focus):
@@ -133,23 +183,24 @@ class ConnectionListView(urwid.ListWalker):
 
     def get_next(self, pos):
         f, i = self.state.get_next(pos)
-        f = ConnectionItem(self.master, self.state, f) if f else None
+        f = ConnectionItem(self.master, self.state, f, False) if f else None
         return f, i
 
     def get_prev(self, pos):
         f, i = self.state.get_prev(pos)
-        f = ConnectionItem(self.master, self.state, f) if f else None
+        f = ConnectionItem(self.master, self.state, f, False) if f else None
         return f, i
 
 
 class ConnectionViewHeader(WWrap):
-    def __init__(self, flow):
-        self.flow = flow
-        self.w = urwid.Text(flow.get_text(nofocus=True, padding=0))
+    def __init__(self, master, flow):
+        self.master, self.flow = master, flow
+        self.w = urwid.Text(format_flow(flow, False, padding=0))
 
-    def refresh_connection(self, f):
+    def refresh_connection(self, flow):
         if f == self.flow:
-            self.w = urwid.Text(f.get_text(nofocus=True, padding=0))
+            self.w = urwid.Text(format_flow(flow, False, padding=0))
+
 
 VIEW_BODY_RAW = 0
 VIEW_BODY_BINARY = 1
@@ -602,59 +653,6 @@ class StatusBar(WWrap):
 
 #end nocover
 
-class ConsoleFlow(flow.Flow):
-    def __init__(self, connection):
-        flow.Flow.__init__(self, connection)
-        self.focus = False
-
-    def get_text(self, nofocus=False, padding=3):
-        if not self.request and not self.response:
-            txt = [
-                ("title", " Connection from %s..."%(self.connection.address)),
-            ]
-        else:
-            txt = [
-                ("ack", "!") if self.intercepting and not self.request.acked else " ",
-                ("method", self.request.method),
-                " ",
-                (
-                    "text" if (self.response or self.error) else "title",
-                    self.request.url(),
-                ),
-            ]
-            if self.response or self.error or self.is_replay():
-                txt.append("\n" + " "*(padding+2))
-                if self.is_replay():
-                    txt.append(("method", "[replay] "))
-                if not (self.response or self.error):
-                    txt.append(("text", "waiting for response..."))
-
-            if self.response:
-                txt.append(
-                   ("ack", "!") if self.intercepting and not self.response.acked else " "
-                )
-                txt.append("<- ")
-                if self.response.code in [200, 304]:
-                    txt.append(("goodcode", str(self.response.code)))
-                else:
-                    txt.append(("error", str(self.response.code)))
-                t = self.response.headers.get("content-type")
-                if t:
-                    t = t[0].split(";")[0]
-                    txt.append(("text", " %s"%t))
-                if self.response.content:
-                    txt.append(", %s"%utils.pretty_size(len(self.response.content)))
-            elif self.error:
-                txt.append(
-                   ("error", self.error.msg)
-                )
-        if self.focus and not nofocus:
-            txt.insert(0, ("focus", ">>" + " "*(padding-2)))
-        else:
-            txt.insert(0, " "*padding)
-        return txt
-
-
 class ConsoleState(flow.State):
     def __init__(self):
         flow.State.__init__(self)
@@ -694,13 +692,10 @@ class ConsoleState(flow.State):
 
     def set_focus(self, idx):
         if self.view:
-            for i in self.view:
-                i.focus = False
             if idx >= len(self.view):
                 idx = len(self.view) - 1
             elif idx < 0:
                 idx = 0
-            self.view[idx].focus = True
             self.focus = idx
 
     def get_from_pos(self, pos):
@@ -817,7 +812,6 @@ class ConsoleMaster(controller.Master):
         sys.stderr.flush()
         self.shutdown()
 
-
     def make_view(self):
         self.view = urwid.Frame(
                         self.body,
@@ -850,7 +844,7 @@ class ConsoleMaster(controller.Master):
     def view_flow(self, flow):
         self.statusbar = StatusBar(self, self.footer_text_connview)
         self.body = ConnectionView(self, self.state, flow)
-        self.header = ConnectionViewHeader(flow)
+        self.header = ConnectionViewHeader(self, flow)
         self.viewstate = VIEW_FLOW
         self.currentflow = flow
         self.make_view()
@@ -903,7 +897,7 @@ class ConsoleMaster(controller.Master):
             f.close()
         except IOError, v:
             return v.strerror
-        self.state.load_flows(data, ConsoleFlow)
+        self.state.load_flows(data)
         if self.conn_list_view:
             self.conn_list_view.set_focus(0)
             self.sync_list_view()
@@ -1209,7 +1203,7 @@ class ConsoleMaster(controller.Master):
 
     # Handlers
     def handle_browserconnection(self, r):
-        f = ConsoleFlow(r)
+        f = flow.Flow(r)
         self.state.add_browserconnect(f)
         r.ack()
         self.sync_list_view()
