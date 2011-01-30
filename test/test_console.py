@@ -1,25 +1,6 @@
-from libmproxy import console, proxy, utils, filt, flow
+from libmproxy import console, proxy, filt, flow
+import utils
 import libpry
-
-def treq(conn=None):
-    if not conn:
-        conn = proxy.BrowserConnection("address", 22)
-    headers = utils.Headers()
-    headers["header"] = ["qvalue"]
-    return proxy.Request(conn, "host", 80, "http", "GET", "/path", headers, "content")
-
-
-def tresp(req=None):
-    if not req:
-        req = treq()
-    headers = utils.Headers()
-    headers["header_response"] = ["svalue"]
-    return proxy.Response(req, 200, "HTTP/1.1", "message", headers, "content_response")
-
-
-def tflow():
-    bc = proxy.BrowserConnection("address", 22)
-    return flow.Flow(bc)
 
 
 class uState(libpry.AutoTree):
@@ -45,21 +26,21 @@ class uState(libpry.AutoTree):
         assert c.lookup(bc)
         assert c.get_focus() == (f, 0)
 
-        req = treq(bc)
+        req = utils.treq(bc)
         assert c.add_request(req)
         assert len(c.flow_list) == 1
         assert c.lookup(req)
 
-        newreq = treq()
+        newreq = utils.treq()
         assert not c.add_request(newreq)
         assert not c.lookup(newreq)
 
-        resp = tresp(req)
+        resp = utils.tresp(req)
         assert c.add_response(resp)
         assert len(c.flow_list) == 1
         assert c.lookup(resp)
 
-        newresp = tresp()
+        newresp = utils.tresp()
         assert not c.add_response(newresp)
         assert not c.lookup(newresp)
 
@@ -77,7 +58,7 @@ class uState(libpry.AutoTree):
     def test_view(self):
         c = console.ConsoleState()
 
-        f = tflow()
+        f = utils.tflow()
         c.add_browserconnect(f)
         assert len(c.view) == 1
         c.set_limit(filt.parse("~q"))
@@ -85,8 +66,8 @@ class uState(libpry.AutoTree):
         c.set_limit(None)
 
         
-        f = tflow()
-        req = treq(f.connection)
+        f = utils.tflow()
+        req = utils.treq(f.connection)
         c.add_browserconnect(f)
         c.add_request(req)
         assert len(c.view) == 2
@@ -130,15 +111,15 @@ class uState(libpry.AutoTree):
         assert c.get_focus() == (None, None)
 
     def _add_request(self, state):
-        f = tflow()
+        f = utils.tflow()
         state.add_browserconnect(f)
-        q = treq(f.connection)
+        q = utils.treq(f.connection)
         state.add_request(q)
         return f
 
     def _add_response(self, state):
         f = self._add_request(state)
-        r = tresp(f.request)
+        r = utils.tresp(f.request)
         state.add_response(r)
 
     def test_focus_view(self):
@@ -155,8 +136,8 @@ class uState(libpry.AutoTree):
 
     def test_delete_last(self):
         c = console.ConsoleState()
-        f1 = tflow()
-        f2 = tflow()
+        f1 = utils.tflow()
+        f2 = utils.tflow()
         c.add_browserconnect(f1)
         c.add_browserconnect(f2)
         c.set_focus(1)
@@ -165,14 +146,14 @@ class uState(libpry.AutoTree):
 
     def test_kill_flow(self):
         c = console.ConsoleState()
-        f = tflow()
+        f = utils.tflow()
         c.add_browserconnect(f)
         c.kill_flow(f)
         assert not c.flow_list
 
     def test_clear(self):
         c = console.ConsoleState()
-        f = tflow()
+        f = utils.tflow()
         c.add_browserconnect(f)
         f.intercepting = True
 
@@ -195,96 +176,6 @@ class uState(libpry.AutoTree):
         c.clear()
         c.load_flows(dump)
         assert isinstance(c.flow_list[0], flow.Flow)
-
-
-class uFlow(libpry.AutoTree):
-    def test_match(self):
-        f = tflow()
-        f.response = tresp()
-        f.request = f.response.request
-        assert not f.match(filt.parse("~b test"))
-
-    def test_backup(self):
-        f = tflow()
-        f.backup()
-        f.revert()
-
-    def test_getset_state(self):
-        f = tflow()
-        state = f.get_state() 
-        assert f == flow.Flow.from_state(state)
-        f.response = tresp()
-        f.request = f.response.request
-        state = f.get_state() 
-        assert f == flow.Flow.from_state(state)
-
-    def test_simple(self):
-        f = tflow()
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.request = treq()
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.response = tresp()
-        f.response.headers["content-type"] = ["text/html"]
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-        f.response.code = 404
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.focus = True
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.connection = flow.ReplayConnection()
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.response = None
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.error = proxy.Error(200, "test")
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-    def test_kill(self):
-        f = tflow()
-        f.request = treq()
-        f.intercept()
-        assert not f.request.acked
-        f.kill()
-        assert f.request.acked
-        f.intercept()
-        f.response = tresp()
-        f.request = f.response.request
-        f.request.ack()
-        assert not f.response.acked
-        f.kill()
-        assert f.response.acked
-
-    def test_accept_intercept(self):
-        f = tflow()
-        f.request = treq()
-        f.intercept()
-        assert not f.request.acked
-        f.accept_intercept()
-        assert f.request.acked
-        f.response = tresp()
-        f.request = f.response.request
-        f.intercept()
-        f.request.ack()
-        assert not f.response.acked
-        f.accept_intercept()
-        assert f.response.acked
-
-    def test_serialization(self):
-        f = flow.Flow(None)
-        f.request = treq()
-
 
 
 class uformat_keyvals(libpry.AutoTree):
@@ -327,7 +218,6 @@ class uPathCompleter(libpry.AutoTree):
 
 
 tests = [
-    uFlow(),
     uformat_keyvals(),
     uState(), 
     uPathCompleter()
