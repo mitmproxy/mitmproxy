@@ -89,6 +89,8 @@ class ConnectionItem(WWrap):
         elif key == "A":
             self.master.accept_all()
             self.master.sync_list_view()
+        elif key == "C":
+            self.master.clear_connections()
         elif key == "d":
             if not self.state.delete_flow(self.flow):
                 self.master.statusbar.message("Can't delete connection mid-intercept.")
@@ -108,6 +110,8 @@ class ConnectionItem(WWrap):
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
+        elif key == " ":
+            key = "page down"
         return key
 
 
@@ -400,6 +404,8 @@ class ConnectionView(WWrap):
                     self.edit
                 )
             key = None
+        elif key == "p":
+            self.master.view_prev_flow(self.flow)
         elif key == "r":
             r = self.state.replay(self.flow, self.master.masterq)
             if r:
@@ -450,6 +456,8 @@ class ConnectionView(WWrap):
                 self.master.prompt("Save request body: ", self.save_body)
             else:
                 self.master.prompt("Save response body: ", self.save_body)
+        elif key == " ":
+            self.master.view_next_flow(self.flow)
         return key
 
 
@@ -773,6 +781,9 @@ class ConsoleMaster(controller.Master):
         ]
 
     def run(self):
+        self.viewstate = VIEW_CONNLIST
+        self.currentflow = None
+
         self.ui = urwid.curses_display.Screen()
         self.ui.register_palette(self.palette)
         self.conn_list_view = ConnectionListView(self, self.state)
@@ -792,8 +803,6 @@ class ConsoleMaster(controller.Master):
         sys.stderr.flush()
         self.shutdown()
 
-        self.viewstate = VIEW_CONNLIST
-        self.currentflow = None
 
     def make_view(self):
         self.view = urwid.Frame(
@@ -810,6 +819,12 @@ class ConsoleMaster(controller.Master):
         self.make_view()
 
     def view_connlist(self):
+        if self.currentflow:
+            try:
+                idx = self.state.view.index(self.currentflow)
+                self.conn_list_view.set_focus(idx)
+            except IndexError:
+                pass
         self.body = urwid.ListBox(self.conn_list_view)
         self.statusbar = StatusBar(self, self.footer_text_default)
         self.header = None
@@ -824,6 +839,25 @@ class ConsoleMaster(controller.Master):
         self.viewstate = VIEW_FLOW
         self.currentflow = flow
         self.make_view()
+
+    def _view_nextprev_flow(self, np, flow):
+        try:
+            idx = self.state.view.index(flow)
+        except IndexError:
+            return
+        if np == "next":
+            new_flow, new_idx = self.state.get_next(idx)
+        else:
+            new_flow, new_idx = self.state.get_prev(idx)
+        if new_idx is None:
+            return
+        self.view_flow(new_flow)
+
+    def view_next_flow(self, flow):
+        return self._view_nextprev_flow("next", flow)
+
+    def view_prev_flow(self, flow):
+        return self._view_nextprev_flow("prev", flow)
 
     def _write_flows(self, path, data):
         if not path:
@@ -1085,15 +1119,11 @@ class ConsoleMaster(controller.Master):
                         elif k == "B":
                             self.prompt("Beep: ", self.set_beep)
                             k = None
-                        elif k == "C":
-                            self.clear_connections()
                         elif k == "j":
                             k = "down"
                         elif k == "k":
                             k = "up"
-                        elif k == " ":
-                            k = "page down"
-                        elif k in ("q","Q"):
+                        elif k in ("q", "Q"):
                             if self.viewstate == VIEW_FLOW:
                                 self.view_connlist()
                             elif self.viewstate == VIEW_HELP:
