@@ -44,46 +44,46 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     return ret
 
 
-def format_flow(flow, focus, padding=3):
-    if not flow.request and not flow.response:
+def format_flow(f, focus, padding=3):
+    if not f.request and not f.response:
         txt = [
-            ("title", " Connection from %s..."%(flow.connection.address)),
+            ("title", " Connection from %s..."%(f.connection.address)),
         ]
     else:
         txt = [
-            ("ack", "!") if flow.intercepting and not flow.request.acked else " ",
-            ("method", flow.request.method),
+            ("ack", "!") if f.intercepting and not f.request.acked else " ",
+            ("method", f.request.method),
             " ",
             (
-                "text" if (flow.response or flow.error) else "title",
-                flow.request.url(),
+                "text" if (f.response or f.error) else "title",
+                f.request.url(),
             ),
         ]
-        if flow.response or flow.error or flow.is_replay():
+        if f.response or f.error or f.is_replay():
             txt.append("\n" + " "*(padding+2))
-            if flow.is_replay():
+            if f.is_replay():
                 txt.append(("method", "[replay] "))
-            if not (flow.response or flow.error):
+            if not (f.response or f.error):
                 txt.append(("text", "waiting for response..."))
 
-        if flow.response:
+        if f.response:
             txt.append(
-               ("ack", "!") if flow.intercepting and not flow.response.acked else " "
+               ("ack", "!") if f.intercepting and not f.response.acked else " "
             )
             txt.append("<- ")
-            if flow.response.code in [200, 304]:
-                txt.append(("goodcode", str(flow.response.code)))
+            if f.response.code in [200, 304]:
+                txt.append(("goodcode", str(f.response.code)))
             else:
-                txt.append(("error", str(flow.response.code)))
-            t = flow.response.headers.get("content-type")
+                txt.append(("error", str(f.response.code)))
+            t = f.response.headers.get("content-type")
             if t:
                 t = t[0].split(";")[0]
                 txt.append(("text", " %s"%t))
-            if flow.response.content:
-                txt.append(", %s"%utils.pretty_size(len(flow.response.content)))
-        elif flow.error:
+            if f.response.content:
+                txt.append(", %s"%utils.pretty_size(len(f.response.content)))
+        elif f.error:
             txt.append(
-               ("error", flow.error.msg)
+               ("error", f.error.msg)
             )
     if focus:
         txt.insert(0, ("focus", ">>" + " "*(padding-2)))
@@ -193,13 +193,13 @@ class ConnectionListView(urwid.ListWalker):
 
 
 class ConnectionViewHeader(WWrap):
-    def __init__(self, master, flow):
-        self.master, self.flow = master, flow
-        self.w = urwid.Text(format_flow(flow, False, padding=0))
+    def __init__(self, master, f):
+        self.master, self.flow = master, f
+        self.w = urwid.Text(format_flow(f, False, padding=0))
 
-    def refresh_connection(self, flow):
+    def refresh_connection(self, f):
         if f == self.flow:
-            self.w = urwid.Text(format_flow(flow, False, padding=0))
+            self.w = urwid.Text(format_flow(f, False, padding=0))
 
 
 VIEW_BODY_RAW = 0
@@ -520,7 +520,19 @@ class ConnectionView(WWrap):
                 self.master.prompt("Save response body: ", self.save_body)
         elif key == " ":
             self.master.view_next_flow(self.flow)
+        elif key == "|":
+            self.master.path_prompt("Script:", self.run_script)
         return key
+
+    def run_script(self, path):
+        path = os.path.expanduser(path)
+        try:
+            newflow = self.flow.run_script(path)
+        except flow.RunException, e:
+            self.master.statusbar.message("Script error: %s"%e)
+            return
+        self.flow.load_state(newflow.get_state())
+        self.master.refresh_connection(self.flow)
 
 
 class _PathCompleter:
@@ -942,6 +954,7 @@ class ConsoleMaster(controller.Master):
             ("s", "save this flow"),
             ("v", "view contents in external viewer"),
             ("w", "save request or response body"),
+            ("|", "run script"),
             ("tab", "toggle response/request view"),
             ("space", "next flow"),
         ]

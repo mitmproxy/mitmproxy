@@ -3,6 +3,22 @@ import utils
 import libpry
 
 class uFlow(libpry.AutoTree):
+    def test_run_script(self):
+        f = utils.tflow()
+        f.response = utils.tresp()
+        f.request = f.response.request
+        f = f.run_script("scripts/a")
+        assert f.request.host == "TESTOK"
+
+    def test_run_script_err(self):
+        f = utils.tflow()
+        f.response = utils.tresp()
+        f.request = f.response.request
+        libpry.raises("returned error", f.run_script,"scripts/err_return")
+        libpry.raises("invalid response", f.run_script,"scripts/err_data")
+        libpry.raises("no such file", f.run_script,"nonexistent")
+        libpry.raises("permission denied", f.run_script,"scripts/nonexecutable")
+
     def test_match(self):
         f = utils.tflow()
         f.response = utils.tresp()

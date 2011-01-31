@@ -2,8 +2,11 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
+import subprocess, base64, sys
 from contrib import bson
 import proxy, threading
+
+class RunException(Exception): pass
 
 class ReplayConnection:
     pass
@@ -33,11 +36,39 @@ class Flow:
         self.intercepting = False
         self._backup = None
 
-    def run_script(self):
+    def script_serialize(self):
+        data = self.get_state()
+        data = bson.dumps(data)
+        return base64.encodestring(data)
+
+    @classmethod
+    def script_deserialize(klass, data):
+        data = base64.decodestring(data)
+        try:
+            data = bson.loads(data)
+        # bson.loads doesn't define a particular exception on error...
+        except Exception:
+            return None
+        return klass.from_state(data)
+
+    def run_script(self, path):
         """
             Run a script on a flow, returning the modified flow.
+
+            Raises RunException if there's an error.
         """
-        pass
+        data = self.script_serialize()
+        try:
+            p = subprocess.Popen([path], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        except OSError, e:
+            raise RunException(e.args[1])
+        so, se = p.communicate(data)
+        if p.returncode:
+            raise RunException("Script returned error code %s"%p.returncode)
+        f = Flow.script_deserialize(so)
+        if not f:
+            raise RunException("Invalid response from script.")
+        return f
 
     def dump(self):
         data = dict(
@@ -52,15 +83,18 @@ class Flow:
             error = self.error.get_state() if self.error else None,
         )
 
+    def load_state(self, state):
+        if state["request"]:
+            self.request = proxy.Request.from_state(state["request"])
+        if state["response"]:
+            self.response = proxy.Response.from_state(self.request, state["response"])
+        if state["error"]:
+            self.error = proxy.Error.from_state(state["error"])
+
     @classmethod
     def from_state(klass, state):
         f = klass(None)
-        if state["request"]:
-            f.request = proxy.Request.from_state(state["request"])
-        if state["response"]:
-            f.response = proxy.Response.from_state(f.request, state["response"])
-        if state["error"]:
-            f.error = proxy.Error.from_state(state["error"])
+        f.load_state(state)
         return f
 
     def __eq__(self, other):
