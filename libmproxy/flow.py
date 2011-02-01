@@ -53,13 +53,19 @@ class Flow:
 
     def run_script(self, path):
         """
-            Run a script on a flow, returning the modified flow.
+            Run a script on a flow.
 
-            Raises RunException if there's an error.
+            Returns a (flow, stderr output) tuple, or raises RunException if
+            there's an error.
         """
         data = self.script_serialize()
         try:
-            p = subprocess.Popen([path], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            p = subprocess.Popen(
+                    [path],
+                    stdout=subprocess.PIPE,
+                    stdin=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
         except OSError, e:
             raise RunException(e.args[1])
         so, se = p.communicate(data)
@@ -68,7 +74,7 @@ class Flow:
         f = Flow.script_deserialize(so)
         if not f:
             raise RunException("Invalid response from script.")
-        return f
+        return f, se
 
     def dump(self):
         data = dict(

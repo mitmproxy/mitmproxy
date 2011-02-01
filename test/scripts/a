@@ -5,4 +5,5 @@ from libmproxy import script
 
 f = script.load_flow()
 f.request.host = "TESTOK"
+print >> sys.stderr, "DEBUG"
 script.return_flow(f)

@@ -7,7 +7,8 @@ class uFlow(libpry.AutoTree):
         f = utils.tflow()
         f.response = utils.tresp()
         f.request = f.response.request
-        f = f.run_script("scripts/a")
+        f, se = f.run_script("scripts/a")
+        assert "DEBUG" == se.strip()
         assert f.request.host == "TESTOK"
 
     def test_run_script_err(self):

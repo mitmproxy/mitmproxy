@@ -486,33 +486,7 @@ class ConnectionView(WWrap):
             if conn.content:
                 t = conn.headers.get("content-type", [None])
                 t = t[0]
-                if t:
-                    ext = mimetypes.guess_extension(t) or ""
-                else:
-                    ext = ""
-                fd, name = tempfile.mkstemp(ext, "mproxy")
-                os.write(fd, conn.content)
-                os.close(fd)
-                t = conn.headers.get("content-type", [None])
-                t = t[0]
-
-                cmd = None
-                shell = False
-
-                if t:
-                    c = mailcap.getcaps()
-                    cmd, _ = mailcap.findmatch(c, t, filename=name)
-                    if cmd:
-                        shell = True
-                if not cmd:
-                    c = os.environ.get("PAGER") or os.environ.get("EDITOR")
-                    cmd = [c, name]
-                ret = subprocess.call(cmd, shell=shell)
-                # Not sure why, unless we do this we get a visible cursor after
-                # spawning 'less'.
-                self.master.ui._curs_set(1)
-                self.master.ui.clear()
-                os.unlink(name)
+                self.master.spawn_external_viewer(conn.content, t)
         elif key == "w":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.master.prompt("Save request body: ", self.save_body)
@@ -521,16 +495,19 @@ class ConnectionView(WWrap):
         elif key == " ":
             self.master.view_next_flow(self.flow)
         elif key == "|":
-            self.master.path_prompt("Script:", self.run_script)
+            self.master.path_prompt("Script: ", self.run_script)
         return key
 
     def run_script(self, path):
         path = os.path.expanduser(path)
         try:
-            newflow = self.flow.run_script(path)
+            newflow, serr = self.flow.run_script(path)
         except flow.RunException, e:
             self.master.statusbar.message("Script error: %s"%e)
             return
+        if serr:
+            serr = "Script output:\n\n" + serr
+            self.master.spawn_external_viewer(serr, None)
         self.flow.load_state(newflow.get_state())
         self.master.refresh_connection(self.flow)
 
@@ -774,6 +751,33 @@ class ConsoleMaster(controller.Master):
 
         self.stickycookie = None
         self.stickyhosts = {}
+
+    def spawn_external_viewer(self, data, contenttype):
+        if contenttype:
+            ext = mimetypes.guess_extension(contenttype) or ""
+        else:
+            ext = ""
+        fd, name = tempfile.mkstemp(ext, "mproxy")
+        os.write(fd, data)
+        os.close(fd)
+
+        cmd = None
+        shell = False
+
+        if contenttype:
+            c = mailcap.getcaps()
+            cmd, _ = mailcap.findmatch(c, contenttype, filename=name)
+            if cmd:
+                shell = True
+        if not cmd:
+            c = os.environ.get("PAGER") or os.environ.get("EDITOR")
+            cmd = [c, name]
+        ret = subprocess.call(cmd, shell=shell)
+        # Not sure why, unless we do this we get a visible cursor after
+        # spawning 'less'.
+        self.ui._curs_set(1)
+        self.ui.clear()
+        os.unlink(name)
 
     def set_palette(self):
         self.palette = [
