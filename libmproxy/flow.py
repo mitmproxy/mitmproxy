@@ -6,7 +6,12 @@ import subprocess, base64, sys
 from contrib import bson
 import proxy, threading
 
-class RunException(Exception): pass
+class RunException(Exception):
+    def __init__(self, msg, returncode, errout):
+        Exception.__init__(self, msg)
+        self.returncode = returncode
+        self.errout = errout
+
 
 class ReplayConnection:
     pass
@@ -58,6 +63,7 @@ class Flow:
             Returns a (flow, stderr output) tuple, or raises RunException if
             there's an error.
         """
+        self.backup()
         data = self.script_serialize()
         try:
             p = subprocess.Popen(
@@ -67,13 +73,21 @@ class Flow:
                     stderr=subprocess.PIPE,
                 )
         except OSError, e:
-            raise RunException(e.args[1])
+            raise RunException(e.args[1], None, None)
         so, se = p.communicate(data)
         if p.returncode:
-            raise RunException("Script returned error code %s"%p.returncode)
+            raise RunException(
+                "Script returned error code %s"%p.returncode,
+                p.returncode,
+                se
+            )
         f = Flow.script_deserialize(so)
         if not f:
-            raise RunException("Invalid response from script.")
+            raise RunException(
+                    "Invalid response from script.",
+                    p.returncode,
+                    se
+                )
         return f, se
 
     def dump(self):
@@ -106,6 +120,14 @@ class Flow:
     def __eq__(self, other):
         return self.get_state() == other.get_state()
 
+    def modified(self):
+        # FIXME: Save a serialization in backup, compare current with
+        # backup to detect if flow has _really_ been modified.
+        if self._backup:
+            return True
+        else:
+            return False
+
     def backup(self):
         if not self._backup:
             self._backup = [
@@ -119,6 +141,7 @@ class Flow:
         if self._backup:
             restore = [i.copy() if i else None for i in self._backup]
             self.connection, self.request, self.response, self.error = restore
+            self._backup = None
 
     def match(self, pattern):
         if pattern:

@@ -61,8 +61,11 @@ def format_flow(f, focus, padding=3):
         ]
         if f.response or f.error or f.is_replay():
             txt.append("\n" + " "*(padding+2))
+            met = ""
             if f.is_replay():
                 txt.append(("method", "[replay] "))
+            elif f.modified():
+                txt.append(("method", "[edited] "))
             if not (f.response or f.error):
                 txt.append(("text", "waiting for response..."))
 
@@ -504,6 +507,9 @@ class ConnectionView(WWrap):
         try:
             newflow, serr = self.flow.run_script(path)
         except flow.RunException, e:
+            if e.errout:
+                serr = "Script error code: %s\n\n"%e.returncode + e.errout
+                self.master.spawn_external_viewer(serr, None)
             self.master.statusbar.message("Script error: %s"%e)
             return
         if serr:
