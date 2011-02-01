@@ -236,7 +236,7 @@ class Headers(MultiDict):
             Returns a string containing a formatted header string.
         """
         headerElements = []
-        for key in self.keys():
+        for key in sorted(self.keys()):
             for val in self[key]:
                 headerElements.append(key + ": " + val)
         headerElements.append("")
