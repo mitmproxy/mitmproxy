@@ -495,11 +495,12 @@ class ConnectionView(WWrap):
         elif key == " ":
             self.master.view_next_flow(self.flow)
         elif key == "|":
-            self.master.path_prompt("Script: ", self.run_script)
+            self.master.path_prompt("Script: ", self.state.last_script, self.run_script)
         return key
 
     def run_script(self, path):
         path = os.path.expanduser(path)
+        self.state.last_script = path
         try:
             newflow, serr = self.flow.run_script(path)
         except flow.RunException, e:
@@ -583,8 +584,8 @@ class ActionBar(WWrap):
     def selectable(self):
         return True
 
-    def path_prompt(self, prompt):
-        self.w = PathEdit(prompt)
+    def path_prompt(self, prompt, text):
+        self.w = PathEdit(prompt, text)
 
     def prompt(self, prompt):
         self.w = urwid.Edit(prompt)
@@ -626,8 +627,8 @@ class StatusBar(WWrap):
     def get_edit_text(self):
         return self.ab.w.get_edit_text()
 
-    def path_prompt(self, prompt):
-        return self.ab.path_prompt(prompt)
+    def path_prompt(self, prompt, text):
+        return self.ab.path_prompt(prompt, text)
 
     def prompt(self, prompt):
         return self.ab.prompt(prompt)
@@ -650,6 +651,9 @@ class ConsoleState(flow.State):
 
         self.view_body_mode = VIEW_BODY_RAW
         self.view_flow_mode = VIEW_FLOW_REQUEST
+
+        self.last_script = ""
+        self.last_saveload = ""
 
     def add_browserconnect(self, f):
         flow.State.add_browserconnect(self, f)
@@ -900,12 +904,14 @@ class ConsoleMaster(controller.Master):
         return self._write_flows(path, data)
 
     def save_flows(self, path):
+        self.state.last_saveload = path
         data = self.state.dump_flows()
         return self._write_flows(path, data)
 
     def load_flows(self, path):
         if not path:
             return 
+        self.state.last_saveload = path
         path = os.path.expanduser(path)
         try:
             f = file(path, "r")
@@ -1008,8 +1014,8 @@ class ConsoleMaster(controller.Master):
         text.extend(format_keyvals(examples, key="key", val="text", indent=4))
         return urwid.ListBox([urwid.Text(text)])
 
-    def path_prompt(self, prompt, callback, *args):
-        self.statusbar.path_prompt(prompt)
+    def path_prompt(self, prompt, text, callback, *args):
+        self.statusbar.path_prompt(prompt, text)
         self.view.set_focus("footer")
         self.prompting = (callback, args)
 
@@ -1164,10 +1170,18 @@ class ConsoleMaster(controller.Master):
                                 )
                                 k = None
                         elif k == "S":
-                            self.path_prompt("Save flows: ", self.save_flows)
+                            self.path_prompt(
+                                "Save flows: ",
+                                self.state.last_saveload,
+                                self.save_flows
+                            )
                             k = None
                         elif k == "L":
-                            self.path_prompt("Load flows: ", self.load_flows)
+                            self.path_prompt(
+                                "Load flows: ",
+                                self.state.last_saveload,
+                                self.load_flows
+                            )
                             k = None
                         elif k == "c":
                             self.prompt("Sticky cookie: ", self.set_stickycookie)
