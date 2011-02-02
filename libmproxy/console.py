@@ -944,6 +944,7 @@ class ConsoleMaster(controller.Master):
             ("l", "set limit filter pattern"),
             ("L", "load saved flows"),
             ("q", "quit / return to connection list"),
+            ("Q", "quit without confirm prompt"),
             ("r", "replay request"),
             ("R", "revert changes to request"),
             ("S", "save all flows matching current limit"),
@@ -1158,6 +1159,8 @@ class ConsoleMaster(controller.Master):
                         elif k == "k":
                             k = "up"
                         elif k in ("q", "Q"):
+                            if k == "Q":
+                                raise Stop
                             if self.viewstate == VIEW_FLOW:
                                 self.view_connlist()
                             elif self.viewstate == VIEW_HELP:
