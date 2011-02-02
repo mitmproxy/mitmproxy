@@ -208,7 +208,6 @@ class State:
         if not f:
             return False
         f.response = resp
-        f.backup()
         return f
 
     def add_error(self, err):
@@ -220,7 +219,6 @@ class State:
         if not f:
             return None
         f.error = err
-        f.backup()
         return f
 
     def dump_flows(self):

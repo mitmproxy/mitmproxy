@@ -393,6 +393,8 @@ class ConnectionView(WWrap):
             conn = self.flow.request
         else:
             conn = self.flow.response
+
+        self.flow.backup()
         if part == "b":
             conn.content = self._spawn_editor(conn.content or "")
         elif part == "h":
@@ -1177,7 +1179,7 @@ class ConsoleMaster(controller.Master):
                                     ),
                                     self.quit,
                                 )
-                                k = None
+                            k = None
                         elif k == "S":
                             self.path_prompt(
                                 "Save flows: ",
