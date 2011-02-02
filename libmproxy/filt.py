@@ -39,7 +39,7 @@
         rex         Equivalent to ~u rex 
 """
 import re, sys
-import pyparsing as pp
+import contrib.pyparsing as pp
 
 
 class _Token:
@@ -315,6 +315,6 @@ def parse(s):
         return bnf.parseString(s, parseAll=True)[0]
     except pp.ParseException:
         return None
-    except ValueError:
+    except ValueError, e:
         return None
 

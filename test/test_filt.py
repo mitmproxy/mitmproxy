@@ -9,6 +9,9 @@ class uParsing(libpry.AutoTree):
         x.dump(fp=c)
         assert c.getvalue()
 
+    def test_err(self):
+        assert filt.parse("~h [") is None
+
     def test_simple(self):
         assert not filt.parse("~b")
         assert filt.parse("~q")
@@ -20,9 +23,6 @@ class uParsing(libpry.AutoTree):
         assert len(p.lst) == 2
 
     def test_naked_url(self):
-        #a = filt.parse("foobar")
-        #assert a.lst[0].expr == "foobar"
-
         a = filt.parse("foobar ~h rex")
         assert a.lst[0].expr == "foobar"
         assert a.lst[1].expr == "rex"
@@ -212,6 +212,9 @@ class uMatching(libpry.AutoTree):
         assert self.q("! ~c 201", s)
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
+
+
+
 
 
 tests = [

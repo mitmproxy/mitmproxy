@@ -858,7 +858,7 @@ class ConsoleMaster(controller.Master):
             try:
                 idx = self.state.view.index(self.currentflow)
                 self.conn_list_view.set_focus(idx)
-            except IndexError:
+            except (IndexError, ValueError):
                 pass
         self.body = urwid.ListBox(self.conn_list_view)
         self.statusbar = StatusBar(self, self.footer_text_default)

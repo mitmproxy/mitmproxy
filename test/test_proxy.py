@@ -1,7 +1,7 @@
 import threading, urllib, Queue, urllib2, cStringIO
 import libpry
 import serv, sslserv
-from libmproxy import proxy, controller, utils
+from libmproxy import proxy, controller, utils, dump, script
 import random
 
 # Yes, the random ports are horrible. During development, sockets are often not
@@ -196,6 +196,9 @@ class u_parse_url(libpry.AutoTree):
         s, h, po, pa = proxy.parse_url("http://foo")
         assert pa == "/"
 
+        s, h, po, pa = proxy.parse_url("https://foo")
+        assert po == 443
+
 
 class uConfig(libpry.AutoTree):
     def test_pem(self):
@@ -210,6 +213,8 @@ class uFileLike(libpry.AutoTree):
         s.flush()
         assert s.readline() == "foobar\n"
         assert s.readline() == "foobar"
+        # Test __getattr__
+        assert s.isatty
 
 
 class uRequest(libpry.AutoTree):

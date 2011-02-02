@@ -48,8 +48,8 @@ class Flow:
 
     @classmethod
     def script_deserialize(klass, data):
-        data = base64.decodestring(data)
         try:
+            data = base64.decodestring(data)
             data = bson.loads(data)
         # bson.loads doesn't define a particular exception on error...
         except Exception:

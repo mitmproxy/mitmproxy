@@ -10,6 +10,7 @@ from contrib import bson
 import flow
 
 
+#begin nocover
 def load_flow():
     """
         Load a flow from the stdin. Returns a Flow object.

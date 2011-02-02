@@ -45,7 +45,10 @@ def parse_url(url):
         port = int(port)
     else:
         host = netloc
-        port = 80
+        if scheme == "https":
+            port = 443
+        else:
+            port = 80
     path = urlparse.urlunparse(('', '', path, params, query, fragment))
     if not path:
         path = "/"
@@ -276,6 +279,8 @@ class FileLike:
                     break
         return result
 
+
+#begin nocover
 
 class ServerConnection:
     def __init__(self, request):

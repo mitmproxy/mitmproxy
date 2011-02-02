@@ -4,15 +4,6 @@ import libpry
 
 
 class uState(libpry.AutoTree):
-    def test_backup(self):
-        bc = proxy.BrowserConnection("address", 22)
-        c = console.ConsoleState()
-        f = flow.Flow(bc)
-        c.add_browserconnect(f)
-
-        f.backup()
-        c.revert(f)
-
     def test_flow(self):
         """
             normal flow:
@@ -25,56 +16,6 @@ class uState(libpry.AutoTree):
         c.add_browserconnect(f)
         assert c.lookup(bc)
         assert c.get_focus() == (f, 0)
-
-        req = utils.treq(bc)
-        assert c.add_request(req)
-        assert len(c.flow_list) == 1
-        assert c.lookup(req)
-
-        newreq = utils.treq()
-        assert not c.add_request(newreq)
-        assert not c.lookup(newreq)
-
-        resp = utils.tresp(req)
-        assert c.add_response(resp)
-        assert len(c.flow_list) == 1
-        assert c.lookup(resp)
-
-        newresp = utils.tresp()
-        assert not c.add_response(newresp)
-        assert not c.lookup(newresp)
-
-    def test_err(self):
-        bc = proxy.BrowserConnection("address", 22)
-        c = console.ConsoleState()
-        f = flow.Flow(bc)
-        c.add_browserconnect(f)
-        e = proxy.Error(bc, "message")
-        assert c.add_error(e)
-
-        e = proxy.Error(proxy.BrowserConnection("address", 22), "message")
-        assert not c.add_error(e)
-
-    def test_view(self):
-        c = console.ConsoleState()
-
-        f = utils.tflow()
-        c.add_browserconnect(f)
-        assert len(c.view) == 1
-        c.set_limit(filt.parse("~q"))
-        assert len(c.view) == 0
-        c.set_limit(None)
-
-        
-        f = utils.tflow()
-        req = utils.treq(f.connection)
-        c.add_browserconnect(f)
-        c.add_request(req)
-        assert len(c.view) == 2
-        c.set_limit(filt.parse("~q"))
-        assert len(c.view) == 1
-        c.set_limit(filt.parse("~s"))
-        assert len(c.view) == 0
 
     def test_focus(self):
         """
@@ -122,6 +63,21 @@ class uState(libpry.AutoTree):
         r = utils.tresp(f.request)
         state.add_response(r)
 
+    def test_add_request(self):
+        c = console.ConsoleState()
+        f = utils.tflow()
+        c.add_browserconnect(f)
+        q = utils.treq(f.connection)
+        c.focus = None
+        assert c.add_request(q)
+
+    def test_add_response(self):
+        c = console.ConsoleState()
+        f = self._add_request(c)
+        r = utils.tresp(f.request)
+        c.focus = None
+        c.add_response(r)
+
     def test_focus_view(self):
         c = console.ConsoleState()
         self._add_request(c)
@@ -134,58 +90,32 @@ class uState(libpry.AutoTree):
         assert len(c.view) == 3
         assert c.focus == 2
 
-    def test_delete_last(self):
-        c = console.ConsoleState()
-        f1 = utils.tflow()
-        f2 = utils.tflow()
-        c.add_browserconnect(f1)
-        c.add_browserconnect(f2)
-        c.set_focus(1)
-        c.delete_flow(f1)
-        assert c.focus == 0
-
-    def test_kill_flow(self):
-        c = console.ConsoleState()
-        f = utils.tflow()
-        c.add_browserconnect(f)
-        c.kill_flow(f)
-        assert not c.flow_list
-
-    def test_clear(self):
-        c = console.ConsoleState()
-        f = utils.tflow()
-        c.add_browserconnect(f)
-        f.intercepting = True
-
-        c.clear()
-        assert len(c.flow_list) == 1
-        f.intercepting = False
-        c.clear()
-        assert len(c.flow_list) == 0
-
-    def test_dump_flows(self):
-        c = console.ConsoleState()
-        self._add_request(c)
-        self._add_response(c)
-        self._add_request(c)
-        self._add_response(c)
-        self._add_request(c)
-        self._add_response(c)
-
-        dump = c.dump_flows()
-        c.clear()
-        c.load_flows(dump)
-        assert isinstance(c.flow_list[0], flow.Flow)
-
 
 class uformat_keyvals(libpry.AutoTree):
     def test_simple(self):
         assert console.format_keyvals(
             [
                 ("aa", "bb"),
+                None,
                 ("cc", "dd"),
             ]
         )
+
+
+class uformat_flow(libpry.AutoTree):
+    def test_simple(self):
+        f = utils.tflow()
+        assert ('focus', '>> ') not in console.format_flow(f, False)
+        assert ('focus', '>> ') in console.format_flow(f, True)
+
+        f.response = utils.tresp()
+        f.request = f.response.request
+        f.backup()
+
+        assert ('method', '[edited] ') in console.format_flow(f, True)
+        f.connection = flow.ReplayConnection()
+        assert ('method', '[replay] ') in console.format_flow(f, True)
+
 
 class uPathCompleter(libpry.AutoTree):
     def test_completion(self):
@@ -219,6 +149,7 @@ class uPathCompleter(libpry.AutoTree):
 
 tests = [
     uformat_keyvals(),
+    uformat_flow(),
     uState(), 
     uPathCompleter()
 ]

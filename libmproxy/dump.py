@@ -1,6 +1,7 @@
 import sys
 import controller
 
+#begin nocover
 class DumpMaster(controller.Master):
     """
         A simple master that just dumps to screen.
