@@ -1,6 +1,11 @@
-import textwrap, cStringIO, os
+import textwrap, cStringIO, os, time
 import libpry
 from libmproxy import utils
+
+
+class uformat_timestamp(libpry.AutoTree):
+    def test_simple(self):
+        assert utils.format_timestamp(time.time())
 
 
 class uisBin(libpry.AutoTree):
@@ -234,6 +239,7 @@ class uprettybody(libpry.AutoTree):
 
     
 tests = [
+    uformat_timestamp(),
     umake_bogus_cert(),
     uisBin(),
     uhexdump(),

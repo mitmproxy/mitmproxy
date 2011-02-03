@@ -84,10 +84,11 @@ def parse_proxy_request(request):
 
 class Request(controller.Msg):
     FMT = '%s %s HTTP/1.0\r\n%s\r\n%s'
-    def __init__(self, connection, host, port, scheme, method, path, headers, content):
+    def __init__(self, connection, host, port, scheme, method, path, headers, content, timestamp=None):
         self.connection = connection
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
+        self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
 
     def get_state(self):
@@ -98,7 +99,8 @@ class Request(controller.Msg):
             method = self.method,
             path = self.path,
             headers = self.headers.get_state(),
-            content = self.content
+            content = self.content,
+            timestamp = self.timestamp,
         )
 
     @classmethod
@@ -111,7 +113,8 @@ class Request(controller.Msg):
             state["method"],
             state["path"],
             utils.Headers.from_state(state["headers"]),
-            state["content"]
+            state["content"],
+            state["timestamp"]
         )
 
     def __eq__(self, other):
@@ -159,10 +162,11 @@ class Request(controller.Msg):
 
 class Response(controller.Msg):
     FMT = '%s\r\n%s\r\n%s'
-    def __init__(self, request, code, proto, msg, headers, content):
+    def __init__(self, request, code, proto, msg, headers, content, timestamp=None):
         self.request = request
         self.code, self.proto, self.msg = code, proto, msg
         self.headers, self.content = headers, content
+        self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
 
     def get_state(self):
@@ -171,6 +175,7 @@ class Response(controller.Msg):
             proto = self.proto,
             msg = self.msg,
             headers = self.headers.get_state(),
+            timestamp = self.timestamp,
             content = self.content
         )
 
@@ -182,7 +187,8 @@ class Response(controller.Msg):
             state["proto"],
             state["msg"],
             utils.Headers.from_state(state["headers"]),
-            state["content"]
+            state["content"],
+            state["timestamp"],
         )
 
     def __eq__(self, other):
@@ -225,8 +231,9 @@ class BrowserConnection(controller.Msg):
 
 
 class Error(controller.Msg):
-    def __init__(self, connection, msg):
+    def __init__(self, connection, msg, timestamp=None):
         self.connection, self.msg = connection, msg
+        self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
 
     def copy(self):
@@ -235,6 +242,7 @@ class Error(controller.Msg):
     def get_state(self):
         return dict(
             msg = self.msg,
+            timestamp = self.timestamp,
         )
 
     @classmethod
@@ -242,6 +250,7 @@ class Error(controller.Msg):
         return klass(
             None,
             state["msg"],
+            state["timestamp"],
         )
 
     def __eq__(self, other):

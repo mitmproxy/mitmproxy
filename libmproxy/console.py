@@ -44,13 +44,19 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     return ret
 
 
-def format_flow(f, focus, padding=3):
+def format_flow(f, focus, extended=False, padding=3):
     if not f.request and not f.response:
         txt = [
             ("title", " Connection from %s..."%(f.connection.address)),
         ]
     else:
+        if extended:
+            ts = ("highlight", utils.format_timestamp(f.request.timestamp))
+        else:
+            ts = ""
+
         txt = [
+            ts,
             ("ack", "!") if f.intercepting and not f.request.acked else " ",
             ("method", f.request.method),
             " ",
@@ -60,7 +66,16 @@ def format_flow(f, focus, padding=3):
             ),
         ]
         if f.response or f.error or f.is_replay():
-            txt.append("\n" + " "*(padding+2))
+
+            tsr = f.response or f.error
+            if extended and tsr:
+                ts = ("highlight", utils.format_timestamp(tsr.timestamp))
+            else:
+                ts = ""
+
+            txt.append("\n") 
+            txt.append(("text", ts))
+            txt.append(" "*(padding+2))
             met = ""
             if f.is_replay():
                 txt.append(("method", "[replay] "))
@@ -198,11 +213,11 @@ class ConnectionListView(urwid.ListWalker):
 class ConnectionViewHeader(WWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
-        self.w = urwid.Text(format_flow(f, False, padding=0))
+        self.w = urwid.Text(format_flow(f, False, extended=True, padding=0))
 
     def refresh_connection(self, f):
         if f == self.flow:
-            self.w = urwid.Text(format_flow(f, False, padding=0))
+            self.w = urwid.Text(format_flow(f, False, extended=True, padding=0))
 
 
 VIEW_BODY_RAW = 0
@@ -810,6 +825,7 @@ class ConsoleMaster(controller.Master):
             ('error', 'light red', 'default'),
             ('header', 'dark cyan', 'default'),
             ('heading', 'white', 'dark blue'),
+            ('highlight', 'white', 'default'),
             ('inactive', 'dark gray', 'default'),
             ('ack', 'light red', 'default'),
 

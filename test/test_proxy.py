@@ -267,6 +267,8 @@ class uError(libpry.AutoTree):
         state = e.get_state()
         assert proxy.Error.from_state(state) == e
 
+        assert e.copy()
+
 
 class uProxyError(libpry.AutoTree):
     def test_simple(self):

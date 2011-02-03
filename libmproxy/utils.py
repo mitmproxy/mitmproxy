@@ -13,8 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import re, os, subprocess
+import re, os, subprocess, datetime
 from contrib import BeautifulSoup
+
+
+def format_timestamp(s):
+    d = datetime.datetime.fromtimestamp(s)
+    return d.strftime("%Y-%m-%d %H:%M:%S")
+
 
 def isBin(s):
     """

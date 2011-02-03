@@ -108,13 +108,18 @@ class uformat_flow(libpry.AutoTree):
         assert ('focus', '>> ') not in console.format_flow(f, False)
         assert ('focus', '>> ') in console.format_flow(f, True)
 
+        assert ('focus', '>> ') not in console.format_flow(f, False, True)
+        assert ('focus', '>> ') in console.format_flow(f, True, True)
+
         f.response = utils.tresp()
         f.request = f.response.request
         f.backup()
 
         assert ('method', '[edited] ') in console.format_flow(f, True)
+        assert ('method', '[edited] ') in console.format_flow(f, True, True)
         f.connection = flow.ReplayConnection()
         assert ('method', '[replay] ') in console.format_flow(f, True)
+        assert ('method', '[replay] ') in console.format_flow(f, True, True)
 
 
 class uPathCompleter(libpry.AutoTree):
