@@ -106,7 +106,7 @@ class Request(controller.Msg):
     @classmethod
     def from_state(klass, state):
         return klass(
-            None,
+            ClientConnection(None),
             state["host"],
             state["port"],
             state["scheme"],
@@ -222,9 +222,22 @@ class Response(controller.Msg):
 
 
 class ClientConnection(controller.Msg):
-    def __init__(self, address, port):
-        self.address, self.port = address, port
+    def __init__(self, address):
+        """
+            address is an (address, port) tuple, or None if this connection has
+            been replayed from within mitmproxy.
+        """
+        self.address = address
         controller.Msg.__init__(self)
+
+    def set_replay(self):
+        self.address = None
+
+    def is_replay(self):
+        if self.address:
+            return False
+        else:
+            return True
 
     def copy(self):
         return copy.copy(self)
@@ -350,10 +363,10 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
     def handle(self):
         server = None
-        bc = ClientConnection(*self.client_address)
-        bc.send(self.mqueue)
+        cc = ClientConnection(self.client_address)
+        cc.send(self.mqueue)
         try:
-            request = self.read_request(bc)
+            request = self.read_request(cc)
             request = request.send(self.mqueue)
             if request is None:
                 self.finish()
@@ -369,7 +382,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         except IOError:
             pass
         except ProxyError, e:
-            err = Error(bc, e.msg)
+            err = Error(cc, e.msg)
             err.send(self.mqueue)
             self.send_error(e.code, e.msg)
         if server:

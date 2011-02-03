@@ -39,8 +39,6 @@ class uFlow(libpry.AutoTree):
 
     def test_getset_state(self):
         f = utils.tflow()
-        state = f.get_state() 
-        assert f == flow.Flow.from_state(state)
         f.response = utils.tresp()
         f.request = f.response.request
         state = f.get_state() 
@@ -66,7 +64,7 @@ class uFlow(libpry.AutoTree):
         assert console.format_flow(f, True)
         assert console.format_flow(f, False)
 
-        f.client_conn = flow.ReplayConnection()
+        f.client_conn.set_replay()
         assert console.format_flow(f, True)
         assert console.format_flow(f, False)
 
@@ -115,7 +113,7 @@ class uFlow(libpry.AutoTree):
 
 class uState(libpry.AutoTree):
     def test_backup(self):
-        bc = proxy.ClientConnection("address", 22)
+        bc = proxy.ClientConnection(("address", 22))
         c = flow.State()
         f = flow.Flow(bc)
         c.add_browserconnect(f)
@@ -129,7 +127,7 @@ class uState(libpry.AutoTree):
 
                 connect -> request -> response
         """
-        bc = proxy.ClientConnection("address", 22)
+        bc = proxy.ClientConnection(("address", 22))
         c = flow.State()
         f = flow.Flow(bc)
         c.add_browserconnect(f)
@@ -154,14 +152,14 @@ class uState(libpry.AutoTree):
         assert not c.lookup(newresp)
 
     def test_err(self):
-        bc = proxy.ClientConnection("address", 22)
+        bc = proxy.ClientConnection(("address", 22))
         c = flow.State()
         f = flow.Flow(bc)
         c.add_browserconnect(f)
         e = proxy.Error(bc, "message")
         assert c.add_error(e)
 
-        e = proxy.Error(proxy.ClientConnection("address", 22), "message")
+        e = proxy.Error(proxy.ClientConnection(("address", 22)), "message")
         assert not c.add_error(e)
 
     def test_view(self):
