@@ -221,7 +221,7 @@ class uRequest(libpry.AutoTree):
     def test_simple(self):
         h = utils.Headers()
         h["test"] = ["test"]
-        c = proxy.BrowserConnection("addr", 2222)
+        c = proxy.ClientConnection(("addr", 2222))
         r = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         u = r.url()
         assert r.set_url(u)
@@ -233,7 +233,7 @@ class uRequest(libpry.AutoTree):
     def test_getset_state(self):
         h = utils.Headers()
         h["test"] = ["test"]
-        c = proxy.BrowserConnection("addr", 2222)
+        c = proxy.ClientConnection(("addr", 2222))
         r = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         state = r.get_state()
         assert proxy.Request.from_state(state) == r
@@ -243,7 +243,7 @@ class uResponse(libpry.AutoTree):
     def test_simple(self):
         h = utils.Headers()
         h["test"] = ["test"]
-        c = proxy.BrowserConnection("addr", 2222)
+        c = proxy.ClientConnection(("addr", 2222))
         req = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         resp = proxy.Response(req, 200, "HTTP", "msg", h.copy(), "content")
         assert resp.short()
@@ -252,7 +252,7 @@ class uResponse(libpry.AutoTree):
     def test_getset_state(self):
         h = utils.Headers()
         h["test"] = ["test"]
-        c = proxy.BrowserConnection("addr", 2222)
+        c = proxy.ClientConnection(("addr", 2222))
         r = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         req = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         resp = proxy.Response(req, 200, "HTTP", "msg", h.copy(), "content")

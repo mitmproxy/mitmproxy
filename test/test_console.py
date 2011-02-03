@@ -10,7 +10,7 @@ class uState(libpry.AutoTree):
 
                 connect -> request -> response
         """
-        bc = proxy.BrowserConnection("address", 22)
+        bc = proxy.ClientConnection(("address", 22))
         c = console.ConsoleState()
         f = flow.Flow(bc)
         c.add_browserconnect(f)
@@ -25,7 +25,7 @@ class uState(libpry.AutoTree):
         """
         c = console.ConsoleState()
 
-        bc = proxy.BrowserConnection("address", 22)
+        bc = proxy.ClientConnection(("address", 22))
         f = flow.Flow(bc)
         c.add_browserconnect(f)
         assert c.get_focus() == (f, 0)
@@ -33,7 +33,7 @@ class uState(libpry.AutoTree):
         assert c.get_from_pos(1) == (None, None)
         assert c.get_next(0) == (None, None)
 
-        bc2 = proxy.BrowserConnection("address", 22)
+        bc2 = proxy.ClientConnection(("address", 22))
         f2 = flow.Flow(bc2)
         c.add_browserconnect(f2)
         assert c.get_focus() == (f, 1)
@@ -54,7 +54,7 @@ class uState(libpry.AutoTree):
     def _add_request(self, state):
         f = utils.tflow()
         state.add_browserconnect(f)
-        q = utils.treq(f.connection)
+        q = utils.treq(f.client_conn)
         state.add_request(q)
         return f
 
@@ -67,7 +67,7 @@ class uState(libpry.AutoTree):
         c = console.ConsoleState()
         f = utils.tflow()
         c.add_browserconnect(f)
-        q = utils.treq(f.connection)
+        q = utils.treq(f.client_conn)
         c.focus = None
         assert c.add_request(q)
 
@@ -117,7 +117,7 @@ class uformat_flow(libpry.AutoTree):
 
         assert ('method', '[edited] ') in console.format_flow(f, True)
         assert ('method', '[edited] ') in console.format_flow(f, True, True)
-        f.connection = flow.ReplayConnection()
+        f.client_conn = proxy.ClientConnection(None)
         assert ('method', '[replay] ') in console.format_flow(f, True)
         assert ('method', '[replay] ') in console.format_flow(f, True, True)
 

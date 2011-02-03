@@ -72,7 +72,7 @@ class uParsing(libpry.AutoTree):
 
 class uMatching(libpry.AutoTree):
     def req(self):
-        conn = proxy.BrowserConnection("one", 2222)
+        conn = proxy.ClientConnection(("one", 2222))
         headers = utils.Headers()
         headers["header"] = ["qvalue"]
         return proxy.Request(

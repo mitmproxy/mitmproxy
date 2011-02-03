@@ -84,8 +84,8 @@ def parse_proxy_request(request):
 
 class Request(controller.Msg):
     FMT = '%s %s HTTP/1.0\r\n%s\r\n%s'
-    def __init__(self, connection, host, port, scheme, method, path, headers, content, timestamp=None):
-        self.connection = connection
+    def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
+        self.client_conn = client_conn
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
         self.timestamp = timestamp or time.time()
@@ -106,7 +106,7 @@ class Request(controller.Msg):
     @classmethod
     def from_state(klass, state):
         return klass(
-            None,
+            ClientConnection(None),
             state["host"],
             state["port"],
             state["scheme"],
@@ -221,18 +221,31 @@ class Response(controller.Msg):
         return self.FMT%data
 
 
-class BrowserConnection(controller.Msg):
-    def __init__(self, address, port):
-        self.address, self.port = address, port
+class ClientConnection(controller.Msg):
+    def __init__(self, address):
+        """
+            address is an (address, port) tuple, or None if this connection has
+            been replayed from within mitmproxy.
+        """
+        self.address = address
         controller.Msg.__init__(self)
+
+    def set_replay(self):
+        self.address = None
+
+    def is_replay(self):
+        if self.address:
+            return False
+        else:
+            return True
 
     def copy(self):
         return copy.copy(self)
 
 
 class Error(controller.Msg):
-    def __init__(self, connection, msg, timestamp=None):
-        self.connection, self.msg = connection, msg
+    def __init__(self, client_conn, msg, timestamp=None):
+        self.client_conn, self.msg = client_conn, msg
         self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
 
@@ -350,10 +363,10 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
     def handle(self):
         server = None
-        bc = BrowserConnection(*self.client_address)
-        bc.send(self.mqueue)
+        cc = ClientConnection(self.client_address)
+        cc.send(self.mqueue)
         try:
-            request = self.read_request(bc)
+            request = self.read_request(cc)
             request = request.send(self.mqueue)
             if request is None:
                 self.finish()
@@ -369,14 +382,14 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         except IOError:
             pass
         except ProxyError, e:
-            err = Error(bc, e.msg)
+            err = Error(cc, e.msg)
             err.send(self.mqueue)
             self.send_error(e.code, e.msg)
         if server:
             server.terminate()
         self.finish()
 
-    def read_request(self, connection):
+    def read_request(self, client_conn):
         request = self.rfile.readline()
         method, scheme, host, port, path = parse_proxy_request(request)
         if not host:
@@ -412,7 +425,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             content = self.rfile.read(int(headers["content-length"][0]))
         else:
             content = ""
-        return Request(connection, host, port, scheme, method, path, headers, content)
+        return Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
         self.wfile.write(response.assemble())

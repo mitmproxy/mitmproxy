@@ -13,10 +13,6 @@ class RunException(Exception):
         self.errout = errout
 
 
-class ReplayConnection:
-    pass
-
-
 # begin nocover
 class ReplayThread(threading.Thread):
     def __init__(self, flow, masterq):
@@ -29,14 +25,14 @@ class ReplayThread(threading.Thread):
             response = server.read_response()
             response.send(self.masterq)
         except proxy.ProxyError, v:
-            err = proxy.Error(self.flow.connection, v.msg)
+            err = proxy.Error(self.flow.client_conn, v.msg)
             err.send(self.masterq)
 # end nocover
 
 
 class Flow:
-    def __init__(self, connection):
-        self.connection = connection
+    def __init__(self, client_conn):
+        self.client_conn = client_conn
         self.request, self.response, self.error = None, None, None
         self.intercepting = False
         self._backup = None
@@ -110,6 +106,7 @@ class Flow:
             self.response = proxy.Response.from_state(self.request, state["response"])
         if state["error"]:
             self.error = proxy.Error.from_state(state["error"])
+        self.client_conn = self.request.client_conn
 
     @classmethod
     def from_state(klass, state):
@@ -131,7 +128,7 @@ class Flow:
     def backup(self):
         if not self._backup:
             self._backup = [
-                self.connection.copy() if self.connection else None,
+                self.client_conn.copy(),
                 self.request.copy() if self.request else None,
                 self.response.copy() if self.response else None,
                 self.error.copy() if self.error else None,
@@ -140,7 +137,7 @@ class Flow:
     def revert(self):
         if self._backup:
             restore = [i.copy() if i else None for i in self._backup]
-            self.connection, self.request, self.response, self.error = restore
+            self.client_conn, self.request, self.response, self.error = restore
             self._backup = None
 
     def match(self, pattern):
@@ -152,7 +149,7 @@ class Flow:
         return False
 
     def is_replay(self):
-        return isinstance(self.connection, ReplayConnection)
+        return self.client_conn.is_replay()
 
     def kill(self):
         if self.request and not self.request.acked:
@@ -188,13 +185,13 @@ class State:
             Start a browser connection.
         """
         self.flow_list.insert(0, f)
-        self.flow_map[f.connection] = f
+        self.flow_map[f.client_conn] = f
 
     def add_request(self, req):
         """
             Add a request to the state. Returns the matching flow.
         """
-        f = self.flow_map.get(req.connection)
+        f = self.flow_map.get(req.client_conn)
         if not f:
             return False
         f.request = req
@@ -204,7 +201,7 @@ class State:
         """
             Add a response to the state. Returns the matching flow.
         """
-        f = self.flow_map.get(resp.request.connection)
+        f = self.flow_map.get(resp.request.client_conn)
         if not f:
             return False
         f.response = resp
@@ -215,7 +212,7 @@ class State:
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        f = self.flow_map.get(err.connection)
+        f = self.flow_map.get(err.client_conn)
         if not f:
             return None
         f.error = err
@@ -231,6 +228,8 @@ class State:
         data = bson.loads(js)
         data = [Flow.from_state(i) for i in data["flows"]]
         self.flow_list.extend(data)
+        for i in data:
+            self.flow_map[i.client_conn] = i
 
     def set_limit(self, limit):
         """
@@ -245,26 +244,26 @@ class State:
         else:
             return tuple(self.flow_list[:])
 
-    def get_connection(self, itm):
-        if isinstance(itm, (proxy.BrowserConnection, ReplayConnection)):
+    def get_client_conn(self, itm):
+        if isinstance(itm, proxy.ClientConnection):
             return itm
-        elif hasattr(itm, "connection"):
-            return itm.connection
+        elif hasattr(itm, "client_conn"):
+            return itm.client_conn
         elif hasattr(itm, "request"):
-            return itm.request.connection
+            return itm.request.client_conn
 
     def lookup(self, itm):
         """
-            Checks for matching connection, using a Flow, Replay Connection,
-            BrowserConnection, Request, Response or Error object. Returns None
+            Checks for matching client_conn, using a Flow, Replay Connection,
+            ClientConnection, Request, Response or Error object. Returns None
             if not found.
         """
-        connection = self.get_connection(itm)
-        return self.flow_map.get(connection)
+        client_conn = self.get_client_conn(itm)
+        return self.flow_map.get(client_conn)
 
     def delete_flow(self, f):
         if not f.intercepting:
-            c = self.get_connection(f)
+            c = self.get_client_conn(f)
             if c in self.flow_map:
                 del self.flow_map[c]
             self.flow_list.remove(f)
@@ -284,19 +283,11 @@ class State:
         self.delete_flow(f)
 
     def revert(self, f):
-        """
-            Replaces the matching connection object with a ReplayConnection object.
-        """
-        conn = self.get_connection(f)
-        if conn in self.flow_map:
-            del self.flow_map[conn]
+        conn = self.get_client_conn(f)
         f.revert()
-        self.flow_map[f.connection] = f
 
     def replay(self, f, masterq):
         """
-            Replaces the matching connection object with a ReplayConnection object.
-
             Returns None if successful, or error message if not.
         """
         #begin nocover
@@ -304,17 +295,12 @@ class State:
             return "Can't replay while intercepting..."
         if f.request:
             f.backup()
-            conn = self.get_connection(f)
-            if conn in self.flow_map:
-                del self.flow_map[conn]
-            rp = ReplayConnection()
-            f.connection = rp
-            f.request.connection = rp
+            conn = self.get_client_conn(f)
+            f.client_conn.set_replay()
             if f.request.content:
                 f.request.headers["content-length"] = [str(len(f.request.content))]
             f.response = None
             f.error = None
-            self.flow_map[rp] = f
             rt = ReplayThread(f, masterq)
             rt.start()
         #end nocover

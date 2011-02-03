@@ -47,7 +47,7 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
 def format_flow(f, focus, extended=False, padding=3):
     if not f.request and not f.response:
         txt = [
-            ("title", " Connection from %s..."%(f.connection.address)),
+            ("title", " Connection from %s..."%(f.client_conn.address[0])),
         ]
     else:
         if extended:
@@ -1263,7 +1263,7 @@ class ConsoleMaster(controller.Master):
         self.refresh_connection(f)
 
     # Handlers
-    def handle_browserconnection(self, r):
+    def handle_clientconnection(self, r):
         f = flow.Flow(r)
         self.state.add_browserconnect(f)
         r.ack()
