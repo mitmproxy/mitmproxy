@@ -23,9 +23,12 @@ class Msg:
         self.q = Queue.Queue()
         self.acked = False
 
-    def ack(self, data=None):
+    def ack(self, data=False):
         self.acked = True
-        self.q.put(data or self)
+        if data is None:
+            self.q.put(data)
+        else:
+            self.q.put(data or self)
 
     def send(self, masterq):
         self.acked = False
