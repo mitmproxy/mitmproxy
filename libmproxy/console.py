@@ -47,7 +47,7 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
 def format_flow(f, focus, extended=False, padding=3):
     if not f.request and not f.response:
         txt = [
-            ("title", " Connection from %s..."%(f.connection.address)),
+            ("title", " Connection from %s..."%(f.client_conn.address)),
         ]
     else:
         if extended:

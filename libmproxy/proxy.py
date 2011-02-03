@@ -84,8 +84,8 @@ def parse_proxy_request(request):
 
 class Request(controller.Msg):
     FMT = '%s %s HTTP/1.0\r\n%s\r\n%s'
-    def __init__(self, connection, host, port, scheme, method, path, headers, content, timestamp=None):
-        self.connection = connection
+    def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
+        self.client_conn = client_conn
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
         self.timestamp = timestamp or time.time()
@@ -221,7 +221,7 @@ class Response(controller.Msg):
         return self.FMT%data
 
 
-class BrowserConnection(controller.Msg):
+class ClientConnection(controller.Msg):
     def __init__(self, address, port):
         self.address, self.port = address, port
         controller.Msg.__init__(self)
@@ -231,8 +231,8 @@ class BrowserConnection(controller.Msg):
 
 
 class Error(controller.Msg):
-    def __init__(self, connection, msg, timestamp=None):
-        self.connection, self.msg = connection, msg
+    def __init__(self, client_conn, msg, timestamp=None):
+        self.client_conn, self.msg = client_conn, msg
         self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
 
@@ -350,7 +350,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
     def handle(self):
         server = None
-        bc = BrowserConnection(*self.client_address)
+        bc = ClientConnection(*self.client_address)
         bc.send(self.mqueue)
         try:
             request = self.read_request(bc)
@@ -376,7 +376,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             server.terminate()
         self.finish()
 
-    def read_request(self, connection):
+    def read_request(self, client_conn):
         request = self.rfile.readline()
         method, scheme, host, port, path = parse_proxy_request(request)
         if not host:
@@ -412,7 +412,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             content = self.rfile.read(int(headers["content-length"][0]))
         else:
             content = ""
-        return Request(connection, host, port, scheme, method, path, headers, content)
+        return Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
         self.wfile.write(response.assemble())

@@ -66,7 +66,7 @@ class uFlow(libpry.AutoTree):
         assert console.format_flow(f, True)
         assert console.format_flow(f, False)
 
-        f.connection = flow.ReplayConnection()
+        f.client_conn = flow.ReplayConnection()
         assert console.format_flow(f, True)
         assert console.format_flow(f, False)
 
@@ -115,7 +115,7 @@ class uFlow(libpry.AutoTree):
 
 class uState(libpry.AutoTree):
     def test_backup(self):
-        bc = proxy.BrowserConnection("address", 22)
+        bc = proxy.ClientConnection("address", 22)
         c = flow.State()
         f = flow.Flow(bc)
         c.add_browserconnect(f)
@@ -129,7 +129,7 @@ class uState(libpry.AutoTree):
 
                 connect -> request -> response
         """
-        bc = proxy.BrowserConnection("address", 22)
+        bc = proxy.ClientConnection("address", 22)
         c = flow.State()
         f = flow.Flow(bc)
         c.add_browserconnect(f)
@@ -154,14 +154,14 @@ class uState(libpry.AutoTree):
         assert not c.lookup(newresp)
 
     def test_err(self):
-        bc = proxy.BrowserConnection("address", 22)
+        bc = proxy.ClientConnection("address", 22)
         c = flow.State()
         f = flow.Flow(bc)
         c.add_browserconnect(f)
         e = proxy.Error(bc, "message")
         assert c.add_error(e)
 
-        e = proxy.Error(proxy.BrowserConnection("address", 22), "message")
+        e = proxy.Error(proxy.ClientConnection("address", 22), "message")
         assert not c.add_error(e)
 
     def test_view(self):
@@ -176,7 +176,7 @@ class uState(libpry.AutoTree):
 
         
         f = utils.tflow()
-        req = utils.treq(f.connection)
+        req = utils.treq(f.client_conn)
         c.add_browserconnect(f)
         c.add_request(req)
         assert len(c.view) == 2
@@ -188,7 +188,7 @@ class uState(libpry.AutoTree):
     def _add_request(self, state):
         f = utils.tflow()
         state.add_browserconnect(f)
-        q = utils.treq(f.connection)
+        q = utils.treq(f.client_conn)
         state.add_request(q)
         return f
 
@@ -201,7 +201,7 @@ class uState(libpry.AutoTree):
         f = utils.tflow()
         f.error = proxy.Error(None, "msg")
         state.add_browserconnect(f)
-        q = utils.treq(f.connection)
+        q = utils.treq(f.client_conn)
         state.add_request(q)
 
     def test_kill_flow(self):
