@@ -31,7 +31,7 @@ class Msg:
         self.acked = False
         try:
             masterq.put(self, timeout=3)
-            return self.q.get(timeout=3)
+            return self.q.get()
         except (Queue.Empty, Queue.Full):
             return None
 
