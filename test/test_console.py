@@ -123,6 +123,17 @@ class uformat_flow(libpry.AutoTree):
 
 
 class uPathCompleter(libpry.AutoTree):
+    def test_lookup_construction(self):
+        c = console._PathCompleter()
+        assert c.complete("/tm") == "/tmp/"
+        c.reset()
+
+        assert c.complete("./completion/a") == "./completion/aaa"
+        c.reset()
+        assert c.complete("./completion/aaa") == "./completion/aaa"
+        assert c.complete("./completion/aaa") == "./completion/aab"
+
+
     def test_completion(self):
         c = console._PathCompleter(True)
         c.reset()
@@ -149,6 +160,7 @@ class uPathCompleter(libpry.AutoTree):
         s = "thisisatotallynonexistantpathforsure"
         assert c.complete(s) == s
         assert c.final == s
+
 
 
 

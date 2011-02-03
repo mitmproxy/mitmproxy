@@ -562,10 +562,13 @@ class _PathCompleter:
                 if os.path.isdir(path):
                     files = glob.glob(os.path.join(path, "*"))
                     prefix = txt
+                elif os.path.isfile(path):
+                    prefix = os.path.dirname(txt)
+                    files = glob.glob(prefix+"/*")
                 else:
                     files = glob.glob(path+"*")
                     prefix = os.path.dirname(txt)
-                prefix = prefix.rstrip("/") or "./"
+                prefix = prefix or "./"
                 for f in files:
                     display = os.path.join(prefix, os.path.basename(f))
                     if os.path.isdir(f):
