@@ -471,9 +471,9 @@ ServerBase = SocketServer.ThreadingTCPServer
 class ProxyServer(ServerBase):
     request_queue_size = 20
     allow_reuse_address = True
-    def __init__(self, port):
-        self.port = port
-        ServerBase.__init__(self, ('', port), ProxyHandler)
+    def __init__(self, port, address=''):
+        self.port, self.address = port, address
+        ServerBase.__init__(self, (address, port), ProxyHandler)
         self.masterq = None
 
     def set_mqueue(self, q):

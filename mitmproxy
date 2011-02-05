@@ -23,9 +23,15 @@ from optparse import OptionParser, OptionGroup
 
 if __name__ == '__main__':
     parser = OptionParser(
-                usage = "%prog [options]",
+                usage = "%prog [options] [flowdump path]",
                 version="%%prog %s"%VERSION,
             )
+
+    parser.add_option(
+        "-a", "--addr", action="store",
+        type = "str", dest="addr", default='',
+        help = "Address to bind proxy to (defaults to all interfaces)"
+    )
 
     parser.add_option(
         "-c", "--cert", action="store",
@@ -76,7 +82,7 @@ if __name__ == '__main__':
     proxy.config = proxy.Config(
         certpath
     )
-    server = proxy.ProxyServer(options.port)
+    server = proxy.ProxyServer(options.port, options.addr)
     m = console.ConsoleMaster(server, options)
 
     for i in args:

@@ -632,7 +632,14 @@ class StatusBar(WWrap):
         if self.expire and time.time() > self.expire:
             self.message("")
         status = urwid.Columns([
-            urwid.Text([('title', "mproxy:%s"%self.master.server.port)]),
+            urwid.Text(
+                [
+                    (
+                        'title',
+                        "mitmproxy %s:%s"%(self.master.server.address, self.master.server.port)
+                    )
+                ]
+            ),
             urwid.Text(
                 [
                     self.text,
