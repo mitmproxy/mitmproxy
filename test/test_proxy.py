@@ -236,7 +236,7 @@ class uRequest(libpry.AutoTree):
         c = proxy.ClientConnection(("addr", 2222))
         r = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         state = r.get_state()
-        assert proxy.Request.from_state(state) == r
+        assert proxy.Request.from_state(c, state) == r
 
 
 class uResponse(libpry.AutoTree):

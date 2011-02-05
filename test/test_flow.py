@@ -32,10 +32,15 @@ class uFlow(libpry.AutoTree):
 
     def test_backup(self):
         f = utils.tflow()
+        f.response = utils.tresp()
+        f.request = f.response.request
+        f.request.content = "foo"
         assert not f.modified()
         f.backup()
+        f.request.content = "bar"
         assert f.modified()
         f.revert()
+        assert f.request.content == "foo"
 
     def test_getset_state(self):
         f = utils.tflow()

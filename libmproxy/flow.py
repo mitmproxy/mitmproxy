@@ -92,21 +92,28 @@ class Flow:
                )
         return bson.dumps(data)
 
-    def get_state(self):
-        return dict(
+    def get_state(self, nobackup=False):
+        d = dict(
             request = self.request.get_state() if self.request else None,
             response = self.response.get_state() if self.response else None,
             error = self.error.get_state() if self.error else None,
+            client_conn = self.client_conn.get_state()
         )
+        if nobackup:
+            d["backup"] = None
+        else:
+            d["backup"] = self._backup
+        return d
 
     def load_state(self, state):
+        self.client_conn = proxy.ClientConnection.from_state(state["client_conn"])
+        self._backup = state["backup"]
         if state["request"]:
-            self.request = proxy.Request.from_state(state["request"])
+            self.request = proxy.Request.from_state(self.client_conn, state["request"])
         if state["response"]:
             self.response = proxy.Response.from_state(self.request, state["response"])
         if state["error"]:
             self.error = proxy.Error.from_state(state["error"])
-        self.client_conn = self.request.client_conn
 
     @classmethod
     def from_state(klass, state):
@@ -126,18 +133,11 @@ class Flow:
             return False
 
     def backup(self):
-        if not self._backup:
-            self._backup = [
-                self.client_conn.copy(),
-                self.request.copy() if self.request else None,
-                self.response.copy() if self.response else None,
-                self.error.copy() if self.error else None,
-            ]
+        self._backup = self.get_state(nobackup=True)
 
     def revert(self):
         if self._backup:
-            restore = [i.copy() if i else None for i in self._backup]
-            self.client_conn, self.request, self.response, self.error = restore
+            self.load_state(self._backup)
             self._backup = None
 
     def match(self, pattern):

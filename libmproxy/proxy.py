@@ -104,9 +104,9 @@ class Request(controller.Msg):
         )
 
     @classmethod
-    def from_state(klass, state):
+    def from_state(klass, client_conn, state):
         return klass(
-            ClientConnection(None),
+            client_conn,
             state["host"],
             state["port"],
             state["scheme"],
@@ -229,6 +229,13 @@ class ClientConnection(controller.Msg):
         """
         self.address = address
         controller.Msg.__init__(self)
+
+    def get_state(self):
+        return self.address
+
+    @classmethod
+    def from_state(klass, state):
+        return klass(state)
 
     def set_replay(self):
         self.address = None
