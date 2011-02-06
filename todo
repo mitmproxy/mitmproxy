@@ -1,15 +1,11 @@
 
 Futures:
 
-    - Timestamps
-    
     - Strings view for binary responses.
     - Post and URL field parsing and editing.
     - On-the-fly generation of keys, signed with a CA
     - Pass-through fast-track for things that don't match filter?
-    - Reading contents from file
     - Shortcut for viewing in pager
-    - Serializing and de-serializing requests and responses.
     - Upstream proxies.
     - mitmdump
         - Filters
@@ -17,7 +13,9 @@ Futures:
         - Pipe to script
         - Command-line replay or serialized flows
 
+
 Bugs:
     
     - In some circumstances, long URLs in list view are line-broken oddly.
     - Termination sometimes hangs.
+    - When a bug in mitmproxy causes a stack trace, we hang on exit.

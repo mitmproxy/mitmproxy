@@ -1,4 +1,4 @@
-import textwrap, cStringIO, os, time
+import textwrap, cStringIO, os, time, re
 import libpry
 from libmproxy import utils
 
@@ -228,13 +228,59 @@ class umake_bogus_cert(libpry.AutoTree):
         assert "CERTIFICATE" in d
 
 
-class uprettybody(libpry.AutoTree):
-    def test_all(self):
-        s = "<html><p></p></html>"
-        assert utils.prettybody(s)
+class upretty_xmlish(libpry.AutoTree):
+    def test_tagre(self):
+        def f(s):
+            return re.search(utils.TAG, s, re.VERBOSE|re.MULTILINE)
+        assert f(r"<body>")
+        assert f(r"<body/>")
+        assert f(r"< body/>")
+        assert f(r"< body/ >")
+        assert f(r"< body / >")
+        assert f(r"<foo a=b>")
+        assert f(r"<foo a='b'>")
+        assert f(r"<foo a='b\"'>")
+        assert f(r'<a b=(a.b) href="foo">')
+        assert f('<td width=25%>')
 
-        s = "".join([chr(i) for i in range(256)])
-        assert utils.prettybody(s)
+    def test_all(self):
+        def isbalanced(ret):
+            # The last tag should have no indent
+            assert ret[-1].strip() == ret[-1]
+
+        s = "<html><br><br></br><p>one</p></html>"
+        ret = utils.pretty_xmlish(s)
+        isbalanced(ret)
+
+        s = r"""
+<body bgcolor=#ffffff text=#000000 link=#0000cc vlink=#551a8b alink=#ff0000 onload="document.f.q.focus();if(document.images)new Image().src='/images/srpr/nav_logo27.png'" ><textarea id=csi style=display:none></textarea></body>
+        """
+        isbalanced(utils.pretty_xmlish(textwrap.dedent(s)))
+
+        s = r"""
+                <a href="http://foo.com" target="">
+                   <img src="http://foo.gif" alt="bar" height="25" width="132">
+                </a>
+            """
+        isbalanced(utils.pretty_xmlish(textwrap.dedent(s)))
+
+        s = r"""
+            <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
+            \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
+            <html></html>
+        """
+        ret = utils.pretty_xmlish(textwrap.dedent(s))
+        isbalanced(ret)
+
+        s = "<html><br/><p>one</p></html>"
+        ret = utils.pretty_xmlish(s)
+        assert len(ret) == 6
+        isbalanced(ret)
+
+        s = "gobbledygook"
+        print utils.pretty_xmlish(s)
+
+
 
 
     
@@ -249,5 +295,5 @@ tests = [
     uMultiDict(),
     uHeaders(),
     uData(),
-    uprettybody(),
+    upretty_xmlish(),
 ]

@@ -307,7 +307,7 @@ class ConnectionView(WWrap):
             ])
 
     def _view_pretty(self, conn, txt):
-        for i in utils.prettybody(conn.content):
+        for i in utils.pretty_xmlish(conn.content):
             txt.append(
                 ("text", i),
             )
