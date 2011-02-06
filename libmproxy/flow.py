@@ -153,11 +153,9 @@ class Flow:
 
     def kill(self):
         if self.request and not self.request.acked:
-            self.request.kill = True
-            self.request.ack()
+            self.request.ack(None)
         elif self.response and not self.response.acked:
-            self.response.kill = True
-            self.response.ack()
+            self.response.ack(None)
         self.intercepting = False
 
     def intercept(self):
