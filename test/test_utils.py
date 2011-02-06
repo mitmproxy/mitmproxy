@@ -242,6 +242,9 @@ class upretty_xmlish(libpry.AutoTree):
         assert f(r"<foo a='b\"'>")
         assert f(r'<a b=(a.b) href="foo">')
         assert f('<td width=25%>')
+        assert f('<form name="search" action="/search.php" method="get" accept-charset="utf-8" class="search">')
+        assert f('<img src="gif" width="125" height="16" alt=&quot;&quot; />')
+
 
     def test_all(self):
         def isbalanced(ret):
@@ -278,7 +281,7 @@ class upretty_xmlish(libpry.AutoTree):
         isbalanced(ret)
 
         s = "gobbledygook"
-        print utils.pretty_xmlish(s)
+        assert utils.pretty_xmlish(s) == ["gobbledygook"]
 
 
 

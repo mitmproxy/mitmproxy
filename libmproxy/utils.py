@@ -52,13 +52,10 @@ TAG = r"""
         (?P<close>\s*\/)?
         (?P<name>\w+)
         (
-                [a-zA-Z0-9_#:=().%\/]+
-            |
-                "[^\"]*"['\"]*
-            |
-                '[^']*'['\"]*
-            | 
-                \s+
+            [^'"\t >]+ |
+            "[^\"]*"['\"]* |
+            '[^']*'['\"]* |
+            \s+
         )*
         (?P<selfcont>\s*\/\s*)?
         \s*>
@@ -67,7 +64,7 @@ UNI = set(["br", "hr", "img", "input", "area", "link"])
 INDENT = " "*4
 def pretty_xmlish(s):
     """
-        This is a robust, general pretty-printer for XML-ish data. 
+        A robust pretty-printer for XML-ish data.
         Returns a list of lines.
     """
     data, offset, indent, prev = [], 0, 0, None
@@ -87,6 +84,9 @@ def pretty_xmlish(s):
         if not any([i.group("close"), i.group("selfcont"), name in UNI]):
             indent += 1
         prev = name
+    trail = s[offset:]
+    if trail.strip():
+        data.append(s[offset:])
     return data
 
 
