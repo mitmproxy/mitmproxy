@@ -40,6 +40,12 @@ if __name__ == '__main__':
     )
 
     parser.add_option(
+        "--ciphers", action="store",
+        type = "str", dest="ciphers", default=None,
+        help = "SSL ciphers."
+    )
+
+    parser.add_option(
         "-p", "--port", action="store",
         type = "int", dest="port", default=8080,
         help = "Port."
@@ -97,7 +103,8 @@ if __name__ == '__main__':
         utils.make_bogus_cert(certpath)
 
     proxy.config = proxy.Config(
-        certpath
+        certpath,
+        ciphers = options.ciphers
     )
     if options.cache is not None:
         utils.mkdir_p(options.cache)

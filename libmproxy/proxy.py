@@ -22,8 +22,9 @@ class ProxyError(Exception):
 
 
 class Config:
-    def __init__(self, pemfile):
+    def __init__(self, pemfile, ciphers = None):
         self.pemfile = pemfile
+        self.ciphers = ciphers
 
 
 def read_chunked(fp):
@@ -520,6 +521,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 keyfile = config.pemfile,
                 server_side = True,
                 ssl_version = ssl.PROTOCOL_SSLv23,
+                ciphers = config.ciphers,
                 do_handshake_on_connect = False
             )
             self.rfile = FileLike(self.connection)
