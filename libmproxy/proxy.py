@@ -407,9 +407,11 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 d = self.rfile.readline()
                 if not d.strip():
                     break
-            self.wfile.write('HTTP/1.1 200 Connection established\r\n')
-            self.wfile.write('Proxy-agent: %s\r\n'%NAME)
-            self.wfile.write('\r\n')
+            self.wfile.write(
+                        'HTTP/1.1 200 Connection established\r\n' +
+                        ('Proxy-agent: %s\r\n'%NAME) +
+                        '\r\n'
+                        )
             self.wfile.flush()
             self.connection = ssl.wrap_socket(
                 self.connection,
