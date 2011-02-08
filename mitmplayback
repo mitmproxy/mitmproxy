@@ -31,9 +31,21 @@ if __name__ == '__main__':
             )
 
     parser.add_option(
-        "-c", "--cert", action="store",
-        type = "str", dest="cert", default="~/.mitmproxy/cert.pem",
+        "--cert", action="store",
+        type = "str", dest="cert", default="~/.mitmproxy/default.pem",
         help = "SSL certificate file."
+    )
+
+    parser.add_option(
+        "-c", "--cacert", action="store",
+        type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
+        help = "SSL CA certificate file."
+    )
+
+    parser.add_option(
+        "--certpath", action="store",
+        type = "str", dest="certpath", default=None,
+        help = "SSL certificate store path."
     )
 
     parser.add_option(
@@ -66,15 +78,27 @@ if __name__ == '__main__':
     if options.quiet:
         options.verbose = 0
 
-    certpath = os.path.expanduser(options.cert)
-    options.cache = os.path.expanduser(options.cache)
+    if options.cert is not None:
+        options.cert = os.path.expanduser(options.cert)
+        if not os.path.exists(options.cert):
+            print >> sys.stderr, "Creating bogus certificate at %s"%options.cert
+            utils.make_bogus_cert(options.cert)
+    if options.cacert is not None:
+        options.cacert = os.path.expanduser(options.cacert)
+        if not os.path.exists(options.cacert):
+            print >> sys.stderr, "Creating bogus CA certificate at %s"%options.cacert
+            utils.make_bogus_cert(options.cacert, newca=True, commonName="Dummy CA")
+    if options.certpath is not None:
+        options.certpath = os.path.expanduser(options.certpath)
+    elif options.cacert is not None:
+        options.certpath = os.path.dirname(options.cacert)
+    if options.cache is not None:
+        options.cache = os.path.expanduser(options.cache)
     
-    if not os.path.exists(certpath):
-        print >> sys.stderr, "Creating bogus certificate at %s"%options.cert
-        utils.make_bogus_cert(certpath)
-
     proxy.config = proxy.Config(
-        certpath,
+        certfile = options.cert,
+        certpath = options.certpath,
+        cacert   = options.cacert,
         ciphers = options.ciphers
     )
     server = proxy.ProxyServer(options.port)

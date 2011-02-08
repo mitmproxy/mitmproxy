@@ -22,9 +22,11 @@ class ProxyError(Exception):
 
 
 class Config:
-    def __init__(self, pemfile, ciphers = None):
-        self.pemfile = pemfile
+    def __init__(self, certfile = None, certpath = None, ciphers = None, cacert = None):
+        self.certfile = certfile
+        self.certpath = certpath
         self.ciphers = ciphers
+        self.cacert = cacert
 
 
 def read_chunked(fp):
@@ -495,6 +497,23 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         if server:
             server.terminate()
 
+    def find_cert(self, host, port=443):
+        #return config.certpath + "/" + host + ":" + port + ".pem"
+        if config.certpath is not None:
+            cert = config.certpath + "/" + host + ".pem"
+            if not os.path.exists(cert) and config.cacert is not None:
+                utils.make_bogus_cert(cert, ca=config.cacert, commonName=host)
+            if os.path.exists(cert):
+                return cert
+            print >> sys.stderr, "WARNING: Certificate missing for %s:%d! (%s)\n" % (host, port, cert)
+        return config.certfile
+
+    def find_key(self, host, port=443):
+        if config.cacert is not None:
+            return config.cacert
+        else:
+            return config.certfile
+
     def read_request(self, client_conn):
         line = self.rfile.readline()
         if line == "\r\n" or line == "\n": # Possible leftover from previous message
@@ -517,8 +536,8 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             self.wfile.flush()
             self.connection = ssl.wrap_socket(
                 self.connection,
-                certfile = config.pemfile,
-                keyfile = config.pemfile,
+                certfile = self.find_cert(host,port),
+                keyfile = self.find_key(host,port),
                 server_side = True,
                 ssl_version = ssl.PROTOCOL_SSLv23,
                 ciphers = config.ciphers,

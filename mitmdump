@@ -27,9 +27,19 @@ if __name__ == '__main__':
                 version="%%prog %s"%VERSION,
             )
     parser.add_option(
-        "-c", "--cert", action="store",
-        type = "str", dest="cert", default="~/.mitmproxy/cert.pem",
+        "--cert", action="store",
+        type = "str", dest="cert", default="~/.mitmproxy/default.pem",
         help = "SSL certificate file."
+    )
+    parser.add_option(
+        "-c", "--cacert", action="store",
+        type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
+        help = "SSL CA certificate file."
+    )
+    parser.add_option(
+        "--certpath", action="store",
+        type = "str", dest="certpath", default="~/.mitmproxy/",
+        help = "SSL certificate store path."
     )
     parser.add_option(
         "--ciphers", action="store",
@@ -52,14 +62,17 @@ if __name__ == '__main__':
     if options.quiet:
         options.verbose = 0
 
-    certpath = os.path.expanduser(options.cert)
+    options.cert = os.path.expanduser(options.cert)
+    options.certpath = os.path.expanduser(options.certpath)
     
-    if not os.path.exists(certpath):
+    if not os.path.exists(options.cert):
         print >> sys.stderr, "Creating bogus certificate at %s"%options.cert
-        utils.make_bogus_cert(certpath)
+        utils.make_bogus_cert(options.cert)
 
     proxy.config = proxy.Config(
-        certpath,
+        certfile = options.cert,
+        certpath = options.certpath,
+        cacert   = options.cacert,
         ciphers = options.ciphers
     )
     server = proxy.ProxyServer(options.port)
