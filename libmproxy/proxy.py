@@ -92,7 +92,7 @@ def parse_url(url):
 
 def parse_request_line(request):
     """
-        Parse a proxy request line. Return (method, scheme, host, port, path).
+        Parse a proxy request line. Return (method, scheme, host, port, path, minor).
         Raise ProxyError on error.
     """
     try:
@@ -228,9 +228,9 @@ class Request(controller.Msg):
 
 class Response(controller.Msg):
     FMT = '%s\r\n%s\r\n%s'
-    def __init__(self, request, code, msg, headers, content, timestamp=None):
+    def __init__(self, request, code, proto, msg, headers, content, timestamp=None):
         self.request = request
-        self.code, self.msg = code, msg
+        self.code, self.proto, self.msg = code, proto, msg
         self.headers, self.content = headers, content
         self.timestamp = timestamp or time.time()
         self.cached = False
@@ -438,7 +438,7 @@ class ServerConnection:
             content = None
         else:
             content = read_http_body(self.rfile, self, headers, True)
-        return Response(self.request, code, msg, headers, content)
+        return Response(self.request, code, proto, msg, headers, content)
 
     def terminate(self):
         try:
@@ -534,15 +534,16 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                         '\r\n'
                         )
             self.wfile.flush()
-            self.connection = ssl.wrap_socket(
-                self.connection,
+            kwargs = dict(
                 certfile = self.find_cert(host,port),
                 keyfile = self.find_key(host,port),
                 server_side = True,
                 ssl_version = ssl.PROTOCOL_SSLv23,
-                ciphers = config.ciphers,
                 do_handshake_on_connect = False
             )
+            if sys.version_info[1] > 6:
+                kwargs["ciphers"] = config.ciphers
+            self.connection = ssl.wrap_socket(self.connection, **kwargs)
             self.rfile = FileLike(self.connection)
             self.wfile = FileLike(self.connection)
             method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())

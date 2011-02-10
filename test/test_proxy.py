@@ -147,33 +147,31 @@ class uProxy(_ProxTests):
 
 
 
-class u_parse_proxy_request(libpry.AutoTree):
+class u_parse_request_line(libpry.AutoTree):
     def test_simple(self):
-        libpry.raises(proxy.ProxyError, proxy.parse_proxy_request, "")
+        libpry.raises(proxy.ProxyError, proxy.parse_request_line, "")
 
         u = "GET ... HTTP/1.1"
-        libpry.raises("invalid url", proxy.parse_proxy_request, u)
-
-        u = "MORK / HTTP/1.1"
-        libpry.raises("unknown request method", proxy.parse_proxy_request, u)
+        libpry.raises("invalid url", proxy.parse_request_line, u)
 
         u = "GET http://foo.com:8888/test HTTP/1.1"
-        m, s, h, po, pa = proxy.parse_proxy_request(u)
+        m, s, h, po, pa, minor = proxy.parse_request_line(u)
         assert m == "GET"
         assert s == "http"
         assert h == "foo.com"
         assert po == 8888
         assert pa == "/test"
+        assert minor == 1
 
     def test_connect(self):
         u = "CONNECT host.com:443 HTTP/1.0"
-        expected = ('CONNECT', None, 'host.com', 443, None)
-        ret = proxy.parse_proxy_request(u)
+        expected = ('CONNECT', None, 'host.com', 443, None, 0)
+        ret = proxy.parse_request_line(u)
         assert expected == ret
 
     def test_inner(self):
         u = "GET / HTTP/1.1"
-        assert proxy.parse_proxy_request(u) == ('GET', None, None, None, '/')
+        assert proxy.parse_request_line(u) == ('GET', None, None, None, '/', 1)
 
 
 class u_parse_url(libpry.AutoTree):
@@ -198,12 +196,6 @@ class u_parse_url(libpry.AutoTree):
 
         s, h, po, pa = proxy.parse_url("https://foo")
         assert po == 443
-
-
-class uConfig(libpry.AutoTree):
-    def test_pem(self):
-        c = proxy.Config(pemfile="data/testkey.pem")
-        assert c.pemfile
 
 
 class uFileLike(libpry.AutoTree):
@@ -282,8 +274,7 @@ tests = [
     uRequest(),
     uResponse(),
     uFileLike(),
-    uConfig(),
-    u_parse_proxy_request(),
+    u_parse_request_line(),
     u_parse_url(),
     uError(),
     _TestServers(), [
