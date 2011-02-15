@@ -13,7 +13,7 @@ def tresp(req=None):
         req = treq()
     headers = utils.Headers()
     headers["header_response"] = ["svalue"]
-    return proxy.Response(req, 200, "HTTP/1.1", "message", headers, "content_response")
+    return proxy.Response(req, 200, "message", headers, "content_response")
 
 
 def tflow():

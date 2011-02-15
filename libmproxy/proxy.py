@@ -228,9 +228,9 @@ class Request(controller.Msg):
 
 class Response(controller.Msg):
     FMT = '%s\r\n%s\r\n%s'
-    def __init__(self, request, code, proto, msg, headers, content, timestamp=None):
+    def __init__(self, request, code, msg, headers, content, timestamp=None):
         self.request = request
-        self.code, self.proto, self.msg = code, proto, msg
+        self.code, self.msg = code, msg
         self.headers, self.content = headers, content
         self.timestamp = timestamp or time.time()
         self.cached = False
@@ -239,7 +239,6 @@ class Response(controller.Msg):
     def get_state(self):
         return dict(
             code = self.code,
-            proto = self.proto,
             msg = self.msg,
             headers = self.headers.get_state(),
             timestamp = self.timestamp,
@@ -251,7 +250,6 @@ class Response(controller.Msg):
         return klass(
             request,
             state["code"],
-            state["proto"],
             state["msg"],
             utils.Headers.from_state(state["headers"]),
             state["content"],
@@ -438,7 +436,7 @@ class ServerConnection:
             content = None
         else:
             content = read_http_body(self.rfile, self, headers, True)
-        return Response(self.request, code, proto, msg, headers, content)
+        return Response(self.request, code, msg, headers, content)
 
     def terminate(self):
         try:

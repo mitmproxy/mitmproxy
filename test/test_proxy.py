@@ -237,7 +237,7 @@ class uResponse(libpry.AutoTree):
         h["test"] = ["test"]
         c = proxy.ClientConnection(("addr", 2222))
         req = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
-        resp = proxy.Response(req, 200, "HTTP", "msg", h.copy(), "content")
+        resp = proxy.Response(req, 200, "msg", h.copy(), "content")
         assert resp.short()
         assert resp.assemble()
 

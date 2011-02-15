@@ -93,7 +93,6 @@ class uMatching(libpry.AutoTree):
         return proxy.Response(
                     q,
                     200,
-                    "HTTP/1.1",
                     "message",
                     headers,
                     "content_response"
