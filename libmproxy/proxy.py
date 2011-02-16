@@ -64,7 +64,7 @@ def read_http_body(rfile, connection, headers, all):
         content = rfile.read()
         connection.close = True
     else:
-        content = None
+        content = ""
     return content
 
 

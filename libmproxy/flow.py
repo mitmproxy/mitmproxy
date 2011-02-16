@@ -3,7 +3,6 @@
     with their responses, and provide filtering and interception facilities.
 """
 import subprocess, base64, sys, json
-from contrib import bson
 import proxy, threading, netstring
 
 class RunException(Exception):
@@ -39,15 +38,12 @@ class Flow:
 
     def script_serialize(self):
         data = self.get_state()
-        data = bson.dumps(data)
-        return base64.encodestring(data)
+        return json.dumps(data)
 
     @classmethod
     def script_deserialize(klass, data):
         try:
-            data = base64.decodestring(data)
-            data = bson.loads(data)
-        # bson.loads doesn't define a particular exception on error...
+            data = json.loads(data)
         except Exception:
             return None
         return klass.from_state(data)
@@ -85,12 +81,6 @@ class Flow:
                     se
                 )
         return f, se
-
-    def dump(self):
-        data = dict(
-                flows = [self.get_state()]
-               )
-        return bson.dumps(data)
 
     def get_state(self, nobackup=False):
         d = dict(
@@ -216,17 +206,9 @@ class State:
         f.error = err
         return f
 
-    def dump_flows(self):
-        data = dict(
-                flows =[i.get_state() for i in self.view]
-               )
-        return bson.dumps(data)
-
-    def load_flows(self, js):
-        data = bson.loads(js)
-        data = [Flow.from_state(i) for i in data["flows"]]
-        self.flow_list.extend(data)
-        for i in data:
+    def load_flows(self, flows):
+        self.flow_list.extend(flows)
+        for i in flows:
             self.flow_map[i.client_conn] = i
 
     def set_limit(self, limit):

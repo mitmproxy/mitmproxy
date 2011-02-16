@@ -958,25 +958,25 @@ class ConsoleMaster(controller.Master):
     def view_prev_flow(self, flow):
         return self._view_nextprev_flow("prev", flow)
 
-    def _write_flows(self, path, data):
+    def _write_flows(self, path, flows):
+        self.state.last_saveload = path
         if not path:
             return 
         path = os.path.expanduser(path)
         try:
             f = file(path, "wb")
-            f.write(data)
+            fw = flow.FlowWriter(f)
+            for i in flows:
+                fw.add(i)
             f.close()
         except IOError, v:
             self.statusbar.message(v.strerror)
 
     def save_one_flow(self, path, flow):
-        data = flow.dump()
-        return self._write_flows(path, data)
+        return self._write_flows(path, [flow])
 
     def save_flows(self, path):
-        self.state.last_saveload = path
-        data = self.state.dump_flows()
-        return self._write_flows(path, data)
+        return self._write_flows(path, self.state.view)
 
     def load_flows(self, path):
         if not path:
@@ -985,7 +985,8 @@ class ConsoleMaster(controller.Master):
         path = os.path.expanduser(path)
         try:
             f = file(path, "r")
-            data = f.read()
+            fr = flow.FlowReader(f)
+            data = list(fr.stream())
             f.close()
         except IOError, v:
             return v.strerror

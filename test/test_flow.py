@@ -27,10 +27,6 @@ class uFlow(libpry.AutoTree):
         f.request = f.response.request
         assert not f.match(filt.parse("~b test"))
 
-    def test_dump(self):
-        f = utils.tflow()
-        assert f.dump()
-
     def test_backup(self):
         f = utils.tflow()
         f.response = utils.tresp()
@@ -237,9 +233,10 @@ class uState(libpry.AutoTree):
         self._add_response(c)
         self._add_error(c)
 
-        dump = c.dump_flows()
+        flows = c.view[:]
         c.clear()
-        c.load_flows(dump)
+        
+        c.load_flows(flows)
         assert isinstance(c.flow_list[0], flow.Flow)
 
     def test_accept_all(self):
