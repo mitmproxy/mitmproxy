@@ -76,7 +76,12 @@ if __name__ == '__main__':
         ciphers = options.ciphers
     )
     server = proxy.ProxyServer(options.port)
-    m = dump.DumpMaster(server, options.verbose)
+
+    dumpopts = dump.Options(
+        verbosity = options.verbose
+    )
+    m = dump.DumpMaster(server, dumpopts)
+
     if options.verbose > 0:
         print >> sys.stderr, "Running on port %s"%options.port
     m.run()
