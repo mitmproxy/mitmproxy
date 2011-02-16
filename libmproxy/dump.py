@@ -78,11 +78,9 @@ class DumpMaster(flow.FlowMaster):
             if self.o.wfile:
                 self.fwriter.add(f)
 
-
 # begin nocover
     def run(self):
         try:
             return flow.FlowMaster.run(self)
         except KeyboardInterrupt:
             self.shutdown()
-

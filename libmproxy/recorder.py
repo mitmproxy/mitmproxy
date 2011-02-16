@@ -48,8 +48,7 @@ import filt
 import re
 import cStringIO
 
-def constant_factory(value):
-    return itertools.repeat(value).next
+
 
 class PatternRule:
     """
