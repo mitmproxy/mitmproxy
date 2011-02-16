@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re, os, subprocess, datetime, textwrap, errno
+import optparse
 
 def format_timestamp(s):
     d = datetime.datetime.fromtimestamp(s)
@@ -474,6 +475,7 @@ def make_bogus_cert(certpath, countryName=None, stateOrProvinceName=None, locali
             stdin=subprocess.PIPE
         )
     
+
 def mkdir_p(path):
     try:
         os.makedirs(path)
@@ -482,4 +484,31 @@ def mkdir_p(path):
             pass
         else:
             raise
+
+
+def certificate_option_group(parser):
+    group = optparse.OptionGroup(parser, "SSL")
+    group.add_option(
+        "--cert", action="store",
+        type = "str", dest="cert", default="~/.mitmproxy/default.pem",
+        help = "SSL certificate file."
+    )
+    group.add_option(
+        "-c", "--cacert", action="store",
+        type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
+        help = "SSL CA certificate file."
+    )
+    group.add_option(
+        "--certpath", action="store",
+        type = "str", dest="certpath", default="~/.mitmproxy/",
+        help = "SSL certificate store path."
+    )
+    group.add_option(
+        "--ciphers", action="store",
+        type = "str", dest="ciphers", default=None,
+        help = "SSL ciphers."
+    )
+    parser.add_option_group(group)
+
+
 

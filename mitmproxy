@@ -26,35 +26,11 @@ if __name__ == '__main__':
                 usage = "%prog [options] [flowdump path]",
                 version="%%prog %s"%VERSION,
             )
-
+    utils.certificate_option_group(parser)
     parser.add_option(
         "-a", "--addr", action="store",
         type = "str", dest="addr", default='',
         help = "Address to bind proxy to (defaults to all interfaces)"
-    )
-
-    parser.add_option(
-        "--cert", action="store",
-        type = "str", dest="cert", default="~/.mitmproxy/default.pem",
-        help = "SSL certificate file."
-    )
-
-    parser.add_option(
-        "-c", "--cacert", action="store",
-        type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
-        help = "SSL CA certificate file."
-    )
-
-    parser.add_option(
-        "--certpath", action="store",
-        type = "str", dest="certpath", default="~/.mitmproxy/",
-        help = "SSL certificate store path."
-    )
-
-    parser.add_option(
-        "--ciphers", action="store",
-        type = "str", dest="ciphers", default=None,
-        help = "SSL ciphers."
     )
 
     parser.add_option(
