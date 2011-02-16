@@ -315,12 +315,7 @@ class FlowMaster(controller.Master):
         f = self.state.add_response(r)
         if not f:
             r.ack()
-        else:
-            if f.match(self.stickycookie):
-                hid = (f.request.host, f.request.port)
-                if f.response.headers.has_key("set-cookie"):
-                    self.stickyhosts[hid] = f.response.headers["set-cookie"]
-            self.process_flow(f, r)
+        return f
 
 
 class FlowWriter:

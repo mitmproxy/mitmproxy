@@ -261,10 +261,28 @@ class uSerialize(libpry.AutoTree):
         assert l[0] == f
 
 
-    
+class uFlowMaster(libpry.AutoTree):
+    def test_one(self):
+        s = flow.State()
+        f = flow.FlowMaster(None, s)
+
+        req = utils.treq()
+        f.handle_clientconnection(req.client_conn)
+        assert len(s.flow_list) == 1
+        f.handle_request(req)
+        assert len(s.flow_list) == 1
+        f.handle_request(req)
+        resp = utils.tresp()
+        resp.request = req
+        f.handle_response(resp)
+        assert len(s.flow_list) == 1
+        
+
 
 tests = [
     uFlow(),
     uState(),
-    uSerialize()
+    uSerialize(),
+    uFlowMaster()
+
 ]

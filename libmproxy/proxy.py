@@ -433,7 +433,7 @@ class ServerConnection:
         if code >= 100 and code <= 199:
             return self.read_response()
         if self.request.method == "HEAD" or code == 204 or code == 304:
-            content = None
+            content = ""
         else:
             content = read_http_body(self.rfile, self, headers, True)
         return Response(self.request, code, msg, headers, content)

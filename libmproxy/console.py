@@ -1334,7 +1334,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.process_flow(f, r)
 
     def handle_response(self, r):
-        f = flow.FlowMaster.handle_request(self, r)
+        f = flow.FlowMaster.handle_response(self, r)
         if f:
             if f.match(self.stickycookie):
                 hid = (f.request.host, f.request.port)
