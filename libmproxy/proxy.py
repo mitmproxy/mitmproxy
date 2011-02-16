@@ -454,8 +454,8 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
     def handle(self):
         cc = ClientConnection(self.client_address)
+        cc.send(self.mqueue)
         while not cc.close:
-            cc.send(self.mqueue)
             self.handle_request(cc)
             cc = cc.copy()
         self.finish()
@@ -471,6 +471,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             if request is None:
                 cc.close = True
                 return
+
             if request.is_response():
                 response = request
                 request = False

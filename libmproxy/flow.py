@@ -183,7 +183,8 @@ class State:
         """
         f = self.flow_map.get(req.client_conn)
         if not f:
-            return False
+            f = Flow(req.client_conn)
+            self.add_browserconnect(f)
         f.request = req
         return f
 

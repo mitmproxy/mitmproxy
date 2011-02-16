@@ -20,6 +20,8 @@ class DumpMaster(flow.FlowMaster):
 
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
+        if not f:
+            return
         if 0 < self.verbosity < 3:
             print >> self.outfile, ">>",
             print >> self.outfile, msg.request.short()
@@ -41,6 +43,8 @@ class DumpMaster(flow.FlowMaster):
                 print >> self.outfile, "\t", i
             print >> self.outfile, "<<"
         msg.ack()
+        self.state.delete_flow(f)
+        print [i.get_state() for i in self.state.flow_list]
 
 
 # begin nocover
