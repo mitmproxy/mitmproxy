@@ -22,6 +22,7 @@ class ReplayThread(threading.Thread):
     def run(self):
         try:
             server = proxy.ServerConnection(self.flow.request)
+            server.send_request(self.flow.request)
             response = server.read_response()
             response.send(self.masterq)
         except proxy.ProxyError, v:
