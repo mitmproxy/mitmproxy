@@ -141,12 +141,12 @@ class uState(libpry.AutoTree):
         assert c.lookup(req)
 
         newreq = utils.treq()
-        assert not c.add_request(newreq)
-        assert not c.lookup(newreq)
+        assert c.add_request(newreq)
+        assert c.lookup(newreq)
 
         resp = utils.tresp(req)
         assert c.add_response(resp)
-        assert len(c.flow_list) == 1
+        assert len(c.flow_list) == 2
         assert c.lookup(resp)
 
         newresp = utils.tresp()

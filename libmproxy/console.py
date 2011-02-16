@@ -822,7 +822,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.stickycookie = None
         self.stickyhosts = {}
 
-        if options.cache is not None:
+        if getattr(options, "cache", None) is not None:
             self.state.start_recording(recorder.Recorder(options))
 
     def spawn_external_viewer(self, data, contenttype):

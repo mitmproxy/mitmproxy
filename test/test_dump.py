@@ -1,6 +1,7 @@
+import os
 from cStringIO import StringIO
 import libpry
-from libmproxy import dump
+from libmproxy import dump, flow
 import utils
 
 
@@ -27,6 +28,30 @@ class uDumpMaster(libpry.AutoTree):
             m = dump.DumpMaster(None, o, cs)
             self._dummy_cycle(m)
             assert "GET" in cs.getvalue()
+
+    def test_write(self):
+        d = self.tmpdir()
+        p = os.path.join(d, "a")
+        o = dump.Options(
+            wfile = p,
+            verbosity = 0
+        )
+        cs = StringIO()
+        m = dump.DumpMaster(None, o, cs)
+        self._dummy_cycle(m)
+        del m
+        assert len(list(flow.FlowReader(open(p)).stream())) == 1
+
+    def test_write_err(self):
+        o = dump.Options(
+            wfile = "nonexistentdir/foo",
+            verbosity = 0
+        )
+        cs = StringIO()
+        libpry.raises(dump.DumpError, dump.DumpMaster, None, o, cs)
+
+
+
 
 
 

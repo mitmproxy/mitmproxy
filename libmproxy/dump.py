@@ -1,5 +1,8 @@
-import sys
+import sys, os
 import flow
+
+class DumpError(Exception): pass
+
 
 class Options(object):
     __slots__ = [
@@ -9,6 +12,9 @@ class Options(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+        for i in self.__slots__:
+            if not hasattr(self, i):
+                setattr(self, i, None)
 
 
 class DumpMaster(flow.FlowMaster):
@@ -16,6 +22,14 @@ class DumpMaster(flow.FlowMaster):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
+
+        if options.wfile:
+            path = os.path.expanduser(options.wfile)
+            try:
+                f = file(path, "wb")
+                self.fwriter = flow.FlowWriter(f)
+            except IOError, v:
+                raise DumpError(v.strerror)
 
     def handle_clientconnection(self, r):
         flow.FlowMaster.handle_clientconnection(self, r)
@@ -55,6 +69,9 @@ class DumpMaster(flow.FlowMaster):
 
             msg.ack()
             self.state.delete_flow(f)
+
+            if self.o.wfile:
+                self.fwriter.add(f)
 
 
 # begin nocover

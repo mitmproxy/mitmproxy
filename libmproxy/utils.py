@@ -525,6 +525,6 @@ def process_certificate_option_group(options):
         options.certpath = os.path.expanduser(options.certpath)
     elif options.cacert is not None:
         options.certpath = os.path.dirname(options.cacert)
-    if options.cache is not None:
+    if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
 

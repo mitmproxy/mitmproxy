@@ -38,6 +38,9 @@ if __name__ == '__main__':
     parser.add_option("-v", "--verbose",
                       action="count", dest="verbose", default=1,
                       help="Increase verbosity. Can be passed multiple times.")
+    parser.add_option("-w", "--writefile",
+                      action="store", dest="wfile", default=None,
+                      help="Write flows to file.")
     options, args = parser.parse_args()
 
     if options.quiet:
@@ -54,7 +57,8 @@ if __name__ == '__main__':
     server = proxy.ProxyServer(options.port)
 
     dumpopts = dump.Options(
-        verbosity = options.verbose
+        verbosity = options.verbose,
+        wfile = options.wfile
     )
     m = dump.DumpMaster(server, dumpopts)
 
