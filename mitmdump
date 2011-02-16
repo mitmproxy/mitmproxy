@@ -23,7 +23,7 @@ from optparse import OptionParser, OptionGroup
 
 if __name__ == '__main__':
     parser = OptionParser(
-                usage = "%prog [options]",
+                usage = "%prog [options] [filter]",
                 version="%%prog %s"%VERSION,
             )
     utils.certificate_option_group(parser)
@@ -60,7 +60,12 @@ if __name__ == '__main__':
         verbosity = options.verbose,
         wfile = options.wfile
     )
-    m = dump.DumpMaster(server, dumpopts)
+    if args:
+        filt = " ".join(args)
+    else:
+        filt = None
+
+    m = dump.DumpMaster(server, dumpopts, filt)
 
     if options.verbose > 0:
         print >> sys.stderr, "Running on port %s"%options.port

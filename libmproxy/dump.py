@@ -1,5 +1,5 @@
 import sys, os
-import flow
+import flow, filt
 
 class DumpError(Exception): pass
 
@@ -18,10 +18,15 @@ class Options(object):
 
 
 class DumpMaster(flow.FlowMaster):
-    def __init__(self, server, options, outfile=sys.stdout):
+    def __init__(self, server, options, filtstr, outfile=sys.stdout):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
+
+        if filtstr:
+            self.filt = filt.parse(filtstr)
+        else:
+            self.filt = None
 
         if options.wfile:
             path = os.path.expanduser(options.wfile)
@@ -46,6 +51,9 @@ class DumpMaster(flow.FlowMaster):
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
         if f:
+            msg.ack()
+            if self.filt and not f.match(self.filt):
+                    return
             if 0 < self.o.verbosity < 3:
                 print >> self.outfile, ">>",
                 print >> self.outfile, msg.request.short()
@@ -66,10 +74,7 @@ class DumpMaster(flow.FlowMaster):
                 for i in msg.assemble().splitlines():
                     print >> self.outfile, "\t", i
                 print >> self.outfile, "<<"
-
-            msg.ack()
             self.state.delete_flow(f)
-
             if self.o.wfile:
                 self.fwriter.add(f)
 

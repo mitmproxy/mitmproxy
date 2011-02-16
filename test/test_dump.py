@@ -19,13 +19,22 @@ class uDumpMaster(libpry.AutoTree):
         assert o.verbosity == 2
         libpry.raises(AttributeError, dump.Options, nonexistent = 2)
 
-    def test_basic_verbosities(self):
+    def test_filter(self):
+            cs = StringIO()
+            o = dump.Options(
+                verbosity = 1
+            )
+            m = dump.DumpMaster(None, o, "~u foo", outfile=cs)
+            self._dummy_cycle(m)
+            assert not "GET" in cs.getvalue()
+
+    def test_basic(self):
         for i in (1, 2, 3):
             cs = StringIO()
             o = dump.Options(
                 verbosity = i
             )
-            m = dump.DumpMaster(None, o, cs)
+            m = dump.DumpMaster(None, o, "~s", outfile=cs)
             self._dummy_cycle(m)
             assert "GET" in cs.getvalue()
 
@@ -37,7 +46,7 @@ class uDumpMaster(libpry.AutoTree):
             verbosity = 0
         )
         cs = StringIO()
-        m = dump.DumpMaster(None, o, cs)
+        m = dump.DumpMaster(None, o, None, outfile=cs)
         self._dummy_cycle(m)
         del m
         assert len(list(flow.FlowReader(open(p)).stream())) == 1
@@ -48,7 +57,7 @@ class uDumpMaster(libpry.AutoTree):
             verbosity = 0
         )
         cs = StringIO()
-        libpry.raises(dump.DumpError, dump.DumpMaster, None, o, cs)
+        libpry.raises(dump.DumpError, dump.DumpMaster, None, o, None)
 
 
 
