@@ -1,14 +1,3 @@
-This version is modified to add recording and playback capabilities enabling
-mitmproxy to record a complete session and allow clients to play back the
-same session against the recorded data.
-
-The store is enabled by using the --store=.. option to mitmproxy or by using
-the noninteractive mitmrecord program.
-
-To play back a recorded session use the mitmplayback program.
-
-Original README follows:
-
 __mitmproxy__ is an interactive SSL-capable intercepting HTTP proxy. It lets
 you to observe, modify and replay requests and responses on the fly. The
 underlying library that mitmproxy is built on can also be used to do these
