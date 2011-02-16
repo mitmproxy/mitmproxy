@@ -43,12 +43,7 @@ if __name__ == '__main__':
     if options.quiet:
         options.verbose = 0
 
-    options.cert = os.path.expanduser(options.cert)
-    options.certpath = os.path.expanduser(options.certpath)
-    
-    if not os.path.exists(options.cert):
-        print >> sys.stderr, "Creating bogus certificate at %s"%options.cert
-        utils.make_bogus_cert(options.cert)
+    utils.process_certificate_option_group(options)
 
     proxy.config = proxy.Config(
         certfile = options.cert,
