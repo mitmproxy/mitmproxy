@@ -4,6 +4,7 @@
 """
 import subprocess, base64, sys, json
 import proxy, threading, netstring
+import controller
 
 class RunException(Exception):
     def __init__(self, msg, returncode, errout):
@@ -285,6 +286,41 @@ class State:
             rt.start()
         #end nocover
 
+
+class FlowMaster(controller.Master):
+    def __init__(self, server, state):
+        controller.Master.__init__(self, server)
+        self.state = state
+
+    # Handlers
+    def handle_clientconnection(self, r):
+        f = Flow(r)
+        self.state.add_browserconnect(f)
+        r.ack()
+        return f
+
+    def handle_error(self, r):
+        f = self.state.add_error(r)
+        if not f:
+            r.ack()
+        return f
+
+    def handle_request(self, r):
+        f = self.state.add_request(r)
+        if not f:
+            r.ack()
+        return f
+
+    def handle_response(self, r):
+        f = self.state.add_response(r)
+        if not f:
+            r.ack()
+        else:
+            if f.match(self.stickycookie):
+                hid = (f.request.host, f.request.port)
+                if f.response.headers.has_key("set-cookie"):
+                    self.stickyhosts[hid] = f.response.headers["set-cookie"]
+            self.process_flow(f, r)
 
 
 class FlowWriter:

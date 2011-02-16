@@ -307,7 +307,7 @@ class ClientConnection(controller.Msg):
         controller.Msg.__init__(self)
 
     def get_state(self):
-        return list(self.address)
+        return list(self.address) if self.address else None
 
     @classmethod
     def from_state(klass, state):

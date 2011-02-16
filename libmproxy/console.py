@@ -779,7 +779,7 @@ VIEW_CONNLIST = 0
 VIEW_FLOW = 1
 VIEW_HELP = 2
 
-class ConsoleMaster(controller.Master):
+class ConsoleMaster(flow.FlowMaster):
     palette = []
     footer_text_default = [
         ('key', "?"), ":help ",
@@ -794,10 +794,10 @@ class ConsoleMaster(controller.Master):
         ('key', "q"), ":back ",
     ]
     def __init__(self, server, options):
+        flow.FlowMaster.__init__(self, server, ConsoleState())
+
         self.conn_list_view = None
         self.set_palette()
-        controller.Master.__init__(self, server)
-        self.state = ConsoleState()
 
         r = self.set_limit(options.limit)
         if r:
@@ -1313,23 +1313,18 @@ class ConsoleMaster(controller.Master):
 
     # Handlers
     def handle_clientconnection(self, r):
-        f = flow.Flow(r)
-        self.state.add_browserconnect(f)
-        r.ack()
-        self.sync_list_view()
+        f = flow.FlowMaster.handle_clientconnection(self, r)
+        if f:
+            self.sync_list_view()
 
     def handle_error(self, r):
-        f = self.state.add_error(r)
-        if not f:
-            r.ack()
-        else:
+        f = flow.FlowMaster.handle_error(self, r)
+        if f:
             self.process_flow(f, r)
 
     def handle_request(self, r):
-        f = self.state.add_request(r)
-        if not f:
-            r.ack()
-        else:
+        f = flow.FlowMaster.handle_request(self, r)
+        if f:
             if f.match(self.stickycookie):
                 hid = (f.request.host, f.request.port)
                 if f.request.headers.has_key("cookie"):
@@ -1339,10 +1334,8 @@ class ConsoleMaster(controller.Master):
             self.process_flow(f, r)
 
     def handle_response(self, r):
-        f = self.state.add_response(r)
-        if not f:
-            r.ack()
-        else:
+        f = flow.FlowMaster.handle_request(self, r)
+        if f:
             if f.match(self.stickycookie):
                 hid = (f.request.host, f.request.port)
                 if f.response.headers.has_key("set-cookie"):
