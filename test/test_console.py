@@ -105,11 +105,12 @@ class uformat_keyvals(libpry.AutoTree):
 class uformat_flow(libpry.AutoTree):
     def test_simple(self):
         f = utils.tflow()
-        assert ('focus', '>> ') not in console.format_flow(f, False)
-        assert ('focus', '>> ') in console.format_flow(f, True)
+        foc = ('focus', '>>')
+        assert foc not in console.format_flow(f, False)
+        assert foc in console.format_flow(f, True)
 
-        assert ('focus', '>> ') not in console.format_flow(f, False, True)
-        assert ('focus', '>> ') in console.format_flow(f, True, True)
+        assert foc not in console.format_flow(f, False, True)
+        assert foc in console.format_flow(f, True, True)
 
         f.response = utils.tresp()
         f.request = f.response.request
