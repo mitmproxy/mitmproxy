@@ -1,3 +1,4 @@
+from cStringIO import StringIO
 from libmproxy import console, proxy, filt, flow
 import utils
 import libpry
@@ -249,8 +250,24 @@ class uState(libpry.AutoTree):
         c.accept_all()
 
 
+class uSerialize(libpry.AutoTree):
+    def test_roundtrip(self):
+        sio = StringIO()
+        f = utils.tflow()
+        w = flow.FlowWriter(sio)
+        w.add(f)
+
+        sio.seek(0)
+        r = flow.FlowReader(sio)
+        l = list(r.stream())
+        assert len(l) == 1
+        assert l[0] == f
+
+
+    
 
 tests = [
     uFlow(),
     uState(),
+    uSerialize()
 ]

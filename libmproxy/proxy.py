@@ -5,7 +5,7 @@
 
     Development started from Neil Schemenauer's munchy.py
 """
-import sys, os, time, string, socket, urlparse, re, select, copy
+import sys, os, time, string, socket, urlparse, re, select, copy, base64
 import SocketServer, ssl
 import utils, controller
 
@@ -147,7 +147,7 @@ class Request(controller.Msg):
             method = self.method,
             path = self.path,
             headers = self.headers.get_state(),
-            content = self.content,
+            content = base64.encodestring(self.content),
             timestamp = self.timestamp,
         )
 
@@ -161,7 +161,7 @@ class Request(controller.Msg):
             state["method"],
             state["path"],
             utils.Headers.from_state(state["headers"]),
-            state["content"],
+            base64.decodestring(state["content"]),
             state["timestamp"]
         )
 
@@ -242,7 +242,7 @@ class Response(controller.Msg):
             msg = self.msg,
             headers = self.headers.get_state(),
             timestamp = self.timestamp,
-            content = self.content
+            content = base64.encodestring(self.content)
         )
 
     @classmethod
@@ -252,7 +252,7 @@ class Response(controller.Msg):
             state["code"],
             state["msg"],
             utils.Headers.from_state(state["headers"]),
-            state["content"],
+            base64.decodestring(state["content"]),
             state["timestamp"],
         )
 
@@ -307,7 +307,7 @@ class ClientConnection(controller.Msg):
         controller.Msg.__init__(self)
 
     def get_state(self):
-        return self.address
+        return list(self.address)
 
     @classmethod
     def from_state(klass, state):

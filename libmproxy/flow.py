@@ -2,9 +2,9 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import subprocess, base64, sys
+import subprocess, base64, sys, json
 from contrib import bson
-import proxy, threading
+import proxy, threading, netstring
 
 class RunException(Exception):
     def __init__(self, msg, returncode, errout):
@@ -302,3 +302,30 @@ class State:
             rt = ReplayThread(f, masterq)
             rt.start()
         #end nocover
+
+
+
+class FlowWriter:
+    def __init__(self, fo):
+        self.fo = fo
+        self.ns = netstring.FileEncoder(fo)
+
+    def add(self, flow):
+        d = flow.get_state()
+        s = json.dumps(d)
+        self.ns.write(s)
+
+
+class FlowReader:
+    def __init__(self, fo):
+        self.fo = fo
+        self.ns = netstring.decode_file(fo)
+
+    def stream(self):
+        """
+            Yields Flow objects from the dump.
+        """
+        for i in self.ns:
+            data = json.loads(i)
+            yield Flow.from_state(data)
+
