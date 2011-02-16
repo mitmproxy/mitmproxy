@@ -45,16 +45,16 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     return ret
 
 
-def format_flow(f, focus, extended=False, padding=3):
-    if not f.request and not f.response:
+def format_flow(f, focus, extended=False, padding=2):
+    if not f.request:
         txt = [
             ("title", " Connection from %s..."%(f.client_conn.address[0])),
         ]
     else:
         if extended:
-            ts = ("highlight", utils.format_timestamp(f.request.timestamp))
+            ts = ("highlight", utils.format_timestamp(f.request.timestamp) + " ")
         else:
-            ts = ""
+            ts = " "
 
         txt = [
             ts,
@@ -67,12 +67,11 @@ def format_flow(f, focus, extended=False, padding=3):
             ),
         ]
         if f.response or f.error or f.is_replay():
-
             tsr = f.response or f.error
             if extended and tsr:
-                ts = ("highlight", utils.format_timestamp(tsr.timestamp))
+                ts = ("highlight", utils.format_timestamp(tsr.timestamp) + " ")
             else:
-                ts = ""
+                ts = " "
 
             txt.append("\n") 
             txt.append(("text", ts))
@@ -104,6 +103,7 @@ def format_flow(f, focus, extended=False, padding=3):
             txt.append(
                ("error", f.error.msg)
             )
+
     if focus:
         txt.insert(0, ("focus", ">>" + " "*(padding-2)))
     else:
@@ -918,6 +918,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.make_view()
 
     def view_connlist(self):
+        if self.ui.s:
+            self.ui.clear()
         if self.currentflow:
             try:
                 idx = self.state.view.index(self.currentflow)
