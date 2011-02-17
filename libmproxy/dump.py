@@ -1,5 +1,5 @@
-import sys, os
-import flow, filt
+import sys, os, traceback
+import flow, filt, utils
 
 class DumpError(Exception): pass
 
@@ -48,30 +48,34 @@ class DumpMaster(flow.FlowMaster):
         flow.FlowMaster.handle_request(self, r)
         r.ack()
 
+    def indent(self, n, t):
+        l = str(t).strip().split("\n")
+        return "\n".join(" "*n + i for i in l)
+
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
         if f:
             msg.ack()
             if self.filt and not f.match(self.filt):
                     return
-            if 0 < self.o.verbosity < 3:
-                print >> self.outfile, ">>",
-                print >> self.outfile, msg.request.short()
             if self.o.verbosity == 1:
-                print >> self.outfile, "<<",
-                print >> self.outfile, msg.short()
+                print >> self.outfile, f.client_conn.address[0],
+                print >> self.outfile, f.request.short()
+                print >> self.outfile, "  <<",
+                print >> self.outfile, f.response.short(), utils.pretty_size(len(f.response.content))
             elif self.o.verbosity == 2:
-                print >> self.outfile, "<<"
-                for i in msg.assemble().splitlines():
-                    print >> self.outfile, "\t", i
-                print >> self.outfile, "<<"
+                print >> self.outfile, f.client_conn.address[0],
+                print >> self.outfile, f.request.short()
+                print >> self.outfile, self.indent(4, f.request.headers)
+                print >> self.outfile, " <<", f.response.short()
+                print >> self.outfile, self.indent(4, f.response.headers)
             elif self.o.verbosity == 3:
                 print >> self.outfile, ">>"
-                for i in msg.request.assemble().splitlines():
+                for i in f.request.request.assemble().splitlines():
                     print >> self.outfile, "\t", i
                 print >> self.outfile, ">>"
                 print >> self.outfile, "<<"
-                for i in msg.assemble().splitlines():
+                for i in f.request.assemble().splitlines():
                     print >> self.outfile, "\t", i
                 print >> self.outfile, "<<"
             self.state.delete_flow(f)
@@ -83,4 +87,7 @@ class DumpMaster(flow.FlowMaster):
         try:
             return flow.FlowMaster.run(self)
         except KeyboardInterrupt:
-            self.shutdown()
+            pass
+        except Exception, v:
+            traceback.print_exc()
+        self.shutdown()
