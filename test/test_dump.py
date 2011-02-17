@@ -6,7 +6,7 @@ import utils
 
 
 class uDumpMaster(libpry.AutoTree):
-    def _dummy_cycle(self, m):
+    def _cycle(self, m):
         req = utils.treq()
         cc = req.client_conn
         resp = utils.tresp(req)
@@ -14,50 +14,64 @@ class uDumpMaster(libpry.AutoTree):
         m.handle_request(req)
         m.handle_response(resp)
 
+    def _dummy_cycle(self, filt, **options):
+        cs = StringIO()
+        o = dump.Options(**options)
+        m = dump.DumpMaster(None, o, filt, outfile=cs)
+        self._cycle(m)
+        return cs.getvalue()
+
     def test_options(self):
         o = dump.Options(verbosity = 2)
         assert o.verbosity == 2
         libpry.raises(AttributeError, dump.Options, nonexistent = 2)
 
     def test_filter(self):
-            cs = StringIO()
-            o = dump.Options(
-                verbosity = 1
-            )
-            m = dump.DumpMaster(None, o, "~u foo", outfile=cs)
-            self._dummy_cycle(m)
-            assert not "GET" in cs.getvalue()
+        assert not "GET" in self._dummy_cycle("~u foo", verbosity=1)
 
     def test_basic(self):
         for i in (1, 2, 3):
-            cs = StringIO()
-            o = dump.Options(
-                verbosity = i
-            )
-            m = dump.DumpMaster(None, o, "~s", outfile=cs)
-            self._dummy_cycle(m)
-            assert "GET" in cs.getvalue()
+            assert "GET" in self._dummy_cycle("~s", verbosity=i)
 
     def test_write(self):
         d = self.tmpdir()
         p = os.path.join(d, "a")
-        o = dump.Options(
-            wfile = p,
-            verbosity = 0
-        )
-        cs = StringIO()
-        m = dump.DumpMaster(None, o, None, outfile=cs)
-        self._dummy_cycle(m)
-        del m
+        self._dummy_cycle(None, wfile=p, verbosity=0)
         assert len(list(flow.FlowReader(open(p)).stream())) == 1
 
     def test_write_err(self):
-        o = dump.Options(
-            wfile = "nonexistentdir/foo",
-            verbosity = 0
+        libpry.raises(
+            dump.DumpError,
+            self._dummy_cycle,
+            None,
+            wfile = "nonexistentdir/foo"
         )
-        cs = StringIO()
-        libpry.raises(dump.DumpError, dump.DumpMaster, None, o, None)
+
+    def test_request_script(self):
+        ret = self._dummy_cycle(None, request_script="scripts/a", verbosity=1)
+        assert "TESTOK" in ret
+        assert "DEBUG" in ret
+        libpry.raises(
+            dump.DumpError,
+            self._dummy_cycle, None, request_script="nonexistent"
+        )
+        libpry.raises(
+            dump.DumpError,
+            self._dummy_cycle, None, request_script="scripts/err_data"
+        )
+
+    def test_response_script(self):
+        ret = self._dummy_cycle(None, response_script="scripts/a", verbosity=1)
+        assert "TESTOK" in ret
+        assert "DEBUG" in ret
+        libpry.raises(
+            dump.DumpError,
+            self._dummy_cycle, None, response_script="nonexistent"
+        )
+        libpry.raises(
+            dump.DumpError,
+            self._dummy_cycle, None, response_script="scripts/err_data"
+        )
 
 
 
@@ -67,5 +81,3 @@ class uDumpMaster(libpry.AutoTree):
 tests = [
     uDumpMaster()
 ]
-
-

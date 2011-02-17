@@ -1,7 +1,7 @@
+import os
 import countershape
 from countershape import Page, Directory, PythonModule, markup
-import countershape.grok
-
+import countershape.grok, countershape.template    
 
 this.layout = countershape.Layout("_layout.html")
 ns.docTitle = "mitmproxy"
@@ -16,12 +16,25 @@ ns.sidebar = countershape.widgets.SiblingPageIndex(
           )
 
 ns.license = file("../LICENSE").read()
-ns.index_contents = file("../README").read()
-ns.example = file("../examples/stickycookies.py").read()
+ns.index_contents = file("../README.mkd").read()
+
+
+top = os.path.abspath(os.getcwd())
+def example(s):
+    d = file(os.path.join(top, s)).read()
+    return countershape.template.pySyntax(d)
+
+
+ns.example = example
+
+
 
 pages = [
     Page("index.html", "introduction"),
-    Page("library.html", "library"),
+    Page("mitmproxy.html", "mitmproxy"),
+    Page("mitmdump.html", "mitmdump"),
+    Page("scripts.html", "scripts"),
+    Page("library.html", "libmproxy"),
     Page("faq.html", "faq"),
     Page("admin.html", "administrivia")
 ]

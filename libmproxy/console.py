@@ -549,7 +549,7 @@ class ConnectionView(WWrap):
         path = os.path.expanduser(path)
         self.state.last_script = path
         try:
-            newflow, serr = self.flow.run_script(path)
+            serr = self.flow.run_script(path)
         except flow.RunException, e:
             if e.errout:
                 serr = "Script error code: %s\n\n"%e.returncode + e.errout
@@ -559,7 +559,6 @@ class ConnectionView(WWrap):
         if serr:
             serr = "Script output:\n\n" + serr
             self.master.spawn_external_viewer(serr, None)
-        self.flow.load_state(newflow.get_state())
         self.master.refresh_connection(self.flow)
 
 

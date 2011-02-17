@@ -8,6 +8,8 @@ class Options(object):
     __slots__ = [
         "verbosity",
         "wfile",
+        "request_script",
+        "response_script",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -44,8 +46,24 @@ class DumpMaster(flow.FlowMaster):
         flow.FlowMaster.handle_error(self, r)
         r.ack()
 
+    def _runscript(self, f, script):
+        try:
+            ret = f.run_script(script)
+            if self.o.verbosity > 0:
+                print >> self.outfile, ret
+        except flow.RunException, e:
+            if e.errout:
+                eout = "Script output:\n" + self.indent(4, e.errout) + "\n"
+            else:
+                eout = ""
+            raise DumpError(
+                    "%s: %s\n%s"%(script, e.args[0], eout)
+                )
+
     def handle_request(self, r):
-        flow.FlowMaster.handle_request(self, r)
+        f = flow.FlowMaster.handle_request(self, r)
+        if self.o.request_script:
+            self._runscript(f, self.o.request_script)
         r.ack()
 
     def indent(self, n, t):
@@ -55,6 +73,8 @@ class DumpMaster(flow.FlowMaster):
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
         if f:
+            if self.o.response_script:
+                self._runscript(f, self.o.response_script)
             msg.ack()
             if self.filt and not f.match(self.filt):
                     return
@@ -96,8 +116,6 @@ class DumpMaster(flow.FlowMaster):
     def run(self):
         try:
             return flow.FlowMaster.run(self)
-        except KeyboardInterrupt:
-            pass
-        except Exception, v:
-            traceback.print_exc()
-        self.shutdown()
+        except BaseException, v:
+            self.shutdown()
+            raise

@@ -41,7 +41,15 @@ if __name__ == '__main__':
     parser.add_option("-w", "--writefile",
                       action="store", dest="wfile", default=None,
                       help="Write flows to file.")
+    parser.add_option("", "--reqscript",
+                      action="store", dest="request_script", default=None,
+                      help="Script to run when a request is recieved.")
+    parser.add_option("", "--respscript",
+                      action="store", dest="response_script", default=None,
+                      help="Script to run when a response is recieved.")
+
     options, args = parser.parse_args()
+
 
     if options.quiet:
         options.verbose = 0
@@ -58,15 +66,23 @@ if __name__ == '__main__':
 
     dumpopts = dump.Options(
         verbosity = options.verbose,
-        wfile = options.wfile
+        wfile = options.wfile,
+        request_script = options.request_script,
+        response_script = options.response_script,
     )
     if args:
         filt = " ".join(args)
     else:
         filt = None
 
-    m = dump.DumpMaster(server, dumpopts, filt)
-
     if options.verbose > 0:
         print >> sys.stderr, "Running on port %s"%options.port
-    m.run()
+
+    try:
+        m = dump.DumpMaster(server, dumpopts, filt)
+        m.run()
+    except dump.DumpError, e:
+        print >> sys.stderr, "mitmdump:", e
+        sys.exit(1)
+    except KeyboardInterrupt:
+        pass

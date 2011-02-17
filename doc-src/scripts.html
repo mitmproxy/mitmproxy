@@ -1,0 +1,11 @@
+
+Both __mitmproxy__ and __mitmdump__ allow you to modify requests and responses
+with external scripts. The script interface is simple - scripts simply read,
+modify and return a single __libmproxy.flow.Flow__ object, using the methods
+defined in the __libmproxy.script__ module. Scripts must be executable.
+
+$!example("../examples/simple_script")!$
+
+
+
+

@@ -82,7 +82,8 @@ class Flow:
                     p.returncode,
                     se
                 )
-        return f, se
+        self.load_state(f.get_state())
+        return se
 
     def get_state(self, nobackup=False):
         d = dict(
