@@ -67,17 +67,26 @@ class DumpMaster(flow.FlowMaster):
                 print >> self.outfile, f.client_conn.address[0],
                 print >> self.outfile, f.request.short()
                 print >> self.outfile, self.indent(4, f.request.headers)
+                print >> self.outfile
                 print >> self.outfile, " <<", f.response.short()
                 print >> self.outfile, self.indent(4, f.response.headers)
+                print >> self.outfile, "\n\n"
             elif self.o.verbosity == 3:
-                print >> self.outfile, ">>"
-                for i in f.request.request.assemble().splitlines():
-                    print >> self.outfile, "\t", i
-                print >> self.outfile, ">>"
-                print >> self.outfile, "<<"
-                for i in f.request.assemble().splitlines():
-                    print >> self.outfile, "\t", i
-                print >> self.outfile, "<<"
+                print >> self.outfile, f.client_conn.address[0],
+                print >> self.outfile, f.request.short()
+                print >> self.outfile, self.indent(4, f.request.headers)
+                if utils.isBin(f.request.content):
+                    print >> self.outfile, self.indent(4, utils.hexdump(f.request.content))
+                elif f.request.content:
+                    print >> self.outfile, self.indent(4, f.request.content)
+                print >> self.outfile
+                print >> self.outfile, " <<", f.response.short()
+                print >> self.outfile, self.indent(4, f.response.headers)
+                if utils.isBin(f.response.content):
+                    print >> self.outfile, self.indent(4, utils.hexdump(f.response.content))
+                elif f.response.content:
+                    print >> self.outfile, self.indent(4, f.response.content)
+                print >> self.outfile, "\n\n"
             self.state.delete_flow(f)
             if self.o.wfile:
                 self.fwriter.add(f)
