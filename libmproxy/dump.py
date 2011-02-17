@@ -58,19 +58,20 @@ class DumpMaster(flow.FlowMaster):
             msg.ack()
             if self.filt and not f.match(self.filt):
                     return
+            sz = utils.pretty_size(len(f.response.content))
             if self.o.verbosity == 1:
                 print >> self.outfile, f.client_conn.address[0],
                 print >> self.outfile, f.request.short()
                 print >> self.outfile, "  <<",
-                print >> self.outfile, f.response.short(), utils.pretty_size(len(f.response.content))
+                print >> self.outfile, f.response.short(), sz
             elif self.o.verbosity == 2:
                 print >> self.outfile, f.client_conn.address[0],
                 print >> self.outfile, f.request.short()
                 print >> self.outfile, self.indent(4, f.request.headers)
                 print >> self.outfile
-                print >> self.outfile, " <<", f.response.short()
+                print >> self.outfile, " <<", f.response.short(), sz
                 print >> self.outfile, self.indent(4, f.response.headers)
-                print >> self.outfile, "\n\n"
+                print >> self.outfile, "\n"
             elif self.o.verbosity == 3:
                 print >> self.outfile, f.client_conn.address[0],
                 print >> self.outfile, f.request.short()
@@ -80,13 +81,13 @@ class DumpMaster(flow.FlowMaster):
                 elif f.request.content:
                     print >> self.outfile, self.indent(4, f.request.content)
                 print >> self.outfile
-                print >> self.outfile, " <<", f.response.short()
+                print >> self.outfile, " <<", f.response.short(), sz
                 print >> self.outfile, self.indent(4, f.response.headers)
                 if utils.isBin(f.response.content):
                     print >> self.outfile, self.indent(4, utils.hexdump(f.response.content))
                 elif f.response.content:
                     print >> self.outfile, self.indent(4, f.response.content)
-                print >> self.outfile, "\n\n"
+                print >> self.outfile, "\n"
             self.state.delete_flow(f)
             if self.o.wfile:
                 self.fwriter.add(f)

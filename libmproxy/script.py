@@ -6,7 +6,6 @@
     simple.
 """
 import sys, base64
-from contrib import bson
 import flow
 
 
