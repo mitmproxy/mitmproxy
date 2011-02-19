@@ -26,7 +26,7 @@ if __name__ == '__main__':
                 usage = "%prog [options] [filter]",
                 version="%%prog %s"%VERSION,
             )
-    utils.certificate_option_group(parser)
+    proxy.certificate_option_group(parser)
     parser.add_option(
         "-p", "--port", action="store",
         type = "int", dest="port", default=8080,
@@ -54,15 +54,15 @@ if __name__ == '__main__':
     if options.quiet:
         options.verbose = 0
 
-    utils.process_certificate_option_group(parser, options)
+    proxy.process_certificate_option_group(parser, options)
 
-    proxy.config = proxy.Config(
+    config = proxy.Config(
         certfile = options.cert,
         certpath = options.certpath,
         cacert   = options.cacert,
         ciphers = options.ciphers
     )
-    server = proxy.ProxyServer(options.port)
+    server = proxy.ProxyServer(config, options.port)
 
     dumpopts = dump.Options(
         verbosity = options.verbose,

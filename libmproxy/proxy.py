@@ -6,11 +6,10 @@
     Development started from Neil Schemenauer's munchy.py
 """
 import sys, os, time, string, socket, urlparse, re, select, copy, base64
-import SocketServer, ssl
+import optparse, SocketServer, ssl
 import utils, controller
 
 NAME = "mitmproxy"
-config = None
 
 
 class ProxyError(Exception):
@@ -495,7 +494,8 @@ class ServerConnection:
 
 
 class ProxyHandler(SocketServer.StreamRequestHandler):
-    def __init__(self, request, client_address, server, q):
+    def __init__(self, config, request, client_address, server, q):
+        self.config = config
         self.mqueue = q
         SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
 
@@ -545,22 +545,14 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         if server:
             server.terminate()
 
-    def find_cert(self, host, port=443):
-        #return config.certpath + "/" + host + ":" + port + ".pem"
-        if config.certpath is not None:
-            cert = config.certpath + "/" + host + ".pem"
-            if not os.path.exists(cert) and config.cacert is not None:
-                utils.dummy_cert(config.certpath, config.cacert, host)
-            if os.path.exists(cert):
-                return cert
-            print >> sys.stderr, "WARNING: Certificate missing for %s:%d! (%s)\n" % (host, port, cert)
-        return config.certfile
-
-    def find_key(self, host, port=443):
-        if config.cacert is not None:
-            return config.cacert
+    def find_cert(self, host):
+        if self.config.certfile:
+            return self.config.certfile
         else:
-            return config.certfile
+            ret = utils.dummy_cert(self.config.certpath, self.config.cacert, host)
+            if not ret:
+                raise ProxyError(400, "mitmproxy: Unable to generate dummy cert.")
+            return ret
 
     def read_request(self, client_conn):
         line = self.rfile.readline()
@@ -583,14 +575,14 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                         )
             self.wfile.flush()
             kwargs = dict(
-                certfile = self.find_cert(host,port),
-                keyfile = self.find_key(host,port),
+                certfile = self.find_cert(host),
+                keyfile = self.config.certfile or self.config.cacert,
                 server_side = True,
                 ssl_version = ssl.PROTOCOL_SSLv23,
                 do_handshake_on_connect = False
             )
             if sys.version_info[1] > 6:
-                kwargs["ciphers"] = config.ciphers
+                kwargs["ciphers"] = self.config.ciphers
             self.connection = ssl.wrap_socket(self.connection, **kwargs)
             self.rfile = FileLike(self.connection)
             self.wfile = FileLike(self.connection)
@@ -671,8 +663,8 @@ ServerBase.daemon_threads = True        # Terminate workers when main thread ter
 class ProxyServer(ServerBase):
     request_queue_size = 20
     allow_reuse_address = True
-    def __init__(self, port, address=''):
-        self.port, self.address = port, address
+    def __init__(self, config, port, address=''):
+        self.config, self.port, self.address = config, port, address
         ServerBase.__init__(self, (address, port), ProxyHandler)
         self.masterq = None
 
@@ -680,8 +672,62 @@ class ProxyServer(ServerBase):
         self.masterq = q
 
     def finish_request(self, request, client_address):
-        self.RequestHandlerClass(request, client_address, self, self.masterq)
+        self.RequestHandlerClass(self.config, request, client_address, self, self.masterq)
 
     def shutdown(self):
         ServerBase.shutdown(self)
+
+
+# Command-line utils
+def certificate_option_group(parser):
+    group = optparse.OptionGroup(parser, "SSL")
+    group.add_option(
+        "--cert", action="store",
+        type = "str", dest="cert", default=None,
+        help = "User-created SSL certificate file."
+    )
+    group.add_option(
+        "--cacert", action="store",
+        type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
+        help = "SSL CA certificate file. Generated if it doesn't exist."
+    )
+    group.add_option(
+        "--certpath", action="store",
+        type = "str", dest="certpath", default="~/.mitmproxy/",
+        help = "SSL certificate store path."
+    )
+    group.add_option(
+        "--ciphers", action="store",
+        type = "str", dest="ciphers", default=None,
+        help = "SSL ciphers."
+    )
+    parser.add_option_group(group)
+
+
+def process_certificate_option_group(parser, options):
+    conf = {}
+    if options.cert:
+        options.cert = os.path.expanduser(options.cert)
+        if not os.path.exists(options.cert):
+            parser.error("Manually created certificate does not exist: %s"%options.cert)
+    if options.cacert:
+        options.cacert = os.path.expanduser(options.cacert)
+        if not os.path.exists(options.cacert):
+            dummy_ca(options.cacert)
+    if options.certpath:
+        options.certpath = os.path.expanduser(options.certpath)
+    elif options.cacert:
+        options.certpath = os.path.dirname(options.cacert)
+
+    if getattr(options, "cache", None) is not None:
+        options.cache = os.path.expanduser(options.cache)
+
+    return Config(
+        certfile = options.cert,
+        certpath = options.certpath,
+        cacert = options.cacert,
+        ciphers = options.ciphers
+    )
+
+
 

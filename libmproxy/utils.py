@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re, os, subprocess, datetime, textwrap, errno, sys
-import optparse
 
 def format_timestamp(s):
     d = datetime.datetime.fromtimestamp(s)
@@ -355,11 +354,14 @@ def dummy_cert(certdir, ca, commonname):
         ca: Path to the certificate authority file, or None.
         commonname: Common name for the generated certificate.
 
-        Returns True if operation succeeded, False if not.
+        Returns cert path if operation succeeded, None if not.
     """
+    certpath = os.path.join(certdir, commonname + ".pem")
+    if os.path.exists(certpath):
+        return certpath
+
     confpath = os.path.join(certdir, commonname + ".cnf")
     reqpath = os.path.join(certdir, commonname + ".req")
-    certpath = os.path.join(certdir, commonname + ".pem")
 
     template = open(data.path("resources/cert.cnf")).read()
     f = open(confpath, "w").write(template%(dict(commonname=commonname)))
@@ -381,7 +383,7 @@ def dummy_cert(certdir, ca, commonname):
             stdin=subprocess.PIPE
         )
         if ret:
-            return False
+            return None
         cmd = [
             "openssl",
             "x509",
@@ -401,7 +403,7 @@ def dummy_cert(certdir, ca, commonname):
             stdin=subprocess.PIPE
         )
         if ret:
-            return False
+            return None
     else:
         # Create a new selfsigned certificate + key
         cmd = [
@@ -423,8 +425,8 @@ def dummy_cert(certdir, ca, commonname):
             stdin=subprocess.PIPE
         )
         if ret:
-            return False
-    return True
+            return None
+    return certpath
 
 
 def mkdir_p(path):
@@ -436,46 +438,4 @@ def mkdir_p(path):
         else:
             raise
 
-
-def certificate_option_group(parser):
-    group = optparse.OptionGroup(parser, "SSL")
-    group.add_option(
-        "--cert", action="store",
-        type = "str", dest="cert", default=None,
-        help = "SSL certificate file."
-    )
-    group.add_option(
-        "--cacert", action="store",
-        type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
-        help = "SSL CA certificate file."
-    )
-    group.add_option(
-        "--certpath", action="store",
-        type = "str", dest="certpath", default="~/.mitmproxy/",
-        help = "SSL certificate store path."
-    )
-    group.add_option(
-        "--ciphers", action="store",
-        type = "str", dest="ciphers", default=None,
-        help = "SSL ciphers."
-    )
-    parser.add_option_group(group)
-
-
-def process_certificate_option_group(parser, options):
-    if options.cert is not None:
-        options.cert = os.path.expanduser(options.cert)
-        if not os.path.exists(options.cert):
-            parser.error("Manually created certificate does not exist: %s"%options.cert)
-    if options.cacert is not None:
-        options.cacert = os.path.expanduser(options.cacert)
-        if not os.path.exists(options.cacert):
-            print >> sys.stderr, "Creating dummy CA certificate at %s"%options.cacert
-            dummy_ca(options.cacert)
-    if options.certpath is not None:
-        options.certpath = os.path.expanduser(options.certpath)
-    elif options.cacert is not None:
-        options.certpath = os.path.dirname(options.cacert)
-    if getattr(options, "cache", None) is not None:
-        options.cache = os.path.expanduser(options.cache)
 

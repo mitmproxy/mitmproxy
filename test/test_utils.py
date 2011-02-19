@@ -293,6 +293,12 @@ class udummy_cert(libpry.AutoTree):
             "foo.com"
         )
         assert os.path.exists(os.path.join(d, "foo", "foo.com.pem"))
+        # Short-circuit
+        assert utils.dummy_cert(
+            os.path.join(d, "foo"),
+            cacert,
+            "foo.com"
+        )
 
     def test_no_ca(self):
         d = self.tmpdir()

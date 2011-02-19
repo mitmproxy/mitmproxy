@@ -15,7 +15,7 @@ HTTPS_PORT = random.randint(30000, 40000)
 
 class TestMaster(controller.Master):
     def __init__(self, port, testq):
-        serv = proxy.ProxyServer(port)
+        serv = proxy.ProxyServer(proxy.Config("data/testkey.pem"), port)
         controller.Master.__init__(self, serv)
         self.testq = testq
         self.log = []
@@ -54,7 +54,6 @@ class ServerThread(threading.Thread):
 
 class _TestServers(libpry.TestContainer):
     def setUpAll(self):
-        proxy.config = proxy.Config("data/testkey.pem")
         self.tqueue = Queue.Queue()
         # We don't make any concurrent requests, so we can access
         # the attributes on this object safely.
