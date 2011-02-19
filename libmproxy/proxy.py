@@ -148,6 +148,23 @@ class Request(controller.Msg):
     def is_cached(self):
         return False
 
+    def load_state(self, state):
+        if state["client_conn"]:
+            if self.client_conn:
+                self.client_conn.load_state(state["client_conn"])
+            else:
+                self.client_conn = ClientConnect.from_state(state["client_conn"])
+        else:
+            self.client_conn = None
+        self.host = state["host"]
+        self.port = state["port"]
+        self.scheme = state["scheme"]
+        self.method = state["method"]
+        self.path = state["path"]
+        self.headers = utils.Headers.from_state(state["headers"])
+        self.content = base64.decodestring(state["content"])
+        self.timestamp = state["timestamp"]
+
     def get_state(self):
         return dict(
             client_conn = self.client_conn.get_state() if self.client_conn else None,
@@ -164,7 +181,7 @@ class Request(controller.Msg):
     @classmethod
     def from_state(klass, state):
         return klass(
-            ClientConnect.from_state(state["client_conn"]) if state["client_conn"] else None,
+            ClientConnect.from_state(state["client_conn"]),
             state["host"],
             state["port"],
             state["scheme"],
@@ -249,6 +266,13 @@ class Response(controller.Msg):
         self.cached = False
         controller.Msg.__init__(self)
 
+    def load_state(self, state):
+        self.code = state["code"]
+        self.msg = state["msg"]
+        self.headers = utils.Headers.from_state(state["headers"])
+        self.content = base64.decodestring(state["content"])
+        self.timestamp = state["timestamp"]
+
     def get_state(self):
         return dict(
             code = self.code,
@@ -325,12 +349,21 @@ class ClientConnect(controller.Msg):
         self.close = False
         controller.Msg.__init__(self)
 
+    def __eq__(self, other):
+        return self.get_state() == other.get_state()
+
+    def load_state(self, state):
+        self.address = state
+
     def get_state(self):
         return list(self.address) if self.address else None
 
     @classmethod
     def from_state(klass, state):
-        return klass(state)
+        if state:
+            return klass(state)
+        else:
+            return None
 
     def copy(self):
         return copy.copy(self)
@@ -341,6 +374,10 @@ class Error(controller.Msg):
         self.flow, self.msg = flow, msg
         self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
+
+    def load_state(self, state):
+        self.msg = state["msg"]
+        self.timestamp = state["timestamp"]
 
     def copy(self):
         return copy.copy(self)

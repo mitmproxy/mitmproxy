@@ -99,11 +99,26 @@ class Flow:
 
     def load_state(self, state):
         self._backup = state["backup"]
-        self.request = proxy.Request.from_state(state["request"])
+        if self.request:
+            self.request.load_state(state["request"])
+        else:
+            self.request = proxy.Request.from_state(state["request"])
+
         if state["response"]:
-            self.response = proxy.Response.from_state(self.request, state["response"])
+            if self.response:
+                self.response.load_state(state["response"])
+            else:
+                self.response = proxy.Response.from_state(self.request, state["response"])
+        else:
+            self.response = None
+
         if state["error"]:
-            self.error = proxy.Error.from_state(state["error"])
+            if self.error:
+                self.error.load_state(state["error"])
+            else:
+                self.error = proxy.Error.from_state(state["error"])
+        else:
+            self.error = None
 
     @classmethod
     def from_state(klass, state):

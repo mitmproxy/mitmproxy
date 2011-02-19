@@ -234,6 +234,11 @@ class uRequest(libpry.AutoTree):
         state = r.get_state()
         assert proxy.Request.from_state(state) == r
 
+        r2 = proxy.Request(c, "testing", 20, "http", "PUT", "/foo", h, "test")
+        assert not r == r2
+        r.load_state(r2.get_state())
+        assert r == r2
+
 
 class uResponse(libpry.AutoTree):
     def test_simple(self):
@@ -256,6 +261,11 @@ class uResponse(libpry.AutoTree):
         state = resp.get_state()
         assert proxy.Response.from_state(req, state) == resp
 
+        resp2 = proxy.Response(req, 220, "foo", h.copy(), "test")
+        assert not resp == resp2
+        resp.load_state(resp2.get_state())
+        assert resp == resp2
+
 
 class uError(libpry.AutoTree):
     def test_getset_state(self):
@@ -265,11 +275,29 @@ class uError(libpry.AutoTree):
 
         assert e.copy()
 
+        e2 = proxy.Error(None, "bar")
+        assert not e == e2
+        e.load_state(e2.get_state())
+        assert e == e2
+
+
 
 class uProxyError(libpry.AutoTree):
     def test_simple(self):
         p = proxy.ProxyError(111, "msg")
         assert repr(p)
+
+
+class uClientConnect(libpry.AutoTree):
+    def test_state(self):
+        c = proxy.ClientConnect(("a", 22))
+        assert proxy.ClientConnect.from_state(c.get_state()) == c
+
+        c2 = proxy.ClientConnect(("a", 25))
+        assert not c == c2
+
+        c.load_state(c2.get_state())
+        assert c == c2
 
 
 
@@ -281,8 +309,9 @@ tests = [
     u_parse_request_line(),
     u_parse_url(),
     uError(),
+    uClientConnect(),
     _TestServers(), [
         uSanity(),
         uProxy(),
-    ]
+    ],
 ]
