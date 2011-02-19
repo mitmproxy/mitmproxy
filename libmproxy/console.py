@@ -46,63 +46,58 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
 
 
 def format_flow(f, focus, extended=False, padding=2):
-    if not f.request:
-        txt = [
-            ("title", " Connection from %s..."%(f.client_conn.address[0])),
-        ]
+    if extended:
+        ts = ("highlight", utils.format_timestamp(f.request.timestamp) + " ")
     else:
-        if extended:
-            ts = ("highlight", utils.format_timestamp(f.request.timestamp) + " ")
+        ts = " "
+
+    txt = [
+        ts,
+        ("ack", "!") if f.intercepting and not f.request.acked else " ",
+        ("method", f.request.method),
+        " ",
+        (
+            "text" if (f.response or f.error) else "title",
+            f.request.url(),
+        ),
+    ]
+    if f.response or f.error or f.request.is_replay():
+        tsr = f.response or f.error
+        if extended and tsr:
+            ts = ("highlight", utils.format_timestamp(tsr.timestamp) + " ")
         else:
             ts = " "
 
-        txt = [
-            ts,
-            ("ack", "!") if f.intercepting and not f.request.acked else " ",
-            ("method", f.request.method),
-            " ",
-            (
-                "text" if (f.response or f.error) else "title",
-                f.request.url(),
-            ),
-        ]
-        if f.response or f.error or f.request.is_replay():
-            tsr = f.response or f.error
-            if extended and tsr:
-                ts = ("highlight", utils.format_timestamp(tsr.timestamp) + " ")
-            else:
-                ts = " "
+        txt.append("\n") 
+        txt.append(("text", ts))
+        txt.append(" "*(padding+2))
+        met = ""
+        if f.request.is_replay():
+            txt.append(("method", "[replay] "))
+        elif f.modified():
+            txt.append(("method", "[edited] "))
+        if not (f.response or f.error):
+            txt.append(("text", "waiting for response..."))
 
-            txt.append("\n") 
-            txt.append(("text", ts))
-            txt.append(" "*(padding+2))
-            met = ""
-            if f.request.is_replay():
-                txt.append(("method", "[replay] "))
-            elif f.modified():
-                txt.append(("method", "[edited] "))
-            if not (f.response or f.error):
-                txt.append(("text", "waiting for response..."))
-
-        if f.response:
-            txt.append(
-               ("ack", "!") if f.intercepting and not f.response.acked else " "
-            )
-            txt.append("<- ")
-            if f.response.code in [200, 304]:
-                txt.append(("goodcode", str(f.response.code)))
-            else:
-                txt.append(("error", str(f.response.code)))
-            t = f.response.headers.get("content-type")
-            if t:
-                t = t[0].split(";")[0]
-                txt.append(("text", " %s"%t))
-            if f.response.content:
-                txt.append(", %s"%utils.pretty_size(len(f.response.content)))
-        elif f.error:
-            txt.append(
-               ("error", f.error.msg)
-            )
+    if f.response:
+        txt.append(
+           ("ack", "!") if f.intercepting and not f.response.acked else " "
+        )
+        txt.append("<- ")
+        if f.response.code in [200, 304]:
+            txt.append(("goodcode", str(f.response.code)))
+        else:
+            txt.append(("error", str(f.response.code)))
+        t = f.response.headers.get("content-type")
+        if t:
+            t = t[0].split(";")[0]
+            txt.append(("text", " %s"%t))
+        if f.response.content:
+            txt.append(", %s"%utils.pretty_size(len(f.response.content)))
+    elif f.error:
+        txt.append(
+           ("error", f.error.msg)
+        )
 
     if focus:
         txt.insert(0, ("focus", ">>" + " "*(padding-2)))

@@ -2,7 +2,7 @@ body {
     -x-system-font:none;
     font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
     color: #555555;
-    font-size: 1.1em;
+    font-size: 1.2em;
 }
 
 a {
@@ -15,7 +15,7 @@ a {
 }
 #hd h1 {
     letter-spacing: 3px;
-    font-size: 2.5em;
+    font-size: 2em;
     line-height: 100%;
     margin: 0.3em 0;
     font-weight: normal;
@@ -46,49 +46,6 @@ a {
         letter-spacing: 0.5px;
 }
 
-.pageindex {
-    font-size: 1.5em;
-}
-
-.pageindex ul {
-    list-style-image:none;
-    list-style-position:outside;
-    list-style-type:none;
-    margin: 0px;
-}
-
-.pageindex li { 
-    list-style-image:none;
-    list-style-position:outside;
-    list-style-type:none;
-    margin: 0; 
-}
-
-.pageindex li.active {
-    padding-left: 4px;
-    border-left: 5px solid #ff0000;
-}
-
-.pageindex li.inactive{
-    border-left: none;
-    margin-left: 9px;
-}
-
-.pageindex li li a {
-    display: block;
-    background-color: transparent;
-    margin: 0;
-    border-top: none;
-    border-bottom: none;
-}
-
-.pageindex ul ul {
-    margin-left: 20px;
-    padding: 0;
-    list-style-type: none;
-}
-
-
 .faq .question {
     font-size: 1.1em;
     font-weight: bold;
@@ -99,3 +56,22 @@ pre {
     background-color: #e0e0e0;
     margin: 10px;
 }
+
+ul {
+    margin-top: 0.1em;
+    margin-bottom: 0;
+    margin-left: 2em;
+}
+
+li a {
+    text-decoration: none;
+}
+
+#nav {
+    float: right;
+
+
+}
+
+
+

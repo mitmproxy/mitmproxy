@@ -1,13 +1,25 @@
-<div class="yui-t2" id="doc3">
+<div id="doc3">
     <div style="" id="hd">
-        $!head!$
+
+        <div id="nav">
+        <!--(block pb)-->
+        <a href="@!urlTo(previous)!@">prev</a>
+        <!--(end)-->
+        <!--(block nb)-->
+        <a href="@!urlTo(next)!@">next</a>
+        <!--(end)-->
+
+        $!pb if previous else "prev"!$ |
+        <a href="@!urlTo('index.html')!@">index</a> |
+        $!nb if next else "next"!$
+        </div>
+
+        $!title!$
+        
     </div>
     <div id="bd">
         <div id="yui-main">
             <div style="" class="yui-b">$!body!$</div>
-        </div>
-        <div style="" class="yui-b">
-            <div>@!sidebar!@</div>
         </div>
     </div>
     <div style="" id="ft">

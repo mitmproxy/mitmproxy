@@ -8,12 +8,10 @@ ns.docTitle = "mitmproxy"
 this.markup = markup.Markdown()
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
-ns.copyright = "Aldo Cortesi 2010"
-ns.head = countershape.template.Template(None, "<h1> @!docTitle!@ - @!this.title!@ </h1>")
-ns.sidebar = countershape.widgets.SiblingPageIndex(
-            '/index.html',
-            exclude=['countershape']
-          )
+ns.copyright = u"\u00a9 mitmproxy project, 2011"
+ns.title = countershape.template.Template(None, "<h1> @!docTitle!@ - @!this.title!@ </h1>")
+
+ns.index = countershape.widgets.SiblingPageIndex('/index.html', divclass="pageindex")
 
 ns.license = file("../LICENSE").read()
 ns.index_contents = file("../README.mkd").read()
@@ -30,11 +28,15 @@ ns.example = example
 
 
 pages = [
-    Page("index.html", "introduction"),
+    Page("index.html", "Index"),
+    Page("intro.html", "Introduction"),
     Page("mitmproxy.html", "mitmproxy"),
+    Directory("mitmproxy"),
     Page("mitmdump.html", "mitmdump"),
-    Page("scripts.html", "scripts"),
-    Page("library.html", "libmproxy"),
-    Page("faq.html", "faq"),
-    Page("admin.html", "administrivia")
+    Directory("mitmdump"),
+    Page("scripts.html", "External scripts"),
+    Page("library.html", "libmproxy: mitmproxy as a library"),
+    Page("ssl.html", "SSL"),
+    Page("faq.html", "FAQ"),
+    Page("admin.html", "Administrivia")
 ]
