@@ -51,6 +51,14 @@ class uFlow(libpry.AutoTree):
         state = f.get_state() 
         assert f == flow.Flow.from_state(state)
 
+        f2 = utils.tflow()
+        f2.error = proxy.Error(f, "e2")
+        assert not f == f2
+        f.load_state(f2.get_state())
+        assert f == f2
+
+
+
     def test_kill(self):
         f = utils.tflow()
         f.request = utils.treq()
