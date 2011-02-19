@@ -26,6 +26,7 @@ class uFlow(libpry.AutoTree):
         f.response = utils.tresp()
         f.request = f.response.request
         assert not f.match(filt.parse("~b test"))
+        assert not f.match(None)
 
     def test_backup(self):
         f = utils.tflow()
@@ -41,8 +42,12 @@ class uFlow(libpry.AutoTree):
 
     def test_getset_state(self):
         f = utils.tflow()
-        f.response = utils.tresp()
-        f.request = f.response.request
+        f.response = utils.tresp(f.request)
+        state = f.get_state() 
+        assert f == flow.Flow.from_state(state)
+
+        f.response = None
+        f.error = proxy.Error(f, "error")
         state = f.get_state() 
         assert f == flow.Flow.from_state(state)
 
@@ -236,18 +241,29 @@ class uSerialize(libpry.AutoTree):
 
 
 class uFlowMaster(libpry.AutoTree):
-    def test_one(self):
+    def test_all(self):
         s = flow.State()
-        f = flow.FlowMaster(None, s)
+        fm = flow.FlowMaster(None, s)
         req = utils.treq()
 
-        f.handle_request(req)
+        fm.handle_clientconnect(req.client_conn)
+
+        f = fm.handle_request(req)
         assert len(s.flow_list) == 1
 
         resp = utils.tresp(req)
-        f.handle_response(resp)
+        fm.handle_response(resp)
         assert len(s.flow_list) == 1
+
+        rx = utils.tresp()
+        assert not fm.handle_response(rx)
         
+        dc = proxy.ClientDisconnect(req.client_conn)
+        fm.handle_clientdisconnect(dc)
+
+        err = proxy.Error(f, "msg")
+        fm.handle_error(err)
+
 
 
 tests = [

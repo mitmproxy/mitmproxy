@@ -168,8 +168,6 @@ class State:
         self.intercept = None
 
     def clientconnect(self, cc):
-        if not isinstance(cc, proxy.ClientConnect):
-            assert False
         self.client_connections.append(cc)
 
     def clientdisconnect(self, dc):
@@ -182,8 +180,6 @@ class State:
         """
             Add a request to the state. Returns the matching flow.
         """
-        if not isinstance(req, proxy.Request):
-            assert False
         f = Flow(req)
         self.flow_list.insert(0, f)
         self.flow_map[req] = f
@@ -193,8 +189,6 @@ class State:
         """
             Add a response to the state. Returns the matching flow.
         """
-        if not isinstance(resp, proxy.Response):
-            assert False
         f = self.flow_map.get(resp.request)
         if not f:
             return False
@@ -230,14 +224,6 @@ class State:
         else:
             return tuple(self.flow_list[:])
 
-    def get_client_conn(self, itm):
-        if isinstance(itm, proxy.ClientConnect):
-            return itm
-        elif hasattr(itm, "client_conn"):
-            return itm.client_conn
-        elif hasattr(itm, "request"):
-            return itm.request.client_conn
-
     def delete_flow(self, f):
         if not f.intercepting:
             if f.request in self.flow_map:
@@ -259,7 +245,6 @@ class State:
         self.delete_flow(f)
 
     def revert(self, f):
-        conn = self.get_client_conn(f)
         f.revert()
 
     def replay(self, f, masterq):
@@ -271,7 +256,6 @@ class State:
             return "Can't replay while intercepting..."
         if f.request:
             f.backup()
-            conn = self.get_client_conn(f)
             f.request.set_replay()
             if f.request.content:
                 f.request.headers["content-length"] = [str(len(f.request.content))]
@@ -297,15 +281,11 @@ class FlowMaster(controller.Master):
 
     def handle_error(self, r):
         f = self.state.add_error(r)
-        if not f:
-            r.ack()
+        r.ack()
         return f
 
     def handle_request(self, r):
-        f = self.state.add_request(r)
-        if not f:
-            r.ack()
-        return f
+        return self.state.add_request(r)
 
     def handle_response(self, r):
         f = self.state.add_response(r)
