@@ -12,7 +12,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap, errno
+import re, os, subprocess, datetime, textwrap, errno, sys
 import optparse
 
 def format_timestamp(s):
@@ -314,167 +314,118 @@ class Data:
 data = Data(__name__)
 
 
-def make_openssl_conf(path, countryName=None, stateOrProvinceName=None, localityName=None, organizationName=None, organizationalUnitName=None, commonName=None, emailAddress=None, ca=False):
-    cnf = open(path, "w")
-    cnf.write("[ req ]\n")
-    cnf.write("prompt = no\n")
-    cnf.write("distinguished_name = req_distinguished_name\n")
-    if ca:
-        cnf.write("x509_extensions = v3_ca # The extentions to add to the self signed cert\n")
-    cnf.write("\n")
-    cnf.write("[ req_distinguished_name ]\n")
-    if countryName is not None:
-        cnf.write("countryName                    = %s\n" % (countryName) )
-        cnf.write("stateOrProvinceName            = %s\n" % (stateOrProvinceName) )
-        cnf.write("localityName                   = %s\n" % (localityName) )
-        cnf.write("organizationName               = %s\n" % (organizationName) )
-        cnf.write("organizationalUnitName         = %s\n" % (organizationalUnitName) )
-        cnf.write("commonName                     = %s\n" % (commonName) )
-        cnf.write("emailAddress                   = %s\n" % (emailAddress) )
-        cnf.write("\n")
-    cnf.write("[ v3_ca ]\n")
-    cnf.write("subjectKeyIdentifier=hash\n")
-    cnf.write("authorityKeyIdentifier=keyid:always,issuer\n")
-    if ca:
-        cnf.write("basicConstraints = critical,CA:true\n")
-        cnf.write("keyUsage = cRLSign, keyCertSign\n")
-        #cnf.write("nsCertType = sslCA, emailCA\n")
-    #cnf.write("subjectAltName=email:copy\n")
-    #cnf.write("issuerAltName=issuer:copy\n")
+def dummy_ca(path):
+    """
+        Creates a dummy CA, and writes it to path.
 
-def make_bogus_cert(certpath, countryName=None, stateOrProvinceName=None, localityName=None, organizationName="mitmproxy", organizationalUnitName=None, commonName="Dummy Certificate", emailAddress=None, ca=None, newca=False):
-    # Generates a bogus certificate like so:
-    # openssl req -config template -x509 -nodes -days 9999 -newkey rsa:1024 \
-    # -keyout cert.pem -out cert.pem 
+        This function also creates the necessary directories if they don't exist.
 
-    (path, ext) = os.path.splitext(certpath)
+        Returns True if operation succeeded, False if not.
+    """
     d = os.path.dirname(path)
     if not os.path.exists(d):
         os.makedirs(d)
-    
-    cnf = open(path+".cnf", "w")
-    cnf.write("[ req ]\n")
-    cnf.write("prompt = no\n")
-    cnf.write("distinguished_name = req_distinguished_name\n")
-    if newca:
-        cnf.write("x509_extensions = v3_ca\n")
-        cnf.write("req_extensions = v3_ca_req\n")
+    cmd = [
+        "openssl",
+        "req",
+        "-new",
+        "-x509",
+        "-config", data.path("resources/ca.cnf"),
+        "-nodes",
+        "-days", "9999",
+        "-out", path,
+        "-newkey", "rsa:1024",
+        "-keyout", path,
+    ]
+    ret = subprocess.call(
+        cmd,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE
+    )
+    if ret:
+        return False
     else:
-        cnf.write("x509_extensions = v3_cert\n")
-        cnf.write("req_extensions = v3_cert_req\n")
-    cnf.write("\n")
-    cnf.write("[ req_distinguished_name ]\n")
-    if countryName is not None:
-        cnf.write("countryName                    = %s\n" % (countryName) )
-    if stateOrProvinceName is not None:
-        cnf.write("stateOrProvinceName            = %s\n" % (stateOrProvinceName) )
-    if localityName is not None:
-        cnf.write("localityName                   = %s\n" % (localityName) )
-    if organizationName is not None:
-        cnf.write("organizationName               = %s\n" % (organizationName) )
-    if organizationalUnitName is not None:
-        cnf.write("organizationalUnitName         = %s\n" % (organizationalUnitName) )
-    if commonName is not None:
-        cnf.write("commonName                     = %s\n" % (commonName) )
-    if emailAddress is not None:
-        cnf.write("emailAddress                   = %s\n" % (emailAddress) )
-    cnf.write("\n")
-    cnf.write("[ v3_ca ]\n")
-    cnf.write("subjectKeyIdentifier=hash\n")
-    cnf.write("authorityKeyIdentifier=keyid:always,issuer\n")
-    cnf.write("basicConstraints = critical,CA:true\n")
-    cnf.write("keyUsage = cRLSign, keyCertSign\n")
-    cnf.write("nsCertType = sslCA\n")
-    #cnf.write("subjectAltName=email:copy\n")
-    #cnf.write("issuerAltName=issuer:copy\n")
-    cnf.write("\n")
-    cnf.write("[ v3_ca_req ]\n")
-    cnf.write("basicConstraints = critical,CA:true\n")
-    cnf.write("keyUsage = cRLSign, keyCertSign\n")
-    cnf.write("nsCertType = sslCA\n")
-    #cnf.write("subjectAltName=email:copy\n")
-    cnf.write("\n")
-    cnf.write("[ v3_cert ]\n")
-    cnf.write("basicConstraints = CA:false\n")
-    cnf.write("keyUsage = nonRepudiation, digitalSignature, keyEncipherment\n")
-    cnf.write("nsCertType = server\n")
-    cnf.write("subjectKeyIdentifier=hash\n")
-    cnf.write("authorityKeyIdentifier=keyid:always,issuer\n")
-    cnf.write("\n")
-    cnf.write("[ v3_cert_req ]\n")
-    cnf.write("basicConstraints = CA:false\n")
-    cnf.write("keyUsage = nonRepudiation, digitalSignature, keyEncipherment\n")
-    cnf.write("nsCertType = server\n")
-    cnf.write("\n")
+        return True
 
-    cnf.close()
- 
-    if ca is None:
+
+def dummy_cert(certdir, ca, commonname):
+    """
+        certdir: Certificate directory.
+        ca: Path to the certificate authority file, or None.
+        commonname: Common name for the generated certificate.
+
+        Returns True if operation succeeded, False if not.
+    """
+    confpath = os.path.join(certdir, commonname + ".cnf")
+    reqpath = os.path.join(certdir, commonname + ".req")
+    certpath = os.path.join(certdir, commonname + ".pem")
+
+    template = open(data.path("resources/cert.cnf")).read()
+    f = open(confpath, "w").write(template%(dict(commonname=commonname)))
+
+    if ca:
+        # Create a dummy signed certificate. Uses same key as the signing CA
+        cmd = [
+            "openssl",
+            "req",
+            "-new",
+            "-config", confpath,
+            "-out", reqpath,
+            "-key", ca,
+        ]
+        ret = subprocess.call(
+            cmd,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE
+        )
+        if ret:
+            return False
+        cmd = [
+            "openssl",
+            "x509",
+            "-req",
+            "-in", reqpath,
+            "-days", "9999",
+            "-out", certpath,
+            "-CA", ca,
+            "-CAcreateserial",
+            "-extfile", confpath,
+            "-extensions", "v3_cert",
+        ]
+        ret = subprocess.call(
+            cmd,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE
+        )
+        if ret:
+            return False
+    else:
         # Create a new selfsigned certificate + key
         cmd = [
             "openssl",
             "req",
             "-new",
             "-x509",
-            "-config", path+".cnf",
+            "-config", confpath,
             "-nodes",
             "-days", "9999",
             "-out", certpath,
             "-newkey", "rsa:1024",
             "-keyout", certpath,
         ]
-        #print " ".join(cmd)
-        subprocess.call(
+        ret = subprocess.call(
             cmd,
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE
         )
-    else:
-        # Create a dummy signed certificate. Uses same key as the signing CA
-        cmd = [
-            "openssl",
-            "req",
-            "-new",
-            "-config", path+".cnf",
-            "-out", path+".req",
-            "-key", ca,
-        ]
-        #print " ".join(cmd)
-        subprocess.call(
-            cmd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE
-        )
-        cmd = [
-            "openssl",
-            "x509",
-            "-req",
-            "-in", path+".req",
-            "-days", "9999",
-            "-out", certpath,
-            "-CA", ca,
-            "-CAcreateserial",
-            "-extfile", path+".cnf"
-        ]
-        if newca:
-            cmd.extend([
-                "-extensions", "v3_ca",
-            ])
-        else:
-            cmd.extend([
-                "-extensions", "v3_cert",
-            ])
-        
-        #print " ".join(cmd)
-        subprocess.call(
-            cmd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE
-        )
-    
+        if ret:
+            return False
+    return True
+
 
 def mkdir_p(path):
     try:
@@ -490,11 +441,11 @@ def certificate_option_group(parser):
     group = optparse.OptionGroup(parser, "SSL")
     group.add_option(
         "--cert", action="store",
-        type = "str", dest="cert", default="~/.mitmproxy/default.pem",
+        type = "str", dest="cert", default=None,
         help = "SSL certificate file."
     )
     group.add_option(
-        "-c", "--cacert", action="store",
+        "--cacert", action="store",
         type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
         help = "SSL CA certificate file."
     )
@@ -510,17 +461,17 @@ def certificate_option_group(parser):
     )
     parser.add_option_group(group)
 
-def process_certificate_option_group(options):
+
+def process_certificate_option_group(parser, options):
     if options.cert is not None:
         options.cert = os.path.expanduser(options.cert)
         if not os.path.exists(options.cert):
-            print >> sys.stderr, "Creating bogus certificate at %s"%options.cert
-            utils.make_bogus_cert(options.cert)
+            parser.error("Manually created certificate does not exist: %s"%options.cert)
     if options.cacert is not None:
         options.cacert = os.path.expanduser(options.cacert)
         if not os.path.exists(options.cacert):
-            print >> sys.stderr, "Creating bogus CA certificate at %s"%options.cacert
-            utils.make_bogus_cert(options.cacert, newca=True, commonName="Dummy CA")
+            print >> sys.stderr, "Creating dummy CA certificate at %s"%options.cacert
+            dummy_ca(options.cacert)
     if options.certpath is not None:
         options.certpath = os.path.expanduser(options.certpath)
     elif options.cacert is not None:

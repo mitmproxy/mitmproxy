@@ -1,0 +1,34 @@
+[ req ]
+prompt = no
+distinguished_name = req_distinguished_name
+x509_extensions = v3_cert
+req_extensions = v3_cert_req
+
+[ req_distinguished_name ]
+organizationName               = mitmproxy
+commonName                     = %(commonname)s
+
+[ v3_ca ]
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+basicConstraints = critical,CA:true
+keyUsage = cRLSign, keyCertSign
+nsCertType = sslCA
+
+[ v3_ca_req ]
+basicConstraints = critical,CA:true
+keyUsage = cRLSign, keyCertSign
+nsCertType = sslCA
+
+[ v3_cert ]
+basicConstraints = CA:false
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+nsCertType = server
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+
+[ v3_cert_req ]
+basicConstraints = CA:false
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+nsCertType = server
+

@@ -217,16 +217,6 @@ class uisSequenceLike(libpry.AutoTree):
         assert not utils.isSequenceLike(1)
 
 
-class umake_bogus_cert(libpry.AutoTree):
-    def test_all(self):
-        d = self.tmpdir()
-        path = os.path.join(d, "foo", "cert")
-        utils.make_bogus_cert(path)
-
-        d = open(path).read()
-        assert "PRIVATE KEY" in d
-        assert "CERTIFICATE" in d
-
 
 class upretty_xmlish(libpry.AutoTree):
     def test_tagre(self):
@@ -284,12 +274,42 @@ class upretty_xmlish(libpry.AutoTree):
         assert utils.pretty_xmlish(s) == ["gobbledygook"]
 
 
+class udummy_ca(libpry.AutoTree):
+    def test_all(self):
+        d = self.tmpdir()
+        path = os.path.join(d, "foo/cert.cnf")
+        assert utils.dummy_ca(path)
+        assert os.path.exists(path)
+
+
+class udummy_cert(libpry.AutoTree):
+    def test_with_ca(self):
+        d = self.tmpdir()
+        cacert = os.path.join(d, "foo/cert.cnf")
+        assert utils.dummy_ca(cacert)
+        assert utils.dummy_cert(
+            os.path.join(d, "foo"),
+            cacert,
+            "foo.com"
+        )
+        assert os.path.exists(os.path.join(d, "foo", "foo.com.pem"))
+
+    def test_no_ca(self):
+        d = self.tmpdir()
+        assert utils.dummy_cert(
+            d,
+            None,
+            "foo.com"
+        )
+        assert os.path.exists(os.path.join(d, "foo.com.pem"))
+
+
+        
 
 
     
 tests = [
     uformat_timestamp(),
-    umake_bogus_cert(),
     uisBin(),
     uhexdump(),
     upretty_size(),
@@ -299,4 +319,6 @@ tests = [
     uHeaders(),
     uData(),
     upretty_xmlish(),
+    udummy_ca(),
+    udummy_cert(),
 ]

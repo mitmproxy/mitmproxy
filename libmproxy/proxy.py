@@ -550,7 +550,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         if config.certpath is not None:
             cert = config.certpath + "/" + host + ".pem"
             if not os.path.exists(cert) and config.cacert is not None:
-                utils.make_bogus_cert(cert, ca=config.cacert, commonName=host)
+                utils.dummy_cert(config.certpath, config.cacert, host)
             if os.path.exists(cert):
                 return cert
             print >> sys.stderr, "WARNING: Certificate missing for %s:%d! (%s)\n" % (host, port, cert)
@@ -679,9 +679,9 @@ class ProxyServer(ServerBase):
     def set_mqueue(self, q):
         self.masterq = q
 
-    def process_request(self, request, client_address):
-        return ServerBase.process_request(self, request, client_address)
-
     def finish_request(self, request, client_address):
         self.RequestHandlerClass(request, client_address, self, self.masterq)
+
+    def shutdown(self):
+        ServerBase.shutdown(self)
 

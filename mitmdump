@@ -54,7 +54,7 @@ if __name__ == '__main__':
     if options.quiet:
         options.verbose = 0
 
-    utils.process_certificate_option_group(options)
+    utils.process_certificate_option_group(parser, options)
 
     proxy.config = proxy.Config(
         certfile = options.cert,
