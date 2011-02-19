@@ -150,7 +150,7 @@ class Request(controller.Msg):
 
     def get_state(self):
         return dict(
-            client_conn = self.client_conn.get_state(),
+            client_conn = self.client_conn.get_state() if self.client_conn else None,
             host = self.host,
             port = self.port,
             scheme = self.scheme,
@@ -164,7 +164,7 @@ class Request(controller.Msg):
     @classmethod
     def from_state(klass, state):
         return klass(
-            ClientConnect.from_state(state["client_conn"]),
+            ClientConnect.from_state(state["client_conn"]) if state["client_conn"] else None,
             state["host"],
             state["port"],
             state["scheme"],

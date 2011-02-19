@@ -230,6 +230,10 @@ class uRequest(libpry.AutoTree):
         state = r.get_state()
         assert proxy.Request.from_state(state) == r
 
+        r.client_conn = None
+        state = r.get_state()
+        assert proxy.Request.from_state(state) == r
+
 
 class uResponse(libpry.AutoTree):
     def test_simple(self):
