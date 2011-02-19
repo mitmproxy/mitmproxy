@@ -10,7 +10,7 @@ class uDumpMaster(libpry.AutoTree):
         req = utils.treq()
         cc = req.client_conn
         resp = utils.tresp(req)
-        m.handle_clientconnection(cc)
+        m.handle_clientconnect(cc)
         m.handle_request(req)
         m.handle_response(resp)
 

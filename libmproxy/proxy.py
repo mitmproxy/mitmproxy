@@ -136,11 +136,21 @@ class Request(controller.Msg):
         self.close = False
         controller.Msg.__init__(self)
 
+    def set_replay(self):
+        self.client_conn = None
+
+    def is_replay(self):
+        if self.client_conn:
+            return False
+        else:
+            return True
+
     def is_cached(self):
         return False
 
     def get_state(self):
         return dict(
+            client_conn = self.client_conn.get_state(),
             host = self.host,
             port = self.port,
             scheme = self.scheme,
@@ -152,9 +162,9 @@ class Request(controller.Msg):
         )
 
     @classmethod
-    def from_state(klass, client_conn, state):
+    def from_state(klass, state):
         return klass(
-            client_conn,
+            ClientConnect.from_state(state["client_conn"]),
             state["host"],
             state["port"],
             state["scheme"],
@@ -164,6 +174,9 @@ class Request(controller.Msg):
             base64.decodestring(state["content"]),
             state["timestamp"]
         )
+
+    def __hash__(self):
+        return id(self)
 
     def __eq__(self, other):
         return self.get_state() == other.get_state()
@@ -296,7 +309,13 @@ class Response(controller.Msg):
         return self.FMT%data
 
 
-class ClientConnection(controller.Msg):
+class ClientDisconnect(controller.Msg):
+    def __init__(self, client_conn):
+        controller.Msg.__init__(self)
+        self.client_conn = client_conn
+
+
+class ClientConnect(controller.Msg):
     def __init__(self, address):
         """
             address is an (address, port) tuple, or None if this connection has
@@ -313,22 +332,13 @@ class ClientConnection(controller.Msg):
     def from_state(klass, state):
         return klass(state)
 
-    def set_replay(self):
-        self.address = None
-
-    def is_replay(self):
-        if self.address:
-            return False
-        else:
-            return True
-
     def copy(self):
         return copy.copy(self)
 
 
 class Error(controller.Msg):
-    def __init__(self, client_conn, msg, timestamp=None):
-        self.client_conn, self.msg = client_conn, msg
+    def __init__(self, flow, msg, timestamp=None):
+        self.flow, self.msg = flow, msg
         self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
 
@@ -453,11 +463,12 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self):
-        cc = ClientConnection(self.client_address)
+        cc = ClientConnect(self.client_address)
         cc.send(self.mqueue)
         while not cc.close:
             self.handle_request(cc)
-            cc = cc.copy()
+        cd = ClientDisconnect(cc)
+        cd.send(self.mqueue)
         self.finish()
 
     def handle_request(self, cc):

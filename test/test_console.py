@@ -10,11 +10,9 @@ class uState(libpry.AutoTree):
 
                 connect -> request -> response
         """
-        bc = proxy.ClientConnection(("address", 22))
         c = console.ConsoleState()
-        f = flow.Flow(bc)
-        c.add_browserconnect(f)
-        assert c.lookup(bc)
+        f = self._add_request(c)
+        assert f.request in c.flow_map
         assert c.get_focus() == (f, 0)
 
     def test_focus(self):
@@ -24,18 +22,14 @@ class uState(libpry.AutoTree):
                 connect -> request -> response
         """
         c = console.ConsoleState()
+        f = self._add_request(c)
 
-        bc = proxy.ClientConnection(("address", 22))
-        f = flow.Flow(bc)
-        c.add_browserconnect(f)
         assert c.get_focus() == (f, 0)
         assert c.get_from_pos(0) == (f, 0)
         assert c.get_from_pos(1) == (None, None)
         assert c.get_next(0) == (None, None)
 
-        bc2 = proxy.ClientConnection(("address", 22))
-        f2 = flow.Flow(bc2)
-        c.add_browserconnect(f2)
+        f2 = self._add_request(c)
         assert c.get_focus() == (f, 1)
         assert c.get_next(0) == (f, 1)
         assert c.get_prev(1) == (f2, 0)
@@ -52,24 +46,13 @@ class uState(libpry.AutoTree):
         assert c.get_focus() == (None, None)
 
     def _add_request(self, state):
-        f = utils.tflow()
-        state.add_browserconnect(f)
-        q = utils.treq(f.client_conn)
-        state.add_request(q)
-        return f
+        r = utils.treq()
+        return state.add_request(r)
 
     def _add_response(self, state):
         f = self._add_request(state)
         r = utils.tresp(f.request)
         state.add_response(r)
-
-    def test_add_request(self):
-        c = console.ConsoleState()
-        f = utils.tflow()
-        c.add_browserconnect(f)
-        q = utils.treq(f.client_conn)
-        c.focus = None
-        assert c.add_request(q)
 
     def test_add_response(self):
         c = console.ConsoleState()
@@ -118,9 +101,10 @@ class uformat_flow(libpry.AutoTree):
 
         assert ('method', '[edited] ') in console.format_flow(f, True)
         assert ('method', '[edited] ') in console.format_flow(f, True, True)
-        f.client_conn = proxy.ClientConnection(None)
+        f.request.set_replay()
         assert ('method', '[replay] ') in console.format_flow(f, True)
         assert ('method', '[replay] ') in console.format_flow(f, True, True)
+
 
 
 class uPathCompleter(libpry.AutoTree):

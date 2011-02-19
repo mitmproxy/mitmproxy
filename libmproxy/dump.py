@@ -38,14 +38,6 @@ class DumpMaster(flow.FlowMaster):
             except IOError, v:
                 raise DumpError(v.strerror)
 
-    def handle_clientconnection(self, r):
-        flow.FlowMaster.handle_clientconnection(self, r)
-        r.ack()
-
-    def handle_error(self, r):
-        flow.FlowMaster.handle_error(self, r)
-        r.ack()
-
     def _runscript(self, f, script):
         try:
             ret = f.run_script(script)
@@ -80,12 +72,12 @@ class DumpMaster(flow.FlowMaster):
                     return
             sz = utils.pretty_size(len(f.response.content))
             if self.o.verbosity == 1:
-                print >> self.outfile, f.client_conn.address[0],
+                print >> self.outfile, f.request.client_conn.address[0],
                 print >> self.outfile, f.request.short()
                 print >> self.outfile, "  <<",
                 print >> self.outfile, f.response.short(), sz
             elif self.o.verbosity == 2:
-                print >> self.outfile, f.client_conn.address[0],
+                print >> self.outfile, f.request.client_conn.address[0],
                 print >> self.outfile, f.request.short()
                 print >> self.outfile, self.indent(4, f.request.headers)
                 print >> self.outfile
@@ -93,7 +85,7 @@ class DumpMaster(flow.FlowMaster):
                 print >> self.outfile, self.indent(4, f.response.headers)
                 print >> self.outfile, "\n"
             elif self.o.verbosity == 3:
-                print >> self.outfile, f.client_conn.address[0],
+                print >> self.outfile, f.request.client_conn.address[0],
                 print >> self.outfile, f.request.short()
                 print >> self.outfile, self.indent(4, f.request.headers)
                 if utils.isBin(f.request.content):

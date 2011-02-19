@@ -32,9 +32,9 @@ class ReplayThread(threading.Thread):
 
 
 class Flow:
-    def __init__(self, client_conn):
-        self.client_conn = client_conn
-        self.request, self.response, self.error = None, None, None
+    def __init__(self, request):
+        self.request = request
+        self.response, self.error = None, None
         self.intercepting = False
         self._backup = None
 
@@ -90,7 +90,6 @@ class Flow:
             request = self.request.get_state() if self.request else None,
             response = self.response.get_state() if self.response else None,
             error = self.error.get_state() if self.error else None,
-            client_conn = self.client_conn.get_state()
         )
         if nobackup:
             d["backup"] = None
@@ -99,10 +98,8 @@ class Flow:
         return d
 
     def load_state(self, state):
-        self.client_conn = proxy.ClientConnection.from_state(state["client_conn"])
         self._backup = state["backup"]
-        if state["request"]:
-            self.request = proxy.Request.from_state(self.client_conn, state["request"])
+        self.request = proxy.Request.from_state(state["request"])
         if state["response"]:
             self.response = proxy.Response.from_state(self.request, state["response"])
         if state["error"]:
@@ -141,9 +138,6 @@ class Flow:
                 return pattern(self.request)
         return False
 
-    def is_replay(self):
-        return self.client_conn.is_replay()
-
     def kill(self):
         if self.request and not self.request.acked:
             self.request.ack(None)
@@ -165,35 +159,43 @@ class Flow:
 
 class State:
     def __init__(self):
+        self.client_connections = []
         self.flow_map = {}
         self.flow_list = []
+
         # These are compiled filt expressions:
         self.limit = None
         self.intercept = None
 
-    def add_browserconnect(self, f):
+    def clientconnect(self, cc):
+        if not isinstance(cc, proxy.ClientConnect):
+            assert False
+        self.client_connections.append(cc)
+
+    def clientdisconnect(self, dc):
         """
             Start a browser connection.
         """
-        self.flow_list.insert(0, f)
-        self.flow_map[f.client_conn] = f
+        self.client_connections.remove(dc.client_conn)
 
     def add_request(self, req):
         """
             Add a request to the state. Returns the matching flow.
         """
-        f = self.flow_map.get(req.client_conn)
-        if not f:
-            f = Flow(req.client_conn)
-            self.add_browserconnect(f)
-        f.request = req
+        if not isinstance(req, proxy.Request):
+            assert False
+        f = Flow(req)
+        self.flow_list.insert(0, f)
+        self.flow_map[req] = f
         return f
 
     def add_response(self, resp):
         """
             Add a response to the state. Returns the matching flow.
         """
-        f = self.flow_map.get(resp.request.client_conn)
+        if not isinstance(resp, proxy.Response):
+            assert False
+        f = self.flow_map.get(resp.request)
         if not f:
             return False
         f.response = resp
@@ -204,7 +206,7 @@ class State:
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        f = self.flow_map.get(err.client_conn)
+        f = self.flow_map.get(err.flow.request)
         if not f:
             return None
         f.error = err
@@ -213,7 +215,7 @@ class State:
     def load_flows(self, flows):
         self.flow_list.extend(flows)
         for i in flows:
-            self.flow_map[i.client_conn] = i
+            self.flow_map[i.request] = i
 
     def set_limit(self, limit):
         """
@@ -229,27 +231,17 @@ class State:
             return tuple(self.flow_list[:])
 
     def get_client_conn(self, itm):
-        if isinstance(itm, proxy.ClientConnection):
+        if isinstance(itm, proxy.ClientConnect):
             return itm
         elif hasattr(itm, "client_conn"):
             return itm.client_conn
         elif hasattr(itm, "request"):
             return itm.request.client_conn
 
-    def lookup(self, itm):
-        """
-            Checks for matching client_conn, using a Flow, Replay Connection,
-            ClientConnection, Request, Response or Error object. Returns None
-            if not found.
-        """
-        client_conn = self.get_client_conn(itm)
-        return self.flow_map.get(client_conn)
-
     def delete_flow(self, f):
         if not f.intercepting:
-            c = self.get_client_conn(f)
-            if c in self.flow_map:
-                del self.flow_map[c]
+            if f.request in self.flow_map:
+                del self.flow_map[f.request]
             self.flow_list.remove(f)
             return True
         return False
@@ -280,7 +272,7 @@ class State:
         if f.request:
             f.backup()
             conn = self.get_client_conn(f)
-            f.client_conn.set_replay()
+            f.request.set_replay()
             if f.request.content:
                 f.request.headers["content-length"] = [str(len(f.request.content))]
             f.response = None
@@ -295,12 +287,13 @@ class FlowMaster(controller.Master):
         controller.Master.__init__(self, server)
         self.state = state
 
-    # Handlers
-    def handle_clientconnection(self, r):
-        f = Flow(r)
-        self.state.add_browserconnect(f)
+    def handle_clientconnect(self, r):
+        self.state.clientconnect(r)
         r.ack()
-        return f
+
+    def handle_clientdisconnect(self, r):
+        self.state.clientdisconnect(r)
+        r.ack()
 
     def handle_error(self, r):
         f = self.state.add_error(r)

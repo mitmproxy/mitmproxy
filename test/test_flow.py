@@ -46,38 +46,6 @@ class uFlow(libpry.AutoTree):
         state = f.get_state() 
         assert f == flow.Flow.from_state(state)
 
-    def test_simple(self):
-        f = utils.tflow()
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.request = utils.treq()
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.response = utils.tresp()
-        f.response.headers["content-type"] = ["text/html"]
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-        f.response.code = 404
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.client_conn.set_replay()
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.response = None
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
-        f.error = proxy.Error(200, "test")
-        assert console.format_flow(f, True)
-        assert console.format_flow(f, False)
-
     def test_kill(self):
         f = utils.tflow()
         f.request = utils.treq()
@@ -115,10 +83,10 @@ class uFlow(libpry.AutoTree):
 
 class uState(libpry.AutoTree):
     def test_backup(self):
-        bc = proxy.ClientConnection(("address", 22))
+        bc = proxy.ClientConnect(("address", 22))
         c = flow.State()
-        f = flow.Flow(bc)
-        c.add_browserconnect(f)
+        req = utils.treq()
+        f = c.add_request(req)
 
         f.backup()
         c.revert(f)
@@ -129,92 +97,98 @@ class uState(libpry.AutoTree):
 
                 connect -> request -> response
         """
-        bc = proxy.ClientConnection(("address", 22))
+        bc = proxy.ClientConnect(("address", 22))
         c = flow.State()
-        f = flow.Flow(bc)
-        c.add_browserconnect(f)
-        assert c.lookup(bc)
+        c.clientconnect(bc)
+        assert len(c.client_connections) == 1
 
         req = utils.treq(bc)
-        assert c.add_request(req)
+        f = c.add_request(req)
+        assert f
         assert len(c.flow_list) == 1
-        assert c.lookup(req)
+        assert c.flow_map.get(req)
 
         newreq = utils.treq()
         assert c.add_request(newreq)
-        assert c.lookup(newreq)
+        assert c.flow_map.get(newreq)
 
         resp = utils.tresp(req)
         assert c.add_response(resp)
         assert len(c.flow_list) == 2
-        assert c.lookup(resp)
+        assert c.flow_map.get(resp.request)
 
         newresp = utils.tresp()
         assert not c.add_response(newresp)
-        assert not c.lookup(newresp)
+        assert not c.flow_map.get(newresp.request)
+
+        dc = proxy.ClientDisconnect(bc)
+        c.clientdisconnect(dc)
+        assert not c.client_connections
 
     def test_err(self):
-        bc = proxy.ClientConnection(("address", 22))
+        bc = proxy.ClientConnect(("address", 22))
         c = flow.State()
-        f = flow.Flow(bc)
-        c.add_browserconnect(f)
-        e = proxy.Error(bc, "message")
+        req = utils.treq()
+        f = c.add_request(req)
+        e = proxy.Error(f, "message")
         assert c.add_error(e)
 
-        e = proxy.Error(proxy.ClientConnection(("address", 22)), "message")
+        e = proxy.Error(utils.tflow(), "message")
         assert not c.add_error(e)
 
     def test_view(self):
         c = flow.State()
 
-        f = utils.tflow()
-        c.add_browserconnect(f)
-        assert len(c.view) == 1
-        c.set_limit(filt.parse("~q"))
+        req = utils.treq()
+        c.clientconnect(req.client_conn)
         assert len(c.view) == 0
-        c.set_limit(None)
 
-        
-        f = utils.tflow()
-        req = utils.treq(f.client_conn)
-        c.add_browserconnect(f)
+        f = c.add_request(req)
+        assert len(c.view) == 1
+
+        c.set_limit(filt.parse("~s"))
+        assert len(c.view) == 0
+        resp = utils.tresp(req)
+        c.add_response(resp)
+        assert len(c.view) == 1
+        c.set_limit(None)
+        assert len(c.view) == 1
+
+        req = utils.treq()
+        c.clientconnect(req.client_conn)
         c.add_request(req)
         assert len(c.view) == 2
         c.set_limit(filt.parse("~q"))
         assert len(c.view) == 1
         c.set_limit(filt.parse("~s"))
-        assert len(c.view) == 0
+        assert len(c.view) == 1
 
     def _add_request(self, state):
-        f = utils.tflow()
-        state.add_browserconnect(f)
-        q = utils.treq(f.client_conn)
-        state.add_request(q)
+        req = utils.treq()
+        f = state.add_request(req)
         return f
 
     def _add_response(self, state):
-        f = self._add_request(state)
-        r = utils.tresp(f.request)
-        state.add_response(r)
+        req = utils.treq()
+        f = state.add_request(req)
+        resp = utils.tresp(req)
+        state.add_response(resp)
 
     def _add_error(self, state):
-        f = utils.tflow()
-        f.error = proxy.Error(None, "msg")
-        state.add_browserconnect(f)
-        q = utils.treq(f.client_conn)
-        state.add_request(q)
+        req = utils.treq()
+        f = state.add_request(req)
+        f.error = proxy.Error(f, "msg")
 
     def test_kill_flow(self):
         c = flow.State()
-        f = utils.tflow()
-        c.add_browserconnect(f)
+        req = utils.treq()
+        f = c.add_request(req)
         c.kill_flow(f)
         assert not c.flow_list
 
     def test_clear(self):
         c = flow.State()
-        f = utils.tflow()
-        c.add_browserconnect(f)
+        f = self._add_request(c)
         f.intercepting = True
 
         c.clear()
@@ -265,15 +239,12 @@ class uFlowMaster(libpry.AutoTree):
     def test_one(self):
         s = flow.State()
         f = flow.FlowMaster(None, s)
-
         req = utils.treq()
-        f.handle_clientconnection(req.client_conn)
-        assert len(s.flow_list) == 1
+
         f.handle_request(req)
         assert len(s.flow_list) == 1
-        f.handle_request(req)
-        resp = utils.tresp()
-        resp.request = req
+
+        resp = utils.tresp(req)
         f.handle_response(resp)
         assert len(s.flow_list) == 1
         

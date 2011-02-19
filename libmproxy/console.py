@@ -66,7 +66,7 @@ def format_flow(f, focus, extended=False, padding=2):
                 f.request.url(),
             ),
         ]
-        if f.response or f.error or f.is_replay():
+        if f.response or f.error or f.request.is_replay():
             tsr = f.response or f.error
             if extended and tsr:
                 ts = ("highlight", utils.format_timestamp(tsr.timestamp) + " ")
@@ -77,7 +77,7 @@ def format_flow(f, focus, extended=False, padding=2):
             txt.append(("text", ts))
             txt.append(" "*(padding+2))
             met = ""
-            if f.is_replay():
+            if f.request.is_replay():
                 txt.append(("method", "[replay] "))
             elif f.modified():
                 txt.append(("method", "[edited] "))
@@ -715,17 +715,13 @@ class ConsoleState(flow.State):
         self.last_script = ""
         self.last_saveload = ""
 
-    def add_browserconnect(self, f):
-        flow.State.add_browserconnect(self, f)
+    def add_request(self, req):
+        f = flow.State.add_request(self, req)
         if self.focus is None:
             self.set_focus(0)
         else:
             self.set_focus(self.focus + 1)
-
-    def add_request(self, req):
-        if self.focus is None:
-            self.set_focus(0)
-        return flow.State.add_request(self, req)
+        return f
 
     def add_response(self, resp):
         if self.store is not None:
@@ -1305,7 +1301,7 @@ class ConsoleMaster(flow.FlowMaster):
     def process_flow(self, f, r):
         if f.match(self.state.beep):
             urwid.curses_display.curses.beep()
-        if f.match(self.state.intercept) and not f.is_replay():
+        if f.match(self.state.intercept) and not f.request.is_replay():
             f.intercept()
         else:
             r.ack()
@@ -1313,8 +1309,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.refresh_connection(f)
 
     # Handlers
-    def handle_clientconnection(self, r):
-        f = flow.FlowMaster.handle_clientconnection(self, r)
+    def handle_clientconnect(self, r):
+        f = flow.FlowMaster.handle_clientconnect(self, r)
         if f:
             self.sync_list_view()
 
