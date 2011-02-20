@@ -160,7 +160,7 @@ class ConnectionItem(WWrap):
                 self.master.statusbar.message("Can't delete connection mid-intercept.")
             self.master.sync_list_view()
         elif key == "r":
-            r = self.state.replay(self.flow, self.master.masterq)
+            r = self.state.replay_request(self.flow, self.master.masterq)
             if r:
                 self.master.statusbar.message(r)
             self.master.sync_list_view()
@@ -511,7 +511,7 @@ class ConnectionView(WWrap):
         elif key == "p":
             self.master.view_prev_flow(self.flow)
         elif key == "r":
-            r = self.state.replay(self.flow, self.master.masterq)
+            r = self.state.replay_request(self.flow, self.master.masterq)
             if r:
                 self.master.statusbar.message(r)
             self.master.refresh_connection(self.flow)

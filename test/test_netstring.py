@@ -3,7 +3,6 @@ from cStringIO import StringIO
 import libpry
 
 
-
 class uNetstring(libpry.AutoTree):
     def setUp(self):
         self.test_data = "Netstring module by Will McGugan"

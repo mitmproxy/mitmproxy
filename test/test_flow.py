@@ -3,6 +3,43 @@ from libmproxy import console, proxy, filt, flow
 import utils
 import libpry
 
+
+class uServerPlaybackState(libpry.AutoTree):
+    def test_hash(self):
+        s = flow.ServerPlaybackState()
+        r = utils.tflow()
+        r2 = utils.tflow()
+
+        assert s._hash(r)
+        assert s._hash(r) == s._hash(r2)
+        r.request.headers["foo"] = ["bar"]
+        assert s._hash(r) == s._hash(r2)
+        r.request.path = "voing"
+        assert s._hash(r) != s._hash(r2)
+
+    def test_load(self):
+        s = flow.ServerPlaybackState()
+        r = utils.tflow()
+        r.request.headers["key"] = ["one"]
+
+        r2 = utils.tflow()
+        r2.request.headers["key"] = ["two"]
+
+        s.load([r, r2])
+        assert len(s) == 2
+        assert len(s.fmap.keys()) == 1
+
+        n = s.next_flow(r)
+        assert n.request.headers["key"] == ["one"]
+        assert len(s) == 1
+
+        n = s.next_flow(r)
+        assert n.request.headers["key"] == ["two"]
+        assert len(s) == 0
+
+        assert not s.next_flow(r)
+
+
 class uFlow(libpry.AutoTree):
     def test_run_script(self):
         f = utils.tflow()
@@ -275,6 +312,7 @@ class uFlowMaster(libpry.AutoTree):
 
 
 tests = [
+    uServerPlaybackState(),
     uFlow(),
     uState(),
     uSerialize(),

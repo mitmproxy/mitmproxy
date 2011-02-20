@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import subprocess, base64, sys, json
+import subprocess, base64, sys, json, hashlib
 import proxy, threading, netstring
 import controller
 
@@ -14,7 +14,7 @@ class RunException(Exception):
 
 
 # begin nocover
-class ReplayThread(threading.Thread):
+class RequestReplayThread(threading.Thread):
     def __init__(self, flow, masterq):
         self.flow, self.masterq = flow, masterq
         threading.Thread.__init__(self)
@@ -29,6 +29,49 @@ class ReplayThread(threading.Thread):
             err = proxy.Error(self.flow.client_conn, v.msg)
             err.send(self.masterq)
 # end nocover
+
+
+class ServerPlaybackState:
+    def __init__(self):
+        self.fmap = {}
+
+    def __len__(self):
+        return sum([len(i) for i in self.fmap.values()])
+    
+    def load(self, flows):
+        """
+            Load a sequence of flows. We assume that the sequence is in
+            chronological order.
+        """
+        for i in flows:
+            h = self._hash(i)
+            l = self.fmap.setdefault(self._hash(i), [])
+            l.append(i)
+
+    def _hash(self, flow):
+        """
+            Calculates a loose hash of the flow request. 
+        """
+        r = flow.request
+        key = [
+            str(r.host),
+            str(r.port),
+            str(r.scheme),
+            str(r.method),
+            str(r.path),
+            str(r.content),
+        ]
+        return hashlib.sha256(repr(key)).digest()
+
+    def next_flow(self, request):
+        """
+            Returns the next flow object, or None if no matching flow was
+            found.
+        """
+        l = self.fmap.get(self._hash(request))
+        if not l:
+            return None
+        return l.pop(0)
 
 
 class Flow:
@@ -262,7 +305,7 @@ class State:
     def revert(self, f):
         f.revert()
 
-    def replay(self, f, masterq):
+    def replay_request(self, f, masterq):
         """
             Returns None if successful, or error message if not.
         """
@@ -276,7 +319,7 @@ class State:
                 f.request.headers["content-length"] = [str(len(f.request.content))]
             f.response = None
             f.error = None
-            rt = ReplayThread(f, masterq)
+            rt = RequestReplayThread(f, masterq)
             rt.start()
         #end nocover
 
