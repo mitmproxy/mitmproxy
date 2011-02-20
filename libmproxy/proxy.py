@@ -338,7 +338,7 @@ class Response(controller.Msg):
             content = ""
         if self.request.client_conn.close:
             headers["connection"] = ["close"]
-        proto = "HTTP/1.1 %s %s"%(self.code, self.msg)
+        proto = "HTTP/1.1 %s %s"%(self.code, str(self.msg))
         data = (proto, str(headers), content)
         return self.FMT%data
 
