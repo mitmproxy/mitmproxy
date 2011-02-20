@@ -1,18 +1,9 @@
 
 Futures:
 
-    - Strings view for binary responses.
     - Post and URL field parsing and editing.
-    - On-the-fly generation of keys, signed with a CA
-    - Pass-through fast-track for things that don't match filter?
-    - Shortcut for viewing in pager
     - Upstream proxies.
-    - mitmdump
-        - Filters
-        - Sticky cookies
-        - Pipe to script
-        - Command-line replay or serialized flows
-
+    - Strings view for binary responses.
 
 Bugs:
     
