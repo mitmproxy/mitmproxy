@@ -6,6 +6,7 @@
     Development started from Neil Schemenauer's munchy.py
 """
 import sys, os, time, string, socket, urlparse, re, select, copy, base64
+import shutil, tempfile
 import optparse, SocketServer, ssl
 import utils, controller
 
@@ -21,11 +22,11 @@ class ProxyError(Exception):
 
 
 class Config:
-    def __init__(self, certfile = None, certpath = None, ciphers = None, cacert = None):
+    def __init__(self, certfile = None, ciphers = None, cacert = None):
         self.certfile = certfile
-        self.certpath = certpath
         self.ciphers = ciphers
         self.cacert = cacert
+        self.certdir = None
 
 
 def read_chunked(fp):
@@ -369,8 +370,8 @@ class ClientConnect(controller.Msg):
 
 
 class Error(controller.Msg):
-    def __init__(self, flow, msg, timestamp=None):
-        self.flow, self.msg = flow, msg
+    def __init__(self, request, msg, timestamp=None):
+        self.request, self.msg = request, msg
         self.timestamp = timestamp or time.time()
         controller.Msg.__init__(self)
 
@@ -509,7 +510,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.finish()
 
     def handle_request(self, cc):
-        server = None
+        server, request = None, None
         try:
             request = self.read_request(cc)
             if request is None:
@@ -538,7 +539,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         except IOError:
             pass
         except ProxyError, e:
-            err = Error(cc, e.msg)
+            err = Error(request, e.msg)
             err.send(self.mqueue)
             cc.close = True
             self.send_error(e.code, e.msg)
@@ -549,7 +550,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         if self.config.certfile:
             return self.config.certfile
         else:
-            ret = utils.dummy_cert(self.config.certpath, self.config.cacert, host)
+            ret = utils.dummy_cert(self.config.certdir, self.config.cacert, host)
             if not ret:
                 raise ProxyError(400, "mitmproxy: Unable to generate dummy cert.")
             return ret
@@ -667,6 +668,8 @@ class ProxyServer(ServerBase):
         self.config, self.port, self.address = config, port, address
         ServerBase.__init__(self, (address, port), ProxyHandler)
         self.masterq = None
+        self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
+        config.certdir = self.certdir
 
     def set_mqueue(self, q):
         self.masterq = q
@@ -675,6 +678,7 @@ class ProxyServer(ServerBase):
         self.RequestHandlerClass(self.config, request, client_address, self, self.masterq)
 
     def shutdown(self):
+        shutil.rmtree(self.certdir)
         ServerBase.shutdown(self)
 
 
@@ -690,11 +694,6 @@ def certificate_option_group(parser):
         "--cacert", action="store",
         type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
         help = "SSL CA certificate file. Generated if it doesn't exist."
-    )
-    group.add_option(
-        "--certpath", action="store",
-        type = "str", dest="certpath", default="~/.mitmproxy/",
-        help = "SSL certificate store path."
     )
     group.add_option(
         "--ciphers", action="store",
@@ -713,21 +712,11 @@ def process_certificate_option_group(parser, options):
     if options.cacert:
         options.cacert = os.path.expanduser(options.cacert)
         if not os.path.exists(options.cacert):
-            dummy_ca(options.cacert)
-    if options.certpath:
-        options.certpath = os.path.expanduser(options.certpath)
-    elif options.cacert:
-        options.certpath = os.path.dirname(options.cacert)
-
+            utils.dummy_ca(options.cacert)
     if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
-
     return Config(
         certfile = options.cert,
-        certpath = options.certpath,
         cacert = options.cacert,
         ciphers = options.ciphers
     )
-
-
-

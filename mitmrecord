@@ -61,14 +61,7 @@ if __name__ == '__main__':
     if options.quiet:
         options.verbose = 0
 
-    proxy.process_certificate_option_group(parser, options)
-
-    config = proxy.Config(
-        certfile = options.cert,
-        certpath = options.certpath,
-        cacert   = options.cacert,
-        ciphers = options.ciphers
-    )
+    config = proxy.process_certificate_option_group(parser, options)
     server = proxy.ProxyServer(config, options.port)
     utils.mkdir_p(options.cache)
     if os.path.exists(options.cache + "/index.txt"):

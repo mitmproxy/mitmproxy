@@ -47,12 +47,12 @@ class uFlow(libpry.AutoTree):
         assert f == flow.Flow.from_state(state)
 
         f.response = None
-        f.error = proxy.Error(f, "error")
+        f.error = proxy.Error(f.request, "error")
         state = f.get_state() 
         assert f == flow.Flow.from_state(state)
 
         f2 = utils.tflow()
-        f2.error = proxy.Error(f, "e2")
+        f2.error = proxy.Error(f.request, "e2")
         assert not f == f2
         f.load_state(f2.get_state())
         assert f == f2
@@ -143,10 +143,10 @@ class uState(libpry.AutoTree):
         c = flow.State()
         req = utils.treq()
         f = c.add_request(req)
-        e = proxy.Error(f, "message")
+        e = proxy.Error(f.request, "message")
         assert c.add_error(e)
 
-        e = proxy.Error(utils.tflow(), "message")
+        e = proxy.Error(utils.tflow().request, "message")
         assert not c.add_error(e)
 
     def test_view(self):
@@ -190,7 +190,7 @@ class uState(libpry.AutoTree):
     def _add_error(self, state):
         req = utils.treq()
         f = state.add_request(req)
-        f.error = proxy.Error(f, "msg")
+        f.error = proxy.Error(f.request, "msg")
 
     def test_kill_flow(self):
         c = flow.State()
@@ -269,7 +269,7 @@ class uFlowMaster(libpry.AutoTree):
         dc = proxy.ClientDisconnect(req.client_conn)
         fm.handle_clientdisconnect(dc)
 
-        err = proxy.Error(f, "msg")
+        err = proxy.Error(f.request, "msg")
         fm.handle_error(err)
 
 

@@ -215,7 +215,7 @@ class State:
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        f = self.flow_map.get(err.flow.request)
+        f = self.flow_map.get(err.request) if err.request else None
         if not f:
             return None
         f.error = err

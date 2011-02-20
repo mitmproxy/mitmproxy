@@ -56,17 +56,11 @@ if __name__ == '__main__':
     if options.quiet:
         options.verbose = 0
 
-    proxy.process_certificate_option_group(parser, options)
     
     if options.cache is not None:
         options.cache = os.path.expanduser(options.cache)
 
-    config = proxy.Config(
-        certfile = options.cert,
-        certpath = options.certpath,
-        cacert   = options.cacert,
-        ciphers = options.ciphers
-    )
+    config = proxy.process_certificate_option_group(parser, options)
     server = proxy.ProxyServer(config, options.port)
     m = playback.PlaybackMaster(server, options)
     m.run()
