@@ -44,9 +44,10 @@ class ServerPlaybackState:
             chronological order.
         """
         for i in flows:
-            h = self._hash(i)
-            l = self.fmap.setdefault(self._hash(i), [])
-            l.append(i)
+            if i.response:
+                h = self._hash(i)
+                l = self.fmap.setdefault(self._hash(i), [])
+                l.append(i)
 
     def _hash(self, flow):
         """

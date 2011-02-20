@@ -6,11 +6,12 @@ class DumpError(Exception): pass
 
 class Options(object):
     __slots__ = [
-        "verbosity",
-        "wfile",
+        "kill",
         "request_script",
         "response_script",
         "replay",
+        "verbosity",
+        "wfile",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -66,7 +67,15 @@ class DumpMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_request(self, r)
         if self.o.request_script:
             self._runscript(f, self.o.request_script)
-        if not self.playback(f):
+
+        if self.o.replay:
+            pb = self.playback(f)
+            if not pb:
+                if self.o.kill:
+                    self.state.kill_flow(f)
+                else:
+                    r.ack()
+        else:
             r.ack()
 
     def indent(self, n, t):

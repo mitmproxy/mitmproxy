@@ -22,3 +22,10 @@ def tflow():
     return flow.Flow(r)
 
 
+def tflow_full():
+    r = treq()
+    f = flow.Flow(r)
+    f.response = tresp(r)
+    return f
+
+

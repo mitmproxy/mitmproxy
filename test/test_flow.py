@@ -19,10 +19,10 @@ class uServerPlaybackState(libpry.AutoTree):
 
     def test_load(self):
         s = flow.ServerPlaybackState()
-        r = utils.tflow()
+        r = utils.tflow_full()
         r.request.headers["key"] = ["one"]
 
-        r2 = utils.tflow()
+        r2 = utils.tflow_full()
         r2.request.headers["key"] = ["two"]
 
         s.load([r, r2])
