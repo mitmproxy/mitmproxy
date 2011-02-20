@@ -328,6 +328,27 @@ class FlowMaster(controller.Master):
     def __init__(self, server, state):
         controller.Master.__init__(self, server)
         self.state = state
+        self._playback_state = None
+
+    def start_playback(self, flows):
+        self._playback_state = ServerPlaybackState()
+        self._playback_state.load(flows)
+
+    def playback(self, flow):
+        """
+            This method should be called by child classes in the handle_request
+            handler. Returns True if playback has taken place, None if not.
+        """
+        if self._playback_state:
+            rflow = self._playback_state.next_flow(flow)
+            if not rflow:
+                return None
+            response = proxy.Response.from_state(flow.request, rflow.response.get_state())
+            response.set_replay()
+            flow.response = response
+            flow.request.ack(response)
+            return True
+        return None
 
     def handle_clientconnect(self, r):
         self.state.clientconnect(r)

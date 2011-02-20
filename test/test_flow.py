@@ -309,6 +309,24 @@ class uFlowMaster(libpry.AutoTree):
         err = proxy.Error(f.request, "msg")
         fm.handle_error(err)
 
+    def test_replay(self):
+        s = flow.State()
+
+        f = utils.tflow()
+        f.response = utils.tresp(f.request)
+        pb = [f]
+
+        fm = flow.FlowMaster(None, s)
+        assert not fm.playback(utils.tflow())
+
+        fm.start_playback(pb)
+        assert fm.playback(utils.tflow())
+
+        fm.start_playback(pb)
+        r = utils.tflow()
+        r.request.content = "gibble"
+        assert not fm.playback(r)
+
 
 
 tests = [

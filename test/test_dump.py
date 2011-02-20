@@ -23,6 +23,23 @@ class uDumpMaster(libpry.AutoTree):
         self._cycle(m, content)
         return cs.getvalue()
 
+    def test_replay(self):
+        cs = StringIO()
+
+        o = dump.Options(replay="nonexistent")
+        libpry.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
+
+        t = self.tmpdir()
+        p = os.path.join(t, "rep")
+        f = open(p, "w")
+        fw = flow.FlowWriter(f)
+        t = utils.tflow()
+        fw.add(t)
+        f.close()
+
+        o = dump.Options(replay=p)
+        m = dump.DumpMaster(None, o, None, outfile=cs)
+
     def test_options(self):
         o = dump.Options(verbosity = 2)
         assert o.verbosity == 2

@@ -10,6 +10,7 @@ class Options(object):
         "wfile",
         "request_script",
         "response_script",
+        "replay",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -38,6 +39,15 @@ class DumpMaster(flow.FlowMaster):
             except IOError, v:
                 raise DumpError(v.strerror)
 
+        if options.replay:
+            path = os.path.expanduser(options.replay)
+            try:
+                f = file(path, "r")
+                flows = list(flow.FlowReader(f).stream())
+            except IOError, v:
+                raise DumpError(v.strerror)
+            self.start_playback(flows)
+
     def _runscript(self, f, script):
         try:
             ret = f.run_script(script)
@@ -56,7 +66,8 @@ class DumpMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_request(self, r)
         if self.o.request_script:
             self._runscript(f, self.o.request_script)
-        r.ack()
+        if not self.playback(f):
+            r.ack()
 
     def indent(self, n, t):
         l = str(t).strip().split("\n")

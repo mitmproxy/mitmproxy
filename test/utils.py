@@ -1,3 +1,4 @@
+import os.path
 from libmproxy import proxy, utils, filt, flow
 
 def treq(conn=None):
@@ -19,4 +20,5 @@ def tresp(req=None):
 def tflow():
     r = treq()
     return flow.Flow(r)
+
 

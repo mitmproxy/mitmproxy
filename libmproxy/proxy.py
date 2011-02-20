@@ -265,6 +265,13 @@ class Response(controller.Msg):
         self.timestamp = timestamp or time.time()
         self.cached = False
         controller.Msg.__init__(self)
+        self.replay = False
+
+    def set_replay(self):
+        self.replay = True
+
+    def is_replay(self):
+        return self.replay
 
     def load_state(self, state):
         self.code = state["code"]
@@ -308,7 +315,10 @@ class Response(controller.Msg):
         return self.cached
 
     def short(self):
-        return "%s %s"%(self.code, self.msg)
+        r = "%s %s"%(self.code, self.msg)
+        if self.is_replay():
+            r = "[replay] " + r
+        return r
 
     def assemble(self):
         """

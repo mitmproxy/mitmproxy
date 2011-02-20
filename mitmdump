@@ -47,6 +47,9 @@ if __name__ == '__main__':
     parser.add_option("", "--respscript",
                       action="store", dest="response_script", default=None,
                       help="Script to run when a response is recieved.")
+    parser.add_option("-r", "--replay",
+                      action="store", dest="replay", default=None,
+                      help="Replay server responses from a saved file.")
 
     options, args = parser.parse_args()
 
@@ -61,6 +64,7 @@ if __name__ == '__main__':
         wfile = options.wfile,
         request_script = options.request_script,
         response_script = options.response_script,
+        replay = options.replay,
     )
     if args:
         filt = " ".join(args)
