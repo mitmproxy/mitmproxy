@@ -10,13 +10,6 @@ def header(data):
     return str(len(data))+":"
     
     
-def encode(data):
-    if not isinstance(data, str):
-        raise ValueError("data should be of type 'str'")
-    
-    return "%i:%s," % (len(data), data)
-
-
 class FileEncoder(object):
     def __init__(self, file_out):
         """"
@@ -39,43 +32,16 @@ class FileEncoder(object):
         return self
         
     
-def netstrings_to_file(file_out, data_container):
-    """
-        Writes a container of netstrings to a file.
-        
-        file_out -- A writeable file-like object
-        data_container -- An iterable of strings
-    """
-    write = file_out.write    
-    for s in data_container:
-        if not isinstance(s, str):
-            raise ValueError("data should be of type 'str'")
-        write(header(s))
-        write(s)
-        write(',')
-            
-    
-def encode_netstrings(data_container):
-    """
-        Encodes a number of strings as sequence of netstrings.
-        
-        data_container -- An iterable of strings to be encoded
-    """    
-    return "".join(encode(s) for s in data_container)
-    
-
 class DecoderError(Exception):
-    (
-        PRECEDING_ZERO_IN_SIZE,
-        MAX_SIZE_REACHED,
-        ILLEGAL_DIGIT_IN_SIZE,
-        ILLEGAL_DIGIT
-    ) = range(4)
+    PRECEDING_ZERO_IN_SIZE = 0
+    MAX_SIZE_REACHED = 1
+    ILLEGAL_DIGIT_IN_SIZE = 2
+    ILLEGAL_DIGIT = 3
     error_text = {    
-        PRECEDING_ZERO_IN_SIZE:"PRECEDING_ZERO_IN_SIZE",
-        MAX_SIZE_REACHED:"MAX_SIZE_REACHED",
-        ILLEGAL_DIGIT_IN_SIZE:"ILLEGAL_DIGIT_IN_SIZE",
-        ILLEGAL_DIGIT:"ILLEGAL_DIGIT"
+        PRECEDING_ZERO_IN_SIZE: "PRECEDING_ZERO_IN_SIZE",
+        MAX_SIZE_REACHED: "MAX_SIZE_REACHED",
+        ILLEGAL_DIGIT_IN_SIZE: "ILLEGAL_DIGIT_IN_SIZE",
+        ILLEGAL_DIGIT: "ILLEGAL_DIGIT"
     }
     def __init__(self, code, text):
         Exception.__init__(self)
@@ -108,34 +74,6 @@ class Decoder(object):
         self.remaining_bytes = 0
         self.data_out = StringIO()
         self.yield_data = ""
-        
-    def __str__(self):
-        if self.data_size is None:
-            bytes = len(self.size_string)
-        else:
-            bytes = self.data_out.tell()
-        return "<netstring decoder, %i bytes in buffer>"%bytes
-        
-    def peek_buffer(self):
-        """
-            Returns any bytes not used by decoder.
-        """
-        return self.data_out.getvalue()            
-            
-    def reset(self):
-        """
-            Resets decoder to initial state, and discards any cached stream data.
-        """
-        self.data_pos = 0
-        self.string_start = 0          
-        self.expecting_terminator = False
-        self.size_string = ""
-        self.data_size = None
-        self.remaining_bytes = 0                
-        self.yield_data = ""
-        
-        self.data_out.reset()
-        self.data_out.truncate()
         
     def feed(self, data):
         """
@@ -198,19 +136,6 @@ class Decoder(object):
                     self.size_string = "" 
                     self.remaining_bytes = 0                    
                     self.expecting_terminator = True                            
-        
-        
-def decode(data):
-    """
-        Decodes netstrings and returns a tuple containing a
-        list of strings, and any remaining data.
-        
-        data -- A string containing netstring data
-    """
-    decoder = Decoder()
-    netstrings = list(decoder.feed(data))
-    remaining = data[decoder.string_start:]
-    return netstrings, remaining
         
         
 def decode_file(file_in, buffer_size=1024):

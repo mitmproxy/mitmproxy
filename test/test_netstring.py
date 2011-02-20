@@ -16,13 +16,6 @@ class uNetstring(libpry.AutoTree):
         for test, result in tests:
             assert netstring.header(test) == result 
             
-    def test_encode(self):
-        tests = [ ("netstring", "9:netstring,"),
-                  ("Will McGugan", "12:Will McGugan,"),
-                  ("", "0:,") ]
-        for test, result in tests:                
-            assert netstring.encode(test) == result 
-            
     def test_file_encoder(self):
         file_out = StringIO()
         data = self.test_data.split()

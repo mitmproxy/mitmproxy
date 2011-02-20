@@ -342,8 +342,10 @@ def dummy_ca(path):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE
     )
+    # begin nocover
     if ret:
         return False
+    # end nocover
     else:
         return True
 
@@ -382,8 +384,7 @@ def dummy_cert(certdir, ca, commonname):
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE
         )
-        if ret:
-            return None
+        if ret: return None
         cmd = [
             "openssl",
             "x509",
@@ -402,8 +403,7 @@ def dummy_cert(certdir, ca, commonname):
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE
         )
-        if ret:
-            return None
+        if ret: return None
     else:
         # Create a new selfsigned certificate + key
         cmd = [
@@ -424,8 +424,7 @@ def dummy_cert(certdir, ca, commonname):
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE
         )
-        if ret:
-            return None
+        if ret: return None
     return certpath
 
 
@@ -437,5 +436,3 @@ def mkdir_p(path):
             pass
         else:
             raise
-
-
