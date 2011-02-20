@@ -26,16 +26,16 @@ class uServerPlaybackState(libpry.AutoTree):
         r2.request.headers["key"] = ["two"]
 
         s.load([r, r2])
-        assert len(s) == 2
+        assert s.count() == 2
         assert len(s.fmap.keys()) == 1
 
         n = s.next_flow(r)
         assert n.request.headers["key"] == ["one"]
-        assert len(s) == 1
+        assert s.count() == 1
 
         n = s.next_flow(r)
         assert n.request.headers["key"] == ["two"]
-        assert len(s) == 0
+        assert s.count() == 0
 
         assert not s.next_flow(r)
 
@@ -317,15 +317,15 @@ class uFlowMaster(libpry.AutoTree):
         pb = [f]
 
         fm = flow.FlowMaster(None, s)
-        assert not fm.playback(utils.tflow())
+        assert not fm.do_playback(utils.tflow())
 
-        fm.start_playback(pb)
-        assert fm.playback(utils.tflow())
+        fm.start_playback(pb, False)
+        assert fm.do_playback(utils.tflow())
 
-        fm.start_playback(pb)
+        fm.start_playback(pb, False)
         r = utils.tflow()
         r.request.content = "gibble"
-        assert not fm.playback(r)
+        assert not fm.do_playback(r)
 
 
 

@@ -32,6 +32,11 @@ class DumpMaster(flow.FlowMaster):
         else:
             self.filt = None
 
+        if self.o.response_script:
+            self.set_response_script(self.o.response_script)  
+        if self.o.request_script:
+            self.set_request_script(self.o.request_script)  
+
         if options.wfile:
             path = os.path.expanduser(options.wfile)
             try:
@@ -47,7 +52,7 @@ class DumpMaster(flow.FlowMaster):
                 flows = list(flow.FlowReader(f).stream())
             except IOError, v:
                 raise DumpError(v.strerror)
-            self.start_playback(flows)
+            self.start_playback(flows, options.kill)
 
     def _runscript(self, f, script):
         try:
@@ -65,17 +70,7 @@ class DumpMaster(flow.FlowMaster):
 
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
-        if self.o.request_script:
-            self._runscript(f, self.o.request_script)
-
-        if self.o.replay:
-            pb = self.playback(f)
-            if not pb:
-                if self.o.kill:
-                    self.state.kill_flow(f)
-                else:
-                    r.ack()
-        else:
+        if f:
             r.ack()
 
     def indent(self, n, t):
@@ -85,8 +80,6 @@ class DumpMaster(flow.FlowMaster):
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
         if f:
-            if self.o.response_script:
-                self._runscript(f, self.o.response_script)
             msg.ack()
             if self.filt and not f.match(self.filt):
                     return

@@ -35,7 +35,7 @@ class ServerPlaybackState:
     def __init__(self):
         self.fmap = {}
 
-    def __len__(self):
+    def count(self):
         return sum([len(i) for i in self.fmap.values()])
     
     def load(self, flows):
@@ -329,19 +329,35 @@ class FlowMaster(controller.Master):
     def __init__(self, server, state):
         controller.Master.__init__(self, server)
         self.state = state
-        self._playback_state = None
+        self.playback = None
+        self.scripts = {}
+        self.kill_nonreplay = False
 
-    def start_playback(self, flows):
-        self._playback_state = ServerPlaybackState()
-        self._playback_state.load(flows)
+    def _runscript(self, f, script):
+        return f.run_script(script)
 
-    def playback(self, flow):
+    def set_response_script(self, s):
+        self.scripts["response"] = s
+
+    def set_request_script(self, s):
+        self.scripts["request"] = s
+
+    def start_playback(self, flows, kill):
+        """
+            flows: A list of flows.
+            kill: Boolean, should we kill requests not part of the replay?
+        """
+        self.playback = ServerPlaybackState()
+        self.playback.load(flows)
+        self.kill_nonreplay = kill
+
+    def do_playback(self, flow):
         """
             This method should be called by child classes in the handle_request
             handler. Returns True if playback has taken place, None if not.
         """
-        if self._playback_state:
-            rflow = self._playback_state.next_flow(flow)
+        if self.playback:
+            rflow = self.playback.next_flow(flow)
             if not rflow:
                 return None
             response = proxy.Response.from_state(flow.request, rflow.response.get_state())
@@ -365,12 +381,24 @@ class FlowMaster(controller.Master):
         return f
 
     def handle_request(self, r):
-        return self.state.add_request(r)
+        f = self.state.add_request(r)
+        if "request" in self.scripts:
+            self._runscript(f, self.scripts["request"])
+        if self.playback:
+            pb = self.do_playback(f)
+            if not pb:
+                if self.kill_nonreplay:
+                    self.state.kill_flow(f)
+                else:
+                    r.ack()
+        return f
 
     def handle_response(self, r):
         f = self.state.add_response(r)
         if not f:
             r.ack()
+        if "response" in self.scripts:
+            self._runscript(f, self.scripts["response"])
         return f
 
 
