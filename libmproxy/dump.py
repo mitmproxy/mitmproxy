@@ -12,6 +12,7 @@ class Options(object):
         "replay",
         "verbosity",
         "wfile",
+        "rheaders",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -52,7 +53,7 @@ class DumpMaster(flow.FlowMaster):
                 flows = list(flow.FlowReader(f).stream())
             except IOError, v:
                 raise DumpError(v.strerror)
-            self.start_playback(flows, options.kill)
+            self.start_playback(flows, options.kill, options.rheaders)
 
     def _runscript(self, f, script):
         try:

@@ -32,7 +32,12 @@ class RequestReplayThread(threading.Thread):
 
 
 class ServerPlaybackState:
-    def __init__(self):
+    def __init__(self, headers):
+        """
+            headers: A case-insensitive list of request headers that should be
+            included in request-response matching.
+        """
+        self.headers = headers
         self.fmap = {}
 
     def count(self):
@@ -62,6 +67,15 @@ class ServerPlaybackState:
             str(r.path),
             str(r.content),
         ]
+        if self.headers:
+            hdrs = []
+            for i in self.headers:
+                v = r.headers.get(i, [])
+                # Slightly subtle: we need to convert everything to strings
+                # to prevent a mismatch between unicode/non-unicode.
+                v = [str(x) for x in v]
+                hdrs.append((i, v))
+            key.append(repr(hdrs))
         return hashlib.sha256(repr(key)).digest()
 
     def next_flow(self, request):
@@ -342,12 +356,12 @@ class FlowMaster(controller.Master):
     def set_request_script(self, s):
         self.scripts["request"] = s
 
-    def start_playback(self, flows, kill):
+    def start_playback(self, flows, kill, headers):
         """
             flows: A list of flows.
             kill: Boolean, should we kill requests not part of the replay?
         """
-        self.playback = ServerPlaybackState()
+        self.playback = ServerPlaybackState(headers)
         self.playback.load(flows)
         self.kill_nonreplay = kill
 

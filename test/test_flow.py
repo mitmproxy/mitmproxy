@@ -6,7 +6,7 @@ import libpry
 
 class uServerPlaybackState(libpry.AutoTree):
     def test_hash(self):
-        s = flow.ServerPlaybackState()
+        s = flow.ServerPlaybackState(None)
         r = utils.tflow()
         r2 = utils.tflow()
 
@@ -17,8 +17,23 @@ class uServerPlaybackState(libpry.AutoTree):
         r.request.path = "voing"
         assert s._hash(r) != s._hash(r2)
 
+    def test_headers(self):
+        s = flow.ServerPlaybackState(["foo"])
+        r = utils.tflow_full()
+        r.request.headers["foo"] = ["bar"]
+        r2 = utils.tflow_full()
+        assert not s._hash(r) == s._hash(r2)
+        r2.request.headers["foo"] = ["bar"]
+        assert s._hash(r) == s._hash(r2)
+        r2.request.headers["oink"] = ["bar"]
+        assert s._hash(r) == s._hash(r2)
+
+        r = utils.tflow_full()
+        r2 = utils.tflow_full()
+        assert s._hash(r) == s._hash(r2)
+
     def test_load(self):
-        s = flow.ServerPlaybackState()
+        s = flow.ServerPlaybackState(None)
         r = utils.tflow_full()
         r.request.headers["key"] = ["one"]
 
@@ -319,10 +334,10 @@ class uFlowMaster(libpry.AutoTree):
         fm = flow.FlowMaster(None, s)
         assert not fm.do_playback(utils.tflow())
 
-        fm.start_playback(pb, False)
+        fm.start_playback(pb, False, [])
         assert fm.do_playback(utils.tflow())
 
-        fm.start_playback(pb, False)
+        fm.start_playback(pb, False, [])
         r = utils.tflow()
         r.request.content = "gibble"
         assert not fm.do_playback(r)
