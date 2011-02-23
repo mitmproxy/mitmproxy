@@ -85,8 +85,8 @@ def parse_url(url):
         else:
             port = 80
     path = urlparse.urlunparse(('', '', path, params, query, fragment))
-    if not path:
-        path = "/"
+    if not path.startswith("/"):
+        path = "/" + path
     return scheme, host, port, path
 
 

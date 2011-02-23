@@ -4,6 +4,17 @@ import utils
 import libpry
 
 
+class uStickyCookieState(libpry.AutoTree):
+    def test_simple(self):
+        s = flow.StickyCookieState()
+        s.add_cookies(
+            ["SSID=mooo, FOO=bar; Domain=.google.com; Path=/; Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "]
+        )
+        assert len(s.jar) == 1
+        assert len(s.get_cookies("www.google.com", "/foo")) == 1
+        assert len(s.get_cookies("www.foo.com", "/foo")) == 0
+
+
 class uServerPlaybackState(libpry.AutoTree):
     def test_hash(self):
         s = flow.ServerPlaybackState(None)
@@ -345,6 +356,7 @@ class uFlowMaster(libpry.AutoTree):
 
 
 tests = [
+    uStickyCookieState(),
     uServerPlaybackState(),
     uFlow(),
     uState(),

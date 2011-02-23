@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import subprocess, base64, sys, json, hashlib
+import subprocess, base64, sys, json, hashlib, Cookie, cookielib, copy
 import proxy, threading, netstring
 import controller
 
@@ -87,6 +87,29 @@ class ServerPlaybackState:
         if not l:
             return None
         return l.pop(0)
+
+
+class StickyCookieState:
+    def __init__(self):
+        self.jar = {}
+
+    def ckey(self, c):
+        c = copy.copy(c)
+        del c["expires"]
+        return str(c)
+
+    def add_cookies(self, headers):
+        for i in headers:
+            c = Cookie.SimpleCookie(i)
+            m = c.values()[0]
+            self.jar[self.ckey(m)] = m
+
+    def get_cookies(self, domain, path):
+        cs = []
+        for i in self.jar.values():
+            if cookielib.domain_match(domain, i["domain"]) and path.startswith(i.get("path", "/")):
+                cs.append(i)
+        return cs
 
 
 class Flow:
