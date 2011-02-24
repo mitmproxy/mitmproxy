@@ -1154,15 +1154,6 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             self.state.beep = None
 
-    def set_stickycookie(self, txt):
-        if txt:
-            self.stickycookie = filt.parse(txt)
-            if not self.stickycookie:
-                return "Invalid filter expression."
-        else:
-            self.stickyhosts = {}
-            self.stickycookie = None
-
     def drawscreen(self):
         size = self.ui.get_cols_rows()
         canvas = self.view.render(size, focus=1)
@@ -1311,20 +1302,10 @@ class ConsoleMaster(flow.FlowMaster):
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
         if f:
-            if f.match(self.stickycookie):
-                hid = (f.request.host, f.request.port)
-                if f.request.headers.has_key("cookie"):
-                    self.stickyhosts[hid] = f.request.headers["cookie"]
-                elif hid in self.stickyhosts:
-                    f.request.headers["cookie"] = self.stickyhosts[hid]
             self.process_flow(f, r)
 
     def handle_response(self, r):
         f = flow.FlowMaster.handle_response(self, r)
         if f:
-            if f.match(self.stickycookie):
-                hid = (f.request.host, f.request.port)
-                if f.response.headers.has_key("set-cookie"):
-                    self.stickyhosts[hid] = f.response.headers["set-cookie"]
             self.process_flow(f, r)
 

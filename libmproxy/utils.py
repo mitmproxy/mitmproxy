@@ -172,6 +172,10 @@ class MultiDict:
         key = self._helper[0](key)
         return self._d.get(key, d)
 
+    def __contains__(self, key):
+        key = self._helper[0](key)
+        return self._d.__contains__(key)
+
     def __eq__(self, other):
         return dict(self) == dict(other)
 
@@ -191,6 +195,10 @@ class MultiDict:
     def has_key(self, key):
         key = self._helper[0](key)
         return self._d.has_key(key)
+
+    def setdefault(self, key, default=None):
+        key = self._helper[0](key)
+        return self._d.setdefault(key, default)
 
     def keys(self):
         return self._d.keys()

@@ -3,7 +3,7 @@
     with their responses, and provide filtering and interception facilities.
 """
 import subprocess, base64, sys, json, hashlib, Cookie, cookielib, copy
-import proxy, threading, netstring
+import proxy, threading, netstring, filt
 import controller
 
 class RunException(Exception):
@@ -90,26 +90,44 @@ class ServerPlaybackState:
 
 
 class StickyCookieState:
-    def __init__(self):
+    def __init__(self, flt):
+        """
+            flt: A compiled filter.
+        """
         self.jar = {}
+        self.flt = flt
 
-    def ckey(self, c):
-        c = copy.copy(c)
-        del c["expires"]
-        return str(c)
+    def ckey(self, m, f):
+        """
+            Returns a (domain, port, path) tuple. 
+        """
+        return (
+            m["domain"] or f.request.host,
+            f.request.port,
+            m["path"] or "/"
+        )
 
-    def add_cookies(self, headers):
-        for i in headers:
+    def handle_response(self, f):
+        for i in f.response.headers.get("set-cookie", []):
             c = Cookie.SimpleCookie(i)
             m = c.values()[0]
-            self.jar[self.ckey(m)] = m
+            k = self.ckey(m, f)
+            if cookielib.domain_match(f.request.host, k[0]):
+                self.jar[self.ckey(m, f)] = m
 
-    def get_cookies(self, domain, path):
-        cs = []
-        for i in self.jar.values():
-            if cookielib.domain_match(domain, i["domain"]) and path.startswith(i.get("path", "/")):
-                cs.append(i)
-        return cs
+    def handle_request(self, f):
+        if f.match(self.flt):
+            cs = []
+            for i in self.jar.keys():
+                match = [
+                    cookielib.domain_match(i[0], f.request.host),
+                    f.request.port == i[1],
+                    f.request.path.startswith(i[2])
+                ]
+                if all(match):
+                    l = f.request.headers.setdefault("cookie", [])
+                    l.append(self.jar[i].output(header="").strip())
+
 
 
 class Flow:
@@ -369,6 +387,7 @@ class FlowMaster(controller.Master):
         self.playback = None
         self.scripts = {}
         self.kill_nonreplay = False
+        self.stickycookie_state = False
 
     def _runscript(self, f, script):
         return f.run_script(script)
@@ -378,6 +397,15 @@ class FlowMaster(controller.Master):
 
     def set_request_script(self, s):
         self.scripts["request"] = s
+
+    def set_stickycookie(self, txt):
+        if txt:
+            flt = filt.parse(txt)
+            if not flt:
+                return "Invalid filter expression."
+            self.stickycookie_state = StickyCookieState(flt)
+        else:
+            self.stickycookie_state = None
 
     def start_playback(self, flows, kill, headers):
         """
@@ -419,6 +447,8 @@ class FlowMaster(controller.Master):
 
     def handle_request(self, r):
         f = self.state.add_request(r)
+        if self.stickycookie_state:
+            self.stickycookie_state.handle_request(f)
         if "request" in self.scripts:
             self._runscript(f, self.scripts["request"])
         if self.playback:
@@ -434,6 +464,8 @@ class FlowMaster(controller.Master):
         f = self.state.add_response(r)
         if not f:
             r.ack()
+        if self.stickycookie_state:
+            self.stickycookie_state.handle_response(f)
         if "response" in self.scripts:
             self._runscript(f, self.scripts["response"])
         return f

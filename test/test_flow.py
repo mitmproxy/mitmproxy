@@ -5,14 +5,33 @@ import libpry
 
 
 class uStickyCookieState(libpry.AutoTree):
-    def test_simple(self):
-        s = flow.StickyCookieState()
-        s.add_cookies(
-            ["SSID=mooo, FOO=bar; Domain=.google.com; Path=/; Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "]
-        )
-        assert len(s.jar) == 1
-        assert len(s.get_cookies("www.google.com", "/foo")) == 1
-        assert len(s.get_cookies("www.foo.com", "/foo")) == 0
+    def _response(self, cookie, host):
+        s = flow.StickyCookieState(filt.parse(".*"))
+        f = utils.tflow_full()
+        f.request.host = host 
+        f.response.headers["Set-Cookie"] = [cookie]
+        s.handle_response(f)
+        return s, f
+
+    def test_handle_response(self):
+        c = "SSID=mooo, FOO=bar; Domain=.google.com; Path=/; "\
+            "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
+
+        s, f = self._response(c, "host")
+        assert not s.jar.keys()
+
+        s, f = self._response(c, "www.google.com")
+        assert s.jar.keys()
+
+        s, f = self._response("SSID=mooo", "www.google.com")
+        assert s.jar.keys()[0] == ('www.google.com', 80, '/')
+
+    def test_handle_request(self):
+        s, f = self._response("SSID=mooo", "www.google.com")
+        assert "cookie" not in f.request.headers
+        s.handle_request(f)
+        assert "cookie" in f.request.headers
+
 
 
 class uServerPlaybackState(libpry.AutoTree):
@@ -352,6 +371,27 @@ class uFlowMaster(libpry.AutoTree):
         r = utils.tflow()
         r.request.content = "gibble"
         assert not fm.do_playback(r)
+
+    def test_stickycookie(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert "Invalid" in fm.set_stickycookie("~h")
+        fm.set_stickycookie(".*")
+        assert fm.stickycookie_state
+        fm.set_stickycookie(None)
+        assert not fm.stickycookie_state
+
+        fm.set_stickycookie(".*")
+        tf = utils.tflow_full()
+        tf.response.headers["set-cookie"] = ["foo=bar"]
+        fm.handle_request(tf.request)
+        f = fm.handle_response(tf.response)
+        assert fm.stickycookie_state.jar
+        assert not "cookie" in tf.request.headers
+        fm.handle_request(tf.request)
+        assert tf.request.headers["cookie"] == ["foo=bar"]
+
+
 
 
 
