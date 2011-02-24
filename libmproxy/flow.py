@@ -390,7 +390,9 @@ class FlowMaster(controller.Master):
         self.stickycookie_state = False
 
     def _runscript(self, f, script):
-        return f.run_script(script)
+        #begin nocover
+        raise NotImplementedError
+        #end nocover
 
     def set_response_script(self, s):
         self.scripts["response"] = s

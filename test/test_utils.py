@@ -310,10 +310,7 @@ class udummy_cert(libpry.AutoTree):
         assert os.path.exists(os.path.join(d, "foo.com.pem"))
 
 
-        
 
-
-    
 tests = [
     uformat_timestamp(),
     uisBin(),

@@ -434,13 +434,3 @@ def dummy_cert(certdir, ca, commonname):
         )
         if ret: return None
     return certpath
-
-
-def mkdir_p(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:
-        if exc.errno == errno.EEXIST:
-            pass
-        else:
-            raise

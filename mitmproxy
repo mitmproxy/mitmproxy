@@ -72,11 +72,6 @@ if __name__ == '__main__':
                         "Options controlling recorder behavior"
                     )
     group.add_option(
-        "-w", "--store", action="store",
-        type = "str", dest="cache", default=None,
-        help = "Session store location"
-    )
-    group.add_option(
         "-C", "--cookies", action="append",
         type = "str", dest="cookies", default=[],
         help = "Persistent client cookies already set or generated in client"
@@ -85,14 +80,6 @@ if __name__ == '__main__':
 
     options, args = parser.parse_args()
 
-
-    if options.cache is not None:
-        options.cache = os.path.expanduser(options.cache)
-    if options.cache is not None:
-        utils.mkdir_p(options.cache)
-        if os.path.exists(options.cache + "/index.txt"):
-            print >> sys.stderr, "ERROR: data already recorded in %s"%options.cache
-            sys.exit(1)
 
     config = proxy.process_certificate_option_group(parser, options)
     server = proxy.ProxyServer(config, options.port, options.addr)
