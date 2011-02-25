@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_option(
         "-p", action="store",
         type = "int", dest="port", default=8080,
-        help = "Port."
+        help = "Proxy service port."
     )
     parser.add_option("-c", 
                       action="store_true", dest="stickycookie_all", default=None,

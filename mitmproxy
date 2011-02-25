@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_option(
         "-p", "--port", action="store",
         type = "int", dest="port", default=8080,
-        help = "Port."
+        help = "Proxy service port."
     )
 
     group = OptionGroup(
@@ -66,17 +66,6 @@ if __name__ == '__main__':
     )
     parser.add_option_group(group)
 
-    group = OptionGroup(
-                        parser,
-                        "Recorder",
-                        "Options controlling recorder behavior"
-                    )
-    group.add_option(
-        "-C", "--cookies", action="append",
-        type = "str", dest="cookies", default=[],
-        help = "Persistent client cookies already set or generated in client"
-    )
-    parser.add_option_group(group)
 
     options, args = parser.parse_args()
 
