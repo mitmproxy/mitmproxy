@@ -10,6 +10,10 @@ class uStrFuncs(libpry.AutoTree):
         t.set_replay()
         dump.str_response(t)
 
+        t = utils.treq()
+        t.stickycookie = True
+        assert "stickycookie" in dump.str_request(t)
+
 
 class uDumpMaster(libpry.AutoTree):
     def _cycle(self, m, content):

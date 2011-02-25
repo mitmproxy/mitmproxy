@@ -31,7 +31,10 @@ def str_response(resp):
 
 
 def str_request(req):
-    return "%s %s"%(req.method, req.url())
+    r = "%s %s"%(req.method, req.url())
+    if req.stickycookie:
+        r = "[stickycookie] " + r
+    return r
 
 
 class DumpMaster(flow.FlowMaster):

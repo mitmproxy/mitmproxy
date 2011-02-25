@@ -126,6 +126,7 @@ class StickyCookieState:
                 ]
                 if all(match):
                     l = f.request.headers.setdefault("cookie", [])
+                    f.request.stickycookie = True
                     l.append(self.jar[i].output(header="").strip())
 
 

@@ -136,6 +136,9 @@ class Request(controller.Msg):
         self.close = False
         controller.Msg.__init__(self)
 
+        # Have this request's cookies been modified by sticky cookies?
+        self.stickycookie = False
+
     def set_replay(self):
         self.client_conn = None
 
