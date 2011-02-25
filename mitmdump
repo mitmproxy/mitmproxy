@@ -18,6 +18,8 @@
 import sys, os.path
 from libmproxy import proxy, dump, utils
 from libmproxy import VERSION
+
+
 from optparse import OptionParser, OptionGroup
 
 
@@ -32,13 +34,19 @@ if __name__ == '__main__':
         type = "int", dest="port", default=8080,
         help = "Port."
     )
+    parser.add_option("-c", 
+                      action="store_true", dest="stickycookie_all", default=None,
+                      help="Set sticky cookie for all requests.")
+    parser.add_option("-C",
+                      action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
+                      help="Set sticky cookie filter. Matched against requests.")
     parser.add_option("-q", 
                       action="store_true", dest="quiet",
                       help="Quiet.")
-    parser.add_option("", "--reqscript",
+    parser.add_option("--reqscript",
                       action="store", dest="request_script", default=None,
                       help="Script to run when a request is recieved.")
-    parser.add_option("", "--respscript",
+    parser.add_option("--respscript",
                       action="store", dest="response_script", default=None,
                       help="Script to run when a response is recieved.")
     parser.add_option("-v", 
@@ -65,10 +73,14 @@ if __name__ == '__main__':
 
     options, args = parser.parse_args()
 
-
     if options.quiet:
         options.verbose = 0
 
+    stickycookie = None
+    if options.stickycookie_all:
+        stickycookie = ".*"
+    elif options.stickycookie_filt:
+        stickycookie = stickycookie_filt
 
     config = proxy.process_certificate_option_group(parser, options)
     server = proxy.ProxyServer(config, options.port)
@@ -79,7 +91,8 @@ if __name__ == '__main__':
         response_script = options.response_script,
         replay = options.replay,
         kill = options.kill,
-        rheaders = options.rheaders
+        rheaders = options.rheaders,
+        stickycookie = stickycookie
     )
     if args:
         filt = " ".join(args)

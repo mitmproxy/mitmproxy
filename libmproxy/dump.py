@@ -13,6 +13,7 @@ class Options(object):
         "verbosity",
         "wfile",
         "rheaders",
+        "stickycookie",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -38,6 +39,9 @@ class DumpMaster(flow.FlowMaster):
         if self.o.request_script:
             self.set_request_script(self.o.request_script)  
 
+        if options.stickycookie:
+            self.set_stickycookie(options.stickycookie)
+
         if options.wfile:
             path = os.path.expanduser(options.wfile)
             try:
@@ -54,6 +58,7 @@ class DumpMaster(flow.FlowMaster):
             except IOError, v:
                 raise DumpError(v.strerror)
             self.start_playback(flows, options.kill, options.rheaders)
+
 
     def _runscript(self, f, script):
         try:

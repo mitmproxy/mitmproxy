@@ -4,6 +4,8 @@ Futures:
     - Post and URL field parsing and editing.
     - Upstream proxies.
     - Strings view for binary responses.
+    - Better manipulation of flows in mitmproxy: copying flows, adding
+    comments.
 
 Bugs:
     
