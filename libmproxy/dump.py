@@ -23,6 +23,17 @@ class Options(object):
                 setattr(self, i, None)
 
 
+def str_response(resp):
+    r = "%s %s"%(resp.code, resp.msg)
+    if resp.is_replay():
+        r = "[replay] " + r
+    return r
+
+
+def str_request(req):
+    return "%s %s"%(req.method, req.url())
+
+
 class DumpMaster(flow.FlowMaster):
     def __init__(self, server, options, filtstr, outfile=sys.stdout):
         flow.FlowMaster.__init__(self, server, flow.State())
@@ -92,27 +103,27 @@ class DumpMaster(flow.FlowMaster):
             sz = utils.pretty_size(len(f.response.content))
             if self.o.verbosity == 1:
                 print >> self.outfile, f.request.client_conn.address[0],
-                print >> self.outfile, f.request.short()
+                print >> self.outfile, str_request(f.request)
                 print >> self.outfile, "  <<",
-                print >> self.outfile, f.response.short(), sz
+                print >> self.outfile, str_response(f.response), sz
             elif self.o.verbosity == 2:
                 print >> self.outfile, f.request.client_conn.address[0],
-                print >> self.outfile, f.request.short()
+                print >> self.outfile, str_request(f.request)
                 print >> self.outfile, self.indent(4, f.request.headers)
                 print >> self.outfile
-                print >> self.outfile, " <<", f.response.short(), sz
+                print >> self.outfile, " <<", str_response(f.response), sz
                 print >> self.outfile, self.indent(4, f.response.headers)
                 print >> self.outfile, "\n"
             elif self.o.verbosity == 3:
                 print >> self.outfile, f.request.client_conn.address[0],
-                print >> self.outfile, f.request.short()
+                print >> self.outfile, str_request(f.request)
                 print >> self.outfile, self.indent(4, f.request.headers)
                 if utils.isBin(f.request.content):
                     print >> self.outfile, self.indent(4, utils.hexdump(f.request.content))
                 elif f.request.content:
                     print >> self.outfile, self.indent(4, f.request.content)
                 print >> self.outfile
-                print >> self.outfile, " <<", f.response.short(), sz
+                print >> self.outfile, " <<", str_response(f.response), sz
                 print >> self.outfile, self.indent(4, f.response.headers)
                 if utils.isBin(f.response.content):
                     print >> self.outfile, self.indent(4, utils.hexdump(f.response.content))

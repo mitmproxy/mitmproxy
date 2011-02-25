@@ -4,6 +4,12 @@ import libpry
 from libmproxy import dump, flow
 import utils
 
+class uStrFuncs(libpry.AutoTree):
+    def test_all(self):
+        t = utils.tresp()
+        t.set_replay()
+        dump.str_response(t)
+
 
 class uDumpMaster(libpry.AutoTree):
     def _cycle(self, m, content):
@@ -103,11 +109,15 @@ class uDumpMaster(libpry.AutoTree):
             self._dummy_cycle, None, "", response_script="scripts/err_return"
         )
 
+    def test_stickycookie(self):
+        ret = self._dummy_cycle(None, "", stickycookie = ".*")
+
 
 
 
 
 
 tests = [
+    uStrFuncs(),
     uDumpMaster()
 ]

@@ -223,9 +223,6 @@ class Request(controller.Msg):
     def is_response(self):
         return False
 
-    def short(self):
-        return "%s %s"%(self.method, self.url())
-
     def assemble_proxy(self):
         return self.assemble(True)
 
@@ -313,12 +310,6 @@ class Response(controller.Msg):
 
     def is_cached(self):
         return self.cached
-
-    def short(self):
-        r = "%s %s"%(self.code, self.msg)
-        if self.is_replay():
-            r = "[replay] " + r
-        return r
 
     def assemble(self):
         """
