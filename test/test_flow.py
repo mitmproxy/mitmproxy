@@ -33,10 +33,32 @@ class uStickyCookieState(libpry.AutoTree):
         assert "cookie" in f.request.headers
 
 
+class uClientPlaybackState(libpry.AutoTree):
+    def test_tick(self):
+        first = utils.tflow()
+        c = flow.ClientPlaybackState(
+            [first, utils.tflow()]
+        )
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert not s.flow_map
+        assert c.count() == 2
+        c.tick(fm, testing=True)
+        assert s.flow_map
+        assert c.count() == 1
+
+        c.tick(fm, testing=True)
+        assert c.count() == 1
+
+        c.clear(first)
+        c.tick(fm, testing=True)
+        assert c.count() == 0
+
+
 
 class uServerPlaybackState(libpry.AutoTree):
     def test_hash(self):
-        s = flow.ServerPlaybackState(None)
+        s = flow.ServerPlaybackState(None, [])
         r = utils.tflow()
         r2 = utils.tflow()
 
@@ -48,7 +70,7 @@ class uServerPlaybackState(libpry.AutoTree):
         assert s._hash(r) != s._hash(r2)
 
     def test_headers(self):
-        s = flow.ServerPlaybackState(["foo"])
+        s = flow.ServerPlaybackState(["foo"], [])
         r = utils.tflow_full()
         r.request.headers["foo"] = ["bar"]
         r2 = utils.tflow_full()
@@ -63,14 +85,13 @@ class uServerPlaybackState(libpry.AutoTree):
         assert s._hash(r) == s._hash(r2)
 
     def test_load(self):
-        s = flow.ServerPlaybackState(None)
         r = utils.tflow_full()
         r.request.headers["key"] = ["one"]
 
         r2 = utils.tflow_full()
         r2.request.headers["key"] = ["two"]
 
-        s.load([r, r2])
+        s = flow.ServerPlaybackState(None, [r, r2])
         assert s.count() == 2
         assert len(s.fmap.keys()) == 1
 
@@ -398,6 +419,7 @@ class uFlowMaster(libpry.AutoTree):
 tests = [
     uStickyCookieState(),
     uServerPlaybackState(),
+    uClientPlaybackState(),
     uFlow(),
     uState(),
     uSerialize(),
