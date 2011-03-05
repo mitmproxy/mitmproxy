@@ -375,7 +375,7 @@ class uFlowMaster(libpry.AutoTree):
         err = proxy.Error(f.request, "msg")
         fm.handle_error(err)
 
-    def test_replay(self):
+    def test_server_playback(self):
         s = flow.State()
 
         f = utils.tflow()
@@ -383,15 +383,21 @@ class uFlowMaster(libpry.AutoTree):
         pb = [f]
 
         fm = flow.FlowMaster(None, s)
-        assert not fm.do_playback(utils.tflow())
+        assert not fm.do_server_playback(utils.tflow())
 
-        fm.start_playback(pb, False, [])
-        assert fm.do_playback(utils.tflow())
+        fm.start_server_playback(pb, False, [])
+        assert fm.do_server_playback(utils.tflow())
 
-        fm.start_playback(pb, False, [])
+        fm.start_server_playback(pb, False, [])
         r = utils.tflow()
         r.request.content = "gibble"
-        assert not fm.do_playback(r)
+        assert not fm.do_server_playback(r)
+
+    def test_client_playback(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        pb = [utils.tflow_full()]
+        fm.start_client_playback(pb)
 
     def test_stickycookie(self):
         s = flow.State()
@@ -424,5 +430,4 @@ tests = [
     uState(),
     uSerialize(),
     uFlowMaster()
-
 ]

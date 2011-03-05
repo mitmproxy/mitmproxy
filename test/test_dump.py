@@ -36,7 +36,7 @@ class uDumpMaster(libpry.AutoTree):
     def test_replay(self):
         cs = StringIO()
 
-        o = dump.Options(replay="nonexistent", kill=True)
+        o = dump.Options(server_replay="nonexistent", kill=True)
         libpry.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
 
         t = self.tmpdir()
@@ -48,13 +48,13 @@ class uDumpMaster(libpry.AutoTree):
         fw.add(t)
         f.close()
 
-        o = dump.Options(replay=p, kill=True)
+        o = dump.Options(server_replay=p, kill=True)
         m = dump.DumpMaster(None, o, None, outfile=cs)
         
         self._cycle(m, "content")
         self._cycle(m, "content")
 
-        o = dump.Options(replay=p, kill=False)
+        o = dump.Options(server_replay=p, kill=False)
         m = dump.DumpMaster(None, o, None, outfile=cs)
         self._cycle(m, "nonexistent")
 

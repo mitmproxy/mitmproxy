@@ -9,7 +9,7 @@ class Options(object):
         "kill",
         "request_script",
         "response_script",
-        "replay",
+        "server_replay",
         "verbosity",
         "wfile",
         "rheaders",
@@ -64,14 +64,14 @@ class DumpMaster(flow.FlowMaster):
             except IOError, v:
                 raise DumpError(v.strerror)
 
-        if options.replay:
-            path = os.path.expanduser(options.replay)
+        if options.server_replay:
+            path = os.path.expanduser(options.server_replay)
             try:
                 f = file(path, "r")
                 flows = list(flow.FlowReader(f).stream())
             except IOError, v:
                 raise DumpError(v.strerror)
-            self.start_playback(flows, options.kill, options.rheaders)
+            self.start_server_playback(flows, options.kill, options.rheaders)
 
 
     def _runscript(self, f, script):

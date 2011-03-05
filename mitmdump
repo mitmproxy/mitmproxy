@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
 
     group = OptionGroup(parser, "Server Replay")
-    group.add_option("-r", action="store", dest="replay", default=None, metavar="PATH",
+    group.add_option("-r", action="store", dest="server_replay", default=None, metavar="PATH",
                       help="Replay server responses from a saved file.")
     group.add_option("-k", "--kill",
                       action="store_true", dest="kill", default=False,
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         wfile = options.wfile,
         request_script = options.request_script,
         response_script = options.response_script,
-        replay = options.replay,
+        server_replay = options.server_replay,
         kill = options.kill,
         rheaders = options.rheaders,
         stickycookie = stickycookie

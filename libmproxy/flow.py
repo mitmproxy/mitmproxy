@@ -409,7 +409,8 @@ class FlowMaster(controller.Master):
     def __init__(self, server, state):
         controller.Master.__init__(self, server)
         self.state = state
-        self.playback = None
+        self.server_playback = None
+        self.client_playback = None
         self.scripts = {}
         self.kill_nonreplay = False
         self.stickycookie_state = False
@@ -434,21 +435,27 @@ class FlowMaster(controller.Master):
         else:
             self.stickycookie_state = None
 
-    def start_playback(self, flows, kill, headers):
+    def start_client_playback(self, flows):
+        """
+            flows: A list of flows.
+        """
+        self.client_playback = ClientPlaybackState(flows)
+
+    def start_server_playback(self, flows, kill, headers):
         """
             flows: A list of flows.
             kill: Boolean, should we kill requests not part of the replay?
         """
-        self.playback = ServerPlaybackState(headers, flows)
+        self.server_playback = ServerPlaybackState(headers, flows)
         self.kill_nonreplay = kill
 
-    def do_playback(self, flow):
+    def do_server_playback(self, flow):
         """
             This method should be called by child classes in the handle_request
             handler. Returns True if playback has taken place, None if not.
         """
-        if self.playback:
-            rflow = self.playback.next_flow(flow)
+        if self.server_playback:
+            rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
             response = proxy.Response.from_state(flow.request, rflow.response.get_state())
@@ -457,6 +464,11 @@ class FlowMaster(controller.Master):
             flow.request.ack(response)
             return True
         return None
+
+    def tick(self, q):
+        if self.client_playback:
+            self.client_playback.tick()
+        controller.Master.tick(self, q)
 
     def handle_clientconnect(self, r):
         self.state.clientconnect(r)
@@ -468,6 +480,8 @@ class FlowMaster(controller.Master):
 
     def handle_error(self, r):
         f = self.state.add_error(r)
+        if self.client_playback:
+            self.client_playback.clear(f)
         r.ack()
         return f
 
@@ -477,8 +491,8 @@ class FlowMaster(controller.Master):
             self.stickycookie_state.handle_request(f)
         if "request" in self.scripts:
             self._runscript(f, self.scripts["request"])
-        if self.playback:
-            pb = self.do_playback(f)
+        if self.server_playback:
+            pb = self.do_server_playback(f)
             if not pb:
                 if self.kill_nonreplay:
                     self.state.kill_flow(f)
@@ -488,6 +502,8 @@ class FlowMaster(controller.Master):
 
     def handle_response(self, r):
         f = self.state.add_response(r)
+        if self.client_playback:
+            self.client_playback.clear(f)
         if not f:
             r.ack()
         if self.stickycookie_state:
