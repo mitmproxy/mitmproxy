@@ -1,5 +1,5 @@
 from libmproxy import console, proxy, filt, flow
-import utils
+import tutils
 import libpry
 
 
@@ -46,18 +46,18 @@ class uState(libpry.AutoTree):
         assert c.get_focus() == (None, None)
 
     def _add_request(self, state):
-        r = utils.treq()
+        r = tutils.treq()
         return state.add_request(r)
 
     def _add_response(self, state):
         f = self._add_request(state)
-        r = utils.tresp(f.request)
+        r = tutils.tresp(f.request)
         state.add_response(r)
 
     def test_add_response(self):
         c = console.ConsoleState()
         f = self._add_request(c)
-        r = utils.tresp(f.request)
+        r = tutils.tresp(f.request)
         c.focus = None
         c.add_response(r)
 
@@ -87,7 +87,7 @@ class uformat_keyvals(libpry.AutoTree):
 
 class uformat_flow(libpry.AutoTree):
     def test_simple(self):
-        f = utils.tflow()
+        f = tutils.tflow()
         foc = ('focus', '>>')
         assert foc not in console.format_flow(f, False)
         assert foc in console.format_flow(f, True)
@@ -95,7 +95,7 @@ class uformat_flow(libpry.AutoTree):
         assert foc not in console.format_flow(f, False, True)
         assert foc in console.format_flow(f, True, True)
 
-        f.response = utils.tresp()
+        f.response = tutils.tresp()
         f.request = f.response.request
         f.backup()
 

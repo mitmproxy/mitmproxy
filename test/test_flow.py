@@ -1,13 +1,13 @@
 from cStringIO import StringIO
 from libmproxy import console, proxy, filt, flow
-import utils
+import tutils
 import libpry
 
 
 class uStickyCookieState(libpry.AutoTree):
     def _response(self, cookie, host):
         s = flow.StickyCookieState(filt.parse(".*"))
-        f = utils.tflow_full()
+        f = tutils.tflow_full()
         f.request.host = host 
         f.response.headers["Set-Cookie"] = [cookie]
         s.handle_response(f)
@@ -35,9 +35,9 @@ class uStickyCookieState(libpry.AutoTree):
 
 class uClientPlaybackState(libpry.AutoTree):
     def test_tick(self):
-        first = utils.tflow()
+        first = tutils.tflow()
         c = flow.ClientPlaybackState(
-            [first, utils.tflow()]
+            [first, tutils.tflow()]
         )
         s = flow.State()
         fm = flow.FlowMaster(None, s)
@@ -59,8 +59,8 @@ class uClientPlaybackState(libpry.AutoTree):
 class uServerPlaybackState(libpry.AutoTree):
     def test_hash(self):
         s = flow.ServerPlaybackState(None, [])
-        r = utils.tflow()
-        r2 = utils.tflow()
+        r = tutils.tflow()
+        r2 = tutils.tflow()
 
         assert s._hash(r)
         assert s._hash(r) == s._hash(r2)
@@ -71,24 +71,24 @@ class uServerPlaybackState(libpry.AutoTree):
 
     def test_headers(self):
         s = flow.ServerPlaybackState(["foo"], [])
-        r = utils.tflow_full()
+        r = tutils.tflow_full()
         r.request.headers["foo"] = ["bar"]
-        r2 = utils.tflow_full()
+        r2 = tutils.tflow_full()
         assert not s._hash(r) == s._hash(r2)
         r2.request.headers["foo"] = ["bar"]
         assert s._hash(r) == s._hash(r2)
         r2.request.headers["oink"] = ["bar"]
         assert s._hash(r) == s._hash(r2)
 
-        r = utils.tflow_full()
-        r2 = utils.tflow_full()
+        r = tutils.tflow_full()
+        r2 = tutils.tflow_full()
         assert s._hash(r) == s._hash(r2)
 
     def test_load(self):
-        r = utils.tflow_full()
+        r = tutils.tflow_full()
         r.request.headers["key"] = ["one"]
 
-        r2 = utils.tflow_full()
+        r2 = tutils.tflow_full()
         r2.request.headers["key"] = ["two"]
 
         s = flow.ServerPlaybackState(None, [r, r2])
@@ -108,16 +108,16 @@ class uServerPlaybackState(libpry.AutoTree):
 
 class uFlow(libpry.AutoTree):
     def test_run_script(self):
-        f = utils.tflow()
-        f.response = utils.tresp()
+        f = tutils.tflow()
+        f.response = tutils.tresp()
         f.request = f.response.request
         se = f.run_script("scripts/a")
         assert "DEBUG" == se.strip()
         assert f.request.host == "TESTOK"
 
     def test_run_script_err(self):
-        f = utils.tflow()
-        f.response = utils.tresp()
+        f = tutils.tflow()
+        f.response = tutils.tresp()
         f.request = f.response.request
         libpry.raises("returned error", f.run_script,"scripts/err_return")
         libpry.raises("invalid response", f.run_script,"scripts/err_data")
@@ -125,15 +125,15 @@ class uFlow(libpry.AutoTree):
         libpry.raises("permission denied", f.run_script,"scripts/nonexecutable")
 
     def test_match(self):
-        f = utils.tflow()
-        f.response = utils.tresp()
+        f = tutils.tflow()
+        f.response = tutils.tresp()
         f.request = f.response.request
         assert not f.match(filt.parse("~b test"))
         assert not f.match(None)
 
     def test_backup(self):
-        f = utils.tflow()
-        f.response = utils.tresp()
+        f = tutils.tflow()
+        f.response = tutils.tresp()
         f.request = f.response.request
         f.request.content = "foo"
         assert not f.modified()
@@ -144,8 +144,8 @@ class uFlow(libpry.AutoTree):
         assert f.request.content == "foo"
 
     def test_getset_state(self):
-        f = utils.tflow()
-        f.response = utils.tresp(f.request)
+        f = tutils.tflow()
+        f.response = tutils.tresp(f.request)
         state = f.get_state() 
         assert f == flow.Flow.from_state(state)
 
@@ -154,7 +154,7 @@ class uFlow(libpry.AutoTree):
         state = f.get_state() 
         assert f == flow.Flow.from_state(state)
 
-        f2 = utils.tflow()
+        f2 = tutils.tflow()
         f2.error = proxy.Error(f.request, "e2")
         assert not f == f2
         f.load_state(f2.get_state())
@@ -163,14 +163,14 @@ class uFlow(libpry.AutoTree):
 
 
     def test_kill(self):
-        f = utils.tflow()
-        f.request = utils.treq()
+        f = tutils.tflow()
+        f.request = tutils.treq()
         f.intercept()
         assert not f.request.acked
         f.kill()
         assert f.request.acked
         f.intercept()
-        f.response = utils.tresp()
+        f.response = tutils.tresp()
         f.request = f.response.request
         f.request.ack()
         assert not f.response.acked
@@ -178,13 +178,13 @@ class uFlow(libpry.AutoTree):
         assert f.response.acked
 
     def test_accept_intercept(self):
-        f = utils.tflow()
-        f.request = utils.treq()
+        f = tutils.tflow()
+        f.request = tutils.treq()
         f.intercept()
         assert not f.request.acked
         f.accept_intercept()
         assert f.request.acked
-        f.response = utils.tresp()
+        f.response = tutils.tresp()
         f.request = f.response.request
         f.intercept()
         f.request.ack()
@@ -194,14 +194,14 @@ class uFlow(libpry.AutoTree):
 
     def test_serialization(self):
         f = flow.Flow(None)
-        f.request = utils.treq()
+        f.request = tutils.treq()
 
 
 class uState(libpry.AutoTree):
     def test_backup(self):
         bc = proxy.ClientConnect(("address", 22))
         c = flow.State()
-        req = utils.treq()
+        req = tutils.treq()
         f = c.add_request(req)
 
         f.backup()
@@ -218,22 +218,22 @@ class uState(libpry.AutoTree):
         c.clientconnect(bc)
         assert len(c.client_connections) == 1
 
-        req = utils.treq(bc)
+        req = tutils.treq(bc)
         f = c.add_request(req)
         assert f
         assert len(c.flow_list) == 1
         assert c.flow_map.get(req)
 
-        newreq = utils.treq()
+        newreq = tutils.treq()
         assert c.add_request(newreq)
         assert c.flow_map.get(newreq)
 
-        resp = utils.tresp(req)
+        resp = tutils.tresp(req)
         assert c.add_response(resp)
         assert len(c.flow_list) == 2
         assert c.flow_map.get(resp.request)
 
-        newresp = utils.tresp()
+        newresp = tutils.tresp()
         assert not c.add_response(newresp)
         assert not c.flow_map.get(newresp.request)
 
@@ -244,18 +244,18 @@ class uState(libpry.AutoTree):
     def test_err(self):
         bc = proxy.ClientConnect(("address", 22))
         c = flow.State()
-        req = utils.treq()
+        req = tutils.treq()
         f = c.add_request(req)
         e = proxy.Error(f.request, "message")
         assert c.add_error(e)
 
-        e = proxy.Error(utils.tflow().request, "message")
+        e = proxy.Error(tutils.tflow().request, "message")
         assert not c.add_error(e)
 
     def test_view(self):
         c = flow.State()
 
-        req = utils.treq()
+        req = tutils.treq()
         c.clientconnect(req.client_conn)
         assert len(c.view) == 0
 
@@ -264,13 +264,13 @@ class uState(libpry.AutoTree):
 
         c.set_limit(filt.parse("~s"))
         assert len(c.view) == 0
-        resp = utils.tresp(req)
+        resp = tutils.tresp(req)
         c.add_response(resp)
         assert len(c.view) == 1
         c.set_limit(None)
         assert len(c.view) == 1
 
-        req = utils.treq()
+        req = tutils.treq()
         c.clientconnect(req.client_conn)
         c.add_request(req)
         assert len(c.view) == 2
@@ -280,24 +280,24 @@ class uState(libpry.AutoTree):
         assert len(c.view) == 1
 
     def _add_request(self, state):
-        req = utils.treq()
+        req = tutils.treq()
         f = state.add_request(req)
         return f
 
     def _add_response(self, state):
-        req = utils.treq()
+        req = tutils.treq()
         f = state.add_request(req)
-        resp = utils.tresp(req)
+        resp = tutils.tresp(req)
         state.add_response(resp)
 
     def _add_error(self, state):
-        req = utils.treq()
+        req = tutils.treq()
         f = state.add_request(req)
         f.error = proxy.Error(f.request, "msg")
 
     def test_kill_flow(self):
         c = flow.State()
-        req = utils.treq()
+        req = tutils.treq()
         f = c.add_request(req)
         c.kill_flow(f)
         assert not c.flow_list
@@ -340,7 +340,7 @@ class uState(libpry.AutoTree):
 class uSerialize(libpry.AutoTree):
     def test_roundtrip(self):
         sio = StringIO()
-        f = utils.tflow()
+        f = tutils.tflow()
         w = flow.FlowWriter(sio)
         w.add(f)
 
@@ -355,18 +355,18 @@ class uFlowMaster(libpry.AutoTree):
     def test_all(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        req = utils.treq()
+        req = tutils.treq()
 
         fm.handle_clientconnect(req.client_conn)
 
         f = fm.handle_request(req)
         assert len(s.flow_list) == 1
 
-        resp = utils.tresp(req)
+        resp = tutils.tresp(req)
         fm.handle_response(resp)
         assert len(s.flow_list) == 1
 
-        rx = utils.tresp()
+        rx = tutils.tresp()
         assert not fm.handle_response(rx)
         
         dc = proxy.ClientDisconnect(req.client_conn)
@@ -378,25 +378,25 @@ class uFlowMaster(libpry.AutoTree):
     def test_server_playback(self):
         s = flow.State()
 
-        f = utils.tflow()
-        f.response = utils.tresp(f.request)
+        f = tutils.tflow()
+        f.response = tutils.tresp(f.request)
         pb = [f]
 
         fm = flow.FlowMaster(None, s)
-        assert not fm.do_server_playback(utils.tflow())
+        assert not fm.do_server_playback(tutils.tflow())
 
         fm.start_server_playback(pb, False, [])
-        assert fm.do_server_playback(utils.tflow())
+        assert fm.do_server_playback(tutils.tflow())
 
         fm.start_server_playback(pb, False, [])
-        r = utils.tflow()
+        r = tutils.tflow()
         r.request.content = "gibble"
         assert not fm.do_server_playback(r)
 
     def test_client_playback(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        pb = [utils.tflow_full()]
+        pb = [tutils.tflow_full()]
         fm.start_client_playback(pb)
 
     def test_stickycookie(self):
@@ -409,7 +409,7 @@ class uFlowMaster(libpry.AutoTree):
         assert not fm.stickycookie_state
 
         fm.set_stickycookie(".*")
-        tf = utils.tflow_full()
+        tf = tutils.tflow_full()
         tf.response.headers["set-cookie"] = ["foo=bar"]
         fm.handle_request(tf.request)
         f = fm.handle_response(tf.response)

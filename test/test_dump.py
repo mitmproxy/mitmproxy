@@ -2,25 +2,25 @@ import os
 from cStringIO import StringIO
 import libpry
 from libmproxy import dump, flow
-import utils
+import tutils
 
 class uStrFuncs(libpry.AutoTree):
     def test_all(self):
-        t = utils.tresp()
+        t = tutils.tresp()
         t.set_replay()
         dump.str_response(t)
 
-        t = utils.treq()
+        t = tutils.treq()
         t.stickycookie = True
         assert "stickycookie" in dump.str_request(t)
 
 
 class uDumpMaster(libpry.AutoTree):
     def _cycle(self, m, content):
-        req = utils.treq()
+        req = tutils.treq()
         req.content = content
         cc = req.client_conn
-        resp = utils.tresp(req)
+        resp = tutils.tresp(req)
         resp.content = content
         m.handle_clientconnect(cc)
         m.handle_request(req)
@@ -43,8 +43,8 @@ class uDumpMaster(libpry.AutoTree):
         p = os.path.join(t, "rep")
         f = open(p, "w")
         fw = flow.FlowWriter(f)
-        t = utils.tflow_full()
-        t.response = utils.tresp(t.request)
+        t = tutils.tflow_full()
+        t.response = tutils.tresp(t.request)
         fw.add(t)
         f.close()
 
