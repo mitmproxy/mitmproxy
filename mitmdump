@@ -34,10 +34,10 @@ if __name__ == '__main__':
         type = "int", dest="port", default=8080,
         help = "Proxy service port."
     )
-    parser.add_option("-c", 
+    parser.add_option("-i", 
                       action="store_true", dest="stickycookie_all", default=None,
                       help="Set sticky cookie for all requests.")
-    parser.add_option("-C",
+    parser.add_option("-I",
                       action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
                       help="Set sticky cookie filter. Matched against requests.")
     parser.add_option("-q", 
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
 
     group = OptionGroup(parser, "Server Replay")
-    group.add_option("-r", action="store", dest="server_replay", default=None, metavar="PATH",
+    group.add_option("-s", action="store", dest="server_replay", default=None, metavar="PATH",
                       help="Replay server responses from a saved file.")
     group.add_option("-k", "--kill",
                       action="store_true", dest="kill", default=False,
@@ -69,6 +69,11 @@ if __name__ == '__main__':
                            "Can be passed multiple times.")
     parser.add_option_group(group)
 
+
+    group = OptionGroup(parser, "Client Replay")
+    group.add_option("-c", action="store", dest="client_replay", default=None, metavar="PATH",
+                      help="Replay client requests from a saved file.")
+    parser.add_option_group(group)
 
 
     options, args = parser.parse_args()
@@ -92,7 +97,8 @@ if __name__ == '__main__':
         server_replay = options.server_replay,
         kill = options.kill,
         rheaders = options.rheaders,
-        stickycookie = stickycookie
+        client_replay = options.client_replay,
+        stickycookie = stickycookie,
     )
     if args:
         filt = " ".join(args)

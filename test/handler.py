@@ -10,6 +10,7 @@ class TestRequestHandler(BaseHTTPRequestHandler):
         self.wfile = socket._fileobject(self.request, "wb", self.wbufsize)
 
     def log_message(self, *args, **kwargs):
+        # Silence output
         pass
 
     def do_GET(self):
@@ -20,6 +21,4 @@ class TestRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-length", len(data))
         self.end_headers()
         self.wfile.write(data)
-
-
 

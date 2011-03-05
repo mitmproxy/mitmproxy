@@ -10,6 +10,7 @@ class Options(object):
         "request_script",
         "response_script",
         "server_replay",
+        "client_replay",
         "verbosity",
         "wfile",
         "rheaders",
@@ -31,7 +32,11 @@ def str_response(resp):
 
 
 def str_request(req):
-    r = "%s %s"%(req.method, req.url())
+    if req.client_conn:
+        c = req.client_conn.address[0]
+    else:
+        c = "[replay]"
+    r = "%s %s %s"%(c, req.method, req.url())
     if req.stickycookie:
         r = "[stickycookie] " + r
     return r
@@ -65,14 +70,22 @@ class DumpMaster(flow.FlowMaster):
                 raise DumpError(v.strerror)
 
         if options.server_replay:
-            path = os.path.expanduser(options.server_replay)
-            try:
-                f = file(path, "r")
-                flows = list(flow.FlowReader(f).stream())
-            except IOError, v:
-                raise DumpError(v.strerror)
-            self.start_server_playback(flows, options.kill, options.rheaders)
+            self.start_server_playback(
+                self._readflow(options.server_replay),
+                options.kill, options.rheaders
+            )
 
+        if options.client_replay:
+            self.start_client_playback(self._readflow(options.client_replay))
+
+    def _readflow(self, path):
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, "r")
+            flows = list(flow.FlowReader(f).stream())
+        except IOError, v:
+            raise DumpError(v.strerror)
+        return flows
 
     def _runscript(self, f, script):
         try:
@@ -92,6 +105,7 @@ class DumpMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_request(self, r)
         if f:
             r.ack()
+        return f
 
     def indent(self, n, t):
         l = str(t).strip().split("\n")
@@ -105,12 +119,10 @@ class DumpMaster(flow.FlowMaster):
                     return
             sz = utils.pretty_size(len(f.response.content))
             if self.o.verbosity == 1:
-                print >> self.outfile, f.request.client_conn.address[0],
                 print >> self.outfile, str_request(f.request)
                 print >> self.outfile, "  <<",
                 print >> self.outfile, str_response(f.response), sz
             elif self.o.verbosity == 2:
-                print >> self.outfile, f.request.client_conn.address[0],
                 print >> self.outfile, str_request(f.request)
                 print >> self.outfile, self.indent(4, f.request.headers)
                 print >> self.outfile
@@ -118,7 +130,6 @@ class DumpMaster(flow.FlowMaster):
                 print >> self.outfile, self.indent(4, f.response.headers)
                 print >> self.outfile, "\n"
             elif self.o.verbosity == 3:
-                print >> self.outfile, f.request.client_conn.address[0],
                 print >> self.outfile, str_request(f.request)
                 print >> self.outfile, self.indent(4, f.request.headers)
                 if utils.isBin(f.request.content):
@@ -136,6 +147,7 @@ class DumpMaster(flow.FlowMaster):
             self.state.delete_flow(f)
             if self.o.wfile:
                 self.fwriter.add(f)
+        return f
 
 # begin nocover
     def run(self):

@@ -52,9 +52,8 @@ class ClientPlaybackState:
             testing: Disables actual replay for testing.
         """
         if self.flows and not self.current:
-            self.current = self.flows.pop(0)
-            self.current.response = None
-            master.handle_request(self.current.request)
+            n = self.flows.pop(0)
+            self.current = master.handle_request(n.request)
             if not testing:
                 #begin nocover
                 master.state.replay_request(self.current, master.masterq)
@@ -467,7 +466,7 @@ class FlowMaster(controller.Master):
 
     def tick(self, q):
         if self.client_playback:
-            self.client_playback.tick()
+            self.client_playback.tick(self)
         controller.Master.tick(self, q)
 
     def handle_clientconnect(self, r):

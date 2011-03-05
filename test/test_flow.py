@@ -50,7 +50,7 @@ class uClientPlaybackState(libpry.AutoTree):
         c.tick(fm, testing=True)
         assert c.count() == 1
 
-        c.clear(first)
+        c.clear(c.current)
         c.tick(fm, testing=True)
         assert c.count() == 0
 
@@ -419,9 +419,6 @@ class uFlowMaster(libpry.AutoTree):
         assert tf.request.headers["cookie"] == ["foo=bar"]
 
 
-
-
-
 tests = [
     uStickyCookieState(),
     uServerPlaybackState(),
@@ -429,5 +426,5 @@ tests = [
     uFlow(),
     uState(),
     uSerialize(),
-    uFlowMaster()
+    uFlowMaster(),
 ]
