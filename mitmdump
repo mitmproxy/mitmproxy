@@ -28,7 +28,6 @@ if __name__ == '__main__':
                 usage = "%prog [options] [filter]",
                 version="%%prog %s"%VERSION,
             )
-    proxy.certificate_option_group(parser)
     parser.add_option(
         "-p", action="store",
         type = "int", dest="port", default=8080,
@@ -56,6 +55,10 @@ if __name__ == '__main__':
                       action="store", dest="wfile", default=None,
                       help="Write flows to file.")
 
+    group = OptionGroup(parser, "Client Replay")
+    group.add_option("-c", action="store", dest="client_replay", default=None, metavar="PATH",
+                      help="Replay client requests from a saved file.")
+    parser.add_option_group(group)
 
     group = OptionGroup(parser, "Server Replay")
     group.add_option("-s", action="store", dest="server_replay", default=None, metavar="PATH",
@@ -69,11 +72,7 @@ if __name__ == '__main__':
                            "Can be passed multiple times.")
     parser.add_option_group(group)
 
-
-    group = OptionGroup(parser, "Client Replay")
-    group.add_option("-c", action="store", dest="client_replay", default=None, metavar="PATH",
-                      help="Replay client requests from a saved file.")
-    parser.add_option_group(group)
+    proxy.certificate_option_group(parser)
 
 
     options, args = parser.parse_args()

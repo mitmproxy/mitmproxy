@@ -11,8 +11,10 @@ class uStrFuncs(libpry.AutoTree):
         dump.str_response(t)
 
         t = tutils.treq()
+        t.client_conn = None
         t.stickycookie = True
         assert "stickycookie" in dump.str_request(t)
+        assert "replay" in dump.str_request(t)
 
 
 class uDumpMaster(libpry.AutoTree):
@@ -57,6 +59,9 @@ class uDumpMaster(libpry.AutoTree):
         o = dump.Options(server_replay=p, kill=False)
         m = dump.DumpMaster(None, o, None, outfile=cs)
         self._cycle(m, "nonexistent")
+
+        o = dump.Options(client_replay=p, kill=False)
+        m = dump.DumpMaster(None, o, None, outfile=cs)
 
     def test_options(self):
         o = dump.Options(verbosity = 2)

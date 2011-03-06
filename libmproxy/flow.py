@@ -53,6 +53,7 @@ class ClientPlaybackState:
         """
         if self.flows and not self.current:
             n = self.flows.pop(0)
+            n.request.client_conn = None
             self.current = master.handle_request(n.request)
             if not testing and not self.current.response:
                 #begin nocover

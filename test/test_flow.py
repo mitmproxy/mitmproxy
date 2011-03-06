@@ -1,3 +1,4 @@
+import Queue
 from cStringIO import StringIO
 from libmproxy import console, proxy, filt, flow
 import tutils
@@ -375,6 +376,23 @@ class uFlowMaster(libpry.AutoTree):
         err = proxy.Error(f.request, "msg")
         fm.handle_error(err)
 
+    def test_client_playback(self):
+        s = flow.State()
+
+        f = tutils.tflow_full()
+        pb = [tutils.tflow_full(), f]
+        fm = flow.FlowMaster(None, s)
+        assert not fm.start_server_playback(pb, False, [])
+        assert not fm.start_client_playback(pb)
+
+        q = Queue.Queue()
+        assert not fm.state.flow_map
+        fm.tick(q)
+        assert fm.state.flow_map
+
+        fm.handle_error(proxy.Error(f.request, "error"))
+
+
     def test_server_playback(self):
         s = flow.State()
 
@@ -392,12 +410,6 @@ class uFlowMaster(libpry.AutoTree):
         r = tutils.tflow()
         r.request.content = "gibble"
         assert not fm.do_server_playback(r)
-
-    def test_client_playback(self):
-        s = flow.State()
-        fm = flow.FlowMaster(None, s)
-        pb = [tutils.tflow_full()]
-        fm.start_client_playback(pb)
 
     def test_stickycookie(self):
         s = flow.State()
