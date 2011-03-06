@@ -54,10 +54,12 @@ class ClientPlaybackState:
         if self.flows and not self.current:
             n = self.flows.pop(0)
             self.current = master.handle_request(n.request)
-            if not testing:
+            if not testing and not self.current.response:
                 #begin nocover
                 master.state.replay_request(self.current, master.masterq)
                 #end nocover
+            elif self.current.response:
+                master.handle_response(self.current.response)
 
 
 class ServerPlaybackState:
