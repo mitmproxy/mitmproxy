@@ -73,7 +73,8 @@ class DumpMaster(flow.FlowMaster):
         if options.server_replay:
             self.start_server_playback(
                 self._readflow(options.server_replay),
-                options.kill, options.rheaders
+                options.kill, options.rheaders,
+                not options.keepserving
             )
 
         if options.client_replay:

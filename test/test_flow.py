@@ -65,7 +65,7 @@ class uClientPlaybackState(libpry.AutoTree):
 
 class uServerPlaybackState(libpry.AutoTree):
     def test_hash(self):
-        s = flow.ServerPlaybackState(None, [])
+        s = flow.ServerPlaybackState(None, [], False)
         r = tutils.tflow()
         r2 = tutils.tflow()
 
@@ -77,7 +77,7 @@ class uServerPlaybackState(libpry.AutoTree):
         assert s._hash(r) != s._hash(r2)
 
     def test_headers(self):
-        s = flow.ServerPlaybackState(["foo"], [])
+        s = flow.ServerPlaybackState(["foo"], [], False)
         r = tutils.tflow_full()
         r.request.headers["foo"] = ["bar"]
         r2 = tutils.tflow_full()
@@ -98,7 +98,7 @@ class uServerPlaybackState(libpry.AutoTree):
         r2 = tutils.tflow_full()
         r2.request.headers["key"] = ["two"]
 
-        s = flow.ServerPlaybackState(None, [r, r2])
+        s = flow.ServerPlaybackState(None, [r, r2], False)
         assert s.count() == 2
         assert len(s.fmap.keys()) == 1
 
@@ -396,7 +396,7 @@ class uFlowMaster(libpry.AutoTree):
         f = tutils.tflow_full()
         pb = [tutils.tflow_full(), f]
         fm = flow.FlowMaster(None, s)
-        assert not fm.start_server_playback(pb, False, [])
+        assert not fm.start_server_playback(pb, False, [], False)
         assert not fm.start_client_playback(pb, False)
 
         q = Queue.Queue()
@@ -417,13 +417,18 @@ class uFlowMaster(libpry.AutoTree):
         fm = flow.FlowMaster(None, s)
         assert not fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(pb, False, [])
+        fm.start_server_playback(pb, False, [], False)
         assert fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(pb, False, [])
+        fm.start_server_playback(pb, False, [], True)
         r = tutils.tflow()
         r.request.content = "gibble"
         assert not fm.do_server_playback(r)
+
+        assert fm.do_server_playback(tutils.tflow())
+        q = Queue.Queue()
+        fm.tick(q)
+        assert fm._shutdown
 
     def test_stickycookie(self):
         s = flow.State()

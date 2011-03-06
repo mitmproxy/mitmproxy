@@ -69,12 +69,12 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
-    def __init__(self, headers, flows):
+    def __init__(self, headers, flows, exit):
         """
             headers: A case-insensitive list of request headers that should be
             included in request-response matching.
         """
-        self.headers = headers
+        self.headers, self.exit = headers, exit
         self.fmap = {}
         for i in flows:
             if i.response:
@@ -458,12 +458,12 @@ class FlowMaster(controller.Master):
         """
         self.client_playback = ClientPlaybackState(flows, exit)
 
-    def start_server_playback(self, flows, kill, headers):
+    def start_server_playback(self, flows, kill, headers, exit):
         """
             flows: A list of flows.
             kill: Boolean, should we kill requests not part of the replay?
         """
-        self.server_playback = ServerPlaybackState(headers, flows)
+        self.server_playback = ServerPlaybackState(headers, flows, exit)
         self.kill_nonreplay = kill
 
     def do_server_playback(self, flow):
@@ -492,6 +492,11 @@ class FlowMaster(controller.Master):
             if all(e):
                 self.shutdown()
             self.client_playback.tick(self)
+
+        if self.server_playback:
+            if self.server_playback.exit and self.server_playback.count() == 0:
+                self.shutdown()
+
         controller.Master.tick(self, q)
 
     def handle_clientconnect(self, r):
