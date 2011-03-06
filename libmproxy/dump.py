@@ -15,6 +15,7 @@ class Options(object):
         "wfile",
         "rheaders",
         "stickycookie",
+        "keepserving",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -76,7 +77,10 @@ class DumpMaster(flow.FlowMaster):
             )
 
         if options.client_replay:
-            self.start_client_playback(self._readflow(options.client_replay))
+            self.start_client_playback(
+                self._readflow(options.client_replay),
+                not options.keepserving
+            )
 
     def _readflow(self, path):
         path = os.path.expanduser(path)

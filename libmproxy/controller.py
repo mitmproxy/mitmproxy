@@ -88,6 +88,7 @@ class Master:
     def shutdown(self):
         if not self._shutdown:
             self._shutdown = True
-            self.server.shutdown()
+            if self.server:
+                self.server.shutdown()
 
 

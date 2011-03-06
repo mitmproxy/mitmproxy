@@ -32,12 +32,17 @@ class RequestReplayThread(threading.Thread):
 
 
 class ClientPlaybackState:
-    def __init__(self, flows):
-        self.flows = flows
+    def __init__(self, flows, exit):
+        self.flows, self.exit = flows, exit
         self.current = None
 
     def count(self):
         return len(self.flows)
+
+    def done(self):
+        if len(self.flows) == 0 and not self.current:
+            return True
+        return False
 
     def clear(self, flow):
         """
@@ -447,11 +452,11 @@ class FlowMaster(controller.Master):
         else:
             self.stickycookie_state = None
 
-    def start_client_playback(self, flows):
+    def start_client_playback(self, flows, exit):
         """
             flows: A list of flows.
         """
-        self.client_playback = ClientPlaybackState(flows)
+        self.client_playback = ClientPlaybackState(flows, exit)
 
     def start_server_playback(self, flows, kill, headers):
         """
@@ -479,6 +484,13 @@ class FlowMaster(controller.Master):
 
     def tick(self, q):
         if self.client_playback:
+            e = [
+                self.client_playback.done(),
+                self.client_playback.exit,
+                self.state.active_flow_count() == 0
+            ]
+            if all(e):
+                self.shutdown()
             self.client_playback.tick(self)
         controller.Master.tick(self, q)
 

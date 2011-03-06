@@ -37,11 +37,12 @@ class uStickyCookieState(libpry.AutoTree):
 class uClientPlaybackState(libpry.AutoTree):
     def test_tick(self):
         first = tutils.tflow()
-        c = flow.ClientPlaybackState(
-            [first, tutils.tflow()]
-        )
         s = flow.State()
         fm = flow.FlowMaster(None, s)
+        fm.start_client_playback([first, tutils.tflow()], True)
+        c = fm.client_playback
+
+        assert not c.done()
         assert not s.flow_count()
         assert c.count() == 2
         c.tick(fm, testing=True)
@@ -54,7 +55,12 @@ class uClientPlaybackState(libpry.AutoTree):
         c.clear(c.current)
         c.tick(fm, testing=True)
         assert c.count() == 0
+        c.clear(c.current)
+        assert c.done()
 
+        q = Queue.Queue()
+        fm.state.clear()
+        fm.tick(q)
 
 
 class uServerPlaybackState(libpry.AutoTree):
@@ -391,7 +397,7 @@ class uFlowMaster(libpry.AutoTree):
         pb = [tutils.tflow_full(), f]
         fm = flow.FlowMaster(None, s)
         assert not fm.start_server_playback(pb, False, [])
-        assert not fm.start_client_playback(pb)
+        assert not fm.start_client_playback(pb, False)
 
         q = Queue.Queue()
         assert not fm.state.flow_count()

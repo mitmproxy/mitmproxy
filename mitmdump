@@ -28,17 +28,19 @@ if __name__ == '__main__':
                 usage = "%prog [options] [filter]",
                 version="%%prog %s"%VERSION,
             )
-    parser.add_option(
-        "-p", action="store",
-        type = "int", dest="port", default=8080,
-        help = "Proxy service port."
-    )
     parser.add_option("-i", 
                       action="store_true", dest="stickycookie_all", default=None,
                       help="Set sticky cookie for all requests.")
     parser.add_option("-I",
                       action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
                       help="Set sticky cookie filter. Matched against requests.")
+    parser.add_option("--keepserving", 
+                      action="store_true", dest="keepserving", default=False,
+                      help="Continue serving after playback.")
+    parser.add_option("-p",
+                      action="store",
+                      type = "int", dest="port", default=8080,
+                      help = "Proxy service port.")
     parser.add_option("-q", 
                       action="store_true", dest="quiet",
                       help="Quiet.")
@@ -97,15 +99,13 @@ if __name__ == '__main__':
         kill = options.kill,
         rheaders = options.rheaders,
         client_replay = options.client_replay,
+        keepserving = options.keepserving,
         stickycookie = stickycookie,
     )
     if args:
         filt = " ".join(args)
     else:
         filt = None
-
-    if options.verbose > 0:
-        print >> sys.stderr, "Running on port %s"%options.port
 
     try:
         m = dump.DumpMaster(server, dumpopts, filt)
