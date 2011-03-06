@@ -42,10 +42,10 @@ class uClientPlaybackState(libpry.AutoTree):
         )
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        assert not s.flow_map
+        assert not s.flow_count()
         assert c.count() == 2
         c.tick(fm, testing=True)
-        assert s.flow_map
+        assert s.flow_count()
         assert c.count() == 1
 
         c.tick(fm, testing=True)
@@ -222,21 +222,29 @@ class uState(libpry.AutoTree):
         req = tutils.treq(bc)
         f = c.add_request(req)
         assert f
-        assert len(c.flow_list) == 1
+        assert c.flow_count() == 1
         assert c.flow_map.get(req)
+        assert c.active_flow_count() == 1
 
         newreq = tutils.treq()
         assert c.add_request(newreq)
         assert c.flow_map.get(newreq)
+        assert c.active_flow_count() == 2
 
         resp = tutils.tresp(req)
         assert c.add_response(resp)
-        assert len(c.flow_list) == 2
+        assert c.flow_count() == 2
         assert c.flow_map.get(resp.request)
+        assert c.active_flow_count() == 1
 
-        newresp = tutils.tresp()
-        assert not c.add_response(newresp)
-        assert not c.flow_map.get(newresp.request)
+        unseen_resp = tutils.tresp()
+        assert not c.add_response(unseen_resp)
+        assert not c.flow_map.get(unseen_resp.request)
+        assert c.active_flow_count() == 1
+
+        resp = tutils.tresp(newreq)
+        assert c.add_response(resp)
+        assert c.active_flow_count() == 0
 
         dc = proxy.ClientDisconnect(bc)
         c.clientdisconnect(dc)
@@ -301,7 +309,7 @@ class uState(libpry.AutoTree):
         req = tutils.treq()
         f = c.add_request(req)
         c.kill_flow(f)
-        assert not c.flow_list
+        assert not c.flow_count()
 
     def test_clear(self):
         c = flow.State()
@@ -309,10 +317,10 @@ class uState(libpry.AutoTree):
         f.intercepting = True
 
         c.clear()
-        assert len(c.flow_list) == 1
+        assert c.flow_count() == 1
         f.intercepting = False
         c.clear()
-        assert len(c.flow_list) == 0
+        assert c.flow_count() == 0
 
     def test_dump_flows(self):
         c = flow.State()
@@ -361,11 +369,11 @@ class uFlowMaster(libpry.AutoTree):
         fm.handle_clientconnect(req.client_conn)
 
         f = fm.handle_request(req)
-        assert len(s.flow_list) == 1
+        assert s.flow_count() == 1
 
         resp = tutils.tresp(req)
         fm.handle_response(resp)
-        assert len(s.flow_list) == 1
+        assert s.flow_count() == 1
 
         rx = tutils.tresp()
         assert not fm.handle_response(rx)
@@ -386,9 +394,9 @@ class uFlowMaster(libpry.AutoTree):
         assert not fm.start_client_playback(pb)
 
         q = Queue.Queue()
-        assert not fm.state.flow_map
+        assert not fm.state.flow_count()
         fm.tick(q)
-        assert fm.state.flow_map
+        assert fm.state.flow_count()
 
         fm.handle_error(proxy.Error(f.request, "error"))
 

@@ -164,6 +164,15 @@ class Flow:
         self.intercepting = False
         self._backup = None
 
+    @classmethod
+    def from_state(klass, state):
+        f = klass(None)
+        f.load_state(state)
+        return f
+
+    def __eq__(self, other):
+        return self.get_state() == other.get_state()
+
     def script_serialize(self):
         data = self.get_state()
         return json.dumps(data)
@@ -246,15 +255,6 @@ class Flow:
         else:
             self.error = None
 
-    @classmethod
-    def from_state(klass, state):
-        f = klass(None)
-        f.load_state(state)
-        return f
-
-    def __eq__(self, other):
-        return self.get_state() == other.get_state()
-
     def modified(self):
         # FIXME: Save a serialization in backup, compare current with
         # backup to detect if flow has _really_ been modified.
@@ -307,6 +307,16 @@ class State:
         # These are compiled filt expressions:
         self.limit = None
         self.intercept = None
+
+    def flow_count(self):
+        return len(self.flow_map)
+
+    def active_flow_count(self):
+        c = 0
+        for i in self.flow_list:
+            if not i.response and not i.error:
+                c += 1
+        return c
 
     def clientconnect(self, cc):
         self.client_connections.append(cc)
