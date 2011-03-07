@@ -5,7 +5,7 @@
 
     Development started from Neil Schemenauer's munchy.py
 """
-import sys, os, time, string, socket, urlparse, re, select, copy, base64
+import sys, os, string, socket, urlparse, re, select, copy, base64
 import shutil, tempfile
 import optparse, SocketServer, ssl
 import utils, controller
@@ -132,7 +132,7 @@ class Request(controller.Msg):
         self.client_conn = client_conn
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
-        self.timestamp = timestamp or time.time()
+        self.timestamp = timestamp or utils.timestamp()
         self.close = False
         controller.Msg.__init__(self)
 
@@ -262,7 +262,7 @@ class Response(controller.Msg):
         self.request = request
         self.code, self.msg = code, msg
         self.headers, self.content = headers, content
-        self.timestamp = timestamp or time.time()
+        self.timestamp = timestamp or utils.timestamp()
         self.cached = False
         controller.Msg.__init__(self)
         self.replay = False
@@ -376,7 +376,7 @@ class ClientConnect(controller.Msg):
 class Error(controller.Msg):
     def __init__(self, request, msg, timestamp=None):
         self.request, self.msg = request, msg
-        self.timestamp = timestamp or time.time()
+        self.timestamp = timestamp or utils.timestamp()
         controller.Msg.__init__(self)
 
     def load_state(self, state):

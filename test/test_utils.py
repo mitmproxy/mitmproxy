@@ -5,7 +5,7 @@ from libmproxy import utils
 
 class uformat_timestamp(libpry.AutoTree):
     def test_simple(self):
-        assert utils.format_timestamp(time.time())
+        assert utils.format_timestamp(utils.timestamp())
 
 
 class uisBin(libpry.AutoTree):

@@ -12,10 +12,18 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap, errno, sys
+import re, os, subprocess, datetime, textwrap, errno, sys, time, pytz
+
+
+def timestamp():
+    d = datetime.datetime.utcnow()
+    return list(d.timetuple())
+
 
 def format_timestamp(s):
-    d = datetime.datetime.fromtimestamp(s)
+    s = time.struct_time(s)
+    d = datetime.datetime.fromtimestamp(time.mktime(s))
+    d = d - datetime.timedelta(seconds=time.altzone)
     return d.strftime("%Y-%m-%d %H:%M:%S")
 
 
