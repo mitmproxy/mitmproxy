@@ -16,14 +16,15 @@ import re, os, subprocess, datetime, textwrap, errno, sys, time, pytz
 
 
 def timestamp():
-    d = datetime.datetime.utcnow()
-    return list(d.timetuple())
+    """
+        Returns a serializable UTC timestamp.
+    """
+    return time.time()
 
 
 def format_timestamp(s):
-    s = time.struct_time(s)
+    s = time.localtime(s)
     d = datetime.datetime.fromtimestamp(time.mktime(s))
-    d = d - datetime.timedelta(seconds=time.altzone)
     return d.strftime("%Y-%m-%d %H:%M:%S")
 
 
