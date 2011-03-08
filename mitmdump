@@ -17,9 +17,7 @@
 
 import sys, os.path
 from libmproxy import proxy, dump, utils
-from libmproxy import VERSION
-
-
+from libmproxy.version import VERSION
 from optparse import OptionParser, OptionGroup
 
 

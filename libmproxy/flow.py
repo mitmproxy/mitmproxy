@@ -4,7 +4,7 @@
 """
 import subprocess, base64, sys, json, hashlib, Cookie, cookielib, copy
 import proxy, threading, netstring, filt
-import controller
+import controller, version
 
 class RunException(Exception):
     def __init__(self, msg, returncode, errout):
@@ -230,6 +230,7 @@ class Flow:
             request = self.request.get_state() if self.request else None,
             response = self.response.get_state() if self.response else None,
             error = self.error.get_state() if self.error else None,
+            version = version.IVERSION
         )
         if nobackup:
             d["backup"] = None
