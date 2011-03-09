@@ -139,6 +139,19 @@ class Request(controller.Msg):
         # Have this request's cookies been modified by sticky cookies?
         self.stickycookie = False
 
+    def anticache(self):
+        """
+            Modifies this request to remove headers that might produce a cached
+            response. That is, we remove ETags and If-Modified-Since headers.
+        """
+        delheaders = [
+            "if-modified-since",
+            "if-none-match",
+        ]
+        for i in delheaders:
+            if i in self.headers:
+                del self.headers[i]
+
     def set_replay(self):
         self.client_conn = None
 

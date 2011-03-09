@@ -78,6 +78,15 @@ class uRequest(libpry.AutoTree):
         assert r.url() == u
         assert r.assemble()
 
+    def test_anticache(self):
+        h = utils.Headers()
+        r = proxy.Request(None, "host", 22, "https", "GET", "/", h, "content")
+        h["if-modified-since"] = ["test"]
+        h["if-none-match"] = ["test"]
+        r.anticache()
+        assert not "if-modified-since" in r.headers
+        assert not "if-none-match" in r.headers
+
     def test_getset_state(self):
         h = utils.Headers()
         h["test"] = ["test"]

@@ -6,16 +6,17 @@ class DumpError(Exception): pass
 
 class Options(object):
     __slots__ = [
+        "anticache",
+        "client_replay",
+        "keepserving",
         "kill",
         "request_script",
         "response_script",
+        "rheaders",
         "server_replay",
-        "client_replay",
+        "stickycookie",
         "verbosity",
         "wfile",
-        "rheaders",
-        "stickycookie",
-        "keepserving",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -82,6 +83,8 @@ class DumpMaster(flow.FlowMaster):
                 self._readflow(options.client_replay),
                 not options.keepserving
             )
+
+        self.anticache = options.anticache
 
     def _readflow(self, path):
         path = os.path.expanduser(path)

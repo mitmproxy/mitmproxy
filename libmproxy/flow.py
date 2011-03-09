@@ -432,6 +432,7 @@ class FlowMaster(controller.Master):
         self.scripts = {}
         self.kill_nonreplay = False
         self.stickycookie_state = False
+        self.anticache = False
 
     def _runscript(self, f, script):
         #begin nocover
@@ -521,6 +522,8 @@ class FlowMaster(controller.Master):
             self.stickycookie_state.handle_request(f)
         if "request" in self.scripts:
             self._runscript(f, self.scripts["request"])
+        if self.anticache:
+            r.anticache()
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb:

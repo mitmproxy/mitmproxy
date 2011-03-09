@@ -167,8 +167,6 @@ class uFlow(libpry.AutoTree):
         f.load_state(f2.get_state())
         assert f == f2
 
-
-
     def test_kill(self):
         f = tutils.tflow()
         f.request = tutils.treq()
@@ -370,6 +368,7 @@ class uFlowMaster(libpry.AutoTree):
     def test_all(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
+        fm.anticache = True
         req = tutils.treq()
 
         fm.handle_clientconnect(req.client_conn)

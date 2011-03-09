@@ -57,6 +57,11 @@ if __name__ == '__main__':
         help="Quiet."
     )
     parser.add_option(
+        "--anticache",
+        action="store_true", dest="anticache", default=False,
+        help="Strip out request headers that might cause the server to return 304-not-modified."
+    )
+    parser.add_option(
         "--reqscript",
         action="store", dest="request_script", default=None,
         help="Script to run when a request is recieved."
@@ -131,6 +136,7 @@ if __name__ == '__main__':
         client_replay = options.client_replay,
         keepserving = options.keepserving,
         stickycookie = stickycookie,
+        anticache = options.anticache
     )
     if args:
         filt = " ".join(args)
