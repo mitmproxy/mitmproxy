@@ -5,7 +5,8 @@
 
     Development started from Neil Schemenauer's munchy.py
 """
-import sys, os, string, socket, urlparse, re, select, copy, base64
+import sys, os, string, socket, urlparse, re, select, copy, base64, time
+from email.utils import parsedate_tz, formatdate, mktime_tz
 import shutil, tempfile
 import optparse, SocketServer, ssl
 import utils, controller
@@ -279,6 +280,30 @@ class Response(controller.Msg):
         self.cached = False
         controller.Msg.__init__(self)
         self.replay = False
+
+    def refresh(self, now=None):
+        """
+            This fairly complex and heuristic function refreshes a server
+            response for replay.
+
+                - It adjusts date, expires and last-modified headers.
+                - It adjusts cookie expiration.
+        """
+        if not now:
+            now = time.time()
+        delta = now - self.timestamp
+        refresh_headers = [
+            "date",
+            "expires",
+            "last-modified",
+        ]
+        for i in refresh_headers:
+            if i in self.headers:
+                d = parsedate_tz(self.headers[i][0])
+                new = mktime_tz(d) + delta
+                self.headers[i] = [formatdate(new)]
+        for i in self.headers.get("set-cookie", []):
+            pass
 
     def set_replay(self):
         self.replay = True

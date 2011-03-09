@@ -1,6 +1,7 @@
-import cStringIO
+import cStringIO, time
 import libpry
 from libmproxy import proxy, controller, utils, dump, script
+import email.utils
 import tutils
 
 
@@ -113,6 +114,23 @@ class uResponse(libpry.AutoTree):
         req = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         resp = proxy.Response(req, 200, "msg", h.copy(), "content")
         assert resp.assemble()
+
+    def test_refresh(self):
+        r = tutils.tresp()
+        n = time.time()
+        r.headers["date"] = [email.utils.formatdate(n)]
+        pre = r.headers["date"]
+        r.refresh(n)
+        assert pre == r.headers["date"]
+        r.refresh(n+60)
+
+        d = email.utils.parsedate_tz(r.headers["date"][0])
+        d = email.utils.mktime_tz(d)
+        # Weird that this is not exact...
+        assert abs(60-(d-n)) <= 1
+
+        r.headers["set-cookie"] = ["MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"]
+        r.refresh()
 
     def test_getset_state(self):
         h = utils.Headers()
