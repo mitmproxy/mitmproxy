@@ -132,6 +132,17 @@ class uResponse(libpry.AutoTree):
         r.headers["set-cookie"] = ["MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"]
         r.refresh()
 
+    def test_refresh_cookie(self):
+        r = tutils.tresp()
+
+        # Invalid expires format, sent to us by Reddit.
+        c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2037 23:59:59 GMT; Path=/"
+        assert r._refresh_cookie(c, 60)
+
+        c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
+        assert "00:21:38" in r._refresh_cookie(c, 60)
+
+
     def test_getset_state(self):
         h = utils.Headers()
         h["test"] = ["test"]

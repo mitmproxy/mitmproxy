@@ -405,7 +405,6 @@ class uFlowMaster(libpry.AutoTree):
 
         fm.handle_error(proxy.Error(f.request, "error"))
 
-
     def test_server_playback(self):
         s = flow.State()
 
@@ -414,6 +413,7 @@ class uFlowMaster(libpry.AutoTree):
         pb = [f]
 
         fm = flow.FlowMaster(None, s)
+        fm.refresh_server_playback = True
         assert not fm.do_server_playback(tutils.tflow())
 
         fm.start_server_playback(pb, False, [], False)

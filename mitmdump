@@ -107,6 +107,12 @@ if __name__ == '__main__':
         help="Request headers to be considered during replay. "
            "Can be passed multiple times."
     )
+    group.add_option(
+        "--norefresh",
+        action="store_true", dest="norefresh", default=False,
+        help= "Disable response refresh, "
+        "which updates times in cookies and headers for replayed responses."
+    )
     parser.add_option_group(group)
 
     proxy.certificate_option_group(parser)
@@ -136,7 +142,8 @@ if __name__ == '__main__':
         client_replay = options.client_replay,
         keepserving = options.keepserving,
         stickycookie = stickycookie,
-        anticache = options.anticache
+        anticache = options.anticache,
+        refresh_server_playback = not options.norefresh,
     )
     if args:
         filt = " ".join(args)

@@ -5,7 +5,7 @@
 
     Development started from Neil Schemenauer's munchy.py
 """
-import sys, os, string, socket, urlparse, re, select, copy, base64, time
+import sys, os, string, socket, urlparse, re, select, copy, base64, time, Cookie
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import shutil, tempfile
 import optparse, SocketServer, ssl
@@ -281,6 +281,28 @@ class Response(controller.Msg):
         controller.Msg.__init__(self)
         self.replay = False
 
+    def _refresh_cookie(self, c, delta):
+        """
+            Takes a cookie string c and a time delta in seconds, and returns
+            a refreshed cookie string.
+        """
+        c = Cookie.SimpleCookie(str(c))
+        for i in c.values():
+            if "expires" in i:
+                d = parsedate_tz(i["expires"])
+                if d:
+                    d = mktime_tz(d) + delta
+                    i["expires"] = formatdate(d)
+                else:
+                    # This can happen when the expires tag is invalid.
+                    # reddit.com sends a an expires tag like this: "Thu, 31 Dec
+                    # 2037 23:59:59 GMT", which is valid RFC 1123, but not
+                    # strictly correct according tot he cookie spec. Browsers
+                    # appear to parse this tolerantly - maybe we should too.
+                    # For now, we just ignore this.
+                    del i["expires"]
+        return c.output(header="").strip()
+
     def refresh(self, now=None):
         """
             This fairly complex and heuristic function refreshes a server
@@ -302,8 +324,11 @@ class Response(controller.Msg):
                 d = parsedate_tz(self.headers[i][0])
                 new = mktime_tz(d) + delta
                 self.headers[i] = [formatdate(new)]
+        c = []
         for i in self.headers.get("set-cookie", []):
-            pass
+            c.append(self._refresh_cookie(i, delta))
+        if c:
+            self.headers["set-cookie"] = c
 
     def set_replay(self):
         self.replay = True

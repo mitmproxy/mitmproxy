@@ -10,6 +10,7 @@ class Options(object):
         "client_replay",
         "keepserving",
         "kill",
+        "refresh_server_playback",
         "request_script",
         "response_script",
         "rheaders",
@@ -85,6 +86,7 @@ class DumpMaster(flow.FlowMaster):
             )
 
         self.anticache = options.anticache
+        self.refresh_server_playback = options.refresh_server_playback
 
     def _readflow(self, path):
         path = os.path.expanduser(path)

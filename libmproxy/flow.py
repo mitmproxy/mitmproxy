@@ -140,6 +140,8 @@ class StickyCookieState:
 
     def handle_response(self, f):
         for i in f.response.headers.get("set-cookie", []):
+            # FIXME: We now know that Cookie.py screws up some cookies with
+            # valid RFC 822/1123 datetime specifications for expiry. Sigh.
             c = Cookie.SimpleCookie(i)
             m = c.values()[0]
             k = self.ckey(m, f)
@@ -432,7 +434,9 @@ class FlowMaster(controller.Master):
         self.scripts = {}
         self.kill_nonreplay = False
         self.stickycookie_state = False
+
         self.anticache = False
+        self.refresh_server_playback = False
 
     def _runscript(self, f, script):
         #begin nocover
@@ -480,6 +484,8 @@ class FlowMaster(controller.Master):
             response = proxy.Response.from_state(flow.request, rflow.response.get_state())
             response.set_replay()
             flow.response = response
+            if self.refresh_server_playback:
+                response.refresh()
             flow.request.ack(response)
             return True
         return None
