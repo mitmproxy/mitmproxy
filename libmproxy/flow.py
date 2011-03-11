@@ -560,6 +560,10 @@ class FlowWriter:
         s = json.dumps(d)
         self.ns.write(s)
 
+class FlowReadError(Exception):
+    @property
+    def strerror(self):
+        return self.args[0]
 
 class FlowReader:
     def __init__(self, fo):
@@ -570,7 +574,10 @@ class FlowReader:
         """
             Yields Flow objects from the dump.
         """
-        for i in self.ns:
-            data = json.loads(i)
-            yield Flow.from_state(data)
+        try:
+            for i in self.ns:
+                data = json.loads(i)
+                yield Flow.from_state(data)
+        except netstring.DecoderError:
+            raise FlowReadError("Invalid data format.")
 

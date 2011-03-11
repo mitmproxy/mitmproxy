@@ -93,7 +93,7 @@ class DumpMaster(flow.FlowMaster):
         try:
             f = file(path, "r")
             flows = list(flow.FlowReader(f).stream())
-        except IOError, v:
+        except (IOError, flow.FlowReadError), v:
             raise DumpError(v.strerror)
         return flows
 
@@ -180,7 +180,6 @@ class DumpMaster(flow.FlowMaster):
             msg.ack()
             self._process_flow(f)
         return f
-
 
 
 # begin nocover

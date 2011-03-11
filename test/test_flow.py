@@ -356,6 +356,16 @@ class uSerialize(libpry.AutoTree):
         assert len(l) == 1
         assert l[0] == f
 
+    def test_error(self):
+        sio = StringIO()
+        sio.write("bogus")
+        sio.seek(0)
+        r = flow.FlowReader(sio)
+        libpry.raises(flow.FlowReadError, list, r.stream())
+
+        f = flow.FlowReadError("foo")
+        assert f.strerror == "foo"
+
 
 class uFlowMaster(libpry.AutoTree):
     def test_all(self):
