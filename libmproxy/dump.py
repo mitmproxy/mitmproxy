@@ -121,43 +121,67 @@ class DumpMaster(flow.FlowMaster):
         l = str(t).strip().split("\n")
         return "\n".join(" "*n + i for i in l)
 
+    def _process_flow(self, f):
+        if self.filt and not f.match(self.filt):
+                return
+
+        if f.response:
+            sz = utils.pretty_size(len(f.response.content))
+            if self.o.verbosity > 0:
+                result = " << %s %s"%(str_response(f.response), sz)
+            if self.o.verbosity > 1:
+                result = result + "\n\n" + self.indent(4, f.response.headers)
+            if self.o.verbosity > 2:
+                if utils.isBin(f.response.content):
+                    d = utils.hexdump(f.response.content)
+                    d = "\n".join("%s\t%s %s"%i for i in d)
+                    cont = self.indent(4, d)
+                elif f.response.content:
+                    cont = self.indent(4, f.response.content)
+                else:
+                    cont = ""
+                result = result + "\n\n" + cont
+        elif f.error:
+            result = " << %s"%f.error.msg
+
+        if self.o.verbosity == 1:
+            print >> self.outfile, str_request(f.request)
+            print >> self.outfile, result
+        elif self.o.verbosity == 2:
+            print >> self.outfile, str_request(f.request)
+            print >> self.outfile, self.indent(4, f.request.headers)
+            print >> self.outfile
+            print >> self.outfile, result
+            print >> self.outfile, "\n"
+        elif self.o.verbosity == 3:
+            print >> self.outfile, str_request(f.request)
+            print >> self.outfile, self.indent(4, f.request.headers)
+            if utils.isBin(f.request.content):
+                print >> self.outfile, self.indent(4, utils.hexdump(f.request.content))
+            elif f.request.content:
+                print >> self.outfile, self.indent(4, f.request.content)
+            print >> self.outfile
+            print >> self.outfile, result
+            print >> self.outfile, "\n"
+        self.state.delete_flow(f)
+        if self.o.wfile:
+            self.fwriter.add(f)
+
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
         if f:
             msg.ack()
-            if self.filt and not f.match(self.filt):
-                    return
-            sz = utils.pretty_size(len(f.response.content))
-            if self.o.verbosity == 1:
-                print >> self.outfile, str_request(f.request)
-                print >> self.outfile, "  <<",
-                print >> self.outfile, str_response(f.response), sz
-            elif self.o.verbosity == 2:
-                print >> self.outfile, str_request(f.request)
-                print >> self.outfile, self.indent(4, f.request.headers)
-                print >> self.outfile
-                print >> self.outfile, " <<", str_response(f.response), sz
-                print >> self.outfile, self.indent(4, f.response.headers)
-                print >> self.outfile, "\n"
-            elif self.o.verbosity == 3:
-                print >> self.outfile, str_request(f.request)
-                print >> self.outfile, self.indent(4, f.request.headers)
-                if utils.isBin(f.request.content):
-                    print >> self.outfile, self.indent(4, utils.hexdump(f.request.content))
-                elif f.request.content:
-                    print >> self.outfile, self.indent(4, f.request.content)
-                print >> self.outfile
-                print >> self.outfile, " <<", str_response(f.response), sz
-                print >> self.outfile, self.indent(4, f.response.headers)
-                if utils.isBin(f.response.content):
-                    print >> self.outfile, self.indent(4, utils.hexdump(f.response.content))
-                elif f.response.content:
-                    print >> self.outfile, self.indent(4, f.response.content)
-                print >> self.outfile, "\n"
-            self.state.delete_flow(f)
-            if self.o.wfile:
-                self.fwriter.add(f)
+            self._process_flow(f)
         return f
+
+    def handle_error(self, msg):
+        f = flow.FlowMaster.handle_error(self, msg)
+        if f:
+            msg.ack()
+            self._process_flow(f)
+        return f
+
+
 
 # begin nocover
     def run(self):

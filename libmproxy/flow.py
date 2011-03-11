@@ -288,6 +288,7 @@ class Flow:
         return False
 
     def kill(self):
+        self.error = proxy.Error(self.request, "Connection killed")
         if self.request and not self.request.acked:
             self.request.ack(None)
         elif self.response and not self.response.acked:
@@ -398,10 +399,6 @@ class State:
     def accept_all(self):
         for i in self.flow_list[:]:
             i.accept_intercept()
-
-    def kill_flow(self, f):
-        f.kill()
-        self.delete_flow(f)
 
     def revert(self, f):
         f.revert()
@@ -534,7 +531,8 @@ class FlowMaster(controller.Master):
             pb = self.do_server_playback(f)
             if not pb:
                 if self.kill_nonreplay:
-                    self.state.kill_flow(f)
+                    f.kill()
+                    self.handle_error(f.error)
                 else:
                     r.ack()
         return f

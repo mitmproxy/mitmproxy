@@ -577,7 +577,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.finish()
 
     def handle_request(self, cc):
-        server, request = None, None
+        server, request, err = None, None, None
         try:
             request = self.read_request(cc)
             if request is None:

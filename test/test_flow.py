@@ -308,13 +308,6 @@ class uState(libpry.AutoTree):
         f = state.add_request(req)
         f.error = proxy.Error(f.request, "msg")
 
-    def test_kill_flow(self):
-        c = flow.State()
-        req = tutils.treq()
-        f = c.add_request(req)
-        c.kill_flow(f)
-        assert not c.flow_count()
-
     def test_clear(self):
         c = flow.State()
         f = self._add_request(c)
