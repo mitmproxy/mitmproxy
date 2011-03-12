@@ -7,7 +7,7 @@ def get_common_options(options):
     if options.stickycookie_all:
         stickycookie = ".*"
     elif options.stickycookie_filt:
-        stickycookie = stickycookie_filt
+        stickycookie = options.stickycookie_filt
     return dict(
         verbosity = options.verbose,
         wfile = options.wfile,
