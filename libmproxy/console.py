@@ -164,7 +164,7 @@ class ConnectionItem(WWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.sync_list_view()
-        elif key == "s":
+        elif key == "w":
             self.master.prompt("Save this flow: ", self.master.save_one_flow, self.flow)
         elif key == "z":
             self.master.kill_connection(self.flow)
@@ -515,7 +515,7 @@ class ConnectionView(WWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.refresh_connection(self.flow)
-        elif key == "s":
+        elif key == "w":
             self.master.prompt("Save this flow: ", self.master.save_one_flow, self.flow)
         elif key == "v":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
@@ -526,7 +526,7 @@ class ConnectionView(WWrap):
                 t = conn.headers.get("content-type", [None])
                 t = t[0]
                 self.master.spawn_external_viewer(conn.content, t)
-        elif key == "w":
+        elif key == "b":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.master.prompt("Save request body: ", self.save_body)
             else:
@@ -758,6 +758,33 @@ class ConsoleState(flow.State):
         return ret
 
 
+
+class Options(object):
+    __slots__ = [
+        "anticache",
+        "beep",
+        "client_replay",
+        "keepserving",
+        "kill",
+        "intercept",
+        "limit",
+        "refresh_server_playback",
+        "request_script",
+        "response_script",
+        "rheaders",
+        "server_replay",
+        "stickycookie",
+        "verbosity",
+        "wfile",
+    ]
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        for i in self.__slots__:
+            if not hasattr(self, i):
+                setattr(self, i, None)
+
+
 #begin nocover
 VIEW_CONNLIST = 0
 VIEW_FLOW = 1
@@ -798,7 +825,7 @@ class ConsoleMaster(flow.FlowMaster):
             print >> sys.stderr, "Beep error:", r
             sys.exit(1)
 
-        r = self.set_stickycookie(options.sticky)
+        r = self.set_stickycookie(options.stickycookie)
         if r:
             print >> sys.stderr, "Sticky cookies error:", r
             sys.exit(1)
@@ -987,7 +1014,7 @@ class ConsoleMaster(flow.FlowMaster):
             ("A", "accept all intercepted connections"),
             ("a", "accept this intercepted connection"),
             ("B", "set beep filter pattern"),
-            ("c", "set sticky cookie expression"),
+            ("c", "client replay"),
             ("i", "set interception pattern"),
             ("j, k", "up, down"),
             ("l", "set limit filter pattern"),
@@ -997,6 +1024,9 @@ class ConsoleMaster(flow.FlowMaster):
             ("r", "replay request"),
             ("R", "revert changes to request"),
             ("S", "save all flows matching current limit"),
+            ("s", "server replay"),
+            ("t", "set sticky cookie expression"),
+            ("w", "save this flow"),
             ("page up/down", "page up/down"),
             ("enter", "view connection"),
         ]
@@ -1006,7 +1036,6 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("C", "clear connection list"),
             ("d", "delete connection from view"),
-            ("s", "save this t flow"),
             ("z", "kill and delete connection, even if it's mid-intercept"),
             ("space", "page down"),
         ]
@@ -1014,12 +1043,11 @@ class ConsoleMaster(flow.FlowMaster):
 
         text.extend([("head", "\n\nConnection view keys:\n")])
         keys = [
-            ("e", "edit response/request"),
+            ("b", "save request/response body"),
+            ("e", "edit request/response"),
             ("m", "change view mode (raw, indent, hex)"),
             ("p", "previous flow"),
-            ("s", "save this flow"),
-            ("v", "view contents in external viewer"),
-            ("w", "save request or response body"),
+            ("v", "view body in external viewer"),
             ("|", "run script"),
             ("tab", "toggle response/request view"),
             ("space", "next flow"),
@@ -1237,7 +1265,7 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.load_flows
                             )
                             k = None
-                        elif k == "c":
+                        elif k == "t":
                             self.prompt("Sticky cookie: ", self.set_stickycookie)
                             k = None
                     if k:

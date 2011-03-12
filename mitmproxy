@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os.path
-from libmproxy import proxy, controller, console, utils, flow
+from libmproxy import proxy, controller, console, utils, flow, cmdline
 from libmproxy.version import VERSION
 from optparse import OptionParser, OptionGroup
 
@@ -26,18 +26,8 @@ if __name__ == '__main__':
                 usage = "%prog [options] [flowdump path]",
                 version="%%prog %s"%VERSION,
             )
-    proxy.certificate_option_group(parser)
-    parser.add_option(
-        "-a", "--addr", action="store",
-        type = "str", dest="addr", default='',
-        help = "Address to bind proxy to (defaults to all interfaces)"
-    )
+    cmdline.common_options(parser)
 
-    parser.add_option(
-        "-p", "--port", action="store",
-        type = "int", dest="port", default=8080,
-        help = "Proxy service port."
-    )
 
     group = OptionGroup(
                         parser,
@@ -59,16 +49,8 @@ if __name__ == '__main__':
         type = "str", dest="intercept", default=None,
         help = "Intercept filter expression."
     )
-    group.add_option(
-        "-s", "--sticky", action="store",
-        type = "str", dest="sticky", default=None,
-        help = "Sticky cookie filter expression."
-    )
     parser.add_option_group(group)
-
-
     options, args = parser.parse_args()
-
 
     config = proxy.process_certificate_option_group(parser, options)
     try:
@@ -76,7 +58,9 @@ if __name__ == '__main__':
     except proxy.ProxyServerError, v:
         print >> sys.stderr, "mitmproxy:", v.args[0]
         sys.exit(1)
-    m = console.ConsoleMaster(server, options)
+
+    opts = console.Options(**cmdline.get_common_options(options))
+    m = console.ConsoleMaster(server, opts)
 
     for i in args:
         try:
