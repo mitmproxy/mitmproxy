@@ -726,14 +726,22 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             pass
 
 
+class ProxyServerError(Exception): pass
+
 ServerBase = SocketServer.ThreadingTCPServer
 ServerBase.daemon_threads = True        # Terminate workers when main thread terminates
 class ProxyServer(ServerBase):
     request_queue_size = 20
     allow_reuse_address = True
     def __init__(self, config, port, address=''):
+        """
+            Raises ProxyServerError if there's a startup problem.
+        """
         self.config, self.port, self.address = config, port, address
-        ServerBase.__init__(self, (address, port), ProxyHandler)
+        try:
+            ServerBase.__init__(self, (address, port), ProxyHandler)
+        except socket.error, v:
+            raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.masterq = None
         self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
         config.certdir = self.certdir

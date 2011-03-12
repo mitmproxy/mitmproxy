@@ -560,10 +560,12 @@ class FlowWriter:
         s = json.dumps(d)
         self.ns.write(s)
 
+
 class FlowReadError(Exception):
     @property
     def strerror(self):
         return self.args[0]
+
 
 class FlowReader:
     def __init__(self, fo):

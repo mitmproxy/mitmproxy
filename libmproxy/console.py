@@ -75,8 +75,6 @@ def format_flow(f, focus, extended=False, padding=2):
             txt.append(("method", "[replay] "))
         elif f.modified():
             txt.append(("method", "[edited] "))
-        if not (f.response or f.error):
-            txt.append(("text", "waiting for response..."))
 
     if f.response:
         txt.append(

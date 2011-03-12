@@ -130,7 +130,12 @@ if __name__ == '__main__':
         stickycookie = stickycookie_filt
 
     config = proxy.process_certificate_option_group(parser, options)
-    server = proxy.ProxyServer(config, options.port, options.addr)
+    try:
+        server = proxy.ProxyServer(config, options.port, options.addr)
+    except proxy.ProxyServerError, v:
+        print >> sys.stderr, "mitmdump:", v.args[0]
+        sys.exit(1)
+
     dumpopts = dump.Options(
         verbosity = options.verbose,
         wfile = options.wfile,
