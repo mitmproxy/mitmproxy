@@ -105,6 +105,15 @@ class uformat_flow(libpry.AutoTree):
         assert ('method', '[replay] ') in console.format_flow(f, True)
         assert ('method', '[replay] ') in console.format_flow(f, True, True)
 
+        f.response.code = 404
+        assert ('error', '404') in console.format_flow(f, True, True)
+        f.response.headers["content-type"] = ["text/html"]
+        assert ('text', ' text/html') in console.format_flow(f, True, True)
+
+        f.response =None
+        f.error = proxy.Error(f.request, "error")
+        assert ('error', 'error') in console.format_flow(f, True, True)
+
 
 
 class uPathCompleter(libpry.AutoTree):
@@ -147,11 +156,17 @@ class uPathCompleter(libpry.AutoTree):
         assert c.final == s
 
 
+class uOptions(libpry.AutoTree):
+    def test_all(self):
+        assert console.Options(beep=True)
+
+
 
 
 tests = [
     uformat_keyvals(),
     uformat_flow(),
     uState(), 
-    uPathCompleter()
+    uPathCompleter(),
+    uOptions()
 ]

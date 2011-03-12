@@ -699,7 +699,6 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.beep = None
-        self.store = None
 
         self.view_body_mode = VIEW_BODY_RAW
         self.view_flow_mode = VIEW_FLOW_REQUEST
@@ -716,8 +715,6 @@ class ConsoleState(flow.State):
         return f
 
     def add_response(self, resp):
-        if self.store is not None:
-            self.store.save_response(resp)
         f = flow.State.add_response(self, resp)
         if self.focus is None:
             self.set_focus(0)
