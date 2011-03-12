@@ -69,7 +69,7 @@ class uState(libpry.AutoTree):
         self._add_response(c)
         self._add_request(c)
         self._add_response(c)
-        c.set_limit(filt.parse("~q"))
+        assert not c.set_limit("~q")
         assert len(c.view) == 3
         assert c.focus == 2
 
@@ -158,7 +158,7 @@ class uPathCompleter(libpry.AutoTree):
 
 class uOptions(libpry.AutoTree):
     def test_all(self):
-        assert console.Options(beep=True)
+        assert console.Options(kill=True)
 
 
 

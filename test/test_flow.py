@@ -275,7 +275,7 @@ class uState(libpry.AutoTree):
         f = c.add_request(req)
         assert len(c.view) == 1
 
-        c.set_limit(filt.parse("~s"))
+        c.set_limit("~s")
         assert len(c.view) == 0
         resp = tutils.tresp(req)
         c.add_response(resp)
@@ -287,9 +287,9 @@ class uState(libpry.AutoTree):
         c.clientconnect(req.client_conn)
         c.add_request(req)
         assert len(c.view) == 2
-        c.set_limit(filt.parse("~q"))
+        c.set_limit("~q")
         assert len(c.view) == 1
-        c.set_limit(filt.parse("~s"))
+        c.set_limit("~s")
         assert len(c.view) == 1
 
     def _add_request(self, state):

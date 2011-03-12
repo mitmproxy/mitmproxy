@@ -316,6 +316,7 @@ class State:
         # These are compiled filt expressions:
         self.limit = None
         self.intercept = None
+        self.limit_txt = None
 
     def flow_count(self):
         return len(self.flow_map)
@@ -371,11 +372,27 @@ class State:
         for i in flows:
             self.flow_map[i.request] = i
 
-    def set_limit(self, limit):
-        """
-            Limit is a compiled filter expression, or None.
-        """
-        self.limit = limit
+    def set_limit(self, txt):
+        if txt:
+            f = filt.parse(txt)
+            if not f:
+                return "Invalid filter expression."
+            self.limit = f
+            self.limit_txt = txt
+        else:
+            self.limit = None
+            self.limit_txt = None
+
+    def set_intercept(self, txt):
+        if txt:
+            f = filt.parse(txt)
+            if not f:
+                return "Invalid filter expression."
+            self.intercept = f
+            self.intercept_txt = txt
+        else:
+            self.intercept = None
+            self.intercept_txt = None
 
     @property
     def view(self):
