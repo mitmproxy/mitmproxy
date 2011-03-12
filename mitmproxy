@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os.path
-from libmproxy import proxy, controller, console, utils
+from libmproxy import proxy, controller, console, utils, flow
 from libmproxy.version import VERSION
 from optparse import OptionParser, OptionGroup
 
@@ -79,7 +79,12 @@ if __name__ == '__main__':
     m = console.ConsoleMaster(server, options)
 
     for i in args:
-        m.load_flows(i)
+        try:
+            m.load_flows(i)
+        except flow.FlowReadError, v:
+            print >> sys.stderr, "mitmproxy:", v.args[0]
+            sys.exit(1)
+
     m.run()
 
 
