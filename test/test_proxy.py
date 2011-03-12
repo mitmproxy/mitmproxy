@@ -5,6 +5,22 @@ import email.utils
 import tutils
 
 
+class u_read_chunked(libpry.AutoTree):
+    def test_all(self):
+        s = cStringIO.StringIO("1\r\na\r\n0\r\n")
+        libpry.raises(IOError, proxy.read_chunked, s)
+
+        s = cStringIO.StringIO("1\r\na\r\n0\r\n\r\n")
+        assert proxy.read_chunked(s) == "a"
+
+        s = cStringIO.StringIO("\r\n")
+        libpry.raises(IOError, proxy.read_chunked, s)
+
+        s = cStringIO.StringIO("1\r\nfoo")
+        libpry.raises(IOError, proxy.read_chunked, s)
+
+
+
 class u_parse_request_line(libpry.AutoTree):
     def test_simple(self):
         libpry.raises(proxy.ProxyError, proxy.parse_request_line, "")
@@ -201,4 +217,5 @@ tests = [
     u_parse_url(),
     uError(),
     uClientConnect(),
+    u_read_chunked(),
 ]
