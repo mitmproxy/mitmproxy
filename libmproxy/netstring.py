@@ -23,8 +23,6 @@ class FileEncoder(object):
             
             data -- A string to be encoded and written
         """  
-        if not isinstance(data, str):
-            raise ValueError("data should be of type 'str'")
         write = self.file_out.write
         write(header(data))
         write(data)
@@ -81,8 +79,6 @@ class Decoder(object):
             
             data -- A string containing complete or partial netstring data
         """
-        if not isinstance(data, str):
-            raise ValueError("data should be of type 'str'")
         self.data_pos = 0 
         self.string_start = 0        
         while self.data_pos < len(data):        

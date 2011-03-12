@@ -46,6 +46,16 @@ class uNetstring(libpry.AutoTree):
                     decoded_data.append(s)
             assert decoded_data == self.test_data.split()
 
+    def test_errors(self):
+        d = netstring.Decoder()
+        libpry.raises("Illegal digit", list, d.feed("1:foo"))
+        d = netstring.Decoder()
+        libpry.raises("Preceding zero", list, d.feed("01:f"))
+        d = netstring.Decoder(5)
+        libpry.raises("Maximum size", list, d.feed("500:f"))
+        d = netstring.Decoder()
+        libpry.raises("Illegal digit", list, d.feed(":f"))
+
 
 
 
