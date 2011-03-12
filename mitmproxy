@@ -35,11 +35,6 @@ if __name__ == '__main__':
                         "See help in mitmproxy for filter expression syntax."
                     )
     group.add_option(
-        "-B", "--beep", action="store",
-        type = "str", dest="beep", default=None,
-        help = "Beep filter expression."
-    )
-    group.add_option(
         "-l", "--limit", action="store",
         type = "str", dest="limit", default=None,
         help = "Limit filter expression."

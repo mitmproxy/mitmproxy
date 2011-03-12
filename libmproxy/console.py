@@ -717,7 +717,6 @@ class ConsoleState(flow.State):
     def __init__(self):
         flow.State.__init__(self)
         self.focus = None
-        self.beep = None
 
         self.view_body_mode = VIEW_BODY_RAW
         self.view_flow_mode = VIEW_FLOW_REQUEST
@@ -778,7 +777,6 @@ class ConsoleState(flow.State):
 class Options(object):
     __slots__ = [
         "anticache",
-        "beep",
         "client_replay",
         "keepserving",
         "kill",
@@ -834,11 +832,6 @@ class ConsoleMaster(flow.FlowMaster):
         r = self.set_intercept(options.intercept)
         if r:
             print >> sys.stderr, "Intercept error:", r
-            sys.exit(1)
-
-        r = self.set_beep(options.beep)
-        if r:
-            print >> sys.stderr, "Beep error:", r
             sys.exit(1)
 
         r = self.set_stickycookie(options.stickycookie)
@@ -1029,7 +1022,6 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("A", "accept all intercepted connections"),
             ("a", "accept this intercepted connection"),
-            ("B", "set beep filter pattern"),
             ("c", "client replay"),
             ("i", "set interception pattern"),
             ("j, k", "up, down"),
@@ -1177,14 +1169,6 @@ class ConsoleMaster(flow.FlowMaster):
     def set_intercept(self, txt):
         return self.state.set_intercept(txt)
 
-    def set_beep(self, txt):
-        if txt:
-            self.state.beep = filt.parse(txt)
-            if not self.state.beep:
-                return "Invalid filter expression."
-        else:
-            self.state.beep = None
-
     def drawscreen(self):
         size = self.ui.get_cols_rows()
         canvas = self.view.render(size, focus=1)
@@ -1232,9 +1216,6 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.set_intercept
                             )
                             self.sync_list_view()
-                            k = None
-                        elif k == "B":
-                            self.prompt("Beep: ", "", self.set_beep)
                             k = None
                         elif k == "j":
                             k = "down"
@@ -1314,8 +1295,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.statusbar.refresh_connection(c)
 
     def process_flow(self, f, r):
-        if f.match(self.state.beep):
-            urwid.curses_display.curses.beep()
         if f.match(self.state.intercept) and not f.request.is_replay():
             f.intercept()
         else:
