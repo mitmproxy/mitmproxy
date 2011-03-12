@@ -1256,7 +1256,11 @@ class ConsoleMaster(flow.FlowMaster):
                             )
                             k = None
                         elif k == "t":
-                            self.prompt("Sticky cookie: ", self.set_stickycookie)
+                            self.prompt(
+                                "Sticky cookie: ",
+                                self.stickycookie_txt,
+                                self.set_stickycookie
+                            )
                             k = None
                     if k:
                         self.view.keypress(size, k)

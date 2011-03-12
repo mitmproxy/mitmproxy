@@ -75,6 +75,7 @@ def pretty_xmlish(s):
         A robust pretty-printer for XML-ish data.
         Returns a list of lines.
     """
+    s = cleanBin(s)
     data, offset, indent, prev = [], 0, 0, None
     for i in re.finditer(TAG, s, re.VERBOSE|re.MULTILINE):
         start, end = i.span()

@@ -469,8 +469,10 @@ class FlowMaster(controller.Master):
             if not flt:
                 return "Invalid filter expression."
             self.stickycookie_state = StickyCookieState(flt)
+            self.stickycookie_txt = txt
         else:
             self.stickycookie_state = None
+            self.stickycookie_txt = None
 
     def start_client_playback(self, flows, exit):
         """
