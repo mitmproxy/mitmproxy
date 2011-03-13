@@ -447,7 +447,9 @@ class FlowMaster(controller.Master):
         self.client_playback = None
         self.scripts = {}
         self.kill_nonreplay = False
+
         self.stickycookie_state = False
+        self.stickycookie_txt = None
 
         self.anticache = False
         self.refresh_server_playback = False

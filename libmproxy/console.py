@@ -228,7 +228,6 @@ VIEW_FLOW_RESPONSE = 1
 class ConnectionView(WWrap):
     REQ = 0
     RESP = 1
-    tabs = ["Request", "Response"]
     methods = [
         ("get", "g"),
         ("post", "p"),
@@ -658,37 +657,59 @@ class ActionBar(WWrap):
 
 
 class StatusBar(WWrap):
-    def __init__(self, master, text):
-        self.master, self.text = master, text
+    def __init__(self, master, helptext):
+        self.master, self.helptext = master, helptext
         self.expire = None
         self.ab = ActionBar()
-        self.ib = urwid.AttrWrap(urwid.Text(""), 'foot')
+        self.ib = WWrap(urwid.Text(""))
         self.w = urwid.Pile([self.ib, self.ab])
+
+    def get_status(self):
+        r = []
+
+        if self.master.state.intercept_txt:
+            r.append("[")
+            r.append(("statusbar_highlight", "i"))
+            r.append(":%s]"%self.master.state.intercept_txt)
+        if self.master.state.limit_txt:
+            r.append("[")
+            r.append(("statusbar_highlight", "l"))
+            r.append(":%s]"%self.master.state.limit_txt)
+        if self.master.stickycookie_txt:
+            r.append("[")
+            r.append(("statusbar_highlight", "t"))
+            r.append(":%s]"%self.master.stickycookie_txt)
+
+
+        return r
 
     def redraw(self):
         if self.expire and time.time() > self.expire:
             self.message("")
-        status = urwid.Columns([
+
+        t = [
+                ('statusbar_text', ("[%s]"%len(self.master.state.flow_list)).ljust(7)),
+            ]
+        t.extend(self.get_status())
+        status = urwid.AttrWrap(urwid.Columns([
+            urwid.Text(t),
             urwid.Text(
                 [
+                    self.helptext,
+                    " ",
                     (
-                        'title',
-                        "mitmproxy %s:%s"%(self.master.server.address, self.master.server.port)
-                    )
-                ]
-            ),
-            urwid.Text(
-                [
-                    self.text,
-                    ('text', "%5s"%("[%s]"%len(self.master.state.flow_list)))
+                        'statusbar_text',
+                        "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
+                    ),
                 ],
-                align="right"),
-        ])
+                align="right"
+            ),
+        ]), "statusbar")
         self.ib.set_w(status)
         self.master.drawscreen()
 
     def update(self, text):
-        self.text = text
+        self.helptext = text
         self.redraw()
 
     def selectable(self):
@@ -807,16 +828,15 @@ VIEW_HELP = 2
 class ConsoleMaster(flow.FlowMaster):
     palette = []
     footer_text_default = [
-        ('key', "?"), ":help ",
-        ('key', "q"), ":exit ",
+        ('statusbar_key', "?"), ":help ",
     ]
     footer_text_help = [
-        ('key', "q"), ":back",
+        ('statusbar_key', "q"), ":back",
     ]
     footer_text_connview = [
-        ('key', "tab"), ":toggle view ",
-        ('key', "?"), ":help ",
-        ('key', "q"), ":back ",
+        ('statusbar_key', "tab"), ":toggle view ",
+        ('statusbar_key', "?"), ":help ",
+        ('statusbar_key', "q"), ":back ",
     ]
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
@@ -871,11 +891,18 @@ class ConsoleMaster(flow.FlowMaster):
         os.unlink(name)
 
     def set_palette(self):
+        BARBG = "dark blue"
         self.palette = [
             ('body', 'black', 'dark cyan', 'standout'),
             ('foot', 'light gray', 'default'),
             ('title', 'white', 'default',),
             ('editline', 'white', 'default',),
+
+            # Status bar
+            ('statusbar', 'light gray', BARBG),
+            ('statusbar_key', 'light cyan', BARBG),
+            ('statusbar_text', 'light gray', BARBG),
+            ('statusbar_highlight', 'white', BARBG),
 
             # Help
             ('key', 'light cyan', 'default', 'underline'),
