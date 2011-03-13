@@ -54,9 +54,9 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
 
 def format_flow(f, focus, extended=False, padding=2):
     if extended:
-        ts = ("highlight", utils.format_timestamp(f.request.timestamp) + " ")
+        ts = ("highlight", utils.format_timestamp(f.request.timestamp))
     else:
-        ts = " "
+        ts = ""
 
     txt = [
         ts,
@@ -321,28 +321,31 @@ class ConnectionView(WWrap):
             )
 
     def _conn_text(self, conn):
-        txt = []
-        txt.extend(
-            format_keyvals(
-                [(h+":", v) for (h, v) in sorted(conn.headers.itemPairs())],
-                key = "header",
-                val = "text"
+        if conn:
+            txt = []
+            txt.extend(
+                format_keyvals(
+                    [(h+":", v) for (h, v) in sorted(conn.headers.itemPairs())],
+                    key = "header",
+                    val = "text"
+                )
             )
-        )
-        txt.append("\n\n")
-        if conn.content:
-            if self.state.view_body_mode == VIEW_BODY_BINARY:
-                self._view_binary(conn, txt)
-            elif self.state.view_body_mode == VIEW_BODY_INDENT:
-                self.master.statusbar.update("Calculating pretty mode...")
-                self._view_pretty(conn, txt)
-                self.master.statusbar.update("")
-            else:
-                if utils.isBin(conn.content):
+            txt.append("\n\n")
+            if conn.content:
+                if self.state.view_body_mode == VIEW_BODY_BINARY:
                     self._view_binary(conn, txt)
+                elif self.state.view_body_mode == VIEW_BODY_INDENT:
+                    self.master.statusbar.update("Calculating pretty mode...")
+                    self._view_pretty(conn, txt)
+                    self.master.statusbar.update("")
                 else:
-                    self._view_normal(conn, txt)
-        return urwid.ListBox([urwid.Text(txt)])
+                    if utils.isBin(conn.content):
+                        self._view_binary(conn, txt)
+                    else:
+                        self._view_normal(conn, txt)
+            return urwid.ListBox([urwid.Text(txt)])
+        else:
+            return urwid.ListBox([])
 
     def view_request(self):
         self.state.view_flow_mode = VIEW_FLOW_REQUEST
@@ -350,10 +353,9 @@ class ConnectionView(WWrap):
         self.w = self.wrap_body(VIEW_FLOW_REQUEST, body)
 
     def view_response(self):
-        if self.flow.response:
-            self.state.view_flow_mode = VIEW_FLOW_RESPONSE
-            body = self._conn_text(self.flow.response)
-            self.w = self.wrap_body(VIEW_FLOW_RESPONSE, body)
+        self.state.view_flow_mode = VIEW_FLOW_RESPONSE
+        body = self._conn_text(self.flow.response)
+        self.w = self.wrap_body(VIEW_FLOW_RESPONSE, body)
 
     def refresh_connection(self, c=None):
         if c == self.flow:

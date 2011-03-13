@@ -81,6 +81,8 @@ class uformat_keyvals(libpry.AutoTree):
                 ("aa", "bb"),
                 None,
                 ("cc", "dd"),
+                (None, "dd"),
+                (None, "dd"),
             ]
         )
 
@@ -159,7 +161,6 @@ class uPathCompleter(libpry.AutoTree):
 class uOptions(libpry.AutoTree):
     def test_all(self):
         assert console.Options(kill=True)
-
 
 
 
