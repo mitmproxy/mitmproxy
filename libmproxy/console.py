@@ -27,10 +27,18 @@ class Stop(Exception): pass
 def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     ret = []
     if lst:
-        pad = max(len(i[0]) for i in lst if i) + space
+        pad = max(len(i[0]) for i in lst if i and i[0]) + space
         for i in lst:
             if i is None:
                 ret.extend("\n")
+            elif i[0] is None:
+                ret.extend(
+                    [
+                        " "*(pad + indent),
+                        (val, i[1]),
+                        "\n"
+                    ]
+                )
             else:
                 ret.extend(
                     [
@@ -679,7 +687,8 @@ class StatusBar(WWrap):
             r.append("[")
             r.append(("statusbar_highlight", "t"))
             r.append(":%s]"%self.master.stickycookie_txt)
-
+        if self.master.anticache:
+            r.append("[anticache]")
 
         return r
 
@@ -861,6 +870,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.stickycookie = None
         self.stickyhosts = {}
+        self.anticache = options.anticache
 
 
     def spawn_external_viewer(self, data, contenttype):
@@ -1054,6 +1064,10 @@ class ConsoleMaster(flow.FlowMaster):
             ("j, k", "up, down"),
             ("l", "set limit filter pattern"),
             ("L", "load saved flows"),
+            ("o", "toggle options:"),
+            (None, "  anticache: modify requests to prevent cached responses"),
+            (None, "  killextra: kill requests not part of server replay"),
+            (None, "  norefresh: disable server replay response refresh"),
             ("q", "quit / return to connection list"),
             ("Q", "quit without confirm prompt"),
             ("r", "replay request"),
@@ -1282,6 +1296,17 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.load_flows
                             )
                             k = None
+                        elif k == "o":
+                            self.prompt_onekey(
+                                    "Options",
+                                    (
+                                        ("anticache", "a"),
+                                        ("killextra", "k"),
+                                        ("norefresh", "n"),
+                                    ),
+                                    self._change_options
+                            )
+                            k = None
                         elif k == "t":
                             self.prompt(
                                 "Sticky cookie: ",
@@ -1297,6 +1322,10 @@ class ConsoleMaster(flow.FlowMaster):
     def quit(self, a):
         if a != "n":
             raise Stop
+
+    def _change_options(self, a):
+        if a == "a":
+            self.anticache = not self.anticache
 
     def shutdown(self):
         for i in self.state.flow_list:
