@@ -53,13 +53,11 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
 
 
 def format_flow(f, focus, extended=False, padding=2):
+    txt = []
     if extended:
-        ts = ("highlight", utils.format_timestamp(f.request.timestamp))
-    else:
-        ts = ""
-
-    txt = [
-        ts,
+        txt.append(("highlight", utils.format_timestamp(f.request.timestamp)))
+    txt.append(" ")
+    txt.extend([
         ("ack", "!") if f.intercepting and not f.request.acked else " ",
         ("method", f.request.method),
         " ",
@@ -67,7 +65,7 @@ def format_flow(f, focus, extended=False, padding=2):
             "text" if (f.response or f.error) else "title",
             f.request.url(),
         ),
-    ]
+    ])
     if f.response or f.error or f.request.is_replay():
         tsr = f.response or f.error
         if extended and tsr:
@@ -247,10 +245,10 @@ class ConnectionView(WWrap):
     ]
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
-        if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-            self.view_request()
-        else:
+        if self.state.view_flow_mode == VIEW_FLOW_RESPONSE and flow.response:
             self.view_response()
+        else:
+            self.view_request()
 
     def _tab(self, content, active):
         if active:
@@ -359,10 +357,10 @@ class ConnectionView(WWrap):
 
     def refresh_connection(self, c=None):
         if c == self.flow:
-            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-                self.view_request()
-            else:
+            if self.state.view_flow_mode == VIEW_FLOW_RESPONSE and flow.response:
                 self.view_response()
+            else:
+                self.view_request()
 
     def _spawn_editor(self, data):
         fd, name = tempfile.mkstemp('', "mproxy")
@@ -471,7 +469,7 @@ class ConnectionView(WWrap):
 
     def keypress(self, size, key):
         if key == "tab":
-            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
+            if self.state.view_flow_mode == VIEW_FLOW_REQUEST and self.flow.response:
                 self.view_response()
             else:
                 self.view_request()
@@ -1315,7 +1313,7 @@ class ConsoleMaster(flow.FlowMaster):
                             k = None
                         elif k == "i":
                             self.prompt(
-                                "Intercept: ",
+                                "Intercept filter: ",
                                 self.state.intercept_txt,
                                 self.set_intercept
                             )
@@ -1379,7 +1377,7 @@ class ConsoleMaster(flow.FlowMaster):
                             k = None
                         elif k == "t":
                             self.prompt(
-                                "Sticky cookie: ",
+                                "Sticky cookie filter: ",
                                 self.stickycookie_txt,
                                 self.set_stickycookie
                             )

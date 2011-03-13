@@ -55,6 +55,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     opts = console.Options(**cmdline.get_common_options(options))
+    opts.intercept = options.intercept
+    opts.limit = options.limit
     m = console.ConsoleMaster(server, opts)
 
     for i in args:
