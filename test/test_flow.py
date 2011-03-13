@@ -265,7 +265,7 @@ class uState(libpry.AutoTree):
         e = proxy.Error(tutils.tflow().request, "message")
         assert not c.add_error(e)
 
-    def test_view(self):
+    def test_set_limit(self):
         c = flow.State()
 
         req = tutils.treq()
@@ -291,6 +291,16 @@ class uState(libpry.AutoTree):
         assert len(c.view) == 1
         c.set_limit("~s")
         assert len(c.view) == 1
+
+        assert "Invalid" in c.set_limit("~")
+
+    def test_set_intercept(self):
+        c = flow.State()
+        assert not c.set_intercept("~q")
+        assert c.intercept_txt == "~q"
+        assert "Invalid" in c.set_intercept("~")
+        assert not c.set_intercept(None)
+        assert c.intercept_txt == None
 
     def _add_request(self, state):
         req = tutils.treq()
