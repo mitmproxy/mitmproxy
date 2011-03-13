@@ -168,18 +168,20 @@ class uFlow(libpry.AutoTree):
         assert f == f2
 
     def test_kill(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
         f = tutils.tflow()
         f.request = tutils.treq()
         f.intercept()
         assert not f.request.acked
-        f.kill()
+        f.kill(fm)
         assert f.request.acked
         f.intercept()
         f.response = tutils.tresp()
         f.request = f.response.request
         f.request.ack()
         assert not f.response.acked
-        f.kill()
+        f.kill(fm)
         assert f.response.acked
 
     def test_accept_intercept(self):

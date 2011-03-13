@@ -287,13 +287,14 @@ class Flow:
                 return pattern(self.request)
         return False
 
-    def kill(self):
+    def kill(self, master):
         self.error = proxy.Error(self.request, "Connection killed")
         if self.request and not self.request.acked:
             self.request.ack(None)
         elif self.response and not self.response.acked:
             self.response.ack(None)
         self.intercepting = False
+        master.handle_error(self.error)
 
     def intercept(self):
         self.intercepting = True
@@ -552,8 +553,7 @@ class FlowMaster(controller.Master):
             pb = self.do_server_playback(f)
             if not pb:
                 if self.kill_nonreplay:
-                    f.kill()
-                    self.handle_error(f.error)
+                    f.kill(self)
                 else:
                     r.ack()
         return f

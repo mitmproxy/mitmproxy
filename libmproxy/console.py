@@ -675,6 +675,10 @@ class StatusBar(WWrap):
     def get_status(self):
         r = []
 
+        if self.master.client_playback:
+            r.append("[")
+            r.append(("statusbar_highlight", "cplayback"))
+            r.append(":%s to go]"%self.master.client_playback.count())
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("statusbar_highlight", "i"))
@@ -872,6 +876,24 @@ class ConsoleMaster(flow.FlowMaster):
         self.stickyhosts = {}
         self.anticache = options.anticache
 
+        if options.client_replay:
+            self.client_playback_path(options.client_replay)
+
+    def _readflow(self, path):
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, "r")
+            flows = list(flow.FlowReader(f).stream())
+        except (IOError, flow.FlowReadError), v:
+            return True, v.strerror
+        return False, flows
+
+    def client_playback_path(self, path):
+        err, ret = self._readflow(path)
+        if err:
+            self.statusbar.message(ret)
+        else:
+            self.start_client_playback(ret, True)
 
     def spawn_external_viewer(self, data, contenttype):
         if contenttype:
@@ -1246,6 +1268,13 @@ class ConsoleMaster(flow.FlowMaster):
                         self.statusbar.message("")
                         if k == "?":
                             self.view_help()
+                        elif k == "c":
+                            self.path_prompt(
+                                "Client replay: ",
+                                self.state.last_saveload,
+                                self.client_playback_path
+                            )
+                            k = None
                         elif k == "l":
                             self.prompt("Limit: ", self.state.limit_txt, self.set_limit)
                             self.sync_list_view()
@@ -1329,7 +1358,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def shutdown(self):
         for i in self.state.flow_list:
-            i.kill()
+            i.kill(self)
         controller.Master.shutdown(self)
 
     def sync_list_view(self):
@@ -1344,7 +1373,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.sync_list_view()
 
     def kill_connection(self, f):
-        self.state.kill_flow(f)
+        f.kill(self)
 
     def refresh_connection(self, c):
         if hasattr(self.header, "refresh_connection"):
@@ -1372,14 +1401,17 @@ class ConsoleMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_error(self, r)
         if f:
             self.process_flow(f, r)
+        return f
 
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
         if f:
             self.process_flow(f, r)
+        return f
 
     def handle_response(self, r):
         f = flow.FlowMaster.handle_response(self, r)
         if f:
             self.process_flow(f, r)
+        return f
 
