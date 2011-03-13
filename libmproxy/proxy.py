@@ -322,8 +322,9 @@ class Response(controller.Msg):
         for i in refresh_headers:
             if i in self.headers:
                 d = parsedate_tz(self.headers[i][0])
-                new = mktime_tz(d) + delta
-                self.headers[i] = [formatdate(new)]
+                if d:
+                    new = mktime_tz(d) + delta
+                    self.headers[i] = [formatdate(new)]
         c = []
         for i in self.headers.get("set-cookie", []):
             c.append(self._refresh_cookie(i, delta))

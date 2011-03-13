@@ -679,6 +679,10 @@ class StatusBar(WWrap):
             r.append("[")
             r.append(("statusbar_highlight", "cplayback"))
             r.append(":%s to go]"%self.master.client_playback.count())
+        if self.master.server_playback:
+            r.append("[")
+            r.append(("statusbar_highlight", "splayback"))
+            r.append(":%s to go]"%self.master.server_playback.count())
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("statusbar_highlight", "i"))
@@ -691,8 +695,17 @@ class StatusBar(WWrap):
             r.append("[")
             r.append(("statusbar_highlight", "t"))
             r.append(":%s]"%self.master.stickycookie_txt)
+
+        opts = []
         if self.master.anticache:
-            r.append("[anticache]")
+            opts.append("anticache")
+        if not self.master.refresh_server_playback:
+            opts.append("norefresh")
+        if self.master.killextra:
+            opts.append("killextra")
+
+        if opts:
+            r.append("[%s]"%(":".join(opts)))
 
         return r
 
@@ -874,10 +887,18 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.stickycookie = None
         self.stickyhosts = {}
+
+        self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
+        self.killextra = options.kill
+        self.rheaders = options.rheaders
 
         if options.client_replay:
             self.client_playback_path(options.client_replay)
+
+        if options.server_replay:
+            self.server_playback_path(options.server_replay)
+
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
@@ -893,7 +914,18 @@ class ConsoleMaster(flow.FlowMaster):
         if err:
             self.statusbar.message(ret)
         else:
-            self.start_client_playback(ret, True)
+            self.start_client_playback(ret, False)
+
+    def server_playback_path(self, path):
+        err, ret = self._readflow(path)
+        if err:
+            self.statusbar.message(ret)
+        else:
+            self.start_server_playback(
+                ret,
+                self.killextra, self.rheaders,
+                False
+            )
 
     def spawn_external_viewer(self, data, contenttype):
         if contenttype:
@@ -1318,6 +1350,13 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.save_flows
                             )
                             k = None
+                        elif k == "s":
+                            self.path_prompt(
+                                "Server replay: ",
+                                self.state.last_saveload,
+                                self.server_playback_path
+                            )
+                            k = None
                         elif k == "L":
                             self.path_prompt(
                                 "Load flows: ",
@@ -1355,6 +1394,10 @@ class ConsoleMaster(flow.FlowMaster):
     def _change_options(self, a):
         if a == "a":
             self.anticache = not self.anticache
+        elif a == "k":
+            self.killextra = not self.killextra
+        elif a == "n":
+            self.refresh_server_playback = not self.refresh_server_playback
 
     def shutdown(self):
         for i in self.state.flow_list:
