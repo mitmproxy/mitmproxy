@@ -57,6 +57,8 @@ def format_flow(f, focus, extended=False, padding=2):
     if extended:
         txt.append(("highlight", utils.format_timestamp(f.request.timestamp)))
     txt.append(" ")
+    if f.request.is_replay():
+        txt.append(("method", "[replay]"))
     txt.extend([
         ("ack", "!") if f.intercepting and not f.request.acked else " ",
         ("method", f.request.method),
@@ -77,16 +79,14 @@ def format_flow(f, focus, extended=False, padding=2):
         txt.append(("text", ts))
         txt.append(" "*(padding+2))
         met = ""
-        if f.request.is_replay():
-            txt.append(("method", "[replay] "))
-        elif f.modified():
-            txt.append(("method", "[edited] "))
 
     if f.response:
         txt.append(
            ("ack", "!") if f.intercepting and not f.response.acked else " "
         )
         txt.append("<- ")
+        if f.response.is_replay():
+            txt.append(("method", "[replay] "))
         if f.response.code in [200, 304]:
             txt.append(("goodcode", str(f.response.code)))
         else:
