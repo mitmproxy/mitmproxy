@@ -16,7 +16,7 @@
 import Queue, mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import cStringIO
-import urwid.curses_display
+import urwid.raw_display
 import urwid
 import controller, utils, filt, proxy, flow
 
@@ -992,7 +992,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.viewstate = VIEW_CONNLIST
         self.currentflow = None
 
-        self.ui = urwid.curses_display.Screen()
+        self.ui = urwid.raw_display.Screen()
         self.ui.register_palette(self.palette)
         self.conn_list_view = ConnectionListView(self, self.state)
 
@@ -1027,7 +1027,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.make_view()
 
     def view_connlist(self):
-        if self.ui.s:
+        if self.ui.started:
             self.ui.clear()
         if self.currentflow:
             try:
