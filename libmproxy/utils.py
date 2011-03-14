@@ -12,7 +12,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap, errno, sys, time, pytz
+import re, os, subprocess, datetime, textwrap, errno, sys, time
 
 
 def timestamp():
