@@ -371,18 +371,15 @@ class ConnectionView(WWrap):
         if not c:
             c = "vi"
         cmd = [c, name]
+        self.master.ui.stop()
         try:
             ret = subprocess.call(cmd)
         except:
             self.master.statusbar.message("Can't start editor: %s" % c)
-            self.master.ui._curs_set(1)
-            self.master.ui.clear()
+            self.master.ui.start()
             os.unlink(name)
             return data
-        # Not sure why, unless we do this we get a visible cursor after
-        # spawning 'less'.
-        self.master.ui._curs_set(1)
-        self.master.ui.clear()
+        self.master.ui.start()
         data = open(name).read()
         os.unlink(name)
         return data
@@ -947,11 +944,9 @@ class ConsoleMaster(flow.FlowMaster):
         if not cmd:
             c = os.environ.get("PAGER") or os.environ.get("EDITOR")
             cmd = [c, name]
+        self.ui.stop()
         ret = subprocess.call(cmd, shell=shell)
-        # Not sure why, unless we do this we get a visible cursor after
-        # spawning 'less'.
-        self.ui._curs_set(1)
-        self.ui.clear()
+        self.ui.start()
         os.unlink(name)
 
     def set_palette(self):
