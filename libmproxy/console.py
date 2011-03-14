@@ -357,7 +357,7 @@ class ConnectionView(WWrap):
 
     def refresh_connection(self, c=None):
         if c == self.flow:
-            if self.state.view_flow_mode == VIEW_FLOW_RESPONSE and flow.response:
+            if self.state.view_flow_mode == VIEW_FLOW_RESPONSE and self.flow.response:
                 self.view_response()
             else:
                 self.view_request()
