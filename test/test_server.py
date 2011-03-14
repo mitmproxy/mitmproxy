@@ -7,23 +7,26 @@ class uSanity(tutils.ProxTest):
         """
             Just check that the HTTP server is running.
         """
-        f = urllib.urlopen("http://127.0.0.1:%s"%tutils.HTTP_PORT)
+        f = urllib.urlopen("http://127.0.0.1:%s"%tutils.HTTP_PORT, proxies={})
         assert f.read()
 
     def test_https(self):
         """
             Just check that the HTTPS server is running.
         """
-        f = urllib.urlopen("https://127.0.0.1:%s"%tutils.HTTPS_PORT)
+        f = urllib.urlopen("https://127.0.0.1:%s"%tutils.HTTPS_PORT, proxies={})
         assert f.read()
 
 
 class uProxy(tutils.ProxTest):
     HOST = "127.0.0.1"
     def _get(self, host=HOST):
+        proxy_support = urllib2.ProxyHandler(
+                            {"http" : "http://127.0.0.1:%s"%tutils.PROXL_PORT}
+                        )
+        opener = urllib2.build_opener(proxy_support)
         r = urllib2.Request("http://%s:%s"%(host, tutils.HTTP_PORT))
-        r.set_proxy("127.0.0.1:%s"%tutils.PROXL_PORT, "http")
-        return urllib2.urlopen(r)
+        return opener.open(r)
 
     def _sget(self, host=HOST):
         proxy_support = urllib2.ProxyHandler(
