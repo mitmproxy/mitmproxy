@@ -101,11 +101,9 @@ class uformat_flow(libpry.AutoTree):
         f.request = f.response.request
         f.backup()
 
-        assert ('method', '[edited] ') in console.format_flow(f, True)
-        assert ('method', '[edited] ') in console.format_flow(f, True, True)
         f.request.set_replay()
-        assert ('method', '[replay] ') in console.format_flow(f, True)
-        assert ('method', '[replay] ') in console.format_flow(f, True, True)
+        assert ('method', '[replay]') in console.format_flow(f, True)
+        assert ('method', '[replay]') in console.format_flow(f, True, True)
 
         f.response.code = 404
         assert ('error', '404') in console.format_flow(f, True, True)
