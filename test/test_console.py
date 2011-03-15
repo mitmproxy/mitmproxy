@@ -102,6 +102,7 @@ class uformat_flow(libpry.AutoTree):
         f.backup()
 
         f.request.set_replay()
+        f.response.set_replay()
         assert ('method', '[replay]') in console.format_flow(f, True)
         assert ('method', '[replay]') in console.format_flow(f, True, True)
 

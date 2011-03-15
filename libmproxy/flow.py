@@ -62,7 +62,7 @@ class ClientPlaybackState:
             self.current = master.handle_request(n.request)
             if not testing and not self.current.response:
                 #begin nocover
-                master.state.replay_request(self.current, master.masterq)
+                master.replay_request(self.current)
                 #end nocover
             elif self.current.response:
                 master.handle_response(self.current.response)
@@ -421,23 +421,6 @@ class State:
     def revert(self, f):
         f.revert()
 
-    def replay_request(self, f, masterq):
-        """
-            Returns None if successful, or error message if not.
-        """
-        #begin nocover
-        if f.intercepting:
-            return "Can't replay while intercepting..."
-        if f.request:
-            f.backup()
-            f.request.set_replay()
-            if f.request.content:
-                f.request.headers["content-length"] = [str(len(f.request.content))]
-            f.response = None
-            f.error = None
-            rt = RequestReplayThread(f, masterq)
-            rt.start()
-        #end nocover
 
 
 class FlowMaster(controller.Master):
@@ -526,6 +509,40 @@ class FlowMaster(controller.Master):
 
         controller.Master.tick(self, q)
 
+    def process_new_request(self, f):
+        if self.stickycookie_state:
+            self.stickycookie_state.handle_request(f)
+        if "request" in self.scripts:
+            self._runscript(f, self.scripts["request"])
+        if self.anticache:
+            f.request.anticache()
+        if self.server_playback:
+            pb = self.do_server_playback(f)
+            if not pb:
+                if self.kill_nonreplay:
+                    f.kill(self)
+                else:
+                    f.request.ack()
+
+    def replay_request(self, f):
+        """
+            Returns None if successful, or error message if not.
+        """
+        #begin nocover
+        if f.intercepting:
+            return "Can't replay while intercepting..."
+        if f.request:
+            f.backup()
+            f.request.set_replay()
+            if f.request.content:
+                f.request.headers["content-length"] = [str(len(f.request.content))]
+            f.response = None
+            f.error = None
+            self.process_new_request(f)
+            rt = RequestReplayThread(f, self.masterq)
+            rt.start()
+        #end nocover
+
     def handle_clientconnect(self, r):
         self.state.clientconnect(r)
         r.ack()
@@ -543,19 +560,7 @@ class FlowMaster(controller.Master):
 
     def handle_request(self, r):
         f = self.state.add_request(r)
-        if self.stickycookie_state:
-            self.stickycookie_state.handle_request(f)
-        if "request" in self.scripts:
-            self._runscript(f, self.scripts["request"])
-        if self.anticache:
-            r.anticache()
-        if self.server_playback:
-            pb = self.do_server_playback(f)
-            if not pb:
-                if self.kill_nonreplay:
-                    f.kill(self)
-                else:
-                    r.ack()
+        self.process_new_request(f)
         return f
 
     def handle_response(self, r):
