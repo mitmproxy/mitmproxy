@@ -139,10 +139,6 @@ class ConnectionItem(WWrap):
         w = self.get_text()
         WWrap.__init__(self, w)
 
-    def intercept(self):
-        self.intercepting = True
-        self.w = self.get_text()
-
     def get_text(self):
         return urwid.Text(format_flow(self.flow, self.focus))
 
@@ -159,8 +155,8 @@ class ConnectionItem(WWrap):
         elif key == "C":
             self.master.clear_connections()
         elif key == "d":
-            if not self.state.delete_flow(self.flow):
-                self.master.statusbar.message("Can't delete connection mid-intercept.")
+            self.flow.kill(self.master)
+            self.state.delete_flow(self.flow)
             self.master.sync_list_view()
         elif key == "r":
             r = self.master.replay_request(self.flow)
@@ -178,7 +174,7 @@ class ConnectionItem(WWrap):
                 self.flow
             )
         elif key == "z":
-            self.master.kill_connection(self.flow)
+            self.flow.kill(self.master)
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
@@ -1415,9 +1411,6 @@ class ConsoleMaster(flow.FlowMaster):
     def delete_connection(self, f):
         self.state.delete_flow(f)
         self.sync_list_view()
-
-    def kill_connection(self, f):
-        f.kill(self)
 
     def refresh_connection(self, c):
         if hasattr(self.header, "refresh_connection"):

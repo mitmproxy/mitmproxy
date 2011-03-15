@@ -326,9 +326,6 @@ class uState(libpry.AutoTree):
         f.intercepting = True
 
         c.clear()
-        assert c.flow_count() == 1
-        f.intercepting = False
-        c.clear()
         assert c.flow_count() == 0
 
     def test_dump_flows(self):

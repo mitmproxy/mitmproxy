@@ -293,8 +293,8 @@ class Flow:
             self.request.ack(None)
         elif self.response and not self.response.acked:
             self.response.ack(None)
-        self.intercepting = False
         master.handle_error(self.error)
+        self.intercepting = False
 
     def intercept(self):
         self.intercepting = True
@@ -403,12 +403,10 @@ class State:
             return tuple(self.flow_list[:])
 
     def delete_flow(self, f):
-        if not f.intercepting:
-            if f.request in self.flow_map:
-                del self.flow_map[f.request]
-            self.flow_list.remove(f)
-            return True
-        return False
+        if f.request in self.flow_map:
+            del self.flow_map[f.request]
+        self.flow_list.remove(f)
+        return True
 
     def clear(self):
         for i in self.flow_list[:]:
