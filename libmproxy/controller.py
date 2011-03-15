@@ -16,6 +16,8 @@
 import sys
 import Queue, threading
 
+exit = False
+
 #begin nocover
 
 class Msg:
@@ -34,7 +36,12 @@ class Msg:
         self.acked = False
         try:
             masterq.put(self, timeout=3)
-            return self.q.get()
+            while not exit:
+                try:
+                    g = self.q.get(timeout=0.5)
+                except Queue.Empty:
+                    continue
+                return g
         except (Queue.Empty, Queue.Full):
             return None
 
@@ -52,7 +59,6 @@ class Slave(threading.Thread):
 class Master:
     def __init__(self, server):
         self.server = server
-        self._shutdown = False
         self.masterq = None
 
     def tick(self, q):
@@ -73,7 +79,7 @@ class Master:
         self.masterq = q
         slave = Slave(q, self.server)
         slave.start()
-        while not self._shutdown:
+        while not exit:
             self.tick(q)
         self.shutdown()
 
@@ -86,9 +92,8 @@ class Master:
             msg.ack()
 
     def shutdown(self):
-        if not self._shutdown:
-            self._shutdown = True
+        global exit
+        if not exit:
+            exit = True
             if self.server:
                 self.server.shutdown()
-
-

@@ -1277,7 +1277,7 @@ class ConsoleMaster(flow.FlowMaster):
         slave = controller.Slave(q, self.server)
         slave.start()
         try:
-            while not self._shutdown:
+            while not controller.exit:
                 self.statusbar.redraw()
                 size = self.drawscreen()
                 self.tick(q)

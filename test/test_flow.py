@@ -1,6 +1,6 @@
 import Queue
 from cStringIO import StringIO
-from libmproxy import console, proxy, filt, flow
+from libmproxy import console, proxy, filt, flow, controller
 import tutils
 import libpry
 
@@ -442,7 +442,7 @@ class uFlowMaster(libpry.AutoTree):
         assert fm.do_server_playback(tutils.tflow())
         q = Queue.Queue()
         fm.tick(q)
-        assert fm._shutdown
+        assert controller.exit
 
     def test_stickycookie(self):
         s = flow.State()
