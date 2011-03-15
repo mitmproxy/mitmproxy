@@ -1,41 +1,34 @@
 
-# Browsers
+SSL
+===
 
-<a name="firefox"></a>
-## Firefox 3.x
+The first time __mitmproxy__ or __mitmdump__ is started, a dummy SSL
+certificate authority is generated (the default location is
+~/.mitmproxy/ca.pem). This dummy CA is used to generate dummy certificates for
+SSL interception on-the-fly. Since your browser won't trust the __mitmproxy__
+dummy CA out of the box (and rightly so), so you will see an SSL cert warning
+every time you visit a new SSL domain through __mitmproxy__. When you're
+testing a single site, just accepting the bogus SSL cert manually is not too
+much of a hassle, but there are a number of cases where you will want to
+configure your testing system or browser to trust __mitmproxy__:
 
-### 1: Open preferences, click on "Advanced", then select"Encryption":
-
-<img src="@!urlTo('firefox3.jpg')!@"/>
-
-### 2: Click "View Certificates", "Import", and select the certificate file: 
-
-<img src="@!urlTo('firefox3-import.jpg')!@"/>
-
-### 3: Tick "Trust this CS to identify web sites", and click "Ok":
-
-<img src="@!urlTo('firefox3-trust.jpg')!@"/>
-
-You should now see the mitmproxy certificate listed in the Authorities tab.
-
-
-<a name="chrome"></a>
-## Chrome
-
-<a name="safari"></a>
-## Safari
-
-<a name="ie"></a>
-## Internet Explorer 8
+- If you are testing non-browser software that checks SSL cert validiy.
+- You are testing an app that makes non-interactive (JSONP, script src, etc.)
+requests to SSL resources. Another workaround in this case is to manually visit
+the page through the browser, and add a certificate exception.
+- You just don't want to deal with the hassle of continuously adding cert
+exceptions.
 
 
-# Global installation
+Installing the mitmproxy CA
+===========================
 
-<a name="windows"></a>
-## Windows 7
-
-<a name="ios"></a>
-## iPhone/iPad
-
-
+* Browser certificate installation: 
+    * [Firefox](@!urlTo("certinstall/firefox.html")!@#firefox)
+    * [Chrome](@!urlTo("certinstall/chrome.html")!@#chrome)
+    * [Safari](@!urlTo("certinstall/safari.html")!@#safari)
+    * [Internet Explorer](@!urlTo("certinstall/ie.html")!@#ie)
+* System-wide certificate installation:
+    * [Windows 7](@!urlTo("certinstall/windows7.html")!@#windows7)
+    * [iPhone/iPad](@!urlTo("certinstall/ios.html")!@#ios)
 

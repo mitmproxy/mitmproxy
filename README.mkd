@@ -1,35 +1,26 @@
-__mitmproxy__ is an interactive SSL-capable intercepting HTTP proxy. It lets
-you to observe, modify and replay requests and responses on the fly. The
-underlying library that mitmproxy is built on can also be used to do these
-things programmatically. 
 
-By default, mitmproxy starts up with a mutt-like interactive curses interface -
-the built-in help page (which you can view by pressing "?") will tell you
-everything you need to know. Note that requests and responses are stored
-in-memory until you delete them, so leaving mitmproxy running indefinitely or
-requesting very large amounts of data through it is a bad idea.
+__mitmproxy__ and __mitmdump__ are SSL-capable, intercepting HTTP proxies.
+
+__mitmproxy__ provides a curses interface that allows traffic to be inspected
+and edited on the fly.
+
+__mitmdump__ is a tcpdump-like tool for HTTP.
 
 
-SSL
----
+Capabilities
+============
 
-The first time mitmproxy is started, it will generate a bogus SSL certificate
-authority (the default location is ~/.mitmproxy/ca.pem). This CA is used to
-generate certificates for SSL requests on-the-fly. To avoid the hassle of
-having to accept these certificates individually, you can add the certificate
-authority to your browser or globally to your system.
+- Intercept HTTP requests and responses and modify them on the fly.
+- Save complete HTTP conversations for later replay and analysis.
+- Client replay to replay the client-side of an HTTP conversation.
+- Server replay replays the HTTP responses of a previously recorded server.
+- Make scripted changes to HTTP traffic using a simple Python API. 
+- Dummy SSL certificate authority creates interception certificates on the fly.
 
-
-Documentation
--------------
-
-A rendered version of the docs for the latest release can be found here:
-
-http://corte.si/projects.html
 
 
 Download
---------
+========
 
 Releases can be found here: http://corte.si/projects.html
 
@@ -37,7 +28,7 @@ Source is hosted here: http://github.com/cortesi/mitmproxy
 
 
 Requirements
-------------
+============
 
 * A recent [Python](http://www.python.org) interpreter.
 * SSL certificates are generated using [openssl](http://www.openssl.org/)
@@ -53,5 +44,3 @@ following:
 * PAGER environment variable to determine the external pager.
 * Appropriate entries in your mailcap files to determine external
   viewers for request and response contents.
-
-
