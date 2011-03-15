@@ -960,7 +960,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.palette = [
             ('body', 'black', 'dark cyan', 'standout'),
             ('foot', 'light gray', 'default'),
-            ('title', 'white', 'default',),
+            ('title', 'white,bold', 'default',),
             ('editline', 'white', 'default',),
 
             # Status bar
@@ -971,7 +971,7 @@ class ConsoleMaster(flow.FlowMaster):
 
             # Help
             ('key', 'light cyan', 'default', 'underline'),
-            ('head', 'white', 'default'),
+            ('head', 'white,bold', 'default'),
             ('text', 'light gray', 'default'),
 
             # List and Connections
@@ -980,8 +980,8 @@ class ConsoleMaster(flow.FlowMaster):
             ('goodcode', 'light green', 'default'),
             ('error', 'light red', 'default'),
             ('header', 'dark cyan', 'default'),
-            ('heading', 'white', 'dark blue'),
-            ('highlight', 'white', 'default'),
+            ('heading', 'white,bold', 'dark blue'),
+            ('highlight', 'white,bold', 'default'),
             ('inactive', 'dark gray', 'default'),
             ('ack', 'light red', 'default'),
 
@@ -1215,7 +1215,7 @@ class ConsoleMaster(flow.FlowMaster):
     def prompt_edit(self, prompt, text, callback):
         self.statusbar.prompt(prompt, text)
         self.view.set_focus("footer")
-        self.prompting = callback
+        self.prompting = (callback, [])
 
     def prompt_onekey(self, prompt, keys, callback):
         """
