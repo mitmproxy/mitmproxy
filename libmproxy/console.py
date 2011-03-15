@@ -289,71 +289,31 @@ class ConnectionView(WWrap):
                 )
         return f
 
-    def _view_normal(self, conn, txt):
-        for i in conn.content.splitlines():
-            txt.append(
-                ("text", i),
-            )
-            txt.append(
-                ("text", "\n"),
-            )
-
-    def _view_binary(self, conn, txt):
-        for offset, hex, s in utils.hexdump(conn.content):
-            txt.extend([
-                ("offset", offset),
-                " ",
-                ("text", hex),
-                "   ",
-                ("text", s),
-                "\n"
-            ])
-
-    def _view_pretty(self, conn, txt):
-        for i in utils.pretty_xmlish(conn.content):
-            txt.append(
-                ("text", i),
-            )
-            txt.append(
-                ("text", "\n"),
-            )
-
-    def _conn_text(self, conn):
+    def _conn_text(self, conn, viewmode):
         if conn:
-            txt = []
-            txt.extend(
-                format_keyvals(
-                    [(h+":", v) for (h, v) in sorted(conn.headers.itemPairs())],
-                    key = "header",
-                    val = "text"
-                )
-            )
-            txt.append("\n\n")
-            if conn.content:
-                if self.state.view_body_mode == VIEW_BODY_BINARY:
-                    self._view_binary(conn, txt)
-                elif self.state.view_body_mode == VIEW_BODY_INDENT:
-                    self.master.statusbar.update("Calculating pretty mode...")
-                    self._view_pretty(conn, txt)
-                    self.master.statusbar.update("")
-                else:
-                    if utils.isBin(conn.content):
-                        self._view_binary(conn, txt)
-                    else:
-                        self._view_normal(conn, txt)
-            return urwid.ListBox([urwid.Text(txt)])
+            return self.master._cached_conn_text(conn.content, tuple(conn.headers.itemPairs()), viewmode)
         else:
             return urwid.ListBox([])
 
     def view_request(self):
         self.state.view_flow_mode = VIEW_FLOW_REQUEST
-        body = self._conn_text(self.flow.request)
+        self.master.statusbar.update("Calculating view...")
+        body = self._conn_text(
+            self.flow.request,
+            self.state.view_body_mode
+        )
         self.w = self.wrap_body(VIEW_FLOW_REQUEST, body)
+        self.master.statusbar.update("")
 
     def view_response(self):
         self.state.view_flow_mode = VIEW_FLOW_RESPONSE
-        body = self._conn_text(self.flow.response)
+        self.master.statusbar.update("Calculating view...")
+        body = self._conn_text(
+            self.flow.response,
+            self.state.view_body_mode
+        )
         self.w = self.wrap_body(VIEW_FLOW_RESPONSE, body)
+        self.master.statusbar.update("")
 
     def refresh_connection(self, c=None):
         if c == self.flow:
@@ -729,11 +689,11 @@ class StatusBar(WWrap):
             ),
         ]), "statusbar")
         self.ib.set_w(status)
-        self.master.drawscreen()
 
     def update(self, text):
         self.helptext = text
         self.redraw()
+        self.master.drawscreen()
 
     def selectable(self):
         return True
@@ -896,6 +856,52 @@ class ConsoleMaster(flow.FlowMaster):
         if options.server_replay:
             self.server_playback_path(options.server_replay)
 
+    def _view_conn_normal(self, content, txt):
+        for i in content.splitlines():
+            txt.append(
+                urwid.Text(("text", i))
+            )
+
+    def _view_conn_binary(self, content, txt):
+        for offset, hex, s in utils.hexdump(content):
+            txt.append(urwid.Text([
+                ("offset", offset),
+                " ",
+                ("text", hex),
+                "   ",
+                ("text", s),
+            ]))
+
+    def _view_conn_pretty(self, content, txt):
+        for i in utils.pretty_xmlish(content):
+            txt.append(
+                urwid.Text(("text", i)),
+            )
+
+    @utils.LRUCache(20)
+    def _cached_conn_text(self, content, hdrItems, viewmode):
+        hdr = []
+        hdr.extend(
+            format_keyvals(
+                [(h+":", v) for (h, v) in sorted(hdrItems)],
+                key = "header",
+                val = "text"
+            )
+        )
+        hdr.append("\n")
+
+        txt = [urwid.Text(hdr)]
+        if content:
+            if viewmode == VIEW_BODY_BINARY:
+                self._view_conn_binary(content, txt)
+            elif viewmode == VIEW_BODY_INDENT:
+                self._view_conn_pretty(content, txt)
+            else:
+                if utils.isBin(content):
+                    self._view_conn_binary(content, txt)
+                else:
+                    self._view_conn_normal(content, txt)
+        return urwid.ListBox(txt)
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
@@ -1272,8 +1278,8 @@ class ConsoleMaster(flow.FlowMaster):
         slave.start()
         try:
             while not self._shutdown:
-                size = self.drawscreen()
                 self.statusbar.redraw()
+                size = self.drawscreen()
                 self.tick(q)
                 self.ui.set_input_timeouts(max_wait=0.1)
                 keys = self.ui.get_input()

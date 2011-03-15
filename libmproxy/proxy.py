@@ -303,6 +303,9 @@ class Response(controller.Msg):
                     del i["expires"]
         return c.output(header="").strip()
 
+    def __hash__(self):
+        return id(self)
+
     def refresh(self, now=None):
         """
             This fairly complex and heuristic function refreshes a server

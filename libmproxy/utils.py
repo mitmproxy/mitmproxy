@@ -12,7 +12,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap, errno, sys, time
+import re, os, subprocess, datetime, textwrap, errno, sys, time, functools
 
 
 def timestamp():
@@ -444,3 +444,41 @@ def dummy_cert(certdir, ca, commonname):
         )
         if ret: return None
     return certpath
+
+
+class LRUCache:
+    """
+        A decorator that implements a self-expiring LRU cache for class
+        methods (not functions!).
+
+        Cache data is tracked as attributes on the object itself. There is
+        therefore a separate cache for each object instance.
+    """
+    def __init__(self, size=100):
+        self.size = size
+
+    def __call__(self, f):
+        cacheName = "_cached_%s"%f.__name__
+        cacheListName = "_cachelist_%s"%f.__name__
+        size = self.size
+
+        @functools.wraps(f)
+        def wrap(self, *args):
+            if not hasattr(self, cacheName):
+                setattr(self, cacheName, {})
+                setattr(self, cacheListName, [])
+            cache = getattr(self, cacheName)
+            cacheList = getattr(self, cacheListName)
+            if cache.has_key(args):
+                cacheList.remove(args)
+                cacheList.insert(0, args)
+                return cache[args]
+            else:
+                ret = f(self, *args)
+                cacheList.insert(0, args)
+                cache[args] = ret
+                if len(cacheList) > size:
+                    d = cacheList.pop()
+                    cache.pop(d)
+                return ret
+        return wrap
