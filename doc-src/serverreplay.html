@@ -1,0 +1,34 @@
+
+Server-side replay lets us replay server responses from a saved HTTP
+conversation.
+
+Matching requests with responses
+--------------------------------
+
+By default, the __mitm*__ tools match incoming requests with responses from the
+save file based on all request parameters, except the request headers. This
+works in most circumstances, and makes it possible to replay server responses
+in situations where request headers would naturally vary, e.g. using a
+different user agent. The __--rheader__ option to both __mitmproxy__ and
+__mitmdump__ allows you to specify individual headers that should be included
+in the matching process.
+
+
+Response refreshing
+-------------------
+
+Simply replaying server responses without modification will often result in
+unexpected behaviour. For example cookie timeouts that were in the future at
+the time a conversation was recorded might be in the past at the time it is
+replayed. By default, the __mitm*__ tools refresh server responses before
+sending them to the client. The __date__, __expires__ and __last-modified__
+headers are all updated to have the same relative time offset as they had at
+the time of recording. So, if they were in the past at the time of recording,
+they will be in the past at the time of replay, and vice versa. Cookie expiry
+times are updated in a similar way.
+
+You can turn off response refreshing using the __norefresh__ option, available
+both on the command-line and using the "options" keyboard shortcut within
+__mitmproxy__.
+
+

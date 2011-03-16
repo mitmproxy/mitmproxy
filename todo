@@ -10,5 +10,4 @@ Futures:
 Bugs:
     
     - In some circumstances, long URLs in list view are line-broken oddly.
-    - Termination sometimes hangs.
     - When a bug in mitmproxy causes a stack trace, we hang on exit.

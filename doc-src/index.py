@@ -30,8 +30,8 @@ ns.example = example
 pages = [
     Page("index.html", "Index"),
     Page("intro.html", "Introduction"),
-    Page("mitmproxy.html", "mitmproxy"),
-    Page("mitmdump.html", "mitmdump"),
+    Page("clientreplay.html", "Client-side replay"),
+    Page("serverreplay.html", "Server-side replay"),
     Page("scripts.html", "External scripts"),
     Page("library.html", "libmproxy: mitmproxy as a library"),
     Page("ssl.html", "SSL"),
