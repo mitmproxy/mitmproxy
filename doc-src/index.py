@@ -32,6 +32,7 @@ pages = [
     Page("intro.html", "Introduction"),
     Page("clientreplay.html", "Client-side replay"),
     Page("serverreplay.html", "Server-side replay"),
+    Page("stickycookies.html", "Sticky cookies"),
     Page("scripts.html", "External scripts"),
     Page("library.html", "libmproxy: mitmproxy as a library"),
     Page("ssl.html", "SSL"),
