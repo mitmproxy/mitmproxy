@@ -517,20 +517,7 @@ class ConnectionView(WWrap):
         return key
 
     def run_script(self, path):
-        path = os.path.expanduser(path)
-        self.state.last_script = path
-        try:
-            serr = self.flow.run_script(path)
-        except flow.RunException, e:
-            if e.errout:
-                serr = "Script error code: %s\n\n"%e.returncode + e.errout
-                self.master.spawn_external_viewer(serr, None)
-            self.master.statusbar.message("Script error: %s"%e)
-            return
-        if serr:
-            serr = "Script output:\n\n" + serr
-            self.master.spawn_external_viewer(serr, None)
-        self.master.refresh_connection(self.flow)
+        self.master._runscript(self.flow, path)
 
 
 class _PathCompleter:
@@ -823,6 +810,11 @@ class ConsoleMaster(flow.FlowMaster):
         self.conn_list_view = None
         self.set_palette()
 
+        if options.response_script:
+            self.set_response_script(options.response_script)  
+        if options.request_script:
+            self.set_request_script(options.request_script)  
+
         r = self.set_limit(options.limit)
         if r:
             print >> sys.stderr, "Limit error:", r
@@ -851,6 +843,22 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.server_replay:
             self.server_playback_path(options.server_replay)
+
+    def _runscript(self, f, path):
+        path = os.path.expanduser(path)
+        self.state.last_script = path
+        try:
+            serr = f.run_script(path)
+        except flow.RunException, e:
+            if e.errout:
+                serr = "Script error code: %s\n\n"%e.returncode + e.errout
+                self.spawn_external_viewer(serr, None)
+            self.statusbar.message("Script error: %s"%e)
+            return
+        if serr:
+            serr = "Script output:\n\n" + serr
+            self.spawn_external_viewer(serr, None)
+        self.refresh_connection(f)
 
     def _view_conn_normal(self, content, txt):
         for i in content.splitlines():
