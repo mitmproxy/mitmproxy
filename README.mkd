@@ -1,7 +1,5 @@
-__mitmproxy__ is an SSL-capable, intercepting HTTP proxy.
-
-__mitmproxy__ is a console application that allows traffic flows to be
-inspected and edited on the fly.
+__mitmproxy__ is an SSL-capable, intercepting HTTP proxy. It provides a console
+interface that allows traffic flows to be inspected and edited on the fly.
 
 __mitmdump__ is the command-line version of mitmproxy, with the same
 functionality but without the frills. Think tcpdump for HTTP.

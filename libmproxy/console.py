@@ -167,7 +167,7 @@ class ConnectionItem(WWrap):
             self.state.revert(self.flow)
             self.master.sync_list_view()
         elif key == "w":
-            self.master.prompt(
+            self.master.path_prompt(
                 "Save this flow: ",
                 self.state.last_saveload,
                 self.master.save_one_flow,
@@ -482,7 +482,7 @@ class ConnectionView(WWrap):
             self.state.revert(self.flow)
             self.master.refresh_connection(self.flow)
         elif key == "w":
-            self.master.prompt(
+            self.master.path_prompt(
                 "Save this flow: ",
                 self.state.last_saveload,
                 self.master.save_one_flow,
@@ -499,13 +499,13 @@ class ConnectionView(WWrap):
                 self.master.spawn_external_viewer(conn.content, t)
         elif key == "b":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-                self.master.prompt(
+                self.master.path_prompt(
                     "Save request body: ",
                     self.state.last_saveload,
                     self.save_body
                 )
             else:
-                self.master.prompt(
+                self.master.path_prompt(
                     "Save response body: ",
                     self.state.last_saveload,
                     self.save_body
