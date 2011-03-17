@@ -1028,7 +1028,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.ui.clear()
         if self.currentflow:
             try:
-                idx = self.state.view.index(self.currentflow)
+                ids = [id(i) for i in self.state.view]
+                idx = ids.index(id(self.currentflow))
                 self.conn_list_view.set_focus(idx)
             except (IndexError, ValueError):
                 pass
