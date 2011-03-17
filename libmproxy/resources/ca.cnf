@@ -5,24 +5,27 @@ x509_extensions = v3_ca
 req_extensions = v3_ca_req
 
 [ req_distinguished_name ]
-organizationName               = mitmproxy
-commonName                     = Dummy CA
+organizationName                = mitmproxy
+commonName                      = mitmproxy
 
 [ v3_ca ]
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid:always,issuer
 basicConstraints = critical,CA:true
 keyUsage = cRLSign, keyCertSign
+extendedKeyUsage=serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC
 nsCertType = sslCA
 
 [ v3_ca_req ]
 basicConstraints = critical,CA:true
 keyUsage = cRLSign, keyCertSign
+extendedKeyUsage=serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC
 nsCertType = sslCA
 
 [ v3_cert ]
 basicConstraints = CA:false
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage=serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC
 nsCertType = server
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid:always,issuer
@@ -30,4 +33,5 @@ authorityKeyIdentifier=keyid:always,issuer
 [ v3_cert_req ]
 basicConstraints = CA:false
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage=serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC
 nsCertType = server

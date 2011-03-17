@@ -1,7 +1,9 @@
-import os
+import os, sys
 import countershape
 from countershape import Page, Directory, PythonModule, markup
 import countershape.grok, countershape.template    
+sys.path.insert(0, "..")
+from libmproxy import filt
 
 this.layout = countershape.Layout("_layout.html")
 ns.docTitle = "mitmproxy"
@@ -25,6 +27,30 @@ def example(s):
 
 ns.example = example
 
+filt_help = []
+for i in filt.filt_unary:
+    filt_help.append(
+        ("~%s"%i.code, i.help)
+    )
+for i in filt.filt_rex:
+    filt_help.append(
+        ("~%s regex"%i.code, i.help)
+    )
+for i in filt.filt_int:
+    filt_help.append(
+        ("~%s int"%i.code, i.help)
+    )
+filt_help.sort()
+filt_help.extend(
+    [
+        ("!", "unary not"),
+        ("&", "and"),
+        ("|", "or"),
+        ("(...)", "grouping"),
+    ]
+)
+ns.filt_help = filt_help
+ 
 
 
 pages = [
@@ -33,6 +59,8 @@ pages = [
     Page("clientreplay.html", "Client-side replay"),
     Page("serverreplay.html", "Server-side replay"),
     Page("stickycookies.html", "Sticky cookies"),
+    Page("anticache.html", "Anticache"),
+    Page("filters.html", "Filter expressions"),
     Page("scripts.html", "External scripts"),
     Page("library.html", "libmproxy: mitmproxy as a library"),
     Page("ssl.html", "SSL"),

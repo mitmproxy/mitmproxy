@@ -411,7 +411,6 @@ def dummy_cert(certdir, ca, commonname):
             "-days", "9999",
             "-out", certpath,
             "-CA", ca,
-            "-CAcreateserial",
             "-extfile", confpath,
             "-extensions", "v3_cert",
         ]

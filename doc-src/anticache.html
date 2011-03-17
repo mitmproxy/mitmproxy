@@ -1,0 +1,7 @@
+
+When the __anticache__ option is passed to mitmproxy, it removes headers
+(__if-none-match__ and __if-modified-since__) that might elicit a
+304-not-modified response from the server. This is useful when you want to make
+sure you capture an HTTP extchange in its totality, and during [client
+replay](@!urlTo("clientreplay.html")!@).
+

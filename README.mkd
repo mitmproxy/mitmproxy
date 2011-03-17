@@ -1,9 +1,14 @@
-__mitmproxy__ and __mitmdump__ are SSL-capable, intercepting HTTP proxies.
+__mitmproxy__ is an SSL-capable, intercepting HTTP proxy.
 
-__mitmproxy__ provides a curses interface that allows traffic to be inspected
-and edited on the fly.
+__mitmproxy__ is a console application that allows traffic flows to be
+inspected and edited on the fly.
 
-__mitmdump__ is the command-line companion of mitmproxy - like tcpdump for HTTP.
+__mitmdump__ is the command-line version of mitmproxy, with the same
+functionality but without the frills. Think tcpdump for HTTP.
+
+Both tools are fully documentented in the commandline __--help__ flag, and, in
+the case of __mitmproxy__, a built-in help page accessible through the __?__
+keyboard shortcut.
 
 
 Capabilities
@@ -11,8 +16,8 @@ Capabilities
 
 - Intercept HTTP requests and responses and modify them on the fly.
 - Save complete HTTP conversations for later replay and analysis.
-- Client replay to replay the client-side of an HTTP conversation.
-- Server replay replays the HTTP responses of a previously recorded server.
+- Replay the client-side of an HTTP conversations.
+- Replays HTTP responses of a previously recorded server.
 - Make scripted changes to HTTP traffic using a simple Python API. 
 - Dummy SSL certificate authority creates interception certificates on the fly.
 
