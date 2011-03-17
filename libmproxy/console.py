@@ -1359,11 +1359,21 @@ class ConsoleMaster(flow.FlowMaster):
                             )
                             k = None
                         elif k == "s":
-                            self.path_prompt(
-                                "Server replay: ",
-                                self.state.last_saveload,
-                                self.server_playback_path
-                            )
+                            if not self.server_playback:
+                                self.path_prompt(
+                                    "Server replay: ",
+                                    self.state.last_saveload,
+                                    self.server_playback_path
+                                )
+                            else:
+                                self.prompt_onekey(
+                                    "Stop current server replay?",
+                                    (
+                                        ("yes", "y"),
+                                        ("no", "n"),
+                                    ),
+                                    self.stop_server_playback_prompt,
+                                )
                             k = None
                         elif k == "L":
                             self.path_prompt(
@@ -1398,6 +1408,10 @@ class ConsoleMaster(flow.FlowMaster):
     def stop_client_playback_prompt(self, a):
         if a != "n":
             self.stop_client_playback()
+
+    def stop_server_playback_prompt(self, a):
+        if a != "n":
+            self.stop_server_playback()
 
     def quit(self, a):
         if a != "n":

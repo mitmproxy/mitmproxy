@@ -475,6 +475,9 @@ class FlowMaster(controller.Master):
         self.server_playback = ServerPlaybackState(headers, flows, exit)
         self.kill_nonreplay = kill
 
+    def stop_server_playback(self):
+        self.server_playback = None
+
     def do_server_playback(self, flow):
         """
             This method should be called by child classes in the handle_request
