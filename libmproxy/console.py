@@ -1023,9 +1023,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.viewstate = VIEW_HELP
         self.make_view()
 
-    def view_connlist(self):
-        if self.ui.started:
-            self.ui.clear()
+    def focus_current(self):
         if self.currentflow:
             try:
                 ids = [id(i) for i in self.state.view]
@@ -1033,6 +1031,11 @@ class ConsoleMaster(flow.FlowMaster):
                 self.conn_list_view.set_focus(idx)
             except (IndexError, ValueError):
                 pass
+
+    def view_connlist(self):
+        if self.ui.started:
+            self.ui.clear()
+        self.focus_current()
         self.body = urwid.ListBox(self.conn_list_view)
         self.statusbar = StatusBar(self, self.footer_text_default)
         self.header = None
@@ -1101,8 +1104,8 @@ class ConsoleMaster(flow.FlowMaster):
             return v.strerror
         self.state.load_flows(data)
         if self.conn_list_view:
-            self.conn_list_view.set_focus(0)
             self.sync_list_view()
+            self.focus_current()
         return "Flows loaded from %s"%path
 
     def helptext(self):
