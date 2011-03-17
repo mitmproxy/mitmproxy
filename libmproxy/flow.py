@@ -464,6 +464,9 @@ class FlowMaster(controller.Master):
         """
         self.client_playback = ClientPlaybackState(flows, exit)
 
+    def stop_client_playback(self):
+        self.client_playback = None
+
     def start_server_playback(self, flows, kill, headers, exit):
         """
             flows: A list of flows.

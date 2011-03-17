@@ -1298,11 +1298,22 @@ class ConsoleMaster(flow.FlowMaster):
                         if k == "?":
                             self.view_help()
                         elif k == "c":
-                            self.path_prompt(
-                                "Client replay: ",
-                                self.state.last_saveload,
-                                self.client_playback_path
-                            )
+                            if not self.client_playback:
+                                self.path_prompt(
+                                    "Client replay: ",
+                                    self.state.last_saveload,
+                                    self.client_playback_path
+                                )
+                            else:
+                                self.prompt_onekey(
+                                    "Stop current client replay?",
+                                    (
+                                        ("yes", "y"),
+                                        ("no", "n"),
+                                    ),
+                                    self.stop_client_playback_prompt,
+                                )
+
                             k = None
                         elif k == "l":
                             self.prompt("Limit: ", self.state.limit_txt, self.set_limit)
@@ -1383,6 +1394,10 @@ class ConsoleMaster(flow.FlowMaster):
                         self.view.keypress(size, k)
         except (Stop, KeyboardInterrupt):
             pass
+
+    def stop_client_playback_prompt(self, a):
+        if a != "n":
+            self.stop_client_playback()
 
     def quit(self, a):
         if a != "n":
