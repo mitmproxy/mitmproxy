@@ -1,9 +1,17 @@
 
 <div class="faq">
 
-    <p class="question">Any tips for running mitmproxy on OSX?</p>
+<p class="question">Any tips for running mitmproxy on OSX?</p>
 
-    Coming soon.
+You can use the OSX <b>open</b> program to create a simple and effective
+<b>~/.mailcap</b> file to view HTTP bodies:
+
+<pre>
+application/*; /usr/bin/open -Wn %s
+audio/*; /usr/bin/open -Wn %s
+image/*; /usr/bin/open -Wn %s
+video/*; /usr/bin/open -Wn %s
+</pre>
 
 
 </div>
