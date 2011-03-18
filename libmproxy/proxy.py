@@ -22,7 +22,7 @@ class ProxyError(Exception):
         return "ProxyError(%s, %s)"%(self.code, self.msg)
 
 
-class Config:
+class SSLConfig:
     def __init__(self, certfile = None, ciphers = None, cacert = None):
         self.certfile = certfile
         self.ciphers = ciphers
@@ -770,11 +770,6 @@ def certificate_option_group(parser):
         help = "User-created SSL certificate file."
     )
     group.add_option(
-        "--cacert", action="store",
-        type = "str", dest="cacert", default="~/.mitmproxy/ca.pem",
-        help = "SSL CA certificate file. Generated if it doesn't exist."
-    )
-    group.add_option(
         "--ciphers", action="store",
         type = "str", dest="ciphers", default=None,
         help = "SSL ciphers."
@@ -788,14 +783,15 @@ def process_certificate_option_group(parser, options):
         options.cert = os.path.expanduser(options.cert)
         if not os.path.exists(options.cert):
             parser.error("Manually created certificate does not exist: %s"%options.cert)
-    if options.cacert:
-        options.cacert = os.path.expanduser(options.cacert)
-        if not os.path.exists(options.cacert):
-            utils.dummy_ca(options.cacert)
+
+    cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
+    cacert = os.path.expanduser(cacert)
+    if not os.path.exists(cacert):
+        utils.dummy_ca(cacert)
     if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
-    return Config(
+    return SSLConfig(
         certfile = options.cert,
-        cacert = options.cacert,
+        cacert = cacert,
         ciphers = options.ciphers
     )

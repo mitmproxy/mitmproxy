@@ -339,9 +339,15 @@ def dummy_ca(path):
 
         Returns True if operation succeeded, False if not.
     """
-    d = os.path.dirname(path)
-    if not os.path.exists(d):
-        os.makedirs(d)
+    dirname = os.path.dirname(path)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    if path.endswith(".pem"):
+        basename, _ = os.path.splitext(path)
+    else:
+        basename = path
+
     cmd = [
         "openssl",
         "req",
@@ -364,8 +370,44 @@ def dummy_ca(path):
     if ret:
         return False
     # end nocover
-    else:
-        return True
+
+    cmd = [
+        "openssl",
+        "pkcs12",
+        "-export",
+        "-password", "pass:",
+        "-nokeys",
+        "-in", path,
+        "-out", os.path.join(dirname, basename + "-cert.p12")
+    ]
+    ret = subprocess.call(
+        cmd,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE
+    )
+    # begin nocover
+    if ret:
+        return False
+    # end nocover
+    cmd = [
+        "openssl",
+        "x509",
+        "-in", path,
+        "-out", os.path.join(dirname, basename + "-cert.pem")
+    ]
+    ret = subprocess.call(
+        cmd,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stdin=subprocess.PIPE
+    )
+    # begin nocover
+    if ret:
+        return False
+    # end nocover
+
+    return True
 
 
 def dummy_cert(certdir, ca, commonname):

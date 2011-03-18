@@ -281,6 +281,12 @@ class udummy_ca(libpry.AutoTree):
         assert utils.dummy_ca(path)
         assert os.path.exists(path)
 
+        path = os.path.join(d, "foo/cert2.pem")
+        assert utils.dummy_ca(path)
+        assert os.path.exists(path)
+        assert os.path.exists(os.path.join(d, "foo/cert2-cert.pem"))
+        assert os.path.exists(os.path.join(d, "foo/cert2-cert.p12"))
+
 
 class udummy_cert(libpry.AutoTree):
     def test_with_ca(self):

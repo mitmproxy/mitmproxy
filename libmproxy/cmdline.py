@@ -30,6 +30,11 @@ def common_options(parser):
         help = "Address to bind proxy to (defaults to all interfaces)"
     )
     parser.add_option(
+        "--confdir",
+        action="store", type = "str", dest="confdir", default='~/.mitmproxy',
+        help = "Configuration directory. (~/.mitmproxy)"
+    )
+    parser.add_option(
         "-p",
         action="store", type = "int", dest="port", default=8080,
         help = "Proxy service port."
