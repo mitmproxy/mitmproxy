@@ -37,6 +37,8 @@ Requirements
   [urwid](http://excess.org/urwid/) library.
 * The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
   library.
+* mitmproxy is tested and developed on OSX, Linux and OpenBSD. You may be able
+  to get it running using Cygwin on Windows, but don't count on it.
 
 You should also make sure that your console environment is set up with the
 following: 

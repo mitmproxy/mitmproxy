@@ -56,6 +56,7 @@ ns.filt_help = filt_help
 pages = [
     Page("index.html", "Index"),
     Page("intro.html", "Introduction"),
+    Page("interception.html", "Interception"),
     Page("clientreplay.html", "Client-side replay"),
     Page("serverreplay.html", "Server-side replay"),
     Page("stickycookies.html", "Sticky cookies"),
