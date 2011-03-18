@@ -1,40 +1,19 @@
 
-The Windows certificate manager expects a different certificate format from the
-one used by mitmproxy. The easiest way to convert the cert to the appropriate
-format is to use the Firefox web browser.
+These instructions were tested on Windows 7. 
 
+### 1: Copy the ~/.mitmproxy/mitmproxy-ca-cert.p12 file to the target system.
 
-### 1: Make sure Firefox is installed on the system.
+### 2: Double-click the certificate file. You should see a certificate import wizard:
 
-### 2: Fire up mitmproxy on the interception host. 
+<img src="@!urlTo('win7-wizard.png')!@"/>
 
-### 3: Configure Firefox to use the mitmproxy interceptor.
+### 3: Click "Next" until you're prompted for the certificate store:
 
-### 4: Using Firefox, browse to an SSL-protected domain. You will see a warning: 
+<img src="@!urlTo('win7-certstore.png')!@"/>
 
+### 4: Select "Place all certificates in the following store, and select "Trusted Root Certification Authorities":
 
-### 5: Click "I understand the risks" and "Add Exception":
+<img src="@!urlTo('win7-certstore-trustedroot.png')!@"/>
 
-
-### 6: Click "Get certificate", "View", and switch to the "Details" tab:
-
-
-### 7: Click "Export", and save the certificate in "X.509 Certificate (PEM)" format:
-
-
-### 8: Next, start a command prompt, and type "certmgr" to start the Certificate Manager:
-
-
-### 9: From the top menu, select "Action", "All tasks", and then "Import":
-
-
-### 10: Click "Next", and browse to select the cert we just exported from Firefox:
-
-
-### 11: Click "Next", and "Finish" to complete the import. Accept all warning prompts.
-
-
-
-
-
+### 5: Click "Next" and "Finish". 
 
