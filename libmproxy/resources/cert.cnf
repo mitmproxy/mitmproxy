@@ -9,8 +9,6 @@ organizationName               = mitmproxy
 commonName                     = %(commonname)s
 
 [ v3_ca ]
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid:always,issuer
 basicConstraints = critical,CA:true
 keyUsage = cRLSign, keyCertSign
 nsCertType = sslCA
@@ -24,8 +22,6 @@ nsCertType = sslCA
 basicConstraints = CA:false
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 nsCertType = server
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid:always,issuer
 
 [ v3_cert_req ]
 basicConstraints = CA:false

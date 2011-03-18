@@ -9,8 +9,6 @@ organizationName                = mitmproxy
 commonName                      = mitmproxy
 
 [ v3_ca ]
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid:always,issuer
 basicConstraints = critical,CA:true
 keyUsage = cRLSign, keyCertSign
 extendedKeyUsage=serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC
@@ -27,8 +25,6 @@ basicConstraints = CA:false
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 extendedKeyUsage=serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC
 nsCertType = server
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid:always,issuer
 
 [ v3_cert_req ]
 basicConstraints = CA:false
