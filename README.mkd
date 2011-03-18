@@ -15,9 +15,9 @@ Capabilities
 - Intercept HTTP requests and responses and modify them on the fly.
 - Save complete HTTP conversations for later replay and analysis.
 - Replay the client-side of an HTTP conversations.
-- Replays HTTP responses of a previously recorded server.
-- Make scripted changes to HTTP traffic using a simple Python API. 
-- Dummy SSL certificate authority creates interception certificates on the fly.
+- Replay HTTP responses of a previously recorded server.
+- Make scripted changes to HTTP traffic using Python. 
+- SSL certificates for interception are generated on the fly.
 
 
 Download
