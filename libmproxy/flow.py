@@ -343,7 +343,7 @@ class State:
             Add a request to the state. Returns the matching flow.
         """
         f = Flow(req)
-        self.flow_list.insert(0, f)
+        self.flow_list.append(f)
         self.flow_map[req] = f
         return f
 

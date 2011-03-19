@@ -30,15 +30,15 @@ class uState(libpry.AutoTree):
         assert c.get_next(0) == (None, None)
 
         f2 = self._add_request(c)
-        assert c.get_focus() == (f, 1)
-        assert c.get_next(0) == (f, 1)
-        assert c.get_prev(1) == (f2, 0)
+        assert c.get_focus() == (f, 0)
+        assert c.get_next(0) == (f2, 1)
+        assert c.get_prev(1) == (f, 0)
         assert c.get_next(1) == (None, None)
 
         c.set_focus(0)
-        assert c.get_focus() == (f2, 0)
+        assert c.get_focus() == (f, 0)
         c.set_focus(-1)
-        assert c.get_focus() == (f2, 0)
+        assert c.get_focus() == (f, 0)
 
         c.delete_flow(f2)
         assert c.get_focus() == (f, 0)
@@ -71,7 +71,7 @@ class uState(libpry.AutoTree):
         self._add_response(c)
         assert not c.set_limit("~q")
         assert len(c.view) == 3
-        assert c.focus == 2
+        assert c.focus == 0
 
 
 class uformat_keyvals(libpry.AutoTree):

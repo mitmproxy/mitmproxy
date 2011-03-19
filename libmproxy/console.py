@@ -715,8 +715,6 @@ class ConsoleState(flow.State):
         f = flow.State.add_request(self, req)
         if self.focus is None:
             self.set_focus(0)
-        else:
-            self.set_focus(self.focus + 1)
         return f
 
     def add_response(self, resp):
