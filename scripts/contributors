@@ -1,0 +1,2 @@
+#!/bin/sh
+git log | grep "^Author:" | sed 's/ <.*//; s/^Author: //' | sort | uniq -c | sort -nr
