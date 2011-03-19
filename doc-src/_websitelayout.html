@@ -5,7 +5,7 @@
         <div class="HorizontalNavBar">
             <ul>
                 <li class="inactive"><a href="../index.html">home</a></li>
-                <li class="active"><a href="index.html">docs</a></li>
+                <li class="active"><a href="@!urlTo("doc/index.html")!@">docs</a></li>
                 <li class="inactive"><a href="../development.html">development</a></li>
             </ul>
         </div>
@@ -15,19 +15,21 @@
     <div id="bd">
         <div id="yui-main">
             <div style="" class="yui-b">
-
+                <!--(block nav)-->
                 <div id="nav">
-                <!--(block pb)-->
-                <a href="@!urlTo(previous)!@">prev</a>
-                <!--(end)-->
-                <!--(block nb)-->
-                <a href="@!urlTo(next)!@">next</a>
-                <!--(end)-->
-                $!pb if previous and not previous.parent.root else "prev"!$ |
-                <a href="@!urlTo('doc/index.html')!@">index</a> |
-                $!nb if next and not next.parent.root else "next"!$
+                    <!--(block pb)-->
+                    <a href="@!urlTo(previous)!@">prev</a>
+                    <!--(end)-->
+                    <!--(block nb)-->
+                    <a href="@!urlTo(next)!@">next</a>
+                    <!--(end)-->
+                    $!pb if previous and not previous.parent.root else "prev"!$ |
+                    <a href="@!urlTo('doc/index.html')!@">index</a> |
+                    $!nb if next and not next.parent.root else "next"!$
                 </div>
-                $!title!$
+                <!--(end)-->
+                $!nav if this.title!="docs" else ""!$
+                $!title if this.title!="docs" else "<h1>mitmproxy docs</h1>"!$
                 $!body!$
             </div>
         </div>

@@ -1,6 +1,7 @@
 
 a {
     color: #3F8ED8;
+    text-decoration: none;
 }
 
 
@@ -9,7 +10,6 @@ a {
     font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
     color: #555555;
     margin: 0;
-    border-bottom: 1px solid #999;
     margin-bottom: 1em;
 }
 #hd.doc h1 {
@@ -20,8 +20,8 @@ a {
     font-weight: normal;
 }
 
-#hd.doc #nav {
-    font-size: 1.5em;
+#nav {
+    float: right;
 }
 
 
@@ -33,24 +33,28 @@ a {
 }
 
 #bd h1 {
-    font-size: 1.6em;
+    font-size: 1.4em;
+    border-bottom: 5px solid #ff7033;
     margin-top: 5px;
     margin-bottom: 5px;
+    color: #000000;
 }
 
 #bd h2 {
-    font-size: 1.2em;
+    font-size: 1.1em;
+    border-bottom: 1px solid #cccccc;
     margin-top: 5px;
     margin-bottom: 5px;
+    color: #000000;
 }
 
 #ft.doc {
     color: #aaa;
-        border-top: 1px solid #aaa;
-        clear: both;
-        margin: 0 0 2em 0;
-        font-size: 0.8em;
-        letter-spacing: 0.5px;
+    border-top: 1px solid #aaa;
+    clear: both;
+    margin-top: 2em;
+    font-size: 0.8em;
+    letter-spacing: 0.5px;
 }
 
 .faq .question {
@@ -60,12 +64,21 @@ a {
 
 pre {
     padding: 10px;
-    margin: 10px;
+    background-color: #dddddd;
 }
 
 .docindex, .docindex ul {
     margin-top: 0.1em;
     margin-bottom: 0;
+    margin-left: 0px;
+}
+
+.docindex li {
+    list-style-position: inside;
+    margin-left: 0;
+}
+
+.docindex ul {
     margin-left: 2em;
 }
 

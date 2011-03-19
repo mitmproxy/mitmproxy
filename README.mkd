@@ -10,7 +10,7 @@ keyboard shortcut.
 
 
 Capabilities
-============
+------------
 
 - Intercept HTTP requests and responses and modify them on the fly.
 - Save complete HTTP conversations for later replay and analysis.
@@ -21,24 +21,26 @@ Capabilities
 
 
 Download
-========
+--------
 
-Releases can be found here: http://corte.si/projects.html
+Releases and rendered documentation can be found on the mitmproxy website:
 
-Source is hosted here: http://github.com/cortesi/mitmproxy
+[mitmproxy.org](http://mitmproxy.org)
+
+Source is hosted on github: 
+
+[github.com/cortesi/mitmproxy](http://github.com/cortesi/mitmproxy)
 
 
 Requirements
-============
+------------
 
-* A recent [Python](http://www.python.org) interpreter.
-* SSL certificates are generated using [openssl](http://www.openssl.org/)
-* The curses interface relies on version 0.9.8 or newer of the
-  [urwid](http://excess.org/urwid/) library.
+* A recent [Python](http://www.python.org) interpreter
+* [openssl](http://www.openssl.org/)
+* [urwid](http://excess.org/urwid/) version 0.9.8 or newer 
 * The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
   library.
-* mitmproxy is tested and developed on OSX, Linux and OpenBSD. You may be able
-  to get it running using Cygwin on Windows, but don't count on it.
+* mitmproxy is tested and developed on OSX, Linux and OpenBSD. 
 
 You should also make sure that your console environment is set up with the
 following: 

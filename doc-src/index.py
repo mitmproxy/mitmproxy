@@ -8,10 +8,10 @@ from libmproxy import filt
 MITMPROXY_SRC = "~/git/public/mitmproxy"
 
 if ns.options.website:
-    ns.title = countershape.template.Template(None, "<h1>@!this.title!@ </h1>")
+    ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
     this.layout = countershape.Layout("_websitelayout.html")
 else:
-    ns.title = countershape.template.Template(None, "<h1> @!docTitle!@ - @!this.title!@ </h1>")
+    ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
     this.layout = countershape.Layout("_layout.html")
 ns.docTitle = "mitmproxy"
 this.markup = markup.Markdown()
