@@ -5,23 +5,34 @@ import countershape.grok, countershape.template
 sys.path.insert(0, "..")
 from libmproxy import filt
 
-this.layout = countershape.Layout("_layout.html")
+MITMPROXY_SRC = "~/git/public/mitmproxy"
+
+if ns.options.website:
+    ns.title = countershape.template.Template(None, "<h1>@!this.title!@ </h1>")
+    this.layout = countershape.Layout("_websitelayout.html")
+else:
+    ns.title = countershape.template.Template(None, "<h1> @!docTitle!@ - @!this.title!@ </h1>")
+    this.layout = countershape.Layout("_layout.html")
 ns.docTitle = "mitmproxy"
 this.markup = markup.Markdown()
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
 ns.copyright = u"\u00a9 mitmproxy project, 2011"
-ns.title = countershape.template.Template(None, "<h1> @!docTitle!@ - @!this.title!@ </h1>")
 
 ns.index = countershape.widgets.SiblingPageIndex('/index.html', divclass="pageindex")
 
-ns.license = file("../LICENSE").read()
-ns.index_contents = file("../README.mkd").read()
+def mpath(p):
+    p = os.path.join(MITMPROXY_SRC, p)
+    return os.path.expanduser(p)
+
+ns.license = file(mpath("LICENSE")).read()
+ns.index_contents = file(mpath("README.mkd")).read()
+
 
 
 top = os.path.abspath(os.getcwd())
 def example(s):
-    d = file(os.path.join(top, s)).read()
+    d = file(mpath(s)).read()
     return countershape.template.pySyntax(d)
 
 
@@ -54,7 +65,7 @@ ns.filt_help = filt_help
 
 
 pages = [
-    Page("index.html", "Index"),
+    Page("index.html", "docs"),
     Page("intro.html", "Introduction"),
     Page("interception.html", "Interception"),
     Page("clientreplay.html", "Client-side replay"),
@@ -65,6 +76,7 @@ pages = [
     Page("scripts.html", "External scripts"),
     Page("library.html", "libmproxy: mitmproxy as a library"),
     Page("ssl.html", "SSL"),
+    Directory("certinstall"),
     Page("faq.html", "FAQ"),
     Page("admin.html", "Administrivia")
 ]

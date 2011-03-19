@@ -1,6 +1,5 @@
 <div id="doc">
-    <div style="" id="hd">
-
+    <div style="" id="hd" class="doc">
         <div id="nav">
         <!--(block pb)-->
         <a href="@!urlTo(previous)!@">prev</a>
@@ -8,21 +7,19 @@
         <!--(block nb)-->
         <a href="@!urlTo(next)!@">next</a>
         <!--(end)-->
-
         $!pb if previous else "prev"!$ |
         <a href="@!urlTo('index.html')!@">index</a> |
         $!nb if next else "next"!$
         </div>
 
         $!title!$
-        
     </div>
     <div id="bd">
         <div id="yui-main">
             <div style="" class="yui-b">$!body!$</div>
         </div>
     </div>
-    <div style="" id="ft">
+    <div style="" id="ft" class="doc">
         <p>@!copyright!@</p>
     </div>
 </div>

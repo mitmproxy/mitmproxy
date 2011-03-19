@@ -1,28 +1,35 @@
-body {
-    -x-system-font:none;
-    font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
-    color: #555555;
-    font-size: 1.2em;
-}
 
 a {
     color: #3F8ED8;
 }
 
-#hd {
+
+#hd.doc {
+    -x-system-font:none;
+    font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
+    color: #555555;
     margin: 0;
     border-bottom: 1px solid #999;
+    margin-bottom: 1em;
 }
-#hd h1 {
+#hd.doc h1 {
     letter-spacing: 3px;
-    font-size: 2em;
+    font-size: 2.5em;
     line-height: 100%;
     margin: 0.3em 0;
     font-weight: normal;
 }
 
+#hd.doc #nav {
+    font-size: 1.5em;
+}
+
+
 #bd {
-    padding: 20px;
+    -x-system-font:none;
+    font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
+    font-size: 1.6em;
+    color: #555555;
 }
 
 #bd h1 {
@@ -37,7 +44,7 @@ a {
     margin-bottom: 5px;
 }
 
-#ft {
+#ft.doc {
     color: #aaa;
         border-top: 1px solid #aaa;
         clear: both;
@@ -53,11 +60,10 @@ a {
 
 pre {
     padding: 10px;
-    background-color: #e0e0e0;
     margin: 10px;
 }
 
-ul {
+.docindex, .docindex ul {
     margin-top: 0.1em;
     margin-bottom: 0;
     margin-left: 2em;
@@ -67,11 +73,6 @@ li a {
     text-decoration: none;
 }
 
-#nav {
-    float: right;
-
-
+.highlight {
+    font-size: 14px;
 }
-
-
-
