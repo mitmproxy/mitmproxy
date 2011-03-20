@@ -20,6 +20,9 @@ Features:
     - No-proxy mode, for when we want to just replay without serving as a proxy ourselves.
     - Upstream proxy support.
     - Strings view for binary responses.
+    - Support HTTP Digest authentication through the stickyauth option. We'll
+    have to save the server nonce, and recalculate the hashes for each request.
+
     - Chunked encoding support for requests (we already support it for responses).
     - Better manipulation of flows in mitmproxy: copying flows, adding
     comments.

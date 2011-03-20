@@ -15,3 +15,10 @@ process once, and simply replay it on startup every time you need to interact
 with the secured resources.
 
 
+## Sticky auth
+
+The __stickyauth__ option is analagous to the __stickycookie__ option, in that
+HTTP __Authorization__ headers are simply replayed to the server once they have
+been seen. This is enough to allow you to access a server resource using HTTP
+Basic authentication through the proxy. Note that __mitmproxy__ doesn't (yet)
+support replay of HTTP Digest authentication. 

@@ -3,11 +3,17 @@ import optparse
 
 
 def get_common_options(options):
-    stickycookie = None
+    stickycookie, stickyauth = None, None
     if options.stickycookie_all:
         stickycookie = ".*"
     elif options.stickycookie_filt:
         stickycookie = options.stickycookie_filt
+
+    if options.stickyauth_all:
+        stickyauth = ".*"
+    elif options.stickyauth_filt:
+        stickyauth = options.stickyauth_filt
+
     return dict(
         verbosity = options.verbose,
         wfile = options.wfile,
@@ -18,6 +24,7 @@ def get_common_options(options):
         rheaders = options.rheaders,
         client_replay = options.client_replay,
         stickycookie = stickycookie,
+        stickyauth = stickyauth,
         anticache = options.anticache,
         refresh_server_playback = not options.norefresh,
     )
@@ -68,6 +75,16 @@ def common_options(parser):
         "-T",
         action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
+    )
+    parser.add_option(
+        "-u",
+        action="store_true", dest="stickyauth_all", default=None,
+        help="Set sticky auth for all requests."
+    )
+    parser.add_option(
+        "-U",
+        action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
+        help="Set sticky auth filter. Matched against requests."
     )
     parser.add_option(
         "-v",

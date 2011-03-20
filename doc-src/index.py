@@ -70,7 +70,7 @@ pages = [
     Page("interception.html", "Interception"),
     Page("clientreplay.html", "Client-side replay"),
     Page("serverreplay.html", "Server-side replay"),
-    Page("stickycookies.html", "Sticky cookies"),
+    Page("sticky.html", "Sticky cookies and auth"),
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
     Page("scripts.html", "External scripts"),

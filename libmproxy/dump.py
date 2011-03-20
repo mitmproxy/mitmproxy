@@ -16,6 +16,7 @@ class Options(object):
         "rheaders",
         "server_replay",
         "stickycookie",
+        "stickyauth",
         "verbosity",
         "wfile",
     ]
@@ -63,6 +64,9 @@ class DumpMaster(flow.FlowMaster):
 
         if options.stickycookie:
             self.set_stickycookie(options.stickycookie)
+
+        if options.stickyauth:
+            self.set_stickyauth(options.stickyauth)
 
         if options.wfile:
             path = os.path.expanduser(options.wfile)

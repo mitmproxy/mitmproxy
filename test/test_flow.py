@@ -34,6 +34,19 @@ class uStickyCookieState(libpry.AutoTree):
         assert "cookie" in f.request.headers
 
 
+class uStickyAuthState(libpry.AutoTree):
+    def test_handle_response(self):
+        s = flow.StickyAuthState(filt.parse(".*"))
+        f = tutils.tflow_full()
+        f.request.headers["authorization"] = ["foo"]
+        s.handle_request(f)
+        assert "host" in s.hosts
+
+        f = tutils.tflow_full()
+        s.handle_request(f)
+        assert f.request.headers["authorization"] == ["foo"]
+
+
 class uClientPlaybackState(libpry.AutoTree):
     def test_tick(self):
         first = tutils.tflow()
@@ -61,6 +74,9 @@ class uClientPlaybackState(libpry.AutoTree):
         q = Queue.Queue()
         fm.state.clear()
         fm.tick(q)
+
+        fm.stop_client_playback()
+        assert not fm.client_playback
 
 
 class uServerPlaybackState(libpry.AutoTree):
@@ -441,6 +457,9 @@ class uFlowMaster(libpry.AutoTree):
         fm.tick(q)
         assert controller.exit
 
+        fm.stop_server_playback()
+        assert not fm.server_playback
+
     def test_stickycookie(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
@@ -460,9 +479,30 @@ class uFlowMaster(libpry.AutoTree):
         fm.handle_request(tf.request)
         assert tf.request.headers["cookie"] == ["foo=bar"]
 
+    def test_stickyauth(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert "Invalid" in fm.set_stickyauth("~h")
+        fm.set_stickyauth(".*")
+        assert fm.stickyauth_state
+        fm.set_stickyauth(None)
+        assert not fm.stickyauth_state
+
+        fm.set_stickyauth(".*")
+        tf = tutils.tflow_full()
+        tf.request.headers["authorization"] = ["foo"]
+        fm.handle_request(tf.request)
+
+        f = tutils.tflow_full()
+        assert fm.stickyauth_state.hosts
+        assert not "authorization" in f.request.headers
+        fm.handle_request(f.request)
+        assert f.request.headers["authorization"] == ["foo"]
+
 
 tests = [
     uStickyCookieState(),
+    uStickyAuthState(),
     uServerPlaybackState(),
     uClientPlaybackState(),
     uFlow(),

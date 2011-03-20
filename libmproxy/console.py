@@ -635,6 +635,10 @@ class StatusBar(WWrap):
             r.append("[")
             r.append(("statusbar_highlight", "t"))
             r.append(":%s]"%self.master.stickycookie_txt)
+        if self.master.stickyauth_txt:
+            r.append("[")
+            r.append(("statusbar_highlight", "u"))
+            r.append(":%s]"%self.master.stickyauth_txt)
 
         opts = []
         if self.master.anticache:
@@ -773,6 +777,7 @@ class Options(object):
         "rheaders",
         "server_replay",
         "stickycookie",
+        "stickyauth",
         "verbosity",
         "wfile",
     ]
@@ -828,8 +833,10 @@ class ConsoleMaster(flow.FlowMaster):
             print >> sys.stderr, "Sticky cookies error:", r
             sys.exit(1)
 
-        self.stickycookie = None
-        self.stickyhosts = {}
+        r = self.set_stickyauth(options.stickyauth)
+        if r:
+            print >> sys.stderr, "Sticky auth error:", r
+            sys.exit(1)
 
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
@@ -1136,6 +1143,7 @@ class ConsoleMaster(flow.FlowMaster):
             ("S", "save all flows matching current limit"),
             ("s", "server replay"),
             ("t", "set sticky cookie expression"),
+            ("u", "set sticky auth expression"),
             ("w", "save this flow"),
             ("page up/down", "page up/down"),
             ("enter", "view connection"),
@@ -1408,6 +1416,13 @@ class ConsoleMaster(flow.FlowMaster):
                                 "Sticky cookie filter: ",
                                 self.stickycookie_txt,
                                 self.set_stickycookie
+                            )
+                            k = None
+                        elif k == "u":
+                            self.prompt(
+                                "Sticky auth filter: ",
+                                self.stickyauth_txt,
+                                self.set_stickyauth
                             )
                             k = None
                     if k:

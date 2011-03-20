@@ -137,8 +137,9 @@ class Request(controller.Msg):
         self.close = False
         controller.Msg.__init__(self)
 
-        # Have this request's cookies been modified by sticky cookies?
+        # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
+        self.stickyauth = False
 
     def anticache(self):
         """

@@ -163,6 +163,21 @@ class StickyCookieState:
                     l.append(self.jar[i].output(header="").strip())
 
 
+class StickyAuthState:
+    def __init__(self, flt):
+        """
+            flt: A compiled filter.
+        """
+        self.flt = flt
+        self.hosts = {}
+
+    def handle_request(self, f):
+        if "authorization" in f.request.headers:
+            self.hosts[f.request.host] = f.request.headers["authorization"]
+        elif f.match(self.flt):
+            if f.request.host in self.hosts:
+                f.request.headers["authorization"] = self.hosts[f.request.host]
+
 
 class Flow:
     def __init__(self, request):
@@ -433,6 +448,9 @@ class FlowMaster(controller.Master):
         self.stickycookie_state = False
         self.stickycookie_txt = None
 
+        self.stickyauth_state = False
+        self.stickyauth_txt = None
+
         self.anticache = False
         self.refresh_server_playback = False
 
@@ -457,6 +475,17 @@ class FlowMaster(controller.Master):
         else:
             self.stickycookie_state = None
             self.stickycookie_txt = None
+
+    def set_stickyauth(self, txt):
+        if txt:
+            flt = filt.parse(txt)
+            if not flt:
+                return "Invalid filter expression."
+            self.stickyauth_state = StickyAuthState(flt)
+            self.stickyauth_txt = txt
+        else:
+            self.stickyauth_state = None
+            self.stickyauth_txt = None
 
     def start_client_playback(self, flows, exit):
         """
@@ -516,6 +545,9 @@ class FlowMaster(controller.Master):
     def process_new_request(self, f):
         if self.stickycookie_state:
             self.stickycookie_state.handle_request(f)
+        if self.stickyauth_state:
+            self.stickyauth_state.handle_request(f)
+
         if "request" in self.scripts:
             self._runscript(f, self.scripts["request"])
         if self.anticache:
