@@ -121,6 +121,8 @@ class uDumpMaster(libpry.AutoTree):
     def test_stickycookie(self):
         ret = self._dummy_cycle(None, "", stickycookie = ".*")
 
+    def test_stickyauth(self):
+        ret = self._dummy_cycle(None, "", stickyauth = ".*")
 
 
 

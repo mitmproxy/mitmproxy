@@ -39,6 +39,8 @@ class uState(libpry.AutoTree):
         assert c.get_focus() == (f, 0)
         c.set_focus(-1)
         assert c.get_focus() == (f, 0)
+        c.set_focus(2)
+        assert c.get_focus() == (f2, 1)
 
         c.delete_flow(f2)
         assert c.get_focus() == (f, 0)

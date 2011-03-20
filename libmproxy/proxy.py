@@ -163,9 +163,6 @@ class Request(controller.Msg):
         else:
             return True
 
-    def is_cached(self):
-        return False
-
     def load_state(self, state):
         if state["client_conn"]:
             if self.client_conn:
@@ -241,9 +238,6 @@ class Request(controller.Msg):
     def is_response(self):
         return False
 
-    def assemble_proxy(self):
-        return self.assemble(True)
-
     def assemble(self, _proxy = False):
         """
             Assembles the request for transmission to the server. We make some
@@ -278,7 +272,6 @@ class Response(controller.Msg):
         self.code, self.msg = code, msg
         self.headers, self.content = headers, content
         self.timestamp = timestamp or utils.timestamp()
-        self.cached = False
         controller.Msg.__init__(self)
         self.replay = False
 
@@ -303,9 +296,6 @@ class Response(controller.Msg):
                     # For now, we just ignore this.
                     del i["expires"]
         return c.output(header="").strip()
-
-    def __hash__(self):
-        return id(self)
 
     def refresh(self, now=None):
         """
@@ -378,9 +368,6 @@ class Response(controller.Msg):
 
     def is_response(self):
         return True
-
-    def is_cached(self):
-        return self.cached
 
     def assemble(self):
         """

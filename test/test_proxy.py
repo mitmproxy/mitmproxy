@@ -95,6 +95,9 @@ class uRequest(libpry.AutoTree):
         assert r.url() == u
         assert r.assemble()
 
+        r2 = r.copy()
+        assert r == r2
+
     def test_anticache(self):
         h = utils.Headers()
         r = proxy.Request(None, "host", 22, "https", "GET", "/", h, "content")
@@ -121,6 +124,10 @@ class uRequest(libpry.AutoTree):
         r.load_state(r2.get_state())
         assert r == r2
 
+        r2.client_conn = None
+        r.load_state(r2.get_state())
+        assert not r.client_conn
+
 
 class uResponse(libpry.AutoTree):
     def test_simple(self):
@@ -130,6 +137,9 @@ class uResponse(libpry.AutoTree):
         req = proxy.Request(c, "host", 22, "https", "GET", "/", h, "content")
         resp = proxy.Response(req, 200, "msg", h.copy(), "content")
         assert resp.assemble()
+
+        resp2 = resp.copy()
+        assert resp2 == resp
 
     def test_refresh(self):
         r = tutils.tresp()
@@ -190,6 +200,10 @@ class uError(libpry.AutoTree):
         assert e == e2
 
 
+        e3 = e.copy()
+        assert e3 == e
+
+
 class uProxyError(libpry.AutoTree):
     def test_simple(self):
         p = proxy.ProxyError(111, "msg")
@@ -206,6 +220,10 @@ class uClientConnect(libpry.AutoTree):
 
         c.load_state(c2.get_state())
         assert c == c2
+
+
+        c3 = c.copy()
+        assert c3 == c
 
 
 tests = [
