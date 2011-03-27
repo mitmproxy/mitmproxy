@@ -27,6 +27,7 @@ if __name__ == '__main__':
                 version="%%prog %s"%VERSION,
             )
     cmdline.common_options(parser)
+    parser.add_option("--debug", dest="debug", default=False, action="store_true")
 
 
     group = OptionGroup(
@@ -57,6 +58,7 @@ if __name__ == '__main__':
     opts = console.Options(**cmdline.get_common_options(options))
     opts.intercept = options.intercept
     opts.limit = options.limit
+    opts.debug = options.debug
     m = console.ConsoleMaster(server, opts)
 
     for i in args:

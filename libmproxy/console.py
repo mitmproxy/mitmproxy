@@ -651,6 +651,9 @@ class StatusBar(WWrap):
         if opts:
             r.append("[%s]"%(":".join(opts)))
 
+        if self.master.debug:
+            r.append("[lt:%0.3f]"%self.master.looptime)
+
         return r
 
     def redraw(self):
@@ -767,6 +770,7 @@ class Options(object):
     __slots__ = [
         "anticache",
         "client_replay",
+        "debug",
         "keepserving",
         "kill",
         "intercept",
@@ -809,6 +813,7 @@ class ConsoleMaster(flow.FlowMaster):
     ]
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
+        self.looptime = 0
 
         self.conn_list_view = None
         self.set_palette()
@@ -848,6 +853,9 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.server_replay:
             self.server_playback_path(options.server_replay)
+
+        self.debug = options.debug
+
 
     def _runscript(self, f, path):
         path = os.path.expanduser(path)
@@ -1292,6 +1300,7 @@ class ConsoleMaster(flow.FlowMaster):
         slave.start()
         try:
             while not controller.exit:
+                startloop = time.time()
                 self.statusbar.redraw()
                 size = self.drawscreen()
                 self.tick(q)
@@ -1427,6 +1436,7 @@ class ConsoleMaster(flow.FlowMaster):
                             k = None
                     if k:
                         self.view.keypress(size, k)
+                self.looptime = time.time() - startloop
         except (Stop, KeyboardInterrupt):
             pass
 
