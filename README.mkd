@@ -35,12 +35,15 @@ Source is hosted on github:
 Requirements
 ------------
 
-* A recent [Python](http://www.python.org) interpreter
-* [openssl](http://www.openssl.org/)
-* [urwid](http://excess.org/urwid/) version 0.9.8 or newer 
+
+* [Python](http://www.python.org) 2.6.x or 2.7.x.
+* [openssl](http://www.openssl.org/). Installed by default on most systems.
+* [urwid](http://excess.org/urwid/) version 0.9.8 or newer.
 * The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
   library.
-* mitmproxy is tested and developed on OSX, Linux and OpenBSD. 
+* Rendering the documentation requires [countershape](http://github.com/cortesi/countershape).
+
+__mitmproxy__ is tested and developed on OSX, Linux and OpenBSD. 
 
 You should also make sure that your console environment is set up with the
 following: 
