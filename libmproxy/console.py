@@ -1023,6 +1023,10 @@ class ConsoleMaster(flow.FlowMaster):
         self.onekey = False
         self.view_connlist()
 
+        self.masterq = Queue.Queue()
+        slave = controller.Slave(self.masterq, self.server)
+        slave.start()
+
         self.ui.run_wrapper(self.loop)
         # If True, quit just pops out to connection list view.
         print >> sys.stderr, "Shutting down..."
@@ -1294,16 +1298,12 @@ class ConsoleMaster(flow.FlowMaster):
         return size
 
     def loop(self):
-        q = Queue.Queue()
-        self.masterq = q
-        slave = controller.Slave(q, self.server)
-        slave.start()
         try:
             while not controller.exit:
                 startloop = time.time()
                 self.statusbar.redraw()
                 size = self.drawscreen()
-                self.tick(q)
+                self.tick(self.masterq)
                 self.ui.set_input_timeouts(max_wait=0.1)
                 keys = self.ui.get_input()
                 for k in keys:

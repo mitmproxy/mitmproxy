@@ -59,7 +59,7 @@ class Slave(threading.Thread):
 class Master:
     def __init__(self, server):
         self.server = server
-        self.masterq = None
+        self.masterq = Queue.Queue()
 
     def tick(self, q):
         try:
@@ -75,12 +75,10 @@ class Master:
             pass
 
     def run(self):
-        q = Queue.Queue()
-        self.masterq = q
-        slave = Slave(q, self.server)
+        slave = Slave(self.masterq, self.server)
         slave.start()
         while not exit:
-            self.tick(q)
+            self.tick(self.masterq)
         self.shutdown()
 
     def handle(self, msg):
