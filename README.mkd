@@ -1,3 +1,4 @@
+
 __mitmproxy__ is an SSL-capable, intercepting HTTP proxy. It provides a console
 interface that allows traffic flows to be inspected and edited on the fly.
 
@@ -34,7 +35,6 @@ Source is hosted on github:
 
 Requirements
 ------------
-
 
 * [Python](http://www.python.org) 2.6.x or 2.7.x.
 * [openssl](http://www.openssl.org/). Installed by default on most systems.

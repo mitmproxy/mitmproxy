@@ -1,4 +1,8 @@
 include LICENSE
+include CHANGELOG
+include CONTRIBUTORS
+include README.mkd
+recursive-include examples *
 recursive-include doc *
 recursive-include test *
 recursive-include libmproxy/resources *

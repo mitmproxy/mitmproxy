@@ -76,7 +76,7 @@ setup(
         long_description = long_description,
         author = "Aldo Cortesi",
         author_email = "aldo@corte.si",
-        url = "http://corte.si/software",
+        url = "http://mitmproxy.org",
         packages = packages,
         package_data = package_data,
         scripts = ["mitmproxy", "mitmdump"],
