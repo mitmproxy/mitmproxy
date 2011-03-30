@@ -74,9 +74,10 @@ pages = [
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
     Page("scripts.html", "External scripts"),
-    Page("library.html", "libmproxy: mitmproxy as a library"),
     Page("ssl.html", "SSL"),
     Directory("certinstall"),
+    Page("library.html", "libmproxy: mitmproxy as a library"),
+    Directory("tutorials"),
     Page("faq.html", "FAQ"),
     Page("admin.html", "Administrivia")
 ]

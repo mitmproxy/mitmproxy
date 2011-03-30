@@ -67,6 +67,13 @@ pre {
     background-color: #dddddd;
 }
 
+.terminal {
+    color: #ffffff;
+    background: #000000;
+
+
+}
+
 .docindex, .docindex ul {
     margin-top: 0.1em;
     margin-bottom: 0;
