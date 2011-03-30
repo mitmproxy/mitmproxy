@@ -1,11 +1,26 @@
 
 
+30 March 2011: mitmproxy 0.4 
+
+    * Full serialization of HTTP conversations
+    
+    * Client and server replay
+    
+    * On-the-fly generation of dummy SSL certificates
+   
+    * mitmdump has "grown up" into a powerful tcpdump-like tool for HTTP/S
+
+    * Dozens of improvements to the mitmproxy console interface
+
+    * Python scripting hooks for programmatic modification of traffic
+
+
 1 March 2010: mitmproxy 0.2 
 
     * Big speed and responsiveness improvements, thanks to Thomas Roth
     
     * Support urwid 0.9.9
-    *
+    
     * Terminal beeping based on filter expressions
     
     * Filter expressions for terminal beeps, limits, interceptions and sticky
