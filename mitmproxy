@@ -49,11 +49,15 @@ if __name__ == '__main__':
     options, args = parser.parse_args()
 
     config = proxy.process_certificate_option_group(parser, options)
-    try:
-        server = proxy.ProxyServer(config, options.port, options.addr)
-    except proxy.ProxyServerError, v:
-        print >> sys.stderr, "mitmproxy:", v.args[0]
-        sys.exit(1)
+
+    if options.no_server:
+        server = None
+    else:
+        try:
+            server = proxy.ProxyServer(config, options.port, options.addr)
+        except proxy.ProxyServerError, v:
+            print >> sys.stderr, "mitmproxy:", v.args[0]
+            sys.exit(1)
 
     opts = console.Options(**cmdline.get_common_options(options))
     opts.intercept = options.intercept

@@ -15,18 +15,19 @@ def get_common_options(options):
         stickyauth = options.stickyauth_filt
 
     return dict(
-        verbosity = options.verbose,
-        wfile = options.wfile,
+        anticache = options.anticache,
+        client_replay = options.client_replay,
+        kill = options.kill,
+        no_server = options.no_server,
+        refresh_server_playback = not options.norefresh,
+        rheaders = options.rheaders,
         request_script = options.request_script,
         response_script = options.response_script,
         server_replay = options.server_replay,
-        kill = options.kill,
-        rheaders = options.rheaders,
-        client_replay = options.client_replay,
         stickycookie = stickycookie,
         stickyauth = stickyauth,
-        anticache = options.anticache,
-        refresh_server_playback = not options.norefresh,
+        wfile = options.wfile,
+        verbosity = options.verbose,
     )
 
 
@@ -40,6 +41,11 @@ def common_options(parser):
         "--confdir",
         action="store", type = "str", dest="confdir", default='~/.mitmproxy',
         help = "Configuration directory. (~/.mitmproxy)"
+    )
+    parser.add_option(
+        "-n",
+        action="store_true", dest="no_server",
+        help="Don't start a proxy server."
     )
     parser.add_option(
         "-p",

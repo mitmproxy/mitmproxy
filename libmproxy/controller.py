@@ -58,6 +58,9 @@ class Slave(threading.Thread):
 
 class Master:
     def __init__(self, server):
+        """
+            server may be None if no server is needed.
+        """
         self.server = server
         self.masterq = Queue.Queue()
 
@@ -75,8 +78,9 @@ class Master:
             pass
 
     def run(self):
-        slave = Slave(self.masterq, self.server)
-        slave.start()
+        if self.server:
+            slave = Slave(self.masterq, self.server)
+            slave.start()
         while not exit:
             self.tick(self.masterq)
         self.shutdown()

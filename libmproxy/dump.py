@@ -10,6 +10,7 @@ class Options(object):
         "client_replay",
         "keepserving",
         "kill",
+        "no_server",
         "refresh_server_playback",
         "request_script",
         "response_script",

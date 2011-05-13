@@ -664,16 +664,19 @@ class StatusBar(WWrap):
                 ('statusbar_text', ("[%s]"%len(self.master.state.flow_list)).ljust(7)),
             ]
         t.extend(self.get_status())
+            
+        if self.master.server:
+            boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
+        else:
+            boundaddr = "[no proxy]"
+
         status = urwid.AttrWrap(urwid.Columns([
             urwid.Text(t),
             urwid.Text(
                 [
                     self.helptext,
                     " ",
-                    (
-                        'statusbar_text',
-                        "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
-                    ),
+                    ('statusbar_text', boundaddr),
                 ],
                 align="right"
             ),
@@ -775,6 +778,7 @@ class Options(object):
         "kill",
         "intercept",
         "limit",
+        "no_server",
         "refresh_server_playback",
         "request_script",
         "response_script",
@@ -1024,8 +1028,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.view_connlist()
 
         self.masterq = Queue.Queue()
-        slave = controller.Slave(self.masterq, self.server)
-        slave.start()
+        if self.server:
+            slave = controller.Slave(self.masterq, self.server)
+            slave.start()
 
         self.ui.run_wrapper(self.loop)
         # If True, quit just pops out to connection list view.
