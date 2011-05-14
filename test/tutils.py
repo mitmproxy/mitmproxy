@@ -32,6 +32,13 @@ def tflow_full():
     return f
 
 
+def tflow_err():
+    r = treq()
+    f = flow.Flow(r)
+    f.error = proxy.Error(r, "error")
+    return f
+
+
 # Yes, the random ports are horrible. During development, sockets are often not
 # properly closed during error conditions, which means you have to wait until
 # you can re-bind to the same port. This is a pain in the ass, so we just pick

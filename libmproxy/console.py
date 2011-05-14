@@ -1127,11 +1127,10 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             f = file(path, "r")
             fr = flow.FlowReader(f)
-            data = list(fr.stream())
-            f.close()
         except IOError, v:
             return v.strerror
-        self.state.load_flows(data)
+        flow.FlowMaster.load_flows(self, fr)
+        f.close()
         if self.conn_list_view:
             self.sync_list_view()
             self.focus_current()

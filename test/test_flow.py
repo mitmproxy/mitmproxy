@@ -369,6 +369,19 @@ class uState(libpry.AutoTree):
 
 
 class uSerialize(libpry.AutoTree):
+    def _treader(self):
+        sio = StringIO()
+        w = flow.FlowWriter(sio)
+        for i in range(3):
+            f = tutils.tflow_full()
+            w.add(f)
+        for i in range(3):
+            f = tutils.tflow_err()
+            w.add(f)
+
+        sio.seek(0)
+        return flow.FlowReader(sio)
+
     def test_roundtrip(self):
         sio = StringIO()
         f = tutils.tflow()
@@ -380,6 +393,14 @@ class uSerialize(libpry.AutoTree):
         l = list(r.stream())
         assert len(l) == 1
         assert l[0] == f
+
+    def test_load_flows(self):
+        r = self._treader()
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        fm.load_flows(r)
+        assert len(s.flow_list) == 6
+
 
     def test_error(self):
         sio = StringIO()

@@ -542,6 +542,20 @@ class FlowMaster(controller.Master):
 
         controller.Master.tick(self, q)
 
+    def load_flows(self, fr):
+        """
+            Load flows from a FlowReader object.
+        """
+        for i in fr.stream():
+            if i.request:
+                f = self.state.add_request(i.request)
+                self.process_new_request(f)
+            if i.response:
+                f = self.state.add_response(i.response)
+                self.process_new_response(f)
+            if i.error:
+                f = self.state.add_error(i.error)
+
     def process_new_request(self, f):
         if self.stickycookie_state:
             self.stickycookie_state.handle_request(f)
@@ -559,6 +573,12 @@ class FlowMaster(controller.Master):
                     f.kill(self)
                 else:
                     f.request.ack()
+
+    def process_new_response(self, f):
+        if self.stickycookie_state:
+            self.stickycookie_state.handle_response(f)
+        if "response" in self.scripts:
+            self._runscript(f, self.scripts["response"])
 
     def replay_request(self, f):
         """
@@ -605,10 +625,7 @@ class FlowMaster(controller.Master):
             self.client_playback.clear(f)
         if not f:
             r.ack()
-        if self.stickycookie_state:
-            self.stickycookie_state.handle_response(f)
-        if "response" in self.scripts:
-            self._runscript(f, self.scripts["response"])
+        self.process_new_response(f)
         return f
 
 
