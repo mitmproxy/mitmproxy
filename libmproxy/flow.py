@@ -548,13 +548,11 @@ class FlowMaster(controller.Master):
         """
         for i in fr.stream():
             if i.request:
-                f = self.state.add_request(i.request)
-                self.process_new_request(f)
+                self.handle_request(i.request)
             if i.response:
-                f = self.state.add_response(i.response)
-                self.process_new_response(f)
+                self.handle_response(i.response)
             if i.error:
-                f = self.state.add_error(i.error)
+                self.handle_error(i.error)
 
     def process_new_request(self, f):
         if self.stickycookie_state:
