@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import Queue, mailcap, mimetypes, tempfile, os, subprocess, glob, time
+import mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import cStringIO
 import urwid.raw_display
@@ -1027,7 +1027,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.onekey = False
         self.view_connlist()
 
-        self.masterq = Queue.Queue()
         if self.server:
             slave = controller.Slave(self.masterq, self.server)
             slave.start()
