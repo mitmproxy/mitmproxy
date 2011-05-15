@@ -53,6 +53,8 @@ class DumpMaster(flow.FlowMaster):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
+        self.anticache = options.anticache
+        self.refresh_server_playback = options.refresh_server_playback
 
         if filtstr:
             self.filt = filt.parse(filtstr)
@@ -100,8 +102,6 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
-        self.anticache = options.anticache
-        self.refresh_server_playback = options.refresh_server_playback
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
