@@ -782,6 +782,7 @@ class Options(object):
         "refresh_server_playback",
         "request_script",
         "response_script",
+        "rfile",
         "rheaders",
         "server_replay",
         "stickycookie",
@@ -818,6 +819,7 @@ class ConsoleMaster(flow.FlowMaster):
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
         self.looptime = 0
+        self.options = options
 
         self.conn_list_view = None
         self.set_palette()
@@ -1031,6 +1033,9 @@ class ConsoleMaster(flow.FlowMaster):
             slave = controller.Slave(self.masterq, self.server)
             slave.start()
 
+        if self.options.rfile:
+            self.load_flows(self.options.rfile)
+
         self.ui.run_wrapper(self.loop)
         # If True, quit just pops out to connection list view.
         print >> sys.stderr, "Shutting down..."
@@ -1127,11 +1132,10 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             f = file(path, "r")
             fr = flow.FlowReader(f)
-            data = list(fr.stream())
-            f.close()
         except IOError, v:
             return v.strerror
-        self.state.load_flows(data)
+        flow.FlowMaster.load_flows(self, fr)
+        f.close()
         if self.conn_list_view:
             self.sync_list_view()
             self.focus_current()

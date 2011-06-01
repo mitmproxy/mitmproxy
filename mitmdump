@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_option(
         "--keepserving",
         action="store_true", dest="keepserving", default=False,
-        help="Continue serving after playback. We exit by default."
+        help="Continue serving after client playback or file read. We exit by default."
     )
 
     options, args = parser.parse_args()

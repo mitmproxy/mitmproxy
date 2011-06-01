@@ -21,6 +21,7 @@ def get_common_options(options):
         no_server = options.no_server,
         refresh_server_playback = not options.norefresh,
         rheaders = options.rheaders,
+        rfile = options.rfile,
         request_script = options.request_script,
         response_script = options.response_script,
         server_replay = options.server_replay,
@@ -56,6 +57,11 @@ def common_options(parser):
         "-q",
         action="store_true", dest="quiet",
         help="Quiet."
+    )
+    parser.add_option(
+        "-r",
+        action="store", dest="rfile", default=None,
+        help="Read flows from file."
     )
     parser.add_option(
         "--anticache",

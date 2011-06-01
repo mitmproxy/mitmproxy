@@ -14,6 +14,7 @@ class Options(object):
         "refresh_server_playback",
         "request_script",
         "response_script",
+        "rfile",
         "rheaders",
         "server_replay",
         "stickycookie",
@@ -52,6 +53,8 @@ class DumpMaster(flow.FlowMaster):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
+        self.anticache = options.anticache
+        self.refresh_server_playback = options.refresh_server_playback
 
         if filtstr:
             self.filt = filt.parse(filtstr)
@@ -84,14 +87,21 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
+        if options.rfile:
+            path = os.path.expanduser(options.rfile)
+            try:
+                f = file(path, "r")
+                freader = flow.FlowReader(f)
+            except IOError, v:
+                raise DumpError(v.strerror)
+            self.load_flows(freader)
+
         if options.client_replay:
             self.start_client_playback(
                 self._readflow(options.client_replay),
                 not options.keepserving
             )
 
-        self.anticache = options.anticache
-        self.refresh_server_playback = options.refresh_server_playback
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
@@ -189,6 +199,8 @@ class DumpMaster(flow.FlowMaster):
 
 # begin nocover
     def run(self):
+        if self.o.rfile and not self.o.keepserving:
+            return
         try:
             return flow.FlowMaster.run(self)
         except BaseException, v:
