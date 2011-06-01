@@ -1,3 +1,19 @@
+mitmproxy is licensed under the terms of the GNU General Public
+License version 3, with the following addition:
+
+  In addition, as a special exception, the copyright holders give
+permission to link the code of this program or portions of this
+program with the OpenSSL project's "OpenSSL" library (or with modified
+versions of it that use the same license as the "OpenSSL" library),
+and distribute linked combinations including the two. 
+
+  You must obey the GNU General Public License in all respects for all
+of the code used other than "OpenSSL".  If you modify file(s) provided
+under this license, you may extend this exception to your version of
+the file, but you are not obligated to do so. If you do not wish to do
+so, delete this exception statement from your version.
+
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
