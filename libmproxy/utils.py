@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re, os, subprocess, datetime, textwrap, errno, sys, time, functools
 
+CERT_SLEEP_TIME = 1
 
 def timestamp():
     """
@@ -485,6 +486,7 @@ def dummy_cert(certdir, ca, commonname):
             stdin=subprocess.PIPE
         )
         if ret: return None
+    time.sleep(CERT_SLEEP_TIME)
     return certpath
 
 

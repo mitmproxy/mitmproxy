@@ -2,6 +2,8 @@ import textwrap, cStringIO, os, time, re
 import libpry
 from libmproxy import utils
 
+utils.CERT_SLEEP_TIME = 0
+
 
 class uformat_timestamp(libpry.AutoTree):
     def test_simple(self):
