@@ -114,7 +114,7 @@ def format_flow(f, focus, extended=False, padding=2):
 
 def int_version(v):
     SIG = 3
-    v = urwid.__version__.split(".")
+    v = urwid.__version__.split("-")[0].split(".")
     x = 0
     for i in range(min(SIG, len(v))):
         x += int(v[i]) * 10**(SIG-i)
