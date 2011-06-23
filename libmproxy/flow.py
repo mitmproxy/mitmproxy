@@ -586,7 +586,6 @@ class FlowMaster(controller.Master):
         if f.intercepting:
             return "Can't replay while intercepting..."
         if f.request:
-            f.backup()
             f.request.set_replay()
             if f.request.content:
                 f.request.headers["content-length"] = [str(len(f.request.content))]
