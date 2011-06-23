@@ -472,7 +472,10 @@ class FileLike:
     def read(self, length):
         result = ''
         while len(result) < length:
-            data = self.o.read(length)
+            try:
+                data = self.o.read(length)
+            except AttributeError:
+                break
             if not data:
                 break
             result += data
@@ -596,7 +599,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 return
             self.send_response(response)
         except IOError:
-            pass
+            cc.close = True
         except ProxyError, e:
             err = Error(request, e.msg)
             err.send(self.mqueue)
@@ -714,7 +717,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             self.wfile.write('<html><head>\n<title>%d %s</title>\n</head>\n'
                     '<body>\n%s\n</body>\n</html>' % (code, response, body))
             self.wfile.flush()
-        except IOError:
+        except:
             pass
 
 
