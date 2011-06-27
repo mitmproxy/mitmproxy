@@ -23,11 +23,12 @@ class ProxyError(Exception):
 
 
 class SSLConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None):
+    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=None):
         self.certfile = certfile
         self.ciphers = ciphers
         self.cacert = cacert
         self.certdir = None
+        self.cert_wait_time = cert_wait_time
 
 
 def read_chunked(fp):
@@ -613,6 +614,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             return self.config.certfile
         else:
             ret = utils.dummy_cert(self.config.certdir, self.config.cacert, host)
+            time.sleep(self.config.cert_wait_time)
             if not ret:
                 raise ProxyError(400, "mitmproxy: Unable to generate dummy cert.")
             return ret
@@ -784,5 +786,6 @@ def process_certificate_option_group(parser, options):
     return SSLConfig(
         certfile = options.cert,
         cacert = cacert,
-        ciphers = options.ciphers
+        ciphers = options.ciphers,
+        cert_wait_time = options.cert_wait_time
     )

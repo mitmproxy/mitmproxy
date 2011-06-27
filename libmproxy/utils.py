@@ -497,7 +497,6 @@ def dummy_cert(certdir, ca, commonname):
             stdin=subprocess.PIPE
         )
         if ret: return None
-    time.sleep(CERT_SLEEP_TIME)
     return certpath
 
 
