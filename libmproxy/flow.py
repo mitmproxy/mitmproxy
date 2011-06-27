@@ -540,7 +540,7 @@ class FlowMaster(controller.Master):
             if self.server_playback.exit and self.server_playback.count() == 0:
                 self.shutdown()
 
-        controller.Master.tick(self, q)
+        return controller.Master.tick(self, q)
 
     def load_flows(self, fr):
         """

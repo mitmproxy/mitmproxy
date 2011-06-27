@@ -1306,14 +1306,18 @@ class ConsoleMaster(flow.FlowMaster):
         return size
 
     def loop(self):
+        changed = True
         try:
             while not controller.exit:
                 startloop = time.time()
-                self.statusbar.redraw()
-                size = self.drawscreen()
-                self.tick(self.masterq)
+                if changed:
+                    self.statusbar.redraw()
+                    size = self.drawscreen()
+                changed = self.tick(self.masterq)
                 self.ui.set_input_timeouts(max_wait=0.1)
                 keys = self.ui.get_input()
+                if keys:
+                    changed = True
                 for k in keys:
                     if self.prompting:
                         if k == "esc":

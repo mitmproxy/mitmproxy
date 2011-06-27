@@ -65,6 +65,7 @@ class Master:
         self.masterq = Queue.Queue()
 
     def tick(self, q):
+        changed = False
         try:
             # This endless loop runs until the 'Queue.Empty'
             # exception is thrown. If more than one request is in
@@ -74,8 +75,10 @@ class Master:
                 # Small timeout to prevent pegging the CPU
                 msg = q.get(timeout=0.01)
                 self.handle(msg)
+                changed = True
         except Queue.Empty:
             pass
+        return changed
 
     def run(self):
         if self.server:
