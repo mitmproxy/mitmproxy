@@ -1,7 +1,7 @@
 import os, sys
 import countershape
 from countershape import Page, Directory, PythonModule, markup
-import countershape.grok, countershape.template    
+import countershape.template
 sys.path.insert(0, "..")
 from libmproxy import filt
 
@@ -33,7 +33,7 @@ ns.index_contents = file(mpath("README.mkd")).read()
 top = os.path.abspath(os.getcwd())
 def example(s):
     d = file(mpath(s)).read()
-    return countershape.template.pySyntax(d)
+    return countershape.template.Syntax("py")(d)
 
 
 ns.example = example

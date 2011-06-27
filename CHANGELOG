@@ -1,3 +1,28 @@
+27 June 2011: mitmproxy 0.5:
+
+    * An -n option to start the tools without binding to a proxy port.
+
+    * Allow scripts, hooks, sticky cookies etc. to run on flows loaded from
+      save files.
+
+    * Regularize command-line options for mitmproxy and mitmdump.
+
+    * Add an "SSL exception" to mitmproxy's license to remove possible
+      distribution issues.
+
+    * Add a --cert-wait-time option to make mitmproxy pause after a new SSL
+      certificate is generated. This can pave over small discrepancies in
+      system time between the client and server.
+
+    * Handle viewing big request and response bodies more elegantly. Only
+      render the first 100k of large documents, and try to avoid running the
+      XML indenter on non-XML data.
+
+    * BUGFIX: Make the "revert" keyboard shortcut in mitmproxy work after a
+      flow has been replayed.
+
+    * BUGFIX: Repair a problem that sometimes caused SSL connections to consume
+      100% of CPU.
 
 
 30 March 2011: mitmproxy 0.4 
