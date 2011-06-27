@@ -18,6 +18,13 @@ class uisBin(libpry.AutoTree):
         assert utils.isBin("testing\x7f")
 
 
+class uisXML(libpry.AutoTree):
+    def test_simple(self):
+        assert not utils.isXML("foo")
+        assert utils.isXML("<foo")
+        assert utils.isXML("  \n<foo")
+
+
 class uhexdump(libpry.AutoTree):
     def test_simple(self):
         assert utils.hexdump("one\0"*10)
@@ -352,6 +359,7 @@ class uLRUCache(libpry.AutoTree):
 tests = [
     uformat_timestamp(),
     uisBin(),
+    uisXML(),
     uhexdump(),
     upretty_size(),
     uisStringLike(),

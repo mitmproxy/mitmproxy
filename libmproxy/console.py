@@ -20,6 +20,8 @@ import urwid.raw_display
 import urwid
 import controller, utils, filt, proxy, flow
 
+VIEW_CUTOFF = 1024*100
+
 
 class Stop(Exception): pass
 
@@ -879,14 +881,27 @@ class ConsoleMaster(flow.FlowMaster):
             self.spawn_external_viewer(serr, None)
         self.refresh_connection(f)
 
+    def _trailer(self, content, txt):
+        rem = len(content) - VIEW_CUTOFF
+        if rem > 0:
+            txt.append(urwid.Text(""))
+            txt.append(
+                urwid.Text(
+                    [
+                        ("highlight", "... %s of data not shown"%utils.pretty_size(rem))
+                    ]
+                )
+            )
+
     def _view_conn_normal(self, content, txt):
-        for i in content.splitlines():
+        for i in content[:VIEW_CUTOFF].splitlines():
             txt.append(
                 urwid.Text(("text", i))
             )
+        self._trailer(content, txt)
 
     def _view_conn_binary(self, content, txt):
-        for offset, hex, s in utils.hexdump(content):
+        for offset, hex, s in utils.hexdump(content[:VIEW_CUTOFF]):
             txt.append(urwid.Text([
                 ("offset", offset),
                 " ",
@@ -894,12 +909,14 @@ class ConsoleMaster(flow.FlowMaster):
                 "   ",
                 ("text", s),
             ]))
+        self._trailer(content, txt)
 
     def _view_conn_pretty(self, content, txt):
-        for i in utils.pretty_xmlish(content):
+        for i in utils.pretty_xmlish(content[:VIEW_CUTOFF]):
             txt.append(
                 urwid.Text(("text", i)),
             )
+        self._trailer(content, txt)
 
     @utils.LRUCache(20)
     def _cached_conn_text(self, content, hdrItems, viewmode):
@@ -918,7 +935,13 @@ class ConsoleMaster(flow.FlowMaster):
             if viewmode == VIEW_BODY_BINARY:
                 self._view_conn_binary(content, txt)
             elif viewmode == VIEW_BODY_INDENT:
-                self._view_conn_pretty(content, txt)
+                if utils.isXML(content):
+                    self._view_conn_pretty(content, txt)
+                else:
+                    if utils.isBin(content):
+                        self._view_conn_binary(content, txt)
+                    else:
+                        self._view_conn_normal(content, txt)
             else:
                 if utils.isBin(content):
                     self._view_conn_binary(content, txt)

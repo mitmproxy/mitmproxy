@@ -44,6 +44,16 @@ def isBin(s):
     return False
 
 
+def isXML(s):
+    for i in s:
+        if i in "\n \t":
+            continue
+        elif i == "<":
+            return True
+        else:
+            return False
+
+
 def cleanBin(s):
     parts = []
     for i in s:
@@ -51,7 +61,8 @@ def cleanBin(s):
         if o > 31 and o < 127:
             parts.append(i)
         else:
-            parts.append(".")
+            if i not in "\n\r\t":
+                parts.append(".")
     return "".join(parts)
     
 
