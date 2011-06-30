@@ -372,7 +372,10 @@ class ConnectionView(WWrap):
 
     def set_resp_code(self, code):
         response = self.flow.response
-        response.code = code
+        try:
+            response.code = int(code)
+        except ValueError:
+            return None
         import BaseHTTPServer
         if BaseHTTPServer.BaseHTTPRequestHandler.responses.has_key(int(code)):
             response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[int(code)][0]
@@ -403,7 +406,7 @@ class ConnectionView(WWrap):
         elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             self.master.prompt_onekey("Method", self.methods, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
-            self.master.prompt_edit("Code", conn.code, self.set_resp_code)
+            self.master.prompt_edit("Code", str(conn.code), self.set_resp_code)
         elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
             self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
         elif part == "r" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
@@ -1290,7 +1293,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.prompting = (callback, args)
 
     def prompt_edit(self, prompt, text, callback):
-        self.statusbar.prompt(prompt, text)
+        self.statusbar.prompt(prompt + ": ", text)
         self.view.set_focus("footer")
         self.prompting = (callback, [])
 
