@@ -223,8 +223,14 @@ class ConnectionViewHeader(WWrap):
 
 
 VIEW_BODY_RAW = 0
-VIEW_BODY_BINARY = 1
+VIEW_BODY_HEX = 1
 VIEW_BODY_PRETTY = 2
+
+BODY_VIEWS = {
+    VIEW_BODY_RAW: "raw",
+    VIEW_BODY_HEX: "hex",
+    VIEW_BODY_PRETTY: "pretty"
+}
 
 VIEW_FLOW_REQUEST = 0
 VIEW_FLOW_RESPONSE = 1
@@ -416,15 +422,6 @@ class ConnectionView(WWrap):
             self.view_response()
         self.master.refresh_connection(self.flow)
 
-    def _changeview(self, v):
-        if v == "r":
-            self.state.view_body_mode = VIEW_BODY_RAW
-        elif v == "h":
-            self.state.view_body_mode = VIEW_BODY_BINARY
-        elif v == "p":
-            self.state.view_body_mode = VIEW_BODY_PRETTY
-        self.master.refresh_connection(self.flow)
-
     def keypress(self, size, key):
         if key == "tab":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST and self.flow.response:
@@ -440,17 +437,6 @@ class ConnectionView(WWrap):
         elif key == "A":
             self.master.accept_all()
             self.master.view_flow(self.flow)
-        elif key == "m":
-            self.master.prompt_onekey(
-                    "View",
-                    (
-                        ("raw", "r"),
-                        ("pretty", "p"),
-                        ("hex", "h"),
-                    ),
-                    self._changeview
-            )
-            key = None
         elif key == "e":
             if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.master.prompt_onekey(
@@ -673,7 +659,7 @@ class StatusBar(WWrap):
         if self.master.server:
             boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
         else:
-            boundaddr = "[no proxy]"
+            boundaddr = ""
 
         status = urwid.AttrWrap(urwid.Columns([
             urwid.Text(t),
@@ -681,6 +667,9 @@ class StatusBar(WWrap):
                 [
                     self.helptext,
                     " ",
+                    ('statusbar_text', "["),
+                    ('statusbar_key', "m"),
+                    ('statusbar_text', (":%s]"%BODY_VIEWS[self.master.state.view_body_mode])),
                     ('statusbar_text', boundaddr),
                 ],
                 align="right"
@@ -720,7 +709,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
 
-        self.view_body_mode = VIEW_BODY_RAW
+        self.view_body_mode = VIEW_BODY_PRETTY
         self.view_flow_mode = VIEW_FLOW_REQUEST
 
         self.last_script = ""
@@ -961,7 +950,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         txt = [urwid.Text(hdr)]
         if content:
-            if viewmode == VIEW_BODY_BINARY:
+            if viewmode == VIEW_BODY_HEX:
                 self._view_conn_binary(content, txt)
             elif viewmode == VIEW_BODY_PRETTY:
                 self._find_pretty_view(content, hdrItems, txt)
@@ -1345,6 +1334,15 @@ class ConsoleMaster(flow.FlowMaster):
     def set_intercept(self, txt):
         return self.state.set_intercept(txt)
 
+    def changeview(self, v):
+        if v == "r":
+            self.state.view_body_mode = VIEW_BODY_RAW
+        elif v == "h":
+            self.state.view_body_mode = VIEW_BODY_HEX
+        elif v == "p":
+            self.state.view_body_mode = VIEW_BODY_PRETTY
+        self.refresh_connection(self.currentflow)
+
     def drawscreen(self):
         size = self.ui.get_cols_rows()
         canvas = self.view.render(size, focus=1)
@@ -1416,6 +1414,17 @@ class ConsoleMaster(flow.FlowMaster):
                             k = "down"
                         elif k == "k":
                             k = "up"
+                        elif k == "m":
+                            self.prompt_onekey(
+                                "View",
+                                (
+                                    ("raw", "r"),
+                                    ("pretty", "p"),
+                                    ("hex", "h"),
+                                ),
+                                self.changeview
+                            )
+                            k = None
                         elif k in ("q", "Q"):
                             if k == "Q":
                                 raise Stop
