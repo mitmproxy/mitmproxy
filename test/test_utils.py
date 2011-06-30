@@ -1,4 +1,4 @@
-import textwrap, cStringIO, os, time, re
+import textwrap, cStringIO, os, time, re, json
 import libpry
 from libmproxy import utils
 
@@ -283,6 +283,13 @@ class upretty_xmlish(libpry.AutoTree):
         assert utils.pretty_xmlish(s) == ["gobbledygook"]
 
 
+class upretty_json(libpry.AutoTree):
+    def test_one(self):
+        s = json.dumps({"foo": 1})
+        assert utils.pretty_json(s)
+        assert not utils.pretty_json("moo")
+
+
 class udummy_ca(libpry.AutoTree):
     def test_all(self):
         d = self.tmpdir()
@@ -368,6 +375,7 @@ tests = [
     uHeaders(),
     uData(),
     upretty_xmlish(),
+    upretty_json(),
     udummy_ca(),
     udummy_cert(),
     uLRUCache(),

@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re, os, subprocess, datetime, textwrap, errno, sys, time, functools
+import json
 
 CERT_SLEEP_TIME = 1
 
@@ -109,6 +110,14 @@ def pretty_xmlish(s):
     if trail.strip():
         data.append(s[offset:])
     return data
+
+
+def pretty_json(s):
+    try:
+        p = json.loads(s)
+    except ValueError:
+        return None
+    return json.dumps(p, sort_keys=True, indent=4).split("\n")
 
 
 def hexdump(s):

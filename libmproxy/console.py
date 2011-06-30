@@ -224,7 +224,7 @@ class ConnectionViewHeader(WWrap):
 
 VIEW_BODY_RAW = 0
 VIEW_BODY_BINARY = 1
-VIEW_BODY_INDENT = 2
+VIEW_BODY_PRETTY = 2
 
 VIEW_FLOW_REQUEST = 0
 VIEW_FLOW_RESPONSE = 1
@@ -418,8 +418,8 @@ class ConnectionView(WWrap):
             self.state.view_body_mode = VIEW_BODY_RAW
         elif v == "h":
             self.state.view_body_mode = VIEW_BODY_BINARY
-        elif v == "i":
-            self.state.view_body_mode = VIEW_BODY_INDENT
+        elif v == "p":
+            self.state.view_body_mode = VIEW_BODY_PRETTY
         self.master.refresh_connection(self.flow)
 
     def keypress(self, size, key):
@@ -442,7 +442,7 @@ class ConnectionView(WWrap):
                     "View",
                     (
                         ("raw", "r"),
-                        ("indent", "i"),
+                        ("pretty", "p"),
                         ("hex", "h"),
                     ),
                     self._changeview
@@ -881,8 +881,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.spawn_external_viewer(serr, None)
         self.refresh_connection(f)
 
-    def _trailer(self, content, txt):
-        rem = len(content) - VIEW_CUTOFF
+    def _trailer(self, clen, txt):
+        rem = clen - VIEW_CUTOFF
         if rem > 0:
             txt.append(urwid.Text(""))
             txt.append(
@@ -893,12 +893,12 @@ class ConsoleMaster(flow.FlowMaster):
                 )
             )
 
-    def _view_conn_normal(self, content, txt):
-        for i in content[:VIEW_CUTOFF].splitlines():
+    def _view_conn_raw(self, content, txt):
+        for i in utils.cleanBin(content[:VIEW_CUTOFF]).splitlines():
             txt.append(
                 urwid.Text(("text", i))
             )
-        self._trailer(content, txt)
+        self._trailer(len(content), txt)
 
     def _view_conn_binary(self, content, txt):
         for offset, hex, s in utils.hexdump(content[:VIEW_CUTOFF]):
@@ -909,14 +909,40 @@ class ConsoleMaster(flow.FlowMaster):
                 "   ",
                 ("text", s),
             ]))
-        self._trailer(content, txt)
+        self._trailer(len(content), txt)
 
-    def _view_conn_pretty(self, content, txt):
+    def _view_conn_xmlish(self, content, txt):
         for i in utils.pretty_xmlish(content[:VIEW_CUTOFF]):
             txt.append(
                 urwid.Text(("text", i)),
             )
-        self._trailer(content, txt)
+        self._trailer(len(content), txt)
+
+    def _view_conn_json(self, lines, txt):
+        sofar = 0
+        for i in lines:
+            sofar += len(i)
+            txt.append(
+                urwid.Text(("text", i)),
+            )
+            if sofar > VIEW_CUTOFF:
+                break
+        self._trailer(sum(len(i) for i in lines), txt)
+
+
+    def _find_pretty_view(self, content, hdrItems, txt):
+        ctype = None
+        for i in hdrItems:
+            if i[0] == "content-type":
+                ctype = i[1]
+                break
+        if utils.isXML(content):
+            return self._view_conn_xmlish(content, txt)
+        if ctype and "application/json" in ctype:
+            lines = utils.pretty_json(content)
+            if lines:
+                return self._view_conn_json(lines, txt)
+        return self._view_conn_raw(content, txt)
 
     @utils.LRUCache(20)
     def _cached_conn_text(self, content, hdrItems, viewmode):
@@ -934,19 +960,10 @@ class ConsoleMaster(flow.FlowMaster):
         if content:
             if viewmode == VIEW_BODY_BINARY:
                 self._view_conn_binary(content, txt)
-            elif viewmode == VIEW_BODY_INDENT:
-                if utils.isXML(content):
-                    self._view_conn_pretty(content, txt)
-                else:
-                    if utils.isBin(content):
-                        self._view_conn_binary(content, txt)
-                    else:
-                        self._view_conn_normal(content, txt)
+            elif viewmode == VIEW_BODY_PRETTY:
+                self._find_pretty_view(content, hdrItems, txt)
             else:
-                if utils.isBin(content):
-                    self._view_conn_binary(content, txt)
-                else:
-                    self._view_conn_normal(content, txt)
+                self._view_conn_raw(content, txt)
         return urwid.ListBox(txt)
 
     def _readflow(self, path):
@@ -1206,7 +1223,10 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("b", "save request/response body"),
             ("e", "edit request/response"),
-            ("m", "change view mode (raw, indent, hex)"),
+            ("m", "change view mode (raw, pretty, hex)"),
+            (None, "  raw: raw data"),
+            (None, "  pretty: pretty-print XML, HTML and JSON"),
+            (None, "  hex: hex dump"),
             ("p", "previous flow"),
             ("v", "view body in external viewer"),
             ("|", "run script"),
