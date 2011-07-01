@@ -198,11 +198,11 @@ class Request(controller.Msg):
     def from_state(klass, state):
         return klass(
             ClientConnect.from_state(state["client_conn"]),
-            state["host"],
+            str(state["host"]),
             state["port"],
-            state["scheme"],
-            state["method"],
-            state["path"],
+            str(state["scheme"]),
+            str(state["method"]),
+            str(state["path"]),
             utils.Headers.from_state(state["headers"]),
             base64.decodestring(state["content"]),
             state["timestamp"]
@@ -353,7 +353,7 @@ class Response(controller.Msg):
         return klass(
             request,
             state["code"],
-            state["msg"],
+            str(state["msg"]),
             utils.Headers.from_state(state["headers"]),
             base64.decodestring(state["content"]),
             state["timestamp"],

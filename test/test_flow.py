@@ -385,6 +385,7 @@ class uSerialize(libpry.AutoTree):
     def test_roundtrip(self):
         sio = StringIO()
         f = tutils.tflow()
+        f.request.content = "".join(chr(i) for i in range(255))
         w = flow.FlowWriter(sio)
         w.add(f)
 
@@ -392,7 +393,10 @@ class uSerialize(libpry.AutoTree):
         r = flow.FlowReader(sio)
         l = list(r.stream())
         assert len(l) == 1
-        assert l[0] == f
+
+        f2 = l[0]
+        assert f2 == f
+        assert f2.request.assemble() == f.request.assemble()
 
     def test_load_flows(self):
         r = self._treader()
