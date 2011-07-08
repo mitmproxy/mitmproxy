@@ -508,7 +508,8 @@ class ConnectionView(WWrap):
         return key
 
     def run_script(self, path):
-        self.master._runscript(self.flow, path)
+        if path:
+            self.master._runscript(self.flow, path)
 
 
 class _PathCompleter:
