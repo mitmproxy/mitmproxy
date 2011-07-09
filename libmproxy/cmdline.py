@@ -117,7 +117,7 @@ def common_options(parser):
     parser.add_option_group(group)
 
     parser.add_option(
-        "--cert-wait-time",
+        "--cert-wait-time", type="float",
         action="store", dest="cert_wait_time", default=0,
         help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
     )
