@@ -942,7 +942,7 @@ class ConsoleMaster(flow.FlowMaster):
         hdr = []
         hdr.extend(
             format_keyvals(
-                [(h+":", v) for (h, v) in sorted(hdrItems)],
+                [(h+":", v) for (h, v) in hdrItems],
                 key = "header",
                 val = "text"
             )
