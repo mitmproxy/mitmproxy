@@ -12,7 +12,7 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap, errno, sys, time, functools
+import re, os, subprocess, datetime, textwrap, errno, sys, time, functools, copy
 import json
 
 CERT_SLEEP_TIME = 1
@@ -164,10 +164,6 @@ def isSequenceLike(anobj):
     return 1
 
 
-def _caseless(s):
-    return s.lower()
-
-
 def try_del(dict, key):
     try:
         del dict[key]
@@ -175,108 +171,72 @@ def try_del(dict, key):
         pass
 
 
-class MultiDict:
-    """
-        Simple wrapper around a dictionary to make holding multiple objects per
-        key easier.
+class Headers:
+    def __init__(self, lst=None):
+        if lst:
+            self.lst = lst
+        else:
+            self.lst = []
 
-        Note that this class assumes that keys are strings.
-
-        Keys have no order, but the order in which values are added to a key is
-        preserved.
-    """
-    # This ridiculous bit of subterfuge is needed to prevent the class from
-    # treating this as a bound method.
-    _helper = (str,)
-    def __init__(self):
-        self._d = dict()
-
-    def copy(self):
-        m = self.__class__()
-        m._d = self._d.copy()
-        return m
-
-    def clear(self):
-        return self._d.clear()
-
-    def get(self, key, d=None):
-        key = self._helper[0](key)
-        return self._d.get(key, d)
-
-    def __contains__(self, key):
-        key = self._helper[0](key)
-        return self._d.__contains__(key)
+    def _kconv(self, s):
+        return s.lower()
 
     def __eq__(self, other):
-        return dict(self) == dict(other)
+        return self.lst == other.lst
 
-    def __delitem__(self, key):
-        self._d.__delitem__(key)
+    def __getitem__(self, k):
+        ret = []
+        k = self._kconv(k)
+        for i in self.lst:
+            if self._kconv(i[0]) == k:
+                ret.append(i[1])
+        return ret
 
-    def __getitem__(self, key):
-        key = self._helper[0](key)
-        return self._d.__getitem__(key)
-    
-    def __setitem__(self, key, value):
-        if not isSequenceLike(value):
-            raise ValueError, "Cannot insert non-sequence."
-        key = self._helper[0](key)
-        return self._d.__setitem__(key, value)
+    def _filter_lst(self, k, lst):
+        new = []
+        for i in lst:
+            if self._kconv(i[0]) != k:
+                new.append(i)
+        return new
 
-    def has_key(self, key):
-        key = self._helper[0](key)
-        return self._d.has_key(key)
+    def __setitem__(self, k, hdrs):
+        k = self._kconv(k)
+        first = None
+        new = self._filter_lst(k, self.lst)
+        for i in hdrs:
+            new.append((k, i))
+        self.lst = new
 
-    def setdefault(self, key, default=None):
-        key = self._helper[0](key)
-        return self._d.setdefault(key, default)
+    def __delitem__(self, k):
+        self.lst = self._filter_lst(k, self.lst)
 
-    def keys(self):
-        return self._d.keys()
+    def __contains__(self, k):
+        for i in self.lst:
+            if self._kconv(i[0]) == k:
+                return True
+        return False
 
-    def extend(self, key, value):
-        if not self.has_key(key):
-            self[key] = []
-        self[key].extend(value)
-
-    def append(self, key, value):
-        self.extend(key, [value])
-
-    def itemPairs(self):
-        """
-            Yield all possible pairs of items.
-        """
-        for i in self.keys():
-            for j in self[i]:
-                yield (i, j)
+    def add(self, key, value):
+        self.lst.append([key, str(value)])
 
     def get_state(self):
-        return list(self.itemPairs())
+        return [tuple(i) for i in self.lst]
 
     @classmethod
     def from_state(klass, state):
-        md = klass()
-        for i in state:
-            md.append(*i)
-        return md
+        return klass([list(i) for i in state])
 
+    def copy(self):
+        lst = copy.deepcopy(self.lst)
+        return Headers(lst)
 
-class Headers(MultiDict):
-    """
-        A dictionary-like class for keeping track of HTTP headers.
-
-        It is case insensitive, and __repr__ formats the headers correcty for
-        output to the server.
-    """
-    _helper = (_caseless,)
     def __repr__(self):
         """
             Returns a string containing a formatted header string.
         """
         headerElements = []
-        for key in sorted(self.keys()):
-            for val in self[key]:
-                headerElements.append(key + ": " + val)
+        for itm in self.lst:
+            headerElements.append(itm[0] + ": " + itm[1])
         headerElements.append("")
         return "\r\n".join(headerElements)
 
@@ -284,7 +244,7 @@ class Headers(MultiDict):
         """
             Match the regular expression against each header (key, value) pair.
         """
-        for k, v in self.itemPairs():
+        for k, v in self.lst:
             s = "%s: %s"%(k, v)
             if re.search(expr, s):
                 return True
@@ -295,6 +255,7 @@ class Headers(MultiDict):
             Read a set of headers from a file pointer. Stop once a blank line
             is reached.
         """
+        ret = []
         name = ''
         while 1:
             line = fp.readline()
@@ -302,18 +263,15 @@ class Headers(MultiDict):
                 break
             if line[0] in ' \t':
                 # continued header
-                self[name][-1] = self[name][-1] + '\r\n ' + line.strip()
+                ret[-1][1] = ret[-1][1] + '\r\n ' + line.strip()
             else:
                 i = line.find(':')
                 # We're being liberal in what we accept, here.
                 if i > 0:
                     name = line[:i]
                     value = line[i+1:].strip()
-                    if self.has_key(name):
-                        # merge value
-                        self.append(name, value)
-                    else:
-                        self[name] = [value]
+                    ret.append([name, value])
+        self.lst = ret
 
 
 def pretty_size(size):

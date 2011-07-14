@@ -101,7 +101,7 @@ class ServerPlaybackState:
         if self.headers:
             hdrs = []
             for i in self.headers:
-                v = r.headers.get(i, [])
+                v = r.headers[i]
                 # Slightly subtle: we need to convert everything to strings
                 # to prevent a mismatch between unicode/non-unicode.
                 v = [str(x) for x in v]
@@ -139,7 +139,7 @@ class StickyCookieState:
         )
 
     def handle_response(self, f):
-        for i in f.response.headers.get("set-cookie", []):
+        for i in f.response.headers["set-cookie"]:
             # FIXME: We now know that Cookie.py screws up some cookies with
             # valid RFC 822/1123 datetime specifications for expiry. Sigh.
             c = Cookie.SimpleCookie(i)
@@ -158,9 +158,10 @@ class StickyCookieState:
                     f.request.path.startswith(i[2])
                 ]
                 if all(match):
-                    l = f.request.headers.setdefault("cookie", [])
+                    l = f.request.headers["cookie"]
                     f.request.stickycookie = True
                     l.append(self.jar[i].output(header="").strip())
+                    f.request.headers["cookie"] = l
 
 
 class StickyAuthState:

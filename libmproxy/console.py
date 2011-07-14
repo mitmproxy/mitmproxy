@@ -93,7 +93,7 @@ def format_flow(f, focus, extended=False, padding=2):
             txt.append(("goodcode", str(f.response.code)))
         else:
             txt.append(("error", str(f.response.code)))
-        t = f.response.headers.get("content-type")
+        t = f.response.headers["content-type"]
         if t:
             t = t[0].split(";")[0]
             txt.append(("text", " %s"%t))
@@ -295,7 +295,11 @@ class ConnectionView(WWrap):
 
     def _conn_text(self, conn, viewmode):
         if conn:
-            return self.master._cached_conn_text(conn.content, tuple(conn.headers.itemPairs()), viewmode)
+            return self.master._cached_conn_text(
+                        conn.content,
+                        tuple([tuple(i) for i in conn.headers.lst]),
+                        viewmode
+                    )
         else:
             return urwid.ListBox([])
 
@@ -485,7 +489,7 @@ class ConnectionView(WWrap):
             else:
                 conn = self.flow.response
             if conn.content:
-                t = conn.headers.get("content-type", [None])
+                t = conn.headers["content-type"] or [None]
                 t = t[0]
                 self.master.spawn_external_viewer(conn.content, t)
         elif key == "b":

@@ -56,11 +56,11 @@ def read_chunked(fp):
     
 
 def read_http_body(rfile, connection, headers, all):
-    if headers.has_key('transfer-encoding'):
+    if 'transfer-encoding' in headers:
         if not ",".join(headers["transfer-encoding"]) == "chunked":
             raise IOError('Invalid transfer-encoding')
         content = read_chunked(rfile)
-    elif headers.has_key("content-length"):
+    elif "content-length" in headers:
         content = rfile.read(int(headers["content-length"][0]))
     elif all:
         content = rfile.read()
@@ -152,8 +152,7 @@ class Request(controller.Msg):
             "if-none-match",
         ]
         for i in delheaders:
-            if i in self.headers:
-                del self.headers[i]
+            del self.headers[i]
 
     def set_replay(self):
         self.client_conn = None
@@ -251,7 +250,7 @@ class Request(controller.Msg):
         utils.try_del(headers, 'connection')
         utils.try_del(headers, 'content-length')
         utils.try_del(headers, 'transfer-encoding')
-        if not headers.has_key('host'):
+        if not 'host' in headers:
             headers["host"] = [self.hostport()]
         content = self.content
         if content is not None:
@@ -321,7 +320,7 @@ class Response(controller.Msg):
                     new = mktime_tz(d) + delta
                     self.headers[i] = [formatdate(new)]
         c = []
-        for i in self.headers.get("set-cookie", []):
+        for i in self.headers["set-cookie"]:
             c.append(self._refresh_cookie(i, delta))
         if c:
             self.headers["set-cookie"] = c
@@ -656,7 +655,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             scheme = "https"
         headers = utils.Headers()
         headers.read(self.rfile)
-        if host is None and headers.has_key("host"):
+        if host is None and "host" in headers:
             netloc = headers["host"][0]
             if ':' in netloc:
                 host, port = string.split(netloc, ':')
@@ -670,7 +669,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             port = int(port)
         if host is None:
             raise ProxyError(400, 'Invalid request: %s'%request)
-        if headers.has_key('expect'):
+        if "expect" in headers:
             expect = ",".join(headers['expect'])
             if expect == "100-continue" and httpminor >= 1:
                 self.wfile.write('HTTP/1.1 100 Continue\r\n')
@@ -681,7 +680,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 raise ProxyError(417, 'Unmet expect: %s'%expect)
         if httpminor == 0:
             client_conn.close = True
-        if headers.has_key('connection'):
+        if "connection" in headers:
             for value in ",".join(headers['connection']).split(","):
                 value = value.strip()
                 if value == "close":

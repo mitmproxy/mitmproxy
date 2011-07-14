@@ -43,88 +43,6 @@ class uData(libpry.AutoTree):
         libpry.raises("does not exist", utils.data.path, "nonexistent")
 
 
-class uMultiDict(libpry.AutoTree):
-    def setUp(self):
-        self.md = utils.MultiDict()
-
-    def test_setget(self):
-        assert not self.md.has_key("foo")
-        self.md.append("foo", 1)
-        assert self.md["foo"] == [1]
-        assert self.md.has_key("foo")
-
-    def test_del(self):
-        self.md.append("foo", 1)
-        del self.md["foo"]
-        assert not self.md.has_key("foo")
-
-    def test_extend(self):
-        self.md.append("foo", 1)
-        self.md.extend("foo", [2, 3])
-        assert self.md["foo"] == [1, 2, 3]
-
-    def test_extend_err(self):
-        self.md.append("foo", 1)
-        libpry.raises("not iterable", self.md.extend, "foo", 2)
-
-    def test_get(self):
-        self.md.append("foo", 1)
-        self.md.append("foo", 2)
-        assert self.md.get("foo") == [1, 2]
-        assert self.md.get("bar") == None
-
-    def test_caseSensitivity(self):
-        self.md._helper = (utils._caseless,)
-        self.md["foo"] = [1]
-        self.md.append("FOO", 2)
-        assert self.md["foo"] == [1, 2]
-        assert self.md["FOO"] == [1, 2]
-        assert self.md.has_key("FoO")
-
-    def test_dict(self):
-        self.md.append("foo", 1)
-        self.md.append("foo", 2)
-        self.md["bar"] = [3]
-        assert self.md == self.md
-        assert dict(self.md) == self.md
-
-    def test_copy(self):
-        self.md["foo"] = [1, 2]
-        self.md["bar"] = [3, 4]
-        md2 = self.md.copy()
-        assert md2 == self.md
-        assert id(md2) != id(self.md)
-
-    def test_clear(self):
-        self.md["foo"] = [1, 2]
-        self.md["bar"] = [3, 4]
-        self.md.clear()
-        assert not self.md.keys()
-
-    def test_setitem(self):
-        libpry.raises(ValueError, self.md.__setitem__, "foo", "bar")
-        self.md["foo"] = ["bar"]
-        assert self.md["foo"] == ["bar"]
-
-    def test_itemPairs(self):
-        self.md.append("foo", 1)
-        self.md.append("foo", 2)
-        self.md.append("bar", 3)
-        l = list(self.md.itemPairs())
-        assert len(l) == 3
-        assert ("foo", 1) in l
-        assert ("foo", 2) in l
-        assert ("bar", 3) in l
-
-    def test_getset_state(self):
-        self.md.append("foo", 1)
-        self.md.append("foo", 2)
-        self.md.append("bar", 3)
-        state = self.md.get_state()
-        nd = utils.MultiDict.from_state(state)
-        assert nd == self.md
-
-
 class uHeaders(libpry.AutoTree):
     def setUp(self):
         self.hd = utils.Headers()
@@ -168,9 +86,9 @@ class uHeaders(libpry.AutoTree):
         assert self.hd["header"] == ['one\r\n two']
 
     def test_dictToHeader1(self):
-        self.hd.append("one", "uno")
-        self.hd.append("two", "due")
-        self.hd.append("two", "tre")
+        self.hd.add("one", "uno")
+        self.hd.add("two", "due")
+        self.hd.add("two", "tre")
         expected = [
             "one: uno\r\n",
             "two: due\r\n",
@@ -191,20 +109,33 @@ class uHeaders(libpry.AutoTree):
 
     def test_match_re(self):
         h = utils.Headers()
-        h.append("one", "uno")
-        h.append("two", "due")
-        h.append("two", "tre")
+        h.add("one", "uno")
+        h.add("two", "due")
+        h.add("two", "tre")
         assert h.match_re("uno")
         assert h.match_re("two: due")
         assert not h.match_re("nonono")
 
     def test_getset_state(self):
-        self.hd.append("foo", 1)
-        self.hd.append("foo", 2)
-        self.hd.append("bar", 3)
+        self.hd.add("foo", 1)
+        self.hd.add("foo", 2)
+        self.hd.add("bar", 3)
         state = self.hd.get_state()
         nd = utils.Headers.from_state(state)
         assert nd == self.hd
+
+    def test_copy(self):
+        self.hd.add("foo", 1)
+        self.hd.add("foo", 2)
+        self.hd.add("bar", 3)
+        assert self.hd == self.hd.copy()
+
+    def test_del(self):
+        self.hd.add("foo", 1)
+        self.hd.add("Foo", 2)
+        self.hd.add("bar", 3)
+        del self.hd["foo"]
+        assert len(self.hd.lst) == 1
 
 
 class uisStringLike(libpry.AutoTree):
@@ -371,7 +302,6 @@ tests = [
     upretty_size(),
     uisStringLike(),
     uisSequenceLike(),
-    uMultiDict(),
     uHeaders(),
     uData(),
     upretty_xmlish(),

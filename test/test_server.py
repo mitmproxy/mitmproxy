@@ -44,7 +44,7 @@ class uProxy(tutils.ProxTest):
             
         l = self.log()
         assert l[0].address
-        assert l[1].headers.has_key("host")
+        assert "host" in l[1].headers
         assert l[2].code == 200
 
     def test_https(self):
@@ -55,7 +55,7 @@ class uProxy(tutils.ProxTest):
 
         l = self.log()
         assert l[0].address
-        assert l[1].headers.has_key("host")
+        assert "host" in l[1].headers
         assert l[2].code == 200
 
     # Disable these two for now: they take a long time.
