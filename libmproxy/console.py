@@ -517,7 +517,6 @@ class ConnectionView(WWrap):
 
 
 class _PathCompleter:
-    DEFAULTPATH = "/bin:/usr/bin:/usr/local/bin"
     def __init__(self, _testing=False):
         """
             _testing: disables reloading of the lookup table to make testing possible.
@@ -542,9 +541,6 @@ class _PathCompleter:
                 if os.path.isdir(path):
                     files = glob.glob(os.path.join(path, "*"))
                     prefix = txt
-                elif os.path.isfile(path):
-                    prefix = os.path.dirname(txt)
-                    files = glob.glob(prefix+"/*")
                 else:
                     files = glob.glob(path+"*")
                     prefix = os.path.dirname(txt)
