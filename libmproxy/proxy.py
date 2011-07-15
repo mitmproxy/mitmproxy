@@ -154,6 +154,13 @@ class Request(controller.Msg):
         for i in delheaders:
             del self.headers[i]
 
+    def anticomp(self):
+        """
+            Modifies this request to remove headers that might produce a cached
+            response. That is, we remove ETags and If-Modified-Since headers.
+        """
+        self.headers["accept-encoding"] = ["identity"]
+
     def set_replay(self):
         self.client_conn = None
 
@@ -244,7 +251,6 @@ class Request(controller.Msg):
             modifications to make sure interception works properly.
         """
         headers = self.headers.copy()
-        utils.try_del(headers, 'accept-encoding')
         utils.try_del(headers, 'proxy-connection')
         utils.try_del(headers, 'keep-alive')
         utils.try_del(headers, 'connection')

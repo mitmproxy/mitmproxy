@@ -16,6 +16,7 @@ def get_common_options(options):
 
     return dict(
         anticache = options.anticache,
+        anticomp = options.anticomp,
         client_replay = options.client_replay,
         kill = options.kill,
         no_server = options.no_server,
@@ -108,6 +109,12 @@ def common_options(parser):
         action="store", dest="wfile", default=None,
         help="Write flows to file."
     )
+    parser.add_option(
+        "-z",
+        action="store_false", dest="anticomp", default=True,
+        help="Try to convince servers to send us un-compressed data."
+    )
+
     group = optparse.OptionGroup(parser, "Client Replay")
     group.add_option(
         "-c",

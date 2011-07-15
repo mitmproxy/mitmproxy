@@ -767,6 +767,7 @@ class ConsoleState(flow.State):
 class Options(object):
     __slots__ = [
         "anticache",
+        "anticomp",
         "client_replay",
         "debug",
         "keepserving",
@@ -846,6 +847,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
+        self.anticomp = options.anticomp
         self.killextra = options.kill
         self.rheaders = options.rheaders
 

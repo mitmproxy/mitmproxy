@@ -422,6 +422,7 @@ class uFlowMaster(libpry.AutoTree):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         fm.anticache = True
+        fm.anticomp = True
         req = tutils.treq()
 
         fm.handle_clientconnect(req.client_conn)

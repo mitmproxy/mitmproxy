@@ -453,6 +453,7 @@ class FlowMaster(controller.Master):
         self.stickyauth_txt = None
 
         self.anticache = False
+        self.anticomp = False
         self.refresh_server_playback = False
 
     def _runscript(self, f, script):
@@ -565,6 +566,8 @@ class FlowMaster(controller.Master):
             self._runscript(f, self.scripts["request"])
         if self.anticache:
             f.request.anticache()
+        if self.anticomp:
+            f.request.anticomp()
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb:

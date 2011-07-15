@@ -7,6 +7,7 @@ class DumpError(Exception): pass
 class Options(object):
     __slots__ = [
         "anticache",
+        "anticomp",
         "client_replay",
         "keepserving",
         "kill",
@@ -54,6 +55,7 @@ class DumpMaster(flow.FlowMaster):
         self.outfile = outfile
         self.o = options
         self.anticache = options.anticache
+        self.anticomp = options.anticomp
         self.refresh_server_playback = options.refresh_server_playback
 
         if filtstr:
