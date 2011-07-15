@@ -221,6 +221,12 @@ class upretty_json(libpry.AutoTree):
         assert not utils.pretty_json("moo")
 
 
+class u_urldecode(libpry.AutoTree):
+    def test_one(self):
+        s = "one=two&three=four"
+        assert len(utils.urldecode(s)) == 2
+
+
 class udummy_ca(libpry.AutoTree):
     def test_all(self):
         d = self.tmpdir()
@@ -306,6 +312,7 @@ tests = [
     uData(),
     upretty_xmlish(),
     upretty_json(),
+    u_urldecode(),
     udummy_ca(),
     udummy_cert(),
     uLRUCache(),

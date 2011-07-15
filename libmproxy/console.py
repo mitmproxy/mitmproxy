@@ -924,6 +924,17 @@ class ConsoleMaster(flow.FlowMaster):
                 break
         self._trailer(sum(len(i) for i in lines), txt)
 
+    def _view_conn_urlencoded(self, lines, txt):
+        txt.append(urwid.Text(("highlight", "URLencoded data:\n")))
+        txt.append(
+            urwid.Text(
+                format_keyvals(
+                    [(k+":", v) for (k, v) in lines],
+                    key = "header",
+                    val = "text"
+                )
+            )
+        )
 
     def _find_pretty_view(self, content, hdrItems, txt):
         ctype = None
@@ -931,9 +942,13 @@ class ConsoleMaster(flow.FlowMaster):
             if i[0] == "content-type":
                 ctype = i[1]
                 break
+        if ctype and "x-www-form-urlencoded" in ctype:
+            data = utils.urldecode(content)
+            if data:
+                return self._view_conn_urlencoded(data, txt)
         if utils.isXML(content):
             return self._view_conn_xmlish(content, txt)
-        if ctype and "application/json" in ctype:
+        elif ctype and "application/json" in ctype:
             lines = utils.pretty_json(content)
             if lines:
                 return self._view_conn_json(lines, txt)

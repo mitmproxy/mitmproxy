@@ -12,7 +12,8 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap, errno, sys, time, functools, copy
+import re, os, subprocess, datetime, textwrap, errno
+import time, functools, copy, cgi
 import json
 
 CERT_SLEEP_TIME = 1
@@ -118,6 +119,10 @@ def pretty_json(s):
     except ValueError:
         return None
     return json.dumps(p, sort_keys=True, indent=4).split("\n")
+
+
+def urldecode(s):
+    return cgi.parse_qsl(s)
 
 
 def hexdump(s):
