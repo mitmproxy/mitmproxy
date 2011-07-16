@@ -646,6 +646,8 @@ class StatusBar(WWrap):
         opts = []
         if self.master.anticache:
             opts.append("anticache")
+        if self.master.anticomp:
+            opts.append("anticomp")
         if not self.master.refresh_server_playback:
             opts.append("norefresh")
         if self.master.killextra:
@@ -1218,6 +1220,7 @@ class ConsoleMaster(flow.FlowMaster):
             ("L", "load saved flows"),
             ("o", "toggle options:"),
             (None, "  anticache: modify requests to prevent cached responses"),
+            (None, "  anticomp: modify requests to try to prevent compressed responses"),
             (None, "  killextra: kill requests not part of server replay"),
             (None, "  norefresh: disable server replay response refresh"),
             ("q", "quit / return to connection list"),
@@ -1513,6 +1516,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     "Options",
                                     (
                                         ("anticache", "a"),
+                                        ("anticomp", "c"),
                                         ("killextra", "k"),
                                         ("norefresh", "n"),
                                     ),
@@ -1554,6 +1558,8 @@ class ConsoleMaster(flow.FlowMaster):
     def _change_options(self, a):
         if a == "a":
             self.anticache = not self.anticache
+        if a == "c":
+            self.anticomp = not self.anticomp
         elif a == "k":
             self.killextra = not self.killextra
         elif a == "n":
