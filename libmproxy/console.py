@@ -1,15 +1,15 @@
 # Copyright (C) 2010  Aldo Cortesi
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -18,7 +18,7 @@ import os.path, sys
 import cStringIO
 import urwid.raw_display
 import urwid
-import controller, utils, filt, proxy, flow
+import controller, utils, filt, proxy, flow, encoding
 
 VIEW_CUTOFF = 1024*100
 
@@ -77,7 +77,7 @@ def format_flow(f, focus, extended=False, padding=2):
         else:
             ts = " "
 
-        txt.append("\n") 
+        txt.append("\n")
         txt.append(("text", ts))
         txt.append(" "*(padding+2))
         met = ""
@@ -97,6 +97,11 @@ def format_flow(f, focus, extended=False, padding=2):
         if t:
             t = t[0].split(";")[0]
             txt.append(("text", " %s"%t))
+        e = f.response.headers["content-encoding"]
+        if e:
+            e = e[0]
+        else:
+            e = "identity"
         if f.response.content:
             txt.append(", %s"%utils.pretty_size(len(f.response.content)))
     elif f.error:
@@ -121,7 +126,7 @@ def int_version(v):
     for i in range(min(SIG, len(v))):
         x += int(v[i]) * 10**(SIG-i)
     return x
-    
+
 
 # We have to do this to be portable over 0.9.8 and 0.9.9 If compatibility
 # becomes a pain to maintain, we'll just mandate 0.9.9 or newer.
@@ -295,8 +300,13 @@ class ConnectionView(WWrap):
 
     def _conn_text(self, conn, viewmode):
         if conn:
+            e = conn.headers["content-encoding"]
+            if e:
+                e = e[0]
+            else:
+                e = "identity"
             return self.master._cached_conn_text(
-                        conn.content,
+                        encoding.decode(e, conn.content),
                         tuple([tuple(i) for i in conn.headers.lst]),
                         viewmode
                     )
@@ -395,7 +405,7 @@ class ConnectionView(WWrap):
         response = self.flow.response
         response.msg = msg
         self.master.refresh_connection(self.flow)
-        
+
     def edit(self, part):
         if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             conn = self.flow.request
@@ -577,7 +587,7 @@ class PathEdit(urwid.Edit, _PathCompleter):
         else:
             self.reset()
         return urwid.Edit.keypress(self, size, key)
-        
+
 
 class ActionBar(WWrap):
     def __init__(self):
@@ -656,7 +666,7 @@ class StatusBar(WWrap):
                 ('statusbar_text', ("[%s]"%len(self.master.state.flow_list)).ljust(7)),
             ]
         t.extend(self.get_status())
-            
+
         if self.master.server:
             boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
         else:
@@ -821,9 +831,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.set_palette()
 
         if options.response_script:
-            self.set_response_script(options.response_script)  
+            self.set_response_script(options.response_script)
         if options.request_script:
-            self.set_request_script(options.request_script)  
+            self.set_request_script(options.request_script)
 
         r = self.set_limit(options.limit)
         if r:
@@ -1157,7 +1167,7 @@ class ConsoleMaster(flow.FlowMaster):
     def _write_flows(self, path, flows):
         self.state.last_saveload = path
         if not path:
-            return 
+            return
         path = os.path.expanduser(path)
         try:
             f = file(path, "wb")
@@ -1176,7 +1186,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def load_flows(self, path):
         if not path:
-            return 
+            return
         self.state.last_saveload = path
         path = os.path.expanduser(path)
         try:
@@ -1307,7 +1317,7 @@ class ConsoleMaster(flow.FlowMaster):
     def prompt_onekey(self, prompt, keys, callback):
         """
             Keys are a set of (word, key) tuples. The appropriate key in the
-            word is highlighted. 
+            word is highlighted.
         """
         prompt = [prompt, " ("]
         mkup = []

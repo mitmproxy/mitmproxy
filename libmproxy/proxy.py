@@ -1,7 +1,7 @@
 """
     A simple proxy server implementation, which always reads all of a server
     response into memory, performs some transformation, and then writes it back
-    to the client. 
+    to the client.
 
     Development started from Neil Schemenauer's munchy.py
 """
@@ -9,7 +9,7 @@ import sys, os, string, socket, urlparse, re, select, copy, base64, time, Cookie
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import shutil, tempfile
 import optparse, SocketServer, ssl
-import utils, controller
+import utils, controller, encoding
 
 NAME = "mitmproxy"
 
@@ -53,7 +53,7 @@ def read_chunked(fp):
         if line == '\r\n' or line == '\n':
             break
     return content
-    
+
 
 def read_http_body(rfile, connection, headers, all):
     if 'transfer-encoding' in headers:
@@ -156,10 +156,20 @@ class Request(controller.Msg):
 
     def anticomp(self):
         """
-            Modifies this request to remove headers that might produce a cached
-            response. That is, we remove ETags and If-Modified-Since headers.
+            Modifies this request to remove headers that will compress the
+            resource's data.
         """
         self.headers["accept-encoding"] = ["identity"]
+
+    def constrain_encoding(self):
+        """
+            Limits the permissible Accept-Encoding values, based on what we can
+            decode appropriately.
+        """
+        if self.headers["accept-encoding"]:
+            self.headers["accept-encoding"] = [', '.join([
+                e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
+            ])]
 
     def set_replay(self):
         self.client_conn = None
@@ -381,7 +391,6 @@ class Response(controller.Msg):
             modifications to make sure interception works properly.
         """
         headers = self.headers.copy()
-        utils.try_del(headers, 'accept-encoding')
         utils.try_del(headers, 'proxy-connection')
         utils.try_del(headers, 'connection')
         utils.try_del(headers, 'keep-alive')
