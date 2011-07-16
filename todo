@@ -5,11 +5,6 @@ of these and need some pointers.
 
 Features:
 
-    - Support for content encodings. At the moment, we sidestep this by
-    stripping headers that indicate accepted encodings. In theory, this should
-    force servers to serve us content uncompressed, but that's not always the
-    case. Besides, we should try to modify requests as little as possible, so
-    direct support for deflate and gzip is the way to go.
     - Add some "workspace" features to mitmproxy:
         - Flow comments
         - Copying/duplicating flows
@@ -25,5 +20,5 @@ Features:
     comments.
 
 Bugs:
-    
+
     - In some circumstances, long URLs in list view are line-broken oddly.
