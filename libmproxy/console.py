@@ -306,7 +306,8 @@ class ConnectionView(WWrap):
             else:
                 e = "identity"
             return self.master._cached_conn_text(
-                        encoding.decode(e, conn.content),
+                        e,
+                        conn.content,
                         tuple([tuple(i) for i in conn.headers.lst]),
                         viewmode
                     )
@@ -965,7 +966,10 @@ class ConsoleMaster(flow.FlowMaster):
         return self._view_conn_raw(content, txt)
 
     @utils.LRUCache(20)
-    def _cached_conn_text(self, content, hdrItems, viewmode):
+    def _cached_conn_text(self, e, rawcontent, hdrItems, viewmode):
+        content = encoding.decode(e, rawcontent)
+        if content is None:
+            content = rawcontent
         hdr = []
         hdr.extend(
             format_keyvals(

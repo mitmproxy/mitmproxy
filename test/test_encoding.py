@@ -18,11 +18,13 @@ class udecode_gzip(libpry.AutoTree):
         gf.write('string')
         gf.close()
         assert 'string' == encoding.decode('gzip', s.getvalue())
+        assert None == encoding.decode("gzip", "bogus")
 
 class udecode_deflate(libpry.AutoTree):
     def test_simple(self):
         assert 'string' == encoding.decode('deflate', zlib.compress('string'))
         assert 'string' == encoding.decode('deflate', zlib.compress('string')[2:-4])
+        assert None == encoding.decode("deflate", "bogus")
 
 tests = [
     udecode_identity(),

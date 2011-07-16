@@ -14,7 +14,6 @@ def decode(encoding, content):
         "gzip": decode_gzip,
         "deflate": decode_deflate,
     }
-
     return encoding_map.get(encoding, decode_identity)(content)
 
 def decode_identity(content):
@@ -26,7 +25,10 @@ def decode_identity(content):
 
 def decode_gzip(content):
     gfile = gzip.GzipFile(fileobj=cStringIO.StringIO(content))
-    return gfile.read()
+    try:
+        return gfile.read()
+    except IOError:
+        return None
 
 def decode_deflate(content):
     """
@@ -38,6 +40,9 @@ def decode_deflate(content):
         http://bugs.python.org/issue5784
     """
     try:
-        return zlib.decompress(content)
+        try:
+            return zlib.decompress(content)
+        except zlib.error:
+            return zlib.decompress(content, -15)
     except zlib.error:
-        return zlib.decompress(content, -15)
+        return None
