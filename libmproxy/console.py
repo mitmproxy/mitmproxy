@@ -26,7 +26,26 @@ VIEW_CUTOFF = 1024*100
 class Stop(Exception): pass
 
 
+def highlight_key(s, k):
+    l = []
+    parts = s.split(k, 1)
+    if parts[0]:
+        l.append(("text", parts[0]))
+    l.append(("key", k))
+    if parts[1]:
+        l.append(("text", parts[1]))
+    return l
+
+
+
 def format_keyvals(lst, key="key", val="text", space=5, indent=0):
+    """
+        Format a list of (key, value) tuples. 
+
+        If key is None, it's treated specially:
+            - We assume a sub-value, and add an extra indent.
+            - The value is treated as a pre-formatted list of directives.
+    """
     ret = []
     if lst:
         pad = max(len(i[0]) for i in lst if i and i[0]) + space
@@ -34,13 +53,9 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
             if i is None:
                 ret.extend("\n")
             elif i[0] is None:
-                ret.extend(
-                    [
-                        " "*(pad + indent),
-                        (val, i[1]),
-                        "\n"
-                    ]
-                )
+                ret.append(" "*(pad + indent*2))
+                ret.extend(i[1])
+                ret.append("\n")
             else:
                 ret.extend(
                     [
@@ -1218,11 +1233,43 @@ class ConsoleMaster(flow.FlowMaster):
             ("j, k", "up, down"),
             ("l", "set limit filter pattern"),
             ("L", "load saved flows"),
+
+            ("m", "change body display mode"),
+            (None, 
+                highlight_key("raw", "r") +
+                [("text", ": raw data")]
+            ),
+            (None, 
+                highlight_key("pretty", "p") +
+                [("text", ": pretty-print XML, HTML and JSON")]
+            ),
+            (None, 
+                highlight_key("hex", "h") +
+                [("text", ": hex dump")]
+            ),
+
             ("o", "toggle options:"),
-            (None, "  anticache: modify requests to prevent cached responses"),
-            (None, "  anticomp: modify requests to try to prevent compressed responses"),
-            (None, "  killextra: kill requests not part of server replay"),
-            (None, "  norefresh: disable server replay response refresh"),
+            (None, 
+                highlight_key("anticache", "a") +
+                [
+                    
+                    ("text", ": modify requests to prevent cached responses")
+                    
+                ]
+            ),
+            (None, 
+                highlight_key("anticomp", "c") +
+                [("text", ": modify requests to try to prevent compressed responses")]
+            ),
+            (None, 
+                highlight_key("killextra", "k") +
+                [("text", ": kill requests not part of server replay")]
+            ),
+            (None, 
+                highlight_key("norefresh", "n") +
+                [("text", ": disable server replay response refresh")]
+            ),
+
             ("q", "quit / return to connection list"),
             ("Q", "quit without confirm prompt"),
             ("r", "replay request"),
@@ -1250,10 +1297,6 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("b", "save request/response body"),
             ("e", "edit request/response"),
-            ("m", "change view mode (raw, pretty, hex)"),
-            (None, "  raw: raw data"),
-            (None, "  pretty: pretty-print XML, HTML and JSON"),
-            (None, "  hex: hex dump"),
             ("p", "previous flow"),
             ("v", "view body in external viewer"),
             ("|", "run script"),
@@ -1329,12 +1372,7 @@ class ConsoleMaster(flow.FlowMaster):
         prompt = [prompt, " ("]
         mkup = []
         for i, e in enumerate(keys):
-            parts = e[0].split(e[1], 1)
-            if parts[0]:
-                mkup.append(("text", parts[0]))
-            mkup.append(("key", e[1]))
-            if parts[1]:
-                mkup.append(("text", parts[1]))
+            mkup.extend(highlight_key(e[0], e[1]))
             if i < len(keys)-1:
                 mkup.append(",")
         prompt.extend(mkup)
