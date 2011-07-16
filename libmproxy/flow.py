@@ -84,10 +84,10 @@ class ServerPlaybackState:
 
     def count(self):
         return sum([len(i) for i in self.fmap.values()])
-    
+
     def _hash(self, flow):
         """
-            Calculates a loose hash of the flow request. 
+            Calculates a loose hash of the flow request.
         """
         r = flow.request
         key = [
@@ -130,7 +130,7 @@ class StickyCookieState:
 
     def ckey(self, m, f):
         """
-            Returns a (domain, port, path) tuple. 
+            Returns a (domain, port, path) tuple.
         """
         return (
             m["domain"] or f.request.host,
@@ -568,6 +568,9 @@ class FlowMaster(controller.Master):
             f.request.anticache()
         if self.anticomp:
             f.request.anticomp()
+        else:
+            f.request.constrain_encoding()
+
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb:

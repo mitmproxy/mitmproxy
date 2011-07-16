@@ -98,7 +98,7 @@ class uHeaders(libpry.AutoTree):
         out = repr(self.hd)
         for i in expected:
             assert out.find(i) >= 0
-        
+
     def test_dictToHeader2(self):
         self.hd["one"] = ["uno"]
         expected1 = "one: uno\r\n"
