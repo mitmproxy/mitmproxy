@@ -967,7 +967,7 @@ class ConsoleMaster(flow.FlowMaster):
     def _find_pretty_view(self, content, hdrItems, txt):
         ctype = None
         for i in hdrItems:
-            if i[0] == "content-type":
+            if i[0].lower() == "content-type":
                 ctype = i[1]
                 break
         if ctype and "x-www-form-urlencoded" in ctype:
