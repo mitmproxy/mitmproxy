@@ -111,7 +111,7 @@ def common_options(parser):
     )
     parser.add_option(
         "-z",
-        action="store_false", dest="anticomp", default=False,
+        action="store_true", dest="anticomp", default=False,
         help="Try to convince servers to send us un-compressed data."
     )
 
