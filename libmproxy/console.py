@@ -40,7 +40,7 @@ def highlight_key(s, k):
 
 def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     """
-        Format a list of (key, value) tuples. 
+        Format a list of (key, value) tuples.
 
         If key is None, it's treated specially:
             - We assume a sub-value, and add an extra indent.
@@ -425,7 +425,16 @@ class ConnectionView(WWrap):
 
         self.flow.backup()
         if part == "b":
-            conn.content = self._spawn_editor(conn.content or "")
+            e = conn.headers["content-encoding"]
+            if e:
+                e = e[0]
+            else:
+                e = "identity"
+            content = encoding.decode(e, conn.content)
+            if content is None:
+                conn.content = self._spawn_editor(conn.content or "")
+            else:
+                conn.content = encoding.encode(e, self._spawn_editor(content or ""))
         elif part == "h":
             headertext = self._spawn_editor(repr(conn.headers))
             headers = utils.Headers()
@@ -1245,37 +1254,37 @@ class ConsoleMaster(flow.FlowMaster):
             ("L", "load saved flows"),
 
             ("m", "change body display mode"),
-            (None, 
+            (None,
                 highlight_key("raw", "r") +
                 [("text", ": raw data")]
             ),
-            (None, 
+            (None,
                 highlight_key("pretty", "p") +
                 [("text", ": pretty-print XML, HTML and JSON")]
             ),
-            (None, 
+            (None,
                 highlight_key("hex", "h") +
                 [("text", ": hex dump")]
             ),
 
             ("o", "toggle options:"),
-            (None, 
+            (None,
                 highlight_key("anticache", "a") +
                 [
-                    
+
                     ("text", ": modify requests to prevent cached responses")
-                    
+
                 ]
             ),
-            (None, 
+            (None,
                 highlight_key("anticomp", "c") +
                 [("text", ": modify requests to try to prevent compressed responses")]
             ),
-            (None, 
+            (None,
                 highlight_key("killextra", "k") +
                 [("text", ": kill requests not part of server replay")]
             ),
-            (None, 
+            (None,
                 highlight_key("norefresh", "n") +
                 [("text", ": disable server replay response refresh")]
             ),
