@@ -112,11 +112,6 @@ def format_flow(f, focus, extended=False, padding=2):
         if t:
             t = t[0].split(";")[0]
             txt.append(("text", " %s"%t))
-        e = f.response.headers["content-encoding"]
-        if e:
-            e = e[0]
-        else:
-            e = "identity"
         if f.response.content:
             txt.append(", %s"%utils.pretty_size(len(f.response.content)))
     elif f.error:
@@ -916,14 +911,17 @@ class ConsoleMaster(flow.FlowMaster):
                 )
             )
 
-    def _view_conn_raw(self, content, txt):
+    def _view_conn_raw(self, content):
+        txt = []
         for i in utils.cleanBin(content[:VIEW_CUTOFF]).splitlines():
             txt.append(
                 urwid.Text(("text", i))
             )
         self._trailer(len(content), txt)
+        return txt
 
-    def _view_conn_binary(self, content, txt):
+    def _view_conn_binary(self, content):
+        txt = []
         for offset, hex, s in utils.hexdump(content[:VIEW_CUTOFF]):
             txt.append(urwid.Text([
                 ("offset", offset),
@@ -933,15 +931,19 @@ class ConsoleMaster(flow.FlowMaster):
                 ("text", s),
             ]))
         self._trailer(len(content), txt)
+        return txt
 
-    def _view_conn_xmlish(self, content, txt):
+    def _view_conn_xmlish(self, content):
+        txt = []
         for i in utils.pretty_xmlish(content[:VIEW_CUTOFF]):
             txt.append(
                 urwid.Text(("text", i)),
             )
         self._trailer(len(content), txt)
+        return txt
 
     def _view_conn_json(self, lines, txt):
+        txt = []
         sofar = 0
         for i in lines:
             sofar += len(i)
@@ -951,20 +953,22 @@ class ConsoleMaster(flow.FlowMaster):
             if sofar > VIEW_CUTOFF:
                 break
         self._trailer(sum(len(i) for i in lines), txt)
+        return txt
 
-    def _view_conn_urlencoded(self, lines, txt):
-        txt.append(urwid.Text(("highlight", "URLencoded data:\n")))
-        txt.append(
-            urwid.Text(
-                format_keyvals(
-                    [(k+":", v) for (k, v) in lines],
-                    key = "header",
-                    val = "text"
-                )
-            )
-        )
+    def _view_conn_urlencoded(self, lines):
+        return [
+                    urwid.Text(("highlight", "URLencoded data:\n")),
+                    urwid.Text(
+                        format_keyvals(
+                            [(k+":", v) for (k, v) in lines],
+                            key = "header",
+                            val = "text"
+                        )
+                    )
+                ]
 
-    def _find_pretty_view(self, content, hdrItems, txt):
+    def _find_pretty_view(self, content, hdrItems):
+        txt = []
         ctype = None
         for i in hdrItems:
             if i[0].lower() == "content-type":
@@ -973,20 +977,22 @@ class ConsoleMaster(flow.FlowMaster):
         if ctype and "x-www-form-urlencoded" in ctype:
             data = utils.urldecode(content)
             if data:
-                return self._view_conn_urlencoded(data, txt)
+                return self._view_conn_urlencoded(data)
         if utils.isXML(content):
-            return self._view_conn_xmlish(content, txt)
+            return self._view_conn_xmlish(content)
         elif ctype and "application/json" in ctype:
             lines = utils.pretty_json(content)
             if lines:
-                return self._view_conn_json(lines, txt)
-        return self._view_conn_raw(content, txt)
+                return self._view_conn_json(lines)
+        return self._view_conn_raw(content)
 
     @utils.LRUCache(20)
     def _cached_conn_text(self, e, rawcontent, hdrItems, viewmode):
         content = encoding.decode(e, rawcontent)
         if content is None:
             content = rawcontent
+            e = None
+
         hdr = []
         hdr.extend(
             format_keyvals(
@@ -998,13 +1004,17 @@ class ConsoleMaster(flow.FlowMaster):
         hdr.append("\n")
 
         txt = [urwid.Text(hdr)]
+        if e and e != "identity":
+            txt.append(
+                urwid.Text(("highlight", "Decoded %s data:\n"%e))
+            )
         if content:
             if viewmode == VIEW_BODY_HEX:
-                self._view_conn_binary(content, txt)
+                txt.extend(self._view_conn_binary(content))
             elif viewmode == VIEW_BODY_PRETTY:
-                self._find_pretty_view(content, hdrItems, txt)
+                txt.extend(self._find_pretty_view(content, hdrItems))
             else:
-                self._view_conn_raw(content, txt)
+                txt.extend(self._view_conn_raw(content))
         return urwid.ListBox(txt)
 
     def _readflow(self, path):
