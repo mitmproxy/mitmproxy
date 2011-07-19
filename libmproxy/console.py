@@ -531,7 +531,7 @@ class ConnectionView(WWrap):
             self.master.view_next_flow(self.flow)
         elif key == "|":
             self.master.path_prompt("Script: ", self.state.last_script, self.run_script)
-        elif key == "z":
+        elif key == "g":
             if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
                 conn = self.flow.response
                 e = conn.headers["content-encoding"]
@@ -1322,6 +1322,7 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("b", "save request/response body"),
             ("e", "edit request/response"),
+            ("g", "switch response encoding"),
             ("p", "previous flow"),
             ("v", "view body in external viewer"),
             ("|", "run script"),
