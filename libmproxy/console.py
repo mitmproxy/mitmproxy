@@ -957,7 +957,7 @@ class ConsoleMaster(flow.FlowMaster):
         self._trailer(len(content), txt)
         return txt
 
-    def _view_conn_json(self, lines, txt):
+    def _view_conn_json(self, lines):
         txt = []
         sofar = 0
         for i in lines:
