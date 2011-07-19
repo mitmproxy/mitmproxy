@@ -10,13 +10,21 @@ ENCODINGS = set(["identity", "gzip", "deflate"])
 
 def decode(encoding, content):
     encoding_map = {
-        "identity": decode_identity,
+        "identity": identity,
         "gzip": decode_gzip,
         "deflate": decode_deflate,
     }
-    return encoding_map.get(encoding, decode_identity)(content)
+    return encoding_map.get(encoding, identity)(content)
 
-def decode_identity(content):
+def encode(encoding, content):
+    encoding_map = {
+        "identity": identity,
+        "gzip": encode_gzip,
+        "deflate": encode_deflate,
+    }
+    return encoding_map.get(encoding, identity)(content)
+
+def identity(content):
     """
         Returns content unchanged. Identity is the default value of
         Accept-Encoding headers.
@@ -30,9 +38,16 @@ def decode_gzip(content):
     except IOError:
         return None
 
+def encode_gzip(content):
+    s = cStringIO.StringIO()
+    gf = gzip.GzipFile(fileobj=s, mode='wb')
+    gf.write(content)
+    gf.close()
+    return s.getvalue()
+
 def decode_deflate(content):
     """
-        Returns decompress data for DEFLATE. Some servers may respond with
+        Returns decompressed data for DEFLATE. Some servers may respond with
         compressed data without a zlib header or checksum. An undocumented
         feature of zlib permits the lenient decompression of data missing both
         values.
@@ -46,3 +61,9 @@ def decode_deflate(content):
             return zlib.decompress(content, -15)
     except zlib.error:
         return None
+
+def encode_deflate(content):
+    """
+        Returns compressed content, always including zlib header and checksum.
+    """
+    return zlib.compress(content)
