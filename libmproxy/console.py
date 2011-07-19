@@ -40,7 +40,7 @@ def highlight_key(s, k):
 
 def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     """
-        Format a list of (key, value) tuples. 
+        Format a list of (key, value) tuples.
 
         If key is None, it's treated specially:
             - We assume a sub-value, and add an extra indent.
@@ -311,8 +311,9 @@ class ConnectionView(WWrap):
     def _conn_text(self, conn, viewmode):
         if conn:
             e = conn.headers["content-encoding"]
-            if e:
+            if e and conn.should_autodecode:
                 e = e[0]
+                conn.should_autodecode = False
             else:
                 e = "identity"
             return self.master._cached_conn_text(
@@ -530,6 +531,20 @@ class ConnectionView(WWrap):
             self.master.view_next_flow(self.flow)
         elif key == "|":
             self.master.path_prompt("Script: ", self.state.last_script, self.run_script)
+        elif key == "z":
+            if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
+                conn = self.flow.response
+                e = conn.headers["content-encoding"]
+                if e:
+                    if conn.last_encoding:
+                        conn.content = encoding.encode(
+                            conn.last_encoding,
+                            encoding.decode(e[0], conn.content)
+                        )
+                        conn.last_encoding, conn.headers["content-encoding"] = e[0], [conn.last_encoding]
+                    else:
+                        conn.last_encoding = "identity"
+                    self.master.refresh_connection(self.flow)
         return key
 
     def run_script(self, path):
@@ -1245,37 +1260,37 @@ class ConsoleMaster(flow.FlowMaster):
             ("L", "load saved flows"),
 
             ("m", "change body display mode"),
-            (None, 
+            (None,
                 highlight_key("raw", "r") +
                 [("text", ": raw data")]
             ),
-            (None, 
+            (None,
                 highlight_key("pretty", "p") +
                 [("text", ": pretty-print XML, HTML and JSON")]
             ),
-            (None, 
+            (None,
                 highlight_key("hex", "h") +
                 [("text", ": hex dump")]
             ),
 
             ("o", "toggle options:"),
-            (None, 
+            (None,
                 highlight_key("anticache", "a") +
                 [
-                    
+
                     ("text", ": modify requests to prevent cached responses")
-                    
+
                 ]
             ),
-            (None, 
+            (None,
                 highlight_key("anticomp", "c") +
                 [("text", ": modify requests to try to prevent compressed responses")]
             ),
-            (None, 
+            (None,
                 highlight_key("killextra", "k") +
                 [("text", ": kill requests not part of server replay")]
             ),
-            (None, 
+            (None,
                 highlight_key("norefresh", "n") +
                 [("text", ": disable server replay response refresh")]
             ),
