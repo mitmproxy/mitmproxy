@@ -190,7 +190,7 @@ class ConnectionItem(WWrap):
                 self.master.save_one_flow,
                 self.flow
             )
-        elif key == "z":
+        elif key == "X":
             self.flow.kill(self.master)
         elif key == "enter":
             if self.flow.request:
@@ -531,7 +531,7 @@ class ConnectionView(WWrap):
             self.master.view_next_flow(self.flow)
         elif key == "|":
             self.master.path_prompt("Script: ", self.state.last_script, self.run_script)
-        elif key == "g":
+        elif key == "z":
             if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
                 conn = self.flow.response
                 e = conn.headers["content-encoding"]
@@ -1313,7 +1313,7 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("C", "clear connection list"),
             ("d", "delete connection from view"),
-            ("z", "kill and delete connection, even if it's mid-intercept"),
+            ("X", "kill and delete connection, even if it's mid-intercept"),
             ("space", "page down"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
@@ -1322,9 +1322,9 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("b", "save request/response body"),
             ("e", "edit request/response"),
-            ("g", "switch response encoding"),
             ("p", "previous flow"),
             ("v", "view body in external viewer"),
+            ("z", "switch response encoding"),
             ("|", "run script"),
             ("tab", "toggle response/request view"),
             ("space", "next flow"),
