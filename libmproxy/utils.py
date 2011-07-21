@@ -17,6 +17,7 @@ import time, functools, copy, cgi
 import json
 
 CERT_SLEEP_TIME = 1
+CERT_EXPIRY = str(365 * 3)
 
 def timestamp():
     """
@@ -339,7 +340,7 @@ def dummy_ca(path):
         "-x509",
         "-config", data.path("resources/ca.cnf"),
         "-nodes",
-        "-days", "9999",
+        "-days", CERT_EXPIRY,
         "-out", path,
         "-newkey", "rsa:1024",
         "-keyout", path,
@@ -434,7 +435,7 @@ def dummy_cert(certdir, ca, commonname):
             "x509",
             "-req",
             "-in", reqpath,
-            "-days", "9999",
+            "-days", CERT_EXPIRY,
             "-out", certpath,
             "-CA", ca,
             "-CAcreateserial",
@@ -457,7 +458,7 @@ def dummy_cert(certdir, ca, commonname):
             "-x509",
             "-config", confpath,
             "-nodes",
-            "-days", "9999",
+            "-days", CERT_EXPIRY,
             "-out", certpath,
             "-newkey", "rsa:1024",
             "-keyout", certpath,
