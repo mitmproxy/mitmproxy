@@ -137,6 +137,15 @@ class uHeaders(libpry.AutoTree):
         del self.hd["foo"]
         assert len(self.hd.lst) == 1
 
+    def test_replace(self):
+        self.hd.add("one", "two")
+        self.hd.add("two", "one")
+        assert self.hd.replace("one", "vun") == 2
+        assert self.hd.lst == [
+            ["vun", "two"],
+            ["two", "vun"],
+        ]
+
 
 class uisStringLike(libpry.AutoTree):
     def test_all(self):

@@ -1,4 +1,4 @@
-import cStringIO, time
+import cStringIO, time, re
 import libpry
 from libmproxy import proxy, controller, utils, dump, script
 import email.utils
@@ -128,6 +128,14 @@ class uRequest(libpry.AutoTree):
         r.load_state(r2.get_state())
         assert not r.client_conn
 
+    def test_replace(self):
+        r = tutils.treq()
+        r.headers["Foo"] = ["fOo"]
+        r.content = "afoob"
+        assert r.replace("foo", "boo", flags=re.I) == 3
+        assert not "foo" in r.content
+        assert r.headers["boo"] == ["boo"]
+
 
 class uResponse(libpry.AutoTree):
     def test_simple(self):
@@ -185,6 +193,14 @@ class uResponse(libpry.AutoTree):
         resp.load_state(resp2.get_state())
         assert resp == resp2
 
+    def test_replace(self):
+        r = tutils.tresp()
+        r.headers["Foo"] = ["fOo"]
+        r.content = "afoob"
+        assert r.replace("foo", "boo", flags=re.I) == 3
+        assert not "foo" in r.content
+        assert r.headers["boo"] == ["boo"]
+
 
 class uError(libpry.AutoTree):
     def test_getset_state(self):
@@ -202,6 +218,11 @@ class uError(libpry.AutoTree):
 
         e3 = e.copy()
         assert e3 == e
+
+    def test_replace(self):
+        e = proxy.Error(None, "amoop")
+        e.replace("moo", "bar")
+        assert e.msg == "abarp"
 
 
 class uProxyError(libpry.AutoTree):

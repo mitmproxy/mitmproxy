@@ -279,6 +279,21 @@ class Headers:
                     ret.append([name, value])
         self.lst = ret
 
+    def replace(self, pattern, repl, count=0, flags=0):
+        """
+            Replaces a regular expression pattern with repl in both header keys
+            and values. Returns the number of replacements made. 
+        """
+        nlst, count = [], 0
+        for i in self.lst:
+            k, c = re.subn(pattern, repl, i[0], count, flags)
+            count += c
+            v, c = re.subn(pattern, repl, i[1], count, flags)
+            count += c
+            nlst.append([k, v])
+        self.lst = nlst
+        return count
+
 
 def pretty_size(size):
     suffixes = [

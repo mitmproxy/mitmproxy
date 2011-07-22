@@ -219,6 +219,21 @@ class uFlow(libpry.AutoTree):
         f = flow.Flow(None)
         f.request = tutils.treq()
 
+    def test_replace(self):
+        f = tutils.tflow_full()
+        f.request.headers["foo"] = ["foo"]
+        f.request.content = "afoob"
+
+        f.response.headers["foo"] = ["foo"]
+        f.response.content = "afoob"
+
+        assert f.replace("foo", "bar") == 6
+
+        assert f.request.headers["bar"] == ["bar"]
+        assert f.request.content == "abarb"
+        assert f.response.headers["bar"] == ["bar"]
+        assert f.response.content == "abarb"
+
 
 class uState(libpry.AutoTree):
     def test_backup(self):

@@ -323,6 +323,18 @@ class Flow:
                 self.response.ack()
             self.intercepting = False
 
+    def replace(self, pattern, repl, count=0, flags=0):
+        """
+            Replaces a regular expression pattern with repl in all parts of the
+            flow . Returns the number of replacements made. 
+        """
+        c = self.request.replace(pattern, repl, count, flags)
+        if self.response:
+            c += self.response.replace(pattern, repl, count, flags)
+        if self.error:
+            c += self.error.replace(pattern, repl, count, flags)
+        return c
+
 
 class State:
     def __init__(self):

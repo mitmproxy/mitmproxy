@@ -280,6 +280,16 @@ class Request(controller.Msg):
         else:
             return self.FMT_PROXY % (self.method, self.scheme, self.host, self.port, self.path, str(headers), content)
 
+    def replace(self, pattern, repl, count=0, flags=0):
+        """
+            Replaces a regular expression pattern with repl in both the headers
+            and the body of the request. Returns the number of replacements
+            made. 
+        """
+        self.content, c = re.subn(pattern, repl, self.content, count, flags)
+        c += self.headers.replace(pattern, repl, count, flags)
+        return c
+
 
 class Response(controller.Msg):
     FMT = '%s\r\n%s\r\n%s'
@@ -406,6 +416,16 @@ class Response(controller.Msg):
         data = (proto, str(headers), content)
         return self.FMT%data
 
+    def replace(self, pattern, repl, count=0, flags=0):
+        """
+            Replaces a regular expression pattern with repl in both the headers
+            and the body of the response. Returns the number of replacements
+            made. 
+        """
+        self.content, c = re.subn(pattern, repl, self.content, count, flags)
+        c += self.headers.replace(pattern, repl, count, flags)
+        return c
+
 
 class ClientDisconnect(controller.Msg):
     def __init__(self, client_conn):
@@ -472,6 +492,15 @@ class Error(controller.Msg):
 
     def __eq__(self, other):
         return self.get_state() == other.get_state()
+
+    def replace(self, pattern, repl, count=0, flags=0):
+        """
+            Replaces a regular expression pattern with repl in both the headers
+            and the body of the request. Returns the number of replacements
+            made. 
+        """
+        self.msg, c = re.subn(pattern, repl, self.msg, count, flags)
+        return c
 
 
 class FileLike:
