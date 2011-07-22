@@ -311,9 +311,8 @@ class ConnectionView(WWrap):
     def _conn_text(self, conn, viewmode):
         if conn:
             e = conn.headers["content-encoding"]
-            if e and conn.should_autodecode:
+            if e and self.master.autodecode:
                 e = e[0]
-                conn.should_autodecode = False
             else:
                 e = "identity"
             return self.master._cached_conn_text(
@@ -534,22 +533,38 @@ class ConnectionView(WWrap):
         elif key == "z":
             if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
                 conn = self.flow.response
-                e = conn.headers["content-encoding"]
-                if e:
-                    if conn.last_encoding:
-                        conn.content = encoding.encode(
-                            conn.last_encoding,
-                            encoding.decode(e[0], conn.content)
-                        )
-                        conn.last_encoding, conn.headers["content-encoding"] = e[0], [conn.last_encoding]
-                    else:
-                        conn.last_encoding = "identity"
-                    self.master.refresh_connection(self.flow)
+                e = conn.headers["content-encoding"] or ["identity"]
+                if e[0] != "identity":
+                    conn.content = encoding.decode(e[0], conn.content)
+                    conn.headers["content-encoding"] = ["identity"]
+                else:
+                    self.master.prompt_onekey(
+                        "Select encoding: ",
+                        (
+                            ("gzip", "z"),
+                            ("deflate", "d"),
+                        ),
+                        self.encode_response_callback
+                    )
+                self.master.refresh_connection(self.flow)
         return key
 
     def run_script(self, path):
         if path:
             self.master._runscript(self.flow, path)
+
+    def encode_response_callback(self, key):
+        conn = self.flow.response
+        encoding_map = {
+            "z": "gzip",
+            "d": "deflate",
+        }
+        conn.content = encoding.encode(
+            encoding_map[key],
+            conn.content
+        )
+        conn.headers["content-encoding"] = [encoding_map[key]]
+        self.master.refresh_connection(self.flow)
 
 
 class _PathCompleter:
@@ -673,6 +688,8 @@ class StatusBar(WWrap):
             opts.append("anticache")
         if self.master.anticomp:
             opts.append("anticomp")
+        if self.master.autodecode:
+            opts.append("autodecode")
         if not self.master.refresh_server_playback:
             opts.append("norefresh")
         if self.master.killextra:
@@ -806,6 +823,7 @@ class Options(object):
     __slots__ = [
         "anticache",
         "anticomp",
+        "autodecode",
         "client_replay",
         "debug",
         "keepserving",
@@ -886,6 +904,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
         self.anticomp = options.anticomp
+        self.autodecode = options.autodecode
         self.killextra = options.kill
         self.rheaders = options.rheaders
 
@@ -1276,15 +1295,15 @@ class ConsoleMaster(flow.FlowMaster):
             ("o", "toggle options:"),
             (None,
                 highlight_key("anticache", "a") +
-                [
-
-                    ("text", ": modify requests to prevent cached responses")
-
-                ]
+                [("text", ": modify requests to prevent cached responses")]
             ),
             (None,
                 highlight_key("anticomp", "c") +
                 [("text", ": modify requests to try to prevent compressed responses")]
+            ),
+            (None,
+                highlight_key("autodecode", "d") +
+                [("text", ": automatically decode compressed responses")]
             ),
             (None,
                 highlight_key("killextra", "k") +
@@ -1581,6 +1600,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     (
                                         ("anticache", "a"),
                                         ("anticomp", "c"),
+                                        ("autodecode", "d"),
                                         ("killextra", "k"),
                                         ("norefresh", "n"),
                                     ),
@@ -1624,6 +1644,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.anticache = not self.anticache
         if a == "c":
             self.anticomp = not self.anticomp
+        elif a == "d":
+            self.autodecode = not self.autodecode
         elif a == "k":
             self.killextra = not self.killextra
         elif a == "n":
