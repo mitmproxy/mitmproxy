@@ -172,7 +172,7 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile
             print >> self.outfile, result
             print >> self.outfile, "\n"
-        elif self.o.verbosity == 3:
+        elif self.o.verbosity >= 3:
             print >> self.outfile, str_request(f.request)
             print >> self.outfile, self.indent(4, f.request.headers)
             if utils.isBin(f.request.content):
@@ -182,6 +182,7 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile
             print >> self.outfile, result
             print >> self.outfile, "\n"
+
         self.state.delete_flow(f)
         if self.o.wfile:
             self.fwriter.add(f)
