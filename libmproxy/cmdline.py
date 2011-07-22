@@ -17,6 +17,7 @@ def get_common_options(options):
     return dict(
         anticache = options.anticache,
         anticomp = options.anticomp,
+        autodecode = options.autodecode,
         client_replay = options.client_replay,
         kill = options.kill,
         no_server = options.no_server,
@@ -38,6 +39,11 @@ def common_options(parser):
         "-a",
         action="store", type = "str", dest="addr", default='',
         help = "Address to bind proxy to (defaults to all interfaces)"
+    )
+    parser.add_option(
+        "-d",
+        action="store_true", dest="autodecode",
+        help="Automatically decode compressed server responses."
     )
     parser.add_option(
         "--confdir",

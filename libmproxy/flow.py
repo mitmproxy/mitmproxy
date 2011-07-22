@@ -454,6 +454,7 @@ class FlowMaster(controller.Master):
 
         self.anticache = False
         self.anticomp = False
+        self.autodecode = False
         self.refresh_server_playback = False
 
     def _runscript(self, f, script):

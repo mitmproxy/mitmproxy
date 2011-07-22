@@ -311,9 +311,8 @@ class ConnectionView(WWrap):
     def _conn_text(self, conn, viewmode):
         if conn:
             e = conn.headers["content-encoding"]
-            if e and conn.should_autodecode:
+            if e and self.master.autodecode:
                 e = e[0]
-                conn.should_autodecode = False
             else:
                 e = "identity"
             return self.master._cached_conn_text(
@@ -673,6 +672,8 @@ class StatusBar(WWrap):
             opts.append("anticache")
         if self.master.anticomp:
             opts.append("anticomp")
+        if self.master.autodecode:
+            opts.append("autodecode")
         if not self.master.refresh_server_playback:
             opts.append("norefresh")
         if self.master.killextra:
@@ -806,6 +807,7 @@ class Options(object):
     __slots__ = [
         "anticache",
         "anticomp",
+        "autodecode",
         "client_replay",
         "debug",
         "keepserving",
@@ -886,6 +888,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
         self.anticomp = options.anticomp
+        self.autodecode = options.autodecode
         self.killextra = options.kill
         self.rheaders = options.rheaders
 
@@ -1276,15 +1279,15 @@ class ConsoleMaster(flow.FlowMaster):
             ("o", "toggle options:"),
             (None,
                 highlight_key("anticache", "a") +
-                [
-
-                    ("text", ": modify requests to prevent cached responses")
-
-                ]
+                [("text", ": modify requests to prevent cached responses")]
             ),
             (None,
                 highlight_key("anticomp", "c") +
                 [("text", ": modify requests to try to prevent compressed responses")]
+            ),
+            (None,
+                highlight_key("autodecode", "d") +
+                [("text", ": automatically decode compressed responses")]
             ),
             (None,
                 highlight_key("killextra", "k") +
@@ -1581,6 +1584,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     (
                                         ("anticache", "a"),
                                         ("anticomp", "c"),
+                                        ("autodecode", "d"),
                                         ("killextra", "k"),
                                         ("norefresh", "n"),
                                     ),
@@ -1624,6 +1628,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.anticache = not self.anticache
         if a == "c":
             self.anticomp = not self.anticomp
+        elif a == "d":
+            self.autodecode = not self.autodecode
         elif a == "k":
             self.killextra = not self.killextra
         elif a == "n":

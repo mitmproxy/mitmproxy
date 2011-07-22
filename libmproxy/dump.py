@@ -8,6 +8,7 @@ class Options(object):
     __slots__ = [
         "anticache",
         "anticomp",
+        "autodecode",
         "client_replay",
         "keepserving",
         "kill",
@@ -56,6 +57,7 @@ class DumpMaster(flow.FlowMaster):
         self.o = options
         self.anticache = options.anticache
         self.anticomp = options.anticomp
+        self.autodecode = options.autodecode
         self.refresh_server_playback = options.refresh_server_playback
 
         if filtstr:
@@ -64,9 +66,9 @@ class DumpMaster(flow.FlowMaster):
             self.filt = None
 
         if self.o.response_script:
-            self.set_response_script(self.o.response_script)  
+            self.set_response_script(self.o.response_script)
         if self.o.request_script:
-            self.set_request_script(self.o.request_script)  
+            self.set_request_script(self.o.request_script)
 
         if options.stickycookie:
             self.set_stickycookie(options.stickycookie)
