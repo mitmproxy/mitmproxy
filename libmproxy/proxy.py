@@ -290,7 +290,6 @@ class Response(controller.Msg):
         self.timestamp = timestamp or utils.timestamp()
         controller.Msg.__init__(self)
         self.replay = False
-        self.last_encoding = None
 
     def _refresh_cookie(self, c, delta):
         """

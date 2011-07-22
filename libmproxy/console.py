@@ -533,22 +533,38 @@ class ConnectionView(WWrap):
         elif key == "z":
             if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
                 conn = self.flow.response
-                e = conn.headers["content-encoding"]
-                if e:
-                    if conn.last_encoding:
-                        conn.content = encoding.encode(
-                            conn.last_encoding,
-                            encoding.decode(e[0], conn.content)
-                        )
-                        conn.last_encoding, conn.headers["content-encoding"] = e[0], [conn.last_encoding]
-                    else:
-                        conn.last_encoding = "identity"
-                    self.master.refresh_connection(self.flow)
+                e = conn.headers["content-encoding"] or ["identity"]
+                if e[0] != "identity":
+                    conn.content = encoding.decode(e[0], conn.content)
+                    conn.headers["content-encoding"] = ["identity"]
+                else:
+                    self.master.prompt_onekey(
+                        "Select encoding: ",
+                        (
+                            ("gzip", "z"),
+                            ("deflate", "d"),
+                        ),
+                        self.encode_response_callback
+                    )
+                self.master.refresh_connection(self.flow)
         return key
 
     def run_script(self, path):
         if path:
             self.master._runscript(self.flow, path)
+
+    def encode_response_callback(self, key):
+        conn = self.flow.response
+        encoding_map = {
+            "z": "gzip",
+            "d": "deflate",
+        }
+        conn.content = encoding.encode(
+            encoding_map[key],
+            conn.content
+        )
+        conn.headers["content-encoding"] = [encoding_map[key]]
+        self.master.refresh_connection(self.flow)
 
 
 class _PathCompleter:
