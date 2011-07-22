@@ -195,6 +195,11 @@ class ConnectionItem(WWrap):
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
+        elif key == "|":
+            self.master.path_prompt(
+                "Script: ", self.state.last_script,
+                self.master.run_script, self.flow
+            )
         elif key == " ":
             key = "page down"
         return key
@@ -529,7 +534,10 @@ class ConnectionView(WWrap):
         elif key == " ":
             self.master.view_next_flow(self.flow)
         elif key == "|":
-            self.master.path_prompt("Script: ", self.state.last_script, self.run_script)
+            self.master.path_prompt(
+                "Script: ", self.state.last_script,
+                self.master.run_script, self.flow
+            )
         elif key == "z":
             if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
                 conn = self.flow.response
@@ -548,10 +556,6 @@ class ConnectionView(WWrap):
                     )
                 self.master.refresh_connection(self.flow)
         return key
-
-    def run_script(self, path):
-        if path:
-            self.master._runscript(self.flow, path)
 
     def encode_response_callback(self, key):
         conn = self.flow.response
@@ -1167,6 +1171,10 @@ class ConsoleMaster(flow.FlowMaster):
         sys.stderr.flush()
         self.shutdown()
 
+    def run_script(self, path, flow):
+        if path:
+            self._runscript(flow, path)
+
     def make_view(self):
         self.view = urwid.Frame(
                         self.body,
@@ -1323,8 +1331,8 @@ class ConsoleMaster(flow.FlowMaster):
             ("t", "set sticky cookie expression"),
             ("u", "set sticky auth expression"),
             ("w", "save this flow"),
+            ("|", "run script on this flow"),
             ("page up/down", "page up/down"),
-            ("enter", "view connection"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
@@ -1334,6 +1342,7 @@ class ConsoleMaster(flow.FlowMaster):
             ("d", "delete connection from view"),
             ("X", "kill and delete connection, even if it's mid-intercept"),
             ("space", "page down"),
+            ("enter", "view connection"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
@@ -1344,7 +1353,6 @@ class ConsoleMaster(flow.FlowMaster):
             ("p", "previous flow"),
             ("v", "view body in external viewer"),
             ("z", "switch response encoding"),
-            ("|", "run script"),
             ("tab", "toggle response/request view"),
             ("space", "next flow"),
         ]
