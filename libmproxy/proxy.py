@@ -287,6 +287,8 @@ class Request(controller.Msg):
             made. 
         """
         self.content, c = re.subn(pattern, repl, self.content, count, flags)
+        self.path, pc = re.subn(pattern, repl, self.path, count, flags)
+        c += pc
         c += self.headers.replace(pattern, repl, count, flags)
         return c
 

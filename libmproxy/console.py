@@ -920,7 +920,6 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.debug = options.debug
 
-
     def _runscript(self, f, path):
         path = os.path.expanduser(path)
         self.state.last_script = path

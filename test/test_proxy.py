@@ -130,9 +130,11 @@ class uRequest(libpry.AutoTree):
 
     def test_replace(self):
         r = tutils.treq()
+        r.path = "path/foo"
         r.headers["Foo"] = ["fOo"]
         r.content = "afoob"
-        assert r.replace("foo", "boo", flags=re.I) == 3
+        assert r.replace("foo", "boo", flags=re.I) == 4
+        assert r.path == "path/boo"
         assert not "foo" in r.content
         assert r.headers["boo"] == ["boo"]
 
