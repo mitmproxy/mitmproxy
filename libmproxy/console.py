@@ -830,6 +830,7 @@ class Options(object):
         "autodecode",
         "client_replay",
         "debug",
+        "eventlog",
         "keepserving",
         "kill",
         "intercept",
