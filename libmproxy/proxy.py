@@ -443,6 +443,8 @@ class ClientConnect(controller.Msg):
         """
         self.address = address
         self.close = False
+        self.requestcount = 0
+        self.connection_error = None
         controller.Msg.__init__(self)
 
     def __eq__(self, other):
@@ -620,10 +622,14 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
     def handle_request(self, cc):
         server, request, err = None, None, None
         try:
-            request = self.read_request(cc)
+            try:
+                request = self.read_request(cc)
+            except IOError, v:
+                raise IOError, "Reading request: %s"%v
             if request is None:
                 cc.close = True
                 return
+            cc.requestcount += 1
             request = request.send(self.mqueue)
             if request is None:
                 cc.close = True
@@ -636,7 +642,10 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             else:
                 server = ServerConnection(request)
                 server.send_request(request)
-                response = server.read_response()
+                try:
+                    response = server.read_response()
+                except IOError, v:
+                    raise IOError, "Reading response: %s"%v
                 response = response.send(self.mqueue)
                 if response is None:
                     server.terminate()
@@ -644,13 +653,16 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 cc.close = True
                 return
             self.send_response(response)
-        except IOError:
+        except IOError, v:
+            cc.connection_error = v
             cc.close = True
         except ProxyError, e:
-            err = Error(request, e.msg)
-            err.send(self.mqueue)
             cc.close = True
-            self.send_error(e.code, e.msg)
+            cc.connection_error = "%s: %s"%(e.code, e.msg)
+            if request:
+                err = Error(request, e.msg)
+                err.send(self.mqueue)
+                self.send_error(e.code, e.msg)
         if server:
             server.terminate()
 
@@ -689,7 +701,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 keyfile = self.config.certfile or self.config.cacert,
                 server_side = True,
                 ssl_version = ssl.PROTOCOL_SSLv23,
-                do_handshake_on_connect = False
+                do_handshake_on_connect = True
             )
             if sys.version_info[1] > 6:
                 kwargs["ciphers"] = self.config.ciphers
