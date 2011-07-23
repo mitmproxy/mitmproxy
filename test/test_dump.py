@@ -1,7 +1,7 @@
 import os
 from cStringIO import StringIO
 import libpry
-from libmproxy import dump, flow
+from libmproxy import dump, flow, proxy
 import tutils
 
 class uStrFuncs(libpry.AutoTree):
@@ -27,6 +27,7 @@ class uDumpMaster(libpry.AutoTree):
         m.handle_clientconnect(cc)
         m.handle_request(req)
         m.handle_response(resp)
+        m.handle_clientdisconnect(proxy.ClientDisconnect(cc))
 
     def _dummy_cycle(self, filt, content, **options):
         cs = StringIO()
@@ -73,7 +74,7 @@ class uDumpMaster(libpry.AutoTree):
 
     def test_basic(self):
         for i in (1, 2, 3):
-            assert "GET" in self._dummy_cycle("~s", "", verbosity=i)
+            assert "GET" in self._dummy_cycle("~s", "", verbosity=i, eventlog=True)
             assert "GET" in self._dummy_cycle("~s", "\x00\x00\x00", verbosity=i)
             assert "GET" in self._dummy_cycle("~s", "ascii", verbosity=i)
 

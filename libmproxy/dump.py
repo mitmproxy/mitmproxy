@@ -10,6 +10,7 @@ class Options(object):
         "anticomp",
         "autodecode",
         "client_replay",
+        "eventlog",
         "keepserving",
         "kill",
         "no_server",
@@ -58,6 +59,7 @@ class DumpMaster(flow.FlowMaster):
         self.anticache = options.anticache
         self.anticomp = options.anticomp
         self.autodecode = options.autodecode
+        self.eventlog = options.eventlog
         self.refresh_server_playback = options.refresh_server_playback
 
         if filtstr:
@@ -130,8 +132,20 @@ class DumpMaster(flow.FlowMaster):
                     "%s: %s\n%s"%(script, e.args[0], eout)
                 )
 
+    def handle_clientconnect(self, c):
+        if self.eventlog:
+            print >> self.outfile, "Connection from: %s:%s"%c.address
+        return flow.FlowMaster.handle_clientconnect(self, c)
+
+    def handle_clientdisconnect(self, c):
+        if self.eventlog:
+            print >> self.outfile, "Disconnect from: %s:%s"%c.client_conn.address
+        return flow.FlowMaster.handle_clientconnect(self, c)
+
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
+        if self.eventlog:
+            print >> self.outfile, "Request: %s"%str_request(r)
         if f:
             r.ack()
         return f

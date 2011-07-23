@@ -19,6 +19,7 @@ def get_common_options(options):
         anticomp = options.anticomp,
         autodecode = options.autodecode,
         client_replay = options.client_replay,
+        eventlog = options.eventlog,
         kill = options.kill,
         no_server = options.no_server,
         refresh_server_playback = not options.norefresh,
@@ -44,6 +45,11 @@ def common_options(parser):
         "-d",
         action="store_true", dest="autodecode",
         help="Automatically decode compressed server responses."
+    )
+    parser.add_option(
+        "-e",
+        action="store_true", dest="eventlog",
+        help="Show event log."
     )
     parser.add_option(
         "--confdir",
