@@ -139,7 +139,7 @@ class DumpMaster(flow.FlowMaster):
 
     def handle_clientdisconnect(self, c):
         if self.eventlog:
-            print >> self.outfile, "Disconnect from: %s:%s"%c.client_conn.address,
+            print >> self.outfile, "Disconnect from: %s:%s"%tuple(c.client_conn.address),
             print >> self.outfile, "(handled %s requests)"%c.client_conn.requestcount
             if c.client_conn.connection_error:
                 print >> self.outfile, "\terror: %s"%c.client_conn.connection_error

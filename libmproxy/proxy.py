@@ -701,7 +701,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 keyfile = self.config.certfile or self.config.cacert,
                 server_side = True,
                 ssl_version = ssl.PROTOCOL_SSLv23,
-                do_handshake_on_connect = True
+                do_handshake_on_connect = True,
             )
             if sys.version_info[1] > 6:
                 kwargs["ciphers"] = self.config.ciphers
