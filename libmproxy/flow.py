@@ -323,16 +323,16 @@ class Flow:
                 self.response.ack()
             self.intercepting = False
 
-    def replace(self, pattern, repl, count=0, flags=0):
+    def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in all parts of the
-            flow . Returns the number of replacements made. 
+            flow . Returns the number of replacements made.
         """
-        c = self.request.replace(pattern, repl, count, flags)
+        c = self.request.replace(pattern, repl, *args, **kwargs)
         if self.response:
-            c += self.response.replace(pattern, repl, count, flags)
+            c += self.response.replace(pattern, repl, *args, **kwargs)
         if self.error:
-            c += self.error.replace(pattern, repl, count, flags)
+            c += self.error.replace(pattern, repl, *args, **kwargs)
         return c
 
 

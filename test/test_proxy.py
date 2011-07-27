@@ -133,7 +133,7 @@ class uRequest(libpry.AutoTree):
         r.path = "path/foo"
         r.headers["Foo"] = ["fOo"]
         r.content = "afoob"
-        assert r.replace("foo", "boo", flags=re.I) == 4
+        assert r.replace("foo(?i)", "boo") == 4
         assert r.path == "path/boo"
         assert not "foo" in r.content
         assert r.headers["boo"] == ["boo"]
@@ -199,7 +199,7 @@ class uResponse(libpry.AutoTree):
         r = tutils.tresp()
         r.headers["Foo"] = ["fOo"]
         r.content = "afoob"
-        assert r.replace("foo", "boo", flags=re.I) == 3
+        assert r.replace("foo(?i)", "boo") == 3
         assert not "foo" in r.content
         assert r.headers["boo"] == ["boo"]
 

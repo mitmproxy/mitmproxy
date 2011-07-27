@@ -1,15 +1,15 @@
 # Copyright (C) 2010  Aldo Cortesi
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re, os, subprocess, datetime, textwrap, errno
@@ -67,7 +67,7 @@ def cleanBin(s):
             if i not in "\n\r\t":
                 parts.append(".")
     return "".join(parts)
-    
+
 
 TAG = r"""
         <\s*
@@ -279,16 +279,16 @@ class Headers:
                     ret.append([name, value])
         self.lst = ret
 
-    def replace(self, pattern, repl, count=0, flags=0):
+    def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in both header keys
-            and values. Returns the number of replacements made. 
+            and values. Returns the number of replacements made.
         """
         nlst, count = [], 0
         for i in self.lst:
-            k, c = re.subn(pattern, repl, i[0], count, flags)
+            k, c = re.subn(pattern, repl, i[0], *args, **kwargs)
             count += c
-            v, c = re.subn(pattern, repl, i[1], count, flags)
+            v, c = re.subn(pattern, repl, i[1], *args, **kwargs)
             count += c
             nlst.append([k, v])
         self.lst = nlst

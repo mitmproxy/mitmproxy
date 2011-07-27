@@ -280,16 +280,16 @@ class Request(controller.Msg):
         else:
             return self.FMT_PROXY % (self.method, self.scheme, self.host, self.port, self.path, str(headers), content)
 
-    def replace(self, pattern, repl, count=0, flags=0):
+    def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in both the headers
             and the body of the request. Returns the number of replacements
-            made. 
+            made.
         """
-        self.content, c = re.subn(pattern, repl, self.content, count, flags)
-        self.path, pc = re.subn(pattern, repl, self.path, count, flags)
+        self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
+        self.path, pc = re.subn(pattern, repl, self.path, *args, **kwargs)
         c += pc
-        c += self.headers.replace(pattern, repl, count, flags)
+        c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
 
@@ -418,14 +418,14 @@ class Response(controller.Msg):
         data = (proto, str(headers), content)
         return self.FMT%data
 
-    def replace(self, pattern, repl, count=0, flags=0):
+    def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in both the headers
             and the body of the response. Returns the number of replacements
-            made. 
+            made.
         """
-        self.content, c = re.subn(pattern, repl, self.content, count, flags)
-        c += self.headers.replace(pattern, repl, count, flags)
+        self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
+        c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
 
@@ -497,13 +497,13 @@ class Error(controller.Msg):
     def __eq__(self, other):
         return self.get_state() == other.get_state()
 
-    def replace(self, pattern, repl, count=0, flags=0):
+    def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in both the headers
             and the body of the request. Returns the number of replacements
-            made. 
+            made.
         """
-        self.msg, c = re.subn(pattern, repl, self.msg, count, flags)
+        self.msg, c = re.subn(pattern, repl, self.msg, *args, **kwargs)
         return c
 
 
