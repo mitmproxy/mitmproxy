@@ -284,7 +284,7 @@ class Request(controller.Msg):
         """
             Replaces a regular expression pattern with repl in both the headers
             and the body of the request. Returns the number of replacements
-            made. 
+            made.
         """
         self.content, c = re.subn(pattern, repl, self.content, count, flags)
         self.path, pc = re.subn(pattern, repl, self.path, count, flags)
@@ -422,11 +422,32 @@ class Response(controller.Msg):
         """
             Replaces a regular expression pattern with repl in both the headers
             and the body of the response. Returns the number of replacements
-            made. 
+            made.
         """
         self.content, c = re.subn(pattern, repl, self.content, count, flags)
         c += self.headers.replace(pattern, repl, count, flags)
         return c
+
+    def decode(self):
+        """
+            Alters Response object, decoding its content based on the current
+            Content-Encoding header and changing Content-Encoding header to
+            'identity'.
+        """
+        self.content = encoding.decode(
+            (self.headers["content-encoding"] or ["identity"])[0],
+            self.content
+        )
+        self.headers["content-encoding"] = ["identity"]
+
+    def encode(self, e):
+        """
+            Alters Response object, encoding its content with the specified
+            coding. This method should only be called on Responses with
+            Content-Encoding headers of 'identity'.
+        """
+        self.content = encoding.encode(e, self.content)
+        self.headers["content-encoding"] = [e]
 
 
 class ClientDisconnect(controller.Msg):
@@ -501,7 +522,7 @@ class Error(controller.Msg):
         """
             Replaces a regular expression pattern with repl in both the headers
             and the body of the request. Returns the number of replacements
-            made. 
+            made.
         """
         self.msg, c = re.subn(pattern, repl, self.msg, count, flags)
         return c
