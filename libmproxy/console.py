@@ -543,8 +543,7 @@ class ConnectionView(WWrap):
                 conn = self.flow.response
                 e = conn.headers["content-encoding"] or ["identity"]
                 if e[0] != "identity":
-                    conn.content = encoding.decode(e[0], conn.content)
-                    conn.headers["content-encoding"] = ["identity"]
+                    conn.decode()
                 else:
                     self.master.prompt_onekey(
                         "Select encoding: ",
@@ -563,11 +562,7 @@ class ConnectionView(WWrap):
             "z": "gzip",
             "d": "deflate",
         }
-        conn.content = encoding.encode(
-            encoding_map[key],
-            conn.content
-        )
-        conn.headers["content-encoding"] = [encoding_map[key]]
+        conn.encode(encoding_map[key])
         self.master.refresh_connection(self.flow)
 
 

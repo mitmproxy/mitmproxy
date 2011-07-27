@@ -203,6 +203,31 @@ class uResponse(libpry.AutoTree):
         assert not "foo" in r.content
         assert r.headers["boo"] == ["boo"]
 
+    def test_decodeencode(self):
+        r = tutils.tresp()
+        r.headers["content-encoding"] = ["identity"]
+        r.content = "falafel"
+        r.decode()
+        assert r.headers["content-encoding"] == ["identity"]
+        assert r.content == "falafel"
+
+        r = tutils.tresp()
+        r.headers["content-encoding"] = ["identity"]
+        r.content = "falafel"
+        r.encode("identity")
+        assert r.headers["content-encoding"] == ["identity"]
+        assert r.content == "falafel"
+
+        r = tutils.tresp()
+        r.headers["content-encoding"] = ["identity"]
+        r.content = "falafel"
+        r.encode("gzip")
+        assert r.headers["content-encoding"] == ["gzip"]
+        assert r.content != "falafel"
+        r.decode()
+        assert r.headers["content-encoding"] == ["identity"]
+        assert r.content == "falafel"
+
 
 class uError(libpry.AutoTree):
     def test_getset_state(self):
