@@ -541,23 +541,25 @@ class ConnectionView(WWrap):
         elif key == "z":
             if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
                 conn = self.flow.response
-                e = conn.headers["content-encoding"] or ["identity"]
-                if e[0] != "identity":
-                    conn.decode()
-                else:
-                    self.master.prompt_onekey(
-                        "Select encoding: ",
-                        (
-                            ("gzip", "z"),
-                            ("deflate", "d"),
-                        ),
-                        self.encode_response_callback
-                    )
-                self.master.refresh_connection(self.flow)
+            else:
+                conn = self.flow.request
+            e = conn.headers["content-encoding"] or ["identity"]
+            if e[0] != "identity":
+                conn.decode()
+            else:
+                self.master.prompt_onekey(
+                    "Select encoding: ",
+                    (
+                        ("gzip", "z"),
+                        ("deflate", "d"),
+                    ),
+                    self.encode_callback,
+                    conn
+                )
+            self.master.refresh_connection(self.flow)
         return key
 
-    def encode_response_callback(self, key):
-        conn = self.flow.response
+    def encode_callback(self, key, conn):
         encoding_map = {
             "z": "gzip",
             "d": "deflate",
@@ -1347,8 +1349,8 @@ class ConsoleMaster(flow.FlowMaster):
             ("e", "edit request/response"),
             ("p", "previous flow"),
             ("v", "view body in external viewer"),
-            ("z", "switch response encoding"),
-            ("tab", "toggle response/request view"),
+            ("z", "encode/decode a request/response"),
+            ("tab", "toggle request/response view"),
             ("space", "next flow"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
@@ -1412,7 +1414,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.view.set_focus("footer")
         self.prompting = (callback, [])
 
-    def prompt_onekey(self, prompt, keys, callback):
+    def prompt_onekey(self, prompt, keys, callback, *args):
         """
             Keys are a set of (word, key) tuples. The appropriate key in the
             word is highlighted.
@@ -1426,7 +1428,7 @@ class ConsoleMaster(flow.FlowMaster):
         prompt.extend(mkup)
         prompt.append(")? ")
         self.onekey = "".join([i[1] for i in keys])
-        self.prompt(prompt, "", callback)
+        self.prompt(prompt, "", callback, *args)
 
     def prompt_done(self):
         self.prompting = False

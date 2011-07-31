@@ -125,9 +125,32 @@ def parse_request_line(request):
     if major != 1:
         raise ProxyError(400, "Unsupported protocol")
     return method, scheme, host, port, path, minor
+    
+
+class HTTPMsg(controller.Msg):
+    def decode(self):
+        """
+            Alters Response object, decoding its content based on the current
+            Content-Encoding header and changing Content-Encoding header to
+            'identity'.
+        """
+        self.content = encoding.decode(
+            (self.headers["content-encoding"] or ["identity"])[0],
+            self.content
+        )
+        self.headers["content-encoding"] = ["identity"]
+
+    def encode(self, e):
+        """
+            Alters Response object, encoding its content with the specified
+            coding. This method should only be called on Responses with
+            Content-Encoding headers of 'identity'.
+        """
+        self.content = encoding.encode(e, self.content)
+        self.headers["content-encoding"] = [e]
 
 
-class Request(controller.Msg):
+class Request(HTTPMsg):
     FMT = '%s %s HTTP/1.1\r\n%s\r\n%s'
     FMT_PROXY = '%s %s://%s:%s%s HTTP/1.1\r\n%s\r\n%s'
     def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
@@ -293,7 +316,7 @@ class Request(controller.Msg):
         return c
 
 
-class Response(controller.Msg):
+class Response(HTTPMsg):
     FMT = '%s\r\n%s\r\n%s'
     def __init__(self, request, code, msg, headers, content, timestamp=None):
         self.request = request
@@ -427,27 +450,6 @@ class Response(controller.Msg):
         self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
-
-    def decode(self):
-        """
-            Alters Response object, decoding its content based on the current
-            Content-Encoding header and changing Content-Encoding header to
-            'identity'.
-        """
-        self.content = encoding.decode(
-            (self.headers["content-encoding"] or ["identity"])[0],
-            self.content
-        )
-        self.headers["content-encoding"] = ["identity"]
-
-    def encode(self, e):
-        """
-            Alters Response object, encoding its content with the specified
-            coding. This method should only be called on Responses with
-            Content-Encoding headers of 'identity'.
-        """
-        self.content = encoding.encode(e, self.content)
-        self.headers["content-encoding"] = [e]
 
 
 class ClientDisconnect(controller.Msg):
