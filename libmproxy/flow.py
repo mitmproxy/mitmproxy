@@ -193,9 +193,6 @@ class Flow:
         f.load_state(state)
         return f
 
-    def __eq__(self, other):
-        return self.get_state() == other.get_state()
-
     def script_serialize(self):
         data = self.get_state()
         return json.dumps(data)

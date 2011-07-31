@@ -170,18 +170,18 @@ class uFlow(libpry.AutoTree):
         f = tutils.tflow()
         f.response = tutils.tresp(f.request)
         state = f.get_state() 
-        assert f == flow.Flow.from_state(state)
+        assert f.get_state() == flow.Flow.from_state(state).get_state()
 
         f.response = None
         f.error = proxy.Error(f.request, "error")
         state = f.get_state() 
-        assert f == flow.Flow.from_state(state)
+        assert f.get_state() == flow.Flow.from_state(state).get_state()
 
         f2 = tutils.tflow()
         f2.error = proxy.Error(f.request, "e2")
         assert not f == f2
         f.load_state(f2.get_state())
-        assert f == f2
+        assert f.get_state() == f2.get_state()
 
     def test_kill(self):
         s = flow.State()
@@ -410,7 +410,7 @@ class uSerialize(libpry.AutoTree):
         assert len(l) == 1
 
         f2 = l[0]
-        assert f2 == f
+        assert f2.get_state() == f.get_state()
         assert f2.request.assemble() == f.request.assemble()
 
     def test_load_flows(self):
