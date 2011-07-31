@@ -152,7 +152,7 @@ class uFlow(libpry.AutoTree):
         f.response = tutils.tresp()
         f.request = f.response.request
         assert not f.match(filt.parse("~b test"))
-        assert not f.match(None)
+        assert f.match(None)
 
     def test_backup(self):
         f = tutils.tflow()
@@ -260,23 +260,23 @@ class uState(libpry.AutoTree):
         f = c.add_request(req)
         assert f
         assert c.flow_count() == 1
-        assert c.flow_map.get(req)
+        assert c._flow_map.get(req)
         assert c.active_flow_count() == 1
 
         newreq = tutils.treq()
         assert c.add_request(newreq)
-        assert c.flow_map.get(newreq)
+        assert c._flow_map.get(newreq)
         assert c.active_flow_count() == 2
 
         resp = tutils.tresp(req)
         assert c.add_response(resp)
         assert c.flow_count() == 2
-        assert c.flow_map.get(resp.request)
+        assert c._flow_map.get(resp.request)
         assert c.active_flow_count() == 1
 
         unseen_resp = tutils.tresp()
         assert not c.add_response(unseen_resp)
-        assert not c.flow_map.get(unseen_resp.request)
+        assert not c._flow_map.get(unseen_resp.request)
         assert c.active_flow_count() == 1
 
         resp = tutils.tresp(newreq)
@@ -373,7 +373,7 @@ class uState(libpry.AutoTree):
         c.clear()
         
         c.load_flows(flows)
-        assert isinstance(c.flow_list[0], flow.Flow)
+        assert isinstance(c._flow_list[0], flow.Flow)
 
     def test_accept_all(self):
         c = flow.State()
@@ -418,7 +418,7 @@ class uSerialize(libpry.AutoTree):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         fm.load_flows(r)
-        assert len(s.flow_list) == 6
+        assert len(s._flow_list) == 6
 
 
     def test_error(self):

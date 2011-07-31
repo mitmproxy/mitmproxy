@@ -208,7 +208,7 @@ class ConnectionItem(WWrap):
 class ConnectionListView(urwid.ListWalker):
     def __init__(self, master, state):
         self.master, self.state = master, state
-        if self.state.flow_list:
+        if self.state.flow_count():
             self.set_focus(0)
 
     def get_focus(self):
@@ -709,7 +709,7 @@ class StatusBar(WWrap):
             self.message("")
 
         t = [
-                ('statusbar_text', ("[%s]"%len(self.master.state.flow_list)).ljust(7)),
+                ('statusbar_text', ("[%s]"%self.master.state.flow_count()).ljust(7)),
             ]
         t.extend(self.get_status())
 
@@ -1657,8 +1657,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.refresh_server_playback = not self.refresh_server_playback
 
     def shutdown(self):
-        for i in self.state.flow_list:
-            i.kill(self)
+        self.state.killall(self)
         controller.Master.shutdown(self)
 
     def sync_list_view(self):
@@ -1681,7 +1680,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.statusbar.refresh_connection(c)
 
     def process_flow(self, f, r):
-        if f.match(self.state.intercept) and not f.request.is_replay():
+        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay():
             f.intercept()
         else:
             r.ack()

@@ -301,7 +301,8 @@ class Flow:
                 return pattern(self.response)
             elif self.request:
                 return pattern(self.request)
-        return False
+        else:
+            return True
 
     def kill(self, master):
         self.error = proxy.Error(self.request, "Connection killed")
@@ -339,20 +340,26 @@ class Flow:
 class State:
     def __init__(self):
         self.client_connections = []
-        self.flow_map = {}
-        self.flow_list = []
+
+        self._flow_map = {}
+        self._flow_list = []
+        self.view = []
 
         # These are compiled filt expressions:
-        self.limit = None
+        self._limit = None
         self.intercept = None
-        self.limit_txt = None
+        self._limit_txt = None
+
+    @property
+    def limit_txt(self):
+        return self._limit_txt
 
     def flow_count(self):
-        return len(self.flow_map)
+        return len(self._flow_map)
 
     def active_flow_count(self):
         c = 0
-        for i in self.flow_list:
+        for i in self._flow_list:
             if not i.response and not i.error:
                 c += 1
         return c
@@ -371,18 +378,22 @@ class State:
             Add a request to the state. Returns the matching flow.
         """
         f = Flow(req)
-        self.flow_list.append(f)
-        self.flow_map[req] = f
+        self._flow_list.append(f)
+        self._flow_map[req] = f
+        if f.match(self._limit):
+            self.view.append(f)
         return f
 
     def add_response(self, resp):
         """
             Add a response to the state. Returns the matching flow.
         """
-        f = self.flow_map.get(resp.request)
+        f = self._flow_map.get(resp.request)
         if not f:
             return False
         f.response = resp
+        if f.match(self._limit) and not f in self.view:
+            self.view.append(f)
         return f
 
     def add_error(self, err):
@@ -390,27 +401,31 @@ class State:
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        f = self.flow_map.get(err.request) if err.request else None
+        f = self._flow_map.get(err.request) if err.request else None
         if not f:
             return None
         f.error = err
+        if f.match(self._limit) and not f in self.view:
+            self.view.append(f)
         return f
 
     def load_flows(self, flows):
-        self.flow_list.extend(flows)
+        self._flow_list.extend(flows)
         for i in flows:
-            self.flow_map[i.request] = i
+            self._flow_map[i.request] = i
+        self.recalculate_view()
 
     def set_limit(self, txt):
         if txt:
             f = filt.parse(txt)
             if not f:
                 return "Invalid filter expression."
-            self.limit = f
-            self.limit_txt = txt
+            self._limit = f
+            self._limit_txt = txt
         else:
-            self.limit = None
-            self.limit_txt = None
+            self._limit = None
+            self._limit_txt = None
+        self.recalculate_view()
 
     def set_intercept(self, txt):
         if txt:
@@ -423,29 +438,34 @@ class State:
             self.intercept = None
             self.intercept_txt = None
 
-    @property
-    def view(self):
-        if self.limit:
-            return tuple([i for i in self.flow_list if i.match(self.limit)])
+    def recalculate_view(self):
+        if self._limit:
+            self.view = [i for i in self._flow_list if i.match(self._limit)]
         else:
-            return tuple(self.flow_list[:])
+            self.view = self._flow_list[:]
 
     def delete_flow(self, f):
-        if f.request in self.flow_map:
-            del self.flow_map[f.request]
-        self.flow_list.remove(f)
+        if f.request in self._flow_map:
+            del self._flow_map[f.request]
+        self._flow_list.remove(f)
+        if f.match(self._limit):
+            self.view.remove(f)
         return True
 
     def clear(self):
-        for i in self.flow_list[:]:
+        for i in self._flow_list[:]:
             self.delete_flow(i)
 
     def accept_all(self):
-        for i in self.flow_list[:]:
+        for i in self._flow_list[:]:
             i.accept_intercept()
 
     def revert(self, f):
         f.revert()
+
+    def killall(self, master):
+        for i in self._flow_list:
+            i.kill(master)
 
 
 

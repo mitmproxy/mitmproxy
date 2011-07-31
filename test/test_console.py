@@ -12,7 +12,7 @@ class uState(libpry.AutoTree):
         """
         c = console.ConsoleState()
         f = self._add_request(c)
-        assert f.request in c.flow_map
+        assert f.request in c._flow_map
         assert c.get_focus() == (f, 0)
 
     def test_focus(self):
