@@ -859,8 +859,20 @@ class Options(object):
 
 
 class BodyPile(urwid.Pile):
-    def __init__(self, master, lst):
-        urwid.Pile.__init__(self, lst)
+    def __init__(self, master):
+        h = urwid.Text("Event log")
+        h = urwid.Padding(h, align="left", width=("relative", 100))
+
+        self.inactive_header = urwid.AttrWrap(h, "inactive_heading")
+        self.active_header = urwid.AttrWrap(h, "heading")
+
+        urwid.Pile.__init__(
+            self, 
+            [
+                urwid.ListBox(master.conn_list_view),
+                urwid.Frame(urwid.ListBox(master.eventlist), header = self.inactive_header)
+            ]
+        )
         self.master = master
         self.focus = 0
         
@@ -868,6 +880,10 @@ class BodyPile(urwid.Pile):
         if key == "tab":
             self.focus = (self.focus + 1)%len(self.widget_list)
             self.set_focus(self.focus)
+            if self.focus == 1:
+                self.widget_list[1].header = self.active_header
+            else:
+                self.widget_list[1].header = self.inactive_header
             key = None
         elif key == "v":
             self.master.toggle_eventlog()
@@ -1170,6 +1186,7 @@ class ConsoleMaster(flow.FlowMaster):
             ('error', 'light red', 'default'),
             ('header', 'dark cyan', 'default'),
             ('heading', 'white,bold', 'dark blue'),
+            ('inactive_heading', 'white', 'dark gray'),
             ('highlight', 'white,bold', 'default'),
             ('inactive', 'dark gray', 'default'),
             ('ack', 'light red', 'default'),
@@ -1245,19 +1262,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.ui.clear()
         self.focus_current()
         if self.eventlog:
-            h = urwid.Text("Event log")
-            h = urwid.Padding(h, align="left", width=("relative", 100))
-            h = urwid.AttrWrap(h, "heading")
-            self.body = BodyPile(
-                self,
-                [
-                    urwid.ListBox(self.conn_list_view),
-                    urwid.Frame(
-                        urwid.ListBox(self.eventlist),
-                        header = h
-                    )
-                ]
-            )
+            self.body = BodyPile(self)
         else:
             self.body = urwid.ListBox(self.conn_list_view)
         self.statusbar = StatusBar(self, self.footer_text_default)
