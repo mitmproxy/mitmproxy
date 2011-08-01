@@ -21,6 +21,7 @@ import urwid
 import controller, utils, filt, proxy, flow, encoding
 
 VIEW_CUTOFF = 1024*100
+EVENTLOG_SIZE = 100
 
 
 class Stop(Exception): pass
@@ -193,8 +194,7 @@ class ConnectionItem(WWrap):
         elif key == "X":
             self.flow.kill(self.master)
         elif key == "v":
-            self.master.eventlog = not self.master.eventlog
-            self.master.view_connlist()
+            self.master.toggle_eventlog()
         elif key == "tab":
             if self.master.eventlog:
                 pass
@@ -858,6 +858,33 @@ class Options(object):
                 setattr(self, i, None)
 
 
+class BodyPile(urwid.Pile):
+    def __init__(self, master, lst):
+        urwid.Pile.__init__(self, lst)
+        self.master = master
+        self.focus = 0
+        
+    def keypress(self, size, key):
+        if key == "tab":
+            self.focus = (self.focus + 1)%len(self.widget_list)
+            self.set_focus(self.focus)
+            key = None
+        elif key == "v":
+            self.master.toggle_eventlog()
+            key = None
+
+        # This is essentially a copypasta from urwid.Pile's keypress handler.
+        # So much for "closed for modification, but open for extension".
+        maxcol = size[0]
+        item_rows = None
+        if len(size)==2:
+            item_rows = self.get_item_rows( size, focus=True )
+        i = self.widget_list.index(self.focus_item)
+        f, height = self.item_types[i]
+        tsize = self.get_item_size(size,i,True,item_rows)
+        return self.focus_item.keypress( tsize, key )
+
+
 #begin nocover
 VIEW_CONNLIST = 0
 VIEW_FLOW = 1
@@ -917,6 +944,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.rheaders = options.rheaders
 
         self.eventlog = options.eventlog
+        self.eventlist = urwid.SimpleListWalker([])
 
         if options.client_replay:
             self.client_playback_path(options.client_replay)
@@ -925,6 +953,10 @@ class ConsoleMaster(flow.FlowMaster):
             self.server_playback_path(options.server_replay)
 
         self.debug = options.debug
+
+    def toggle_eventlog(self):
+        self.eventlog = not self.eventlog
+        self.view_connlist()
 
     def _runscript(self, f, path):
         path = os.path.expanduser(path)
@@ -1216,11 +1248,12 @@ class ConsoleMaster(flow.FlowMaster):
             h = urwid.Text("Event log")
             h = urwid.Padding(h, align="left", width=("relative", 100))
             h = urwid.AttrWrap(h, "heading")
-            self.body = urwid.Pile(
+            self.body = BodyPile(
+                self,
                 [
                     urwid.ListBox(self.conn_list_view),
                     urwid.Frame(
-                        urwid.ListBox([urwid.Text("foo"), urwid.Text("bar")]),
+                        urwid.ListBox(self.eventlist),
                         header = h
                     )
                 ]
@@ -1366,7 +1399,9 @@ class ConsoleMaster(flow.FlowMaster):
         keys = [
             ("C", "clear connection list"),
             ("d", "delete connection from view"),
+            ("v", "toggle eventlog"),
             ("X", "kill and delete connection, even if it's mid-intercept"),
+            ("tab", "tab between eventlog and connection list"),
             ("space", "page down"),
             ("enter", "view connection"),
         ]
@@ -1716,11 +1751,20 @@ class ConsoleMaster(flow.FlowMaster):
         self.sync_list_view()
         self.refresh_connection(f)
 
+    def add_event(self, e):
+        self.eventlist.append(e)
+        if len(self.eventlist) > EVENTLOG_SIZE:
+            self.eventlist.pop(0)
+        self.eventlist.set_focus(len(self.eventlist))
+
     # Handlers
     def handle_clientconnect(self, r):
-        f = flow.FlowMaster.handle_clientconnect(self, r)
-        if f:
-            self.sync_list_view()
+        self.add_event(urwid.Text("connect"))
+        return flow.FlowMaster.handle_clientconnect(self, r)
+
+    def handle_clientdisconnect(self, r):
+        self.add_event(urwid.Text("disconnect"))
+        return flow.FlowMaster.handle_clientdisconnect(self, r)
 
     def handle_error(self, r):
         f = flow.FlowMaster.handle_error(self, r)
