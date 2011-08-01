@@ -192,6 +192,12 @@ class ConnectionItem(WWrap):
             )
         elif key == "X":
             self.flow.kill(self.master)
+        elif key == "v":
+            self.master.eventlog = not self.master.eventlog
+            self.master.view_connlist()
+        elif key == "tab":
+            if self.master.eventlog:
+                pass
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
@@ -910,6 +916,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.killextra = options.kill
         self.rheaders = options.rheaders
 
+        self.eventlog = options.eventlog
+
         if options.client_replay:
             self.client_playback_path(options.client_replay)
 
@@ -1204,7 +1212,21 @@ class ConsoleMaster(flow.FlowMaster):
         if self.ui.started:
             self.ui.clear()
         self.focus_current()
-        self.body = urwid.ListBox(self.conn_list_view)
+        if self.eventlog:
+            h = urwid.Text("Event log")
+            h = urwid.Padding(h, align="left", width=("relative", 100))
+            h = urwid.AttrWrap(h, "heading")
+            self.body = urwid.Pile(
+                [
+                    urwid.ListBox(self.conn_list_view),
+                    urwid.Frame(
+                        urwid.ListBox([urwid.Text("foo"), urwid.Text("bar")]),
+                        header = h
+                    )
+                ]
+            )
+        else:
+            self.body = urwid.ListBox(self.conn_list_view)
         self.statusbar = StatusBar(self, self.footer_text_default)
         self.header = None
         self.viewstate = VIEW_CONNLIST
