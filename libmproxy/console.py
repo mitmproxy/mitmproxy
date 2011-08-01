@@ -1160,7 +1160,11 @@ class ConsoleMaster(flow.FlowMaster):
             slave.start()
 
         if self.options.rfile:
-            self.load_flows(self.options.rfile)
+            ret = self.load_flows(self.options.rfile)
+            if ret:
+                self.shutdown()
+                print >> sys.stderr, "Could not load file:", ret
+                sys.exit(1)
 
         self.ui.run_wrapper(self.loop)
         # If True, quit just pops out to connection list view.
@@ -1254,9 +1258,13 @@ class ConsoleMaster(flow.FlowMaster):
     def save_flows(self, path):
         return self._write_flows(path, self.state.view)
 
-    def load_flows(self, path):
+    def load_flows_callback(self, path):
         if not path:
             return
+        ret = self.load_flows(path)
+        return ret or "Flows loaded from %s"%path
+
+    def load_flows(self, path):
         self.state.last_saveload = path
         path = os.path.expanduser(path)
         try:
@@ -1269,7 +1277,6 @@ class ConsoleMaster(flow.FlowMaster):
         if self.conn_list_view:
             self.sync_list_view()
             self.focus_current()
-        return "Flows loaded from %s"%path
 
     def helptext(self):
         text = []
@@ -1596,7 +1603,7 @@ class ConsoleMaster(flow.FlowMaster):
                             self.path_prompt(
                                 "Load flows: ",
                                 self.state.last_saveload,
-                                self.load_flows
+                                self.load_flows_callback
                             )
                             k = None
                         elif k == "o":
