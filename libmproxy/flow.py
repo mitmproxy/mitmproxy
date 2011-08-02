@@ -588,8 +588,6 @@ class FlowMaster(controller.Master):
             f.request.anticache()
         if self.anticomp:
             f.request.anticomp()
-        else:
-            f.request.constrain_encoding()
 
         if self.server_playback:
             pb = self.do_server_playback(f)

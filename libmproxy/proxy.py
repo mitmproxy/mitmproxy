@@ -134,11 +134,14 @@ class HTTPMsg(controller.Msg):
             Content-Encoding header and changing Content-Encoding header to
             'identity'.
         """
+        ce = self.headers["content-encoding"]
+        if not ce or ce[0] not in encoding.ENCODINGS:
+            return
         self.content = encoding.decode(
-            (self.headers["content-encoding"] or ["identity"])[0],
+            ce[0],
             self.content
         )
-        self.headers["content-encoding"] = ["identity"]
+        del self.headers["content-encoding"]
 
     def encode(self, e):
         """

@@ -8,21 +8,25 @@ __ALL__ = ["ENCODINGS"]
 
 ENCODINGS = set(["identity", "gzip", "deflate"])
 
-def decode(encoding, content):
+def decode(e, content):
     encoding_map = {
         "identity": identity,
         "gzip": decode_gzip,
         "deflate": decode_deflate,
     }
-    return encoding_map.get(encoding, identity)(content)
+    if e not in encoding_map:
+        return None
+    return encoding_map[e](content)
 
-def encode(encoding, content):
+def encode(e, content):
     encoding_map = {
         "identity": identity,
         "gzip": encode_gzip,
         "deflate": encode_deflate,
     }
-    return encoding_map.get(encoding, identity)(content)
+    if e not in encoding_map:
+        return None
+    return encoding_map[e](content)
 
 def identity(content):
     """
