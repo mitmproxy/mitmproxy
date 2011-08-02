@@ -749,7 +749,9 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     port = 80
             port = int(port)
         if host is None:
-            raise ProxyError(400, 'Invalid request: %s'%request)
+            # FIXME: We only specify the first part of the invalid request in this error.
+            # We should gather up everything read from the socket, and specify it all.
+            raise ProxyError(400, 'Invalid request: %s'%line)
         if "expect" in headers:
             expect = ",".join(headers['expect'])
             if expect == "100-continue" and httpminor >= 1:
