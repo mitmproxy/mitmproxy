@@ -21,7 +21,7 @@ import urwid
 import controller, utils, filt, proxy, flow, encoding
 
 VIEW_CUTOFF = 1024*100
-EVENTLOG_SIZE = 100
+EVENTLOG_SIZE = 500
 
 
 class Stop(Exception): pass
@@ -1764,11 +1764,21 @@ class ConsoleMaster(flow.FlowMaster):
 
     # Handlers
     def handle_clientconnect(self, r):
-        self.add_event(urwid.Text("connect"))
+        self.add_event(urwid.Text("Connect from: %s:%s"%r.address))
         return flow.FlowMaster.handle_clientconnect(self, r)
 
     def handle_clientdisconnect(self, r):
-        self.add_event(urwid.Text("disconnect"))
+        s = "Disconnect from: %s:%s"%r.client_conn.address
+        self.add_event(urwid.Text(s))
+        if r.client_conn.requestcount:
+            s = "    -> handled %s requests"%r.client_conn.requestcount
+            self.add_event(urwid.Text(s))
+        if r.client_conn.connection_error:
+            self.add_event(
+                urwid.Text(
+                        ("error", "   -> error: %s"%r.client_conn.connection_error)
+                )
+            )
         return flow.FlowMaster.handle_clientdisconnect(self, r)
 
     def handle_error(self, r):
