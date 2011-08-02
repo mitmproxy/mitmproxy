@@ -1728,6 +1728,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.anticomp = not self.anticomp
         elif a == "d":
             self.autodecode = not self.autodecode
+            self.refresh_connection(self.currentflow)
         elif a == "k":
             self.killextra = not self.killextra
         elif a == "n":

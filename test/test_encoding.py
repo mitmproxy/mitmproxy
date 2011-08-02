@@ -10,8 +10,7 @@ class uidentity(libpry.AutoTree):
         assert "string" == encoding.encode("identity", "string")
 
     def test_fallthrough(self):
-        assert "string" == encoding.decode("nonexistent encoding", "string")
-        assert "string" == encoding.encode("nonexistent encoding", "string")
+        assert None == encoding.decode("nonexistent encoding", "string")
 
 class ugzip(libpry.AutoTree):
     def test_simple(self):

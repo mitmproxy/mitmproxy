@@ -143,7 +143,7 @@ class uRequest(libpry.AutoTree):
         r.headers["content-encoding"] = ["identity"]
         r.content = "falafel"
         r.decode()
-        assert r.headers["content-encoding"] == ["identity"]
+        assert not r.headers["content-encoding"]
         assert r.content == "falafel"
 
         r = tutils.treq()
@@ -160,7 +160,7 @@ class uRequest(libpry.AutoTree):
         assert r.headers["content-encoding"] == ["gzip"]
         assert r.content != "falafel"
         r.decode()
-        assert r.headers["content-encoding"] == ["identity"]
+        assert not r.headers["content-encoding"]
         assert r.content == "falafel"
 
 
@@ -233,7 +233,7 @@ class uResponse(libpry.AutoTree):
         r.headers["content-encoding"] = ["identity"]
         r.content = "falafel"
         r.decode()
-        assert r.headers["content-encoding"] == ["identity"]
+        assert not r.headers["content-encoding"]
         assert r.content == "falafel"
 
         r = tutils.tresp()
@@ -250,7 +250,7 @@ class uResponse(libpry.AutoTree):
         assert r.headers["content-encoding"] == ["gzip"]
         assert r.content != "falafel"
         r.decode()
-        assert r.headers["content-encoding"] == ["identity"]
+        assert not r.headers["content-encoding"]
         assert r.content == "falafel"
 
 
