@@ -200,6 +200,22 @@ class uFlow(libpry.AutoTree):
         f.kill(fm)
         assert f.response.acked
 
+    def test_killall(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+
+        r = tutils.treq()
+        fm.handle_request(r)
+
+        r = tutils.treq()
+        fm.handle_request(r)
+
+        for i in s.view:
+            assert not i.request.acked
+        s.killall(fm)
+        for i in s.view:
+            assert i.request.acked
+
     def test_accept_intercept(self):
         f = tutils.tflow()
         f.request = tutils.treq()
@@ -233,6 +249,10 @@ class uFlow(libpry.AutoTree):
         assert f.request.content == "abarb"
         assert f.response.headers["bar"] == ["bar"]
         assert f.response.content == "abarb"
+
+        f = tutils.tflow_err()
+        f.replace("error", "bar")
+        assert f.error.msg == "bar"
 
 
 class uState(libpry.AutoTree):
@@ -294,6 +314,7 @@ class uState(libpry.AutoTree):
         e = proxy.Error(tutils.tflow().request, "message")
         assert not c.add_error(e)
 
+
     def test_set_limit(self):
         c = flow.State()
 
@@ -304,6 +325,7 @@ class uState(libpry.AutoTree):
         assert len(c.view) == 1
 
         c.set_limit("~s")
+        assert c.limit_txt == "~s"
         assert len(c.view) == 0
         resp = tutils.tresp(req)
         c.add_response(resp)
@@ -447,6 +469,7 @@ class uFlowMaster(libpry.AutoTree):
         assert not fm.handle_response(rx)
         
         dc = proxy.ClientDisconnect(req.client_conn)
+        fm.handle_clientdisconnect(dc)
 
         err = proxy.Error(f.request, "msg")
         fm.handle_error(err)

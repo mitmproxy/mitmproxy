@@ -145,11 +145,10 @@ def hexdump(s):
     return parts
 
 
-def try_del(dict, key):
-    try:
-        del dict[key]
-    except KeyError:
-        pass
+def del_all(dict, keys):
+    for key in keys:
+        if key in dict:
+            del dict[key]
 
 
 class Headers:

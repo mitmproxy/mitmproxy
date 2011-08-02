@@ -159,7 +159,7 @@ class DumpMaster(flow.FlowMaster):
 
     def _process_flow(self, f):
         if self.filt and not f.match(self.filt):
-                return
+            return
 
         if f.response:
             sz = utils.pretty_size(len(f.response.content))

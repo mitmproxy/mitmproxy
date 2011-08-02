@@ -284,11 +284,16 @@ class Request(HTTPMsg):
             modifications to make sure interception works properly.
         """
         headers = self.headers.copy()
-        utils.try_del(headers, 'proxy-connection')
-        utils.try_del(headers, 'keep-alive')
-        utils.try_del(headers, 'connection')
-        utils.try_del(headers, 'content-length')
-        utils.try_del(headers, 'transfer-encoding')
+        utils.del_all(
+            headers,
+            [
+                'proxy-connection',
+                'keep-alive',
+                'connection',
+                'content-length',
+                'transfer-encoding'
+            ]
+        )
         if not 'host' in headers:
             headers["host"] = [self.hostport()]
         content = self.content
@@ -426,10 +431,10 @@ class Response(HTTPMsg):
             modifications to make sure interception works properly.
         """
         headers = self.headers.copy()
-        utils.try_del(headers, 'proxy-connection')
-        utils.try_del(headers, 'connection')
-        utils.try_del(headers, 'keep-alive')
-        utils.try_del(headers, 'transfer-encoding')
+        utils.del_all(
+            headers,
+            ['proxy-connection', 'connection', 'keep-alive', 'transfer-encoding']
+        )
         content = self.content
         if content is not None:
             headers["content-length"] = [str(len(content))]

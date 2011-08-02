@@ -29,6 +29,12 @@ class uhexdump(libpry.AutoTree):
     def test_simple(self):
         assert utils.hexdump("one\0"*10)
 
+class udel_all(libpry.AutoTree):
+    def test_simple(self):
+        d = dict(a=1, b=2, c=3)
+        utils.del_all(d, ["a", "x", "b"])
+        assert d.keys() == ["c"]
+
 
 class upretty_size(libpry.AutoTree):
     def test_simple(self):
@@ -300,6 +306,7 @@ tests = [
     upretty_xmlish(),
     upretty_json(),
     u_urldecode(),
+    udel_all(),
     udummy_ca(),
     udummy_cert(),
     uLRUCache(),

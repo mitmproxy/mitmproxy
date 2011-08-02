@@ -867,6 +867,7 @@ class Options(object):
                 setattr(self, i, None)
 
 
+#begin nocover
 class BodyPile(urwid.Pile):
     def __init__(self, master):
         h = urwid.Text("Event log")
@@ -909,7 +910,6 @@ class BodyPile(urwid.Pile):
         return self.focus_item.keypress( tsize, key )
 
 
-#begin nocover
 VIEW_CONNLIST = 0
 VIEW_FLOW = 1
 VIEW_HELP = 2

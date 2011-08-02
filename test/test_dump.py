@@ -22,6 +22,7 @@ class uDumpMaster(libpry.AutoTree):
         req = tutils.treq()
         req.content = content
         cc = req.client_conn
+        cc.connection_error = "error"
         resp = tutils.tresp(req)
         resp.content = content
         m.handle_clientconnect(cc)
@@ -29,12 +30,21 @@ class uDumpMaster(libpry.AutoTree):
         m.handle_response(resp)
         m.handle_clientdisconnect(proxy.ClientDisconnect(cc))
 
-    def _dummy_cycle(self, filt, content, **options):
+    def _dummy_cycle(self, n, filt, content, **options):
         cs = StringIO()
         o = dump.Options(**options)
         m = dump.DumpMaster(None, o, filt, outfile=cs)
-        self._cycle(m, content)
+        for i in range(n):
+            self._cycle(m, content)
         return cs.getvalue()
+
+    def _flowfile(self, path):
+        f = open(path, "w")
+        fw = flow.FlowWriter(f)
+        t = tutils.tflow_full()
+        t.response = tutils.tresp(t.request)
+        fw.add(t)
+        f.close()
 
     def test_replay(self):
         cs = StringIO()
@@ -44,12 +54,7 @@ class uDumpMaster(libpry.AutoTree):
 
         t = self.tmpdir()
         p = os.path.join(t, "rep")
-        f = open(p, "w")
-        fw = flow.FlowWriter(f)
-        t = tutils.tflow_full()
-        t.response = tutils.tresp(t.request)
-        fw.add(t)
-        f.close()
+        self._flowfile(p)
 
         o = dump.Options(server_replay=p, kill=True)
         m = dump.DumpMaster(None, o, None, outfile=cs)
@@ -64,66 +69,79 @@ class uDumpMaster(libpry.AutoTree):
         o = dump.Options(client_replay=p, kill=False)
         m = dump.DumpMaster(None, o, None, outfile=cs)
 
+    def test_read(self):
+        cs = StringIO()
+        t = self.tmpdir()
+        p = os.path.join(t, "read")
+        self._flowfile(p)
+        assert "GET" in self._dummy_cycle(0, None, "", verbosity=1, rfile=p)
+
+        libpry.raises(
+            dump.DumpError, self._dummy_cycle,
+            0, None, "", verbosity=1, rfile="/nonexistent"
+        )
+
     def test_options(self):
         o = dump.Options(verbosity = 2)
         assert o.verbosity == 2
         libpry.raises(AttributeError, dump.Options, nonexistent = 2)
 
     def test_filter(self):
-        assert not "GET" in self._dummy_cycle("~u foo", "", verbosity=1)
+        assert not "GET" in self._dummy_cycle(1, "~u foo", "", verbosity=1)
 
     def test_basic(self):
         for i in (1, 2, 3):
-            assert "GET" in self._dummy_cycle("~s", "", verbosity=i, eventlog=True)
-            assert "GET" in self._dummy_cycle("~s", "\x00\x00\x00", verbosity=i)
-            assert "GET" in self._dummy_cycle("~s", "ascii", verbosity=i)
+            assert "GET" in self._dummy_cycle(1, "~s", "", verbosity=i, eventlog=True)
+            assert "GET" in self._dummy_cycle(1, "~s", "\x00\x00\x00", verbosity=i)
+            assert "GET" in self._dummy_cycle(1, "~s", "ascii", verbosity=i)
 
     def test_write(self):
         d = self.tmpdir()
         p = os.path.join(d, "a")
-        self._dummy_cycle(None, "", wfile=p, verbosity=0)
+        self._dummy_cycle(1, None, "", wfile=p, verbosity=0)
         assert len(list(flow.FlowReader(open(p)).stream())) == 1
 
     def test_write_err(self):
         libpry.raises(
             dump.DumpError,
             self._dummy_cycle,
+            1,
             None,
             "", 
             wfile = "nonexistentdir/foo"
         )
 
     def test_request_script(self):
-        ret = self._dummy_cycle(None, "", request_script="scripts/a", verbosity=1)
+        ret = self._dummy_cycle(1, None, "", request_script="scripts/a", verbosity=1)
         assert "TESTOK" in ret
         assert "DEBUG" in ret
         libpry.raises(
             dump.DumpError,
-            self._dummy_cycle, None, "", request_script="nonexistent"
+            self._dummy_cycle, 1, None, "", request_script="nonexistent"
         )
         libpry.raises(
             dump.DumpError,
-            self._dummy_cycle, None, "", request_script="scripts/err_return"
+            self._dummy_cycle, 1, None, "", request_script="scripts/err_return"
         )
 
     def test_response_script(self):
-        ret = self._dummy_cycle(None, "", response_script="scripts/a", verbosity=1)
+        ret = self._dummy_cycle(1, None, "", response_script="scripts/a", verbosity=1)
         assert "TESTOK" in ret
         assert "DEBUG" in ret
         libpry.raises(
             dump.DumpError,
-            self._dummy_cycle, None, "", response_script="nonexistent"
+            self._dummy_cycle, 1, None, "", response_script="nonexistent"
         )
         libpry.raises(
             dump.DumpError,
-            self._dummy_cycle, None, "", response_script="scripts/err_return"
+            self._dummy_cycle, 1, None, "", response_script="scripts/err_return"
         )
 
     def test_stickycookie(self):
-        ret = self._dummy_cycle(None, "", stickycookie = ".*")
+        ret = self._dummy_cycle(1, None, "", stickycookie = ".*")
 
     def test_stickyauth(self):
-        ret = self._dummy_cycle(None, "", stickyauth = ".*")
+        ret = self._dummy_cycle(1, None, "", stickyauth = ".*")
 
 
 
