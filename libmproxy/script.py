@@ -5,9 +5,8 @@
     convenience functions to make loading and returning data from scripts
     simple.
 """
-import sys, base64
+import sys
 import flow
-
 
 #begin nocover
 def load_flow():

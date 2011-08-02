@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap, errno
+import re, os, subprocess, datetime, textwrap
 import time, functools, copy, cgi
 import json
 
@@ -145,31 +145,6 @@ def hexdump(s):
     return parts
 
 
-def isStringLike(anobj):
-    try:
-        # Avoid succeeding expensively if anobj is large.
-        anobj[:0]+''
-    except:
-        return 0
-    else:
-        return 1
-
-
-def isSequenceLike(anobj):
-    """
-        Is anobj a non-string sequence type (list, tuple, iterator, or
-        similar)?  Crude, but mostly effective.
-    """
-    if not hasattr(anobj, "next"):
-        if isStringLike(anobj):
-            return 0
-        try:
-            anobj[:0]
-        except:
-            return 0
-    return 1
-
-
 def try_del(dict, key):
     try:
         del dict[key]
@@ -207,7 +182,6 @@ class Headers:
 
     def __setitem__(self, k, hdrs):
         k = self._kconv(k)
-        first = None
         new = self._filter_lst(k, self.lst)
         for i in hdrs:
             new.append((k, i))
@@ -328,7 +302,7 @@ class Data:
         if not os.path.exists(fullpath):
             raise ValueError, "dataPath: %s does not exist."%fullpath
         return fullpath
-data = Data(__name__)
+pkg_data = Data(__name__)
 
 
 def dummy_ca(path):
@@ -353,7 +327,7 @@ def dummy_ca(path):
         "req",
         "-new",
         "-x509",
-        "-config", data.path("resources/ca.cnf"),
+        "-config", pkg_data.path("resources/ca.cnf"),
         "-nodes",
         "-days", CERT_EXPIRY,
         "-out", path,
@@ -425,8 +399,10 @@ def dummy_cert(certdir, ca, commonname):
     confpath = os.path.join(certdir, commonname + ".cnf")
     reqpath = os.path.join(certdir, commonname + ".req")
 
-    template = open(data.path("resources/cert.cnf")).read()
-    f = open(confpath, "w").write(template%(dict(commonname=commonname)))
+    template = open(pkg_data.path("resources/cert.cnf")).read()
+    f = open(confpath, "w")
+    f.write(template%(dict(commonname=commonname)))
+    f.close()
 
     if ca:
         # Create a dummy signed certificate. Uses same key as the signing CA

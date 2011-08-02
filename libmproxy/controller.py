@@ -16,7 +16,7 @@
 import sys
 import Queue, threading
 
-exit = False
+should_exit = False
 
 #begin nocover
 
@@ -36,7 +36,7 @@ class Msg:
         self.acked = False
         try:
             masterq.put(self, timeout=3)
-            while not exit:
+            while not should_exit:
                 try:
                     g = self.q.get(timeout=0.5)
                 except Queue.Empty:
@@ -84,7 +84,7 @@ class Master:
         if self.server:
             slave = Slave(self.masterq, self.server)
             slave.start()
-        while not exit:
+        while not should_exit:
             self.tick(self.masterq)
         self.shutdown()
 
@@ -97,8 +97,8 @@ class Master:
             msg.ack()
 
     def shutdown(self):
-        global exit
-        if not exit:
-            exit = True
+        global should_exit
+        if not should_exit:
+            should_exit = True
             if self.server:
                 self.server.shutdown()

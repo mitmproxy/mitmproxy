@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import subprocess, base64, sys, json, hashlib, Cookie, cookielib, copy
+import subprocess, sys, json, hashlib, Cookie, cookielib
 import proxy, threading, netstring, filt
 import controller, version
 
@@ -78,7 +78,6 @@ class ServerPlaybackState:
         self.fmap = {}
         for i in flows:
             if i.response:
-                h = self._hash(i)
                 l = self.fmap.setdefault(self._hash(i), [])
                 l.append(i)
 
@@ -150,7 +149,6 @@ class StickyCookieState:
 
     def handle_request(self, f):
         if f.match(self.flt):
-            cs = []
             for i in self.jar.keys():
                 match = [
                     cookielib.domain_match(i[0], f.request.host),
@@ -334,7 +332,7 @@ class Flow:
         return c
 
 
-class State:
+class State(object):
     def __init__(self):
         self._flow_map = {}
         self._flow_list = []
@@ -387,8 +385,11 @@ class State:
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        f = self._flow_map.get(err.request) if err.request else None
-        if not f:
+        if err.request:
+            f = self._flow_map.get(err.request)
+            if not f:
+                return None
+        else:
             return None
         f.error = err
         if f.match(self._limit) and not f in self.view:

@@ -1,4 +1,4 @@
-import sys, os, traceback
+import sys, os
 import flow, filt, utils
 
 class DumpError(Exception): pass
@@ -225,6 +225,6 @@ class DumpMaster(flow.FlowMaster):
             return
         try:
             return flow.FlowMaster.run(self)
-        except BaseException, v:
+        except BaseException:
             self.shutdown()
             raise

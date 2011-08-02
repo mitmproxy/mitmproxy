@@ -66,7 +66,7 @@ class TestMaster(controller.Master):
 class ProxyThread(threading.Thread):
     def __init__(self, port, testq):
         self.tmaster = TestMaster(port, testq)
-        controller.exit = False
+        controller.should_exit = False
         threading.Thread.__init__(self)
 
     def run(self):

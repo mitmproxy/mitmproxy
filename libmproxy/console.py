@@ -16,9 +16,8 @@
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import cStringIO
-import urwid.raw_display
 import urwid
-import controller, utils, filt, proxy, flow, encoding
+import controller, utils, filt, proxy, flow
 
 VIEW_CUTOFF = 1024*100
 EVENTLOG_SIZE = 500
@@ -96,7 +95,6 @@ def format_flow(f, focus, extended=False, padding=2):
         txt.append("\n")
         txt.append(("text", ts))
         txt.append(" "*(padding+2))
-        met = ""
 
     if f.response:
         txt.append(
@@ -384,7 +382,7 @@ class ConnectionView(WWrap):
         cmd = [c, name]
         self.master.ui.stop()
         try:
-            ret = subprocess.call(cmd)
+            subprocess.call(cmd)
         except:
             self.master.statusbar.message("Can't start editor: %s" % c)
             self.master.ui.start()
@@ -902,7 +900,6 @@ class BodyPile(urwid.Pile):
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
-        maxcol = size[0]
         item_rows = None
         if len(size)==2:
             item_rows = self.get_item_rows( size, focus=True )
@@ -1024,11 +1021,11 @@ class ConsoleMaster(flow.FlowMaster):
 
     def _view_conn_binary(self, content):
         txt = []
-        for offset, hex, s in utils.hexdump(content[:VIEW_CUTOFF]):
+        for offset, hexa, s in utils.hexdump(content[:VIEW_CUTOFF]):
             txt.append(urwid.Text([
                 ("offset", offset),
                 " ",
-                ("text", hex),
+                ("text", hexa),
                 "   ",
                 ("text", s),
             ]))
@@ -1070,7 +1067,6 @@ class ConsoleMaster(flow.FlowMaster):
                 ]
 
     def _find_pretty_view(self, content, hdrItems):
-        txt = []
         ctype = None
         for i in hdrItems:
             if i[0].lower() == "content-type":
@@ -1167,7 +1163,7 @@ class ConsoleMaster(flow.FlowMaster):
             c = os.environ.get("PAGER") or os.environ.get("EDITOR")
             cmd = [c, name]
         self.ui.stop()
-        ret = subprocess.call(cmd, shell=shell)
+        subprocess.call(cmd, shell=shell)
         self.ui.start()
         os.unlink(name)
 
@@ -1555,7 +1551,7 @@ class ConsoleMaster(flow.FlowMaster):
     def loop(self):
         changed = True
         try:
-            while not controller.exit:
+            while not controller.should_exit:
                 startloop = time.time()
                 if changed:
                     self.statusbar.redraw()

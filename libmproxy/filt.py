@@ -315,6 +315,6 @@ def parse(s):
         return bnf.parseString(s, parseAll=True)[0]
     except pp.ParseException:
         return None
-    except ValueError, e:
+    except ValueError:
         return None
 

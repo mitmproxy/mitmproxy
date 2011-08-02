@@ -853,7 +853,6 @@ def certificate_option_group(parser):
 
 
 def process_certificate_option_group(parser, options):
-    conf = {}
     if options.cert:
         options.cert = os.path.expanduser(options.cert)
         if not os.path.exists(options.cert):

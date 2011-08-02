@@ -40,7 +40,7 @@ class upretty_size(libpry.AutoTree):
 
 class uData(libpry.AutoTree):
     def test_nonexistent(self):
-        libpry.raises("does not exist", utils.data.path, "nonexistent")
+        libpry.raises("does not exist", utils.pkg_data.path, "nonexistent")
 
 
 class uHeaders(libpry.AutoTree):
@@ -145,26 +145,6 @@ class uHeaders(libpry.AutoTree):
             ["vun", "two"],
             ["two", "vun"],
         ]
-
-
-class uisStringLike(libpry.AutoTree):
-    def test_all(self):
-        assert utils.isStringLike("foo")
-        assert not utils.isStringLike([1, 2, 3])
-        assert not utils.isStringLike((1, 2, 3))
-        assert not utils.isStringLike(["1", "2", "3"])
-
-
-class uisSequenceLike(libpry.AutoTree):
-    def test_all(self):
-        assert utils.isSequenceLike([1, 2, 3])
-        assert utils.isSequenceLike((1, 2, 3))
-        assert not utils.isSequenceLike("foobar")
-        assert utils.isSequenceLike(["foobar", "foo"])
-        x = iter([1, 2, 3])
-        assert utils.isSequenceLike(x)
-        assert not utils.isSequenceLike(1)
-
 
 
 class upretty_xmlish(libpry.AutoTree):
@@ -315,8 +295,6 @@ tests = [
     uisXML(),
     uhexdump(),
     upretty_size(),
-    uisStringLike(),
-    uisSequenceLike(),
     uHeaders(),
     uData(),
     upretty_xmlish(),

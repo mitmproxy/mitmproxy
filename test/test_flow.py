@@ -489,7 +489,7 @@ class uFlowMaster(libpry.AutoTree):
         assert fm.do_server_playback(tutils.tflow())
         q = Queue.Queue()
         fm.tick(q)
-        assert controller.exit
+        assert controller.should_exit
 
         fm.stop_server_playback()
         assert not fm.server_playback
