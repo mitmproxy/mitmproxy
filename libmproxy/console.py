@@ -17,7 +17,7 @@ import mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import cStringIO
 import urwid
-import controller, utils, filt, proxy, flow
+import controller, utils, filt, proxy, flow, encoding
 
 VIEW_CUTOFF = 1024*100
 EVENTLOG_SIZE = 500
@@ -868,6 +868,7 @@ class Options(object):
 
 
 #begin nocover
+
 class BodyPile(urwid.Pile):
     def __init__(self, master):
         h = urwid.Text("Event log")
