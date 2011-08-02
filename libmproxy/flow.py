@@ -336,8 +336,6 @@ class Flow:
 
 class State:
     def __init__(self):
-        self.client_connections = []
-
         self._flow_map = {}
         self._flow_list = []
         self.view = []
@@ -360,15 +358,6 @@ class State:
             if not i.response and not i.error:
                 c += 1
         return c
-
-    def clientconnect(self, cc):
-        self.client_connections.append(cc)
-
-    def clientdisconnect(self, dc):
-        """
-            Start a browser connection.
-        """
-        self.client_connections.remove(dc.client_conn)
 
     def add_request(self, req):
         """
@@ -634,11 +623,9 @@ class FlowMaster(controller.Master):
         #end nocover
 
     def handle_clientconnect(self, r):
-        self.state.clientconnect(r)
         r.ack()
 
     def handle_clientdisconnect(self, r):
-        self.state.clientdisconnect(r)
         r.ack()
 
     def handle_error(self, r):

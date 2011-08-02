@@ -253,8 +253,6 @@ class uState(libpry.AutoTree):
         """
         bc = proxy.ClientConnect(("address", 22))
         c = flow.State()
-        c.clientconnect(bc)
-        assert len(c.client_connections) == 1
 
         req = tutils.treq(bc)
         f = c.add_request(req)
@@ -284,8 +282,6 @@ class uState(libpry.AutoTree):
         assert c.active_flow_count() == 0
 
         dc = proxy.ClientDisconnect(bc)
-        c.clientdisconnect(dc)
-        assert not c.client_connections
 
     def test_err(self):
         bc = proxy.ClientConnect(("address", 22))
@@ -302,7 +298,6 @@ class uState(libpry.AutoTree):
         c = flow.State()
 
         req = tutils.treq()
-        c.clientconnect(req.client_conn)
         assert len(c.view) == 0
 
         f = c.add_request(req)
@@ -317,7 +312,6 @@ class uState(libpry.AutoTree):
         assert len(c.view) == 1
 
         req = tutils.treq()
-        c.clientconnect(req.client_conn)
         c.add_request(req)
         assert len(c.view) == 2
         c.set_limit("~q")
@@ -453,7 +447,6 @@ class uFlowMaster(libpry.AutoTree):
         assert not fm.handle_response(rx)
         
         dc = proxy.ClientDisconnect(req.client_conn)
-        fm.handle_clientdisconnect(dc)
 
         err = proxy.Error(f.request, "msg")
         fm.handle_error(err)
