@@ -167,11 +167,6 @@ class ConnectionItem(WWrap):
         if key == "a":
             self.flow.accept_intercept()
             self.master.sync_list_view()
-        elif key == "A":
-            self.master.accept_all()
-            self.master.sync_list_view()
-        elif key == "C":
-            self.master.clear_connections()
         elif key == "d":
             self.flow.kill(self.master)
             self.state.delete_flow(self.flow)
@@ -195,9 +190,6 @@ class ConnectionItem(WWrap):
             self.flow.kill(self.master)
         elif key == "v":
             self.master.toggle_eventlog()
-        elif key == "tab":
-            if self.master.eventlog:
-                pass
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
@@ -206,8 +198,6 @@ class ConnectionItem(WWrap):
                 "Script: ", self.state.last_script,
                 self.master.run_script, self.flow
             )
-        elif key == " ":
-            key = "page down"
         return key
 
 
@@ -236,6 +226,27 @@ class ConnectionListView(urwid.ListWalker):
         f, i = self.state.get_prev(pos)
         f = ConnectionItem(self.master, self.state, f, False) if f else None
         return f, i
+
+
+class ConnectionListBox(urwid.ListBox):
+    def __init__(self, master):
+        self.master = master
+        urwid.ListBox.__init__(self, master.conn_list_view)
+
+    def keypress(self, size, key):
+        if key == "A":
+            self.master.accept_all()
+            self.master.sync_list_view()
+            key = None
+        elif key == "C":
+            self.master.clear_connections()
+            key = None
+        elif key == "v":
+            self.master.toggle_eventlog()
+            key = None
+        elif key == " ":
+            key = "page down"
+        return urwid.ListBox.keypress(self, size, key)
 
 
 class ConnectionViewHeader(WWrap):
@@ -869,7 +880,7 @@ class BodyPile(urwid.Pile):
         urwid.Pile.__init__(
             self, 
             [
-                urwid.ListBox(master.conn_list_view),
+                ConnectionListBox(master),
                 urwid.Frame(urwid.ListBox(master.eventlist), header = self.inactive_header)
             ]
         )
@@ -1264,7 +1275,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.eventlog:
             self.body = BodyPile(self)
         else:
-            self.body = urwid.ListBox(self.conn_list_view)
+            self.body = ConnectionListBox(self)
         self.statusbar = StatusBar(self, self.footer_text_default)
         self.header = None
         self.viewstate = VIEW_CONNLIST
