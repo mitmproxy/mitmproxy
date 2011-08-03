@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import subprocess, sys, json, hashlib, Cookie, cookielib, base64, copy, re
+import json, hashlib, Cookie, cookielib, base64, copy, re
 import time
 import netstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz

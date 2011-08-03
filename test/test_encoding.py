@@ -2,7 +2,6 @@ from libmproxy import encoding
 import libpry
 
 import cStringIO
-import gzip, zlib
 
 class uidentity(libpry.AutoTree):
     def test_simple(self):

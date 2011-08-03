@@ -1,7 +1,6 @@
-import cStringIO, time, re
+import cStringIO, time
 import libpry
 from libmproxy import proxy, controller, utils, dump
-import tutils
 
 
 class u_read_chunked(libpry.AutoTree):

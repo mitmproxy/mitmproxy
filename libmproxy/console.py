@@ -864,8 +864,6 @@ class Options(object):
         "limit",
         "no_server",
         "refresh_server_playback",
-        "request_script",
-        "response_script",
         "rfile",
         "script",
         "rheaders",
@@ -951,11 +949,6 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.conn_list_view = None
         self.set_palette()
-
-        if options.response_script:
-            self.set_response_script(options.response_script)
-        if options.request_script:
-            self.set_request_script(options.request_script)
 
         r = self.set_limit(options.limit)
         if r:
@@ -1085,15 +1078,14 @@ class ConsoleMaster(flow.FlowMaster):
         return txt
 
     def _view_conn_urlencoded(self, lines):
+        kv = format_keyvals(
+                [(k+":", v) for (k, v) in lines],
+                key = "header",
+                val = "text"
+             )
         return [
                     urwid.Text(("highlight", "URLencoded data:\n")),
-                    urwid.Text(
-                        format_keyvals(
-                            [(k+":", v) for (k, v) in lines],
-                            key = "header",
-                            val = "text"
-                        )
-                    )
+                    urwid.Text(kv)
                 ]
 
     def _find_pretty_view(self, content, hdrItems):

@@ -1,4 +1,4 @@
-import imp, os, traceback, flow
+import os, traceback
 
 class ScriptError(Exception):
     pass
@@ -14,7 +14,6 @@ class Script:
     """
     def __init__(self, path, ctx):
         self.path, self.ctx = path, ctx
-        self.mod = None
         self.ns = None
 
     def load(self):
@@ -31,7 +30,7 @@ class Script:
             raise ScriptError("Not a file: %s"%self.path)
         ns = {}
         try:
-            self.mod = execfile(path, ns, ns)
+            execfile(path, ns, ns)
         except Exception, v:
             raise ScriptError(traceback.format_exc(v))
         self.ns = ns

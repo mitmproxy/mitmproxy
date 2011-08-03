@@ -40,7 +40,7 @@ class upretty_size(libpry.AutoTree):
     def test_simple(self):
         assert utils.pretty_size(100) == "100B"
         assert utils.pretty_size(1024) == "1kB"
-        assert utils.pretty_size(1024 + (1024/2)) == "1.5kB"
+        assert utils.pretty_size(1024 + (1024/2.0)) == "1.5kB"
         assert utils.pretty_size(1024*1024) == "1M"
 
 

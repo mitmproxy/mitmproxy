@@ -9,10 +9,10 @@ class uNetstring(libpry.AutoTree):
         self.encoded_data = "9:Netstring,6:module,2:by,4:Will,7:McGugan,"
 
     def test_header(self):
-        tests = [ ("netstring", "9:"),
+        t = [ ("netstring", "9:"),
                   ("Will McGugan", "12:"),
                   ("", "0:") ]
-        for test, result in tests:
+        for test, result in t:
             assert netstring.header(test) == result 
             
     def test_file_encoder(self):

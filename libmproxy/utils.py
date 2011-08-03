@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re, os, subprocess, datetime, urlparse, string
-import time, functools, copy, cgi, textwrap
+import time, functools, cgi, textwrap
 import json
 
 CERT_SLEEP_TIME = 1

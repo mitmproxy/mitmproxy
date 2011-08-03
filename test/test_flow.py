@@ -241,7 +241,6 @@ class uFlow(libpry.AutoTree):
 
 class uState(libpry.AutoTree):
     def test_backup(self):
-        bc = flow.ClientConnect(("address", 22))
         c = flow.State()
         req = tutils.treq()
         f = c.add_request(req)
@@ -285,10 +284,8 @@ class uState(libpry.AutoTree):
         assert c.add_response(resp)
         assert c.active_flow_count() == 0
 
-        dc = flow.ClientDisconnect(bc)
 
     def test_err(self):
-        bc = flow.ClientConnect(("address", 22))
         c = flow.State()
         req = tutils.treq()
         f = c.add_request(req)
@@ -305,7 +302,7 @@ class uState(libpry.AutoTree):
         req = tutils.treq()
         assert len(c.view) == 0
 
-        f = c.add_request(req)
+        c.add_request(req)
         assert len(c.view) == 1
 
         c.set_limit("~s")
@@ -342,7 +339,7 @@ class uState(libpry.AutoTree):
 
     def _add_response(self, state):
         req = tutils.treq()
-        f = state.add_request(req)
+        state.add_request(req)
         resp = tutils.tresp(req)
         state.add_response(resp)
 
@@ -539,7 +536,7 @@ class uFlowMaster(libpry.AutoTree):
         tf = tutils.tflow_full()
         tf.response.headers["set-cookie"] = ["foo=bar"]
         fm.handle_request(tf.request)
-        f = fm.handle_response(tf.response)
+        fm.handle_response(tf.response)
         assert fm.stickycookie_state.jar
         assert not "cookie" in tf.request.headers
         fm.handle_request(tf.request)
@@ -690,7 +687,6 @@ class uResponse(libpry.AutoTree):
         h = flow.Headers()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
-        r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
         resp = flow.Response(req, 200, "msg", h.copy(), "content")
 

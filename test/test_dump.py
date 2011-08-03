@@ -70,7 +70,6 @@ class uDumpMaster(libpry.AutoTree):
         m = dump.DumpMaster(None, o, None, outfile=cs)
 
     def test_read(self):
-        cs = StringIO()
         t = self.tmpdir()
         p = os.path.join(t, "read")
         self._flowfile(p)
@@ -130,10 +129,10 @@ class uDumpMaster(libpry.AutoTree):
         )
 
     def test_stickycookie(self):
-        ret = self._dummy_cycle(1, None, "", stickycookie = ".*")
+        self._dummy_cycle(1, None, "", stickycookie = ".*")
 
     def test_stickyauth(self):
-        ret = self._dummy_cycle(1, None, "", stickyauth = ".*")
+        self._dummy_cycle(1, None, "", stickyauth = ".*")
 
 
 
