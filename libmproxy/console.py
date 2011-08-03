@@ -193,7 +193,7 @@ class ConnectionItem(WWrap):
                 self.master.view_flow(self.flow)
         elif key == "|":
             self.master.path_prompt(
-                "Script: ", self.state.last_script,
+                "Send flow to script: ", self.state.last_script,
                 self.master.run_script, self.flow
             )
         return key
@@ -550,7 +550,7 @@ class ConnectionView(WWrap):
             self.master.view_next_flow(self.flow)
         elif key == "|":
             self.master.path_prompt(
-                "Script: ", self.state.last_script,
+                "Send flow to script: ", self.state.last_script,
                 self.master.run_script, self.flow
             )
         elif key == "z":
@@ -713,6 +713,9 @@ class StatusBar(WWrap):
 
         if opts:
             r.append("[%s]"%(":".join(opts)))
+
+        if self.master.script:
+            r.append("[script:%s]"%self.master.script.path)
 
         if self.master.debug:
             r.append("[lt:%0.3f]"%self.master.looptime)
@@ -962,6 +965,12 @@ class ConsoleMaster(flow.FlowMaster):
             print >> sys.stderr, "Sticky auth error:", r
             sys.exit(1)
 
+        if options.script:
+            err = self.load_script(options.script)
+            if err:
+                print >> sys.stderr, "Script load error:", r
+                sys.exit(1)
+
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
         self.anticomp = options.anticomp
@@ -979,6 +988,14 @@ class ConsoleMaster(flow.FlowMaster):
             self.server_playback_path(options.server_replay)
 
         self.debug = options.debug
+
+    def set_script(self, path):
+        if not path:
+            return
+        ret = self.load_script(path)
+        if ret:
+            self.statusbar.message(ret)
+        self.state.last_script = path
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
@@ -1379,6 +1396,7 @@ class ConsoleMaster(flow.FlowMaster):
             ("Q", "quit without confirm prompt"),
             ("r", "replay request"),
             ("R", "revert changes to request"),
+            ("s", "set/unset script"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),
             ("u", "set sticky auth expression"),
@@ -1632,6 +1650,16 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.state.last_saveload,
                                 self.save_flows
                             )
+                            k = None
+                        elif k == "s":
+                            if self.script:
+                                self.script = None
+                            else:
+                                self.path_prompt(
+                                    "Set script: ",
+                                    self.state.last_script,
+                                    self.set_script
+                                )
                             k = None
                         elif k == "S":
                             if not self.server_playback:
