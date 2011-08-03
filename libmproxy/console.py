@@ -1766,31 +1766,18 @@ class ConsoleMaster(flow.FlowMaster):
         self.sync_list_view()
         self.refresh_connection(f)
 
-    def add_event(self, e):
+    def add_event(self, e, level="info"):
+        if level == "info":
+            e = urwid.Text(e)
+        elif level == "error":
+            e = urwid.Text(("error", e))
+
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:
             self.eventlist.pop(0)
         self.eventlist.set_focus(len(self.eventlist))
 
     # Handlers
-    def handle_clientconnect(self, r):
-        self.add_event(urwid.Text("Connect from: %s:%s"%r.address))
-        return flow.FlowMaster.handle_clientconnect(self, r)
-
-    def handle_clientdisconnect(self, r):
-        s = "Disconnect from: %s:%s"%r.client_conn.address
-        self.add_event(urwid.Text(s))
-        if r.client_conn.requestcount:
-            s = "    -> handled %s requests"%r.client_conn.requestcount
-            self.add_event(urwid.Text(s))
-        if r.client_conn.connection_error:
-            self.add_event(
-                urwid.Text(
-                        ("error", "   -> error: %s"%r.client_conn.connection_error)
-                )
-            )
-        return flow.FlowMaster.handle_clientdisconnect(self, r)
-
     def handle_error(self, r):
         f = flow.FlowMaster.handle_error(self, r)
         if f:

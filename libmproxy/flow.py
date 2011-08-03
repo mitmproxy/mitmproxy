@@ -481,6 +481,12 @@ class FlowMaster(controller.Master):
         raise NotImplementedError
         #end nocover
 
+    def add_event(self, e, level="info"):
+        """
+            level: info, error
+        """
+        pass
+
     def set_plugin(self, p):
         self.plugin = p
 
@@ -615,9 +621,19 @@ class FlowMaster(controller.Master):
         #end nocover
 
     def handle_clientconnect(self, r):
+        self.add_event("Connect from: %s:%s"%r.address)
         r.ack()
 
     def handle_clientdisconnect(self, r):
+        s = "Disconnect from: %s:%s"%r.client_conn.address
+        self.add_event(s)
+        if r.client_conn.requestcount:
+            s = "    -> handled %s requests"%r.client_conn.requestcount
+            self.add_event(s)
+        if r.client_conn.connection_error:
+            self.add_event(
+                "   -> error: %s"%r.client_conn.connection_error, "error"
+            )
         r.ack()
 
     def handle_error(self, r):

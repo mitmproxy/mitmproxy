@@ -20,6 +20,7 @@ class Options(object):
         "rfile",
         "rheaders",
         "server_replay",
+        "script",
         "stickycookie",
         "stickyauth",
         "verbosity",
@@ -132,23 +133,13 @@ class DumpMaster(flow.FlowMaster):
                     "%s: %s\n%s"%(script, e.args[0], eout)
                 )
 
-    def handle_clientconnect(self, c):
+    def add_event(self, e, level="info"):
         if self.eventlog:
-            print >> self.outfile, "Connection from: %s:%s"%c.address
-        return flow.FlowMaster.handle_clientconnect(self, c)
-
-    def handle_clientdisconnect(self, c):
-        if self.eventlog:
-            print >> self.outfile, "Disconnect from: %s:%s"%tuple(c.client_conn.address),
-            print >> self.outfile, "(handled %s requests)"%c.client_conn.requestcount
-            if c.client_conn.connection_error:
-                print >> self.outfile, "\terror: %s"%c.client_conn.connection_error
-        return flow.FlowMaster.handle_clientconnect(self, c)
+            print >> self.outfile, e
 
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
-        if self.eventlog:
-            print >> self.outfile, "Request: %s"%str_request(r)
+        self.add_event("Request: %s"%str_request(r))
         if f:
             r.ack()
         return f
