@@ -13,6 +13,7 @@ if ns.options.website:
 else:
     ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
     this.layout = countershape.Layout("_layout.html")
+
 ns.docTitle = "mitmproxy"
 this.markup = markup.Markdown()
 ns.docMaintainer = "Aldo Cortesi"

@@ -1,4 +1,3 @@
-
 This is a loose collection of todo items, in case someone else wants to start
 hacking on mitmproxy. Drop me a line (aldo@corte.si) if you want to tackle any
 of these and need some pointers.
@@ -16,9 +15,4 @@ Features:
     - Support HTTP Digest authentication through the stickyauth option. We'll
     have to save the server nonce, and recalculate the hashes for each request.
     - Chunked encoding support for requests (we already support it for responses).
-    - Better manipulation of flows in mitmproxy: copying flows, adding
-    comments.
-
-Bugs:
-
-    - In some circumstances, long URLs in list view are line-broken oddly.
+    - A progress indicator for large files

@@ -1400,15 +1400,15 @@ class ConsoleMaster(flow.FlowMaster):
             ("o", "toggle options:"),
             (None,
                 highlight_key("anticache", "a") +
-                [("text", ": modify requests to prevent cached responses")]
+                [("text", ": prevent cached responses")]
             ),
             (None,
                 highlight_key("anticomp", "c") +
-                [("text", ": modify requests to try to prevent compressed responses")]
+                [("text", ": prevent compressed responses")]
             ),
             (None,
                 highlight_key("autodecode", "d") +
-                [("text", ": automatically decode compressed responses")]
+                [("text", ": auto-decode compressed content")]
             ),
             (None,
                 highlight_key("killextra", "k") +
@@ -1430,7 +1430,7 @@ class ConsoleMaster(flow.FlowMaster):
             ("w", "save all flows matching current limit"),
             ("W", "save this flow"),
             ("|", "run script on this flow"),
-            ("page up/down", "page up/down"),
+            ("pg up/down", "page up/down"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 

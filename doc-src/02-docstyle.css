@@ -12,6 +12,7 @@ a {
     margin: 0;
     margin-bottom: 1em;
 }
+
 #hd.doc h1 {
     letter-spacing: 3px;
     font-size: 2.5em;
@@ -48,6 +49,12 @@ a {
     color: #000000;
 }
 
+#bd p {
+    margin: 1em 0;
+
+
+}
+
 #ft.doc {
     color: #aaa;
     border-top: 1px solid #aaa;
@@ -65,6 +72,7 @@ a {
 pre {
     padding: 10px;
     background-color: #dddddd;
+    margin: 1em 0;
 }
 
 .terminal {
