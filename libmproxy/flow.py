@@ -443,20 +443,30 @@ class FlowMaster(controller.Master):
         """
         pass
 
-    def load_script(self, path):
+    def get_script(self, path):
         """
-            Loads a script. Returns an error description if something went
-            wrong.
+            Returns an (error, script) tuple.
         """
         s = script.Script(path, self)
         try:
             s.load()
         except script.ScriptError, v:
-            return v.args[0]
+            return (v.args[0], None)
         ret = s.run("start")
         if not ret[0] and ret[1]:
-            return "Error in script start:\n\n" + ret[1][1]
-        self.script = s
+            return ("Error in script start:\n\n" + ret[1][1], None)
+        return (None, s)
+
+    def load_script(self, path):
+        """
+            Loads a script. Returns an error description if something went
+            wrong.
+        """
+        r = self.get_script(path)
+        if r[0]:
+            return r[0]
+        else:
+            self.script = r[1]
 
     def set_stickycookie(self, txt):
         if txt:

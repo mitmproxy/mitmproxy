@@ -194,7 +194,7 @@ class ConnectionItem(WWrap):
         elif key == "|":
             self.master.path_prompt(
                 "Send flow to script: ", self.state.last_script,
-                self.master.run_script, self.flow
+                self.master.run_script_once, self.flow
             )
         return key
 
@@ -551,7 +551,7 @@ class ConnectionView(WWrap):
         elif key == "|":
             self.master.path_prompt(
                 "Send flow to script: ", self.state.last_script,
-                self.master.run_script, self.flow
+                self.master.run_script_once, self.flow
             )
         elif key == "z":
             if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
@@ -988,6 +988,21 @@ class ConsoleMaster(flow.FlowMaster):
             self.server_playback_path(options.server_replay)
 
         self.debug = options.debug
+
+    def run_script_once(self, path, f):
+        ret = self.get_script(path)
+        if ret[0]:
+            self.statusbar.message(ret[0])
+        s = ret[1]
+
+        if f.request:
+            s.run("request", f)
+        if f.response:
+            s.run("response", f)
+        if f.error:
+            s.run("error", f)
+        self.refresh_connection(f)
+        self.state.last_script = path
 
     def set_script(self, path):
         if not path:

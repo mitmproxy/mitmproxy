@@ -130,14 +130,6 @@ class uServerPlaybackState(libpry.AutoTree):
 
 
 class uFlow(libpry.AutoTree):
-    def test_run_script(self):
-        f = tutils.tflow()
-        f.response = tutils.tresp()
-        f.request = f.response.request
-        se = f.run_script("scripts/a")
-        assert "DEBUG" == se.strip()
-        assert f.request.host == "TESTOK"
-
     def test_match(self):
         f = tutils.tflow()
         f.response = tutils.tresp()
