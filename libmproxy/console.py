@@ -475,7 +475,7 @@ class ConnectionView(WWrap):
         elif part == "r" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             if not conn.acked:
                 response = flow.Response(conn, "200", "OK", flow.Headers(), "")
-                conn.ack(response)
+                conn._ack(response)
             self.view_response()
         self.master.refresh_connection(self.flow)
 
@@ -1797,7 +1797,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay():
             f.intercept()
         else:
-            r.ack()
+            r._ack()
         self.sync_list_view()
         self.refresh_connection(f)
 

@@ -25,14 +25,14 @@ class Msg:
         self.q = Queue.Queue()
         self.acked = False
 
-    def ack(self, data=False):
+    def _ack(self, data=False):
         self.acked = True
         if data is None:
             self.q.put(data)
         else:
             self.q.put(data or self)
 
-    def send(self, masterq):
+    def _send(self, masterq):
         self.acked = False
         try:
             masterq.put(self, timeout=3)
@@ -94,7 +94,7 @@ class Master:
         if m:
             m(msg)
         else:
-            msg.ack()
+            msg._ack()
 
     def shutdown(self):
         global should_exit

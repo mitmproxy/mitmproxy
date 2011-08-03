@@ -124,7 +124,7 @@ class DumpMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_request(self, r)
         self.add_event("Request: %s"%str_request(r))
         if f:
-            r.ack()
+            r._ack()
         return f
 
     def indent(self, n, t):
@@ -181,14 +181,14 @@ class DumpMaster(flow.FlowMaster):
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
         if f:
-            msg.ack()
+            msg._ack()
             self._process_flow(f)
         return f
 
     def handle_error(self, msg):
         f = flow.FlowMaster.handle_error(self, msg)
         if f:
-            msg.ack()
+            msg._ack()
             self._process_flow(f)
         return f
 

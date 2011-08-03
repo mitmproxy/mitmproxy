@@ -60,7 +60,7 @@ class TestMaster(controller.Master):
 
     def handle(self, m):
         self.log.append(m)
-        m.ack()
+        m._ack()
 
 
 class ProxyThread(threading.Thread):

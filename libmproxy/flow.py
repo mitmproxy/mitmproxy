@@ -138,9 +138,9 @@ class Headers:
 class HTTPMsg(controller.Msg):
     def decode(self):
         """
-            Alters Response object, decoding its content based on the current
-            Content-Encoding header and changing Content-Encoding header to
-            'identity'.
+            Decodes content based on the current Content-Encoding header, then
+            removes the header. If there is no Content-Encoding header, no
+            action is taken.
         """
         ce = self.headers["content-encoding"]
         if not ce or ce[0] not in encoding.ENCODINGS:
@@ -153,10 +153,10 @@ class HTTPMsg(controller.Msg):
 
     def encode(self, e):
         """
-            Alters Response object, encoding its content with the specified
-            coding. This method should only be called on Responses with
-            Content-Encoding headers of 'identity'.
+            Encodes content with the encoding e, where e is "gzip", "deflate"
+            or "identity".
         """
+        # FIXME: Error if there's an existing encoding header?
         self.content = encoding.encode(e, self.content)
         self.headers["content-encoding"] = [e]
 
@@ -289,7 +289,7 @@ class Request(HTTPMsg):
     def is_response(self):
         return False
 
-    def assemble(self, _proxy = False):
+    def _assemble(self, _proxy = False):
         """
             Assembles the request for transmission to the server. We make some
             modifications to make sure interception works properly.
@@ -436,7 +436,7 @@ class Response(HTTPMsg):
     def is_response(self):
         return True
 
-    def assemble(self):
+    def _assemble(self):
         """
             Assembles the response for transmission to the client. We make some
             modifications to make sure interception works properly.
@@ -544,16 +544,6 @@ class Error(controller.Msg):
         """
         self.msg, c = re.subn(pattern, repl, self.msg, *args, **kwargs)
         return c
-
-
-
-
-
-
-
-
-
-
 
 
 class ClientPlaybackState:
@@ -788,9 +778,9 @@ class Flow:
     def kill(self, master):
         self.error = Error(self.request, "Connection killed")
         if self.request and not self.request.acked:
-            self.request.ack(None)
+            self.request._ack(None)
         elif self.response and not self.response.acked:
-            self.response.ack(None)
+            self.response._ack(None)
         master.handle_error(self.error)
         self.intercepting = False
 
@@ -800,9 +790,9 @@ class Flow:
     def accept_intercept(self):
         if self.request:
             if not self.request.acked:
-                self.request.ack()
+                self.request._ack()
             elif self.response and not self.response.acked:
-                self.response.ack()
+                self.response._ack()
             self.intercepting = False
 
     def replace(self, pattern, repl, *args, **kwargs):
@@ -1049,7 +1039,7 @@ class FlowMaster(controller.Master):
             flow.response = response
             if self.refresh_server_playback:
                 response.refresh()
-            flow.request.ack(response)
+            flow.request._ack(response)
             return True
         return None
 
@@ -1099,7 +1089,7 @@ class FlowMaster(controller.Master):
                 if self.kill_nonreplay:
                     f.kill(self)
                 else:
-                    f.request.ack()
+                    f.request._ack()
 
     def process_new_response(self, f):
         if self.stickycookie_state:
@@ -1133,7 +1123,7 @@ class FlowMaster(controller.Master):
     def handle_clientconnect(self, cc):
         self.run_script("clientconnect", cc)
         self.add_event("Connect from: %s:%s"%cc.address)
-        cc.ack()
+        cc._ack()
 
     def handle_clientdisconnect(self, r):
         self.run_script("clientdisconnect", r)
@@ -1146,7 +1136,7 @@ class FlowMaster(controller.Master):
             self.add_event(
                 "   -> error: %s"%r.client_conn.connection_error, "error"
             )
-        r.ack()
+        r._ack()
 
     def handle_error(self, r):
         f = self.state.add_error(r)
@@ -1154,7 +1144,7 @@ class FlowMaster(controller.Master):
             self.run_script("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
-        r.ack()
+        r._ack()
         return f
 
     def handle_request(self, r):
@@ -1170,7 +1160,7 @@ class FlowMaster(controller.Master):
         if self.client_playback:
             self.client_playback.clear(f)
         if not f:
-            r.ack()
+            r._ack()
         self.process_new_response(f)
         return f
 

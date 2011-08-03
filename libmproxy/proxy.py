@@ -151,10 +151,10 @@ class RequestReplayThread(threading.Thread):
             server = ServerConnection(self.flow.request)
             server.send_request(self.flow.request)
             response = server.read_response()
-            response.send(self.masterq)
+            response._send(self.masterq)
         except ProxyError, v:
             err = flow.Error(self.flow.request, v.msg)
-            err.send(self.masterq)
+            err._send(self.masterq)
 
 
 class ServerConnection:
@@ -182,7 +182,7 @@ class ServerConnection:
         self.request = request
         request.close = self.close
         try:
-            self.wfile.write(request.assemble())
+            self.wfile.write(request._assemble())
             self.wfile.flush()
         except socket.error, err:
             raise ProxyError(504, 'Error sending data to "%s": %s' % (request.host, err))
@@ -225,11 +225,11 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
     def handle(self):
         cc = flow.ClientConnect(self.client_address)
-        cc.send(self.mqueue)
+        cc._send(self.mqueue)
         while not cc.close:
             self.handle_request(cc)
         cd = flow.ClientDisconnect(cc)
-        cd.send(self.mqueue)
+        cd._send(self.mqueue)
         self.finish()
 
     def handle_request(self, cc):
@@ -243,7 +243,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 cc.close = True
                 return
             cc.requestcount += 1
-            request = request.send(self.mqueue)
+            request = request._send(self.mqueue)
             if request is None:
                 cc.close = True
                 return
@@ -251,7 +251,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             if request.is_response():
                 response = request
                 request = False
-                response = response.send(self.mqueue)
+                response = response._send(self.mqueue)
             else:
                 server = ServerConnection(request)
                 server.send_request(request)
@@ -259,7 +259,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     response = server.read_response()
                 except IOError, v:
                     raise IOError, "Reading response: %s"%v
-                response = response.send(self.mqueue)
+                response = response._send(self.mqueue)
                 if response is None:
                     server.terminate()
             if response is None:
@@ -274,7 +274,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             cc.connection_error = "%s: %s"%(e.code, e.msg)
             if request:
                 err = flow.Error(request, e.msg)
-                err.send(self.mqueue)
+                err._send(self.mqueue)
                 self.send_error(e.code, e.msg)
         if server:
             server.terminate()
@@ -364,7 +364,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
-        self.wfile.write(response.assemble())
+        self.wfile.write(response._assemble())
         self.wfile.flush()
 
     def terminate(self, connection, wfile, rfile):

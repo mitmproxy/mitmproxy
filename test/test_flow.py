@@ -179,7 +179,7 @@ class uFlow(libpry.AutoTree):
         f.intercept()
         f.response = tutils.tresp()
         f.request = f.response.request
-        f.request.ack()
+        f.request._ack()
         assert not f.response.acked
         f.kill(fm)
         assert f.response.acked
@@ -210,7 +210,7 @@ class uFlow(libpry.AutoTree):
         f.response = tutils.tresp()
         f.request = f.response.request
         f.intercept()
-        f.request.ack()
+        f.request._ack()
         assert not f.response.acked
         f.accept_intercept()
         assert f.response.acked
@@ -411,7 +411,7 @@ class uSerialize(libpry.AutoTree):
 
         f2 = l[0]
         assert f2._get_state() == f._get_state()
-        assert f2.request.assemble() == f.request.assemble()
+        assert f2.request._assemble() == f.request._assemble()
 
     def test_load_flows(self):
         r = self._treader()
@@ -575,7 +575,7 @@ class uRequest(libpry.AutoTree):
         assert r.set_url(u)
         assert not r.set_url("")
         assert r.url() == u
-        assert r.assemble()
+        assert r._assemble()
 
         r2 = r.copy()
         assert r == r2
@@ -653,7 +653,7 @@ class uResponse(libpry.AutoTree):
         c = flow.ClientConnect(("addr", 2222))
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
         resp = flow.Response(req, 200, "msg", h.copy(), "content")
-        assert resp.assemble()
+        assert resp._assemble()
 
         resp2 = resp.copy()
         assert resp2 == resp
