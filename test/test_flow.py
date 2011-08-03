@@ -138,15 +138,6 @@ class uFlow(libpry.AutoTree):
         assert "DEBUG" == se.strip()
         assert f.request.host == "TESTOK"
 
-    def test_run_script_err(self):
-        f = tutils.tflow()
-        f.response = tutils.tresp()
-        f.request = f.response.request
-        libpry.raises("returned error", f.run_script,"scripts/err_return")
-        libpry.raises("invalid response", f.run_script,"scripts/err_data")
-        libpry.raises("no such file", f.run_script,"nonexistent")
-        libpry.raises("permission denied", f.run_script,"scripts/nonexecutable")
-
     def test_match(self):
         f = tutils.tflow()
         f.response = tutils.tresp()
@@ -449,13 +440,38 @@ class uSerialize(libpry.AutoTree):
 
 
 class uFlowMaster(libpry.AutoTree):
+    def test_load_script(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert not fm.load_script("scripts/a.py")
+        assert fm.load_script("nonexistent")
+        assert "ValueError" in fm.load_script("scripts/starterr.py")
+
+    def test_script(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert not fm.load_script("scripts/all.py")
+        req = tutils.treq()
+        fm.handle_clientconnect(req.client_conn)
+        assert fm.script.ns["log"][-1] == "clientconnect"
+        f = fm.handle_request(req)
+        assert fm.script.ns["log"][-1] == "request"
+        resp = tutils.tresp(req)
+        fm.handle_response(resp)
+        assert fm.script.ns["log"][-1] == "response"
+        dc = proxy.ClientDisconnect(req.client_conn)
+        fm.handle_clientdisconnect(dc)
+        assert fm.script.ns["log"][-1] == "clientdisconnect"
+        err = proxy.Error(f.request, "msg")
+        fm.handle_error(err)
+        assert fm.script.ns["log"][-1] == "error"
+
     def test_all(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         fm.anticache = True
         fm.anticomp = True
         req = tutils.treq()
-
         fm.handle_clientconnect(req.client_conn)
 
         f = fm.handle_request(req)

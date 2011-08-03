@@ -8,7 +8,7 @@ class Context:
         self.master, self.state = master, state
 
     def log(self, *args, **kwargs):
-        self.master.log(*args, **kwargs)
+        self.master.add_event(*args, **kwargs)
 
 
 class Script:
@@ -32,9 +32,14 @@ class Script:
             Raises ScriptError on failure, with argument equal to an error
             message that may be a formatted traceback.
         """
+        path = os.path.expanduser(self.path)
+        if not os.path.exists(path):
+            raise ScriptError("No such file: %s"%self.path)
+        if not os.path.isfile(path):
+            raise ScriptError("Not a file: %s"%self.path)
         ns = {}
         try:
-            self.mod = execfile(os.path.expanduser(self.path), {}, ns)
+            self.mod = execfile(path, ns, ns)
         except Exception, v:
             raise ScriptError(traceback.format_exc(v))
         self.ns = ns

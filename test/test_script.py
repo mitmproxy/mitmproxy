@@ -27,17 +27,23 @@ class uScript(libpry.AutoTree):
 
         s = script.Script("nonexistent", fm)
         libpry.raises(
-            script.ScriptError,
+            "no such file",
             s.load
         )
 
-        s = script.Script(os.path.join("scripts", "syntaxerr.py"), fm)
+        s = script.Script("scripts", fm)
+        libpry.raises(
+            "not a file",
+            s.load
+        )
+
+        s = script.Script("scripts/syntaxerr.py", fm)
         libpry.raises(
             script.ScriptError,
             s.load
         )
 
-        s = script.Script(os.path.join("scripts", "loaderr.py"), fm)
+        s = script.Script("scripts/loaderr.py", fm)
         libpry.raises(
             script.ScriptError,
             s.load

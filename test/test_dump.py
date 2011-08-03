@@ -111,30 +111,22 @@ class uDumpMaster(libpry.AutoTree):
             wfile = "nonexistentdir/foo"
         )
 
-    def test_request_script(self):
-        ret = self._dummy_cycle(1, None, "", request_script="scripts/a", verbosity=1)
-        assert "TESTOK" in ret
-        assert "DEBUG" in ret
+    def test_script(self):
+        ret = self._dummy_cycle(
+            1, None, "",
+            script="scripts/all.py", verbosity=0, eventlog=True
+        )
+        assert "XCLIENTCONNECT" in ret
+        assert "XREQUEST" in ret
+        assert "XRESPONSE" in ret
+        assert "XCLIENTDISCONNECT" in ret
         libpry.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", request_script="nonexistent"
+            self._dummy_cycle, 1, None, "", script="nonexistent"
         )
         libpry.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", request_script="scripts/err_return"
-        )
-
-    def test_response_script(self):
-        ret = self._dummy_cycle(1, None, "", response_script="scripts/a", verbosity=1)
-        assert "TESTOK" in ret
-        assert "DEBUG" in ret
-        libpry.raises(
-            dump.DumpError,
-            self._dummy_cycle, 1, None, "", response_script="nonexistent"
-        )
-        libpry.raises(
-            dump.DumpError,
-            self._dummy_cycle, 1, None, "", response_script="scripts/err_return"
+            self._dummy_cycle, 1, None, "", script="starterr.py"
         )
 
     def test_stickycookie(self):

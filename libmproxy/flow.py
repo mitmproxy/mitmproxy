@@ -3,7 +3,7 @@
     with their responses, and provide filtering and interception facilities.
 """
 import subprocess, sys, json, hashlib, Cookie, cookielib
-import proxy, threading, netstring, filt
+import proxy, threading, netstring, filt, script
 import controller, version
 
 class RunException(Exception):
@@ -191,10 +191,6 @@ class Flow:
         f.load_state(state)
         return f
 
-    def script_serialize(self):
-        data = self.get_state()
-        return json.dumps(data)
-
     @classmethod
     def script_deserialize(klass, data):
         try:
@@ -202,41 +198,6 @@ class Flow:
         except Exception:
             return None
         return klass.from_state(data)
-
-    def run_script(self, path):
-        """
-            Run a script on a flow.
-
-            Returns a (flow, stderr output) tuple, or raises RunException if
-            there's an error.
-        """
-        self.backup()
-        data = self.script_serialize()
-        try:
-            p = subprocess.Popen(
-                    [path],
-                    stdout=subprocess.PIPE,
-                    stdin=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-        except OSError, e:
-            raise RunException(e.args[1], None, None)
-        so, se = p.communicate(data)
-        if p.returncode:
-            raise RunException(
-                "Script returned error code %s"%p.returncode,
-                p.returncode,
-                se
-            )
-        f = Flow.script_deserialize(so)
-        if not f:
-            raise RunException(
-                    "Invalid response from script.",
-                    p.returncode,
-                    se
-                )
-        self.load_state(f.get_state())
-        return se
 
     def get_state(self, nobackup=False):
         d = dict(
@@ -463,7 +424,7 @@ class FlowMaster(controller.Master):
         self.server_playback = None
         self.client_playback = None
         self.kill_nonreplay = False
-        self.plugin = None
+        self.script = None
 
         self.stickycookie_state = False
         self.stickycookie_txt = None
@@ -476,19 +437,26 @@ class FlowMaster(controller.Master):
         self.autodecode = False
         self.refresh_server_playback = False
 
-    def _runscript(self, f, script):
-        #begin nocover
-        raise NotImplementedError
-        #end nocover
-
     def add_event(self, e, level="info"):
         """
             level: info, error
         """
         pass
 
-    def set_plugin(self, p):
-        self.plugin = p
+    def load_script(self, path):
+        """
+            Loads a script. Returns an error description if something went
+            wrong.
+        """
+        s = script.Script(path, self)
+        try:
+            s.load()
+        except script.ScriptError, v:
+            return v.args[0]
+        ret = s.run("start")
+        if not ret[0] and ret[1]:
+            return "Error in script start:\n\n" + ret[1][1]
+        self.script = s
 
     def set_stickycookie(self, txt):
         if txt:
@@ -620,11 +588,20 @@ class FlowMaster(controller.Master):
             rt.start()
         #end nocover
 
-    def handle_clientconnect(self, r):
-        self.add_event("Connect from: %s:%s"%r.address)
-        r.ack()
+    def run_script(self, name, *args, **kwargs):
+        if self.script:
+            ret = self.script.run(name, *args, **kwargs)
+            if not ret[0] and ret[1]:
+                e = "Script error:\n" + ret[1][1]
+                self.add_event(e, "error")
+
+    def handle_clientconnect(self, cc):
+        self.run_script("clientconnect", cc)
+        self.add_event("Connect from: %s:%s"%cc.address)
+        cc.ack()
 
     def handle_clientdisconnect(self, r):
+        self.run_script("clientdisconnect", r)
         s = "Disconnect from: %s:%s"%r.client_conn.address
         self.add_event(s)
         if r.client_conn.requestcount:
@@ -638,6 +615,8 @@ class FlowMaster(controller.Master):
 
     def handle_error(self, r):
         f = self.state.add_error(r)
+        if f:
+            self.run_script("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
         r.ack()
@@ -645,11 +624,14 @@ class FlowMaster(controller.Master):
 
     def handle_request(self, r):
         f = self.state.add_request(r)
+        self.run_script("request", f)
         self.process_new_request(f)
         return f
 
     def handle_response(self, r):
         f = self.state.add_response(r)
+        if f:
+            self.run_script("response", f)
         if self.client_playback:
             self.client_playback.clear(f)
         if not f:

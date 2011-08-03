@@ -1,5 +1,5 @@
 import sys, os
-import flow, filt, utils
+import flow, filt, utils, script
 
 class DumpError(Exception): pass
 
@@ -15,8 +15,6 @@ class Options(object):
         "kill",
         "no_server",
         "refresh_server_playback",
-        "request_script",
-        "response_script",
         "rfile",
         "rheaders",
         "server_replay",
@@ -68,11 +66,6 @@ class DumpMaster(flow.FlowMaster):
         else:
             self.filt = None
 
-        if self.o.response_script:
-            self.set_response_script(self.o.response_script)
-        if self.o.request_script:
-            self.set_request_script(self.o.request_script)
-
         if options.stickycookie:
             self.set_stickycookie(options.stickycookie)
 
@@ -109,6 +102,10 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
+        if options.script:
+            err = self.load_script(options.script)
+            if err:
+                raise DumpError(err)
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
@@ -118,20 +115,6 @@ class DumpMaster(flow.FlowMaster):
         except (IOError, flow.FlowReadError), v:
             raise DumpError(v.strerror)
         return flows
-
-    def _runscript(self, f, script):
-        try:
-            ret = f.run_script(script)
-            if self.o.verbosity > 0:
-                print >> self.outfile, ret
-        except flow.RunException, e:
-            if e.errout:
-                eout = "Script output:\n" + self.indent(4, e.errout) + "\n"
-            else:
-                eout = ""
-            raise DumpError(
-                    "%s: %s\n%s"%(script, e.args[0], eout)
-                )
 
     def add_event(self, e, level="info"):
         if self.eventlog:
