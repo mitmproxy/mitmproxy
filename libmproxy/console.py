@@ -343,10 +343,7 @@ class ConnectionView(WWrap):
     def _conn_text(self, conn, viewmode):
         if conn:
             e = conn.headers["content-encoding"]
-            if e and self.master.autodecode:
-                e = e[0]
-            else:
-                e = "identity"
+            e = e[0] if e else None
             return self.master._cached_conn_text(
                         e,
                         conn.content,
@@ -716,8 +713,6 @@ class StatusBar(WWrap):
             opts.append("anticache")
         if self.master.anticomp:
             opts.append("anticomp")
-        if self.master.autodecode:
-            opts.append("autodecode")
         if not self.master.refresh_server_playback:
             opts.append("norefresh")
         if self.master.killextra:
@@ -854,7 +849,6 @@ class Options(object):
     __slots__ = [
         "anticache",
         "anticomp",
-        "autodecode",
         "client_replay",
         "debug",
         "eventlog",
@@ -979,7 +973,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
         self.anticomp = options.anticomp
-        self.autodecode = options.autodecode
         self.killextra = options.kill
         self.rheaders = options.rheaders
 
@@ -1107,12 +1100,7 @@ class ConsoleMaster(flow.FlowMaster):
         return self._view_conn_raw(content)
 
     @utils.LRUCache(20)
-    def _cached_conn_text(self, e, rawcontent, hdrItems, viewmode):
-        content = encoding.decode(e, rawcontent)
-        if content is None:
-            content = rawcontent
-            e = None
-
+    def _cached_conn_text(self, e, content, hdrItems, viewmode):
         hdr = []
         hdr.extend(
             format_keyvals(
@@ -1124,14 +1112,18 @@ class ConsoleMaster(flow.FlowMaster):
         hdr.append("\n")
 
         txt = [urwid.Text(hdr)]
-        if e and e != "identity":
-            txt.append(
-                urwid.Text(("highlight", "Decoded %s data:\n"%e))
-            )
         if content:
             if viewmode == VIEW_BODY_HEX:
                 txt.extend(self._view_conn_binary(content))
             elif viewmode == VIEW_BODY_PRETTY:
+                if e:
+                    decoded = encoding.decode(e, content)
+                    if decoded:
+                        content = decoded
+                        if e and e != "identity":
+                            txt.append(
+                                urwid.Text(("highlight", "Decoded %s data:\n"%e))
+                            )
                 txt.extend(self._find_pretty_view(content, hdrItems))
             else:
                 txt.extend(self._view_conn_raw(content))
@@ -1397,10 +1389,6 @@ class ConsoleMaster(flow.FlowMaster):
             (None,
                 highlight_key("anticomp", "c") +
                 [("text", ": prevent compressed responses")]
-            ),
-            (None,
-                highlight_key("autodecode", "d") +
-                [("text", ": auto-decode compressed content")]
             ),
             (None,
                 highlight_key("killextra", "k") +
@@ -1710,7 +1698,6 @@ class ConsoleMaster(flow.FlowMaster):
                                     (
                                         ("anticache", "a"),
                                         ("anticomp", "c"),
-                                        ("autodecode", "d"),
                                         ("killextra", "k"),
                                         ("norefresh", "n"),
                                     ),
@@ -1754,9 +1741,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.anticache = not self.anticache
         if a == "c":
             self.anticomp = not self.anticomp
-        elif a == "d":
-            self.autodecode = not self.autodecode
-            self.refresh_connection(self.currentflow)
         elif a == "k":
             self.killextra = not self.killextra
         elif a == "n":

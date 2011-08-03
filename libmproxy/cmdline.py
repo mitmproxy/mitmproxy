@@ -17,7 +17,6 @@ def get_common_options(options):
     return dict(
         anticache = options.anticache,
         anticomp = options.anticomp,
-        autodecode = options.autodecode,
         client_replay = options.client_replay,
         eventlog = options.eventlog,
         kill = options.kill,
@@ -49,11 +48,6 @@ def common_options(parser):
         "--confdir",
         action="store", type = "str", dest="confdir", default='~/.mitmproxy',
         help = "Configuration directory. (~/.mitmproxy)"
-    )
-    parser.add_option(
-        "-d",
-        action="store_true", dest="autodecode",
-        help="Automatically decode compressed server responses."
     )
     parser.add_option(
         "-e",

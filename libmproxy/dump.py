@@ -8,7 +8,6 @@ class Options(object):
     __slots__ = [
         "anticache",
         "anticomp",
-        "autodecode",
         "client_replay",
         "eventlog",
         "keepserving",
@@ -57,7 +56,6 @@ class DumpMaster(flow.FlowMaster):
         self.o = options
         self.anticache = options.anticache
         self.anticomp = options.anticomp
-        self.autodecode = options.autodecode
         self.eventlog = options.eventlog
         self.refresh_server_playback = options.refresh_server_playback
 
