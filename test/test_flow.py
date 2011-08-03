@@ -153,19 +153,19 @@ class uFlow(libpry.AutoTree):
     def test_getset_state(self):
         f = tutils.tflow()
         f.response = tutils.tresp(f.request)
-        state = f.get_state() 
-        assert f.get_state() == flow.Flow.from_state(state).get_state()
+        state = f._get_state() 
+        assert f._get_state() == flow.Flow._from_state(state)._get_state()
 
         f.response = None
         f.error = flow.Error(f.request, "error")
-        state = f.get_state() 
-        assert f.get_state() == flow.Flow.from_state(state).get_state()
+        state = f._get_state() 
+        assert f._get_state() == flow.Flow._from_state(state)._get_state()
 
         f2 = tutils.tflow()
         f2.error = flow.Error(f.request, "e2")
         assert not f == f2
-        f.load_state(f2.get_state())
-        assert f.get_state() == f2.get_state()
+        f._load_state(f2._get_state())
+        assert f._get_state() == f2._get_state()
 
     def test_kill(self):
         s = flow.State()
@@ -410,7 +410,7 @@ class uSerialize(libpry.AutoTree):
         assert len(l) == 1
 
         f2 = l[0]
-        assert f2.get_state() == f.get_state()
+        assert f2._get_state() == f._get_state()
         assert f2.request.assemble() == f.request.assemble()
 
     def test_load_flows(self):
@@ -594,20 +594,20 @@ class uRequest(libpry.AutoTree):
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
-        state = r.get_state()
-        assert flow.Request.from_state(state) == r
+        state = r._get_state()
+        assert flow.Request._from_state(state) == r
 
         r.client_conn = None
-        state = r.get_state()
-        assert flow.Request.from_state(state) == r
+        state = r._get_state()
+        assert flow.Request._from_state(state) == r
 
         r2 = flow.Request(c, "testing", 20, "http", "PUT", "/foo", h, "test")
         assert not r == r2
-        r.load_state(r2.get_state())
+        r._load_state(r2._get_state())
         assert r == r2
 
         r2.client_conn = None
-        r.load_state(r2.get_state())
+        r._load_state(r2._get_state())
         assert not r.client_conn
 
     def test_replace(self):
@@ -694,12 +694,12 @@ class uResponse(libpry.AutoTree):
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
         resp = flow.Response(req, 200, "msg", h.copy(), "content")
 
-        state = resp.get_state()
-        assert flow.Response.from_state(req, state) == resp
+        state = resp._get_state()
+        assert flow.Response._from_state(req, state) == resp
 
         resp2 = flow.Response(req, 220, "foo", h.copy(), "test")
         assert not resp == resp2
-        resp.load_state(resp2.get_state())
+        resp._load_state(resp2._get_state())
         assert resp == resp2
 
     def test_replace(self):
@@ -739,14 +739,14 @@ class uResponse(libpry.AutoTree):
 class uError(libpry.AutoTree):
     def test_getset_state(self):
         e = flow.Error(None, "Error")
-        state = e.get_state()
-        assert flow.Error.from_state(state) == e
+        state = e._get_state()
+        assert flow.Error._from_state(state) == e
 
         assert e.copy()
 
         e2 = flow.Error(None, "bar")
         assert not e == e2
-        e.load_state(e2.get_state())
+        e._load_state(e2._get_state())
         assert e == e2
 
 
@@ -762,12 +762,12 @@ class uError(libpry.AutoTree):
 class uClientConnect(libpry.AutoTree):
     def test_state(self):
         c = flow.ClientConnect(("a", 22))
-        assert flow.ClientConnect.from_state(c.get_state()) == c
+        assert flow.ClientConnect._from_state(c._get_state()) == c
 
         c2 = flow.ClientConnect(("a", 25))
         assert not c == c2
 
-        c.load_state(c2.get_state())
+        c._load_state(c2._get_state())
         assert c == c2
 
         c3 = c.copy()
@@ -851,8 +851,8 @@ class uHeaders(libpry.AutoTree):
         self.hd.add("foo", 1)
         self.hd.add("foo", 2)
         self.hd.add("bar", 3)
-        state = self.hd.get_state()
-        nd = flow.Headers.from_state(state)
+        state = self.hd._get_state()
+        nd = flow.Headers._from_state(state)
         assert nd == self.hd
 
     def test_copy(self):

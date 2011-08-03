@@ -62,11 +62,11 @@ class Headers:
     def add(self, key, value):
         self.lst.append([key, str(value)])
 
-    def get_state(self):
+    def _get_state(self):
         return [tuple(i) for i in self.lst]
 
     @classmethod
-    def from_state(klass, state):
+    def _from_state(klass, state):
         return klass([list(i) for i in state])
 
     def copy(self):
@@ -85,7 +85,10 @@ class Headers:
 
     def match_re(self, expr):
         """
-            Match the regular expression against each header (key, value) pair.
+            Match the regular expression against each header. For each (key,
+            value) pair a string of the following format is matched against:
+
+            "key: value"
         """
         for k, v in self.lst:
             s = "%s: %s"%(k, v)
@@ -211,12 +214,12 @@ class Request(HTTPMsg):
         else:
             return True
 
-    def load_state(self, state):
+    def _load_state(self, state):
         if state["client_conn"]:
             if self.client_conn:
-                self.client_conn.load_state(state["client_conn"])
+                self.client_conn._load_state(state["client_conn"])
             else:
-                self.client_conn = ClientConnect.from_state(state["client_conn"])
+                self.client_conn = ClientConnect._from_state(state["client_conn"])
         else:
             self.client_conn = None
         self.host = state["host"]
@@ -224,33 +227,33 @@ class Request(HTTPMsg):
         self.scheme = state["scheme"]
         self.method = state["method"]
         self.path = state["path"]
-        self.headers = Headers.from_state(state["headers"])
+        self.headers = Headers._from_state(state["headers"])
         self.content = base64.decodestring(state["content"])
         self.timestamp = state["timestamp"]
 
-    def get_state(self):
+    def _get_state(self):
         return dict(
-            client_conn = self.client_conn.get_state() if self.client_conn else None,
+            client_conn = self.client_conn._get_state() if self.client_conn else None,
             host = self.host,
             port = self.port,
             scheme = self.scheme,
             method = self.method,
             path = self.path,
-            headers = self.headers.get_state(),
+            headers = self.headers._get_state(),
             content = base64.encodestring(self.content),
             timestamp = self.timestamp,
         )
 
     @classmethod
-    def from_state(klass, state):
+    def _from_state(klass, state):
         return klass(
-            ClientConnect.from_state(state["client_conn"]),
+            ClientConnect._from_state(state["client_conn"]),
             str(state["host"]),
             state["port"],
             str(state["scheme"]),
             str(state["method"]),
             str(state["path"]),
-            Headers.from_state(state["headers"]),
+            Headers._from_state(state["headers"]),
             base64.decodestring(state["content"]),
             state["timestamp"]
         )
@@ -259,7 +262,7 @@ class Request(HTTPMsg):
         return id(self)
 
     def __eq__(self, other):
-        return self.get_state() == other.get_state()
+        return self._get_state() == other._get_state()
 
     def copy(self):
         c = copy.copy(self)
@@ -395,35 +398,35 @@ class Response(HTTPMsg):
     def is_replay(self):
         return self.replay
 
-    def load_state(self, state):
+    def _load_state(self, state):
         self.code = state["code"]
         self.msg = state["msg"]
-        self.headers = Headers.from_state(state["headers"])
+        self.headers = Headers._from_state(state["headers"])
         self.content = base64.decodestring(state["content"])
         self.timestamp = state["timestamp"]
 
-    def get_state(self):
+    def _get_state(self):
         return dict(
             code = self.code,
             msg = self.msg,
-            headers = self.headers.get_state(),
+            headers = self.headers._get_state(),
             timestamp = self.timestamp,
             content = base64.encodestring(self.content)
         )
 
     @classmethod
-    def from_state(klass, request, state):
+    def _from_state(klass, request, state):
         return klass(
             request,
             state["code"],
             str(state["msg"]),
-            Headers.from_state(state["headers"]),
+            Headers._from_state(state["headers"]),
             base64.decodestring(state["content"]),
             state["timestamp"],
         )
 
     def __eq__(self, other):
-        return self.get_state() == other.get_state()
+        return self._get_state() == other._get_state()
 
     def copy(self):
         c = copy.copy(self)
@@ -484,16 +487,16 @@ class ClientConnect(controller.Msg):
         controller.Msg.__init__(self)
 
     def __eq__(self, other):
-        return self.get_state() == other.get_state()
+        return self._get_state() == other._get_state()
 
-    def load_state(self, state):
+    def _load_state(self, state):
         self.address = state
 
-    def get_state(self):
+    def _get_state(self):
         return list(self.address) if self.address else None
 
     @classmethod
-    def from_state(klass, state):
+    def _from_state(klass, state):
         if state:
             return klass(state)
         else:
@@ -509,21 +512,21 @@ class Error(controller.Msg):
         self.timestamp = timestamp or utils.timestamp()
         controller.Msg.__init__(self)
 
-    def load_state(self, state):
+    def _load_state(self, state):
         self.msg = state["msg"]
         self.timestamp = state["timestamp"]
 
     def copy(self):
         return copy.copy(self)
 
-    def get_state(self):
+    def _get_state(self):
         return dict(
             msg = self.msg,
             timestamp = self.timestamp,
         )
 
     @classmethod
-    def from_state(klass, state):
+    def _from_state(klass, state):
         return klass(
             None,
             state["msg"],
@@ -531,7 +534,7 @@ class Error(controller.Msg):
         )
 
     def __eq__(self, other):
-        return self.get_state() == other.get_state()
+        return self._get_state() == other._get_state()
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -708,9 +711,9 @@ class Flow:
         self._backup = None
 
     @classmethod
-    def from_state(klass, state):
+    def _from_state(klass, state):
         f = klass(None)
-        f.load_state(state)
+        f._load_state(state)
         return f
 
     @classmethod
@@ -719,13 +722,13 @@ class Flow:
             data = json.loads(data)
         except Exception:
             return None
-        return klass.from_state(data)
+        return klass._from_state(data)
 
-    def get_state(self, nobackup=False):
+    def _get_state(self, nobackup=False):
         d = dict(
-            request = self.request.get_state() if self.request else None,
-            response = self.response.get_state() if self.response else None,
-            error = self.error.get_state() if self.error else None,
+            request = self.request._get_state() if self.request else None,
+            response = self.response._get_state() if self.response else None,
+            error = self.error._get_state() if self.error else None,
             version = version.IVERSION
         )
         if nobackup:
@@ -734,26 +737,26 @@ class Flow:
             d["backup"] = self._backup
         return d
 
-    def load_state(self, state):
+    def _load_state(self, state):
         self._backup = state["backup"]
         if self.request:
-            self.request.load_state(state["request"])
+            self.request._load_state(state["request"])
         else:
-            self.request = Request.from_state(state["request"])
+            self.request = Request._from_state(state["request"])
 
         if state["response"]:
             if self.response:
-                self.response.load_state(state["response"])
+                self.response._load_state(state["response"])
             else:
-                self.response = Response.from_state(self.request, state["response"])
+                self.response = Response._from_state(self.request, state["response"])
         else:
             self.response = None
 
         if state["error"]:
             if self.error:
-                self.error.load_state(state["error"])
+                self.error._load_state(state["error"])
             else:
-                self.error = Error.from_state(state["error"])
+                self.error = Error._from_state(state["error"])
         else:
             self.error = None
 
@@ -766,11 +769,11 @@ class Flow:
             return False
 
     def backup(self):
-        self._backup = self.get_state(nobackup=True)
+        self._backup = self._get_state(nobackup=True)
 
     def revert(self):
         if self._backup:
-            self.load_state(self._backup)
+            self._load_state(self._backup)
             self._backup = None
 
     def match(self, pattern):
@@ -1041,7 +1044,7 @@ class FlowMaster(controller.Master):
             rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
-            response = Response.from_state(flow.request, rflow.response.get_state())
+            response = Response._from_state(flow.request, rflow.response._get_state())
             response.set_replay()
             flow.response = response
             if self.refresh_server_playback:
@@ -1178,7 +1181,7 @@ class FlowWriter:
         self.ns = netstring.FileEncoder(fo)
 
     def add(self, flow):
-        d = flow.get_state()
+        d = flow._get_state()
         s = json.dumps(d)
         self.ns.write(s)
 
@@ -1201,7 +1204,7 @@ class FlowReader:
         try:
             for i in self.ns:
                 data = json.loads(i)
-                yield Flow.from_state(data)
+                yield Flow._from_state(data)
         except netstring.DecoderError:
             raise FlowReadError("Invalid data format.")
 
