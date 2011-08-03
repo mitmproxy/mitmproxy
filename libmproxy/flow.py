@@ -786,6 +786,22 @@ class StickyAuthState:
 
 
 class Flow:
+    """
+        A Flow is a collection of objects representing a single HTTP
+        transaction. The main attributes are:
+            
+            request: Request object
+            response: Response object
+            error: Error object
+
+        Note that it's possible for a Flow to have both a response and an error
+        object. This might happen, for instance, when a response was received
+        from the server, but there was an error sending it back to the client.
+
+        The following additional attributes are exposed:
+
+            intercepting: Is this flow currently being intercepted?
+    """
     def __init__(self, request):
         self.request = request
         self.response, self.error = None, None
@@ -797,14 +813,6 @@ class Flow:
         f = klass(None)
         f._load_state(state)
         return f
-
-    @classmethod
-    def script_deserialize(klass, data):
-        try:
-            data = json.loads(data)
-        except Exception:
-            return None
-        return klass._from_state(data)
 
     def _get_state(self, nobackup=False):
         d = dict(
@@ -843,6 +851,9 @@ class Flow:
             self.error = None
 
     def modified(self):
+        """
+            Has this Flow been modified?
+        """
         # FIXME: Save a serialization in backup, compare current with
         # backup to detect if flow has _really_ been modified.
         if self._backup:
@@ -851,23 +862,37 @@ class Flow:
             return False
 
     def backup(self):
+        """
+            Save a backup of this Flow, which can be reverted to using a
+            call to .revert().
+        """
         self._backup = self._get_state(nobackup=True)
 
     def revert(self):
+        """
+            Revert to the last backed up state.
+        """
         if self._backup:
             self._load_state(self._backup)
             self._backup = None
 
-    def match(self, pattern):
-        if pattern:
+    def match(self, f):
+        """
+            Match this flow against a compiled filter expression. Returns True
+            if matched, False if not.
+        """
+        if f:
             if self.response:
-                return pattern(self.response)
+                return f(self.response)
             elif self.request:
-                return pattern(self.request)
+                return f(self.request)
         else:
             return True
 
     def kill(self, master):
+        """
+            Kill this request.
+        """
         self.error = Error(self.request, "Connection killed")
         if self.request and not self.request.acked:
             self.request._ack(None)
@@ -877,9 +902,16 @@ class Flow:
         self.intercepting = False
 
     def intercept(self):
+        """
+            Intercept this Flow. Processing will stop until accept_intercept is
+            called.
+        """
         self.intercepting = True
 
     def accept_intercept(self):
+        """
+            Continue with the flow - called after an intercept().
+        """
         if self.request:
             if not self.request.acked:
                 self.request._ack()
