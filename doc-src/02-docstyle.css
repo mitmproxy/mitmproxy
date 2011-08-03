@@ -8,7 +8,7 @@ a {
 #hd.doc {
     -x-system-font:none;
     font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
-    color: #555555;
+    color: #444444;
     margin: 0;
     margin-bottom: 1em;
 }
@@ -16,7 +16,6 @@ a {
 #hd.doc h1 {
     letter-spacing: 3px;
     font-size: 2.5em;
-    line-height: 100%;
     margin: 0.3em 0;
     font-weight: normal;
 }
@@ -27,32 +26,34 @@ a {
 
 
 #bd {
-    -x-system-font:none;
-    font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
-    font-size: 1.6em;
-    color: #555555;
+    font: 16px/21px "HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 1.5;
+    color: #444444;
+}
+
+#bd h1, #bd h2 {
+    font-family: "Georgia","Times New Roman",Helvetica,Arial,sans-serif;
+    font-weight: normal;
 }
 
 #bd h1 {
-    font-size: 1.4em;
-    border-bottom: 5px solid #ff7033;
+    font-size: 1.8em;
+    border-bottom: 2px solid #ff7033;
     margin-top: 5px;
     margin-bottom: 5px;
-    color: #000000;
+    color: #181818;
 }
 
 #bd h2 {
-    font-size: 1.1em;
+    font-size: 1.3em;
     border-bottom: 1px solid #cccccc;
     margin-top: 5px;
     margin-bottom: 5px;
-    color: #000000;
+    color: #181818;
 }
 
 #bd p {
     margin: 1em 0;
-
-
 }
 
 #ft.doc {
@@ -70,6 +71,8 @@ a {
 }
 
 pre {
+    font-size: 0.9em;
+    line-height: 1.4;
     padding: 10px;
     background-color: #dddddd;
     margin: 1em 0;
@@ -82,7 +85,9 @@ pre {
 
 }
 
-.docindex, .docindex ul {
+.docindex {
+    font-size: 1.3em;
+    line-height: 1.3;
     margin-top: 0.1em;
     margin-bottom: 0;
     margin-left: 0px;
@@ -95,6 +100,8 @@ pre {
 
 .docindex ul {
     margin-left: 2em;
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
 }
 
 li a {
