@@ -177,7 +177,7 @@ class ConnectionItem(WWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.sync_list_view()
-        elif key == "w":
+        elif key == "W":
             self.master.path_prompt(
                 "Save this flow: ",
                 self.state.last_saveload,
@@ -517,7 +517,7 @@ class ConnectionView(WWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.refresh_connection(self.flow)
-        elif key == "w":
+        elif key == "W":
             self.master.path_prompt(
                 "Save this flow: ",
                 self.state.last_saveload,
@@ -984,22 +984,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlog = not self.eventlog
         self.view_connlist()
 
-    def _runscript(self, f, path):
-        path = os.path.expanduser(path)
-        self.state.last_script = path
-        try:
-            serr = f.run_script(path)
-        except flow.RunException, e:
-            if e.errout:
-                serr = "Script error code: %s\n\n"%e.returncode + e.errout
-                self.spawn_external_viewer(serr, None)
-            self.statusbar.message("Script error: %s"%e)
-            return
-        if serr:
-            serr = "Script output:\n\n" + serr
-            self.spawn_external_viewer(serr, None)
-        self.refresh_connection(f)
-
     def _trailer(self, clen, txt):
         rem = clen - VIEW_CUTOFF
         if rem > 0:
@@ -1238,10 +1222,6 @@ class ConsoleMaster(flow.FlowMaster):
         sys.stderr.flush()
         self.shutdown()
 
-    def run_script(self, path, flow):
-        if path:
-            self._runscript(flow, path)
-
     def make_view(self):
         self.view = urwid.Frame(
                         self.body,
@@ -1399,11 +1379,11 @@ class ConsoleMaster(flow.FlowMaster):
             ("Q", "quit without confirm prompt"),
             ("r", "replay request"),
             ("R", "revert changes to request"),
-            ("S", "save all flows matching current limit"),
-            ("s", "server replay"),
+            ("S", "server replay"),
             ("t", "set sticky cookie expression"),
             ("u", "set sticky auth expression"),
-            ("w", "save this flow"),
+            ("w", "save all flows matching current limit"),
+            ("W", "save this flow"),
             ("|", "run script on this flow"),
             ("page up/down", "page up/down"),
         ]
@@ -1646,14 +1626,14 @@ class ConsoleMaster(flow.FlowMaster):
                                     self.quit,
                                 )
                             k = None
-                        elif k == "S":
+                        elif k == "w":
                             self.path_prompt(
                                 "Save flows: ",
                                 self.state.last_saveload,
                                 self.save_flows
                             )
                             k = None
-                        elif k == "s":
+                        elif k == "S":
                             if not self.server_playback:
                                 self.path_prompt(
                                     "Server replay: ",
