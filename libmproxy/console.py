@@ -852,6 +852,7 @@ class Options(object):
         "request_script",
         "response_script",
         "rfile",
+        "script",
         "rheaders",
         "server_replay",
         "stickycookie",

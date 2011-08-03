@@ -25,9 +25,8 @@ def get_common_options(options):
         refresh_server_playback = not options.norefresh,
         rheaders = options.rheaders,
         rfile = options.rfile,
-        request_script = options.request_script,
-        response_script = options.response_script,
         server_replay = options.server_replay,
+        script = options.script,
         stickycookie = stickycookie,
         stickyauth = stickyauth,
         wfile = options.wfile,
@@ -42,6 +41,16 @@ def common_options(parser):
         help = "Address to bind proxy to (defaults to all interfaces)"
     )
     parser.add_option(
+        "--anticache",
+        action="store_true", dest="anticache", default=False,
+        help="Strip out request headers that might cause the server to return 304-not-modified."
+    )
+    parser.add_option(
+        "--confdir",
+        action="store", type = "str", dest="confdir", default='~/.mitmproxy',
+        help = "Configuration directory. (~/.mitmproxy)"
+    )
+    parser.add_option(
         "-d",
         action="store_true", dest="autodecode",
         help="Automatically decode compressed server responses."
@@ -50,11 +59,6 @@ def common_options(parser):
         "-e",
         action="store_true", dest="eventlog",
         help="Show event log."
-    )
-    parser.add_option(
-        "--confdir",
-        action="store", type = "str", dest="confdir", default='~/.mitmproxy',
-        help = "Configuration directory. (~/.mitmproxy)"
     )
     parser.add_option(
         "-n",
@@ -77,19 +81,9 @@ def common_options(parser):
         help="Read flows from file."
     )
     parser.add_option(
-        "--anticache",
-        action="store_true", dest="anticache", default=False,
-        help="Strip out request headers that might cause the server to return 304-not-modified."
-    )
-    parser.add_option(
-        "--reqscript",
-        action="store", dest="request_script", default=None,
-        help="Script to run when a request is recieved."
-    )
-    parser.add_option(
-        "--respscript",
-        action="store", dest="response_script", default=None,
-        help="Script to run when a response is recieved."
+        "-s",
+        action="store", dest="script", default=None,
+        help="Run a script."
     )
     parser.add_option(
         "-t",
@@ -143,7 +137,7 @@ def common_options(parser):
 
     group = optparse.OptionGroup(parser, "Server Replay")
     group.add_option(
-        "-s",
+        "-S",
         action="store", dest="server_replay", default=None, metavar="PATH",
         help="Replay server responses from a saved file."
     )

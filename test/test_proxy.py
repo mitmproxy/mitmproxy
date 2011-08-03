@@ -1,6 +1,6 @@
 import cStringIO, time, re
 import libpry
-from libmproxy import proxy, controller, utils, dump, script
+from libmproxy import proxy, controller, utils, dump
 import email.utils
 import tutils
 

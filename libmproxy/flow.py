@@ -462,8 +462,8 @@ class FlowMaster(controller.Master):
         self.state = state
         self.server_playback = None
         self.client_playback = None
-        self.scripts = {}
         self.kill_nonreplay = False
+        self.plugin = None
 
         self.stickycookie_state = False
         self.stickycookie_txt = None
@@ -481,11 +481,8 @@ class FlowMaster(controller.Master):
         raise NotImplementedError
         #end nocover
 
-    def set_response_script(self, s):
-        self.scripts["response"] = s
-
-    def set_request_script(self, s):
-        self.scripts["request"] = s
+    def set_plugin(self, p):
+        self.plugin = p
 
     def set_stickycookie(self, txt):
         if txt:
@@ -582,8 +579,6 @@ class FlowMaster(controller.Master):
         if self.stickyauth_state:
             self.stickyauth_state.handle_request(f)
 
-        if "request" in self.scripts:
-            self._runscript(f, self.scripts["request"])
         if self.anticache:
             f.request.anticache()
         if self.anticomp:
@@ -600,8 +595,6 @@ class FlowMaster(controller.Master):
     def process_new_response(self, f):
         if self.stickycookie_state:
             self.stickycookie_state.handle_response(f)
-        if "response" in self.scripts:
-            self._runscript(f, self.scripts["response"])
 
     def replay_request(self, f):
         """
