@@ -247,6 +247,18 @@ class ConnectionListBox(urwid.ListBox):
         return urwid.ListBox.keypress(self, size, key)
 
 
+class EventListBox(urwid.ListBox):
+    def __init__(self, master):
+        self.master = master
+        urwid.ListBox.__init__(self, master.eventlist)
+
+    def keypress(self, size, key):
+        if key == "C":
+            self.master.clear_events()
+            key = None
+        return urwid.ListBox.keypress(self, size, key)
+
+
 class ConnectionViewHeader(WWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
@@ -885,7 +897,7 @@ class BodyPile(urwid.Pile):
             self, 
             [
                 ConnectionListBox(master),
-                urwid.Frame(urwid.ListBox(master.eventlist), header = self.inactive_header)
+                urwid.Frame(EventListBox(master), header = self.inactive_header)
             ]
         )
         self.master = master
@@ -1424,7 +1436,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         text.extend([("head", "\n\nConnection list keys:\n")])
         keys = [
-            ("C", "clear connection list"),
+            ("C", "clear connection list or eventlog"),
             ("d", "delete connection from view"),
             ("v", "toggle eventlog"),
             ("X", "kill and delete connection, even if it's mid-intercept"),
@@ -1788,6 +1800,9 @@ class ConsoleMaster(flow.FlowMaster):
             r.ack()
         self.sync_list_view()
         self.refresh_connection(f)
+
+    def clear_events(self):
+        self.eventlist[:] = []
 
     def add_event(self, e, level="info"):
         if level == "info":
