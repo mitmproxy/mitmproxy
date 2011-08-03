@@ -15,6 +15,21 @@ class RunException(Exception):
         self.errout = errout
 
 
+class ScriptContext:
+    def __init__(self, master):
+        self._master = master
+
+    def log(self, *args, **kwargs):
+        """
+            Logs an event. 
+            
+            How this is handled depends on the front-end. mitmdump will display
+            events if the eventlog flag ("-e") was passed. mitmproxy sends
+            output to the eventlog for display ("v" keyboard shortcut).
+        """
+        self._master.add_event(*args, **kwargs)
+
+
 class Headers:
     def __init__(self, lst=None):
         if lst:
@@ -1055,7 +1070,6 @@ class State(object):
             i.kill(master)
 
 
-
 class FlowMaster(controller.Master):
     def __init__(self, server, state):
         controller.Master.__init__(self, server)
@@ -1086,7 +1100,7 @@ class FlowMaster(controller.Master):
         """
             Returns an (error, script) tuple.
         """
-        s = script.Script(path, self)
+        s = script.Script(path, ScriptContext(self))
         try:
             s.load()
         except script.ScriptError, v:

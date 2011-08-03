@@ -1,14 +1,7 @@
-import imp, os, traceback
+import imp, os, traceback, flow
 
 class ScriptError(Exception):
     pass
-
-class Context:
-    def __init__(self, master, state):
-        self.master, self.state = master, state
-
-    def log(self, *args, **kwargs):
-        self.master.add_event(*args, **kwargs)
 
 
 class Script:
@@ -19,9 +12,8 @@ class Script:
             s.load()
             s.run("start")
     """
-    def __init__(self, path, master):
-        self.path = path
-        self.ctx = Context(master, master.state)
+    def __init__(self, path, ctx):
+        self.path, self.ctx = path, ctx
         self.mod = None
         self.ns = None
 
