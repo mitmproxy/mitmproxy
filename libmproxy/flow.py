@@ -70,6 +70,9 @@ class Headers:
         return klass([list(i) for i in state])
 
     def copy(self):
+        """
+            Returns a copy of this object.
+        """
         lst = copy.deepcopy(self.lst)
         return Headers(lst)
 
@@ -168,15 +171,15 @@ class Request(HTTPMsg):
         Exposes the following attributes:
             
             client_conn: ClientConnection object, or None if this is a replay.
-            headers: A Headers object
-            content: The content of the request, or None
+            headers: Headers object
+            content: Content of the request, or None
             
             scheme: URL scheme (http/https)
             host: Host portion of the URL
             port: Destination port
-            path: The path portion of the URL
+            path: Path portion of the URL
 
-            timestamp: Time of the request.
+            timestamp: Seconds since the epoch
             method: HTTP method 
     """
     def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
@@ -366,6 +369,18 @@ class Request(HTTPMsg):
 
 
 class Response(HTTPMsg):
+    """
+        An HTTP response.
+
+        Exposes the following attributes:
+
+            request: Request object.
+            code: HTTP response code
+            msg: HTTP response message
+            headers: Headers object
+            content: Response content
+            timestamp: Seconds since the epoch
+    """
     def __init__(self, request, code, msg, headers, content, timestamp=None):
         self.request = request
         self.code, self.msg = code, msg
@@ -464,6 +479,9 @@ class Response(HTTPMsg):
         return self._get_state() == other._get_state()
 
     def copy(self):
+        """
+            Returns a copy of this object.
+        """
         c = copy.copy(self)
         c.headers = self.headers.copy()
         return c
@@ -505,12 +523,30 @@ class Response(HTTPMsg):
 
 
 class ClientDisconnect(controller.Msg):
+    """
+        A client disconnection event. 
+
+        Exposes the following attributes:
+
+            client_conn: ClientConnect object.
+    """
     def __init__(self, client_conn):
         controller.Msg.__init__(self)
         self.client_conn = client_conn
 
 
 class ClientConnect(controller.Msg):
+    """
+        A single client connection. Each connection can result in multiple HTTP
+        Requests.
+
+        Exposes the following attributes:
+            
+            address: (address, port) tuple, or None if the connection is replayed.
+            requestcount: Number of requests created by this client connection.
+            close: Is the client connection closed?
+            connection_error: Error string or None.
+    """
     def __init__(self, address):
         """
             address is an (address, port) tuple, or None if this connection has
@@ -539,10 +575,27 @@ class ClientConnect(controller.Msg):
             return None
 
     def copy(self):
+        """
+            Returns a copy of this object.
+        """
         return copy.copy(self)
 
 
 class Error(controller.Msg):
+    """
+        An Error. 
+
+        This is distinct from an HTTP error response (say, a code 500), which
+        is represented by a normal Response object. This class is responsible
+        for indicating errors that fall outside of normal HTTP communications,
+        like interrupted connections, timeouts, protocol errors.
+
+        Exposes the following attributes:
+
+            request: Request object
+            msg: Message describing the error
+            timestamp: Seconds since the epoch
+    """
     def __init__(self, request, msg, timestamp=None):
         self.request, self.msg = request, msg
         self.timestamp = timestamp or utils.timestamp()
@@ -553,6 +606,9 @@ class Error(controller.Msg):
         self.timestamp = state["timestamp"]
 
     def copy(self):
+        """
+            Returns a copy of this object.
+        """
         return copy.copy(self)
 
     def _get_state(self):
@@ -622,7 +678,7 @@ class ClientPlaybackState:
 class ServerPlaybackState:
     def __init__(self, headers, flows, exit):
         """
-            headers: A case-insensitive list of request headers that should be
+            headers: Case-insensitive list of request headers that should be
             included in request-response matching.
         """
         self.headers, self.exit = headers, exit
@@ -673,7 +729,7 @@ class ServerPlaybackState:
 class StickyCookieState:
     def __init__(self, flt):
         """
-            flt: A compiled filter.
+            flt: Compiled filter.
         """
         self.jar = {}
         self.flt = flt
@@ -716,7 +772,7 @@ class StickyCookieState:
 class StickyAuthState:
     def __init__(self, flt):
         """
-            flt: A compiled filter.
+            flt: Compiled filter.
         """
         self.flt = flt
         self.hosts = {}
@@ -1043,7 +1099,7 @@ class FlowMaster(controller.Master):
 
     def start_client_playback(self, flows, exit):
         """
-            flows: A list of flows.
+            flows: List of flows.
         """
         self.client_playback = ClientPlaybackState(flows, exit)
 
@@ -1052,7 +1108,7 @@ class FlowMaster(controller.Master):
 
     def start_server_playback(self, flows, kill, headers, exit):
         """
-            flows: A list of flows.
+            flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
         """
         self.server_playback = ServerPlaybackState(headers, flows, exit)
