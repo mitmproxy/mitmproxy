@@ -1,5 +1,5 @@
 import cStringIO
-from libmproxy import filt, proxy, utils
+from libmproxy import filt, flow
 import libpry
 
 
@@ -72,10 +72,10 @@ class uParsing(libpry.AutoTree):
 
 class uMatching(libpry.AutoTree):
     def req(self):
-        conn = proxy.ClientConnect(("one", 2222))
-        headers = utils.Headers()
+        conn = flow.ClientConnect(("one", 2222))
+        headers = flow.Headers()
         headers["header"] = ["qvalue"]
-        return proxy.Request(
+        return flow.Request(
                     conn,
                     "host",
                     80,
@@ -88,9 +88,9 @@ class uMatching(libpry.AutoTree):
 
     def resp(self):
         q = self.req()
-        headers = utils.Headers()
+        headers = flow.Headers()
         headers["header_response"] = ["svalue"]
-        return proxy.Response(
+        return flow.Response(
                     q,
                     200,
                     "message",

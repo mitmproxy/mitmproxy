@@ -28,7 +28,7 @@ class uDumpMaster(libpry.AutoTree):
         m.handle_clientconnect(cc)
         m.handle_request(req)
         m.handle_response(resp)
-        m.handle_clientdisconnect(proxy.ClientDisconnect(cc))
+        m.handle_clientdisconnect(flow.ClientDisconnect(cc))
 
     def _dummy_cycle(self, n, filt, content, **options):
         cs = StringIO()

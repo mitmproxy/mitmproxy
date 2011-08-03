@@ -1,4 +1,4 @@
-from libmproxy import console, proxy, filt, flow
+from libmproxy import console, filt, flow
 import tutils
 import libpry
 
@@ -114,7 +114,7 @@ class uformat_flow(libpry.AutoTree):
         assert ('text', ' text/html') in console.format_flow(f, True, True)
 
         f.response =None
-        f.error = proxy.Error(f.request, "error")
+        f.error = flow.Error(f.request, "error")
         assert ('error', 'error') in console.format_flow(f, True, True)
 
 

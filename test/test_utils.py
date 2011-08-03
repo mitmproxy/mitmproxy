@@ -49,109 +49,6 @@ class uData(libpry.AutoTree):
         libpry.raises("does not exist", utils.pkg_data.path, "nonexistent")
 
 
-class uHeaders(libpry.AutoTree):
-    def setUp(self):
-        self.hd = utils.Headers()
-
-    def test_read_simple(self):
-        data = """
-            Header: one
-            Header2: two
-            \r\n
-        """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = cStringIO.StringIO(data)
-        self.hd.read(s)
-        assert self.hd["header"] == ["one"]
-        assert self.hd["header2"] == ["two"]
-
-    def test_read_multi(self):
-        data = """
-            Header: one
-            Header: two
-            \r\n
-        """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = cStringIO.StringIO(data)
-        self.hd.read(s)
-        assert self.hd["header"] == ["one", "two"]
-
-    def test_read_continued(self):
-        data = """
-            Header: one
-            \ttwo
-            Header2: three
-            \r\n
-        """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = cStringIO.StringIO(data)
-        self.hd.read(s)
-        assert self.hd["header"] == ['one\r\n two']
-
-    def test_dictToHeader1(self):
-        self.hd.add("one", "uno")
-        self.hd.add("two", "due")
-        self.hd.add("two", "tre")
-        expected = [
-            "one: uno\r\n",
-            "two: due\r\n",
-            "two: tre\r\n",
-            "\r\n"
-        ]
-        out = repr(self.hd)
-        for i in expected:
-            assert out.find(i) >= 0
-
-    def test_dictToHeader2(self):
-        self.hd["one"] = ["uno"]
-        expected1 = "one: uno\r\n"
-        expected2 = "\r\n"
-        out = repr(self.hd)
-        assert out.find(expected1) >= 0
-        assert out.find(expected2) >= 0
-
-    def test_match_re(self):
-        h = utils.Headers()
-        h.add("one", "uno")
-        h.add("two", "due")
-        h.add("two", "tre")
-        assert h.match_re("uno")
-        assert h.match_re("two: due")
-        assert not h.match_re("nonono")
-
-    def test_getset_state(self):
-        self.hd.add("foo", 1)
-        self.hd.add("foo", 2)
-        self.hd.add("bar", 3)
-        state = self.hd.get_state()
-        nd = utils.Headers.from_state(state)
-        assert nd == self.hd
-
-    def test_copy(self):
-        self.hd.add("foo", 1)
-        self.hd.add("foo", 2)
-        self.hd.add("bar", 3)
-        assert self.hd == self.hd.copy()
-
-    def test_del(self):
-        self.hd.add("foo", 1)
-        self.hd.add("Foo", 2)
-        self.hd.add("bar", 3)
-        del self.hd["foo"]
-        assert len(self.hd.lst) == 1
-
-    def test_replace(self):
-        self.hd.add("one", "two")
-        self.hd.add("two", "one")
-        assert self.hd.replace("one", "vun") == 2
-        assert self.hd.lst == [
-            ["vun", "two"],
-            ["two", "vun"],
-        ]
-
 
 class upretty_xmlish(libpry.AutoTree):
     def test_tagre(self):
@@ -295,13 +192,36 @@ class uLRUCache(libpry.AutoTree):
         assert len(f._cachelist_one) == 2
 
 
+
+class u_parse_url(libpry.AutoTree):
+    def test_simple(self):
+        assert not utils.parse_url("")
+
+        u = "http://foo.com:8888/test"
+        s, h, po, pa = utils.parse_url(u)
+        assert s == "http"
+        assert h == "foo.com"
+        assert po == 8888
+        assert pa == "/test"
+
+        s, h, po, pa = utils.parse_url("http://foo/bar")
+        assert s == "http"
+        assert h == "foo"
+        assert po == 80
+        assert pa == "/bar"
+
+        s, h, po, pa = utils.parse_url("http://foo")
+        assert pa == "/"
+
+        s, h, po, pa = utils.parse_url("https://foo")
+        assert po == 443
+
 tests = [
     uformat_timestamp(),
     uisBin(),
     uisXML(),
     uhexdump(),
     upretty_size(),
-    uHeaders(),
     uData(),
     upretty_xmlish(),
     upretty_json(),
@@ -310,4 +230,5 @@ tests = [
     udummy_ca(),
     udummy_cert(),
     uLRUCache(),
+    u_parse_url()
 ]

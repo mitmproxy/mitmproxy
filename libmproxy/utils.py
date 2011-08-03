@@ -12,8 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, textwrap
-import time, functools, copy, cgi
+import re, os, subprocess, datetime, urlparse, string
+import time, functools, copy, cgi, textwrap
 import json
 
 CERT_SLEEP_TIME = 1
@@ -150,122 +150,6 @@ def del_all(dict, keys):
         if key in dict:
             del dict[key]
 
-
-class Headers:
-    def __init__(self, lst=None):
-        if lst:
-            self.lst = lst
-        else:
-            self.lst = []
-
-    def _kconv(self, s):
-        return s.lower()
-
-    def __eq__(self, other):
-        return self.lst == other.lst
-
-    def __getitem__(self, k):
-        ret = []
-        k = self._kconv(k)
-        for i in self.lst:
-            if self._kconv(i[0]) == k:
-                ret.append(i[1])
-        return ret
-
-    def _filter_lst(self, k, lst):
-        new = []
-        for i in lst:
-            if self._kconv(i[0]) != k:
-                new.append(i)
-        return new
-
-    def __setitem__(self, k, hdrs):
-        k = self._kconv(k)
-        new = self._filter_lst(k, self.lst)
-        for i in hdrs:
-            new.append((k, i))
-        self.lst = new
-
-    def __delitem__(self, k):
-        self.lst = self._filter_lst(k, self.lst)
-
-    def __contains__(self, k):
-        for i in self.lst:
-            if self._kconv(i[0]) == k:
-                return True
-        return False
-
-    def add(self, key, value):
-        self.lst.append([key, str(value)])
-
-    def get_state(self):
-        return [tuple(i) for i in self.lst]
-
-    @classmethod
-    def from_state(klass, state):
-        return klass([list(i) for i in state])
-
-    def copy(self):
-        lst = copy.deepcopy(self.lst)
-        return Headers(lst)
-
-    def __repr__(self):
-        """
-            Returns a string containing a formatted header string.
-        """
-        headerElements = []
-        for itm in self.lst:
-            headerElements.append(itm[0] + ": " + itm[1])
-        headerElements.append("")
-        return "\r\n".join(headerElements)
-
-    def match_re(self, expr):
-        """
-            Match the regular expression against each header (key, value) pair.
-        """
-        for k, v in self.lst:
-            s = "%s: %s"%(k, v)
-            if re.search(expr, s):
-                return True
-        return False
-
-    def read(self, fp):
-        """
-            Read a set of headers from a file pointer. Stop once a blank line
-            is reached.
-        """
-        ret = []
-        name = ''
-        while 1:
-            line = fp.readline()
-            if not line or line == '\r\n' or line == '\n':
-                break
-            if line[0] in ' \t':
-                # continued header
-                ret[-1][1] = ret[-1][1] + '\r\n ' + line.strip()
-            else:
-                i = line.find(':')
-                # We're being liberal in what we accept, here.
-                if i > 0:
-                    name = line[:i]
-                    value = line[i+1:].strip()
-                    ret.append([name, value])
-        self.lst = ret
-
-    def replace(self, pattern, repl, *args, **kwargs):
-        """
-            Replaces a regular expression pattern with repl in both header keys
-            and values. Returns the number of replacements made.
-        """
-        nlst, count = [], 0
-        for i in self.lst:
-            k, c = re.subn(pattern, repl, i[0], *args, **kwargs)
-            count += c
-            v, c = re.subn(pattern, repl, i[1], *args, **kwargs)
-            count += c
-            nlst.append([k, v])
-        self.lst = nlst
-        return count
 
 
 def pretty_size(size):
@@ -499,3 +383,27 @@ class LRUCache:
                     cache.pop(d)
                 return ret
         return wrap
+
+
+def parse_url(url):
+    """
+        Returns a (scheme, host, port, path) tuple, or None on error.
+    """
+    scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+    if not scheme:
+        return None
+    if ':' in netloc:
+        host, port = string.split(netloc, ':')
+        port = int(port)
+    else:
+        host = netloc
+        if scheme == "https":
+            port = 443
+        else:
+            port = 80
+    path = urlparse.urlunparse(('', '', path, params, query, fragment))
+    if not path.startswith("/"):
+        path = "/" + path
+    return scheme, host, port, path
+
+

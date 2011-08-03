@@ -17,7 +17,7 @@ import mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import cStringIO
 import urwid
-import controller, utils, filt, proxy, flow, encoding
+import controller, utils, filt, flow, encoding
 
 VIEW_CUTOFF = 1024*100
 EVENTLOG_SIZE = 500
@@ -460,7 +460,7 @@ class ConnectionView(WWrap):
             conn.content = self._spawn_editor(conn.content or "")
         elif part == "h":
             headertext = self._spawn_editor(repr(conn.headers))
-            headers = utils.Headers()
+            headers = flow.Headers()
             fp = cStringIO.StringIO(headertext)
             headers.read(fp)
             conn.headers = headers
@@ -474,7 +474,7 @@ class ConnectionView(WWrap):
             self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
         elif part == "r" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             if not conn.acked:
-                response = proxy.Response(conn, "200", "OK", utils.Headers(), "")
+                response = flow.Response(conn, "200", "OK", flow.Headers(), "")
                 conn.ack(response)
             self.view_response()
         self.master.refresh_connection(self.flow)

@@ -1,23 +1,23 @@
 import os.path, threading, Queue
 import libpry
-from libmproxy import proxy, utils, filt, flow, controller
+from libmproxy import proxy, filt, flow, controller
 import serv, sslserv
 import random
 
 def treq(conn=None):
     if not conn:
-        conn = proxy.ClientConnect(("address", 22))
-    headers = utils.Headers()
+        conn = flow.ClientConnect(("address", 22))
+    headers = flow.Headers()
     headers["header"] = ["qvalue"]
-    return proxy.Request(conn, "host", 80, "http", "GET", "/path", headers, "content")
+    return flow.Request(conn, "host", 80, "http", "GET", "/path", headers, "content")
 
 
 def tresp(req=None):
     if not req:
         req = treq()
-    headers = utils.Headers()
+    headers = flow.Headers()
     headers["header_response"] = ["svalue"]
-    return proxy.Response(req, 200, "message", headers, "content_response")
+    return flow.Response(req, 200, "message", headers, "content_response")
 
 
 def tflow():
@@ -35,7 +35,7 @@ def tflow_full():
 def tflow_err():
     r = treq()
     f = flow.Flow(r)
-    f.error = proxy.Error(r, "error")
+    f.error = flow.Error(r, "error")
     return f
 
 
