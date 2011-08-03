@@ -60,14 +60,14 @@ class FReq(_Action):
     code = "q"
     help = "Match request"
     def __call__(self, conn):
-        return not conn.is_response()
+        return not conn._is_response()
 
 
 class FResp(_Action):
     code = "s"
     help = "Match response"
     def __call__(self, conn):
-        return conn.is_response()
+        return conn._is_response()
     
 
 class _Rex(_Action):
@@ -91,7 +91,7 @@ class FContentType(_Rex):
     def __call__(self, o):
         if _check_content_type(self.expr, o):
             return True
-        elif o.is_response() and _check_content_type(self.expr, o.request):
+        elif o._is_response() and _check_content_type(self.expr, o.request):
             return True
         else:
             return False
@@ -101,7 +101,7 @@ class FRequestContentType(_Rex):
     code = "tq"
     help = "Request Content-Type header"
     def __call__(self, o):
-        if o.is_response():
+        if o._is_response():
             return _check_content_type(self.expr, o.request)
         else:
             return _check_content_type(self.expr, o)
@@ -111,7 +111,7 @@ class FResponseContentType(_Rex):
     code = "ts"
     help = "Request Content-Type header"
     def __call__(self, o):
-        if o.is_response():
+        if o._is_response():
             return _check_content_type(self.expr, o)
         else:
             return False
@@ -122,7 +122,7 @@ class FHead(_Rex):
     help = "Header"
     def __call__(self, o):
         val = o.headers.match_re(self.expr)
-        if not val and o.is_response():
+        if not val and o._is_response():
             val = o.request.headers.match_re(self.expr)
         return val
     
@@ -131,7 +131,7 @@ class FHeadRequest(_Rex):
     code = "hq"
     help = "Request header"
     def __call__(self, o):
-        if o.is_response():
+        if o._is_response():
             h = o.request.headers
         else:
             h = o.headers
@@ -142,7 +142,7 @@ class FHeadResponse(_Rex):
     code = "hs"
     help = "Response header"
     def __call__(self, o):
-        if not o.is_response():
+        if not o._is_response():
             return False
         return o.headers.match_re(self.expr)
 
@@ -153,7 +153,7 @@ class FBod(_Rex):
     def __call__(self, o):
         if o.content and re.search(self.expr, o.content):
             return True
-        elif o.is_response() and o.request.content and re.search(self.expr, o.request.content):
+        elif o._is_response() and o.request.content and re.search(self.expr, o.request.content):
             return True
         return False
 
@@ -162,9 +162,9 @@ class FBodRequest(_Rex):
     code = "bq"
     help = "Request body"
     def __call__(self, o):
-        if o.is_response() and o.request.content and re.search(self.expr, o.request.content):
+        if o._is_response() and o.request.content and re.search(self.expr, o.request.content):
             return True
-        elif not o.is_response() and o.content and re.search(self.expr, o.content):
+        elif not o._is_response() and o.content and re.search(self.expr, o.content):
             return True
         return False
 
@@ -173,7 +173,7 @@ class FBodResponse(_Rex):
     code = "bs"
     help = "Response body"
     def __call__(self, o):
-        if not o.is_response():
+        if not o._is_response():
             return False
         elif o.content and re.search(self.expr, o.content):
             return True
@@ -191,11 +191,11 @@ class FUrl(_Rex):
         return klass(*toks)
 
     def __call__(self, o):
-        if o.is_response():
+        if o._is_response():
             c = o.request
         else:
             c = o
-        return re.search(self.expr, c.url())
+        return re.search(self.expr, c.get_url())
 
 
 class _Int(_Action):
@@ -207,7 +207,7 @@ class FCode(_Int):
     code = "c"
     help = "HTTP response code"
     def __call__(self, o):
-        if o.is_response():
+        if o._is_response():
             return o.code == self.num
         return False
 

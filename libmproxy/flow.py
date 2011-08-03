@@ -162,8 +162,23 @@ class HTTPMsg(controller.Msg):
 
 
 class Request(HTTPMsg):
-    FMT = '%s %s HTTP/1.1\r\n%s\r\n%s'
-    FMT_PROXY = '%s %s://%s:%s%s HTTP/1.1\r\n%s\r\n%s'
+    """
+        An HTTP request.
+
+        Exposes the following attributes:
+            
+            client_conn: ClientConnection object, or None if this is a replay.
+            headers: A Headers object
+            content: The content of the request, or None
+            
+            scheme: URL scheme (http/https)
+            host: Host portion of the URL
+            port: Destination port
+            path: The path portion of the URL
+
+            timestamp: Time of the request.
+            method: HTTP method 
+    """
     def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
         self.client_conn = client_conn
         self.host, self.port, self.scheme = host, port, scheme
@@ -205,10 +220,13 @@ class Request(HTTPMsg):
                 e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
             ])]
 
-    def set_replay(self):
+    def _set_replay(self):
         self.client_conn = None
 
     def is_replay(self):
+        """
+            Is this request a replay?
+        """
         if self.client_conn:
             return False
         else:
@@ -265,28 +283,40 @@ class Request(HTTPMsg):
         return self._get_state() == other._get_state()
 
     def copy(self):
+        """
+            Returns a copy of this object.
+        """
         c = copy.copy(self)
         c.headers = self.headers.copy()
         return c
 
-    def hostport(self):
+    def _hostport(self):
         if (self.port, self.scheme) in [(80, "http"), (443, "https")]:
             host = self.host
         else:
             host = "%s:%s"%(self.host, self.port)
         return host
 
-    def url(self):
-        return "%s://%s%s"%(self.scheme, self.hostport(), self.path)
+    def get_url(self):
+        """
+            Returns a URL string, constructed from the Request's URL compnents.
+        """
+        return "%s://%s%s"%(self.scheme, self._hostport(), self.path)
 
     def set_url(self, url):
+        """
+            Parses a URL specification, and updates the Request's information
+            accordingly.
+
+            Returns False if the URL was invalid, True if the request succeeded. 
+        """
         parts = utils.parse_url(url)
         if not parts:
             return False
         self.scheme, self.host, self.port, self.path = parts
         return True
 
-    def is_response(self):
+    def _is_response(self):
         return False
 
     def _assemble(self, _proxy = False):
@@ -294,6 +324,9 @@ class Request(HTTPMsg):
             Assembles the request for transmission to the server. We make some
             modifications to make sure interception works properly.
         """
+        FMT = '%s %s HTTP/1.1\r\n%s\r\n%s'
+        FMT_PROXY = '%s %s://%s:%s%s HTTP/1.1\r\n%s\r\n%s'
+
         headers = self.headers.copy()
         utils.del_all(
             headers,
@@ -306,7 +339,7 @@ class Request(HTTPMsg):
             ]
         )
         if not 'host' in headers:
-            headers["host"] = [self.hostport()]
+            headers["host"] = [self._hostport()]
         content = self.content
         if content is not None:
             headers["content-length"] = [str(len(content))]
@@ -315,9 +348,9 @@ class Request(HTTPMsg):
         if self.close:
             headers["connection"] = ["close"]
         if not _proxy:
-            return self.FMT % (self.method, self.path, str(headers), content)
+            return FMT % (self.method, self.path, str(headers), content)
         else:
-            return self.FMT_PROXY % (self.method, self.scheme, self.host, self.port, self.path, str(headers), content)
+            return FMT_PROXY % (self.method, self.scheme, self.host, self.port, self.path, str(headers), content)
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -333,7 +366,6 @@ class Request(HTTPMsg):
 
 
 class Response(HTTPMsg):
-    FMT = '%s\r\n%s\r\n%s'
     def __init__(self, request, code, msg, headers, content, timestamp=None):
         self.request = request
         self.code, self.msg = code, msg
@@ -392,10 +424,13 @@ class Response(HTTPMsg):
         if c:
             self.headers["set-cookie"] = c
 
-    def set_replay(self):
+    def _set_replay(self):
         self.replay = True
 
     def is_replay(self):
+        """
+            Is this response a replay?
+        """
         return self.replay
 
     def _load_state(self, state):
@@ -433,7 +468,7 @@ class Response(HTTPMsg):
         c.headers = self.headers.copy()
         return c
 
-    def is_response(self):
+    def _is_response(self):
         return True
 
     def _assemble(self):
@@ -441,6 +476,7 @@ class Response(HTTPMsg):
             Assembles the response for transmission to the client. We make some
             modifications to make sure interception works properly.
         """
+        FMT = '%s\r\n%s\r\n%s'
         headers = self.headers.copy()
         utils.del_all(
             headers,
@@ -455,7 +491,7 @@ class Response(HTTPMsg):
             headers["connection"] = ["close"]
         proto = "HTTP/1.1 %s %s"%(self.code, str(self.msg))
         data = (proto, str(headers), content)
-        return self.FMT%data
+        return FMT%data
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -1035,7 +1071,7 @@ class FlowMaster(controller.Master):
             if not rflow:
                 return None
             response = Response._from_state(flow.request, rflow.response._get_state())
-            response.set_replay()
+            response._set_replay()
             flow.response = response
             if self.refresh_server_playback:
                 response.refresh()
@@ -1103,7 +1139,7 @@ class FlowMaster(controller.Master):
         if f.intercepting:
             return "Can't replay while intercepting..."
         if f.request:
-            f.request.set_replay()
+            f.request._set_replay()
             if f.request.content:
                 f.request.headers["content-length"] = [str(len(f.request.content))]
             f.response = None

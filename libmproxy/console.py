@@ -82,7 +82,7 @@ def format_flow(f, focus, extended=False, padding=2):
         " ",
         (
             "text" if (f.response or f.error) else "title",
-            f.request.url(),
+            f.request.get_url(),
         ),
     ])
     if f.response or f.error or f.request.is_replay():
@@ -465,7 +465,7 @@ class ConnectionView(WWrap):
             headers.read(fp)
             conn.headers = headers
         elif part == "u" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-            self.master.prompt_edit("URL", conn.url(), self.set_url)
+            self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             self.master.prompt_onekey("Method", self.methods, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == VIEW_FLOW_RESPONSE:

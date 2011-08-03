@@ -7,7 +7,7 @@ import tutils
 class uStrFuncs(libpry.AutoTree):
     def test_all(self):
         t = tutils.tresp()
-        t.set_replay()
+        t._set_replay()
         dump.str_response(t)
 
         t = tutils.treq()

@@ -571,10 +571,10 @@ class uRequest(libpry.AutoTree):
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
-        u = r.url()
+        u = r.get_url()
         assert r.set_url(u)
         assert not r.set_url("")
-        assert r.url() == u
+        assert r.get_url() == u
         assert r._assemble()
 
         r2 = r.copy()

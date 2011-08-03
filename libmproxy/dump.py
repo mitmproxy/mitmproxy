@@ -44,7 +44,7 @@ def str_request(req):
         c = req.client_conn.address[0]
     else:
         c = "[replay]"
-    r = "%s %s %s"%(c, req.method, req.url())
+    r = "%s %s %s"%(c, req.method, req.get_url())
     if req.stickycookie:
         r = "[stickycookie] " + r
     return r
