@@ -1,4 +1,7 @@
 
+- command-line: _--anticache_ 
+- mitmproxy shortcut: _o_, then _a_
+
 When the __anticache__ option is passed to mitmproxy, it removes headers
 (__if-none-match__ and __if-modified-since__) that might elicit a
 304-not-modified response from the server. This is useful when you want to make

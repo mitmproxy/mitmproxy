@@ -56,6 +56,13 @@ a {
     margin: 1em 0;
 }
 
+/* Keyboard shortcuts */
+#bd em {
+    font-weight: bold;
+    color: #04B404; 
+    font-style: normal;
+}
+
 #ft.doc {
     color: #aaa;
     border-top: 1px solid #aaa;
@@ -111,3 +118,5 @@ li a {
 .highlight {
     font-size: 14px;
 }
+
+

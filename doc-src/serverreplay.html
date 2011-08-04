@@ -1,4 +1,7 @@
 
+- command-line: _-S path_ 
+- mitmproxy shortcut: _S_
+
 Server-side replay lets us replay server responses from a saved HTTP
 conversation.
 
@@ -8,10 +11,9 @@ Matching requests with responses
 By default, __mitmproxy__ excludes request headers when matching incoming
 requests with responses from the replay file. This works in most circumstances,
 and makes it possible to replay server responses in situations where request
-headers would naturally vary, e.g. using a different user agent. The
-__--rheader__ option to both __mitmproxy__ and __mitmdump__ allows you to
-override this behaviour by specifying individual headers that should be
-included in matching.
+headers would naturally vary, e.g. using a different user agent. The _--rheader
+headername_ command-line option allows you to override this behaviour by
+specifying individual headers that should be included in matching.
 
 
 Response refreshing
@@ -27,8 +29,7 @@ recording. So, if they were in the past at the time of recording, they will be
 in the past at the time of replay, and vice versa. Cookie expiry times are
 updated in a similar way.
 
-You can turn off response refreshing using the __norefresh__ option, available
-both on the command-line and using the "options" keyboard shortcut within
-__mitmproxy__.
+You can turn off response refreshing using the _--norefresh_ argument, or using
+the _o_ options shortcut within __mitmproxy__.
 
 

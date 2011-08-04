@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+"""
+    This script adds a new header to all responses.
+"""
 from libmproxy import script
 
 def response(ctx, f):
-    ctx.log("processing a response")
     f.response.headers["newheader"] = ["foo"]

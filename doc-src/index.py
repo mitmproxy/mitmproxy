@@ -69,7 +69,6 @@ pages = [
     Page("index.html", "docs"),
     Page("intro.html", "Introduction"),
     Page("mitmproxy.html", "mitmproxy"),
-    Directory("mitmproxy"),
     Page("mitmdump.html", "mitmdump"),
     Page("clientreplay.html", "Client-side replay"),
     Page("serverreplay.html", "Server-side replay"),

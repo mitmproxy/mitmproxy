@@ -1,0 +1,44 @@
+
+__mitmdump__ is the command-line companion to mitmproxy. It provides
+tcpdump-like functionality to let you view, record, and programmatically
+transform HTTP traffic. See the _--help_ flag ouptut for complete
+documentation.
+
+
+
+## Example: saving traffic
+
+    mitmdump -w outfile
+
+Start up mitmdump in proxy mode, and write all traffic to __outfile__. 
+
+
+## Example: client replay
+
+    mitmdump -nc outfile
+
+Start mitmdump without binding to the proxy port (_-n_), then replay all
+requests from outfile (_-c filename_). Flags combine in the obvious way, so
+you can replay requests from one file, and write the resulting flows to
+another:
+
+    mitmdump -nc srcfile -w dstfile
+
+See the [Client-side Replay](@!urlTo("clientreplay.html")!@) section for more information.
+
+
+## Example: running a script
+
+    mitmdump -s examples/add_header.py
+
+This runs the __add_header.py__ example script, which simply adds a new header
+to all responses.
+
+
+## Example: scripted data transformation
+
+    mitmdump -ns examples/add_header.py -r srcfile -w dstfile
+
+This command loads flows from __srcfile__, transforms it according to the
+specified script, then writes it back to __dstfile__.
+
