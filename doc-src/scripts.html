@@ -1,14 +1,46 @@
 
-Both __mitmproxy__ and __mitmdump__ allow you to modify requests and responses
-with external scripts. This is often done through the __--reqscript__ and
-__--respscript__ options
+__mitmproxy__ has a powerful event-drive scripting API, that allows you to
+modify flows on-the-fly or rewrite previously saved flows locally. 
 
 
-The script interface is simple - scripts simply read,
-modify and return a single __libmproxy.flow.Flow__ object, using the methods
-defined in the __libmproxy.script__ module. Scripts must be executable.
+## Events
 
-!example("examples/simple_script")!$
+<table>
+    <tr>
+        <td>start(ctx)</td>
+        <td>Called once on startup, before any other events.</td>
+    </tr>
+    <tr>
+        <td>clientconnect(ctx, ClientConnect)</td>
+        <td>Called when a client initiates a connection to the proxy. Note that
+        a connection can correspond to multiple HTTP requests.</td>
+    </tr>
+    <tr>
+        <td>request(ctx, Flow)</td>
+        <td>Called when a client request has been received.</td>
+    </tr>
+    <tr>
+        <td>response(ctx, Flow)</td>
+        <td>Called when a server response has been received.</td>
+    </tr>
+    <tr>
+        <td>error(ctx, Flow)</td>
+        <td>Called when a flow error has occured, e.g. invalid server
+        responses, or interrupted connections. This is distinct from a valid
+        server HTTP error response, which is simply a response with an HTTP
+        error code. </td>
+    </tr>
+    <tr>
+        <td>clientdisconnect(ctx, ClientDisconnect)</td>
+        <td>Called when a client disconnects from the proxy.</td>
+    </tr>
+    <tr>
+        <td>done(ctx)</td>
+        <td>Called once on script shutdown, after any other events.</td>
+    </tr>
+</table>
+
+
 
 
 

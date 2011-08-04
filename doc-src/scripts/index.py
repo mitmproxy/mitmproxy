@@ -1,6 +1,6 @@
 from countershape import Page
 
 pages = [
-    Page("flows.html", "Introduction to flows"),
+    Page("examples.html", "Examples"),
     Page("api.html", "API"),
 ]

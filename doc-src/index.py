@@ -75,7 +75,7 @@ pages = [
     Page("sticky.html", "Sticky cookies and auth"),
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
-    Page("scripts.html", "External scripts"),
+    Page("scripts.html", "Scripts"),
     Directory("scripts"),
     Page("ssl.html", "SSL interception"),
     Directory("certinstall"),
