@@ -85,15 +85,6 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
-        if options.rfile:
-            path = os.path.expanduser(options.rfile)
-            try:
-                f = file(path, "r")
-                freader = flow.FlowReader(f)
-            except IOError, v:
-                raise DumpError(v.strerror)
-            self.load_flows(freader)
-
         if options.client_replay:
             self.start_client_playback(
                 self._readflow(options.client_replay),
@@ -104,6 +95,16 @@ class DumpMaster(flow.FlowMaster):
             err = self.load_script(options.script)
             if err:
                 raise DumpError(err)
+
+        if options.rfile:
+            path = os.path.expanduser(options.rfile)
+            try:
+                f = file(path, "r")
+                freader = flow.FlowReader(f)
+            except IOError, v:
+                raise DumpError(v.strerror)
+            self.load_flows(freader)
+
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
