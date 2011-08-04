@@ -1,9 +1,5 @@
 from libmproxy import controller, proxy
 
-proxy.config = proxy.Config(
-    "~/.mitmproxy/cert.pem"
-)
-
 class StickyMaster(controller.Master):
     def __init__(self, server):
         controller.Master.__init__(self, server)
@@ -17,19 +13,22 @@ class StickyMaster(controller.Master):
 
     def handle_request(self, msg):
         hid = (msg.host, msg.port)
-        if msg.headers.has_key("cookie"):
+        if msg.headers["cookie"]:
             self.stickyhosts[hid] = msg.headers["cookie"]
         elif hid in self.stickyhosts:
             msg.headers["cookie"] = self.stickyhosts[hid]
-        msg.ack()
+        msg._ack()
 
     def handle_response(self, msg):
         hid = (msg.request.host, msg.request.port)
-        if msg.headers.has_key("set-cookie"):
+        if msg.headers["set-cookie"]:
             self.stickyhosts[hid] = f.response.headers["set-cookie"]
-        msg.ack()
+        msg._ack()
 
 
-server = proxy.ProxyServer(8080)
+ssl_config = proxy.SSLConfig(
+    "~/.mitmproxy/cert.pem"
+)
+server = proxy.ProxyServer(ssl_config, 8080)
 m = StickyMaster(server)
 m.run()
