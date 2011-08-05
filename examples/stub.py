@@ -1,30 +1,31 @@
 """
-    This is a script stub, with empty definitions for all events.
+    This is a script stub, with definitions for all events.
 """
 
 def start(ctx):
     """
         Called once on script startup, before any other events.
     """
-    pass
+    ctx.log("start")
 
 def clientconnect(ctx, client_connect):
     """
         Called when a client initiates a connection to the proxy. Note that a
         connection can correspond to multiple HTTP requests
     """
-    pass
+    ctx.log("clientconnect")
 
 def request(ctx, flow):
     """
         Called when a client request has been received.
     """
+    ctx.log("request")
 
 def response(ctx, flow):
     """
        Called when a server response has been received.
     """
-    pass
+    ctx.log("response")
 
 def error(ctx, flow):
     """
@@ -32,16 +33,16 @@ def error(ctx, flow):
         interrupted connections. This is distinct from a valid server HTTP error
         response, which is simply a response with an HTTP error code. 
     """
-    pass
+    ctx.log("error")
 
 def clientdisconnect(ctx, client_disconnect):
     """
         Called when a client disconnects from the proxy.
     """
-    pass
+    ctx.log("clientdisconnect")
 
 def done(ctx):
     """
         Called once on script shutdown, after any other events.
     """
-    pass
+    ctx.log("done")

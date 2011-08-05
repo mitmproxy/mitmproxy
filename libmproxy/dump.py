@@ -191,10 +191,11 @@ class DumpMaster(flow.FlowMaster):
             self._process_flow(f)
         return f
 
-
 # begin nocover
     def run(self):
         if self.o.rfile and not self.o.keepserving:
+            if self.script:
+                self.load_script(None)
             return
         try:
             return flow.FlowMaster.run(self)

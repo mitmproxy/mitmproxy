@@ -964,12 +964,6 @@ class ConsoleMaster(flow.FlowMaster):
             print >> sys.stderr, "Sticky auth error:", r
             sys.exit(1)
 
-        if options.script:
-            err = self.load_script(options.script)
-            if err:
-                print >> sys.stderr, "Script load error:", r
-                sys.exit(1)
-
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
         self.anticomp = options.anticomp
@@ -987,6 +981,13 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.debug = options.debug
 
+        if options.script:
+            err = self.load_script(options.script)
+            if err:
+                print >> sys.stderr, "Script load error:", err
+                sys.exit(1)
+
+
     def run_script_once(self, path, f):
         ret = self.get_script(path)
         if ret[0]:
@@ -999,6 +1000,7 @@ class ConsoleMaster(flow.FlowMaster):
             s.run("response", f)
         if f.error:
             s.run("error", f)
+        s.run("done")
         self.refresh_connection(f)
         self.state.last_script = path
 
@@ -1660,7 +1662,7 @@ class ConsoleMaster(flow.FlowMaster):
                             k = None
                         elif k == "s":
                             if self.script:
-                                self.script = None
+                                self.load_script(None)
                             else:
                                 self.path_prompt(
                                     "Set script: ",

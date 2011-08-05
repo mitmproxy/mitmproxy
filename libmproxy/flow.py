@@ -1112,13 +1112,19 @@ class FlowMaster(controller.Master):
     def load_script(self, path):
         """
             Loads a script. Returns an error description if something went
-            wrong.
+            wrong. If path is None, the current script is terminated.
         """
-        r = self.get_script(path)
-        if r[0]:
-            return r[0]
+        if path is None:
+            self.run_script_hook("done")
+            self.script = None
         else:
-            self.script = r[1]
+            r = self.get_script(path)
+            if r[0]:
+                return r[0]
+            else:
+                if self.script:
+                    self.run_script_hook("done")
+                self.script = r[1]
 
     def set_stickycookie(self, txt):
         if txt:
@@ -1250,7 +1256,7 @@ class FlowMaster(controller.Master):
             rt.start()
         #end nocover
 
-    def run_script(self, name, *args, **kwargs):
+    def run_script_hook(self, name, *args, **kwargs):
         if self.script:
             ret = self.script.run(name, *args, **kwargs)
             if not ret[0] and ret[1]:
@@ -1258,12 +1264,12 @@ class FlowMaster(controller.Master):
                 self.add_event(e, "error")
 
     def handle_clientconnect(self, cc):
-        self.run_script("clientconnect", cc)
+        self.run_script_hook("clientconnect", cc)
         self.add_event("Connect from: %s:%s"%cc.address)
         cc._ack()
 
     def handle_clientdisconnect(self, r):
-        self.run_script("clientdisconnect", r)
+        self.run_script_hook("clientdisconnect", r)
         s = "Disconnect from: %s:%s"%r.client_conn.address
         self.add_event(s)
         if r.client_conn.requestcount:
@@ -1278,7 +1284,7 @@ class FlowMaster(controller.Master):
     def handle_error(self, r):
         f = self.state.add_error(r)
         if f:
-            self.run_script("error", f)
+            self.run_script_hook("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
         r._ack()
@@ -1286,20 +1292,25 @@ class FlowMaster(controller.Master):
 
     def handle_request(self, r):
         f = self.state.add_request(r)
-        self.run_script("request", f)
+        self.run_script_hook("request", f)
         self.process_new_request(f)
         return f
 
     def handle_response(self, r):
         f = self.state.add_response(r)
         if f:
-            self.run_script("response", f)
+            self.run_script_hook("response", f)
         if self.client_playback:
             self.client_playback.clear(f)
         if not f:
             r._ack()
         self.process_new_response(f)
         return f
+
+    def shutdown(self):
+        if self.script:
+            self.load_script(None)
+        controller.Master.shutdown(self)
 
 
 class FlowWriter:
