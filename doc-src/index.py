@@ -34,7 +34,8 @@ ns.index_contents = file(mpath("README.mkd")).read()
 top = os.path.abspath(os.getcwd())
 def example(s):
     d = file(mpath(s)).read()
-    return countershape.template.Syntax("py")(d)
+    extemp = """<div class="example">%s<div class="example_legend">(%s)</div></div>"""
+    return extemp%(countershape.template.Syntax("py")(d), s)
 
 
 ns.example = example

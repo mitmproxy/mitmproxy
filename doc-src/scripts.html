@@ -1,47 +1,71 @@
 
-__mitmproxy__ has a powerful event-drive scripting API, that allows you to
-modify flows on-the-fly or rewrite previously saved flows locally. 
+__mitmproxy__ has a powerful scripting API that allows you to modify flows
+on-the-fly or rewrite previously saved flows locally. 
+
+The mitmproxy scripting API is event driven - a script is simply a Python
+module that exposes a set of event methods. Here's a complete mitmproxy script
+that adds a new header to every HTTP response before it is returned to the
+client:
+
+$!example("examples/add_header.py")!$
+
+The first argument to each event method is an instance of ScriptContext that
+lets the script interact with the global mitmproxy state. The __response__
+event also gets an instance of Flow, which we can use to manipulate the
+response itself.
 
 
 ## Events
 
-<table>
-    <tr>
-        <td>start(ctx)</td>
-        <td>Called once on startup, before any other events.</td>
-    </tr>
-    <tr>
-        <td>clientconnect(ctx, ClientConnect)</td>
-        <td>Called when a client initiates a connection to the proxy. Note that
-        a connection can correspond to multiple HTTP requests.</td>
-    </tr>
-    <tr>
-        <td>request(ctx, Flow)</td>
-        <td>Called when a client request has been received.</td>
-    </tr>
-    <tr>
-        <td>response(ctx, Flow)</td>
-        <td>Called when a server response has been received.</td>
-    </tr>
-    <tr>
-        <td>error(ctx, Flow)</td>
-        <td>Called when a flow error has occured, e.g. invalid server
-        responses, or interrupted connections. This is distinct from a valid
-        server HTTP error response, which is simply a response with an HTTP
-        error code. </td>
-    </tr>
-    <tr>
-        <td>clientdisconnect(ctx, ClientDisconnect)</td>
-        <td>Called when a client disconnects from the proxy.</td>
-    </tr>
-    <tr>
-        <td>done(ctx)</td>
-        <td>Called once on script shutdown, after any other events.</td>
-    </tr>
-</table>
+### start(ScriptContext)
+
+Called once on startup, before any other events.
 
 
+###clientconnect(ScriptContext, ClientConnect)
+
+Called when a client initiates a connection to the proxy. Note that
+a connection can correspond to multiple HTTP requests.
 
 
+###request(ScriptContext, Flow)
+
+Called when a client request has been received. The __Flow__ object is
+guaranteed to have a non-None __request__ attribute.
 
 
+### response(ScriptContext, Flow)
+
+Called when a server response has been received. The __Flow__ object is
+guaranteed to have non-None __request__ and __response__ attributes.
+
+
+### error(ScriptContext, Flow)
+
+Called when a flow error has occured, e.g. invalid server responses, or
+interrupted connections. This is distinct from a valid server HTTP error
+response, which is simply a response with an HTTP error code. The __Flow__
+object is guaranteed to have non-None __request__ and __error__ attributes.
+
+
+### clientdisconnect(ScriptContext, ClientDisconnect)
+
+Called when a client disconnects from the proxy.
+
+### done(ScriptContext)
+
+Called once on script shutdown, after any other events.
+
+
+## Scripts on saved flows
+
+There are a few circumstances in which a script may run on Flows that are
+already complete. For example, you could start a script, and then load a saved
+set of flows from a file (see the scripted data transformation example on the
+[mitmdump](@!urlTo("mitmdump.html")!@) page). This also happens when you run a
+one-shot script on a single flow through the _|_ (pipe) shortcut in mitmproxy.
+
+In this case, there are no client connections, and the events are run in the
+following order: __start__, __request__, __response__, __error__, __done__.  If
+the flow doesn't have a __response__ or __error__ associated with it, the
+matching event will be skipped.

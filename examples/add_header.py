@@ -1,6 +1,2 @@
-"""
-    This script adds a new header to all responses.
-"""
-
-def response(ctx, f):
-    f.response.headers["newheader"] = ["foo"]
+def response(context, flow):
+    flow.response.headers["newheader"] = ["foo"]

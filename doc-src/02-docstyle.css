@@ -52,14 +52,21 @@ a {
     color: #181818;
 }
 
+
+#bd h3 {
+    margin-bottom: 0px;
+
+}
+
 #bd p {
     margin: 1em 0;
+    margin-top: 0.5em;
 }
 
 /* Keyboard shortcuts */
 #bd em {
     font-weight: bold;
-    color: #04B404; 
+    color: #00A700; 
     font-style: normal;
 }
 
@@ -86,10 +93,9 @@ pre {
 }
 
 .terminal {
-    color: #ffffff;
+    color: #c0c0c0;
+    font-size: 1em;
     background: #000000;
-
-
 }
 
 .docindex {
@@ -118,5 +124,22 @@ li a {
 .highlight {
     font-size: 14px;
 }
+.example_legend{
+    float: right;
+    line-height: 1;
+    margin-left: 20px;
+    font-size: 12px;
+}
+.example pre {
+    margin: 0;
 
+}
+
+
+
+
+.kvtable th {
+    text-align: left;
+    white-space: nowrap;
+}
 
