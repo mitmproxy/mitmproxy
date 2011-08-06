@@ -34,6 +34,17 @@ Source is hosted on github:
 [github.com/cortesi/mitmproxy](http://github.com/cortesi/mitmproxy)
 
 
+Community
+---------
+
+Come join us in the #mitmproxy channel on the OFTC IRC network
+(irc://irc.oftc.net:6667).
+
+We also have a mailing list, hosted here:
+
+    http://groups.google.com/group/mitmproxy
+
+
 Requirements
 ------------
 
