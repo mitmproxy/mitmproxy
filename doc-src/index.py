@@ -77,7 +77,6 @@ pages = [
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
     Page("scripts.html", "Scripts"),
-    Directory("scripts"),
     Page("ssl.html", "SSL interception"),
     Directory("certinstall"),
     Page("library.html", "libmproxy: mitmproxy as a library"),
