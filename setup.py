@@ -72,7 +72,7 @@ packages, package_data = findPackages("libmproxy")
 setup(
         name = "mitmproxy",
         version = version.VERSION,
-        description = "An interactive SSL-capable intercepting HTTP proxy for penetration testers and software developers.",
+        description = "An interactive, SSL-capable man-in-the-middle HTTP proxy for penetration testers and software developers.",
         long_description = long_description,
         author = "Aldo Cortesi",
         author_email = "aldo@corte.si",
@@ -81,10 +81,14 @@ setup(
         package_data = package_data,
         scripts = ["mitmproxy", "mitmdump"],
         classifiers = [
-            "Development Status :: 4 - Beta",
+            "License :: OSI Approved :: GNU General Public License (GPL)",
+            "Development Status :: 5 - Production/Stable",
+            "Environment :: Console",
+            "Environment :: Console :: Curses",
             "Programming Language :: Python",
             "Topic :: Security",
             "Topic :: Internet :: WWW/HTTP",
+            "Topic :: Internet :: Proxy Servers",
             "Topic :: Software Development :: Testing"
         ]
 )
