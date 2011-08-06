@@ -1,3 +1,36 @@
+7 August 2011: mitmproxy 0.6:
+
+    * New scripting API that allows much more flexible and fine-grained
+      rewriting of traffic. See the docs for more info.
+
+    * Support for gzip and deflate content encodings. A new "z"
+      keybinding in mitmproxy to let us quickly encode and decode content, plus
+      automatic decoding for the "pretty" view mode.
+
+    * An event log, viewable with the "v" shortcut in mitmproxy, and the
+      "-e" command-line flag in mitmdump.
+
+    * Huge performance improvements: mitmproxy interface, loading
+      large numbers of flows from file.
+
+    * A new "replace" convenience method for all flow objects, that does a
+      universal regex-based string replacement.
+
+    * Header management has been rewritten to maintain both case and order.
+
+    * Improved stability for SSL interception.
+
+    * Default expiry time on generated SSL certs has been dropped to avoid an
+      OpenSSL overflow bug that caused certificates to expire in the distant
+      past on some systems.
+
+    * A "pretty" view mode for JSON and form submission data.
+
+    * Expanded documentation and examples.
+
+    * Countless other small improvements and bugfixes.
+
+
 27 June 2011: mitmproxy 0.5:
 
     * An -n option to start the tools without binding to a proxy port.
