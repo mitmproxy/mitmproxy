@@ -57,15 +57,65 @@ Called when a client disconnects from the proxy.
 Called once on script shutdown, after any other events.
 
 
-## Scripts on saved flows
+## API
 
-There are a few circumstances in which a script may run on Flows that are
-already complete. For example, you could start a script, and then load a saved
-set of flows from a file (see the scripted data transformation example on the
-[mitmdump](@!urlTo("mitmdump.html")!@) page). This also happens when you run a
+The main classes you will deal with in writing mitmproxy scripts are:
+
+<table class="kvtable">
+    <tr>
+        <th>libmproxy.flow.ScriptContext</th>
+        <td>A handle for interacting with mitmproxy's global state.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.flow.Flow</th>
+        <td>A collection of objects representing a single HTTP transaction.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.flow.Request</th>
+        <td>An HTTP request.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.flow.Response</th>
+        <td>An HTTP response.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.flow.Error</th>
+        <td>A communications error.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.flow.ClientConnection</th>
+        <td>Describes a client connection.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.flow.ClientDisconnection</th>
+        <td>Describes a client disconnection.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.flow.Headers</th>
+        <td>HTTP headers for a request or response.</td>
+    </tr>
+</table>
+
+
+The canonical API documentation is the code. You can view the API documentation
+using pydoc (which is installed with Python by default), like this:
+
+<pre class="terminal">
+> pydoc libmproxy.flow.Request
+</pre>
+
+
+## Running scripts on saved flows
+
+Sometimes, we want to run a script on __Flow__ objects that are already
+complete.  This happens when you start a script, and then load a saved set of
+flows from a file (see the "scripted data transformation" example on the
+[mitmdump](@!urlTo("mitmdump.html")!@) page). It also happens when you run a
 one-shot script on a single flow through the _|_ (pipe) shortcut in mitmproxy.
 
 In this case, there are no client connections, and the events are run in the
 following order: __start__, __request__, __response__, __error__, __done__.  If
 the flow doesn't have a __response__ or __error__ associated with it, the
-matching event will be skipped.
+matching event will be skipped. 
+
+

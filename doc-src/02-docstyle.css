@@ -31,31 +31,29 @@ a {
     color: #444444;
 }
 
-#bd h1, #bd h2 {
+#bd h1, #bd h2, #bd h3 {
     font-family: "Georgia","Times New Roman",Helvetica,Arial,sans-serif;
     font-weight: normal;
+    color: #181818;
 }
 
 #bd h1 {
-    font-size: 1.8em;
+    font-size: 1.9em;
     border-bottom: 2px solid #ff7033;
     margin-top: 5px;
     margin-bottom: 5px;
-    color: #181818;
 }
 
 #bd h2 {
-    font-size: 1.3em;
+    font-size: 1.4em;
     border-bottom: 1px solid #cccccc;
     margin-top: 5px;
     margin-bottom: 5px;
-    color: #181818;
 }
 
 
 #bd h3 {
     margin-bottom: 0px;
-
 }
 
 #bd p {
@@ -125,18 +123,12 @@ li a {
     font-size: 14px;
 }
 .example_legend{
-    float: right;
     line-height: 1;
-    margin-left: 20px;
     font-size: 12px;
 }
 .example pre {
     margin: 0;
-
 }
-
-
-
 
 .kvtable th {
     text-align: left;
