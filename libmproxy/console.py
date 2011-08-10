@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import mailcap, mimetypes, tempfile, os, subprocess, glob, time
+import mailcap, mimetypes, tempfile, os, subprocess, glob, time, re
 import os.path, sys
 import cStringIO
 import urwid
@@ -886,7 +886,7 @@ class BodyPile(urwid.Pile):
         self.active_header = urwid.AttrWrap(h, "heading")
 
         urwid.Pile.__init__(
-            self, 
+            self,
             [
                 ConnectionListBox(master),
                 urwid.Frame(EventListBox(master), header = self.inactive_header)
@@ -894,7 +894,7 @@ class BodyPile(urwid.Pile):
         )
         self.master = master
         self.focus = 0
-        
+
     def keypress(self, size, key):
         if key == "tab":
             self.focus = (self.focus + 1)%len(self.widget_list)
@@ -1072,6 +1072,32 @@ class ConsoleMaster(flow.FlowMaster):
         self._trailer(sum(len(i) for i in lines), txt)
         return txt
 
+    def _view_conn_formdata(self, content, boundary):
+        rx = re.compile(r'\bname="([^"]+)"')
+        keys = []
+        vals = []
+
+        for i in content.split("--" + boundary):
+            parts = i.splitlines()
+            if len(parts) > 1 and parts[0][0:2] != "--":
+                saw_clrf = False
+                data = []
+                match = rx.search(parts[1])
+                if match:
+                    keys.append(match.group(1) + ":")
+                    vals.append(utils.cleanBin(
+                        "\n".join(parts[3+parts[2:].index(""):])
+                    ))
+        kv = format_keyvals(
+            zip(keys, vals),
+            key = "header",
+            val = "text"
+        )
+        return [
+            urwid.Text(("highlight", "Form data:\n")),
+            urwid.Text(kv)
+        ]
+
     def _view_conn_urlencoded(self, lines):
         kv = format_keyvals(
                 [(k+":", v) for (k, v) in lines],
@@ -1099,6 +1125,10 @@ class ConsoleMaster(flow.FlowMaster):
             lines = utils.pretty_json(content)
             if lines:
                 return self._view_conn_json(lines)
+        elif ctype and "multipart/form-data" in ctype:
+            boundary = ctype.split('boundary=')
+            if len(boundary) > 1:
+                return self._view_conn_formdata(content, boundary[1].split(';')[0])
         return self._view_conn_raw(content)
 
     @utils.LRUCache(20)
