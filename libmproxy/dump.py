@@ -187,7 +187,6 @@ class DumpMaster(flow.FlowMaster):
     def handle_error(self, msg):
         f = flow.FlowMaster.handle_error(self, msg)
         if f:
-            msg._ack()
             self._process_flow(f)
         return f
 

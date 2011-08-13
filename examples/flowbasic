@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+"""
+    This example shows how to build a proxy based on mitmproxy's Flow
+    primitives.
+
+    Note that request and response messages are not automatically acked, so we
+    need to implement handlers to do this.
+"""
+import os
+from libmproxy import proxy, flow
+
+class MyMaster(flow.FlowMaster):
+    def run(self):
+        try:
+            flow.FlowMaster.run(self)
+        except KeyboardInterrupt:
+            self.shutdown()
+
+    def handle_request(self, r):
+        f = flow.FlowMaster.handle_request(self, r)
+        if f:
+            r._ack()
+        return f
+
+    def handle_response(self, r):
+        f = flow.FlowMaster.handle_response(self, r)
+        if f:
+            r._ack()
+        print f
+        return f
+
+
+ssl_config = proxy.SSLConfig(
+    cacert = os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
+)
+state = flow.State()
+server = proxy.ProxyServer(ssl_config, 8080)
+m = MyMaster(server, state)
+m.run()
