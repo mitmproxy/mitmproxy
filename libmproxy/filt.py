@@ -222,7 +222,7 @@ class FAnd(_Token):
             i.dump(indent+1, fp)
 
     def __call__(self, o):
-        return all([i(o) for i in self.lst])
+        return all(i(o) for i in self.lst)
 
 
 class FOr(_Token):
@@ -235,7 +235,7 @@ class FOr(_Token):
             i.dump(indent+1, fp)
 
     def __call__(self, o):
-        return any([i(o) for i in self.lst])
+        return any(i(o) for i in self.lst)
 
 
 class FNot(_Token):
@@ -277,7 +277,7 @@ def _make():
         f.setParseAction(klass.make)
         parts.append(f)
 
-    simplerex = "".join([c for c in pp.printables if c not in  "()~'\""])
+    simplerex = "".join(c for c in pp.printables if c not in  "()~'\"")
     rex = pp.Word(simplerex) |\
           pp.QuotedString("\"", escChar='\\') |\
           pp.QuotedString("'", escChar='\\')

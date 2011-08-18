@@ -347,7 +347,7 @@ class ConnectionView(WWrap):
             return self.master._cached_conn_text(
                         e,
                         conn.content,
-                        tuple([tuple(i) for i in conn.headers.lst]),
+                        tuple(tuple(i) for i in conn.headers.lst),
                         viewmode
                     )
         else:
@@ -1542,7 +1542,7 @@ class ConsoleMaster(flow.FlowMaster):
                 mkup.append(",")
         prompt.extend(mkup)
         prompt.append(")? ")
-        self.onekey = "".join([i[1] for i in keys])
+        self.onekey = "".join(i[1] for i in keys)
         self.prompt(prompt, "", callback, *args)
 
     def prompt_done(self):

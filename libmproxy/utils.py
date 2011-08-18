@@ -135,10 +135,10 @@ def hexdump(s):
     for i in range(0, len(s), 16):
         o = "%.10x"%i
         part = s[i:i+16]
-        x = " ".join(["%.2x"%ord(i) for i in part])
+        x = " ".join("%.2x"%ord(i) for i in part)
         if len(part) < 16:
             x += " "
-            x += " ".join(["  " for i in range(16-len(part))])
+            x += " ".join("  " for i in range(16 - len(part)))
         parts.append(
             (o, x, cleanBin(part))
         )
