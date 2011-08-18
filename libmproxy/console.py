@@ -347,7 +347,7 @@ class ConnectionView(WWrap):
             return self.master._cached_conn_text(
                         e,
                         conn.content,
-                        tuple([tuple(i) for i in conn.headers.lst]),
+                        tuple(tuple(i) for i in conn.headers.lst),
                         viewmode
                     )
         else:
@@ -914,7 +914,6 @@ class BodyPile(urwid.Pile):
         if len(size)==2:
             item_rows = self.get_item_rows( size, focus=True )
         i = self.widget_list.index(self.focus_item)
-        f, height = self.item_types[i]
         tsize = self.get_item_size(size,i,True,item_rows)
         return self.focus_item.keypress( tsize, key )
 
@@ -1080,8 +1079,6 @@ class ConsoleMaster(flow.FlowMaster):
         for i in content.split("--" + boundary):
             parts = i.splitlines()
             if len(parts) > 1 and parts[0][0:2] != "--":
-                saw_clrf = False
-                data = []
                 match = rx.search(parts[1])
                 if match:
                     keys.append(match.group(1) + ":")
@@ -1389,7 +1386,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def helptext(self):
         text = []
-        text.extend([("head", "Global keys:\n")])
+        text.append(("head", "Global keys:\n"))
         keys = [
             ("A", "accept all intercepted connections"),
             ("a", "accept this intercepted connection"),
@@ -1446,7 +1443,7 @@ class ConsoleMaster(flow.FlowMaster):
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.extend([("head", "\n\nConnection list keys:\n")])
+        text.append(("head", "\n\nConnection list keys:\n"))
         keys = [
             ("C", "clear connection list or eventlog"),
             ("d", "delete connection from view"),
@@ -1458,7 +1455,7 @@ class ConsoleMaster(flow.FlowMaster):
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.extend([("head", "\n\nConnection view keys:\n")])
+        text.append(("head", "\n\nConnection view keys:\n"))
         keys = [
             ("b", "save request/response body"),
             ("e", "edit request/response"),
@@ -1470,7 +1467,7 @@ class ConsoleMaster(flow.FlowMaster):
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.extend([("head", "\n\nFilter expressions:\n")])
+        text.append(("head", "\n\nFilter expressions:\n"))
         f = []
         for i in filt.filt_unary:
             f.append(
@@ -1542,7 +1539,7 @@ class ConsoleMaster(flow.FlowMaster):
                 mkup.append(",")
         prompt.extend(mkup)
         prompt.append(")? ")
-        self.onekey = "".join([i[1] for i in keys])
+        self.onekey = "".join(i[1] for i in keys)
         self.prompt(prompt, "", callback, *args)
 
     def prompt_done(self):

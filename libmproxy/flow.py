@@ -234,9 +234,9 @@ class Request(HTTPMsg):
             decode appropriately.
         """
         if self.headers["accept-encoding"]:
-            self.headers["accept-encoding"] = [', '.join([
+            self.headers["accept-encoding"] = [', '.join(
                 e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
-            ])]
+            )]
 
     def _set_replay(self):
         self.client_conn = None
@@ -704,7 +704,7 @@ class ServerPlaybackState:
                 l.append(i)
 
     def count(self):
-        return sum([len(i) for i in self.fmap.values()])
+        return sum(len(i) for i in self.fmap.values())
 
     def _hash(self, flow):
         """

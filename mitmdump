@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os.path
-from libmproxy import proxy, dump, utils, cmdline
+import sys
+from libmproxy import proxy, dump, cmdline
 from libmproxy.version import VERSION
-from optparse import OptionParser, OptionGroup
+from optparse import OptionParser
 
 
 if __name__ == '__main__':
