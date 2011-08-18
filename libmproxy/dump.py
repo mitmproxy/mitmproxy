@@ -1,5 +1,5 @@
 import sys, os
-import flow, filt, utils, script
+import flow, filt, utils
 
 class DumpError(Exception): pass
 

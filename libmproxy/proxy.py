@@ -5,7 +5,7 @@
 
     Development started from Neil Schemenauer's munchy.py
 """
-import sys, os, string, socket, select, time
+import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer, ssl
 import utils, flow
