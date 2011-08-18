@@ -914,7 +914,6 @@ class BodyPile(urwid.Pile):
         if len(size)==2:
             item_rows = self.get_item_rows( size, focus=True )
         i = self.widget_list.index(self.focus_item)
-        f, height = self.item_types[i]
         tsize = self.get_item_size(size,i,True,item_rows)
         return self.focus_item.keypress( tsize, key )
 
@@ -1080,8 +1079,6 @@ class ConsoleMaster(flow.FlowMaster):
         for i in content.split("--" + boundary):
             parts = i.splitlines()
             if len(parts) > 1 and parts[0][0:2] != "--":
-                saw_clrf = False
-                data = []
                 match = rx.search(parts[1])
                 if match:
                     keys.append(match.group(1) + ":")
