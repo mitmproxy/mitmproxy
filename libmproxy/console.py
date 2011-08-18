@@ -1386,7 +1386,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def helptext(self):
         text = []
-        text.extend([("head", "Global keys:\n")])
+        text.append(("head", "Global keys:\n"))
         keys = [
             ("A", "accept all intercepted connections"),
             ("a", "accept this intercepted connection"),
@@ -1443,7 +1443,7 @@ class ConsoleMaster(flow.FlowMaster):
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.extend([("head", "\n\nConnection list keys:\n")])
+        text.append(("head", "\n\nConnection list keys:\n"))
         keys = [
             ("C", "clear connection list or eventlog"),
             ("d", "delete connection from view"),
@@ -1455,7 +1455,7 @@ class ConsoleMaster(flow.FlowMaster):
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.extend([("head", "\n\nConnection view keys:\n")])
+        text.append(("head", "\n\nConnection view keys:\n"))
         keys = [
             ("b", "save request/response body"),
             ("e", "edit request/response"),
@@ -1467,7 +1467,7 @@ class ConsoleMaster(flow.FlowMaster):
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.extend([("head", "\n\nFilter expressions:\n")])
+        text.append(("head", "\n\nFilter expressions:\n"))
         f = []
         for i in filt.filt_unary:
             f.append(
