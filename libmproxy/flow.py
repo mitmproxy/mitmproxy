@@ -264,7 +264,7 @@ class Request(HTTPMsg):
         self.method = state["method"]
         self.path = state["path"]
         self.headers = Headers._from_state(state["headers"])
-        self.content = base64.decodestring(state["content"])
+        self.content = state["content"]
         self.timestamp = state["timestamp"]
 
     def _get_state(self):
@@ -276,7 +276,7 @@ class Request(HTTPMsg):
             method = self.method,
             path = self.path,
             headers = self.headers._get_state(),
-            content = base64.encodestring(self.content),
+            content = self.content,
             timestamp = self.timestamp,
         )
 
@@ -290,7 +290,7 @@ class Request(HTTPMsg):
             str(state["method"]),
             str(state["path"]),
             Headers._from_state(state["headers"]),
-            base64.decodestring(state["content"]),
+            state["content"],
             state["timestamp"]
         )
 
@@ -467,7 +467,7 @@ class Response(HTTPMsg):
         self.code = state["code"]
         self.msg = state["msg"]
         self.headers = Headers._from_state(state["headers"])
-        self.content = base64.decodestring(state["content"])
+        self.content = state["content"]
         self.timestamp = state["timestamp"]
 
     def _get_state(self):
@@ -476,7 +476,7 @@ class Response(HTTPMsg):
             msg = self.msg,
             headers = self.headers._get_state(),
             timestamp = self.timestamp,
-            content = base64.encodestring(self.content)
+            content = self.content
         )
 
     @classmethod
@@ -486,7 +486,7 @@ class Response(HTTPMsg):
             state["code"],
             str(state["msg"]),
             Headers._from_state(state["headers"]),
-            base64.decodestring(state["content"]),
+            state["content"],
             state["timestamp"],
         )
 
@@ -1316,12 +1316,10 @@ class FlowMaster(controller.Master):
 class FlowWriter:
     def __init__(self, fo):
         self.fo = fo
-        self.ns = netstring.FileEncoder(fo)
 
     def add(self, flow):
         d = flow._get_state()
-        s = json.dumps(d)
-        self.ns.write(s)
+        netstring.dump(d, self.fo)
 
 
 class FlowReadError(Exception):
@@ -1333,16 +1331,20 @@ class FlowReadError(Exception):
 class FlowReader:
     def __init__(self, fo):
         self.fo = fo
-        self.ns = netstring.decode_file(fo)
 
     def stream(self):
         """
             Yields Flow objects from the dump.
         """
+        off = 0
         try:
-            for i in self.ns:
-                data = json.loads(i)
+            while 1:
+                data = netstring.load(self.fo)
+                off = self.fo.tell()
                 yield Flow._from_state(data)
-        except netstring.DecoderError:
+        except ValueError, v:
+            # Error is due to EOF
+            if self.fo.tell() == off and self.fo.read() == '':
+                return
             raise FlowReadError("Invalid data format.")
 
