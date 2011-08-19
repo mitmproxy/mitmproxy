@@ -2,4 +2,5 @@ base = ..
 coverage = ../libmproxy
 exclude = .
           ../libmproxy/contrib
+          ../libmproxy/tnetstring.py
 

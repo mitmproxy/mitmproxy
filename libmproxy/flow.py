@@ -2,9 +2,9 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import json, hashlib, Cookie, cookielib, base64, copy, re
+import hashlib, Cookie, cookielib, copy, re
 import time
-import netstring, filt, script, utils, encoding, proxy
+import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import controller, version
 
@@ -1319,7 +1319,7 @@ class FlowWriter:
 
     def add(self, flow):
         d = flow._get_state()
-        netstring.dump(d, self.fo)
+        tnetstring.dump(d, self.fo)
 
 
 class FlowReadError(Exception):
@@ -1339,7 +1339,7 @@ class FlowReader:
         off = 0
         try:
             while 1:
-                data = netstring.load(self.fo)
+                data = tnetstring.load(self.fo)
                 off = self.fo.tell()
                 yield Flow._from_state(data)
         except ValueError, v:
