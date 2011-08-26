@@ -1312,7 +1312,8 @@ class FlowMaster(controller.Master):
             self.client_playback.clear(f)
         if not f:
             r._ack()
-        self.process_new_response(f)
+        if f:
+            self.process_new_response(f)
         return f
 
     def shutdown(self):
