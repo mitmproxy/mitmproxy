@@ -759,6 +759,13 @@ class StickyCookieState:
             m["path"] or "/"
         )
 
+    def domain_match(self, a, b):
+        if cookielib.domain_match(a, b):
+            return True
+        elif cookielib.domain_match(a, b.strip(".")):
+            return True
+        return False
+
     def handle_response(self, f):
         for i in f.response.headers["set-cookie"]:
             # FIXME: We now know that Cookie.py screws up some cookies with
@@ -766,22 +773,23 @@ class StickyCookieState:
             c = Cookie.SimpleCookie(str(i))
             m = c.values()[0]
             k = self.ckey(m, f)
-            if cookielib.domain_match(f.request.host, k[0]):
+            if self.domain_match(f.request.host, k[0]):
                 self.jar[self.ckey(m, f)] = m
 
     def handle_request(self, f):
+        l = []
         if f.match(self.flt):
             for i in self.jar.keys():
                 match = [
-                    cookielib.domain_match(i[0], f.request.host),
+                    self.domain_match(f.request.host, i[0]),
                     f.request.port == i[1],
                     f.request.path.startswith(i[2])
                 ]
                 if all(match):
-                    l = f.request.headers["cookie"]
-                    f.request.stickycookie = True
                     l.append(self.jar[i].output(header="").strip())
-                    f.request.headers["cookie"] = l
+        if l:
+            f.request.stickycookie = True
+            f.request.headers["cookie"] = l
 
 
 class StickyAuthState:
@@ -1304,7 +1312,8 @@ class FlowMaster(controller.Master):
             self.client_playback.clear(f)
         if not f:
             r._ack()
-        self.process_new_response(f)
+        if f:
+            self.process_new_response(f)
         return f
 
     def shutdown(self):
