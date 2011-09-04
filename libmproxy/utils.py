@@ -393,8 +393,11 @@ def parse_url(url):
     if not scheme:
         return None
     if ':' in netloc:
-        host, port = string.split(netloc, ':')
-        port = int(port)
+        host, port = string.rsplit(netloc, ':', maxsplit=1)
+        try:
+            port = int(port)
+        except ValueError:
+            return None
     else:
         host = netloc
         if scheme == "https":

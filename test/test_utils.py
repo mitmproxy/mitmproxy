@@ -216,6 +216,9 @@ class u_parse_url(libpry.AutoTree):
         s, h, po, pa = utils.parse_url("https://foo")
         assert po == 443
 
+        assert not utils.parse_url("https://foo:bar")
+        assert not utils.parse_url("https://foo:")
+
 tests = [
     uformat_timestamp(),
     uisBin(),
