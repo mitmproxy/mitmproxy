@@ -104,7 +104,6 @@ def parse_request_line(request):
     return method, scheme, host, port, path, minor
     
 
-
 class FileLike:
     def __init__(self, o):
         self.o = o
@@ -197,7 +196,10 @@ class ServerConnection:
         if not len(parts) == 3:
             raise ProxyError(502, "Invalid server response: %s."%line)
         proto, code, msg = parts
-        code = int(code)
+        try:
+            code = int(code)
+        except ValueError:
+            raise ProxyError(502, "Invalid server response: %s."%line)
         headers = flow.Headers()
         headers.read(self.rfile)
         if code >= 100 and code <= 199:

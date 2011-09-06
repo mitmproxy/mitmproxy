@@ -80,6 +80,8 @@ class Master:
         return changed
 
     def run(self):
+        global should_exit
+        should_exit = False
         if self.server:
             slave = Slave(self.masterq, self.server)
             slave.start()
