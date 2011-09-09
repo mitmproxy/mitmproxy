@@ -855,7 +855,6 @@ class Options(object):
         "keepserving",
         "kill",
         "intercept",
-        "limit",
         "no_server",
         "refresh_server_playback",
         "rfile",
@@ -942,11 +941,6 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.conn_list_view = None
         self.set_palette()
-
-        r = self.set_limit(options.limit)
-        if r:
-            print >> sys.stderr, "Limit error:", r
-            sys.exit(1)
 
         r = self.set_intercept(options.intercept)
         if r:

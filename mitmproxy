@@ -36,11 +36,6 @@ if __name__ == '__main__':
                         "See help in mitmproxy for filter expression syntax."
                     )
     group.add_option(
-        "-l", "--limit", action="store",
-        type = "str", dest="limit", default=None,
-        help = "Limit filter expression."
-    )
-    group.add_option(
         "-i", "--intercept", action="store",
         type = "str", dest="intercept", default=None,
         help = "Intercept filter expression."
@@ -48,7 +43,7 @@ if __name__ == '__main__':
     parser.add_option_group(group)
     options, args = parser.parse_args()
 
-    config = proxy.process_certificate_option_group(parser, options)
+    config = proxy.process_proxy_options(parser, options)
 
     if options.no_server:
         server = None
@@ -61,7 +56,6 @@ if __name__ == '__main__':
 
     opts = console.Options(**cmdline.get_common_options(options))
     opts.intercept = options.intercept
-    opts.limit = options.limit
     opts.debug = options.debug
     m = console.ConsoleMaster(server, opts)
 

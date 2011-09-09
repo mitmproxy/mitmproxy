@@ -410,3 +410,33 @@ def parse_url(url):
     return scheme, host, port, path
 
 
+def parse_size(s):
+    """
+        Parses a size specification. Valid specifications are:
+            
+            123: bytes
+            123k: kilobytes
+            123m: megabytes
+            123g: gigabytes
+    """
+    if not s:
+        return None
+    mult = None
+    if s[-1].lower() == "k":
+        mult = 1024**1
+    elif s[-1].lower() == "m":
+        mult = 1024**2
+    elif s[-1].lower() == "g":
+        mult = 1024**3
+
+    if mult:
+        s = s[:-1]
+    else:
+        mult = 1
+    try:
+        return int(s) * mult
+    except ValueError:
+        raise ValueError("Invalid size specification: %s"%s)
+
+
+

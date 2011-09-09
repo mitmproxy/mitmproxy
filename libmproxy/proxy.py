@@ -22,12 +22,13 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0):
+    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, body_size_limit = None):
         self.certfile = certfile
         self.ciphers = ciphers
         self.cacert = cacert
         self.certdir = None
         self.cert_wait_time = cert_wait_time
+        self.body_size_limit = body_size_limit
 
 
 def read_chunked(fp, limit):
@@ -160,13 +161,13 @@ class FileLike:
 
 #begin nocover
 class RequestReplayThread(threading.Thread):
-    def __init__(self, flow, masterq):
-        self.flow, self.masterq = flow, masterq
+    def __init__(self, flow, masterq, body_size_limit):
+        self.flow, self.masterq, self.body_size_limit = flow, masterq, body_size_limit
         threading.Thread.__init__(self)
 
     def run(self):
         try:
-            server = ServerConnection(self.flow.request)
+            server = ServerConnection(self.flow.request, self.body_size_limit)
             server.send_request(self.flow.request)
             response = server.read_response()
             response._send(self.masterq)
@@ -176,7 +177,8 @@ class RequestReplayThread(threading.Thread):
 
 
 class ServerConnection:
-    def __init__(self, request):
+    def __init__(self, request, body_size_limit):
+        self.body_size_limit = body_size_limit
         self.host = request.host
         self.port = request.port
         self.scheme = request.scheme
@@ -226,7 +228,7 @@ class ServerConnection:
         if self.request.method == "HEAD" or code == 204 or code == 304:
             content = ""
         else:
-            content = read_http_body(self.rfile, self, headers, True, None)
+            content = read_http_body(self.rfile, self, headers, True, self.body_size_limit)
         return flow.Response(self.request, code, msg, headers, content)
 
     def terminate(self):
@@ -274,7 +276,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 request = False
                 response = response._send(self.mqueue)
             else:
-                server = ServerConnection(request)
+                server = ServerConnection(request, self.config.body_size_limit)
                 server.send_request(request)
                 try:
                     response = server.read_response()
@@ -381,7 +383,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     client_conn.close = True
                 if value == "keep-alive":
                     client_conn.close = False
-        content = read_http_body(self.rfile, client_conn, headers, False, None)
+        content = read_http_body(self.rfile, client_conn, headers, False, self.config.body_size_limit)
         return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
@@ -463,7 +465,7 @@ def certificate_option_group(parser):
     parser.add_option_group(group)
 
 
-def process_certificate_option_group(parser, options):
+def process_proxy_options(parser, options):
     if options.cert:
         options.cert = os.path.expanduser(options.cert)
         if not os.path.exists(options.cert):
@@ -475,9 +477,13 @@ def process_certificate_option_group(parser, options):
         utils.dummy_ca(cacert)
     if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
+    body_size_limit = utils.parse_size(options.body_size_limit)
     return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
         ciphers = options.ciphers,
-        cert_wait_time = options.cert_wait_time
+        cert_wait_time = options.cert_wait_time,
+        body_size_limit = body_size_limit
     )
+
+

@@ -219,6 +219,17 @@ class u_parse_url(libpry.AutoTree):
         assert not utils.parse_url("https://foo:bar")
         assert not utils.parse_url("https://foo:")
 
+
+class u_parse_size(libpry.AutoTree):
+    def test_simple(self):
+        assert utils.parse_size("1") == 1
+        assert utils.parse_size("1k") == 1024
+        assert utils.parse_size("1m") == 1024**2
+        assert utils.parse_size("1g") == 1024**3
+        libpry.raises(ValueError, utils.parse_size, "1f")
+        libpry.raises(ValueError, utils.parse_size, "ak")
+
+
 tests = [
     uformat_timestamp(),
     uisBin(),
@@ -233,5 +244,6 @@ tests = [
     udummy_ca(),
     udummy_cert(),
     uLRUCache(),
-    u_parse_url()
+    u_parse_url(),
+    u_parse_size()
 ]
