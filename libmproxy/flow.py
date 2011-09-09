@@ -1260,7 +1260,11 @@ class FlowMaster(controller.Master):
             f.response = None
             f.error = None
             self.process_new_request(f)
-            rt = proxy.RequestReplayThread(f, self.masterq, None)
+            rt = proxy.RequestReplayThread(
+                    f,
+                    self.masterq,
+                    self.server.config.body_size_limit
+                )
             rt.start()
         #end nocover
 

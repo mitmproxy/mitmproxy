@@ -55,12 +55,6 @@ def common_options(parser):
         help="Show event log."
     )
     parser.add_option(
-        "-l",
-        action="store", dest="body_size_limit", default=None,
-        help="Byte size limit of HTTP request and response bodies."\
-             " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
-    )
-    parser.add_option(
         "-n",
         action="store_true", dest="no_server",
         help="Don't start a proxy server."
@@ -120,7 +114,13 @@ def common_options(parser):
         action="store_true", dest="anticomp", default=False,
         help="Try to convince servers to send us un-compressed data."
     )
-
+    parser.add_option(
+        "-Z",
+        action="store", dest="body_size_limit", default=None,
+        metavar="SIZE",
+        help="Byte size limit of HTTP request and response bodies."\
+             " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
+    )
     group = optparse.OptionGroup(parser, "Client Replay")
     group.add_option(
         "-c",
