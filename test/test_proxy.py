@@ -1,22 +1,52 @@
 import cStringIO, time
 import libpry
-from libmproxy import proxy, controller, utils, dump
+from libmproxy import proxy, controller, utils, dump, flow
 
 
 class u_read_chunked(libpry.AutoTree):
     def test_all(self):
         s = cStringIO.StringIO("1\r\na\r\n0\r\n")
-        libpry.raises(IOError, proxy.read_chunked, s)
+        libpry.raises(IOError, proxy.read_chunked, s, None)
 
         s = cStringIO.StringIO("1\r\na\r\n0\r\n\r\n")
-        assert proxy.read_chunked(s) == "a"
+        assert proxy.read_chunked(s, None) == "a"
 
         s = cStringIO.StringIO("\r\n")
-        libpry.raises(IOError, proxy.read_chunked, s)
+        libpry.raises(IOError, proxy.read_chunked, s, None)
 
         s = cStringIO.StringIO("1\r\nfoo")
-        libpry.raises(IOError, proxy.read_chunked, s)
+        libpry.raises(IOError, proxy.read_chunked, s, None)
 
+        s = cStringIO.StringIO("foo\r\nfoo")
+        libpry.raises(proxy.ProxyError, proxy.read_chunked, s, None)
+
+
+class Dummy: pass
+
+class u_read_http_body(libpry.AutoTree):
+    def test_all(self):
+
+        d = Dummy()
+        h = flow.Headers()
+        s = cStringIO.StringIO("testing")
+        assert proxy.read_http_body(s, d, h, False, None) == ""
+
+        h["content-length"] = ["foo"]
+        s = cStringIO.StringIO("testing")
+        libpry.raises(proxy.ProxyError, proxy.read_http_body, s, d, h, False, None)
+
+        h["content-length"] = [5]
+        s = cStringIO.StringIO("testing")
+        assert len(proxy.read_http_body(s, d, h, False, None)) == 5
+        s = cStringIO.StringIO("testing")
+        libpry.raises(proxy.ProxyError, proxy.read_http_body, s, d, h, False, 4)
+
+
+        h = flow.Headers()
+        s = cStringIO.StringIO("testing")
+        assert len(proxy.read_http_body(s, d, h, True, 4)) == 4
+        s = cStringIO.StringIO("testing")
+        assert len(proxy.read_http_body(s, d, h, True, 100)) == 7
 
 
 class u_parse_request_line(libpry.AutoTree):
@@ -69,4 +99,5 @@ tests = [
     uFileLike(),
     u_parse_request_line(),
     u_read_chunked(),
+    u_read_http_body(),
 ]

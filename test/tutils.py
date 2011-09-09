@@ -50,7 +50,7 @@ HTTPS_PORT = random.randint(30000, 40000)
 
 class TestMaster(controller.Master):
     def __init__(self, port, testq):
-        serv = proxy.ProxyServer(proxy.SSLConfig("data/testkey.pem"), port)
+        serv = proxy.ProxyServer(proxy.ProxyConfig("data/testkey.pem"), port)
         controller.Master.__init__(self, serv)
         self.testq = testq
         self.log = []

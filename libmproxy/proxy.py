@@ -21,7 +21,7 @@ class ProxyError(Exception):
         return "ProxyError(%s, %s)"%(self.code, self.msg)
 
 
-class SSLConfig:
+class ProxyConfig:
     def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0):
         self.certfile = certfile
         self.ciphers = ciphers
@@ -30,19 +30,30 @@ class SSLConfig:
         self.cert_wait_time = cert_wait_time
 
 
-def read_chunked(fp):
+def read_chunked(fp, limit):
     content = ""
+    total = 0
     while 1:
-        line = fp.readline()
+        line = fp.readline(128)
         if line == "":
             raise IOError("Connection closed")
         if line == '\r\n' or line == '\n':
             continue
-        length = int(line,16)
+        try:
+            length = int(line,16)
+        except ValueError:
+            # FIXME: Not strictly correct - this could be from the server, in which
+            # case we should send a 502.
+            raise ProxyError(400, "Invalid chunked encoding length: %s"%line)
         if not length:
             break
+        total += length
+        if limit is not None and total > limit:
+            msg = "HTTP Body too large."\
+                  " Limit is %s, chunked content length was at least %s"%(limit, total)
+            raise ProxyError(509, msg)
         content += fp.read(length)
-        line = fp.readline()
+        line = fp.readline(5)
         if line != '\r\n':
             raise IOError("Malformed chunked body")
     while 1:
@@ -54,15 +65,23 @@ def read_chunked(fp):
     return content
 
 
-def read_http_body(rfile, connection, headers, all):
+def read_http_body(rfile, connection, headers, all, limit):
     if 'transfer-encoding' in headers:
         if not ",".join(headers["transfer-encoding"]) == "chunked":
             raise IOError('Invalid transfer-encoding')
-        content = read_chunked(rfile)
+        content = read_chunked(rfile, limit)
     elif "content-length" in headers:
-        content = rfile.read(int(headers["content-length"][0]))
+        try:
+            l = int(headers["content-length"][0])
+        except ValueError:
+            # FIXME: Not strictly correct - this could be from the server, in which
+            # case we should send a 502.
+            raise ProxyError(400, "Invalid content-length header: %s"%headers["content-length"])
+        if limit is not None and l > limit:
+            raise ProxyError(509, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
+        content = rfile.read(l)
     elif all:
-        content = rfile.read()
+        content = rfile.read(limit if limit else None)
         connection.close = True
     else:
         content = ""
@@ -173,7 +192,7 @@ class ServerConnection:
                 server = ssl.wrap_socket(server)
             server.connect((addr, self.port))
         except socket.error, err:
-            raise ProxyError(504, 'Error connecting to "%s": %s' % (self.host, err))
+            raise ProxyError(502, 'Error connecting to "%s": %s' % (self.host, err))
         self.server = server
         self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
 
@@ -184,7 +203,7 @@ class ServerConnection:
             self.wfile.write(request._assemble())
             self.wfile.flush()
         except socket.error, err:
-            raise ProxyError(504, 'Error sending data to "%s": %s' % (request.host, err))
+            raise ProxyError(502, 'Error sending data to "%s": %s' % (request.host, err))
 
     def read_response(self):
         line = self.rfile.readline()
@@ -207,7 +226,7 @@ class ServerConnection:
         if self.request.method == "HEAD" or code == 204 or code == 304:
             content = ""
         else:
-            content = read_http_body(self.rfile, self, headers, True)
+            content = read_http_body(self.rfile, self, headers, True, None)
         return flow.Response(self.request, code, msg, headers, content)
 
     def terminate(self):
@@ -288,7 +307,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             ret = utils.dummy_cert(self.config.certdir, self.config.cacert, host)
             time.sleep(self.config.cert_wait_time)
             if not ret:
-                raise ProxyError(400, "mitmproxy: Unable to generate dummy cert.")
+                raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
             return ret
 
     def read_request(self, client_conn):
@@ -362,7 +381,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     client_conn.close = True
                 if value == "keep-alive":
                     client_conn.close = False
-        content = read_http_body(self.rfile, client_conn, headers, False)
+        content = read_http_body(self.rfile, client_conn, headers, False, None)
         return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
@@ -456,7 +475,7 @@ def process_certificate_option_group(parser, options):
         utils.dummy_ca(cacert)
     if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
-    return SSLConfig(
+    return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
         ciphers = options.ciphers,
