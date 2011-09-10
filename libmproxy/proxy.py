@@ -445,8 +445,11 @@ class ProxyServer(ServerBase):
         self.RequestHandlerClass(self.config, request, client_address, self, self.masterq)
 
     def shutdown(self):
-        shutil.rmtree(self.certdir)
         ServerBase.shutdown(self)
+        try:
+            shutil.rmtree(self.certdir)
+        except OSError:
+            pass
 
 
 # Command-line utils
