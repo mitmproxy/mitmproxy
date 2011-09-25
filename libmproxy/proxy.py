@@ -214,6 +214,8 @@ class ServerConnection:
         if not line:
             raise ProxyError(502, "Blank server response.")
         parts = line.strip().split(" ", 2)
+        if len(parts) == 2: # handle missing message gracefully
+            parts.append("")
         if not len(parts) == 3:
             raise ProxyError(502, "Invalid server response: %s."%line)
         proto, code, msg = parts
