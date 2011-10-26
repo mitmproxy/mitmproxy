@@ -426,7 +426,7 @@ class ConnectionView(WWrap):
 
     def set_url(self, url):
         request = self.flow.request
-        if not request.set_url(url):
+        if not request.set_url(str(url)):
             return "Invalid URL."
         self.master.refresh_connection(self.flow)
 

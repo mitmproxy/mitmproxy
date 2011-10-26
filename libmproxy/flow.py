@@ -21,8 +21,8 @@ class ScriptContext:
 
     def log(self, *args, **kwargs):
         """
-            Logs an event. 
-            
+            Logs an event.
+
             How this is handled depends on the front-end. mitmdump will display
             events if the eventlog flag ("-e") was passed. mitmproxy sends
             output to the eventlog for display ("v" keyboard shortcut).
@@ -184,18 +184,18 @@ class Request(HTTPMsg):
         An HTTP request.
 
         Exposes the following attributes:
-            
+
             client_conn: ClientConnection object, or None if this is a replay.
             headers: Headers object
             content: Content of the request, or None
-            
+
             scheme: URL scheme (http/https)
             host: Host portion of the URL
             port: Destination port
             path: Path portion of the URL
 
             timestamp: Seconds since the epoch
-            method: HTTP method 
+            method: HTTP method
     """
     def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
         self.client_conn = client_conn
@@ -326,7 +326,7 @@ class Request(HTTPMsg):
             Parses a URL specification, and updates the Request's information
             accordingly.
 
-            Returns False if the URL was invalid, True if the request succeeded. 
+            Returns False if the URL was invalid, True if the request succeeded.
         """
         parts = utils.parse_url(url)
         if not parts:
@@ -539,7 +539,7 @@ class Response(HTTPMsg):
 
 class ClientDisconnect(controller.Msg):
     """
-        A client disconnection event. 
+        A client disconnection event.
 
         Exposes the following attributes:
 
@@ -556,7 +556,7 @@ class ClientConnect(controller.Msg):
         Requests.
 
         Exposes the following attributes:
-            
+
             address: (address, port) tuple, or None if the connection is replayed.
             requestcount: Number of requests created by this client connection.
             close: Is the client connection closed?
@@ -598,7 +598,7 @@ class ClientConnect(controller.Msg):
 
 class Error(controller.Msg):
     """
-        An Error. 
+        An Error.
 
         This is distinct from an HTTP error response (say, a code 500), which
         is represented by a normal Response object. This class is responsible
@@ -812,7 +812,7 @@ class Flow:
     """
         A Flow is a collection of objects representing a single HTTP
         transaction. The main attributes are:
-            
+
             request: Request object
             response: Response object
             error: Error object
