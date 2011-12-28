@@ -16,6 +16,7 @@ class uParsing(libpry.AutoTree):
         assert not filt.parse("~b")
         assert filt.parse("~q")
         assert filt.parse("~c 10")
+        assert filt.parse("~m foobar")
         assert filt.parse("~u foobar")
         assert filt.parse("~q ~c 10")
         p = filt.parse("~q ~c 10")
@@ -170,6 +171,13 @@ class uMatching(libpry.AutoTree):
         assert not self.q("~bs nomatch", s)
         assert not self.q("~bs response", q)
         assert self.q("~bs response", s)
+
+    def test_method(self):
+        q = self.req()
+        s = self.resp()
+        assert self.q("~m get", q)
+        assert not self.q("~m post", q)
+        assert not self.q("~m get", s)
 
     def test_url(self):
         q = self.req()

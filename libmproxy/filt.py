@@ -34,6 +34,7 @@
         ~bq rex     Expression in the body of response
         ~t rex      Shortcut for content-type header.
 
+        ~m rex      Method
         ~u rex      URL
         ~c CODE     Response code.
         rex         Equivalent to ~u rex 
@@ -178,7 +179,18 @@ class FBodResponse(_Rex):
         elif o.content and re.search(self.expr, o.content):
             return True
         return False
-        
+
+
+class FMethod(_Rex):
+    code = "m"
+    help = "Method"
+    def __call__(self, o):
+        if o._is_response():
+            return False
+        elif o.method:
+            return re.search(self.expr, o.method, re.IGNORECASE)
+        return False
+
 
 class FUrl(_Rex):
     code = "u"
@@ -260,6 +272,7 @@ filt_rex = [
     FBodRequest,
     FBodResponse,
     FBod,
+    FMethod,
     FUrl,
     FRequestContentType,
     FResponseContentType,
