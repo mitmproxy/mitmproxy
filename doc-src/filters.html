@@ -26,9 +26,9 @@ URL containing "google.com":
 
 Requests whose body contains the string "test":
 
-    ~r ~b test
+    ~q ~b test
 
 Anything but requests with a text/html content type:
 
-    !(~r & ~t \"text/html\")
+    !(~q & ~t \"text/html\")
 
