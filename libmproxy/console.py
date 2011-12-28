@@ -1499,8 +1499,8 @@ class ConsoleMaster(flow.FlowMaster):
         )
         examples = [
                 ("google\.com", "Url containing \"google.com"),
-                ("~r ~b test", "Requests where body contains \"test\""),
-                ("!(~r & ~t \"text/html\")", "Anything but requests with a text/html content type."),
+                ("~q ~b test", "Requests where body contains \"test\""),
+                ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(format_keyvals(examples, key="key", val="text", indent=4))
         return urwid.ListBox([urwid.Text(text)])
