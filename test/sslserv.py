@@ -18,5 +18,5 @@ class SecureHTTPServer(HTTPServer):
 
 
 def make(port):
-    server_address = ('', port)
+    server_address = ('127.0.0.1', port)
     return SecureHTTPServer(server_address, handler.TestRequestHandler)

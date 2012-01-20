@@ -122,7 +122,7 @@ def parse_request_line(request):
     if major != 1:
         raise ProxyError(400, "Unsupported protocol")
     return method, scheme, host, port, path, minor
-    
+
 
 class FileLike:
     def __init__(self, o):

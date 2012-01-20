@@ -413,7 +413,7 @@ def parse_url(url):
 def parse_size(s):
     """
         Parses a size specification. Valid specifications are:
-            
+
             123: bytes
             123k: kilobytes
             123m: megabytes
@@ -437,6 +437,3 @@ def parse_size(s):
         return int(s) * mult
     except ValueError:
         raise ValueError("Invalid size specification: %s"%s)
-
-
-

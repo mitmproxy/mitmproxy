@@ -454,7 +454,8 @@ class ConnectionView(WWrap):
 
         self.flow.backup()
         if part == "b":
-            conn.content = self._spawn_editor(conn.content or "")
+            c = self._spawn_editor(conn.content or "")
+            conn.content = c.rstrip("\n")
         elif part == "h":
             headertext = self._spawn_editor(repr(conn.headers))
             headers = flow.Headers()

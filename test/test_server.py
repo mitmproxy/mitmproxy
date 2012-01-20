@@ -41,7 +41,7 @@ class uProxy(tutils.ProxTest):
         assert f.code == 200
         assert f.read()
         f.close()
-            
+
         l = self.log()
         assert l[0].address
         assert "host" in l[1].headers
