@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re, os, subprocess, datetime, urlparse, string
-import time, functools, cgi, textwrap
+import time, functools, cgi, textwrap, hashlib
 import json
 
 CERT_SLEEP_TIME = 1
@@ -275,12 +275,13 @@ def dummy_cert(certdir, ca, commonname):
 
         Returns cert path if operation succeeded, None if not.
     """
-    certpath = os.path.join(certdir, commonname + ".pem")
+    namehash = hashlib.sha256(commonname).hexdigest()
+    certpath = os.path.join(certdir, namehash + ".pem")
     if os.path.exists(certpath):
         return certpath
 
-    confpath = os.path.join(certdir, commonname + ".cnf")
-    reqpath = os.path.join(certdir, commonname + ".req")
+    confpath = os.path.join(certdir, namehash + ".cnf")
+    reqpath = os.path.join(certdir, namehash + ".req")
 
     template = open(pkg_data.path("resources/cert.cnf")).read()
     f = open(confpath, "w")
