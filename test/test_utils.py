@@ -138,12 +138,12 @@ class udummy_cert(libpry.AutoTree):
         d = self.tmpdir()
         cacert = os.path.join(d, "foo/cert.cnf")
         assert utils.dummy_ca(cacert)
-        assert utils.dummy_cert(
+        p = utils.dummy_cert(
             os.path.join(d, "foo"),
             cacert,
             "foo.com"
         )
-        assert os.path.exists(os.path.join(d, "foo", "foo.com.pem"))
+        assert os.path.exists(p)
         # Short-circuit
         assert utils.dummy_cert(
             os.path.join(d, "foo"),
@@ -153,12 +153,12 @@ class udummy_cert(libpry.AutoTree):
 
     def test_no_ca(self):
         d = self.tmpdir()
-        assert utils.dummy_cert(
+        p = utils.dummy_cert(
             d,
             None,
             "foo.com"
         )
-        assert os.path.exists(os.path.join(d, "foo.com.pem"))
+        assert os.path.exists(p)
 
 
 class uLRUCache(libpry.AutoTree):
