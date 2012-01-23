@@ -323,15 +323,14 @@ class ConnectionView(WWrap):
         else:
             parts.append(self._tab(qt, False))
 
-        if self.flow.response:
-            if self.flow.intercepting and not self.flow.response.acked:
-                st = "Response (intercepted)"
-            else:
-                st = "Response"
-            if active == VIEW_FLOW_RESPONSE:
-                parts.append(self._tab(st, True))
-            else:
-                parts.append(self._tab(st, False))
+        if self.flow.intercepting and not self.flow.response.acked:
+            st = "Response (intercepted)"
+        else:
+            st = "Response"
+        if active == VIEW_FLOW_RESPONSE:
+            parts.append(self._tab(st, True))
+        else:
+            parts.append(self._tab(st, False))
 
         h = urwid.Columns(parts, dividechars=1)
         f = urwid.Frame(
@@ -341,17 +340,14 @@ class ConnectionView(WWrap):
         return f
 
     def _conn_text(self, conn, viewmode):
-        if conn:
-            e = conn.headers["content-encoding"]
-            e = e[0] if e else None
-            return self.master._cached_conn_text(
-                        e,
-                        conn.content,
-                        tuple(tuple(i) for i in conn.headers.lst),
-                        viewmode
-                    )
-        else:
-            return urwid.ListBox([])
+        e = conn.headers["content-encoding"]
+        e = e[0] if e else None
+        return self.master._cached_conn_text(
+                    e,
+                    conn.content,
+                    tuple(tuple(i) for i in conn.headers.lst),
+                    viewmode
+                )
 
     def view_request(self):
         self.state.view_flow_mode = VIEW_FLOW_REQUEST
@@ -366,10 +362,24 @@ class ConnectionView(WWrap):
     def view_response(self):
         self.state.view_flow_mode = VIEW_FLOW_RESPONSE
         self.master.statusbar.update("Calculating view...")
-        body = self._conn_text(
-            self.flow.response,
-            self.state.view_body_mode
-        )
+        if self.flow.response:
+            body = self._conn_text(
+                self.flow.response,
+                self.state.view_body_mode
+            )
+        else:
+            body = urwid.ListBox(
+                        [
+                            urwid.Text(""),
+                            urwid.Text(
+                                [
+                                    ("highlight", "No response. Press "),
+                                    ("key", "e"),
+                                    ("highlight", " and edit any aspect to add one."),
+                                ]
+                            )
+                        ]
+                   )                    
         self.w = self.wrap_body(VIEW_FLOW_RESPONSE, body)
         self.master.statusbar.update("")
 
@@ -450,6 +460,8 @@ class ConnectionView(WWrap):
         if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             conn = self.flow.request
         else:
+            if not self.flow.response:
+                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.Headers(), "")
             conn = self.flow.response
 
         self.flow.backup()
@@ -470,16 +482,15 @@ class ConnectionView(WWrap):
             self.master.prompt_edit("Code", str(conn.code), self.set_resp_code)
         elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
             self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
-        elif part == "r" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-            if not conn.acked:
-                response = flow.Response(conn, "200", "OK", flow.Headers(), "")
-                conn._ack(response)
-            self.view_response()
         self.master.refresh_connection(self.flow)
 
     def keypress(self, size, key):
+        if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
+            conn = self.flow.request
+        else:
+            conn = self.flow.response
         if key == "tab":
-            if self.state.view_flow_mode == VIEW_FLOW_REQUEST and self.flow.response:
+            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
                 self.view_response()
             else:
                 self.view_request()
@@ -501,7 +512,6 @@ class ConnectionView(WWrap):
                         ("body", "b"),
                         ("url", "u"),
                         ("method", "m"),
-                        ("reply", "r")
                     ),
                     self.edit
                 )
@@ -535,27 +545,24 @@ class ConnectionView(WWrap):
                 self.flow
             )
         elif key == "v":
-            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-                conn = self.flow.request
-            else:
-                conn = self.flow.response
-            if conn.content:
+            if conn and conn.content:
                 t = conn.headers["content-type"] or [None]
                 t = t[0]
                 self.master.spawn_external_viewer(conn.content, t)
         elif key == "b":
-            if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
-                self.master.path_prompt(
-                    "Save request body: ",
-                    self.state.last_saveload,
-                    self.save_body
-                )
-            else:
-                self.master.path_prompt(
-                    "Save response body: ",
-                    self.state.last_saveload,
-                    self.save_body
-                )
+            if conn:
+                if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
+                    self.master.path_prompt(
+                        "Save request body: ",
+                        self.state.last_saveload,
+                        self.save_body
+                    )
+                else:
+                    self.master.path_prompt(
+                        "Save response body: ",
+                        self.state.last_saveload,
+                        self.save_body
+                    )
         elif key == " ":
             self.master.view_next_flow(self.flow)
         elif key == "|":
@@ -564,24 +571,21 @@ class ConnectionView(WWrap):
                 self.master.run_script_once, self.flow
             )
         elif key == "z":
-            if self.state.view_flow_mode == VIEW_FLOW_RESPONSE:
-                conn = self.flow.response
-            else:
-                conn = self.flow.request
-            e = conn.headers["content-encoding"] or ["identity"]
-            if e[0] != "identity":
-                conn.decode()
-            else:
-                self.master.prompt_onekey(
-                    "Select encoding: ",
-                    (
-                        ("gzip", "z"),
-                        ("deflate", "d"),
-                    ),
-                    self.encode_callback,
-                    conn
-                )
-            self.master.refresh_connection(self.flow)
+            if conn:
+                e = conn.headers["content-encoding"] or ["identity"]
+                if e[0] != "identity":
+                    conn.decode()
+                else:
+                    self.master.prompt_onekey(
+                        "Select encoding: ",
+                        (
+                            ("gzip", "z"),
+                            ("deflate", "d"),
+                        ),
+                        self.encode_callback,
+                        conn
+                    )
+                self.master.refresh_connection(self.flow)
         return key
 
     def encode_callback(self, key, conn):
