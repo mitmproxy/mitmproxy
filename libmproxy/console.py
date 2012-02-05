@@ -37,7 +37,6 @@ def highlight_key(s, k):
     return l
 
 
-
 def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     """
         Format a list of (key, value) tuples.
@@ -259,6 +258,32 @@ class EventListBox(urwid.ListBox):
         return urwid.ListBox.keypress(self, size, key)
 
 
+class KVEditor(WWrap):
+    def __init__(self, master, title, value, callback):
+        self.master, self.title, self.value, self.callback = master, title, value, callback
+
+        p = urwid.Text(title)
+        p = urwid.Padding(p, align="left", width=("relative", 100))
+        p = urwid.AttrWrap(p, "heading")
+
+        parts = []
+        for k, v in value:
+            parts.append(
+                urwid.Columns(
+                    [
+                        urwid.Edit(edit_text=k),
+                        urwid.Edit(edit_text=v),
+                    ]
+                )
+            )
+
+        self.w = urwid.Frame(
+                    urwid.ListBox(parts),
+                    header = p
+                )
+        self.master.statusbar.update("")
+
+
 class ConnectionViewHeader(WWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
@@ -379,7 +404,7 @@ class ConnectionView(WWrap):
                                 ]
                             )
                         ]
-                   )                    
+                   )
         self.w = self.wrap_body(VIEW_FLOW_RESPONSE, body)
         self.master.statusbar.update("")
 
@@ -469,11 +494,12 @@ class ConnectionView(WWrap):
             c = self._spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n")
         elif part == "h":
-            headertext = self._spawn_editor(repr(conn.headers))
-            headers = flow.Headers()
-            fp = cStringIO.StringIO(headertext)
-            headers.read(fp)
-            conn.headers = headers
+            self.master.view_kveditor("Editing headers", conn.headers.lst, None)
+            #headertext = self._spawn_editor(repr(conn.headers))
+            #headers = flow.Headers()
+            #fp = cStringIO.StringIO(headertext)
+            #headers.read(fp)
+            #conn.headers = headers
         elif part == "u" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
@@ -925,6 +951,7 @@ class BodyPile(urwid.Pile):
 VIEW_CONNLIST = 0
 VIEW_FLOW = 1
 VIEW_HELP = 2
+VIEW_KVEDITOR = 3
 
 class ConsoleMaster(flow.FlowMaster):
     palette = []
@@ -1286,11 +1313,19 @@ class ConsoleMaster(flow.FlowMaster):
                     )
         self.view.set_focus("body")
 
+
     def view_help(self):
         self.statusbar = StatusBar(self, self.footer_text_help)
         self.body = self.helptext()
         self.header = None
         self.viewstate = VIEW_HELP
+        self.make_view()
+
+    def view_kveditor(self, title, value, callback):
+        self.statusbar = StatusBar(self, self.footer_text_help)
+        self.body = KVEditor(self, title, value, callback)
+        self.header = None
+        self.viewstate = VIEW_KVEDITOR
         self.make_view()
 
     def focus_current(self):
@@ -1664,7 +1699,7 @@ class ConsoleMaster(flow.FlowMaster):
                                 raise Stop
                             if self.viewstate == VIEW_FLOW:
                                 self.view_connlist()
-                            elif self.viewstate == VIEW_HELP:
+                            elif self.viewstate in (VIEW_HELP, VIEW_KVEDITOR):
                                 if self.currentflow:
                                     self.view_flow(self.currentflow)
                                 else:

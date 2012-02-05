@@ -32,10 +32,7 @@ class ScriptContext:
 
 class Headers:
     def __init__(self, lst=None):
-        if lst:
-            self.lst = lst
-        else:
-            self.lst = []
+        self.lst = lst or []
 
     def _kconv(self, s):
         return s.lower()
