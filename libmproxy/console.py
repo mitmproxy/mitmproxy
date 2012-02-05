@@ -241,8 +241,6 @@ class ConnectionListBox(urwid.ListBox):
         elif key == "v":
             self.master.toggle_eventlog()
             key = None
-        elif key == " ":
-            key = "page down"
         return urwid.ListBox.keypress(self, size, key)
 
 
@@ -261,27 +259,36 @@ class EventListBox(urwid.ListBox):
 class KVEditor(WWrap):
     def __init__(self, master, title, value, callback):
         self.master, self.title, self.value, self.callback = master, title, value, callback
-
         p = urwid.Text(title)
         p = urwid.Padding(p, align="left", width=("relative", 100))
         p = urwid.AttrWrap(p, "heading")
-
+        maxk = max(len(v[0]) for v in value)
         parts = []
         for k, v in value:
             parts.append(
                 urwid.Columns(
                     [
-                        urwid.Edit(edit_text=k),
-                        urwid.Edit(edit_text=v),
-                    ]
+                        (
+                            "fixed",
+                            maxk + 2, 
+                            urwid.AttrWrap(urwid.Edit(edit_text=k), "editfield"),
+                        ),
+                        urwid.AttrWrap(urwid.Edit(edit_text=v), "editfield"),
+                    ],
+                    dividechars = 2
                 )
             )
-
+            parts.append(urwid.Text(" "))
         self.w = urwid.Frame(
                     urwid.ListBox(parts),
                     header = p
                 )
         self.master.statusbar.update("")
+
+    def keypress(self, size, key):
+        if key == "tab":
+            print "tab"
+        return key
 
 
 class ConnectionViewHeader(WWrap):
@@ -1269,6 +1276,9 @@ class ConsoleMaster(flow.FlowMaster):
 
             # Hex view
             ('offset', 'dark cyan', 'default'),
+
+            # KV Editor
+            ('editfield', 'black', 'light cyan'),
         ]
 
     def run(self):
@@ -1473,6 +1483,7 @@ class ConsoleMaster(flow.FlowMaster):
             ("w", "save all flows matching current limit"),
             ("W", "save this flow"),
             ("|", "run script on this flow"),
+            ("space", "page down"),
             ("pg up/down", "page up/down"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
@@ -1484,7 +1495,6 @@ class ConsoleMaster(flow.FlowMaster):
             ("v", "toggle eventlog"),
             ("X", "kill and delete connection, even if it's mid-intercept"),
             ("tab", "tab between eventlog and connection list"),
-            ("space", "page down"),
             ("enter", "view connection"),
         ]
         text.extend(format_keyvals(keys, key="key", val="text", indent=4))
@@ -1781,6 +1791,8 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.set_stickyauth
                             )
                             k = None
+                        elif k == " ":
+                            k = "page down"
                     if k:
                         self.view.keypress(size, k)
                 self.looptime = time.time() - startloop
