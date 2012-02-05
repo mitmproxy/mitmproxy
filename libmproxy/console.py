@@ -26,6 +26,16 @@ EVENTLOG_SIZE = 500
 class Stop(Exception): pass
 
 
+def shortcuts(k):
+    if k == " ":
+        k = "page down"
+    elif k == "j":
+        k = "down"
+    elif k == "k":
+        k = "up"
+    return k
+
+
 def highlight_key(s, k):
     l = []
     parts = s.split(k, 1)
@@ -161,6 +171,7 @@ class ConnectionItem(WWrap):
         return True
 
     def keypress(self, (maxcol,), key):
+        key = shortcuts(key)
         if key == "a":
             self.flow.accept_intercept()
             self.master.sync_list_view()
@@ -231,6 +242,7 @@ class ConnectionListBox(urwid.ListBox):
         urwid.ListBox.__init__(self, master.conn_list_view)
 
     def keypress(self, size, key):
+        key = shortcuts(key)
         if key == "A":
             self.master.accept_all()
             self.master.sync_list_view()
@@ -250,6 +262,7 @@ class EventListBox(urwid.ListBox):
         urwid.ListBox.__init__(self, master.eventlist)
 
     def keypress(self, size, key):
+        key = shortcuts(key)
         if key == "C":
             self.master.clear_events()
             key = None
@@ -271,24 +284,30 @@ class KVEditor(WWrap):
                         (
                             "fixed",
                             maxk + 2, 
-                            urwid.AttrWrap(urwid.Edit(edit_text=k), "editfield"),
+                            urwid.AttrWrap(urwid.Edit(edit_text=k, wrap="any"), "editfield"),
                         ),
-                        urwid.AttrWrap(urwid.Edit(edit_text=v), "editfield"),
+                        urwid.AttrWrap(urwid.Edit(edit_text=v, wrap="any"), "editfield"),
                     ],
                     dividechars = 2
                 )
             )
             parts.append(urwid.Text(" "))
-        self.w = urwid.Frame(
-                    urwid.ListBox(parts),
-                    header = p
-                )
+        self.lb = urwid.ListBox(parts)
+        self.w = urwid.Frame(self.lb, header = p)
         self.master.statusbar.update("")
 
     def keypress(self, size, key):
-        if key == "tab":
-            print "tab"
-        return key
+        if key in ("tab", "enter"):
+            cw = self.lb.get_focus()[0]
+            col = cw.get_focus_column()
+            if col == 0:
+                cw.set_focus_column(1)
+            else:
+                self.lb._keypress_down(size)
+                cw = self.lb.get_focus()[0]
+                cw.set_focus_column(0)
+            return None
+        return self.w.keypress(size, key)
 
 
 class ConnectionViewHeader(WWrap):
@@ -518,6 +537,11 @@ class ConnectionView(WWrap):
         self.master.refresh_connection(self.flow)
 
     def keypress(self, size, key):
+        if key == " ":
+            self.master.view_next_flow(self.flow)
+            return key
+
+        key = shortcuts(key)
         if self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             conn = self.flow.request
         else:
@@ -596,8 +620,6 @@ class ConnectionView(WWrap):
                         self.state.last_saveload,
                         self.save_body
                     )
-        elif key == " ":
-            self.master.view_next_flow(self.flow)
         elif key == "|":
             self.master.path_prompt(
                 "Send flow to script: ", self.state.last_script,
@@ -1645,156 +1667,136 @@ class ConsoleMaster(flow.FlowMaster):
                     if self.prompting:
                         if k == "esc":
                             self.prompt_cancel()
-                            k = None
                         elif self.onekey:
                             if k == "enter":
                                 self.prompt_cancel()
                             elif k in self.onekey:
                                 self.prompt_execute(k)
-                            k = None
                         elif k == "enter":
                             self.prompt_execute()
-                            k = None
+                        else:
+                            self.view.keypress(size, k)
                     else:
-                        self.statusbar.message("")
-                        if k == "?":
-                            self.view_help()
-                        elif k == "c":
-                            if not self.client_playback:
-                                self.path_prompt(
-                                    "Client replay: ",
-                                    self.state.last_saveload,
-                                    self.client_playback_path
-                                )
-                            else:
-                                self.prompt_onekey(
-                                    "Stop current client replay?",
-                                    (
-                                        ("yes", "y"),
-                                        ("no", "n"),
-                                    ),
-                                    self.stop_client_playback_prompt,
-                                )
-
-                            k = None
-                        elif k == "l":
-                            self.prompt("Limit: ", self.state.limit_txt, self.set_limit)
-                            self.sync_list_view()
-                            k = None
-                        elif k == "i":
-                            self.prompt(
-                                "Intercept filter: ",
-                                self.state.intercept_txt,
-                                self.set_intercept
-                            )
-                            self.sync_list_view()
-                            k = None
-                        elif k == "j":
-                            k = "down"
-                        elif k == "k":
-                            k = "up"
-                        elif k == "m":
-                            self.prompt_onekey(
-                                "View",
-                                (
-                                    ("raw", "r"),
-                                    ("pretty", "p"),
-                                    ("hex", "h"),
-                                ),
-                                self.changeview
-                            )
-                            k = None
-                        elif k in ("q", "Q"):
-                            if k == "Q":
-                                raise Stop
-                            if self.viewstate == VIEW_FLOW:
-                                self.view_connlist()
-                            elif self.viewstate in (VIEW_HELP, VIEW_KVEDITOR):
-                                if self.currentflow:
-                                    self.view_flow(self.currentflow)
+                        k = self.view.keypress(size, k)
+                        if k:
+                            self.statusbar.message("")
+                            if k == "?":
+                                self.view_help()
+                            elif k == "c":
+                                if not self.client_playback:
+                                    self.path_prompt(
+                                        "Client replay: ",
+                                        self.state.last_saveload,
+                                        self.client_playback_path
+                                    )
                                 else:
+                                    self.prompt_onekey(
+                                        "Stop current client replay?",
+                                        (
+                                            ("yes", "y"),
+                                            ("no", "n"),
+                                        ),
+                                        self.stop_client_playback_prompt,
+                                    )
+                            elif k == "l":
+                                self.prompt("Limit: ", self.state.limit_txt, self.set_limit)
+                                self.sync_list_view()
+                            elif k == "i":
+                                self.prompt(
+                                    "Intercept filter: ",
+                                    self.state.intercept_txt,
+                                    self.set_intercept
+                                )
+                                self.sync_list_view()
+                            elif k == "m":
+                                self.prompt_onekey(
+                                    "View",
+                                    (
+                                        ("raw", "r"),
+                                        ("pretty", "p"),
+                                        ("hex", "h"),
+                                    ),
+                                    self.changeview
+                                )
+                            elif k in ("q", "Q"):
+                                if k == "Q":
+                                    raise Stop
+                                if self.viewstate == VIEW_FLOW:
                                     self.view_connlist()
-                            else:
-                                self.prompt_onekey(
-                                    "Quit",
-                                    (
-                                        ("yes", "y"),
-                                        ("no", "n"),
-                                    ),
-                                    self.quit,
-                                )
-                            k = None
-                        elif k == "w":
-                            self.path_prompt(
-                                "Save flows: ",
-                                self.state.last_saveload,
-                                self.save_flows
-                            )
-                            k = None
-                        elif k == "s":
-                            if self.script:
-                                self.load_script(None)
-                            else:
+                                elif self.viewstate in (VIEW_HELP, VIEW_KVEDITOR):
+                                    if self.currentflow:
+                                        self.view_flow(self.currentflow)
+                                    else:
+                                        self.view_connlist()
+                                else:
+                                    self.prompt_onekey(
+                                        "Quit",
+                                        (
+                                            ("yes", "y"),
+                                            ("no", "n"),
+                                        ),
+                                        self.quit,
+                                    )
+                            elif k == "w":
                                 self.path_prompt(
-                                    "Set script: ",
-                                    self.state.last_script,
-                                    self.set_script
-                                )
-                            k = None
-                        elif k == "S":
-                            if not self.server_playback:
-                                self.path_prompt(
-                                    "Server replay: ",
+                                    "Save flows: ",
                                     self.state.last_saveload,
-                                    self.server_playback_path
+                                    self.save_flows
                                 )
-                            else:
+                            elif k == "s":
+                                if self.script:
+                                    self.load_script(None)
+                                else:
+                                    self.path_prompt(
+                                        "Set script: ",
+                                        self.state.last_script,
+                                        self.set_script
+                                    )
+                            elif k == "S":
+                                if not self.server_playback:
+                                    self.path_prompt(
+                                        "Server replay: ",
+                                        self.state.last_saveload,
+                                        self.server_playback_path
+                                    )
+                                else:
+                                    self.prompt_onekey(
+                                        "Stop current server replay?",
+                                        (
+                                            ("yes", "y"),
+                                            ("no", "n"),
+                                        ),
+                                        self.stop_server_playback_prompt,
+                                    )
+                            elif k == "L":
+                                self.path_prompt(
+                                    "Load flows: ",
+                                    self.state.last_saveload,
+                                    self.load_flows_callback
+                                )
+                            elif k == "o":
                                 self.prompt_onekey(
-                                    "Stop current server replay?",
-                                    (
-                                        ("yes", "y"),
-                                        ("no", "n"),
-                                    ),
-                                    self.stop_server_playback_prompt,
+                                        "Options",
+                                        (
+                                            ("anticache", "a"),
+                                            ("anticomp", "c"),
+                                            ("killextra", "k"),
+                                            ("norefresh", "n"),
+                                        ),
+                                        self._change_options
                                 )
-                            k = None
-                        elif k == "L":
-                            self.path_prompt(
-                                "Load flows: ",
-                                self.state.last_saveload,
-                                self.load_flows_callback
-                            )
-                            k = None
-                        elif k == "o":
-                            self.prompt_onekey(
-                                    "Options",
-                                    (
-                                        ("anticache", "a"),
-                                        ("anticomp", "c"),
-                                        ("killextra", "k"),
-                                        ("norefresh", "n"),
-                                    ),
-                                    self._change_options
-                            )
-                            k = None
-                        elif k == "t":
-                            self.prompt(
-                                "Sticky cookie filter: ",
-                                self.stickycookie_txt,
-                                self.set_stickycookie
-                            )
-                            k = None
-                        elif k == "u":
-                            self.prompt(
-                                "Sticky auth filter: ",
-                                self.stickyauth_txt,
-                                self.set_stickyauth
-                            )
-                            k = None
-                        elif k == " ":
-                            k = "page down"
-                    if k:
-                        self.view.keypress(size, k)
+                            elif k == "t":
+                                self.prompt(
+                                    "Sticky cookie filter: ",
+                                    self.stickycookie_txt,
+                                    self.set_stickycookie
+                                )
+                            elif k == "u":
+                                self.prompt(
+                                    "Sticky auth filter: ",
+                                    self.stickyauth_txt,
+                                    self.set_stickyauth
+                                )
                 self.looptime = time.time() - startloop
         except (Stop, KeyboardInterrupt):
             pass
