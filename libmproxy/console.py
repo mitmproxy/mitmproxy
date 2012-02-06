@@ -269,6 +269,21 @@ class EventListBox(urwid.ListBox):
         return urwid.ListBox.keypress(self, size, key)
 
 
+class SText(WWrap):
+    def __init__(self, txt):
+        w = urwid.Text(txt, wrap="any")
+        w = urwid.AttrWrap(w, "editfield")
+        WWrap.__init__(self, w)
+
+    def keypress(self, size, key):
+        raise ValueError, key
+        time.sleep(0.5)
+        return key
+
+    def selectable(self):
+        return True
+
+
 class KVEditor(WWrap):
     def __init__(self, master, title, value, callback):
         self.master, self.title, self.value, self.callback = master, title, value, callback
@@ -284,9 +299,9 @@ class KVEditor(WWrap):
                         (
                             "fixed",
                             maxk + 2, 
-                            urwid.AttrWrap(urwid.Edit(edit_text=k, wrap="any"), "editfield"),
+                            SText(k)
                         ),
-                        urwid.AttrWrap(urwid.Edit(edit_text=v, wrap="any"), "editfield"),
+                        SText(v)
                     ],
                     dividechars = 2
                 )
@@ -307,6 +322,15 @@ class KVEditor(WWrap):
                 cw = self.lb.get_focus()[0]
                 cw.set_focus_column(0)
             return None
+        elif key == "ctrl e":
+            # Editor
+            pass
+        elif key == "ctrl r":
+            # Revert
+            pass
+        elif key == "esc":
+            self.master.view_connlist()
+            return
         return self.w.keypress(size, key)
 
 
@@ -1354,7 +1378,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.make_view()
 
     def view_kveditor(self, title, value, callback):
-        self.statusbar = StatusBar(self, self.footer_text_help)
+        self.statusbar = StatusBar(self, "foo")
         self.body = KVEditor(self, title, value, callback)
         self.header = None
         self.viewstate = VIEW_KVEDITOR
