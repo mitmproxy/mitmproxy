@@ -283,7 +283,7 @@ class KVEditor(WWrap):
                     [
                         (
                             "fixed",
-                            maxk + 2, 
+                            maxk + 2,
                             urwid.AttrWrap(urwid.Edit(edit_text=k, wrap="any"), "editfield"),
                         ),
                         urwid.AttrWrap(urwid.Edit(edit_text=v, wrap="any"), "editfield"),
@@ -520,12 +520,11 @@ class ConnectionView(WWrap):
             c = self._spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n")
         elif part == "h":
-            self.master.view_kveditor("Editing headers", conn.headers.lst, None)
-            #headertext = self._spawn_editor(repr(conn.headers))
-            #headers = flow.Headers()
-            #fp = cStringIO.StringIO(headertext)
-            #headers.read(fp)
-            #conn.headers = headers
+            headertext = self._spawn_editor(repr(conn.headers))
+            headers = flow.Headers()
+            fp = cStringIO.StringIO(headertext)
+            headers.read(fp)
+            conn.headers = headers
         elif part == "u" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == VIEW_FLOW_REQUEST:
