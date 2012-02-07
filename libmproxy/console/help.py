@@ -1,0 +1,146 @@
+import urwid
+import common
+from .. import filt
+
+class HelpView(urwid.ListBox):
+    def __init__(self, master):
+        self.master = master
+        urwid.ListBox.__init__(
+            self,
+            self.helptext()
+        )
+
+    def keypress(self, size, key):
+        key = common.shortcuts(key)
+        if key == "q":
+            self.master.pop_view()
+            return None
+        return urwid.ListBox.keypress(self, size, key)
+
+    def helptext(self):
+        text = []
+        text.append(("head", "Global keys:\n"))
+        keys = [
+            ("A", "accept all intercepted connections"),
+            ("a", "accept this intercepted connection"),
+            ("c", "client replay"),
+            ("i", "set interception pattern"),
+            ("j, k", "up, down"),
+            ("l", "set limit filter pattern"),
+            ("L", "load saved flows"),
+
+            ("m", "change body display mode"),
+            (None,
+                common.highlight_key("raw", "r") +
+                [("text", ": raw data")]
+            ),
+            (None,
+                common.highlight_key("pretty", "p") +
+                [("text", ": pretty-print XML, HTML and JSON")]
+            ),
+            (None,
+                common.highlight_key("hex", "h") +
+                [("text", ": hex dump")]
+            ),
+
+            ("o", "toggle options:"),
+            (None,
+                common.highlight_key("anticache", "a") +
+                [("text", ": prevent cached responses")]
+            ),
+            (None,
+                common.highlight_key("anticomp", "c") +
+                [("text", ": prevent compressed responses")]
+            ),
+            (None,
+                common.highlight_key("killextra", "k") +
+                [("text", ": kill requests not part of server replay")]
+            ),
+            (None,
+                common.highlight_key("norefresh", "n") +
+                [("text", ": disable server replay response refresh")]
+            ),
+
+            ("q", "quit / return to connection list"),
+            ("Q", "quit without confirm prompt"),
+            ("r", "replay request"),
+            ("R", "revert changes to request"),
+            ("s", "set/unset script"),
+            ("S", "server replay"),
+            ("t", "set sticky cookie expression"),
+            ("u", "set sticky auth expression"),
+            ("w", "save all flows matching current limit"),
+            ("W", "save this flow"),
+            ("|", "run script on this flow"),
+            ("space", "page down"),
+            ("pg up/down", "page up/down"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+
+        text.append(("head", "\n\nConnection list keys:\n"))
+        keys = [
+            ("C", "clear connection list or eventlog"),
+            ("d", "delete connection from view"),
+            ("v", "toggle eventlog"),
+            ("X", "kill and delete connection, even if it's mid-intercept"),
+            ("tab", "tab between eventlog and connection list"),
+            ("enter", "view connection"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+
+        text.append(("head", "\n\nConnection view keys:\n"))
+        keys = [
+            ("b", "save request/response body"),
+            ("e", "edit request/response"),
+            ("p", "previous flow"),
+            ("v", "view body in external viewer"),
+            ("z", "encode/decode a request/response"),
+            ("tab", "toggle request/response view"),
+            ("space", "next flow"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+
+        text.append(("head", "\n\nFilter expressions:\n"))
+        f = []
+        for i in filt.filt_unary:
+            f.append(
+                ("~%s"%i.code, i.help)
+            )
+        for i in filt.filt_rex:
+            f.append(
+                ("~%s regex"%i.code, i.help)
+            )
+        for i in filt.filt_int:
+            f.append(
+                ("~%s int"%i.code, i.help)
+            )
+        f.sort()
+        f.extend(
+            [
+                ("!", "unary not"),
+                ("&", "and"),
+                ("|", "or"),
+                ("(...)", "grouping"),
+            ]
+        )
+        text.extend(common.format_keyvals(f, key="key", val="text", indent=4))
+
+        text.extend(
+           [
+                "\n",
+                ("text", "    Regexes are Python-style.\n"),
+                ("text", "    Regexes can be specified as quoted strings.\n"),
+                ("text", "    Header matching (~h, ~hq, ~hs) is against a string of the form \"name: value\".\n"),
+                ("text", "    Expressions with no operators are regex matches against URL.\n"),
+                ("text", "    Default binary operator is &.\n"),
+                ("head", "\n    Examples:\n"),
+           ]
+        )
+        examples = [
+                ("google\.com", "Url containing \"google.com"),
+                ("~q ~b test", "Requests where body contains \"test\""),
+                ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
+        ]
+        text.extend(common.format_keyvals(examples, key="key", val="text", indent=4))
+        return [urwid.Text(text)]
+
