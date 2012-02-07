@@ -90,5 +90,6 @@ setup(
             "Topic :: Internet :: WWW/HTTP",
             "Topic :: Internet :: Proxy Servers",
             "Topic :: Software Development :: Testing"
-        ]
+        ],
+        install_requires=['urwid'],
 )
