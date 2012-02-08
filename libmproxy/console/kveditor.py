@@ -88,14 +88,18 @@ class KVItem(common.WWrap):
 
 
 class KVWalker(urwid.ListWalker):
-    def __init__(self, lst):
-        self.lst = lst
+    def __init__(self, lst, editor):
+        self.lst, self.editor = lst, editor
         self.maxk = max(len(v[0]) for v in lst) if lst else 20
         if self.maxk < 20:
             self.maxk = 20
         self.focus = 0
         self.focus_col = 0
         self.editing = False
+
+    def _modified(self):
+        self.editor.show_empty_msg()
+        return urwid.ListWalker._modified(self)
 
     def get_current_value(self):
         if self.lst:
@@ -187,10 +191,25 @@ class KVEditor(common.WWrap):
         p = urwid.Text(title)
         p = urwid.Padding(p, align="left", width=("relative", 100))
         p = urwid.AttrWrap(p, "heading")
-        self.walker = KVWalker(self.value)
+        self.walker = KVWalker(self.value, self)
         self.lb = KVListBox(self.walker)
         self.w = urwid.Frame(self.lb, header = p)
         self.master.statusbar.update("")
+        self.show_empty_msg()
+
+    def show_empty_msg(self):
+        if self.walker.lst:
+            self.w.set_footer(None)
+        else:
+            self.w.set_footer(
+                urwid.Text(
+                    [
+                        ("highlight", "No values. Press "),
+                        ("key", "a"),
+                        ("highlight", " to add some."),
+                    ]
+                )
+            )
 
     def keypress(self, size, key):
         if self.walker.editing:
