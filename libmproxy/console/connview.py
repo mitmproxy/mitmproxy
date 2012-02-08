@@ -61,7 +61,7 @@ cache = CallbackCache()
 class ConnectionView(common.WWrap):
     REQ = 0
     RESP = 1
-    methods = [
+    method_options = [
         ("get", "g"),
         ("post", "p"),
         ("put", "u"),
@@ -69,6 +69,7 @@ class ConnectionView(common.WWrap):
         ("trace", "t"),
         ("delete", "d"),
         ("options", "o"),
+        ("edit raw", "e"),
     ]
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
@@ -312,11 +313,19 @@ class ConnectionView(common.WWrap):
             else:
                 self.view_request()
 
+    def set_method_raw(self, m):
+        if m:
+            self.flow.request.method = m
+            self.master.refresh_connection(self.flow)
+
     def edit_method(self, m):
-        for i in self.methods:
-            if i[1] == m:
-                self.flow.request.method = i[0].upper()
-        self.master.refresh_connection(self.flow)
+        if m == "e":
+            self.master.prompt_edit("Method", self.flow.request.method, self.set_method_raw)
+        else:
+            for i in self.method_options:
+                if i[1] == m:
+                    self.flow.request.method = i[0].upper()
+            self.master.refresh_connection(self.flow)
 
     def save_body(self, path):
         if not path:
@@ -376,7 +385,7 @@ class ConnectionView(common.WWrap):
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_onekey("Method", self.methods, self.edit_method)
+            self.master.prompt_onekey("Method", self.method_options, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             self.master.prompt_edit("Code", str(conn.code), self.set_resp_code)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
