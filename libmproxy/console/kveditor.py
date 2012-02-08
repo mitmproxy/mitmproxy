@@ -76,6 +76,18 @@ class KVWalker(urwid.ListWalker):
         self.focus_col = 0
         self.editing = False
 
+    def delete_focus(self):
+        if self.lst:
+            del self.lst[self.focus]
+            self.focus = min(len(self.lst)-1, self.focus)
+            self._modified()
+
+    def add(self):
+        self.focus = min(self.focus +1, len(self.lst))
+        self.lst.insert(self.focus, ("", ""))
+        self.focus_col = 0
+        self.start_edit()
+
     def start_edit(self):
         self.editing = KVItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
         self._modified()
@@ -95,6 +107,7 @@ class KVWalker(urwid.ListWalker):
         self._modified()
 
     def tab_next(self):
+        self.stop_edit()
         if self.focus_col == 0:
             self.focus_col = 1
         elif self.focus != len(self.lst)-1:
@@ -105,8 +118,10 @@ class KVWalker(urwid.ListWalker):
     def get_focus(self):
         if self.editing:
             return self.editing, self.focus
-        else:
+        elif self.lst:
             return KVItem(self.focus_col, False, self.maxk, *self.lst[self.focus]), self.focus
+        else:
+            return None, None
 
     def set_focus(self, focus):
         self.stop_edit()
@@ -145,6 +160,9 @@ class KVEditor(common.WWrap):
         if self.walker.editing:
             if key in ["esc", "enter"]:
                 self.walker.stop_edit()
+            elif key == "tab":
+                self.walker.tab_next()
+                self.walker.start_edit()
             else:
                 self.w.keypress(size, key)
             return None
@@ -159,6 +177,10 @@ class KVEditor(common.WWrap):
             self.walker.right()
         elif key == "tab":
             self.walker.tab_next()
+        elif key == "a":
+            self.walker.add()
+        elif key == "d":
+            self.walker.delete_focus()
         elif key in ["enter", "e"]:
             self.walker.start_edit()
         else:
