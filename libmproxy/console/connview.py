@@ -275,28 +275,6 @@ class ConnectionView(common.WWrap):
             else:
                 self.view_request()
 
-    def _spawn_editor(self, data):
-        fd, name = tempfile.mkstemp('', "mproxy")
-        os.write(fd, data)
-        os.close(fd)
-        c = os.environ.get("EDITOR")
-        #If no EDITOR is set, assume 'vi'
-        if not c:
-            c = "vi"
-        cmd = [c, name]
-        self.master.ui.stop()
-        try:
-            subprocess.call(cmd)
-        except:
-            self.master.statusbar.message("Can't start editor: %s" % c)
-            self.master.ui.start()
-            os.unlink(name)
-            return data
-        self.master.ui.start()
-        data = open(name).read()
-        os.unlink(name)
-        return data
-
     def edit_method(self, m):
         for i in self.methods:
             if i[1] == m:
@@ -354,7 +332,7 @@ class ConnectionView(common.WWrap):
 
         self.flow.backup()
         if part == "b":
-            c = self._spawn_editor(conn.content or "")
+            c = self.master.spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n")
         elif part == "h":
             self.master.view_kveditor("Editing headers", conn.headers.lst, self.set_headers, conn)

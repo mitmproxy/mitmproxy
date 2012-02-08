@@ -426,6 +426,28 @@ class ConsoleMaster(flow.FlowMaster):
                 False
             )
 
+    def spawn_editor(self, data):
+        fd, name = tempfile.mkstemp('', "mproxy")
+        os.write(fd, data)
+        os.close(fd)
+        c = os.environ.get("EDITOR")
+        #If no EDITOR is set, assume 'vi'
+        if not c:
+            c = "vi"
+        cmd = [c, name]
+        self.ui.stop()
+        try:
+            subprocess.call(cmd)
+        except:
+            self.statusbar.message("Can't start editor: %s" % c)
+            self.ui.start()
+            os.unlink(name)
+            return data
+        self.ui.start()
+        data = open(name).read()
+        os.unlink(name)
+        return data
+
     def spawn_external_viewer(self, data, contenttype):
         if contenttype:
             ext = mimetypes.guess_extension(contenttype) or ""

@@ -1,6 +1,7 @@
 import copy
 import urwid
 import common
+from .. import utils
 
 class SText(common.WWrap):
     def __init__(self, txt, focused):
@@ -75,6 +76,15 @@ class KVWalker(urwid.ListWalker):
         self.focus = 0
         self.focus_col = 0
         self.editing = False
+
+    def get_current_value(self):
+        if self.lst:
+            return self.lst[self.focus][self.focus_col]
+
+    def set_current_value(self, val):
+        row = list(self.lst[self.focus])
+        row[self.focus_col] = val
+        self.lst[self.focus] = tuple(row)
 
     def delete_focus(self):
         if self.lst:
@@ -174,7 +184,7 @@ class KVEditor(common.WWrap):
             else:
                 self.w.keypress(size, key)
             return None
-            
+
         key = common.shortcuts(key)
         if key in ["q", "esc"]:
             self.callback(self.walker.lst, *self.cb_args, **self.cb_kwargs)
@@ -191,6 +201,13 @@ class KVEditor(common.WWrap):
             self.walker.insert()
         elif key == "d":
             self.walker.delete_focus()
+        elif key == "e":
+            o = self.walker.get_current_value()
+            if o is not None:
+                n = self.master.spawn_editor(o)
+                n = utils.clean_hanging_newline(n)
+                self.walker.set_current_value(n)
+                self.walker._modified()
         elif key in ["enter", "e"]:
             self.walker.start_edit()
         else:

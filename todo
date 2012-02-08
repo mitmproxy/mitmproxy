@@ -8,9 +8,6 @@ Features:
         - Flow comments
         - Copying/duplicating flows
         - Ordering by time, size, etc. a-la-mutt (o keyboard shorcut is reserved for this)
-    - Post and URL field parsing and editing.
-        - We need a built-in graphical editor for these, that knows how to
-        break fields up and present them for modificatio individually.
     - Upstream proxy support.
     - Support HTTP Digest authentication through the stickyauth option. We'll
     have to save the server nonce, and recalculate the hashes for each request.
