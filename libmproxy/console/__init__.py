@@ -486,7 +486,7 @@ class ConsoleMaster(flow.FlowMaster):
             ('offset', 'dark cyan', 'default'),
 
             # KV Editor
-            ('focusfield', 'white', 'dark blue'),
+            ('focusfield', 'black', 'light gray'),
             ('editfield', 'black', 'light cyan'),
         ]
 
