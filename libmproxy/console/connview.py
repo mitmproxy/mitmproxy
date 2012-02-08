@@ -1,3 +1,4 @@
+import os
 import urwid
 import common
 from .. import utils, encoding, flow
