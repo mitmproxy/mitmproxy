@@ -1,4 +1,8 @@
 
+# Please note that the master branch of mitmproxy is currently under heavy
+# development. Feel free to test things out, but you may want to use a release.
+
+
 __mitmproxy__ is an SSL-capable man-in-the-middle proxy for HTTP. It provides a
 console interface that allows traffic flows to be inspected and edited on the
 fly.
