@@ -9,6 +9,9 @@ class SText(common.WWrap):
             w = urwid.AttrWrap(w, "editfield")
         common.WWrap.__init__(self, w)
 
+    def get_text(self):
+        return self.w.get_text()[0]
+
     def keypress(self, size, key):
         return key
 
@@ -18,8 +21,11 @@ class SText(common.WWrap):
 
 class SEdit(common.WWrap):
     def __init__(self, txt):
-        w = urwid.Edit(txt, wrap="any")
+        w = urwid.Edit(txt, wrap="any", multiline=True)
         common.WWrap.__init__(self, w)
+
+    def get_text(self):
+        return self.w.get_text()[0]
 
     def selectable(self):
         return True
@@ -29,12 +35,12 @@ class KVItem(common.WWrap):
     def __init__(self, focused, editing, maxk, k, v):
         self.focused, self.editing = focused, editing
         if focused == 0 and editing:
-            self.kf = SEdit(k)
+            self.editing = self.kf = SEdit(k)
         else:
             self.kf = SText(k, True if focused == 0 else False)
 
         if focused == 1 and editing:
-            self.vf = SEdit(v)
+            self.editing = self.vf = SEdit(v)
         else:
             self.vf = SText(v, True if focused == 1 else False)
 
@@ -49,12 +55,12 @@ class KVItem(common.WWrap):
             w.set_focus_column(focused)
         common.WWrap.__init__(self, w)
 
+    def get_kv(self):
+        return (self.kf.get_text(), self.vf.get_text())
+
     def keypress(self, s, k):
         if self.editing:
-            if self.focused == 0:
-                return self.kf.keypress(s, k)
-            else:
-                return self.vf.keypress(s, k)
+            k = self.editing.keypress(s, k)
         return k
 
     def selectable(self):
@@ -69,8 +75,13 @@ class KVWalker(urwid.ListWalker):
         self.focus_col = 0
         self.editing = False
 
-    def edit(self):
+    def start_edit(self):
         self.editing = KVItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
+        self._modified()
+
+    def stop_edit(self):
+        self.lst[self.focus] = self.editing.get_kv()
+        self.editing = False
         self._modified()
 
     def left(self):
@@ -127,21 +138,25 @@ class KVEditor(common.WWrap):
 
     def keypress(self, size, key):
         if self.walker.editing:
-            self.w.keypress(size, key)
-            return None
-        else:
-            key = common.shortcuts(key)
-            if key == "q":
-                self.master.pop_view()
-            elif key == "h":
-                self.walker.left()
-            elif key == "l":
-                self.walker.right()
-            elif key == "tab":
-                self.walker.tab_next()
-            elif key == "enter":
-                self.walker.edit()
-            elif key == "esc":
-                self.master.view_connlist()
+            if key in ["esc"]:
+                self.walker.stop_edit()
+                return None
+            elif key in ["left", "right", "up", "down"]:
+                self.walker.stop_edit()
             else:
-                return self.w.keypress(size, key)
+                self.w.keypress(size, key)
+                return None
+            
+        key = common.shortcuts(key)
+        if key == ["q", "esc"]:
+            self.master.pop_view()
+        elif key in ["h", "left"]:
+            self.walker.left()
+        elif key in ["l", "right"]:
+            self.walker.right()
+        elif key == "tab":
+            self.walker.tab_next()
+        elif key == "enter":
+            self.walker.start_edit()
+        else:
+            return self.w.keypress(size, key)
