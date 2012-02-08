@@ -103,7 +103,10 @@ class DumpMaster(flow.FlowMaster):
                 freader = flow.FlowReader(f)
             except IOError, v:
                 raise DumpError(v.strerror)
-            self.load_flows(freader)
+            try:
+                self.load_flows(freader)
+            except flow.FlowReadError, v:
+                raise DumpError(v)
 
 
     def _readflow(self, path):

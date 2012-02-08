@@ -640,7 +640,10 @@ class ConsoleMaster(flow.FlowMaster):
             fr = flow.FlowReader(f)
         except IOError, v:
             return v.strerror
-        flow.FlowMaster.load_flows(self, fr)
+        try:
+            flow.FlowMaster.load_flows(self, fr)
+        except flow.FlowReadError, v:
+            return v.strerror
         f.close()
         if self.conn_list_view:
             self.sync_list_view()
