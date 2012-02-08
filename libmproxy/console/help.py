@@ -26,13 +26,20 @@ class HelpView(urwid.ListBox):
         text.append(("head", "Keys for this view:\n"))
         text.extend(self.help_context)
 
+        text.append(("head", "\n\nMovement:\n"))
+        keys = [
+            ("j, k", "up, down"),
+            ("h, l", "left, right (in some contexts)"),
+            ("space", "page down"),
+            ("pg up/down", "page up/down"),
+            ("arrows", "up, down, left, right"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+
         text.append(("head", "\n\nGlobal keys:\n"))
         keys = [
             ("c", "client replay"),
             ("i", "set interception pattern"),
-            ("j, k", "up, down"),
-            ("l", "set limit filter pattern"),
-            ("L", "load saved flows"),
 
             ("o", "toggle options:"),
             (None,
@@ -54,16 +61,10 @@ class HelpView(urwid.ListBox):
 
             ("q", "quit / return to connection list"),
             ("Q", "quit without confirm prompt"),
-            ("r", "replay request"),
-            ("R", "revert changes to request"),
             ("s", "set/unset script"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),
             ("u", "set sticky auth expression"),
-            ("w", "save all flows matching current limit"),
-            ("W", "save this flow"),
-            ("space", "page down"),
-            ("pg up/down", "page up/down"),
         ]
         text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
 

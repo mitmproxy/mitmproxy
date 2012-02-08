@@ -773,9 +773,6 @@ class ConsoleMaster(flow.FlowMaster):
                                         ),
                                         self.stop_client_playback_prompt,
                                     )
-                            elif k == "l":
-                                self.prompt("Limit: ", self.state.limit_txt, self.set_limit)
-                                self.sync_list_view()
                             elif k == "i":
                                 self.prompt(
                                     "Intercept filter: ",
@@ -793,12 +790,6 @@ class ConsoleMaster(flow.FlowMaster):
                                         ("no", "n"),
                                     ),
                                     self.quit,
-                                )
-                            elif k == "w":
-                                self.path_prompt(
-                                    "Save flows: ",
-                                    self.state.last_saveload,
-                                    self.save_flows
                                 )
                             elif k == "s":
                                 if self.script:
@@ -825,12 +816,6 @@ class ConsoleMaster(flow.FlowMaster):
                                         ),
                                         self.stop_server_playback_prompt,
                                     )
-                            elif k == "L":
-                                self.path_prompt(
-                                    "Load flows: ",
-                                    self.state.last_saveload,
-                                    self.load_flows_callback
-                                )
                             elif k == "o":
                                 self.prompt_onekey(
                                         "Options",

@@ -7,10 +7,10 @@ from .. import utils
 def _mkhelp():
     text = []
     keys = [
+        ("A", "insert row before cursor"),
         ("a", "add row after cursor"),
         ("d", "delete row"),
         ("e", "spawn external editor on current field"),
-        ("i", "insert row before cursor"),
         ("q", "return to flow view"),
         ("esc", "return to flow view/exit field edit mode"),
         ("tab", "next field"),
@@ -215,7 +215,7 @@ class KVEditor(common.WWrap):
             self.walker.tab_next()
         elif key == "a":
             self.walker.add()
-        elif key == "i":
+        elif key == "A":
             self.walker.insert()
         elif key == "d":
             self.walker.delete_focus()

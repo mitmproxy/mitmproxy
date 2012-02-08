@@ -23,7 +23,11 @@ def _mkhelp():
                 [("text", ": hex dump")]
             ),
         ("p", "previous flow"),
+        ("r", "replay request"),
+        ("R", "revert changes to request"),
         ("v", "view body in external viewer"),
+        ("w", "save all flows matching current limit"),
+        ("W", "save this flow"),
         ("z", "encode/decode a request/response"),
         ("tab", "toggle request/response view"),
         ("space", "next flow"),

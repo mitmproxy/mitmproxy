@@ -8,7 +8,13 @@ def _mkhelp():
         ("a", "accept this intercepted connection"),
         ("C", "clear connection list or eventlog"),
         ("d", "delete connection from view"),
+        ("l", "set limit filter pattern"),
+        ("L", "load saved flows"),
+        ("r", "replay request"),
+        ("R", "revert changes to request"),
         ("v", "toggle eventlog"),
+        ("w", "save all flows matching current limit"),
+        ("W", "save this flow"),
         ("X", "kill and delete connection, even if it's mid-intercept"),
         ("tab", "tab between eventlog and connection list"),
         ("enter", "view connection"),
@@ -96,6 +102,15 @@ class ConnectionItem(common.WWrap):
             self.flow.kill(self.master)
             self.state.delete_flow(self.flow)
             self.master.sync_list_view()
+        elif key == "l":
+            self.master.prompt("Limit: ", self.state.limit_txt, self.master.set_limit)
+            self.master.sync_list_view()
+        elif key == "L":
+            self.master.path_prompt(
+                "Load flows: ",
+                self.state.last_saveload,
+                self.master.load_flows_callback
+            )
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:
@@ -104,6 +119,12 @@ class ConnectionItem(common.WWrap):
         elif key == "R":
             self.state.revert(self.flow)
             self.master.sync_list_view()
+        elif key == "w":
+            self.master.path_prompt(
+                "Save flows: ",
+                self.state.last_saveload,
+                self.master.save_flows
+            )
         elif key == "W":
             self.master.path_prompt(
                 "Save this flow: ",
@@ -120,9 +141,9 @@ class ConnectionItem(common.WWrap):
                 self.master.view_flow(self.flow)
         elif key == "|":
             self.master.path_prompt(
-                "Send flow to script: ", 
+                "Send flow to script: ",
                 self.state.last_script,
-                self.master.run_script_once, 
+                self.master.run_script_once,
                 self.flow
             )
         else:
