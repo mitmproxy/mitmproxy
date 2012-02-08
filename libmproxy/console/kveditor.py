@@ -167,8 +167,10 @@ class KVEditor(common.WWrap):
             if key in ["esc", "enter"]:
                 self.walker.stop_edit()
             elif key == "tab":
+                pf = self.walker.focus
                 self.walker.tab_next()
-                self.walker.start_edit()
+                if self.walker.focus == pf:
+                    self.walker.start_edit()
             else:
                 self.w.keypress(size, key)
             return None
