@@ -129,8 +129,9 @@ class KVWalker(urwid.ListWalker):
         return self._insert(min(self.focus + 1, len(self.lst)))
 
     def start_edit(self):
-        self.editing = KVItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
-        self._modified()
+        if self.lst:
+            self.editing = KVItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
+            self._modified()
 
     def stop_edit(self):
         if self.editing:
