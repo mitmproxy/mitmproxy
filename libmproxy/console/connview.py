@@ -243,7 +243,7 @@ class ConnectionView(common.WWrap):
         else:
             parts.append(self._tab(qt, False))
 
-        if self.flow.intercepting and not self.flow.response.acked:
+        if self.flow.intercepting and self.flow.response and not self.flow.response.acked:
             st = "Response (intercepted)"
         else:
             st = "Response"
