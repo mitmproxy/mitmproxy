@@ -4,12 +4,15 @@ import common
 def _mkhelp():
     text = []
     keys = [
+        ("A", "accept all intercepted connections"),
+        ("a", "accept this intercepted connection"),
         ("C", "clear connection list or eventlog"),
         ("d", "delete connection from view"),
         ("v", "toggle eventlog"),
         ("X", "kill and delete connection, even if it's mid-intercept"),
         ("tab", "tab between eventlog and connection list"),
         ("enter", "view connection"),
+        ("|", "run script on this flow"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
@@ -117,10 +120,13 @@ class ConnectionItem(common.WWrap):
                 self.master.view_flow(self.flow)
         elif key == "|":
             self.master.path_prompt(
-                "Send flow to script: ", self.state.last_script,
-                self.master.run_script_once, self.flow
+                "Send flow to script: ", 
+                self.state.last_script,
+                self.master.run_script_once, 
+                self.flow
             )
-        return key
+        else:
+            return key
 
 
 class ConnectionListView(urwid.ListWalker):

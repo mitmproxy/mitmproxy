@@ -372,11 +372,13 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
     def run_script_once(self, path, f):
+        if not path:
+            return
         ret = self.get_script(path)
         if ret[0]:
             self.statusbar.message(ret[0])
+            return
         s = ret[1]
-
         if f.request:
             s.run("request", f)
         if f.response:
@@ -781,16 +783,6 @@ class ConsoleMaster(flow.FlowMaster):
                                     self.set_intercept
                                 )
                                 self.sync_list_view()
-                            elif k == "m":
-                                self.prompt_onekey(
-                                    "View",
-                                    (
-                                        ("raw", "r"),
-                                        ("pretty", "p"),
-                                        ("hex", "h"),
-                                    ),
-                                    self.changeview
-                                )
                             elif k == "Q":
                                 raise Stop
                             elif k == "q":

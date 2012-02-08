@@ -5,13 +5,29 @@ from .. import utils, encoding, flow
 def _mkhelp():
     text = []
     keys = [
+        ("A", "accept all intercepted connections"),
+        ("a", "accept this intercepted connection"),
         ("b", "save request/response body"),
         ("e", "edit request/response"),
+        ("m", "change body display mode"),
+            (None,
+                common.highlight_key("raw", "r") +
+                [("text", ": raw data")]
+            ),
+            (None,
+                common.highlight_key("pretty", "p") +
+                [("text", ": pretty-print XML, HTML and JSON")]
+            ),
+            (None,
+                common.highlight_key("hex", "h") +
+                [("text", ": hex dump")]
+            ),
         ("p", "previous flow"),
         ("v", "view body in external viewer"),
         ("z", "encode/decode a request/response"),
         ("tab", "toggle request/response view"),
         ("space", "next flow"),
+        ("|", "run script on this flow"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
@@ -433,6 +449,17 @@ class ConnectionView(common.WWrap):
                     self.edit
                 )
             key = None
+        elif key == "m":
+            self.master.prompt_onekey(
+                "View",
+                (
+                    ("raw", "r"),
+                    ("pretty", "p"),
+                    ("hex", "h"),
+                ),
+                self.master.changeview
+            )
+            key = None
         elif key == "p":
             self.view_prev_flow(self.flow)
         elif key == "r":
@@ -490,7 +517,8 @@ class ConnectionView(common.WWrap):
                         conn
                     )
                 self.master.refresh_connection(self.flow)
-        return key
+        else:
+            return key
 
     def encode_callback(self, key, conn):
         encoding_map = {

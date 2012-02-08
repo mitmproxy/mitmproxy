@@ -28,27 +28,11 @@ class HelpView(urwid.ListBox):
 
         text.append(("head", "\n\nGlobal keys:\n"))
         keys = [
-            ("A", "accept all intercepted connections"),
-            ("a", "accept this intercepted connection"),
             ("c", "client replay"),
             ("i", "set interception pattern"),
             ("j, k", "up, down"),
             ("l", "set limit filter pattern"),
             ("L", "load saved flows"),
-
-            ("m", "change body display mode"),
-            (None,
-                common.highlight_key("raw", "r") +
-                [("text", ": raw data")]
-            ),
-            (None,
-                common.highlight_key("pretty", "p") +
-                [("text", ": pretty-print XML, HTML and JSON")]
-            ),
-            (None,
-                common.highlight_key("hex", "h") +
-                [("text", ": hex dump")]
-            ),
 
             ("o", "toggle options:"),
             (None,
@@ -78,7 +62,6 @@ class HelpView(urwid.ListBox):
             ("u", "set sticky auth expression"),
             ("w", "save all flows matching current limit"),
             ("W", "save this flow"),
-            ("|", "run script on this flow"),
             ("space", "page down"),
             ("pg up/down", "page up/down"),
         ]
