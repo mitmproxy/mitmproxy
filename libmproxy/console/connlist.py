@@ -1,6 +1,21 @@
 import urwid
 import common
 
+def _mkhelp():
+    text = []
+    keys = [
+        ("C", "clear connection list or eventlog"),
+        ("d", "delete connection from view"),
+        ("v", "toggle eventlog"),
+        ("X", "kill and delete connection, even if it's mid-intercept"),
+        ("tab", "tab between eventlog and connection list"),
+        ("enter", "view connection"),
+    ]
+    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+    return text
+help_context = _mkhelp()
+
+
 class EventListBox(urwid.ListBox):
     def __init__(self, master):
         self.master = master

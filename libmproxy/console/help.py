@@ -3,8 +3,9 @@ import common
 from .. import filt
 
 class HelpView(urwid.ListBox):
-    def __init__(self, master):
-        self.master = master
+    def __init__(self, master, help_context, state):
+        self.master, self.state = master, state
+        self.help_context = help_context or []
         urwid.ListBox.__init__(
             self,
             self.helptext()
@@ -13,13 +14,19 @@ class HelpView(urwid.ListBox):
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "q":
-            self.master.pop_view()
+            self.master.statusbar = self.state[0]
+            self.master.body = self.state[1]
+            self.master.header = self.state[2]
+            self.master.make_view()
             return None
         return urwid.ListBox.keypress(self, size, key)
 
     def helptext(self):
         text = []
-        text.append(("head", "Global keys:\n"))
+        text.append(("head", "Keys for this view:\n"))
+        text.extend(self.help_context)
+
+        text.append(("head", "\n\nGlobal keys:\n"))
         keys = [
             ("A", "accept all intercepted connections"),
             ("a", "accept this intercepted connection"),
@@ -74,29 +81,6 @@ class HelpView(urwid.ListBox):
             ("|", "run script on this flow"),
             ("space", "page down"),
             ("pg up/down", "page up/down"),
-        ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-
-        text.append(("head", "\n\nConnection list keys:\n"))
-        keys = [
-            ("C", "clear connection list or eventlog"),
-            ("d", "delete connection from view"),
-            ("v", "toggle eventlog"),
-            ("X", "kill and delete connection, even if it's mid-intercept"),
-            ("tab", "tab between eventlog and connection list"),
-            ("enter", "view connection"),
-        ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-
-        text.append(("head", "\n\nConnection view keys:\n"))
-        keys = [
-            ("b", "save request/response body"),
-            ("e", "edit request/response"),
-            ("p", "previous flow"),
-            ("v", "view body in external viewer"),
-            ("z", "encode/decode a request/response"),
-            ("tab", "toggle request/response view"),
-            ("space", "next flow"),
         ]
         text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
 

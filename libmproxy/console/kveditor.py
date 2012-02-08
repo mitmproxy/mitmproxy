@@ -3,6 +3,24 @@ import urwid
 import common
 from .. import utils
 
+
+def _mkhelp():
+    text = []
+    keys = [
+        ("a", "add row after cursor"),
+        ("d", "delete row"),
+        ("e", "spawn external editor on current field"),
+        ("i", "insert row before cursor"),
+        ("q", "return to flow view"),
+        ("esc", "return to flow view/exit field edit mode"),
+        ("tab", "next field"),
+        ("enter", "edit field"),
+    ]
+    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+    return text
+help_context = _mkhelp()
+
+
 class SText(common.WWrap):
     def __init__(self, txt, focused):
         w = urwid.Text(txt, wrap="any")
@@ -208,7 +226,7 @@ class KVEditor(common.WWrap):
                 n = utils.clean_hanging_newline(n)
                 self.walker.set_current_value(n)
                 self.walker._modified()
-        elif key in ["enter", "e"]:
+        elif key in ["enter"]:
             self.walker.start_edit()
         else:
             return self.w.keypress(size, key)

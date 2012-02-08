@@ -2,6 +2,22 @@ import urwid
 import common
 from .. import utils, encoding, flow
 
+def _mkhelp():
+    text = []
+    keys = [
+        ("b", "save request/response body"),
+        ("e", "edit request/response"),
+        ("p", "previous flow"),
+        ("v", "view body in external viewer"),
+        ("z", "encode/decode a request/response"),
+        ("tab", "toggle request/response view"),
+        ("space", "next flow"),
+    ]
+    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+    return text
+help_context = _mkhelp()
+
+
 VIEW_CUTOFF = 1024*100
 
 class ConnectionViewHeader(common.WWrap):

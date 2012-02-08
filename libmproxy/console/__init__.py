@@ -523,9 +523,11 @@ class ConsoleMaster(flow.FlowMaster):
         self.statusbar = None
         self.header = None
         self.body = None
+        self.help_context = None
 
         self.prompting = False
         self.onekey = False
+
         self.view_connlist()
 
         if self.server:
@@ -545,6 +547,15 @@ class ConsoleMaster(flow.FlowMaster):
         sys.stderr.flush()
         self.shutdown()
 
+    def focus_current(self):
+        if self.currentflow:
+            try:
+                ids = [id(i) for i in self.state.view]
+                idx = ids.index(id(self.currentflow))
+                self.conn_list_view.set_focus(idx)
+            except (IndexError, ValueError):
+                pass
+
     def make_view(self):
         self.view = urwid.Frame(
                         self.body,
@@ -554,8 +565,10 @@ class ConsoleMaster(flow.FlowMaster):
         self.view.set_focus("body")
 
     def view_help(self):
+        h = help.HelpView(self, self.help_context, (self.statusbar, self.body, self.header))
+
         self.statusbar = StatusBar(self, self.footer_text_help)
-        self.body = help.HelpView(self)
+        self.body = h
         self.header = None
         self.make_view()
 
@@ -563,16 +576,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.statusbar = StatusBar(self, "foo")
         self.body = kveditor.KVEditor(self, title, value, callback, *args, **kwargs)
         self.header = None
-        self.make_view()
 
-    def focus_current(self):
-        if self.currentflow:
-            try:
-                ids = [id(i) for i in self.state.view]
-                idx = ids.index(id(self.currentflow))
-                self.conn_list_view.set_focus(idx)
-            except (IndexError, ValueError):
-                pass
+        self.help_context = kveditor.help_context
+        self.make_view()
 
     def view_connlist(self):
         if self.ui.started:
@@ -585,14 +591,18 @@ class ConsoleMaster(flow.FlowMaster):
         self.statusbar = StatusBar(self, self.footer_text_default)
         self.header = None
         self.currentflow = None
+
         self.make_view()
+        self.help_context = connlist.help_context
 
     def view_flow(self, flow):
         self.statusbar = StatusBar(self, self.footer_text_connview)
         self.body = connview.ConnectionView(self, self.state, flow)
         self.header = connview.ConnectionViewHeader(self, flow)
         self.currentflow = flow
+
         self.make_view()
+        self.help_context = connview.help_context
 
     def _write_flows(self, path, flows):
         self.state.last_saveload = path
