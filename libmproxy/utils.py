@@ -411,6 +411,18 @@ def parse_url(url):
     return scheme, host, port, path
 
 
+def clean_hanging_newline(t):
+    """
+        Many editors will silently add a newline to the final line of a
+        document (I'm looking at you, Vim). This function fixes this common
+        problem at the risk of removing a hanging newline in the rare cases
+        where the user actually intends it.
+    """
+    if t[-1] == "\n":
+        return t[:-1]
+    return t
+
+
 def parse_size(s):
     """
         Parses a size specification. Valid specifications are:
