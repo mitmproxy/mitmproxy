@@ -1,19 +1,117 @@
+import time
 import urwid
 import common
 
 class SText(common.WWrap):
-    def __init__(self, txt):
+    def __init__(self, txt, focused):
         w = urwid.Text(txt, wrap="any")
-        w = urwid.AttrWrap(w, "editfield")
+        if focused:
+            w = urwid.AttrWrap(w, "editfield")
         common.WWrap.__init__(self, w)
 
     def keypress(self, size, key):
-        raise ValueError, key
-        time.sleep(0.5)
         return key
 
     def selectable(self):
         return True
+
+
+class SEdit(common.WWrap):
+    def __init__(self, txt):
+        w = urwid.Edit(txt, wrap="any")
+        common.WWrap.__init__(self, w)
+
+    def selectable(self):
+        return True
+
+
+class KVItem(common.WWrap):
+    def __init__(self, focused, editing, maxk, k, v):
+        self.focused, self.editing = focused, editing
+        if focused == 0 and editing:
+            self.kf = SEdit(k)
+        else:
+            self.kf = SText(k, True if focused == 0 else False)
+
+        if focused == 1 and editing:
+            self.vf = SEdit(v)
+        else:
+            self.vf = SText(v, True if focused == 1 else False)
+
+        w = urwid.Columns(
+            [
+                ("fixed", maxk + 2, self.kf),
+                self.vf
+            ],
+            dividechars = 2
+        )
+        if focused is not None:
+            w.set_focus_column(focused)
+        common.WWrap.__init__(self, w)
+
+    def keypress(self, s, k):
+        if self.editing:
+            if self.focused == 0:
+                return self.kf.keypress(s, k)
+            else:
+                return self.vf.keypress(s, k)
+        return k
+
+    def selectable(self):
+        return True
+
+
+class KVWalker(urwid.ListWalker):
+    def __init__(self, lst):
+        self.lst = lst
+        self.maxk = max(len(v[0]) for v in lst)
+        self.focus = 0
+        self.focus_col = 0
+        self.editing = False
+
+    def edit(self):
+        self.editing = KVItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
+        self._modified()
+
+    def left(self):
+        self.focus_col = 0
+        self._modified()
+
+    def right(self):
+        self.focus_col = 1
+        self._modified()
+
+    def tab_next(self):
+        if self.focus_col == 0:
+            self.focus_col = 1
+        elif self.focus != len(self.lst)-1:
+            self.focus_col = 0
+            self.focus += 1
+        self._modified()
+
+    def get_focus(self):
+        if self.editing:
+            return self.editing, self.focus
+        else:
+            return KVItem(self.focus_col, False, self.maxk, *self.lst[self.focus]), self.focus
+
+    def set_focus(self, focus):
+        self.focus = focus
+
+    def get_next(self, pos):
+        if pos+1 >= len(self.lst):
+            return None, None
+        return KVItem(None, False, self.maxk, *self.lst[pos+1]), pos+1
+
+    def get_prev(self, pos):
+        if pos-1 < 0:
+            return None, None
+        return KVItem(None, False, self.maxk, *self.lst[pos-1]), pos-1
+
+
+class KVListBox(urwid.ListBox):
+    def __init__(self, lw):
+        urwid.ListBox.__init__(self, lw)
 
 
 class KVEditor(common.WWrap):
@@ -22,49 +120,28 @@ class KVEditor(common.WWrap):
         p = urwid.Text(title)
         p = urwid.Padding(p, align="left", width=("relative", 100))
         p = urwid.AttrWrap(p, "heading")
-        maxk = max(len(v[0]) for v in value)
-        parts = []
-        for k, v in value:
-            parts.append(
-                urwid.Columns(
-                    [
-                        (
-                            "fixed",
-                            maxk + 2,
-                            SText(k)
-                        ),
-                        SText(v)
-                    ],
-                    dividechars = 2
-                )
-            )
-            parts.append(urwid.Text(" "))
-        self.lb = urwid.ListBox(parts)
+        self.walker = KVWalker(self.value)
+        self.lb = KVListBox(self.walker)
         self.w = urwid.Frame(self.lb, header = p)
         self.master.statusbar.update("")
 
     def keypress(self, size, key):
-        if key == "q":
-            self.master.pop_view()
+        if self.walker.editing:
+            self.w.keypress(size, key)
             return None
-        if key in ("tab", "enter"):
-            cw = self.lb.get_focus()[0]
-            col = cw.get_focus_column()
-            if col == 0:
-                cw.set_focus_column(1)
+        else:
+            key = common.shortcuts(key)
+            if key == "q":
+                self.master.pop_view()
+            elif key == "h":
+                self.walker.left()
+            elif key == "l":
+                self.walker.right()
+            elif key == "tab":
+                self.walker.tab_next()
+            elif key == "enter":
+                self.walker.edit()
+            elif key == "esc":
+                self.master.view_connlist()
             else:
-                self.lb._keypress_down(size)
-                cw = self.lb.get_focus()[0]
-                cw.set_focus_column(0)
-            return None
-        elif key == "ctrl e":
-            # Editor
-            pass
-        elif key == "ctrl r":
-            # Revert
-            pass
-        elif key == "esc":
-            self.master.view_connlist()
-            return
-        return self.w.keypress(size, key)
-
+                return self.w.keypress(size, key)

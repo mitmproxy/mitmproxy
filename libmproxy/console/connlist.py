@@ -1,6 +1,61 @@
 import urwid
 import common
 
+class EventListBox(urwid.ListBox):
+    def __init__(self, master):
+        self.master = master
+        urwid.ListBox.__init__(self, master.eventlist)
+
+    def keypress(self, size, key):
+        key = common.shortcuts(key)
+        if key == "C":
+            self.master.clear_events()
+            key = None
+        return urwid.ListBox.keypress(self, size, key)
+
+
+class BodyPile(urwid.Pile):
+    def __init__(self, master):
+        h = urwid.Text("Event log")
+        h = urwid.Padding(h, align="left", width=("relative", 100))
+
+        self.inactive_header = urwid.AttrWrap(h, "inactive_heading")
+        self.active_header = urwid.AttrWrap(h, "heading")
+
+        urwid.Pile.__init__(
+            self,
+            [
+                ConnectionListBox(master),
+                urwid.Frame(EventListBox(master), header = self.inactive_header)
+            ]
+        )
+        self.master = master
+        self.focus = 0
+
+    def keypress(self, size, key):
+        if key == "tab":
+            self.focus = (self.focus + 1)%len(self.widget_list)
+            self.set_focus(self.focus)
+            if self.focus == 1:
+                self.widget_list[1].header = self.active_header
+            else:
+                self.widget_list[1].header = self.inactive_header
+            key = None
+        elif key == "v":
+            self.master.toggle_eventlog()
+            key = None
+
+        # This is essentially a copypasta from urwid.Pile's keypress handler.
+        # So much for "closed for modification, but open for extension".
+        item_rows = None
+        if len(size)==2:
+            item_rows = self.get_item_rows( size, focus=True )
+        i = self.widget_list.index(self.focus_item)
+        tsize = self.get_item_size(size,i,True,item_rows)
+        return self.focus_item.keypress( tsize, key )
+
+
+
 class ConnectionItem(common.WWrap):
     def __init__(self, master, state, flow, focus):
         self.master, self.state, self.flow = master, state, flow

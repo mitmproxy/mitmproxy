@@ -28,19 +28,6 @@ class Stop(Exception): pass
 
 #begin nocover
 
-class EventListBox(urwid.ListBox):
-    def __init__(self, master):
-        self.master = master
-        urwid.ListBox.__init__(self, master.eventlist)
-
-    def keypress(self, size, key):
-        key = common.shortcuts(key)
-        if key == "C":
-            self.master.clear_events()
-            key = None
-        return urwid.ListBox.keypress(self, size, key)
-
-
 
 class _PathCompleter:
     def __init__(self, _testing=False):
@@ -324,46 +311,6 @@ class Options(object):
 
 #begin nocover
 
-class BodyPile(urwid.Pile):
-    def __init__(self, master):
-        h = urwid.Text("Event log")
-        h = urwid.Padding(h, align="left", width=("relative", 100))
-
-        self.inactive_header = urwid.AttrWrap(h, "inactive_heading")
-        self.active_header = urwid.AttrWrap(h, "heading")
-
-        urwid.Pile.__init__(
-            self,
-            [
-                connlist.ConnectionListBox(master),
-                urwid.Frame(EventListBox(master), header = self.inactive_header)
-            ]
-        )
-        self.master = master
-        self.focus = 0
-
-    def keypress(self, size, key):
-        if key == "tab":
-            self.focus = (self.focus + 1)%len(self.widget_list)
-            self.set_focus(self.focus)
-            if self.focus == 1:
-                self.widget_list[1].header = self.active_header
-            else:
-                self.widget_list[1].header = self.inactive_header
-            key = None
-        elif key == "v":
-            self.master.toggle_eventlog()
-            key = None
-
-        # This is essentially a copypasta from urwid.Pile's keypress handler.
-        # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size)==2:
-            item_rows = self.get_item_rows( size, focus=True )
-        i = self.widget_list.index(self.focus_item)
-        tsize = self.get_item_size(size,i,True,item_rows)
-        return self.focus_item.keypress( tsize, key )
-
 
 class ConsoleMaster(flow.FlowMaster):
     palette = []
@@ -609,7 +556,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.ui.clear()
         self.focus_current()
         if self.eventlog:
-            self.body = BodyPile(self)
+            self.body = connlist.BodyPile(self)
         else:
             self.body = connlist.ConnectionListBox(self)
         self.statusbar = StatusBar(self, self.footer_text_default)
@@ -623,25 +570,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.header = connview.ConnectionViewHeader(self, flow)
         self.currentflow = flow
         self.make_view()
-
-    def _view_nextprev_flow(self, np, flow):
-        try:
-            idx = self.state.view.index(flow)
-        except IndexError:
-            return
-        if np == "next":
-            new_flow, new_idx = self.state.get_next(idx)
-        else:
-            new_flow, new_idx = self.state.get_prev(idx)
-        if new_idx is None:
-            return
-        self.view_flow(new_flow)
-
-    def view_next_flow(self, flow):
-        return self._view_nextprev_flow("next", flow)
-
-    def view_prev_flow(self, flow):
-        return self._view_nextprev_flow("prev", flow)
 
     def _write_flows(self, path, flows):
         self.state.last_saveload = path

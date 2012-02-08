@@ -370,9 +370,28 @@ class ConnectionView(common.WWrap):
             self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
         self.master.refresh_connection(self.flow)
 
+    def _view_nextprev_flow(self, np, flow):
+        try:
+            idx = self.state.view.index(flow)
+        except IndexError:
+            return
+        if np == "next":
+            new_flow, new_idx = self.state.get_next(idx)
+        else:
+            new_flow, new_idx = self.state.get_prev(idx)
+        if new_idx is None:
+            return
+        self.master.view_flow(new_flow)
+
+    def view_next_flow(self, flow):
+        return self._view_nextprev_flow("next", flow)
+
+    def view_prev_flow(self, flow):
+        return self._view_nextprev_flow("prev", flow)
+
     def keypress(self, size, key):
         if key == " ":
-            self.master.view_next_flow(self.flow)
+            self.view_next_flow(self.flow)
             return key
 
         key = common.shortcuts(key)
@@ -423,7 +442,7 @@ class ConnectionView(common.WWrap):
                 )
             key = None
         elif key == "p":
-            self.master.view_prev_flow(self.flow)
+            self.view_prev_flow(self.flow)
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:
