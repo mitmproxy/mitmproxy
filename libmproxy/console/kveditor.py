@@ -1,4 +1,4 @@
-import time
+import copy
 import urwid
 import common
 
@@ -6,7 +6,7 @@ class SText(common.WWrap):
     def __init__(self, txt, focused):
         w = urwid.Text(txt, wrap="any")
         if focused:
-            w = urwid.AttrWrap(w, "editfield")
+            w = urwid.AttrWrap(w, "focusfield")
         common.WWrap.__init__(self, w)
 
     def get_text(self):
@@ -21,7 +21,8 @@ class SText(common.WWrap):
 
 class SEdit(common.WWrap):
     def __init__(self, txt):
-        w = urwid.Edit(txt, wrap="any", multiline=True)
+        w = urwid.Edit(edit_text=txt, wrap="any", multiline=True)
+        w = urwid.AttrWrap(w, "editfield")
         common.WWrap.__init__(self, w)
 
     def get_text(self):
@@ -33,7 +34,7 @@ class SEdit(common.WWrap):
 
 class KVItem(common.WWrap):
     def __init__(self, focused, editing, maxk, k, v):
-        self.focused, self.editing = focused, editing
+        self.focused, self.editing, self.maxk = focused, editing, maxk
         if focused == 0 and editing:
             self.editing = self.kf = SEdit(k)
         else:
@@ -60,7 +61,7 @@ class KVItem(common.WWrap):
 
     def keypress(self, s, k):
         if self.editing:
-            k = self.editing.keypress(s, k)
+            k = self.editing.keypress((s[0]-self.maxk-4,), k)
         return k
 
     def selectable(self):
@@ -80,9 +81,10 @@ class KVWalker(urwid.ListWalker):
         self._modified()
 
     def stop_edit(self):
-        self.lst[self.focus] = self.editing.get_kv()
-        self.editing = False
-        self._modified()
+        if self.editing:
+            self.lst[self.focus] = self.editing.get_kv()
+            self.editing = False
+            self._modified()
 
     def left(self):
         self.focus_col = 0
@@ -107,6 +109,7 @@ class KVWalker(urwid.ListWalker):
             return KVItem(self.focus_col, False, self.maxk, *self.lst[self.focus]), self.focus
 
     def set_focus(self, focus):
+        self.stop_edit()
         self.focus = focus
 
     def get_next(self, pos):
@@ -126,8 +129,10 @@ class KVListBox(urwid.ListBox):
 
 
 class KVEditor(common.WWrap):
-    def __init__(self, master, title, value, callback):
+    def __init__(self, master, title, value, callback, *cb_args, **cb_kwargs):
+        value = copy.deepcopy(value)
         self.master, self.title, self.value, self.callback = master, title, value, callback
+        self.cb_args, self.cb_kwargs = cb_args, cb_kwargs
         p = urwid.Text(title)
         p = urwid.Padding(p, align="left", width=("relative", 100))
         p = urwid.AttrWrap(p, "heading")
@@ -138,17 +143,15 @@ class KVEditor(common.WWrap):
 
     def keypress(self, size, key):
         if self.walker.editing:
-            if key in ["esc"]:
-                self.walker.stop_edit()
-                return None
-            elif key in ["left", "right", "up", "down"]:
+            if key in ["esc", "enter"]:
                 self.walker.stop_edit()
             else:
                 self.w.keypress(size, key)
-                return None
+            return None
             
         key = common.shortcuts(key)
-        if key == ["q", "esc"]:
+        if key in ["q", "esc"]:
+            self.callback(self.walker.lst, *self.cb_args, **self.cb_kwargs)
             self.master.pop_view()
         elif key in ["h", "left"]:
             self.walker.left()
@@ -156,7 +159,7 @@ class KVEditor(common.WWrap):
             self.walker.right()
         elif key == "tab":
             self.walker.tab_next()
-        elif key == "enter":
+        elif key in ["enter", "e"]:
             self.walker.start_edit()
         else:
             return self.w.keypress(size, key)

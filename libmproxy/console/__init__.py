@@ -486,6 +486,7 @@ class ConsoleMaster(flow.FlowMaster):
             ('offset', 'dark cyan', 'default'),
 
             # KV Editor
+            ('focusfield', 'dark cyan', 'default'),
             ('editfield', 'black', 'light cyan'),
         ]
 
@@ -536,9 +537,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.header = None
         self.make_view()
 
-    def view_kveditor(self, title, value, callback):
+    def view_kveditor(self, title, value, callback, *args, **kwargs):
         self.statusbar = StatusBar(self, "foo")
-        self.body = kveditor.KVEditor(self, title, value, callback)
+        self.body = kveditor.KVEditor(self, title, value, callback, *args, **kwargs)
         self.header = None
         self.make_view()
 

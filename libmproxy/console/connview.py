@@ -1,6 +1,6 @@
 import urwid
 import common
-from .. import utils, encoding
+from .. import utils, encoding, flow
 
 VIEW_CUTOFF = 1024*100
 
@@ -341,6 +341,9 @@ class ConnectionView(common.WWrap):
         response.msg = msg
         self.master.refresh_connection(self.flow)
 
+    def set_headers(self, lst, conn):
+        conn.headers = flow.Headers(lst)
+
     def edit(self, part):
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             conn = self.flow.request
@@ -354,12 +357,7 @@ class ConnectionView(common.WWrap):
             c = self._spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n")
         elif part == "h":
-            self.master.view_kveditor("Editing headers", conn.headers.lst, None)
-            #headertext = self._spawn_editor(repr(conn.headers))
-            #headers = flow.Headers()
-            #fp = cStringIO.StringIO(headertext)
-            #headers.read(fp)
-            #conn.headers = headers
+            self.master.view_kveditor("Editing headers", conn.headers.lst, self.set_headers, conn)
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
