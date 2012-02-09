@@ -12,7 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, urlparse, string
+import re, os, subprocess, datetime, urlparse, string, urllib
 import time, functools, cgi, textwrap, hashlib
 import json
 
@@ -123,7 +123,17 @@ def pretty_json(s):
 
 
 def urldecode(s):
+    """
+        Takes a urlencoded string and returns a list of (key, value) tuples.
+    """
     return cgi.parse_qsl(s)
+
+
+def urlencode(s):
+    """
+        Takes a list of (key, value) tuples and returns a urlencoded string.
+    """
+    return urllib.urlencode(s, False)
 
 
 def hexdump(s):

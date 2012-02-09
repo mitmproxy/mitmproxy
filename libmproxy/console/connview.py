@@ -377,7 +377,7 @@ class ConnectionView(common.WWrap):
             conn = self.flow.response
 
         self.flow.backup()
-        if part == "b":
+        if part == "r":
             c = self.master.spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n")
         elif part == "h":
@@ -445,7 +445,7 @@ class ConnectionView(common.WWrap):
                     "Edit request",
                     (
                         ("header", "h"),
-                        ("body", "b"),
+                        ("raw body", "r"),
                         ("url", "u"),
                         ("method", "m"),
                     ),
@@ -458,7 +458,7 @@ class ConnectionView(common.WWrap):
                         ("code", "c"),
                         ("message", "m"),
                         ("header", "h"),
-                        ("body", "b"),
+                        ("raw body", "r"),
                     ),
                     self.edit
                 )

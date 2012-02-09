@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import hashlib, Cookie, cookielib, copy, re
+import hashlib, Cookie, cookielib, copy, re, urlparse
 import time
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
@@ -311,6 +311,25 @@ class Request(HTTPMsg):
         else:
             host = "%s:%s"%(self.host, self.port)
         return host
+
+    def get_query(self):
+        """
+            Gets the request query string. Returns a list of (key, value)
+            tuples.
+        """
+        _, _, _, _, query, _ = urlparse.urlparse(self.get_url())
+        if not query:
+            return []
+        return utils.urldecode(query)
+
+    def set_query(self, q):
+        """
+            Takes a list of (key, value) tuples, and sets the request query
+            string.
+        """
+        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url())
+        query = utils.urlencode(q)
+        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def get_url(self):
         """

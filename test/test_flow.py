@@ -10,7 +10,7 @@ class uStickyCookieState(libpry.AutoTree):
     def _response(self, cookie, host):
         s = flow.StickyCookieState(filt.parse(".*"))
         f = tutils.tflow_full()
-        f.request.host = host 
+        f.request.host = host
         f.response.headers["Set-Cookie"] = [cookie]
         s.handle_response(f)
         return s, f
@@ -153,12 +153,12 @@ class uFlow(libpry.AutoTree):
     def test_getset_state(self):
         f = tutils.tflow()
         f.response = tutils.tresp(f.request)
-        state = f._get_state() 
+        state = f._get_state()
         assert f._get_state() == flow.Flow._from_state(state)._get_state()
 
         f.response = None
         f.error = flow.Error(f.request, "error")
-        state = f._get_state() 
+        state = f._get_state()
         assert f._get_state() == flow.Flow._from_state(state)._get_state()
 
         f2 = tutils.tflow()
@@ -368,7 +368,7 @@ class uState(libpry.AutoTree):
 
         flows = c.view[:]
         c.clear()
-        
+
         c.load_flows(flows)
         assert isinstance(c._flow_list[0], flow.Flow)
 
@@ -473,7 +473,7 @@ class uFlowMaster(libpry.AutoTree):
 
         rx = tutils.tresp()
         assert not fm.handle_response(rx)
-        
+
         dc = flow.ClientDisconnect(req.client_conn)
         fm.handle_clientdisconnect(dc)
 
@@ -576,6 +576,29 @@ class uRequest(libpry.AutoTree):
 
         r2 = r.copy()
         assert r == r2
+
+    def test_getset_query(self):
+        h = flow.Headers()
+
+        r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
+        q = r.get_query()
+        assert q == [("x", "y"), ("a", "b")]
+
+        r = flow.Request(None, "host", 22, "https", "GET", "/", h, "content")
+        q = r.get_query()
+        assert not q
+
+        r = flow.Request(None, "host", 22, "https", "GET", "/?adsfa", h, "content")
+        q = r.get_query()
+        assert not q
+
+        r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
+        assert r.get_query()
+        r.set_query([])
+        assert not r.get_query()
+        qv = [("a", "b"), ("c", "d")]
+        r.set_query(qv)
+        assert r.get_query() == qv
 
     def test_anticache(self):
         h = flow.Headers()
