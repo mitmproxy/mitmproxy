@@ -368,6 +368,9 @@ class ConnectionView(common.WWrap):
     def set_headers(self, lst, conn):
         conn.headers = flow.Headers(lst)
 
+    def set_query(self, lst, conn):
+        conn.set_query(lst)
+
     def edit(self, part):
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             conn = self.flow.request
@@ -382,6 +385,8 @@ class ConnectionView(common.WWrap):
             conn.content = c.rstrip("\n")
         elif part == "h":
             self.master.view_kveditor("Editing headers", conn.headers.lst, self.set_headers, conn)
+        elif part == "q":
+            self.master.view_kveditor("Editing query", conn.get_query(), self.set_query, conn)
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
@@ -444,9 +449,10 @@ class ConnectionView(common.WWrap):
                 self.master.prompt_onekey(
                     "Edit request",
                     (
+                        ("query", "q"),
+                        ("url", "u"),
                         ("header", "h"),
                         ("raw body", "r"),
-                        ("url", "u"),
                         ("method", "m"),
                     ),
                     self.edit
