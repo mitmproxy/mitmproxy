@@ -7,7 +7,7 @@ def _mkhelp():
         ("A", "accept all intercepted connections"),
         ("a", "accept this intercepted connection"),
         ("C", "clear connection list or eventlog"),
-        ("d", "delete connection from view"),
+        ("d", "delete flow"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),

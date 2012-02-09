@@ -9,6 +9,7 @@ def _mkhelp():
         ("A", "accept all intercepted connections"),
         ("a", "accept this intercepted connection"),
         ("b", "save request/response body"),
+        ("d", "delete flow"),
         ("e", "edit request/response"),
         ("m", "change body display mode"),
             (None,
@@ -444,6 +445,16 @@ class ConnectionView(common.WWrap):
         elif key == "A":
             self.master.accept_all()
             self.master.view_flow(self.flow)
+        elif key == "d":
+            if self.state.flow_count() == 1:
+                self.master.view_connlist()
+            elif self.state.view.index(self.flow) == len(self.state.view)-1:
+                self.view_prev_flow(self.flow)
+            else:
+                self.view_next_flow(self.flow)
+            f = self.flow
+            f.kill(self.master)
+            self.state.delete_flow(f)
         elif key == "e":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
                 self.master.prompt_onekey(
