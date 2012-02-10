@@ -273,7 +273,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 cc.close = True
                 return
 
-            if request._is_response():
+            if isinstance(request, flow.Response):
                 response = request
                 request = False
                 response = response._send(self.mqueue)

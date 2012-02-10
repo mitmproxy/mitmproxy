@@ -1,4 +1,3 @@
-
 # Copyright (C) 2010  Aldo Cortesi
 #
 # This program is free software: you can redistribute it and/or modify
@@ -41,6 +40,7 @@
 """
 import re, sys
 import contrib.pyparsing as pp
+import flow
 
 
 class _Token:
@@ -57,18 +57,25 @@ class _Action(_Token):
         return klass(*toks[1:])
 
 
+class FErr(_Action):
+    code = "e"
+    help = "Match error"
+    def __call__(self, conn):
+        return isinstance(conn, flow.Error)
+
+
 class FReq(_Action):
     code = "q"
     help = "Match request"
     def __call__(self, conn):
-        return not conn._is_response()
+        return isinstance(conn, flow.Request)
 
 
 class FResp(_Action):
     code = "s"
     help = "Match response"
     def __call__(self, conn):
-        return conn._is_response()
+        return isinstance(conn, flow.Response)
 
 
 class _Rex(_Action):
@@ -92,7 +99,7 @@ class FContentType(_Rex):
     def __call__(self, o):
         if _check_content_type(self.expr, o):
             return True
-        elif o._is_response() and _check_content_type(self.expr, o.request):
+        elif isinstance(o, flow.Response) and _check_content_type(self.expr, o.request):
             return True
         else:
             return False
@@ -102,7 +109,7 @@ class FRequestContentType(_Rex):
     code = "tq"
     help = "Request Content-Type header"
     def __call__(self, o):
-        if o._is_response():
+        if isinstance(o, flow.Response):
             return _check_content_type(self.expr, o.request)
         else:
             return _check_content_type(self.expr, o)
@@ -112,7 +119,7 @@ class FResponseContentType(_Rex):
     code = "ts"
     help = "Request Content-Type header"
     def __call__(self, o):
-        if o._is_response():
+        if isinstance(o, flow.Response):
             return _check_content_type(self.expr, o)
         else:
             return False
@@ -123,7 +130,7 @@ class FHead(_Rex):
     help = "Header"
     def __call__(self, o):
         val = o.headers.match_re(self.expr)
-        if not val and o._is_response():
+        if not val and isinstance(o, flow.Response):
             val = o.request.headers.match_re(self.expr)
         return val
 
@@ -132,7 +139,7 @@ class FHeadRequest(_Rex):
     code = "hq"
     help = "Request header"
     def __call__(self, o):
-        if o._is_response():
+        if isinstance(o, flow.Response):
             h = o.request.headers
         else:
             h = o.headers
@@ -143,7 +150,7 @@ class FHeadResponse(_Rex):
     code = "hs"
     help = "Response header"
     def __call__(self, o):
-        if not o._is_response():
+        if not isinstance(o, flow.Response):
             return False
         return o.headers.match_re(self.expr)
 
@@ -154,7 +161,7 @@ class FBod(_Rex):
     def __call__(self, o):
         if o.content and re.search(self.expr, o.content):
             return True
-        elif o._is_response() and o.request.content and re.search(self.expr, o.request.content):
+        elif isinstance(o, flow.Response) and o.request.content and re.search(self.expr, o.request.content):
             return True
         return False
 
@@ -163,9 +170,9 @@ class FBodRequest(_Rex):
     code = "bq"
     help = "Request body"
     def __call__(self, o):
-        if o._is_response() and o.request.content and re.search(self.expr, o.request.content):
+        if isinstance(o, flow.Response) and o.request.content and re.search(self.expr, o.request.content):
             return True
-        elif not o._is_response() and o.content and re.search(self.expr, o.content):
+        elif not isinstance(o, flow.Response) and o.content and re.search(self.expr, o.content):
             return True
         return False
 
@@ -174,7 +181,7 @@ class FBodResponse(_Rex):
     code = "bs"
     help = "Response body"
     def __call__(self, o):
-        if not o._is_response():
+        if not isinstance(o, flow.Response):
             return False
         elif o.content and re.search(self.expr, o.content):
             return True
@@ -185,7 +192,7 @@ class FMethod(_Rex):
     code = "m"
     help = "Method"
     def __call__(self, o):
-        if o._is_response():
+        if isinstance(o, flow.Response):
             return False
         elif o.method:
             return re.search(self.expr, o.method, re.IGNORECASE)
@@ -203,7 +210,7 @@ class FUrl(_Rex):
         return klass(*toks)
 
     def __call__(self, o):
-        if o._is_response():
+        if isinstance(o, flow.Response):
             c = o.request
         else:
             c = o
@@ -219,7 +226,7 @@ class FCode(_Int):
     code = "c"
     help = "HTTP response code"
     def __call__(self, o):
-        if o._is_response():
+        if isinstance(o, flow.Response):
             return o.code == self.num
         return False
 
@@ -263,7 +270,8 @@ class FNot(_Token):
 
 filt_unary = [
     FReq,
-    FResp
+    FResp,
+    FErr
 ]
 filt_rex = [
     FHeadRequest,

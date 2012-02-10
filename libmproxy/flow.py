@@ -367,9 +367,6 @@ class Request(HTTPMsg):
         self.scheme, self.host, self.port, self.path = parts
         return True
 
-    def _is_response(self):
-        return False
-
     def _assemble(self, _proxy = False):
         """
             Assembles the request for transmission to the server. We make some
@@ -533,9 +530,6 @@ class Response(HTTPMsg):
         c = copy.copy(self)
         c.headers = self.headers.copy()
         return c
-
-    def _is_response(self):
-        return True
 
     def _assemble(self):
         """
@@ -942,6 +936,8 @@ class Flow:
                 return f(self.response)
             elif self.request:
                 return f(self.request)
+            elif self.error:
+                return f(self.error)
         else:
             return True
 

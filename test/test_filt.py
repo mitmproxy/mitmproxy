@@ -9,7 +9,7 @@ class uParsing(libpry.AutoTree):
         x.dump(fp=c)
         assert c.getvalue()
 
-    def test_err(self):
+    def test_parse_err(self):
         assert filt.parse("~h [") is None
 
     def test_simple(self):
@@ -99,6 +99,10 @@ class uMatching(libpry.AutoTree):
                     "content_response"
                 )
 
+    def err(self):
+        q = self.req()
+        return flow.Error(q, "msg")
+
     def q(self, q, o):
         return filt.parse(q)(o)
 
@@ -131,6 +135,10 @@ class uMatching(libpry.AutoTree):
 
         assert not self.q("~s", q)
         assert self.q("~s", s)
+
+    def test_ferr(self):
+        e = self.err()
+        assert self.q("~e", e)
 
     def test_head(self):
         q = self.req()
