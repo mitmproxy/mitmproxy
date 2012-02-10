@@ -453,8 +453,18 @@ class uFlowMaster(libpry.AutoTree):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         assert not fm.load_script("scripts/a.py")
+        assert not fm.load_script("scripts/a.py")
+        assert not fm.load_script(None)
         assert fm.load_script("nonexistent")
         assert "ValueError" in fm.load_script("scripts/starterr.py")
+
+    def test_script_reqerr(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        assert not fm.load_script("scripts/reqerr.py")
+        req = tutils.treq()
+        fm.handle_clientconnect(req.client_conn)
+        f = fm.handle_request(req)
 
     def test_script(self):
         s = flow.State()
@@ -494,10 +504,14 @@ class uFlowMaster(libpry.AutoTree):
         assert not fm.handle_response(rx)
 
         dc = flow.ClientDisconnect(req.client_conn)
+        req.client_conn.requestcount = 1
         fm.handle_clientdisconnect(dc)
 
         err = flow.Error(f.request, "msg")
         fm.handle_error(err)
+
+        fm.load_script("scripts/a.py")
+        fm.shutdown()
 
     def test_client_playback(self):
         s = flow.State()
