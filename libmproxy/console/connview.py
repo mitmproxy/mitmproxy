@@ -459,7 +459,7 @@ class ConnectionView(common.WWrap):
                 self.view_request()
         elif key in ("up", "down", "page up", "page down"):
             # Why doesn't this just work??
-            self.w.body.keypress(size, key)
+            self.w.keypress(size, key)
         elif key == "a":
             self.flow.accept_intercept()
             self.master.view_flow(self.flow)
