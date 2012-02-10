@@ -160,14 +160,14 @@ class ConnectionView(common.WWrap):
         ]
 
     def _view_conn_urlencoded(self, lines):
-        kv = common.format_keyvals(
-                [(k+":", v) for (k, v) in lines],
-                key = "header",
-                val = "text"
-             )
-        return [
-                    urwid.Text(("highlight", "URLencoded data:\n")),
-                    urwid.Text(kv)
+        return  [
+                    urwid.Text(
+                        common.format_keyvals(
+                                [(k+":", v) for (k, v) in lines],
+                                key = "header",
+                                val = "text"
+                        )
+                    )
                 ]
 
     def _find_pretty_view(self, content, hdrItems):
@@ -179,18 +179,18 @@ class ConnectionView(common.WWrap):
         if ctype and flow.HDR_FORM_URLENCODED in ctype:
             data = utils.urldecode(content)
             if data:
-                return self._view_conn_urlencoded(data)
+                return "URLEncoded form", self._view_conn_urlencoded(data)
         if utils.isXML(content):
-            return self._view_conn_xmlish(content)
+            return "Indented XML-ish", self._view_conn_xmlish(content)
         elif ctype and "application/json" in ctype:
             lines = utils.pretty_json(content)
             if lines:
-                return self._view_conn_json(lines)
+                return "JSON", self._view_conn_json(lines)
         elif ctype and "multipart/form-data" in ctype:
             boundary = ctype.split('boundary=')
             if len(boundary) > 1:
-                return self._view_conn_formdata(content, boundary[1].split(';')[0])
-        return self._view_conn_raw(content)
+                return "FOrm data", self._view_conn_formdata(content, boundary[1].split(';')[0])
+        return "", self._view_conn_raw(content)
 
     def _cached_conn_text(self, e, content, hdrItems, viewmode):
         hdr = []
@@ -201,24 +201,43 @@ class ConnectionView(common.WWrap):
                 val = "text"
             )
         )
-        hdr.append("\n")
-
         txt = [urwid.Text(hdr)]
         if content:
+            msg = ""
             if viewmode == common.VIEW_BODY_HEX:
-                txt.extend(self._view_conn_binary(content))
+                body = self._view_conn_binary(content)
             elif viewmode == common.VIEW_BODY_PRETTY:
+                emsg = ""
                 if e:
                     decoded = encoding.decode(e, content)
                     if decoded:
                         content = decoded
                         if e and e != "identity":
-                            txt.append(
-                                urwid.Text(("highlight", "Decoded %s data:\n"%e))
-                            )
-                txt.extend(self._find_pretty_view(content, hdrItems))
+                            emsg = "[decoded %s]"%e
+                msg, body = self._find_pretty_view(content, hdrItems)
+                if emsg:
+                    msg = emsg + " " + msg
             else:
-                txt.extend(self._view_conn_raw(content))
+                body = self._view_conn_raw(content)
+
+            title = urwid.AttrWrap(urwid.Columns([
+                urwid.Text(
+                    [
+                        ("statusbar", msg),
+                    ]
+                ),
+                urwid.Text(
+                    [
+                        " ",
+                        ('statusbar_text', "["),
+                        ('statusbar_key', "m"),
+                        ('statusbar_text', (":%s]"%common.BODY_VIEWS[self.master.state.view_body_mode])),
+                    ],
+                    align="right"
+                ),
+            ]), "statusbar")
+            txt.append(title)
+            txt.extend(body)
         return urwid.ListBox(txt)
 
     def _tab(self, content, active):

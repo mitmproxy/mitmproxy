@@ -38,23 +38,23 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     ret = []
     if lst:
         pad = max(len(i[0]) for i in lst if i and i[0]) + space
-        for i in lst:
-            if i is None:
-                ret.extend("\n")
-            elif i[0] is None:
+        for i, kv in enumerate(lst):
+            if kv is None:
+                ret.extend("")
+            elif kv[0] is None:
                 ret.append(" "*(pad + indent*2))
-                ret.extend(i[1])
-                ret.append("\n")
+                ret.extend(kv[1])
             else:
                 ret.extend(
                     [
                         " "*indent,
-                        (key, i[0]),
-                        " "*(pad-len(i[0])),
-                        (val, i[1]),
-                        "\n"
+                        (key, kv[0]),
+                        " "*(pad-len(kv[0])),
+                        (val, kv[1]),
                     ]
                 )
+            if i < len(lst) - 1:
+                ret.append("\n")
     return ret
 
 

@@ -185,11 +185,6 @@ class StatusBar(common.WWrap):
             urwid.Text(
                 [
                     self.helptext,
-                    " ",
-                    ('statusbar_text', "["),
-                    ('statusbar_key', "m"),
-                    ('statusbar_text', (":%s]"%common.BODY_VIEWS[self.master.state.view_body_mode])),
-                    ('statusbar_text', boundaddr),
                 ],
                 align="right"
             ),
