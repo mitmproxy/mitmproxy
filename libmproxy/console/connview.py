@@ -369,6 +369,9 @@ class ConnectionView(common.WWrap):
     def set_query(self, lst, conn):
         conn.set_query(lst)
 
+    def set_form(self, lst, conn):
+        conn.set_form_urlencoded(lst)
+
     def edit(self, part):
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             conn = self.flow.request
@@ -381,6 +384,8 @@ class ConnectionView(common.WWrap):
         if part == "r":
             c = self.master.spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n")
+        elif part == "f":
+            self.master.view_kveditor("Editing form", conn.get_form_urlencoded(), self.set_form, conn)
         elif part == "h":
             self.master.view_kveditor("Editing headers", conn.headers.lst, self.set_headers, conn)
         elif part == "q":
@@ -458,6 +463,7 @@ class ConnectionView(common.WWrap):
                     "Edit request",
                     (
                         ("query", "q"),
+                        ("form", "f"),
                         ("url", "u"),
                         ("header", "h"),
                         ("raw body", "r"),

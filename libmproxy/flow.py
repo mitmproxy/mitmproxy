@@ -8,7 +8,7 @@ import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import controller, version
 
-HDR_FORM_URLENCODED = "x-www-form-urlencoded"
+HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
 class RunException(Exception):
     def __init__(self, msg, returncode, errout):
@@ -332,7 +332,7 @@ class Request(HTTPMsg):
             Sets the body to the URL-encoded form data, and adds the
             appropriate content-type header.
         """
-        self.headers["content-type"] = [HDR_FORM_URLENCODED]
+        self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(data)
 
     def get_query(self):
