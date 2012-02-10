@@ -1,16 +1,16 @@
 
 # Copyright (C) 2010  Aldo Cortesi
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,7 +19,7 @@
 
         ~q          Request
         ~s          Response
-    
+
     Headers:
 
         Patterns are matched against "name: value" strings. Field names are
@@ -37,7 +37,7 @@
         ~m rex      Method
         ~u rex      URL
         ~c CODE     Response code.
-        rex         Equivalent to ~u rex 
+        rex         Equivalent to ~u rex
 """
 import re, sys
 import contrib.pyparsing as pp
@@ -69,7 +69,7 @@ class FResp(_Action):
     help = "Match response"
     def __call__(self, conn):
         return conn._is_response()
-    
+
 
 class _Rex(_Action):
     def __init__(self, expr):
@@ -84,7 +84,7 @@ def _check_content_type(expr, o):
     if val and re.search(expr, val[0]):
         return True
     return False
-    
+
 
 class FContentType(_Rex):
     code = "t"
@@ -126,7 +126,7 @@ class FHead(_Rex):
         if not val and o._is_response():
             val = o.request.headers.match_re(self.expr)
         return val
-    
+
 
 class FHeadRequest(_Rex):
     code = "hq"

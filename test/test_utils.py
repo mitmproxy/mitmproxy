@@ -29,11 +29,19 @@ class uhexdump(libpry.AutoTree):
     def test_simple(self):
         assert utils.hexdump("one\0"*10)
 
+
 class udel_all(libpry.AutoTree):
     def test_simple(self):
         d = dict(a=1, b=2, c=3)
         utils.del_all(d, ["a", "x", "b"])
         assert d.keys() == ["c"]
+
+
+class uclean_hanging_newline(libpry.AutoTree):
+    def test_simple(self):
+        s = "foo\n"
+        assert utils.clean_hanging_newline(s) == "foo"
+        assert utils.clean_hanging_newline("foo") == "foo"
 
 
 class upretty_size(libpry.AutoTree):
@@ -222,6 +230,7 @@ class u_parse_url(libpry.AutoTree):
 
 class u_parse_size(libpry.AutoTree):
     def test_simple(self):
+        assert not utils.parse_size("")
         assert utils.parse_size("1") == 1
         assert utils.parse_size("1k") == 1024
         assert utils.parse_size("1m") == 1024**2
@@ -245,5 +254,6 @@ tests = [
     udummy_cert(),
     uLRUCache(),
     u_parse_url(),
-    u_parse_size()
+    u_parse_size(),
+    uclean_hanging_newline()
 ]

@@ -178,6 +178,8 @@ class uMatching(libpry.AutoTree):
         assert self.q("~m get", q)
         assert not self.q("~m post", q)
         assert not self.q("~m get", s)
+        q.method = ""
+        assert not self.q("~m get", q)
 
     def test_url(self):
         q = self.req()

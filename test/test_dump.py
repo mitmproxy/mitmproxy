@@ -58,7 +58,7 @@ class uDumpMaster(libpry.AutoTree):
 
         o = dump.Options(server_replay=p, kill=True)
         m = dump.DumpMaster(None, o, None, outfile=cs)
-        
+
         self._cycle(m, "content")
         self._cycle(m, "content")
 
@@ -78,6 +78,11 @@ class uDumpMaster(libpry.AutoTree):
         libpry.raises(
             dump.DumpError, self._dummy_cycle,
             0, None, "", verbosity=1, rfile="/nonexistent"
+        )
+
+        libpry.raises(
+            dump.DumpError, self._dummy_cycle,
+            0, None, "", verbosity=1, rfile="test_dump.py"
         )
 
     def test_options(self):
@@ -106,7 +111,7 @@ class uDumpMaster(libpry.AutoTree):
             self._dummy_cycle,
             1,
             None,
-            "", 
+            "",
             wfile = "nonexistentdir/foo"
         )
 

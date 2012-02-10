@@ -10,12 +10,6 @@ import controller, version
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
-class RunException(Exception):
-    def __init__(self, msg, returncode, errout):
-        Exception.__init__(self, msg)
-        self.returncode = returncode
-        self.errout = errout
-
 
 class ScriptContext:
     def __init__(self, master):
@@ -398,10 +392,10 @@ class Request(HTTPMsg):
         if not 'host' in headers:
             headers["host"] = [self._hostport()]
         content = self.content
-        if content is not None:
-            headers["content-length"] = [str(len(content))]
-        else:
+        if content is None:
             content = ""
+        else:
+            headers["content-length"] = [str(len(content))]
         if self.close:
             headers["connection"] = ["close"]
         if not _proxy:
@@ -555,10 +549,10 @@ class Response(HTTPMsg):
             ['proxy-connection', 'connection', 'keep-alive', 'transfer-encoding']
         )
         content = self.content
-        if content is not None:
-            headers["content-length"] = [str(len(content))]
-        else:
+        if content is None:
             content = ""
+        else:
+            headers["content-length"] = [str(len(content))]
         if self.request.client_conn.close:
             headers["connection"] = ["close"]
         proto = "HTTP/1.1 %s %s"%(self.code, str(self.msg))

@@ -15,6 +15,11 @@ class uStickyCookieState(libpry.AutoTree):
         s.handle_response(f)
         return s, f
 
+    def test_domain_match(self):
+        s = flow.StickyCookieState(filt.parse(".*"))
+        assert s.domain_match("www.google.com", ".google.com")
+        assert s.domain_match("google.com", ".google.com")
+
     def test_handle_response(self):
         c = "SSID=mooo, FOO=bar; Domain=.google.com; Path=/; "\
             "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
@@ -294,6 +299,15 @@ class uState(libpry.AutoTree):
 
         e = flow.Error(tutils.tflow().request, "message")
         assert not c.add_error(e)
+
+        c = flow.State()
+        req = tutils.treq()
+        f = c.add_request(req)
+        e = flow.Error(f.request, "message")
+        c.set_limit("~bs message")
+        assert not c.view
+        assert c.add_error(e)
+        #assert c.view
 
 
     def test_set_limit(self):
@@ -577,6 +591,14 @@ class uRequest(libpry.AutoTree):
         r2 = r.copy()
         assert r == r2
 
+        r.content = None
+        assert r._assemble()
+
+        r.close = True
+        assert "connection: close" in r._assemble()
+
+        assert r._assemble(True)
+
     def test_getset_form_urlencoded(self):
         h = flow.Headers()
         h["content-type"] = [flow.HDR_FORM_URLENCODED]
@@ -588,6 +610,8 @@ class uRequest(libpry.AutoTree):
         r.set_form_urlencoded(d)
         assert r.get_form_urlencoded() == d
 
+        r.headers["content-type"] = ["foo"]
+        assert not r.get_form_urlencoded()
 
     def test_getset_query(self):
         h = flow.Headers()
@@ -652,6 +676,12 @@ class uRequest(libpry.AutoTree):
         assert not "foo" in r.content
         assert r.headers["boo"] == ["boo"]
 
+    def test_constrain_encoding(self):
+        r = tutils.treq()
+        r.headers["accept-encoding"] = ["gzip", "oink"]
+        r.constrain_encoding()
+        assert "oink" not in r.headers["accept-encoding"]
+
     def test_decodeencode(self):
         r = tutils.treq()
         r.headers["content-encoding"] = ["identity"]
@@ -659,6 +689,10 @@ class uRequest(libpry.AutoTree):
         r.decode()
         assert not r.headers["content-encoding"]
         assert r.content == "falafel"
+
+        r = tutils.treq()
+        r.content = "falafel"
+        assert not r.decode()
 
         r = tutils.treq()
         r.headers["content-encoding"] = ["identity"]
@@ -689,6 +723,12 @@ class uResponse(libpry.AutoTree):
 
         resp2 = resp.copy()
         assert resp2 == resp
+
+        resp.content = None
+        assert resp._assemble()
+
+        resp.request.client_conn.close = True
+        assert "connection: close" in resp._assemble()
 
     def test_refresh(self):
         r = tutils.tresp()
@@ -808,6 +848,10 @@ class uClientConnect(libpry.AutoTree):
 class uHeaders(libpry.AutoTree):
     def setUp(self):
         self.hd = flow.Headers()
+
+    def test_str_err(self):
+        h = flow.Headers()
+        libpry.raises(ValueError, h.__setitem__, "key", "foo")
 
     def test_read_simple(self):
         data = """
