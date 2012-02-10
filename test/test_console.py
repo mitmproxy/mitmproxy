@@ -72,7 +72,7 @@ class uState(libpry.AutoTree):
         self._add_response(c)
         self._add_request(c)
         self._add_response(c)
-        assert not c.set_limit("~q")
+        assert not c.set_limit("~s")
         assert len(c.view) == 3
         assert c.focus == 0
 

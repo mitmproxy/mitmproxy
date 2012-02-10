@@ -932,12 +932,14 @@ class Flow:
             if matched, False if not.
         """
         if f:
-            if self.response:
-                return f(self.response)
-            elif self.request:
-                return f(self.request)
-            elif self.error:
-                return f(self.error)
+            if self.response and f(self.response):
+                return True
+            elif self.request and f(self.request):
+                return True
+            elif self.error and f(self.error):
+                return True
+            else:
+                return False
         else:
             return True
 

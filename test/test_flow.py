@@ -142,6 +142,10 @@ class uFlow(libpry.AutoTree):
         f.request = f.response.request
         assert not f.match(filt.parse("~b test"))
         assert f.match(None)
+        assert not f.match(filt.parse("~b test"))
+
+        f = tutils.tflow_err()
+        assert f.match(filt.parse("~e"))
 
     def test_backup(self):
         f = tutils.tflow()
@@ -304,10 +308,11 @@ class uState(libpry.AutoTree):
         req = tutils.treq()
         f = c.add_request(req)
         e = flow.Error(f.request, "message")
-        c.set_limit("~bs message")
+        c.set_limit("~e")
+        assert not c.view
         assert not c.view
         assert c.add_error(e)
-        #assert c.view
+        assert c.view
 
 
     def test_set_limit(self):
@@ -332,7 +337,7 @@ class uState(libpry.AutoTree):
         c.add_request(req)
         assert len(c.view) == 2
         c.set_limit("~q")
-        assert len(c.view) == 1
+        assert len(c.view) == 2
         c.set_limit("~s")
         assert len(c.view) == 1
 
