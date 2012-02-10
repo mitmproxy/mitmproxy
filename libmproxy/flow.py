@@ -8,6 +8,8 @@ import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import controller, version
 
+HDR_FORM_URLENCODED = "x-www-form-urlencoded"
+
 class RunException(Exception):
     def __init__(self, msg, returncode, errout):
         Exception.__init__(self, msg)
@@ -56,6 +58,8 @@ class Headers:
         return new
 
     def __setitem__(self, k, hdrs):
+        if isinstance(hdrs, basestring):
+            raise ValueError("Header values should be lists.")
         k = self._kconv(k)
         new = self._filter_lst(k, self.lst)
         for i in hdrs:
@@ -311,6 +315,25 @@ class Request(HTTPMsg):
         else:
             host = "%s:%s"%(self.host, self.port)
         return host
+
+    def get_form_urlencoded(self):
+        """
+            Retrieves the URL-encoded form data, returning a list of (key,
+            value) tuples. Returns an empty list if there is no data or the
+            content-type indicates non-form data.
+        """
+        hv = [i.lower() for i in self.headers["content-type"]]
+        if HDR_FORM_URLENCODED in hv:
+            return utils.urldecode(self.content)
+        return []
+
+    def set_form_urlencoded(self, data):
+        """
+            Sets the body to the URL-encoded form data, and adds the
+            appropriate content-type header.
+        """
+        self.headers["content-type"] = [HDR_FORM_URLENCODED]
+        self.content = utils.urlencode(data)
 
     def get_query(self):
         """

@@ -176,7 +176,7 @@ class ConnectionView(common.WWrap):
             if i[0].lower() == "content-type":
                 ctype = i[1]
                 break
-        if ctype and "x-www-form-urlencoded" in ctype:
+        if ctype and flow.HDR_FORM_URLENCODED in ctype:
             data = utils.urldecode(content)
             if data:
                 return self._view_conn_urlencoded(data)
@@ -220,9 +220,6 @@ class ConnectionView(common.WWrap):
             else:
                 txt.extend(self._view_conn_raw(content))
         return urwid.ListBox(txt)
-
-
-
 
     def _tab(self, content, active):
         if active:

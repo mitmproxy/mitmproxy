@@ -577,6 +577,18 @@ class uRequest(libpry.AutoTree):
         r2 = r.copy()
         assert r == r2
 
+    def test_getset_form_urlencoded(self):
+        h = flow.Headers()
+        h["content-type"] = [flow.HDR_FORM_URLENCODED]
+        d = [("one", "two"), ("three", "four")]
+        r = flow.Request(None, "host", 22, "https", "GET", "/", h, utils.urlencode(d))
+        assert r.get_form_urlencoded() == d
+
+        d = [("x", "y")]
+        r.set_form_urlencoded(d)
+        assert r.get_form_urlencoded() == d
+
+
     def test_getset_query(self):
         h = flow.Headers()
 
