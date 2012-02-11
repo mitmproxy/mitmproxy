@@ -149,26 +149,23 @@ class ConnectionView(common.WWrap):
                     vals.append(utils.cleanBin(
                         "\n".join(parts[3+parts[2:].index(""):])
                     ))
-        kv = common.format_keyvals(
+        r = [
+            urwid.Text(("highlight", "Form data:\n")),
+        ]
+        r.extend(common.format_keyvals(
             zip(keys, vals),
             key = "header",
             val = "text"
-        )
-        return [
-            urwid.Text(("highlight", "Form data:\n")),
-            urwid.Text(kv)
-        ]
+        ))
+        return r
 
     def _view_conn_urlencoded(self, lines):
-        return  [
-                    urwid.Text(
-                        common.format_keyvals(
-                                [(k+":", v) for (k, v) in lines],
-                                key = "header",
-                                val = "text"
-                        )
-                    )
-                ]
+        return common.format_keyvals(
+                    [(k+":", v) for (k, v) in lines],
+                    key = "header",
+                    val = "text"
+               )
+
 
     def _find_pretty_view(self, content, hdrItems):
         ctype = None
@@ -189,19 +186,15 @@ class ConnectionView(common.WWrap):
         elif ctype and "multipart/form-data" in ctype:
             boundary = ctype.split('boundary=')
             if len(boundary) > 1:
-                return "FOrm data", self._view_conn_formdata(content, boundary[1].split(';')[0])
+                return "Form data", self._view_conn_formdata(content, boundary[1].split(';')[0])
         return "", self._view_conn_raw(content)
 
     def _cached_conn_text(self, e, content, hdrItems, viewmode):
-        hdr = []
-        hdr.extend(
-            common.format_keyvals(
+        txt = common.format_keyvals(
                 [(h+":", v) for (h, v) in hdrItems],
                 key = "header",
                 val = "text"
             )
-        )
-        txt = [urwid.Text(hdr)]
         if content:
             msg = ""
             if viewmode == common.VIEW_BODY_HEX:

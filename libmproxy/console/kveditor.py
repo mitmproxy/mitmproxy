@@ -87,10 +87,11 @@ class KVItem(common.WWrap):
         return True
 
 
+KEY_MAX = 30
 class KVWalker(urwid.ListWalker):
     def __init__(self, lst, editor):
         self.lst, self.editor = lst, editor
-        self.maxk = max(len(v[0]) for v in lst) if lst else 20
+        self.maxk = min(max(len(v[0]) for v in lst), KEY_MAX) if lst else 20
         if self.maxk < 20:
             self.maxk = 20
         self.focus = 0

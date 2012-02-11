@@ -23,10 +23,10 @@ class HelpView(urwid.ListBox):
 
     def helptext(self):
         text = []
-        text.append(("head", "Keys for this view:\n"))
+        text.append(urwid.Text([("head", "Keys for this view:\n")]))
         text.extend(self.help_context)
 
-        text.append(("head", "\n\nMovement:\n"))
+        text.append(urwid.Text([("head", "\n\nMovement:\n")]))
         keys = [
             ("j, k", "up, down"),
             ("h, l", "left, right (in some contexts)"),
@@ -36,7 +36,7 @@ class HelpView(urwid.ListBox):
         ]
         text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.append(("head", "\n\nGlobal keys:\n"))
+        text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
             ("c", "client replay"),
             ("i", "set interception pattern"),
@@ -68,7 +68,7 @@ class HelpView(urwid.ListBox):
         ]
         text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
 
-        text.append(("head", "\n\nFilter expressions:\n"))
+        text.append(urwid.Text([("head", "\n\nFilter expressions:\n")]))
         f = []
         for i in filt.filt_unary:
             f.append(
@@ -93,16 +93,18 @@ class HelpView(urwid.ListBox):
         )
         text.extend(common.format_keyvals(f, key="key", val="text", indent=4))
 
-        text.extend(
-           [
-                "\n",
-                ("text", "    Regexes are Python-style.\n"),
-                ("text", "    Regexes can be specified as quoted strings.\n"),
-                ("text", "    Header matching (~h, ~hq, ~hs) is against a string of the form \"name: value\".\n"),
-                ("text", "    Expressions with no operators are regex matches against URL.\n"),
-                ("text", "    Default binary operator is &.\n"),
-                ("head", "\n    Examples:\n"),
-           ]
+        text.append(
+            urwid.Text(
+               [
+                    "\n",
+                    ("text", "    Regexes are Python-style.\n"),
+                    ("text", "    Regexes can be specified as quoted strings.\n"),
+                    ("text", "    Header matching (~h, ~hq, ~hs) is against a string of the form \"name: value\".\n"),
+                    ("text", "    Expressions with no operators are regex matches against URL.\n"),
+                    ("text", "    Default binary operator is &.\n"),
+                    ("head", "\n    Examples:\n"),
+               ]
+            )
         )
         examples = [
                 ("google\.com", "Url containing \"google.com"),
@@ -110,5 +112,5 @@ class HelpView(urwid.ListBox):
                 ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(common.format_keyvals(examples, key="key", val="text", indent=4))
-        return [urwid.Text(text)]
+        return text
 

@@ -27,7 +27,8 @@ def highlight_key(s, k):
     return l
 
 
-def format_keyvals(lst, key="key", val="text", space=5, indent=0):
+KEY_MAX = 30
+def format_keyvals(lst, key="key", val="text", indent=0):
     """
         Format a list of (key, value) tuples.
 
@@ -37,24 +38,25 @@ def format_keyvals(lst, key="key", val="text", space=5, indent=0):
     """
     ret = []
     if lst:
-        pad = max(len(i[0]) for i in lst if i and i[0]) + space
+        maxk = min(max(len(i[0]) for i in lst if i and i[0]), KEY_MAX)
         for i, kv in enumerate(lst):
             if kv is None:
-                ret.extend("")
-            elif kv[0] is None:
-                ret.append(" "*(pad + indent*2))
-                ret.extend(kv[1])
+                ret.append(Text(""))
             else:
-                ret.extend(
-                    [
-                        " "*indent,
-                        (key, kv[0]),
-                        " "*(pad-len(kv[0])),
-                        (val, kv[1]),
-                    ]
+                ret.append(
+                    urwid.Columns(
+                        [
+                            ("fixed", indent, urwid.Text("")),
+                            (
+                                "fixed",
+                                maxk,
+                                urwid.Text([(key, kv[0] or "")])
+                            ),
+                            urwid.Text([(val, kv[1])])
+                        ],
+                        dividechars = 2
+                    )
                 )
-            if i < len(lst) - 1:
-                ret.append("\n")
     return ret
 
 
@@ -122,8 +124,6 @@ def format_flow(f, focus, extended=False, padding=2):
     else:
         txt.insert(0, " "*padding)
     return txt
-
-
 
 
 def int_version(v):
