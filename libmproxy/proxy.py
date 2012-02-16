@@ -22,13 +22,14 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, body_size_limit = None):
+    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, body_size_limit = None, reverse_upstream=None):
         self.certfile = certfile
         self.ciphers = ciphers
         self.cacert = cacert
         self.certdir = None
         self.cert_wait_time = cert_wait_time
         self.body_size_limit = body_size_limit
+        self.reverse_upstream = reverse_upstream
 
 
 def read_chunked(fp, limit):
@@ -347,6 +348,12 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             self.rfile = FileLike(self.connection)
             self.wfile = FileLike(self.connection)
             method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())
+        # if we're in reverse proxy mode, we only get the path and version in the request
+        # and need to fill up host and port from the configuration
+        if self.config.reverse_upstream:
+            scheme = 'http'
+            host, port = self.config.reverse_upstream.split(':')
+            port = int(port)
         if scheme is None:
             scheme = "https"
         headers = flow.Headers()
@@ -488,7 +495,8 @@ def process_proxy_options(parser, options):
         cacert = cacert,
         ciphers = options.ciphers,
         cert_wait_time = options.cert_wait_time,
-        body_size_limit = body_size_limit
+        body_size_limit = body_size_limit,
+        reverse_upstream = options.reverse_upstream
     )
 
 
