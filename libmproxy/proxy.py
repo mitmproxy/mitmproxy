@@ -348,8 +348,11 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             self.rfile = FileLike(self.connection)
             self.wfile = FileLike(self.connection)
             method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())
-        # if we're in reverse proxy mode, we only get the path and version in the request
-        # and need to fill up host and port from the configuration
+        # If we're in reverse proxy mode, we only get the path and
+        # version in the request and need to fill up host and port
+        # from the configuration. This still assumes that the client will
+        # provide the correct Host: header and we do not need to tamper
+        # with that (or will tamper using other means).
         if self.config.reverse_upstream:
             scheme = 'http'
             host, port = self.config.reverse_upstream.split(':')
