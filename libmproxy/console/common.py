@@ -71,7 +71,7 @@ def shortcuts(k):
 
 
 def fcol(s, attr):
-    s = str(s)
+    s = unicode(s)
     return (
         "fixed",
         len(s),
@@ -81,6 +81,7 @@ def fcol(s, attr):
             ]
         )
     )
+
 
 
 def format_flow(f, focus, extended=False, padding=2):
@@ -97,17 +98,20 @@ def format_flow(f, focus, extended=False, padding=2):
     else:
         req.append(fcol(">>" if focus else "  ", "focus"))
     if f.request.is_replay():
-        req.append(fcol("[replay]", "method"))
+        req.append(fcol(u"\u267B", "replay"))
     req.append(fcol(f.request.method, "method"))
 
     preamble = sum(i[1] for i in req) + len(req) -1
+
+    if f.intercepting and not f.request.acked:
+        uc = "intercept"
+    elif f.response or f.error:
+        uc = "text"
+    else:
+        uc = "title"
+
     req.append(
-        urwid.Text([
-            (
-                "text" if (f.response or f.error) else "title",
-                f.request.get_url(),
-            )
-        ])
+        urwid.Text([(uc, f.request.get_url())])
     )
 
     pile.append(urwid.Columns(req, dividechars=1))
@@ -118,21 +122,30 @@ def format_flow(f, focus, extended=False, padding=2):
     )
 
     if f.response or f.error:
-        resp.append(fcol("<-", "method"))
+        resp.append(fcol(u"\u2190", "method"))
 
     if f.response:
         if f.response.is_replay():
-            resp.append("[replay]", "method")
+            resp.append(fcol(u"\u267B", "replay"))
         if f.response.code in [200, 304]:
             resp.append(fcol(f.response.code, "goodcode"))
         else:
             resp.append(fcol(f.response.code, "error"))
+
+        if f.intercepting and f.response and not f.response.acked:
+            rc = "intercept"
+        else:
+            rc = "text"
+
         t = f.response.headers["content-type"]
         if t:
             t = t[0].split(";")[0]
-            resp.append(fcol(t, "text"))
+            resp.append(fcol(t, rc))
         if f.response.content:
-            resp.append(fcol(utils.pretty_size(len(f.response.content)), "text"))
+            resp.append(fcol(utils.pretty_size(len(f.response.content)), rc))
+        else:
+            resp.append(fcol("[empty content]", rc))
+
     elif f.error:
         resp.append(
             urwid.Text([

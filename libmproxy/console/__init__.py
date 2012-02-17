@@ -18,7 +18,7 @@ import os.path, sys
 import cStringIO
 import urwid
 from .. import controller, utils, filt, flow
-import connlist, connview, help, common, kveditor
+import connlist, connview, help, common, kveditor, palettes
 
 EVENTLOG_SIZE = 500
 
@@ -471,48 +471,13 @@ class ConsoleMaster(flow.FlowMaster):
         os.unlink(name)
 
     def set_palette(self):
-        BARBG = "dark blue"
-        self.palette = [
-            ('body', 'black', 'dark cyan', 'standout'),
-            ('foot', 'light gray', 'default'),
-            ('title', 'white,bold', 'default',),
-            ('editline', 'white', 'default',),
-
-            # Status bar
-            ('statusbar', 'light gray', BARBG),
-            ('statusbar_key', 'light cyan', BARBG),
-            ('statusbar_text', 'light gray', BARBG),
-            ('statusbar_highlight', 'white', BARBG),
-
-            # Help
-            ('key', 'light cyan', 'default', 'underline'),
-            ('head', 'white,bold', 'default'),
-            ('text', 'light gray', 'default'),
-
-            # List and Connections
-            ('method', 'dark cyan', 'default'),
-            ('focus', 'yellow', 'default'),
-            ('goodcode', 'light green', 'default'),
-            ('error', 'light red', 'default'),
-            ('header', 'dark cyan', 'default'),
-            ('heading', 'white,bold', 'dark blue'),
-            ('inactive_heading', 'white', 'dark gray'),
-            ('highlight', 'white,bold', 'default'),
-            ('inactive', 'dark gray', 'default'),
-            ('ack', 'light red', 'default'),
-
-            # Hex view
-            ('offset', 'dark cyan', 'default'),
-
-            # KV Editor
-            ('focusfield', 'black', 'light gray'),
-            ('editfield', 'black', 'light cyan'),
-        ]
+        self.palette = palettes.dark
 
     def run(self):
         self.currentflow = None
 
         self.ui = urwid.raw_display.Screen()
+        self.ui.set_terminal_properties(256)
         self.ui.register_palette(self.palette)
         self.conn_list_view = connlist.ConnectionListView(self, self.state)
 
