@@ -145,7 +145,6 @@ def format_flow(f, focus, extended=False, padding=2):
             resp.append(fcol(utils.pretty_size(len(f.response.content)), rc))
         else:
             resp.append(fcol("[empty content]", rc))
-
     elif f.error:
         resp.append(
             urwid.Text([

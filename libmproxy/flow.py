@@ -660,9 +660,9 @@ class Error(controller.Msg):
         )
 
     @classmethod
-    def _from_state(klass, state):
+    def _from_state(klass, request, state):
         return klass(
-            None,
+            request,
             state["msg"],
             state["timestamp"],
         )
@@ -896,7 +896,7 @@ class Flow:
             if self.error:
                 self.error._load_state(state["error"])
             else:
-                self.error = Error._from_state(state["error"])
+                self.error = Error._from_state(self.request, state["error"])
         else:
             self.error = None
 
