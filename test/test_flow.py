@@ -830,7 +830,7 @@ class uError(libpry.AutoTree):
     def test_getset_state(self):
         e = flow.Error(None, "Error")
         state = e._get_state()
-        assert flow.Error._from_state(state) == e
+        assert flow.Error._from_state(None, state) == e
 
         assert e.copy()
 

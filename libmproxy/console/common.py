@@ -41,7 +41,7 @@ def format_keyvals(lst, key="key", val="text", indent=0):
         maxk = min(max(len(i[0]) for i in lst if i and i[0]), KEY_MAX)
         for i, kv in enumerate(lst):
             if kv is None:
-                ret.append(Text(""))
+                ret.append(urwid.Text(""))
             else:
                 ret.append(
                     urwid.Columns(

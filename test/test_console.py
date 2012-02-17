@@ -90,36 +90,6 @@ class uformat_keyvals(libpry.AutoTree):
         )
 
 
-class uformat_flow(libpry.AutoTree):
-    def test_simple(self):
-        f = tutils.tflow()
-        foc = ('focus', '>>')
-        assert foc not in common.format_flow(f, False)
-        assert foc in common.format_flow(f, True)
-
-        assert foc not in common.format_flow(f, False, True)
-        assert foc in common.format_flow(f, True, True)
-
-        f.response = tutils.tresp()
-        f.request = f.response.request
-        f.backup()
-
-        f.request._set_replay()
-        f.response._set_replay()
-        assert ('method', '[replay]') in common.format_flow(f, True)
-        assert ('method', '[replay]') in common.format_flow(f, True, True)
-
-        f.response.code = 404
-        assert ('error', '404') in common.format_flow(f, True, True)
-        f.response.headers["content-type"] = ["text/html"]
-        assert ('text', ' text/html') in common.format_flow(f, True, True)
-
-        f.response =None
-        f.error = flow.Error(f.request, "error")
-        assert ('error', 'error') in common.format_flow(f, True, True)
-
-
-
 class uPathCompleter(libpry.AutoTree):
     def test_lookup_construction(self):
         c = console._PathCompleter()
@@ -169,7 +139,6 @@ class uOptions(libpry.AutoTree):
 
 tests = [
     uformat_keyvals(),
-    uformat_flow(),
     uState(),
     uPathCompleter(),
     uOptions()
