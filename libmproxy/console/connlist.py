@@ -79,7 +79,6 @@ class BodyPile(urwid.Pile):
         return self.focus_item.keypress( tsize, key )
 
 
-
 class ConnectionItem(common.WWrap):
     def __init__(self, master, state, flow, focus):
         self.master, self.state, self.flow = master, state, flow
@@ -88,7 +87,7 @@ class ConnectionItem(common.WWrap):
         common.WWrap.__init__(self, w)
 
     def get_text(self):
-        return urwid.Text(common.format_flow(self.flow, self.focus))
+        return common.format_flow(self.flow, self.focus)
 
     def selectable(self):
         return True

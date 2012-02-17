@@ -70,60 +70,80 @@ def shortcuts(k):
     return k
 
 
-def format_flow(f, focus, extended=False, padding=2):
-    txt = []
-    if extended:
-        txt.append(("highlight", utils.format_timestamp(f.request.timestamp)))
-    txt.append(" ")
-    if f.request.is_replay():
-        txt.append(("method", "[replay]"))
-    txt.extend([
-        ("ack", "!") if f.intercepting and not f.request.acked else " ",
-        ("method", f.request.method),
-        " ",
-        (
-            "text" if (f.response or f.error) else "title",
-            f.request.get_url(),
-        ),
-    ])
-    if f.response or f.error or f.request.is_replay():
-        tsr = f.response or f.error
-        if extended and tsr:
-            ts = ("highlight", utils.format_timestamp(tsr.timestamp) + " ")
-        else:
-            ts = " "
+def fcol(s, attr):
+    s = str(s)
+    return (
+        "fixed",
+        len(s),
+        urwid.Text(
+            [
+                (attr, s)
+            ]
+        )
+    )
 
-        txt.append("\n")
-        txt.append(("text", ts))
-        txt.append(" "*(padding+2))
+
+def format_flow(f, focus, extended=False, padding=2):
+    pile = []
+
+    req = []
+    if extended:
+        req.append(
+            fcol(
+                utils.format_timestamp(f.request.timestamp),
+                "highlight"
+            )
+        )
+    else:
+        req.append(fcol(">>" if focus else "  ", "focus"))
+    if f.request.is_replay():
+        req.append(fcol("[replay]", "method"))
+    req.append(fcol(f.request.method, "method"))
+
+    preamble = sum(i[1] for i in req) + len(req) -1
+    req.append(
+        urwid.Text([
+            (
+                "text" if (f.response or f.error) else "title",
+                f.request.get_url(),
+            )
+        ])
+    )
+
+    pile.append(urwid.Columns(req, dividechars=1))
+
+    resp = []
+    resp.append(
+        ("fixed", preamble, urwid.Text(""))
+    )
+
+    if f.response or f.error:
+        resp.append(fcol("<-", "method"))
 
     if f.response:
-        txt.append(
-           ("ack", "!") if f.intercepting and not f.response.acked else " "
-        )
-        txt.append("<- ")
         if f.response.is_replay():
-            txt.append(("method", "[replay] "))
+            resp.append("[replay]", "method")
         if f.response.code in [200, 304]:
-            txt.append(("goodcode", str(f.response.code)))
+            resp.append(fcol(f.response.code, "goodcode"))
         else:
-            txt.append(("error", str(f.response.code)))
+            resp.append(fcol(f.response.code, "error"))
         t = f.response.headers["content-type"]
         if t:
             t = t[0].split(";")[0]
-            txt.append(("text", " %s"%t))
+            resp.append(fcol(t, "text"))
         if f.response.content:
-            txt.append(", %s"%utils.pretty_size(len(f.response.content)))
+            resp.append(fcol(utils.pretty_size(len(f.response.content)), "text"))
     elif f.error:
-        txt.append(
-           ("error", f.error.msg)
+        resp.append(
+            urwid.Text([
+                (
+                    "error",
+                    f.error.msg
+                )
+            ])
         )
-
-    if focus:
-        txt.insert(0, ("focus", ">>" + " "*(padding-2)))
-    else:
-        txt.insert(0, " "*padding)
-    return txt
+    pile.append(urwid.Columns(resp, dividechars=1))
+    return urwid.Pile(pile)
 
 
 def int_version(v):

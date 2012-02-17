@@ -45,11 +45,11 @@ VIEW_CUTOFF = 1024*100
 class ConnectionViewHeader(common.WWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
-        self.w = urwid.Text(common.format_flow(f, False, extended=True, padding=0))
+        self.w = common.format_flow(f, False, extended=True, padding=0)
 
     def refresh_connection(self, f):
         if f == self.flow:
-            self.w = urwid.Text(common.format_flow(f, False, extended=True, padding=0))
+            self.w = common.format_flow(f, False, extended=True, padding=0)
 
 
 class CallbackCache:
