@@ -1,4 +1,4 @@
-import os
+import os, re
 import urwid
 import common
 from .. import utils, encoding, flow
@@ -216,19 +216,19 @@ class ConnectionView(common.WWrap):
             title = urwid.AttrWrap(urwid.Columns([
                 urwid.Text(
                     [
-                        ("statusbar", msg),
+                        ("heading", msg),
                     ]
                 ),
                 urwid.Text(
                     [
                         " ",
-                        ('statusbar_text', "["),
-                        ('statusbar_key', "m"),
-                        ('statusbar_text', (":%s]"%common.BODY_VIEWS[self.master.state.view_body_mode])),
+                        ('heading', "["),
+                        ('heading_key', "m"),
+                        ('heading', (":%s]"%common.BODY_VIEWS[self.master.state.view_body_mode])),
                     ],
                     align="right"
                 ),
-            ]), "statusbar")
+            ]), "heading")
             txt.append(title)
             txt.extend(body)
         return urwid.ListBox(txt)
