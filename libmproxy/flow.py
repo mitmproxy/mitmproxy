@@ -851,6 +851,15 @@ class Flow:
         self.intercepting = False
         self._backup = None
 
+    def copy(self):
+        rc = self.request.copy()
+        f = Flow(rc)
+        if self.response:
+            f.response = self.response.copy()
+        if self.error:
+            f.error = self.error.copy()
+        return f
+
     @classmethod
     def _from_state(klass, state):
         f = klass(None)
@@ -1011,6 +1020,7 @@ class State(object):
         f = Flow(req)
         self._flow_list.append(f)
         self._flow_map[req] = f
+        assert len(self._flow_list) == len(self._flow_map)
         if f.match(self._limit):
             self.view.append(f)
         return f
@@ -1235,17 +1245,24 @@ class FlowMaster(controller.Master):
 
         return controller.Master.tick(self, q)
 
+    def duplicate_flow(self, f):
+        return self.load_flow(f.copy())
+
+    def load_flow(self, f):
+        if f.request:
+            fr = self.handle_request(f.request)
+        if f.response:
+            self.handle_response(f.response)
+        if f.error:
+            self.handle_error(f.error)
+        return fr
+
     def load_flows(self, fr):
         """
             Load flows from a FlowReader object.
         """
         for i in fr.stream():
-            if i.request:
-                self.handle_request(i.request)
-            if i.response:
-                self.handle_response(i.response)
-            if i.error:
-                self.handle_error(i.error)
+            self.load_flow(i)
 
     def process_new_request(self, f):
         if self.stickycookie_state:

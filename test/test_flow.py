@@ -136,6 +136,14 @@ class uServerPlaybackState(libpry.AutoTree):
 
 
 class uFlow(libpry.AutoTree):
+    def test_copy(self):
+        f = tutils.tflow_full()
+        f2 = f.copy()
+        assert not f is f2
+        assert not f.request is f2.request
+        assert f.request.headers == f2.request.headers
+        assert not f.request.headers is f2.request.headers
+
     def test_match(self):
         f = tutils.tflow()
         f.response = tutils.tresp()
@@ -485,6 +493,15 @@ class uFlowMaster(libpry.AutoTree):
         fm.handle_error(err)
         assert fm.script.ns["log"][-1] == "error"
 
+    def test_duplicate_flow(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        f = tutils.tflow_full()
+        fm.load_flow(f)
+        assert s.flow_count() == 1
+        f2 = fm.duplicate_flow(f)
+        assert s.flow_count() == 2
+
     def test_all(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
@@ -572,6 +589,7 @@ class uFlowMaster(libpry.AutoTree):
         fm.handle_response(tf.response)
         assert fm.stickycookie_state.jar
         assert not "cookie" in tf.request.headers
+        tf = tf.copy()
         fm.handle_request(tf.request)
         assert tf.request.headers["cookie"] == ["foo=bar"]
 
