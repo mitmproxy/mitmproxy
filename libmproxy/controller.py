@@ -25,11 +25,12 @@ class Msg:
         self.acked = False
 
     def _ack(self, data=False):
-        self.acked = True
-        if data is None:
-            self.q.put(data)
-        else:
-            self.q.put(data or self)
+        if not self.acked:
+            self.acked = True
+            if data is None:
+                self.q.put(data)
+            else:
+                self.q.put(data or self)
 
     def _send(self, masterq):
         self.acked = False

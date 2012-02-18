@@ -25,6 +25,24 @@ class ScriptContext:
         """
         self._master.add_event(*args, **kwargs)
 
+    def duplicate_flow(self, f):
+        """
+            Returns a duplicate of the specified flow. The flow is also
+            injected into the current state, and is ready for editing, replay,
+            etc.
+        """
+        self._master.pause_scripts = True
+        f = self._master.duplicate_flow(f)
+        self._master.pause_scripts = False
+        return f
+
+    def replay_request(self, f):
+        """
+            Replay the request on the current flow. The response will be added
+            to the flow object.
+        """
+        self._master.replay_request(f)
+
 
 class Headers:
     def __init__(self, lst=None):
@@ -300,6 +318,7 @@ class Request(HTTPMsg):
             Returns a copy of this object.
         """
         c = copy.copy(self)
+        c.acked = True
         c.headers = self.headers.copy()
         return c
 
@@ -521,6 +540,7 @@ class Response(HTTPMsg):
             Returns a copy of this object.
         """
         c = copy.copy(self)
+        c.acked = True
         c.headers = self.headers.copy()
         return c
 
@@ -613,7 +633,9 @@ class ClientConnect(controller.Msg):
         """
             Returns a copy of this object.
         """
-        return copy.copy(self)
+        c = copy.copy(self)
+        c.acked = True
+        return c
 
 
 class Error(controller.Msg):
@@ -644,7 +666,9 @@ class Error(controller.Msg):
         """
             Returns a copy of this object.
         """
-        return copy.copy(self)
+        c = copy.copy(self)
+        c.acked = True
+        return c
 
     def _get_state(self):
         return dict(
@@ -1125,6 +1149,7 @@ class FlowMaster(controller.Master):
         self.client_playback = None
         self.kill_nonreplay = False
         self.script = None
+        self.pause_scripts = False
 
         self.stickycookie_state = False
         self.stickycookie_txt = None
@@ -1318,7 +1343,7 @@ class FlowMaster(controller.Master):
         #end nocover
 
     def run_script_hook(self, name, *args, **kwargs):
-        if self.script:
+        if self.script and not self.pause_scripts:
             ret = self.script.run(name, *args, **kwargs)
             if not ret[0] and ret[1]:
                 e = "Script error:\n" + ret[1][1]
