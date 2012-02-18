@@ -206,6 +206,7 @@ class u_parse_proxy_spec(libpry.AutoTree):
         assert utils.parse_proxy_spec("http://foo.com:88") == ("http", "foo.com", 88)
         assert utils.parse_proxy_spec("http://foo.com") == ("http", "foo.com", 80)
         assert not utils.parse_proxy_spec("foo.com") 
+        assert not utils.parse_proxy_spec("http://") 
 
 
 class u_unparse_url(libpry.AutoTree):

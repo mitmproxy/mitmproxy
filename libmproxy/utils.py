@@ -422,7 +422,7 @@ def parse_url(url):
 
 def parse_proxy_spec(url):
     p = parse_url(url)
-    if not p:
+    if not p or not p[1]:
         return None
     return p[:3]
 
