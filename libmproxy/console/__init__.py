@@ -122,31 +122,31 @@ class StatusBar(common.WWrap):
 
         if self.master.client_playback:
             r.append("[")
-            r.append(("key", "cplayback"))
+            r.append(("heading_key", "cplayback"))
             r.append(":%s to go]"%self.master.client_playback.count())
         if self.master.server_playback:
             r.append("[")
-            r.append(("key", "splayback"))
+            r.append(("heading_key", "splayback"))
             r.append(":%s to go]"%self.master.server_playback.count())
         if self.master.state.intercept_txt:
             r.append("[")
-            r.append(("key", "i"))
+            r.append(("heading_key", "i"))
             r.append(":%s]"%self.master.state.intercept_txt)
         if self.master.state.limit_txt:
             r.append("[")
-            r.append(("key", "l"))
+            r.append(("heading_key", "l"))
             r.append(":%s]"%self.master.state.limit_txt)
         if self.master.stickycookie_txt:
             r.append("[")
-            r.append(("key", "t"))
+            r.append(("heading_key", "t"))
             r.append(":%s]"%self.master.stickycookie_txt)
         if self.master.stickyauth_txt:
             r.append("[")
-            r.append(("key", "u"))
+            r.append(("heading_key", "u"))
             r.append(":%s]"%self.master.stickyauth_txt)
         if self.master.server.config.reverse_proxy:
             r.append("[")
-            r.append(("key", "R"))
+            r.append(("heading_key", "R"))
             r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
 
         opts = []
@@ -175,7 +175,7 @@ class StatusBar(common.WWrap):
             self.message("")
 
         t = [
-                ('statusbar_text', ("[%s]"%self.master.state.flow_count()).ljust(7)),
+                ('heading', ("[%s]"%self.master.state.flow_count()).ljust(7)),
             ]
         t.extend(self.get_status())
 
@@ -192,7 +192,7 @@ class StatusBar(common.WWrap):
                 ],
                 align="right"
             ),
-        ]), "statusbar")
+        ]), "heading")
         self.ib.set_w(status)
 
     def update(self, text):
@@ -314,15 +314,15 @@ class Options(object):
 class ConsoleMaster(flow.FlowMaster):
     palette = []
     footer_text_default = [
-        ('statusbar_key', "?"), ":help ",
+        ('heading_key', "?"), ":help ",
     ]
     footer_text_help = [
-        ('statusbar_key', "q"), ":back",
+        ('heading_key', "q"), ":back",
     ]
     footer_text_connview = [
-        ('statusbar_key', "tab"), ":toggle view ",
-        ('statusbar_key', "?"), ":help ",
-        ('statusbar_key', "q"), ":back ",
+        ('heading_key', "tab"), ":toggle view ",
+        ('heading_key', "?"), ":help ",
+        ('heading_key', "q"), ":back ",
     ]
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
@@ -532,18 +532,16 @@ class ConsoleMaster(flow.FlowMaster):
 
     def view_help(self):
         h = help.HelpView(self, self.help_context, (self.statusbar, self.body, self.header))
-
         self.statusbar = StatusBar(self, self.footer_text_help)
         self.body = h
         self.header = None
         self.make_view()
 
     def view_kveditor(self, title, value, callback, *args, **kwargs):
-        self.statusbar = StatusBar(self, "foo")
         self.body = kveditor.KVEditor(self, title, value, callback, *args, **kwargs)
         self.header = None
-
         self.help_context = kveditor.help_context
+        self.statusbar = StatusBar(self, self.footer_text_help)
         self.make_view()
 
     def view_connlist(self):
@@ -562,9 +560,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.help_context = connlist.help_context
 
     def view_flow(self, flow):
-        self.statusbar = StatusBar(self, self.footer_text_connview)
         self.body = connview.ConnectionView(self, self.state, flow)
         self.header = connview.ConnectionViewHeader(self, flow)
+        self.statusbar = StatusBar(self, self.footer_text_connview)
         self.currentflow = flow
 
         self.make_view()

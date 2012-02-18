@@ -43,7 +43,7 @@ class BodyPile(urwid.Pile):
         h = urwid.Text("Event log")
         h = urwid.Padding(h, align="left", width=("relative", 100))
 
-        self.inactive_header = urwid.AttrWrap(h, "inactive_heading")
+        self.inactive_header = urwid.AttrWrap(h, "heading_inactive")
         self.active_header = urwid.AttrWrap(h, "heading")
 
         urwid.Pile.__init__(

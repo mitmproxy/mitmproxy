@@ -233,11 +233,7 @@ class ConnectionView(common.WWrap):
             txt.extend(body)
         return urwid.ListBox(txt)
 
-    def _tab(self, content, active):
-        if active:
-            attr = "heading"
-        else:
-            attr = "inactive"
+    def _tab(self, content, attr):
         p = urwid.Text(content)
         p = urwid.Padding(p, align="left", width=("relative", 100))
         p = urwid.AttrWrap(p, attr)
@@ -247,24 +243,24 @@ class ConnectionView(common.WWrap):
         parts = []
 
         if self.flow.intercepting and not self.flow.request.acked:
-            qt = "Request (intercepted)"
+            qt = "Request intercepted"
         else:
             qt = "Request"
         if active == common.VIEW_FLOW_REQUEST:
-            parts.append(self._tab(qt, True))
+            parts.append(self._tab(qt, "heading"))
         else:
-            parts.append(self._tab(qt, False))
+            parts.append(self._tab(qt, "heading_inactive"))
 
         if self.flow.intercepting and self.flow.response and not self.flow.response.acked:
-            st = "Response (intercepted)"
+            st = "Response intercepted"
         else:
             st = "Response"
         if active == common.VIEW_FLOW_RESPONSE:
-            parts.append(self._tab(st, True))
+            parts.append(self._tab(st, "heading"))
         else:
-            parts.append(self._tab(st, False))
+            parts.append(self._tab(st, "heading_inactive"))
 
-        h = urwid.Columns(parts, dividechars=1)
+        h = urwid.Columns(parts)
         f = urwid.Frame(
                     body,
                     header=h
@@ -284,17 +280,15 @@ class ConnectionView(common.WWrap):
 
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
-        self.master.statusbar.update("Calculating view...")
         body = self._conn_text(
             self.flow.request,
             self.state.view_body_mode
         )
         self.w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
-        self.master.statusbar.update("")
+        self.master.statusbar.redraw()
 
     def view_response(self):
         self.state.view_flow_mode = common.VIEW_FLOW_RESPONSE
-        self.master.statusbar.update("Calculating view...")
         if self.flow.response:
             body = self._conn_text(
                 self.flow.response,
@@ -314,7 +308,7 @@ class ConnectionView(common.WWrap):
                         ]
                    )
         self.w = self.wrap_body(common.VIEW_FLOW_RESPONSE, body)
-        self.master.statusbar.update("")
+        self.master.statusbar.redraw()
 
     def refresh_connection(self, c=None):
         if c == self.flow:
