@@ -1292,9 +1292,9 @@ class FlowMaster(controller.Master):
             f.error = None
             self.process_new_request(f)
             rt = proxy.RequestReplayThread(
+                    self.server.config,
                     f,
                     self.masterq,
-                    self.server.config.body_size_limit
                 )
             rt.start()
         #end nocover

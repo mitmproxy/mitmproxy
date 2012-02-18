@@ -8,11 +8,11 @@ def _mkhelp():
         ("a", "accept this intercepted connection"),
         ("C", "clear connection list or eventlog"),
         ("d", "delete flow"),
+        ("e", "toggle eventlog"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
         ("R", "revert changes to request"),
-        ("v", "toggle eventlog"),
         ("w", "save all flows matching current limit"),
         ("W", "save this flow"),
         ("X", "kill and delete connection, even if it's mid-intercept"),
@@ -133,8 +133,6 @@ class ConnectionItem(common.WWrap):
             )
         elif key == "X":
             self.flow.kill(self.master)
-        elif key == "v":
-            self.master.toggle_eventlog()
         elif key == "enter":
             if self.flow.request:
                 self.master.view_flow(self.flow)
@@ -190,7 +188,7 @@ class ConnectionListBox(urwid.ListBox):
         elif key == "C":
             self.master.clear_connections()
             key = None
-        elif key == "v":
+        elif key == "e":
             self.master.toggle_eventlog()
             key = None
         return urwid.ListBox.keypress(self, size, key)

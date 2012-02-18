@@ -26,7 +26,7 @@ def _mkhelp():
             ),
         ("p", "previous flow"),
         ("r", "replay request"),
-        ("R", "revert changes to request"),
+        ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
         ("w", "save all flows matching current limit"),
         ("W", "save this flow"),
@@ -513,7 +513,7 @@ class ConnectionView(common.WWrap):
             if r:
                 self.master.statusbar.message(r)
             self.master.refresh_connection(self.flow)
-        elif key == "R":
+        elif key == "V":
             self.state.revert(self.flow)
             self.master.refresh_connection(self.flow)
         elif key == "W":

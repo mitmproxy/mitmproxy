@@ -200,6 +200,13 @@ class uLRUCache(libpry.AutoTree):
         assert len(f._cachelist_one) == 2
 
 
+class u_parse_proxy_spec(libpry.AutoTree):
+    def test_simple(self):
+        assert not utils.parse_proxy_spec("")
+        assert utils.parse_proxy_spec("http://foo.com:88") == ("http", "foo.com", 88)
+        assert utils.parse_proxy_spec("http://foo.com") == ("http", "foo.com", 80)
+        assert not utils.parse_proxy_spec("foo.com") 
+
 
 class u_parse_url(libpry.AutoTree):
     def test_simple(self):
@@ -254,6 +261,7 @@ tests = [
     udummy_cert(),
     uLRUCache(),
     u_parse_url(),
+    u_parse_proxy_spec(),
     u_parse_size(),
     uclean_hanging_newline()
 ]

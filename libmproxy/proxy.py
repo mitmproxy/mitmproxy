@@ -2,8 +2,6 @@
     A simple proxy server implementation, which always reads all of a server
     response into memory, performs some transformation, and then writes it back
     to the client.
-
-    Development started from Neil Schemenauer's munchy.py
 """
 import sys, os, string, socket, time
 import shutil, tempfile, threading
@@ -22,14 +20,14 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, body_size_limit = None, reverse_upstream=None):
+    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, body_size_limit = None, reverse_proxy=None):
         self.certfile = certfile
         self.ciphers = ciphers
         self.cacert = cacert
         self.certdir = None
         self.cert_wait_time = cert_wait_time
         self.body_size_limit = body_size_limit
-        self.reverse_upstream = reverse_upstream
+        self.reverse_proxy = reverse_proxy
 
 
 def read_chunked(fp, limit):
@@ -162,14 +160,14 @@ class FileLike:
 
 #begin nocover
 class RequestReplayThread(threading.Thread):
-    def __init__(self, flow, masterq, body_size_limit):
-        self.flow, self.masterq, self.body_size_limit = flow, masterq, body_size_limit
+    def __init__(self, config, flow, masterq):
+        self.config, self.flow, self.masterq = config, flow, masterq
         threading.Thread.__init__(self)
 
     def run(self):
         try:
-            server = ServerConnection(self.flow.request, self.body_size_limit)
-            server.send_request(self.flow.request)
+            server = ServerConnection(self.config, self.flow.request)
+            server.send()
             response = server.read_response()
             response._send(self.masterq)
         except ProxyError, v:
@@ -178,11 +176,14 @@ class RequestReplayThread(threading.Thread):
 
 
 class ServerConnection:
-    def __init__(self, request, body_size_limit):
-        self.body_size_limit = body_size_limit
-        self.host = request.host
-        self.port = request.port
-        self.scheme = request.scheme
+    def __init__(self, config, request):
+        self.config, self.request = config, request
+        if config.reverse_proxy:
+            self.scheme, self.host, self.port = config.reverse_proxy
+        else:
+            self.host = request.host
+            self.port = request.port
+            self.scheme = request.scheme
         self.close = False
         self.server, self.rfile, self.wfile = None, None, None
         self.connect()
@@ -199,14 +200,13 @@ class ServerConnection:
         self.server = server
         self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
 
-    def send_request(self, request):
-        self.request = request
-        request.close = self.close
+    def send(self):
+        self.request.close = self.close
         try:
-            self.wfile.write(request._assemble())
+            self.wfile.write(self.request._assemble())
             self.wfile.flush()
         except socket.error, err:
-            raise ProxyError(502, 'Error sending data to "%s": %s' % (request.host, err))
+            raise ProxyError(502, 'Error sending data to "%s": %s' % (self.request.host, err))
 
     def read_response(self):
         line = self.rfile.readline()
@@ -231,7 +231,7 @@ class ServerConnection:
         if self.request.method == "HEAD" or code == 204 or code == 304:
             content = ""
         else:
-            content = read_http_body(self.rfile, self, headers, True, self.body_size_limit)
+            content = read_http_body(self.rfile, self, headers, True, self.config.body_size_limit)
         return flow.Response(self.request, code, msg, headers, content)
 
     def terminate(self):
@@ -279,8 +279,8 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 request = False
                 response = response._send(self.mqueue)
             else:
-                server = ServerConnection(request, self.config.body_size_limit)
-                server.send_request(request)
+                server = ServerConnection(self.config, request)
+                server.send()
                 try:
                     response = server.read_response()
                 except IOError, v:
@@ -348,15 +348,6 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             self.rfile = FileLike(self.connection)
             self.wfile = FileLike(self.connection)
             method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())
-        # If we're in reverse proxy mode, we only get the path and
-        # version in the request and need to fill up host and port
-        # from the configuration. This still assumes that the client will
-        # provide the correct Host: header and we do not need to tamper
-        # with that (or will tamper using other means).
-        if self.config.reverse_upstream:
-            scheme = 'http'
-            host, port = self.config.reverse_upstream.split(':')
-            port = int(port)
         if scheme is None:
             scheme = "https"
         headers = flow.Headers()
@@ -374,9 +365,12 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     port = 80
             port = int(port)
         if host is None:
-            # FIXME: We only specify the first part of the invalid request in this error.
-            # We should gather up everything read from the socket, and specify it all.
-            raise ProxyError(400, 'Invalid request: %s'%line)
+            if self.config.reverse_proxy:
+                scheme, host, port = self.config.reverse_proxy
+            else:
+                # FIXME: We only specify the first part of the invalid request in this error.
+                # We should gather up everything read from the socket, and specify it all.
+                raise ProxyError(400, 'Invalid request: %s'%line)
         if "expect" in headers:
             expect = ",".join(headers['expect'])
             if expect == "100-continue" and httpminor >= 1:
@@ -493,13 +487,21 @@ def process_proxy_options(parser, options):
     if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
     body_size_limit = utils.parse_size(options.body_size_limit)
+
+    if options.reverse_proxy:
+        rp = utils.parse_proxy_spec(options.reverse_proxy)
+        if not rp:
+            parser.error("Invalid reverse proxy specification: %s"%options.reverse_proxy)
+    else:
+        rp = None
+
     return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
         ciphers = options.ciphers,
         cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
-        reverse_upstream = options.reverse_upstream
+        reverse_proxy = rp
     )
 
 

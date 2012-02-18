@@ -161,7 +161,6 @@ def del_all(dict, keys):
             del dict[key]
 
 
-
 def pretty_size(size):
     suffixes = [
         ("B",   2**10),
@@ -419,6 +418,13 @@ def parse_url(url):
     if not path.startswith("/"):
         path = "/" + path
     return scheme, host, port, path
+
+
+def parse_proxy_spec(url):
+    p = parse_url(url)
+    if not p:
+        return None
+    return p[:3]
 
 
 def clean_hanging_newline(t):
