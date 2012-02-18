@@ -516,9 +516,7 @@ class ConsoleMaster(flow.FlowMaster):
     def focus_current(self):
         if self.currentflow:
             try:
-                ids = [id(i) for i in self.state.view]
-                idx = ids.index(id(self.currentflow))
-                self.conn_list_view.set_focus(idx)
+                self.conn_list_view.set_focus(self.state.index(self.currentflow))
             except (IndexError, ValueError):
                 pass
 

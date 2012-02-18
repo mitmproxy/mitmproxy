@@ -8,10 +8,10 @@ def _mkhelp():
         ("a", "accept this intercepted connection"),
         ("C", "clear connection list or eventlog"),
         ("d", "delete flow"),
+        ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
-        ("p", "duplicate flow"),
         ("r", "replay request"),
         ("R", "revert changes to request"),
         ("w", "save all flows matching current limit"),
@@ -102,6 +102,10 @@ class ConnectionItem(common.WWrap):
             self.flow.kill(self.master)
             self.state.delete_flow(self.flow)
             self.master.sync_list_view()
+        elif key == "D":
+            f = self.master.duplicate_flow(self.flow)
+            self.master.currentflow = f
+            self.master.focus_current()
         elif key == "l":
             self.master.prompt("Limit: ", self.state.limit_txt, self.master.set_limit)
             self.master.sync_list_view()
@@ -111,9 +115,6 @@ class ConnectionItem(common.WWrap):
                 self.state.last_saveload,
                 self.master.load_flows_callback
             )
-        elif key == "p":
-            f = self.master.duplicate_flow(self.flow)
-            self.master.conn_list_view.set_focus(self.state.index(f))
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:

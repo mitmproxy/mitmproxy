@@ -10,6 +10,7 @@ def _mkhelp():
         ("a", "accept this intercepted connection"),
         ("b", "save request/response body"),
         ("d", "delete flow"),
+        ("D", "duplicate flow"),
         ("e", "edit request/response"),
         ("m", "change body display mode"),
             (None,
@@ -463,6 +464,11 @@ class ConnectionView(common.WWrap):
             f = self.flow
             f.kill(self.master)
             self.state.delete_flow(f)
+        elif key == "D":
+            f = self.master.duplicate_flow(self.flow)
+            self.master.view_flow(f)
+            self.master.currentflow = f
+            self.master.statusbar.message("Duplicated.")
         elif key == "e":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
                 self.master.prompt_onekey(
