@@ -427,6 +427,23 @@ def parse_proxy_spec(url):
     return p[:3]
 
 
+def hostport(scheme, host, port):
+    """
+        Returns the host component, with a port specifcation if needed.
+    """
+    if (port, scheme) in [(80, "http"), (443, "https")]:
+        return host
+    else:
+        return "%s:%s"%(host, port)
+
+
+def unparse_url(scheme, host, port, path=""):
+    """
+        Returns a URL string, constructed from the specified compnents.
+    """
+    return "%s://%s%s"%(scheme, hostport(scheme, host, port), path)
+
+
 def clean_hanging_newline(t):
     """
         Many editors will silently add a newline to the final line of a

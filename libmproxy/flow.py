@@ -303,13 +303,6 @@ class Request(HTTPMsg):
         c.headers = self.headers.copy()
         return c
 
-    def _hostport(self):
-        if (self.port, self.scheme) in [(80, "http"), (443, "https")]:
-            host = self.host
-        else:
-            host = "%s:%s"%(self.host, self.port)
-        return host
-
     def get_form_urlencoded(self):
         """
             Retrieves the URL-encoded form data, returning a list of (key,
@@ -352,7 +345,7 @@ class Request(HTTPMsg):
         """
             Returns a URL string, constructed from the Request's URL compnents.
         """
-        return "%s://%s%s"%(self.scheme, self._hostport(), self.path)
+        return utils.unparse_url(self.scheme, self.host, self.port, self.path)
 
     def set_url(self, url):
         """
@@ -387,7 +380,7 @@ class Request(HTTPMsg):
             ]
         )
         if not 'host' in headers:
-            headers["host"] = [self._hostport()]
+            headers["host"] = [utils.hostport(self.scheme, self.host, self.port)]
         content = self.content
         if content is None:
             content = ""

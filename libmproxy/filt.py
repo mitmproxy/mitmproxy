@@ -212,8 +212,10 @@ class FUrl(_Rex):
     def __call__(self, o):
         if isinstance(o, flow.Response):
             c = o.request
-        else:
+        elif isinstance(o, flow.Request):
             c = o
+        else:
+            return False
         return re.search(self.expr, c.get_url())
 
 

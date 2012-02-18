@@ -122,28 +122,32 @@ class StatusBar(common.WWrap):
 
         if self.master.client_playback:
             r.append("[")
-            r.append(("statusbar_highlight", "cplayback"))
+            r.append(("key", "cplayback"))
             r.append(":%s to go]"%self.master.client_playback.count())
         if self.master.server_playback:
             r.append("[")
-            r.append(("statusbar_highlight", "splayback"))
+            r.append(("key", "splayback"))
             r.append(":%s to go]"%self.master.server_playback.count())
         if self.master.state.intercept_txt:
             r.append("[")
-            r.append(("statusbar_highlight", "i"))
+            r.append(("key", "i"))
             r.append(":%s]"%self.master.state.intercept_txt)
         if self.master.state.limit_txt:
             r.append("[")
-            r.append(("statusbar_highlight", "l"))
+            r.append(("key", "l"))
             r.append(":%s]"%self.master.state.limit_txt)
         if self.master.stickycookie_txt:
             r.append("[")
-            r.append(("statusbar_highlight", "t"))
+            r.append(("key", "t"))
             r.append(":%s]"%self.master.stickycookie_txt)
         if self.master.stickyauth_txt:
             r.append("[")
-            r.append(("statusbar_highlight", "u"))
+            r.append(("key", "u"))
             r.append(":%s]"%self.master.stickyauth_txt)
+        if self.master.server.config.reverse_proxy:
+            r.append("[")
+            r.append(("key", "R"))
+            r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
 
         opts = []
         if self.master.anticache:
@@ -667,6 +671,12 @@ class ConsoleMaster(flow.FlowMaster):
     def set_intercept(self, txt):
         return self.state.set_intercept(txt)
 
+    def set_reverse_proxy(self, txt):
+        s = utils.parse_proxy_spec(txt)
+        if not s:
+            return "Invalid reverse proxy specification"
+        self.server.config.reverse_proxy = s
+
     def changeview(self, v):
         if v == "r":
             self.state.view_body_mode = common.VIEW_BODY_RAW
@@ -754,6 +764,17 @@ class ConsoleMaster(flow.FlowMaster):
                                     ),
                                     self.quit,
                                 )
+                            elif k == "R":
+                                if self.server.config.reverse_proxy:
+                                    p = utils.unparse_url(*self.server.config.reverse_proxy)
+                                else:
+                                    p = ""
+                                self.prompt(
+                                    "Reverse proxy: ",
+                                    p,
+                                    self.set_reverse_proxy
+                                )
+                                self.sync_list_view()
                             elif k == "s":
                                 if self.script:
                                     self.load_script(None)

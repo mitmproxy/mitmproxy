@@ -67,7 +67,7 @@ def common_options(parser):
     parser.add_option(
         "-R",
         action="store", dest="reverse_proxy", default=None,
-        help="Reverse proxy: upstream server host:port"
+        help="Reverse proxy to upstream server: http[s]://host[:port]"
     )
     parser.add_option(
         "-q",

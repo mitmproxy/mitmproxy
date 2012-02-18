@@ -208,6 +208,14 @@ class u_parse_proxy_spec(libpry.AutoTree):
         assert not utils.parse_proxy_spec("foo.com") 
 
 
+class u_unparse_url(libpry.AutoTree):
+    def test_simple(self):
+        assert utils.unparse_url("http", "foo.com", 99, "") == "http://foo.com:99"
+        assert utils.unparse_url("http", "foo.com", 80, "") == "http://foo.com"
+        assert utils.unparse_url("https", "foo.com", 80, "") == "https://foo.com:80"
+        assert utils.unparse_url("https", "foo.com", 443, "") == "https://foo.com"
+
+
 class u_parse_url(libpry.AutoTree):
     def test_simple(self):
         assert not utils.parse_url("")
@@ -262,6 +270,7 @@ tests = [
     uLRUCache(),
     u_parse_url(),
     u_parse_proxy_spec(),
+    u_unparse_url(),
     u_parse_size(),
     uclean_hanging_newline()
 ]
