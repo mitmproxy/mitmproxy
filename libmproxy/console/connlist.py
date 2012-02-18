@@ -11,6 +11,7 @@ def _mkhelp():
         ("e", "toggle eventlog"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
+        ("p", "duplicate flow"),
         ("r", "replay request"),
         ("R", "revert changes to request"),
         ("w", "save all flows matching current limit"),
@@ -110,6 +111,9 @@ class ConnectionItem(common.WWrap):
                 self.state.last_saveload,
                 self.master.load_flows_callback
             )
+        elif key == "p":
+            f = self.master.duplicate_flow(self.flow)
+            self.master.conn_list_view.set_focus(self.state.index(f))
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:

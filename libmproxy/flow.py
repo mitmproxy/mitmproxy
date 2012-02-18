@@ -856,8 +856,10 @@ class Flow:
         f = Flow(rc)
         if self.response:
             f.response = self.response.copy()
+            f.response.request = rc
         if self.error:
             f.error = self.error.copy()
+            f.error.request = rc
         return f
 
     @classmethod
@@ -1005,6 +1007,9 @@ class State(object):
 
     def flow_count(self):
         return len(self._flow_map)
+
+    def index(self, f):
+        return self._flow_list.index(f)
 
     def active_flow_count(self):
         c = 0
@@ -1249,6 +1254,9 @@ class FlowMaster(controller.Master):
         return self.load_flow(f.copy())
 
     def load_flow(self, f):
+        """
+            Loads a flow, and returns a new flow object.
+        """
         if f.request:
             fr = self.handle_request(f.request)
         if f.response:
