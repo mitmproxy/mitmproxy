@@ -43,20 +43,20 @@ def format_keyvals(lst, key="key", val="text", indent=0):
             if kv is None:
                 ret.append(urwid.Text(""))
             else:
-                ret.append(
-                    urwid.Columns(
-                        [
-                            ("fixed", indent, urwid.Text("")),
-                            (
-                                "fixed",
-                                maxk,
-                                urwid.Text([(key, kv[0] or "")])
-                            ),
-                            urwid.Text([(val, kv[1])])
-                        ],
-                        dividechars = 2
-                    )
-                )
+                cols = []
+                # This cumbersome construction process is here for a reason:
+                # Urwid < 1.0 barfs if given a fixed size column of size zero.
+                if indent:
+                    cols.append(("fixed", indent, urwid.Text("")))
+                cols.extend([
+                    (
+                        "fixed",
+                        maxk,
+                        urwid.Text([(key, kv[0] or "")])
+                    ),
+                    urwid.Text([(val, kv[1])])
+                ])
+                ret.append(urwid.Columns(cols, dividechars = 2))
     return ret
 
 
