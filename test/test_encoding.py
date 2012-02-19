@@ -1,8 +1,6 @@
 from libmproxy import encoding
 import libpry
 
-import cStringIO
-
 class uidentity(libpry.AutoTree):
     def test_simple(self):
         assert "string" == encoding.decode("identity", "string")

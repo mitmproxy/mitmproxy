@@ -1,4 +1,4 @@
-from libmproxy import console, filt, flow
+from libmproxy import console
 from libmproxy.console import common
 import tutils
 import libpry

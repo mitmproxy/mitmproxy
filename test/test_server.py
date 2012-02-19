@@ -1,5 +1,4 @@
 import urllib, urllib2
-from libmproxy import flow
 import tutils
 
 class uSanity(tutils.ProxTest):

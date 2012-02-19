@@ -1,7 +1,7 @@
-import Queue, time, textwrap
+import Queue, time
 from cStringIO import StringIO
 import email.utils
-from libmproxy import console, proxy, filt, flow, controller, utils
+from libmproxy import filt, flow, controller, utils
 import tutils
 import libpry
 
@@ -472,7 +472,7 @@ class uFlowMaster(libpry.AutoTree):
         assert not fm.load_script("scripts/reqerr.py")
         req = tutils.treq()
         fm.handle_clientconnect(req.client_conn)
-        f = fm.handle_request(req)
+        assert fm.handle_request(req)
 
     def test_script(self):
         s = flow.State()

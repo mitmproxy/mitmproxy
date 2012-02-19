@@ -1,6 +1,6 @@
-import os.path, threading, Queue
+import threading, Queue
 import libpry
-from libmproxy import proxy, filt, flow, controller
+from libmproxy import proxy, flow, controller
 import serv, sslserv
 import random
 
@@ -50,8 +50,8 @@ HTTPS_PORT = random.randint(30000, 40000)
 
 class TestMaster(controller.Master):
     def __init__(self, port, testq):
-        serv = proxy.ProxyServer(proxy.ProxyConfig("data/testkey.pem"), port)
-        controller.Master.__init__(self, serv)
+        s = proxy.ProxyServer(proxy.ProxyConfig("data/testkey.pem"), port)
+        controller.Master.__init__(self, s)
         self.testq = testq
         self.log = []
 

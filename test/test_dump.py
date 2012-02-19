@@ -1,7 +1,7 @@
 import os
 from cStringIO import StringIO
 import libpry
-from libmproxy import dump, flow, proxy
+from libmproxy import dump, flow
 import tutils
 
 class uStrFuncs(libpry.AutoTree):

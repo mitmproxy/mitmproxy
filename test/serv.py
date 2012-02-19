@@ -1,5 +1,3 @@
-import socket
-from SocketServer import BaseServer
 from BaseHTTPServer import HTTPServer
 import handler
 

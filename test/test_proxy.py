@@ -1,7 +1,7 @@
-import cStringIO, time, textwrap
+import cStringIO, textwrap
 from cStringIO import StringIO
 import libpry
-from libmproxy import proxy, controller, utils, dump, flow
+from libmproxy import proxy, flow
 
 
 class u_read_chunked(libpry.AutoTree):
