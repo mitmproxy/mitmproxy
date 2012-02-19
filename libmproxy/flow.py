@@ -45,11 +45,14 @@ class ScriptContext:
 
 
 class ODict:
+    """
+        A dictionary-like object for managing ordered (key, value) data. 
+    """
     def __init__(self, lst=None):
         self.lst = lst or []
 
     def _kconv(self, s):
-        return s.lower()
+        return s
 
     def __eq__(self, other):
         return self.lst == other.lst
@@ -105,7 +108,7 @@ class ODict:
             Returns a copy of this object.
         """
         lst = copy.deepcopy(self.lst)
-        return ODict(lst)
+        return self.__class__(lst)
 
     def __repr__(self):
         elements = []
@@ -143,6 +146,15 @@ class ODict:
         return count
 
 
+class ODictCaseless(ODict):
+    """
+        A variant of ODict with "caseless" keys. This version _preserves_ key
+        case, but does not consider case when setting or getting items. 
+    """
+    def _kconv(self, s):
+        return s.lower()
+
+
 class HTTPMsg(controller.Msg):
     def decode(self):
         """
@@ -176,7 +188,7 @@ class Request(HTTPMsg):
         Exposes the following attributes:
 
             client_conn: ClientConnection object, or None if this is a replay.
-            headers: ODict object
+            headers: ODictCaseless object
             content: Content of the request, or None
 
             scheme: URL scheme (http/https)
@@ -188,6 +200,7 @@ class Request(HTTPMsg):
             method: HTTP method
     """
     def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
+        assert isinstance(headers, ODictCaseless)
         self.client_conn = client_conn
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
@@ -253,7 +266,7 @@ class Request(HTTPMsg):
         self.scheme = state["scheme"]
         self.method = state["method"]
         self.path = state["path"]
-        self.headers = ODict._from_state(state["headers"])
+        self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp = state["timestamp"]
 
@@ -279,7 +292,7 @@ class Request(HTTPMsg):
             str(state["scheme"]),
             str(state["method"]),
             str(state["path"]),
-            ODict._from_state(state["headers"]),
+            ODictCaseless._from_state(state["headers"]),
             state["content"],
             state["timestamp"]
         )
@@ -415,6 +428,7 @@ class Response(HTTPMsg):
             timestamp: Seconds since the epoch
     """
     def __init__(self, request, code, msg, headers, content, timestamp=None):
+        assert isinstance(headers, ODictCaseless)
         self.request = request
         self.code, self.msg = code, msg
         self.headers, self.content = headers, content
@@ -484,7 +498,7 @@ class Response(HTTPMsg):
     def _load_state(self, state):
         self.code = state["code"]
         self.msg = state["msg"]
-        self.headers = ODict._from_state(state["headers"])
+        self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp = state["timestamp"]
 
@@ -503,7 +517,7 @@ class Response(HTTPMsg):
             request,
             state["code"],
             str(state["msg"]),
-            ODict._from_state(state["headers"]),
+            ODictCaseless._from_state(state["headers"]),
             state["content"],
             state["timestamp"],
         )

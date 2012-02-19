@@ -7,7 +7,7 @@ import random
 def treq(conn=None):
     if not conn:
         conn = flow.ClientConnect(("address", 22))
-    headers = flow.ODict()
+    headers = flow.ODictCaseless()
     headers["header"] = ["qvalue"]
     return flow.Request(conn, "host", 80, "http", "GET", "/path", headers, "content")
 
@@ -15,7 +15,7 @@ def treq(conn=None):
 def tresp(req=None):
     if not req:
         req = treq()
-    headers = flow.ODict()
+    headers = flow.ODictCaseless()
     headers["header_response"] = ["svalue"]
     return flow.Response(req, 200, "message", headers, "content_response")
 

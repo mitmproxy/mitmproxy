@@ -617,7 +617,7 @@ class uFlowMaster(libpry.AutoTree):
 
 class uRequest(libpry.AutoTree):
     def test_simple(self):
-        h = flow.ODict()
+        h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -639,7 +639,7 @@ class uRequest(libpry.AutoTree):
         assert r._assemble(True)
 
     def test_getset_form_urlencoded(self):
-        h = flow.ODict()
+        h = flow.ODictCaseless()
         h["content-type"] = [flow.HDR_FORM_URLENCODED]
         d = flow.ODict([("one", "two"), ("three", "four")])
         r = flow.Request(None, "host", 22, "https", "GET", "/", h, utils.urlencode(d.lst))
@@ -653,7 +653,7 @@ class uRequest(libpry.AutoTree):
         assert not r.get_form_urlencoded()
 
     def test_getset_query(self):
-        h = flow.ODict()
+        h = flow.ODictCaseless()
 
         r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
         q = r.get_query()
@@ -676,7 +676,7 @@ class uRequest(libpry.AutoTree):
         assert r.get_query() == qv
 
     def test_anticache(self):
-        h = flow.ODict()
+        h = flow.ODictCaseless()
         r = flow.Request(None, "host", 22, "https", "GET", "/", h, "content")
         h["if-modified-since"] = ["test"]
         h["if-none-match"] = ["test"]
@@ -685,7 +685,7 @@ class uRequest(libpry.AutoTree):
         assert not "if-none-match" in r.headers
 
     def test_getset_state(self):
-        h = flow.ODict()
+        h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -753,7 +753,7 @@ class uRequest(libpry.AutoTree):
 
 class uResponse(libpry.AutoTree):
     def test_simple(self):
-        h = flow.ODict()
+        h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -798,7 +798,7 @@ class uResponse(libpry.AutoTree):
 
 
     def test_getset_state(self):
-        h = flow.ODict()
+        h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -886,31 +886,31 @@ class uClientConnect(libpry.AutoTree):
 
 class uODict(libpry.AutoTree):
     def setUp(self):
-        self.hd = flow.ODict()
+        self.od = flow.ODict()
 
     def test_str_err(self):
         h = flow.ODict()
         libpry.raises(ValueError, h.__setitem__, "key", "foo")
 
     def test_dictToHeader1(self):
-        self.hd.add("one", "uno")
-        self.hd.add("two", "due")
-        self.hd.add("two", "tre")
+        self.od.add("one", "uno")
+        self.od.add("two", "due")
+        self.od.add("two", "tre")
         expected = [
             "one: uno\r\n",
             "two: due\r\n",
             "two: tre\r\n",
             "\r\n"
         ]
-        out = repr(self.hd)
+        out = repr(self.od)
         for i in expected:
             assert out.find(i) >= 0
 
     def test_dictToHeader2(self):
-        self.hd["one"] = ["uno"]
+        self.od["one"] = ["uno"]
         expected1 = "one: uno\r\n"
         expected2 = "\r\n"
-        out = repr(self.hd)
+        out = repr(self.od)
         assert out.find(expected1) >= 0
         assert out.find(expected2) >= 0
 
@@ -924,34 +924,47 @@ class uODict(libpry.AutoTree):
         assert not h.match_re("nonono")
 
     def test_getset_state(self):
-        self.hd.add("foo", 1)
-        self.hd.add("foo", 2)
-        self.hd.add("bar", 3)
-        state = self.hd._get_state()
+        self.od.add("foo", 1)
+        self.od.add("foo", 2)
+        self.od.add("bar", 3)
+        state = self.od._get_state()
         nd = flow.ODict._from_state(state)
-        assert nd == self.hd
+        assert nd == self.od
 
     def test_copy(self):
-        self.hd.add("foo", 1)
-        self.hd.add("foo", 2)
-        self.hd.add("bar", 3)
-        assert self.hd == self.hd.copy()
+        self.od.add("foo", 1)
+        self.od.add("foo", 2)
+        self.od.add("bar", 3)
+        assert self.od == self.od.copy()
 
     def test_del(self):
-        self.hd.add("foo", 1)
-        self.hd.add("Foo", 2)
-        self.hd.add("bar", 3)
-        del self.hd["foo"]
-        assert len(self.hd.lst) == 1
+        self.od.add("foo", 1)
+        self.od.add("Foo", 2)
+        self.od.add("bar", 3)
+        del self.od["foo"]
+        assert len(self.od.lst) == 2
 
     def test_replace(self):
-        self.hd.add("one", "two")
-        self.hd.add("two", "one")
-        assert self.hd.replace("one", "vun") == 2
-        assert self.hd.lst == [
+        self.od.add("one", "two")
+        self.od.add("two", "one")
+        assert self.od.replace("one", "vun") == 2
+        assert self.od.lst == [
             ["vun", "two"],
             ["two", "vun"],
         ]
+
+
+class uODictCaseless(libpry.AutoTree):
+    def setUp(self):
+        self.od = flow.ODictCaseless()
+
+    def test_del(self):
+        self.od.add("foo", 1)
+        self.od.add("Foo", 2)
+        self.od.add("bar", 3)
+        del self.od["foo"]
+        assert len(self.od) == 1
+
 
 
 tests = [
@@ -968,4 +981,5 @@ tests = [
     uError(),
     uClientConnect(),
     uODict(),
+    uODictCaseless(),
 ]

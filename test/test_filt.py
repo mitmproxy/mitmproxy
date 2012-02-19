@@ -74,7 +74,7 @@ class uParsing(libpry.AutoTree):
 class uMatching(libpry.AutoTree):
     def req(self):
         conn = flow.ClientConnect(("one", 2222))
-        headers = flow.ODict()
+        headers = flow.ODictCaseless()
         headers["header"] = ["qvalue"]
         return flow.Request(
                     conn,
@@ -89,7 +89,7 @@ class uMatching(libpry.AutoTree):
 
     def resp(self):
         q = self.req()
-        headers = flow.ODict()
+        headers = flow.ODictCaseless()
         headers["header_response"] = ["svalue"]
         return flow.Response(
                     q,

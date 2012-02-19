@@ -52,7 +52,7 @@ def read_headers(fp):
                 name = line[:i]
                 value = line[i+1:].strip()
                 ret.append([name, value])
-    return flow.ODict(ret)
+    return flow.ODictCaseless(ret)
 
 
 def read_chunked(fp, limit):
