@@ -657,7 +657,7 @@ class uRequest(libpry.AutoTree):
 
         r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
         q = r.get_query()
-        assert q == [("x", "y"), ("a", "b")]
+        assert q.lst == [("x", "y"), ("a", "b")]
 
         r = flow.Request(None, "host", 22, "https", "GET", "/", h, "content")
         q = r.get_query()
@@ -669,9 +669,9 @@ class uRequest(libpry.AutoTree):
 
         r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
         assert r.get_query()
-        r.set_query([])
+        r.set_query(flow.ODict([]))
         assert not r.get_query()
-        qv = [("a", "b"), ("c", "d")]
+        qv = flow.ODict([("a", "b"), ("c", "d")])
         r.set_query(qv)
         assert r.get_query() == qv
 

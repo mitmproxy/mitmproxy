@@ -374,7 +374,7 @@ class ConnectionView(common.WWrap):
         conn.headers = flow.ODict(lst)
 
     def set_query(self, lst, conn):
-        conn.set_query(lst)
+        conn.set_query(flow.ODict(lst))
 
     def set_form(self, lst, conn):
         conn.set_form_urlencoded(lst)
@@ -396,7 +396,7 @@ class ConnectionView(common.WWrap):
         elif part == "h":
             self.master.view_kveditor("Editing headers", conn.headers.lst, self.set_headers, conn)
         elif part == "q":
-            self.master.view_kveditor("Editing query", conn.get_query(), self.set_query, conn)
+            self.master.view_kveditor("Editing query", conn.get_query().lst, self.set_query, conn)
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:

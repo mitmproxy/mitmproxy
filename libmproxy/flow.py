@@ -69,6 +69,9 @@ class ODict:
                 new.append(i)
         return new
 
+    def __len__(self):
+        return len(self.lst)
+
     def __setitem__(self, k, values):
         if isinstance(values, basestring):
             raise ValueError("ODict values should be lists.")
@@ -323,7 +326,7 @@ class Request(HTTPMsg):
         _, _, _, _, query, _ = urlparse.urlparse(self.get_url())
         if not query:
             return []
-        return utils.urldecode(query)
+        return ODict(utils.urldecode(query))
 
     def set_query(self, q):
         """
@@ -331,7 +334,7 @@ class Request(HTTPMsg):
             string.
         """
         scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url())
-        query = utils.urlencode(q)
+        query = utils.urlencode(q.lst)
         self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def get_url(self):
