@@ -301,40 +301,39 @@ class Request(HTTPMsg):
 
     def get_form_urlencoded(self):
         """
-            Retrieves the URL-encoded form data, returning a list of (key,
-            value) tuples. Returns an empty list if there is no data or the
-            content-type indicates non-form data.
+            Retrieves the URL-encoded form data, returning an ODict object.
+            Returns an empty ODict if there is no data or the content-type
+            indicates non-form data.
         """
         hv = [i.lower() for i in self.headers["content-type"]]
         if HDR_FORM_URLENCODED in hv:
-            return utils.urldecode(self.content)
-        return []
+            return ODict(utils.urldecode(self.content))
+        return ODict([])
 
-    def set_form_urlencoded(self, data):
+    def set_form_urlencoded(self, odict):
         """
             Sets the body to the URL-encoded form data, and adds the
-            appropriate content-type header.
+            appropriate content-type header. Note that this will destory the
+            existing body if there is one.
         """
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
-        self.content = utils.urlencode(data)
+        self.content = utils.urlencode(odict.lst)
 
     def get_query(self):
         """
-            Gets the request query string. Returns a list of (key, value)
-            tuples.
+            Gets the request query string. Returns an ODict object.
         """
         _, _, _, _, query, _ = urlparse.urlparse(self.get_url())
         if not query:
             return []
         return ODict(utils.urldecode(query))
 
-    def set_query(self, q):
+    def set_query(self, odict):
         """
-            Takes a list of (key, value) tuples, and sets the request query
-            string.
+            Takes an ODict object, and sets the request query string.
         """
         scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url())
-        query = utils.urlencode(q.lst)
+        query = utils.urlencode(odict.lst)
         self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def get_url(self):

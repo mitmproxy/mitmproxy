@@ -641,11 +641,11 @@ class uRequest(libpry.AutoTree):
     def test_getset_form_urlencoded(self):
         h = flow.ODict()
         h["content-type"] = [flow.HDR_FORM_URLENCODED]
-        d = [("one", "two"), ("three", "four")]
-        r = flow.Request(None, "host", 22, "https", "GET", "/", h, utils.urlencode(d))
+        d = flow.ODict([("one", "two"), ("three", "four")])
+        r = flow.Request(None, "host", 22, "https", "GET", "/", h, utils.urlencode(d.lst))
         assert r.get_form_urlencoded() == d
 
-        d = [("x", "y")]
+        d = flow.ODict([("x", "y")])
         r.set_form_urlencoded(d)
         assert r.get_form_urlencoded() == d
 
