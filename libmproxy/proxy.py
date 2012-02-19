@@ -30,6 +30,31 @@ class ProxyConfig:
         self.reverse_proxy = reverse_proxy
 
 
+
+def read_headers(fp):
+    """
+        Read a set of headers from a file pointer. Stop once a blank line
+        is reached. Return a ODict object.
+    """
+    ret = []
+    name = ''
+    while 1:
+        line = fp.readline()
+        if not line or line == '\r\n' or line == '\n':
+            break
+        if line[0] in ' \t':
+            # continued header
+            ret[-1][1] = ret[-1][1] + '\r\n ' + line.strip()
+        else:
+            i = line.find(':')
+            # We're being liberal in what we accept, here.
+            if i > 0:
+                name = line[:i]
+                value = line[i+1:].strip()
+                ret.append([name, value])
+    return flow.ODict(ret)
+
+
 def read_chunked(fp, limit):
     content = ""
     total = 0
@@ -224,8 +249,7 @@ class ServerConnection:
             code = int(code)
         except ValueError:
             raise ProxyError(502, "Invalid server response: %s."%line)
-        headers = flow.Headers()
-        headers.read(self.rfile)
+        headers = read_headers(self.rfile)
         if code >= 100 and code <= 199:
             return self.read_response()
         if self.request.method == "HEAD" or code == 204 or code == 304:
@@ -350,8 +374,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())
         if scheme is None:
             scheme = "https"
-        headers = flow.Headers()
-        headers.read(self.rfile)
+        headers = read_headers(self.rfile)
         if host is None and "host" in headers:
             netloc = headers["host"][0]
             if ':' in netloc:

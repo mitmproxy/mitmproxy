@@ -44,7 +44,7 @@ class ScriptContext:
         self._master.replay_request(f)
 
 
-class Headers:
+class ODict:
     def __init__(self, lst=None):
         self.lst = lst or []
 
@@ -69,12 +69,12 @@ class Headers:
                 new.append(i)
         return new
 
-    def __setitem__(self, k, hdrs):
-        if isinstance(hdrs, basestring):
-            raise ValueError("Header values should be lists.")
+    def __setitem__(self, k, values):
+        if isinstance(values, basestring):
+            raise ValueError("ODict values should be lists.")
         k = self._kconv(k)
         new = self._filter_lst(k, self.lst)
-        for i in hdrs:
+        for i in values:
             new.append((k, i))
         self.lst = new
 
@@ -102,22 +102,19 @@ class Headers:
             Returns a copy of this object.
         """
         lst = copy.deepcopy(self.lst)
-        return Headers(lst)
+        return ODict(lst)
 
     def __repr__(self):
-        """
-            Returns a string containing a formatted header string.
-        """
-        headerElements = []
+        elements = []
         for itm in self.lst:
-            headerElements.append(itm[0] + ": " + itm[1])
-        headerElements.append("")
-        return "\r\n".join(headerElements)
+            elements.append(itm[0] + ": " + itm[1])
+        elements.append("")
+        return "\r\n".join(elements)
 
     def match_re(self, expr):
         """
-            Match the regular expression against each header. For each (key,
-            value) pair a string of the following format is matched against:
+            Match the regular expression against each (key, value) pair. For
+            each pair a string of the following format is matched against:
 
             "key: value"
         """
@@ -127,32 +124,9 @@ class Headers:
                 return True
         return False
 
-    def read(self, fp):
-        """
-            Read a set of headers from a file pointer. Stop once a blank line
-            is reached.
-        """
-        ret = []
-        name = ''
-        while 1:
-            line = fp.readline()
-            if not line or line == '\r\n' or line == '\n':
-                break
-            if line[0] in ' \t':
-                # continued header
-                ret[-1][1] = ret[-1][1] + '\r\n ' + line.strip()
-            else:
-                i = line.find(':')
-                # We're being liberal in what we accept, here.
-                if i > 0:
-                    name = line[:i]
-                    value = line[i+1:].strip()
-                    ret.append([name, value])
-        self.lst = ret
-
     def replace(self, pattern, repl, *args, **kwargs):
         """
-            Replaces a regular expression pattern with repl in both header keys
+            Replaces a regular expression pattern with repl in both keys
             and values. Returns the number of replacements made.
         """
         nlst, count = [], 0
@@ -199,7 +173,7 @@ class Request(HTTPMsg):
         Exposes the following attributes:
 
             client_conn: ClientConnection object, or None if this is a replay.
-            headers: Headers object
+            headers: ODict object
             content: Content of the request, or None
 
             scheme: URL scheme (http/https)
@@ -276,7 +250,7 @@ class Request(HTTPMsg):
         self.scheme = state["scheme"]
         self.method = state["method"]
         self.path = state["path"]
-        self.headers = Headers._from_state(state["headers"])
+        self.headers = ODict._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp = state["timestamp"]
 
@@ -302,7 +276,7 @@ class Request(HTTPMsg):
             str(state["scheme"]),
             str(state["method"]),
             str(state["path"]),
-            Headers._from_state(state["headers"]),
+            ODict._from_state(state["headers"]),
             state["content"],
             state["timestamp"]
         )
@@ -434,7 +408,7 @@ class Response(HTTPMsg):
             request: Request object.
             code: HTTP response code
             msg: HTTP response message
-            headers: Headers object
+            headers: ODict object
             content: Response content
             timestamp: Seconds since the epoch
     """
@@ -508,7 +482,7 @@ class Response(HTTPMsg):
     def _load_state(self, state):
         self.code = state["code"]
         self.msg = state["msg"]
-        self.headers = Headers._from_state(state["headers"])
+        self.headers = ODict._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp = state["timestamp"]
 
@@ -527,7 +501,7 @@ class Response(HTTPMsg):
             request,
             state["code"],
             str(state["msg"]),
-            Headers._from_state(state["headers"]),
+            ODict._from_state(state["headers"]),
             state["content"],
             state["timestamp"],
         )

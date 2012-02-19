@@ -1,4 +1,5 @@
-import cStringIO, time
+import cStringIO, time, textwrap
+from cStringIO import StringIO
 import libpry
 from libmproxy import proxy, controller, utils, dump, flow
 
@@ -27,7 +28,7 @@ class u_read_http_body(libpry.AutoTree):
     def test_all(self):
 
         d = Dummy()
-        h = flow.Headers()
+        h = flow.ODict()
         s = cStringIO.StringIO("testing")
         assert proxy.read_http_body(s, d, h, False, None) == ""
 
@@ -42,7 +43,7 @@ class u_read_http_body(libpry.AutoTree):
         libpry.raises(proxy.ProxyError, proxy.read_http_body, s, d, h, False, 4)
 
 
-        h = flow.Headers()
+        h = flow.ODict()
         s = cStringIO.StringIO("testing")
         assert len(proxy.read_http_body(s, d, h, True, 4)) == 4
         s = cStringIO.StringIO("testing")
@@ -94,10 +95,51 @@ class uProxyError(libpry.AutoTree):
         assert repr(p)
 
 
+class u_read_headers(libpry.AutoTree):
+    def test_read_simple(self):
+        data = """
+            Header: one
+            Header2: two
+            \r\n
+        """
+        data = textwrap.dedent(data)
+        data = data.strip()
+        s = StringIO(data)
+        headers = proxy.read_headers(s)
+        assert headers["header"] == ["one"]
+        assert headers["header2"] == ["two"]
+
+    def test_read_multi(self):
+        data = """
+            Header: one
+            Header: two
+            \r\n
+        """
+        data = textwrap.dedent(data)
+        data = data.strip()
+        s = StringIO(data)
+        headers = proxy.read_headers(s)
+        assert headers["header"] == ["one", "two"]
+
+    def test_read_continued(self):
+        data = """
+            Header: one
+            \ttwo
+            Header2: three
+            \r\n
+        """
+        data = textwrap.dedent(data)
+        data = data.strip()
+        s = StringIO(data)
+        headers = proxy.read_headers(s)
+        assert headers["header"] == ['one\r\n two']
+
+
 tests = [
     uProxyError(),
     uFileLike(),
     u_parse_request_line(),
     u_read_chunked(),
     u_read_http_body(),
+    u_read_headers()
 ]

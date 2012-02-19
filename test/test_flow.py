@@ -617,7 +617,7 @@ class uFlowMaster(libpry.AutoTree):
 
 class uRequest(libpry.AutoTree):
     def test_simple(self):
-        h = flow.Headers()
+        h = flow.ODict()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -639,7 +639,7 @@ class uRequest(libpry.AutoTree):
         assert r._assemble(True)
 
     def test_getset_form_urlencoded(self):
-        h = flow.Headers()
+        h = flow.ODict()
         h["content-type"] = [flow.HDR_FORM_URLENCODED]
         d = [("one", "two"), ("three", "four")]
         r = flow.Request(None, "host", 22, "https", "GET", "/", h, utils.urlencode(d))
@@ -653,7 +653,7 @@ class uRequest(libpry.AutoTree):
         assert not r.get_form_urlencoded()
 
     def test_getset_query(self):
-        h = flow.Headers()
+        h = flow.ODict()
 
         r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
         q = r.get_query()
@@ -676,7 +676,7 @@ class uRequest(libpry.AutoTree):
         assert r.get_query() == qv
 
     def test_anticache(self):
-        h = flow.Headers()
+        h = flow.ODict()
         r = flow.Request(None, "host", 22, "https", "GET", "/", h, "content")
         h["if-modified-since"] = ["test"]
         h["if-none-match"] = ["test"]
@@ -685,7 +685,7 @@ class uRequest(libpry.AutoTree):
         assert not "if-none-match" in r.headers
 
     def test_getset_state(self):
-        h = flow.Headers()
+        h = flow.ODict()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -753,7 +753,7 @@ class uRequest(libpry.AutoTree):
 
 class uResponse(libpry.AutoTree):
     def test_simple(self):
-        h = flow.Headers()
+        h = flow.ODict()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -798,7 +798,7 @@ class uResponse(libpry.AutoTree):
 
 
     def test_getset_state(self):
-        h = flow.Headers()
+        h = flow.ODict()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
@@ -884,51 +884,13 @@ class uClientConnect(libpry.AutoTree):
         assert c3 == c
 
 
-class uHeaders(libpry.AutoTree):
+class uODict(libpry.AutoTree):
     def setUp(self):
-        self.hd = flow.Headers()
+        self.hd = flow.ODict()
 
     def test_str_err(self):
-        h = flow.Headers()
+        h = flow.ODict()
         libpry.raises(ValueError, h.__setitem__, "key", "foo")
-
-    def test_read_simple(self):
-        data = """
-            Header: one
-            Header2: two
-            \r\n
-        """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = StringIO(data)
-        self.hd.read(s)
-        assert self.hd["header"] == ["one"]
-        assert self.hd["header2"] == ["two"]
-
-    def test_read_multi(self):
-        data = """
-            Header: one
-            Header: two
-            \r\n
-        """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = StringIO(data)
-        self.hd.read(s)
-        assert self.hd["header"] == ["one", "two"]
-
-    def test_read_continued(self):
-        data = """
-            Header: one
-            \ttwo
-            Header2: three
-            \r\n
-        """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = StringIO(data)
-        self.hd.read(s)
-        assert self.hd["header"] == ['one\r\n two']
 
     def test_dictToHeader1(self):
         self.hd.add("one", "uno")
@@ -953,7 +915,7 @@ class uHeaders(libpry.AutoTree):
         assert out.find(expected2) >= 0
 
     def test_match_re(self):
-        h = flow.Headers()
+        h = flow.ODict()
         h.add("one", "uno")
         h.add("two", "due")
         h.add("two", "tre")
@@ -966,7 +928,7 @@ class uHeaders(libpry.AutoTree):
         self.hd.add("foo", 2)
         self.hd.add("bar", 3)
         state = self.hd._get_state()
-        nd = flow.Headers._from_state(state)
+        nd = flow.ODict._from_state(state)
         assert nd == self.hd
 
     def test_copy(self):
@@ -1005,5 +967,5 @@ tests = [
     uResponse(),
     uError(),
     uClientConnect(),
-    uHeaders(),
+    uODict(),
 ]

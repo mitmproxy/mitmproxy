@@ -371,7 +371,7 @@ class ConnectionView(common.WWrap):
         self.master.refresh_connection(self.flow)
 
     def set_headers(self, lst, conn):
-        conn.headers = flow.Headers(lst)
+        conn.headers = flow.ODict(lst)
 
     def set_query(self, lst, conn):
         conn.set_query(lst)
@@ -384,7 +384,7 @@ class ConnectionView(common.WWrap):
             conn = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.Headers(), "")
+                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.ODict(), "")
             conn = self.flow.response
 
         self.flow.backup()
