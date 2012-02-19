@@ -192,9 +192,7 @@ class FMethod(_Rex):
     code = "m"
     help = "Method"
     def __call__(self, o):
-        if isinstance(o, flow.Response):
-            return False
-        elif o.method:
+        if isinstance(o, flow.Request):
             return re.search(self.expr, o.method, re.IGNORECASE)
         return False
 
