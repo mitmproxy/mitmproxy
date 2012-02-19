@@ -1,3 +1,29 @@
+
+20 February 2012: mitmproxy 0.7:
+
+    * New built-in key/value editor. This lets you interactively edit URL query
+      strings, headers and URL-encoded form data. 
+
+    * Extend script API to allow duplication and replay of flows.
+    
+    * Add "D" shortcut in mitmproxy to duplicate a flow.
+    
+    * Reverse proxy mode. In this mode mitmproxy acts as an HTTP server,
+      forwarding all traffic to a specified upstream server.
+
+    * UI improvements - use unicode characters to make GUI more compact,
+      improve spacing and layout throughout.
+
+    * Add support for filtering by HTTP method.
+   
+    * Add the ability to specify an HTTP body size limit.
+    
+    * Move to typed netstrings for serialization format - this makes 0.7
+      backwards-incompatible with serialized data from 0.6!
+
+    * Many minor bugfixes and improvements.
+
+
 7 August 2011: mitmproxy 0.6:
 
     * New scripting API that allows much more flexible and fine-grained
@@ -92,6 +118,3 @@
     * "A" will now accept all intercepted connections
     
     * Lots of bugfixes
-
-    
-

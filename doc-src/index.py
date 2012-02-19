@@ -17,7 +17,7 @@ else:
 this.markup = markup.Markdown()
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
-ns.copyright = u"\u00a9 mitmproxy project, 2011"
+ns.copyright = u"\u00a9 mitmproxy project, 2012"
 
 ns.index = countershape.widgets.SiblingPageIndex('/index.html', divclass="pageindex")
 
@@ -62,7 +62,7 @@ filt_help.extend(
     ]
 )
 ns.filt_help = filt_help
- 
+
 
 
 pages = [

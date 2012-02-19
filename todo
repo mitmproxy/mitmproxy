@@ -2,14 +2,25 @@ This is a loose collection of todo items, in case someone else wants to start
 hacking on mitmproxy. Drop me a line (aldo@corte.si) if you want to tackle any
 of these and need some pointers.
 
-Features:
+Targeted for 0.8:
+    - Upstream proxy support.
+    - Improve worst-case performance problem with XML-ish indenter
+    - Follow mode to keep most recent flow in view
+    - Rewrite the core to be asynchronous. I've done some research, and
+    although it's a bit of a bloated monster, it looks like Twisted is the way
+    to go.
+    - Verbose view to show timestamps
+    - Search within requests/responses
+    - Transparent proxy support
+    - Ordering a-la mutt's "o" shortcut
 
+
+Further ideas:
     - Add some "workspace" features to mitmproxy:
         - Flow comments
         - Copying/duplicating flows
         - Ordering by time, size, etc. a-la-mutt (o keyboard shorcut is reserved for this)
-    - Upstream proxy support.
     - Support HTTP Digest authentication through the stickyauth option. We'll
-    have to save the server nonce, and recalculate the hashes for each request.
+      have to save the server nonce, and recalculate the hashes for each request.
     - Chunked encoding support for requests (we already support it for responses).
     - A progress indicator for large files
