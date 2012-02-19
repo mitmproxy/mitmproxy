@@ -106,15 +106,6 @@ class ConnectionItem(common.WWrap):
             f = self.master.duplicate_flow(self.flow)
             self.master.currentflow = f
             self.master.focus_current()
-        elif key == "l":
-            self.master.prompt("Limit: ", self.state.limit_txt, self.master.set_limit)
-            self.master.sync_list_view()
-        elif key == "L":
-            self.master.path_prompt(
-                "Load flows: ",
-                self.state.last_saveload,
-                self.master.load_flows_callback
-            )
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:
@@ -189,11 +180,18 @@ class ConnectionListBox(urwid.ListBox):
         if key == "A":
             self.master.accept_all()
             self.master.sync_list_view()
-            key = None
         elif key == "C":
             self.master.clear_connections()
-            key = None
         elif key == "e":
             self.master.toggle_eventlog()
-            key = None
-        return urwid.ListBox.keypress(self, size, key)
+        elif key == "l":
+            self.master.prompt("Limit: ", self.master.state.limit_txt, self.master.set_limit)
+            self.master.sync_list_view()
+        elif key == "L":
+            self.master.path_prompt(
+                "Load flows: ",
+                self.master.state.last_saveload,
+                self.master.load_flows_callback
+            )
+        else:
+            return urwid.ListBox.keypress(self, size, key)
