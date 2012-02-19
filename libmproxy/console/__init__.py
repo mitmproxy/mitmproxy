@@ -13,11 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import mailcap, mimetypes, tempfile, os, subprocess, glob, time, re
+import mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
-import cStringIO
 import urwid
-from .. import controller, utils, filt, flow
+from .. import controller, utils, flow
 import connlist, connview, help, common, kveditor, palettes
 
 EVENTLOG_SIZE = 500
@@ -177,18 +176,17 @@ class StatusBar(common.WWrap):
         t = [
                 ('heading', ("[%s]"%self.master.state.flow_count()).ljust(7)),
             ]
-        t.extend(self.get_status())
-
         if self.master.server:
             boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
         else:
             boundaddr = ""
-
+        t.extend(self.get_status())
         status = urwid.AttrWrap(urwid.Columns([
             urwid.Text(t),
             urwid.Text(
                 [
                     self.helptext,
+                    boundaddr
                 ],
                 align="right"
             ),
