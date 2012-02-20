@@ -30,10 +30,10 @@ class MyMaster(flow.FlowMaster):
         return f
 
 
-ssl_config = proxy.SSLConfig(
+config = proxy.ProxyConfig(
     cacert = os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
 )
 state = flow.State()
-server = proxy.ProxyServer(ssl_config, 8080)
+server = proxy.ProxyServer(config, 8080)
 m = MyMaster(server, state)
 m.run()

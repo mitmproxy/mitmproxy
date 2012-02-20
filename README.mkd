@@ -3,7 +3,7 @@ console interface that allows traffic flows to be inspected and edited on the
 fly.
 
 __mitmdump__ is the command-line version of mitmproxy, with the same
-functionality but without the frills. Think tcpdump for HTTP.
+functionality but without the user interface. Think tcpdump for HTTP.
 
 Both tools are fully documentented in the commandline _--help_ flag, and, in
 the case of __mitmproxy__, a built-in help page accessible through the _?_
@@ -17,7 +17,7 @@ Features
 - Save complete HTTP conversations for later replay and analysis.
 - Replay the client-side of an HTTP conversations.
 - Replay HTTP responses of a previously recorded server.
-- Reverse proxy mode to forward traffic to a specified server
+- Reverse proxy mode to forward traffic to a specified server.
 - Make scripted changes to HTTP traffic using Python. 
 - SSL certificates for interception are generated on the fly.
 

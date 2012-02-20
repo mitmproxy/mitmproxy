@@ -34,9 +34,9 @@ class StickyMaster(controller.Master):
         msg._ack()
 
 
-ssl_config = proxy.SSLConfig(
+config = proxy.ProxyConfig(
     cacert = os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
 )
-server = proxy.ProxyServer(ssl_config, 8080)
+server = proxy.ProxyServer(config, 8080)
 m = StickyMaster(server)
 m.run()

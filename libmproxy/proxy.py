@@ -30,7 +30,6 @@ class ProxyConfig:
         self.reverse_proxy = reverse_proxy
 
 
-
 def read_headers(fp):
     """
         Read a set of headers from a file pointer. Stop once a blank line
