@@ -13,7 +13,7 @@ def _mkhelp():
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
-        ("R", "revert changes to request"),
+        ("V", "revert changes to request"),
         ("w", "save all flows matching current limit"),
         ("W", "save this flow"),
         ("X", "kill and delete connection, even if it's mid-intercept"),
@@ -111,7 +111,7 @@ class ConnectionItem(common.WWrap):
             if r:
                 self.master.statusbar.message(r)
             self.master.sync_list_view()
-        elif key == "R":
+        elif key == "V":
             self.state.revert(self.flow)
             self.master.sync_list_view()
         elif key == "w":

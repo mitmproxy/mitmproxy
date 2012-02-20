@@ -666,10 +666,13 @@ class ConsoleMaster(flow.FlowMaster):
         return self.state.set_intercept(txt)
 
     def set_reverse_proxy(self, txt):
-        s = utils.parse_proxy_spec(txt)
-        if not s:
-            return "Invalid reverse proxy specification"
-        self.server.config.reverse_proxy = s
+        if not txt:
+            self.server.config.reverse_proxy = None
+        else:
+            s = utils.parse_proxy_spec(txt)
+            if not s:
+                return "Invalid reverse proxy specification"
+            self.server.config.reverse_proxy = s
 
     def changeview(self, v):
         if v == "r":
