@@ -6,8 +6,8 @@ from .. import utils, encoding, flow
 def _mkhelp():
     text = []
     keys = [
-        ("A", "accept all intercepted connections"),
-        ("a", "accept this intercepted connection"),
+        ("A", "accept all intercepted flows"),
+        ("a", "accept this intercepted flow"),
         ("b", "save request/response body"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
@@ -48,7 +48,7 @@ class ConnectionViewHeader(common.WWrap):
         self.master, self.flow = master, f
         self.w = common.format_flow(f, False, extended=True, padding=0)
 
-    def refresh_connection(self, f):
+    def refresh_flow(self, f):
         if f == self.flow:
             self.w = common.format_flow(f, False, extended=True, padding=0)
 
@@ -92,7 +92,7 @@ class ConnectionView(common.WWrap):
                 )
             )
 
-    def _view_conn_raw(self, content):
+    def _view_flow_raw(self, content):
         txt = []
         for i in utils.cleanBin(content[:VIEW_CUTOFF]).splitlines():
             txt.append(
@@ -101,7 +101,7 @@ class ConnectionView(common.WWrap):
         self._trailer(len(content), txt)
         return txt
 
-    def _view_conn_binary(self, content):
+    def _view_flow_binary(self, content):
         txt = []
         for offset, hexa, s in utils.hexdump(content[:VIEW_CUTOFF]):
             txt.append(urwid.Text([
@@ -114,7 +114,7 @@ class ConnectionView(common.WWrap):
         self._trailer(len(content), txt)
         return txt
 
-    def _view_conn_xmlish(self, content):
+    def _view_flow_xmlish(self, content):
         txt = []
         for i in utils.pretty_xmlish(content[:VIEW_CUTOFF]):
             txt.append(
@@ -123,7 +123,7 @@ class ConnectionView(common.WWrap):
         self._trailer(len(content), txt)
         return txt
 
-    def _view_conn_json(self, lines):
+    def _view_flow_json(self, lines):
         txt = []
         sofar = 0
         for i in lines:
@@ -136,7 +136,7 @@ class ConnectionView(common.WWrap):
         self._trailer(sum(len(i) for i in lines), txt)
         return txt
 
-    def _view_conn_formdata(self, content, boundary):
+    def _view_flow_formdata(self, content, boundary):
         rx = re.compile(r'\bname="([^"]+)"')
         keys = []
         vals = []
@@ -160,7 +160,7 @@ class ConnectionView(common.WWrap):
         ))
         return r
 
-    def _view_conn_urlencoded(self, lines):
+    def _view_flow_urlencoded(self, lines):
         return common.format_keyvals(
                     [(k+":", v) for (k, v) in lines],
                     key = "header",
@@ -177,18 +177,18 @@ class ConnectionView(common.WWrap):
         if ctype and flow.HDR_FORM_URLENCODED in ctype:
             data = utils.urldecode(content)
             if data:
-                return "URLEncoded form", self._view_conn_urlencoded(data)
+                return "URLEncoded form", self._view_flow_urlencoded(data)
         if utils.isXML(content):
-            return "Indented XML-ish", self._view_conn_xmlish(content)
+            return "Indented XML-ish", self._view_flow_xmlish(content)
         elif ctype and "application/json" in ctype:
             lines = utils.pretty_json(content)
             if lines:
-                return "JSON", self._view_conn_json(lines)
+                return "JSON", self._view_flow_json(lines)
         elif ctype and "multipart/form-data" in ctype:
             boundary = ctype.split('boundary=')
             if len(boundary) > 1:
-                return "Form data", self._view_conn_formdata(content, boundary[1].split(';')[0])
-        return "", self._view_conn_raw(content)
+                return "Form data", self._view_flow_formdata(content, boundary[1].split(';')[0])
+        return "", self._view_flow_raw(content)
 
     def _cached_conn_text(self, e, content, hdrItems, viewmode):
         txt = common.format_keyvals(
@@ -199,7 +199,7 @@ class ConnectionView(common.WWrap):
         if content:
             msg = ""
             if viewmode == common.VIEW_BODY_HEX:
-                body = self._view_conn_binary(content)
+                body = self._view_flow_binary(content)
             elif viewmode == common.VIEW_BODY_PRETTY:
                 emsg = ""
                 if e:
@@ -212,7 +212,7 @@ class ConnectionView(common.WWrap):
                 if emsg:
                     msg = emsg + " " + msg
             else:
-                body = self._view_conn_raw(content)
+                body = self._view_flow_raw(content)
 
             title = urwid.AttrWrap(urwid.Columns([
                 urwid.Text(
@@ -311,7 +311,7 @@ class ConnectionView(common.WWrap):
         self.w = self.wrap_body(common.VIEW_FLOW_RESPONSE, body)
         self.master.statusbar.redraw()
 
-    def refresh_connection(self, c=None):
+    def refresh_flow(self, c=None):
         if c == self.flow:
             if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE and self.flow.response:
                 self.view_response()
@@ -321,7 +321,7 @@ class ConnectionView(common.WWrap):
     def set_method_raw(self, m):
         if m:
             self.flow.request.method = m
-            self.master.refresh_connection(self.flow)
+            self.master.refresh_flow(self.flow)
 
     def edit_method(self, m):
         if m == "e":
@@ -330,7 +330,7 @@ class ConnectionView(common.WWrap):
             for i in self.method_options:
                 if i[1] == m:
                     self.flow.request.method = i[0].upper()
-            self.master.refresh_connection(self.flow)
+            self.master.refresh_flow(self.flow)
 
     def save_body(self, path):
         if not path:
@@ -352,7 +352,7 @@ class ConnectionView(common.WWrap):
         request = self.flow.request
         if not request.set_url(str(url)):
             return "Invalid URL."
-        self.master.refresh_connection(self.flow)
+        self.master.refresh_flow(self.flow)
 
     def set_resp_code(self, code):
         response = self.flow.response
@@ -363,12 +363,12 @@ class ConnectionView(common.WWrap):
         import BaseHTTPServer
         if BaseHTTPServer.BaseHTTPRequestHandler.responses.has_key(int(code)):
             response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[int(code)][0]
-        self.master.refresh_connection(self.flow)
+        self.master.refresh_flow(self.flow)
 
     def set_resp_msg(self, msg):
         response = self.flow.response
         response.msg = msg
-        self.master.refresh_connection(self.flow)
+        self.master.refresh_flow(self.flow)
 
     def set_headers(self, lst, conn):
         conn.headers = flow.ODict(lst)
@@ -405,7 +405,7 @@ class ConnectionView(common.WWrap):
             self.master.prompt_edit("Code", str(conn.code), self.set_resp_code)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
-        self.master.refresh_connection(self.flow)
+        self.master.refresh_flow(self.flow)
 
     def _view_nextprev_flow(self, np, flow):
         try:
@@ -438,7 +438,7 @@ class ConnectionView(common.WWrap):
             conn = self.flow.response
 
         if key == "q":
-            self.master.view_connlist()
+            self.master.view_flowlist()
             key = None
         elif key == "tab":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
@@ -456,7 +456,7 @@ class ConnectionView(common.WWrap):
             self.master.view_flow(self.flow)
         elif key == "d":
             if self.state.flow_count() == 1:
-                self.master.view_connlist()
+                self.master.view_flowlist()
             elif self.state.view.index(self.flow) == len(self.state.view)-1:
                 self.view_prev_flow(self.flow)
             else:
@@ -512,10 +512,10 @@ class ConnectionView(common.WWrap):
             r = self.master.replay_request(self.flow)
             if r:
                 self.master.statusbar.message(r)
-            self.master.refresh_connection(self.flow)
+            self.master.refresh_flow(self.flow)
         elif key == "V":
             self.state.revert(self.flow)
-            self.master.refresh_connection(self.flow)
+            self.master.refresh_flow(self.flow)
         elif key == "W":
             self.master.path_prompt(
                 "Save this flow: ",
@@ -562,7 +562,7 @@ class ConnectionView(common.WWrap):
                         self.encode_callback,
                         conn
                     )
-                self.master.refresh_connection(self.flow)
+                self.master.refresh_flow(self.flow)
         else:
             return key
 
@@ -572,4 +572,4 @@ class ConnectionView(common.WWrap):
             "d": "deflate",
         }
         conn.encode(encoding_map[key])
-        self.master.refresh_connection(self.flow)
+        self.master.refresh_flow(self.flow)

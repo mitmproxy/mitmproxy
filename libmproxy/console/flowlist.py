@@ -4,9 +4,9 @@ import common
 def _mkhelp():
     text = []
     keys = [
-        ("A", "accept all intercepted connections"),
-        ("a", "accept this intercepted connection"),
-        ("C", "clear connection list or eventlog"),
+        ("A", "accept all intercepted flows"),
+        ("a", "accept this intercepted flows"),
+        ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
@@ -16,9 +16,9 @@ def _mkhelp():
         ("V", "revert changes to request"),
         ("w", "save all flows matching current limit"),
         ("W", "save this flow"),
-        ("X", "kill and delete connection, even if it's mid-intercept"),
-        ("tab", "tab between eventlog and connection list"),
-        ("enter", "view connection"),
+        ("X", "kill and delete flow, even if it's mid-intercept"),
+        ("tab", "tab between eventlog and flow list"),
+        ("enter", "view flow"),
         ("|", "run script on this flow"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
@@ -173,7 +173,7 @@ class ConnectionListView(urwid.ListWalker):
 class ConnectionListBox(urwid.ListBox):
     def __init__(self, master):
         self.master = master
-        urwid.ListBox.__init__(self, master.conn_list_view)
+        urwid.ListBox.__init__(self, master.flow_list_view)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
@@ -181,7 +181,7 @@ class ConnectionListBox(urwid.ListBox):
             self.master.accept_all()
             self.master.sync_list_view()
         elif key == "C":
-            self.master.clear_connections()
+            self.master.clear_flows()
         elif key == "e":
             self.master.toggle_eventlog()
         elif key == "l":

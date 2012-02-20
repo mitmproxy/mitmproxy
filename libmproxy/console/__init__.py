@@ -17,7 +17,7 @@ import mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import urwid
 from .. import controller, utils, flow
-import connlist, connview, help, common, kveditor, palettes
+import flowlist, flowview, help, common, kveditor, palettes
 
 EVENTLOG_SIZE = 500
 
@@ -317,7 +317,7 @@ class ConsoleMaster(flow.FlowMaster):
     footer_text_help = [
         ('heading_key', "q"), ":back",
     ]
-    footer_text_connview = [
+    footer_text_flowview = [
         ('heading_key', "tab"), ":toggle view ",
         ('heading_key', "?"), ":help ",
         ('heading_key', "q"), ":back ",
@@ -327,7 +327,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.looptime = 0
         self.options = options
 
-        self.conn_list_view = None
+        self.flow_list_view = None
         self.set_palette()
 
         r = self.set_intercept(options.intercept)
@@ -383,7 +383,7 @@ class ConsoleMaster(flow.FlowMaster):
         if f.error:
             s.run("error", f)
         s.run("done")
-        self.refresh_connection(f)
+        self.refresh_flow(f)
         self.state.last_script = path
 
     def set_script(self, path):
@@ -396,7 +396,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
-        self.view_connlist()
+        self.view_flowlist()
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
@@ -481,7 +481,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
         self.ui.register_palette(self.palette)
-        self.conn_list_view = connlist.ConnectionListView(self, self.state)
+        self.flow_list_view = flowlist.ConnectionListView(self, self.state)
 
         self.view = None
         self.statusbar = None
@@ -492,7 +492,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.prompting = False
         self.onekey = False
 
-        self.view_connlist()
+        self.view_flowlist()
 
         if self.server:
             slave = controller.Slave(self.masterq, self.server)
@@ -506,7 +506,7 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
         self.ui.run_wrapper(self.loop)
-        # If True, quit just pops out to connection list view.
+        # If True, quit just pops out to flow list view.
         print >> sys.stderr, "Shutting down..."
         sys.stderr.flush()
         self.shutdown()
@@ -514,7 +514,7 @@ class ConsoleMaster(flow.FlowMaster):
     def focus_current(self):
         if self.currentflow:
             try:
-                self.conn_list_view.set_focus(self.state.index(self.currentflow))
+                self.flow_list_view.set_focus(self.state.index(self.currentflow))
             except (IndexError, ValueError):
                 pass
 
@@ -540,29 +540,29 @@ class ConsoleMaster(flow.FlowMaster):
         self.statusbar = StatusBar(self, self.footer_text_help)
         self.make_view()
 
-    def view_connlist(self):
+    def view_flowlist(self):
         if self.ui.started:
             self.ui.clear()
         self.focus_current()
         if self.eventlog:
-            self.body = connlist.BodyPile(self)
+            self.body = flowlist.BodyPile(self)
         else:
-            self.body = connlist.ConnectionListBox(self)
+            self.body = flowlist.ConnectionListBox(self)
         self.statusbar = StatusBar(self, self.footer_text_default)
         self.header = None
         self.currentflow = None
 
         self.make_view()
-        self.help_context = connlist.help_context
+        self.help_context = flowlist.help_context
 
     def view_flow(self, flow):
-        self.body = connview.ConnectionView(self, self.state, flow)
-        self.header = connview.ConnectionViewHeader(self, flow)
-        self.statusbar = StatusBar(self, self.footer_text_connview)
+        self.body = flowview.ConnectionView(self, self.state, flow)
+        self.header = flowview.ConnectionViewHeader(self, flow)
+        self.statusbar = StatusBar(self, self.footer_text_flowview)
         self.currentflow = flow
 
         self.make_view()
-        self.help_context = connview.help_context
+        self.help_context = flowview.help_context
 
     def _write_flows(self, path, flows):
         self.state.last_saveload = path
@@ -603,7 +603,7 @@ class ConsoleMaster(flow.FlowMaster):
         except flow.FlowReadError, v:
             return v.strerror
         f.close()
-        if self.conn_list_view:
+        if self.flow_list_view:
             self.sync_list_view()
             self.focus_current()
 
@@ -681,7 +681,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.state.view_body_mode = common.VIEW_BODY_HEX
         elif v == "p":
             self.state.view_body_mode = common.VIEW_BODY_PRETTY
-        self.refresh_connection(self.currentflow)
+        self.refresh_flow(self.currentflow)
 
     def drawscreen(self):
         size = self.ui.get_cols_rows()
@@ -693,7 +693,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.currentflow:
             self.view_flow(self.currentflow)
         else:
-            self.view_connlist()
+            self.view_flowlist()
 
     def loop(self):
         changed = True
@@ -851,23 +851,23 @@ class ConsoleMaster(flow.FlowMaster):
         controller.Master.shutdown(self)
 
     def sync_list_view(self):
-        self.conn_list_view._modified()
+        self.flow_list_view._modified()
 
-    def clear_connections(self):
+    def clear_flows(self):
         self.state.clear()
         self.sync_list_view()
 
-    def delete_connection(self, f):
+    def delete_flow(self, f):
         self.state.delete_flow(f)
         self.sync_list_view()
 
-    def refresh_connection(self, c):
-        if hasattr(self.header, "refresh_connection"):
-            self.header.refresh_connection(c)
-        if hasattr(self.body, "refresh_connection"):
-            self.body.refresh_connection(c)
-        if hasattr(self.statusbar, "refresh_connection"):
-            self.statusbar.refresh_connection(c)
+    def refresh_flow(self, c):
+        if hasattr(self.header, "refresh_flow"):
+            self.header.refresh_flow(c)
+        if hasattr(self.body, "refresh_flow"):
+            self.body.refresh_flow(c)
+        if hasattr(self.statusbar, "refresh_flow"):
+            self.statusbar.refresh_flow(c)
 
     def process_flow(self, f, r):
         if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay():
@@ -875,7 +875,7 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             r._ack()
         self.sync_list_view()
-        self.refresh_connection(f)
+        self.refresh_flow(f)
 
     def clear_events(self):
         self.eventlist[:] = []

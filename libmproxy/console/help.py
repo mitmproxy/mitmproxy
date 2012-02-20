@@ -59,7 +59,7 @@ class HelpView(urwid.ListBox):
                 [("text", ": disable server replay response refresh")]
             ),
 
-            ("q", "quit / return to connection list"),
+            ("q", "quit / return to flow list"),
             ("Q", "quit without confirm prompt"),
             ("R", "set reverse proxy mode"),
             ("s", "set/unset script"),
