@@ -46,7 +46,7 @@ class ScriptContext:
 
 class ODict:
     """
-        A dictionary-like object for managing ordered (key, value) data. 
+        A dictionary-like object for managing ordered (key, value) data.
     """
     def __init__(self, lst=None):
         self.lst = lst or []
@@ -149,7 +149,7 @@ class ODict:
 class ODictCaseless(ODict):
     """
         A variant of ODict with "caseless" keys. This version _preserves_ key
-        case, but does not consider case when setting or getting items. 
+        case, but does not consider case when setting or getting items.
     """
     def _kconv(self, s):
         return s.lower()
@@ -337,9 +337,9 @@ class Request(HTTPMsg):
             Gets the request query string. Returns an ODict object.
         """
         _, _, _, _, query, _ = urlparse.urlparse(self.get_url())
-        if not query:
-            return []
-        return ODict(utils.urldecode(query))
+        if query:
+            return ODict(utils.urldecode(query))
+        return ODict([])
 
     def set_query(self, odict):
         """
