@@ -318,7 +318,6 @@ class ConsoleMaster(flow.FlowMaster):
         ('heading_key', "q"), ":back",
     ]
     footer_text_flowview = [
-        ('heading_key', "tab"), ":toggle view ",
         ('heading_key', "?"), ":help ",
         ('heading_key', "q"), ":back ",
     ]

@@ -84,6 +84,8 @@ def fcol(s, attr):
 
 
 
+REPLAY_SYMBOL = u"\u21ba"
+
 def format_flow(f, focus, extended=False, padding=2):
     pile = []
 
@@ -98,7 +100,7 @@ def format_flow(f, focus, extended=False, padding=2):
     else:
         req.append(fcol(">>" if focus else "  ", "focus"))
     if f.request.is_replay():
-        req.append(fcol(u"\u267B", "replay"))
+        req.append(fcol(REPLAY_SYMBOL, "replay"))
     req.append(fcol(f.request.method, "method"))
 
     preamble = sum(i[1] for i in req) + len(req) -1
@@ -126,7 +128,7 @@ def format_flow(f, focus, extended=False, padding=2):
 
     if f.response:
         if f.response.is_replay():
-            resp.append(fcol(u"\u267B", "replay"))
+            resp.append(fcol(REPLAY_SYMBOL, "replay"))
         if f.response.code in [200, 304]:
             resp.append(fcol(f.response.code, "goodcode"))
         else:

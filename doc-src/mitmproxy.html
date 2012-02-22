@@ -1,28 +1,79 @@
 
 __mitmproxy__ is a console tool that allows interactive examination and
-modification of HTTP traffic. The _?_ shortcut key shows complete documentation
-on __mitmproxy__'s functionality.
+modification of HTTP traffic. Use the _?_ shortcut key to view,
+context-sensitive documentation from any __mitmproxy__ screen.
 
+## Flow list
 
-## The interface: connection list
+The flow list shows an index of captured flows in chronological order. 
 
 <img src="@!urlTo("screenshots/mitmproxy.png")!@"/>
 
+- __1__: A GET request, returning a 302 Redirect response.
+- __2__: A GET request, returning 16.75kb of text/html data.
+- __3__: A replayed request. 
+- __4__: Intercepted flows are indicated with orange text. The user may edit
+these flows, and then accept them (using the _a_ key) to continue. In this
+case, the request has been intercepted on the way to the server.
+- __5__: A response intercepted from the server on the way to the client.
+- __6__: The event log can be toggled on and off using the _e_ shorcut key. This
+pane shows events and errors that may not result in a flow that shows up in the
+flow pane.
+- __7__: Flow count.
+- __8__: Various information on mitmproxy's state. In this case, we have an
+interception pattern set to ".*".
+- __9__: Bind address indicator - mitmproxy is listening on port 8080 of all
+interfaces.
 
-The connection list shows an index of captured flows in chronological order.
-So, in this case, we can we can see that we visited __gmail.com__, which then
-returned a 301 redirect to mail.google.com.
 
-The statusbar at the bottom tells us that there are 11 flows in the view, that
-we are using the "pretty" view mode (more on that below), and that the proxy is
-bound to port 8080 of all interfaces.
+## Flow view
 
-Also visible is the __Event log__, which can be toggled on and off with the _v_
-keyboard shortcut. This displays events like client connection information,
-errors, and script output.
+The __Flow View__ lets you inspect and manipulate a single flow:
+
+<img src="@!urlTo("screenshots/mitmproxy-flowview.png")!@"/>
+
+- __1__: Flow summary.
+- __2__: The Request/Response tabs, showing you which part of the flow you are
+currently viewing. In the example above, we're viewing the Response. Hit _tab_
+to switch between the Response and the Request.
+- __3__: Headers.
+- __4__: Body.
+- __5__: View Mode indicator. In this case, we're viewing the body in __hex__
+mode. The other available modes are __pretty__, which uses a number of
+heuristics to show you a friendly view of various content types, and __raw__,
+which shows you exactly what's there without any changes. You can change modes
+using the _m_ key.
 
 
-## Example: Interception
+## Key/Value Editor
+
+It turns out that ordered key/value data is pervasive in HTTP communications,
+so mitmproxy has a built-in editor to help edit and create this kind of data.
+There are three ways to reach the __K/V Editor__ from the __Flow View__ screen:
+
+- Editing request or response headers (_e_ for edit, then _h_ for headers) 
+- Editing a query string (_e_ for edit, then _q_ for query)
+- Editing a URL-encoded form (_e_ for edit, then _f_ for form)
+
+If there is is no form or query string, an empty __K/V Editor__ will be started
+to let you add one. Here is the __K/V Editor__ showing the headers from a
+request:
+
+<img src="@!urlTo("screenshots/mitmproxy-kveditor.png")!@"/>
+
+To edit, navigate to the key or value you want to modify using the arrow or vi
+navigation keys, and press enter. The background color will change to show that
+you are in edit mode for the specified field:
+
+<img src="@!urlTo("screenshots/mitmproxy-kveditor-editmode.png")!@"/>
+
+Modify the field as desired, and press escape or enter to exit edit mode when
+you're done. You can also add a key/value pair (_a_ key), delete a pair (_d_
+key), spawn an external editor on a field (_e_ key). Be sure to consult the
+context-sensitive help (_?_ key) for more.
+
+
+# Example: Interception
 
 __mitmproxy__'s interception functionality lets you pause an HTTP request or
 response, inspect and modify it, and then accept it to send it on to the server
@@ -31,27 +82,27 @@ or client.
 
 ### 1: Set an interception pattern
 
-<img src="@!urlTo('intercept-filt.png')!@"/>
+<img src="@!urlTo('mitmproxy-intercept-filt.png')!@"/>
 
 We press _i_ to set an interception pattern. In this case, the __~q__ filter
 pattern tells __mitmproxy__ to intercept all requests. For complete filter
 syntax, see the [Filter expressions](@!urlTo("filters.html")!@) section of this
 document, or the built-in help function in __mitmproxy__.
 
-### 2: Intercepted connections are indicated with a red exclamation mark:
+### 2: Intercepted connections are indicated with orange text:
 
-<img src="@!urlTo('intercept-mid.png')!@"/>
+<img src="@!urlTo('mitmproxy-intercept-mid.png')!@"/>
 
 ### 3: You can now view and modify the request:
 
-<img src="@!urlTo('intercept-options.png')!@"/>
+<img src="@!urlTo('mitmproxy-intercept-options.png')!@"/>
 
 In this case, we viewed the request by selecting it, pressed _e_ for "edit"
 and _m_ for "method" to change the HTTP request method.
 
-### 4: Accept the intercept to continue
+### 4: Accept the intercept to continue:
 
-<img src="@!urlTo('intercept-result.png')!@"/>
+<img src="@!urlTo('mitmproxy-intercept-result.png')!@"/>
 
 Finally, we press _a_ to accept the modified request, which is then sent on to
 the server. In this case, we changed the request from an HTTP GET to to

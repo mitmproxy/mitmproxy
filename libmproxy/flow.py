@@ -58,6 +58,10 @@ class ODict:
         return self.lst == other.lst
 
     def __getitem__(self, k):
+        """
+            Returns a list of values matching key.
+
+        """
         ret = []
         k = self._kconv(k)
         for i in self.lst:
@@ -73,18 +77,28 @@ class ODict:
         return new
 
     def __len__(self):
+        """
+            Total number of (key, value) pairs.
+        """
         return len(self.lst)
 
-    def __setitem__(self, k, values):
-        if isinstance(values, basestring):
-            raise ValueError("ODict values should be lists.")
+    def __setitem__(self, k, valuelist):
+        """
+            Sets the values for key k. If there are existing values for this
+            key, they are cleared.
+        """
+        if isinstance(valuelist, basestring):
+            raise ValueError("ODict valuelist should be lists.")
         k = self._kconv(k)
         new = self._filter_lst(k, self.lst)
-        for i in values:
+        for i in valuelist:
             new.append((k, i))
         self.lst = new
 
     def __delitem__(self, k):
+        """
+            Delete all items matching k. 
+        """
         self.lst = self._filter_lst(k, self.lst)
 
     def __contains__(self, k):
