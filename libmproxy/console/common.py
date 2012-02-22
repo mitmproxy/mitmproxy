@@ -1,4 +1,5 @@
 import urwid
+import urwid.util
 from .. import utils
 
 
@@ -82,9 +83,13 @@ def fcol(s, attr):
         )
     )
 
+if urwid.util.detected_encoding:
+    SYMBOL_REPLAY = u"\u21ba"
+    SYMBOL_RETURN = u"\u2190"
+else:
+    SYMBOL_REPLAY = u"[r]"
+    SYMBOL_RETURN = u"<-"
 
-
-REPLAY_SYMBOL = u"\u21ba"
 
 def format_flow(f, focus, extended=False, padding=2):
     pile = []
@@ -100,7 +105,7 @@ def format_flow(f, focus, extended=False, padding=2):
     else:
         req.append(fcol(">>" if focus else "  ", "focus"))
     if f.request.is_replay():
-        req.append(fcol(REPLAY_SYMBOL, "replay"))
+        req.append(fcol(SYMBOL_REPLAY, "replay"))
     req.append(fcol(f.request.method, "method"))
 
     preamble = sum(i[1] for i in req) + len(req) -1
@@ -124,11 +129,11 @@ def format_flow(f, focus, extended=False, padding=2):
     )
 
     if f.response or f.error:
-        resp.append(fcol(u"\u2190", "method"))
+        resp.append(fcol(SYMBOL_RETURN, "method"))
 
     if f.response:
         if f.response.is_replay():
-            resp.append(fcol(REPLAY_SYMBOL, "replay"))
+            resp.append(fcol(SYMBOL_REPLAY, "replay"))
         if f.response.code in [200, 304]:
             resp.append(fcol(f.response.code, "goodcode"))
         else:
