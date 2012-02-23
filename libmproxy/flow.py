@@ -979,16 +979,8 @@ class Flow:
             if matched, False if not.
         """
         if f:
-            if self.response and f(self.response):
-                return True
-            elif self.request and f(self.request):
-                return True
-            elif self.error and f(self.error):
-                return True
-            else:
-                return False
-        else:
-            return True
+            return f(self)
+        return True
 
     def kill(self, master):
         """
