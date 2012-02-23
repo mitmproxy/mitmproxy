@@ -394,6 +394,13 @@ class ConnectionView(common.WWrap):
     def set_form(self, lst, conn):
         conn.set_form_urlencoded(flow.ODict(lst))
 
+    def edit_form(self, conn):
+        self.master.view_kveditor("Editing form", conn.get_form_urlencoded().lst, self.set_form, conn)
+
+    def edit_form_confirm(self, key, conn):
+        if key == "y":
+            self.edit_form(conn)
+
     def edit(self, part):
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             conn = self.flow.request
@@ -407,7 +414,18 @@ class ConnectionView(common.WWrap):
             c = self.master.spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n")
         elif part == "f":
-            self.master.view_kveditor("Editing form", conn.get_form_urlencoded().lst, self.set_form, conn)
+            if not conn.get_form_urlencoded() and conn.content:
+                self.master.prompt_onekey(
+                    "Existing body is not a URL-encoded form. Clear and edit?",
+                    [
+                        ("yes", "y"),
+                        ("no", "n"),
+                    ],
+                    self.edit_form_confirm, 
+                    conn
+                )
+            else:
+                self.edit_form(conn)
         elif part == "h":
             self.master.view_kveditor("Editing headers", conn.headers.lst, self.set_headers, conn)
         elif part == "q":

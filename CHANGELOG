@@ -6,6 +6,8 @@
 
     * Extend script API to allow duplication and replay of flows.
     
+    * API for easy manipulation of URL-encoded forms and query strings.
+    
     * Add "D" shortcut in mitmproxy to duplicate a flow.
     
     * Reverse proxy mode. In this mode mitmproxy acts as an HTTP server,
