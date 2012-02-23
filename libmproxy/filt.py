@@ -66,9 +66,10 @@ class FErr(_Action):
 
 class FReq(_Action):
     code = "q"
-    help = "Match request"
+    help = "Match request with no response"
     def __call__(self, f):
-        return True if f.request else False
+        if not f.response:
+            return True
 
 
 class FResp(_Action):

@@ -135,8 +135,7 @@ class uMatching(libpry.AutoTree):
         s = self.resp()
 
         assert self.q("~q", q)
-        # FIXME
-        assert self.q("~q", s)
+        assert not self.q("~q", s)
 
         assert not self.q("~s", q)
         assert self.q("~s", s)
@@ -226,8 +225,7 @@ class uMatching(libpry.AutoTree):
         assert self.q("~c 200 | ~h nohead", s)
         assert self.q("~c 201 | ~h head", s)
         assert not self.q("~c 201 | ~h nohead", s)
-        # FIXME
-        #assert self.q("(~c 201 | ~h nohead) | ~s", s)
+        assert self.q("(~c 201 | ~h nohead) | ~s", s)
 
     def test_not(self):
         s = self.resp()
