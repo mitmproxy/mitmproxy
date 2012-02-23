@@ -1,6 +1,8 @@
 add_header.py           Simple script that just adds a header to every request.
+dup_and_replay.py       Duplicates each request, changes it, and then replays the modified request.
 flowbasic               Basic use of mitmproxy as a library.
 modify_form.py          Modify all form submissions to add a parameter. 
+modify_querystring.py   Modify all query strings to add a parameters.
 stub.py                 Script stub with a method definition for every event. 
 stickycookies           An example of writing a custom proxy with libmproxy.
 upsidedownternet.py     Rewrites traffic to turn PNGs upside down.
