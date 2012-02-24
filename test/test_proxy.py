@@ -24,6 +24,7 @@ class u_read_chunked(libpry.AutoTree):
 
 class Dummy: pass
 
+
 class u_read_http_body(libpry.AutoTree):
     def test_all(self):
 
@@ -41,7 +42,6 @@ class u_read_http_body(libpry.AutoTree):
         assert len(proxy.read_http_body(s, d, h, False, None)) == 5
         s = cStringIO.StringIO("testing")
         libpry.raises(proxy.ProxyError, proxy.read_http_body, s, d, h, False, 4)
-
 
         h = flow.ODict()
         s = cStringIO.StringIO("testing")

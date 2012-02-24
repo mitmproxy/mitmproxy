@@ -143,6 +143,17 @@ class uFlow(libpry.AutoTree):
         assert not f.request is f2.request
         assert f.request.headers == f2.request.headers
         assert not f.request.headers is f2.request.headers
+        assert f.response == f2.response
+        assert not f.response is f2.response
+
+        f = tutils.tflow_err()
+        f2 = f.copy()
+        assert not f is f2
+        assert not f.request is f2.request
+        assert f.request.headers == f2.request.headers
+        assert not f.request.headers is f2.request.headers
+        assert f.error == f2.error
+        assert not f.error is f2.error
 
     def test_match(self):
         f = tutils.tflow()
@@ -301,7 +312,6 @@ class uState(libpry.AutoTree):
         assert c.add_response(resp)
         assert c.active_flow_count() == 0
 
-
     def test_err(self):
         c = flow.State()
         req = tutils.treq()
@@ -321,7 +331,6 @@ class uState(libpry.AutoTree):
         assert not c.view
         assert c.add_error(e)
         assert c.view
-
 
     def test_set_limit(self):
         c = flow.State()

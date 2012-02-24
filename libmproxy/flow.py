@@ -1096,11 +1096,8 @@ class State(object):
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        if err.request:
-            f = self._flow_map.get(err.request)
-            if not f:
-                return None
-        else:
+        f = self._flow_map.get(err.request)
+        if not f:
             return None
         f.error = err
         if f.match(self._limit) and not f in self.view:
