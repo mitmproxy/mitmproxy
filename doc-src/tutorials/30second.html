@@ -49,13 +49,13 @@ voila! - totally hands-free wireless network startup.
 
 We might also want to prune requests that download CSS, JS, images and so
 forth. These add only a few moments to the time it takes to replay, but they're
-not really needed and I somehow feel compelled trim them anyway. So, we fire up
+not really needed and I somehow feel compelled to trim them anyway. So, we fire up
 the mitmproxy console tool on our serialized conversation, like so:
 
 <pre class="terminal">
-> mitmproxy wireless-login
+> mitmproxy -r wireless-login
 </pre>
 
 We can now go through and manually delete (using the __d__ keyboard shortcut)
-everything we want to trim. When we're done, we use __S__ to save the
+everything we want to trim. When we're done, we use __w__ to save the
 conversation back to the file.
