@@ -16,7 +16,7 @@
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time
 import os.path, sys
 import urwid
-from .. import controller, utils, flow
+from .. import controller, utils, flow, version
 import flowlist, flowview, help, common, kveditor, palettes
 
 EVENTLOG_SIZE = 500
@@ -315,7 +315,8 @@ class ConsoleMaster(flow.FlowMaster):
         ('heading_key', "?"), ":help ",
     ]
     footer_text_help = [
-        ('heading_key', "q"), ":back",
+        ("heading", 'mitmproxy v%s '%version.VERSION),
+        ('heading_key', "q"), ":back ",
     ]
     footer_text_flowview = [
         ('heading_key', "?"), ":help ",
