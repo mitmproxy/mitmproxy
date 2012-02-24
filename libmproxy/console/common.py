@@ -143,10 +143,11 @@ def format_flow(f, focus, extended=False, padding=2):
         ("fixed", preamble, urwid.Text(""))
     )
 
-    if f.response or f.error:
-        resp.append(fcol(SYMBOL_RETURN, "method"))
-
     if f.response:
+        if f.response.code in [200, 304]:
+            resp.append(fcol(SYMBOL_RETURN, "goodcode"))
+        else:
+            resp.append(fcol(SYMBOL_RETURN, "error"))
         if f.response.is_replay():
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
         if f.response.code in [200, 304]:
@@ -168,6 +169,7 @@ def format_flow(f, focus, extended=False, padding=2):
         else:
             resp.append(fcol("[empty content]", rc))
     elif f.error:
+        resp.append(fcol(SYMBOL_RETURN, "error"))
         resp.append(
             urwid.Text([
                 (
