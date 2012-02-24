@@ -345,7 +345,7 @@ class uState(libpry.AutoTree):
         c.add_request(req)
         assert len(c.view) == 2
         c.set_limit("~q")
-        assert len(c.view) == 2
+        assert len(c.view) == 1
         c.set_limit("~s")
         assert len(c.view) == 1
 
@@ -930,6 +930,15 @@ class uODict(libpry.AutoTree):
         state = self.od._get_state()
         nd = flow.ODict._from_state(state)
         assert nd == self.od
+
+    def test_in_any(self):
+        self.od["one"] = ["atwoa", "athreea"]
+        assert self.od.in_any("one", "two")
+        assert self.od.in_any("one", "three")
+        assert not self.od.in_any("one", "four")
+        assert not self.od.in_any("nonexistent", "foo")
+        assert not self.od.in_any("one", "TWO")
+        assert self.od.in_any("one", "TWO", True)
 
     def test_copy(self):
         self.od.add("foo", 1)

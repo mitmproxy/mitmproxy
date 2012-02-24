@@ -146,6 +146,21 @@ class ODict:
         elements.append("")
         return "\r\n".join(elements)
 
+    def in_any(self, key, value, caseless=False):
+        """
+            Do any of the values matching key contain value?
+
+            If caseless is true, value comparison is case-insensitive.
+        """
+        if caseless:
+            value = value.lower()
+        for i in self[key]:
+            if caseless:
+                i = i.lower()
+            if value in i:
+                return True
+        return False
+
     def match_re(self, expr):
         """
             Match the regular expression against each (key, value) pair. For
@@ -347,8 +362,7 @@ class Request(HTTPMsg):
             Returns an empty ODict if there is no data or the content-type
             indicates non-form data.
         """
-        hv = [i.lower() for i in self.headers["content-type"]]
-        if HDR_FORM_URLENCODED in hv:
+        if self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
             return ODict(utils.urldecode(self.content))
         return ODict([])
 
