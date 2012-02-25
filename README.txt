@@ -6,8 +6,7 @@ fly.
 functionality but without the user interface. Think tcpdump for HTTP.
 
 Complete documentation and a set of practical tutorials is included in the
-distribution package, and is also available at `mitmproxy.org
-<http://mitmproxy.org>`_.
+distribution package, and is also available at mitmproxy.org_.
 
 
 Features
@@ -27,11 +26,11 @@ Download
 
 Releases and rendered documentation can be found on the mitmproxy website:
 
-`mitmproxy.org <http://mitmproxy.org>`_
+mitmproxy.org_
 
 Source is hosted on github: 
 
-`github.com/cortesi/mitmproxy <http://github.com/cortesi/mitmproxy>`_
+`github.com/cortesi/mitmproxy`_
 
 
 Community
@@ -48,12 +47,12 @@ http://groups.google.com/group/mitmproxy
 Requirements
 ------------
 
-* `Python <http://www.python.org>`_ 2.6.x or 2.7.x.
-* `openssl <http://www.openssl.org/>`_ - installed by default on most systems.
-* `urwid <http://excess.org/urwid/>`_ version 0.9.8 or newer.
-* The test suite uses the `pry <http://github.com/cortesi/pry>`_ unit testing
+* Python_ 2.6.x or 2.7.x.
+* openssl_ - installed by default on most systems.
+* urwid_  version 0.9.8 or newer.
+* The test suite uses the pry_ unit testing
   library.
-* Rendering the documentation requires `countershape <http://github.com/cortesi/countershape>`_.
+* Rendering the documentation requires countershape_.
 
 **mitmproxy** is tested and developed on OSX, Linux and OpenBSD. 
 
@@ -64,3 +63,12 @@ following:
 * PAGER environment variable to determine the external pager.
 * Appropriate entries in your mailcap files to determine external
   viewers for request and response contents.
+
+.. _mitmproxy.org: http://mitmproxy.org
+.. _github.com/cortesi/mitmproxy: http://github.com/cortesi/mitmproxy
+.. _python: http://www.python.org
+.. _openssl: http://www.openssl.org/
+.. _urwid: http://excess.org/urwid/
+.. _pry: http://github.com/cortesi/pry
+.. _countershape: http://github.com/cortesi/countershape
+

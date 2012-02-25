@@ -83,8 +83,11 @@ setup(
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
             "Environment :: Console :: Curses",
+            "Operating System :: MacOS :: MacOS X",
+            "Operating System :: POSIX",
             "Programming Language :: Python",
             "Topic :: Security",
+            "Topic :: Internet",
             "Topic :: Internet :: WWW/HTTP",
             "Topic :: Internet :: Proxy Servers",
             "Topic :: Software Development :: Testing"
