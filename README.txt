@@ -1,13 +1,13 @@
-__mitmproxy__ is an SSL-capable man-in-the-middle proxy for HTTP. It provides a
+**mitmproxy** is an SSL-capable man-in-the-middle proxy for HTTP. It provides a
 console interface that allows traffic flows to be inspected and edited on the
 fly.
 
-__mitmdump__ is the command-line version of mitmproxy, with the same
+**mitmdump** is the command-line version of mitmproxy, with the same
 functionality but without the user interface. Think tcpdump for HTTP.
 
 Complete documentation and a set of practical tutorials is included in the
-distribution package, and is also available at
-[mitmproxy.org](http://mitmproxy.org).
+distribution package, and is also available at `mitmproxy.org
+<http://mitmproxy.org>`_.
 
 
 Features
@@ -27,11 +27,11 @@ Download
 
 Releases and rendered documentation can be found on the mitmproxy website:
 
-[mitmproxy.org](http://mitmproxy.org)
+`mitmproxy.org <http://mitmproxy.org>`_
 
 Source is hosted on github: 
 
-[github.com/cortesi/mitmproxy](http://github.com/cortesi/mitmproxy)
+`github.com/cortesi/mitmproxy <http://github.com/cortesi/mitmproxy>`_
 
 
 Community
@@ -42,20 +42,20 @@ Come join us in the #mitmproxy channel on the OFTC IRC network
 
 We also have a mailing list, hosted here:
 
-    http://groups.google.com/group/mitmproxy
+http://groups.google.com/group/mitmproxy
 
 
 Requirements
 ------------
 
-* [Python](http://www.python.org) 2.6.x or 2.7.x.
-* [openssl](http://www.openssl.org/) - installed by default on most systems.
-* [urwid](http://excess.org/urwid/) version 0.9.8 or newer.
-* The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
+* `Python <http://www.python.org>`_ 2.6.x or 2.7.x.
+* `openssl <http://www.openssl.org/>`_ - installed by default on most systems.
+* `urwid <http://excess.org/urwid/>`_ version 0.9.8 or newer.
+* The test suite uses the `pry <http://github.com/cortesi/pry>`_ unit testing
   library.
-* Rendering the documentation requires [countershape](http://github.com/cortesi/countershape).
+* Rendering the documentation requires `countershape <http://github.com/cortesi/countershape>`_.
 
-__mitmproxy__ is tested and developed on OSX, Linux and OpenBSD. 
+**mitmproxy** is tested and developed on OSX, Linux and OpenBSD. 
 
 You should also make sure that your console environment is set up with the
 following: 

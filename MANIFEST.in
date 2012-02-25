@@ -1,7 +1,8 @@
 include LICENSE
 include CHANGELOG
 include CONTRIBUTORS
-include README.mkd
+include README.txt
+exclude README.mkd
 recursive-include examples *
 recursive-include doc *
 recursive-include test *
