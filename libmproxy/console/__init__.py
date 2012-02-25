@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import mailcap, mimetypes, tempfile, os, subprocess, glob, time
+import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex
 import os.path, sys
 import urwid
 from .. import controller, utils, flow, version
@@ -433,7 +433,8 @@ class ConsoleMaster(flow.FlowMaster):
         #If no EDITOR is set, assume 'vi'
         if not c:
             c = "vi"
-        cmd = [c, name]
+        cmd = shlex.split(c)
+        cmd.append(name)
         self.ui.stop()
         try:
             subprocess.call(cmd)
