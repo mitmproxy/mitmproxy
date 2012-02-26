@@ -106,34 +106,36 @@ else:
     SYMBOL_RETURN = u"<-"
 
 
-def format_flow(f, focus, extended=False, padding=2):
-    pile = []
 
+def raw_format_flow(f, focus, extended, padding):
+    f = dict(f)
+
+    pile = []
     req = []
     if extended:
         req.append(
             fcol(
-                utils.format_timestamp(f.request.timestamp),
+                utils.format_timestamp(f["req_timestamp"]),
                 "highlight"
             )
         )
     else:
         req.append(fcol(">>" if focus else "  ", "focus"))
-    if f.request.is_replay():
+    if f["req_is_replay"]:
         req.append(fcol(SYMBOL_REPLAY, "replay"))
-    req.append(fcol(f.request.method, "method"))
+    req.append(fcol(f["req_method"], "method"))
 
     preamble = sum(i[1] for i in req) + len(req) -1
 
-    if f.intercepting and not f.request.acked:
+    if f["intercepting"] and not f["req_acked"]:
         uc = "intercept"
-    elif f.response or f.error:
+    elif f["resp_code"] or f["err_msg"]:
         uc = "text"
     else:
         uc = "title"
 
     req.append(
-        urwid.Text([(uc, f.request.get_url())])
+        urwid.Text([(uc, f["req_url"])])
     )
 
     pile.append(urwid.Columns(req, dividechars=1))
@@ -143,43 +145,74 @@ def format_flow(f, focus, extended=False, padding=2):
         ("fixed", preamble, urwid.Text(""))
     )
 
-    if f.response:
-        if f.response.code in [200, 304]:
+    if f["resp_code"]:
+        if f["resp_code"] in [200, 304]:
             resp.append(fcol(SYMBOL_RETURN, "goodcode"))
         else:
             resp.append(fcol(SYMBOL_RETURN, "error"))
-        if f.response.is_replay():
+        if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
-        if f.response.code in [200, 304]:
-            resp.append(fcol(f.response.code, "goodcode"))
+        if f["resp_code"] in [200, 304]:
+            resp.append(fcol(f["resp_code"], "goodcode"))
         else:
-            resp.append(fcol(f.response.code, "error"))
+            resp.append(fcol(f["resp_code"], "error"))
 
-        if f.intercepting and f.response and not f.response.acked:
+        if f["intercepting"] and f["resp_code"] and not f["resp_acked"]:
             rc = "intercept"
         else:
             rc = "text"
 
-        t = f.response.headers["content-type"]
-        if t:
-            t = t[0].split(";")[0]
-            resp.append(fcol(t, rc))
-        if f.response.content:
-            resp.append(fcol(utils.pretty_size(len(f.response.content)), rc))
-        else:
-            resp.append(fcol("[empty content]", rc))
-    elif f.error:
+        if f["resp_ctype"]:
+            resp.append(fcol(f["resp_ctype"], rc))
+        resp.append(fcol(f["resp_clen"], rc))
+    elif f["err_msg"]:
         resp.append(fcol(SYMBOL_RETURN, "error"))
         resp.append(
             urwid.Text([
                 (
                     "error",
-                    f.error.msg
+                    f["err_msg"]
                 )
             ])
         )
     pile.append(urwid.Columns(resp, dividechars=1))
     return urwid.Pile(pile)
+
+
+class FlowCache:
+    @utils.LRUCache(200)
+    def format_flow(self, *args):
+        return raw_format_flow(*args)
+flowcache = FlowCache()
+
+
+def format_flow(f, focus, extended=False, padding=2):
+    d = dict(
+        intercepting = f.intercepting,
+
+        req_timestamp = f.request.timestamp,
+        req_is_replay = f.request.is_replay(),
+        req_method = f.request.method,
+        req_acked = f.request.acked,
+        req_url = f.request.get_url(),
+
+        err_msg = f.error.msg if f.error else None,
+        resp_code = f.response.code if f.response else None,
+    )
+    if f.response:
+        d.update(dict(
+            resp_code = f.response.code,
+            resp_is_replay = f.response.is_replay(),
+            resp_acked = f.response.acked,
+            resp_clen = utils.pretty_size(len(f.response.content)) if f.response.content else "[empty content]"
+        ))
+        t = f.response.headers["content-type"]
+        if t:
+            d["resp_ctype"] = t[0].split(";")[0]
+        else:
+            d["resp_ctype"] = ""
+    return flowcache.format_flow(tuple(sorted(d.items())), focus, extended, padding)
+
 
 
 def int_version(v):

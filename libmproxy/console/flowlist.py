@@ -171,7 +171,6 @@ class ConnectionListView(urwid.ListWalker):
 
     def set_focus(self, focus):
         ret = self.state.set_focus(focus)
-        self._modified()
         return ret
 
     def get_next(self, pos):

@@ -421,7 +421,7 @@ class ConnectionView(common.WWrap):
                         ("yes", "y"),
                         ("no", "n"),
                     ],
-                    self.edit_form_confirm, 
+                    self.edit_form_confirm,
                     conn
                 )
             else:
