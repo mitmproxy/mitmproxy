@@ -143,7 +143,7 @@ class StatusBar(common.WWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]"%self.master.stickyauth_txt)
-        if self.master.server.config.reverse_proxy:
+        if self.master.server and self.master.server.config.reverse_proxy:
             r.append("[")
             r.append(("heading_key", "R"))
             r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
