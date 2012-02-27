@@ -147,9 +147,9 @@ def common_options(parser):
         help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
     )
     parser.add_option(
-        "--upstream-cn-lookup", default=False,
-        action="store_true", dest="upstream_cn_lookup",
-        help="Connect to upstream server to look up certificate Common Name."
+        "--upstream-cert", default=False,
+        action="store_true", dest="upstream_cert",
+        help="Connect to upstream server to look up certificate details."
     )
 
     group = optparse.OptionGroup(parser, "Client Replay")

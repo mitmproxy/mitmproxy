@@ -35,13 +35,13 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, upstream_cn_lookup=False, body_size_limit = None, reverse_proxy=None):
+    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None):
         self.certfile = certfile
         self.ciphers = ciphers
         self.cacert = cacert
         self.certdir = None
         self.cert_wait_time = cert_wait_time
-        self.upstream_cn_lookup = upstream_cn_lookup
+        self.upstream_cert = upstream_cert
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
 
@@ -349,7 +349,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             return self.config.certfile
         else:
             sans = []
-            if self.config.upstream_cn_lookup:
+            if self.config.upstream_cert:
                 host, sans = utils.get_remote_cn(host, port)
             ret = utils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
             time.sleep(self.config.cert_wait_time)
@@ -542,6 +542,6 @@ def process_proxy_options(parser, options):
         ciphers = options.ciphers,
         cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
-        upstream_cn_lookup = options.upstream_cn_lookup,
+        upstream_cert = options.upstream_cert,
         reverse_proxy = rp
     )
