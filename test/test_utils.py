@@ -265,6 +265,12 @@ class uparse_text_cert(libpry.AutoTree):
         assert cn == "google.com"
         assert len(san) == 436
 
+        c = file("data/text_cert_2", "r").read()
+        cn, san = utils.parse_text_cert(c)
+        assert cn == "www.inode.co.nz"
+        assert len(san) == 2
+
+
 
 tests = [
     uparse_text_cert(),

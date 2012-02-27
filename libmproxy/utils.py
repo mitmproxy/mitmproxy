@@ -513,7 +513,7 @@ def get_remote_cn(host, port):
 
 CNRE = re.compile(
     r"""
-        Subject:.*CN=(\S*)
+        Subject:.*CN=([^ \t\n\r\f\v/]*)
     """,
     re.VERBOSE|re.MULTILINE
 )
@@ -524,8 +524,6 @@ SANRE = re.compile(
     """,
     re.VERBOSE|re.MULTILINE
 )
-
-
 def parse_text_cert(txt):
     """
         Returns a (common name, [subject alternative names]) tuple.
