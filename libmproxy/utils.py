@@ -300,7 +300,15 @@ def dummy_cert(certdir, ca, commonname, sans):
     ss = "\n".join(ss)
 
     f = open(confpath, "w")
-    f.write(template%(dict(commonname=commonname, sans=ss)))
+    f.write(
+        template%(
+            dict(
+                commonname=commonname,
+                sans=ss,
+                altnames="subjectAltName = @alt_names" if ss else ""
+            )
+        )
+    )
     f.close()
 
     if ca:
