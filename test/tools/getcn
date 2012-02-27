@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+
+import sys
+sys.path.insert(0, "../..")
+from libmproxy import utils
+
+cn, san = utils.get_remote_cn(sys.argv[1], 443)
+print cn
+if san:
+    for i in san:
+        print "\t", i
+
+    

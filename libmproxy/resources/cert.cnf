@@ -28,3 +28,5 @@ basicConstraints = CA:false
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 nsCertType = server
 
+[ alt_names ]
+%(sans)s
