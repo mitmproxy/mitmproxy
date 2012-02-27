@@ -23,6 +23,8 @@
     * Move to typed netstrings for serialization format - this makes 0.7
       backwards-incompatible with serialized data from 0.6!
 
+    * Significant improvements in speed and responsiveness of UI. 
+
     * Many minor bugfixes and improvements.
 
 
