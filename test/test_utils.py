@@ -147,14 +147,13 @@ class udummy_cert(libpry.AutoTree):
         cacert = os.path.join(d, "foo/cert.cnf")
         assert utils.dummy_ca(cacert)
         p = utils.dummy_cert(
-            #os.path.join(d, "foo"),
-            "/tmp",
+            os.path.join(d, "foo"),
             cacert,
             "foo.com",
             ["one.com", "two.com", "*.three.com"]
         )
         assert os.path.exists(p)
-
+        
         # Short-circuit
         assert utils.dummy_cert(
             os.path.join(d, "foo"),
