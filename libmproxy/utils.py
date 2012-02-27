@@ -12,8 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import re, os, subprocess, datetime, urlparse, string, urllib
-import time, functools, cgi, textwrap, hashlib
+import re, os, subprocess, datetime, urlparse, string, urllib, socket
+import time, functools, cgi, textwrap, hashlib, ssl, tempfile
 import json
 
 CERT_SLEEP_TIME = 1
@@ -276,7 +276,7 @@ def dummy_ca(path):
     return True
 
 
-def dummy_cert(certdir, ca, commonname):
+def dummy_cert(certdir, ca, commonname, sans):
     """
         certdir: Certificate directory.
         ca: Path to the certificate authority file, or None.
@@ -293,8 +293,22 @@ def dummy_cert(certdir, ca, commonname):
     reqpath = os.path.join(certdir, namehash + ".req")
 
     template = open(pkg_data.path("resources/cert.cnf")).read()
+
+    ss = []
+    for i, v in enumerate(sans):
+        ss.append("DNS.%s = %s"%(i+1, v))
+    ss = "\n".join(ss)
+
     f = open(confpath, "w")
-    f.write(template%(dict(commonname=commonname)))
+    f.write(
+        template%(
+            dict(
+                commonname=commonname,
+                sans=ss,
+                altnames="subjectAltName = @alt_names" if ss else ""
+            )
+        )
+    )
     f.close()
 
     if ca:
@@ -324,7 +338,7 @@ def dummy_cert(certdir, ca, commonname):
             "-CA", ca,
             "-CAcreateserial",
             "-extfile", confpath,
-            "-extensions", "v3_cert",
+            "-extensions", "v3_cert_req",
         ]
         ret = subprocess.call(
             cmd,
@@ -483,3 +497,60 @@ def parse_size(s):
         return int(s) * mult
     except ValueError:
         raise ValueError("Invalid size specification: %s"%s)
+
+
+def get_remote_cn(host, port):
+    addr = socket.gethostbyname(host)
+    s = ssl.get_server_certificate((addr, port))
+    f = tempfile.NamedTemporaryFile()
+    f.write(s)
+    f.flush()
+    p = subprocess.Popen(
+        [
+            "openssl",
+            "x509",
+            "-in", f.name,
+            "-text",
+            "-noout"
+        ],
+        stdout = subprocess.PIPE
+    )
+    out, _ = p.communicate()
+    return parse_text_cert(out)
+
+
+CNRE = re.compile(
+    r"""
+        Subject:.*CN=([^ \t\n\r\f\v/]*)
+    """,
+    re.VERBOSE|re.MULTILINE
+)
+SANRE = re.compile(
+    r"""
+        X509v3\ Subject\ Alternative\ Name:\s*
+        (.*)$
+    """,
+    re.VERBOSE|re.MULTILINE
+)
+def parse_text_cert(txt):
+    """
+        Returns a (common name, [subject alternative names]) tuple.
+    """
+    r = re.search(CNRE, txt)
+    if r:
+        cn = r.group(1)
+    else:
+        return None
+
+    r = re.search(SANRE, txt)
+    san = []
+    if r:
+        for i in r.group(1).split(","):
+            i = i.strip()
+            k, v = i.split(":")
+            if k == "DNS":
+                san.append(v)
+    else:
+        san = []
+    return (cn, san)
+

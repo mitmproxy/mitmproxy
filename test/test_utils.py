@@ -149,14 +149,17 @@ class udummy_cert(libpry.AutoTree):
         p = utils.dummy_cert(
             os.path.join(d, "foo"),
             cacert,
-            "foo.com"
+            "foo.com",
+            ["one.com", "two.com", "*.three.com"]
         )
         assert os.path.exists(p)
+        
         # Short-circuit
         assert utils.dummy_cert(
             os.path.join(d, "foo"),
             cacert,
-            "foo.com"
+            "foo.com",
+            []
         )
 
     def test_no_ca(self):
@@ -164,7 +167,8 @@ class udummy_cert(libpry.AutoTree):
         p = utils.dummy_cert(
             d,
             None,
-            "foo.com"
+            "foo.com",
+            []
         )
         assert os.path.exists(p)
 
@@ -255,7 +259,22 @@ class u_parse_size(libpry.AutoTree):
         libpry.raises(ValueError, utils.parse_size, "ak")
 
 
+class uparse_text_cert(libpry.AutoTree):
+    def test_simple(self):
+        c = file("data/text_cert", "r").read()
+        cn, san = utils.parse_text_cert(c)
+        assert cn == "google.com"
+        assert len(san) == 436
+
+        c = file("data/text_cert_2", "r").read()
+        cn, san = utils.parse_text_cert(c)
+        assert cn == "www.inode.co.nz"
+        assert len(san) == 2
+
+
+
 tests = [
+    uparse_text_cert(),
     uformat_timestamp(),
     uisBin(),
     uisXML(),

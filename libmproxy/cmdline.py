@@ -141,6 +141,17 @@ def common_options(parser):
         help="Byte size limit of HTTP request and response bodies."\
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
+    parser.add_option(
+        "--cert-wait-time", type="float",
+        action="store", dest="cert_wait_time", default=0,
+        help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
+    )
+    parser.add_option(
+        "--upstream-cn-lookup", default=False,
+        action="store_true", dest="upstream_cn_lookup",
+        help="Connect to upstream server to look up certificate Common Name."
+    )
+
     group = optparse.OptionGroup(parser, "Client Replay")
     group.add_option(
         "-c",
@@ -148,12 +159,6 @@ def common_options(parser):
         help="Replay client requests from a saved file."
     )
     parser.add_option_group(group)
-
-    parser.add_option(
-        "--cert-wait-time", type="float",
-        action="store", dest="cert_wait_time", default=0,
-        help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
-    )
 
     group = optparse.OptionGroup(parser, "Server Replay")
     group.add_option(

@@ -35,12 +35,13 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, body_size_limit = None, reverse_proxy=None):
+    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, upstream_cn_lookup=False, body_size_limit = None, reverse_proxy=None):
         self.certfile = certfile
         self.ciphers = ciphers
         self.cacert = cacert
         self.certdir = None
         self.cert_wait_time = cert_wait_time
+        self.upstream_cn_lookup = upstream_cn_lookup
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
 
@@ -343,11 +344,14 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         if server:
             server.terminate()
 
-    def find_cert(self, host):
+    def find_cert(self, host, port):
         if self.config.certfile:
             return self.config.certfile
         else:
-            ret = utils.dummy_cert(self.config.certdir, self.config.cacert, host)
+            sans = []
+            if self.config.upstream_cn_lookup:
+                host, sans = utils.get_remote_cn(host, port)
+            ret = utils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
             time.sleep(self.config.cert_wait_time)
             if not ret:
                 raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
@@ -374,7 +378,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                         )
             self.wfile.flush()
             kwargs = dict(
-                certfile = self.find_cert(host),
+                certfile = self.find_cert(host, port),
                 keyfile = self.config.certfile or self.config.cacert,
                 server_side = True,
                 ssl_version = ssl.PROTOCOL_SSLv23,
@@ -538,5 +542,6 @@ def process_proxy_options(parser, options):
         ciphers = options.ciphers,
         cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
+        upstream_cn_lookup = options.upstream_cn_lookup,
         reverse_proxy = rp
     )
