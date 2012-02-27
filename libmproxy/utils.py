@@ -296,7 +296,7 @@ def dummy_cert(certdir, ca, commonname, sans):
 
     ss = []
     for i, v in enumerate(sans):
-        ss.append("DNS.%s = %s"%(i, v))
+        ss.append("DNS.%s = %s"%(i+1, v))
     ss = "\n".join(ss)
 
     f = open(confpath, "w")
@@ -338,7 +338,7 @@ def dummy_cert(certdir, ca, commonname, sans):
             "-CA", ca,
             "-CAcreateserial",
             "-extfile", confpath,
-            "-extensions", "v3_cert",
+            "-extensions", "v3_cert_req",
         ]
         ret = subprocess.call(
             cmd,
