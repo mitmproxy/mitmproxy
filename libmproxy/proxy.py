@@ -21,7 +21,7 @@
 import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer, ssl
-import utils, flow
+import utils, flow, certutils
 
 NAME = "mitmproxy"
 
@@ -350,8 +350,8 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         else:
             sans = []
             if self.config.upstream_cert:
-                host, sans = utils.get_remote_cn(host, port)
-            ret = utils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
+                host, sans = certutils.get_remote_cn(host, port)
+            ret = certutils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
             time.sleep(self.config.cert_wait_time)
             if not ret:
                 raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
@@ -524,7 +524,7 @@ def process_proxy_options(parser, options):
     cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
     cacert = os.path.expanduser(cacert)
     if not os.path.exists(cacert):
-        utils.dummy_ca(cacert)
+        certutils.dummy_ca(cacert)
     if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
     body_size_limit = utils.parse_size(options.body_size_limit)
