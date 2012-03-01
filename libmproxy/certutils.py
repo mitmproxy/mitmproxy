@@ -1,4 +1,7 @@
 import subprocess, os, tempfile, ssl, hashlib, socket, re
+from pyasn1.type import univ, constraint, char, namedtype, tag
+from pyasn1.codec.der.decoder import decode
+import OpenSSL
 import utils
 
 CERT_SLEEP_TIME = 1
@@ -182,54 +185,40 @@ def dummy_cert(certdir, ca, commonname, sans):
 def get_remote_cn(host, port):
     addr = socket.gethostbyname(host)
     s = ssl.get_server_certificate((addr, port))
-    f = tempfile.NamedTemporaryFile()
-    f.write(s)
-    f.flush()
-    p = subprocess.Popen(
-        [
-            "openssl",
-            "x509",
-            "-in", f.name,
-            "-text",
-            "-noout"
-        ],
-        stdout = subprocess.PIPE
+    return parse_text_cert(s)
+
+
+class GeneralName(univ.Choice):
+    # We are only interested in dNSNames. We use a default handler to ignore
+    # other types. 
+    componentType = namedtype.NamedTypes(
+        namedtype.NamedType('dNSName', char.IA5String().subtype(
+                implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
+            )
+        ),
     )
-    out, _ = p.communicate()
-    return parse_text_cert(out)
+
+class GeneralNames(univ.SequenceOf):
+    componentType = GeneralName()
+    sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
 
 
-CNRE = re.compile(
-    r"""
-        Subject:.*CN=([^ \t\n\r\f\v/]*)
-    """,
-    re.VERBOSE|re.MULTILINE
-)
-SANRE = re.compile(
-    r"""
-        X509v3\ Subject\ Alternative\ Name:\s*
-        (.*)$
-    """,
-    re.VERBOSE|re.MULTILINE
-)
+
 def parse_text_cert(txt):
     """
         Returns a (common name, [subject alternative names]) tuple.
     """
-    r = re.search(CNRE, txt)
-    if r:
-        cn = r.group(1)
-    else:
-        return None
+    cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, txt)
+    cn = None
+    for i in cert.get_subject().get_components():
+        if i[0] == "CN":
+            cn = i[1]
+    altnames = []
+    for i in range(cert.get_extension_count()):
+        ext = cert.get_extension(i)
+        if ext.get_short_name() == "subjectAltName":
+            dec = decode(ext.get_data(), asn1Spec=GeneralNames())
+            for i in dec[0]:
+                altnames.append(i[0])
+    return cn, altnames
 
-    r = re.search(SANRE, txt)
-    san = []
-    if r:
-        for i in r.group(1).split(","):
-            i = i.strip()
-            k, v = i.split(":")
-            if k == "DNS":
-                san.append(v)
-    else:
-        san = []
-    return (cn, san)

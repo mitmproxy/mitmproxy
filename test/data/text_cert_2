@@ -1,83 +1,39 @@
-Certificate:
-    Data:
-        Version: 3 (0x2)
-        Serial Number: 67908 (0x10944)
-        Signature Algorithm: sha1WithRSAEncryption
-        Issuer: C=IL, O=StartCom Ltd., OU=Secure Digital Certificate Signing, CN=StartCom Class 1 Primary Intermediate Server CA
-        Validity
-            Not Before: Jan 11 19:27:36 2010 GMT
-            Not After : Jan 12 09:14:55 2011 GMT
-        Subject: description=126832-MCxLsY6Tn1gm7o90, C=NZ, O=Persona Not Validated, OU=StartCom Free Certificate Member, CN=www.inode.co.nz/emailAddress=jim@inode.co.nz
-        Subject Public Key Info:
-            Public Key Algorithm: rsaEncryption
-            RSA Public Key: (2048 bit)
-                Modulus (2048 bit):
-                    00:be:a0:85:69:46:86:a8:3e:57:43:f9:f1:1d:d2:
-                    bc:b4:62:3b:d3:ab:75:e9:03:c7:39:90:6c:ac:10:
-                    71:cd:39:7e:b9:c5:e5:9f:6f:4f:a8:1a:ed:83:ae:
-                    5d:57:97:c6:16:02:02:8d:27:af:a2:88:fb:2f:cb:
-                    c7:e4:07:bc:fe:56:d2:72:9b:b3:eb:2f:cd:44:04:
-                    ae:ad:99:64:5c:21:87:57:b5:2d:b5:5c:72:b3:70:
-                    90:75:33:28:ea:b4:4d:36:95:75:4e:24:f2:40:d0:
-                    cf:36:05:f6:d4:d9:6f:e1:b9:1e:fd:41:26:3a:70:
-                    63:07:bc:3f:87:00:88:f2:4f:ac:51:4e:29:3c:92:
-                    cc:7a:a2:62:c5:e5:c7:eb:d1:d6:5d:5e:df:32:9a:
-                    be:17:7e:2d:54:a8:2d:65:97:6f:5d:f2:28:e0:ea:
-                    ea:f9:ee:88:78:d4:25:79:7c:09:f5:65:06:1a:06:
-                    a2:d5:d4:e0:94:79:71:bb:86:a1:6f:fc:fa:b9:30:
-                    11:d5:fe:62:80:af:54:2a:a0:77:1f:48:91:11:41:
-                    ea:e5:9f:37:aa:1c:52:21:6f:84:0d:1e:92:73:be:
-                    7b:0b:95:7d:12:e2:21:a4:83:07:ca:4d:c9:45:95:
-                    aa:ee:27:80:55:ad:58:ed:4e:61:98:34:23:fd:f6:
-                    06:47
-                Exponent: 65537 (0x10001)
-        X509v3 extensions:
-            X509v3 Basic Constraints: 
-                CA:FALSE
-            X509v3 Key Usage: 
-                Digital Signature, Key Encipherment, Key Agreement
-            X509v3 Extended Key Usage: 
-                TLS Web Server Authentication
-            X509v3 Subject Key Identifier: 
-                1F:68:BD:91:8F:AA:FC:89:19:41:4E:0A:69:80:4E:D9:67:95:93:53
-            X509v3 Authority Key Identifier: 
-                keyid:EB:42:34:D0:98:B0:AB:9F:F4:1B:6B:08:F7:CC:64:2E:EF:0E:2C:45
-
-            X509v3 Subject Alternative Name: 
-                DNS:www.inode.co.nz, DNS:inode.co.nz
-            X509v3 Certificate Policies: 
-                Policy: 1.3.6.1.4.1.23223.1.2.1
-                  CPS: http://www.startssl.com/policy.pdf
-                  CPS: http://www.startssl.com/intermediate.pdf
-                  User Notice:
-                    Organization: StartCom Ltd.
-                    Number: 1
-                    Explicit Text: Limited Liability, see section *Legal Limitations* of the StartCom Certification Authority Policy available at http://www.startssl.com/policy.pdf
-
-            X509v3 CRL Distribution Points: 
-                URI:http://www.startssl.com/crt1-crl.crl
-                URI:http://crl.startssl.com/crt1-crl.crl
-
-            Authority Information Access: 
-                OCSP - URI:http://ocsp.startssl.com/sub/class1/server/ca
-                CA Issuers - URI:http://www.startssl.com/certs/sub.class1.server.ca.crt
-
-            X509v3 Issuer Alternative Name: 
-                URI:http://www.startssl.com/
-    Signature Algorithm: sha1WithRSAEncryption
-        8a:f5:88:0f:42:93:f2:ad:44:cd:6c:f2:f8:17:9c:b0:5a:f2:
-        85:08:6e:2c:57:c0:b0:f9:07:aa:93:5d:f4:e7:e4:45:2b:46:
-        06:e2:65:2d:7f:bd:0d:0f:53:ce:3a:ae:b5:d6:36:6e:e3:41:
-        b8:39:fb:d5:bb:99:2b:e6:39:7e:68:eb:db:ca:c0:4f:af:96:
-        31:df:8a:9c:29:79:58:b4:f9:20:e4:ba:67:db:37:71:e7:39:
-        4c:54:1b:98:e1:a5:7a:94:92:f5:0e:93:b3:d2:ac:5c:e1:c7:
-        42:f0:e4:41:e0:ea:39:5d:94:a9:d8:17:20:0c:85:9b:97:9f:
-        48:bf:49:5c:f5:e7:b5:16:ae:b0:db:b6:b3:c1:76:07:6a:d1:
-        25:ee:23:3d:f9:d4:cb:62:ef:63:c3:96:d5:8b:e3:50:0f:be:
-        be:97:56:45:d7:d4:6c:94:29:e7:99:91:7d:a6:0c:3d:19:f2:
-        52:6d:f4:94:02:36:ed:06:b1:81:03:c5:3a:a0:de:65:49:b9:
-        96:56:f9:78:51:bf:07:77:fc:ee:e8:60:f9:8d:68:13:29:1b:
-        12:f6:6b:20:53:78:86:2b:61:8a:84:34:b5:bf:b9:ec:52:a4:
-        90:6d:ac:5b:7b:9e:98:d8:90:c3:6a:ab:12:8f:c6:00:c6:f5:
-        70:8e:74:46
+-----BEGIN CERTIFICATE-----
+MIIGujCCBaKgAwIBAgIDAQlEMA0GCSqGSIb3DQEBBQUAMIGMMQswCQYDVQQGEwJJ
+TDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0
+YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMvU3RhcnRDb20gQ2xhc3Mg
+MSBQcmltYXJ5IEludGVybWVkaWF0ZSBTZXJ2ZXIgQ0EwHhcNMTAwMTExMTkyNzM2
+WhcNMTEwMTEyMDkxNDU1WjCBtDEgMB4GA1UEDRMXMTI2ODMyLU1DeExzWTZUbjFn
+bTdvOTAxCzAJBgNVBAYTAk5aMR4wHAYDVQQKExVQZXJzb25hIE5vdCBWYWxpZGF0
+ZWQxKTAnBgNVBAsTIFN0YXJ0Q29tIEZyZWUgQ2VydGlmaWNhdGUgTWVtYmVyMRgw
+FgYDVQQDEw93d3cuaW5vZGUuY28ubnoxHjAcBgkqhkiG9w0BCQEWD2ppbUBpbm9k
+ZS5jby5uejCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL6ghWlGhqg+
+V0P58R3SvLRiO9OrdekDxzmQbKwQcc05frnF5Z9vT6ga7YOuXVeXxhYCAo0nr6KI
++y/Lx+QHvP5W0nKbs+svzUQErq2ZZFwhh1e1LbVccrNwkHUzKOq0TTaVdU4k8kDQ
+zzYF9tTZb+G5Hv1BJjpwYwe8P4cAiPJPrFFOKTySzHqiYsXlx+vR1l1e3zKavhd+
+LVSoLWWXb13yKODq6vnuiHjUJXl8CfVlBhoGotXU4JR5cbuGoW/8+rkwEdX+YoCv
+VCqgdx9IkRFB6uWfN6ocUiFvhA0eknO+ewuVfRLiIaSDB8pNyUWVqu4ngFWtWO1O
+YZg0I/32BkcCAwEAAaOCAvkwggL1MAkGA1UdEwQCMAAwCwYDVR0PBAQDAgOoMBMG
+A1UdJQQMMAoGCCsGAQUFBwMBMB0GA1UdDgQWBBQfaL2Rj6r8iRlBTgppgE7ZZ5WT
+UzAfBgNVHSMEGDAWgBTrQjTQmLCrn/Qbawj3zGQu7w4sRTAnBgNVHREEIDAegg93
+d3cuaW5vZGUuY28ubnqCC2lub2RlLmNvLm56MIIBQgYDVR0gBIIBOTCCATUwggEx
+BgsrBgEEAYG1NwECATCCASAwLgYIKwYBBQUHAgEWImh0dHA6Ly93d3cuc3RhcnRz
+c2wuY29tL3BvbGljeS5wZGYwNAYIKwYBBQUHAgEWKGh0dHA6Ly93d3cuc3RhcnRz
+c2wuY29tL2ludGVybWVkaWF0ZS5wZGYwgbcGCCsGAQUFBwICMIGqMBQWDVN0YXJ0
+Q29tIEx0ZC4wAwIBARqBkUxpbWl0ZWQgTGlhYmlsaXR5LCBzZWUgc2VjdGlvbiAq
+TGVnYWwgTGltaXRhdGlvbnMqIG9mIHRoZSBTdGFydENvbSBDZXJ0aWZpY2F0aW9u
+IEF1dGhvcml0eSBQb2xpY3kgYXZhaWxhYmxlIGF0IGh0dHA6Ly93d3cuc3RhcnRz
+c2wuY29tL3BvbGljeS5wZGYwYQYDVR0fBFowWDAqoCigJoYkaHR0cDovL3d3dy5z
+dGFydHNzbC5jb20vY3J0MS1jcmwuY3JsMCqgKKAmhiRodHRwOi8vY3JsLnN0YXJ0
+c3NsLmNvbS9jcnQxLWNybC5jcmwwgY4GCCsGAQUFBwEBBIGBMH8wOQYIKwYBBQUH
+MAGGLWh0dHA6Ly9vY3NwLnN0YXJ0c3NsLmNvbS9zdWIvY2xhc3MxL3NlcnZlci9j
+YTBCBggrBgEFBQcwAoY2aHR0cDovL3d3dy5zdGFydHNzbC5jb20vY2VydHMvc3Vi
+LmNsYXNzMS5zZXJ2ZXIuY2EuY3J0MCMGA1UdEgQcMBqGGGh0dHA6Ly93d3cuc3Rh
+cnRzc2wuY29tLzANBgkqhkiG9w0BAQUFAAOCAQEAivWID0KT8q1EzWzy+BecsFry
+hQhuLFfAsPkHqpNd9OfkRStGBuJlLX+9DQ9TzjqutdY2buNBuDn71buZK+Y5fmjr
+28rAT6+WMd+KnCl5WLT5IOS6Z9s3cec5TFQbmOGlepSS9Q6Ts9KsXOHHQvDkQeDq
+OV2UqdgXIAyFm5efSL9JXPXntRausNu2s8F2B2rRJe4jPfnUy2LvY8OW1YvjUA++
+vpdWRdfUbJQp55mRfaYMPRnyUm30lAI27QaxgQPFOqDeZUm5llb5eFG/B3f87uhg
++Y1oEykbEvZrIFN4hithioQ0tb+57FKkkG2sW3uemNiQw2qrEo/GAMb1cI50Rg==
+-----END CERTIFICATE-----
 
