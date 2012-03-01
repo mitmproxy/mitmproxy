@@ -1,4 +1,4 @@
-import subprocess, os, tempfile, ssl, hashlib, socket, re
+import subprocess, os, ssl, hashlib, socket
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 import OpenSSL

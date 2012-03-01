@@ -1,4 +1,4 @@
-import textwrap, os, re, json
+import textwrap, re, json
 import libpry
 from libmproxy import utils
 
