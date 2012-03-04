@@ -350,7 +350,9 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         else:
             sans = []
             if self.config.upstream_cert:
-                host, sans = certutils.get_remote_cn(host, port)
+                cert = certutils.get_remote_cert(host, port)
+                sans = cert.altnames
+                host = cert.cn
             ret = certutils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
             time.sleep(self.config.cert_wait_time)
             if not ret:
