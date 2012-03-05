@@ -187,7 +187,7 @@ def common_options(parser):
     group.add_option(
         "--no-pop",
         action="store_true", dest="nopop", default=False,
-        help="Disable response pop from response flow."
+        help="Disable response pop from response flow. "
         "This makes it possible to replay same response multiple times."
     )
     parser.add_option_group(group)
