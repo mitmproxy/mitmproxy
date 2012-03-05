@@ -126,7 +126,10 @@ class StatusBar(common.WWrap):
         if self.master.server_playback:
             r.append("[")
             r.append(("heading_key", "splayback"))
-            r.append(":%s to go]"%self.master.server_playback.count())
+            if self.master.nopop:
+                r.append(":%s in file]"%self.master.server_playback.count())
+            else:
+                r.append(":%s to go]"%self.master.server_playback.count())
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("heading_key", "i"))
@@ -297,6 +300,7 @@ class Options(object):
         "stickyauth",
         "verbosity",
         "wfile",
+        "nopop",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -350,6 +354,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.anticomp = options.anticomp
         self.killextra = options.kill
         self.rheaders = options.rheaders
+        self.nopop = options.nopop
 
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
@@ -422,7 +427,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.start_server_playback(
                 ret,
                 self.killextra, self.rheaders,
-                False
+                False, self.nopop
             )
 
     def spawn_editor(self, data):
