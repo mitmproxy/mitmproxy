@@ -134,6 +134,18 @@ class uServerPlaybackState(libpry.AutoTree):
 
         assert not s.next_flow(r)
 
+    def test_load_with_nopop(self):
+        r = tutils.tflow_full()
+        r.request.headers["key"] = ["one"]
+
+        r2 = tutils.tflow_full()
+        r2.request.headers["key"] = ["two"]
+
+        s = flow.ServerPlaybackState(None, [r, r2], False, True)
+
+        assert s.count() == 2
+        n = s.next_flow(r)
+        assert s.count() == 2
 
 class uFlow(libpry.AutoTree):
     def test_copy(self):
