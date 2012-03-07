@@ -768,12 +768,12 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
-    def __init__(self, headers, flows, exit):
+    def __init__(self, headers, flows, exit, nopop):
         """
             headers: Case-insensitive list of request headers that should be
             included in request-response matching.
         """
-        self.headers, self.exit = headers, exit
+        self.headers, self.exit, self.nopop = headers, exit, nopop
         self.fmap = {}
         for i in flows:
             if i.response:
@@ -815,7 +815,12 @@ class ServerPlaybackState:
         l = self.fmap.get(self._hash(request))
         if not l:
             return None
-        return l.pop(0)
+
+        if self.nopop: 
+            return l[0]
+        else: 
+            return l.pop(0)
+
 
 
 class StickyCookieState:
@@ -1251,12 +1256,12 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(self, flows, kill, headers, exit):
+    def start_server_playback(self, flows, kill, headers, exit, nopop):
         """
             flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
         """
-        self.server_playback = ServerPlaybackState(headers, flows, exit)
+        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop)
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):

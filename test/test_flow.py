@@ -87,7 +87,7 @@ class uClientPlaybackState(libpry.AutoTree):
 
 class uServerPlaybackState(libpry.AutoTree):
     def test_hash(self):
-        s = flow.ServerPlaybackState(None, [], False)
+        s = flow.ServerPlaybackState(None, [], False, False)
         r = tutils.tflow()
         r2 = tutils.tflow()
 
@@ -99,7 +99,7 @@ class uServerPlaybackState(libpry.AutoTree):
         assert s._hash(r) != s._hash(r2)
 
     def test_headers(self):
-        s = flow.ServerPlaybackState(["foo"], [], False)
+        s = flow.ServerPlaybackState(["foo"], [], False, False)
         r = tutils.tflow_full()
         r.request.headers["foo"] = ["bar"]
         r2 = tutils.tflow_full()
@@ -120,7 +120,7 @@ class uServerPlaybackState(libpry.AutoTree):
         r2 = tutils.tflow_full()
         r2.request.headers["key"] = ["two"]
 
-        s = flow.ServerPlaybackState(None, [r, r2], False)
+        s = flow.ServerPlaybackState(None, [r, r2], False, False)
         assert s.count() == 2
         assert len(s.fmap.keys()) == 1
 
@@ -134,6 +134,18 @@ class uServerPlaybackState(libpry.AutoTree):
 
         assert not s.next_flow(r)
 
+    def test_load_with_nopop(self):
+        r = tutils.tflow_full()
+        r.request.headers["key"] = ["one"]
+
+        r2 = tutils.tflow_full()
+        r2.request.headers["key"] = ["two"]
+
+        s = flow.ServerPlaybackState(None, [r, r2], False, True)
+
+        assert s.count() == 2
+        n = s.next_flow(r)
+        assert s.count() == 2
 
 class uFlow(libpry.AutoTree):
     def test_copy(self):
@@ -547,7 +559,7 @@ class uFlowMaster(libpry.AutoTree):
         f = tutils.tflow_full()
         pb = [tutils.tflow_full(), f]
         fm = flow.FlowMaster(None, s)
-        assert not fm.start_server_playback(pb, False, [], False)
+        assert not fm.start_server_playback(pb, False, [], False, False)
         assert not fm.start_client_playback(pb, False)
 
         q = Queue.Queue()
@@ -568,10 +580,10 @@ class uFlowMaster(libpry.AutoTree):
         fm.refresh_server_playback = True
         assert not fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(pb, False, [], False)
+        fm.start_server_playback(pb, False, [], False, False)
         assert fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(pb, False, [], True)
+        fm.start_server_playback(pb, False, [], True, False)
         r = tutils.tflow()
         r.request.content = "gibble"
         assert not fm.do_server_playback(r)
