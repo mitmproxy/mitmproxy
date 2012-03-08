@@ -106,7 +106,7 @@ def read_chunked(fp, limit):
 
 def read_http_body(rfile, connection, headers, all, limit):
     if 'transfer-encoding' in headers:
-        if not ",".join(headers["transfer-encoding"]) == "chunked":
+        if not ",".join(headers["transfer-encoding"]).lower() == "chunked":
             raise IOError('Invalid transfer-encoding')
         content = read_chunked(rfile, limit)
     elif "content-length" in headers:
