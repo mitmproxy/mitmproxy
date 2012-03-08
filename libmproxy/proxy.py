@@ -184,10 +184,14 @@ class FileLike:
             result += data
         return result
 
-    def readline(self):
+    def readline(self, size = None):
         result = ''
+        bytes_read = 0
         while True:
+            if size is not None and bytes_read >= size:
+                break
             ch = self.read(1)
+            bytes_read += 1
             if not ch:
                 break
             else:
