@@ -28,6 +28,7 @@ class Options(object):
         "keepserving",
         "kill",
         "no_server",
+        "nopop",
         "refresh_server_playback",
         "rfile",
         "rheaders",
@@ -97,7 +98,8 @@ class DumpMaster(flow.FlowMaster):
             self.start_server_playback(
                 self._readflow(options.server_replay),
                 options.kill, options.rheaders,
-                not options.keepserving
+                not options.keepserving,
+                options.nopop
             )
 
         if options.client_replay:
