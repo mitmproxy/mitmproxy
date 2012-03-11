@@ -48,7 +48,8 @@ Requirements
 ------------
 
 * Python_ 2.6.x or 2.7.x.
-* openssl_ - installed by default on most systems.
+* PyOpenSSL_ 0.12 or newer.
+* pyasn1_ 0.1.2 or newer.
 * urwid_  version 0.9.8 or newer.
 * The test suite uses the pry_ unit testing
   library.
@@ -67,8 +68,8 @@ following:
 .. _mitmproxy.org: http://mitmproxy.org
 .. _github.com/cortesi/mitmproxy: http://github.com/cortesi/mitmproxy
 .. _python: http://www.python.org
-.. _openssl: http://www.openssl.org/
+.. _PyOpenSSL: http://pypi.python.org/pypi/pyOpenSSL
+.. _pyasn1: http://pypi.python.org/pypi/pyasn1
 .. _urwid: http://excess.org/urwid/
 .. _pry: http://github.com/cortesi/pry
 .. _countershape: http://github.com/cortesi/countershape
-

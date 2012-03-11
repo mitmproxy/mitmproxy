@@ -49,7 +49,8 @@ Requirements
 ------------
 
 * [Python](http://www.python.org) 2.6.x or 2.7.x.
-* [openssl](http://www.openssl.org/) - installed by default on most systems.
+* [PyOpenSSL](http://pypi.python.org/pypi/pyOpenSSL) 0.12 or newer.
+* [pyasn1](http://pypi.python.org/pypi/pyasn1) 0.1.2 or newer.
 * [urwid](http://excess.org/urwid/) version 0.9.8 or newer.
 * The test suite uses the [pry](http://github.com/cortesi/pry) unit testing
   library.
