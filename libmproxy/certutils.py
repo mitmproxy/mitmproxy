@@ -9,81 +9,57 @@ CERT_EXPIRY = str(365 * 3)
 
 
 def dummy_ca(path):
-    """
-        Creates a dummy CA, and writes it to path.
-
-        This function also creates the necessary directories if they don't exist.
-
-        Returns True if operation succeeded, False if not.
-    """
     dirname = os.path.dirname(path)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
-
     if path.endswith(".pem"):
         basename, _ = os.path.splitext(path)
     else:
         basename = path
 
-    cmd = [
-        "openssl",
-        "req",
-        "-new",
-        "-x509",
-        "-config", utils.pkg_data.path("resources/ca.cnf"),
-        "-nodes",
-        "-days", CERT_EXPIRY,
-        "-out", path,
-        "-newkey", "rsa:1024",
-        "-keyout", path,
-    ]
-    ret = subprocess.call(
-        cmd,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE
-    )
-    # begin nocover
-    if ret:
-        return False
-    # end nocover
+    key = OpenSSL.crypto.PKey()
+    key.generate_key(OpenSSL.crypto.TYPE_RSA, 1024)
+    ca = OpenSSL.crypto.X509()
+    ca.set_version(3)
+    ca.set_serial_number(1)
+    ca.get_subject().CN = "mitmproxy"
+    ca.get_subject().OU = "mitmproxy"
+    ca.gmtime_adj_notBefore(0)
+    ca.gmtime_adj_notAfter(24 * 60 * 60 * 720)
+    ca.set_issuer(ca.get_subject())
+    ca.set_pubkey(key)
+    ca.add_extensions([
+      OpenSSL.crypto.X509Extension("basicConstraints", True,
+                                   "CA:TRUE"),
+      OpenSSL.crypto.X509Extension("nsCertType", True,
+                                   "sslCA"),
+      OpenSSL.crypto.X509Extension("extendedKeyUsage", True,
+                                    "serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
+                                    ),
+      OpenSSL.crypto.X509Extension("keyUsage", True,
+                                   "keyCertSign, cRLSign"),
+      OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
+                                   subject=ca),
+      ])
+    ca.sign(key, "sha1")
 
-    cmd = [
-        "openssl",
-        "pkcs12",
-        "-export",
-        "-password", "pass:",
-        "-nokeys",
-        "-in", path,
-        "-out", os.path.join(dirname, basename + "-cert.p12")
-    ]
-    ret = subprocess.call(
-        cmd,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE
-    )
-    # begin nocover
-    if ret:
-        return False
-    # end nocover
-    cmd = [
-        "openssl",
-        "x509",
-        "-in", path,
-        "-out", os.path.join(dirname, basename + "-cert.pem")
-    ]
-    ret = subprocess.call(
-        cmd,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stdin=subprocess.PIPE
-    )
-    # begin nocover
-    if ret:
-        return False
-    # end nocover
+    # Dump the CA plus private key
+    f = open(path, "w")
+    f.write(OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key))
+    f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
+    f.close()
 
+    # Dump the certificate in PEM format
+    f = open(os.path.join(dirname, basename + "-cert.pem"), "w")
+    f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
+    f.close()
+
+    # Dump the certificate in PKCS12 format for Windows devices
+    f = open(os.path.join(dirname, basename + "-cert.p12"), "w")
+    p12 = OpenSSL.crypto.PKCS12()
+    p12.set_certificate(ca)
+    f.write(p12.export())
+    f.close()
     return True
 
 
@@ -182,7 +158,7 @@ def dummy_cert(certdir, ca, commonname, sans):
     return certpath
 
 
-class GeneralName(univ.Choice):
+class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
     # other types.
     componentType = namedtype.NamedTypes(
@@ -193,9 +169,10 @@ class GeneralName(univ.Choice):
     )
 
 
-class GeneralNames(univ.SequenceOf):
-    componentType = GeneralName()
+class _GeneralNames(univ.SequenceOf):
+    componentType = _GeneralName()
     sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
+
 
 
 class SSLCert:
@@ -219,11 +196,10 @@ class SSLCert:
         for i in range(self.cert.get_extension_count()):
             ext = self.cert.get_extension(i)
             if ext.get_short_name() == "subjectAltName":
-                dec = decode(ext.get_data(), asn1Spec=GeneralNames())
+                dec = decode(ext.get_data(), asn1Spec=_GeneralNames())
                 for i in dec[0]:
                     altnames.append(i[0])
         return altnames
-        
 
 
 def get_remote_cert(host, port):
