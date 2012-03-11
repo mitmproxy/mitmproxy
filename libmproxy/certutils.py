@@ -8,15 +8,7 @@ CERT_SLEEP_TIME = 1
 CERT_EXPIRY = str(365 * 3)
 
 
-def dummy_ca(path):
-    dirname = os.path.dirname(path)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    if path.endswith(".pem"):
-        basename, _ = os.path.splitext(path)
-    else:
-        basename = path
-
+def create_ca():
     key = OpenSSL.crypto.PKey()
     key.generate_key(OpenSSL.crypto.TYPE_RSA, 1024)
     ca = OpenSSL.crypto.X509()
@@ -42,6 +34,19 @@ def dummy_ca(path):
                                    subject=ca),
       ])
     ca.sign(key, "sha1")
+    return key, ca
+
+
+def dummy_ca(path):
+    dirname = os.path.dirname(path)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    if path.endswith(".pem"):
+        basename, _ = os.path.splitext(path)
+    else:
+        basename = path
+
+    key, ca = create_ca()
 
     # Dump the CA plus private key
     f = open(path, "w")
@@ -64,6 +69,57 @@ def dummy_ca(path):
 
 
 def dummy_cert(certdir, ca, commonname, sans):
+    """
+        certdir: Certificate directory.
+        ca: Path to the certificate authority file, or None.
+        commonname: Common name for the generated certificate.
+
+        Returns cert path if operation succeeded, None if not.
+    """
+    namehash = hashlib.sha256(commonname).hexdigest()
+    certpath = os.path.join(certdir, namehash + ".pem")
+    if os.path.exists(certpath):
+        return certpath
+
+    ss = []
+    for i in sans:
+        ss.append("DNS: %s"%i)
+    ss = ", ".join(ss)
+
+    if ca:
+        raw = file(ca, "r").read()
+        ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
+        key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
+    else:
+        key, ca = create_ca()
+
+    pkey = ca.get_pubkey()
+    req = OpenSSL.crypto.X509Req()
+    subj = req.get_subject()
+    subj.CN = commonname
+    req.set_pubkey(ca.get_pubkey())
+    req.sign(key, "sha1")
+    if ss:
+        req.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
+
+    cert = OpenSSL.crypto.X509()
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(60 * 60 * 24 * 30)
+    cert.set_issuer(ca.get_subject())
+    cert.set_subject(req.get_subject())
+    if ss:
+        cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
+    cert.set_pubkey(req.get_pubkey())
+    cert.sign(key, "sha1")
+
+    f = open(certpath, "w")
+    f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert))
+    f.close()
+
+    return certpath
+
+
+def dummy_cert_(certdir, ca, commonname, sans):
     """
         certdir: Certificate directory.
         ca: Path to the certificate authority file, or None.
