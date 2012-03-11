@@ -54,6 +54,7 @@ class upretty_size(libpry.AutoTree):
 
 class uData(libpry.AutoTree):
     def test_nonexistent(self):
+        assert utils.pkg_data.path("console")
         libpry.raises("does not exist", utils.pkg_data.path, "nonexistent")
 
 

@@ -119,101 +119,6 @@ def dummy_cert(certdir, ca, commonname, sans):
     return certpath
 
 
-def dummy_cert_(certdir, ca, commonname, sans):
-    """
-        certdir: Certificate directory.
-        ca: Path to the certificate authority file, or None.
-        commonname: Common name for the generated certificate.
-
-        Returns cert path if operation succeeded, None if not.
-    """
-    namehash = hashlib.sha256(commonname).hexdigest()
-    certpath = os.path.join(certdir, namehash + ".pem")
-    if os.path.exists(certpath):
-        return certpath
-
-    confpath = os.path.join(certdir, namehash + ".cnf")
-    reqpath = os.path.join(certdir, namehash + ".req")
-
-    template = open(utils.pkg_data.path("resources/cert.cnf")).read()
-
-    ss = []
-    for i, v in enumerate(sans):
-        ss.append("DNS.%s = %s"%(i+1, v))
-    ss = "\n".join(ss)
-
-    f = open(confpath, "w")
-    f.write(
-        template%(
-            dict(
-                commonname=commonname,
-                sans=ss,
-                altnames="subjectAltName = @alt_names" if ss else ""
-            )
-        )
-    )
-    f.close()
-
-    if ca:
-        # Create a dummy signed certificate. Uses same key as the signing CA
-        cmd = [
-            "openssl",
-            "req",
-            "-new",
-            "-config", confpath,
-            "-out", reqpath,
-            "-key", ca,
-        ]
-        ret = subprocess.call(
-            cmd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE
-        )
-        if ret: return None
-        cmd = [
-            "openssl",
-            "x509",
-            "-req",
-            "-in", reqpath,
-            "-days", CERT_EXPIRY,
-            "-out", certpath,
-            "-CA", ca,
-            "-CAcreateserial",
-            "-extfile", confpath,
-            "-extensions", "v3_cert_req",
-        ]
-        ret = subprocess.call(
-            cmd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE
-        )
-        if ret: return None
-    else:
-        # Create a new selfsigned certificate + key
-        cmd = [
-            "openssl",
-            "req",
-            "-new",
-            "-x509",
-            "-config", confpath,
-            "-nodes",
-            "-days", CERT_EXPIRY,
-            "-out", certpath,
-            "-newkey", "rsa:1024",
-            "-keyout", certpath,
-        ]
-        ret = subprocess.call(
-            cmd,
-            stderr=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stdin=subprocess.PIPE
-        )
-        if ret: return None
-    return certpath
-
-
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
     # other types.
@@ -258,9 +163,11 @@ class SSLCert:
         return altnames
 
 
+# begin nocover
 def get_remote_cert(host, port):
     addr = socket.gethostbyname(host)
     s = ssl.get_server_certificate((addr, port))
     return SSLCert(s)
+# end nocover
 
 
