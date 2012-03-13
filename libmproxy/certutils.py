@@ -1,4 +1,4 @@
-import subprocess, os, ssl, hashlib, socket
+import subprocess, os, ssl, hashlib, socket, time
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 import OpenSSL
@@ -13,7 +13,6 @@ def create_ca():
     key.generate_key(OpenSSL.crypto.TYPE_RSA, 1024)
     ca = OpenSSL.crypto.X509()
     ca.set_version(3)
-    ca.set_serial_number(1)
     ca.get_subject().CN = "mitmproxy"
     ca.get_subject().OU = "mitmproxy"
     ca.gmtime_adj_notBefore(0)
@@ -107,6 +106,7 @@ def dummy_cert(certdir, ca, commonname, sans):
     cert.gmtime_adj_notAfter(60 * 60 * 24 * 30)
     cert.set_issuer(ca.get_subject())
     cert.set_subject(req.get_subject())
+    cert.set_serial_number(int(time.time()*10000))
     if ss:
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
     cert.set_pubkey(req.get_pubkey())

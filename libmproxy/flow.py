@@ -816,9 +816,9 @@ class ServerPlaybackState:
         if not l:
             return None
 
-        if self.nopop: 
+        if self.nopop:
             return l[0]
-        else: 
+        else:
             return l.pop(0)
 
 
