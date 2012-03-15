@@ -176,8 +176,11 @@ class ODict:
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
-            Replaces a regular expression pattern with repl in both keys
-            and values. Returns the number of replacements made.
+            Replaces a regular expression pattern with repl in both keys and
+            values. Encoded content will be decoded before replacement, and
+            re-encoded afterwards.
+
+            Returns the number of replacements made.
         """
         nlst, count = [], 0
         for i in self.lst:
@@ -475,10 +478,13 @@ class Request(HTTPMsg):
     def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in both the headers
-            and the body of the request. Returns the number of replacements
-            made.
+            and the body of the request. Encoded content will be decoded before
+            replacement, and re-encoded afterwards.
+
+            Returns the number of replacements made.
         """
-        self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
+        with decoded(self):
+            self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
         self.path, pc = re.subn(pattern, repl, self.path, *args, **kwargs)
         c += pc
         c += self.headers.replace(pattern, repl, *args, **kwargs)
@@ -630,10 +636,13 @@ class Response(HTTPMsg):
     def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in both the headers
-            and the body of the response. Returns the number of replacements
-            made.
+            and the body of the response. Encoded content will be decoded
+            before replacement, and re-encoded afterwards.
+
+            Returns the number of replacements made.
         """
-        self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
+        with decoded(self):
+            self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
@@ -753,6 +762,8 @@ class Error(controller.Msg):
             Replaces a regular expression pattern with repl in both the headers
             and the body of the request. Returns the number of replacements
             made.
+
+            FIXME: Is replace useful on an Error object??
         """
         self.msg, c = re.subn(pattern, repl, self.msg, *args, **kwargs)
         return c
@@ -1062,7 +1073,10 @@ class Flow:
     def replace(self, pattern, repl, *args, **kwargs):
         """
             Replaces a regular expression pattern with repl in all parts of the
-            flow . Returns the number of replacements made.
+            flow. Encoded content will be decoded before replacement, and
+            re-encoded afterwards.
+
+            Returns the number of replacements made.
         """
         c = self.request.replace(pattern, repl, *args, **kwargs)
         if self.response:
