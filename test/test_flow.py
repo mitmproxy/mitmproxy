@@ -996,6 +996,29 @@ class uODictCaseless(libpry.AutoTree):
         assert len(self.od) == 1
 
 
+class udecoded(libpry.AutoTree):
+    def test_del(self):
+        r = tutils.treq()
+        assert r.content == "content"
+        assert not r.headers["content-encoding"]
+        r.encode("gzip")
+        assert r.headers["content-encoding"]
+        assert r.content != "content"
+        with flow.decoded(r):
+            assert not r.headers["content-encoding"]
+            assert r.content == "content"
+        assert r.headers["content-encoding"]
+        assert r.content != "content"
+
+        with flow.decoded(r):
+            r.content = "foo"
+
+        assert r.content != "foo"
+        r.decode()
+        assert r.content == "foo"
+
+
+
 
 tests = [
     uStickyCookieState(),
@@ -1012,4 +1035,5 @@ tests = [
     uClientConnect(),
     uODict(),
     uODictCaseless(),
+    udecoded()
 ]

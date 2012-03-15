@@ -199,6 +199,34 @@ class ODictCaseless(ODict):
         return s.lower()
 
 
+class decoded(object):
+    """
+
+        A context manager that decodes a request, response or error, and then
+        re-encodes it with the same encoding after execution of the block.
+
+        Example:
+
+        with decoded(request):
+            request.content = request.content.replace("foo", "bar")
+    """
+    def __init__(self, o):
+        self.o = o
+        ce = o.headers["content-encoding"]
+        if ce and ce[0] in encoding.ENCODINGS:
+            self.ce = ce[0]
+        else:
+            self.ce = None
+
+    def __enter__(self):
+        if self.ce:
+            self.o.decode()
+
+    def __exit__(self, type, value, tb):
+        if self.ce:
+            self.o.encode(self.ce)
+
+
 class HTTPMsg(controller.Msg):
     def decode(self):
         """
