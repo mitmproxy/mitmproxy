@@ -26,27 +26,28 @@ import controller, version
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
 
-class Hooks:
+class ReplaceHooks:
     def __init__(self):
         self.lst = []
 
-    def add(self, patt, func):
+    def add(self, fpatt, rex, s):
         """
-            Add a hook.
+            Add a replacement hook.
 
-            patt: A string specifying a filter pattern.
-            func: A callable taking the matching flow as argument.
+            fpatt: A string specifying a filter pattern.
+            rex: A regular expression.
+            s: The replacement string
 
             Returns True if hook was added, False if the pattern could not be
             parsed.
         """
-        cpatt = filt.parse(patt)
+        cpatt = filt.parse(fpatt)
         if not cpatt:
             return False
-        self.lst.append((patt, func, cpatt))
+        self.lst.append((fpatt, rex, s, cpatt))
         return True
 
-    def remove(self, patt, func=None):
+    def remove(self, fpatt, rex, s):
         """
             Remove a hook.
 
@@ -54,15 +55,16 @@ class Hooks:
             func: Optional callable. If not specified, all hooks matching patt are removed.
         """
         for i in range(len(self.lst)-1, -1, -1):
-            if func and (patt, func) == self.lst[i][:2]:
-                del self.lst[i]
-            elif not func and patt == self.lst[i][0]:
+            if (fpatt, rex, s) == self.lst[i][:3]:
                 del self.lst[i]
 
     def run(self, f):
-        for _, func, cpatt in self.lst:
+        for _, rex, s, cpatt in self.lst:
             if cpatt(f):
-                func(f)
+                if f.response:
+                    f.response.replace(rex, s)
+                else:
+                    f.request.replace(rex, s)
 
     def clear(self):
         self.lst = []
@@ -1270,7 +1272,7 @@ class FlowMaster(controller.Master):
         self.anticache = False
         self.anticomp = False
         self.refresh_server_playback = False
-        self.hooks = Hooks()
+        self.replacehooks = ReplaceHooks()
 
     def add_event(self, e, level="info"):
         """
@@ -1480,7 +1482,7 @@ class FlowMaster(controller.Master):
 
     def handle_error(self, r):
         f = self.state.add_error(r)
-        self.hooks.run(f)
+        self.replacehooks.run(f)
         if f:
             self.run_script_hook("error", f)
         if self.client_playback:
@@ -1490,14 +1492,14 @@ class FlowMaster(controller.Master):
 
     def handle_request(self, r):
         f = self.state.add_request(r)
-        self.hooks.run(f)
+        self.replacehooks.run(f)
         self.run_script_hook("request", f)
         self.process_new_request(f)
         return f
 
     def handle_response(self, r):
         f = self.state.add_response(r)
-        self.hooks.run(f)
+        self.replacehooks.run(f)
         if f:
             self.run_script_hook("response", f)
         if self.client_playback:

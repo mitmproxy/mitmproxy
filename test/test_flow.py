@@ -1036,44 +1036,47 @@ class udecoded(libpry.AutoTree):
         assert r.content == "foo"
 
 
-class uHooks(libpry.AutoTree):
+class uReplaceHooks(libpry.AutoTree):
     def test_add_remove(self):
-        f = lambda(x): None
-        h = flow.Hooks()
-        h.add("~q", f)
+        h = flow.ReplaceHooks()
+        h.add("~q", "foo", "bar")
         assert h.lst
-
-        h.remove("~q", f)
+        h.remove("~q", "foo", "bar")
         assert not h.lst
 
-        h.add("~q", f)
-        h.add("~s", f)
+        h.add("~q", "foo", "bar")
+        h.add("~s", "foo", "bar")
         assert len(h.lst) == 2
-        h.remove("~q", f)
+        h.remove("~q", "foo", "bar")
         assert len(h.lst) == 1
-        h.remove("~q")
+        h.remove("~q", "foo", "bar")
         assert len(h.lst) == 1
-        h.remove("~s")
+        h.clear()
         assert len(h.lst) == 0
 
-        track = []
-        def func(x):
-            track.append(x)
-
-        h.add("~s", func)
-
         f = tutils.tflow()
+        f.request.content = "foo"
+        h.add("~s", "foo", "bar")
         h.run(f)
-        assert not track
+        assert f.request.content == "foo"
 
         f = tutils.tflow_full()
+        f.request.content = "foo"
+        f.response.content = "foo"
         h.run(f)
-        assert len(track) == 1
+        assert f.response.content == "bar"
+        assert f.request.content == "foo"
 
+        f = tutils.tflow()
+        h.clear()
+        h.add("~q", "foo", "bar")
+        f.request.content = "foo"
+        h.run(f)
+        assert f.request.content == "bar"
 
 
 tests = [
-    uHooks(),
+    uReplaceHooks(),
     uStickyCookieState(),
     uStickyAuthState(),
     uServerPlaybackState(),
