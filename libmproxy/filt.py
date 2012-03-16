@@ -87,6 +87,7 @@ class _Rex(_Action):
         except:
             raise ValueError, "Cannot compile expression."
 
+
 def _check_content_type(expr, o):
     val = o.headers["content-type"]
     if val and re.search(expr, val[0]):

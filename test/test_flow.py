@@ -1036,9 +1036,44 @@ class udecoded(libpry.AutoTree):
         assert r.content == "foo"
 
 
+class uHooks(libpry.AutoTree):
+    def test_add_remove(self):
+        f = lambda(x): None
+        h = flow.Hooks()
+        h.add("~q", f)
+        assert h.lst
+
+        h.remove("~q", f)
+        assert not h.lst
+
+        h.add("~q", f)
+        h.add("~s", f)
+        assert len(h.lst) == 2
+        h.remove("~q", f)
+        assert len(h.lst) == 1
+        h.remove("~q")
+        assert len(h.lst) == 1
+        h.remove("~s")
+        assert len(h.lst) == 0
+
+        track = []
+        def func(x):
+            track.append(x)
+
+        h.add("~s", func)
+
+        f = tutils.tflow()
+        h.run(f)
+        assert not track
+
+        f = tutils.tflow_full()
+        h.run(f)
+        assert len(track) == 1
+
 
 
 tests = [
+    uHooks(),
     uStickyCookieState(),
     uStickyAuthState(),
     uServerPlaybackState(),

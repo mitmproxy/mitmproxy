@@ -57,12 +57,12 @@ functions.  They're only here so you can use load() to read precisely one
 item from a file or socket without consuming any extra data.
 
 By default tnetstrings work only with byte strings, not unicode.  If you want
-unicode strings then pass an optional encoding to the various functions, 
+unicode strings then pass an optional encoding to the various functions,
 like so::
 
     >>> print repr(tnetstring.loads("2:\\xce\\xb1,"))
     '\\xce\\xb1'
-    >>> 
+    >>>
     >>> print repr(tnetstring.loads("2:\\xce\\xb1,","utf8"))
     u'\u03b1'
 
@@ -129,7 +129,7 @@ def _rdumpq(q,size,value,encoding=None):
         write("5:false!")
         return size + 8
     if isinstance(value,(int,long)):
-        data = str(value) 
+        data = str(value)
         ldata = len(data)
         span = str(ldata)
         write("#")
@@ -142,7 +142,7 @@ def _rdumpq(q,size,value,encoding=None):
         #  It round-trips more accurately.
         #  Probably unnecessary in later python versions that
         #  use David Gay's ftoa routines.
-        data = repr(value) 
+        data = repr(value)
         ldata = len(data)
         span = str(ldata)
         write("^")
@@ -207,13 +207,13 @@ def _gdumps(value,encoding):
     elif value is False:
         yield "5:false!"
     elif isinstance(value,(int,long)):
-        data = str(value) 
+        data = str(value)
         yield str(len(data))
         yield ":"
         yield data
         yield "#"
     elif isinstance(value,(float,)):
-        data = repr(value) 
+        data = repr(value)
         yield str(len(data))
         yield ":"
         yield data
@@ -334,7 +334,7 @@ def load(file,encoding=None):
             d[key] = val
         return d
     raise ValueError("unknown type tag")
-    
+
 
 
 def pop(string,encoding=None):

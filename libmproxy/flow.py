@@ -26,6 +26,48 @@ import controller, version
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 
 
+class Hooks:
+    def __init__(self):
+        self.lst = []
+
+    def add(self, patt, func):
+        """
+            Add a hook.
+
+            patt: A string specifying a filter pattern.
+            func: A callable taking the matching flow as argument.
+
+            Returns True if hook was added, False if the pattern could not be
+            parsed.
+        """
+        cpatt = filt.parse(patt)
+        if not cpatt:
+            return False
+        self.lst.append((patt, func, cpatt))
+        return True
+
+    def remove(self, patt, func=None):
+        """
+            Remove a hook.
+
+            patt: A string specifying a filter pattern.
+            func: Optional callable. If not specified, all hooks matching patt are removed.
+        """
+        for i in range(len(self.lst)-1, -1, -1):
+            if func and (patt, func) == self.lst[i][:2]:
+                del self.lst[i]
+            elif not func and patt == self.lst[i][0]:
+                del self.lst[i]
+
+    def run(self, f):
+        for _, func, cpatt in self.lst:
+            if cpatt(f):
+                func(f)
+
+    def clear(self):
+        self.lst = []
+
+
 class ScriptContext:
     def __init__(self, master):
         self._master = master
@@ -75,7 +117,6 @@ class ODict:
     def __getitem__(self, k):
         """
             Returns a list of values matching key.
-
         """
         ret = []
         k = self._kconv(k)
@@ -1229,6 +1270,7 @@ class FlowMaster(controller.Master):
         self.anticache = False
         self.anticomp = False
         self.refresh_server_playback = False
+        self.hooks = Hooks()
 
     def add_event(self, e, level="info"):
         """
@@ -1438,6 +1480,7 @@ class FlowMaster(controller.Master):
 
     def handle_error(self, r):
         f = self.state.add_error(r)
+        self.hooks.run(f)
         if f:
             self.run_script_hook("error", f)
         if self.client_playback:
@@ -1447,12 +1490,14 @@ class FlowMaster(controller.Master):
 
     def handle_request(self, r):
         f = self.state.add_request(r)
+        self.hooks.run(f)
         self.run_script_hook("request", f)
         self.process_new_request(f)
         return f
 
     def handle_response(self, r):
         f = self.state.add_response(r)
+        self.hooks.run(f)
         if f:
             self.run_script_hook("response", f)
         if self.client_playback:
