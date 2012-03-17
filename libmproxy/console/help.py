@@ -34,6 +34,8 @@ class HelpView(urwid.ListBox):
             self.master.header = self.state[2]
             self.master.make_view()
             return None
+        elif key == "?":
+            key = None
         return urwid.ListBox.keypress(self, size, key)
 
     def helptext(self):
@@ -76,7 +78,7 @@ class HelpView(urwid.ListBox):
 
             ("q", "quit / return to flow list"),
             ("Q", "quit without confirm prompt"),
-            ("R", "set reverse proxy mode"),
+            ("P", "set reverse proxy mode"),
             ("s", "set/unset script"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),

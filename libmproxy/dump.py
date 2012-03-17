@@ -146,7 +146,6 @@ class DumpMaster(flow.FlowMaster):
 
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
-        self.add_event("Request: %s"%str_request(r))
         if f:
             r._ack()
         return f

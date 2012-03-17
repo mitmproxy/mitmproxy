@@ -148,7 +148,7 @@ class StatusBar(common.WWrap):
             r.append(":%s]"%self.master.stickyauth_txt)
         if self.master.server and self.master.server.config.reverse_proxy:
             r.append("[")
-            r.append(("heading_key", "R"))
+            r.append(("heading_key", "P"))
             r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
 
         opts = []
@@ -771,7 +771,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     ),
                                     self.quit,
                                 )
-                            elif k == "R":
+                            elif k == "P":
                                 if self.server.config.reverse_proxy:
                                     p = utils.unparse_url(*self.server.config.reverse_proxy)
                                 else:
