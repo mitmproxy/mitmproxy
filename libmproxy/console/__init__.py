@@ -119,6 +119,10 @@ class StatusBar(common.WWrap):
     def get_status(self):
         r = []
 
+        if self.master.replacehooks.count():
+            r.append("[")
+            r.append(("heading_key", "R"))
+            r.append("eplace]")
         if self.master.client_playback:
             r.append("[")
             r.append(("heading_key", "cplayback"))
@@ -543,8 +547,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.header = None
         self.make_view()
 
-    def view_grideditor(self, title, value, callback, *args, **kwargs):
-        self.body = grideditor.GridEditor(self, title, value, callback, *args, **kwargs)
+    def view_grideditor(self, title, columns, value, callback, *args, **kwargs):
+        self.body = grideditor.GridEditor(self, title, columns, value, callback, *args, **kwargs)
         self.header = None
         self.help_context = grideditor.help_context
         self.statusbar = StatusBar(self, self.footer_text_help)
@@ -705,6 +709,9 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             self.view_flowlist()
 
+    def set_replace(self, r):
+        pass
+
     def loop(self):
         changed = True
         try:
@@ -782,6 +789,13 @@ class ConsoleMaster(flow.FlowMaster):
                                     self.set_reverse_proxy
                                 )
                                 self.sync_list_view()
+                            elif k == "R":
+                                self.view_grideditor(
+                                    "Editing replacements",
+                                    3,
+                                    self.replacehooks.get_specs(),
+                                    self.set_replace
+                                )
                             elif k == "s":
                                 if self.script:
                                     self.load_script(None)

@@ -58,6 +58,15 @@ class ReplaceHooks:
             if (fpatt, rex, s) == self.lst[i][:3]:
                 del self.lst[i]
 
+    def get_specs(self):
+        """
+            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
+        """
+        return [i[:3] for i in self.lst]
+
+    def count(self):
+        return len(self.lst)
+
     def run(self, f):
         for _, rex, s, cpatt in self.lst:
             if cpatt(f):

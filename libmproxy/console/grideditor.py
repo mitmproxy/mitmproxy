@@ -67,31 +67,32 @@ class SEdit(common.WWrap):
 
 
 class GridItem(common.WWrap):
-    def __init__(self, focused, editing, maxk, k, v):
+    def __init__(self, focused, editing, maxk, values):
         self.focused, self.editing, self.maxk = focused, editing, maxk
-        if focused == 0 and editing:
-            self.editing = self.kf = SEdit(k)
-        else:
-            self.kf = SText(k, True if focused == 0 else False)
 
-        if focused == 1 and editing:
-            self.editing = self.vf = SEdit(v)
-        else:
-            self.vf = SText(v, True if focused == 1 else False)
+        self.fields = []
+        for i, v in enumerate(values):
+            if focused == i and editing:
+                self.editing = SEdit(v)
+                self.fields.append(self.editing)
+            else:
+                self.fields.append(
+                    SText(v, True if focused == i else False)
+                )
+
+        fspecs = self.fields[:]
+        fspecs[0] = ("fixed", maxk + 2, fspecs[0]) 
 
         w = urwid.Columns(
-            [
-                ("fixed", maxk + 2, self.kf),
-                self.vf
-            ],
+            fspecs,
             dividechars = 2
         )
         if focused is not None:
             w.set_focus_column(focused)
         common.WWrap.__init__(self, w)
 
-    def get_kv(self):
-        return (self.kf.get_text(), self.vf.get_text())
+    def get_value(self):
+        return [i.get_text() for i in self.fields]
 
     def keypress(self, s, k):
         if self.editing:
@@ -105,10 +106,13 @@ class GridItem(common.WWrap):
 KEY_MAX = 30
 class GridWalker(urwid.ListWalker):
     def __init__(self, lst, editor):
+        self.maxk = 20
+        if lst:
+            for i, r in enumerate(lst):
+                assert len(r) == editor.columns
+                self.maxk = max(len(r), self.maxk)
+        self.maxk = min(self.maxk, KEY_MAX)
         self.lst, self.editor = lst, editor
-        self.maxk = min(max(len(v[0]) for v in lst), KEY_MAX) if lst else 20
-        if self.maxk < 20:
-            self.maxk = 20
         self.focus = 0
         self.focus_col = 0
         self.editing = False
@@ -134,7 +138,7 @@ class GridWalker(urwid.ListWalker):
 
     def _insert(self, pos):
         self.focus = pos
-        self.lst.insert(self.focus, ("", ""))
+        self.lst.insert(self.focus, [""]*self.editor.columns)
         self.focus_col = 0
         self.start_edit()
 
@@ -146,27 +150,27 @@ class GridWalker(urwid.ListWalker):
 
     def start_edit(self):
         if self.lst:
-            self.editing = GridItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
+            self.editing = GridItem(self.focus_col, True, self.maxk, self.lst[self.focus])
             self._modified()
 
     def stop_edit(self):
         if self.editing:
-            self.lst[self.focus] = self.editing.get_kv()
+            self.lst[self.focus] = self.editing.get_value()
             self.editing = False
             self._modified()
 
     def left(self):
-        self.focus_col = 0
+        self.focus_col = max(self.focus_col - 1, 0)
         self._modified()
 
     def right(self):
-        self.focus_col = 1
+        self.focus_col = min(self.focus_col + 1, self.editor.columns-1)
         self._modified()
 
     def tab_next(self):
         self.stop_edit()
-        if self.focus_col == 0:
-            self.focus_col = 1
+        if self.focus_col < self.editor.columns-1:
+            self.focus_col += 1
         elif self.focus != len(self.lst)-1:
             self.focus_col = 0
             self.focus += 1
@@ -176,7 +180,7 @@ class GridWalker(urwid.ListWalker):
         if self.editing:
             return self.editing, self.focus
         elif self.lst:
-            return GridItem(self.focus_col, False, self.maxk, *self.lst[self.focus]), self.focus
+            return GridItem(self.focus_col, False, self.maxk, self.lst[self.focus]), self.focus
         else:
             return None, None
 
@@ -187,12 +191,12 @@ class GridWalker(urwid.ListWalker):
     def get_next(self, pos):
         if pos+1 >= len(self.lst):
             return None, None
-        return GridItem(None, False, self.maxk, *self.lst[pos+1]), pos+1
+        return GridItem(None, False, self.maxk, self.lst[pos+1]), pos+1
 
     def get_prev(self, pos):
         if pos-1 < 0:
             return None, None
-        return GridItem(None, False, self.maxk, *self.lst[pos-1]), pos-1
+        return GridItem(None, False, self.maxk, self.lst[pos-1]), pos-1
 
 
 class GridListBox(urwid.ListBox):
@@ -201,9 +205,10 @@ class GridListBox(urwid.ListBox):
 
 
 class GridEditor(common.WWrap):
-    def __init__(self, master, title, value, callback, *cb_args, **cb_kwargs):
+    def __init__(self, master, title, columns, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
         self.master, self.title, self.value, self.callback = master, title, value, callback
+        self.columns = columns
         self.cb_args, self.cb_kwargs = cb_args, cb_kwargs
         p = urwid.Text(title)
         p = urwid.Padding(p, align="left", width=("relative", 100))

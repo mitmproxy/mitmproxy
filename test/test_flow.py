@@ -1046,13 +1046,16 @@ class uReplaceHooks(libpry.AutoTree):
 
         h.add("~q", "foo", "bar")
         h.add("~s", "foo", "bar")
-        assert len(h.lst) == 2
+
+        v = h.get_specs()
+        assert v == [('~q', 'foo', 'bar'), ('~s', 'foo', 'bar')]
+        assert h.count() == 2
         h.remove("~q", "foo", "bar")
-        assert len(h.lst) == 1
+        assert h.count() == 1
         h.remove("~q", "foo", "bar")
-        assert len(h.lst) == 1
+        assert h.count() == 1
         h.clear()
-        assert len(h.lst) == 0
+        assert h.count() == 0
 
         f = tutils.tflow()
         f.request.content = "foo"
