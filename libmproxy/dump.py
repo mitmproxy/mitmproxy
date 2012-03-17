@@ -30,6 +30,7 @@ class Options(object):
         "no_server",
         "nopop",
         "refresh_server_playback",
+        "replacements",
         "rfile",
         "rheaders",
         "server_replay",
@@ -93,6 +94,9 @@ class DumpMaster(flow.FlowMaster):
                 self.fwriter = flow.FlowWriter(f)
             except IOError, v:
                 raise DumpError(v.strerror)
+
+        for i in options.replacements:
+            self.replacehooks.add(*i)
 
         if options.server_replay:
             self.start_server_playback(

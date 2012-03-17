@@ -54,7 +54,10 @@ if __name__ == '__main__':
             print >> sys.stderr, "mitmproxy:", v.args[0]
             sys.exit(1)
 
-    opts = console.Options(**cmdline.get_common_options(options))
+    try:
+        opts = console.Options(**cmdline.get_common_options(options))
+    except cmdline.OptionException, v:
+        parser.error(v.message)
     opts.intercept = options.intercept
     opts.debug = options.debug
     m = console.ConsoleMaster(server, opts)

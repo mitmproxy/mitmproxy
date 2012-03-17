@@ -294,6 +294,7 @@ class Options(object):
         "refresh_server_playback",
         "rfile",
         "script",
+        "replacements",
         "rheaders",
         "server_replay",
         "stickycookie",
@@ -330,6 +331,9 @@ class ConsoleMaster(flow.FlowMaster):
         flow.FlowMaster.__init__(self, server, ConsoleState())
         self.looptime = 0
         self.options = options
+
+        for i in options.replacements:
+            self.replacehooks.add(*i)
 
         self.flow_list_view = None
         self.set_palette()

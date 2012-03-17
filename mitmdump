@@ -49,7 +49,10 @@ if __name__ == '__main__':
             sys.exit(1)
 
 
-    dumpopts = dump.Options(**cmdline.get_common_options(options))
+    try:
+        dumpopts = dump.Options(**cmdline.get_common_options(options))
+    except cmdline.OptionException, v:
+        parser.error(v.message)
     dumpopts.keepserving = options.keepserving
 
     if args:

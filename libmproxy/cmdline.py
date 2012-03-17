@@ -14,7 +14,61 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import proxy
-import optparse
+import optparse, re, filt, textwrap
+
+
+class ParseReplaceException(Exception): pass
+class OptionException(Exception): pass
+
+
+def parse_replace_hook(s):
+    """
+        Returns a (pattern, regex, replacement) tuple.
+
+        The general form for a replacement hook is as follows:
+
+            /patt/regex/replacement
+
+        The first character specifies the separator. Example:
+
+            :~q:foo:bar
+
+        If only two clauses are specified, the pattern is set to match
+        universally (i.e. ".*"). Example:
+
+            /foo/bar/
+
+        Clauses are parsed from left to right. Extra separators are taken to be
+        part of the final clause. For instance, the replacement clause below is
+        "foo/bar/":
+
+            /one/two/foo/bar/
+
+        Checks that pattern and regex are both well-formed. Raises
+        ParseReplaceException on error.
+    """
+    sep, rem = s[0], s[1:]
+    parts = rem.split(sep, 2)
+    if len(parts) == 2:
+        patt = ".*"
+        regex, replacement = parts
+    elif len(parts) == 3:
+        patt, regex, replacement = parts
+    else:
+        raise ParseReplaceException("Malformed replacement specifier - too few clauses: %s"%s)
+
+    if not regex:
+        raise ParseReplaceException("Empty replacement regex: %s"%str(patt))
+
+    try:
+        re.compile(regex)
+    except re.error, e:
+        raise ParseReplaceException("Malformed replacement regex: %s"%str(e.message))
+
+    if not filt.parse(patt):
+        raise ParseReplaceException("Malformed replacement filter pattern: %s"%patt)
+
+    return patt, regex, replacement
 
 
 def get_common_options(options):
@@ -29,6 +83,24 @@ def get_common_options(options):
     elif options.stickyauth_filt:
         stickyauth = options.stickyauth_filt
 
+    reps = []
+    for i in options.replace:
+        try:
+            p = parse_replace_hook(i)
+        except ParseReplaceException, e:
+            raise OptionException(e.message)
+        reps.append(p)
+    for i in options.replace_file:
+        try:
+            patt, rex, path = parse_replace_hook(i)
+        except ParseReplaceException, e:
+            raise OptionException(e.message)
+        try:
+            v = open(path, "r").read()
+        except IOError, e:
+            raise OptionException("Could not read replace file: %s"%path)
+        reps.append((patt, rex, v))
+
     return dict(
         anticache = options.anticache,
         anticomp = options.anticomp,
@@ -39,6 +111,7 @@ def get_common_options(options):
         refresh_server_playback = not options.norefresh,
         rheaders = options.rheaders,
         rfile = options.rfile,
+        replacements = reps,
         server_replay = options.server_replay,
         script = options.script,
         stickycookie = stickycookie,
@@ -189,6 +262,28 @@ def common_options(parser):
         action="store_true", dest="nopop", default=False,
         help="Disable response pop from response flow. "
         "This makes it possible to replay same response multiple times."
+    )
+
+    group = optparse.OptionGroup(
+        parser,
+        "Replacements",
+        """
+            Replacements are of the form "/pattern/regex/replacement", where
+            the separator can be any character. Please see the documentation
+            for more information.
+        """.strip()
+    )
+    group.add_option(
+        "--replace",
+        action="append", type="str", dest="replace", default=[],
+        metavar="PATTERN",
+        help="Replacement pattern."
+    )
+    group.add_option(
+        "--replace-from-file",
+        action="append", type="str", dest="replace_file", default=[],
+        metavar="PATTERN",
+        help="Replacement pattern, where the replacement clause is a path to a file."
     )
     parser.add_option_group(group)
 
