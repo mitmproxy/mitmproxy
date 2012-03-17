@@ -95,8 +95,9 @@ class DumpMaster(flow.FlowMaster):
             except IOError, v:
                 raise DumpError(v.strerror)
 
-        for i in options.replacements:
-            self.replacehooks.add(*i)
+        if options.replacements:
+            for i in options.replacements:
+                self.replacehooks.add(*i)
 
         if options.server_replay:
             self.start_server_playback(
