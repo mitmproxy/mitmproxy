@@ -66,7 +66,7 @@ class SEdit(common.WWrap):
         return True
 
 
-class KVItem(common.WWrap):
+class GridItem(common.WWrap):
     def __init__(self, focused, editing, maxk, k, v):
         self.focused, self.editing, self.maxk = focused, editing, maxk
         if focused == 0 and editing:
@@ -103,7 +103,7 @@ class KVItem(common.WWrap):
 
 
 KEY_MAX = 30
-class KVWalker(urwid.ListWalker):
+class GridWalker(urwid.ListWalker):
     def __init__(self, lst, editor):
         self.lst, self.editor = lst, editor
         self.maxk = min(max(len(v[0]) for v in lst), KEY_MAX) if lst else 20
@@ -146,7 +146,7 @@ class KVWalker(urwid.ListWalker):
 
     def start_edit(self):
         if self.lst:
-            self.editing = KVItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
+            self.editing = GridItem(self.focus_col, True, self.maxk, *self.lst[self.focus])
             self._modified()
 
     def stop_edit(self):
@@ -176,7 +176,7 @@ class KVWalker(urwid.ListWalker):
         if self.editing:
             return self.editing, self.focus
         elif self.lst:
-            return KVItem(self.focus_col, False, self.maxk, *self.lst[self.focus]), self.focus
+            return GridItem(self.focus_col, False, self.maxk, *self.lst[self.focus]), self.focus
         else:
             return None, None
 
@@ -187,20 +187,20 @@ class KVWalker(urwid.ListWalker):
     def get_next(self, pos):
         if pos+1 >= len(self.lst):
             return None, None
-        return KVItem(None, False, self.maxk, *self.lst[pos+1]), pos+1
+        return GridItem(None, False, self.maxk, *self.lst[pos+1]), pos+1
 
     def get_prev(self, pos):
         if pos-1 < 0:
             return None, None
-        return KVItem(None, False, self.maxk, *self.lst[pos-1]), pos-1
+        return GridItem(None, False, self.maxk, *self.lst[pos-1]), pos-1
 
 
-class KVListBox(urwid.ListBox):
+class GridListBox(urwid.ListBox):
     def __init__(self, lw):
         urwid.ListBox.__init__(self, lw)
 
 
-class KVEditor(common.WWrap):
+class GridEditor(common.WWrap):
     def __init__(self, master, title, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
         self.master, self.title, self.value, self.callback = master, title, value, callback
@@ -208,8 +208,8 @@ class KVEditor(common.WWrap):
         p = urwid.Text(title)
         p = urwid.Padding(p, align="left", width=("relative", 100))
         p = urwid.AttrWrap(p, "heading")
-        self.walker = KVWalker(self.value, self)
-        self.lb = KVListBox(self.walker)
+        self.walker = GridWalker(self.value, self)
+        self.lb = GridListBox(self.walker)
         self.w = urwid.Frame(self.lb, header = p)
         self.master.statusbar.update("")
         self.show_empty_msg()

@@ -44,7 +44,7 @@ dark = [
     # Hex view
     ('offset', 'dark cyan', 'default'),
 
-    # KV Editor
+    # Grid Editor
     ('focusfield', 'black', 'light gray'),
     ('editfield', 'black', 'light cyan'),
 ]

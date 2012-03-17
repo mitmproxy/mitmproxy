@@ -17,7 +17,7 @@ import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex
 import os.path, sys
 import urwid
 from .. import controller, utils, flow, version
-import flowlist, flowview, help, common, kveditor, palettes
+import flowlist, flowview, help, common, grideditor, palettes
 
 EVENTLOG_SIZE = 500
 
@@ -543,10 +543,10 @@ class ConsoleMaster(flow.FlowMaster):
         self.header = None
         self.make_view()
 
-    def view_kveditor(self, title, value, callback, *args, **kwargs):
-        self.body = kveditor.KVEditor(self, title, value, callback, *args, **kwargs)
+    def view_grideditor(self, title, value, callback, *args, **kwargs):
+        self.body = grideditor.GridEditor(self, title, value, callback, *args, **kwargs)
         self.header = None
-        self.help_context = kveditor.help_context
+        self.help_context = grideditor.help_context
         self.statusbar = StatusBar(self, self.footer_text_help)
         self.make_view()
 
