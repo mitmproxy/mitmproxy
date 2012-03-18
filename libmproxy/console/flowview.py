@@ -15,7 +15,7 @@
 
 import os, re
 import urwid
-import common
+import common, grideditor
 from .. import utils, encoding, flow
 
 def _mkhelp():
@@ -395,7 +395,9 @@ class ConnectionView(common.WWrap):
         conn.set_form_urlencoded(flow.ODict(lst))
 
     def edit_form(self, conn):
-        self.master.view_grideditor("Editing form", 2, conn.get_form_urlencoded().lst, self.set_form, conn)
+        self.master.view_grideditor(
+            grideditor.URLEncodedFormEditor(self.master, conn.get_form_urlencoded().lst, self.set_form, conn)
+        )
 
     def edit_form_confirm(self, key, conn):
         if key == "y":
@@ -427,9 +429,9 @@ class ConnectionView(common.WWrap):
             else:
                 self.edit_form(conn)
         elif part == "h":
-            self.master.view_grideditor("Editing headers", 2, conn.headers.lst, self.set_headers, conn)
+            self.master.view_grideditor(grideditor.HeaderEditor(self.master, conn.headers.lst, self.set_headers, conn))
         elif part == "q":
-            self.master.view_grideditor("Editing query", 2, conn.get_query().lst, self.set_query, conn)
+            self.master.view_grideditor(grideditor.QueryEditor(self.master, conn.get_query().lst, self.set_query, conn))
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", conn.get_url(), self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:

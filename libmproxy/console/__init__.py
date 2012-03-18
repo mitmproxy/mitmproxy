@@ -122,7 +122,7 @@ class StatusBar(common.WWrap):
         if self.master.replacehooks.count():
             r.append("[")
             r.append(("heading_key", "R"))
-            r.append("eplace]")
+            r.append("eplacing]")
         if self.master.client_playback:
             r.append("[")
             r.append(("heading_key", "cplayback"))
@@ -547,8 +547,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.header = None
         self.make_view()
 
-    def view_grideditor(self, title, columns, value, callback, *args, **kwargs):
-        self.body = grideditor.GridEditor(self, title, columns, value, callback, *args, **kwargs)
+    def view_grideditor(self, ge):
+        self.body = ge
         self.header = None
         self.help_context = grideditor.help_context
         self.statusbar = StatusBar(self, self.footer_text_help)
@@ -710,7 +710,9 @@ class ConsoleMaster(flow.FlowMaster):
             self.view_flowlist()
 
     def set_replace(self, r):
-        pass
+        self.replacehooks.clear()
+        for i in r:
+            self.replacehooks.add(*i)
 
     def loop(self):
         changed = True
@@ -791,10 +793,11 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.sync_list_view()
                             elif k == "R":
                                 self.view_grideditor(
-                                    "Editing replacements",
-                                    3,
-                                    self.replacehooks.get_specs(),
-                                    self.set_replace
+                                    grideditor.ReplaceEditor(
+                                        self,
+                                        self.replacehooks.get_specs(),
+                                        self.set_replace
+                                    )
                                 )
                             elif k == "s":
                                 if self.script:
@@ -933,4 +936,7 @@ class ConsoleMaster(flow.FlowMaster):
         if f:
             self.process_flow(f, r)
         return f
+
+
+
 

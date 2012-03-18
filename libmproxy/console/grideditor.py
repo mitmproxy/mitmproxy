@@ -81,7 +81,7 @@ class GridItem(common.WWrap):
                 )
 
         fspecs = self.fields[:]
-        fspecs[0] = ("fixed", maxk + 2, fspecs[0]) 
+        fspecs[0] = ("fixed", maxk + 2, fspecs[0])
 
         w = urwid.Columns(
             fspecs,
@@ -205,12 +205,11 @@ class GridListBox(urwid.ListBox):
 
 
 class GridEditor(common.WWrap):
-    def __init__(self, master, title, columns, value, callback, *cb_args, **cb_kwargs):
+    def __init__(self, master, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
-        self.master, self.title, self.value, self.callback = master, title, value, callback
-        self.columns = columns
+        self.master, self.value, self.callback = master, value, callback
         self.cb_args, self.cb_kwargs = cb_args, cb_kwargs
-        p = urwid.Text(title)
+        p = urwid.Text(self.title)
         p = urwid.Padding(p, align="left", width=("relative", 100))
         p = urwid.AttrWrap(p, "heading")
         self.walker = GridWalker(self.value, self)
@@ -273,3 +272,24 @@ class GridEditor(common.WWrap):
             self.walker.start_edit()
         else:
             return self.w.keypress(size, key)
+
+
+class QueryEditor(GridEditor):
+    title = "Editing query"
+    columns = 2
+
+
+class HeaderEditor(GridEditor):
+    title = "Editing headers"
+    columns = 2
+
+
+class URLEncodedFormEditor(GridEditor):
+    title = "Editing URL-encoded form"
+    columns = 2
+
+
+class ReplaceEditor(GridEditor):
+    title = "Editing replacement patterns"
+    columns = 3
+

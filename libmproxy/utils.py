@@ -130,6 +130,7 @@ def urlencode(s):
     """
         Takes a list of (key, value) tuples and returns a urlencoded string.
     """
+    s = [tuple(i) for i in s]
     return urllib.urlencode(s, False)
 
 
