@@ -95,7 +95,8 @@ class GridItem(common.WWrap):
 
     def keypress(self, s, k):
         if self.editing:
-            k = self.editing.keypress((s[0]-self.first_width-4,), k)
+            w = self.w.column_widths(s)[self.focused]
+            k = self.editing.keypress((w,), k)
         return k
 
     def selectable(self):
@@ -253,7 +254,7 @@ class GridEditor(common.WWrap):
 
     def keypress(self, size, key):
         if self.walker.editing:
-            if key in ["esc", "enter"]:
+            if key in ["esc"]:
                 self.walker.stop_edit()
             elif key == "tab":
                 pf, pfc = self.walker.focus, self.walker.focus_col
