@@ -42,6 +42,23 @@ def _mkhelp():
             ),
         ("p", "previous flow"),
         ("r", "replay request"),
+        ("T", "override content-type for pretty-printed body"),
+            (None,
+                common.highlight_key("automatic", "a") +
+                [("text", ": automatic detection")]
+            ),
+            (None,
+                common.highlight_key("html", "h") +
+                [("text", ": format as HTML")]
+            ),
+            (None,
+                common.highlight_key("json", "j") +
+                [("text", ": format as JSON")]
+            ),
+            (None,
+                common.highlight_key("xml", "x") +
+                [("text", ": format as XML")]
+            ),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
         ("w", "save all flows matching current limit"),
@@ -183,17 +200,20 @@ class ConnectionView(common.WWrap):
                )
 
 
-    def _find_pretty_view(self, content, hdrItems):
+    def _find_pretty_view(self, content, hdrItems, pretty_type=common.VIEW_BODY_PRETTY_TYPE_AUTO):
         ctype = None
-        for i in hdrItems:
-            if i[0].lower() == "content-type":
-                ctype = i[1]
-                break
+        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_AUTO:
+            for i in hdrItems:
+                if i[0].lower() == "content-type":
+                    ctype = i[1]
+                    break
+        else:
+            ctype = common.BODY_PRETTY_TYPES[pretty_type]
         if ctype and flow.HDR_FORM_URLENCODED in ctype:
             data = utils.urldecode(content)
             if data:
                 return "URLEncoded form", self._view_flow_urlencoded(data)
-        if utils.isXML(content):
+        if (ctype and ("text/xml" in ctype or "text/html" in ctype)) or utils.isXML(content):
             return "Indented XML-ish", self._view_flow_xmlish(content)
         elif ctype and "application/json" in ctype:
             lines = utils.pretty_json(content)
@@ -205,7 +225,7 @@ class ConnectionView(common.WWrap):
                 return "Form data", self._view_flow_formdata(content, boundary[1].split(';')[0])
         return "", self._view_flow_raw(content)
 
-    def _cached_conn_text(self, e, content, hdrItems, viewmode):
+    def _cached_conn_text(self, e, content, hdrItems, viewmode, pretty_type):
         txt = common.format_keyvals(
                 [(h+":", v) for (h, v) in hdrItems],
                 key = "header",
@@ -223,7 +243,9 @@ class ConnectionView(common.WWrap):
                         content = decoded
                         if e and e != "identity":
                             emsg = "[decoded %s]"%e
-                msg, body = self._find_pretty_view(content, hdrItems)
+                msg, body = self._find_pretty_view(content, hdrItems, pretty_type)
+                if pretty_type != common.VIEW_BODY_PRETTY_TYPE_AUTO:
+                    msg += " (forced)"
                 if emsg:
                     msg = emsg + " " + msg
             else:
@@ -283,7 +305,7 @@ class ConnectionView(common.WWrap):
                 )
         return f
 
-    def _conn_text(self, conn, viewmode):
+    def _conn_text(self, conn, viewmode, pretty_type):
         e = conn.headers["content-encoding"]
         e = e[0] if e else None
         return cache.callback(
@@ -291,14 +313,16 @@ class ConnectionView(common.WWrap):
                     e,
                     conn.content,
                     tuple(tuple(i) for i in conn.headers.lst),
-                    viewmode
+                    viewmode,
+                    pretty_type
                 )
 
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
         body = self._conn_text(
             self.flow.request,
-            self.state.view_body_mode
+            self.state.view_body_mode,
+            self.state.view_body_pretty_type
         )
         self.w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
         self.master.statusbar.redraw()
@@ -308,7 +332,8 @@ class ConnectionView(common.WWrap):
         if self.flow.response:
             body = self._conn_text(
                 self.flow.response,
-                self.state.view_body_mode
+                self.state.view_body_mode,
+                self.state.view_body_pretty_type
             )
         else:
             body = urwid.ListBox(
@@ -548,6 +573,18 @@ class ConnectionView(common.WWrap):
             if r:
                 self.master.statusbar.message(r)
             self.master.refresh_flow(self.flow)
+        elif key == "T":
+            self.master.prompt_onekey(
+                "Pretty-Print format",
+                (
+                    ("auto detect", "a"),
+                    ("html", "h"),
+                    ("json", "j"),
+                    ("xml", "x"),
+                ),
+                self.master.change_pretty_type
+            )
+            key = None
         elif key == "V":
             self.state.revert(self.flow)
             self.master.refresh_flow(self.flow)

@@ -232,6 +232,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.view_body_mode = common.VIEW_BODY_PRETTY
+        self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
         self.last_saveload = ""
@@ -695,6 +696,17 @@ class ConsoleMaster(flow.FlowMaster):
             self.state.view_body_mode = common.VIEW_BODY_HEX
         elif v == "p":
             self.state.view_body_mode = common.VIEW_BODY_PRETTY
+        self.refresh_flow(self.currentflow)
+
+    def change_pretty_type(self, t):
+        if t == "a":
+            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
+        elif t == "h":
+            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_HTML
+        elif t == "j":
+            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_JSON
+        elif t == "x":
+            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_XML
         self.refresh_flow(self.currentflow)
 
     def drawscreen(self):
