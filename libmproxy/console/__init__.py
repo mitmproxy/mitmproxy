@@ -232,7 +232,6 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.view_body_mode = common.VIEW_BODY_PRETTY
-        self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
         self.last_saveload = ""
@@ -571,8 +570,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.help_context = flowlist.help_context
 
     def view_flow(self, flow):
-        self.body = flowview.ConnectionView(self, self.state, flow)
-        self.header = flowview.ConnectionViewHeader(self, flow)
+        self.body = flowview.FlowView(self, self.state, flow)
+        self.header = flowview.FlowViewHeader(self, flow)
         self.statusbar = StatusBar(self, self.footer_text_flowview)
         self.currentflow = flow
 
@@ -696,17 +695,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.state.view_body_mode = common.VIEW_BODY_HEX
         elif v == "p":
             self.state.view_body_mode = common.VIEW_BODY_PRETTY
-        self.refresh_flow(self.currentflow)
-
-    def change_pretty_type(self, t):
-        if t == "a":
-            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
-        elif t == "j":
-            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_JSON
-        elif t == "u":
-            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_URLENCODED
-        elif t == "x":
-            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_XML
         self.refresh_flow(self.currentflow)
 
     def drawscreen(self):

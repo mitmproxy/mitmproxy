@@ -48,12 +48,12 @@ def _mkhelp():
                 [("text", ": automatic detection")]
             ),
             (None,
-                common.highlight_key("html", "h") +
-                [("text", ": format as HTML")]
-            ),
-            (None,
                 common.highlight_key("json", "j") +
                 [("text", ": format as JSON")]
+            ),
+            (None,
+                common.highlight_key("urlencoded", "u") +
+                [("text", ": format as URL-encoded data")]
             ),
             (None,
                 common.highlight_key("xml", "x") +
@@ -75,7 +75,7 @@ help_context = _mkhelp()
 
 VIEW_CUTOFF = 1024*100
 
-class ConnectionViewHeader(common.WWrap):
+class FlowViewHeader(common.WWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
         self.w = common.format_flow(f, False, extended=True, padding=0)
@@ -92,7 +92,7 @@ class CallbackCache:
 cache = CallbackCache()
 
 
-class ConnectionView(common.WWrap):
+class FlowView(common.WWrap):
     REQ = 0
     RESP = 1
     method_options = [
@@ -107,6 +107,7 @@ class ConnectionView(common.WWrap):
     ]
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
+        self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
         if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE and flow.response:
             self.view_response()
         else:
@@ -327,7 +328,7 @@ class ConnectionView(common.WWrap):
         body = self._conn_text(
             self.flow.request,
             self.state.view_body_mode,
-            self.state.view_body_pretty_type
+            self.view_body_pretty_type
         )
         self.w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
         self.master.statusbar.redraw()
@@ -338,7 +339,7 @@ class ConnectionView(common.WWrap):
             body = self._conn_text(
                 self.flow.response,
                 self.state.view_body_mode,
-                self.state.view_body_pretty_type
+                self.view_body_pretty_type
             )
         else:
             body = urwid.ListBox(
@@ -491,6 +492,17 @@ class ConnectionView(common.WWrap):
     def view_prev_flow(self, flow):
         return self._view_nextprev_flow("prev", flow)
 
+    def change_pretty_type(self, t):
+        if t == "a":
+            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
+        elif t == "j":
+            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_JSON
+        elif t == "u":
+            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_URLENCODED
+        elif t == "x":
+            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_XML
+        self.master.refresh_flow(self.flow)
+
     def keypress(self, size, key):
         if key == " ":
             self.view_next_flow(self.flow)
@@ -587,7 +599,7 @@ class ConnectionView(common.WWrap):
                     ("urlencoded", "u"),
                     ("xmlish", "x"),
                 ),
-                self.master.change_pretty_type
+                self.change_pretty_type
             )
             key = None
         elif key == "V":
