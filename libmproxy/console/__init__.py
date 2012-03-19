@@ -701,10 +701,10 @@ class ConsoleMaster(flow.FlowMaster):
     def change_pretty_type(self, t):
         if t == "a":
             self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
-        elif t == "h":
-            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_HTML
         elif t == "j":
             self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_JSON
+        elif t == "u":
+            self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_URLENCODED
         elif t == "x":
             self.state.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_XML
         self.refresh_flow(self.currentflow)

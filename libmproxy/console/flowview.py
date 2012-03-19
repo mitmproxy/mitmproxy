@@ -199,32 +199,34 @@ class ConnectionView(common.WWrap):
                     val = "text"
                )
 
-
     def _find_pretty_view(self, content, hdrItems, pretty_type=common.VIEW_BODY_PRETTY_TYPE_AUTO):
         ctype = None
         if pretty_type == common.VIEW_BODY_PRETTY_TYPE_AUTO:
+            pretty_type == None
             for i in hdrItems:
                 if i[0].lower() == "content-type":
                     ctype = i[1]
                     break
-        else:
-            ctype = common.BODY_PRETTY_TYPES[pretty_type]
+            ct = utils.parse_content_type(ctype) if ctype else None
+            if ct:
+                pretty_type = common.BODY_PRETTY_TYPES.get("%s/%s"%(ct[0], ct[1]))
+            if not pretty_type and utils.isXML(content):
+                pretty_type = common.VIEW_BODY_PRETTY_TYPE_XML
 
-        if ctype and flow.HDR_FORM_URLENCODED in ctype:
+        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_URLENCODED:
             data = utils.urldecode(content)
             if data:
                 return "URLEncoded form", self._view_flow_urlencoded(data)
-        if (ctype and ("text/xml" in ctype or "text/html" in ctype)) or utils.isXML(content):
+
+        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_XML:
             return "Indented XML-ish", self._view_flow_xmlish(content)
-        elif ctype and "application/json" in ctype:
+
+        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_JSON:
             lines = utils.pretty_json(content)
             if lines:
                 return "JSON", self._view_flow_json(lines)
-        elif ctype and "multipart/form-data" in ctype:
-            boundary = ctype.split('boundary=')
-            if len(boundary) > 1:
-                return "Form data", self._view_flow_formdata(content, boundary[1].split(';')[0])
-        return "", self._view_flow_raw(content)
+
+        return "Falling back to raw.", self._view_flow_raw(content)
 
     def _cached_conn_text(self, e, content, hdrItems, viewmode, pretty_type):
         txt = common.format_keyvals(
@@ -245,8 +247,10 @@ class ConnectionView(common.WWrap):
                         if e and e != "identity":
                             emsg = "[decoded %s]"%e
                 msg, body = self._find_pretty_view(content, hdrItems, pretty_type)
+
                 if pretty_type != common.VIEW_BODY_PRETTY_TYPE_AUTO:
-                    msg += " (forced)"
+                    emsg += " (forced to %s)"%(common.BODY_PRETTY_NAMES[pretty_type])
+
                 if emsg:
                     msg = emsg + " " + msg
             else:
@@ -579,9 +583,9 @@ class ConnectionView(common.WWrap):
                 "Pretty-Print format",
                 (
                     ("auto detect", "a"),
-                    ("html", "h"),
                     ("json", "j"),
-                    ("xml", "x"),
+                    ("urlencoded", "u"),
+                    ("xmlish", "x"),
                 ),
                 self.master.change_pretty_type
             )

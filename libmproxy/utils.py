@@ -289,7 +289,7 @@ def parse_content_type(c):
             clause = i.split("=", 1)
             if len(clause) == 2:
                 d[clause[0].strip()] = clause[1].strip()
-    return ts[0], ts[1], d
+    return ts[0].lower(), ts[1].lower(), d
 
 
 def hostport(scheme, host, port):
