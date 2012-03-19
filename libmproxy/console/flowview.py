@@ -209,6 +209,7 @@ class ConnectionView(common.WWrap):
                     break
         else:
             ctype = common.BODY_PRETTY_TYPES[pretty_type]
+
         if ctype and flow.HDR_FORM_URLENCODED in ctype:
             data = utils.urldecode(content)
             if data:

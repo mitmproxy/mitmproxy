@@ -214,7 +214,18 @@ class u_parse_size(libpry.AutoTree):
         libpry.raises(ValueError, utils.parse_size, "ak")
 
 
+class u_parse_content_type(libpry.AutoTree):
+    def test_simple(self):
+        p = utils.parse_content_type
+        assert p("text/html") == ("text", "html", {})
+        assert p("text") == None
+
+        v = p("text/html; charset=UTF-8")
+        assert v == ('text', 'html', {'charset': 'UTF-8'})
+
+
 tests = [
+    u_parse_content_type(),
     uformat_timestamp(),
     uisBin(),
     uisXML(),
