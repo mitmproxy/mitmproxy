@@ -16,7 +16,7 @@
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex
 import os.path, sys
 import urwid
-from .. import controller, utils, flow, version
+from .. import controller, utils, flow
 import flowlist, flowview, help, common, grideditor, palettes
 
 EVENTLOG_SIZE = 500
@@ -320,17 +320,6 @@ class Options(object):
 
 class ConsoleMaster(flow.FlowMaster):
     palette = []
-    footer_text_default = [
-        ('heading_key', "?"), ":help ",
-    ]
-    footer_text_help = [
-        ("heading", 'mitmproxy v%s '%version.VERSION),
-        ('heading_key', "q"), ":back ",
-    ]
-    footer_text_flowview = [
-        ('heading_key', "?"), ":help ",
-        ('heading_key', "q"), ":back ",
-    ]
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
         self.looptime = 0
@@ -542,7 +531,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def view_help(self):
         h = help.HelpView(self, self.help_context, (self.statusbar, self.body, self.header))
-        self.statusbar = StatusBar(self, self.footer_text_help)
+        self.statusbar = StatusBar(self, help.footer)
         self.body = h
         self.header = None
         self.make_view()
@@ -551,7 +540,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.body = ge
         self.header = None
         self.help_context = grideditor.help_context
-        self.statusbar = StatusBar(self, self.footer_text_help)
+        self.statusbar = StatusBar(self, grideditor.footer)
         self.make_view()
 
     def view_flowlist(self):
@@ -562,7 +551,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.body = flowlist.BodyPile(self)
         else:
             self.body = flowlist.ConnectionListBox(self)
-        self.statusbar = StatusBar(self, self.footer_text_default)
+        self.statusbar = StatusBar(self, flowlist.footer)
         self.header = None
         self.currentflow = None
 
@@ -572,7 +561,7 @@ class ConsoleMaster(flow.FlowMaster):
     def view_flow(self, flow):
         self.body = flowview.FlowView(self, self.state, flow)
         self.header = flowview.FlowViewHeader(self, flow)
-        self.statusbar = StatusBar(self, self.footer_text_flowview)
+        self.statusbar = StatusBar(self, flowview.footer)
         self.currentflow = flow
 
         self.make_view()
@@ -936,7 +925,3 @@ class ConsoleMaster(flow.FlowMaster):
         if f:
             self.process_flow(f, r)
         return f
-
-
-
-

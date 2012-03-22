@@ -35,6 +35,14 @@ def _mkhelp():
     return text
 help_context = _mkhelp()
 
+footer = [
+    ('heading_key', "enter"), ":edit ",
+    ('heading_key', "q"), ":back ",
+]
+footer_editing = [
+    ('heading_key', "esc"), ":stop editing ",
+]
+
 
 class SText(common.WWrap):
     def __init__(self, txt, focused):
@@ -66,7 +74,7 @@ class SEdit(common.WWrap):
         return True
 
 
-class GridItem(common.WWrap):
+class GridRow(common.WWrap):
     def __init__(self, focused, editing, first_width, values):
         self.focused, self.editing, self.first_width = focused, editing, first_width
 
@@ -143,11 +151,13 @@ class GridWalker(urwid.ListWalker):
 
     def start_edit(self):
         if self.lst:
-            self.editing = GridItem(self.focus_col, True, self.editor.first_width, self.lst[self.focus])
+            self.editing = GridRow(self.focus_col, True, self.editor.first_width, self.lst[self.focus])
+            self.editor.master.statusbar.update(footer_editing)
             self._modified()
 
     def stop_edit(self):
         if self.editing:
+            self.editor.master.statusbar.update(footer)
             self.lst[self.focus] = self.editing.get_value()
             self.editing = False
             self._modified()
@@ -173,7 +183,7 @@ class GridWalker(urwid.ListWalker):
         if self.editing:
             return self.editing, self.focus
         elif self.lst:
-            return GridItem(self.focus_col, False, self.editor.first_width, self.lst[self.focus]), self.focus
+            return GridRow(self.focus_col, False, self.editor.first_width, self.lst[self.focus]), self.focus
         else:
             return None, None
 
@@ -184,12 +194,12 @@ class GridWalker(urwid.ListWalker):
     def get_next(self, pos):
         if pos+1 >= len(self.lst):
             return None, None
-        return GridItem(None, False, self.editor.first_width, self.lst[pos+1]), pos+1
+        return GridRow(None, False, self.editor.first_width, self.lst[pos+1]), pos+1
 
     def get_prev(self, pos):
         if pos-1 < 0:
             return None, None
-        return GridItem(None, False, self.editor.first_width, self.lst[pos-1]), pos-1
+        return GridRow(None, False, self.editor.first_width, self.lst[pos-1]), pos-1
 
 
 class GridListBox(urwid.ListBox):
@@ -232,7 +242,7 @@ class GridEditor(common.WWrap):
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)
         self.w = urwid.Frame(
-            self.lb, 
+            self.lb,
             header = urwid.Pile([title, h])
         )
         self.master.statusbar.update("")

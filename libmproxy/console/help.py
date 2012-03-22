@@ -15,7 +15,12 @@
 
 import urwid
 import common
-from .. import filt
+from .. import filt, version
+
+footer = [
+    ("heading", 'mitmproxy v%s '%version.VERSION),
+    ('heading_key', "q"), ":back ",
+]
 
 class HelpView(urwid.ListBox):
     def __init__(self, master, help_context, state):

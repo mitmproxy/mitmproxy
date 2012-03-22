@@ -40,6 +40,9 @@ def _mkhelp():
     return text
 help_context = _mkhelp()
 
+footer = [
+    ('heading_key', "?"), ":help ",
+]
 
 class EventListBox(urwid.ListBox):
     def __init__(self, master):
