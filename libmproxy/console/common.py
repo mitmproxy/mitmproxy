@@ -17,35 +17,6 @@ import urwid
 import urwid.util
 from .. import utils
 
-VIEW_BODY_RAW = 0
-VIEW_BODY_HEX = 1
-VIEW_BODY_PRETTY = 2
-
-
-BODY_VIEWS = {
-    VIEW_BODY_RAW: "raw",
-    VIEW_BODY_HEX: "hex",
-    VIEW_BODY_PRETTY: "pretty"
-}
-
-
-VIEW_BODY_PRETTY_TYPE_AUTO = 0
-VIEW_BODY_PRETTY_TYPE_JSON = 1
-VIEW_BODY_PRETTY_TYPE_XML = 2
-VIEW_BODY_PRETTY_TYPE_URLENCODED = 3
-
-BODY_PRETTY_NAMES = {
-    VIEW_BODY_PRETTY_TYPE_JSON: "json",
-    VIEW_BODY_PRETTY_TYPE_XML: "xmlish",
-    VIEW_BODY_PRETTY_TYPE_URLENCODED: "urlencoded"
-}
-
-BODY_PRETTY_TYPES = {
-    "text/html": VIEW_BODY_PRETTY_TYPE_XML,
-    "application/json": VIEW_BODY_PRETTY_TYPE_JSON,
-    "text/xml": VIEW_BODY_PRETTY_TYPE_XML,
-    "multipart/form-data": VIEW_BODY_PRETTY_TYPE_URLENCODED
-}
 
 
 VIEW_FLOW_REQUEST = 0

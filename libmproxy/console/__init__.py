@@ -17,7 +17,7 @@ import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex
 import os.path, sys
 import urwid
 from .. import controller, utils, flow
-import flowlist, flowview, help, common, grideditor, palettes
+import flowlist, flowview, help, common, grideditor, palettes, contentview
 
 EVENTLOG_SIZE = 500
 
@@ -231,7 +231,7 @@ class ConsoleState(flow.State):
     def __init__(self):
         flow.State.__init__(self)
         self.focus = None
-        self.view_body_mode = common.VIEW_BODY_PRETTY
+        self.view_body_mode = contentview.VIEW_CONTENT_PRETTY
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
         self.last_saveload = ""
@@ -679,11 +679,11 @@ class ConsoleMaster(flow.FlowMaster):
 
     def changeview(self, v):
         if v == "r":
-            self.state.view_body_mode = common.VIEW_BODY_RAW
+            self.state.view_body_mode = contentview.VIEW_CONTENT_RAW
         elif v == "h":
-            self.state.view_body_mode = common.VIEW_BODY_HEX
+            self.state.view_body_mode = contentview.VIEW_CONTENT_HEX
         elif v == "p":
-            self.state.view_body_mode = common.VIEW_BODY_PRETTY
+            self.state.view_body_mode = contentview.VIEW_CONTENT_PRETTY
         self.refresh_flow(self.currentflow)
 
     def drawscreen(self):

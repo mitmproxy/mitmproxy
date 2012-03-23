@@ -15,7 +15,7 @@
 
 import os, re
 import urwid
-import common, grideditor
+import common, grideditor, contentview
 from .. import utils, encoding, flow
 
 def _mkhelp():
@@ -77,7 +77,6 @@ footer = [
     ('heading_key', "q"), ":back ",
 ]
 
-VIEW_CUTOFF = 1024*100
 
 class FlowViewHeader(common.WWrap):
     def __init__(self, master, f):
@@ -90,7 +89,7 @@ class FlowViewHeader(common.WWrap):
 
 
 class CallbackCache:
-    @utils.LRUCache(20)
+    @utils.LRUCache(100)
     def callback(self, obj, method, *args, **kwargs):
         return getattr(obj, method)(*args, **kwargs)
 cache = CallbackCache()
@@ -111,127 +110,11 @@ class FlowView(common.WWrap):
     ]
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
-        self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
+        self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
         if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE and flow.response:
             self.view_response()
         else:
             self.view_request()
-
-    def _trailer(self, clen, txt):
-        rem = clen - VIEW_CUTOFF
-        if rem > 0:
-            txt.append(urwid.Text(""))
-            txt.append(
-                urwid.Text(
-                    [
-                        ("highlight", "... %s of data not shown"%utils.pretty_size(rem))
-                    ]
-                )
-            )
-
-    def _view_flow_raw(self, content):
-        txt = []
-        for i in utils.cleanBin(content[:VIEW_CUTOFF]).splitlines():
-            txt.append(
-                urwid.Text(("text", i))
-            )
-        self._trailer(len(content), txt)
-        return txt
-
-    def _view_flow_binary(self, content):
-        txt = []
-        for offset, hexa, s in utils.hexdump(content[:VIEW_CUTOFF]):
-            txt.append(urwid.Text([
-                ("offset", offset),
-                " ",
-                ("text", hexa),
-                "   ",
-                ("text", s),
-            ]))
-        self._trailer(len(content), txt)
-        return txt
-
-    def _view_flow_xmlish(self, content):
-        txt = []
-        for i in utils.pretty_xmlish(content[:VIEW_CUTOFF]):
-            txt.append(
-                urwid.Text(("text", i)),
-            )
-        self._trailer(len(content), txt)
-        return txt
-
-    def _view_flow_json(self, lines):
-        txt = []
-        sofar = 0
-        for i in lines:
-            sofar += len(i)
-            txt.append(
-                urwid.Text(("text", i)),
-            )
-            if sofar > VIEW_CUTOFF:
-                break
-        self._trailer(sum(len(i) for i in lines), txt)
-        return txt
-
-    def _view_flow_formdata(self, content, boundary):
-        rx = re.compile(r'\bname="([^"]+)"')
-        keys = []
-        vals = []
-
-        for i in content.split("--" + boundary):
-            parts = i.splitlines()
-            if len(parts) > 1 and parts[0][0:2] != "--":
-                match = rx.search(parts[1])
-                if match:
-                    keys.append(match.group(1) + ":")
-                    vals.append(utils.cleanBin(
-                        "\n".join(parts[3+parts[2:].index(""):])
-                    ))
-        r = [
-            urwid.Text(("highlight", "Form data:\n")),
-        ]
-        r.extend(common.format_keyvals(
-            zip(keys, vals),
-            key = "header",
-            val = "text"
-        ))
-        return r
-
-    def _view_flow_urlencoded(self, lines):
-        return common.format_keyvals(
-                    [(k+":", v) for (k, v) in lines],
-                    key = "header",
-                    val = "text"
-               )
-
-    def _find_pretty_view(self, content, hdrItems, pretty_type=common.VIEW_BODY_PRETTY_TYPE_AUTO):
-        ctype = None
-        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_AUTO:
-            pretty_type == None
-            for i in hdrItems:
-                if i[0].lower() == "content-type":
-                    ctype = i[1]
-                    break
-            ct = utils.parse_content_type(ctype) if ctype else None
-            if ct:
-                pretty_type = common.BODY_PRETTY_TYPES.get("%s/%s"%(ct[0], ct[1]))
-            if not pretty_type and utils.isXML(content):
-                pretty_type = common.VIEW_BODY_PRETTY_TYPE_XML
-
-        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_URLENCODED:
-            data = utils.urldecode(content)
-            if data:
-                return "URLEncoded form", self._view_flow_urlencoded(data)
-
-        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_XML:
-            return "Indented XML-ish", self._view_flow_xmlish(content)
-
-        if pretty_type == common.VIEW_BODY_PRETTY_TYPE_JSON:
-            lines = utils.pretty_json(content)
-            if lines:
-                return "JSON", self._view_flow_json(lines)
-
-        return "Falling back to raw.", self._view_flow_raw(content)
 
     def _cached_conn_text(self, e, content, hdrItems, viewmode, pretty_type):
         txt = common.format_keyvals(
@@ -239,28 +122,9 @@ class FlowView(common.WWrap):
                 key = "header",
                 val = "text"
             )
+
         if content:
-            msg = ""
-            if viewmode == common.VIEW_BODY_HEX:
-                body = self._view_flow_binary(content)
-            elif viewmode == common.VIEW_BODY_PRETTY:
-                emsg = ""
-                if e:
-                    decoded = encoding.decode(e, content)
-                    if decoded:
-                        content = decoded
-                        if e and e != "identity":
-                            emsg = "[decoded %s]"%e
-                msg, body = self._find_pretty_view(content, hdrItems, pretty_type)
-
-                if pretty_type != common.VIEW_BODY_PRETTY_TYPE_AUTO:
-                    emsg += " (forced to %s)"%(common.BODY_PRETTY_NAMES[pretty_type])
-
-                if emsg:
-                    msg = emsg + " " + msg
-            else:
-                body = self._view_flow_raw(content)
-
+            msg, body = contentview.get_content_view(viewmode, pretty_type, e, content, hdrItems)
             title = urwid.AttrWrap(urwid.Columns([
                 urwid.Text(
                     [
@@ -272,7 +136,7 @@ class FlowView(common.WWrap):
                         " ",
                         ('heading', "["),
                         ('heading_key', "m"),
-                        ('heading', (":%s]"%common.BODY_VIEWS[self.master.state.view_body_mode])),
+                        ('heading', (":%s]"%contentview.CONTENT_VIEWS[self.master.state.view_body_mode])),
                     ],
                     align="right"
                 ),
@@ -498,13 +362,13 @@ class FlowView(common.WWrap):
 
     def change_pretty_type(self, t):
         if t == "a":
-            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_AUTO
+            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
         elif t == "j":
-            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_JSON
+            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_JSON
         elif t == "u":
-            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_URLENCODED
+            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_URLENCODED
         elif t == "x":
-            self.view_body_pretty_type = common.VIEW_BODY_PRETTY_TYPE_XML
+            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_XML
         self.master.refresh_flow(self.flow)
 
     def keypress(self, size, key):
