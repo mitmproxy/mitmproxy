@@ -1077,6 +1077,10 @@ class uReplaceHooks(libpry.AutoTree):
         h.run(f)
         assert f.request.content == "bar"
 
+        assert not h.add("~", "foo", "bar")
+        assert not h.add("foo", "*", "bar")
+
+
 
 tests = [
     uReplaceHooks(),

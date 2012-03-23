@@ -46,5 +46,7 @@ dark = [
 
     # Grid Editor
     ('focusfield', 'black', 'light gray'),
+    ('focusfield_error', 'dark red', 'light gray'),
+    ('field_error', 'dark red', 'black'),
     ('editfield', 'black', 'light cyan'),
 ]

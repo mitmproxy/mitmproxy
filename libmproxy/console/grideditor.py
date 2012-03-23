@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy
+import copy, re
 import urwid
 import common
-from .. import utils
+from .. import utils, filt
 
 
 def _mkhelp():
@@ -45,10 +45,15 @@ footer_editing = [
 
 
 class SText(common.WWrap):
-    def __init__(self, txt, focused):
+    def __init__(self, txt, focused, error):
         w = urwid.Text(txt, wrap="any")
         if focused:
-            w = urwid.AttrWrap(w, "focusfield")
+            if error:
+                w = urwid.AttrWrap(w, "focusfield_error")
+            else:
+                w = urwid.AttrWrap(w, "focusfield")
+        elif error:
+            w = urwid.AttrWrap(w, "field_error")
         common.WWrap.__init__(self, w)
 
     def get_text(self):
@@ -75,21 +80,22 @@ class SEdit(common.WWrap):
 
 
 class GridRow(common.WWrap):
-    def __init__(self, focused, editing, first_width, values):
-        self.focused, self.editing, self.first_width = focused, editing, first_width
+    def __init__(self, focused, editing, editor, values):
+        self.focused, self.editing, self.editor = focused, editing, editor
 
+        errors = values[1]
         self.fields = []
-        for i, v in enumerate(values):
+        for i, v in enumerate(values[0]):
             if focused == i and editing:
                 self.editing = SEdit(v)
                 self.fields.append(self.editing)
             else:
                 self.fields.append(
-                    SText(v, True if focused == i else False)
+                    SText(v, True if focused == i else False, i in errors)
                 )
 
         fspecs = self.fields[:]
-        fspecs[0] = ("fixed", first_width + 2, fspecs[0])
+        fspecs[0] = ("fixed", self.editor.first_width + 2, fspecs[0])
         w = urwid.Columns(
             fspecs,
             dividechars = 2
@@ -99,7 +105,14 @@ class GridRow(common.WWrap):
         common.WWrap.__init__(self, w)
 
     def get_value(self):
-        return [i.get_text() for i in self.fields]
+        vals = []
+        errors = set([])
+        for i, f in enumerate(self.fields):
+            v = f.get_text()
+            vals.append(v)
+            if self.editor.is_error(i, v):
+                errors.add(i)
+        return [vals, errors]
 
     def keypress(self, s, k):
         if self.editing:
@@ -112,8 +125,14 @@ class GridRow(common.WWrap):
 
 
 class GridWalker(urwid.ListWalker):
+    """
+        Stores rows as a list of (rows, errors) tuples, where rows is a list
+        and errors is a set with an entry of each offset in rows that is an
+        error.
+    """
     def __init__(self, lst, editor):
-        self.lst, self.editor = lst, editor
+        self.lst = [(i, set([])) for i in lst]
+        self.editor = editor
         self.focus = 0
         self.focus_col = 0
         self.editing = False
@@ -127,9 +146,9 @@ class GridWalker(urwid.ListWalker):
             return self.lst[self.focus][self.focus_col]
 
     def set_current_value(self, val):
-        row = list(self.lst[self.focus])
+        row = list(self.lst[self.focus][0])
         row[self.focus_col] = val
-        self.lst[self.focus] = tuple(row)
+        self.lst[self.focus] = [tuple(row), set([])]
 
     def delete_focus(self):
         if self.lst:
@@ -139,7 +158,7 @@ class GridWalker(urwid.ListWalker):
 
     def _insert(self, pos):
         self.focus = pos
-        self.lst.insert(self.focus, [""]*self.editor.columns)
+        self.lst.insert(self.focus, [[""]*self.editor.columns, set([])])
         self.focus_col = 0
         self.start_edit()
 
@@ -151,7 +170,7 @@ class GridWalker(urwid.ListWalker):
 
     def start_edit(self):
         if self.lst:
-            self.editing = GridRow(self.focus_col, True, self.editor.first_width, self.lst[self.focus])
+            self.editing = GridRow(self.focus_col, True, self.editor, self.lst[self.focus])
             self.editor.master.statusbar.update(footer_editing)
             self._modified()
 
@@ -183,7 +202,7 @@ class GridWalker(urwid.ListWalker):
         if self.editing:
             return self.editing, self.focus
         elif self.lst:
-            return GridRow(self.focus_col, False, self.editor.first_width, self.lst[self.focus]), self.focus
+            return GridRow(self.focus_col, False, self.editor, self.lst[self.focus]), self.focus
         else:
             return None, None
 
@@ -194,12 +213,12 @@ class GridWalker(urwid.ListWalker):
     def get_next(self, pos):
         if pos+1 >= len(self.lst):
             return None, None
-        return GridRow(None, False, self.editor.first_width, self.lst[pos+1]), pos+1
+        return GridRow(None, False, self.editor, self.lst[pos+1]), pos+1
 
     def get_prev(self, pos):
         if pos-1 < 0:
             return None, None
-        return GridRow(None, False, self.editor.first_width, self.lst[pos-1]), pos-1
+        return GridRow(None, False, self.editor, self.lst[pos-1]), pos-1
 
 
 class GridListBox(urwid.ListBox):
@@ -279,8 +298,8 @@ class GridEditor(common.WWrap):
         if key in ["q", "esc"]:
             res = []
             for i in self.walker.lst:
-                if any([x.strip() for x in i]):
-                    res.append(i)
+                if any([x.strip() for x in i[0]]):
+                    res.append(i[0])
             self.callback(res, *self.cb_args, **self.cb_kwargs)
             self.master.pop_view()
         elif key in ["h", "left"]:
@@ -307,6 +326,9 @@ class GridEditor(common.WWrap):
         else:
             return self.w.keypress(size, key)
 
+    def is_error(self, col, val):
+        return False
+
 
 class QueryEditor(GridEditor):
     title = "Editing query"
@@ -330,4 +352,14 @@ class ReplaceEditor(GridEditor):
     title = "Editing replacement patterns"
     columns = 3
     headings = ("Filter", "Regex", "Replacement")
+    def is_error(self, col, val):
+        if col == 0:
+            if not filt.parse(val):
+                return True
+        elif col == 1:
+            try:
+                re.compile(val)
+            except re.error:
+                return True
+        return False
 

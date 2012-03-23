@@ -44,6 +44,10 @@ class ReplaceHooks:
         cpatt = filt.parse(fpatt)
         if not cpatt:
             return False
+        try:
+            re.compile(rex)
+        except re.error:
+            return False
         self.lst.append((fpatt, rex, s, cpatt))
         return True
 
