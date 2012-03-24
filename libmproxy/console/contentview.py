@@ -2,6 +2,7 @@ import re
 import urwid
 import common
 from .. import utils, encoding, flow
+from ..contrib import jsbeautifier
 
 VIEW_CUTOFF = 1024*100
 
@@ -20,12 +21,14 @@ VIEW_CONTENT_PRETTY_TYPE_JSON = 1
 VIEW_CONTENT_PRETTY_TYPE_XML = 2
 VIEW_CONTENT_PRETTY_TYPE_URLENCODED = 3
 VIEW_CONTENT_PRETTY_TYPE_MULTIPART = 4
+VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT = 5
 
 CONTENT_PRETTY_NAMES = {
     VIEW_CONTENT_PRETTY_TYPE_JSON: "JSON",
     VIEW_CONTENT_PRETTY_TYPE_XML: "XML",
     VIEW_CONTENT_PRETTY_TYPE_URLENCODED: "URL-encoded",
-    VIEW_CONTENT_PRETTY_TYPE_MULTIPART: "Multipart Form"
+    VIEW_CONTENT_PRETTY_TYPE_MULTIPART: "Multipart Form",
+    VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT: "JavaScript",
 }
 
 CONTENT_TYPES_MAP = {
@@ -34,6 +37,8 @@ CONTENT_TYPES_MAP = {
     "text/xml": VIEW_CONTENT_PRETTY_TYPE_XML,
     "multipart/form-data": VIEW_CONTENT_PRETTY_TYPE_MULTIPART,
     "application/x-www-form-urlencoded": VIEW_CONTENT_PRETTY_TYPE_URLENCODED,
+    "application/x-javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
+    "application/javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
 }
 
 def trailer(clen, txt):
@@ -49,13 +54,21 @@ def trailer(clen, txt):
         )
 
 
-def view_raw(hdrs, content):
+def _view_text(content):
+    """
+        Generates a body for a chunk of text.
+    """
     txt = []
     for i in utils.cleanBin(content[:VIEW_CUTOFF]).splitlines():
         txt.append(
             urwid.Text(("text", i))
         )
     trailer(len(content), txt)
+    return txt
+
+
+def view_raw(hdrs, content):
+    txt = _view_text(content)
     return "Raw", txt
 
 
@@ -144,11 +157,19 @@ def view_urlencoded(hdrs, content):
         return "URLEncoded form", body
 
 
+def view_javascript(hdrs, content):
+    opts = jsbeautifier.default_options()
+    opts.indent_size = 2
+    res = jsbeautifier.beautify(content, opts)
+    return "JavaScript", _view_text(res)
+
+
 PRETTY_FUNCTION_MAP = {
     VIEW_CONTENT_PRETTY_TYPE_XML: view_xmlish,
     VIEW_CONTENT_PRETTY_TYPE_JSON: view_json,
     VIEW_CONTENT_PRETTY_TYPE_URLENCODED: view_urlencoded,
     VIEW_CONTENT_PRETTY_TYPE_MULTIPART: view_multipart,
+    VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT: view_javascript,
 }
 
 def get_view_func(viewmode, pretty_type, hdrs, content):

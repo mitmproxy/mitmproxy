@@ -58,11 +58,10 @@ def cleanBin(s):
     parts = []
     for i in s:
         o = ord(i)
-        if o > 31 and o < 127:
+        if (o > 31 and o < 127) or i in "\n\r\t":
             parts.append(i)
         else:
-            if i not in "\n\r\t":
-                parts.append(".")
+            parts.append(".")
     return "".join(parts)
 
 

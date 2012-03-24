@@ -9,7 +9,7 @@ class uContentView(libpry.AutoTree):
         assert not txt
         cv.trailer(cv.VIEW_CUTOFF + 10, txt)
         assert txt
-        
+
     def test_get_view_func(self):
         f = cv.get_view_func(
                 cv.VIEW_CONTENT_HEX,
@@ -74,6 +74,11 @@ class uContentView(libpry.AutoTree):
 
     def test_view_raw(self):
         assert cv.view_raw([], "foo")
+
+    def test_view_javascript(self):
+        assert cv.view_javascript([], "[1, 2, 3]")
+        assert cv.view_javascript([], "[1, 2, 3")
+        assert cv.view_javascript([], "function(a){[1, 2, 3]}")
 
     def test_view_raw(self):
         assert cv.view_hex([], "foo")

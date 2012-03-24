@@ -1,0 +1,10 @@
+
+Contribs:
+
+pyparsing 1.5.2, MIT license
+
+jsbeautifier, git checkout 25/03/12, MIT license
+    - Removed test directories
+    - Disabled packers through a single-line modification (see "# CORTESI"
+    comment)
+
