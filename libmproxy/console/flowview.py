@@ -116,15 +116,14 @@ class FlowView(common.WWrap):
         else:
             self.view_request()
 
-    def _cached_conn_text(self, e, content, hdrItems, viewmode, pretty_type):
+    def _cached_conn_text(self, content, hdrItems, viewmode, pretty_type):
         txt = common.format_keyvals(
                 [(h+":", v) for (h, v) in hdrItems],
                 key = "header",
                 val = "text"
             )
-
         if content:
-            msg, body = contentview.get_content_view(viewmode, pretty_type, e, content, hdrItems)
+            msg, body = contentview.get_content_view(viewmode, pretty_type, hdrItems, content)
             title = urwid.AttrWrap(urwid.Columns([
                 urwid.Text(
                     [
@@ -180,11 +179,8 @@ class FlowView(common.WWrap):
         return f
 
     def _conn_text(self, conn, viewmode, pretty_type):
-        e = conn.headers["content-encoding"]
-        e = e[0] if e else None
         return cache.callback(
                     self, "_cached_conn_text",
-                    e,
                     conn.content,
                     tuple(tuple(i) for i in conn.headers.lst),
                     viewmode,

@@ -181,6 +181,12 @@ class ODict:
     def add(self, key, value):
         self.lst.append([key, str(value)])
 
+    def get(self, k, d=None):
+        if k in self:
+            return self[k]
+        else:
+            return d
+
     def _get_state(self):
         return [tuple(i) for i in self.lst]
 

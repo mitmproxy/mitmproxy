@@ -1001,6 +1001,11 @@ class uODict(libpry.AutoTree):
             ["two", "vun"],
         ]
 
+    def test_get(self):
+        self.od.add("one", "two")
+        assert self.od.get("one") == ["two"]
+        assert self.od.get("two") == None
+
 
 class uODictCaseless(libpry.AutoTree):
     def setUp(self):
