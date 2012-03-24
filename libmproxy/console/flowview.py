@@ -365,6 +365,8 @@ class FlowView(common.WWrap):
         if t == "a":
             self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
         elif t == "j":
+            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT
+        elif t == "s":
             self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_JSON
         elif t == "u":
             self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_URLENCODED
@@ -464,7 +466,8 @@ class FlowView(common.WWrap):
                 "Pretty-Print format",
                 (
                     ("auto detect", "a"),
-                    ("json", "j"),
+                    ("javascript", "j"),
+                    ("json", "s"),
                     ("urlencoded", "u"),
                     ("xmlish", "x"),
                 ),
