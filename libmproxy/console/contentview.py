@@ -1,3 +1,4 @@
+import re
 import urwid
 import common
 from .. import utils, encoding, flow
@@ -18,18 +19,21 @@ VIEW_CONTENT_PRETTY_TYPE_AUTO = 0
 VIEW_CONTENT_PRETTY_TYPE_JSON = 1
 VIEW_CONTENT_PRETTY_TYPE_XML = 2
 VIEW_CONTENT_PRETTY_TYPE_URLENCODED = 3
+VIEW_CONTENT_PRETTY_TYPE_MULTIPART = 4
 
 CONTENT_PRETTY_NAMES = {
     VIEW_CONTENT_PRETTY_TYPE_JSON: "JSON",
     VIEW_CONTENT_PRETTY_TYPE_XML: "XML",
-    VIEW_CONTENT_PRETTY_TYPE_URLENCODED: "URL-encoded"
+    VIEW_CONTENT_PRETTY_TYPE_URLENCODED: "URL-encoded",
+    VIEW_CONTENT_PRETTY_TYPE_MULTIPART: "Multipart Form"
 }
 
 CONTENT_TYPES_MAP = {
     "text/html": VIEW_CONTENT_PRETTY_TYPE_XML,
     "application/json": VIEW_CONTENT_PRETTY_TYPE_JSON,
     "text/xml": VIEW_CONTENT_PRETTY_TYPE_XML,
-    "multipart/form-data": VIEW_CONTENT_PRETTY_TYPE_URLENCODED
+    "multipart/form-data": VIEW_CONTENT_PRETTY_TYPE_MULTIPART,
+    "application/x-www-form-urlencoded": VIEW_CONTENT_PRETTY_TYPE_URLENCODED,
 }
 
 def trailer(clen, txt):
@@ -95,30 +99,38 @@ def view_json(hdrs, content):
         return "JSON", txt
 
 
-# FIXME
-def view_formdata(content, boundary):
-    rx = re.compile(r'\bname="([^"]+)"')
-    keys = []
-    vals = []
+def view_multipart(hdrs, content):
+    v = hdrs.get("content-type")
+    if v:
+        v = utils.parse_content_type(v[0])
+        if not v:
+            return
+        boundary = v[2].get("boundary")
+        if not boundary:
+            return
 
-    for i in content.split("--" + boundary):
-        parts = i.splitlines()
-        if len(parts) > 1 and parts[0][0:2] != "--":
-            match = rx.search(parts[1])
-            if match:
-                keys.append(match.group(1) + ":")
-                vals.append(utils.cleanBin(
-                    "\n".join(parts[3+parts[2:].index(""):])
-                ))
-    r = [
-        urwid.Text(("highlight", "Form data:\n")),
-    ]
-    r.extend(common.format_keyvals(
-        zip(keys, vals),
-        key = "header",
-        val = "text"
-    ))
-    return r
+        rx = re.compile(r'\bname="([^"]+)"')
+        keys = []
+        vals = []
+
+        for i in content.split("--" + boundary):
+            parts = i.splitlines()
+            if len(parts) > 1 and parts[0][0:2] != "--":
+                match = rx.search(parts[1])
+                if match:
+                    keys.append(match.group(1) + ":")
+                    vals.append(utils.cleanBin(
+                        "\n".join(parts[3+parts[2:].index(""):])
+                    ))
+        r = [
+            urwid.Text(("highlight", "Form data:\n")),
+        ]
+        r.extend(common.format_keyvals(
+            zip(keys, vals),
+            key = "header",
+            val = "text"
+        ))
+        return "Multipart form", r
 
 
 def view_urlencoded(hdrs, content):
@@ -135,7 +147,8 @@ def view_urlencoded(hdrs, content):
 PRETTY_FUNCTION_MAP = {
     VIEW_CONTENT_PRETTY_TYPE_XML: view_xmlish,
     VIEW_CONTENT_PRETTY_TYPE_JSON: view_json,
-    VIEW_CONTENT_PRETTY_TYPE_URLENCODED: view_urlencoded
+    VIEW_CONTENT_PRETTY_TYPE_URLENCODED: view_urlencoded,
+    VIEW_CONTENT_PRETTY_TYPE_MULTIPART: view_multipart,
 }
 
 def get_view_func(viewmode, pretty_type, hdrs, content):

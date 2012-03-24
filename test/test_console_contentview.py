@@ -78,6 +78,32 @@ class uContentView(libpry.AutoTree):
     def test_view_raw(self):
         assert cv.view_hex([], "foo")
 
+    def test_view_multipart(self):
+        v = """
+--AaB03x
+Content-Disposition: form-data; name="submit-name"
+
+Larry
+--AaB03x
+        """.strip()
+        h = flow.ODictCaseless(
+            [("Content-Type", "multipart/form-data; boundary=AaB03x")]
+        )
+        assert cv.view_multipart(h, v)
+
+        h = flow.ODictCaseless()
+        assert not cv.view_multipart(h, v)
+
+        h = flow.ODictCaseless(
+            [("Content-Type", "multipart/form-data")]
+        )
+        assert not cv.view_multipart(h, v)
+
+        h = flow.ODictCaseless(
+            [("Content-Type", "unparseable")]
+        )
+        assert not cv.view_multipart(h, v)
+
     def test_get_content_view(self):
         r = cv.get_content_view(
                 cv.VIEW_CONTENT_RAW,
