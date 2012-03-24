@@ -90,8 +90,13 @@ class FlowViewHeader(common.WWrap):
 
 class CallbackCache:
     @utils.LRUCache(100)
+    def _callback(self, method, *args, **kwargs):
+        return getattr(self.obj, method)(*args, **kwargs)
+
     def callback(self, obj, method, *args, **kwargs):
-        return getattr(obj, method)(*args, **kwargs)
+        # obj varies!
+        self.obj = obj
+        return self._callback(method, *args, **kwargs)
 cache = CallbackCache()
 
 
