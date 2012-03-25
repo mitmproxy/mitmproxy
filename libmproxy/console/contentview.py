@@ -47,6 +47,7 @@ CONTENT_TYPES_MAP = {
     "image/png": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
     "image/jpeg": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
     "image/gif": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
+    "image/vnd.microsoft.icon": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
     "image/x-icon": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
 }
 

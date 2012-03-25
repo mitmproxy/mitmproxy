@@ -48,16 +48,24 @@ def _mkhelp():
                 [("text", ": automatic detection")]
             ),
             (None,
-                common.highlight_key("json", "j") +
-                [("text", ": format as JSON")]
+                common.highlight_key("image", "i") +
+                [("text", ": Image")]
+            ),
+            (None,
+                common.highlight_key("javascript", "j") +
+                [("text", ": JavaScript")]
+            ),
+            (None,
+                common.highlight_key("json", "s") +
+                [("text", ": JSON")]
             ),
             (None,
                 common.highlight_key("urlencoded", "u") +
-                [("text", ": format as URL-encoded data")]
+                [("text", ": URL-encoded data")]
             ),
             (None,
                 common.highlight_key("xml", "x") +
-                [("text", ": format as XML")]
+                [("text", ": XML")]
             ),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
@@ -364,6 +372,8 @@ class FlowView(common.WWrap):
     def change_pretty_type(self, t):
         if t == "a":
             self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
+        elif t == "i":
+            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_IMAGE
         elif t == "j":
             self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT
         elif t == "s":
@@ -466,6 +476,7 @@ class FlowView(common.WWrap):
                 "Pretty-Print format",
                 (
                     ("auto detect", "a"),
+                    ("image", "i"),
                     ("javascript", "j"),
                     ("json", "s"),
                     ("urlencoded", "u"),
