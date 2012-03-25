@@ -83,6 +83,13 @@ class uContentView(libpry.AutoTree):
     def test_view_raw(self):
         assert cv.view_hex([], "foo")
 
+    def test_view_image(self):
+        assert cv.view_image([], file("data/image.png").read())
+        assert cv.view_image([], file("data/image.gif").read())
+        assert cv.view_image([], file("data/image-err1.jpg").read())
+        assert cv.view_image([], file("data/image.ico").read())
+        assert not cv.view_image([], "flibble")
+
     def test_view_multipart(self):
         v = """
 --AaB03x

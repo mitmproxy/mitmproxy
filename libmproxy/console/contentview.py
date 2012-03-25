@@ -1,5 +1,7 @@
-import re
+import re, cStringIO
 import urwid
+from PIL import Image
+from PIL.ExifTags import TAGS
 import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier
@@ -22,6 +24,7 @@ VIEW_CONTENT_PRETTY_TYPE_XML = 2
 VIEW_CONTENT_PRETTY_TYPE_URLENCODED = 3
 VIEW_CONTENT_PRETTY_TYPE_MULTIPART = 4
 VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT = 5
+VIEW_CONTENT_PRETTY_TYPE_IMAGE = 6
 
 CONTENT_PRETTY_NAMES = {
     VIEW_CONTENT_PRETTY_TYPE_JSON: "JSON",
@@ -29,6 +32,7 @@ CONTENT_PRETTY_NAMES = {
     VIEW_CONTENT_PRETTY_TYPE_URLENCODED: "URL-encoded",
     VIEW_CONTENT_PRETTY_TYPE_MULTIPART: "Multipart Form",
     VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT: "JavaScript",
+    VIEW_CONTENT_PRETTY_TYPE_IMAGE: "Image",
 }
 
 CONTENT_TYPES_MAP = {
@@ -39,6 +43,11 @@ CONTENT_TYPES_MAP = {
     "application/x-www-form-urlencoded": VIEW_CONTENT_PRETTY_TYPE_URLENCODED,
     "application/x-javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
     "application/javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
+    "text/javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
+    "image/png": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
+    "image/jpeg": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
+    "image/gif": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
+    "image/x-icon": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
 }
 
 def trailer(clen, txt):
@@ -164,12 +173,47 @@ def view_javascript(hdrs, content):
     return "JavaScript", _view_text(res)
 
 
+def view_image(hdrs, content):
+    try:
+        img = Image.open(cStringIO.StringIO(content))
+    except IOError:
+        return None
+    parts = [
+        ("Format", str(img.format_description)),
+        ("Size", "%s x %s px"%img.size),
+        ("Mode", str(img.mode)),
+    ]
+    for i in sorted(img.info.keys()):
+        if i != "exif":
+            parts.append(
+                (str(i), str(img.info[i]))
+            )
+    if hasattr(img, "_getexif"):
+        ex = img._getexif()
+        if ex:
+            for i in sorted(ex.keys()):
+                tag = TAGS.get(i, i)
+                parts.append(
+                    (str(tag), str(ex[i]))
+                )
+    clean = []
+    for i in parts:
+        clean.append([utils.cleanBin(i[0]), utils.cleanBin(i[1])])
+    fmt = common.format_keyvals(
+            clean,
+            key = "header",
+            val = "text"
+        )
+    return "%s image"%img.format, fmt
+
+
 PRETTY_FUNCTION_MAP = {
     VIEW_CONTENT_PRETTY_TYPE_XML: view_xmlish,
     VIEW_CONTENT_PRETTY_TYPE_JSON: view_json,
     VIEW_CONTENT_PRETTY_TYPE_URLENCODED: view_urlencoded,
     VIEW_CONTENT_PRETTY_TYPE_MULTIPART: view_multipart,
     VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT: view_javascript,
+    VIEW_CONTENT_PRETTY_TYPE_IMAGE: view_image,
 }
 
 def get_view_func(viewmode, pretty_type, hdrs, content):
