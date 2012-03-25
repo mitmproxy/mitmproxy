@@ -116,7 +116,7 @@ class FlowView(common.WWrap):
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
         self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
-        if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE and flow.response:
+        if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             self.view_response()
         else:
             self.view_request()
