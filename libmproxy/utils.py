@@ -54,11 +54,18 @@ def isXML(s):
             return False
 
 
-def cleanBin(s):
+def cleanBin(s, fixspacing=False):
+    """
+        Cleans binary data to make it safe to display. If fixspacing is True,
+        tabs, newlines and so forth will be maintained, if not, they will be
+        replaced with a placeholder.
+    """
     parts = []
     for i in s:
         o = ord(i)
-        if (o > 31 and o < 127) or i in "\n\r\t":
+        if (o > 31 and o < 127):
+            parts.append(i)
+        elif i in "\n\r\t" and not fixspacing:
             parts.append(i)
         else:
             parts.append(".")
@@ -147,7 +154,7 @@ def hexdump(s):
             x += " "
             x += " ".join("  " for i in range(16 - len(part)))
         parts.append(
-            (o, x, cleanBin(part))
+            (o, x, cleanBin(part, True))
         )
     return parts
 

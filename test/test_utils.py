@@ -224,7 +224,17 @@ class u_parse_content_type(libpry.AutoTree):
         assert v == ('text', 'html', {'charset': 'UTF-8'})
 
 
+class u_cleanBin(libpry.AutoTree):
+    def test_simple(self):
+        assert utils.cleanBin("one") == "one"
+        assert utils.cleanBin("\00ne") == ".ne"
+        assert utils.cleanBin("\nne") == "\nne"
+        assert utils.cleanBin("\nne", True) == ".ne"
+
+
+
 tests = [
+    u_cleanBin(),
     u_parse_content_type(),
     uformat_timestamp(),
     uisBin(),
