@@ -12,9 +12,10 @@ def create_ca():
     key = OpenSSL.crypto.PKey()
     key.generate_key(OpenSSL.crypto.TYPE_RSA, 1024)
     ca = OpenSSL.crypto.X509()
-    ca.set_version(3)
+    ca.set_serial_number(int(time.time()*10000))
+    ca.set_version(2)
     ca.get_subject().CN = "mitmproxy"
-    ca.get_subject().OU = "mitmproxy"
+    ca.get_subject().O = "mitmproxy"
     ca.gmtime_adj_notBefore(0)
     ca.gmtime_adj_notAfter(24 * 60 * 60 * 720)
     ca.set_issuer(ca.get_subject())
@@ -27,7 +28,7 @@ def create_ca():
       OpenSSL.crypto.X509Extension("extendedKeyUsage", True,
                                     "serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
                                     ),
-      OpenSSL.crypto.X509Extension("keyUsage", True,
+      OpenSSL.crypto.X509Extension("keyUsage", False,
                                    "keyCertSign, cRLSign"),
       OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
                                    subject=ca),
