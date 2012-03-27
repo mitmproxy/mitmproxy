@@ -360,6 +360,7 @@ class FlowView(common.WWrap):
         else:
             new_flow, new_idx = self.state.get_prev(idx)
         if new_idx is None:
+            self.master.statusbar.message("No more flows!")
             return
         self.master.view_flow(new_flow)
 
@@ -387,7 +388,7 @@ class FlowView(common.WWrap):
     def keypress(self, size, key):
         if key == " ":
             self.view_next_flow(self.flow)
-            return key
+            return
 
         key = common.shortcuts(key)
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
