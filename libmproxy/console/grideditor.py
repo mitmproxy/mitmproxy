@@ -143,7 +143,7 @@ class GridWalker(urwid.ListWalker):
 
     def get_current_value(self):
         if self.lst:
-            return self.lst[self.focus][self.focus_col]
+            return self.lst[self.focus][0][self.focus_col]
 
     def set_current_value(self, val):
         row = list(self.lst[self.focus][0])
