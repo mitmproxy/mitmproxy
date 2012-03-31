@@ -6,7 +6,7 @@ import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier
 
-VIEW_CUTOFF = 1024*100
+VIEW_CUTOFF = 1024*20
 
 VIEW_CONTENT_RAW = 0
 VIEW_CONTENT_HEX = 1
@@ -64,21 +64,21 @@ def trailer(clen, txt):
         )
 
 
-def _view_text(content):
+def _view_text(content, total):
     """
         Generates a body for a chunk of text.
     """
     txt = []
-    for i in utils.cleanBin(content[:VIEW_CUTOFF]).splitlines():
+    for i in utils.cleanBin(content).splitlines():
         txt.append(
             urwid.Text(("text", i))
         )
-    trailer(len(content), txt)
+    trailer(total, txt)
     return txt
 
 
 def view_raw(hdrs, content):
-    txt = _view_text(content)
+    txt = _view_text(content[:VIEW_CUTOFF], len(content))
     return "Raw", txt
 
 
@@ -170,8 +170,8 @@ def view_urlencoded(hdrs, content):
 def view_javascript(hdrs, content):
     opts = jsbeautifier.default_options()
     opts.indent_size = 2
-    res = jsbeautifier.beautify(content, opts)
-    return "JavaScript", _view_text(res)
+    res = jsbeautifier.beautify(content[:VIEW_CUTOFF], opts)
+    return "JavaScript", _view_text(res, len(content))
 
 
 def view_image(hdrs, content):
