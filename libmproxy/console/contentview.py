@@ -113,7 +113,7 @@ def view_hex(hdrs, content):
             ("text", s),
         ]))
     trailer(len(content), txt)
-    return "HEX", txt
+    return "Hex", txt
 
 
 def view_xmlish(hdrs, content):
@@ -272,6 +272,9 @@ def get_content_view(viewmode, hdrItems, content):
     func = get_view_func(viewmode, hdrs, content)
     ret = func(hdrs, content)
     if not ret:
+        viewmode = VIEW_RAW
         ret = view_raw(hdrs, content)
-    msg.append(ret[0])
+        msg.append("Fallback to Raw")
+    else:
+        msg.append(ret[0])
     return " ".join(msg), ret[1]
