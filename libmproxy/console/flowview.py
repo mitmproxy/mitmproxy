@@ -93,7 +93,7 @@ class FlowViewHeader(common.WWrap):
 
 
 class CallbackCache:
-    @utils.LRUCache(100)
+    @utils.LRUCache(200)
     def _callback(self, method, *args, **kwargs):
         return getattr(self.obj, method)(*args, **kwargs)
 
@@ -124,14 +124,25 @@ class FlowView(common.WWrap):
         else:
             self.view_request()
 
-    def _cached_conn_text(self, content, hdrItems, viewmode):
+    def _cached_content_view(self, viewmode, hdrItems, content):
+        return contentview.get_content_view(viewmode, hdrItems, content)
+
+    def content_view(self, viewmode, conn):
+        return cache.callback(
+                    self, "_cached_content_view",
+                    viewmode,
+                    tuple(tuple(i) for i in conn.headers.lst),
+                    conn.content,
+                )
+
+    def _conn_text(self, conn, viewmode):
         txt = common.format_keyvals(
-                [(h+":", v) for (h, v) in hdrItems],
+                [(h+":", v) for (h, v) in conn.headers.lst],
                 key = "header",
                 val = "text"
             )
-        if content:
-            msg, body = contentview.get_content_view(viewmode, hdrItems, content)
+        if conn.content:
+            msg, body = self.content_view(viewmode, conn)
             title = urwid.AttrWrap(urwid.Columns([
                 urwid.Text(
                     [
@@ -185,14 +196,6 @@ class FlowView(common.WWrap):
                     header=h
                 )
         return f
-
-    def _conn_text(self, conn, viewmode):
-        return cache.callback(
-                    self, "_cached_conn_text",
-                    conn.content,
-                    tuple(tuple(i) for i in conn.headers.lst),
-                    viewmode
-                )
 
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
