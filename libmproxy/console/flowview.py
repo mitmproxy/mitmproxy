@@ -448,9 +448,11 @@ class FlowView(common.WWrap):
                 )
             key = None
         elif key == "m":
+            p = list(contentview.VIEW_PROMPT)
+            p.insert(0, ("clear", "c"))
             self.master.prompt_onekey(
                 "Display mode",
-                contentview.VIEW_PROMPT,
+                p,
                 self.change_this_display_mode
             )
             key = None
