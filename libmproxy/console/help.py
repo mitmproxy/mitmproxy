@@ -62,6 +62,39 @@ class HelpView(urwid.ListBox):
         keys = [
             ("c", "client replay"),
             ("i", "set interception pattern"),
+            ("M", "change global default display mode"),
+                (None,
+                    common.highlight_key("automatic", "a") +
+                    [("text", ": automatic detection")]
+                ),
+                (None,
+                    common.highlight_key("hex", "h") +
+                    [("text", ": Hex")]
+                ),
+                (None,
+                    common.highlight_key("image", "i") +
+                    [("text", ": Image")]
+                ),
+                (None,
+                    common.highlight_key("javascript", "j") +
+                    [("text", ": JavaScript")]
+                ),
+                (None,
+                    common.highlight_key("json", "s") +
+                    [("text", ": JSON")]
+                ),
+                (None,
+                    common.highlight_key("urlencoded", "u") +
+                    [("text", ": URL-encoded data")]
+                ),
+                (None,
+                    common.highlight_key("raw", "r") +
+                    [("text", ": raw data")]
+                ),
+                (None,
+                    common.highlight_key("xml", "x") +
+                    [("text", ": XML")]
+                ),
 
             ("o", "toggle options:"),
             (None,

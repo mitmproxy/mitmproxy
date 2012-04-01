@@ -30,12 +30,26 @@ VIEW_NAMES = {
     VIEW_HEX: "Hex",
 }
 
+
+VIEW_PROMPT = (
+    ("auto detect", "a"),
+    ("hex", "h"),
+    ("image", "i"),
+    ("javascript", "j"),
+    ("json", "s"),
+    ("raw", "r"),
+    ("multipart", "m"),
+    ("urlencoded", "u"),
+    ("xmlish", "x"),
+)
+
 VIEW_SHORTCUTS = {
     "a": VIEW_AUTO,
     "i": VIEW_IMAGE,
     "j": VIEW_JAVASCRIPT,
     "s": VIEW_JSON,
     "u": VIEW_URLENCODED,
+    "m": VIEW_MULTIPART,
     "x": VIEW_XML,
     "r": VIEW_RAW,
     "h": VIEW_HEX,

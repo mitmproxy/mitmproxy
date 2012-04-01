@@ -378,11 +378,6 @@ class FlowView(common.WWrap):
         )
         self.master.refresh_flow(self.flow)
 
-    def change_default_display_mode(self, t):
-        v = contentview.VIEW_SHORTCUTS.get(t)
-        self.state.default_body_view = v
-        self.master.refresh_flow(self.flow)
-
     def keypress(self, size, key):
         if key == " ":
             self.view_next_flow(self.flow)
@@ -455,33 +450,8 @@ class FlowView(common.WWrap):
         elif key == "m":
             self.master.prompt_onekey(
                 "Display mode",
-                (
-                    ("auto detect", "a"),
-                    ("hex", "h"),
-                    ("image", "i"),
-                    ("javascript", "j"),
-                    ("json", "s"),
-                    ("raw", "r"),
-                    ("urlencoded", "u"),
-                    ("xmlish", "x"),
-                ),
+                contentview.VIEW_PROMPT,
                 self.change_this_display_mode
-            )
-            key = None
-        elif key == "M":
-            self.master.prompt_onekey(
-                "Global default display mode",
-                (
-                    ("auto detect", "a"),
-                    ("hex", "h"),
-                    ("image", "i"),
-                    ("javascript", "j"),
-                    ("json", "s"),
-                    ("raw", "r"),
-                    ("urlencoded", "u"),
-                    ("xmlish", "x"),
-                ),
-                self.change_default_display_mode
             )
             key = None
         elif key == "p":

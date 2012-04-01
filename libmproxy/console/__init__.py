@@ -154,6 +154,10 @@ class StatusBar(common.WWrap):
             r.append("[")
             r.append(("heading_key", "P"))
             r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
+        if self.master.state.default_body_view != contentview.VIEW_AUTO:
+            r.append("[")
+            r.append(("heading_key", "M"))
+            r.append(":%s]"%contentview.VIEW_NAMES[self.master.state.default_body_view])
 
         opts = []
         if self.master.anticache:
@@ -677,6 +681,12 @@ class ConsoleMaster(flow.FlowMaster):
     def set_intercept(self, txt):
         return self.state.set_intercept(txt)
 
+    def change_default_display_mode(self, t):
+        v = contentview.VIEW_SHORTCUTS.get(t)
+        self.state.default_body_view = v
+        if self.currentflow:
+            self.refresh_flow(self.currentflow)
+
     def set_reverse_proxy(self, txt):
         if not txt:
             self.server.config.reverse_proxy = None
@@ -768,6 +778,12 @@ class ConsoleMaster(flow.FlowMaster):
                                         ("no", "n"),
                                     ),
                                     self.quit,
+                                )
+                            elif k == "M":
+                                self.prompt_onekey(
+                                    "Global default display mode",
+                                    contentview.VIEW_PROMPT,
+                                    self.change_default_display_mode
                                 )
                             elif k == "P":
                                 if self.server.config.reverse_proxy:
