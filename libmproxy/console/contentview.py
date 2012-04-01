@@ -8,47 +8,53 @@ from ..contrib import jsbeautifier
 
 VIEW_CUTOFF = 1024*20
 
-VIEW_CONTENT_RAW = 0
-VIEW_CONTENT_HEX = 1
-VIEW_CONTENT_PRETTY = 2
+VIEW_AUTO = 0
+VIEW_JSON = 1
+VIEW_XML = 2
+VIEW_URLENCODED = 3
+VIEW_MULTIPART = 4
+VIEW_JAVASCRIPT = 5
+VIEW_IMAGE = 6
+VIEW_RAW = 7
+VIEW_HEX = 8
 
-CONTENT_VIEWS = {
-    VIEW_CONTENT_RAW: "raw",
-    VIEW_CONTENT_HEX: "hex",
-    VIEW_CONTENT_PRETTY: "pretty"
+VIEW_NAMES = {
+    VIEW_AUTO: "Auto",
+    VIEW_JSON: "JSON",
+    VIEW_XML: "XML",
+    VIEW_URLENCODED: "URL-encoded",
+    VIEW_MULTIPART: "Multipart Form",
+    VIEW_JAVASCRIPT: "JavaScript",
+    VIEW_IMAGE: "Image",
+    VIEW_RAW: "Raw",
+    VIEW_HEX: "Hex",
 }
 
-VIEW_CONTENT_PRETTY_TYPE_AUTO = 0
-VIEW_CONTENT_PRETTY_TYPE_JSON = 1
-VIEW_CONTENT_PRETTY_TYPE_XML = 2
-VIEW_CONTENT_PRETTY_TYPE_URLENCODED = 3
-VIEW_CONTENT_PRETTY_TYPE_MULTIPART = 4
-VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT = 5
-VIEW_CONTENT_PRETTY_TYPE_IMAGE = 6
-
-CONTENT_PRETTY_NAMES = {
-    VIEW_CONTENT_PRETTY_TYPE_JSON: "JSON",
-    VIEW_CONTENT_PRETTY_TYPE_XML: "XML",
-    VIEW_CONTENT_PRETTY_TYPE_URLENCODED: "URL-encoded",
-    VIEW_CONTENT_PRETTY_TYPE_MULTIPART: "Multipart Form",
-    VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT: "JavaScript",
-    VIEW_CONTENT_PRETTY_TYPE_IMAGE: "Image",
+VIEW_SHORTCUTS = {
+    "a": VIEW_AUTO,
+    "i": VIEW_IMAGE,
+    "j": VIEW_JAVASCRIPT,
+    "s": VIEW_JSON,
+    "u": VIEW_URLENCODED,
+    "x": VIEW_XML,
+    "r": VIEW_RAW,
+    "h": VIEW_HEX,
 }
 
 CONTENT_TYPES_MAP = {
-    "text/html": VIEW_CONTENT_PRETTY_TYPE_XML,
-    "application/json": VIEW_CONTENT_PRETTY_TYPE_JSON,
-    "text/xml": VIEW_CONTENT_PRETTY_TYPE_XML,
-    "multipart/form-data": VIEW_CONTENT_PRETTY_TYPE_MULTIPART,
-    "application/x-www-form-urlencoded": VIEW_CONTENT_PRETTY_TYPE_URLENCODED,
-    "application/x-javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
-    "application/javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
-    "text/javascript": VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
-    "image/png": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
-    "image/jpeg": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
-    "image/gif": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
-    "image/vnd.microsoft.icon": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
-    "image/x-icon": VIEW_CONTENT_PRETTY_TYPE_IMAGE,
+    "text/html": VIEW_XML,
+    "application/json": VIEW_JSON,
+    "text/xml": VIEW_XML,
+    "multipart/form-data": VIEW_MULTIPART,
+    "application/x-www-form-urlencoded": VIEW_URLENCODED,
+    "application/x-javascript": VIEW_JAVASCRIPT,
+    "application/javascript": VIEW_JAVASCRIPT,
+    "text/javascript": VIEW_JAVASCRIPT,
+    "image/png": VIEW_IMAGE,
+    "image/jpeg": VIEW_IMAGE,
+    "image/gif": VIEW_IMAGE,
+    "image/vnd.microsoft.icon": VIEW_IMAGE,
+    "image/x-icon": VIEW_IMAGE,
 }
 
 def trailer(clen, txt):
@@ -209,36 +215,33 @@ def view_image(hdrs, content):
 
 
 PRETTY_FUNCTION_MAP = {
-    VIEW_CONTENT_PRETTY_TYPE_XML: view_xmlish,
-    VIEW_CONTENT_PRETTY_TYPE_JSON: view_json,
-    VIEW_CONTENT_PRETTY_TYPE_URLENCODED: view_urlencoded,
-    VIEW_CONTENT_PRETTY_TYPE_MULTIPART: view_multipart,
-    VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT: view_javascript,
-    VIEW_CONTENT_PRETTY_TYPE_IMAGE: view_image,
+    VIEW_XML: view_xmlish,
+    VIEW_JSON: view_json,
+    VIEW_URLENCODED: view_urlencoded,
+    VIEW_MULTIPART: view_multipart,
+    VIEW_JAVASCRIPT: view_javascript,
+    VIEW_IMAGE: view_image,
+    VIEW_HEX: view_hex,
+    VIEW_RAW: view_raw,
 }
 
-def get_view_func(viewmode, pretty_type, hdrs, content):
+def get_view_func(viewmode, hdrs, content):
     """
         Returns a function object.
     """
-    if viewmode == VIEW_CONTENT_HEX:
-        return view_hex
-    elif viewmode == VIEW_CONTENT_RAW:
-        return view_raw
-    else:
-        if pretty_type == VIEW_CONTENT_PRETTY_TYPE_AUTO:
-            ctype = hdrs.get("content-type")
-            if ctype:
-                ctype = ctype[0]
-            ct = utils.parse_content_type(ctype) if ctype else None
-            if ct:
-                pretty_type = CONTENT_TYPES_MAP.get("%s/%s"%(ct[0], ct[1]))
-            if not pretty_type and utils.isXML(content):
-                pretty_type = VIEW_CONTENT_PRETTY_TYPE_XML
-        return PRETTY_FUNCTION_MAP.get(pretty_type, view_raw)
+    if viewmode == VIEW_AUTO:
+        ctype = hdrs.get("content-type")
+        if ctype:
+            ctype = ctype[0]
+        ct = utils.parse_content_type(ctype) if ctype else None
+        if ct:
+            viewmode = CONTENT_TYPES_MAP.get("%s/%s"%(ct[0], ct[1]))
+        if not viewmode and utils.isXML(content):
+            viewmode = VIEW_XML
+    return PRETTY_FUNCTION_MAP.get(viewmode, view_raw)
 
 
-def get_content_view(viewmode, pretty_type, hdrItems, content):
+def get_content_view(viewmode, hdrItems, content):
     """
         Returns a (msg, body) tuple.
     """
@@ -252,11 +255,7 @@ def get_content_view(viewmode, pretty_type, hdrItems, content):
         if decoded:
             content = decoded
             msg.append("[decoded %s]"%enc[0])
-
-    if viewmode == VIEW_CONTENT_PRETTY and pretty_type != VIEW_CONTENT_PRETTY_TYPE_AUTO:
-        msg.append("[forced to %s]"%(CONTENT_PRETTY_NAMES[pretty_type]))
-    func = get_view_func(viewmode, pretty_type, hdrs, content)
-
+    func = get_view_func(viewmode, hdrs, content)
     ret = func(hdrs, content)
     if not ret:
         ret = view_raw(hdrs, content)

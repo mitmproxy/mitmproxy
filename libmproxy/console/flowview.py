@@ -27,25 +27,14 @@ def _mkhelp():
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "edit request/response"),
-        ("m", "change body display mode"),
-            (None,
-                common.highlight_key("raw", "r") +
-                [("text", ": raw data")]
-            ),
-            (None,
-                common.highlight_key("pretty", "p") +
-                [("text", ": pretty-print XML, HTML and JSON")]
-            ),
-            (None,
-                common.highlight_key("hex", "h") +
-                [("text", ": hex dump")]
-            ),
-        ("p", "previous flow"),
-        ("r", "replay request"),
-        ("T", "override content-type for pretty-printed body"),
+        ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +
                 [("text", ": automatic detection")]
+            ),
+            (None,
+                common.highlight_key("hex", "h") +
+                [("text", ": Hex")]
             ),
             (None,
                 common.highlight_key("image", "i") +
@@ -64,9 +53,16 @@ def _mkhelp():
                 [("text", ": URL-encoded data")]
             ),
             (None,
+                common.highlight_key("raw", "r") +
+                [("text", ": raw data")]
+            ),
+            (None,
                 common.highlight_key("xml", "x") +
                 [("text", ": XML")]
             ),
+        ("M", "change default body display mode"),
+        ("p", "previous flow"),
+        ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
         ("w", "save all flows matching current limit"),
@@ -128,14 +124,14 @@ class FlowView(common.WWrap):
         else:
             self.view_request()
 
-    def _cached_conn_text(self, content, hdrItems, viewmode, pretty_type):
+    def _cached_conn_text(self, content, hdrItems, viewmode):
         txt = common.format_keyvals(
                 [(h+":", v) for (h, v) in hdrItems],
                 key = "header",
                 val = "text"
             )
         if content:
-            msg, body = contentview.get_content_view(viewmode, pretty_type, hdrItems, content)
+            msg, body = contentview.get_content_view(viewmode, hdrItems, content)
             title = urwid.AttrWrap(urwid.Columns([
                 urwid.Text(
                     [
@@ -147,7 +143,7 @@ class FlowView(common.WWrap):
                         " ",
                         ('heading', "["),
                         ('heading_key', "m"),
-                        ('heading', (":%s]"%contentview.CONTENT_VIEWS[self.master.state.view_body_mode])),
+                        ('heading', (":%s]"%contentview.VIEW_NAMES[viewmode])),
                     ],
                     align="right"
                 ),
@@ -190,24 +186,22 @@ class FlowView(common.WWrap):
                 )
         return f
 
-    def _conn_text(self, conn, viewmode, pretty_type):
+    def _conn_text(self, conn, viewmode):
         return cache.callback(
                     self, "_cached_conn_text",
                     conn.content,
                     tuple(tuple(i) for i in conn.headers.lst),
-                    viewmode,
-                    pretty_type
+                    viewmode
                 )
 
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
         body = self._conn_text(
             self.flow.request,
-            self.state.view_body_mode,
             self.state.get_flow_setting(
                 self.flow,
                 (common.VIEW_FLOW_REQUEST, "prettyview"),
-                contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
+                self.state.default_body_view
             )
         )
         self.w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
@@ -218,11 +212,10 @@ class FlowView(common.WWrap):
         if self.flow.response:
             body = self._conn_text(
                 self.flow.response,
-                self.state.view_body_mode,
                 self.state.get_flow_setting(
                     self.flow,
                     (common.VIEW_FLOW_RESPONSE, "prettyview"),
-                    contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
+                    self.state.default_body_view
                 )
             )
         else:
@@ -377,20 +370,17 @@ class FlowView(common.WWrap):
     def view_prev_flow(self, flow):
         return self._view_nextprev_flow("prev", flow)
 
-    def change_pretty_type(self, t):
-        d = {
-            "a": contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO,
-            "i": contentview.VIEW_CONTENT_PRETTY_TYPE_IMAGE,
-            "j": contentview.VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
-            "s": contentview.VIEW_CONTENT_PRETTY_TYPE_JSON,
-            "u": contentview.VIEW_CONTENT_PRETTY_TYPE_URLENCODED,
-            "x": contentview.VIEW_CONTENT_PRETTY_TYPE_XML,
-        }
+    def change_this_display_mode(self, t):
         self.state.add_flow_setting(
             self.flow,
             (self.state.view_flow_mode, "prettyview"),
-            d.get(t)
+            contentview.VIEW_SHORTCUTS.get(t)
         )
+        self.master.refresh_flow(self.flow)
+
+    def change_default_display_mode(self, t):
+        v = contentview.VIEW_SHORTCUTS.get(t)
+        self.state.default_body_view = v
         self.master.refresh_flow(self.flow)
 
     def keypress(self, size, key):
@@ -464,13 +454,34 @@ class FlowView(common.WWrap):
             key = None
         elif key == "m":
             self.master.prompt_onekey(
-                "View",
+                "Display mode",
                 (
-                    ("raw", "r"),
-                    ("pretty", "p"),
+                    ("auto detect", "a"),
                     ("hex", "h"),
+                    ("image", "i"),
+                    ("javascript", "j"),
+                    ("json", "s"),
+                    ("raw", "r"),
+                    ("urlencoded", "u"),
+                    ("xmlish", "x"),
                 ),
-                self.master.changeview
+                self.change_this_display_mode
+            )
+            key = None
+        elif key == "M":
+            self.master.prompt_onekey(
+                "Global default display mode",
+                (
+                    ("auto detect", "a"),
+                    ("hex", "h"),
+                    ("image", "i"),
+                    ("javascript", "j"),
+                    ("json", "s"),
+                    ("raw", "r"),
+                    ("urlencoded", "u"),
+                    ("xmlish", "x"),
+                ),
+                self.change_default_display_mode
             )
             key = None
         elif key == "p":
@@ -480,20 +491,6 @@ class FlowView(common.WWrap):
             if r:
                 self.master.statusbar.message(r)
             self.master.refresh_flow(self.flow)
-        elif key == "T":
-            self.master.prompt_onekey(
-                "Pretty-Print format",
-                (
-                    ("auto detect", "a"),
-                    ("image", "i"),
-                    ("javascript", "j"),
-                    ("json", "s"),
-                    ("urlencoded", "u"),
-                    ("xmlish", "x"),
-                ),
-                self.change_pretty_type
-            )
-            key = None
         elif key == "V":
             self.state.revert(self.flow)
             self.master.refresh_flow(self.flow)

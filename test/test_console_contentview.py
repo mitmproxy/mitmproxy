@@ -12,24 +12,21 @@ class uContentView(libpry.AutoTree):
 
     def test_get_view_func(self):
         f = cv.get_view_func(
-                cv.VIEW_CONTENT_HEX,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_HEX,
                 flow.ODictCaseless(),
                 "foo"
               )
         assert f is cv.view_hex
 
         f = cv.get_view_func(
-                cv.VIEW_CONTENT_RAW,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_AUTO,
                 flow.ODictCaseless(),
                 "foo"
               )
         assert f is cv.view_raw
 
         f = cv.get_view_func(
-                cv.VIEW_CONTENT_PRETTY,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_AUTO,
                 flow.ODictCaseless(
                     [["content-type", "text/html"]],
                 ),
@@ -38,8 +35,7 @@ class uContentView(libpry.AutoTree):
         assert f is cv.view_xmlish
 
         f = cv.get_view_func(
-                cv.VIEW_CONTENT_PRETTY,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_AUTO,
                 flow.ODictCaseless(
                     [["content-type", "text/flibble"]],
                 ),
@@ -48,8 +44,7 @@ class uContentView(libpry.AutoTree):
         assert f is cv.view_raw
 
         f = cv.get_view_func(
-                cv.VIEW_CONTENT_PRETTY,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_AUTO,
                 flow.ODictCaseless(
                     [["content-type", "text/flibble"]],
                 ),
@@ -118,33 +113,28 @@ Larry
 
     def test_get_content_view(self):
         r = cv.get_content_view(
-                cv.VIEW_CONTENT_RAW,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_RAW,
                 [["content-type", "application/json"]],
                 "[1, 2, 3]"
               )
-        assert r[0] == "Raw"
+        assert "Raw" in r[0]
 
         r = cv.get_content_view(
-                cv.VIEW_CONTENT_PRETTY,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_AUTO,
                 [["content-type", "application/json"]],
                 "[1, 2, 3]"
               )
         assert r[0] == "JSON"
 
-
         r = cv.get_content_view(
-                cv.VIEW_CONTENT_PRETTY,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_AUTO,
                 [["content-type", "application/json"]],
                 "[1, 2"
               )
         assert r[0] == "Raw"
 
         r = cv.get_content_view(
-                cv.VIEW_CONTENT_PRETTY,
-                cv.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+                cv.VIEW_AUTO,
                 [
                     ["content-type", "application/json"],
                     ["content-encoding", "gzip"]
@@ -154,10 +144,8 @@ Larry
         assert "decoded gzip" in r[0]
         assert "JSON" in r[0]
 
-
         r = cv.get_content_view(
-                cv.VIEW_CONTENT_PRETTY,
-                cv.VIEW_CONTENT_PRETTY_TYPE_XML,
+                cv.VIEW_XML,
                 [
                     ["content-type", "application/json"],
                     ["content-encoding", "gzip"]
