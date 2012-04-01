@@ -135,30 +135,41 @@ class FlowView(common.WWrap):
                     conn.content,
                 )
 
-    def _conn_text(self, conn, viewmode):
+    def conn_text(self, conn):
         txt = common.format_keyvals(
                 [(h+":", v) for (h, v) in conn.headers.lst],
                 key = "header",
                 val = "text"
             )
         if conn.content:
+            override = self.state.get_flow_setting(
+                self.flow,
+                (self.state.view_flow_mode, "prettyview"),
+            )
+            viewmode = self.state.default_body_view if override is None else override
+
             msg, body = self.content_view(viewmode, conn)
-            title = urwid.AttrWrap(urwid.Columns([
+
+            cols = [
                 urwid.Text(
                     [
                         ("heading", msg),
                     ]
-                ),
-                urwid.Text(
-                    [
-                        " ",
-                        ('heading', "["),
-                        ('heading_key', "m"),
-                        ('heading', (":%s]"%contentview.VIEW_NAMES[viewmode])),
-                    ],
-                    align="right"
-                ),
-            ]), "heading")
+                )
+            ]
+            if override is not None:
+                cols.append(
+                    urwid.Text(
+                        [
+                            " ",
+                            ('heading', "["),
+                            ('heading_key', "m"),
+                            ('heading', (":%s]"%contentview.VIEW_NAMES[viewmode])),
+                        ],
+                        align="right"
+                    )
+                )
+            title = urwid.AttrWrap(urwid.Columns(cols), "heading")
             txt.append(title)
             txt.extend(body)
         return urwid.ListBox(txt)
@@ -199,28 +210,14 @@ class FlowView(common.WWrap):
 
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
-        body = self._conn_text(
-            self.flow.request,
-            self.state.get_flow_setting(
-                self.flow,
-                (common.VIEW_FLOW_REQUEST, "prettyview"),
-                self.state.default_body_view
-            )
-        )
+        body = self.conn_text(self.flow.request)
         self.w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
         self.master.statusbar.redraw()
 
     def view_response(self):
         self.state.view_flow_mode = common.VIEW_FLOW_RESPONSE
         if self.flow.response:
-            body = self._conn_text(
-                self.flow.response,
-                self.state.get_flow_setting(
-                    self.flow,
-                    (common.VIEW_FLOW_RESPONSE, "prettyview"),
-                    self.state.default_body_view
-                )
-            )
+            body = self.conn_text(self.flow.response)
         else:
             body = urwid.ListBox(
                         [
