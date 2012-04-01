@@ -4,7 +4,7 @@ import tutils
 import libpry
 
 
-class uState(libpry.AutoTree):
+class uConsoleState(libpry.AutoTree):
     def test_flow(self):
         """
             normal flow:
@@ -76,6 +76,18 @@ class uState(libpry.AutoTree):
         assert len(c.view) == 3
         assert c.focus == 0
 
+    def test_settings(self):
+        c = console.ConsoleState()
+        f = self._add_request(c)
+        c.add_flow_setting(f, "foo", "bar")
+        assert c.get_flow_setting(f, "foo") == "bar"
+        assert c.get_flow_setting(f, "oink") == None
+        assert c.get_flow_setting(f, "oink", "foo") == "foo"
+        assert len(c.flowsettings) == 1
+        c.delete_flow(f)
+        del f
+        assert len(c.flowsettings) == 0
+
 
 class uformat_keyvals(libpry.AutoTree):
     def test_simple(self):
@@ -139,7 +151,7 @@ class uOptions(libpry.AutoTree):
 
 tests = [
     uformat_keyvals(),
-    uState(),
+    uConsoleState(),
     uPathCompleter(),
     uOptions()
 ]

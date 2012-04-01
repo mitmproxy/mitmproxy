@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex
-import os.path, sys
+import os.path, sys, weakref
 import urwid
 from .. import controller, utils, flow
 import flowlist, flowview, help, common, grideditor, palettes, contentview
@@ -235,6 +235,15 @@ class ConsoleState(flow.State):
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
         self.last_saveload = ""
+        self.flowsettings = weakref.WeakKeyDictionary()
+
+    def add_flow_setting(self, flow, key, value):
+        d = self.flowsettings.setdefault(flow, {})
+        d[key] = value
+
+    def get_flow_setting(self, flow, key, default=None):
+        d = self.flowsettings.get(flow, {})
+        return d.get(key, default)
 
     def add_request(self, req):
         f = flow.State.add_request(self, req)

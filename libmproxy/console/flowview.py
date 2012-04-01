@@ -123,7 +123,6 @@ class FlowView(common.WWrap):
     ]
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
-        self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
         if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             self.view_response()
         else:
@@ -205,7 +204,11 @@ class FlowView(common.WWrap):
         body = self._conn_text(
             self.flow.request,
             self.state.view_body_mode,
-            self.view_body_pretty_type
+            self.state.get_flow_setting(
+                self.flow,
+                (common.VIEW_FLOW_REQUEST, "prettyview"),
+                contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
+            )
         )
         self.w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
         self.master.statusbar.redraw()
@@ -216,7 +219,11 @@ class FlowView(common.WWrap):
             body = self._conn_text(
                 self.flow.response,
                 self.state.view_body_mode,
-                self.view_body_pretty_type
+                self.state.get_flow_setting(
+                    self.flow,
+                    (common.VIEW_FLOW_RESPONSE, "prettyview"),
+                    contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
+                )
             )
         else:
             body = urwid.ListBox(
@@ -371,18 +378,19 @@ class FlowView(common.WWrap):
         return self._view_nextprev_flow("prev", flow)
 
     def change_pretty_type(self, t):
-        if t == "a":
-            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO
-        elif t == "i":
-            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_IMAGE
-        elif t == "j":
-            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT
-        elif t == "s":
-            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_JSON
-        elif t == "u":
-            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_URLENCODED
-        elif t == "x":
-            self.view_body_pretty_type = contentview.VIEW_CONTENT_PRETTY_TYPE_XML
+        d = {
+            "a": contentview.VIEW_CONTENT_PRETTY_TYPE_AUTO,
+            "i": contentview.VIEW_CONTENT_PRETTY_TYPE_IMAGE,
+            "j": contentview.VIEW_CONTENT_PRETTY_TYPE_JAVASCRIPT,
+            "s": contentview.VIEW_CONTENT_PRETTY_TYPE_JSON,
+            "u": contentview.VIEW_CONTENT_PRETTY_TYPE_URLENCODED,
+            "x": contentview.VIEW_CONTENT_PRETTY_TYPE_XML,
+        }
+        self.state.add_flow_setting(
+            self.flow,
+            (self.state.view_flow_mode, "prettyview"),
+            d.get(t)
+        )
         self.master.refresh_flow(self.flow)
 
     def keypress(self, size, key):
