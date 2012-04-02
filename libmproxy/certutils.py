@@ -1,4 +1,4 @@
-import subprocess, os, ssl, hashlib, socket, time
+import os, ssl, hashlib, socket, time
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 import OpenSSL
@@ -136,13 +136,52 @@ class _GeneralNames(univ.SequenceOf):
     sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
 
 
-
 class SSLCert:
     def __init__(self, pemtxt):
         """
             Returns a (common name, [subject alternative names]) tuple.
         """
         self.cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, pemtxt)
+
+    @classmethod
+    def from_der(klass, der):
+        pem = ssl.DER_cert_to_PEM_cert(der)
+        return klass(pem)
+
+    def digest(self, name):
+        return self.cert.digest(name)
+
+    @property
+    def notbefore(self):
+        return self.cert.get_notBefore()
+
+    @property
+    def notafter(self):
+        return self.cert.get_notAfter()
+
+    @property
+    def has_expired(self):
+        return self.cert.has_expired()
+
+    @property
+    def subject(self):
+        return self.cert.get_subject().get_components()
+
+    @property
+    def serial(self):
+        return self.cert.get_serial_number()
+
+    @property
+    def keyinfo(self):
+        pk = self.cert.get_pubkey()
+        types = {
+            OpenSSL.crypto.TYPE_RSA: "RSA",
+            OpenSSL.crypto.TYPE_DSA: "DSA",
+        }
+        return (
+            types.get(pk.type(), "UNKNOWN"),
+            pk.bits()
+        )
 
     @property
     def cn(self):
@@ -170,5 +209,4 @@ def get_remote_cert(host, port):
     s = ssl.get_server_certificate((addr, port))
     return SSLCert(s)
 # end nocover
-
 

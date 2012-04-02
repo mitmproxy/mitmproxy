@@ -566,11 +566,12 @@ class Response(HTTPMsg):
             content: Response content
             timestamp: Seconds since the epoch
     """
-    def __init__(self, request, code, msg, headers, content, timestamp=None):
+    def __init__(self, request, code, msg, headers, content, peercert, timestamp=None):
         assert isinstance(headers, ODictCaseless)
         self.request = request
         self.code, self.msg = code, msg
         self.headers, self.content = headers, content
+        self.peercert = peercert
         self.timestamp = timestamp or utils.timestamp()
         controller.Msg.__init__(self)
         self.replay = False
@@ -640,6 +641,7 @@ class Response(HTTPMsg):
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp = state["timestamp"]
+        self.peercert = state["peercert"]
 
     def _get_state(self):
         return dict(
@@ -647,6 +649,7 @@ class Response(HTTPMsg):
             msg = self.msg,
             headers = self.headers._get_state(),
             timestamp = self.timestamp,
+            peercert = self.peercert,
             content = self.content
         )
 
@@ -658,6 +661,7 @@ class Response(HTTPMsg):
             str(state["msg"]),
             ODictCaseless._from_state(state["headers"]),
             state["content"],
+            state.get("peercert"),
             state["timestamp"],
         )
 

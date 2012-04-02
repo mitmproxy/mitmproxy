@@ -49,7 +49,7 @@ class udummy_cert(libpry.AutoTree):
         assert os.path.exists(p)
 
 
-class uparse_text_cert(libpry.AutoTree):
+class uSSLCert(libpry.AutoTree):
     def test_simple(self):
         c = certutils.SSLCert(file("data/text_cert", "r").read())
         assert c.cn == "google.com"
@@ -58,10 +58,22 @@ class uparse_text_cert(libpry.AutoTree):
         c = certutils.SSLCert(file("data/text_cert_2", "r").read())
         assert c.cn == "www.inode.co.nz"
         assert len(c.altnames) == 2
+        assert c.digest("sha1")
+        assert c.notbefore
+        assert c.notafter
+        assert c.subject
+        assert c.keyinfo == ("RSA", 2048)
+        assert c.serial
+        c.has_expired
+
+    def test_der(self):
+        d = file("data/dercert").read()
+        s = certutils.SSLCert.from_der(d)
+        assert s.cn
 
 
 tests = [
-    uparse_text_cert(),
     udummy_ca(),
     udummy_cert(),
+    uSSLCert(),
 ]

@@ -229,6 +229,7 @@ class ServerConnection:
             self.port = request.port
             self.scheme = request.scheme
         self.close = False
+        self.cert = None
         self.server, self.rfile, self.wfile = None, None, None
         self.connect()
 
@@ -239,6 +240,8 @@ class ServerConnection:
             if self.scheme == "https":
                 server = ssl.wrap_socket(server)
             server.connect((addr, self.port))
+            if self.scheme == "https":
+                self.cert = server.getpeercert(True)
         except socket.error, err:
             raise ProxyError(502, 'Error connecting to "%s": %s' % (self.host, err))
         self.server = server
@@ -275,7 +278,7 @@ class ServerConnection:
             content = ""
         else:
             content = read_http_body(self.rfile, self, headers, True, self.config.body_size_limit)
-        return flow.Response(self.request, code, msg, headers, content)
+        return flow.Response(self.request, code, msg, headers, content, self.cert)
 
     def terminate(self):
         try:

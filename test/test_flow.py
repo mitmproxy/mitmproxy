@@ -796,7 +796,7 @@ class uResponse(libpry.AutoTree):
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
-        resp = flow.Response(req, 200, "msg", h.copy(), "content")
+        resp = flow.Response(req, 200, "msg", h.copy(), "content", None)
         assert resp._assemble()
 
         resp2 = resp.copy()
@@ -841,12 +841,12 @@ class uResponse(libpry.AutoTree):
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
         req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
-        resp = flow.Response(req, 200, "msg", h.copy(), "content")
+        resp = flow.Response(req, 200, "msg", h.copy(), "content", None)
 
         state = resp._get_state()
         assert flow.Response._from_state(req, state) == resp
 
-        resp2 = flow.Response(req, 220, "foo", h.copy(), "test")
+        resp2 = flow.Response(req, 220, "foo", h.copy(), "test", None)
         assert not resp == resp2
         resp._load_state(resp2._get_state())
         assert resp == resp2
