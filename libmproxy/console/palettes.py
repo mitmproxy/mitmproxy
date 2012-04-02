@@ -33,8 +33,15 @@ dark = [
     # List and Connections
     ('method', 'dark cyan', 'default'),
     ('focus', 'yellow', 'default'),
-    ('goodcode', 'light green', 'default'),
+
+    ('code_200', 'light green', 'default'),
+    ('code_300', 'light blue', 'default'),
+    ('code_400', 'light red', 'default', None, "#f60", "default"),
+    ('code_500', 'light red', 'default'),
+    ('code_other', 'dark red', 'default'),
+
     ('error', 'light red', 'default'),
+
     ('header', 'dark cyan', 'default'),
     ('highlight', 'white,bold', 'default'),
     ('intercept', 'brown', 'default', None, "#f60", "default"),

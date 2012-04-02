@@ -137,17 +137,17 @@ def raw_format_flow(f, focus, extended, padding):
     )
 
     if f["resp_code"]:
-        if f["resp_code"] in [200, 304]:
-            resp.append(fcol(SYMBOL_RETURN, "goodcode"))
-        else:
-            resp.append(fcol(SYMBOL_RETURN, "error"))
+        codes = {
+            2: "code_200",
+            3: "code_300",
+            4: "code_400",
+            5: "code_500",
+        }
+        ccol = codes.get(f["resp_code"]/100, "code_other")
+        resp.append(fcol(SYMBOL_RETURN, ccol))
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
-        if f["resp_code"] in [200, 304]:
-            resp.append(fcol(f["resp_code"], "goodcode"))
-        else:
-            resp.append(fcol(f["resp_code"], "error"))
-
+        resp.append(fcol(f["resp_code"], ccol))
         if f["intercepting"] and f["resp_code"] and not f["resp_acked"]:
             rc = "intercept"
         else:
