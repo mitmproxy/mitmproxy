@@ -25,7 +25,6 @@ EVENTLOG_SIZE = 500
 class Stop(Exception): pass
 
 
-#begin nocover
 
 
 class _PathCompleter:
@@ -75,6 +74,7 @@ class _PathCompleter:
         self.final = ret[1]
         return ret[0]
 
+#begin nocover
 
 class PathEdit(urwid.Edit, _PathCompleter):
     def __init__(self, *args, **kwargs):

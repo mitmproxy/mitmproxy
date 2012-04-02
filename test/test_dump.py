@@ -27,8 +27,9 @@ class uDumpMaster(libpry.AutoTree):
         resp.content = content
         m.handle_clientconnect(cc)
         m.handle_request(req)
-        m.handle_response(resp)
+        f = m.handle_response(resp)
         m.handle_clientdisconnect(flow.ClientDisconnect(cc))
+        return f
 
     def _dummy_cycle(self, n, filt, content, **options):
         cs = StringIO()
@@ -92,6 +93,12 @@ class uDumpMaster(libpry.AutoTree):
 
     def test_filter(self):
         assert not "GET" in self._dummy_cycle(1, "~u foo", "", verbosity=1)
+
+    def test_replacements(self):
+        o = dump.Options(replacements=[(".*", "content", "foo")])
+        m = dump.DumpMaster(None, o, None)
+        f = self._cycle(m, "content")
+        assert f.request.content == "foo"
 
     def test_basic(self):
         for i in (1, 2, 3):

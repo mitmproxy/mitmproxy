@@ -113,7 +113,8 @@ class uPathCompleter(libpry.AutoTree):
         c.reset()
         assert c.complete("./completion/aaa") == "./completion/aaa"
         assert c.complete("./completion/aaa") == "./completion/aaa"
-
+        c.reset()
+        assert c.complete("./completion") == "./completion/aaa"
 
     def test_completion(self):
         c = console._PathCompleter(True)
