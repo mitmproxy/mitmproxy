@@ -61,8 +61,8 @@ def format_keyvals(lst, key="key", val="text", indent=0):
                         maxk,
                         urwid.Text([(key, kv[0] or "")])
                     ),
-                    urwid.Text([(val, kv[1])])
-                ])
+                    kv[1] if isinstance(kv[1], urwid.Widget) else urwid.Text([(val, kv[1])])
+               ])
                 ret.append(urwid.Columns(cols, dividechars = 2))
     return ret
 

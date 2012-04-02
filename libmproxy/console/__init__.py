@@ -17,7 +17,7 @@ import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex
 import os.path, sys, weakref
 import urwid
 from .. import controller, utils, flow
-import flowlist, flowview, help, common, grideditor, palettes, contentview
+import flowlist, flowview, help, common, grideditor, palettes, contentview, flowdetailview
 
 EVENTLOG_SIZE = 500
 
@@ -543,6 +543,13 @@ class ConsoleMaster(flow.FlowMaster):
     def view_help(self):
         h = help.HelpView(self, self.help_context, (self.statusbar, self.body, self.header))
         self.statusbar = StatusBar(self, help.footer)
+        self.body = h
+        self.header = None
+        self.make_view()
+
+    def view_flowdetails(self, flow):
+        h = flowdetailview.FlowDetailsView(self, flow, (self.statusbar, self.body, self.header))
+        self.statusbar = StatusBar(self, flowdetailview.footer)
         self.body = h
         self.header = None
         self.make_view()

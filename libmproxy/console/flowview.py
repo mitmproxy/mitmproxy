@@ -67,6 +67,7 @@ def _mkhelp():
         ("v", "view body in external viewer"),
         ("w", "save all flows matching current limit"),
         ("W", "save this flow"),
+        ("X", "view flow details"),
         ("z", "encode/decode a request/response"),
         ("tab", "toggle request/response view"),
         ("space", "next flow"),
@@ -497,6 +498,8 @@ class FlowView(common.WWrap):
                 "Send flow to script: ", self.state.last_script,
                 self.master.run_script_once, self.flow
             )
+        elif key == "X":
+            self.master.view_flowdetails(self.flow)
         elif key == "z":
             if conn:
                 e = conn.headers["content-encoding"] or ["identity"]

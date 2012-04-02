@@ -152,6 +152,10 @@ class SSLCert:
         return self.cert.digest(name)
 
     @property
+    def issuer(self):
+        return self.cert.get_issuer().get_components()
+
+    @property
     def notbefore(self):
         return self.cert.get_notBefore()
 
@@ -186,7 +190,7 @@ class SSLCert:
     @property
     def cn(self):
         cn = None
-        for i in self.cert.get_subject().get_components():
+        for i in self.subject:
             if i[0] == "CN":
                 cn = i[1]
         return cn
@@ -199,7 +203,7 @@ class SSLCert:
             if ext.get_short_name() == "subjectAltName":
                 dec = decode(ext.get_data(), asn1Spec=_GeneralNames())
                 for i in dec[0]:
-                    altnames.append(i[0])
+                    altnames.append(i[0].asOctets())
         return altnames
 
 
