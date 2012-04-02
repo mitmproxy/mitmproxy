@@ -478,6 +478,7 @@ ServerBase.daemon_threads = True        # Terminate workers when main thread ter
 class ProxyServer(ServerBase):
     request_queue_size = 20
     allow_reuse_address = True
+    bound = True
     def __init__(self, config, port, address=''):
         """
             Raises ProxyServerError if there's a startup problem.
@@ -491,6 +492,10 @@ class ProxyServer(ServerBase):
         self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
         config.certdir = self.certdir
 
+    def start_slave(self, klass, masterq):
+        slave = klass(masterq, self)
+        slave.start()
+
     def set_mqueue(self, q):
         self.masterq = q
 
@@ -503,6 +508,18 @@ class ProxyServer(ServerBase):
             shutil.rmtree(self.certdir)
         except OSError:
             pass
+
+
+class DummyServer:
+    bound = False
+    def __init__(self, config):
+        self.config = config
+
+    def start_slave(self, klass, masterq):
+        pass
+
+    def shutdown(self):
+        pass
 
 
 # Command-line utils

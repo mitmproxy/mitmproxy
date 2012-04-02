@@ -131,7 +131,7 @@ Larry
                 [["content-type", "application/json"]],
                 "[1, 2"
               )
-        assert r[0] == "Raw"
+        assert "Raw" in r[0]
 
         r = cv.get_content_view(
                 cv.VIEW_AUTO,
@@ -153,7 +153,7 @@ Larry
                 encoding.encode('gzip', "[1, 2, 3]")
               )
         assert "decoded gzip" in r[0]
-        assert "forced" in r[0]
+        assert "XML" in r[0]
 
 
 tests = [

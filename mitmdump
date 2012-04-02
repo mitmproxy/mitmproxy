@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     proxyconfig = proxy.process_proxy_options(parser, options)
     if options.no_server:
-        server = None
+        server = proxy.DummyServer(proxyconfig)
     else:
         try:
             server = proxy.ProxyServer(proxyconfig, options.port, options.addr)

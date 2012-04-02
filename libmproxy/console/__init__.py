@@ -150,7 +150,7 @@ class StatusBar(common.WWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]"%self.master.stickyauth_txt)
-        if self.master.server and self.master.server.config.reverse_proxy:
+        if self.master.server.config.reverse_proxy:
             r.append("[")
             r.append(("heading_key", "P"))
             r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
@@ -187,7 +187,7 @@ class StatusBar(common.WWrap):
         t = [
                 ('heading', ("[%s]"%self.master.state.flow_count()).ljust(7)),
             ]
-        if self.master.server:
+        if self.master.server.bound:
             boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
         else:
             boundaddr = ""
@@ -510,9 +510,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.view_flowlist()
 
-        if self.server:
-            slave = controller.Slave(self.masterq, self.server)
-            slave.start()
+        self.server.start_slave(controller.Slave, self.masterq)
 
         if self.options.rfile:
             ret = self.load_flows(self.options.rfile)

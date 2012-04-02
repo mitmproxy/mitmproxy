@@ -83,9 +83,7 @@ class Master:
     def run(self):
         global should_exit
         should_exit = False
-        if self.server:
-            slave = Slave(self.masterq, self.server)
-            slave.start()
+        self.server.start_slave(Slave, self.masterq)
         while not should_exit:
             self.tick(self.masterq)
         self.shutdown()
