@@ -324,7 +324,7 @@ class Request(HTTPMsg):
 
         Exposes the following attributes:
 
-            client_conn: ClientConnection object, or None if this is a replay.
+            client_conn: ClientConnect object, or None if this is a replay.
             headers: ODictCaseless object
             content: Content of the request, or None
 
@@ -760,15 +760,20 @@ class ClientConnect(controller.Msg):
         return self._get_state() == other._get_state()
 
     def _load_state(self, state):
-        self.address = state
+        self.requestcount = state["requestcount"]
 
     def _get_state(self):
-        return list(self.address) if self.address else None
+        return dict(
+            address = list(self.address),
+            requestcount = self.requestcount,
+        )
 
     @classmethod
     def _from_state(klass, state):
         if state:
-            return klass(state)
+            k = klass(state["address"])
+            k._load_state(state)
+            return k
         else:
             return None
 

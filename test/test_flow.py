@@ -923,8 +923,9 @@ class uClientConnect(libpry.AutoTree):
         c2 = flow.ClientConnect(("a", 25))
         assert not c == c2
 
+        c2.requestcount = 99
         c._load_state(c2._get_state())
-        assert c == c2
+        assert c.requestcount == 99
 
         c3 = c.copy()
         assert c3 == c
