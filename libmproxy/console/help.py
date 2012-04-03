@@ -117,6 +117,7 @@ class HelpView(urwid.ListBox):
             ("q", "quit / return to flow list"),
             ("Q", "quit without confirm prompt"),
             ("P", "set reverse proxy mode"),
+            ("R", "edit replacement patterns"),
             ("s", "set/unset script"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),

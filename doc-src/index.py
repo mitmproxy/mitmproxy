@@ -73,6 +73,8 @@ pages = [
     Page("clientreplay.html", "Client-side replay"),
     Page("serverreplay.html", "Server-side replay"),
     Page("sticky.html", "Sticky cookies and auth"),
+    Page("upstreamcerts.html", "Upstream Certs"),
+    Page("replacements.html", "Replacements"),
     Page("reverseproxy.html", "Reverse proxy mode"),
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),

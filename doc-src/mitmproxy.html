@@ -45,19 +45,22 @@ which shows you exactly what's there without any changes. You can change modes
 using the _m_ key.
 
 
-## Key/Value Editor
+## Grid Editor
 
-It turns out that ordered key/value data is pervasive in HTTP communications,
-so mitmproxy has a built-in editor to help edit and create this kind of data.
-There are three ways to reach the __K/V Editor__ from the __Flow View__ screen:
+Much of the data that we'd like to interact with in mitmproxy is structured.
+For instance, headers, queries and form data can all be thought of as a list of
+key/value pairs. Mitmproxy has a built-in editor that lays this type of data
+out in a grid for easy manipulation. 
 
-- Editing request or response headers (_e_ for edit, then _h_ for headers) 
-- Editing a query string (_e_ for edit, then _q_ for query)
-- Editing a URL-encoded form (_e_ for edit, then _f_ for form)
+At the moment, the Grid Editor is used in four parts of mitmproxy:
 
-If there is is no form or query string, an empty __K/V Editor__ will be started
-to let you add one. Here is the __K/V Editor__ showing the headers from a
-request:
+- Editing request or response headers (_e_ for edit, then _h_ for headers in flow view) 
+- Editing a query string (_e_ for edit, then _q_ for query in flow view)
+- Editing a URL-encoded form (_e_ for edit, then _f_ for form in flow view)
+- Editing replacement patterns (_R_ globally)
+
+If there is is no data, an empty editor will be started to let you add some.
+Here is the editor showing the headers from a request:
 
 <img src="@!urlTo("screenshots/mitmproxy-kveditor.png")!@"/>
 
@@ -67,10 +70,10 @@ you are in edit mode for the specified field:
 
 <img src="@!urlTo("screenshots/mitmproxy-kveditor-editmode.png")!@"/>
 
-Modify the field as desired, and press escape or enter to exit edit mode when
-you're done. You can also add a key/value pair (_a_ key), delete a pair (_d_
-key), spawn an external editor on a field (_e_ key). Be sure to consult the
-context-sensitive help (_?_ key) for more.
+Modify the field as desired, then press escape to exit edit mode when you're
+done. You can also add a row (_a_ key), delete a row (_d_ key), spawn an
+external editor on a field (_e_ key). Be sure to consult the context-sensitive
+help (_?_ key) for more.
 
 
 # Example: Interception

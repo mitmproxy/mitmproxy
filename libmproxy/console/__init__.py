@@ -168,6 +168,8 @@ class StatusBar(common.WWrap):
             opts.append("norefresh")
         if self.master.killextra:
             opts.append("killextra")
+        if self.master.server.config.upstream_cert:
+            opts.append("upstream-cert")
 
         if opts:
             r.append("[%s]"%(":".join(opts)))
@@ -842,6 +844,7 @@ class ConsoleMaster(flow.FlowMaster):
                                             ("anticomp", "c"),
                                             ("killextra", "k"),
                                             ("norefresh", "n"),
+                                            ("upstream-certs", "u"),
                                         ),
                                         self._change_options
                                 )
@@ -882,6 +885,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.killextra = not self.killextra
         elif a == "n":
             self.refresh_server_playback = not self.refresh_server_playback
+        elif a == "u":
+            self.server.config.upstream_cert = not self.server.config.upstream_cert
 
     def shutdown(self):
         self.state.killall(self)

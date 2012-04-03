@@ -1,0 +1,15 @@
+- command-line: _--upstream-cert_ 
+- mitmproxy shortcut: _o_, then _u_
+
+In its normal mode of operation, mitmproxy will use the target domain specified
+in a client's proxy request to generate an interception certificate. When
+__upstream-cert__ mode is activated a different procedure is followed: we first
+connect to the specified remote server to retrieve the server's __Common Name__
+and __Subject Alternative Names__. This feature is especially useful when the
+client specifies an IP address rather than a host name in the proxy request. If
+this is the case, we can only generate a certificate if we can establish the
+__CN__ and __SANs__ from the upstream server.
+
+Note that __upstream-cert__ mode does not work when the remote server relies on
+[Server Name Indication](http://en.wikipedia.org/wiki/Server_Name_Indication).
+Luckily, SNI is still not very widely used.
