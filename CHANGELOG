@@ -1,4 +1,31 @@
 
+5 April 2012: mitmproxy 0.8:
+
+    * Detailed tutorial for Android interception. Some features that land in
+      this release have finally made reliable Android interception possible.
+
+    * Upstream-cert mode, which uses information from the upstream server to
+      generate interception certificates.
+
+    * Replacement patterns that let you easily do global replacements in flows
+      matching filter patterns. Can be specified on the command-line, or edited
+      interactively.
+
+    * Much more sophisticated and usable pretty printing of request bodies.
+      Support for auto-indentation of Javascript, inspection of image EXIF
+      data, and more.
+
+    * Details view for flows, showing connection and SSL cert information (X
+      keyboard shortcut).
+
+    * Server certificates are now stored and serialized in saved traffic for
+      later analysis. This means that the 0.8 serialization format is NOT
+      compatible with 0.7.
+
+    * Many other improvements, including bugfixes, and expanded scripting API,
+      and more sophisticated certificate handling.
+
+
 20 February 2012: mitmproxy 0.7:
 
     * New built-in key/value editor. This lets you interactively edit URL query
