@@ -55,8 +55,8 @@ class FlowDetailsView(urwid.ListBox):
                 text.append(urwid.Text([("head", "Server Certificate:")]))
                 parts = [
                     ["Type", "%s, %s bits"%c.keyinfo],
-                    ["Valid to", c.notafter],
-                    ["Valid from", c.notbefore],
+                    ["Valid to", str(c.notafter)],
+                    ["Valid from", str(c.notbefore)],
                     ["Serial", str(c.serial)],
                 ]
 

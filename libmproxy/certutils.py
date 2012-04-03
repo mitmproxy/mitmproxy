@@ -1,4 +1,4 @@
-import os, ssl, hashlib, socket, time
+import os, ssl, hashlib, socket, time, datetime
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 import OpenSSL
@@ -157,11 +157,13 @@ class SSLCert:
 
     @property
     def notbefore(self):
-        return self.cert.get_notBefore()
+        t = self.cert.get_notBefore()
+        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
 
     @property
     def notafter(self):
-        return self.cert.get_notAfter()
+        t = self.cert.get_notAfter()
+        return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
 
     @property
     def has_expired(self):
