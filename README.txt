@@ -51,6 +51,7 @@ Requirements
 * PyOpenSSL_ 0.12 or newer.
 * pyasn1_ 0.1.2 or newer.
 * urwid_  version 0.9.8 or newer.
+* PIL_  version 1.1 or newer.
 * The test suite uses the pry_ unit testing
   library.
 * Rendering the documentation requires countershape_.
@@ -70,6 +71,7 @@ following:
 .. _python: http://www.python.org
 .. _PyOpenSSL: http://pypi.python.org/pypi/pyOpenSSL
 .. _pyasn1: http://pypi.python.org/pypi/pyasn1
+.. _PIL: http://www.pythonware.com/products/pil/
 .. _urwid: http://excess.org/urwid/
 .. _pry: http://github.com/cortesi/pry
 .. _countershape: http://github.com/cortesi/countershape
