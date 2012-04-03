@@ -760,6 +760,7 @@ class ClientConnect(controller.Msg):
         return self._get_state() == other._get_state()
 
     def _load_state(self, state):
+        self.close = True
         self.requestcount = state["requestcount"]
 
     def _get_state(self):
@@ -1047,21 +1048,16 @@ class Flow:
         f._load_state(state)
         return f
 
-    def _get_state(self, nobackup=False):
+    def _get_state(self):
         d = dict(
             request = self.request._get_state() if self.request else None,
             response = self.response._get_state() if self.response else None,
             error = self.error._get_state() if self.error else None,
             version = version.IVERSION
         )
-        if nobackup:
-            d["backup"] = None
-        else:
-            d["backup"] = self._backup
         return d
 
     def _load_state(self, state):
-        self._backup = state["backup"]
         if self.request:
             self.request._load_state(state["request"])
         else:
@@ -1094,12 +1090,13 @@ class Flow:
         else:
             return False
 
-    def backup(self):
+    def backup(self, force=False):
         """
             Save a backup of this Flow, which can be reverted to using a
             call to .revert().
         """
-        self._backup = self._get_state(nobackup=True)
+        if not self._backup:
+            self._backup = self._get_state()
 
     def revert(self):
         """

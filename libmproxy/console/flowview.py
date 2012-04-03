@@ -460,13 +460,18 @@ class FlowView(common.WWrap):
         elif key == "p":
             self.view_prev_flow(self.flow)
         elif key == "r":
+            self.flow.backup()
             r = self.master.replay_request(self.flow)
             if r:
                 self.master.statusbar.message(r)
             self.master.refresh_flow(self.flow)
         elif key == "V":
+            if not self.flow.modified():
+                self.master.statusbar.message("Flow not modified.")
+                return
             self.state.revert(self.flow)
             self.master.refresh_flow(self.flow)
+            self.master.statusbar.message("Reverted.")
         elif key == "W":
             self.master.path_prompt(
                 "Save this flow: ",
@@ -502,6 +507,7 @@ class FlowView(common.WWrap):
             self.master.view_flowdetails(self.flow)
         elif key == "z":
             if conn:
+                self.flow.backup()
                 e = conn.headers["content-encoding"] or ["identity"]
                 if e[0] != "identity":
                     conn.decode()
