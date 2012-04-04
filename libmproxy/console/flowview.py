@@ -295,7 +295,7 @@ class FlowView(common.WWrap):
         self.master.refresh_flow(self.flow)
 
     def set_headers(self, lst, conn):
-        conn.headers = flow.ODict(lst)
+        conn.headers = flow.ODictCaseless(lst)
 
     def set_query(self, lst, conn):
         conn.set_query(flow.ODict(lst))
@@ -317,7 +317,7 @@ class FlowView(common.WWrap):
             conn = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.ODict(), "")
+                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.ODictCaseless(), "")
             conn = self.flow.response
 
         self.flow.backup()
