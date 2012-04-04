@@ -1,68 +1,27 @@
 
-The proxy situation on Android is [unutterably
-woeful](http://code.google.com/p/android/issues/detail?id=1273). It beggars
-belief, but until recently Android didn't have a global proxy setting at all.
-Recent releases have repaired this, but in the meantime the app ecosystem has
-grown used to life without this basic necessity, and many apps merrily ignore
-it. The upshot is that the only way to make reliable interception work on
-Android is to do it without using the proxy settings.
+The proxy situation on Android is [an
+embarrasment](http://code.google.com/p/android/issues/detail?id=1273).  It's
+scarcely credible, but Android didn't have a global proxy setting at all until
+quite recently, and it's still not supported on many common Android versions.
+In the meantime the app ecosystem has grown used to life without this basic
+necessity, and many apps merrily ignore it even if it's there. The upshot is
+that in many cases the only way to make interception work on Android is to do
+it without relying on the proxy settings.
+
+We used an Asus Transformer Prime TF201 with Android 4.0.3 in the examples
+below - your device may differ, but the broad process should be similar. 
 
 
-The Solution
-============
-
-In response to Android's proxy situation, a number of apps have been created to
-duct-tape proxy support onto the OS. These tools work by running a rudimentary
-local proxy on the device, and forwarding all traffic destined for HTTP/S ports
-to it using iptables. Since the proxy is running locally, it can detect what
-the final IP address of the redirected traffic would have been. The local proxy
-then connects to a user-configured upstream, and forwards the requests with a
-proxy CONNECT request to the destination IP.
-
-Now, if the configured upstream proxy is mitmproxy, we have a slight problem.
-Proxy requests from the Android device in this scheme will specify only the
-destination IP address, __not__ the destination domain. But mitmproxy needs the
-target domain to generate a valid interception certificate. The solution is
-mitmproxy's [upstream certificate](@!urlTo("upstreamcerts.html")!@) option.
-When this is active, mitmproxy makes a connection to the upstream server to
-obtain the certificate Common Name and Subject Alternative Names. 
-
-Adding all this together, we can achieve reliable Android interception with
-only a few minutes of setup.
-
-
-Step-by-step
-============
-
-The instructions below show how to set up an Android device with
-[ProxyDroid](https://play.google.com/store/apps/details?id=org.proxydroid)
-(the local "duct-tape" proxy implementation) to achieve interception. We've
-used an Asus Transformer Prime TF201 with Android 4.0.3 - your device may
-differ, but the broad setup process will be the same. 
-
-Before continuing, make sure your device is rooted - this is required to
-install ProxyDroid. 
-
-Run mitmproxy
--------------
-
-Start a mitmproxy instance on your interception host, making sure that the
-upstream certificate option is set (use the _--upstream-cert_ command-line
-option, or enable it interactively using the _o_ shortcut).
-
-    mitmproxy --upstream-cert
-
-
-Install the mitmproxy certificate
----------------------------------
+Installing the mitmproxy certificate
+====================================
 
 The first step is to install mitmproxy's interception certificate on the
 Android device. In your ~/.mitmproxy directory, there should be a file called
 __mitmproxy-ca-cert.cer__ - we need to transfer this file to
 __/sdcard/Downloads__ on the Android device. If this file doesn't exist for
 you, your certs were generated with an older version of mitmproxy - just copy
-the __mitmproxy-ca-cert.pem__ file to __mitmproxy-ca-cert.ca__ and proceed from
-there.
+the __mitmproxy-ca-cert.pem__ file to __mitmproxy-ca-cert.cer__ and proceed
+from there.
 
 In this case, we're using wget from the terminal to transfer the certificate
 from a local HTTP server:
@@ -86,11 +45,41 @@ store:
 
 <img src="android-settingssecurityuserinstalledca.png"/>
 
+If you're lucky enough to be working with an app that obeys the wireless proxy
+settings, you're just about done - simply configure the settings to point at
+mitmproxy. If not, proceed to the next step...
+
+
+Working around Android's proxy shortcomings
+===========================================
+
+In response to Android's proxy situation, a number of apps have been created to
+duct-tape proxy support onto the OS. These tools work by running a rudimentary
+local proxy on the device, and forwarding all traffic destined for HTTP/S ports
+to it using iptables. Since the proxy is running locally, it can detect what
+the final IP address of the redirected traffic would have been. The local proxy
+then connects to a user-configured upstream proxy, and initiates a proxy
+CONNECT request to the destination IP.
+
+Now, if the configured upstream proxy is mitmproxy, we have a slight problem.
+Proxy requests from the Android device in this scheme will specify only the
+destination IP address, __not__ the destination domain. Mitmproxy needs the
+target domain to generate a valid interception certificate. The solution is
+mitmproxy's [upstream certificate](@!urlTo("upstreamcerts.html")!@) option.
+When this is active, mitmproxy makes a connection to the upstream server to
+obtain the certificate Common Name and Subject Alternative Names. 
+
+Adding all this together, we can achieve reliable Android interception with
+only a few more minutes of setup. The instructions below show how to set up an
+Android device with
+[ProxyDroid](https://play.google.com/store/apps/details?id=org.proxydroid) (the
+local "duct-tape" proxy implementation) to achieve interception.
 
 Install ProxyDroid
 ------------------
 
-Now, install ProxyDroid from the Google Play store:
+First, root your device - this is required to install ProxyDroid. Then install
+ProxyDroid from the Google Play store:
 
 <img src="android-proxydroidinstall.png"/>
 
@@ -103,6 +92,9 @@ mitmproxy instance. When you're done, it should look something like this:
 In this case, our mitmproxy instance is at the host __maru.otago.ac.nz__,
 running on port __8080__.
 
-And that's it - you should now have full SSL interception enabled for your
-Android device. Happy hacking!
+When you start mitmproxy, make sure that the upstream certificate option is set
+(use the _--upstream-cert_ command-line option, or enable it interactively
+using the _o_ shortcut):
+
+    mitmproxy --upstream-cert
 
