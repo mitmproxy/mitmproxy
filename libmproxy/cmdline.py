@@ -154,7 +154,7 @@ def common_options(parser):
         help = "Proxy service port."
     )
     parser.add_option(
-        "-R",
+        "-P",
         action="store", dest="reverse_proxy", default=None,
         help="Reverse proxy to upstream server: http[s]://host[:port]"
     )
