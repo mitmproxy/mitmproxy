@@ -102,6 +102,11 @@ class ActionBar(common.WWrap):
         self.w = PathEdit(prompt, text)
 
     def prompt(self, prompt, text = ""):
+        # A (partial) workaround for this Urwid issue:
+        # https://github.com/Nic0/tyrs/issues/115
+        # We can remove it once veryone is beyond 1.0.1
+        if isinstance(prompt, basestring):
+            prompt = unicode(prompt)
         self.w = urwid.Edit(prompt, text or "")
 
     def message(self, message):
