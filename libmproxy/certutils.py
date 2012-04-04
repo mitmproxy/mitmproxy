@@ -59,6 +59,11 @@ def dummy_ca(path):
     f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
     f.close()
 
+    # Create a .cer file with the same contents for Android
+    f = open(os.path.join(dirname, basename + "-cert.cer"), "w")
+    f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
+    f.close()
+
     # Dump the certificate in PKCS12 format for Windows devices
     f = open(os.path.join(dirname, basename + "-cert.p12"), "w")
     p12 = OpenSSL.crypto.PKCS12()
