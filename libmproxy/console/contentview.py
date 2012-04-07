@@ -2,11 +2,12 @@ import re, cStringIO
 import urwid
 from PIL import Image
 from PIL.ExifTags import TAGS
+import lxml.html, lxml.etree
 import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier
 
-VIEW_CUTOFF = 1024*20
+VIEW_CUTOFF = 1024*200
 
 VIEW_AUTO = 0
 VIEW_JSON = 1
@@ -17,6 +18,7 @@ VIEW_JAVASCRIPT = 5
 VIEW_IMAGE = 6
 VIEW_RAW = 7
 VIEW_HEX = 8
+VIEW_HTML = 9
 
 VIEW_NAMES = {
     VIEW_AUTO: "Auto",
@@ -28,35 +30,38 @@ VIEW_NAMES = {
     VIEW_IMAGE: "Image",
     VIEW_RAW: "Raw",
     VIEW_HEX: "Hex",
+    VIEW_HTML: "HTML",
 }
 
 
 VIEW_PROMPT = (
     ("auto detect", "a"),
-    ("hex", "h"),
+    ("hex", "e"),
+    ("html", "h"),
     ("image", "i"),
     ("javascript", "j"),
     ("json", "s"),
     ("raw", "r"),
     ("multipart", "m"),
     ("urlencoded", "u"),
-    ("xmlish", "x"),
+    ("xml", "x"),
 )
 
 VIEW_SHORTCUTS = {
     "a": VIEW_AUTO,
+    "x": VIEW_XML,
+    "h": VIEW_HTML,
     "i": VIEW_IMAGE,
     "j": VIEW_JAVASCRIPT,
     "s": VIEW_JSON,
     "u": VIEW_URLENCODED,
     "m": VIEW_MULTIPART,
-    "x": VIEW_XML,
     "r": VIEW_RAW,
-    "h": VIEW_HEX,
+    "e": VIEW_HEX,
 }
 
 CONTENT_TYPES_MAP = {
-    "text/html": VIEW_XML,
+    "text/html": VIEW_HTML,
     "application/json": VIEW_JSON,
     "text/xml": VIEW_XML,
     "multipart/form-data": VIEW_MULTIPART,
@@ -116,14 +121,55 @@ def view_hex(hdrs, content):
     return "Hex", txt
 
 
-def view_xmlish(hdrs, content):
+def view_xml(hdrs, content):
+    parser = lxml.etree.XMLParser(remove_blank_text=True, resolve_entities=False, strip_cdata=False, recover=False)
+    try:
+        document = lxml.etree.fromstring(content, parser)
+    except lxml.etree.XMLSyntaxError, v:
+        print v
+        return None
+    docinfo = document.getroottree().docinfo
+
+    prev = []
+    p = document.getroottree().getroot().getprevious()
+    while p is not None:
+        prev.insert(
+            0,
+            lxml.etree.tostring(p)
+        )
+        p = p.getprevious()
+
+    s = lxml.etree.tostring(
+            document,
+            pretty_print=True,
+            xml_declaration=True,
+            doctype=docinfo.doctype + "\n".join(prev),
+            encoding = docinfo.encoding
+        )
+
     txt = []
-    for i in utils.pretty_xmlish(content[:VIEW_CUTOFF]):
+    for i in s[:VIEW_CUTOFF].strip().split("\n"):
         txt.append(
             urwid.Text(("text", i)),
         )
     trailer(len(content), txt)
     return "XML-like data", txt
+
+
+def view_html(hdrs, content):
+    if utils.isXML(content):
+        parser = lxml.etree.HTMLParser(strip_cdata=True, remove_blank_text=True)
+        d = lxml.html.fromstring(content, parser=parser)
+        docinfo = d.getroottree().docinfo
+        s = lxml.etree.tostring(d, pretty_print=True, doctype=docinfo.doctype)
+
+        txt = []
+        for i in s[:VIEW_CUTOFF].strip().split("\n"):
+            txt.append(
+                urwid.Text(("text", i)),
+            )
+        trailer(len(content), txt)
+        return "HTML", txt
 
 
 def view_json(hdrs, content):
@@ -229,7 +275,8 @@ def view_image(hdrs, content):
 
 
 PRETTY_FUNCTION_MAP = {
-    VIEW_XML: view_xmlish,
+    VIEW_XML: view_xml,
+    VIEW_HTML: view_html,
     VIEW_JSON: view_json,
     VIEW_URLENCODED: view_urlencoded,
     VIEW_MULTIPART: view_multipart,
@@ -274,7 +321,7 @@ def get_content_view(viewmode, hdrItems, content):
     if not ret:
         viewmode = VIEW_RAW
         ret = view_raw(hdrs, content)
-        msg.append("Fallback to Raw")
+        msg.append("Couldn't parse: falling back to Raw")
     else:
         msg.append(ret[0])
     return " ".join(msg), ret[1]

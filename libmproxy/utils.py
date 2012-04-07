@@ -72,51 +72,6 @@ def cleanBin(s, fixspacing=False):
     return "".join(parts)
 
 
-TAG = r"""
-        <\s*
-        (?!\s*[!"])
-        (?P<close>\s*\/)?
-        (?P<name>\w+)
-        (
-            [^'"\t >]+ |
-            "[^\"]*"['\"]* |
-            '[^']*'['\"]* |
-            \s+
-        )*
-        (?P<selfcont>\s*\/\s*)?
-        \s*>
-      """
-UNI = set(["br", "hr", "img", "input", "area", "link"])
-INDENT = " "*4
-def pretty_xmlish(s):
-    """
-        A robust pretty-printer for XML-ish data.
-        Returns a list of lines.
-    """
-    s = cleanBin(s)
-    data, offset, indent, prev = [], 0, 0, None
-    for i in re.finditer(TAG, s, re.VERBOSE|re.MULTILINE):
-        start, end = i.span()
-        name = i.group("name")
-        if start > offset:
-            txt = []
-            for x in textwrap.dedent(s[offset:start]).split("\n"):
-                if x.strip():
-                    txt.append(indent*INDENT + x)
-            data.extend(txt)
-        if i.group("close") and not (name in UNI and name==prev):
-            indent = max(indent - 1, 0)
-        data.append(indent*INDENT + i.group().strip())
-        offset = end
-        if not any([i.group("close"), i.group("selfcont"), name in UNI]):
-            indent += 1
-        prev = name
-    trail = s[offset:]
-    if trail.strip():
-        data.append(s[offset:])
-    return data
-
-
 def pretty_json(s):
     try:
         p = json.loads(s)

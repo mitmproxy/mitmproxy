@@ -57,15 +57,32 @@ class uContentView(libpry.AutoTree):
         assert cv.view_urlencoded([], d)
         assert not cv.view_urlencoded([], "foo")
 
+    def test_view_html(self):
+        s = "<html><br><br></br><p>one</p></html>"
+        assert cv.view_html([], s)
+
+        s = "gobbledygook"
+        assert not cv.view_html([], s)
+
     def test_view_json(self):
         cv.VIEW_CUTOFF = 100
         assert cv.view_json([], "{}")
         assert not cv.view_urlencoded([], "{")
         assert cv.view_json([], "[" + ",".join(["0"]*cv.VIEW_CUTOFF) + "]")
 
-    def test_view_xmlish(self):
-        assert cv.view_xmlish([], "<foo></foo>")
-        assert cv.view_xmlish([], "<foo>")
+    def test_view_xml(self):
+        #assert cv.view_xml([], "<foo></foo>")
+        #assert not cv.view_xml([], "<foo>")
+
+        s = """<?xml version="1.0" encoding="UTF-8"?>
+            <?xml-stylesheet title="XSL_formatting"?>
+            <rss 
+                xmlns:media="http://search.yahoo.com/mrss/"
+                xmlns:atom="http://www.w3.org/2005/Atom"
+                version="2.0">
+            </rss>
+        """
+        print cv.view_xml([], s)
 
     def test_view_raw(self):
         assert cv.view_raw([], "foo")

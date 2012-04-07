@@ -4,7 +4,6 @@ of these and need some pointers.
 
 Targeted for 0.9:
     - Upstream proxy support.
-    - Improve worst-case performance problem with XML-ish indenter
     - Follow mode to keep most recent flow in view
     - Rewrite the core to be asynchronous. I've done some research, and
     although it's a bit of a bloated monster, it looks like Twisted is the way
