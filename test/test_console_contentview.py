@@ -32,7 +32,7 @@ class uContentView(libpry.AutoTree):
                 ),
                 "foo"
               )
-        assert f is cv.view_xmlish
+        assert f is cv.view_html
 
         f = cv.get_view_func(
                 cv.VIEW_AUTO,
@@ -50,7 +50,7 @@ class uContentView(libpry.AutoTree):
                 ),
                 "<xml></xml>"
               )
-        assert f is cv.view_xmlish
+        assert f is cv.view_xml
 
     def test_view_urlencoded(self):
         d = utils.urlencode([("one", "two"), ("three", "four")])
@@ -71,18 +71,17 @@ class uContentView(libpry.AutoTree):
         assert cv.view_json([], "[" + ",".join(["0"]*cv.VIEW_CUTOFF) + "]")
 
     def test_view_xml(self):
-        #assert cv.view_xml([], "<foo></foo>")
-        #assert not cv.view_xml([], "<foo>")
-
+        assert cv.view_xml([], "<foo></foo>")
+        assert not cv.view_xml([], "<foo>")
         s = """<?xml version="1.0" encoding="UTF-8"?>
             <?xml-stylesheet title="XSL_formatting"?>
-            <rss 
+            <rss
                 xmlns:media="http://search.yahoo.com/mrss/"
                 xmlns:atom="http://www.w3.org/2005/Atom"
                 version="2.0">
             </rss>
         """
-        print cv.view_xml([], s)
+        assert cv.view_xml([], s)
 
     def test_view_raw(self):
         assert cv.view_raw([], "foo")
@@ -170,7 +169,7 @@ Larry
                 encoding.encode('gzip', "[1, 2, 3]")
               )
         assert "decoded gzip" in r[0]
-        assert "XML" in r[0]
+        assert "Raw" in r[0]
 
 
 tests = [

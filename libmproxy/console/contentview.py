@@ -7,7 +7,7 @@ import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier
 
-VIEW_CUTOFF = 1024*200
+VIEW_CUTOFF = 1024*100
 
 VIEW_AUTO = 0
 VIEW_JSON = 1
@@ -126,7 +126,6 @@ def view_xml(hdrs, content):
     try:
         document = lxml.etree.fromstring(content, parser)
     except lxml.etree.XMLSyntaxError, v:
-        print v
         return None
     docinfo = document.getroottree().docinfo
 
@@ -138,12 +137,16 @@ def view_xml(hdrs, content):
             lxml.etree.tostring(p)
         )
         p = p.getprevious()
+    doctype=docinfo.doctype
+    if prev:
+        doctype += "\n".join(prev).strip()
+    doctype = doctype.strip()
 
     s = lxml.etree.tostring(
             document,
             pretty_print=True,
             xml_declaration=True,
-            doctype=docinfo.doctype + "\n".join(prev),
+            doctype=doctype or None,
             encoding = docinfo.encoding
         )
 
@@ -162,14 +165,7 @@ def view_html(hdrs, content):
         d = lxml.html.fromstring(content, parser=parser)
         docinfo = d.getroottree().docinfo
         s = lxml.etree.tostring(d, pretty_print=True, doctype=docinfo.doctype)
-
-        txt = []
-        for i in s[:VIEW_CUTOFF].strip().split("\n"):
-            txt.append(
-                urwid.Text(("text", i)),
-            )
-        trailer(len(content), txt)
-        return "HTML", txt
+        return "HTML", _view_text(s[:VIEW_CUTOFF], len(s))
 
 
 def view_json(hdrs, content):
