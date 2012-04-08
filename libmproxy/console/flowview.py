@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, re
+import os, re, sys
 import urwid
 import common, grideditor, contentview
 from .. import utils, encoding, flow
@@ -125,15 +125,25 @@ class FlowView(common.WWrap):
         else:
             self.view_request()
 
-    def _cached_content_view(self, viewmode, hdrItems, content):
-        return contentview.get_content_view(viewmode, hdrItems, content)
+    def _cached_content_view(self, viewmode, hdrItems, content, limit):
+        return contentview.get_content_view(viewmode, hdrItems, content, limit)
 
     def content_view(self, viewmode, conn):
+        full = self.state.get_flow_setting(
+            self.flow,
+            (self.state.view_flow_mode, "fullcontents"),
+            False
+        )
+        if full:
+            limit = sys.maxint
+        else:
+            limit = contentview.VIEW_CUTOFF
         return cache.callback(
                     self, "_cached_content_view",
                     viewmode,
                     tuple(tuple(i) for i in conn.headers.lst),
                     conn.content,
+                    limit
                 )
 
     def conn_text(self, conn):
@@ -407,6 +417,20 @@ class FlowView(common.WWrap):
         elif key == "A":
             self.master.accept_all()
             self.master.view_flow(self.flow)
+        elif key == "b":
+            if conn:
+                if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+                    self.master.path_prompt(
+                        "Save request body: ",
+                        self.state.last_saveload,
+                        self.save_body
+                    )
+                else:
+                    self.master.path_prompt(
+                        "Save response body: ",
+                        self.state.last_saveload,
+                        self.save_body
+                    )
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()
@@ -448,6 +472,15 @@ class FlowView(common.WWrap):
                     self.edit
                 )
             key = None
+        elif key == "f":
+            self.master.statusbar.message("Loading all body data...")
+            self.state.add_flow_setting(
+                self.flow,
+                (self.state.view_flow_mode, "fullcontents"),
+                True
+            )
+            self.master.refresh_flow(self.flow)
+            self.master.statusbar.message("")
         elif key == "m":
             p = list(contentview.VIEW_PROMPT)
             p.insert(0, ("clear", "c"))
@@ -484,20 +517,6 @@ class FlowView(common.WWrap):
                 t = conn.headers["content-type"] or [None]
                 t = t[0]
                 self.master.spawn_external_viewer(conn.content, t)
-        elif key == "b":
-            if conn:
-                if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-                    self.master.path_prompt(
-                        "Save request body: ",
-                        self.state.last_saveload,
-                        self.save_body
-                    )
-                else:
-                    self.master.path_prompt(
-                        "Save response body: ",
-                        self.state.last_saveload,
-                        self.save_body
-                    )
         elif key == "|":
             self.master.path_prompt(
                 "Send flow to script: ", self.state.last_script,

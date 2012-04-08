@@ -234,6 +234,7 @@ class StatusBar(common.WWrap):
         else:
             self.expire = None
         self.ab.message(msg)
+        self.master.drawscreen()
 
 
 #end nocover

@@ -7,7 +7,7 @@ import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier
 
-VIEW_CUTOFF = 1024*100
+VIEW_CUTOFF = 1024*50
 
 VIEW_AUTO = 0
 VIEW_JSON = 1
@@ -76,20 +76,22 @@ CONTENT_TYPES_MAP = {
     "image/x-icon": VIEW_IMAGE,
 }
 
-def trailer(clen, txt):
-    rem = clen - VIEW_CUTOFF
+def trailer(clen, txt, limit):
+    rem = clen - limit
     if rem > 0:
         txt.append(urwid.Text(""))
         txt.append(
             urwid.Text(
                 [
-                    ("highlight", "... %s of data not shown"%utils.pretty_size(rem))
+                    ("highlight", "... %s of data not shown. Press "%utils.pretty_size(rem)),
+                    ("key", "f"),
+                    ("highlight", " to load all data.")
                 ]
             )
         )
 
 
-def _view_text(content, total):
+def _view_text(content, total, limit):
     """
         Generates a body for a chunk of text.
     """
@@ -98,18 +100,18 @@ def _view_text(content, total):
         txt.append(
             urwid.Text(("text", i), wrap="any")
         )
-    trailer(total, txt)
+    trailer(total, txt, limit)
     return txt
 
 
-def view_raw(hdrs, content):
-    txt = _view_text(content[:VIEW_CUTOFF], len(content))
+def view_raw(hdrs, content, limit):
+    txt = _view_text(content[:limit], len(content), limit)
     return "Raw", txt
 
 
-def view_hex(hdrs, content):
+def view_hex(hdrs, content, limit):
     txt = []
-    for offset, hexa, s in utils.hexdump(content[:VIEW_CUTOFF]):
+    for offset, hexa, s in utils.hexdump(content[:limit]):
         txt.append(urwid.Text([
             ("offset", offset),
             " ",
@@ -117,11 +119,11 @@ def view_hex(hdrs, content):
             "   ",
             ("text", s),
         ]))
-    trailer(len(content), txt)
+    trailer(len(content), txt, limit)
     return "Hex", txt
 
 
-def view_xml(hdrs, content):
+def view_xml(hdrs, content, limit):
     parser = lxml.etree.XMLParser(remove_blank_text=True, resolve_entities=False, strip_cdata=False, recover=False)
     try:
         document = lxml.etree.fromstring(content, parser)
@@ -151,24 +153,24 @@ def view_xml(hdrs, content):
         )
 
     txt = []
-    for i in s[:VIEW_CUTOFF].strip().split("\n"):
+    for i in s[:limit].strip().split("\n"):
         txt.append(
             urwid.Text(("text", i)),
         )
-    trailer(len(content), txt)
+    trailer(len(content), txt, limit)
     return "XML-like data", txt
 
 
-def view_html(hdrs, content):
+def view_html(hdrs, content, limit):
     if utils.isXML(content):
         parser = lxml.etree.HTMLParser(strip_cdata=True, remove_blank_text=True)
         d = lxml.html.fromstring(content, parser=parser)
         docinfo = d.getroottree().docinfo
         s = lxml.etree.tostring(d, pretty_print=True, doctype=docinfo.doctype)
-        return "HTML", _view_text(s[:VIEW_CUTOFF], len(s))
+        return "HTML", _view_text(s[:limit], len(s), limit)
 
 
-def view_json(hdrs, content):
+def view_json(hdrs, content, limit):
     lines = utils.pretty_json(content)
     if lines:
         txt = []
@@ -178,13 +180,13 @@ def view_json(hdrs, content):
             txt.append(
                 urwid.Text(("text", i)),
             )
-            if sofar > VIEW_CUTOFF:
+            if sofar > limit:
                 break
-        trailer(sum(len(i) for i in lines), txt)
+        trailer(sum(len(i) for i in lines), txt, limit)
         return "JSON", txt
 
 
-def view_multipart(hdrs, content):
+def view_multipart(hdrs, content, limit):
     v = hdrs.get("content-type")
     if v:
         v = utils.parse_content_type(v[0])
@@ -218,7 +220,7 @@ def view_multipart(hdrs, content):
         return "Multipart form", r
 
 
-def view_urlencoded(hdrs, content):
+def view_urlencoded(hdrs, content, limit):
     lines = utils.urldecode(content)
     if lines:
         body = common.format_keyvals(
@@ -229,18 +231,20 @@ def view_urlencoded(hdrs, content):
         return "URLEncoded form", body
 
 
-def view_javascript(hdrs, content):
+def view_javascript(hdrs, content, limit):
     opts = jsbeautifier.default_options()
     opts.indent_size = 2
     try:
-        res = jsbeautifier.beautify(content[:VIEW_CUTOFF], opts)
+        res = jsbeautifier.beautify(content[:limit], opts)
+    # begin nocover
     except:
         # Bugs in jsbeautifier mean that it can trhow arbitrary errors.
         return None
-    return "JavaScript", _view_text(res, len(content))
+    # end nocover
+    return "JavaScript", _view_text(res, len(content), limit)
 
 
-def view_image(hdrs, content):
+def view_image(hdrs, content, limit):
     try:
         img = Image.open(cStringIO.StringIO(content))
     except IOError:
@@ -302,7 +306,7 @@ def get_view_func(viewmode, hdrs, content):
     return PRETTY_FUNCTION_MAP.get(viewmode, view_raw)
 
 
-def get_content_view(viewmode, hdrItems, content):
+def get_content_view(viewmode, hdrItems, content, limit):
     """
         Returns a (msg, body) tuple.
     """
@@ -317,10 +321,10 @@ def get_content_view(viewmode, hdrItems, content):
             content = decoded
             msg.append("[decoded %s]"%enc[0])
     func = get_view_func(viewmode, hdrs, content)
-    ret = func(hdrs, content)
+    ret = func(hdrs, content, limit)
     if not ret:
         viewmode = VIEW_RAW
-        ret = view_raw(hdrs, content)
+        ret = view_raw(hdrs, content, limit)
         msg.append("Couldn't parse: falling back to Raw")
     else:
         msg.append(ret[0])
