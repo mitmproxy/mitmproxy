@@ -191,9 +191,17 @@ class StatusBar(common.WWrap):
         if self.expire and time.time() > self.expire:
             self.message("")
 
-        t = [
-                ('heading', ("[%s]"%self.master.state.flow_count()).ljust(7)),
+        fc = self.master.state.flow_count()
+        if self.master.currentflow:
+            idx = self.master.state.view.index(self.master.currentflow) + 1
+            t = [
+                ('heading', ("[%s/%s]"%(idx, fc)).ljust(9))
             ]
+        else:
+            t = [
+                ('heading', ("[%s]"%fc).ljust(9))
+            ]
+
         if self.master.server.bound:
             boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
         else:

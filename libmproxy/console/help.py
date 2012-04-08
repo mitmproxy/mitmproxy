@@ -95,7 +95,6 @@ class HelpView(urwid.ListBox):
                     common.highlight_key("xml", "x") +
                     [("text", ": XML")]
                 ),
-
             ("o", "toggle options:"),
                 (None,
                     common.highlight_key("anticache", "a") +
