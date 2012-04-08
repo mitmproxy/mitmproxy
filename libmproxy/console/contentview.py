@@ -232,7 +232,11 @@ def view_urlencoded(hdrs, content):
 def view_javascript(hdrs, content):
     opts = jsbeautifier.default_options()
     opts.indent_size = 2
-    res = jsbeautifier.beautify(content[:VIEW_CUTOFF], opts)
+    try:
+        res = jsbeautifier.beautify(content[:VIEW_CUTOFF], opts)
+    except:
+        # Bugs in jsbeautifier mean that it can trhow arbitrary errors.
+        return None
     return "JavaScript", _view_text(res, len(content))
 
 
