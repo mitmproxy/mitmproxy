@@ -27,6 +27,7 @@ def _mkhelp():
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "edit request/response"),
+        ("f", "load full body data"),
         ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +

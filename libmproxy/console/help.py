@@ -97,22 +97,26 @@ class HelpView(urwid.ListBox):
                 ),
 
             ("o", "toggle options:"),
-            (None,
-                common.highlight_key("anticache", "a") +
-                [("text", ": prevent cached responses")]
-            ),
-            (None,
-                common.highlight_key("anticomp", "c") +
-                [("text", ": prevent compressed responses")]
-            ),
-            (None,
-                common.highlight_key("killextra", "k") +
-                [("text", ": kill requests not part of server replay")]
-            ),
-            (None,
-                common.highlight_key("norefresh", "n") +
-                [("text", ": disable server replay response refresh")]
-            ),
+                (None,
+                    common.highlight_key("anticache", "a") +
+                    [("text", ": prevent cached responses")]
+                ),
+                (None,
+                    common.highlight_key("anticomp", "c") +
+                    [("text", ": prevent compressed responses")]
+                ),
+                (None,
+                    common.highlight_key("killextra", "k") +
+                    [("text", ": kill requests not part of server replay")]
+                ),
+                (None,
+                    common.highlight_key("norefresh", "n") +
+                    [("text", ": disable server replay response refresh")]
+                ),
+                (None,
+                    common.highlight_key("upstream certs", "u") +
+                    [("text", ": sniff cert info from upstream server")]
+                ),
 
             ("q", "quit / return to flow list"),
             ("Q", "quit without confirm prompt"),
