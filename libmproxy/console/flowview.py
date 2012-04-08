@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, re, sys
+import os, sys
 import urwid
 import common, grideditor, contentview
-from .. import utils, encoding, flow
+from .. import utils, flow
 
 def _mkhelp():
     text = []

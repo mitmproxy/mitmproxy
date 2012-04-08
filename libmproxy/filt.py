@@ -40,7 +40,6 @@
 """
 import re, sys
 import contrib.pyparsing as pp
-import flow
 
 
 class _Token:

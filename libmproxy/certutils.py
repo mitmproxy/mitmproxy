@@ -2,7 +2,6 @@ import os, ssl, hashlib, socket, time, datetime
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 import OpenSSL
-import utils
 
 CERT_SLEEP_TIME = 1
 CERT_EXPIRY = str(365 * 3)
@@ -98,7 +97,6 @@ def dummy_cert(certdir, ca, commonname, sans):
     else:
         key, ca = create_ca()
 
-    pkey = ca.get_pubkey()
     req = OpenSSL.crypto.X509Req()
     subj = req.get_subject()
     subj.CN = commonname

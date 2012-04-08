@@ -15,7 +15,6 @@
 
 import urwid
 import common
-from .. import filt, version
 
 footer = [
     ('heading_key', "q"), ":back ",

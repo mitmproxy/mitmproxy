@@ -127,7 +127,7 @@ def view_xml(hdrs, content, limit):
     parser = lxml.etree.XMLParser(remove_blank_text=True, resolve_entities=False, strip_cdata=False, recover=False)
     try:
         document = lxml.etree.fromstring(content, parser)
-    except lxml.etree.XMLSyntaxError, v:
+    except lxml.etree.XMLSyntaxError:
         return None
     docinfo = document.getroottree().docinfo
 

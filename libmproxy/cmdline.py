@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import proxy
-import optparse, re, filt, textwrap
+import optparse, re, filt
 
 
 class ParseReplaceException(Exception): pass
