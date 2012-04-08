@@ -96,7 +96,7 @@ def _view_text(content, total):
     txt = []
     for i in utils.cleanBin(content).splitlines():
         txt.append(
-            urwid.Text(("text", i))
+            urwid.Text(("text", i), wrap="any")
         )
     trailer(total, txt)
     return txt

@@ -3,7 +3,7 @@ MANIFEST
 /dist
 /tmp
 /doc
-*.py[cd]
+*.py[cdo]
 *.swp
 *.swo
 mitmproxyc
