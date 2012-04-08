@@ -357,7 +357,7 @@ class ConsoleMaster(flow.FlowMaster):
         for i in options.replacements:
             self.replacehooks.add(*i)
 
-        self.flow_list_view = None
+        self.flow_list_walker = None
         self.set_palette()
 
         r = self.set_intercept(options.intercept)
@@ -513,7 +513,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
         self.ui.register_palette(self.palette)
-        self.flow_list_view = flowlist.ConnectionListView(self, self.state)
+        self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
 
         self.view = None
         self.statusbar = None
@@ -544,7 +544,7 @@ class ConsoleMaster(flow.FlowMaster):
     def focus_current(self):
         if self.currentflow:
             try:
-                self.flow_list_view.set_focus(self.state.index(self.currentflow))
+                self.flow_list_walker.set_focus(self.state.index(self.currentflow))
             except (IndexError, ValueError):
                 pass
 
@@ -584,7 +584,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.eventlog:
             self.body = flowlist.BodyPile(self)
         else:
-            self.body = flowlist.ConnectionListBox(self)
+            self.body = flowlist.FlowListBox(self)
         self.statusbar = StatusBar(self, flowlist.footer)
         self.header = None
         self.currentflow = None
@@ -640,7 +640,7 @@ class ConsoleMaster(flow.FlowMaster):
         except flow.FlowReadError, v:
             return v.strerror
         f.close()
-        if self.flow_list_view:
+        if self.flow_list_walker:
             self.sync_list_view()
             self.focus_current()
 
@@ -697,7 +697,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.accept_all()
 
     def set_limit(self, txt):
-        return self.state.set_limit(txt)
+        v = self.state.set_limit(txt)
+        self.sync_list_view()
+        return v
 
     def set_intercept(self, txt):
         return self.state.set_intercept(txt)
@@ -788,7 +790,6 @@ class ConsoleMaster(flow.FlowMaster):
                                     self.state.intercept_txt,
                                     self.set_intercept
                                 )
-                                self.sync_list_view()
                             elif k == "Q":
                                 raise Stop
                             elif k == "q":
@@ -816,7 +817,6 @@ class ConsoleMaster(flow.FlowMaster):
                                     p,
                                     self.set_reverse_proxy
                                 )
-                                self.sync_list_view()
                             elif k == "R":
                                 self.view_grideditor(
                                     grideditor.ReplaceEditor(
@@ -907,7 +907,7 @@ class ConsoleMaster(flow.FlowMaster):
         controller.Master.shutdown(self)
 
     def sync_list_view(self):
-        self.flow_list_view._modified()
+        self.flow_list_walker._modified()
 
     def clear_flows(self):
         self.state.clear()

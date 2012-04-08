@@ -68,7 +68,7 @@ class BodyPile(urwid.Pile):
         urwid.Pile.__init__(
             self,
             [
-                ConnectionListBox(master),
+                FlowListBox(master),
                 urwid.Frame(EventListBox(master), header = self.inactive_header)
             ]
         )
@@ -166,7 +166,7 @@ class ConnectionItem(common.WWrap):
             return key
 
 
-class ConnectionListView(urwid.ListWalker):
+class FlowListWalker(urwid.ListWalker):
     def __init__(self, master, state):
         self.master, self.state = master, state
         if self.state.flow_count():
@@ -192,10 +192,10 @@ class ConnectionListView(urwid.ListWalker):
         return f, i
 
 
-class ConnectionListBox(urwid.ListBox):
+class FlowListBox(urwid.ListBox):
     def __init__(self, master):
         self.master = master
-        urwid.ListBox.__init__(self, master.flow_list_view)
+        urwid.ListBox.__init__(self, master.flow_list_walker)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
@@ -208,7 +208,6 @@ class ConnectionListBox(urwid.ListBox):
             self.master.toggle_eventlog()
         elif key == "l":
             self.master.prompt("Limit: ", self.master.state.limit_txt, self.master.set_limit)
-            self.master.sync_list_view()
         elif key == "L":
             self.master.path_prompt(
                 "Load flows: ",
