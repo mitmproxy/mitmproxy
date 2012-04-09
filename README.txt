@@ -37,7 +37,7 @@ Community
 ---------
 
 Come join us in the #mitmproxy channel on the OFTC IRC network
-(irc://irc.oftc.net:6667).
+(irc.oftc.net, port 6667).
 
 We also have a mailing list, hosted here:
 
