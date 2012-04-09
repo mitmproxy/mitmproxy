@@ -1,0 +1,57 @@
+
+## Using Pip 
+
+The preferred way to install mitmproxy is to use
+[pip](http://pypi.python.org/pypi/pip). A single command will install the
+latest release of mitmproxy, along with all its dependencies:
+
+<pre>
+sudo pip install mitmproxy
+</pre>
+
+
+## From Source
+
+- When installing from source, you will need to install the
+[dependencies](@!urlTo("intro.html")!@) by hand. 
+- Then run the following command from the base of the source distribution:
+    
+<pre>
+sudo python setup.py install
+</pre>
+
+
+## OSX
+
+- Make sure that XCode is installed from the App Store, and that the
+command-line tools have been downloaded (XCode/Preferences/Downloads).
+- Install __pip__ using the following command:
+    
+<pre>
+sudo easy_install pip
+</pre>
+
+- Now use __pip__ to set up the dependencies and do the install:
+
+<pre>
+sudo pip install mitmproxy
+</pre>
+
+This procedure may vary if, for instance, you've installed Python from an
+external source like [homebrew](http://mxcl.github.com/homebrew/). In that
+case, the easiest way to proceed is to first install __easy_install__, then
+continue as above.
+
+There are a few bits of customization you might want to do to make mitmproxy
+comfortable to use. At the moment, mitmproxy's color scheme is optimized for a
+dark background terminal, so you probably want to change the default. You can
+use the OSX <b>open</b> program to create a simple and effective
+<b>~/.mailcap</b> file to view HTTP bodies:
+
+<pre>
+application/*; /usr/bin/open -Wn %s
+audio/*; /usr/bin/open -Wn %s
+image/*; /usr/bin/open -Wn %s
+video/*; /usr/bin/open -Wn %s
+</pre>
+

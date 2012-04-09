@@ -68,6 +68,7 @@ ns.filt_help = filt_help
 pages = [
     Page("index.html", "docs"),
     Page("intro.html", "Introduction"),
+    Page("install.html", "Installation"),
     Page("mitmproxy.html", "mitmproxy"),
     Page("mitmdump.html", "mitmdump"),
     Page("clientreplay.html", "Client-side replay"),

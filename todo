@@ -3,18 +3,20 @@ hacking on mitmproxy. Drop me a line (aldo@corte.si) if you want to tackle any
 of these and need some pointers.
 
 Targeted for 0.9:
+    - White-background colorscheme
+    - Extra content view modules: CSS indenter, Flash SWF info extractor
     - Upstream proxy support.
     - Follow mode to keep most recent flow in view
-    - Rewrite the core to be asynchronous. I've done some research, and
-    although it's a bit of a bloated monster, it looks like Twisted is the way
-    to go.
     - Verbose view to show timestamps
     - Search within requests/responses
     - Transparent proxy support
     - Ordering a-la mutt's "o" shortcut
 
 
-Further ideas:
+Future:
+    - Rewrite the core to be asynchronous. I've done some research, and
+    although it's a bit of a bloated monster, it looks like Twisted is the way
+    to go.
     - Add some "workspace" features to mitmproxy:
         - Flow comments
         - Copying/duplicating flows
