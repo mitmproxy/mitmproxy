@@ -1575,6 +1575,9 @@ class FlowReader:
         try:
             while 1:
                 data = tnetstring.load(self.fo)
+                if tuple(data["version"]) != version.IVERSION:
+                    v = ".".join(str(i) for i in data["version"])
+                    raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
                 yield Flow._from_state(data)
         except ValueError:

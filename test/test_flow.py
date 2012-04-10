@@ -1,7 +1,7 @@
 import Queue, time
 from cStringIO import StringIO
 import email.utils
-from libmproxy import filt, flow, controller, utils
+from libmproxy import filt, flow, controller, utils, tnetstring
 import tutils
 import libpry
 
@@ -493,6 +493,17 @@ class uSerialize(libpry.AutoTree):
 
         f = flow.FlowReadError("foo")
         assert f.strerror == "foo"
+
+    def test_versioncheck(self):
+        f = tutils.tflow()
+        d = f._get_state()
+        d["version"] = (0, 0)
+        sio = StringIO()
+        tnetstring.dump(d, sio)
+        sio.seek(0)
+
+        r = flow.FlowReader(sio)
+        libpry.raises("version", list, r.stream())
 
 
 class uFlowMaster(libpry.AutoTree):
