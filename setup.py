@@ -92,5 +92,5 @@ setup(
             "Topic :: Internet :: Proxy Servers",
             "Topic :: Software Development :: Testing"
         ],
-        install_requires=['urwid>=1.0', 'pyasn1', 'pyopenssl>=0.12', "PIL", "lxml"],
+        install_requires=['urwid>=1.0', 'pyasn1>0.1.2', 'pyopenssl>=0.12', "PIL", "lxml"],
 )
