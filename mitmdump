@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
+import sys, signal
 from libmproxy import proxy, dump, cmdline
 from libmproxy.version import VERSION
 from optparse import OptionParser
@@ -62,9 +62,15 @@ if __name__ == '__main__':
 
     try:
         m = dump.DumpMaster(server, dumpopts, filt)
+        def cleankill(*args, **kwargs):
+            m.shutdown()
+        signal.signal(signal.SIGTERM, cleankill)
         m.run()
     except dump.DumpError, e:
         print >> sys.stderr, "mitmdump:", e
         sys.exit(1)
     except KeyboardInterrupt:
         pass
+
+
+
