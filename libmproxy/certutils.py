@@ -67,6 +67,7 @@ def dummy_ca(path):
     f = open(os.path.join(dirname, basename + "-cert.p12"), "w")
     p12 = OpenSSL.crypto.PKCS12()
     p12.set_certificate(ca)
+    p12.set_privatekey(key)
     f.write(p12.export())
     f.close()
     return True
