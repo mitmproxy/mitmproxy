@@ -160,7 +160,6 @@ class ODict:
         """
         if isinstance(valuelist, basestring):
             raise ValueError("ODict valuelist should be lists.")
-        k = self._kconv(k)
         new = self._filter_lst(k, self.lst)
         for i in valuelist:
             new.append((k, i))
@@ -174,7 +173,7 @@ class ODict:
 
     def __contains__(self, k):
         for i in self.lst:
-            if self._kconv(i[0]) == k:
+            if self._kconv(i[0]) == self._kconv(k):
                 return True
         return False
 
@@ -186,6 +185,9 @@ class ODict:
             return self[k]
         else:
             return d
+
+    def items(self):
+        return self.lst[:]
 
     def _get_state(self):
         return [tuple(i) for i in self.lst]

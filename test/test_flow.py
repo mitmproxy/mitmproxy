@@ -1030,6 +1030,15 @@ class uODictCaseless(libpry.AutoTree):
     def setUp(self):
         self.od = flow.ODictCaseless()
 
+    def test_case_preservation(self):
+        self.od["Foo"] = ["1"]
+        assert "foo" in self.od
+        assert self.od.items()[0][0] == "Foo"
+        assert self.od.get("foo") == ["1"]
+        assert self.od.get("foo", [""]) == ["1"]
+        assert self.od.get("Foo", [""]) == ["1"]
+        assert self.od.get("xx", "yy") == "yy"
+
     def test_del(self):
         self.od.add("foo", 1)
         self.od.add("Foo", 2)

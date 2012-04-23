@@ -21,9 +21,7 @@
 import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer, ssl
-import utils, flow, certutils
-
-NAME = "mitmproxy"
+import utils, flow, certutils, version, wsgi
 
 
 class ProxyError(Exception):
@@ -128,6 +126,8 @@ def read_http_body(rfile, connection, headers, all, limit):
     return content
 
 
+#FIXME: Return full HTTP version specification from here. Allow non-HTTP
+#protocol specs, and make it all editable.
 def parse_request_line(request):
     """
         Parse a proxy request line. Return (method, scheme, host, port, path, minor).
@@ -230,7 +230,7 @@ class ServerConnection:
             self.scheme = request.scheme
         self.close = False
         self.cert = None
-        self.server, self.rfile, self.wfile = None, None, None
+        self.sock, self.rfile, self.wfile = None, None, None
         self.connect()
 
     def connect(self):
@@ -244,7 +244,7 @@ class ServerConnection:
                 self.cert = server.getpeercert(True)
         except socket.error, err:
             raise ProxyError(502, 'Error connecting to "%s": %s' % (self.host, err))
-        self.server = server
+        self.sock = server
         self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
 
     def send(self):
@@ -284,7 +284,7 @@ class ServerConnection:
         try:
             if not self.wfile.closed:
                 self.wfile.flush()
-            self.server.close()
+            self.sock.close()
         except IOError:
             pass
 
@@ -305,7 +305,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.finish()
 
     def handle_request(self, cc):
-        server, request, err = None, None, None
+        server_conn, request, err = None, None, None
         try:
             try:
                 request = self.read_request(cc)
@@ -315,29 +315,34 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 cc.close = True
                 return
             cc.requestcount += 1
-            request = request._send(self.mqueue)
-            if request is None:
-                cc.close = True
-                return
 
-            if isinstance(request, flow.Response):
-                response = request
-                request = False
-                response = response._send(self.mqueue)
+            app = self.server.apps.get(request)
+            if app:
+                app.serve(request, self.wfile)
             else:
-                server = ServerConnection(self.config, request)
-                server.send()
-                try:
-                    response = server.read_response()
-                except IOError, v:
-                    raise IOError, "Reading response: %s"%v
-                response = response._send(self.mqueue)
+                request = request._send(self.mqueue)
+                if request is None:
+                    cc.close = True
+                    return
+
+                if isinstance(request, flow.Response):
+                    response = request
+                    request = False
+                    response = response._send(self.mqueue)
+                else:
+                    server_conn = ServerConnection(self.config, request)
+                    server_conn.send()
+                    try:
+                        response = server_conn.read_response()
+                    except IOError, v:
+                        raise IOError, "Reading response: %s"%v
+                    response = response._send(self.mqueue)
+                    if response is None:
+                        server_conn.terminate()
                 if response is None:
-                    server.terminate()
-            if response is None:
-                cc.close = True
-                return
-            self.send_response(response)
+                    cc.close = True
+                    return
+                self.send_response(response)
         except IOError, v:
             cc.connection_error = v
             cc.close = True
@@ -348,8 +353,8 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 err = flow.Error(request, e.msg)
                 err._send(self.mqueue)
                 self.send_error(e.code, e.msg)
-        if server:
-            server.terminate()
+        if server_conn:
+            server_conn.terminate()
 
     def find_cert(self, host, port):
         if self.config.certfile:
@@ -374,7 +379,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             return None
         method, scheme, host, port, path, httpminor = parse_request_line(line)
         if method == "CONNECT":
-            # Discard additional headers sent to the proxy. Should I expose
+            # FIXME: Discard additional headers sent to the proxy. Should I expose
             # these to users?
             while 1:
                 d = self.rfile.readline()
@@ -382,7 +387,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     break
             self.wfile.write(
                         'HTTP/1.1 200 Connection established\r\n' +
-                        ('Proxy-agent: %s\r\n'%NAME) +
+                        ('Proxy-agent: %s\r\n'%version.NAMEVERSION) +
                         '\r\n'
                         )
             self.wfile.flush()
@@ -425,7 +430,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             expect = ",".join(headers['expect'])
             if expect == "100-continue" and httpminor >= 1:
                 self.wfile.write('HTTP/1.1 100 Continue\r\n')
-                self.wfile.write('Proxy-agent: %s\r\n'%NAME)
+                self.wfile.write('Proxy-agent: %s\r\n'%version.NAMEVERSION)
                 self.wfile.write('\r\n')
                 del headers['expect']
             else:
@@ -463,7 +468,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             import BaseHTTPServer
             response = BaseHTTPServer.BaseHTTPRequestHandler.responses[code][0]
             self.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-            self.wfile.write("Server: %s\r\n"%NAME)
+            self.wfile.write("Server: %s\r\n"%version.NAMEVERSION)
             self.wfile.write("Connection: close\r\n")
             self.wfile.write("Content-type: text/html\r\n")
             self.wfile.write("\r\n")
@@ -494,6 +499,7 @@ class ProxyServer(ServerBase):
         self.masterq = None
         self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
         config.certdir = self.certdir
+        self.apps = wsgi.AppRegistry()
 
     def start_slave(self, klass, masterq):
         slave = klass(masterq, self)
