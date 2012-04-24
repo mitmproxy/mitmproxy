@@ -104,13 +104,17 @@ class WSGIAdaptor:
             except Exception, v:
                 pass
         return errs.getvalue()
-    
+
 
 class AppRegistry:
     def __init__(self):
         self.apps = {}
 
     def add(self, app, domain, port):
+        """
+            Add a WSGI app to the registry, to be served for requests to the
+            specified domain, on the specified port.
+        """
         self.apps[(domain, port)] = WSGIAdaptor(app, domain, port)
 
     def get(self, request):

@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+"""
+    This example shows how to graft a WSGI app onto mitmproxy. In this
+    instance, we're using the Bottle framework (http://bottlepy.org/) to expose
+    a single simplest-possible page.
+"""
 import bottle
 import os
 from libmproxy import proxy, flow
-
 
 @bottle.route('/')
 def index():
@@ -35,6 +39,8 @@ config = proxy.ProxyConfig(
 )
 state = flow.State()
 server = proxy.ProxyServer(config, 8080)
+# Register the app using the magic domain "proxapp" on port 80. Requests to
+# this domain and port combination will now be routed to the WSGI app instance.
 server.apps.add(bottle.app(), "proxapp", 80)
 m = MyMaster(server, state)
 m.run()
