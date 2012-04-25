@@ -528,10 +528,10 @@ class Request(HTTPMsg):
         if not 'host' in headers:
             headers["host"] = [utils.hostport(self.scheme, self.host, self.port)]
         content = self.content
-        if content is None:
-            content = ""
-        else:
+        if content:
             headers["content-length"] = [str(len(content))]
+        else:
+            content = ""
         if self.close:
             headers["connection"] = ["close"]
         if not _proxy:
@@ -698,10 +698,10 @@ class Response(HTTPMsg):
             ['proxy-connection', 'connection', 'keep-alive', 'transfer-encoding']
         )
         content = self.content
-        if content is None:
-            content = ""
-        else:
+        if content:
             headers["content-length"] = [str(len(content))]
+        else:
+            content = ""
         if self.request.client_conn.close:
             headers["connection"] = ["close"]
         proto = "HTTP/1.1 %s %s"%(self.code, str(self.msg))
