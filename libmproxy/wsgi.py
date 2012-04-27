@@ -55,6 +55,23 @@ class WSGIAdaptor:
                 environ[key] = value
         return environ
 
+    def error_page(self, soc, headers_sent):
+        """
+            Make a best-effort attempt to write an error page. If headers are
+            already sent, we just bung the error into the page.
+        """
+        c = """
+            <html>
+                <h1>Internal Server Error</h1>
+            </html>
+        """
+        if not headers_sent:
+            soc.write("HTTP/1.1 500 Internal Server Error%s\r\n")
+            soc.write("Content-Type: text/html\r\n")
+            soc.write("Content-Length: %s\r\n"%len(c))
+            soc.write("\r\n")
+        soc.write(c)
+
     def serve(self, request, soc):
         state = dict(
             response_started = False,
@@ -97,12 +114,12 @@ class WSGIAdaptor:
             if not state["headers_sent"]:
                 write("")
         except Exception, v:
-            print v
             try:
-                # Serve internal server error page
-                pass
+                self.error_page(soc, state["headers_sent"])
+            # begin nocover
             except Exception, v:
                 pass
+            # end nocover
         return errs.getvalue()
 
 
