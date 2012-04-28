@@ -4,6 +4,17 @@ from libpathod import rparse
 
 rparse.TESTING = True
 
+class DummyRequest(StringIO.StringIO):
+    def write(self, d, callback=None):
+        StringIO.StringIO.write(self, d)
+        if callback:
+            callback()
+
+    def finish(self):
+        return
+
+
+
 class uMisc(libpry.AutoTree):
     def test_generators(self):
         v = rparse.Value.parseString("val")[0]
@@ -130,8 +141,10 @@ class uMisc(libpry.AutoTree):
         r = e.parseString('10')[0]
         assert r.msg.val == "Unknown code"
 
-    def test_stub_response(self):
-        s = rparse.StubResponse(400, "foo")
+    def test_internal_response(self):
+        d = DummyRequest()
+        s = rparse.InternalResponse(400, "foo")
+        s.render(d)
 
 
 class uDisconnects(libpry.AutoTree):
@@ -175,6 +188,10 @@ class uPauses(libpry.AutoTree):
 class uparse(libpry.AutoTree):
     def test_parse_err(self):
         libpry.raises(rparse.ParseException, rparse.parse, {}, "400:msg,b:")
+        try:
+            rparse.parse({}, "400:msg,b:")
+        except rparse.ParseException, v:
+            print v.marked()
 
     def test_parse_header(self):
         r = rparse.parse({}, "400,h:foo:bar")
@@ -191,16 +208,6 @@ class uparse(libpry.AutoTree):
     def test_parse_pause_random(self):
         r = rparse.parse({}, "400,pr:10")
         assert ("random", 10) in r.pauses
-
-
-class DummyRequest(StringIO.StringIO):
-    def write(self, d, callback=None):
-        StringIO.StringIO.write(self, d)
-        if callback:
-            callback()
-
-    def finish(self):
-        return
 
 
 class uResponse(libpry.AutoTree):

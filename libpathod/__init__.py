@@ -16,7 +16,6 @@ def application(**settings):
                     (r"/preview", handlers.Preview),
                     (r"/p/.*", handlers.Pathod, settings),
                 ],
-                debug=True,
                 static_path = utils.data.path("static"),
                 template_path = utils.data.path("templates"),
            )

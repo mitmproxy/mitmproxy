@@ -36,9 +36,9 @@ class Pathod(object):
         try:
             self.response = rparse.parse(self.settings, spec)
         except rparse.ParseException, v:
-            self.response = rparse.StubResponse(
+            self.response = rparse.InternalResponse(
                 800,
-                "Error parsing response spec:" + str(v)
+                "Error parsing response spec: %s\n"%v.msg + v.marked()
             )
 
     def _execute(self, transforms, *args, **kwargs):

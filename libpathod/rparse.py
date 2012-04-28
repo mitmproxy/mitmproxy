@@ -5,7 +5,17 @@ import tornado.ioloop
 
 TESTING = False
 
-class ParseException(Exception): pass
+class ParseException(Exception):
+    def __init__(self, msg, s, col):
+        Exception.__init__(self)
+        self.msg = msg
+        self.s = s
+        self.col = col
+
+    def marked(self):
+        return "%s\n%s"%(self.s, " "*(self.col-1) + "^")
+
+
 class ServerError(Exception): pass
 
 
@@ -304,19 +314,9 @@ class Response:
     code = 200
     msg = LiteralGenerator(http.RESPONSES[code])
     body = LiteralGenerator("OK")
-    def __init__(self, settings, tokens):
-        self.tokens = tokens
+    def __init__(self):
         self.headers = []
         self.pauses = []
-        for i in tokens:
-            i.mod_response(settings, self)
-        if self.body and not self.get_header("Content-Length"):
-            self.headers.append(
-                (
-                    LiteralGenerator("Content-Length"),
-                    LiteralGenerator(str(len(self.body))),
-                )
-            )
 
     def get_header(self, hdr):
         for k, v in self.headers:
@@ -393,6 +393,14 @@ class Response:
         fp.finish()
 
     def render(self, fp):
+        if self.body and not self.get_header("Content-Length"):
+            self.headers.append(
+                (
+                    LiteralGenerator("Content-Length"),
+                    LiteralGenerator(str(len(self.body))),
+                )
+            )
+
         hdrs = []
         for k, v in self.headers:
             hdrs.extend([
@@ -423,8 +431,17 @@ class Response:
         return "\n".join(parts)
 
 
-class StubResponse:
+class CraftedResponse(Response):
+    def __init__(self, settings, tokens):
+        Response.__init__(self)
+        self.tokens = tokens
+        for i in tokens:
+            i.mod_response(settings, self)
+
+
+class InternalResponse(Response):
     def __init__(self, code, body):
+        Response.__init__(self)
         self.code = code
         self.msg = LiteralGenerator(http.RESPONSES.get(code, "Unknown error"))
         self.body = LiteralGenerator(body)
@@ -442,6 +459,6 @@ class StubResponse:
 
 def parse(settings, s):
     try:
-        return Response(settings, Response.expr().parseString(s, parseAll=True))
+        return CraftedResponse(settings, Response.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
-        raise ParseException(v)
+        raise ParseException(v.msg, v.line, v.col)
