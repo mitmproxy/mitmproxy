@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Omnid</title>
+    <link href="/static/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">Omnid</a>
+          <ul class="nav">
+            <li {% if section== "main" %} class="active" {% end %}><a href="/">Main</a></li>
+            <li {% if section== "log" %} class="active" {% end %}><a href="/log">Log</a></li>
+            <li {% if section== "help" %} class="active" {% end %}><a href="/help">Help</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+        
+        {% block body %}  
+        {% end %}  
+
+      <footer>
+        <p>made by <a href="http://corte.si">Aldo Cortesi</a> </p>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>

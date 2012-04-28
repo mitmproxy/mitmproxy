@@ -1,0 +1,102 @@
+
+Value Specifiers:
+
+    !500k           - 500k of random data
+    !500k:utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
+    "foo"           - literal
+    foo             - literal
+    <path           - load from path under data directory
+    <"path literal" - load from path under data directory
+
+
+Response:
+    
+    code:[comma-separated features]
+    
+
+Specifying a response:
+    Code 200:
+        code:msg
+        200:VALUE
+
+    Headers:
+        h:VALUE:VALUE
+
+    Body:
+        b:VALUE
+
+    Pauses:
+        pb:5
+        pb:forever
+
+        Pause before sending data:
+
+            pb:5
+
+        Pause after sending data, before hanging up:
+
+            pa:5
+
+        Pause after sending a random amoutn of data:
+
+            pr:5
+
+
+    Disconnect:
+        
+        Before sending data:
+
+            db
+
+        Randomly:
+
+            dr
+
+
+Shortcuts:
+
+    Redirects:
+        code:msg>destination
+        code>destination
+
+        301:VALUE>VALUE
+        301>http://foo.bar
+
+
+    Content-type:
+
+        t:content-type
+
+
+Examples:
+    200,b:500k
+
+    404,p:5s,b:1k:printable
+
+    200,t:text/json,p:5s,b:1k
+
+    200,b:1k,xr
+
+
+
+Sequences:
+
+    200 * 2 | !forever
+
+    200 | 404 | 200,b:500g
+
+
+
+Anchors:
+
+    Passed on command-line?
+        --anchor /foo/bar 200:!/foo
+
+
+
+Built-in help
+
+    /help
+
+    /explain/expression
+
