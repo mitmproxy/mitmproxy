@@ -1,22 +1,44 @@
 #!/usr/bin/env python
 import argparse
-from libpathod import app
+from libpathod import app, utils
 import tornado.ioloop
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument("-p", dest='port', default=8888, type=int, help='Port.')
     parser.add_argument(
-        "-s", dest='staticdir', default=None, type=str,
+        "-d", dest='staticdir', default=None, type=str,
         help='Directory for static files.'
+    )
+    parser.add_argument(
+        "-s", dest='ssl', default=False,
+        action="store_true",
+        help='Serve with SSL.'
+    )
+    parser.add_argument(
+        "--keyfile", dest='ssl_keyfile', default=None,
+        type=str,
+        help='SSL key file. If not specified, a default key is used.'
+    )
+    parser.add_argument(
+        "--certfile", dest='ssl_certfile', default=None,
+        type=str,
+        help='SSL cert file. If not specified, a default cert is used.'
     )
     args = parser.parse_args()
 
     application = app.PathodApp(
                     staticdir=args.staticdir
                 )
+    if args.ssl:
+        ssl = dict(
+             keyfile = args.ssl_keyfile or utils.data.path("resources/server.key"),
+             certfile = args.ssl_certfile or utils.data.path("resources/server.crt"),
+        )
+    else:
+        ssl = None
     print "pathod listening on port %s"%args.port
     try:
-        app.run(application, args.port, None)
+        app.run(application, args.port, ssl)
     except KeyboardInterrupt:
         pass
