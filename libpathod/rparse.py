@@ -192,6 +192,25 @@ Value = pp.MatchFirst(
 )
 
 
+class ShortcutContentType:
+    def __init__(self, value):
+        self.value = value
+
+    def mod_response(self, settings, r):
+        r.headers.append(
+            (
+                LiteralGenerator("Content-Type"),
+                self.value.get_generator(settings)
+            )
+        )
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("c").suppress()
+        e = e + Value
+        return e.setParseAction(lambda x: klass(*x))
+
+
 class Body:
     def __init__(self, value):
         self.value = value
@@ -238,7 +257,6 @@ class PauseRandom(_Pause):
     sub = "r"
     def mod_response(self, settings, r):
         r.actions.append(("random", "pause", self.value))
-
 
 
 class _Disconnect:
@@ -313,6 +331,7 @@ class Response:
         PauseRandom,
         DisconnectBefore,
         DisconnectRandom,
+        ShortcutContentType,
     )
     version = "HTTP/1.1"
     code = 200
@@ -364,8 +383,10 @@ class Response:
     def add_timeout(self, s, callback):
         if TESTING:
             callback()
+        # begin nocover
         else:
             tornado.ioloop.IOLoop.instance().add_timeout(time.time() + s, callback)
+        # end nocover
 
     def write_values(self, fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
         while vals:

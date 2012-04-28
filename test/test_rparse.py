@@ -24,7 +24,6 @@ class DummyRequest(StringIO.StringIO):
         return
 
 
-
 class uMisc(libpry.AutoTree):
     def test_generators(self):
         v = rparse.Value.parseString("'val'")[0]
@@ -81,7 +80,6 @@ class uMisc(libpry.AutoTree):
         v = rparse.Value.parseString("<path2")[0]
         libpry.raises(rparse.ServerError, v.get_generator, dict(staticdir=t))
         libpry.raises("no static directory", v.get_generator, dict())
-
 
     def test_generated_value(self):
         v = rparse.Value.parseString("!10b")[0]
@@ -159,8 +157,9 @@ class uMisc(libpry.AutoTree):
 
 class uDisconnects(libpry.AutoTree):
     def test_parse(self):
-        assert rparse.parse({}, "400:db")
-        
+        assert (0, "disconnect") in rparse.parse({}, "400:db").actions
+        assert ("random", "disconnect") in rparse.parse({}, "400:dr").actions
+
     def test_before(self):
         e = rparse.DisconnectBefore.expr()
         v = e.parseString("db")[0]
@@ -176,6 +175,11 @@ class uDisconnects(libpry.AutoTree):
 
         v = e.parseString("dr")[0]
         assert isinstance(v, rparse.DisconnectRandom)
+
+
+class uShortcutContentType(libpry.AutoTree):
+    def test_parse(self):
+        assert len(rparse.parse({}, "400:c'foo'").headers) == 1
 
 
 class uPauses(libpry.AutoTree):
@@ -307,5 +311,6 @@ tests = [
     uPauses(),
     uDisconnects(),
     uMisc(),
-    uparse()
+    uparse(),
+    uShortcutContentType()
 ]

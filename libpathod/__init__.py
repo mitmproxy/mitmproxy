@@ -19,4 +19,3 @@ def application(**settings):
                 static_path = utils.data.path("static"),
                 template_path = utils.data.path("templates"),
            )
-
