@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import libomnid
+import libpathod
 import tornado.ioloop
 
 if __name__ == "__main__":
@@ -12,8 +12,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    libomnid.application(staticdir=args.staticdir).listen(args.port)
-    print "omnid listening on port %s"%args.port
+    libpathod.application(staticdir=args.staticdir).listen(args.port)
+    print "pathod listening on port %s"%args.port
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:

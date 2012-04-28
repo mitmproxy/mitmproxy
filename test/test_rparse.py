@@ -1,4 +1,4 @@
-import StringIO, sys
+import StringIO, sys, os
 import libpry
 from libpathod import rparse
 
@@ -24,10 +24,42 @@ class uMisc(libpry.AutoTree):
         assert g[:] == "one"
         assert g[1] == "n"
 
+    def test_filegenerator(self):
+        t = self.tmpdir()
+        path = os.path.join(t, "foo")
+        f = open(path, "w")
+        f.write("x"*10000)
+        f.close()
+        g = rparse.FileGenerator(path)
+        assert len(g) == 10000
+        assert g[0] == "x"
+        assert g[-1] == "x"
+        assert g[0:5] == "xxxxx"
+
     def test_valueliteral(self):
         v = rparse.ValueLiteral("foo")
         assert v.expr()
         assert str(v)
+
+    def test_file_value(self):
+        v = rparse.Value.parseString("<'one two'")[0]
+        assert v.path == "one two"
+
+        v = rparse.Value.parseString("<path")[0]
+        assert v.path == "path"
+
+        t = self.tmpdir()
+        p = os.path.join(t, "path")
+        f = open(p, "w")
+        f.write("x"*10000)
+        f.close()
+
+        assert v.get_generator(dict(staticdir=t))
+
+        v = rparse.Value.parseString("<path2")[0]
+        libpry.raises(rparse.ServerError, v.get_generator, dict(staticdir=t))
+        libpry.raises("no static directory", v.get_generator, dict())
+
 
     def test_generated_value(self):
         v = rparse.Value.parseString("!10b")[0]
@@ -55,11 +87,6 @@ class uMisc(libpry.AutoTree):
         assert rparse.Value.parseString("'val'")[0].val == "val"
         assert rparse.Value.parseString('"val"')[0].val == "val"
         assert rparse.Value.parseString('"\'val\'"')[0].val == "'val'"
-
-        v = rparse.Value.parseString("<path")[0]
-        assert v.path == "path"
-        v = rparse.Value.parseString("<'one two'")[0]
-        assert v.path == "one two"
 
     def test_body(self):
         e = rparse.Body.expr()

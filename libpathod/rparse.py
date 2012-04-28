@@ -1,4 +1,4 @@
-import operator, string, random, sys, time
+import operator, string, random, sys, time, mmap, os
 import contrib.pyparsing as pp
 import http, utils
 import tornado.ioloop
@@ -6,6 +6,7 @@ import tornado.ioloop
 TESTING = False
 
 class ParseException(Exception): pass
+class ServerError(Exception): pass
 
 
 DATATYPES = dict(
@@ -81,6 +82,17 @@ class RandomGenerator:
 class FileGenerator:
     def __init__(self, path):
         self.path = path
+        self.fp = file(path, "r")
+        self.map = mmap.mmap(self.fp.fileno(), 0, prot=mmap.PROT_READ)
+
+    def __len__(self):
+        return len(self.map)
+
+    def __getitem__(self, x):
+        return self.map.__getitem__(x)
+
+    def __getslice__(self, a, b):
+        return self.map.__getslice__(a, b)
 
 
 class ValueLiteral:
@@ -145,7 +157,13 @@ class ValueFile:
         return e.setParseAction(lambda x: klass(*x))
 
     def get_generator(self, settings):
-        raise NotImplementedError
+        sd = settings.get("staticdir")
+        if not sd:
+            raise ServerError("No static directory specified.")
+        path = os.path.join(sd, self.path)
+        if not os.path.exists(path):
+            raise ServerError("Static file does not exist: %s"%path)
+        return FileGenerator(path)
 
     def __str__(self):
         return "<%s"%(self.path)
