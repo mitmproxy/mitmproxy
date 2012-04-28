@@ -125,13 +125,6 @@ class ValueLiteral:
         return self.val
 
 
-class ValueNakedLiteral(ValueLiteral):
-    @classmethod
-    def expr(klass):
-        e = v_naked_literal.copy()
-        return e.setParseAction(lambda x: klass(*x))
-
-
 class ValueGenerate:
     UNITS = dict(
         b = 1024**0,
@@ -232,19 +225,19 @@ class _Pause:
 class PauseBefore(_Pause):
     sub = "b"
     def mod_response(self, settings, r):
-        r.pauses.append((0, self.value))
+        r.actions.append((0, "pause", self.value))
 
 
 class PauseAfter(_Pause):
     sub = "a"
     def mod_response(self, settings, r):
-        r.pauses.append((sys.maxint, self.value))
+        r.actions.append((sys.maxint, "pause", self.value))
 
 
 class PauseRandom(_Pause):
     sub = "r"
     def mod_response(self, settings, r):
-        r.pauses.append(("random", self.value))
+        r.actions.append(("random", "pause", self.value))
 
 
 
@@ -261,13 +254,13 @@ class _Disconnect:
 class DisconnectBefore(_Disconnect):
     sub = "b"
     def mod_response(self, settings, r):
-        r.pauses.append((0, self.value))
+        r.actions.append((0, "disconnect"))
 
 
 class DisconnectRandom(_Disconnect):
     sub = "r"
     def mod_response(self, settings, r):
-        r.pauses.append(("random", self.value))
+        r.actions.append(("random", "disconnect"))
 
 
 class Header:
@@ -312,7 +305,7 @@ class Code:
 
 BLOCKSIZE = 1024
 class Response:
-    comps = [
+    comps = (
         Body,
         Header,
         PauseBefore,
@@ -320,14 +313,14 @@ class Response:
         PauseRandom,
         DisconnectBefore,
         DisconnectRandom,
-    ]
+    )
     version = "HTTP/1.1"
     code = 200
     msg = LiteralGenerator(http.RESPONSES[code])
     body = LiteralGenerator("OK")
     def __init__(self):
         self.headers = []
-        self.pauses = []
+        self.actions = []
 
     def get_header(self, hdr):
         for k, v in self.headers:
@@ -374,30 +367,33 @@ class Response:
         else:
             tornado.ioloop.IOLoop.instance().add_timeout(time.time() + s, callback)
 
-    def write_values(self, fp, vals, pauses, disconnect, sofar=0, skip=0, blocksize=BLOCKSIZE):
-        if disconnect == "before":
-            fp.finish()
-            return
+    def write_values(self, fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
         while vals:
             part = vals.pop()
             for i in range(skip, len(part), blocksize):
                 d = part[i:i+blocksize]
-                if pauses and pauses[-1][0] < (sofar + len(d)):
-                    p = pauses.pop()
+                if actions and actions[-1][0] < (sofar + len(d)):
+                    p = actions.pop()
                     offset = p[0]-sofar
                     vals.append(part)
-                    def pause_callback():
-                        self.write_values(
-                            fp, vals, pauses, disconnect,
-                            sofar=sofar+offset,
-                            skip=i+offset,
-                            blocksize=blocksize
-                        )
-                    def flushed_callback():
-                        # Data has been flushed, set the timeout.
-                        self.add_timeout(p[1], pause_callback)
-                    fp.write(d[:offset], callback=flushed_callback)
-                    return
+                    if p[1] == "pause":
+                        def pause_callback():
+                            self.write_values(
+                                fp, vals, actions,
+                                sofar=sofar+offset,
+                                skip=i+offset,
+                                blocksize=blocksize
+                            )
+                        def flushed_callback():
+                            # Data has been flushed, set the timeout.
+                            self.add_timeout(p[2], pause_callback)
+                        fp.write(d[:offset], callback=flushed_callback)
+                        return
+                    elif p[1] == "disconnect":
+                        fp.write(d[:offset])
+                        fp.finish()
+                        fp.connection.stream.close()
+                        return
                 fp.write(d)
                 sofar += len(d)
             skip = 0
@@ -431,9 +427,9 @@ class Response:
             self.body
         ])
         vals.reverse()
-        pauses = self.ready_randoms(self.length(), self.pauses)
-        pauses.reverse()
-        return self.write_values(fp, vals, pauses, None)
+        actions = self.ready_randoms(self.length(), self.actions)
+        actions.reverse()
+        return self.write_values(fp, vals, actions)
 
     def __str__(self):
         parts = [

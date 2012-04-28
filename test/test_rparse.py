@@ -4,7 +4,17 @@ from libpathod import rparse
 
 rparse.TESTING = True
 
+
+class Sponge:
+    def __getattr__(self, x):
+        return Sponge()
+
+    def __call__(self, *args, **kwargs):
+        pass
+
+
 class DummyRequest(StringIO.StringIO):
+    connection = Sponge()
     def write(self, d, callback=None):
         StringIO.StringIO.write(self, d)
         if callback:
@@ -54,6 +64,7 @@ class uMisc(libpry.AutoTree):
 
     def test_file_value(self):
         v = rparse.Value.parseString("<'one two'")[0]
+        assert str(v)
         assert v.path == "one two"
 
         v = rparse.Value.parseString("<path")[0]
@@ -147,6 +158,9 @@ class uMisc(libpry.AutoTree):
 
 
 class uDisconnects(libpry.AutoTree):
+    def test_parse(self):
+        assert rparse.parse({}, "400:db")
+        
     def test_before(self):
         e = rparse.DisconnectBefore.expr()
         v = e.parseString("db")[0]
@@ -185,12 +199,14 @@ class uPauses(libpry.AutoTree):
 
 
 class uparse(libpry.AutoTree):
+
     def test_parse_err(self):
         libpry.raises(rparse.ParseException, rparse.parse, {}, "400:msg,b:")
         try:
             rparse.parse({}, "400'msg':b:")
         except rparse.ParseException, v:
             assert v.marked()
+            assert str(v)
 
     def test_parse_header(self):
         r = rparse.parse({}, '400:h"foo"="bar"')
@@ -198,15 +214,15 @@ class uparse(libpry.AutoTree):
 
     def test_parse_pause_before(self):
         r = rparse.parse({}, "400:pb10")
-        assert (0, 10) in r.pauses
+        assert (0, "pause", 10) in r.actions
 
     def test_parse_pause_after(self):
         r = rparse.parse({}, "400:pa10")
-        assert (sys.maxint, 10) in r.pauses
+        assert (sys.maxint, "pause", 10) in r.actions
 
     def test_parse_pause_random(self):
         r = rparse.parse({}, "400:pr10")
-        assert ("random", 10) in r.pauses
+        assert ("random", "pause", 10) in r.actions
 
 
 class uResponse(libpry.AutoTree):
@@ -240,7 +256,7 @@ class uResponse(libpry.AutoTree):
         r = self.dummy_response()
         s = DummyRequest()
         tst = "foo"*100
-        r.write_values(s, [tst], [], "before", blocksize=5)
+        r.write_values(s, [tst], [(0, "disconnect")], blocksize=5)
         assert not s.getvalue()
 
     def test_write_values(self):
@@ -248,7 +264,7 @@ class uResponse(libpry.AutoTree):
         r = rparse.parse({}, "400'msg'")
 
         s = DummyRequest()
-        r.write_values(s, [tst], [], None)
+        r.write_values(s, [tst], [])
         assert s.getvalue() == tst
 
     def test_write_values_pauses(self):
@@ -257,18 +273,18 @@ class uResponse(libpry.AutoTree):
 
         for i in range(2, 10):
             s = DummyRequest()
-            r.write_values(s, [tst], [(2, 0), (1, 0)], None, blocksize=i)
+            r.write_values(s, [tst], [(2, "pause", 0), (1, "pause", 0)], blocksize=i)
             assert s.getvalue() == tst
 
         for i in range(2, 10):
             s = DummyRequest()
-            r.write_values(s, [tst], [(1, 0)], None, blocksize=i)
+            r.write_values(s, [tst], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == tst
 
         tst = ["".join(str(i) for i in range(10))]*5
         for i in range(2, 10):
             s = DummyRequest()
-            r.write_values(s, tst[:], [(1, 0)], None, blocksize=i)
+            r.write_values(s, tst[:], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == "".join(tst)
 
     def test_render(self):
