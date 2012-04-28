@@ -1,45 +1,36 @@
 
 Response:
     
-    code[msg],[comma-separated features]
+    code[msg]:[colon-separated features]
     
 
 Features:
 
-    hVALUE:VALUE       Set header
+    hVALUE=VALUE       Set header
     bVALUE             Set body
     db                 Disconnect before sending data
     dr                 Disconnect randomly
-    pbTIME             Pause before sending data for NUM seconds or forever
-    paTIME             Pause after sending all data for NUM seconds or forever
-    prTIME             Pause randomly for NUM seconds or forever
-
+    pbNUM|forever      Pause before sending data for NUM seconds or forever
+    paNUM|forever      Pause after sending all data for NUM seconds or forever
+    prNUM|forever      Pause randomly for NUM seconds or forever
     cVALUE             Set Content-Type header
     lVALUE             Set Location header
-
-
-Time Specifiers:
-
-    5               - 5 seconds
-    5s              - 5 seconds
-    5m              - 5 minutes
-    5h              - 5 hours
 
 
 Value Specifiers:
 
     !500k           - 500k of random data
-    !500k:utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
+    !500k-utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
     "foo"           - literal
     <path           - load from path under data directory
     <"path"         - load from path under data directory
 
 
 Examples:
-    200,b500k
-    404,pb5,b1k:printable
-    200,t"text/json",pr5,b1k
-    200,b1k,xr
+    200:b500k
+    404:pb5:b1k-printable
+    200:t"text/json":pr5,b1k
+    200:b1k:xr
 
 
 Sequences:
@@ -52,7 +43,6 @@ Anchors:
 
     Passed on command-line?
         --anchor /foo/bar 200:!/foo
-
 
 
 Built-in help

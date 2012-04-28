@@ -158,13 +158,13 @@ class ValueGenerate:
         u = reduce(operator.or_, [pp.Literal(i) for i in klass.UNITS.keys()])
         e = e + pp.Optional(u, default=None)
 
-        s = pp.Literal(":").suppress()
+        s = pp.Literal("-").suppress()
         s += reduce(operator.or_, [pp.Literal(i) for i in DATATYPES.keys()])
         e += pp.Optional(s, default="bytes")
         return e.setParseAction(lambda x: klass(*x))
 
     def __str__(self):
-        return "!%s%s:%s"%(self.usize, self.unit, self.datatype)
+        return "!%s%s-%s"%(self.usize, self.unit, self.datatype)
 
 
 class ValueFile:
@@ -286,7 +286,7 @@ class Header:
     def expr(klass):
         e = pp.Literal("h").suppress()
         e += Value
-        e += pp.Literal(":").suppress()
+        e += pp.Literal("=").suppress()
         e += Value
         return e.setParseAction(lambda x: klass(*x))
 
@@ -342,7 +342,7 @@ class Response:
         resp = pp.And(
             [
                 Code.expr(),
-                pp.ZeroOrMore(pp.Literal(",").suppress() + atom)
+                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
             ]
         )
         return resp

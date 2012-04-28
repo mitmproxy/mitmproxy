@@ -84,12 +84,12 @@ class uMisc(libpry.AutoTree):
         v = rparse.Value.parseString("!10g")[0]
         assert v.bytes() == 1024**3 * 10
 
-        v = rparse.Value.parseString("!10g:digits")[0]
+        v = rparse.Value.parseString("!10g-digits")[0]
         assert v.datatype == "digits"
         g = v.get_generator({})
         assert g[:100]
 
-        v = rparse.Value.parseString("!10:digits")[0]
+        v = rparse.Value.parseString("!10-digits")[0]
         assert v.unit == "b"
         assert v.datatype == "digits"
 
@@ -104,15 +104,15 @@ class uMisc(libpry.AutoTree):
         assert v.value.val == "foo"
 
         v = e.parseString("b!100")[0]
-        assert str(v.value) == "!100b:bytes"
+        assert str(v.value) == "!100b-bytes"
 
-        v = e.parseString("b!100g:digits", parseAll=True)[0]
+        v = e.parseString("b!100g-digits", parseAll=True)[0]
         assert v.value.datatype == "digits"
-        assert str(v.value) == "!100g:digits"
+        assert str(v.value) == "!100g-digits"
 
     def test_header(self):
         e = rparse.Header.expr()
-        v = e.parseString("h'foo':'bar'")[0]
+        v = e.parseString("h'foo'='bar'")[0]
         assert v.key.val == "foo"
         assert v.value.val == "bar"
 
@@ -188,24 +188,24 @@ class uparse(libpry.AutoTree):
     def test_parse_err(self):
         libpry.raises(rparse.ParseException, rparse.parse, {}, "400:msg,b:")
         try:
-            rparse.parse({}, "400:msg,b:")
+            rparse.parse({}, "400'msg':b:")
         except rparse.ParseException, v:
             assert v.marked()
 
     def test_parse_header(self):
-        r = rparse.parse({}, '400,h"foo":"bar"')
+        r = rparse.parse({}, '400:h"foo"="bar"')
         assert r.get_header("foo") == "bar"
 
     def test_parse_pause_before(self):
-        r = rparse.parse({}, "400,pb10")
+        r = rparse.parse({}, "400:pb10")
         assert (0, 10) in r.pauses
 
     def test_parse_pause_after(self):
-        r = rparse.parse({}, "400,pa10")
+        r = rparse.parse({}, "400:pa10")
         assert (sys.maxint, 10) in r.pauses
 
     def test_parse_pause_random(self):
-        r = rparse.parse({}, "400,pr10")
+        r = rparse.parse({}, "400:pr10")
         assert ("random", 10) in r.pauses
 
 
@@ -218,7 +218,7 @@ class uResponse(libpry.AutoTree):
         assert r.code == 400
         assert r.msg == "msg"
 
-        r = rparse.parse({}, "400'msg',b!100b")
+        r = rparse.parse({}, "400'msg':b!100b")
         assert r.msg == "msg"
         assert r.body[:]
         assert str(r)
@@ -282,8 +282,8 @@ class uResponse(libpry.AutoTree):
             x.render(s)
             assert x.length() == len(s.getvalue())
         testlen(rparse.parse({}, "400'msg'"))
-        testlen(rparse.parse({}, "400'msg',h'foo':'bar'"))
-        testlen(rparse.parse({}, "400'msg',h'foo':'bar',b!100b"))
+        testlen(rparse.parse({}, "400'msg':h'foo'='bar'"))
+        testlen(rparse.parse({}, "400'msg':h'foo'='bar':b!100b"))
 
 
 tests = [
