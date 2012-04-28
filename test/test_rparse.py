@@ -17,7 +17,7 @@ class DummyRequest(StringIO.StringIO):
 
 class uMisc(libpry.AutoTree):
     def test_generators(self):
-        v = rparse.Value.parseString("val")[0]
+        v = rparse.Value.parseString("'val'")[0]
         g = v.get_generator({})
         assert g[:] == "val"
 
@@ -94,26 +94,25 @@ class uMisc(libpry.AutoTree):
         assert v.datatype == "digits"
 
     def test_value(self):
-        assert rparse.Value.parseString("val")[0].val == "val"
         assert rparse.Value.parseString("'val'")[0].val == "val"
         assert rparse.Value.parseString('"val"')[0].val == "val"
         assert rparse.Value.parseString('"\'val\'"')[0].val == "'val'"
 
     def test_body(self):
         e = rparse.Body.expr()
-        v = e.parseString("b:foo")[0]
+        v = e.parseString("b'foo'")[0]
         assert v.value.val == "foo"
 
-        v = e.parseString("b:!100")[0]
+        v = e.parseString("b!100")[0]
         assert str(v.value) == "!100b:bytes"
 
-        v = e.parseString("b:!100g:digits", parseAll=True)[0]
+        v = e.parseString("b!100g:digits", parseAll=True)[0]
         assert v.value.datatype == "digits"
         assert str(v.value) == "!100g:digits"
 
     def test_header(self):
         e = rparse.Header.expr()
-        v = e.parseString("h:foo:bar")[0]
+        v = e.parseString("h'foo':'bar'")[0]
         assert v.key.val == "foo"
         assert v.value.val == "bar"
 
@@ -122,17 +121,17 @@ class uMisc(libpry.AutoTree):
         v = e.parseString("200")[0]
         assert v.code == 200
 
-        v = e.parseString("404:msg")[0]
+        v = e.parseString("404'msg'")[0]
         assert v.code == 404
         assert v.msg.val == "msg"
 
-        r = e.parseString("200:'foo'")[0]
+        r = e.parseString("200'foo'")[0]
         assert r.msg.val == "foo"
 
-        r = e.parseString("200:'\"foo\"'")[0]
+        r = e.parseString("200'\"foo\"'")[0]
         assert r.msg.val == "\"foo\""
 
-        r = e.parseString('200:"foo"')[0]
+        r = e.parseString('200"foo"')[0]
         assert r.msg.val == "foo"
 
         r = e.parseString('404')[0]
@@ -168,20 +167,20 @@ class uDisconnects(libpry.AutoTree):
 class uPauses(libpry.AutoTree):
     def test_before(self):
         e = rparse.PauseBefore.expr()
-        v = e.parseString("pb:10")[0]
+        v = e.parseString("pb10")[0]
         assert v.value == 10
 
-        v = e.parseString("pb:forever")[0]
+        v = e.parseString("pbforever")[0]
         assert v.value == "forever"
 
     def test_after(self):
         e = rparse.PauseAfter.expr()
-        v = e.parseString("pa:10")[0]
+        v = e.parseString("pa10")[0]
         assert v.value == 10
 
     def test_random(self):
         e = rparse.PauseRandom.expr()
-        v = e.parseString("pr:10")[0]
+        v = e.parseString("pr10")[0]
         assert v.value == 10
 
 
@@ -191,41 +190,41 @@ class uparse(libpry.AutoTree):
         try:
             rparse.parse({}, "400:msg,b:")
         except rparse.ParseException, v:
-            print v.marked()
+            assert v.marked()
 
     def test_parse_header(self):
-        r = rparse.parse({}, "400,h:foo:bar")
+        r = rparse.parse({}, '400,h"foo":"bar"')
         assert r.get_header("foo") == "bar"
 
     def test_parse_pause_before(self):
-        r = rparse.parse({}, "400,pb:10")
+        r = rparse.parse({}, "400,pb10")
         assert (0, 10) in r.pauses
 
     def test_parse_pause_after(self):
-        r = rparse.parse({}, "400,pa:10")
+        r = rparse.parse({}, "400,pa10")
         assert (sys.maxint, 10) in r.pauses
 
     def test_parse_pause_random(self):
-        r = rparse.parse({}, "400,pr:10")
+        r = rparse.parse({}, "400,pr10")
         assert ("random", 10) in r.pauses
 
 
 class uResponse(libpry.AutoTree):
     def dummy_response(self):
-        return rparse.parse({}, "400:msg")
+        return rparse.parse({}, "400'msg'")
 
     def test_response(self):
-        r = rparse.parse({}, "400:msg")
+        r = rparse.parse({}, "400'msg'")
         assert r.code == 400
         assert r.msg == "msg"
 
-        r = rparse.parse({}, "400:msg,b:!100b")
+        r = rparse.parse({}, "400'msg',b!100b")
         assert r.msg == "msg"
         assert r.body[:]
         assert str(r)
 
     def test_ready_randoms(self):
-        r = rparse.parse({}, "400:msg")
+        r = rparse.parse({}, "400'msg'")
 
         x = [(0, 5)]
         assert r.ready_randoms(100, x) == x
@@ -246,7 +245,7 @@ class uResponse(libpry.AutoTree):
 
     def test_write_values(self):
         tst = "foo"*1025
-        r = rparse.parse({}, "400:msg")
+        r = rparse.parse({}, "400'msg'")
 
         s = DummyRequest()
         r.write_values(s, [tst], [], None)
@@ -254,7 +253,7 @@ class uResponse(libpry.AutoTree):
 
     def test_write_values_pauses(self):
         tst = "".join(str(i) for i in range(10))
-        r = rparse.parse({}, "400:msg")
+        r = rparse.parse({}, "400'msg'")
 
         for i in range(2, 10):
             s = DummyRequest()
@@ -274,7 +273,7 @@ class uResponse(libpry.AutoTree):
 
     def test_render(self):
         s = DummyRequest()
-        r = rparse.parse({}, "400:msg")
+        r = rparse.parse({}, "400'msg'")
         r.render(s)
 
     def test_length(self):
@@ -282,9 +281,9 @@ class uResponse(libpry.AutoTree):
             s = DummyRequest()
             x.render(s)
             assert x.length() == len(s.getvalue())
-        testlen(rparse.parse({}, "400:msg"))
-        testlen(rparse.parse({}, "400:msg,h:foo:bar"))
-        testlen(rparse.parse({}, "400:msg,h:foo:bar,b:!100b"))
+        testlen(rparse.parse({}, "400'msg'"))
+        testlen(rparse.parse({}, "400'msg',h'foo':'bar'"))
+        testlen(rparse.parse({}, "400'msg',h'foo':'bar',b!100b"))
 
 
 tests = [

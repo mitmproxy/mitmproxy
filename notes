@@ -1,90 +1,51 @@
 
+Response:
+    
+    code[msg],[comma-separated features]
+    
+
+Features:
+
+    hVALUE:VALUE       Set header
+    bVALUE             Set body
+    db                 Disconnect before sending data
+    dr                 Disconnect randomly
+    pbTIME             Pause before sending data for NUM seconds or forever
+    paTIME             Pause after sending all data for NUM seconds or forever
+    prTIME             Pause randomly for NUM seconds or forever
+
+    cVALUE             Set Content-Type header
+    lVALUE             Set Location header
+
+
+Time Specifiers:
+
+    5               - 5 seconds
+    5s              - 5 seconds
+    5m              - 5 minutes
+    5h              - 5 hours
+
+
 Value Specifiers:
 
     !500k           - 500k of random data
     !500k:utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
     "foo"           - literal
-    foo             - literal
     <path           - load from path under data directory
-    <"path literal" - load from path under data directory
-
-
-Response:
-    
-    code:[comma-separated features]
-    
-
-Specifying a response:
-    Code 200:
-        code:msg
-        200:VALUE
-
-    Headers:
-        h:VALUE:VALUE
-
-    Body:
-        b:VALUE
-
-    Pauses:
-        pb:5
-        pb:forever
-
-        Pause before sending data:
-
-            pb:5
-
-        Pause after sending data, before hanging up:
-
-            pa:5
-
-        Pause after sending a random amoutn of data:
-
-            pr:5
-
-
-    Disconnect:
-        
-        Before sending data:
-
-            db
-
-        Randomly:
-
-            dr
-
-
-Shortcuts:
-
-    Redirects:
-        code:msg>destination
-        code>destination
-
-        301:VALUE>VALUE
-        301>http://foo.bar
-
-
-    Content-type:
-
-        t:content-type
+    <"path"         - load from path under data directory
 
 
 Examples:
-    200,b:500k
-
-    404,p:5s,b:1k:printable
-
-    200,t:text/json,p:5s,b:1k
-
-    200,b:1k,xr
-
+    200,b500k
+    404,pb5,b1k:printable
+    200,t"text/json",pr5,b1k
+    200,b1k,xr
 
 
 Sequences:
 
     200 * 2 | !forever
-
     200 | 404 | 200,b:500g
-
 
 
 Anchors:

@@ -15,6 +15,9 @@ class ParseException(Exception):
     def marked(self):
         return "%s\n%s"%(self.s, " "*(self.col-1) + "^")
 
+    def __str__(self):
+        return self.msg
+
 
 class ServerError(Exception): pass
 
@@ -41,16 +44,17 @@ v_integer = pp.Regex(r"[+-]?\d+")\
     .setName("integer")\
     .setParseAction(lambda toks: int(toks[0]))
 
-v_string = pp.MatchFirst(
+
+v_literal = pp.MatchFirst(
     [
         pp.QuotedString("\"", escChar="\\", unquoteResults=True),
         pp.QuotedString("'", escChar="\\", unquoteResults=True),
     ]
 )
 
-v_literal = pp.MatchFirst(
+v_naked_literal = pp.MatchFirst(
     [
-        v_string,
+        v_literal,
         pp.Word("".join(i for i in pp.printables if i not in ",:"))
     ]
 )
@@ -121,6 +125,13 @@ class ValueLiteral:
         return self.val
 
 
+class ValueNakedLiteral(ValueLiteral):
+    @classmethod
+    def expr(klass):
+        e = v_naked_literal.copy()
+        return e.setParseAction(lambda x: klass(*x))
+
+
 class ValueGenerate:
     UNITS = dict(
         b = 1024**0,
@@ -163,7 +174,7 @@ class ValueFile:
     @classmethod
     def expr(klass):
         e = pp.Literal("<").suppress()
-        e = e + v_literal
+        e = e + v_naked_literal
         return e.setParseAction(lambda x: klass(*x))
 
     def get_generator(self, settings):
@@ -197,7 +208,7 @@ class Body:
 
     @classmethod
     def expr(klass):
-        e = pp.Literal("b:").suppress()
+        e = pp.Literal("b").suppress()
         e = e + Value
         return e.setParseAction(lambda x: klass(*x))
 
@@ -208,7 +219,7 @@ class _Pause:
 
     @classmethod
     def expr(klass):
-        e = pp.Literal("p%s:"%klass.sub).suppress()
+        e = pp.Literal("p%s"%klass.sub).suppress()
         e = e + pp.MatchFirst(
                     [
                         v_integer,
@@ -273,7 +284,7 @@ class Header:
 
     @classmethod
     def expr(klass):
-        e = pp.Literal("h:").suppress()
+        e = pp.Literal("h").suppress()
         e += Value
         e += pp.Literal(":").suppress()
         e += Value
@@ -294,7 +305,7 @@ class Code:
     def expr(klass):
         e = v_integer
         e = e + pp.Optional(
-            pp.Literal(":").suppress() + Value
+            Value
         )
         return e.setParseAction(lambda x: klass(*x))
 
