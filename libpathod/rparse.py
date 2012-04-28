@@ -211,6 +211,26 @@ class ShortcutContentType:
         return e.setParseAction(lambda x: klass(*x))
 
 
+
+class ShortcutLocation:
+    def __init__(self, value):
+        self.value = value
+
+    def mod_response(self, settings, r):
+        r.headers.append(
+            (
+                LiteralGenerator("Location"),
+                self.value.get_generator(settings)
+            )
+        )
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("l").suppress()
+        e = e + Value
+        return e.setParseAction(lambda x: klass(*x))
+
+
 class Body:
     def __init__(self, value):
         self.value = value
@@ -332,6 +352,7 @@ class Response:
         DisconnectBefore,
         DisconnectRandom,
         ShortcutContentType,
+        ShortcutLocation,
     )
     version = "HTTP/1.1"
     code = 200

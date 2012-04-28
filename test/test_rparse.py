@@ -177,9 +177,10 @@ class uDisconnects(libpry.AutoTree):
         assert isinstance(v, rparse.DisconnectRandom)
 
 
-class uShortcutContentType(libpry.AutoTree):
+class uShortcuts(libpry.AutoTree):
     def test_parse(self):
-        assert len(rparse.parse({}, "400:c'foo'").headers) == 1
+        assert rparse.parse({}, "400:c'foo'").headers[0][0][:] == "Content-Type"
+        assert rparse.parse({}, "400:l'foo'").headers[0][0][:] == "Location"
 
 
 class uPauses(libpry.AutoTree):
@@ -312,5 +313,5 @@ tests = [
     uDisconnects(),
     uMisc(),
     uparse(),
-    uShortcutContentType()
+    uShortcuts()
 ]
