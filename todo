@@ -1,5 +1,13 @@
-- Disconnect or pause at specified byte offset
-- Logs
-- API
-    - Logs, log reset, log retrieval
-    - Anchor management
+
+0.1:
+    - Disconnect or pause at specified byte offset
+    - Logs
+    - API
+        - Logs, log reset, log retrieval
+        - Anchor management
+
+0.2:
+    - Shortcuts for cookies, auth
+    - Various SSL errors (expired certs, etc.)
+    - Caching
+    

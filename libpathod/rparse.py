@@ -146,18 +146,18 @@ class ValueGenerate:
 
     @classmethod
     def expr(klass):
-        e = pp.Literal("!").suppress() + v_integer
+        e = pp.Literal("@").suppress() + v_integer
 
         u = reduce(operator.or_, [pp.Literal(i) for i in klass.UNITS.keys()])
         e = e + pp.Optional(u, default=None)
 
-        s = pp.Literal("-").suppress()
+        s = pp.Literal(",").suppress()
         s += reduce(operator.or_, [pp.Literal(i) for i in DATATYPES.keys()])
         e += pp.Optional(s, default="bytes")
         return e.setParseAction(lambda x: klass(*x))
 
     def __str__(self):
-        return "!%s%s-%s"%(self.usize, self.unit, self.datatype)
+        return "@%s%s,%s"%(self.usize, self.unit, self.datatype)
 
 
 class ValueFile:
@@ -245,60 +245,50 @@ class Body:
         return e.setParseAction(lambda x: klass(*x))
 
 
-class _Pause:
-    def __init__(self, value):
-        self.value = value
+class PauseAt:
+    def __init__(self, seconds, offset):
+        self.seconds, self.offset = seconds, offset
 
     @classmethod
     def expr(klass):
-        e = pp.Literal("p%s"%klass.sub).suppress()
-        e = e + pp.MatchFirst(
+        e = pp.Literal("p").suppress()
+        e +=pp.MatchFirst(
                     [
                         v_integer,
-                        pp.Literal("forever")
+                        pp.Literal("f")
+                    ]
+                )
+        e += pp.Literal(",").suppress()
+        e += pp.MatchFirst(
+                    [
+                        v_integer,
+                        pp.Literal("r"),
+                        pp.Literal("a"),
                     ]
                 )
         return e.setParseAction(lambda x: klass(*x))
 
-
-class PauseBefore(_Pause):
-    sub = "b"
     def mod_response(self, settings, r):
-        r.actions.append((0, "pause", self.value))
+        r.actions.append((self.offset, "pause", self.seconds))
 
 
-class PauseAfter(_Pause):
-    sub = "a"
-    def mod_response(self, settings, r):
-        r.actions.append((sys.maxint, "pause", self.value))
-
-
-class PauseRandom(_Pause):
-    sub = "r"
-    def mod_response(self, settings, r):
-        r.actions.append(("random", "pause", self.value))
-
-
-class _Disconnect:
+class DisconnectAt:
     def __init__(self, value):
         self.value = value
 
+    def mod_response(self, settings, r):
+        r.actions.append((self.value, "disconnect"))
+
     @classmethod
     def expr(klass):
-        e = pp.Literal("d%s"%klass.sub)
-        return e.setParseAction(klass)
-
-
-class DisconnectBefore(_Disconnect):
-    sub = "b"
-    def mod_response(self, settings, r):
-        r.actions.append((0, "disconnect"))
-
-
-class DisconnectRandom(_Disconnect):
-    sub = "r"
-    def mod_response(self, settings, r):
-        r.actions.append(("random", "disconnect"))
+        e = pp.Literal("d").suppress()
+        e = e + pp.MatchFirst(
+                    [
+                        v_integer,
+                        pp.Literal("r")
+                    ]
+                )
+        return e.setParseAction(lambda x: klass(*x))
 
 
 class Header:
@@ -346,11 +336,8 @@ class Response:
     comps = (
         Body,
         Header,
-        PauseBefore,
-        PauseAfter,
-        PauseRandom,
-        DisconnectBefore,
-        DisconnectRandom,
+        PauseAt,
+        DisconnectAt,
         ShortcutContentType,
         ShortcutLocation,
     )
@@ -391,13 +378,15 @@ class Response:
         l += len(self.body)
         return l
 
-    def ready_randoms(self, l, lst):
+    def ready_actions(self, l, lst):
         ret = []
-        for k, v in lst:
-            if k == "random":
-                ret.append((random.randrange(l), v))
-            else:
-                ret.append((k, v))
+        for i in lst:
+            itms = list(i)
+            if i[0] == "r":
+                itms[0] = random.randrange(l)
+            if i[0] == "a":
+                itms[0] = l+1
+            ret.append(tuple(itms))
         ret.sort()
         return ret
 
@@ -469,7 +458,7 @@ class Response:
             self.body
         ])
         vals.reverse()
-        actions = self.ready_randoms(self.length(), self.actions)
+        actions = self.ready_actions(self.length(), self.actions)
         actions.reverse()
         return self.write_values(fp, vals, actions)
 

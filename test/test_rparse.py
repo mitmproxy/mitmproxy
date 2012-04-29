@@ -82,23 +82,23 @@ class uMisc(libpry.AutoTree):
         libpry.raises("no static directory", v.get_generator, dict())
 
     def test_generated_value(self):
-        v = rparse.Value.parseString("!10b")[0]
+        v = rparse.Value.parseString("@10b")[0]
         assert v.usize == 10
         assert v.unit == "b"
         assert v.bytes() == 10
-        v = rparse.Value.parseString("!10")[0]
+        v = rparse.Value.parseString("@10")[0]
         assert v.unit == "b"
-        v = rparse.Value.parseString("!10k")[0]
+        v = rparse.Value.parseString("@10k")[0]
         assert v.bytes() == 10240
-        v = rparse.Value.parseString("!10g")[0]
+        v = rparse.Value.parseString("@10g")[0]
         assert v.bytes() == 1024**3 * 10
 
-        v = rparse.Value.parseString("!10g-digits")[0]
+        v = rparse.Value.parseString("@10g,digits")[0]
         assert v.datatype == "digits"
         g = v.get_generator({})
         assert g[:100]
 
-        v = rparse.Value.parseString("!10-digits")[0]
+        v = rparse.Value.parseString("@10,digits")[0]
         assert v.unit == "b"
         assert v.datatype == "digits"
 
@@ -112,12 +112,12 @@ class uMisc(libpry.AutoTree):
         v = e.parseString("b'foo'")[0]
         assert v.value.val == "foo"
 
-        v = e.parseString("b!100")[0]
-        assert str(v.value) == "!100b-bytes"
+        v = e.parseString("b@100")[0]
+        assert str(v.value) == "@100b,bytes"
 
-        v = e.parseString("b!100g-digits", parseAll=True)[0]
+        v = e.parseString("b@100g,digits", parseAll=True)[0]
         assert v.value.datatype == "digits"
-        assert str(v.value) == "!100g-digits"
+        assert str(v.value) == "@100g,digits"
 
     def test_header(self):
         e = rparse.Header.expr()
@@ -157,24 +157,21 @@ class uMisc(libpry.AutoTree):
 
 class uDisconnects(libpry.AutoTree):
     def test_parse(self):
-        assert (0, "disconnect") in rparse.parse({}, "400:db").actions
-        assert ("random", "disconnect") in rparse.parse({}, "400:dr").actions
+        assert (0, "disconnect") in rparse.parse({}, "400:d0").actions
+        assert ("r", "disconnect") in rparse.parse({}, "400:dr").actions
 
-    def test_before(self):
-        e = rparse.DisconnectBefore.expr()
-        v = e.parseString("db")[0]
-        assert isinstance(v, rparse.DisconnectBefore)
+    def test_at(self):
+        e = rparse.DisconnectAt.expr()
+        v = e.parseString("d0")[0]
+        assert isinstance(v, rparse.DisconnectAt)
+        assert v.value == 0
 
-        v = e.parseString("db")[0]
-        assert isinstance(v, rparse.DisconnectBefore)
+        v = e.parseString("d100")[0]
+        assert v.value == 100
 
-    def test_random(self):
-        e = rparse.DisconnectRandom.expr()
+        e = rparse.DisconnectAt.expr()
         v = e.parseString("dr")[0]
-        assert isinstance(v, rparse.DisconnectRandom)
-
-        v = e.parseString("dr")[0]
-        assert isinstance(v, rparse.DisconnectRandom)
+        assert v.value == "r"
 
 
 class uShortcuts(libpry.AutoTree):
@@ -184,27 +181,27 @@ class uShortcuts(libpry.AutoTree):
 
 
 class uPauses(libpry.AutoTree):
-    def test_before(self):
-        e = rparse.PauseBefore.expr()
-        v = e.parseString("pb10")[0]
-        assert v.value == 10
+    def test_parse(self):
+        e = rparse.PauseAt.expr()
+        v = e.parseString("p10,10")[0]
+        assert v.seconds == 10
+        assert v.offset == 10
 
-        v = e.parseString("pbforever")[0]
-        assert v.value == "forever"
+        v = e.parseString("pf,10")[0]
+        assert v.seconds == "f"
 
-    def test_after(self):
-        e = rparse.PauseAfter.expr()
-        v = e.parseString("pa10")[0]
-        assert v.value == 10
+        v = e.parseString("pf,r")[0]
+        assert v.offset == "r"
 
-    def test_random(self):
-        e = rparse.PauseRandom.expr()
-        v = e.parseString("pr10")[0]
-        assert v.value == 10
+        v = e.parseString("pf,a")[0]
+        assert v.offset == "a"
+
+    def test_request(self):
+        r = rparse.parse({}, '400:p10,10')
+        assert r.actions[0] == (10, "pause", 10)
 
 
 class uparse(libpry.AutoTree):
-
     def test_parse_err(self):
         libpry.raises(rparse.ParseException, rparse.parse, {}, "400:msg,b:")
         try:
@@ -218,16 +215,16 @@ class uparse(libpry.AutoTree):
         assert r.get_header("foo") == "bar"
 
     def test_parse_pause_before(self):
-        r = rparse.parse({}, "400:pb10")
+        r = rparse.parse({}, "400:p10,0")
         assert (0, "pause", 10) in r.actions
 
     def test_parse_pause_after(self):
-        r = rparse.parse({}, "400:pa10")
-        assert (sys.maxint, "pause", 10) in r.actions
+        r = rparse.parse({}, "400:p10,a")
+        assert ("a", "pause", 10) in r.actions
 
     def test_parse_pause_random(self):
-        r = rparse.parse({}, "400:pr10")
-        assert ("random", "pause", 10) in r.actions
+        r = rparse.parse({}, "400:p10,r")
+        assert ("r", "pause", 10) in r.actions
 
 
 class uResponse(libpry.AutoTree):
@@ -239,23 +236,27 @@ class uResponse(libpry.AutoTree):
         assert r.code == 400
         assert r.msg == "msg"
 
-        r = rparse.parse({}, "400'msg':b!100b")
+        r = rparse.parse({}, "400'msg':b@100b")
         assert r.msg == "msg"
         assert r.body[:]
         assert str(r)
 
-    def test_ready_randoms(self):
+    def test_ready_actions(self):
         r = rparse.parse({}, "400'msg'")
 
         x = [(0, 5)]
-        assert r.ready_randoms(100, x) == x
+        assert r.ready_actions(100, x) == x
 
-        x = [("random", 5)]
-        ret = r.ready_randoms(100, x)
+        x = [("r", 5)]
+        ret = r.ready_actions(100, x)
         assert 0 <= ret[0][0] < 100
 
+        x = [("a", "pause", 5)]
+        ret = r.ready_actions(100, x)
+        assert ret[0][0] > 100
+
         x = [(1, 5), (0, 5)]
-        assert r.ready_randoms(100, x) == sorted(x)
+        assert r.ready_actions(100, x) == sorted(x)
 
     def test_write_values_disconnects(self):
         r = self.dummy_response()
@@ -304,7 +305,7 @@ class uResponse(libpry.AutoTree):
             assert x.length() == len(s.getvalue())
         testlen(rparse.parse({}, "400'msg'"))
         testlen(rparse.parse({}, "400'msg':h'foo'='bar'"))
-        testlen(rparse.parse({}, "400'msg':h'foo'='bar':b!100b"))
+        testlen(rparse.parse({}, "400'msg':h'foo'='bar':b@100b"))
 
 
 tests = [

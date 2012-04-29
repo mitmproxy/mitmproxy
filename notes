@@ -6,21 +6,18 @@ Response:
 
 Features:
 
-    hVALUE=VALUE       Set header
-    bVALUE             Set body
-    db                 Disconnect before sending data
-    dr                 Disconnect randomly
-    pbNUM|forever      Pause before sending data for NUM seconds or forever
-    paNUM|forever      Pause after sending all data for NUM seconds or forever
-    prNUM|forever      Pause randomly for NUM seconds or forever
-    cVALUE             Set Content-Type header
-    lVALUE             Set Location header
+    hVALUE=VALUE        Set header
+    bVALUE              Set body
+    cVALUE              Set Content-Type header
+    lVALUE              Set Location header
 
+    dOFF|r              Disconnect after OFF bytes, measured from the beginning of the response.
+    pNUM|f,OFF|r|a      Pause for NUM seconds after OFF bytes. 
 
 Value Specifiers:
 
-    !500k           - 500k of random data
-    !500k-utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
+    @500k           - 500k of random data
+    @500k,utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
     "foo"           - literal
     <path           - load from path under data directory
     <"path"         - load from path under data directory
@@ -28,8 +25,8 @@ Value Specifiers:
 
 Examples:
     200:b500k
-    404:pb5:b1k-printable
-    200:t"text/json":pr5,b1k
+    404:pb5:b1k,printable
+    200:t"text/json":pr5:b1k
     200:b1k:xr
 
 
