@@ -126,11 +126,13 @@ Set a header. Both KEY and VALUE are full _Value Specifiers_.
 Set the body. VALUE is a _Value Specifier_. When the body is set, Pathod will
 automatically set the appropriate Content-Length header.
 
+
 #### cVALUE
 
 A shortcut for setting the Content-Type header. Equivalent to:
 
     h"Content-Type"=VALUE
+
 
 #### lVALUE
 

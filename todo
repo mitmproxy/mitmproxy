@@ -1,8 +1,7 @@
 
 0.1:
     - Test pause at 0 bytes
-    - Web help document
-    - README
+    - Web status and explain
     - API
         - Logs, log reset, log retrieval
         - Anchor management
