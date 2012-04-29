@@ -2,6 +2,16 @@ import urllib, pprint
 import tornado.web, tornado.template, tornado.ioloop, tornado.httpserver
 import rparse, utils
 
+
+class APILog(tornado.web.RequestHandler):
+    def get(self):
+        self.write(
+            dict(
+                d = self.application.get_log()
+            )
+        )
+
+
 class _Page(tornado.web.RequestHandler):
     def render(self, name, **kwargs):
         tornado.web.RequestHandler.render(self, name + ".html", **kwargs)
@@ -118,6 +128,7 @@ class PathodApp(tornado.web.Application):
                 (r"/log/([0-9]+)", OneLog),
                 (r"/help", Help),
                 (r"/preview", Preview),
+                (r"/api/log", APILog),
                 (r"/p/.*", RequestPathod, settings),
             ],
             static_path = utils.data.path("static"),
@@ -179,8 +190,11 @@ class PathodApp(tornado.web.Application):
             if i["id"] == id:
                 return i
 
-    def clear_logs(self):
+    def clear_log(self):
         self.log = []
+
+    def get_log(self):
+        return self.log
 
 
 # begin nocover
