@@ -1,0 +1,28 @@
+{% extends frame.html %}
+{% block body %}  
+
+<h1>Preview</h1>
+
+{% if syntaxerror %}
+    <h2> Error: {{ syntaxerror }} </h2>
+    <pre>{{ marked }}</pre>
+{% elif error %}
+    <h2> Error </h2>
+    <p style="color: #ff0000">{{ error }}</p>
+{% else %}
+
+    <h2>Spec:</h2>
+
+    <pre>{{ spec }}</pre>
+
+    <h2>Response:</h2>
+
+    <pre>{{ output }}</pre>
+
+{% end %}  
+    <form class="well form-search" method="GET" action="/preview">
+        <input style="width: 30em;" name="spec" class="input-medium search-query" value="{{spec}}">
+        <input type="submit" class="btn" value="preview">
+        <a href="#" class="btn">go</a>
+    </form>
+{% end %}  

@@ -42,7 +42,9 @@ class uPages(libpry.AutoTree):
                 klass = h.handler_class
         r = httpserver.HTTPRequest("GET", path)
         del r.connection
-        return klass(a, r)
+        k = klass(a, r)
+        k._transforms = []
+        return k
 
     def test_index(self):
         page = self.dummy_page("/")
@@ -58,5 +60,4 @@ class uPages(libpry.AutoTree):
 
 tests = [
     uApplication(),
-    uPages()
 ]

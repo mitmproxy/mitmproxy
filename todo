@@ -1,7 +1,7 @@
 
 0.1:
-    - Test pause at 0 bytes
     - Web status and explain
+    - setup.py
     - API
         - Logs, log reset, log retrieval
         - Anchor management
@@ -11,4 +11,3 @@
     - Shortcuts for cookies, auth
     - Various SSL errors (expired certs, etc.)
     - Caching
-    

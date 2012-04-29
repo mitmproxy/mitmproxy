@@ -1,27 +1,8 @@
-import StringIO, sys, os
+import sys, os
 import libpry
-from libpathod import rparse
+from libpathod import rparse, utils
 
 rparse.TESTING = True
-
-
-class Sponge:
-    def __getattr__(self, x):
-        return Sponge()
-
-    def __call__(self, *args, **kwargs):
-        pass
-
-
-class DummyRequest(StringIO.StringIO):
-    connection = Sponge()
-    def write(self, d, callback=None):
-        StringIO.StringIO.write(self, d)
-        if callback:
-            callback()
-
-    def finish(self):
-        return
 
 
 class uMisc(libpry.AutoTree):
@@ -150,7 +131,7 @@ class uMisc(libpry.AutoTree):
         assert r.msg.val == "Unknown code"
 
     def test_internal_response(self):
-        d = DummyRequest()
+        d = utils.DummyRequest()
         s = rparse.InternalResponse(400, "foo")
         s.serve(d)
 
@@ -226,6 +207,10 @@ class uparse(libpry.AutoTree):
         r = rparse.parse({}, "400:p10,r")
         assert ("r", "pause", 10) in r.actions
 
+    def test_parse_stress(self):
+        r = rparse.parse({}, "400:b@100g")
+        assert r.length()
+
 
 class uResponse(libpry.AutoTree):
     def dummy_response(self):
@@ -260,7 +245,7 @@ class uResponse(libpry.AutoTree):
 
     def test_write_values_disconnects(self):
         r = self.dummy_response()
-        s = DummyRequest()
+        s = utils.DummyRequest()
         tst = "foo"*100
         r.write_values(s, [tst], [(0, "disconnect")], blocksize=5)
         assert not s.getvalue()
@@ -269,7 +254,7 @@ class uResponse(libpry.AutoTree):
         tst = "foo"*1025
         r = rparse.parse({}, "400'msg'")
 
-        s = DummyRequest()
+        s = utils.DummyRequest()
         r.write_values(s, [tst], [])
         assert s.getvalue() == tst
 
@@ -278,29 +263,29 @@ class uResponse(libpry.AutoTree):
         r = rparse.parse({}, "400'msg'")
 
         for i in range(2, 10):
-            s = DummyRequest()
+            s = utils.DummyRequest()
             r.write_values(s, [tst], [(2, "pause", 0), (1, "pause", 0)], blocksize=i)
             assert s.getvalue() == tst
 
         for i in range(2, 10):
-            s = DummyRequest()
+            s = utils.DummyRequest()
             r.write_values(s, [tst], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == tst
 
         tst = ["".join(str(i) for i in range(10))]*5
         for i in range(2, 10):
-            s = DummyRequest()
+            s = utils.DummyRequest()
             r.write_values(s, tst[:], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == "".join(tst)
 
     def test_render(self):
-        s = DummyRequest()
+        s = utils.DummyRequest()
         r = rparse.parse({}, "400'msg'")
         assert r.serve(s)
 
     def test_length(self):
         def testlen(x):
-            s = DummyRequest()
+            s = utils.DummyRequest()
             x.serve(s)
             assert x.length() == len(s.getvalue())
         testlen(rparse.parse({}, "400'msg'"))

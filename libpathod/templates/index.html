@@ -1,12 +1,13 @@
 {% extends frame.html %}
 {% block body %}  
-  <!-- Main hero unit for a primary marketing message or call to action -->
-  <div class="hero-unit">
-    <form>
-        <input>
-        <a type="submit" class="btn">explain</a>
-
+    <form class="well form-search" method="GET" action="/preview">
+        <input style="width: 30em;" name="spec" class="input-medium search-query">
+        <input type="submit" class="btn" value="preview">
+        <a href="#" class="btn">go</a>
     </form>
-  </div>
-
+    <script>
+        $(function(){
+            console.log("pigs");
+        });
+    </script>
 {% end %}  

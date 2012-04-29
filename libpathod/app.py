@@ -6,6 +6,7 @@ class _Page(tornado.web.RequestHandler):
     def render(self, name, **kwargs):
         tornado.web.RequestHandler.render(self, name + ".html", **kwargs)
 
+
 class Index(_Page):
     name = "index"
     section = "main"
@@ -16,8 +17,29 @@ class Index(_Page):
 class Preview(_Page):
     name = "preview"
     section = "main"
+    SANITY = 1024*1024
     def get(self):
-        self.render(self.name, section=self.section)
+        spec = self.get_argument("spec", None)
+        args = dict(
+            spec = spec,
+            section = self.section,
+            syntaxerror = None,
+            error = None
+        )
+        try:
+            r = rparse.parse(self.application.settings, spec)
+        except rparse.ParseException, v:
+            args["syntaxerror"] = str(v)
+            args["marked"] = v.marked()
+            return self.render(self.name, **args)
+        if r.length() > self.SANITY:
+            error = "Refusing to preview a response of %s bytes. This is for your own good."%r.length()
+            args["error"] = error
+        else:
+            d = utils.DummyRequest()
+            r.serve(d)
+            args["output"] = d.getvalue()
+        self.render(self.name, **args)
 
 
 class Help(_Page):

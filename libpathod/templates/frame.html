@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>Pathod</title>
     <link href="/static/bootstrap.min.css" rel="stylesheet">
+    <script src="/static/jquery-1.7.2.min.js"></script>
     <style>
         body {
             padding-top: 45px;
@@ -15,7 +16,7 @@
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="#">Pathod</a>
+          <a class="brand" href="/">Pathod</a>
           <ul class="nav">
             <li {% if section== "main" %} class="active" {% end %}><a href="/">Main</a></li>
             <li {% if section== "log" %} class="active" {% end %}><a href="/log">Log</a></li>
