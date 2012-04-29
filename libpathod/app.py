@@ -12,6 +12,12 @@ class APILog(tornado.web.RequestHandler):
         )
 
 
+class APILogClear(tornado.web.RequestHandler):
+    def post(self):
+        self.application.clear_log()
+        self.write("OK")
+
+
 class _Page(tornado.web.RequestHandler):
     def render(self, name, **kwargs):
         tornado.web.RequestHandler.render(self, name + ".html", **kwargs)
@@ -129,6 +135,7 @@ class PathodApp(tornado.web.Application):
                 (r"/help", Help),
                 (r"/preview", Preview),
                 (r"/api/log", APILog),
+                (r"/api/log/clear", APILogClear),
                 (r"/p/.*", RequestPathod, settings),
             ],
             static_path = utils.data.path("static"),

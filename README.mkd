@@ -284,6 +284,12 @@ Where each entry looks like this:
         'started': 1335735586.469218
     }
 
+You can preview the JSON data returned for a log entry through the built-in web
+interface.
+
+### /api/log/clear
+
+A POST to this URL clears the log buffer.
 
 
 # Installing
