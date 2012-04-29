@@ -1,27 +1,25 @@
 
-__pathod__
-==========
-
-__pathod__ is a pathological HTTP/S daemon, useful for testing and torturing client
-software. At __pathod__'s core is a small, terse language for crafting HTTP
-responses. The simplest way to use __pathod__ is to fire up the daemon, and specify
-the respnse behaviour you want using this language in the request URL. Here's a
-minimal example:
+__pathod__ is a pathological HTTP/S daemon, useful for testing and torturing
+HTTP clients. At __pathod__'s heart is a tiny, terse language for crafting HTTP
+responses. The simplest way to use __pathod__ is to fire up the daemon, and
+specify the response behaviour you want using this language in the request URL.
+Here's a minimal example:
 
     http://localhost:9999/p/200
 
-Everything below the magic "/p/" path component is a response specifier - in
-this case just a vanilla 200 OK response. See the docs below to get (much)
-fancier. You can also add anchors to the __pathod__ server that serve a fixed
-response whenever a matching URL is requested:
+Everything after the "/p/" path component is a response specifier - in this
+case just a vanilla 200 OK response. See the docs below to get (much) fancier.
+You can also add anchors to the __pathod__ server that serve a fixed response
+whenever a matching URL is requested:
 
     pathod --anchor "/foo=200"
 
-Here, the part before the "=" is a regex specifying the anchor path, and the
-part after is a response specifier.
+Here, "/foo" a regex specifying the anchor path, and the part after the "=" is
+a response specifier.
 
-__pathod__ also has a nifty built-in web interface, which exposes activity logs,
-online help and various other goodies. Try it by visiting the server root:
+__pathod__ also has a nifty built-in web interface, which lets you play with
+the language by previewing responses, exposes activity logs, online help and
+various other goodies. Try it by visiting the server root:
 
     http://localhost:9999
 
@@ -57,7 +55,7 @@ ASCII letters instead:
 Full documentation on the value specification syntax can be found in the next
 section. 
    
-Following the response code specifier is a colon-separateed list of features.
+Following the response code specifier is a colon-separated list of features.
 For instance, this specifies a response with a body consisting of 1 megabyte of
 random data:
 
@@ -73,7 +71,7 @@ same response again, but with a 1k randomly generated header name:
     200:b@1m:h@1k,ascii_letters="foo"
 
 A few specific headers have shortcuts, because they're used so often. The
-shorcut for the content-type header is "c":
+shortcut for the content-type header is "c":
 
     200:b@1m:c"text/json"
 
