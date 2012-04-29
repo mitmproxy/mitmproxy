@@ -1,6 +1,6 @@
-import operator, string, random, sys, time, mmap, os, time
+import operator, string, random, mmap, os, time
 import contrib.pyparsing as pp
-import http, utils
+import http
 import tornado.ioloop
 
 TESTING = False

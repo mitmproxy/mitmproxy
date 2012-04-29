@@ -1,4 +1,4 @@
-import copy, os, re, StringIO
+import os, re
 import rparse
 
 class AnchorError(Exception): pass

@@ -1,4 +1,4 @@
-import sys, os
+import os
 import libpry
 from libpathod import rparse, utils
 

@@ -233,11 +233,13 @@ Supported data types are:
     ascii
     bytes
 
+
 # API
 
 __pathod__ exposes a simple API, intended to make it possible to drive and
 inspect the daemon remotely for use in unit testing and the like. The next
 release will include a client-side library that makes this transparent.
+
 
 ### /api/log
 
@@ -287,6 +289,7 @@ Where each entry looks like this:
 You can preview the JSON data returned for a log entry through the built-in web
 interface.
 
+
 ### /api/log/clear
 
 A POST to this URL clears the log buffer.
@@ -302,4 +305,3 @@ system, installing __pathod__ and its dependencies is dead simple:
 The project uses the __pry__ unit testing framework, which you can get here:
 
     http://github.com/cortesi/pry
-

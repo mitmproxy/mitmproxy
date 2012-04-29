@@ -1,10 +1,11 @@
 
 0.2:
     - API
-        - Logs, log reset, log retrieval
         - Anchor management
+        - Client library
+    - Unit testing examples
     - Specify if server should add Server and Date headers
     - Shortcuts for cookies, auth
     - Various SSL errors (expired certs, etc.)
-    - Caching functions
+    - Muck with caching
 
