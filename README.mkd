@@ -1,10 +1,10 @@
 
-_pathod_
-========    
+__pathod__
+==========
 
-_pathod_ is a pathological HTTP/S daemon, useful for testing and torturing client
-software. At _pathod_'s core is a small, terse language for crafting HTTP
-responses. The simplest way to use _pathod_ is to fire up the daemon, and specify
+__pathod__ is a pathological HTTP/S daemon, useful for testing and torturing client
+software. At __pathod__'s core is a small, terse language for crafting HTTP
+responses. The simplest way to use __pathod__ is to fire up the daemon, and specify
 the respnse behaviour you want using this language in the request URL. Here's a
 minimal example:
 
@@ -12,7 +12,7 @@ minimal example:
 
 Everything below the magic "/p/" path component is a response specifier - in
 this case just a vanilla 200 OK response. See the docs below to get (much)
-fancier. You can also add anchors to the _pathod_ server that serve a fixed
+fancier. You can also add anchors to the __pathod__ server that serve a fixed
 response whenever a matching URL is requested:
 
     pathod --anchor "/foo=200"
@@ -20,7 +20,7 @@ response whenever a matching URL is requested:
 Here, the part before the "=" is a regex specifying the anchor path, and the
 part after is a response specifier.
 
-_pathod_ also has a nifty built-in web interface, which exposes activity logs,
+__pathod__ also has a nifty built-in web interface, which exposes activity logs,
 online help and various other goodies. Try it by visiting the server root:
 
     http://localhost:9999
@@ -40,16 +40,16 @@ OK message with no headers and no content:
     200
 
 We can embellish this a bit by specifying an optional custom HTTP response
-message (if we don't, _pathod_ automatically creates an appropriate one). By
+message (if we don't, __pathod__ automatically creates an appropriate one). By
 default for a 200 response code the message is "OK", but we can change it like
 this:
 
     200"YAY"
 
 The quoted string here is an example of a Value Specifier, a syntax that is
-used throughout the _pathod_ response specification language. In this case, the
+used throughout the __pathod__ response specification language. In this case, the
 quotes mean we're specifying a literal string, but there are many other fun
-things we can do. For example, we can tell _pathod_ to generate 100k of random
+things we can do. For example, we can tell __pathod__ to generate 100k of random
 ASCII letters instead:
 
     200@100k,ascii_letters
@@ -79,14 +79,14 @@ shorcut for the content-type header is "c":
 
 That's it for the basic response definition. Now we can start mucking with the
 responses to break clients. One common hard-to-test circumstance is hangs or
-slow responses. _pathod_ has a pause operator that you can use to define
+slow responses. __pathod__ has a pause operator that you can use to define
 precisely when and how long the server should hang. Here, for instance, we hang
 for 120 seconds after sending 50 bytes (counted from the first byte of the HTTP
 response):
 
     200:b@1m:p120,50
 
-If that's not long enough, we can tell _pathod_ to hang forever:
+If that's not long enough, we can tell __pathod__ to hang forever:
 
     200:b@1m:p120,f
 
@@ -94,12 +94,12 @@ Or to send all data, and then hang without disconnecting:
 
     200:b@1m:p120,a
 
-We can also ask _pathod_ to hang randomly:
+We can also ask __pathod__ to hang randomly:
 
     200:b@1m:pr,a
 
 There is a similar mechanism for dropping connections mid-response. So, we can
-tell _pathod_ to disconnect after sending 50 bytes:
+tell __pathod__ to disconnect after sending 50 bytes:
 
     200:b@1m:d50
 
@@ -123,7 +123,7 @@ Set a header. Both KEY and VALUE are full _Value Specifiers_.
 
 #### bVALUE
 
-Set the body. VALUE is a _Value Specifier_. When the body is set, _pathod_ will
+Set the body. VALUE is a _Value Specifier_. When the body is set, __pathod__ will
 automatically set the appropriate Content-Length header.
 
 
@@ -143,7 +143,7 @@ A shortcut for setting the Location header. Equivalent to:
 
 #### dOFFSET
 
-Disconnect after OFFSET bytes. The offset can also be "r", in which case _pathod_
+Disconnect after OFFSET bytes. The offset can also be "r", in which case __pathod__
 will disconnect at a random point in the response.
 
 
@@ -174,7 +174,7 @@ backslashes within the string:
 ### Files
 
 You can load a value from a specified file path. To do so, you have to specify
-a _staticdir_ option to _pathod_ on the command-line, like so: 
+a _staticdir_ option to __pathod__ on the command-line, like so: 
 
     pathod -d ~/myassets
 
@@ -192,7 +192,7 @@ The path value can also be a quoted string, with the same syntax as literals:
 
 An @-symbol lead-in specifies that generated data should be used. There are two
 components to a generator specification - a size, and a data type. By default
-_pathod_ assumes a data type of "bytes". 
+__pathod__ assumes a data type of "bytes". 
 
 Here's a value specifier for generating 100 bytes:
     
