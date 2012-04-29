@@ -116,42 +116,36 @@ once at 10 bytes and once at 20, then disconnects at 5000:
 Features
 ========
 
-_h_KEY=VALUE
-------------
+### _h_KEY=VALUE
 
 Set a header. Both KEY and VALUE are full _Value Specifiers_. 
 
 
-_b_VALUE
---------
+### _b_VALUE
 
 Set the body. VALUE is a _Value Specifier_. When the body is set, Pathod will
 automatically set the appropriate Content-Length header.
 
-_c_VALUE
---------
+### _c_VALUE
 
 A shortcut for setting the Content-Type header. Equivalent to:
 
     h"Content-Type"=VALUE
 
-_l_VALUE
---------
+### _l_VALUE
 
 A shortcut for setting the Location header. Equivalent to:
 
     h"Content-Type"=VALUE
 
 
-_d_OFFSET
----------
+### _d_OFFSET
 
 Disconnect after OFFSET bytes. The offset can also be "r", in which case Pathod
 will disconnect at a random point in the response.
 
 
-_p_SECONDS,OFFSET
------------------
+### _p_SECONDS,OFFSET
 
 Pause for SECONDS seconds after OFFSET bytes. SECONDS can also be "f" to pause
 forever. OFFSET can also be "r" to generate a random offset, or "a" for an
@@ -161,11 +155,83 @@ offset just after all data has been sent.
 Value Specifiers
 ================
 
-    @500k           - 500k of random data
-    @500k,utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
-    "foo"           - literal
-    <path           - load from path under data directory
-    <"path"         - load from path under data directory
+There are three different flavours of value specification. 
+
+### Literal
+
+Literal values are specified as a quoted strings: 
+
+    "foo"
+
+Either single or double quotes are accepted, and quotes can be escaped with
+backslashes within the string:
+
+    'fo\'o'
+
+
+### Files
+
+You can load a value from a specified file path. To do so, you have to specify
+a _staticdir_ option to Pathod on the command-line, like so: 
+
+    pathod -d ~/myassets
+
+All paths are relative paths under this directory. File loads are indicated by
+starting the value specifier with the left angle bracket:
+    
+    <my/path
+
+The path value can also be a quoted string, with the same syntax as literals:
+
+    <"my/path"
+
+
+### Generated values
+
+An @-symbol lead-in specifies that generated data should be used. There are two
+components to a generator specification - a size, and a data type. By default
+Pathod assumes a data type of "bytes". 
+
+Here's a value specifier for generating 100 bytes:
+    
+    @100
+
+You can use standard suffixes to indicate larger values. Here, for instance, is
+a specifier for generating 100 megabytes:
+
+    @100m
+
+The supported suffixes are:
+
+    b = 1024**0 (bytes)
+    k = 1024**1 (kilobytes)
+    m = 1024**2 (megabytes)
+    g = 1024**3 (gigabytes)
+    t = 1024**4 (terabytes)
+
+Data types are separated from the size specification by a comma. This
+specification generates 100mb of ASCII:
+
+    @100m,ascii
+
+Supported data types are:
+
+    
+    ascii_letters
+    ascii_lowercase
+    ascii_uppercase
+    digits
+    hexdigits
+    letters
+    lowercase
+    octdigits
+    printable
+    punctuation
+    uppercase
+    whitespace
+    ascii
+    bytes
+
 
 
 Anchors
