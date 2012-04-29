@@ -11,7 +11,7 @@ class Index(_Page):
     name = "index"
     section = "main"
     def get(self):
-        self.render(self.name, section=self.section)
+        self.render(self.name, section=self.section, spec="")
 
 
 class Preview(_Page):

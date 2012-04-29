@@ -1,0 +1,12 @@
+<form class="well form-search" method="GET" action="/preview">
+    <input id="spec" style="width: 30em;" name="spec" class="input-medium search-query" value="{{spec}}">
+    <input type="submit" class="btn" value="preview">
+    <a href="#" id="submitspec" class="btn">go</a>
+</form>
+<script>
+    $(function(){
+        $("#submitspec").click(function(){
+            document.location = "/p/" + $("#spec").val()
+        });
+    });
+</script>

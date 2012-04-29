@@ -20,9 +20,5 @@
     <pre>{{ output }}</pre>
 
 {% end %}  
-    <form class="well form-search" method="GET" action="/preview">
-        <input style="width: 30em;" name="spec" class="input-medium search-query" value="{{spec}}">
-        <input type="submit" class="btn" value="preview">
-        <a href="#" class="btn">go</a>
-    </form>
+{% include previewform.html %}
 {% end %}  

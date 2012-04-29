@@ -1,6 +1,5 @@
 
 0.1:
-    - Web status and explain
     - setup.py
     - API
         - Logs, log reset, log retrieval
