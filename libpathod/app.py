@@ -4,9 +4,7 @@ import rparse, utils
 
 class _Page(tornado.web.RequestHandler):
     def render(self, name, **kwargs):
-        b = self.application.templates.load(name + ".html").generate(**kwargs)
-        self.write(b)
-
+        tornado.web.RequestHandler.render(self, name + ".html", **kwargs)
 
 class Index(_Page):
     name = "index"
@@ -33,7 +31,21 @@ class Log(_Page):
     name = "log"
     section = "log"
     def get(self):
-        self.render(self.name, section=self.section)
+        self.render(self.name, section=self.section, log=self.application.log)
+
+
+class OneLog(_Page):
+    name = "onelog"
+    section = "log"
+    def get(self, lid):
+        l = pprint.pformat(self.application.log_by_id(int(lid)))
+        self.render(self.name, section=self.section, alog=l, lid=lid)
+
+
+class ClearLog(_Page):
+    def post(self):
+        self.application.clear_logs()
+        self.redirect("/log")
 
 
 class Pathod(object):
@@ -74,13 +86,14 @@ class RequestPathod(Pathod):
 class PathodApp(tornado.web.Application):
     LOGBUF = 500
     def __init__(self, **settings):
-        self.templates = tornado.template.Loader(utils.data.path("templates"))
         self.appsettings = settings
         tornado.web.Application.__init__(
             self,
             [
                 (r"/", Index),
                 (r"/log", Log),
+                (r"/log/clear", ClearLog),
+                (r"/log/([0-9]+)", OneLog),
                 (r"/help", Help),
                 (r"/preview", Preview),
                 (r"/p/.*", RequestPathod, settings),
@@ -138,6 +151,14 @@ class PathodApp(tornado.web.Application):
         if len(self.log) > self.LOGBUF:
             self.log.pop()
         self.logid += 1
+
+    def log_by_id(self, id):
+        for i in self.log:
+            if i["id"] == id:
+                return i
+
+    def clear_logs(self):
+        self.log = []
 
 
 # begin nocover

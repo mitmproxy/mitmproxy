@@ -27,6 +27,11 @@ class uApplication(libpry.AutoTree):
         assert a.log[0]["id"] == 3
         assert a.log[-1]["id"] == 1
 
+        assert a.log_by_id(1)["id"] == 1
+        assert not a.log_by_id(0)
+
+
+
 class uPages(libpry.AutoTree):
     def dummy_page(self, path):
         # A hideous, hideous kludge, but Tornado seems to have no more sensible

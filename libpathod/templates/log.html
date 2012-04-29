@@ -1,5 +1,26 @@
 {% extends frame.html %}
 {% block body %}  
-    <h1> Log </h1>
+    <form style="float: right" method="POST" action="/log/clear">
+        <button type="submit" class="btn">clear</button> 
+    </form>
+    <h1> Logs </h1>
+    <hr>
+
+    <table class="table table-striped table-condensed">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>url</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in log %}
+                <tr>
+                    <td>{{ i["id"] }}</td>
+                    <td><a href="/log/{{ i["id"] }}">{{ i["request"]["full_url"] }}</a></td>
+                </tr>
+            {% end %}
+        </tbody>
+    </table>
 {% end %}  
 

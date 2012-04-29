@@ -4,16 +4,15 @@
     <meta charset="utf-8">
     <title>Pathod</title>
     <link href="/static/bootstrap.min.css" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 60px;
-      }
+    <style>
+        body {
+            padding-top: 45px;
+        }
     </style>
   </head>
 
   <body>
-
-    <div class="navbar navbar-fixed">
+    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
           <a class="brand" href="#">Pathod</a>
@@ -31,10 +30,8 @@
         {% block body %}  
         {% end %}  
 
-      <footer>
-        <p>made by <a href="http://corte.si">Aldo Cortesi</a> </p>
-      </footer>
-
+    <hr>
+    <p>by <a href="http://corte.si">Aldo Cortesi</a> </p>
     </div> <!-- /container -->
 
   </body>

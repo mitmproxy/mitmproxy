@@ -467,6 +467,7 @@ class Response:
             started = started,
             duration = duration,
             actions = actions,
+            code = self.code,
         )
 
     def __str__(self):
