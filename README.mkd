@@ -231,3 +231,12 @@ Supported data types are:
     whitespace
     ascii
     bytes
+
+
+# Inastalling
+
+__pathod__ requires Tornado 2.2.1 or later. If you already have __pip__ on your
+system, installing __pathod__ and its dependencies is dead simple:
+    
+    pip install pathod
+
