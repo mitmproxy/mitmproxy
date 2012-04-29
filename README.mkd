@@ -233,10 +233,14 @@ Supported data types are:
     bytes
 
 
-# Inastalling
+# Installing
 
 __pathod__ requires Tornado 2.2.1 or later. If you already have __pip__ on your
 system, installing __pathod__ and its dependencies is dead simple:
     
     pip install pathod
+
+The project uses the __pry__ unit testing framework, which you can get here:
+
+    http://github.com/cortesi/pry
 
