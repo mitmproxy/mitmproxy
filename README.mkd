@@ -5,22 +5,23 @@ Pathod
 Pathod is a pathological HTTP/S daemon, useful for testing and torturing client
 software. At Pathod's core is a small, terse language for crafting HTTP
 responses. The simplest way to use Pathod is to fire up the daemon, and specify
-the respnse behaviour you want in the request URL, like this:
+the respnse behaviour you want using this language in the request URL. Here's a
+minimal example:
 
     http://localhost:9999/p/200
 
 Everything below the magic "/p/" path component is a response specifier - in
-this case we're just specifying a vanilly 200 OK response, see the docs below
-to get fancier. You can also add anchors to the Pathod server that serve a
-fixed response whenever a path matching a specified URL is requested:
+this case just a vanilla 200 OK response. See the docs below to get (much)
+fancier. You can also add anchors to the Pathod server that serve a fixed
+response whenever a matching URL is requested:
 
-    pathod --anchor /foo=200
+    pathod --anchor "/foo=200"
 
 Here, the part before the "=" is a regex specifying the anchor path, and the
-part after is again a response specifier.
+part after is a response specifier.
 
-Pathod has a nifty web interface built in, which exposes activity logs, online
-help and various other goodies. Try it by visiting the server root:
+Pathod also has a nifty built-in web interface, which exposes activity logs,
+online help and various other goodies. Try it by visiting the server root:
 
     http://localhost:9999
 
@@ -39,20 +40,22 @@ OK message with no headers and no content:
     200
 
 We can embellish this a bit by specifying an optional custom HTTP response
-message. By default for a 200 response code, this is just "OK", but we can
-change it like this:
+message (if we don't, Pathod automatically creates an appropriate one). By
+default for a 200 response code the message is "OK", but we can change it like
+this:
 
     200"YAY"
 
-The quoted string above is an example of a value specifier, a syntax that is
-used pervasively in the Pathod response specification language. In this case,
-we're specifying a literal string, but there are many other fun things we can
-do. For example, we can tell Pathod to generate 100k of random ASCII letters
-instead:
+The quoted string here is an example of a Value Specifier, a syntax that is
+used throughout the Pathod response specification language. In this case, the
+quotes mean we're specifying a literal string, but there are many other fun
+things we can do. For example, we can tell Pathod to generate 100k of random
+ASCII letters instead:
 
     200@100k,ascii_letters
 
-Full documentation on the value specification syntax can be found below. 
+Full documentation on the value specification syntax can be found in the next
+section. 
    
 Following the response code specifier is a colon-separateed list of features.
 For instance, this specifies a response with a body consisting of 1 megabyte of
@@ -95,8 +98,8 @@ We can also ask Pathod to hang randomly:
 
     200:b@1m:pr,a
 
-Pathod has a similar mechanism for simply dropping a connection mid-response.
-So we can tell Pathod to disconnect after sending 50 bytes:
+There is a similar mechanism for dropping connections mid-response. So, we can
+tell Pathod to disconnect after sending 50 bytes:
 
     200:b@1m:d50
 
@@ -105,7 +108,7 @@ Or randomly:
     200:b@1m:dr
 
 All of these features can be combined. Here's a response that pauses twice,
-then hangs:
+once at 10 bytes and once at 20, then disconnects at 5000:
 
     200:b@1m:p10,10:p20,10:d5000
 
@@ -113,17 +116,50 @@ then hangs:
 Features
 ========
 
-    hVALUE=VALUE        Set header
-    bVALUE              Set body
-    cVALUE              Set Content-Type header
-    lVALUE              Set Location header
+_h_KEY=VALUE
+------------
 
-    dOFF|r              Disconnect after OFF bytes, measured from the beginning of the response.
-    pNUM|f,OFF|r|a      Pause for NUM seconds after OFF bytes. 
+Set a header. Both KEY and VALUE are full _Value Specifiers_. 
+
+
+_b_VALUE
+--------
+
+Set the body. VALUE is a _Value Specifier_. When the body is set, Pathod will
+automatically set the appropriate Content-Length header.
+
+_c_VALUE
+--------
+
+A shortcut for setting the Content-Type header. Equivalent to:
+
+    h"Content-Type"=VALUE
+
+_l_VALUE
+--------
+
+A shortcut for setting the Location header. Equivalent to:
+
+    h"Content-Type"=VALUE
+
+
+_d_OFFSET
+---------
+
+Disconnect after OFFSET bytes. The offset can also be "r", in which case Pathod
+will disconnect at a random point in the response.
+
+
+_p_SECONDS,OFFSET
+-----------------
+
+Pause for SECONDS seconds after OFFSET bytes. SECONDS can also be "f" to pause
+forever. OFFSET can also be "r" to generate a random offset, or "a" for an
+offset just after all data has been sent.
 
 
 Value Specifiers
-----------------
+================
 
     @500k           - 500k of random data
     @500k,utf8      - 500k of utf8. Other specifiers: utf8,alphanum,alpha,printable
