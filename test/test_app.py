@@ -2,8 +2,14 @@ import libpry
 from libpathod import app
 from tornado import httpserver
 
-
 class uApplication(libpry.AutoTree):
+    def test_anchors(self):
+        a = app.PathodApp(staticdir=None)
+        a.add_anchor("/foo", "200")
+        assert a.handlers[0][1][0].handler_class.__name__ == "FixedPathod"
+
+
+class uPages(libpry.AutoTree):
     def dummy_page(self, path):
         # A hideous, hideous kludge, but Tornado seems to have no more sensible
         # way to do this.
@@ -14,9 +20,6 @@ class uApplication(libpry.AutoTree):
         r = httpserver.HTTPRequest("GET", path)
         del r.connection
         return klass(a, r)
-
-    def test_create(self):
-        assert app.PathodApp(staticdir=None)
 
     def test_index(self):
         page = self.dummy_page("/")
@@ -31,5 +34,6 @@ class uApplication(libpry.AutoTree):
 
 
 tests = [
-    uApplication()
+    uApplication(),
+    uPages()
 ]

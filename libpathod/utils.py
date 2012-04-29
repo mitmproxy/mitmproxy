@@ -1,4 +1,27 @@
-import copy, os
+import copy, os, re
+import rparse
+
+class AnchorError(Exception): pass
+
+def parse_anchor_spec(s, settings):
+    """
+        For now, this is very simple, and you can't have an '=' in your regular
+        expression.
+    """
+    if not "=" in s:
+        raise AnchorError("Invalid anchor definition: %s"%s)
+    rex, spec = s.split("=", 1)
+    try:
+        re.compile(rex)
+    except re.error:
+        raise AnchorError("Invalid regex in anchor: %s"%s)
+    try:
+        rparse.parse(settings, spec)
+    except rparse.ParseException, v:
+        raise AnchorError("Invalid page spec in anchor: '%s', %s"%(s, str(v)))
+
+    return rex, spec
+
 
 class Data:
     def __init__(self, name):

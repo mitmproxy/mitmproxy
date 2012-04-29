@@ -1,11 +1,15 @@
 #!/usr/bin/env python
-import argparse
+import argparse, sys
 from libpathod import app, utils
 import tornado.ioloop
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument("-p", dest='port', default=8888, type=int, help='Port.')
+    parser.add_argument(
+        "-a", dest='anchors', default=[], type=str, action="append",
+        help='Add an anchor. Specified as a string with the form pattern=pagespec'
+    )
     parser.add_argument(
         "-d", dest='staticdir', default=None, type=str,
         help='Directory for static files.'
@@ -26,10 +30,17 @@ if __name__ == "__main__":
         help='SSL cert file. If not specified, a default cert is used.'
     )
     args = parser.parse_args()
+    settings = dict(
+        staticdir=args.staticdir
+    )
+    application = app.PathodApp(**settings)
+    for i in args.anchors:
+        try:
+            rex, spec = utils.parse_anchor_spec(i, settings)
+        except utils.AnchorError, v:
+            parser.error(str(v))
+        application.add_anchor(rex, spec)
 
-    application = app.PathodApp(
-                    staticdir=args.staticdir
-                )
     if args.ssl:
         ssl = dict(
              keyfile = args.ssl_keyfile or utils.data.path("resources/server.key"),

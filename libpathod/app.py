@@ -37,10 +37,8 @@ class Log(_Page):
 
 
 class Pathod(object):
-    anchor = "/p/"
-    def __init__(self, application, request, **settings):
+    def __init__(self, spec, application, request, **settings):
         self.application, self.request, self.settings = application, request, settings
-        spec = urllib.unquote(self.request.uri)[len(self.anchor):]
         try:
             self.response = rparse.parse(self.settings, spec)
         except rparse.ParseException, v:
@@ -53,9 +51,17 @@ class Pathod(object):
         self.response.render(self.request)
 
 
+class RequestPathod(Pathod):
+    anchor = "/p/"
+    def __init__(self, application, request, **settings):
+        spec = urllib.unquote(request.uri)[len(self.anchor):]
+        Pathod.__init__(self, spec, application, request, **settings)
+
+
 class PathodApp(tornado.web.Application):
     def __init__(self, **settings):
         self.templates = tornado.template.Loader(utils.data.path("templates"))
+        self.appsettings = settings
         tornado.web.Application.__init__(
             self,
             [
@@ -63,12 +69,36 @@ class PathodApp(tornado.web.Application):
                 (r"/log", Log),
                 (r"/help", Help),
                 (r"/preview", Preview),
-                (r"/p/.*", Pathod, settings),
+                (r"/p/.*", RequestPathod, settings),
             ],
             static_path = utils.data.path("static"),
             template_path = utils.data.path("templates"),
             debug=True
         )
+
+    def add_anchor(self, pattern, spec):
+        """
+            Anchors are added to the beginning of the handlers.
+        """
+        # We assume we have only one host...
+        l = self.handlers[0][1]
+        class FixedPathod(Pathod):
+            def __init__(self, application, request, **settings):
+                Pathod.__init__(self, spec, application, request, **settings)
+        FixedPathod.spec = spec
+        l.insert(0, tornado.web.URLSpec(pattern, FixedPathod, self.appsettings))
+
+    def get_anchors(self, pattern, spec):
+        """
+            Anchors are added to the beginning of the handlers.
+        """
+        pass
+
+    def remove_anchor(self, pattern, spec):
+        """
+            Anchors are added to the beginning of the handlers.
+        """
+        pass
 
 
 # begin nocover
