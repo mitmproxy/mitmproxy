@@ -116,36 +116,36 @@ once at 10 bytes and once at 20, then disconnects at 5000:
 Features
 ========
 
-### _h_KEY=VALUE
+#### hKEY=VALUE
 
 Set a header. Both KEY and VALUE are full _Value Specifiers_. 
 
 
-### _b_VALUE
+#### bVALUE
 
 Set the body. VALUE is a _Value Specifier_. When the body is set, Pathod will
 automatically set the appropriate Content-Length header.
 
-### _c_VALUE
+#### cVALUE
 
 A shortcut for setting the Content-Type header. Equivalent to:
 
     h"Content-Type"=VALUE
 
-### _l_VALUE
+#### lVALUE
 
 A shortcut for setting the Location header. Equivalent to:
 
     h"Content-Type"=VALUE
 
 
-### _d_OFFSET
+#### dOFFSET
 
 Disconnect after OFFSET bytes. The offset can also be "r", in which case Pathod
 will disconnect at a random point in the response.
 
 
-### _p_SECONDS,OFFSET
+#### pSECONDS,OFFSET
 
 Pause for SECONDS seconds after OFFSET bytes. SECONDS can also be "f" to pause
 forever. OFFSET can also be "r" to generate a random offset, or "a" for an
@@ -231,12 +231,3 @@ Supported data types are:
     whitespace
     ascii
     bytes
-
-
-
-Anchors
-=======
-
-    Passed on command-line:
-        -a "/foo/bar=200:!/foo"
-
