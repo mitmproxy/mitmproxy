@@ -14,6 +14,18 @@ class uApplication(libpry.AutoTree):
         a.remove_anchor("/oink", "400")
         assert a.get_anchors() == [("/foo", "200")]
 
+    def test_logs(self):
+        a = app.PathodApp(staticdir=None)
+        a.LOGBUF = 3
+        a.add_log({})
+        assert a.log[0]["id"] == 0
+        a.add_log({})
+        a.add_log({})
+        assert a.log[0]["id"] == 2
+        a.add_log({})
+        assert len(a.log) == 3
+        assert a.log[0]["id"] == 3
+        assert a.log[-1]["id"] == 1
 
 class uPages(libpry.AutoTree):
     def dummy_page(self, path):

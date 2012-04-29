@@ -1,4 +1,4 @@
-import urllib
+import urllib, pprint
 import tornado.web, tornado.template, tornado.ioloop, tornado.httpserver
 import rparse, utils
 
@@ -48,7 +48,20 @@ class Pathod(object):
             )
 
     def _execute(self, transforms, *args, **kwargs):
-        self.response.render(self.request)
+        d = self.response.serve(self.request)
+        d["request"] = dict(
+            path = self.request.path,
+            method = self.request.method,
+            headers = self.request.headers,
+            host = self.request.host,
+            protocol = self.request.protocol,
+            remote_address = self.request.connection.address,
+            full_url = self.request.full_url(),
+            query = self.request.query,
+            version = self.request.version,
+            uri = self.request.uri,
+        )
+        self.application.add_log(d)
 
 
 class RequestPathod(Pathod):
@@ -59,6 +72,7 @@ class RequestPathod(Pathod):
 
 
 class PathodApp(tornado.web.Application):
+    LOGBUF = 500
     def __init__(self, **settings):
         self.templates = tornado.template.Loader(utils.data.path("templates"))
         self.appsettings = settings
@@ -75,6 +89,8 @@ class PathodApp(tornado.web.Application):
             template_path = utils.data.path("templates"),
             debug=True
         )
+        self.log = []
+        self.logid = 0
 
     def add_anchor(self, pattern, spec):
         """
@@ -115,6 +131,13 @@ class PathodApp(tornado.web.Application):
                 if (h.handler_class.pattern, h.handler_class.spec) == (pattern, spec):
                     del l[i]
                     return
+
+    def add_log(self, d):
+        d["id"] = self.logid
+        self.log.insert(0, d)
+        if len(self.log) > self.LOGBUF:
+            self.log.pop()
+        self.logid += 1
 
 
 # begin nocover

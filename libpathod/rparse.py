@@ -1,4 +1,4 @@
-import operator, string, random, sys, time, mmap, os
+import operator, string, random, sys, time, mmap, os, time
 import contrib.pyparsing as pp
 import http, utils
 import tornado.ioloop
@@ -430,7 +430,8 @@ class Response:
             skip = 0
         fp.finish()
 
-    def render(self, fp):
+    def serve(self, fp):
+        started = time.time()
         if self.body and not self.get_header("Content-Length"):
             self.headers.append(
                 (
@@ -460,7 +461,13 @@ class Response:
         vals.reverse()
         actions = self.ready_actions(self.length(), self.actions)
         actions.reverse()
-        return self.write_values(fp, vals, actions)
+        self.write_values(fp, vals, actions[:])
+        duration = time.time() - started
+        return dict(
+            started = started,
+            duration = duration,
+            actions = actions,
+        )
 
     def __str__(self):
         parts = [
@@ -470,11 +477,16 @@ class Response:
 
 
 class CraftedResponse(Response):
-    def __init__(self, settings, tokens):
+    def __init__(self, settings, spec, tokens):
         Response.__init__(self)
-        self.tokens = tokens
+        self.spec, self.tokens = spec, tokens
         for i in tokens:
             i.mod_response(settings, self)
+
+    def serve(self, fp):
+        d = Response.serve(self, fp)
+        d["spec"] = self.spec
+        return d
 
 
 class InternalResponse(Response):
@@ -494,9 +506,14 @@ class InternalResponse(Response):
             )
         ]
 
+    def serve(self, fp):
+        d = Response.serve(self, fp)
+        d["internal"] = True
+        return d
+
 
 def parse(settings, s):
     try:
-        return CraftedResponse(settings, Response.expr().parseString(s, parseAll=True))
+        return CraftedResponse(settings, s, Response.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)

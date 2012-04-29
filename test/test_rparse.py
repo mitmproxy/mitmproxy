@@ -152,7 +152,7 @@ class uMisc(libpry.AutoTree):
     def test_internal_response(self):
         d = DummyRequest()
         s = rparse.InternalResponse(400, "foo")
-        s.render(d)
+        s.serve(d)
 
 
 class uDisconnects(libpry.AutoTree):
@@ -296,12 +296,12 @@ class uResponse(libpry.AutoTree):
     def test_render(self):
         s = DummyRequest()
         r = rparse.parse({}, "400'msg'")
-        r.render(s)
+        assert r.serve(s)
 
     def test_length(self):
         def testlen(x):
             s = DummyRequest()
-            x.render(s)
+            x.serve(s)
             assert x.length() == len(s.getvalue())
         testlen(rparse.parse({}, "400'msg'"))
         testlen(rparse.parse({}, "400'msg':h'foo'='bar'"))
