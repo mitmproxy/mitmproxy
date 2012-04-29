@@ -344,7 +344,7 @@ class Response:
     version = "HTTP/1.1"
     code = 200
     msg = LiteralGenerator(http.RESPONSES[code])
-    body = LiteralGenerator("OK")
+    body = LiteralGenerator("")
     def __init__(self):
         self.headers = []
         self.actions = []
@@ -429,6 +429,7 @@ class Response:
                 sofar += len(d)
             skip = 0
         fp.finish()
+        fp.connection.stream.close()
 
     def serve(self, fp):
         started = time.time()
@@ -454,10 +455,9 @@ class Response:
             "\r\n",
         ]
         vals.extend(hdrs)
-        vals.extend([
-            "\r\n",
-            self.body
-        ])
+        vals.append("\r\n")
+        if self.body:
+            vals.append(self.body)
         vals.reverse()
         actions = self.ready_actions(self.length(), self.actions)
         actions.reverse()

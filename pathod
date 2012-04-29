@@ -5,7 +5,7 @@ import tornado.ioloop
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument("-p", dest='port', default=8888, type=int, help='Port.')
+    parser.add_argument("-p", dest='port', default=9999, type=int, help='Port.')
     parser.add_argument(
         "-a", dest='anchors', default=[], type=str, action="append",
         help='Add an anchor. Specified as a string with the form pattern=pagespec'
