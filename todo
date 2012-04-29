@@ -1,6 +1,5 @@
-
-- Anchors
-- Logs, log reset, log retrieval
-- Add anchors programmatically?
-
-- Sequences
+- Disconnect or pause at specified byte offset
+- Logs
+- API
+    - Logs, log reset, log retrieval
+    - Anchor management

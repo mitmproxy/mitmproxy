@@ -6,7 +6,13 @@ class uApplication(libpry.AutoTree):
     def test_anchors(self):
         a = app.PathodApp(staticdir=None)
         a.add_anchor("/foo", "200")
-        assert a.handlers[0][1][0].handler_class.__name__ == "FixedPathod"
+        assert a.get_anchors() == [("/foo", "200")]
+        a.add_anchor("/bar", "400")
+        assert a.get_anchors() == [("/bar", "400"), ("/foo", "200")]
+        a.remove_anchor("/bar", "400")
+        assert a.get_anchors() == [("/foo", "200")]
+        a.remove_anchor("/oink", "400")
+        assert a.get_anchors() == [("/foo", "200")]
 
 
 class uPages(libpry.AutoTree):

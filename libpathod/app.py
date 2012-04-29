@@ -86,19 +86,35 @@ class PathodApp(tornado.web.Application):
             def __init__(self, application, request, **settings):
                 Pathod.__init__(self, spec, application, request, **settings)
         FixedPathod.spec = spec
+        FixedPathod.pattern = pattern
         l.insert(0, tornado.web.URLSpec(pattern, FixedPathod, self.appsettings))
 
-    def get_anchors(self, pattern, spec):
+    def get_anchors(self):
         """
             Anchors are added to the beginning of the handlers.
         """
-        pass
+        l = self.handlers[0][1]
+        a = []
+        for i in l:
+            if i.handler_class.__name__ == "FixedPathod":
+                a.append(
+                    (
+                        i.handler_class.pattern,
+                        i.handler_class.spec
+                    )
+                )
+        return a
 
     def remove_anchor(self, pattern, spec):
         """
             Anchors are added to the beginning of the handlers.
         """
-        pass
+        l = self.handlers[0][1]
+        for i, h in enumerate(l):
+            if h.handler_class.__name__ == "FixedPathod":
+                if (h.handler_class.pattern, h.handler_class.spec) == (pattern, spec):
+                    del l[i]
+                    return
 
 
 # begin nocover

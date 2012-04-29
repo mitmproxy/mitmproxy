@@ -33,16 +33,10 @@ Examples:
     200:b1k:xr
 
 
-Sequences:
-
-    200 * 2 | !forever
-    200 | 404 | 200,b:500g
-
-
 Anchors:
 
-    Passed on command-line?
-        --anchor /foo/bar 200:!/foo
+    Passed on command-line:
+        -a "/foo/bar=200:!/foo"
 
 
 Built-in help
