@@ -1,4 +1,4 @@
-import cStringIO, urllib, time, sys
+import cStringIO, urllib, time, sys, traceback
 import version, flow
 
 def date_time_string():
@@ -55,7 +55,7 @@ class WSGIAdaptor:
                 environ[key] = value
         return environ
 
-    def error_page(self, soc, headers_sent):
+    def error_page(self, soc, headers_sent, s):
         """
             Make a best-effort attempt to write an error page. If headers are
             already sent, we just bung the error into the page.
@@ -63,10 +63,11 @@ class WSGIAdaptor:
         c = """
             <html>
                 <h1>Internal Server Error</h1>
+                <pre>%s"</pre>
             </html>
-        """
+        """%s
         if not headers_sent:
-            soc.write("HTTP/1.1 500 Internal Server Error%s\r\n")
+            soc.write("HTTP/1.1 500 Internal Server Error\r\n")
             soc.write("Content-Type: text/html\r\n")
             soc.write("Content-Length: %s\r\n"%len(c))
             soc.write("\r\n")
@@ -115,7 +116,8 @@ class WSGIAdaptor:
                 write("")
         except Exception, v:
             try:
-                self.error_page(soc, state["headers_sent"])
+                s = traceback.format_exc()
+                self.error_page(soc, state["headers_sent"], s)
             # begin nocover
             except Exception, v:
                 pass
