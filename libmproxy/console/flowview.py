@@ -68,6 +68,7 @@ def _mkhelp():
         ("v", "view body in external viewer"),
         ("w", "save all flows matching current limit"),
         ("W", "save this flow"),
+        ("x", "delete body"),
         ("X", "view flow details"),
         ("z", "encode/decode a request/response"),
         ("tab", "toggle request/response view"),
@@ -153,14 +154,17 @@ class FlowView(common.WWrap):
                 key = "header",
                 val = "text"
             )
-        if conn.content:
+        if conn.content is not None:
             override = self.state.get_flow_setting(
                 self.flow,
                 (self.state.view_flow_mode, "prettyview"),
             )
             viewmode = self.state.default_body_view if override is None else override
 
-            msg, body = self.content_view(viewmode, conn)
+            if conn.content == flow.CONTENT_MISSING:
+                msg, body = "", [urwid.Text([("error", "[content missing]")])]
+            else:
+                msg, body = self.content_view(viewmode, conn)
 
             cols = [
                 urwid.Text(
@@ -184,6 +188,8 @@ class FlowView(common.WWrap):
             title = urwid.AttrWrap(urwid.Columns(cols), "heading")
             txt.append(title)
             txt.extend(body)
+        elif conn.content == flow.CONTENT_MISSING:
+            pass
         return urwid.ListBox(txt)
 
     def _tab(self, content, attr):
@@ -390,6 +396,17 @@ class FlowView(common.WWrap):
         )
         self.master.refresh_flow(self.flow)
 
+    def delete_body(self, t):
+        if t == "m":
+            val = flow.CONTENT_MISSING
+        else:
+            val = None
+        if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+            self.flow.request.content = val
+        else:
+            self.flow.response.content = val
+        self.master.refresh_flow(self.flow)
+
     def keypress(self, size, key):
         if key == " ":
             self.view_next_flow(self.flow)
@@ -523,6 +540,16 @@ class FlowView(common.WWrap):
                 "Send flow to script: ", self.state.last_script,
                 self.master.run_script_once, self.flow
             )
+        elif key == "x":
+            self.master.prompt_onekey(
+                "Delete body",
+                (
+                    ("completely", "c"),
+                    ("mark as missing", "m"),
+                ),
+                self.delete_body
+            )
+            key = None
         elif key == "X":
             self.master.view_flowdetails(self.flow)
         elif key == "z":
