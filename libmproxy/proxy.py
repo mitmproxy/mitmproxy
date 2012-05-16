@@ -250,7 +250,10 @@ class ServerConnection:
     def send(self):
         self.request.close = self.close
         try:
-            self.wfile.write(self.request._assemble())
+            d = self.request._assemble()
+            if not d:
+                raise ProxyError(502, "Incomplete request could not not be readied for transmission.")
+            self.wfile.write(d)
             self.wfile.flush()
         except socket.error, err:
             raise ProxyError(502, 'Error sending data to "%s": %s' % (self.request.host, err))
@@ -448,7 +451,10 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
-        self.wfile.write(response._assemble())
+        d = response._assemble()
+        if not d:
+            raise ProxyError(502, "Incomplete response could not not be readied for transmission.")
+        self.wfile.write(d)
         self.wfile.flush()
 
     def terminate(self, connection, wfile, rfile):

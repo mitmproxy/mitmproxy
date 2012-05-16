@@ -688,6 +688,9 @@ class uRequest(libpry.AutoTree):
 
         assert r._assemble(True)
 
+        r.content = flow.CONTENT_MISSING
+        assert not r._assemble()
+
     def test_getset_form_urlencoded(self):
         h = flow.ODictCaseless()
         h["content-type"] = [flow.HDR_FORM_URLENCODED]
@@ -818,6 +821,9 @@ class uResponse(libpry.AutoTree):
 
         resp.request.client_conn.close = True
         assert "connection: close" in resp._assemble()
+
+        resp.content = flow.CONTENT_MISSING
+        assert not resp._assemble()
 
     def test_refresh(self):
         r = tutils.tresp()

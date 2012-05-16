@@ -24,6 +24,7 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 import controller, version, certutils
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
+CONTENT_MISSING = 0
 
 
 class ReplaceHooks:
@@ -302,7 +303,7 @@ class HTTPMsg(controller.Msg):
             action is taken.
         """
         ce = self.headers["content-encoding"]
-        if not ce or ce[0] not in encoding.ENCODINGS:
+        if not self.content or not ce or ce[0] not in encoding.ENCODINGS:
             return
         self.content = encoding.decode(
             ce[0],
@@ -327,12 +328,19 @@ class Request(HTTPMsg):
         Exposes the following attributes:
 
             client_conn: ClientConnect object, or None if this is a replay.
+
             headers: ODictCaseless object
-            content: Content of the request, or None
+
+            content: Content of the request, None, or CONTENT_MISSING if there
+            is content associated, but not present. CONTENT_MISSING evaluates
+            to False to make checking for the presence of content natural.
 
             scheme: URL scheme (http/https)
+
             host: Host portion of the URL
+
             port: Destination port
+
             path: Path portion of the URL
 
             timestamp: Seconds since the epoch
@@ -457,7 +465,7 @@ class Request(HTTPMsg):
             Returns an empty ODict if there is no data or the content-type
             indicates non-form data.
         """
-        if self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
+        if self.content and self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
             return ODict(utils.urldecode(self.content))
         return ODict([])
 
@@ -510,7 +518,11 @@ class Request(HTTPMsg):
         """
             Assembles the request for transmission to the server. We make some
             modifications to make sure interception works properly.
+
+            Returns None if the request cannot be assembled.
         """
+        if self.content == CONTENT_MISSING:
+            return None
         FMT = '%s %s HTTP/1.1\r\n%s\r\n%s'
         FMT_PROXY = '%s %s://%s:%s%s HTTP/1.1\r\n%s\r\n%s'
 
@@ -562,10 +574,17 @@ class Response(HTTPMsg):
         Exposes the following attributes:
 
             request: Request object.
+
             code: HTTP response code
+
             msg: HTTP response message
+
             headers: ODict object
-            content: Response content
+
+            content: Content of the request, None, or CONTENT_MISSING if there
+            is content associated, but not present. CONTENT_MISSING evaluates
+            to False to make checking for the presence of content natural.
+
             timestamp: Seconds since the epoch
     """
     def __init__(self, request, code, msg, headers, content, der_cert, timestamp=None):
@@ -690,7 +709,11 @@ class Response(HTTPMsg):
         """
             Assembles the response for transmission to the client. We make some
             modifications to make sure interception works properly.
+
+            Returns None if the request cannot be assembled.
         """
+        if self.content == CONTENT_MISSING:
+            return None
         FMT = '%s\r\n%s\r\n%s'
         headers = self.headers.copy()
         utils.del_all(
