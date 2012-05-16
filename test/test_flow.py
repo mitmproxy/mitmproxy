@@ -516,6 +516,16 @@ class uFlowMaster(libpry.AutoTree):
         assert fm.load_script("nonexistent")
         assert "ValueError" in fm.load_script("scripts/starterr.py")
 
+    def test_replay(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        f = tutils.tflow_full()
+        f.request.content = flow.CONTENT_MISSING
+        assert "missing" in fm.replay_request(f)
+
+        f.intercepting = True
+        assert "intercepting" in fm.replay_request(f)
+
     def test_script_reqerr(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)

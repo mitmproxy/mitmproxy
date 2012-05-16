@@ -1494,9 +1494,11 @@ class FlowMaster(controller.Master):
         """
             Returns None if successful, or error message if not.
         """
-        #begin nocover
         if f.intercepting:
             return "Can't replay while intercepting..."
+        if f.request.content == CONTENT_MISSING:
+            return "Can't replay request with missing content..."
+        #begin nocover
         if f.request:
             f.request._set_replay()
             if f.request.content:
