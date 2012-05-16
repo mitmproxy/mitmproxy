@@ -217,7 +217,7 @@ class DumpMaster(flow.FlowMaster):
 # begin nocover
     def shutdown(self):
         if self.o.wfile:
-            self.wfile.fo.close()
+            self.fwriter.fo.close()
         return flow.FlowMaster.shutdown(self)
 
     def run(self):
