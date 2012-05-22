@@ -84,7 +84,7 @@ def urldecode(s):
     """
         Takes a urlencoded string and returns a list of (key, value) tuples.
     """
-    return cgi.parse_qsl(s)
+	return urlparse.parse_qs(s, keep_blank_values)
 
 
 def urlencode(s):
