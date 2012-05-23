@@ -33,10 +33,11 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None):
+    def __init__(self, certfile = None, ciphers = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None):
         self.certfile = certfile
         self.ciphers = ciphers
         self.cacert = cacert
+        self.clientcerts = clientcerts
         self.certdir = None
         self.cert_wait_time = cert_wait_time
         self.upstream_cert = upstream_cert
@@ -238,7 +239,14 @@ class ServerConnection:
             addr = socket.gethostbyname(self.host)
             server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.scheme == "https":
-                server = ssl.wrap_socket(server)
+                if self.config.clientcerts:
+                    clientcert = os.path.join(self.config.clientcerts, self.host) + ".pem"
+                    if not os.path.exists(clientcert):
+                        clientcert = None
+                else:
+                    clientcert = None
+                server = ssl.wrap_socket(server, certfile = clientcert)
+
             server.connect((addr, self.port))
             if self.scheme == "https":
                 self.cert = server.getpeercert(True)
@@ -550,6 +558,11 @@ def certificate_option_group(parser):
         type = "str", dest="ciphers", default=None,
         help = "SSL ciphers."
     )
+    group.add_option(
+        "--client-certs", action="store",
+        type = "str", dest = "clientcerts", default=None,
+        help = "Client certificate directory."
+    )
     parser.add_option_group(group)
 
 
@@ -574,9 +587,15 @@ def process_proxy_options(parser, options):
     else:
         rp = None
 
+    if options.clientcerts:
+        options.clientcerts = os.path.expanduser(options.clientcerts)
+        if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
+            parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
+
     return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
+        clientcerts = options.clientcerts,
         ciphers = options.ciphers,
         cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
