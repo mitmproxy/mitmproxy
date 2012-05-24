@@ -334,7 +334,7 @@ class FlowView(common.WWrap):
             conn = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.ODictCaseless(), "")
+                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.ODictCaseless(), "", None)
             conn = self.flow.response
 
         self.flow.backup()
