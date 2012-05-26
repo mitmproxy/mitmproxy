@@ -175,8 +175,13 @@ class u_cleanBin(libpry.AutoTree):
         assert utils.cleanBin("\nne", True) == ".ne"
 
 
+class u_safe_subn(libpry.AutoTree):
+    def test_simple(self):
+        assert utils.safe_subn("foo", u"bar", "\xc2foo")
+
 
 tests = [
+    u_safe_subn(),
     u_cleanBin(),
     u_parse_content_type(),
     uformat_timestamp(),

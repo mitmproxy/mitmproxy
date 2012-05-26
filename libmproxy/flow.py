@@ -249,9 +249,9 @@ class ODict:
         """
         nlst, count = [], 0
         for i in self.lst:
-            k, c = re.subn(pattern, repl, i[0], *args, **kwargs)
+            k, c = utils.safe_subn(pattern, repl, i[0], *args, **kwargs)
             count += c
-            v, c = re.subn(pattern, repl, i[1], *args, **kwargs)
+            v, c = utils.safe_subn(pattern, repl, i[1], *args, **kwargs)
             count += c
             nlst.append([k, v])
         self.lst = nlst
@@ -560,8 +560,8 @@ class Request(HTTPMsg):
             Returns the number of replacements made.
         """
         with decoded(self):
-            self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
-        self.path, pc = re.subn(pattern, repl, self.path, *args, **kwargs)
+            self.content, c = utils.safe_subn(pattern, repl, self.content, *args, **kwargs)
+        self.path, pc = utils.safe_subn(pattern, repl, self.path, *args, **kwargs)
         c += pc
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
@@ -740,7 +740,7 @@ class Response(HTTPMsg):
             Returns the number of replacements made.
         """
         with decoded(self):
-            self.content, c = re.subn(pattern, repl, self.content, *args, **kwargs)
+            self.content, c = utils.safe_subn(pattern, repl, self.content, *args, **kwargs)
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
@@ -869,7 +869,7 @@ class Error(controller.Msg):
 
             FIXME: Is replace useful on an Error object??
         """
-        self.msg, c = re.subn(pattern, repl, self.msg, *args, **kwargs)
+        self.msg, c = utils.safe_subn(pattern, repl, self.msg, *args, **kwargs)
         return c
 
 

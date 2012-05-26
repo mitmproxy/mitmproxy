@@ -259,6 +259,11 @@ class uFlow(libpry.AutoTree):
         f = flow.Flow(None)
         f.request = tutils.treq()
 
+    def test_replace_unicode(self):
+        f = tutils.tflow_full()
+        f.response.content = "\xc2foo"
+        f.replace("foo", u"bar")
+
     def test_replace(self):
         f = tutils.tflow_full()
         f.request.headers["foo"] = ["foo"]
