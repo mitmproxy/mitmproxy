@@ -61,6 +61,9 @@ if __name__ == '__main__':
     opts.intercept = options.intercept
     opts.debug = options.debug
     m = console.ConsoleMaster(server, opts)
-    m.run()
+    try:
+        m.run()
+    except KeyboardInterrupt:
+        pass
 
 
