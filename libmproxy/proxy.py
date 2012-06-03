@@ -146,14 +146,13 @@ def parse_request_line(request):
         except ValueError:
             raise ProxyError(400, "Can't parse request")
         port = int(port)
-    else:
-        if url.startswith("/") or url == "*":
+    elif url.startswith("/") or url == "*":
             scheme, port, host, path = None, None, None, url
-        else:
-            parts = utils.parse_url(url)
-            if not parts:
-                raise ProxyError(400, "Invalid url: %s"%url)
-            scheme, host, port, path = parts
+    else:
+        parts = utils.parse_url(url)
+        if not parts:
+            raise ProxyError(400, "Invalid url: %s"%url)
+        scheme, host, port, path = parts
     if not protocol.startswith("HTTP/"):
         raise ProxyError(400, "Unsupported protocol")
     major,minor = protocol.split('/')[1].split('.')

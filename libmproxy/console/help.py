@@ -31,18 +31,6 @@ class HelpView(urwid.ListBox):
             self.helptext()
         )
 
-    def keypress(self, size, key):
-        key = common.shortcuts(key)
-        if key == "q":
-            self.master.statusbar = self.state[0]
-            self.master.body = self.state[1]
-            self.master.header = self.state[2]
-            self.master.make_view()
-            return None
-        elif key == "?":
-            key = None
-        return urwid.ListBox.keypress(self, size, key)
-
     def helptext(self):
         text = []
         text.append(urwid.Text([("head", "Keys for this view:\n")]))
@@ -173,4 +161,17 @@ class HelpView(urwid.ListBox):
         ]
         text.extend(common.format_keyvals(examples, key="key", val="text", indent=4))
         return text
+
+    def keypress(self, size, key):
+        key = common.shortcuts(key)
+        if key == "q":
+            self.master.statusbar = self.state[0]
+            self.master.body = self.state[1]
+            self.master.header = self.state[2]
+            self.master.make_view()
+            return None
+        elif key == "?":
+            key = None
+        return urwid.ListBox.keypress(self, size, key)
+
 
