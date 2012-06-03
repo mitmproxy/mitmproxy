@@ -58,7 +58,7 @@ class Script:
 
                 (True, retval) on success.
                 (False, None) on nonexistent method.
-                (Fals, (exc, traceback string)) if there was an exception.
+                (False, (exc, traceback string)) if there was an exception.
         """
         f = self.ns.get(name)
         if f:

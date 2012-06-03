@@ -94,6 +94,7 @@ class PathEdit(urwid.Edit, _PathCompleter):
 class ActionBar(common.WWrap):
     def __init__(self):
         self.message("")
+        self.expire = None
 
     def selectable(self):
         return True
@@ -102,6 +103,7 @@ class ActionBar(common.WWrap):
         self.w = PathEdit(prompt, text)
 
     def prompt(self, prompt, text = ""):
+        self.expire = None
         # A (partial) workaround for this Urwid issue:
         # https://github.com/Nic0/tyrs/issues/115
         # We can remove it once veryone is beyond 1.0.1
@@ -109,14 +111,14 @@ class ActionBar(common.WWrap):
             prompt = unicode(prompt)
         self.w = urwid.Edit(prompt, text or "")
 
-    def message(self, message):
+    def message(self, message, expire=None):
+        self.expire = expire
         self.w = urwid.Text(message)
 
 
 class StatusBar(common.WWrap):
     def __init__(self, master, helptext):
         self.master, self.helptext = master, helptext
-        self.expire = None
         self.ab = ActionBar()
         self.ib = common.WWrap(urwid.Text(""))
         self.w = urwid.Pile([self.ib, self.ab])
@@ -188,7 +190,7 @@ class StatusBar(common.WWrap):
         return r
 
     def redraw(self):
-        if self.expire and time.time() > self.expire:
+        if self.ab.expire and time.time() > self.ab.expire:
             self.message("")
 
         fc = self.master.state.flow_count()
@@ -238,10 +240,8 @@ class StatusBar(common.WWrap):
 
     def message(self, msg, expire=None):
         if expire:
-            self.expire = time.time() + float(expire)/1000
-        else:
-            self.expire = None
-        self.ab.message(msg)
+            expire = time.time() + float(expire)/1000
+        self.ab.message(msg, expire)
         self.master.drawscreen()
 
 
