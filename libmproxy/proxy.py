@@ -127,6 +127,61 @@ def read_http_body(rfile, connection, headers, all, limit):
     return content
 
 
+def parse_http_protocol(s):
+    if not s.startswith("HTTP/"):
+        return None
+    major, minor = s.split('/')[1].split('.')
+    major = int(major)
+    minor = int(minor)
+    return major, minor
+
+
+def parse_init_connect(line):
+    try:
+        method, url, protocol = string.split(line)
+    except ValueError:
+        return None
+    if method != 'CONNECT':
+        return None
+    try:
+        host, port = url.split(":")
+    except ValueError:
+        return None
+    port = int(port)
+    mm = parse_http_protocol(protocol)
+    if not mm:
+        return None
+    return host, port, mm[0], mm[1]
+
+
+def parse_init_proxy(line):
+    try:
+        method, url, protocol = string.split(line)
+    except ValueError:
+        return None
+    parts = utils.parse_url(url)
+    if not parts:
+        return None
+    scheme, host, port, path = parts
+    mm = parse_http_protocol(protocol)
+    if not mm:
+        return None
+    return method, scheme, host, port, path, mm[0], mm[1]
+
+
+def parse_init_http(line):
+    try:
+        method, url, protocol = string.split(line)
+    except ValueError:
+        return None
+    if not (url.startswith("/") or url == "*"):
+        return None
+    mm = parse_http_protocol(protocol)
+    if not mm:
+        return None
+    return method, url, mm[0], mm[1]
+
+
 #FIXME: Return full HTTP version specification from here. Allow non-HTTP
 #protocol specs, and make it all editable.
 def parse_request_line(request):
@@ -441,6 +496,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 # We should gather up everything read from the socket, and specify it all.
                 raise ProxyError(400, 'Invalid request: %s'%line)
         if "expect" in headers:
+            # FIXME: Should be forwarded upstream
             expect = ",".join(headers['expect'])
             if expect == "100-continue" and httpminor >= 1:
                 self.wfile.write('HTTP/1.1 100 Continue\r\n')

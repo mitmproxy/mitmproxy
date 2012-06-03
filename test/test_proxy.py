@@ -135,7 +135,59 @@ class u_read_headers(libpry.AutoTree):
         assert headers["header"] == ['one\r\n two']
 
 
+class u_parse_http_protocol(libpry.AutoTree):
+    def test_simple(self):
+        assert proxy.parse_http_protocol("HTTP/1.1") == (1, 1)
+        assert proxy.parse_http_protocol("HTTP/0.0") == (0, 0)
+        assert not proxy.parse_http_protocol("foo/0.0")
+
+
+class u_parse_init_connect(libpry.AutoTree):
+    def test_simple(self):
+        assert proxy.parse_init_connect("CONNECT host.com:443 HTTP/1.0")
+        assert not proxy.parse_init_connect("bogus")
+        assert not proxy.parse_init_connect("GET host.com:443 HTTP/1.0")
+        assert not proxy.parse_init_connect("CONNECT host.com443 HTTP/1.0")
+        assert not proxy.parse_init_connect("CONNECT host.com:443 foo/1.0")
+
+
+class u_parse_init_proxy(libpry.AutoTree):
+    def test_simple(self):
+        u = "GET http://foo.com:8888/test HTTP/1.1"
+        m, s, h, po, pa, major, minor = proxy.parse_init_proxy(u)
+        assert m == "GET"
+        assert s == "http"
+        assert h == "foo.com"
+        assert po == 8888
+        assert pa == "/test"
+        assert major == 1
+        assert minor == 1
+
+        assert not proxy.parse_init_proxy("invalid")
+        assert not proxy.parse_init_proxy("GET invalid HTTP/1.1")
+        assert not proxy.parse_init_proxy("GET http://foo.com:8888/test foo/1.1")
+
+
+class u_parse_init_http(libpry.AutoTree):
+    def test_simple(self):
+        u = "GET /test HTTP/1.1"
+        m, u, major, minor = proxy.parse_init_http(u)
+        assert m == "GET"
+        assert u == "/test"
+        assert major == 1
+        assert minor == 1
+
+        assert not proxy.parse_init_http("invalid")
+        assert not proxy.parse_init_http("GET invalid HTTP/1.1")
+        assert not proxy.parse_init_http("GET /test foo/1.1")
+
+
+
 tests = [
+    u_parse_http_protocol(),
+    u_parse_init_connect(),
+    u_parse_init_proxy(),
+    u_parse_init_http(),
     uProxyError(),
     uFileLike(),
     u_parse_request_line(),
