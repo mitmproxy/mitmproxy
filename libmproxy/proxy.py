@@ -381,6 +381,20 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
             return ret
 
+    def convert_to_ssl(self, cert):
+        kwargs = dict(
+            certfile = cert,
+            keyfile = self.config.certfile or self.config.cacert,
+            server_side = True,
+            ssl_version = ssl.PROTOCOL_SSLv23,
+            do_handshake_on_connect = True,
+        )
+        if sys.version_info[1] > 6:
+            kwargs["ciphers"] = self.config.ciphers
+        self.connection = ssl.wrap_socket(self.connection, **kwargs)
+        self.rfile = FileLike(self.connection)
+        self.wfile = FileLike(self.connection)
+
     def read_request(self, client_conn):
         line = self.rfile.readline()
         if line == "\r\n" or line == "\n": # Possible leftover from previous message
@@ -401,18 +415,8 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                         '\r\n'
                         )
             self.wfile.flush()
-            kwargs = dict(
-                certfile = self.find_cert(host, port),
-                keyfile = self.config.certfile or self.config.cacert,
-                server_side = True,
-                ssl_version = ssl.PROTOCOL_SSLv23,
-                do_handshake_on_connect = True,
-            )
-            if sys.version_info[1] > 6:
-                kwargs["ciphers"] = self.config.ciphers
-            self.connection = ssl.wrap_socket(self.connection, **kwargs)
-            self.rfile = FileLike(self.connection)
-            self.wfile = FileLike(self.connection)
+            certfile = self.find_cert(host, port)
+            self.convert_to_ssl(certfile)
             method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())
         if scheme is None:
             scheme = "https"
