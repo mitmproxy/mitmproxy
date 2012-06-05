@@ -263,6 +263,7 @@ def common_options(parser):
         help="Disable response pop from response flow. "
         "This makes it possible to replay same response multiple times."
     )
+    parser.add_option_group(group)
 
     group = optparse.OptionGroup(
         parser,
