@@ -5,7 +5,8 @@ import tornado.ioloop
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument("-p", dest='port', default=9999, type=int, help='Port.')
+    parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
+    parser.add_argument("-l", dest='address', default="0.0.0.0", type=str, help='Listening address.')
     parser.add_argument(
         "-a", dest='anchors', default=[], type=str, action="append",
         help='Add an anchor. Specified as a string with the form pattern=pagespec'
@@ -48,8 +49,9 @@ if __name__ == "__main__":
         )
     else:
         ssl = None
-    print "%s listening on port %s"%(version.NAMEVERSION, args.port)
     try:
-        pathod.run(application, args.port, ssl)
+        port = pathod.make_server(application, args.port, args.address, ssl)
+        print "%s listening on port %s"%(version.NAMEVERSION, port)
+        pathod.run()
     except KeyboardInterrupt:
         pass

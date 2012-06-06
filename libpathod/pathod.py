@@ -205,11 +205,24 @@ class PathodApp(tornado.web.Application):
 
 
 # begin nocover
-def run(application, port, ssl_options):
+def make_server(application, port, address, ssl_options):
+    """
+        Returns the bound port. This will match the passed port, unless the
+        passed port was 0. In that case, an arbitrary empty port will be bound
+        to, and this new port will be returned. 
+    """
     http_server = tornado.httpserver.HTTPServer(
         application,
         ssl_options=ssl_options
     )
-    http_server.listen(port)
-    tornado.ioloop.IOLoop.instance().start()
+    http_server.listen(port, address)
+    port = port
+    for i in http_server._sockets.values():
+        sn = i.getsockname()
+        if sn[0] == address:
+            port = sn[1]
+    return port
 
+
+def run():
+    tornado.ioloop.IOLoop.instance().start()
