@@ -1,10 +1,10 @@
 import time
 import libpry
 import requests
-from libpathod import test
+from libpathod import test, version
 
 
-class uDaemon(libpry.AutoTree):
+class uDaemonManual(libpry.AutoTree):
     def test_startstop(self):
         d = test.Daemon()
         rsp = requests.get("http://localhost:%s/p/202"%d.port)
@@ -15,7 +15,19 @@ class uDaemon(libpry.AutoTree):
         assert not rsp.ok
 
 
+class uDaemon(libpry.AutoTree):
+    def setUpAll(self):
+        self.d = test.Daemon()
+
+    def tearDownAll(self):
+        self.d.shutdown()
+
+    def test_info(self):
+        assert tuple(self.d.info()["version"]) == version.IVERSION
+
+
 
 tests = [
+    uDaemonManual(),
     uDaemon()
 ]

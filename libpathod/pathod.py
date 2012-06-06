@@ -1,6 +1,6 @@
 import urllib, pprint
 import tornado.web, tornado.template, tornado.ioloop, tornado.httpserver
-import rparse, utils
+import rparse, utils, version
 
 
 class APILog(tornado.web.RequestHandler):
@@ -22,6 +22,15 @@ class APIShutdown(tornado.web.RequestHandler):
     def post(self):
         tornado.ioloop.IOLoop.instance().stop()
         self.write("OK")
+
+
+class APIInfo(tornado.web.RequestHandler):
+    def get(self):
+        self.write(
+            dict(
+                version = version.IVERSION
+            )
+        )
 
 
 class _Page(tornado.web.RequestHandler):
@@ -141,6 +150,7 @@ class PathodApp(tornado.web.Application):
                 (r"/help", Help),
                 (r"/preview", Preview),
                 (r"/api/shutdown", APIShutdown),
+                (r"/api/info", APIInfo),
                 (r"/api/log", APILog),
                 (r"/api/log/clear", APILogClear),
                 (r"/p/.*", RequestPathod, settings),
@@ -228,7 +238,7 @@ def make_app(staticdir=None, anchors=()):
 
 def make_server(application, port, address, ssl_options):
     """
-        Returns a (server, port) tuple. 
+        Returns a (server, port) tuple.
 
         The returned port will match the passed port, unless the passed port
         was 0. In that case, an arbitrary empty port will be bound to, and this
