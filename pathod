@@ -31,16 +31,11 @@ if __name__ == "__main__":
         help='SSL cert file. If not specified, a default cert is used.'
     )
     args = parser.parse_args()
-    settings = dict(
-        staticdir=args.staticdir
-    )
-    application = pathod.PathodApp(**settings)
-    for i in args.anchors:
-        try:
-            rex, spec = utils.parse_anchor_spec(i, settings)
-        except utils.AnchorError, v:
-            parser.error(str(v))
-        application.add_anchor(rex, spec)
+
+    try:
+        app = pathod.make_app(staticdir=args.staticdir, anchors=args.anchors)
+    except utils.AnchorError, v:
+        parser.error(str(v))
 
     if args.ssl:
         ssl = dict(
@@ -50,8 +45,8 @@ if __name__ == "__main__":
     else:
         ssl = None
     try:
-        port = pathod.make_server(application, args.port, args.address, ssl)
+        server, port = pathod.make_server(app, args.port, args.address, ssl)
         print "%s listening on port %s"%(version.NAMEVERSION, port)
-        pathod.run()
+        pathod.run(server)
     except KeyboardInterrupt:
         pass

@@ -18,6 +18,12 @@ class APILogClear(tornado.web.RequestHandler):
         self.write("OK")
 
 
+class APIShutdown(tornado.web.RequestHandler):
+    def post(self):
+        tornado.ioloop.IOLoop.instance().stop()
+        self.write("OK")
+
+
 class _Page(tornado.web.RequestHandler):
     def render(self, name, **kwargs):
         tornado.web.RequestHandler.render(self, name + ".html", **kwargs)
@@ -134,6 +140,7 @@ class PathodApp(tornado.web.Application):
                 (r"/log/([0-9]+)", OneLog),
                 (r"/help", Help),
                 (r"/preview", Preview),
+                (r"/api/shutdown", APIShutdown),
                 (r"/api/log", APILog),
                 (r"/api/log/clear", APILogClear),
                 (r"/p/.*", RequestPathod, settings),
@@ -204,12 +211,28 @@ class PathodApp(tornado.web.Application):
         return self.log
 
 
-# begin nocover
+def make_app(staticdir=None, anchors=()):
+    """
+        staticdir: A directory for static assets referenced in response patterns.
+        anchors: A sequence of strings of the form "pattern=pagespec"
+    """
+    settings = dict(
+        staticdir=staticdir
+    )
+    application = PathodApp(**settings)
+    for i in anchors:
+        rex, spec = utils.parse_anchor_spec(i, settings)
+        application.add_anchor(rex, spec)
+    return application
+
+
 def make_server(application, port, address, ssl_options):
     """
-        Returns the bound port. This will match the passed port, unless the
-        passed port was 0. In that case, an arbitrary empty port will be bound
-        to, and this new port will be returned. 
+        Returns a (server, port) tuple. 
+
+        The returned port will match the passed port, unless the passed port
+        was 0. In that case, an arbitrary empty port will be bound to, and this
+        new port will be returned.
     """
     http_server = tornado.httpserver.HTTPServer(
         application,
@@ -221,8 +244,12 @@ def make_server(application, port, address, ssl_options):
         sn = i.getsockname()
         if sn[0] == address:
             port = sn[1]
-    return port
+    return http_server, port
 
 
-def run():
+# begin nocover
+def run(server):
     tornado.ioloop.IOLoop.instance().start()
+    server.stop()
+    tornado.ioloop.IOLoop.instance().close()
+

@@ -57,7 +57,15 @@ class uPages(libpry.AutoTree):
         assert "".join(page._write_buffer)
 
 
+class u_make_server(libpry.AutoTree):
+    def test_simple(self):
+        app = pathod.PathodApp()
+        assert pathod.make_server(app, 0, "127.0.0.1", None)
+
+
 
 tests = [
     uApplication(),
+    #uPages(),
+    u_make_server()
 ]
