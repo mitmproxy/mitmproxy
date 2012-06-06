@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse, sys
-from libpathod import app, utils, version
+from libpathod import pathod, utils, version
 import tornado.ioloop
 
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     settings = dict(
         staticdir=args.staticdir
     )
-    application = app.PathodApp(**settings)
+    application = pathod.PathodApp(**settings)
     for i in args.anchors:
         try:
             rex, spec = utils.parse_anchor_spec(i, settings)
@@ -50,6 +50,6 @@ if __name__ == "__main__":
         ssl = None
     print "%s listening on port %s"%(version.NAMEVERSION, args.port)
     try:
-        app.run(application, args.port, ssl)
+        pathod.run(application, args.port, ssl)
     except KeyboardInterrupt:
         pass

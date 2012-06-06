@@ -1,10 +1,10 @@
 import libpry
-from libpathod import app
+from libpathod import pathod
 from tornado import httpserver
 
 class uApplication(libpry.AutoTree):
     def test_anchors(self):
-        a = app.PathodApp(staticdir=None)
+        a = pathod.PathodApp(staticdir=None)
         a.add_anchor("/foo", "200")
         assert a.get_anchors() == [("/foo", "200")]
         a.add_anchor("/bar", "400")
@@ -15,7 +15,7 @@ class uApplication(libpry.AutoTree):
         assert a.get_anchors() == [("/foo", "200")]
 
     def test_logs(self):
-        a = app.PathodApp(staticdir=None)
+        a = pathod.PathodApp(staticdir=None)
         a.LOGBUF = 3
         a.add_log({})
         assert a.log[0]["id"] == 0
@@ -36,7 +36,7 @@ class uPages(libpry.AutoTree):
     def dummy_page(self, path):
         # A hideous, hideous kludge, but Tornado seems to have no more sensible
         # way to do this.
-        a = app.PathodApp(staticdir=None)
+        a = pathod.PathodApp(staticdir=None)
         for h in a.handlers[0][1]:
             if h.regex.match(path):
                 klass = h.handler_class
