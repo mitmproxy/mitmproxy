@@ -67,14 +67,5 @@ class Data:
             raise ValueError, "dataPath: %s does not exist."%fullpath
         return fullpath
 
-    def read(self, path):
-        """
-            Returns a path to the package data housed at 'path' under this
-            module.Path can be a path to a file, or to a directory.
-
-            This function will raise ValueError if the path does not exist.
-        """
-        p = self.path(path)
-        return open(p).read()
 
 data = Data(__name__)

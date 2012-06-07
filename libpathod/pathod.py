@@ -261,5 +261,4 @@ def make_server(application, port, address, ssl_options):
 def run(server):
     tornado.ioloop.IOLoop.instance().start()
     server.stop()
-    tornado.ioloop.IOLoop.instance().close()
 
