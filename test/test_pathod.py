@@ -31,41 +31,13 @@ class uApplication(libpry.AutoTree):
         assert not a.log_by_id(0)
 
 
-
-class uPages(libpry.AutoTree):
-    def dummy_page(self, path):
-        # A hideous, hideous kludge, but Tornado seems to have no more sensible
-        # way to do this.
-        a = pathod.PathodApp(staticdir=None)
-        for h in a.handlers[0][1]:
-            if h.regex.match(path):
-                klass = h.handler_class
-        r = httpserver.HTTPRequest("GET", path)
-        del r.connection
-        k = klass(a, r)
-        k._transforms = []
-        return k
-
-    def test_index(self):
-        page = self.dummy_page("/")
-        page.get()
-        assert "".join(page._write_buffer)
-
-    def test_help(self):
-        page = self.dummy_page("/help")
-        page.get()
-        assert "".join(page._write_buffer)
-
-
 class u_make_server(libpry.AutoTree):
     def test_simple(self):
         app = pathod.PathodApp()
         assert pathod.make_server(app, 0, "127.0.0.1", None)
 
 
-
 tests = [
     uApplication(),
-    #uPages(),
     u_make_server()
 ]
