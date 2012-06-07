@@ -37,6 +37,10 @@ if __name__ == "__main__":
     except utils.AnchorError, v:
         parser.error(str(v))
 
+    sl = [args.ssl_keyfile, args.ssl_certfile]
+    if any(sl) and not all(sl):
+        parser.error("Both --certfile and --keyfile must be specified.")
+
     if args.ssl:
         ssl = dict(
              keyfile = args.ssl_keyfile or utils.data.path("resources/server.key"),
