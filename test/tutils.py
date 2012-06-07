@@ -1,7 +1,8 @@
 import threading, Queue
 import libpry
 from libmproxy import proxy, flow, controller
-import serv, sslserv
+import requests
+import libpathod.test
 import random
 
 def treq(conn=None):
@@ -39,15 +40,6 @@ def tflow_err():
     return f
 
 
-# Yes, the random ports are horrible. During development, sockets are often not
-# properly closed during error conditions, which means you have to wait until
-# you can re-bind to the same port. This is a pain in the ass, so we just pick
-# a random port and keep moving.
-PROXL_PORT = random.randint(10000, 20000)
-HTTP_PORT = random.randint(20000, 30000)
-HTTPS_PORT = random.randint(30000, 40000)
-
-
 class TestMaster(controller.Master):
     def __init__(self, port, testq):
         s = proxy.ProxyServer(proxy.ProxyConfig("data/testkey.pem"), port)
@@ -64,8 +56,9 @@ class TestMaster(controller.Master):
 
 
 class ProxyThread(threading.Thread):
-    def __init__(self, port, testq):
-        self.tmaster = TestMaster(port, testq)
+    def __init__(self, testq):
+        self.port = random.randint(10000, 20000)
+        self.tmaster = TestMaster(self.port, testq)
         controller.should_exit = False
         threading.Thread.__init__(self)
 
@@ -88,30 +81,55 @@ class ServerThread(threading.Thread):
         self.server.shutdown()
 
 
-class TestServers(libpry.TestContainer):
+class TestServer(libpry.TestContainer):
+    """
+        Starts up a Pathod server and a mitmproxy instance.
+    """
+    def __init__(self, ssl=None):
+        libpry.TestContainer.__init__(self)
+        self.ssl = ssl
+
     def setUpAll(self):
         self.tqueue = Queue.Queue()
         # We don't make any concurrent requests, so we can access
         # the attributes on this object safely.
-        self.proxthread = ProxyThread(PROXL_PORT, self.tqueue)
-        self.threads = [
-            ServerThread(serv.make(HTTP_PORT)),
-            ServerThread(sslserv.make(HTTPS_PORT)),
-            self.proxthread
-        ]
-        for i in self.threads:
-            i.start()
+        self.proxy = ProxyThread(self.tqueue)
+        self.server = libpathod.test.Daemon(ssl=self.ssl)
+        self.proxy.start()
 
     def setUp(self):
-        self.proxthread.tmaster.clear()
+        self.proxy.tmaster.clear()
 
     def tearDownAll(self):
-        for i in self.threads:
-            i.shutdown()
+        self.proxy.shutdown()
+        self.server.shutdown()
 
 
 class ProxTest(libpry.AutoTree):
+    def pathod(self, spec):
+        """
+            Constructs a pathod request, with the appropriate base and proxy.
+        """
+        return requests.get(self.urlbase + "/p/" + spec, proxies=self.proxies, verify=False)
+
+    @property
+    def proxies(self):
+        """
+            The URL base for the server instance.
+        """
+        return {
+            "http" : "http://127.0.0.1:%s"%self.findAttr("proxy").port,
+            "https" : "http://127.0.0.1:%s"%self.findAttr("proxy").port
+        }
+
+    @property
+    def urlbase(self):
+        """
+            The URL base for the server instance.
+        """
+        return self.findAttr("server").urlbase
+
     def log(self):
-        pthread = self.findAttr("proxthread")
+        pthread = self.findAttr("proxy")
         return pthread.tmaster.log
 
