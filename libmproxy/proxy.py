@@ -574,6 +574,7 @@ def process_proxy_options(parser, options):
 
     cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
     cacert = os.path.expanduser(cacert)
+    cacert = os.path.abspath(cacert)
     if not os.path.exists(cacert):
         certutils.dummy_ca(cacert)
     if getattr(options, "cache", None) is not None:
