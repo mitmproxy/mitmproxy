@@ -1,6 +1,5 @@
 import urllib, urllib2
 import libpathod.test, requests
-import libpry
 import tutils
 
 class uSanity(tutils.ProxTest):

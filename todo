@@ -14,9 +14,6 @@ Targeted for 0.9:
 
 
 Future:
-    - Rewrite the core to be asynchronous. I've done some research, and
-    although it's a bit of a bloated monster, it looks like Twisted is the way
-    to go.
     - Add some "workspace" features to mitmproxy:
         - Flow comments
         - Copying/duplicating flows
