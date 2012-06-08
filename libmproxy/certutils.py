@@ -42,8 +42,9 @@ def dummy_ca(path):
         os.makedirs(dirname)
     if path.endswith(".pem"):
         basename, _ = os.path.splitext(path)
+        basename = os.path.basename(basename)
     else:
-        basename = path
+        basename = os.path.basename(path)
 
     key, ca = create_ca()
 
