@@ -1,8 +1,7 @@
-import libpry
 from libpathod import pathod
 from tornado import httpserver
 
-class uApplication(libpry.AutoTree):
+class TestApplication:
     def test_anchors(self):
         a = pathod.PathodApp(staticdir=None)
         a.add_anchor("/foo", "200")
@@ -31,13 +30,6 @@ class uApplication(libpry.AutoTree):
         assert not a.log_by_id(0)
 
 
-class u_make_server(libpry.AutoTree):
-    def test_simple(self):
-        app = pathod.PathodApp()
-        assert pathod.make_server(app, 0, "127.0.0.1", None)
-
-
-tests = [
-    uApplication(),
-    u_make_server()
-]
+def test_make_server():
+    app = pathod.PathodApp()
+    assert pathod.make_server(app, 0, "127.0.0.1", None)

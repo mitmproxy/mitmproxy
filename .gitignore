@@ -6,3 +6,4 @@ MANIFEST
 # Vim swap files
 *.swp
 /doc
+.coverage

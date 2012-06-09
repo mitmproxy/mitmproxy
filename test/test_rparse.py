@@ -1,11 +1,11 @@
 import os
-import libpry
 from libpathod import rparse, utils
+import tutils
 
 rparse.TESTING = True
 
 
-class uMisc(libpry.AutoTree):
+class TestMisc:
     def test_generators(self):
         v = rparse.Value.parseString("'val'")[0]
         g = v.get_generator({})
@@ -26,16 +26,16 @@ class uMisc(libpry.AutoTree):
         assert g[1] == "n"
 
     def test_filegenerator(self):
-        t = self.tmpdir()
-        path = os.path.join(t, "foo")
-        f = open(path, "w")
-        f.write("x"*10000)
-        f.close()
-        g = rparse.FileGenerator(path)
-        assert len(g) == 10000
-        assert g[0] == "x"
-        assert g[-1] == "x"
-        assert g[0:5] == "xxxxx"
+        with tutils.tmpdir() as t:
+            path = os.path.join(t, "foo")
+            f = open(path, "w")
+            f.write("x"*10000)
+            f.close()
+            g = rparse.FileGenerator(path)
+            assert len(g) == 10000
+            assert g[0] == "x"
+            assert g[-1] == "x"
+            assert g[0:5] == "xxxxx"
 
     def test_valueliteral(self):
         v = rparse.ValueLiteral("foo")
@@ -50,17 +50,17 @@ class uMisc(libpry.AutoTree):
         v = rparse.Value.parseString("<path")[0]
         assert v.path == "path"
 
-        t = self.tmpdir()
-        p = os.path.join(t, "path")
-        f = open(p, "w")
-        f.write("x"*10000)
-        f.close()
+        with tutils.tmpdir() as t:
+            p = os.path.join(t, "path")
+            f = open(p, "w")
+            f.write("x"*10000)
+            f.close()
 
-        assert v.get_generator(dict(staticdir=t))
+            assert v.get_generator(dict(staticdir=t))
 
-        v = rparse.Value.parseString("<path2")[0]
-        libpry.raises(rparse.ServerError, v.get_generator, dict(staticdir=t))
-        libpry.raises("no static directory", v.get_generator, dict())
+            v = rparse.Value.parseString("<path2")[0]
+            tutils.raises(rparse.ServerError, v.get_generator, dict(staticdir=t))
+            tutils.raises("no static directory", v.get_generator, dict())
 
     def test_generated_value(self):
         v = rparse.Value.parseString("@10b")[0]
@@ -136,7 +136,7 @@ class uMisc(libpry.AutoTree):
         s.serve(d)
 
 
-class uDisconnects(libpry.AutoTree):
+class TestDisconnects:
     def test_parse(self):
         assert (0, "disconnect") in rparse.parse({}, "400:d0").actions
         assert ("r", "disconnect") in rparse.parse({}, "400:dr").actions
@@ -155,13 +155,13 @@ class uDisconnects(libpry.AutoTree):
         assert v.value == "r"
 
 
-class uShortcuts(libpry.AutoTree):
+class TestShortcuts:
     def test_parse(self):
         assert rparse.parse({}, "400:c'foo'").headers[0][0][:] == "Content-Type"
         assert rparse.parse({}, "400:l'foo'").headers[0][0][:] == "Location"
 
 
-class uPauses(libpry.AutoTree):
+class TestPauses:
     def test_parse(self):
         e = rparse.PauseAt.expr()
         v = e.parseString("p10,10")[0]
@@ -182,9 +182,9 @@ class uPauses(libpry.AutoTree):
         assert r.actions[0] == (10, "pause", 10)
 
 
-class uparse(libpry.AutoTree):
+class TestParse:
     def test_parse_err(self):
-        libpry.raises(rparse.ParseException, rparse.parse, {}, "400:msg,b:")
+        tutils.raises(rparse.ParseException, rparse.parse, {}, "400:msg,b:")
         try:
             rparse.parse({}, "400'msg':b:")
         except rparse.ParseException, v:
@@ -212,7 +212,7 @@ class uparse(libpry.AutoTree):
         assert r.length()
 
 
-class uResponse(libpry.AutoTree):
+class TestResponse:
     def dummy_response(self):
         return rparse.parse({}, "400'msg'")
 
@@ -291,13 +291,3 @@ class uResponse(libpry.AutoTree):
         testlen(rparse.parse({}, "400'msg'"))
         testlen(rparse.parse({}, "400'msg':h'foo'='bar'"))
         testlen(rparse.parse({}, "400'msg':h'foo'='bar':b@100b"))
-
-
-tests = [
-    uResponse(),
-    uPauses(),
-    uDisconnects(),
-    uMisc(),
-    uparse(),
-    uShortcuts()
-]

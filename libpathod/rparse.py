@@ -393,10 +393,8 @@ class Response:
     def add_timeout(self, s, callback):
         if TESTING:
             callback()
-        # begin nocover
-        else:
+        else: # pragma: no cover
             tornado.ioloop.IOLoop.instance().add_timeout(time.time() + s, callback)
-        # end nocover
 
     def write_values(self, fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
         while vals:
