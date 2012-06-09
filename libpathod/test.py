@@ -20,6 +20,7 @@ class Daemon:
 
     def shutdown(self):
         requests.post("%s/api/shutdown"%self.urlbase, verify=False)
+        self.thread.join()
 
 
 class PaThread(threading.Thread):
