@@ -1,9 +1,9 @@
-import threading, Queue
+import threading, Queue, time
 import os, shutil,tempfile
 from contextlib import contextmanager
 import libpry
 from libmproxy import proxy, flow, controller, utils
-import requests
+import human_curl as hurl
 import libpathod.test
 import random
 
@@ -44,7 +44,7 @@ def tflow_err():
 
 class TestMaster(controller.Master):
     def __init__(self, port, testq):
-        s = proxy.ProxyServer(proxy.ProxyConfig("data/testkey.pem"), port)
+        s = proxy.ProxyServer(proxy.ProxyConfig(test_data.path("data/testkey.pem")), port)
         controller.Master.__init__(self, s)
         self.testq = testq
         self.log = []
@@ -106,17 +106,21 @@ class ProxTest:
         """
             Constructs a pathod request, with the appropriate base and proxy.
         """
-        return requests.get(self.urlbase + "/p/" + spec, proxies=self.proxies, verify=False)
+        return hurl.get(
+            self.urlbase + "/p/" + spec,
+            proxy=self.proxies,
+            validate_cert=False,
+            #debug=hurl.utils.stdout_debug
+        )
 
     @property
     def proxies(self):
         """
             The URL base for the server instance.
         """
-        return {
-            "http" : "http://127.0.0.1:%s"%self.proxy.port,
-            "https" : "http://127.0.0.1:%s"%self.proxy.port
-        }
+        return (
+            ("https" if self.ssl else "http", ("127.0.0.1", self.proxy.port))
+        )
 
     @property
     def urlbase(self):
@@ -128,7 +132,6 @@ class ProxTest:
     def log(self):
         pthread = self.proxy
         return pthread.tmaster.log
-
 
 
 @contextmanager

@@ -123,6 +123,7 @@ def read_http_body(rfile, connection, headers, all, limit):
         content = rfile.read(limit if limit else None)
         connection.close = True
     else:
+        connection.close = True
         content = ""
     return content
 
