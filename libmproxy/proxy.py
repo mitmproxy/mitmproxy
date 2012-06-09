@@ -183,38 +183,22 @@ def parse_init_http(line):
     return method, url, mm[0], mm[1]
 
 
-#FIXME: Return full HTTP version specification from here. Allow non-HTTP
-#protocol specs, and make it all editable.
-def parse_request_line(request):
+def should_connection_close(httpmajor, httpminor, headers):
     """
-        Parse a proxy request line. Return (method, scheme, host, port, path, minor).
-        Raise ProxyError on error.
+        Checks the HTTP version and headers to see if this connection should be
+        closed.
     """
-    try:
-        method, url, protocol = string.split(request)
-    except ValueError:
-        raise ProxyError(400, "Can't parse request")
-    if method == 'CONNECT':
-        scheme = None
-        path = None
-        try:
-            host, port = url.split(":")
-        except ValueError:
-            raise ProxyError(400, "Can't parse request")
-        port = int(port)
-    elif url.startswith("/") or url == "*":
-            scheme, port, host, path = None, None, None, url
-    else:
-        parts = utils.parse_url(url)
-        if not parts:
-            raise ProxyError(400, "Invalid url: %s"%url)
-        scheme, host, port, path = parts
-    if not protocol.startswith("HTTP/"):
-        raise ProxyError(400, "Unsupported protocol")
-    major,minor = protocol.split('/')[1].split('.')
-    major = int(major)
-    minor = int(minor)
-    return method, scheme, host, port, path, minor
+    if "connection" in headers:
+        for value in ",".join(headers['connection']).split(","):
+            value = value.strip()
+            if value == "close":
+                return True
+            elif value == "keep-alive":
+                return False
+    # HTTP 1.1 connections are assumed to be persistent
+    if httpmajor == 1 and httpminor == 1:
+        return False
+    return True
 
 
 class FileLike:
@@ -302,7 +286,6 @@ class ServerConnection:
         self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
 
     def send(self, request):
-        request.close = self.close
         try:
             d = request._assemble()
             if not d:
@@ -350,6 +333,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
     def __init__(self, config, request, client_address, server, q):
         self.config = config
         self.mqueue = q
+        self.server_conn = None
         SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self):
@@ -389,9 +373,9 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 else:
                     if self.config.reverse_proxy:
                         scheme, host, port = self.config.reverse_proxy
-                        server_conn = ServerConnection(self.config, scheme, host, port)
                     else:
-                        server_conn = ServerConnection(self.config, request.scheme, request.host, request.port)
+                        scheme, host, port = request.scheme, request.host, request.port
+                    server_conn = ServerConnection(self.config, scheme, host, port)
                     server_conn.send(request)
                     try:
                         response = server_conn.read_response(request)

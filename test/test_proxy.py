@@ -24,6 +24,15 @@ def test_read_chunked():
     tutils.raises(proxy.ProxyError, proxy.read_chunked, s, None)
 
 
+def test_should_connection_close():
+    h = flow.ODictCaseless()
+    assert proxy.should_connection_close(1, 0, h)
+    assert not proxy.should_connection_close(1, 1, h)
+
+    h["connection"] = ["keep-alive"]
+    assert not proxy.should_connection_close(1, 1, h)
+
+
 def test_read_http_body():
     d = Dummy()
     h = flow.ODict()
@@ -45,33 +54,6 @@ def test_read_http_body():
     assert len(proxy.read_http_body(s, d, h, True, 4)) == 4
     s = cStringIO.StringIO("testing")
     assert len(proxy.read_http_body(s, d, h, True, 100)) == 7
-
-
-class TestParseRequestLine:
-    def test_simple(self):
-        tutils.raises(proxy.ProxyError, proxy.parse_request_line, "")
-
-        u = "GET ... HTTP/1.1"
-        tutils.raises("invalid url", proxy.parse_request_line, u)
-
-        u = "GET http://foo.com:8888/test HTTP/1.1"
-        m, s, h, po, pa, minor = proxy.parse_request_line(u)
-        assert m == "GET"
-        assert s == "http"
-        assert h == "foo.com"
-        assert po == 8888
-        assert pa == "/test"
-        assert minor == 1
-
-    def test_connect(self):
-        u = "CONNECT host.com:443 HTTP/1.0"
-        expected = ('CONNECT', None, 'host.com', 443, None, 0)
-        ret = proxy.parse_request_line(u)
-        assert expected == ret
-
-    def test_inner(self):
-        u = "GET / HTTP/1.1"
-        assert proxy.parse_request_line(u) == ('GET', None, None, None, '/', 1)
 
 
 class TestFileLike:
