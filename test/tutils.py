@@ -12,7 +12,7 @@ def treq(conn=None):
         conn = flow.ClientConnect(("address", 22))
     headers = flow.ODictCaseless()
     headers["header"] = ["qvalue"]
-    return flow.Request(conn, "host", 80, "http", "GET", "/path", headers, "content")
+    return flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers, "content")
 
 
 def tresp(req=None):

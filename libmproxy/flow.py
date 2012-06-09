@@ -346,9 +346,10 @@ class Request(HTTPMsg):
             timestamp: Seconds since the epoch
             method: HTTP method
     """
-    def __init__(self, client_conn, host, port, scheme, method, path, headers, content, timestamp=None):
+    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp=None):
         assert isinstance(headers, ODictCaseless)
         self.client_conn = client_conn
+        self.httpversion = httpversion
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
         self.timestamp = timestamp or utils.timestamp()
@@ -420,6 +421,7 @@ class Request(HTTPMsg):
     def _get_state(self):
         return dict(
             client_conn = self.client_conn._get_state() if self.client_conn else None,
+            httpversion = self.httpversion,
             host = self.host,
             port = self.port,
             scheme = self.scheme,
@@ -434,6 +436,7 @@ class Request(HTTPMsg):
     def _from_state(klass, state):
         return klass(
             ClientConnect._from_state(state["client_conn"]),
+            tuple(state["httpversion"]),
             str(state["host"]),
             state["port"],
             str(state["scheme"]),
@@ -523,8 +526,8 @@ class Request(HTTPMsg):
         """
         if self.content == CONTENT_MISSING:
             return None
-        FMT = '%s %s HTTP/1.1\r\n%s\r\n%s'
-        FMT_PROXY = '%s %s://%s:%s%s HTTP/1.1\r\n%s\r\n%s'
+        FMT = '%s %s HTTP/%s.%s\r\n%s\r\n%s'
+        FMT_PROXY = '%s %s://%s:%s%s HTTP/%s.%s\r\n%s\r\n%s'
 
         headers = self.headers.copy()
         utils.del_all(
@@ -547,9 +550,26 @@ class Request(HTTPMsg):
         if self.close:
             headers["connection"] = ["close"]
         if not _proxy:
-            return FMT % (self.method, self.path, str(headers), content)
+            return FMT % (
+                self.method, 
+                self.path, 
+                self.httpversion[0],
+                self.httpversion[1],
+                str(headers), 
+                content
+            )
         else:
-            return FMT_PROXY % (self.method, self.scheme, self.host, self.port, self.path, str(headers), content)
+            return FMT_PROXY % (    
+                self.method,
+                self.scheme,
+                self.host,
+                self.port,
+                self.path,
+                self.httpversion[0],
+                self.httpversion[1],
+                str(headers),
+                content
+            )
 
     def replace(self, pattern, repl, *args, **kwargs):
         """

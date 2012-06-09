@@ -77,6 +77,7 @@ class TestMatching:
         headers["header"] = ["qvalue"]
         req = flow.Request(
                     conn,
+                    (1, 1),
                     "host",
                     80,
                     "http",

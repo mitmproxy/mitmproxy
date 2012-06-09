@@ -686,7 +686,7 @@ class TestRequest:
         h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
-        r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         u = r.get_url()
         assert r.set_url(u)
         assert not r.set_url("")
@@ -711,7 +711,7 @@ class TestRequest:
         h = flow.ODictCaseless()
         h["content-type"] = [flow.HDR_FORM_URLENCODED]
         d = flow.ODict([("one", "two"), ("three", "four")])
-        r = flow.Request(None, "host", 22, "https", "GET", "/", h, utils.urlencode(d.lst))
+        r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/", h, utils.urlencode(d.lst))
         assert r.get_form_urlencoded() == d
 
         d = flow.ODict([("x", "y")])
@@ -724,19 +724,19 @@ class TestRequest:
     def test_getset_query(self):
         h = flow.ODictCaseless()
 
-        r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
+        r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
         q = r.get_query()
         assert q.lst == [("x", "y"), ("a", "b")]
 
-        r = flow.Request(None, "host", 22, "https", "GET", "/", h, "content")
+        r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         q = r.get_query()
         assert not q
 
-        r = flow.Request(None, "host", 22, "https", "GET", "/?adsfa", h, "content")
+        r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/?adsfa", h, "content")
         q = r.get_query()
         assert not q
 
-        r = flow.Request(None, "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
+        r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
         assert r.get_query()
         r.set_query(flow.ODict([]))
         assert not r.get_query()
@@ -746,7 +746,7 @@ class TestRequest:
 
     def test_anticache(self):
         h = flow.ODictCaseless()
-        r = flow.Request(None, "host", 22, "https", "GET", "/", h, "content")
+        r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         h["if-modified-since"] = ["test"]
         h["if-none-match"] = ["test"]
         r.anticache()
@@ -757,7 +757,7 @@ class TestRequest:
         h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
-        r = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         state = r._get_state()
         assert flow.Request._from_state(state) == r
 
@@ -765,7 +765,7 @@ class TestRequest:
         state = r._get_state()
         assert flow.Request._from_state(state) == r
 
-        r2 = flow.Request(c, "testing", 20, "http", "PUT", "/foo", h, "test")
+        r2 = flow.Request(c, (1, 1), "testing", 20, "http", "PUT", "/foo", h, "test")
         assert not r == r2
         r._load_state(r2._get_state())
         assert r == r2
@@ -825,7 +825,7 @@ class TestResponse:
         h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
-        req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
+        req = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         resp = flow.Response(req, 200, "msg", h.copy(), "content", None)
         assert resp._assemble()
 
@@ -883,7 +883,7 @@ class TestResponse:
         h = flow.ODictCaseless()
         h["test"] = ["test"]
         c = flow.ClientConnect(("addr", 2222))
-        req = flow.Request(c, "host", 22, "https", "GET", "/", h, "content")
+        req = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         resp = flow.Response(req, 200, "msg", h.copy(), "content", None)
 
         state = resp._get_state()

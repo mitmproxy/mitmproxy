@@ -465,7 +465,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             method, path, httpversion = parse_init_http(line)
             headers = read_headers(self.rfile)
             content = self.read_contents(client_conn, headers, httpversion)
-            return flow.Request(client_conn, host, port, "http", method, path, headers, content)
+            return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
         elif line.startswith("CONNECT"):
             host, port, httpversion = parse_init_connect(line)
             # FIXME: Discard additional headers sent to the proxy. Should I expose
@@ -486,12 +486,12 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             method, path, httpversion = parse_init_http(self.rfile.readline(line))
             headers = read_headers(self.rfile)
             content = self.read_contents(client_conn, headers, httpversion)
-            return flow.Request(client_conn, host, port, "https", method, path, headers, content)
+            return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content)
         else:
             method, scheme, host, port, path, httpversion = parse_init_proxy(line)
             headers = read_headers(self.rfile)
             content = self.read_contents(client_conn, headers, httpversion)
-            return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
+            return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
         d = response._assemble()
