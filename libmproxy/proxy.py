@@ -149,10 +149,10 @@ def parse_init_connect(line):
     except ValueError:
         return None
     port = int(port)
-    mm = parse_http_protocol(protocol)
-    if not mm:
+    httpversion = parse_http_protocol(protocol)
+    if not httpversion:
         return None
-    return host, port, mm[0], mm[1]
+    return host, port, httpversion
 
 
 def parse_init_proxy(line):
@@ -164,26 +164,29 @@ def parse_init_proxy(line):
     if not parts:
         return None
     scheme, host, port, path = parts
-    mm = parse_http_protocol(protocol)
-    if not mm:
+    httpversion = parse_http_protocol(protocol)
+    if not httpversion:
         return None
-    return method, scheme, host, port, path, mm[0], mm[1]
+    return method, scheme, host, port, path, httpversion
 
 
 def parse_init_http(line):
+    """
+        Returns (method, url, httpversion)
+    """
     try:
         method, url, protocol = string.split(line)
     except ValueError:
         return None
     if not (url.startswith("/") or url == "*"):
         return None
-    mm = parse_http_protocol(protocol)
-    if not mm:
+    httpversion = parse_http_protocol(protocol)
+    if not httpversion:
         return None
-    return method, url, mm[0], mm[1]
+    return method, url, httpversion
 
 
-def should_connection_close(httpmajor, httpminor, headers):
+def should_connection_close(httpversion, headers):
     """
         Checks the HTTP version and headers to see if this connection should be
         closed.
@@ -196,7 +199,7 @@ def should_connection_close(httpmajor, httpminor, headers):
             elif value == "keep-alive":
                 return False
     # HTTP 1.1 connections are assumed to be persistent
-    if httpmajor == 1 and httpminor == 1:
+    if httpversion == (1, 1):
         return False
     return True
 
@@ -430,16 +433,16 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
 
-    def read_contents(self, client_conn, headers, httpminor):
+    def read_contents(self, client_conn, headers, httpversion):
         if "expect" in headers:
             # FIXME: Should be forwarded upstream
             expect = ",".join(headers['expect'])
-            if expect == "100-continue" and httpminor >= 1:
+            if expect == "100-continue" and httpversion >= (1, 1):
                 self.wfile.write('HTTP/1.1 100 Continue\r\n')
                 self.wfile.write('Proxy-agent: %s\r\n'%version.NAMEVERSION)
                 self.wfile.write('\r\n')
                 del headers['expect']
-        if httpminor == 0:
+        if httpversion < (1, 1):
             client_conn.close = True
         if "connection" in headers:
             for value in ",".join(headers['connection']).split(","):
@@ -459,12 +462,12 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
         if self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
-            method, path, httpmajor, httpminor = parse_init_http(line)
+            method, path, httpversion = parse_init_http(line)
             headers = read_headers(self.rfile)
-            content = self.read_contents(client_conn, headers, httpminor)
+            content = self.read_contents(client_conn, headers, httpversion)
             return flow.Request(client_conn, host, port, "http", method, path, headers, content)
         elif line.startswith("CONNECT"):
-            host, port, httpmajor, httpminor = parse_init_connect(line)
+            host, port, httpversion = parse_init_connect(line)
             # FIXME: Discard additional headers sent to the proxy. Should I expose
             # these to users?
             while 1:
@@ -480,14 +483,14 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             certfile = self.find_cert(host, port)
             self.convert_to_ssl(certfile)
 
-            method, path, httpmajor, httpminor = parse_init_http(self.rfile.readline(line))
+            method, path, httpversion = parse_init_http(self.rfile.readline(line))
             headers = read_headers(self.rfile)
-            content = self.read_contents(client_conn, headers, httpminor)
+            content = self.read_contents(client_conn, headers, httpversion)
             return flow.Request(client_conn, host, port, "https", method, path, headers, content)
         else:
-            method, scheme, host, port, path, httpmajor, httpminor = parse_init_proxy(line)
+            method, scheme, host, port, path, httpversion = parse_init_proxy(line)
             headers = read_headers(self.rfile)
-            content = self.read_contents(client_conn, headers, httpminor)
+            content = self.read_contents(client_conn, headers, httpversion)
             return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):

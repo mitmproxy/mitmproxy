@@ -26,11 +26,11 @@ def test_read_chunked():
 
 def test_should_connection_close():
     h = flow.ODictCaseless()
-    assert proxy.should_connection_close(1, 0, h)
-    assert not proxy.should_connection_close(1, 1, h)
+    assert proxy.should_connection_close((1, 0), h)
+    assert not proxy.should_connection_close((1, 1), h)
 
     h["connection"] = ["keep-alive"]
-    assert not proxy.should_connection_close(1, 1, h)
+    assert not proxy.should_connection_close((1, 1), h)
 
 
 def test_read_http_body():
@@ -129,14 +129,13 @@ def test_parse_init_connect():
 
 def test_prase_init_proxy():
     u = "GET http://foo.com:8888/test HTTP/1.1"
-    m, s, h, po, pa, major, minor = proxy.parse_init_proxy(u)
+    m, s, h, po, pa, httpversion = proxy.parse_init_proxy(u)
     assert m == "GET"
     assert s == "http"
     assert h == "foo.com"
     assert po == 8888
     assert pa == "/test"
-    assert major == 1
-    assert minor == 1
+    assert httpversion == (1, 1)
 
     assert not proxy.parse_init_proxy("invalid")
     assert not proxy.parse_init_proxy("GET invalid HTTP/1.1")
@@ -145,13 +144,11 @@ def test_prase_init_proxy():
 
 def test_parse_init_http():
     u = "GET /test HTTP/1.1"
-    m, u, major, minor = proxy.parse_init_http(u)
+    m, u, httpversion= proxy.parse_init_http(u)
     assert m == "GET"
     assert u == "/test"
-    assert major == 1
-    assert minor == 1
+    assert httpversion == (1, 1)
 
     assert not proxy.parse_init_http("invalid")
     assert not proxy.parse_init_http("GET invalid HTTP/1.1")
     assert not proxy.parse_init_http("GET /test foo/1.1")
-
