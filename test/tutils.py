@@ -1,4 +1,4 @@
-import threading, Queue
+import threading, Queue, unittest
 import libpry
 from libmproxy import proxy, flow, controller
 import requests
@@ -81,31 +81,25 @@ class ServerThread(threading.Thread):
         self.server.shutdown()
 
 
-class TestServer(libpry.TestContainer):
-    """
-        Starts up a Pathod server and a mitmproxy instance.
-    """
-    def __init__(self, ssl=None):
-        libpry.TestContainer.__init__(self)
-        self.ssl = ssl
-
-    def setUpAll(self):
-        self.tqueue = Queue.Queue()
+class ProxTest:
+    ssl = None
+    @classmethod
+    def setupAll(cls):
+        cls.tqueue = Queue.Queue()
         # We don't make any concurrent requests, so we can access
         # the attributes on this object safely.
-        self.proxy = ProxyThread(self.tqueue)
-        self.server = libpathod.test.Daemon(ssl=self.ssl)
-        self.proxy.start()
+        cls.proxy = ProxyThread(cls.tqueue)
+        cls.proxy.start()
+        cls.server = libpathod.test.Daemon(ssl=cls.ssl)
+
+    @classmethod
+    def teardownAll(cls):
+        cls.proxy.shutdown()
+        cls.server.shutdown()
 
     def setUp(self):
         self.proxy.tmaster.clear()
 
-    def tearDownAll(self):
-        self.proxy.shutdown()
-        self.server.shutdown()
-
-
-class ProxTest(libpry.AutoTree):
     def pathod(self, spec):
         """
             Constructs a pathod request, with the appropriate base and proxy.
@@ -118,8 +112,8 @@ class ProxTest(libpry.AutoTree):
             The URL base for the server instance.
         """
         return {
-            "http" : "http://127.0.0.1:%s"%self.findAttr("proxy").port,
-            "https" : "http://127.0.0.1:%s"%self.findAttr("proxy").port
+            "http" : "http://127.0.0.1:%s"%self.proxy.port,
+            "https" : "http://127.0.0.1:%s"%self.proxy.port
         }
 
     @property
@@ -127,12 +121,11 @@ class ProxTest(libpry.AutoTree):
         """
             The URL base for the server instance.
         """
-        return self.findAttr("server").urlbase
+        return self.server.urlbase
 
     def log(self):
-        pthread = self.findAttr("proxy")
+        pthread = self.proxy
         return pthread.tmaster.log
-
 
 
 def raises(exc, obj, *args, **kwargs):
