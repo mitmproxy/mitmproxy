@@ -214,8 +214,6 @@ def parse_request_line(request):
     major,minor = protocol.split('/')[1].split('.')
     major = int(major)
     minor = int(minor)
-    if major != 1:
-        raise ProxyError(400, "Unsupported protocol")
     return method, scheme, host, port, path, minor
 
 
@@ -459,8 +457,6 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 self.wfile.write('Proxy-agent: %s\r\n'%version.NAMEVERSION)
                 self.wfile.write('\r\n')
                 del headers['expect']
-            else:
-                raise ProxyError(417, 'Unmet expect: %s'%expect)
         if httpminor == 0:
             client_conn.close = True
         if "connection" in headers:
