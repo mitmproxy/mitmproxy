@@ -450,51 +450,7 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
 
-    def read_request(self, client_conn):
-        line = self.rfile.readline()
-        if line == "\r\n" or line == "\n": # Possible leftover from previous message
-            line = self.rfile.readline()
-        if line == "":
-            return None
-        method, scheme, host, port, path, httpminor = parse_request_line(line)
-        if method == "CONNECT":
-            # FIXME: Discard additional headers sent to the proxy. Should I expose
-            # these to users?
-            while 1:
-                d = self.rfile.readline()
-                if d == '\r\n' or d == '\n':
-                    break
-            self.wfile.write(
-                        'HTTP/1.1 200 Connection established\r\n' +
-                        ('Proxy-agent: %s\r\n'%version.NAMEVERSION) +
-                        '\r\n'
-                        )
-            self.wfile.flush()
-            certfile = self.find_cert(host, port)
-            self.convert_to_ssl(certfile)
-            method, scheme, host, port, path, httpminor = parse_request_line(self.rfile.readline())
-        if scheme is None:
-            scheme = "https"
-        headers = read_headers(self.rfile)
-        if host is None and "host" in headers:
-            netloc = headers["host"][0]
-            if ':' in netloc:
-                host, port = string.split(netloc, ':')
-                port = int(port)
-            else:
-                host = netloc
-                if scheme == "https":
-                    port = 443
-                else:
-                    port = 80
-            port = int(port)
-        if host is None:
-            if self.config.reverse_proxy:
-                scheme, host, port = self.config.reverse_proxy
-            else:
-                # FIXME: We only specify the first part of the invalid request in this error.
-                # We should gather up everything read from the socket, and specify it all.
-                raise ProxyError(400, 'Invalid request: %s'%line)
+    def read_contents(self, client_conn, headers, httpminor):
         if "expect" in headers:
             # FIXME: Should be forwarded upstream
             expect = ",".join(headers['expect'])
@@ -514,8 +470,47 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                     client_conn.close = True
                 if value == "keep-alive":
                     client_conn.close = False
-        content = read_http_body(self.rfile, client_conn, headers, False, self.config.body_size_limit)
-        return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
+        return read_http_body(self.rfile, client_conn, headers, False, self.config.body_size_limit)
+
+    def read_request(self, client_conn):
+        line = self.rfile.readline()
+        if line == "\r\n" or line == "\n": # Possible leftover from previous message
+            line = self.rfile.readline()
+        if line == "":
+            return None
+
+        if self.config.reverse_proxy:
+            scheme, host, port = self.config.reverse_proxy
+            method, path, httpmajor, httpminor = parse_init_http(line)
+            headers = read_headers(self.rfile)
+            content = self.read_contents(client_conn, headers, httpminor)
+            return flow.Request(client_conn, host, port, "http", method, path, headers, content)
+        elif line.startswith("CONNECT"):
+            host, port, httpmajor, httpminor = parse_init_connect(line)
+            # FIXME: Discard additional headers sent to the proxy. Should I expose
+            # these to users?
+            while 1:
+                d = self.rfile.readline()
+                if d == '\r\n' or d == '\n':
+                    break
+            self.wfile.write(
+                        'HTTP/1.1 200 Connection established\r\n' +
+                        ('Proxy-agent: %s\r\n'%version.NAMEVERSION) +
+                        '\r\n'
+                        )
+            self.wfile.flush()
+            certfile = self.find_cert(host, port)
+            self.convert_to_ssl(certfile)
+
+            method, path, httpmajor, httpminor = parse_init_http(self.rfile.readline(line))
+            headers = read_headers(self.rfile)
+            content = self.read_contents(client_conn, headers, httpminor)
+            return flow.Request(client_conn, host, port, "https", method, path, headers, content)
+        else:
+            method, scheme, host, port, path, httpmajor, httpminor = parse_init_proxy(line)
+            headers = read_headers(self.rfile)
+            content = self.read_contents(client_conn, headers, httpminor)
+            return flow.Request(client_conn, host, port, scheme, method, path, headers, content)
 
     def send_response(self, response):
         d = response._assemble()
