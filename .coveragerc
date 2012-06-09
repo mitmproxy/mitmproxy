@@ -1,2 +1,3 @@
 [report]
-omit = *contrib*
+omit = *contrib*, *tnetstring*
+include = *libmproxy*

@@ -17,8 +17,6 @@ import Queue, threading
 
 should_exit = False
 
-#begin nocover
-
 class Msg:
     def __init__(self):
         self.q = Queue.Queue()
@@ -36,13 +34,13 @@ class Msg:
         self.acked = False
         try:
             masterq.put(self, timeout=3)
-            while not should_exit:
+            while not should_exit: # pragma: no cover
                 try:
                     g = self.q.get(timeout=0.5)
                 except Queue.Empty:
                     continue
                 return g
-        except (Queue.Empty, Queue.Full):
+        except (Queue.Empty, Queue.Full): # pragma: no cover
             return None
 
 
@@ -88,7 +86,7 @@ class Master:
             self.tick(self.masterq)
         self.shutdown()
 
-    def handle(self, msg):
+    def handle(self, msg): # pragma: no cover
         c = "handle_" + msg.__class__.__name__.lower()
         m = getattr(self, c, None)
         if m:

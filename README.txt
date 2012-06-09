@@ -57,8 +57,8 @@ Requirements
 The following auxiliary components may be needed if you plan to hack on
 mitmproxy:
 
-* The test suite uses the pry_ unit testing
-  library.
+* The test suite uses the nose_ unit testing
+  framework.
 * Rendering the documentation requires countershape_.
 
 **mitmproxy** is tested and developed on OSX, Linux and OpenBSD. Windows is not
@@ -80,5 +80,5 @@ following:
 .. _PIL: http://www.pythonware.com/products/pil/
 .. _lxml: http://lxml.de/
 .. _urwid: http://excess.org/urwid/
-.. _pry: http://github.com/cortesi/pry
+.. _nose: http://readthedocs.org/docs/nose/en/latest/
 .. _countershape: http://github.com/cortesi/countershape

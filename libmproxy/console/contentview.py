@@ -236,11 +236,10 @@ def view_javascript(hdrs, content, limit):
     opts.indent_size = 2
     try:
         res = jsbeautifier.beautify(content[:limit], opts)
-    # begin nocover
-    except:
-        # Bugs in jsbeautifier mean that it can trhow arbitrary errors.
-        return None
-    # end nocover
+    except:                                     # pragma: no cover 
+        # Bugs in jsbeautifier mean that it 
+        # can throw arbitrary errors.
+        return None                             # pragma: no cover
     return "JavaScript", _view_text(res, len(content), limit)
 
 

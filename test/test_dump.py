@@ -82,7 +82,7 @@ class TestDumpMaster:
 
             libpry.raises(
                 dump.DumpError, self._dummy_cycle,
-                0, None, "", verbosity=1, rfile="test_dump.py"
+                0, None, "", verbosity=1, rfile=tutils.test_data.path("test_dump.py")
             )
 
     def test_options(self):

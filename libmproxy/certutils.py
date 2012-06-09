@@ -213,10 +213,7 @@ class SSLCert:
         return altnames
 
 
-# begin nocover
-def get_remote_cert(host, port):
+def get_remote_cert(host, port): # pragma: no cover
     addr = socket.gethostbyname(host)
     s = ssl.get_server_certificate((addr, port))
     return SSLCert(s)
-# end nocover
-

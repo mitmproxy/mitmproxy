@@ -214,13 +214,12 @@ class DumpMaster(flow.FlowMaster):
             self._process_flow(f)
         return f
 
-# begin nocover
-    def shutdown(self):
+    def shutdown(self):  # pragma: no cover
         if self.o.wfile:
             self.fwriter.fo.close()
         return flow.FlowMaster.shutdown(self)
 
-    def run(self):
+    def run(self):  # pragma: no cover
         if self.o.rfile and not self.o.keepserving:
             if self.script:
                 self.load_script(None)

@@ -257,7 +257,6 @@ class FileLike:
         return result
 
 
-#begin nocover
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
         self.config, self.flow, self.masterq = config, flow, masterq

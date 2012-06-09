@@ -595,7 +595,7 @@ class TestFlowMaster:
         err = flow.Error(f.request, "msg")
         fm.handle_error(err)
 
-        fm.load_script("scripts/a.py")
+        fm.load_script(tutils.test_data.path("scripts/a.py"))
         fm.shutdown()
 
     def test_client_playback(self):
