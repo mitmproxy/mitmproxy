@@ -1,4 +1,5 @@
 import urllib, urllib2, unittest
+import time
 import libpathod.test, requests
 import tutils
 
@@ -14,6 +15,10 @@ class TestHTTP(Sanity):
 
 class TestHTTPS(Sanity):
     ssl = True
+
+
+class TestReverse(Sanity):
+    reverse = True
 
 
 class TestProxy(tutils.ProxTest):

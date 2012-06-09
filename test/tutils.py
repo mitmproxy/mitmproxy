@@ -43,8 +43,8 @@ def tflow_err():
 
 
 class TestMaster(controller.Master):
-    def __init__(self, port, testq):
-        s = proxy.ProxyServer(proxy.ProxyConfig(test_data.path("data/testkey.pem")), port)
+    def __init__(self, port, testq, config):
+        s = proxy.ProxyServer(config, port)
         controller.Master.__init__(self, s)
         self.testq = testq
         self.log = []
@@ -58,9 +58,9 @@ class TestMaster(controller.Master):
 
 
 class ProxyThread(threading.Thread):
-    def __init__(self, testq):
+    def __init__(self, testq, config):
         self.port = random.randint(10000, 20000)
-        self.tmaster = TestMaster(self.port, testq)
+        self.tmaster = TestMaster(self.port, testq, config)
         controller.should_exit = False
         threading.Thread.__init__(self)
 
@@ -85,14 +85,25 @@ class ServerThread(threading.Thread):
 
 class ProxTest:
     ssl = None
+    reverse = False
     @classmethod
     def setupAll(cls):
         cls.tqueue = Queue.Queue()
-        # We don't make any concurrent requests, so we can access
-        # the attributes on this object safely.
-        cls.proxy = ProxyThread(cls.tqueue)
-        cls.proxy.start()
         cls.server = libpathod.test.Daemon(ssl=cls.ssl)
+        if cls.reverse:
+            reverse_proxy = (
+                "https" if cls.ssl else "http",
+                "127.0.0.1",
+                cls.server.port
+            )
+        else:
+            reverse_proxy = None
+        config = proxy.ProxyConfig(
+            certfile=test_data.path("data/testkey.pem"),
+            reverse_proxy = reverse_proxy
+        )
+        cls.proxy = ProxyThread(cls.tqueue, config)
+        cls.proxy.start()
 
     @classmethod
     def teardownAll(cls):
@@ -106,12 +117,24 @@ class ProxTest:
         """
             Constructs a pathod request, with the appropriate base and proxy.
         """
-        return hurl.get(
-            self.urlbase + "/p/" + spec,
-            proxy=self.proxies,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
+        if self.reverse:
+            r = hurl.get(
+                "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
+                validate_cert=False,
+                #debug=hurl.utils.stdout_debug
+            )
+            return r
+        else:
+            return hurl.get(
+                self.urlbase + "/p/" + spec,
+                proxy=self.proxies,
+                validate_cert=False,
+                #debug=hurl.utils.stdout_debug
+            )
+
+    @property
+    def scheme(self):
+        return "https" if self.ssl else "http"
 
     @property
     def proxies(self):
@@ -119,7 +142,7 @@ class ProxTest:
             The URL base for the server instance.
         """
         return (
-            ("https" if self.ssl else "http", ("127.0.0.1", self.proxy.port))
+            (self.scheme, ("127.0.0.1", self.proxy.port))
         )
 
     @property
