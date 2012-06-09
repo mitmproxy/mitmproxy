@@ -1,15 +1,14 @@
 import os
 from libmproxy import script, flow
-import libpry
 import tutils
 
-class uScript(libpry.AutoTree):
+class TestScript:
     def test_simple(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         ctx = flow.ScriptContext(fm)
 
-        p = script.Script(os.path.join("scripts", "a.py"), ctx)
+        p = script.Script(tutils.test_data.path("scripts/a.py"), ctx)
         p.load()
         assert "here" in p.ns
         assert p.run("here") == (True, 1)
@@ -26,7 +25,7 @@ class uScript(libpry.AutoTree):
     def test_duplicate_flow(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        fm.load_script(os.path.join("scripts", "duplicate_flow.py"))
+        fm.load_script(tutils.test_data.path("scripts/duplicate_flow.py"))
         r = tutils.treq()
         fm.handle_request(r)
         assert fm.state.flow_count() == 2
@@ -40,32 +39,26 @@ class uScript(libpry.AutoTree):
 
 
         s = script.Script("nonexistent", ctx)
-        libpry.raises(
+        tutils.raises(
             "no such file",
             s.load
         )
 
-        s = script.Script("scripts", ctx)
-        libpry.raises(
+        s = script.Script(tutils.test_data.path("scripts"), ctx)
+        tutils.raises(
             "not a file",
             s.load
         )
 
-        s = script.Script("scripts/syntaxerr.py", ctx)
-        libpry.raises(
+        s = script.Script(tutils.test_data.path("scripts/syntaxerr.py"), ctx)
+        tutils.raises(
             script.ScriptError,
             s.load
         )
 
-        s = script.Script("scripts/loaderr.py", ctx)
-        libpry.raises(
+        s = script.Script(tutils.test_data.path("scripts/loaderr.py"), ctx)
+        tutils.raises(
             script.ScriptError,
             s.load
         )
-
-
-
-tests = [
-    uScript(),
-]
 

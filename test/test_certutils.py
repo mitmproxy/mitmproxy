@@ -1,11 +1,10 @@
 import os
-import libpry
 from libmproxy import certutils
+import tutils
 
 
-class udummy_ca(libpry.AutoTree):
-    def test_all(self):
-        d = self.tmpdir()
+def test_dummy_ca():
+    with tutils.tmpdir() as d:
         path = os.path.join(d, "foo/cert.cnf")
         assert certutils.dummy_ca(path)
         assert os.path.exists(path)
@@ -17,45 +16,45 @@ class udummy_ca(libpry.AutoTree):
         assert os.path.exists(os.path.join(d, "foo/cert2-cert.p12"))
 
 
-class udummy_cert(libpry.AutoTree):
+class TestDummyCert:
     def test_with_ca(self):
-        d = self.tmpdir()
-        cacert = os.path.join(d, "foo/cert.cnf")
-        assert certutils.dummy_ca(cacert)
-        p = certutils.dummy_cert(
-            os.path.join(d, "foo"),
-            cacert,
-            "foo.com",
-            ["one.com", "two.com", "*.three.com"]
-        )
-        assert os.path.exists(p)
+        with tutils.tmpdir() as d:
+            cacert = os.path.join(d, "foo/cert.cnf")
+            assert certutils.dummy_ca(cacert)
+            p = certutils.dummy_cert(
+                os.path.join(d, "foo"),
+                cacert,
+                "foo.com",
+                ["one.com", "two.com", "*.three.com"]
+            )
+            assert os.path.exists(p)
 
-        # Short-circuit
-        assert certutils.dummy_cert(
-            os.path.join(d, "foo"),
-            cacert,
-            "foo.com",
-            []
-        )
+            # Short-circuit
+            assert certutils.dummy_cert(
+                os.path.join(d, "foo"),
+                cacert,
+                "foo.com",
+                []
+            )
 
     def test_no_ca(self):
-        d = self.tmpdir()
-        p = certutils.dummy_cert(
-            d,
-            None,
-            "foo.com",
-            []
-        )
-        assert os.path.exists(p)
+        with tutils.tmpdir() as d:
+            p = certutils.dummy_cert(
+                d,
+                None,
+                "foo.com",
+                []
+            )
+            assert os.path.exists(p)
 
 
-class uSSLCert(libpry.AutoTree):
+class TestSSLCert:
     def test_simple(self):
-        c = certutils.SSLCert(file("data/text_cert", "r").read())
+        c = certutils.SSLCert(file(tutils.test_data.path("data/text_cert"), "r").read())
         assert c.cn == "google.com"
         assert len(c.altnames) == 436
 
-        c = certutils.SSLCert(file("data/text_cert_2", "r").read())
+        c = certutils.SSLCert(file(tutils.test_data.path("data/text_cert_2"), "r").read())
         assert c.cn == "www.inode.co.nz"
         assert len(c.altnames) == 2
         assert c.digest("sha1")
@@ -68,13 +67,6 @@ class uSSLCert(libpry.AutoTree):
         c.has_expired
 
     def test_der(self):
-        d = file("data/dercert").read()
+        d = file(tutils.test_data.path("data/dercert")).read()
         s = certutils.SSLCert.from_der(d)
         assert s.cn
-
-
-tests = [
-    udummy_ca(),
-    udummy_cert(),
-    uSSLCert(),
-]

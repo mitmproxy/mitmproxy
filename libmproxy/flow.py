@@ -903,9 +903,7 @@ class ClientPlaybackState:
             n.request.client_conn = None
             self.current = master.handle_request(n.request)
             if not testing and not self.current.response:
-                #begin nocover
-                master.replay_request(self.current)
-                #end nocover
+                master.replay_request(self.current) # pragma: no cover
             elif self.current.response:
                 master.handle_response(self.current.response)
 
@@ -1498,7 +1496,6 @@ class FlowMaster(controller.Master):
             return "Can't replay while intercepting..."
         if f.request.content == CONTENT_MISSING:
             return "Can't replay request with missing content..."
-        #begin nocover
         if f.request:
             f.request._set_replay()
             if f.request.content:
@@ -1511,8 +1508,7 @@ class FlowMaster(controller.Master):
                     f,
                     self.masterq,
                 )
-            rt.start()
-        #end nocover
+            rt.start() # pragma: no cover
 
     def run_script_hook(self, name, *args, **kwargs):
         if self.script and not self.pause_scripts:

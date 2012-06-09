@@ -1,10 +1,9 @@
+import os
 from libmproxy import console
 from libmproxy.console import common
 import tutils
-import libpry
 
-
-class uConsoleState(libpry.AutoTree):
+class TestConsoleState:
     def test_flow(self):
         """
             normal flow:
@@ -89,32 +88,34 @@ class uConsoleState(libpry.AutoTree):
         assert len(c.flowsettings) == 0
 
 
-class uformat_keyvals(libpry.AutoTree):
-    def test_simple(self):
-        assert common.format_keyvals(
-            [
-                ("aa", "bb"),
-                None,
-                ("cc", "dd"),
-                (None, "dd"),
-                (None, "dd"),
-            ]
-        )
+def test_format_keyvals():
+    assert common.format_keyvals(
+        [
+            ("aa", "bb"),
+            None,
+            ("cc", "dd"),
+            (None, "dd"),
+            (None, "dd"),
+        ]
+    )
 
 
-class uPathCompleter(libpry.AutoTree):
+class TestPathCompleter:
     def test_lookup_construction(self):
         c = console._PathCompleter()
         assert c.complete("/tm") == "/tmp/"
         c.reset()
 
-        assert c.complete("./completion/a") == "./completion/aaa"
-        assert c.complete("./completion/a") == "./completion/aab"
+        cd = tutils.test_data.path("completion")
+        ca = os.path.join(cd, "a")
+        assert c.complete(ca).endswith("/completion/aaa")
+        assert c.complete(ca).endswith("/completion/aab")
         c.reset()
-        assert c.complete("./completion/aaa") == "./completion/aaa"
-        assert c.complete("./completion/aaa") == "./completion/aaa"
+        ca = os.path.join(cd, "aaa")
+        assert c.complete(ca).endswith("/completion/aaa")
+        assert c.complete(ca).endswith("/completion/aaa")
         c.reset()
-        assert c.complete("./completion") == "./completion/aaa"
+        assert c.complete(cd).endswith("/completion/aaa")
 
     def test_completion(self):
         c = console._PathCompleter(True)
@@ -144,15 +145,5 @@ class uPathCompleter(libpry.AutoTree):
         assert c.final == s
 
 
-class uOptions(libpry.AutoTree):
-    def test_all(self):
-        assert console.Options(kill=True)
-
-
-
-tests = [
-    uformat_keyvals(),
-    uConsoleState(),
-    uPathCompleter(),
-    uOptions()
-]
+def test_options():
+    assert console.Options(kill=True)

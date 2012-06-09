@@ -10,3 +10,4 @@ mitmproxyc
 mitmdumpc
 mitmplaybackc
 mitmrecordc
+.coverage

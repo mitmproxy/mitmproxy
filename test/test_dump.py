@@ -4,20 +4,19 @@ import libpry
 from libmproxy import dump, flow
 import tutils
 
-class uStrFuncs(libpry.AutoTree):
-    def test_all(self):
-        t = tutils.tresp()
-        t._set_replay()
-        dump.str_response(t)
+def test_strfuncs():
+    t = tutils.tresp()
+    t._set_replay()
+    dump.str_response(t)
 
-        t = tutils.treq()
-        t.client_conn = None
-        t.stickycookie = True
-        assert "stickycookie" in dump.str_request(t)
-        assert "replay" in dump.str_request(t)
+    t = tutils.treq()
+    t.client_conn = None
+    t.stickycookie = True
+    assert "stickycookie" in dump.str_request(t)
+    assert "replay" in dump.str_request(t)
 
 
-class uDumpMaster(libpry.AutoTree):
+class TestDumpMaster:
     def _cycle(self, m, content):
         req = tutils.treq()
         req.content = content
@@ -53,38 +52,38 @@ class uDumpMaster(libpry.AutoTree):
         o = dump.Options(server_replay="nonexistent", kill=True)
         libpry.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
 
-        t = self.tmpdir()
-        p = os.path.join(t, "rep")
-        self._flowfile(p)
+        with tutils.tmpdir() as t:
+            p = os.path.join(t, "rep")
+            self._flowfile(p)
 
-        o = dump.Options(server_replay=p, kill=True)
-        m = dump.DumpMaster(None, o, None, outfile=cs)
+            o = dump.Options(server_replay=p, kill=True)
+            m = dump.DumpMaster(None, o, None, outfile=cs)
 
-        self._cycle(m, "content")
-        self._cycle(m, "content")
+            self._cycle(m, "content")
+            self._cycle(m, "content")
 
-        o = dump.Options(server_replay=p, kill=False)
-        m = dump.DumpMaster(None, o, None, outfile=cs)
-        self._cycle(m, "nonexistent")
+            o = dump.Options(server_replay=p, kill=False)
+            m = dump.DumpMaster(None, o, None, outfile=cs)
+            self._cycle(m, "nonexistent")
 
-        o = dump.Options(client_replay=p, kill=False)
-        m = dump.DumpMaster(None, o, None, outfile=cs)
+            o = dump.Options(client_replay=p, kill=False)
+            m = dump.DumpMaster(None, o, None, outfile=cs)
 
     def test_read(self):
-        t = self.tmpdir()
-        p = os.path.join(t, "read")
-        self._flowfile(p)
-        assert "GET" in self._dummy_cycle(0, None, "", verbosity=1, rfile=p)
+        with tutils.tmpdir() as t:
+            p = os.path.join(t, "read")
+            self._flowfile(p)
+            assert "GET" in self._dummy_cycle(0, None, "", verbosity=1, rfile=p)
 
-        libpry.raises(
-            dump.DumpError, self._dummy_cycle,
-            0, None, "", verbosity=1, rfile="/nonexistent"
-        )
+            libpry.raises(
+                dump.DumpError, self._dummy_cycle,
+                0, None, "", verbosity=1, rfile="/nonexistent"
+            )
 
-        libpry.raises(
-            dump.DumpError, self._dummy_cycle,
-            0, None, "", verbosity=1, rfile="test_dump.py"
-        )
+            libpry.raises(
+                dump.DumpError, self._dummy_cycle,
+                0, None, "", verbosity=1, rfile="test_dump.py"
+            )
 
     def test_options(self):
         o = dump.Options(verbosity = 2)
@@ -107,10 +106,10 @@ class uDumpMaster(libpry.AutoTree):
             assert "GET" in self._dummy_cycle(1, "~s", "ascii", verbosity=i)
 
     def test_write(self):
-        d = self.tmpdir()
-        p = os.path.join(d, "a")
-        self._dummy_cycle(1, None, "", wfile=p, verbosity=0)
-        assert len(list(flow.FlowReader(open(p)).stream())) == 1
+        with tutils.tmpdir() as d:
+            p = os.path.join(d, "a")
+            self._dummy_cycle(1, None, "", wfile=p, verbosity=0)
+            assert len(list(flow.FlowReader(open(p)).stream())) == 1
 
     def test_write_err(self):
         libpry.raises(
@@ -125,7 +124,7 @@ class uDumpMaster(libpry.AutoTree):
     def test_script(self):
         ret = self._dummy_cycle(
             1, None, "",
-            script="scripts/all.py", verbosity=0, eventlog=True
+            script=tutils.test_data.path("scripts/all.py"), verbosity=0, eventlog=True
         )
         assert "XCLIENTCONNECT" in ret
         assert "XREQUEST" in ret
@@ -146,11 +145,3 @@ class uDumpMaster(libpry.AutoTree):
     def test_stickyauth(self):
         self._dummy_cycle(1, None, "", stickyauth = ".*")
 
-
-
-
-
-tests = [
-    uStrFuncs(),
-    uDumpMaster()
-]

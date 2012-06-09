@@ -1,9 +1,8 @@
 import cStringIO
 from libmproxy import filt, flow
-import libpry
 
 
-class uParsing(libpry.AutoTree):
+class TestParsing:
     def _dump(self, x):
         c = cStringIO.StringIO()
         x.dump(fp=c)
@@ -71,7 +70,7 @@ class uParsing(libpry.AutoTree):
         self._dump(a)
 
 
-class uMatching(libpry.AutoTree):
+class TestMatching:
     def req(self):
         conn = flow.ClientConnect(("one", 2222))
         headers = flow.ODictCaseless()
@@ -235,11 +234,3 @@ class uMatching(libpry.AutoTree):
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
 
-
-
-
-
-tests = [
-    uMatching(),
-    uParsing()
-]

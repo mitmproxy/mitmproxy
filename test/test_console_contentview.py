@@ -1,9 +1,9 @@
 import sys
-import libpry
 import libmproxy.console.contentview as cv
 from libmproxy import utils, flow, encoding
+import tutils
 
-class uContentView(libpry.AutoTree):
+class TestContentView:
     def test_trailer(self):
         txt = []
         cv.trailer(5, txt, 1000)
@@ -97,10 +97,18 @@ class uContentView(libpry.AutoTree):
         assert cv.view_hex([], "foo", 1000)
 
     def test_view_image(self):
-        assert cv.view_image([], file("data/image.png").read(), sys.maxint)
-        assert cv.view_image([], file("data/image.gif").read(), sys.maxint)
-        assert cv.view_image([], file("data/image-err1.jpg").read(), sys.maxint)
-        assert cv.view_image([], file("data/image.ico").read(), sys.maxint)
+        p = tutils.test_data.path("data/image.png")
+        assert cv.view_image([], file(p).read(), sys.maxint)
+
+        p = tutils.test_data.path("data/image.gif")
+        assert cv.view_image([], file(p).read(), sys.maxint)
+
+        p = tutils.test_data.path("data/image-err1.jpg")
+        assert cv.view_image([], file(p).read(), sys.maxint)
+
+        p = tutils.test_data.path("data/image.ico")
+        assert cv.view_image([], file(p).read(), sys.maxint)
+
         assert not cv.view_image([], "flibble", sys.maxint)
 
     def test_view_multipart(self):
@@ -178,7 +186,3 @@ Larry
         assert "decoded gzip" in r[0]
         assert "Raw" in r[0]
 
-
-tests = [
-    uContentView()
-]

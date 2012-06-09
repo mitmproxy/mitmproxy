@@ -118,10 +118,8 @@ class WSGIAdaptor:
             try:
                 s = traceback.format_exc()
                 self.error_page(soc, state["headers_sent"], s)
-            # begin nocover
-            except Exception, v:
-                pass
-            # end nocover
+            except Exception, v:    # pragma: no cover
+                pass                # pragma: no cover
         return errs.getvalue()
 
 

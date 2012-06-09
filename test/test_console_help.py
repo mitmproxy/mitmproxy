@@ -1,5 +1,4 @@
 import sys
-import libpry
 import libmproxy.console.help as help
 from libmproxy import utils, flow, encoding
 
@@ -8,7 +7,7 @@ class DummyMaster:
         pass
 
 
-class uHelp(libpry.AutoTree):
+class TestHelp:
     def test_helptext(self):
         h = help.HelpView(None, "foo", None)
         assert h.helptext()
@@ -18,8 +17,3 @@ class uHelp(libpry.AutoTree):
         assert not h.keypress((0, 0), "q")
         assert not h.keypress((0, 0), "?")
         assert h.keypress((0, 0), "o") == "o"
-
-
-tests = [
-    uHelp()
-]

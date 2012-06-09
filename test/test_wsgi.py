@@ -1,5 +1,4 @@
 import cStringIO, sys
-import libpry
 from libmproxy import wsgi
 import tutils
 
@@ -16,7 +15,7 @@ class TestApp:
         return ['Hello', ' world!\n']
 
 
-class uWSGIAdaptor(libpry.AutoTree):
+class TestWSGIAdaptor:
     def test_make_environ(self):
         w = wsgi.WSGIAdaptor(None, "foo", 80)
         tr = tutils.treq()
@@ -97,7 +96,7 @@ class uWSGIAdaptor(libpry.AutoTree):
         assert "Internal Server Error" in self._serve(app)
 
 
-class uAppRegistry(libpry.AutoTree):
+class TestAppRegistry:
     def test_add_get(self):
         ar = wsgi.AppRegistry()
         ar.add("foo", "domain", 80)
@@ -109,9 +108,3 @@ class uAppRegistry(libpry.AutoTree):
 
         r.port = 81
         assert not ar.get(r)
-
-
-tests = [
-    uWSGIAdaptor(),
-    uAppRegistry()
-]

@@ -1,6 +1,8 @@
-import threading, Queue, unittest
+import threading, Queue
+import os, shutil,tempfile
+from contextlib import contextmanager
 import libpry
-from libmproxy import proxy, flow, controller
+from libmproxy import proxy, flow, controller, utils
 import requests
 import libpathod.test
 import random
@@ -128,6 +130,19 @@ class ProxTest:
         return pthread.tmaster.log
 
 
+
+@contextmanager
+def tmpdir(*args, **kwargs):
+    orig_workdir = os.getcwd()
+    temp_workdir = tempfile.mkdtemp(*args, **kwargs)
+    os.chdir(temp_workdir)
+
+    yield temp_workdir
+
+    os.chdir(orig_workdir)
+    shutil.rmtree(temp_workdir)
+
+
 def raises(exc, obj, *args, **kwargs):
     """
         Assert that a callable raises a specified exception.
@@ -165,3 +180,5 @@ def raises(exc, obj, *args, **kwargs):
                     )
                 )
     raise AssertionError("No exception raised.")
+
+test_data = utils.Data(__name__)
