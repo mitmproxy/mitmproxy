@@ -4,7 +4,12 @@ import libpry
 from libmproxy import proxy, flow
 import tutils
 
-class Dummy: pass
+
+def test_has_chunked_encoding():
+    h = flow.ODictCaseless()
+    assert not proxy.has_chunked_encoding(h)
+    h["transfer-encoding"] = ["chunked"]
+    assert proxy.has_chunked_encoding(h)
 
 
 def test_read_chunked():
@@ -24,36 +29,35 @@ def test_read_chunked():
     tutils.raises(proxy.ProxyError, proxy.read_chunked, s, None)
 
 
-def test_should_connection_close():
+def test_request_connection_close():
     h = flow.ODictCaseless()
-    assert proxy.should_connection_close((1, 0), h)
-    assert not proxy.should_connection_close((1, 1), h)
+    assert proxy.request_connection_close((1, 0), h)
+    assert not proxy.request_connection_close((1, 1), h)
 
     h["connection"] = ["keep-alive"]
-    assert not proxy.should_connection_close((1, 1), h)
+    assert not proxy.request_connection_close((1, 1), h)
 
 
 def test_read_http_body():
-    d = Dummy()
     h = flow.ODict()
     s = cStringIO.StringIO("testing")
-    assert proxy.read_http_body(s, d, h, False, None) == ""
+    assert proxy.read_http_body(s, h, False, None) == ""
 
     h["content-length"] = ["foo"]
     s = cStringIO.StringIO("testing")
-    tutils.raises(proxy.ProxyError, proxy.read_http_body, s, d, h, False, None)
+    tutils.raises(proxy.ProxyError, proxy.read_http_body, s, h, False, None)
 
     h["content-length"] = [5]
     s = cStringIO.StringIO("testing")
-    assert len(proxy.read_http_body(s, d, h, False, None)) == 5
+    assert len(proxy.read_http_body(s, h, False, None)) == 5
     s = cStringIO.StringIO("testing")
-    tutils.raises(proxy.ProxyError, proxy.read_http_body, s, d, h, False, 4)
+    tutils.raises(proxy.ProxyError, proxy.read_http_body, s, h, False, 4)
 
     h = flow.ODict()
     s = cStringIO.StringIO("testing")
-    assert len(proxy.read_http_body(s, d, h, True, 4)) == 4
+    assert len(proxy.read_http_body(s, h, True, 4)) == 4
     s = cStringIO.StringIO("testing")
-    assert len(proxy.read_http_body(s, d, h, True, 100)) == 7
+    assert len(proxy.read_http_body(s, h, True, 100)) == 7
 
 
 class TestFileLike:
