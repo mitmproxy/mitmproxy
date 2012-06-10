@@ -95,6 +95,7 @@ class TestMatching:
         headers["header_response"] = ["svalue"]
         f.response = flow.Response(
                     f.request,
+                    (1, 1),
                     200,
                     "message",
                     headers,

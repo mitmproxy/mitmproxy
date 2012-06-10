@@ -606,10 +606,10 @@ class Response(HTTPMsg):
 
             timestamp: Seconds since the epoch
     """
-    def __init__(self, request, code, msg, headers, content, der_cert, timestamp=None):
+    def __init__(self, request, httpversion, code, msg, headers, content, der_cert, timestamp=None):
         assert isinstance(headers, ODictCaseless)
         self.request = request
-        self.code, self.msg = code, msg
+        self.httpversion, self.code, self.msg = httpversion, code, msg
         self.headers, self.content = headers, content
         self.der_cert = der_cert
         self.timestamp = timestamp or utils.timestamp()
@@ -692,6 +692,7 @@ class Response(HTTPMsg):
 
     def _get_state(self):
         return dict(
+            httpversion = self.httpversion,
             code = self.code,
             msg = self.msg,
             headers = self.headers._get_state(),
@@ -704,6 +705,7 @@ class Response(HTTPMsg):
     def _from_state(klass, request, state):
         return klass(
             request,
+            state["httpversion"],
             state["code"],
             str(state["msg"]),
             ODictCaseless._from_state(state["headers"]),

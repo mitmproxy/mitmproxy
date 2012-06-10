@@ -20,7 +20,7 @@ def tresp(req=None):
         req = treq()
     headers = flow.ODictCaseless()
     headers["header_response"] = ["svalue"]
-    return flow.Response(req, 200, "message", headers, "content_response", None)
+    return flow.Response(req, (1, 1), 200, "message", headers, "content_response", None)
 
 
 def tflow():

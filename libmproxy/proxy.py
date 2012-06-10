@@ -309,6 +309,9 @@ class ServerConnection:
         if not len(parts) == 3:
             raise ProxyError(502, "Invalid server response: %s."%line)
         proto, code, msg = parts
+        httpversion = parse_http_protocol(proto)
+        if httpversion is None:
+            raise ProxyError(502, "Invalid HTTP version: %s."%httpversion)
         try:
             code = int(code)
         except ValueError:
@@ -320,7 +323,7 @@ class ServerConnection:
             content = ""
         else:
             content = read_http_body(self.rfile, self, headers, True, self.config.body_size_limit)
-        return flow.Response(request, code, msg, headers, content, self.cert)
+        return flow.Response(request, httpversion, code, msg, headers, content, self.cert)
 
     def terminate(self):
         try:
