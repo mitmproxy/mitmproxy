@@ -835,9 +835,6 @@ class TestResponse:
         resp.content = None
         assert resp._assemble()
 
-        resp.request.client_conn.close = True
-        assert "connection: close" in resp._assemble()
-
         resp.content = flow.CONTENT_MISSING
         assert not resp._assemble()
 

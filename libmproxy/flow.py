@@ -746,8 +746,6 @@ class Response(HTTPMsg):
             headers["content-length"] = [str(len(content))]
         else:
             content = ""
-        if self.request.client_conn.close:
-            headers["connection"] = ["close"]
         proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
         data = (proto, str(headers), content)
         return FMT%data
