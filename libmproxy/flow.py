@@ -536,7 +536,6 @@ class Request(HTTPMsg):
                 'proxy-connection',
                 'keep-alive',
                 'connection',
-                'content-length',
                 'transfer-encoding'
             ]
         )
@@ -551,15 +550,15 @@ class Request(HTTPMsg):
             headers["connection"] = ["close"]
         if not _proxy:
             return FMT % (
-                self.method, 
-                self.path, 
+                self.method,
+                self.path,
                 self.httpversion[0],
                 self.httpversion[1],
-                str(headers), 
+                str(headers),
                 content
             )
         else:
-            return FMT_PROXY % (    
+            return FMT_PROXY % (
                 self.method,
                 self.scheme,
                 self.host,
@@ -738,7 +737,7 @@ class Response(HTTPMsg):
         headers = self.headers.copy()
         utils.del_all(
             headers,
-            ['proxy-connection', 'connection', 'keep-alive', 'transfer-encoding']
+            ['proxy-connection', 'transfer-encoding']
         )
         content = self.content
         if content:

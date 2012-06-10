@@ -121,7 +121,7 @@ class ProxTest:
             r = hurl.get(
                 "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
                 validate_cert=False,
-                #debug=hurl.utils.stdout_debug
+                debug=hurl.utils.stdout_debug
             )
             return r
         else:
@@ -129,7 +129,7 @@ class ProxTest:
                 self.urlbase + "/p/" + spec,
                 proxy=self.proxies,
                 validate_cert=False,
-                #debug=hurl.utils.stdout_debug
+                debug=hurl.utils.stdout_debug
             )
 
     @property
