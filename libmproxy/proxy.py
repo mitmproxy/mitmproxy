@@ -22,6 +22,7 @@ import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer, ssl
 import utils, flow, certutils, version, wsgi
+from OpenSSL import SSL
 
 
 class ProxyError(Exception):
@@ -239,7 +240,7 @@ class FileLike:
 
     def flush(self):
         pass
-
+    
     def read(self, length):
         result = ''
         while len(result) < length:
@@ -247,10 +248,15 @@ class FileLike:
                 data = self.o.read(length)
             except AttributeError:
                 break
+            except SSL.ZeroReturnError:
+                break
             if not data:
                 break
             result += data
         return result
+
+    def write(self, v):
+        self.o.sendall(v)
 
     def readline(self, size = None):
         result = ''
@@ -463,16 +469,21 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
             return ret
 
     def convert_to_ssl(self, cert):
-        kwargs = dict(
-            certfile = cert,
-            keyfile = self.config.certfile or self.config.cacert,
-            server_side = True,
-            ssl_version = ssl.PROTOCOL_SSLv23,
-            do_handshake_on_connect = True,
-        )
-        if sys.version_info[1] > 6:
-            kwargs["ciphers"] = self.config.ciphers
-        self.connection = ssl.wrap_socket(self.connection, **kwargs)
+        ctx = SSL.Context(SSL.SSLv23_METHOD)
+        ctx.use_privatekey_file(self.config.certfile or self.config.cacert)
+        ctx.use_certificate_file(cert)
+        self.connection = SSL.Connection(ctx, self.connection)
+        self.connection.set_accept_state()
+        #kwargs = dict(
+        #    certfile = cert,
+        #    keyfile = self.config.certfile or self.config.cacert,
+        #    server_side = True,
+        #    ssl_version = ssl.PROTOCOL_SSLv23,
+        #    do_handshake_on_connect = True,
+        #)
+        #if sys.version_info[1] > 6:
+        #    kwargs["ciphers"] = self.config.ciphers
+        #self.connection = ssl.wrap_socket(self.connection, **kwargs)
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
 

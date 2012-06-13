@@ -16,6 +16,9 @@ class Sanity(tutils.ProxTest):
         assert self.pathod("304").status_code == 304
         assert self.log()
 
+    def test_large(self):
+        assert len(self.pathod("200:b@500k").content) == 1024*500
+
 
 class TestHTTP(Sanity):
     pass
