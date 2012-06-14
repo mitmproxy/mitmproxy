@@ -34,7 +34,8 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_mode=None):
+        assert not (reverse_proxy and transparent_mode)
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
@@ -43,6 +44,7 @@ class ProxyConfig:
         self.upstream_cert = upstream_cert
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
+        self.transparent_mode = transparent_mode
 
 
 def read_headers(fp):
@@ -239,7 +241,7 @@ class FileLike:
 
     def flush(self):
         pass
-    
+
     def read(self, length):
         result = ''
         while len(result) < length:
@@ -488,7 +490,9 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         if line == "":
             return None
 
-        if self.config.reverse_proxy:
+        if self.config.transparent_mode:
+            pass
+        elif self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
             method, path, httpversion = parse_init_http(line)
             headers = read_headers(self.rfile)

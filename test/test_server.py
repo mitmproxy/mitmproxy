@@ -11,28 +11,32 @@ import tutils
     for a 200 response.
 """
 
-class Sanity(tutils.ProxTest):
+class SanityMixin:
     def test_http(self):
         assert self.pathod("304").status_code == 304
         assert self.log()
 
     def test_large(self):
-        assert len(self.pathod("200:b@500k").content) == 1024*500
+        assert len(self.pathod("200:b@50k").content) == 1024*50
 
 
-class TestHTTP(Sanity):
+class TestHTTP(tutils.HTTPProxTest, SanityMixin):
     pass
 
 
-class TestHTTPS(Sanity):
+class TestHTTPS(tutils.HTTPProxTest, SanityMixin):
     ssl = True
 
 
-class TestReverse(Sanity):
+class TestReverse(tutils.ReverseProxTest, SanityMixin):
     reverse = True
 
 
-class TestProxy(tutils.ProxTest):
+class _TestTransparent():
+    transparent = True
+
+
+class TestProxy(tutils.HTTPProxTest):
     def test_http(self):
         f = self.pathod("304")
         assert f.status_code == 304
