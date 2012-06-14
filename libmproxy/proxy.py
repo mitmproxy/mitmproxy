@@ -34,9 +34,8 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, ciphers = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None):
         self.certfile = certfile
-        self.ciphers = ciphers
         self.cacert = cacert
         self.clientcerts = clientcerts
         self.certdir = None
@@ -474,16 +473,6 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         ctx.use_certificate_file(cert)
         self.connection = SSL.Connection(ctx, self.connection)
         self.connection.set_accept_state()
-        #kwargs = dict(
-        #    certfile = cert,
-        #    keyfile = self.config.certfile or self.config.cacert,
-        #    server_side = True,
-        #    ssl_version = ssl.PROTOCOL_SSLv23,
-        #    do_handshake_on_connect = True,
-        #)
-        #if sys.version_info[1] > 6:
-        #    kwargs["ciphers"] = self.config.ciphers
-        #self.connection = ssl.wrap_socket(self.connection, **kwargs)
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
 
@@ -634,11 +623,6 @@ def certificate_option_group(parser):
         help = "User-created SSL certificate file."
     )
     group.add_option(
-        "--ciphers", action="store",
-        type = "str", dest="ciphers", default=None,
-        help = "SSL ciphers."
-    )
-    group.add_option(
         "--client-certs", action="store",
         type = "str", dest = "clientcerts", default=None,
         help = "Client certificate directory."
@@ -676,7 +660,6 @@ def process_proxy_options(parser, options):
         certfile = options.cert,
         cacert = cacert,
         clientcerts = options.clientcerts,
-        ciphers = options.ciphers,
         cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
         upstream_cert = options.upstream_cert,
