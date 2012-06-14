@@ -20,7 +20,7 @@
 """
 import sys, os, string, socket, time
 import shutil, tempfile, threading
-import optparse, SocketServer, ssl
+import optparse, SocketServer
 import utils, flow, certutils, version, wsgi
 from OpenSSL import SSL
 
@@ -310,14 +310,19 @@ class ServerConnection:
                         clientcert = None
                 else:
                     clientcert = None
-                server = ssl.wrap_socket(server, certfile = clientcert)
+                context = SSL.Context(SSL.SSLv23_METHOD)
+                if clientcert:
+                    context.use_certificate_file(clientcert)
+                server = SSL.Connection(context, server)
             server.connect((addr, self.port))
             if self.scheme == "https":
-                self.cert = server.getpeercert(True)
+                self.cert = server.get_peer_certificate()
+                self.rfile, self.wfile = FileLike(server), FileLike(server)
+            else:
+                self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
         except socket.error, err:
             raise ProxyError(502, 'Error connecting to "%s": %s' % (self.host, err))
         self.sock = server
-        self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
 
     def send(self, request):
         self.requestcount += 1
