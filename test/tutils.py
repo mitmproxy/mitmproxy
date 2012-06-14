@@ -147,6 +147,37 @@ class HTTPProxTest(ProxTestBase):
         )
 
 
+class TResolver:
+    def __init__(self, port):
+        self.port = port
+
+    def original_addr(self, sock):
+        return ("127.0.0.1", self.port)
+
+
+class TransparentProxTest(ProxTestBase):
+    ssl = None
+    @classmethod
+    def get_proxy_config(cls):
+        return dict(
+                transparent_proxy = dict(
+                    resolver = TResolver(cls.server.port),
+                    sslports = []
+                )
+            )
+
+    def pathod(self, spec):
+        """
+            Constructs a pathod request, with the appropriate base and proxy.
+        """
+        r = hurl.get(
+            "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
+            validate_cert=False,
+            #debug=hurl.utils.stdout_debug
+        )
+        return r
+
+
 class ReverseProxTest(ProxTestBase):
     ssl = None
     @classmethod

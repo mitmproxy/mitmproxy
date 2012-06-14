@@ -32,7 +32,7 @@ class TestReverse(tutils.ReverseProxTest, SanityMixin):
     reverse = True
 
 
-class _TestTransparent():
+class TestTransparent(tutils.TransparentProxTest, SanityMixin):
     transparent = True
 
 

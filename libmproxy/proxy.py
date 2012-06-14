@@ -34,8 +34,8 @@ class ProxyError(Exception):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_mode=None):
-        assert not (reverse_proxy and transparent_mode)
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None):
+        assert not (reverse_proxy and transparent_proxy)
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
@@ -44,7 +44,7 @@ class ProxyConfig:
         self.upstream_cert = upstream_cert
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
-        self.transparent_mode = transparent_mode
+        self.transparent_proxy = transparent_proxy
 
 
 def read_headers(fp):
@@ -490,8 +490,20 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         if line == "":
             return None
 
-        if self.config.transparent_mode:
-            pass
+        if self.config.transparent_proxy:
+            host, port = self.config.transparent_proxy["resolver"].original_addr(self.connection)
+            if port in self.config.transparent_proxy["sslports"]:
+                scheme = "https"
+                certfile = self.find_cert(host, port)
+                self.convert_to_ssl(certfile)
+            else:
+                scheme = "http"
+            method, path, httpversion = parse_init_http(line)
+            headers = read_headers(self.rfile)
+            content = read_http_body_request(
+                        self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
+                    )
+            return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
         elif self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
             method, path, httpversion = parse_init_http(line)
@@ -519,7 +531,6 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
                 self.convert_to_ssl(certfile)
                 self.proxy_connect_state = (host, port, httpversion)
                 line = self.rfile.readline(line)
-
             if self.proxy_connect_state:
                 host, port, httpversion = self.proxy_connect_state
                 method, path, httpversion = parse_init_http(line)
