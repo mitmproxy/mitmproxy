@@ -21,7 +21,7 @@
 import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer
-import utils, flow, certutils, version, wsgi
+import utils, flow, certutils, version, wsgi, tcpserver
 from OpenSSL import SSL
 
 
@@ -50,7 +50,7 @@ class ProxyConfig:
 def read_headers(fp):
     """
         Read a set of headers from a file pointer. Stop once a blank line
-        is reached. Return a ODict object.
+        is reached. Return a ODictCaseless object.
     """
     ret = []
     name = ''
@@ -374,13 +374,13 @@ class ServerConnection:
             pass
 
 
-class ProxyHandler(SocketServer.StreamRequestHandler):
-    def __init__(self, config, request, client_address, server, q):
+class ProxyHandler(tcpserver.BaseHandler):
+    def __init__(self, config, connection, client_address, server, q):
         self.mqueue = q
         self.config = config
         self.server_conn = None
         self.proxy_connect_state = None
-        SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
+        tcpserver.BaseHandler.__init__(self, connection, client_address, server)
 
     def handle(self):
         cc = flow.ClientConnect(self.client_address)
@@ -390,7 +390,6 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         cc.close = True
         cd = flow.ClientDisconnect(cc)
         cd._send(self.mqueue)
-        self.finish()
 
     def server_connect(self, scheme, host, port):
         sc = self.server_conn
@@ -554,18 +553,6 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
         self.wfile.write(d)
         self.wfile.flush()
 
-    def terminate(self, connection, wfile, rfile):
-        self.request.close()
-        try:
-            if not getattr(wfile, "closed", False):
-                wfile.flush()
-            connection.close()
-        except IOError:
-            pass
-
-    def finish(self):
-        self.terminate(self.connection, self.wfile, self.rfile)
-
     def send_error(self, code, body):
         try:
             import BaseHTTPServer
@@ -584,10 +571,8 @@ class ProxyHandler(SocketServer.StreamRequestHandler):
 
 class ProxyServerError(Exception): pass
 
-ServerBase = SocketServer.ThreadingTCPServer
-ServerBase.daemon_threads = True        # Terminate workers when main thread terminates
-class ProxyServer(ServerBase):
-    request_queue_size = 20
+
+class ProxyServer(tcpserver.TCPServer):
     allow_reuse_address = True
     bound = True
     def __init__(self, config, port, address=''):
@@ -596,7 +581,7 @@ class ProxyServer(ServerBase):
         """
         self.config, self.port, self.address = config, port, address
         try:
-            ServerBase.__init__(self, (address, port), ProxyHandler)
+            tcpserver.TCPServer.__init__(self, (address, port))
         except socket.error, v:
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.masterq = None
@@ -611,11 +596,11 @@ class ProxyServer(ServerBase):
     def set_mqueue(self, q):
         self.masterq = q
 
-    def finish_request(self, request, client_address):
-        self.RequestHandlerClass(self.config, request, client_address, self, self.masterq)
+    def handle_connection(self, request, client_address):
+        ProxyHandler(self.config, request, client_address, self, self.masterq)
 
     def shutdown(self):
-        ServerBase.shutdown(self)
+        tcpserver.TCPServer.shutdown(self)
         try:
             shutil.rmtree(self.certdir)
         except OSError:
