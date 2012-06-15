@@ -1052,6 +1052,12 @@ class TestODictCaseless:
     def setUp(self):
         self.od = flow.ODictCaseless()
 
+    def test_override(self):
+        o = flow.ODictCaseless()
+        o.add('T', 'application/x-www-form-urlencoded; charset=UTF-8')
+        o["T"] = ["foo"]
+        assert o["T"] == ["foo"]
+
     def test_case_preservation(self):
         self.od["Foo"] = ["1"]
         assert "foo" in self.od

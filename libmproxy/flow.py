@@ -142,6 +142,7 @@ class ODict:
         return ret
 
     def _filter_lst(self, k, lst):
+        k = self._kconv(k)
         new = []
         for i in lst:
             if self._kconv(i[0]) != k:
@@ -163,7 +164,7 @@ class ODict:
             raise ValueError("ODict valuelist should be lists.")
         new = self._filter_lst(k, self.lst)
         for i in valuelist:
-            new.append((k, i))
+            new.append([k, i])
         self.lst = new
 
     def __delitem__(self, k):
@@ -478,6 +479,8 @@ class Request(HTTPMsg):
             appropriate content-type header. Note that this will destory the
             existing body if there is one.
         """
+        # FIXME: If there's an existing content-type header indicating a
+        # url-encoded form, leave it alone.
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(odict.lst)
 
