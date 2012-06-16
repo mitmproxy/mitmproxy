@@ -255,7 +255,7 @@ class ServerConnection(netlib.TCPClient):
         netlib.TCPClient.__init__(
             self,
             True if scheme == "https" else False,
-            host, 
+            host,
             port,
             clientcert
         )
@@ -305,7 +305,7 @@ class ServerConnection(netlib.TCPClient):
         try:
             if not self.wfile.closed:
                 self.wfile.flush()
-            self.sock.close()
+            self.connection.close()
         except IOError:
             pass
 

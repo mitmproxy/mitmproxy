@@ -1,4 +1,4 @@
-import select, socket, threading, traceback
+import select, socket, threading, traceback, sys
 from OpenSSL import SSL
 
 
@@ -20,8 +20,6 @@ class FileLike:
         while len(result) < length:
             try:
                 data = self.o.read(length)
-            except AttributeError:
-                break
             except SSL.ZeroReturnError:
                 break
             if not data:
@@ -52,7 +50,7 @@ class FileLike:
 class TCPClient:
     def __init__(self, ssl, host, port, clientcert):
         self.ssl, self.host, self.port, self.clientcert = ssl, host, port, clientcert
-        self.sock, self.rfile, self.wfile = None, None, None
+        self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.connect()
 
@@ -73,7 +71,7 @@ class TCPClient:
                 self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
         except socket.error, err:
             raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
-        self.sock = server
+        self.connection = server
 
 
 class BaseHandler:
@@ -105,10 +103,10 @@ class BaseHandler:
             self.connection.close()
             self.wfile.close()
             self.rfile.close()
-        except IOError:
+        except IOError: # pragma: no cover
             pass
 
-    def handle(self):
+    def handle(self): # pragma: no cover
         raise NotImplementedError
 
 
@@ -123,6 +121,7 @@ class TCPServer:
         self.socket.bind(self.server_address)
         self.server_address = self.socket.getsockname()
         self.socket.listen(self.request_queue_size)
+        self.port = self.socket.getsockname()[1]
 
     def request_thread(self, request, client_address):
         try:
@@ -143,9 +142,11 @@ class TCPServer:
                     except socket.error:
                         return
                     try:
-                        t = threading.Thread(target = self.request_thread,
-                                             args = (request, client_address))
-                        t.setDaemon (1)
+                        t = threading.Thread(
+                                target = self.request_thread,
+                                args = (request, client_address)
+                            )
+                        t.setDaemon(1)
                         t.start()
                     except:
                         self.handle_error(request, client_address)
@@ -159,16 +160,16 @@ class TCPServer:
         self.__is_shut_down.wait()
         self.handle_shutdown()
 
-    def handle_error(self, request, client_address):
+    def handle_error(self, request, client_address, fp=sys.stderr):
         """
             Called when handle_connection raises an exception.
         """
-        print >> sys.stderr, '-'*40
-        print >> sys.stderr, "Error processing of request from %s"%client_address
-        traceback.print_exc()
-        print >> sys.stderr, '-'*40
+        print >> fp, '-'*40
+        print >> fp, "Error processing of request from %s:%s"%client_address
+        print >> fp, traceback.format_exc()
+        print >> fp, '-'*40
 
-    def handle_connection(self, request, client_address):
+    def handle_connection(self, request, client_address): # pragma: no cover
         """
             Called after client connection.
         """
