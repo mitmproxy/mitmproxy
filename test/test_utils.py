@@ -107,32 +107,6 @@ def test_unparse_url():
     assert utils.unparse_url("https", "foo.com", 443, "") == "https://foo.com"
 
 
-def test_parse_url():
-    assert not utils.parse_url("")
-
-    u = "http://foo.com:8888/test"
-    s, h, po, pa = utils.parse_url(u)
-    assert s == "http"
-    assert h == "foo.com"
-    assert po == 8888
-    assert pa == "/test"
-
-    s, h, po, pa = utils.parse_url("http://foo/bar")
-    assert s == "http"
-    assert h == "foo"
-    assert po == 80
-    assert pa == "/bar"
-
-    s, h, po, pa = utils.parse_url("http://foo")
-    assert pa == "/"
-
-    s, h, po, pa = utils.parse_url("https://foo")
-    assert po == 443
-
-    assert not utils.parse_url("https://foo:bar")
-    assert not utils.parse_url("https://foo:")
-
-
 def test_parse_size():
     assert not utils.parse_size("")
     assert utils.parse_size("1") == 1

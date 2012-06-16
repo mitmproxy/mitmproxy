@@ -1,5 +1,4 @@
-import string
-import flow, utils
+import string, urlparse
 
 class ProtocolError(Exception):
     def __init__(self, code, msg):
@@ -7,6 +6,31 @@ class ProtocolError(Exception):
 
     def __str__(self):
         return "ProtocolError(%s, %s)"%(self.code, self.msg)
+
+
+def parse_url(url):
+    """
+        Returns a (scheme, host, port, path) tuple, or None on error.
+    """
+    scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+    if not scheme:
+        return None
+    if ':' in netloc:
+        host, port = string.rsplit(netloc, ':', maxsplit=1)
+        try:
+            port = int(port)
+        except ValueError:
+            return None
+    else:
+        host = netloc
+        if scheme == "https":
+            port = 443
+        else:
+            port = 80
+    path = urlparse.urlunparse(('', '', path, params, query, fragment))
+    if not path.startswith("/"):
+        path = "/" + path
+    return scheme, host, port, path
 
 
 def read_headers(fp):
@@ -30,7 +54,7 @@ def read_headers(fp):
                 name = line[:i]
                 value = line[i+1:].strip()
                 ret.append([name, value])
-    return flow.ODictCaseless(ret)
+    return ret
 
 
 def read_chunked(fp, limit):
@@ -128,7 +152,7 @@ def parse_init_proxy(line):
         method, url, protocol = string.split(line)
     except ValueError:
         return None
-    parts = utils.parse_url(url)
+    parts = parse_url(url)
     if not parts:
         return None
     scheme, host, port, path = parts

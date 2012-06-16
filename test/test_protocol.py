@@ -107,9 +107,8 @@ class TestReadHeaders:
         data = textwrap.dedent(data)
         data = data.strip()
         s = cStringIO.StringIO(data)
-        headers = protocol.read_headers(s)
-        assert headers["header"] == ["one"]
-        assert headers["header2"] == ["two"]
+        h = protocol.read_headers(s)
+        assert h == [["Header", "one"], ["Header2", "two"]]
 
     def test_read_multi(self):
         data = """
@@ -120,8 +119,8 @@ class TestReadHeaders:
         data = textwrap.dedent(data)
         data = data.strip()
         s = cStringIO.StringIO(data)
-        headers = protocol.read_headers(s)
-        assert headers["header"] == ["one", "two"]
+        h = protocol.read_headers(s)
+        assert h == [["Header", "one"], ["Header", "two"]]
 
     def test_read_continued(self):
         data = """
@@ -133,7 +132,32 @@ class TestReadHeaders:
         data = textwrap.dedent(data)
         data = data.strip()
         s = cStringIO.StringIO(data)
-        headers = protocol.read_headers(s)
-        assert headers["header"] == ['one\r\n two']
+        h = protocol.read_headers(s)
+        assert h == [["Header", "one\r\n two"], ["Header2", "three"]]
 
+
+def test_parse_url():
+    assert not protocol.parse_url("")
+
+    u = "http://foo.com:8888/test"
+    s, h, po, pa = protocol.parse_url(u)
+    assert s == "http"
+    assert h == "foo.com"
+    assert po == 8888
+    assert pa == "/test"
+
+    s, h, po, pa = protocol.parse_url("http://foo/bar")
+    assert s == "http"
+    assert h == "foo"
+    assert po == 80
+    assert pa == "/bar"
+
+    s, h, po, pa = protocol.parse_url("http://foo")
+    assert pa == "/"
+
+    s, h, po, pa = protocol.parse_url("https://foo")
+    assert po == 443
+
+    assert not protocol.parse_url("https://foo:bar")
+    assert not protocol.parse_url("https://foo:")
 

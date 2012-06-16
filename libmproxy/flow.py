@@ -21,7 +21,7 @@ import hashlib, Cookie, cookielib, copy, re, urlparse
 import time
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-import controller, version, certutils
+import controller, version, certutils, protocol
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
@@ -514,7 +514,7 @@ class Request(HTTPMsg):
 
             Returns False if the URL was invalid, True if the request succeeded.
         """
-        parts = utils.parse_url(url)
+        parts = protocol.parse_url(url)
         if not parts:
             return False
         self.scheme, self.host, self.port, self.path = parts

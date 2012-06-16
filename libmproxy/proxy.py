@@ -53,7 +53,7 @@ class RequestReplayThread(threading.Thread):
             server.send(r)
             response = server.read_response(r)
             response._send(self.masterq)
-        except (ProxyError, ProtocolError), v:
+        except (ProxyError, protocol.ProtocolError), v:
             err = flow.Error(self.flow.request, v.msg)
             err._send(self.masterq)
         except netlib.NetLibError, v:
@@ -107,7 +107,7 @@ class ServerConnection(netlib.TCPClient):
             code = int(code)
         except ValueError:
             raise ProxyError(502, "Invalid server response: %s."%line)
-        headers = protocol.read_headers(self.rfile)
+        headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
         if code >= 100 and code <= 199:
             return self.read_response()
         if request.method == "HEAD" or code == 204 or code == 304:
@@ -203,7 +203,7 @@ class ProxyHandler(netlib.BaseHandler):
                     return
         except IOError, v:
             cc.connection_error = v
-        except (ProxyError, ProtocolError), e:
+        except (ProxyError, protocol.ProtocolError), e:
             cc.connection_error = "%s: %s"%(e.code, e.msg)
             if request:
                 err = flow.Error(request, e.msg)
@@ -243,7 +243,7 @@ class ProxyHandler(netlib.BaseHandler):
             else:
                 scheme = "http"
             method, path, httpversion = protocol.parse_init_http(line)
-            headers = protocol.read_headers(self.rfile)
+            headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
             content = protocol.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -251,7 +251,7 @@ class ProxyHandler(netlib.BaseHandler):
         elif self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
             method, path, httpversion = protocol.parse_init_http(line)
-            headers = protocol.read_headers(self.rfile)
+            headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
             content = protocol.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -278,14 +278,14 @@ class ProxyHandler(netlib.BaseHandler):
             if self.proxy_connect_state:
                 host, port, httpversion = self.proxy_connect_state
                 method, path, httpversion = protocol.parse_init_http(line)
-                headers = protocol.read_headers(self.rfile)
+                headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
                 content = protocol.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
                 return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content)
             else:
                 method, scheme, host, port, path, httpversion = protocol.parse_init_proxy(line)
-                headers = protocol.read_headers(self.rfile)
+                headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
                 content = protocol.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )

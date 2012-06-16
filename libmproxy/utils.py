@@ -15,6 +15,7 @@
 import os, datetime, urlparse, string, urllib, re
 import time, functools, cgi
 import json
+import protocol
 
 def timestamp():
     """
@@ -194,33 +195,8 @@ class LRUCache:
         return wrap
 
 
-def parse_url(url):
-    """
-        Returns a (scheme, host, port, path) tuple, or None on error.
-    """
-    scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
-    if not scheme:
-        return None
-    if ':' in netloc:
-        host, port = string.rsplit(netloc, ':', maxsplit=1)
-        try:
-            port = int(port)
-        except ValueError:
-            return None
-    else:
-        host = netloc
-        if scheme == "https":
-            port = 443
-        else:
-            port = 80
-    path = urlparse.urlunparse(('', '', path, params, query, fragment))
-    if not path.startswith("/"):
-        path = "/" + path
-    return scheme, host, port, path
-
-
 def parse_proxy_spec(url):
-    p = parse_url(url)
+    p = protocol.parse_url(url)
     if not p or not p[1]:
         return None
     return p[:3]
