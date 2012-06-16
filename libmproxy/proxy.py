@@ -12,12 +12,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-"""
-    A simple proxy server implementation, which always reads all of a server
-    response into memory, performs some transformation, and then writes it back
-    to the client.
-"""
 import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer
@@ -535,8 +529,7 @@ class ProxyServer(netlib.TCPServer):
     def handle_connection(self, request, client_address):
         ProxyHandler(self.config, request, client_address, self, self.masterq)
 
-    def shutdown(self):
-        netlib.TCPServer.shutdown(self)
+    def handle_shutdown(self):
         try:
             shutil.rmtree(self.certdir)
         except OSError:

@@ -1,4 +1,4 @@
-import select, socket, threading
+import select, socket, threading, traceback
 from OpenSSL import SSL
 
 
@@ -124,9 +124,6 @@ class TCPServer:
         self.server_address = self.socket.getsockname()
         self.socket.listen(self.request_queue_size)
 
-    def fileno(self):
-        return self.socket.fileno()
-
     def request_thread(self, request, client_address):
         try:
             self.handle_connection(request, client_address)
@@ -139,8 +136,8 @@ class TCPServer:
         self.__is_shut_down.clear()
         try:
             while not self.__shutdown_request:
-                r, w, e = select.select([self], [], [], poll_interval)
-                if self in r:
+                r, w, e = select.select([self.socket], [], [], poll_interval)
+                if self.socket in r:
                     try:
                         request, client_address = self.socket.accept()
                     except socket.error:
@@ -160,14 +157,25 @@ class TCPServer:
     def shutdown(self):
         self.__shutdown_request = True
         self.__is_shut_down.wait()
+        self.handle_shutdown()
 
     def handle_error(self, request, client_address):
-        print '-'*40
-        print 'Exception happened during processing of request from',
-        print client_address
-        import traceback
-        traceback.print_exc() # XXX But this goes to stderr!
-        print '-'*40
+        """
+            Called when handle_connection raises an exception.
+        """
+        print >> sys.stderr, '-'*40
+        print >> sys.stderr, "Error processing of request from %s"%client_address
+        traceback.print_exc()
+        print >> sys.stderr, '-'*40
 
     def handle_connection(self, request, client_address):
+        """
+            Called after client connection.
+        """
         raise NotImplementedError
+
+    def handle_shutdown(self):
+        """
+            Called after server shutdown.
+        """
+        pass
