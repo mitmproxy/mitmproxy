@@ -72,7 +72,6 @@ class TestServer(ServerTestBase):
         assert "Testing an error" in self.q.get()
 
 
-
 class TestTCPClient:
     def test_conerr(self):
         tutils.raises(netlib.NetLibError, netlib.TCPClient, False, "127.0.0.1", 0, None)
@@ -92,4 +91,3 @@ class TestFileLike:
         s = cStringIO.StringIO("foobar\nfoobar")
         s = netlib.FileLike(s)
         assert s.readline(3) == "foo"
-
