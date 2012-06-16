@@ -60,17 +60,6 @@ def test_read_http_body():
     assert len(proxy.read_http_body(s, h, True, 100)) == 7
 
 
-class TestFileLike:
-    def test_wrap(self):
-        s = cStringIO.StringIO("foobar\nfoobar")
-        s = proxy.FileLike(s)
-        s.flush()
-        assert s.readline() == "foobar\n"
-        assert s.readline() == "foobar"
-        # Test __getattr__
-        assert s.isatty
-
-
 class TestProxyError:
     def test_simple(self):
         p = proxy.ProxyError(111, "msg")
