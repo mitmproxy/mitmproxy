@@ -1,56 +1,5 @@
 #!/usr/bin/env python
-import argparse, sys
-from libpathod import pathod, utils, version
-import tornado.ioloop
+from libpathod import pathod
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
-    parser.add_argument("-l", dest='address', default="0.0.0.0", type=str, help='Listening address.')
-    parser.add_argument(
-        "-a", dest='anchors', default=[], type=str, action="append",
-        help='Add an anchor. Specified as a string with the form pattern=pagespec'
-    )
-    parser.add_argument(
-        "-d", dest='staticdir', default=None, type=str,
-        help='Directory for static files.'
-    )
-    parser.add_argument(
-        "-s", dest='ssl', default=False,
-        action="store_true",
-        help='Serve with SSL.'
-    )
-    parser.add_argument(
-        "--keyfile", dest='ssl_keyfile', default=None,
-        type=str,
-        help='SSL key file. If not specified, a default key is used.'
-    )
-    parser.add_argument(
-        "--certfile", dest='ssl_certfile', default=None,
-        type=str,
-        help='SSL cert file. If not specified, a default cert is used.'
-    )
-    args = parser.parse_args()
-
-    try:
-        app = pathod.make_app(staticdir=args.staticdir, anchors=args.anchors)
-    except utils.AnchorError, v:
-        parser.error(str(v))
-
-    sl = [args.ssl_keyfile, args.ssl_certfile]
-    if any(sl) and not all(sl):
-        parser.error("Both --certfile and --keyfile must be specified.")
-
-    if args.ssl:
-        ssl = dict(
-             keyfile = args.ssl_keyfile or utils.data.path("resources/server.key"),
-             certfile = args.ssl_certfile or utils.data.path("resources/server.crt"),
-        )
-    else:
-        ssl = None
-    try:
-        server, port = pathod.make_server(app, args.port, args.address, ssl)
-        print "%s listening on port %s"%(version.NAMEVERSION, port)
-        pathod.run(server)
-    except KeyboardInterrupt:
-        pass
+s = pathod.PathodServer(("127.0.0.1", 8888))
+s.serve_forever()

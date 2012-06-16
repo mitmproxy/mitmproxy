@@ -29,7 +29,6 @@ class PaThread(threading.Thread):
         self.q, self.app, self.ssl = q, app, ssl
         self.port = None
 
-# begin nocover
     def run(self):
         if self.ssl is True:
             ssloptions = dict(
