@@ -8,6 +8,5 @@ MANIFEST
 *.swo
 mitmproxyc
 mitmdumpc
-mitmplaybackc
-mitmrecordc
+netlib
 .coverage

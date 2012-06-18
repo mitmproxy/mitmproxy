@@ -15,7 +15,7 @@
 import os, datetime, urlparse, string, urllib, re
 import time, functools, cgi
 import json
-import protocol
+from netlib import protocol
 
 def timestamp():
     """
@@ -294,6 +294,3 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
         need a better solution that is aware of the actual content ecoding.
     """
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
-
-
-

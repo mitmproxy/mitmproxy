@@ -15,8 +15,9 @@
 import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer
-import utils, flow, certutils, version, wsgi, netlib, protocol
 from OpenSSL import SSL
+from netlib import odict, tcp, protocol
+import utils, flow, certutils, version, wsgi
 
 
 class ProxyError(Exception):
@@ -56,18 +57,18 @@ class RequestReplayThread(threading.Thread):
         except (ProxyError, protocol.ProtocolError), v:
             err = flow.Error(self.flow.request, v.msg)
             err._send(self.masterq)
-        except netlib.NetLibError, v:
+        except tcp.NetLibError, v:
             raise ProxyError(502, v)
 
 
-class ServerConnection(netlib.TCPClient):
+class ServerConnection(tcp.TCPClient):
     def __init__(self, config, scheme, host, port):
         clientcert = None
         if config.clientcerts:
             path = os.path.join(config.clientcerts, self.host) + ".pem"
             if os.path.exists(clientcert):
                 clientcert = path
-        netlib.TCPClient.__init__(
+        tcp.TCPClient.__init__(
             self,
             True if scheme == "https" else False,
             host,
@@ -107,7 +108,7 @@ class ServerConnection(netlib.TCPClient):
             code = int(code)
         except ValueError:
             raise ProxyError(502, "Invalid server response: %s."%line)
-        headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
+        headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
         if code >= 100 and code <= 199:
             return self.read_response()
         if request.method == "HEAD" or code == 204 or code == 304:
@@ -125,13 +126,13 @@ class ServerConnection(netlib.TCPClient):
             pass
 
 
-class ProxyHandler(netlib.BaseHandler):
+class ProxyHandler(tcp.BaseHandler):
     def __init__(self, config, connection, client_address, server, q):
         self.mqueue = q
         self.config = config
         self.server_conn = None
         self.proxy_connect_state = None
-        netlib.BaseHandler.__init__(self, connection, client_address, server)
+        tcp.BaseHandler.__init__(self, connection, client_address, server)
 
     def handle(self):
         cc = flow.ClientConnect(self.client_address)
@@ -150,7 +151,7 @@ class ProxyHandler(netlib.BaseHandler):
         if not self.server_conn:
             try:
                 self.server_conn = ServerConnection(self.config, scheme, host, port)
-            except netlib.NetLibError, v:
+            except tcp.NetLibError, v:
                 raise ProxyError(502, v)
 
     def handle_request(self, cc):
@@ -243,7 +244,7 @@ class ProxyHandler(netlib.BaseHandler):
             else:
                 scheme = "http"
             method, path, httpversion = protocol.parse_init_http(line)
-            headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
+            headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
             content = protocol.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -251,7 +252,7 @@ class ProxyHandler(netlib.BaseHandler):
         elif self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
             method, path, httpversion = protocol.parse_init_http(line)
-            headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
+            headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
             content = protocol.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -278,14 +279,14 @@ class ProxyHandler(netlib.BaseHandler):
             if self.proxy_connect_state:
                 host, port, httpversion = self.proxy_connect_state
                 method, path, httpversion = protocol.parse_init_http(line)
-                headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
+                headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
                 content = protocol.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
                 return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content)
             else:
                 method, scheme, host, port, path, httpversion = protocol.parse_init_proxy(line)
-                headers = flow.ODictCaseless(protocol.read_headers(self.rfile))
+                headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
                 content = protocol.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
@@ -317,7 +318,7 @@ class ProxyHandler(netlib.BaseHandler):
 class ProxyServerError(Exception): pass
 
 
-class ProxyServer(netlib.TCPServer):
+class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
     def __init__(self, config, port, address=''):
@@ -326,7 +327,7 @@ class ProxyServer(netlib.TCPServer):
         """
         self.config, self.port, self.address = config, port, address
         try:
-            netlib.TCPServer.__init__(self, (address, port))
+            tcp.TCPServer.__init__(self, (address, port))
         except socket.error, v:
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.masterq = None
