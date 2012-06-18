@@ -1,0 +1,9 @@
+MANIFEST
+/build
+/dist
+/tmp
+/doc
+*.py[cdo]
+*.swp
+*.swo
+.coverage
