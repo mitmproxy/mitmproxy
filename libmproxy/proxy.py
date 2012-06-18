@@ -16,8 +16,8 @@ import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer
 from OpenSSL import SSL
-from netlib import odict, tcp, protocol
-import utils, flow, certutils, version, wsgi
+from netlib import odict, tcp, protocol, wsgi
+import utils, flow, certutils, version
 
 
 class ProxyError(Exception):
@@ -333,7 +333,7 @@ class ProxyServer(tcp.TCPServer):
         self.masterq = None
         self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
         config.certdir = self.certdir
-        self.apps = wsgi.AppRegistry()
+        self.apps = AppRegistry()
 
     def start_slave(self, klass, masterq):
         slave = klass(masterq, self)
@@ -350,6 +350,24 @@ class ProxyServer(tcp.TCPServer):
             shutil.rmtree(self.certdir)
         except OSError:
             pass
+
+
+class AppRegistry:
+    def __init__(self):
+        self.apps = {}
+
+    def add(self, app, domain, port):
+        """
+            Add a WSGI app to the registry, to be served for requests to the
+            specified domain, on the specified port.
+        """
+        self.apps[(domain, port)] = wsgi.WSGIAdaptor(app, domain, port, version.NAMEVERSION)
+
+    def get(self, request):
+        """
+            Returns an WSGIAdaptor instance if request matches an app, or None.
+        """
+        return self.apps.get((request.host, request.port), None)
 
 
 class DummyServer:
