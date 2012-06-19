@@ -1,7 +1,6 @@
 import operator, string, random, mmap, os, time
 import contrib.pyparsing as pp
 import http
-import tornado.ioloop
 
 TESTING = False
 
@@ -390,12 +389,6 @@ class Response:
         ret.sort()
         return ret
 
-    def add_timeout(self, s, callback):
-        if TESTING:
-            callback()
-        else: # pragma: no cover
-            tornado.ioloop.IOLoop.instance().add_timeout(time.time() + s, callback)
-
     def write_values(self, fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
         while vals:
             part = vals.pop()
@@ -406,17 +399,14 @@ class Response:
                     offset = p[0]-sofar
                     vals.append(part)
                     if p[1] == "pause":
-                        def pause_callback():
-                            self.write_values(
-                                fp, vals, actions,
-                                sofar=sofar+offset,
-                                skip=i+offset,
-                                blocksize=blocksize
-                            )
-                        def flushed_callback():
-                            # Data has been flushed, set the timeout.
-                            self.add_timeout(p[2], pause_callback)
-                        fp.write(d[:offset], callback=flushed_callback)
+                        fp.write(d[:offset])
+                        time.sleep(p[2])
+                        self.write_values(
+                            fp, vals, actions,
+                            sofar=sofar+offset,
+                            skip=i+offset,
+                            blocksize=blocksize
+                        )
                         return
                     elif p[1] == "disconnect":
                         fp.write(d[:offset])
@@ -426,8 +416,6 @@ class Response:
                 fp.write(d)
                 sofar += len(d)
             skip = 0
-        fp.finish()
-        fp.connection.stream.close()
 
     def serve(self, fp):
         started = time.time()

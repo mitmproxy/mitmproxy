@@ -1,5 +1,6 @@
+import urllib
 from netlib import tcp, protocol, odict, wsgi
-import version, app
+import version, app, rparse
 
 
 class PathodHandler(tcp.BaseHandler):
@@ -11,6 +12,19 @@ class PathodHandler(tcp.BaseHandler):
             return None
 
         method, path, httpversion = protocol.parse_init_http(line)
+        if path.startswith(self.server.prefix):
+            spec = urllib.unquote(path)[len(self.server.prefix):]
+            try:
+                presp = rparse.parse({}, spec)
+            except rparse.ParseException, v:
+                presp = rparse.InternalResponse(
+                    800,
+                    "Error parsing response spec: %s\n"%v.msg + v.marked()
+                )
+            presp.serve(self.wfile)
+            self.finish()
+            return
+
         headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
         content = protocol.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, None
@@ -27,10 +41,10 @@ class PathodHandler(tcp.BaseHandler):
         app.serve(req, self.wfile)
 
 
-
 class Pathod(tcp.TCPServer):
-    def __init__(self, addr):
+    def __init__(self, addr, prefix="/p/"):
         tcp.TCPServer.__init__(self, addr)
+        self.prefix = prefix
         self.app = app.app
         self.app.config["pathod"] = self
 
