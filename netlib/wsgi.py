@@ -1,6 +1,19 @@
 import cStringIO, urllib, time, sys, traceback
 import odict
 
+
+class ClientConn:
+    def __init__(self, address):
+        self.address = address
+
+
+class Request:
+    def __init__(self, client_conn, scheme, method, path, headers, content):
+        self.scheme, self.method, self.path = scheme, method, path
+        self.headers, self.content = headers, content
+        self.client_conn = client_conn
+
+
 def date_time_string():
     """Return the current date and time formatted for a message header."""
     WEEKS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -85,7 +98,7 @@ class WSGIAdaptor:
                 soc.write("HTTP/1.1 %s\r\n"%state["status"])
                 h = state["headers"]
                 if 'server' not in h:
-                    h["Server"] = [version.NAMEVERSION]
+                    h["Server"] = [self.sversion]
                 if 'date' not in h:
                     h["Date"] = [date_time_string()]
                 soc.write(str(h))

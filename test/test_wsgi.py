@@ -1,7 +1,13 @@
 import cStringIO, sys
 import libpry
-from netlib import wsgi
-import tutils
+from netlib import wsgi, odict
+
+
+def treq():
+    cc = wsgi.ClientConn(("127.0.0.1", 8888))
+    h = odict.ODictCaseless()
+    h["test"] = ["value"]
+    return wsgi.Request(cc, "http", "GET", "/", h, "")
 
 
 class TestApp:
@@ -16,10 +22,10 @@ class TestApp:
         return ['Hello', ' world!\n']
 
 
-class uWSGIAdaptor(libpry.AutoTree):
+class TestWSGI:
     def test_make_environ(self):
-        w = wsgi.WSGIAdaptor(None, "foo", 80)
-        tr = tutils.treq()
+        w = wsgi.WSGIAdaptor(None, "foo", 80, "version")
+        tr = treq()
         assert w.make_environ(tr, None)
 
         tr.path = "/foo?bar=voing"
@@ -28,8 +34,8 @@ class uWSGIAdaptor(libpry.AutoTree):
 
     def test_serve(self):
         ta = TestApp()
-        w = wsgi.WSGIAdaptor(ta, "foo", 80)
-        r = tutils.treq()
+        w = wsgi.WSGIAdaptor(ta, "foo", 80, "version")
+        r = treq()
         r.host = "foo"
         r.port = 80
 
@@ -43,8 +49,8 @@ class uWSGIAdaptor(libpry.AutoTree):
         assert "Server:" in val
 
     def _serve(self, app):
-        w = wsgi.WSGIAdaptor(app, "foo", 80)
-        r = tutils.treq()
+        w = wsgi.WSGIAdaptor(app, "foo", 80, "version")
+        r = treq()
         r.host = "foo"
         r.port = 80
         wfile = cStringIO.StringIO()
