@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 from libpathod import pathod
 
-s = pathod.PathodServer(("127.0.0.1", 8888))
+s = pathod.Pathod(("127.0.0.1", 8888))
 s.serve_forever()

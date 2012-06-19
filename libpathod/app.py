@@ -1,4 +1,15 @@
+from flask import Flask, jsonify
+import version
+app = Flask(__name__)
 
+@app.route('/api/info')
+def api_info():
+    return jsonify(
+        version = version.IVERSION
+    )
+
+
+"""
 class APILog(tornado.web.RequestHandler):
     def get(self):
         self.write(
@@ -95,3 +106,4 @@ class ClearLog(_Page):
     def post(self):
         self.application.clear_logs()
         self.redirect("/log")
+"""
