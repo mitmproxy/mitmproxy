@@ -131,7 +131,7 @@ class TCPServer:
             self.handle_error(request, client_address)
             request.close()
 
-    def serve_forever(self, poll_interval=0.5):
+    def serve_forever(self, poll_interval=0.1):
         self.__is_shut_down.clear()
         try:
             while not self.__shutdown_request:
