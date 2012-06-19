@@ -158,6 +158,7 @@ class TCPServer:
     def shutdown(self):
         self.__shutdown_request = True
         self.__is_shut_down.wait()
+        self.socket.close()
         self.handle_shutdown()
 
     def handle_error(self, request, client_address, fp=sys.stderr):
