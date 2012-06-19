@@ -46,4 +46,3 @@ class TestDaemon:
 
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
-

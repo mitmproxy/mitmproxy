@@ -7,7 +7,8 @@ IFACE = "127.0.0.1"
 
 class Daemon:
     def __init__(self, staticdir=None, anchors=(), ssl=None):
-        self.app = pathod.make_app(staticdir=staticdir, anchors=anchors)
+        #self.app = pathod.make_app(staticdir=staticdir, anchors=anchors)
+        self.app = None
         self.q = Queue.Queue()
         self.thread = PaThread(self.q, self.app, ssl)
         self.thread.start()
@@ -19,7 +20,7 @@ class Daemon:
         return resp.json
 
     def shutdown(self):
-        requests.post("%s/api/shutdown"%self.urlbase, verify=False)
+        self.thread.server.shutdown()
         self.thread.join()
 
 
@@ -37,6 +38,7 @@ class PaThread(threading.Thread):
             )
         else:
             ssloptions = self.ssl
-        self.server, self.port = pathod.make_server(self.app, 0, IFACE, ssloptions)
-        self.q.put(self.port)
-        pathod.run(self.server)
+        self.server = pathod.Pathod((IFACE, 0))
+        #self.server, self.port = pathod.make_server(self.app, 0, IFACE, ssloptions)
+        self.q.put(self.server.port)
+        self.server.serve_forever()
