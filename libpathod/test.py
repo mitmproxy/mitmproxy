@@ -36,7 +36,7 @@ class PaThread(threading.Thread):
             )
         else:
             ssloptions = self.ssl
-        self.server = pathod.Pathod((IFACE, 0))
+        self.server = pathod.Pathod((IFACE, 0), ssloptions=ssloptions)
         #self.server, self.port = pathod.make_server(self.app, 0, IFACE, ssloptions)
         self.q.put(self.server.port)
         self.server.serve_forever()

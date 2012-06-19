@@ -5,6 +5,12 @@ import version, app, rparse
 
 class PathodHandler(tcp.BaseHandler):
     def handle(self):
+        if self.server.ssloptions:
+            self.convert_to_ssl(
+                self.server.ssloptions["certfile"],
+                self.server.ssloptions["keyfile"],
+            )
+
         line = self.rfile.readline()
         if line == "\r\n" or line == "\n": # Possible leftover from previous message
             line = self.rfile.readline()
@@ -42,8 +48,9 @@ class PathodHandler(tcp.BaseHandler):
 
 
 class Pathod(tcp.TCPServer):
-    def __init__(self, addr, prefix="/p/"):
+    def __init__(self, addr, ssloptions=None, prefix="/p/"):
         tcp.TCPServer.__init__(self, addr)
+        self.ssloptions = ssloptions
         self.prefix = prefix
         self.app = app.app
         self.app.config["pathod"] = self
