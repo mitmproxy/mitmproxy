@@ -1,7 +1,6 @@
 from libpathod import pathod
-from tornado import httpserver
 
-class TestApplication:
+class _TestApplication:
     def test_anchors(self):
         a = pathod.PathodApp(staticdir=None)
         a.add_anchor("/foo", "200")
@@ -30,6 +29,7 @@ class TestApplication:
         assert not a.log_by_id(0)
 
 
-def test_make_server():
-    app = pathod.PathodApp()
-    assert pathod.make_server(app, 0, "127.0.0.1", None)
+class TestPathod:
+    def test_instantiation(self):
+        pathod.Pathod(("127.0.0.1", 0))
+        

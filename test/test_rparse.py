@@ -1,4 +1,4 @@
-import os
+import os, cStringIO
 from libpathod import rparse, utils
 import tutils
 
@@ -131,7 +131,7 @@ class TestMisc:
         assert r.msg.val == "Unknown code"
 
     def test_internal_response(self):
-        d = utils.DummyRequest()
+        d = cStringIO.StringIO()
         s = rparse.InternalResponse(400, "foo")
         s.serve(d)
 
@@ -245,7 +245,7 @@ class TestResponse:
 
     def test_write_values_disconnects(self):
         r = self.dummy_response()
-        s = utils.DummyRequest()
+        s = cStringIO.StringIO()
         tst = "foo"*100
         r.write_values(s, [tst], [(0, "disconnect")], blocksize=5)
         assert not s.getvalue()
@@ -254,7 +254,7 @@ class TestResponse:
         tst = "foo"*1025
         r = rparse.parse({}, "400'msg'")
 
-        s = utils.DummyRequest()
+        s = cStringIO.StringIO()
         r.write_values(s, [tst], [])
         assert s.getvalue() == tst
 
@@ -263,29 +263,29 @@ class TestResponse:
         r = rparse.parse({}, "400'msg'")
 
         for i in range(2, 10):
-            s = utils.DummyRequest()
+            s = cStringIO.StringIO()
             r.write_values(s, [tst], [(2, "pause", 0), (1, "pause", 0)], blocksize=i)
             assert s.getvalue() == tst
 
         for i in range(2, 10):
-            s = utils.DummyRequest()
+            s = cStringIO.StringIO()
             r.write_values(s, [tst], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == tst
 
         tst = ["".join(str(i) for i in range(10))]*5
         for i in range(2, 10):
-            s = utils.DummyRequest()
+            s = cStringIO.StringIO()
             r.write_values(s, tst[:], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == "".join(tst)
 
     def test_render(self):
-        s = utils.DummyRequest()
+        s = cStringIO.StringIO()
         r = rparse.parse({}, "400'msg'")
         assert r.serve(s)
 
     def test_length(self):
         def testlen(x):
-            s = utils.DummyRequest()
+            s = cStringIO.StringIO()
             x.serve(s)
             assert x.length() == len(s.getvalue())
         testlen(rparse.parse({}, "400'msg'"))

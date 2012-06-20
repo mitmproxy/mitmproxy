@@ -4,31 +4,6 @@ import rparse
 class AnchorError(Exception): pass
 
 
-class Sponge:
-    def __getattr__(self, x):
-        return Sponge()
-
-    def __call__(self, *args, **kwargs):
-        pass
-
-
-class DummyRequest:
-    connection = Sponge()
-    def __init__(self):
-        self.buf = []
-
-    def write(self, d, callback=None):
-        self.buf.append(str(d))
-        if callback:
-            callback()
-
-    def getvalue(self):
-        return "".join(self.buf)
-
-    def finish(self):
-        return
-
-
 def parse_anchor_spec(s, settings):
     """
         For now, this is very simple, and you can't have an '=' in your regular

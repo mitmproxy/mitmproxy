@@ -390,6 +390,9 @@ class Response:
         return ret
 
     def write_values(self, fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
+        """
+            Return True if connection should disconnect.
+        """
         while vals:
             part = vals.pop()
             for i in range(skip, len(part), blocksize):
@@ -401,18 +404,15 @@ class Response:
                     if p[1] == "pause":
                         fp.write(d[:offset])
                         time.sleep(p[2])
-                        self.write_values(
+                        return self.write_values(
                             fp, vals, actions,
                             sofar=sofar+offset,
                             skip=i+offset,
                             blocksize=blocksize
                         )
-                        return
                     elif p[1] == "disconnect":
                         fp.write(d[:offset])
-                        fp.finish()
-                        fp.connection.stream.close()
-                        return
+                        return True
                 fp.write(d)
                 sofar += len(d)
             skip = 0
@@ -447,9 +447,10 @@ class Response:
         vals.reverse()
         actions = self.ready_actions(self.length(), self.actions)
         actions.reverse()
-        self.write_values(fp, vals, actions[:])
+        disconnect = self.write_values(fp, vals, actions[:])
         duration = time.time() - started
         return dict(
+            disconnect = disconnect,
             started = started,
             duration = duration,
             actions = actions,
