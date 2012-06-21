@@ -18,9 +18,9 @@
         <div class="container">
           <a class="brand" href="/">Pathod</a>
           <ul class="nav">
-            <li {% if section== "main" %} class="active" {% end %}><a href="/">Main</a></li>
-            <li {% if section== "log" %} class="active" {% end %}><a href="/log">Log</a></li>
-            <li {% if section== "help" %} class="active" {% end %}><a href="/help">Help</a></li>
+            <li {% if section== "main" %} class="active" {% endif %}><a href="/">Main</a></li>
+            <li {% if section== "log" %} class="active" {% endif %}><a href="/log">Log</a></li>
+            <li {% if section== "help" %} class="active" {% endif %}><a href="/help">Help</a></li>
           </ul>
         </div>
       </div>
@@ -29,7 +29,7 @@
     <div class="container">
         
         {% block body %}  
-        {% end %}  
+        {% endblock %}  
 
     <hr>
     <p>by <a href="http://corte.si">Aldo Cortesi</a> </p>

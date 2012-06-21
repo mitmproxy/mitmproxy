@@ -1,5 +1,8 @@
-from flask import Flask, jsonify
+import logging
+from flask import Flask, jsonify, render_template
 import version
+
+logging.basicConfig(level="DEBUG")
 app = Flask(__name__)
 
 @app.route('/api/info')
@@ -20,6 +23,14 @@ def api_log():
 def api_clear_log():
     app.config["pathod"].clear_log() 
     return "OK"
+
+
+
+@app.route('/')
+@app.route('/index.html')
+def index():
+    return render_template("index.html", name="index", section="main")
+    
 
 
 """
