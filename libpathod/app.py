@@ -25,7 +25,6 @@ def api_clear_log():
     return "OK"
 
 
-
 @app.route('/')
 @app.route('/index.html')
 def index():
@@ -46,7 +45,6 @@ def log():
 def onelog(lid):
     l = pprint.pformat(app.config["pathod"].log_by_id(int(lid)))
     return render_template("onelog.html", section="log", alog=l, lid=lid)
-
 
 
 SANITY = 1024*1024
