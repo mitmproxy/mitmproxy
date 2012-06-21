@@ -35,6 +35,17 @@ class PathodHandler(tcp.BaseHandler):
             ret = presp.serve(self.wfile)
             if ret["disconnect"]:
                 self.close()
+
+            ret["request"] = dict(
+                path = path,
+                method = method,
+                headers = headers.lst,
+                #remote_address = self.request.connection.address,
+                #full_url = self.request.full_url(),
+                #query = self.request.query,
+                httpversion = httpversion,
+                #uri = self.request.uri,
+            )
             self.server.add_log(ret)
         else:
             cc = wsgi.ClientConn(self.client_address)
@@ -59,6 +70,10 @@ class Pathod(tcp.TCPServer):
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0
+
+    @property
+    def request_settings(self):
+        return {}
 
     def handle_connection(self, request, client_address):
         PathodHandler(request, client_address, self)

@@ -1,4 +1,4 @@
-{% extends frame.html %}
+{% extends "frame.html" %}
 {% block body %}  
 
 <h1>Preview</h1>
@@ -10,7 +10,6 @@
     <h2> Error </h2>
     <p style="color: #ff0000">{{ error }}</p>
 {% else %}
-
     <h2>Spec:</h2>
 
     <pre>{{ spec }}</pre>
@@ -19,6 +18,6 @@
 
     <pre>{{ output }}</pre>
 
-{% end %}  
-{% include previewform.html %}
-{% end %}  
+{% endif %}  
+{% include "previewform.html" %}
+{% endblock %}  

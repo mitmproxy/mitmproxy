@@ -1,4 +1,4 @@
-{% extends frame.html %}
+{% extends "frame.html" %}
 {% block body %}  
     <form style="float: right" method="POST" action="/log/clear">
         <button type="submit" class="btn">clear</button> 
@@ -10,17 +10,19 @@
         <thead>
             <tr>
                 <th>id</th>
-                <th>url</th>
+                <th>method</th>
+                <th>path</th>
             </tr>
         </thead>
         <tbody>
             {% for i in log %}
                 <tr>
                     <td>{{ i["id"] }}</td>
-                    <td><a href="/log/{{ i["id"] }}">{{ i["request"]["full_url"] }}</a></td>
+                    <td>{{ i["request"]["method"] }}</td>
+                    <td><a href="/log/{{ i["id"] }}">{{ i["request"]["path"] }}</a></td>
                 </tr>
-            {% end %}
+            {% endfor %}
         </tbody>
     </table>
-{% end %}  
+{% endblock %}  
 
