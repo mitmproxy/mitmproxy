@@ -6,7 +6,7 @@ import tutils
 logging.disable(logging.CRITICAL)
 
 class TestDaemonManual:
-    def test_startstop(self):
+    def test_simple(self):
         d = test.Daemon()
         rsp = requests.get("http://localhost:%s/p/202"%d.port)
         assert rsp.ok
@@ -46,3 +46,10 @@ class TestDaemon:
 
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
+
+    def test_logs(self):
+        rsp = requests.get("http://localhost:%s/p/202"%self.d.port)
+        assert len(self.d.log()) == 1
+        assert self.d.clear_log()
+        assert len(self.d.log()) == 0
+

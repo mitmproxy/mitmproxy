@@ -9,37 +9,20 @@ def api_info():
     )
 
 
+@app.route('/api/log')
+def api_log():
+    return jsonify(
+        log = app.config["pathod"].get_log() 
+    )
+
+
+@app.route('/api/clear_log')
+def api_clear_log():
+    app.config["pathod"].clear_log() 
+    return "OK"
+
+
 """
-class APILog(tornado.web.RequestHandler):
-    def get(self):
-        self.write(
-            dict(
-                d = self.application.get_log()
-            )
-        )
-
-
-class APILogClear(tornado.web.RequestHandler):
-    def post(self):
-        self.application.clear_log()
-        self.write("OK")
-
-
-class APIShutdown(tornado.web.RequestHandler):
-    def post(self):
-        tornado.ioloop.IOLoop.instance().stop()
-        self.write("OK")
-
-
-class APIInfo(tornado.web.RequestHandler):
-    def get(self):
-        self.write(
-            dict(
-                version = version.IVERSION
-            )
-        )
-
-
 class _Page(tornado.web.RequestHandler):
     def render(self, name, **kwargs):
         tornado.web.RequestHandler.render(self, name + ".html", **kwargs)

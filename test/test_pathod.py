@@ -12,22 +12,6 @@ class _TestApplication:
         a.remove_anchor("/oink", "400")
         assert a.get_anchors() == [("/foo", "200")]
 
-    def test_logs(self):
-        a = pathod.PathodApp(staticdir=None)
-        a.LOGBUF = 3
-        a.add_log({})
-        assert a.log[0]["id"] == 0
-        a.add_log({})
-        a.add_log({})
-        assert a.log[0]["id"] == 2
-        a.add_log({})
-        assert len(a.log) == 3
-        assert a.log[0]["id"] == 3
-        assert a.log[-1]["id"] == 1
-
-        assert a.log_by_id(1)["id"] == 1
-        assert not a.log_by_id(0)
-
 
 class TestPathod:
     def test_instantiation(self):
