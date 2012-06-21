@@ -1,4 +1,4 @@
-import urllib
+import urllib, threading
 from netlib import tcp, protocol, odict, wsgi
 import version, app, rparse
 
@@ -22,6 +22,7 @@ class PathodHandler(tcp.BaseHandler):
         content = protocol.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, None
                 )
+
         if path.startswith(self.server.prefix):
             spec = urllib.unquote(path)[len(self.server.prefix):]
             try:
@@ -34,6 +35,7 @@ class PathodHandler(tcp.BaseHandler):
             ret = presp.serve(self.wfile)
             if ret["disconnect"]:
                 self.close()
+            self.server.add_log(ret)
         else:
             cc = wsgi.ClientConn(self.client_address)
             req = wsgi.Request(cc, "http", method, path, headers, content)
@@ -48,12 +50,38 @@ class PathodHandler(tcp.BaseHandler):
 
 
 class Pathod(tcp.TCPServer):
-    def __init__(self, addr, ssloptions=None, prefix="/p/"):
+    LOGBUF = 500
+    def __init__(self, addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None):
         tcp.TCPServer.__init__(self, addr)
         self.ssloptions = ssloptions
         self.prefix = prefix
         self.app = app.app
         self.app.config["pathod"] = self
+        self.log = []
+        self.logid = 0
 
     def handle_connection(self, request, client_address):
         PathodHandler(request, client_address, self)
+
+    def add_log(self, d):
+        lock = threading.Lock()
+        with lock:
+            d["id"] = self.logid
+            self.log.insert(0, d)
+            if len(self.log) > self.LOGBUF:
+                self.log.pop()
+            self.logid += 1
+        return d["id"]
+
+    def clear_log(self):
+        lock = threading.Lock()
+        with lock:
+            self.log = []
+
+    def log_by_id(self, id):
+        for i in self.log:
+            if i["id"] == id:
+                return i
+
+    def get_log(self):
+        return self.log

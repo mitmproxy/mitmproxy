@@ -31,5 +31,17 @@ class _TestApplication:
 
 class TestPathod:
     def test_instantiation(self):
-        pathod.Pathod(("127.0.0.1", 0))
-        
+        p = pathod.Pathod(("127.0.0.1", 0))
+
+    def test_logging(self):
+        p = pathod.Pathod(("127.0.0.1", 0))
+        assert len(p.get_log()) == 0
+        id = p.add_log(dict(s="foo"))
+        assert p.log_by_id(id)
+        assert len(p.get_log()) == 1
+        p.clear_log()
+        assert len(p.get_log()) == 0
+
+        for i in range(p.LOGBUF + 1):
+            p.add_log(dict(s="foo"))
+        assert len(p.get_log()) <= p.LOGBUF
