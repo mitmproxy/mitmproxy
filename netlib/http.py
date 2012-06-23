@@ -57,36 +57,40 @@ def read_headers(fp):
     return ret
 
 
-def read_chunked(fp, limit):
+def read_chunked(code, fp, limit):
+    """
+        Read a chunked HTTP body.
+
+        May raise HttpError.
+    """
     content = ""
     total = 0
     while 1:
         line = fp.readline(128)
         if line == "":
-            raise IOError("Connection closed")
-        if line == '\r\n' or line == '\n':
-            continue
-        try:
-            length = int(line,16)
-        except ValueError:
-            # FIXME: Not strictly correct - this could be from the server, in which
-            # case we should send a 502.
-            raise HttpError(400, "Invalid chunked encoding length: %s"%line)
-        if not length:
-            break
-        total += length
-        if limit is not None and total > limit:
-            msg = "HTTP Body too large."\
-                  " Limit is %s, chunked content length was at least %s"%(limit, total)
-            raise HttpError(509, msg)
-        content += fp.read(length)
-        line = fp.readline(5)
-        if line != '\r\n':
-            raise IOError("Malformed chunked body")
+            raise HttpError(code, "Connection closed prematurely")
+        if line != '\r\n' and line != '\n':
+            try:
+                length = int(line, 16)
+            except ValueError:
+                # FIXME: Not strictly correct - this could be from the server, in which
+                # case we should send a 502.
+                raise HttpError(code, "Invalid chunked encoding length: %s"%line)
+            if not length:
+                break
+            total += length
+            if limit is not None and total > limit:
+                msg = "HTTP Body too large."\
+                      " Limit is %s, chunked content length was at least %s"%(limit, total)
+                raise HttpError(code, msg)
+            content += fp.read(length)
+            line = fp.readline(5)
+            if line != '\r\n':
+                raise HttpError(code, "Malformed chunked body")
     while 1:
         line = fp.readline()
         if line == "":
-            raise IOError("Connection closed")
+            raise HttpError(code, "Connection closed prematurely")
         if line == '\r\n' or line == '\n':
             break
     return content
@@ -100,18 +104,27 @@ def has_chunked_encoding(headers):
     return False
 
 
-def read_http_body(rfile, headers, all, limit):
+def read_http_body(code, rfile, headers, all, limit):
+    """
+        Read an HTTP body:
+            
+            code: The HTTP error code to be used when raising HttpError
+            rfile: A file descriptor to read from
+            headers: An ODictCaseless object
+            all: Should we read all data?
+            limit: Size limit.
+    """
     if has_chunked_encoding(headers):
-        content = read_chunked(rfile, limit)
+        content = read_chunked(code, rfile, limit)
     elif "content-length" in headers:
         try:
             l = int(headers["content-length"][0])
         except ValueError:
             # FIXME: Not strictly correct - this could be from the server, in which
             # case we should send a 502.
-            raise HttpError(400, "Invalid content-length header: %s"%headers["content-length"])
+            raise HttpError(code, "Invalid content-length header: %s"%headers["content-length"])
         if limit is not None and l > limit:
-            raise HttpError(509, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
+            raise HttpError(code, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
         content = rfile.read(l)
     elif all:
         content = rfile.read(limit if limit else None)
@@ -121,6 +134,10 @@ def read_http_body(rfile, headers, all, limit):
 
 
 def parse_http_protocol(s):
+    """
+        Parse an HTTP protocol declaration. Returns a (major, minor) tuple, or
+        None.
+    """
     if not s.startswith("HTTP/"):
         return None
     major, minor = s.split('/')[1].split('.')
@@ -201,18 +218,26 @@ def response_connection_close(httpversion, headers):
     """
     if request_connection_close(httpversion, headers):
         return True
-    elif not has_chunked_encoding(headers) and "content-length" in headers:
-        return True
-    return False
+    elif (not has_chunked_encoding(headers)) and "content-length" in headers:
+        return False
+    return True
 
 
 def read_http_body_request(rfile, wfile, headers, httpversion, limit):
+    """
+        Read the HTTP body from a client request.
+    """
     if "expect" in headers:
         # FIXME: Should be forwarded upstream
-        expect = ",".join(headers['expect'])
-        if expect == "100-continue" and httpversion >= (1, 1):
+        if "100-continue" in headers['expect'] and httpversion >= (1, 1):
             wfile.write('HTTP/1.1 100 Continue\r\n')
-            wfile.write('Proxy-agent: %s\r\n'%version.NAMEVERSION)
             wfile.write('\r\n')
             del headers['expect']
-    return read_http_body(rfile, headers, False, limit)
+    return read_http_body(400, rfile, headers, False, limit)
+
+
+def read_http_body_response(rfile, headers, False, limit):
+    """
+        Read the HTTP body from a server response.
+    """
+    return read_http_body(500, rfile, headers, False, limit)
