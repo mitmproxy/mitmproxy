@@ -3,8 +3,11 @@ __pathod__ is a collection of pathological tools for testing and torturing HTTP
 clients and servers. The project has three components:
 
 - __pathod__, an pathological HTTP daemon.
-- __pathoc__, a fiendishly perverse HTTP client. 
+- __pathoc__, a perverse HTTP client. 
 - __libpathod.test__, an API for easily using __pathod__ and __pathoc__ in unit tests.
+
+
+# pathod
 
 At __pathod__'s heart is a tiny, terse language for crafting HTTP responses.
 The simplest way to use __pathod__ is to fire up the daemon, and specify the
@@ -31,8 +34,7 @@ various other goodies. Try it by visiting the server root:
 
 
 
-Specifying Responses
-====================
+## Specifying Responses
 
 The general form of a response is as follows:
     
@@ -117,8 +119,8 @@ once at 10 bytes and once at 20, then disconnects at 5000:
     200:b@1m:p10,10:p20,10:d5000
 
 
-Features
-========
+## Features
+
 
 #### hKEY=VALUE
 
@@ -158,8 +160,9 @@ forever. OFFSET can also be "r" to generate a random offset, or "a" for an
 offset just after all data has been sent.
 
 
-Value Specifiers
-================
+
+
+## Value Specifiers
 
 There are three different flavours of value specification. 
 
@@ -240,7 +243,7 @@ Supported data types are:
     bytes
 
 
-# API
+## API
 
 __pathod__ exposes a simple API, intended to make it possible to drive and
 inspect the daemon remotely for use in unit testing and the like. 
@@ -299,6 +302,9 @@ interface.
 A POST to this URL clears the log buffer.
 
 
+
+
+
 # Installing
 
 If you already have __pip__ on your system, installing __pathod__ and its
@@ -307,5 +313,6 @@ dependencies is dead simple:
     pip install pathod
 
 The project uses the __nose__ unit testing framework, which you can get here:
-    
+
+    FIXME
 
