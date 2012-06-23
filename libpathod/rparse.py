@@ -1,6 +1,6 @@
 import operator, string, random, mmap, os, time
 import contrib.pyparsing as pp
-import http
+from netlib import http_status
 
 TESTING = False
 
@@ -315,7 +315,7 @@ class Code:
     def __init__(self, code, msg=None):
         self.code, self.msg = code, msg
         if msg is None:
-            self.msg = ValueLiteral(http.RESPONSES.get(self.code, "Unknown code"))
+            self.msg = ValueLiteral(http_status.RESPONSES.get(self.code, "Unknown code"))
 
     def mod_response(self, settings, r):
         r.code = self.code
@@ -342,7 +342,7 @@ class Response:
     )
     version = "HTTP/1.1"
     code = 200
-    msg = LiteralGenerator(http.RESPONSES[code])
+    msg = LiteralGenerator(http_status.RESPONSES[code])
     body = LiteralGenerator("")
     def __init__(self):
         self.headers = []
@@ -481,7 +481,7 @@ class InternalResponse(Response):
     def __init__(self, code, body):
         Response.__init__(self)
         self.code = code
-        self.msg = LiteralGenerator(http.RESPONSES.get(code, "Unknown error"))
+        self.msg = LiteralGenerator(http_status.RESPONSES.get(code, "Unknown error"))
         self.body = LiteralGenerator(body)
         self.headers = [
             (
