@@ -1,11 +1,11 @@
 import string, urlparse
 
-class ProtocolError(Exception):
+class HttpError(Exception):
     def __init__(self, code, msg):
         self.code, self.msg = code, msg
 
     def __str__(self):
-        return "ProtocolError(%s, %s)"%(self.code, self.msg)
+        return "HttpError(%s, %s)"%(self.code, self.msg)
 
 
 def parse_url(url):
@@ -71,14 +71,14 @@ def read_chunked(fp, limit):
         except ValueError:
             # FIXME: Not strictly correct - this could be from the server, in which
             # case we should send a 502.
-            raise ProtocolError(400, "Invalid chunked encoding length: %s"%line)
+            raise HttpError(400, "Invalid chunked encoding length: %s"%line)
         if not length:
             break
         total += length
         if limit is not None and total > limit:
             msg = "HTTP Body too large."\
                   " Limit is %s, chunked content length was at least %s"%(limit, total)
-            raise ProtocolError(509, msg)
+            raise HttpError(509, msg)
         content += fp.read(length)
         line = fp.readline(5)
         if line != '\r\n':
@@ -109,9 +109,9 @@ def read_http_body(rfile, headers, all, limit):
         except ValueError:
             # FIXME: Not strictly correct - this could be from the server, in which
             # case we should send a 502.
-            raise ProtocolError(400, "Invalid content-length header: %s"%headers["content-length"])
+            raise HttpError(400, "Invalid content-length header: %s"%headers["content-length"])
         if limit is not None and l > limit:
-            raise ProtocolError(509, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
+            raise HttpError(509, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
         content = rfile.read(l)
     elif all:
         content = rfile.read(limit if limit else None)
