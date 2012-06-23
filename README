@@ -1,2 +1,10 @@
-Netlib is a collection of common utility functions, used by the pathod and
-mitmproxy projects.
+
+Netlib is a collection of network utility classes, used by pathod and mitmproxy
+projects. It differs from other projects in some fundamental respects, because
+both pathod and mitmproxy often need to violate standards. This means that
+protocols are implemented as small, well-contained and flexible functions, and
+servers are implemented to allow misbehaviour when needed.
+
+At this point, I have no plans to make netlib useful beyond mitmproxy and
+pathod. Please get in touch if you think parts of netlib might have broader
+utility.
