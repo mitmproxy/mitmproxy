@@ -16,7 +16,7 @@ import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer
 from OpenSSL import SSL
-from netlib import odict, tcp, protocol, wsgi
+from netlib import odict, tcp, http, wsgi
 import utils, flow, certutils, version
 
 
@@ -54,7 +54,7 @@ class RequestReplayThread(threading.Thread):
             server.send(r)
             response = server.read_response(r)
             response._send(self.masterq)
-        except (ProxyError, protocol.ProtocolError), v:
+        except (ProxyError, http.HttpError), v:
             err = flow.Error(self.flow.request, v.msg)
             err._send(self.masterq)
         except tcp.NetLibError, v:
@@ -101,20 +101,20 @@ class ServerConnection(tcp.TCPClient):
         if not len(parts) == 3:
             raise ProxyError(502, "Invalid server response: %s."%line)
         proto, code, msg = parts
-        httpversion = protocol.parse_http_protocol(proto)
+        httpversion = http.parse_http_protocol(proto)
         if httpversion is None:
             raise ProxyError(502, "Invalid HTTP version: %s."%httpversion)
         try:
             code = int(code)
         except ValueError:
             raise ProxyError(502, "Invalid server response: %s."%line)
-        headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
+        headers = odict.ODictCaseless(http.read_headers(self.rfile))
         if code >= 100 and code <= 199:
             return self.read_response()
         if request.method == "HEAD" or code == 204 or code == 304:
             content = ""
         else:
-            content = protocol.read_http_body(self.rfile, headers, True, self.config.body_size_limit)
+            content = http.read_http_body(self.rfile, headers, True, self.config.body_size_limit)
         return flow.Response(request, httpversion, code, msg, headers, content, self.cert)
 
     def terminate(self):
@@ -194,17 +194,17 @@ class ProxyHandler(tcp.BaseHandler):
                 if response is None:
                     return
                 self.send_response(response)
-                if protocol.request_connection_close(request.httpversion, request.headers):
+                if http.request_connection_close(request.httpversion, request.headers):
                     return
                 # We could keep the client connection when the server
                 # connection needs to go away.  However, we want to mimic
                 # behaviour as closely as possible to the client, so we
                 # disconnect.
-                if protocol.response_connection_close(response.httpversion, response.headers):
+                if http.response_connection_close(response.httpversion, response.headers):
                     return
         except IOError, v:
             cc.connection_error = v
-        except (ProxyError, protocol.ProtocolError), e:
+        except (ProxyError, http.HttpError), e:
             cc.connection_error = "%s: %s"%(e.code, e.msg)
             if request:
                 err = flow.Error(request, e.msg)
@@ -243,23 +243,23 @@ class ProxyHandler(tcp.BaseHandler):
                 self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
             else:
                 scheme = "http"
-            method, path, httpversion = protocol.parse_init_http(line)
-            headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
-            content = protocol.read_http_body_request(
+            method, path, httpversion = http.parse_init_http(line)
+            headers = odict.ODictCaseless(http.read_headers(self.rfile))
+            content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
             return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
         elif self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
-            method, path, httpversion = protocol.parse_init_http(line)
-            headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
-            content = protocol.read_http_body_request(
+            method, path, httpversion = http.parse_init_http(line)
+            headers = odict.ODictCaseless(http.read_headers(self.rfile))
+            content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
             return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
         else:
             if line.startswith("CONNECT"):
-                host, port, httpversion = protocol.parse_init_connect(line)
+                host, port, httpversion = http.parse_init_connect(line)
                 # FIXME: Discard additional headers sent to the proxy. Should I expose
                 # these to users?
                 while 1:
@@ -278,16 +278,16 @@ class ProxyHandler(tcp.BaseHandler):
                 line = self.rfile.readline(line)
             if self.proxy_connect_state:
                 host, port, httpversion = self.proxy_connect_state
-                method, path, httpversion = protocol.parse_init_http(line)
-                headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
-                content = protocol.read_http_body_request(
+                method, path, httpversion = http.parse_init_http(line)
+                headers = odict.ODictCaseless(http.read_headers(self.rfile))
+                content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
                 return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content)
             else:
-                method, scheme, host, port, path, httpversion = protocol.parse_init_proxy(line)
-                headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
-                content = protocol.read_http_body_request(
+                method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
+                headers = odict.ODictCaseless(http.read_headers(self.rfile))
+                content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
                 return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content)

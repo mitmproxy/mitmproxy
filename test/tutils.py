@@ -1,7 +1,6 @@
 import threading, Queue, time
 import os, shutil, tempfile
 from contextlib import contextmanager
-import libpry
 from libmproxy import proxy, flow, controller, utils
 import human_curl as hurl
 import libpathod.test

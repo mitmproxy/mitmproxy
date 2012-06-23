@@ -15,7 +15,7 @@
 import os, datetime, urlparse, string, urllib, re
 import time, functools, cgi
 import json
-from netlib import protocol
+from netlib import http
 
 def timestamp():
     """
@@ -196,7 +196,7 @@ class LRUCache:
 
 
 def parse_proxy_spec(url):
-    p = protocol.parse_url(url)
+    p = http.parse_url(url)
     if not p or not p[1]:
         return None
     return p[:3]
