@@ -8,11 +8,8 @@ this.titlePrefix = ""
 this.site_url = "http://corte.si"
 pages = [
     Page("index.html", "overview", namespace=dict(section="index")),
-    Page("docs.html", "docs", namespace=dict(section="docs")),
+    Page("pathod.html", "pathod", namespace=dict(section="docs")),
+    Page("pathoc.html", "pathoc", namespace=dict(section="docs")),
+    Page("test.html", "libpathod.test", namespace=dict(section="docs")),
     sitemap.Sitemap("sitemap.xml")
 ]
-ns.sidebar = widgets.SiblingPageIndex(
-                        pages[0],
-                        depth=1,
-                        divclass="sidebarmenu"
-                    )
