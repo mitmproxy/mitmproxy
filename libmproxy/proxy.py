@@ -114,7 +114,7 @@ class ServerConnection(tcp.TCPClient):
         if request.method == "HEAD" or code == 204 or code == 304:
             content = ""
         else:
-            content = http.read_http_body(self.rfile, headers, True, self.config.body_size_limit)
+            content = http.read_http_body_response(self.rfile, headers, True, self.config.body_size_limit)
         return flow.Response(request, httpversion, code, msg, headers, content, self.cert)
 
     def terminate(self):
@@ -157,10 +157,7 @@ class ProxyHandler(tcp.BaseHandler):
     def handle_request(self, cc):
         try:
             request, err = None, None
-            try:
-                request = self.read_request(cc)
-            except IOError, v:
-                raise IOError, "Reading request: %s"%v
+            request = self.read_request(cc)
             if request is None:
                 return
             cc.requestcount += 1
@@ -184,10 +181,7 @@ class ProxyHandler(tcp.BaseHandler):
                         scheme, host, port = request.scheme, request.host, request.port
                     self.server_connect(scheme, host, port)
                     self.server_conn.send(request)
-                    try:
-                        response = self.server_conn.read_response(request)
-                    except IOError, v:
-                        raise IOError, "Reading response: %s"%v
+                    response = self.server_conn.read_response(request)
                     response = response._send(self.mqueue)
                     if response is None:
                         self.server_conn.terminate()
