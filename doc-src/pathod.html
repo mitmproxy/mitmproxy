@@ -1,6 +1,11 @@
-# pathod
+<div class="page-header">
+   <h1>
+        pathod
+        <small>A pathological web daemon.</small>
+    </h1>
+</div>
 
-At __pathod__'s heart is a tiny, terse language for crafting HTTP responses,
+At __pathod__'s heart is a small, terse language for crafting HTTP responses,
 designed to be easy to specify in a request URL.  The simplest way to use
 __pathod__ is to fire up the daemon, and specify the response behaviour you
 want using this language in the request URL.  Here's a minimal example:
@@ -284,55 +289,42 @@ Supported data types are:
 __pathod__ exposes a simple API, intended to make it possible to drive and
 inspect the daemon remotely for use in unit testing and the like. 
 
-### /api/log
 
-Returns the current log buffer. At the moment the buffer size is 500 entries -
-when the log grows larger than this, older entries are discarded. The returned
-data is a JSON dictionary, with the form:
-    
-    {
-        'logs': [ ENTRIES ]
-    }
+<table class="table table-bordered table-condensed">
+    <tbody >
+        <tr>
+            <td>
+                /api/clear_log
+            </td>
+            <td>
+                A POST to this URL clears the log buffer.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                /api/info
+            </td>
+            <td>
+                Basic version and configuration info.
+            </td>
+        </tr>
+        <tr>
+            <td>
+                /api/log
+            </td>
+            <td>
+                Returns the current log buffer. At the moment the buffer size is 500 entries -
+                when the log grows larger than this, older entries are discarded. The returned
+                data is a JSON dictionary, with the form:
 
-Where each entry looks like this:
-
-    {
-        # Record of actions taken at specified byte offsets
-        'actions': [(200, 'disconnect'), (10, 'pause', 1)],
-        # HTTP return code
-        'code': 200,
-        # Request duration in seconds
-        'duration': 0.00020599365234375,
-        # ID unique to this invocation of pathod
-        'id': 2,
-        # The request that triggered the response
-        'request': {
-            'full_url': 'http://testing:9999/p/200:b@1000:p1,10:d200',
-            'headers': {
-                'Accept': '*/*',
-                'Host': 'localhost:9999',
-                'User-Agent': 'curl/7.21.4'
-            },
-            'host': 'localhost:9999',
-            'method': 'POST',
-            'path': '/p/200:b@1000:p1,10:d200',
-            'protocol': 'http',
-            'query': '',
-            'remote_address': ('10.0.0.234', 63448),
-            'uri': '/p/200:b@1000:p1,10:d200',
-            'version': 'HTTP/1.1'
-        },
-        # The response spec that was served. You can re-parse this to get full
-        # details on the response.
-        'spec': '200:b@1000:p1,10:d200',
-        # Time at which response startd.
-        'started': 1335735586.469218
-    }
-
-You can preview the JSON data returned for a log entry through the built-in web
-interface.
-
-
-### /api/log/clear
-
-A POST to this URL clears the log buffer.
+                <pre>
+                    {
+                        'log': [ ENTRIES ]
+                    }
+                </pre>
+                You can preview the JSON data returned for a log entry through the built-in web
+                interface.
+            </td>
+        </tr>
+    </tbody>
+</table>

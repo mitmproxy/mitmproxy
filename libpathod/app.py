@@ -15,13 +15,13 @@ def api_info():
 @app.route('/api/log')
 def api_log():
     return jsonify(
-        log = app.config["pathod"].get_log() 
+        log = app.config["pathod"].get_log()
     )
 
 
 @app.route('/api/clear_log')
 def api_clear_log():
-    app.config["pathod"].clear_log() 
+    app.config["pathod"].clear_log()
     return "OK"
 
 
@@ -34,12 +34,12 @@ def index():
 @app.route('/help')
 def help():
     return render_template("help.html", section="help")
-    
+
 
 @app.route('/log')
 def log():
     return render_template("log.html", section="log", log=app.config["pathod"].get_log())
-    
+
 
 @app.route('/log/<int:lid>')
 def onelog(lid):
