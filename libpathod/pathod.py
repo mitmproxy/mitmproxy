@@ -1,5 +1,5 @@
 import urllib, threading
-from netlib import tcp, protocol, odict, wsgi
+from netlib import tcp, http, odict, wsgi
 import version, app, rparse
 
 
@@ -17,9 +17,9 @@ class PathodHandler(tcp.BaseHandler):
         if line == "":
             return None
 
-        method, path, httpversion = protocol.parse_init_http(line)
-        headers = odict.ODictCaseless(protocol.read_headers(self.rfile))
-        content = protocol.read_http_body_request(
+        method, path, httpversion = http.parse_init_http(line)
+        headers = odict.ODictCaseless(http.read_headers(self.rfile))
+        content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, None
                 )
 

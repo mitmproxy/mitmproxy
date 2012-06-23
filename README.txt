@@ -22,4 +22,3 @@ the language by previewing responses, exposes activity logs, online help and
 various other goodies. Try it by visiting the server root:
 
     http://localhost:9999
-
