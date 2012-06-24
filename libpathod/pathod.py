@@ -14,59 +14,60 @@ class PathodHandler(tcp.BaseHandler):
                 self.server.ssloptions["keyfile"],
             )
 
-        line = self.rfile.readline()
-        if line == "\r\n" or line == "\n": # Possible leftover from previous message
+        while 1:
             line = self.rfile.readline()
-        if line == "":
-            return None
+            if line == "\r\n" or line == "\n": # Possible leftover from previous message
+                line = self.rfile.readline()
+            if line == "":
+                return None
 
-        method, path, httpversion = http.parse_init_http(line)
-        headers = http.read_headers(self.rfile)
-        content = http.read_http_body_request(
-                    self.rfile, self.wfile, headers, httpversion, None
+            method, path, httpversion = http.parse_init_http(line)
+            headers = http.read_headers(self.rfile)
+            content = http.read_http_body_request(
+                        self.rfile, self.wfile, headers, httpversion, None
+                    )
+
+            crafted = None
+            for i in self.server.anchors:
+                if i[0].match(path):
+                    crafted = i[1]
+
+            if not crafted and path.startswith(self.server.prefix):
+                spec = urllib.unquote(path)[len(self.server.prefix):]
+                try:
+                    crafted = rparse.parse_response(self.server.request_settings, spec)
+                except rparse.ParseException, v:
+                    crafted = rparse.InternalResponse(
+                        800,
+                        "Error parsing response spec: %s\n"%v.msg + v.marked()
+                    )
+
+            if crafted:
+                ret = crafted.serve(self.wfile)
+                if ret["disconnect"]:
+                    self.finish()
+                ret["request"] = dict(
+                    path = path,
+                    method = method,
+                    headers = headers.lst,
+                    #remote_address = self.request.connection.address,
+                    #full_url = self.request.full_url(),
+                    #query = self.request.query,
+                    httpversion = httpversion,
+                    #uri = self.request.uri,
                 )
-
-        crafted = None
-        for i in self.server.anchors:
-            if i[0].match(path):
-                crafted = i[1]
-
-        if not crafted and path.startswith(self.server.prefix):
-            spec = urllib.unquote(path)[len(self.server.prefix):]
-            try:
-                crafted = rparse.parse_response(self.server.request_settings, spec)
-            except rparse.ParseException, v:
-                crafted = rparse.InternalResponse(
-                    800,
-                    "Error parsing response spec: %s\n"%v.msg + v.marked()
+                self.server.add_log(ret)
+            else:
+                cc = wsgi.ClientConn(self.client_address)
+                req = wsgi.Request(cc, "http", method, path, headers, content)
+                sn = self.connection.getsockname()
+                app = wsgi.WSGIAdaptor(
+                    self.server.app,
+                    sn[0],
+                    self.server.port,
+                    version.NAMEVERSION
                 )
-
-        if crafted:
-            ret = crafted.serve(self.wfile)
-            if ret["disconnect"]:
-                self.finish()
-            ret["request"] = dict(
-                path = path,
-                method = method,
-                headers = headers.lst,
-                #remote_address = self.request.connection.address,
-                #full_url = self.request.full_url(),
-                #query = self.request.query,
-                httpversion = httpversion,
-                #uri = self.request.uri,
-            )
-            self.server.add_log(ret)
-        else:
-            cc = wsgi.ClientConn(self.client_address)
-            req = wsgi.Request(cc, "http", method, path, headers, content)
-            sn = self.connection.getsockname()
-            app = wsgi.WSGIAdaptor(
-                self.server.app,
-                sn[0],
-                self.server.port,
-                version.NAMEVERSION
-            )
-            app.serve(req, self.wfile)
+                app.serve(req, self.wfile)
 
 
 class Pathod(tcp.TCPServer):
