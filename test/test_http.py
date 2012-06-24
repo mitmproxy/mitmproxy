@@ -218,11 +218,12 @@ def test_read_response():
 
     data = """
         HTTP/1.1 200 OK
+        Content-Length: 3
 
         foo
     """
-    assert tst(data, "GET", None) == ((1, 1), 200, 'OK', odict.ODictCaseless(), 'foo\n')
-    assert tst(data, "HEAD", None) == ((1, 1), 200, 'OK', odict.ODictCaseless(), '')
+    assert tst(data, "GET", None)[4] == 'foo'
+    assert tst(data, "HEAD", None)[4] == ''
 
 
 def test_parse_url():
