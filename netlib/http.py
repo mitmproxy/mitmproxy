@@ -1,4 +1,5 @@
 import string, urlparse
+import odict
 
 class HttpError(Exception):
     def __init__(self, code, msg):
@@ -54,7 +55,7 @@ def read_headers(fp):
                 name = line[:i]
                 value = line[i+1:].strip()
                 ret.append([name, value])
-    return ret
+    return odict.ODictCaseless(ret)
 
 
 def read_chunked(code, fp, limit):
@@ -107,7 +108,7 @@ def has_chunked_encoding(headers):
 def read_http_body(code, rfile, headers, all, limit):
     """
         Read an HTTP body:
-            
+
             code: The HTTP error code to be used when raising HttpError
             rfile: A file descriptor to read from
             headers: An ODictCaseless object
