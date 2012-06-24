@@ -108,7 +108,7 @@ class ServerConnection(tcp.TCPClient):
             code = int(code)
         except ValueError:
             raise ProxyError(502, "Invalid server response: %s."%line)
-        headers = odict.ODictCaseless(http.read_headers(self.rfile))
+        headers = http.read_headers(self.rfile)
         if code >= 100 and code <= 199:
             return self.read_response()
         if request.method == "HEAD" or code == 204 or code == 304:
@@ -238,7 +238,7 @@ class ProxyHandler(tcp.BaseHandler):
             else:
                 scheme = "http"
             method, path, httpversion = http.parse_init_http(line)
-            headers = odict.ODictCaseless(http.read_headers(self.rfile))
+            headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -246,7 +246,7 @@ class ProxyHandler(tcp.BaseHandler):
         elif self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
             method, path, httpversion = http.parse_init_http(line)
-            headers = odict.ODictCaseless(http.read_headers(self.rfile))
+            headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -273,14 +273,14 @@ class ProxyHandler(tcp.BaseHandler):
             if self.proxy_connect_state:
                 host, port, httpversion = self.proxy_connect_state
                 method, path, httpversion = http.parse_init_http(line)
-                headers = odict.ODictCaseless(http.read_headers(self.rfile))
+                headers = http.read_headers(self.rfile)
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
                 return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content)
             else:
                 method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
-                headers = odict.ODictCaseless(http.read_headers(self.rfile))
+                headers = http.read_headers(self.rfile)
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
