@@ -55,7 +55,7 @@ class WSGIAdaptor:
             'CONTENT_TYPE':         request.headers.get('Content-Type', [''])[0],
             'CONTENT_LENGTH':       request.headers.get('Content-Length', [''])[0],
             'SERVER_NAME':          self.domain,
-            'SERVER_PORT':          self.port,
+            'SERVER_PORT':          str(self.port),
             # FIXME: We need to pick up the protocol read from the request.
             'SERVER_PROTOCOL':      "HTTP/1.1",
         }
