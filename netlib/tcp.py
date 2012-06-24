@@ -48,11 +48,10 @@ class FileLike:
 
 
 class TCPClient:
-    def __init__(self, ssl, host, port, clientcert, sni):
-        self.ssl, self.host, self.port, self.clientcert, self.sni = ssl, host, port, clientcert, sni
+    def __init__(self, ssl, host, port, clientcert):
+        self.ssl, self.host, self.port, self.clientcert = ssl, host, port, clientcert
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
-        self.connect()
 
     def connect(self):
         try:
@@ -75,6 +74,9 @@ class TCPClient:
 
 
 class BaseHandler:
+    """
+        The instantiator is expected to call the handle() and finish() methods.
+    """
     rbufsize = -1
     wbufsize = 0
     def __init__(self, connection, client_address, server):
@@ -84,8 +86,6 @@ class BaseHandler:
 
         self.client_address = client_address
         self.server = server
-        self.handle()
-        self.finish()
 
     def convert_to_ssl(self, cert, key):
         ctx = SSL.Context(SSL.SSLv23_METHOD)

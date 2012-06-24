@@ -46,7 +46,9 @@ class TServer(tcp.TCPServer):
         self.ssl, self.q = ssl, q
 
     def handle_connection(self, request, client_address):
-        THandler(request, client_address, self)
+        h = THandler(request, client_address, self)
+        h.handle()
+        h.finish()
 
     def handle_error(self, request, client_address):
         s = cStringIO.StringIO()
@@ -64,7 +66,8 @@ class TestServer(ServerTestBase):
 
     def test_echo(self):
         testval = "echo!\n"
-        c = tcp.TCPClient(False, "127.0.0.1", self.port, None, None)
+        c = tcp.TCPClient(False, "127.0.0.1", self.port, None)
+        c.connect()
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
@@ -79,7 +82,8 @@ class TestServerSSL(ServerTestBase):
         return s
 
     def test_echo(self):
-        c = tcp.TCPClient(True, "127.0.0.1", self.port, None, None)
+        c = tcp.TCPClient(True, "127.0.0.1", self.port, None)
+        c.connect()
         testval = "echo!\n"
         c.wfile.write(testval)
         c.wfile.flush()
@@ -88,7 +92,8 @@ class TestServerSSL(ServerTestBase):
 
 class TestTCPClient:
     def test_conerr(self):
-        tutils.raises(tcp.NetLibError, tcp.TCPClient, False, "127.0.0.1", 0, None, None)
+        c = tcp.TCPClient(True, "127.0.0.1", 0, None)
+        tutils.raises(tcp.NetLibError, c.connect)
 
 
 class TestFileLike:
