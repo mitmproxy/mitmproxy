@@ -48,8 +48,8 @@ class FileLike:
 
 
 class TCPClient:
-    def __init__(self, ssl, host, port, clientcert):
-        self.ssl, self.host, self.port, self.clientcert = ssl, host, port, clientcert
+    def __init__(self, ssl, host, port, clientcert, sni):
+        self.ssl, self.host, self.port, self.clientcert, self.sni = ssl, host, port, clientcert, sni
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.connect()

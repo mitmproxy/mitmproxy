@@ -27,6 +27,11 @@ class ServerTestBase:
 
 class THandler(tcp.BaseHandler):
     def handle(self):
+        if self.server.ssl:
+            self.convert_to_ssl(
+                tutils.test_data.path("data/server.crt"),
+                tutils.test_data.path("data/server.key"),
+            )
         v = self.rfile.readline()
         if v.startswith("echo"):
             self.wfile.write(v)
@@ -36,9 +41,9 @@ class THandler(tcp.BaseHandler):
 
 
 class TServer(tcp.TCPServer):
-    def __init__(self, addr, q):
+    def __init__(self, addr, ssl, q):
         tcp.TCPServer.__init__(self, addr)
-        self.q = q
+        self.ssl, self.q = ssl, q
 
     def handle_connection(self, request, client_address):
         THandler(request, client_address, self)
@@ -53,28 +58,37 @@ class TestServer(ServerTestBase):
     @classmethod
     def makeserver(cls):
         cls.q = Queue.Queue()
-        s = TServer(("127.0.0.1", 0), cls.q)
+        s = TServer(("127.0.0.1", 0), False, cls.q)
         cls.port = s.port
         return s
 
     def test_echo(self):
         testval = "echo!\n"
-        c = tcp.TCPClient(False, "127.0.0.1", self.port, None)
+        c = tcp.TCPClient(False, "127.0.0.1", self.port, None, None)
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
 
-    def test_error(self):
-        testval = "error!\n"
-        c = tcp.TCPClient(False, "127.0.0.1", self.port, None)
+
+class TestServerSSL(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        cls.q = Queue.Queue()
+        s = TServer(("127.0.0.1", 0), True, cls.q)
+        cls.port = s.port
+        return s
+
+    def test_echo(self):
+        c = tcp.TCPClient(True, "127.0.0.1", self.port, None, None)
+        testval = "echo!\n"
         c.wfile.write(testval)
         c.wfile.flush()
-        assert "Testing an error" in self.q.get()
+        assert c.rfile.readline() == testval
 
 
 class TestTCPClient:
     def test_conerr(self):
-        tutils.raises(tcp.NetLibError, tcp.TCPClient, False, "127.0.0.1", 0, None)
+        tutils.raises(tcp.NetLibError, tcp.TCPClient, False, "127.0.0.1", 0, None, None)
 
 
 class TestFileLike:
