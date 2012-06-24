@@ -1,6 +1,7 @@
 import operator, string, random, mmap, os, time
 import contrib.pyparsing as pp
 from netlib import http_status
+import utils
 
 BLOCKSIZE = 1024
 
@@ -305,7 +306,7 @@ class Method:
         # it to be canonical. The user can specify a different case by using a
         # string value literal.
         if isinstance(value, basestring):
-            value = value.upper()
+            value = ValueLiteral(value.upper())
         self.value = value
 
     def accept(self, settings, r):
@@ -406,6 +407,46 @@ class Code:
         return e.setParseAction(lambda x: klass(*x))
 
 
+class Request:
+    comps = (
+        Body,
+        Header,
+        PauseAt,
+        DisconnectAt,
+        ShortcutContentType,
+    )
+    version = "HTTP/1.1"
+    body = LiteralGenerator("")
+    def __init__(self):
+        self.headers = []
+        self.actions = []
+
+    @classmethod
+    def expr(klass):
+        parts = [i.expr() for i in klass.comps]
+        atom = pp.MatchFirst(parts)
+        resp = pp.And(
+            [
+                Method.expr(),
+                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
+            ]
+        )
+        return resp
+
+
+class CraftedRequest(Request):
+    def __init__(self, settings, spec, tokens):
+        Request.__init__(self)
+        self.spec, self.tokens = spec, tokens
+        for i in tokens:
+            i.accept(settings, self)
+
+    def serve(self, fp):
+        d = Request.serve(self, fp)
+        d["spec"] = self.spec
+        return d
+
+
 class Response:
     comps = (
         Body,
@@ -422,12 +463,6 @@ class Response:
     def __init__(self):
         self.headers = []
         self.actions = []
-
-    def get_header(self, hdr):
-        for k, v in self.headers:
-            if k[:len(hdr)].lower() == hdr:
-                return v
-        return None
 
     @classmethod
     def expr(klass):
@@ -454,7 +489,7 @@ class Response:
 
     def serve(self, fp):
         started = time.time()
-        if self.body and not self.get_header("Content-Length"):
+        if self.body and not utils.get_header("Content-Length", self.headers):
             self.headers.append(
                 (
                     LiteralGenerator("Content-Length"),
@@ -538,5 +573,12 @@ class InternalResponse(Response):
 def parse_response(settings, s):
     try:
         return CraftedResponse(settings, s, Response.expr().parseString(s, parseAll=True))
+    except pp.ParseException, v:
+        raise ParseException(v.msg, v.line, v.col)
+
+
+def parse_request(settings, s):
+    try:
+        return CraftedRequest(settings, s, Request.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)

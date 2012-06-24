@@ -188,7 +188,13 @@ class TestPauses:
         assert r.actions[0] == (10, "pause", 10)
 
 
-class TestParse:
+class TestParseRequest:
+    def test_simple(self):
+        r = rparse.parse_request({}, "GET")
+        assert r.method == "GET"
+
+
+class TestParseResponse:
     def test_parse_err(self):
         tutils.raises(rparse.ParseException, rparse.parse_response, {}, "400:msg,b:")
         try:
@@ -199,7 +205,7 @@ class TestParse:
 
     def test_parse_header(self):
         r = rparse.parse_response({}, '400:h"foo"="bar"')
-        assert r.get_header("foo") == "bar"
+        assert utils.get_header("foo", r.headers)
 
     def test_parse_pause_before(self):
         r = rparse.parse_response({}, "400:p10,0")
