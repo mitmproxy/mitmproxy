@@ -2,6 +2,8 @@ import operator, string, random, mmap, os, time
 import contrib.pyparsing as pp
 from netlib import http_status
 
+BLOCKSIZE = 1024
+
 class ParseException(Exception):
     def __init__(self, msg, s, col):
         Exception.__init__(self)
@@ -17,6 +19,52 @@ class ParseException(Exception):
 
 
 class ServerError(Exception): pass
+
+
+def ready_actions(l, lst):
+    ret = []
+    for i in lst:
+        itms = list(i)
+        if i[0] == "r":
+            itms[0] = random.randrange(l)
+        if i[0] == "a":
+            itms[0] = l+1
+        ret.append(tuple(itms))
+    ret.sort()
+    return ret
+
+
+def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
+    """
+        vals: A list of values, which may be strings or Value objects.
+        actions: A list of (offset, action, arg) tuples. Action may be "pause" or "disconnect".
+
+        Return True if connection should disconnect.
+    """
+    while vals:
+        part = vals.pop()
+        for i in range(skip, len(part), blocksize):
+            d = part[i:i+blocksize]
+            if actions and actions[-1][0] < (sofar + len(d)):
+                p = actions.pop()
+                offset = p[0]-sofar
+                vals.append(part)
+                if p[1] == "pause":
+                    fp.write(d[:offset])
+                    time.sleep(p[2])
+                    return write_values(
+                        fp, vals, actions,
+                        sofar=sofar+offset,
+                        skip=i+offset,
+                        blocksize=blocksize
+                    )
+                elif p[1] == "disconnect":
+                    fp.write(d[:offset])
+                    return True
+            fp.write(d)
+            sofar += len(d)
+        skip = 0
+
 
 
 DATATYPES = dict(
@@ -328,7 +376,6 @@ class Code:
         return e.setParseAction(lambda x: klass(*x))
 
 
-BLOCKSIZE = 1024
 class Response:
     comps = (
         Body,
@@ -375,46 +422,6 @@ class Response:
         l += len(self.body)
         return l
 
-    def ready_actions(self, l, lst):
-        ret = []
-        for i in lst:
-            itms = list(i)
-            if i[0] == "r":
-                itms[0] = random.randrange(l)
-            if i[0] == "a":
-                itms[0] = l+1
-            ret.append(tuple(itms))
-        ret.sort()
-        return ret
-
-    def write_values(self, fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
-        """
-            Return True if connection should disconnect.
-        """
-        while vals:
-            part = vals.pop()
-            for i in range(skip, len(part), blocksize):
-                d = part[i:i+blocksize]
-                if actions and actions[-1][0] < (sofar + len(d)):
-                    p = actions.pop()
-                    offset = p[0]-sofar
-                    vals.append(part)
-                    if p[1] == "pause":
-                        fp.write(d[:offset])
-                        time.sleep(p[2])
-                        return self.write_values(
-                            fp, vals, actions,
-                            sofar=sofar+offset,
-                            skip=i+offset,
-                            blocksize=blocksize
-                        )
-                    elif p[1] == "disconnect":
-                        fp.write(d[:offset])
-                        return True
-                fp.write(d)
-                sofar += len(d)
-            skip = 0
-
     def serve(self, fp):
         started = time.time()
         if self.body and not self.get_header("Content-Length"):
@@ -443,9 +450,9 @@ class Response:
         if self.body:
             vals.append(self.body)
         vals.reverse()
-        actions = self.ready_actions(self.length(), self.actions)
+        actions = ready_actions(self.length(), self.actions)
         actions.reverse()
-        disconnect = self.write_values(fp, vals, actions[:])
+        disconnect = write_values(fp, vals, actions[:])
         duration = time.time() - started
         return dict(
             disconnect = disconnect,
@@ -498,7 +505,7 @@ class InternalResponse(Response):
         return d
 
 
-def parse(settings, s):
+def parse_response(settings, s):
     try:
         return CraftedResponse(settings, s, Response.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:

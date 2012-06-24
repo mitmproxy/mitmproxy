@@ -33,7 +33,7 @@ class PathodHandler(tcp.BaseHandler):
         if not crafted and path.startswith(self.server.prefix):
             spec = urllib.unquote(path)[len(self.server.prefix):]
             try:
-                crafted = rparse.parse(self.server.request_settings, spec)
+                crafted = rparse.parse_response(self.server.request_settings, spec)
             except rparse.ParseException, v:
                 crafted = rparse.InternalResponse(
                     800,
@@ -95,7 +95,7 @@ class Pathod(tcp.TCPServer):
                 except re.error:
                     raise PathodError("Invalid regex in anchor: %s"%i[0])
                 try:
-                    aresp = rparse.parse(self.request_settings, i[1])
+                    aresp = rparse.parse_response(self.request_settings, i[1])
                 except rparse.ParseException, v:
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, aresp))
