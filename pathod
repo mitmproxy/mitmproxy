@@ -7,7 +7,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
     parser.add_argument("-l", dest='address', default="0.0.0.0", type=str, help='Listening address.')
     parser.add_argument(
-        "-a", dest='anchors', default=[], type=str, action="append",
+        "-a", dest='anchors', default=[], type=str, action="append", metavar="ANCHOR",
         help='Add an anchor. Specified as a string with the form pattern=pagespec'
     )
     parser.add_argument(
@@ -43,12 +43,22 @@ if __name__ == "__main__":
     else:
         ssl = None
 
-    pd = pathod.Pathod(
-        (args.address, args.port),
-        ssloptions = ssl,
-        staticdir = args.staticdir,
-        anchors = args.anchors
-    )
+    alst = []
+    for i in args.anchors:
+        parts = utils.parse_anchor_spec(i)
+        if not parts:
+            parser.error("Invalid anchor specification: %s"%i)
+        alst.append(parts)
+
+    try:
+        pd = pathod.Pathod(
+            (args.address, args.port),
+            ssloptions = ssl,
+            staticdir = args.staticdir,
+            anchors = alst
+        )
+    except pathod.PathodError, v:
+        parser.error(str(v))
     try:
         print "%s listening on port %s"%(version.NAMEVERSION, pd.port)
         pd.serve_forever()

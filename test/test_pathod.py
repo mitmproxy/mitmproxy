@@ -1,4 +1,5 @@
 from libpathod import pathod
+import tutils
 
 class _TestApplication:
     def test_anchors(self):
@@ -20,6 +21,8 @@ class TestPathod:
                 anchors = [(".*", "200")]
             )
         assert p.anchors
+        tutils.raises("invalid regex", pathod.Pathod, ("127.0.0.1", 0), anchors=[("*", "200")])
+        tutils.raises("invalid page spec", pathod.Pathod, ("127.0.0.1", 0), anchors=[("foo", "bar")])
 
     def test_logging(self):
         p = pathod.Pathod(("127.0.0.1", 0))

@@ -2,6 +2,8 @@ import urllib, threading, re
 from netlib import tcp, http, odict, wsgi
 import version, app, rparse
 
+class PathodError(Exception): pass
+
 
 class PathodHandler(tcp.BaseHandler):
     def handle(self):
@@ -73,7 +75,7 @@ class Pathod(tcp.TCPServer):
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
             ssloptions: a dictionary containing certfile and keyfile specifications.
-            prefix: string specifying the prefix at which to anchor response generation. 
+            prefix: string specifying the prefix at which to anchor response generation.
             staticdir: path to a directory of static resources, or None.
             anchors: A list of (regex, spec) tuples, or None.
         """
@@ -88,8 +90,14 @@ class Pathod(tcp.TCPServer):
         self.anchors = []
         if anchors:
             for i in anchors:
-                arex = re.compile(i[0])
-                aresp = rparse.parse(self.request_settings, i[1])
+                try:
+                    arex = re.compile(i[0])
+                except re.error:
+                    raise PathodError("Invalid regex in anchor: %s"%i[0])
+                try:
+                    aresp = rparse.parse(self.request_settings, i[1])
+                except rparse.ParseException, v:
+                    raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, aresp))
 
     @property

@@ -17,7 +17,7 @@ case just a vanilla 200 OK response. See the docs below to get (much) fancier.
 You can also add anchors to the __pathod__ server that serve a fixed response
 whenever a matching URL is requested:
 
-    pathod --anchor "/foo=200"
+    pathod -a "/foo=200"
 
 Here, "/foo" a regex specifying the anchor path, and the part after the "=" is
 a response specifier.
