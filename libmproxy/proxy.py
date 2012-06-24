@@ -51,6 +51,7 @@ class RequestReplayThread(threading.Thread):
         try:
             r = self.flow.request
             server = ServerConnection(self.config, r.scheme, r.host, r.port)
+            server.connect()
             server.send(r)
             httpversion, code, msg, headers, content = http.read_response(
                 server.rfile, r.method, self.config.body_size_limit
@@ -128,6 +129,7 @@ class ProxyHandler(tcp.BaseHandler):
         if not self.server_conn:
             try:
                 self.server_conn = ServerConnection(self.config, scheme, host, port)
+                self.server_conn.connect()
             except tcp.NetLibError, v:
                 raise ProxyError(502, v)
 
@@ -321,7 +323,9 @@ class ProxyServer(tcp.TCPServer):
         self.masterq = q
 
     def handle_connection(self, request, client_address):
-        ProxyHandler(self.config, request, client_address, self, self.masterq)
+        h = ProxyHandler(self.config, request, client_address, self, self.masterq)
+        h.handle()
+        h.finish()
 
     def handle_shutdown(self):
         try:
