@@ -290,6 +290,20 @@ class Body:
         return e.setParseAction(lambda x: klass(*x))
 
 
+class Path:
+    def __init__(self, value):
+        self.value = value
+
+    def accept(self, settings, r):
+        r.path = self.value.get_generator(settings)
+
+    @classmethod
+    def expr(klass):
+        e = Value.copy()
+        return e.setParseAction(lambda x: klass(*x))
+
+
+
 class Method:
     methods = [
         "get",
@@ -416,8 +430,10 @@ class Request:
         ShortcutContentType,
     )
     version = "HTTP/1.1"
-    body = LiteralGenerator("")
     def __init__(self):
+        self.method = None
+        self.path = None
+        self.body = LiteralGenerator("")
         self.headers = []
         self.actions = []
 
@@ -428,6 +444,8 @@ class Request:
         resp = pp.And(
             [
                 Method.expr(),
+                pp.Literal(":").suppress(),
+                Path.expr(),
                 pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
             ]
         )

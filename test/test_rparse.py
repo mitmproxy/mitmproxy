@@ -88,9 +88,13 @@ class TestMisc:
         assert rparse.Value.parseString('"val"')[0].val == "val"
         assert rparse.Value.parseString('"\'val\'"')[0].val == "'val'"
 
+    def test_path(self):
+        e = rparse.Path.expr()
+        assert e.parseString('"/foo"')[0].value.val == "/foo"
+
     def test_method(self):
         e = rparse.Method.expr()
-        assert e.parseString("get")[0].value == "GET"
+        assert e.parseString("get")[0].value.val == "GET"
         assert e.parseString("'foo'")[0].value.val == "foo"
         assert e.parseString("'get'")[0].value.val == "get"
 
@@ -189,9 +193,13 @@ class TestPauses:
 
 
 class TestParseRequest:
+    def test_err(self):
+        tutils.raises(rparse.ParseException, rparse.parse_request, {}, 'GET')
+
     def test_simple(self):
-        r = rparse.parse_request({}, "GET")
+        r = rparse.parse_request({}, 'GET:"/foo"')
         assert r.method == "GET"
+        assert r.path == "/foo"
 
 
 class TestParseResponse:
