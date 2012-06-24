@@ -10,7 +10,7 @@ if __name__ == "__main__":
     parser.add_argument('request', type=str, nargs="+", help='Request specification')
 
     args = parser.parse_args()
-        
+
     if args.port is None:
         port = 443 if args.ssl else 80
     else:

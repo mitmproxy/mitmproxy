@@ -1,6 +1,7 @@
-import urllib, threading, re
+import urllib, threading, re, logging
 from netlib import tcp, http, odict, wsgi
 import version, app, rparse
+
 
 class PathodError(Exception): pass
 

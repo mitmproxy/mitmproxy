@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse, sys
+import argparse, sys, logging
 from libpathod import pathod, utils, version
 
 if __name__ == "__main__":
@@ -13,6 +13,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d", dest='staticdir', default=None, type=str,
         help='Directory for static files.'
+    )
+    parser.add_argument(
+        "--debug", dest='debug', default=False,
+        action="store_true",
+        help='Enable debug output.'
     )
     parser.add_argument(
         "-s", dest='ssl', default=False,
@@ -49,6 +54,18 @@ if __name__ == "__main__":
         if not parts:
             parser.error("Invalid anchor specification: %s"%i)
         alst.append(parts)
+
+    root = logging.getLogger()
+    if root.handlers:
+        for handler in root.handlers:
+            root.removeHandler(handler)
+    logging.basicConfig(
+        format='%(asctime)s: %(message)s',
+        datefmt='%d-%m-%y %I:%M:%S',
+        level=logging.DEBUG
+    )
+    if not args.debug:
+        logging.disable(logging.DEBUG)
 
     try:
         pd = pathod.Pathod(

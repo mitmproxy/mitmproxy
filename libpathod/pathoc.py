@@ -1,7 +1,6 @@
 from netlib import tcp, http
 import rparse
 
-
 class PathocError(Exception): pass
 
 
