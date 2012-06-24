@@ -52,7 +52,12 @@ class RequestReplayThread(threading.Thread):
             r = self.flow.request
             server = ServerConnection(self.config, r.scheme, r.host, r.port)
             server.send(r)
-            response = server.read_response(r)
+            httpversion, code, msg, headers, content = http.read_response(
+                server.rfile, r.method, self.config.body_size_limit
+            )
+            response = flow.Response(
+                request, httpversion, code, msg, headers, content, server.cert
+            )
             response._send(self.masterq)
         except (ProxyError, http.HttpError), v:
             err = flow.Error(self.flow.request, v.msg)
@@ -88,34 +93,6 @@ class ServerConnection(tcp.TCPClient):
             self.wfile.flush()
         except socket.error, err:
             raise ProxyError(502, 'Error sending data to "%s": %s' % (request.host, err))
-
-    def read_response(self, request):
-        line = self.rfile.readline()
-        if line == "\r\n" or line == "\n": # Possible leftover from previous message
-            line = self.rfile.readline()
-        if not line:
-            raise ProxyError(502, "Blank server response.")
-        parts = line.strip().split(" ", 2)
-        if len(parts) == 2: # handle missing message gracefully
-            parts.append("")
-        if not len(parts) == 3:
-            raise ProxyError(502, "Invalid server response: %s."%line)
-        proto, code, msg = parts
-        httpversion = http.parse_http_protocol(proto)
-        if httpversion is None:
-            raise ProxyError(502, "Invalid HTTP version: %s."%httpversion)
-        try:
-            code = int(code)
-        except ValueError:
-            raise ProxyError(502, "Invalid server response: %s."%line)
-        headers = http.read_headers(self.rfile)
-        if code >= 100 and code <= 199:
-            return self.read_response()
-        if request.method == "HEAD" or code == 204 or code == 304:
-            content = ""
-        else:
-            content = http.read_http_body_response(self.rfile, headers, True, self.config.body_size_limit)
-        return flow.Response(request, httpversion, code, msg, headers, content, self.cert)
 
     def terminate(self):
         try:
@@ -181,7 +158,14 @@ class ProxyHandler(tcp.BaseHandler):
                         scheme, host, port = request.scheme, request.host, request.port
                     self.server_connect(scheme, host, port)
                     self.server_conn.send(request)
-                    response = self.server_conn.read_response(request)
+                    httpversion, code, msg, headers, content = http.read_response(
+                        self.server_conn.rfile,
+                        request.method,
+                        self.config.body_size_limit
+                    )
+                    response = flow.Response(
+                        request, httpversion, code, msg, headers, content, self.server_conn.cert
+                    )
                     response = response._send(self.mqueue)
                     if response is None:
                         self.server_conn.terminate()
