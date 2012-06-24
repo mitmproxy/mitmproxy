@@ -272,5 +272,5 @@ def read_response(rfile, method, body_size_limit):
     if method == "HEAD" or code == 204 or code == 304:
         content = ""
     else:
-        content = read_http_body_response(rfile, headers, True, body_size_limit)
+        content = read_http_body_response(rfile, headers, False, body_size_limit)
     return httpversion, code, msg, headers, content
