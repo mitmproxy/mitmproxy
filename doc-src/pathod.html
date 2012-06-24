@@ -30,7 +30,9 @@ various other goodies. Try it by visiting the server root:
 
 
 
-# Specifying Responses
+<div class="page-header">
+   <h1>Specifying Responses</h1>
+</div>
 
 The general form of a response is as follows:
     
@@ -284,7 +286,9 @@ Supported data types are:
 - bytes
 
 
-# API
+<div class="page-header">
+   <h1>API</h1>
+</div>
 
 __pathod__ exposes a simple API, intended to make it possible to drive and
 inspect the daemon remotely for use in unit testing and the like. 
@@ -328,3 +332,16 @@ inspect the daemon remotely for use in unit testing and the like.
         </tr>
     </tbody>
 </table>
+
+<div class="page-header">
+   <h1>Error Responses</h1>
+</div>
+
+To let users distinguish crafted responses from internal pathod responses,
+pathod uses the non-standard 800 response code to indicate errors. For example,
+a request to:
+
+    http://localhost:9999/p/foo
+
+... will return an 800 response, because "foo" is not a valid page specifier.
+
