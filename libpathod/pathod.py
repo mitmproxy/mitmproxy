@@ -14,7 +14,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.server.ssloptions["keyfile"],
             )
 
-        while 1:
+        while not self.finished:
             line = self.rfile.readline()
             if line == "\r\n" or line == "\n": # Possible leftover from previous message
                 line = self.rfile.readline()
