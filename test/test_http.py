@@ -107,6 +107,7 @@ def test_parse_http_protocol():
     assert http.parse_http_protocol("HTTP/1.1") == (1, 1)
     assert http.parse_http_protocol("HTTP/0.0") == (0, 0)
     assert not http.parse_http_protocol("foo/0.0")
+    assert not http.parse_http_protocol("HTTP/x")
 
 
 def test_parse_init_connect():
@@ -181,6 +182,47 @@ class TestReadHeaders:
         s = cStringIO.StringIO(data)
         h = http.read_headers(s)
         assert h.lst == [["Header", "one\r\n two"], ["Header2", "three"]]
+
+
+def test_read_response():
+    def tst(data, method, limit):
+        data = textwrap.dedent(data)
+        r = cStringIO.StringIO(data)
+        return  http.read_response(r, method, limit)
+
+    tutils.raises("blank server response", tst, "", "GET", None)
+    tutils.raises("invalid server response", tst, "foo", "GET", None)
+    data = """
+        HTTP/1.1 200 OK
+    """
+    assert tst(data, "GET", None) == ((1, 1), 200, 'OK', odict.ODictCaseless(), '')
+    data = """
+        HTTP/1.1 200
+    """
+    assert tst(data, "GET", None) == ((1, 1), 200, '', odict.ODictCaseless(), '')
+    data = """
+        HTTP/x 200 OK
+    """
+    tutils.raises("invalid http version", tst, data, "GET", None)
+    data = """
+        HTTP/1.1 xx OK
+    """
+    tutils.raises("invalid server response", tst, data, "GET", None)
+
+    data = """
+        HTTP/1.1 100 CONTINUE
+
+        HTTP/1.1 200 OK
+    """
+    assert tst(data, "GET", None) == ((1, 1), 200, 'OK', odict.ODictCaseless(), '')
+
+    data = """
+        HTTP/1.1 200 OK
+
+        foo
+    """
+    assert tst(data, "GET", None) == ((1, 1), 200, 'OK', odict.ODictCaseless(), 'foo\n')
+    assert tst(data, "HEAD", None) == ((1, 1), 200, 'OK', odict.ODictCaseless(), '')
 
 
 def test_parse_url():

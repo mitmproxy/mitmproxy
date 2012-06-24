@@ -128,7 +128,7 @@ def read_http_body(code, rfile, headers, all, limit):
             raise HttpError(code, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
         content = rfile.read(l)
     elif all:
-        content = rfile.read(limit if limit else None)
+        content = rfile.read(limit if limit else -1)
     else:
         content = ""
     return content
@@ -141,7 +141,10 @@ def parse_http_protocol(s):
     """
     if not s.startswith("HTTP/"):
         return None
-    major, minor = s.split('/')[1].split('.')
+    _, version = s.split('/')
+    if "." not in version:
+        return None
+    major, minor = version.split('.')
     major = int(major)
     minor = int(minor)
     return major, minor
@@ -237,8 +240,37 @@ def read_http_body_request(rfile, wfile, headers, httpversion, limit):
     return read_http_body(400, rfile, headers, False, limit)
 
 
-def read_http_body_response(rfile, headers, False, limit):
+def read_http_body_response(rfile, headers, all, limit):
     """
         Read the HTTP body from a server response.
     """
-    return read_http_body(500, rfile, headers, False, limit)
+    return read_http_body(500, rfile, headers, all, limit)
+
+
+def read_response(rfile, method, body_size_limit):
+    line = rfile.readline()
+    if line == "\r\n" or line == "\n": # Possible leftover from previous message
+        line = rfile.readline()
+    if not line:
+        raise HttpError(502, "Blank server response.")
+    parts = line.strip().split(" ", 2)
+    if len(parts) == 2: # handle missing message gracefully
+        parts.append("")
+    if not len(parts) == 3:
+        raise HttpError(502, "Invalid server response: %s."%line)
+    proto, code, msg = parts
+    httpversion = parse_http_protocol(proto)
+    if httpversion is None:
+        raise HttpError(502, "Invalid HTTP version: %s."%httpversion)
+    try:
+        code = int(code)
+    except ValueError:
+        raise HttpError(502, "Invalid server response: %s."%line)
+    headers = read_headers(rfile)
+    if code >= 100 and code <= 199:
+        return read_response(rfile, method, body_size_limit)
+    if method == "HEAD" or code == 204 or code == 304:
+        content = ""
+    else:
+        content = read_http_body_response(rfile, headers, True, body_size_limit)
+    return httpversion, code, msg, headers, content
