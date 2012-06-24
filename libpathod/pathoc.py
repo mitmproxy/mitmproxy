@@ -26,4 +26,3 @@ class Pathoc(tcp.TCPClient):
         r.serve(self.wfile)
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
-

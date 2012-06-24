@@ -109,7 +109,9 @@ class Pathod(tcp.TCPServer):
         )
 
     def handle_connection(self, request, client_address):
-        PathodHandler(request, client_address, self)
+        h = PathodHandler(request, client_address, self)
+        h.handle()
+        h.finish()
 
     def add_log(self, d):
         lock = threading.Lock()
