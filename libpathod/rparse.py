@@ -2,8 +2,6 @@ import operator, string, random, mmap, os, time
 import contrib.pyparsing as pp
 from netlib import http_status
 
-TESTING = False
-
 class ParseException(Exception):
     def __init__(self, msg, s, col):
         Exception.__init__(self)

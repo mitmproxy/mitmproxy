@@ -44,12 +44,28 @@ class TestDaemon:
     def tearDownAll(self):
         self.d.shutdown()
 
+    def setUp(self):
+        self.d.clear_log()
+
+    def get(self, spec):
+        return requests.get("http://localhost:%s/p/%s"%(self.d.port, spec))
+
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
 
     def test_logs(self):
-        rsp = requests.get("http://localhost:%s/p/202"%self.d.port)
+        rsp = self.get("202")
         assert len(self.d.log()) == 1
         assert self.d.clear_log()
         assert len(self.d.log()) == 0
+
+    def test_disconnect(self):
+        rsp = self.get("202:b@100k:d200")
+        assert len(rsp.content) < 200
+
+    def test_parserr(self):
+        rsp = self.get("400:msg,b:")
+        assert rsp.status_code == 800
+
+
 

@@ -26,7 +26,7 @@ class PathodHandler(tcp.BaseHandler):
         if path.startswith(self.server.prefix):
             spec = urllib.unquote(path)[len(self.server.prefix):]
             try:
-                presp = rparse.parse({}, spec)
+                presp = rparse.parse(self.server.request_settings, spec)
             except rparse.ParseException, v:
                 presp = rparse.InternalResponse(
                     800,
@@ -34,8 +34,7 @@ class PathodHandler(tcp.BaseHandler):
                 )
             ret = presp.serve(self.wfile)
             if ret["disconnect"]:
-                self.close()
-
+                self.finish()
             ret["request"] = dict(
                 path = path,
                 method = method,
@@ -65,6 +64,7 @@ class Pathod(tcp.TCPServer):
     def __init__(self, addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None):
         tcp.TCPServer.__init__(self, addr)
         self.ssloptions = ssloptions
+        self.staticdir = staticdir
         self.prefix = prefix
         self.app = app.app
         self.app.config["pathod"] = self
@@ -73,7 +73,9 @@ class Pathod(tcp.TCPServer):
 
     @property
     def request_settings(self):
-        return {}
+        return dict(
+            staticdir = self.staticdir
+        )
 
     def handle_connection(self, request, client_address):
         PathodHandler(request, client_address, self)
