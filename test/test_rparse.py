@@ -211,7 +211,6 @@ class TestParseRequest:
         assert str(r)
 
 
-
 class TestParseResponse:
     def test_parse_err(self):
         tutils.raises(rparse.ParseException, rparse.parse_response, {}, "400:msg,b:")

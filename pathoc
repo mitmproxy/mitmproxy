@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+import argparse, sys
+from libpathod import pathoc, version
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='A perverse HTTP client.')
+    parser.add_argument('--port', type=int, default=None, help="Port. Defaults to 80, or 443 if SSL is active.")
+    parser.add_argument('--ssl', action="store_true", default=False, help="Connect with SSL.")
+    parser.add_argument('host', type=str, help='Host to connect to')
+    parser.add_argument('request', type=str, nargs="+", help='Request specification')
+
+    args = parser.parse_args()
+        
+    if args.port is None:
+        port = 443 if args.ssl else 80
+    else:
+        port = args.port
+
+    try:
+        p = pathoc.Pathoc(args.ssl, args.host, port, None)
+        for i in args.request:
+            p.request(i)
+    except pathoc.PathocError, v:
+        print >> sys.stderr, str(v) 
+        sys.exit(1)
