@@ -38,7 +38,7 @@ class TestDaemonManual:
 class TestDaemon:
     @classmethod
     def setUpAll(self):
-        self.d = test.Daemon()
+        self.d = test.Daemon(staticdir=tutils.test_data.path("data"))
 
     @classmethod
     def tearDownAll(self):
@@ -66,6 +66,11 @@ class TestDaemon:
     def test_parserr(self):
         rsp = self.get("400:msg,b:")
         assert rsp.status_code == 800
+
+    def test_static(self):
+        rsp = self.get("200:b<file")
+        assert rsp.status_code == 200
+        assert rsp.content.strip() == "testfile"
 
 
 
