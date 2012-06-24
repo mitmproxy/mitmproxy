@@ -88,6 +88,12 @@ class TestMisc:
         assert rparse.Value.parseString('"val"')[0].val == "val"
         assert rparse.Value.parseString('"\'val\'"')[0].val == "'val'"
 
+    def test_method(self):
+        e = rparse.Method.expr()
+        assert e.parseString("get")[0].value == "GET"
+        assert e.parseString("'foo'")[0].value.val == "foo"
+        assert e.parseString("'get'")[0].value.val == "get"
+
     def test_body(self):
         e = rparse.Body.expr()
         v = e.parseString("b'foo'")[0]

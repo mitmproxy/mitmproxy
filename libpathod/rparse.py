@@ -21,14 +21,14 @@ class ParseException(Exception):
 class ServerError(Exception): pass
 
 
-def ready_actions(l, lst):
+def ready_actions(length, lst):
     ret = []
     for i in lst:
         itms = list(i)
         if i[0] == "r":
-            itms[0] = random.randrange(l)
+            itms[0] = random.randrange(length)
         if i[0] == "a":
-            itms[0] = l+1
+            itms[0] = length+1
         ret.append(tuple(itms))
     ret.sort()
     return ret
@@ -64,7 +64,6 @@ def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
             fp.write(d)
             sofar += len(d)
         skip = 0
-
 
 
 DATATYPES = dict(
@@ -241,7 +240,7 @@ class ShortcutContentType:
     def __init__(self, value):
         self.value = value
 
-    def mod_response(self, settings, r):
+    def accept(self, settings, r):
         r.headers.append(
             (
                 LiteralGenerator("Content-Type"),
@@ -261,7 +260,7 @@ class ShortcutLocation:
     def __init__(self, value):
         self.value = value
 
-    def mod_response(self, settings, r):
+    def accept(self, settings, r):
         r.headers.append(
             (
                 LiteralGenerator("Location"),
@@ -280,7 +279,7 @@ class Body:
     def __init__(self, value):
         self.value = value
 
-    def mod_response(self, settings, r):
+    def accept(self, settings, r):
         r.body = self.value.get_generator(settings)
 
     @classmethod
@@ -290,6 +289,37 @@ class Body:
         return e.setParseAction(lambda x: klass(*x))
 
 
+class Method:
+    methods = [
+        "get",
+        "head",
+        "post",
+        "put",
+        "delete",
+        "options",
+        "trace",
+        "connect",
+    ]
+    def __init__(self, value):
+        # If it's a string, we were passed one of the methods, so we upper-case
+        # it to be canonical. The user can specify a different case by using a
+        # string value literal.
+        if isinstance(value, basestring):
+            value = value.upper()
+        self.value = value
+
+    def accept(self, settings, r):
+        r.method = self.value.get_generator(settings)
+
+    @classmethod
+    def expr(klass):
+        parts = [pp.CaselessLiteral(i) for i in klass.methods]
+        m = pp.MatchFirst(parts)
+        spec = m | Value.copy()
+        spec = spec.setParseAction(lambda x: klass(*x))
+        return spec
+
+
 class PauseAt:
     def __init__(self, seconds, offset):
         self.seconds, self.offset = seconds, offset
@@ -297,7 +327,7 @@ class PauseAt:
     @classmethod
     def expr(klass):
         e = pp.Literal("p").suppress()
-        e +=pp.MatchFirst(
+        e += pp.MatchFirst(
                     [
                         v_integer,
                         pp.Literal("f")
@@ -313,7 +343,7 @@ class PauseAt:
                 )
         return e.setParseAction(lambda x: klass(*x))
 
-    def mod_response(self, settings, r):
+    def accept(self, settings, r):
         r.actions.append((self.offset, "pause", self.seconds))
 
 
@@ -321,7 +351,7 @@ class DisconnectAt:
     def __init__(self, value):
         self.value = value
 
-    def mod_response(self, settings, r):
+    def accept(self, settings, r):
         r.actions.append((self.value, "disconnect"))
 
     @classmethod
@@ -340,7 +370,7 @@ class Header:
     def __init__(self, key, value):
         self.key, self.value = key, value
 
-    def mod_response(self, settings, r):
+    def accept(self, settings, r):
         r.headers.append(
             (
                 self.key.get_generator(settings),
@@ -363,7 +393,7 @@ class Code:
         if msg is None:
             self.msg = ValueLiteral(http_status.RESPONSES.get(self.code, "Unknown code"))
 
-    def mod_response(self, settings, r):
+    def accept(self, settings, r):
         r.code = self.code
         r.msg = self.msg.get_generator(settings)
 
@@ -474,7 +504,7 @@ class CraftedResponse(Response):
         Response.__init__(self)
         self.spec, self.tokens = spec, tokens
         for i in tokens:
-            i.mod_response(settings, self)
+            i.accept(settings, self)
 
     def serve(self, fp):
         d = Response.serve(self, fp)
