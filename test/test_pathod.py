@@ -15,7 +15,11 @@ class _TestApplication:
 
 class TestPathod:
     def test_instantiation(self):
-        p = pathod.Pathod(("127.0.0.1", 0))
+        p = pathod.Pathod(
+                ("127.0.0.1", 0),
+                anchors = [(".*", "200")]
+            )
+        assert p.anchors
 
     def test_logging(self):
         p = pathod.Pathod(("127.0.0.1", 0))

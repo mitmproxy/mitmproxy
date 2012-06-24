@@ -1,4 +1,4 @@
-import urllib, threading
+import urllib, threading, re
 from netlib import tcp, http, odict, wsgi
 import version, app, rparse
 
@@ -23,16 +23,23 @@ class PathodHandler(tcp.BaseHandler):
                     self.rfile, self.wfile, headers, httpversion, None
                 )
 
-        if path.startswith(self.server.prefix):
+        crafted = None
+        for i in self.server.anchors:
+            if i[0].match(path):
+                crafted = i[1]
+
+        if not crafted and path.startswith(self.server.prefix):
             spec = urllib.unquote(path)[len(self.server.prefix):]
             try:
-                presp = rparse.parse(self.server.request_settings, spec)
+                crafted = rparse.parse(self.server.request_settings, spec)
             except rparse.ParseException, v:
-                presp = rparse.InternalResponse(
+                crafted = rparse.InternalResponse(
                     800,
                     "Error parsing response spec: %s\n"%v.msg + v.marked()
                 )
-            ret = presp.serve(self.wfile)
+
+        if crafted:
+            ret = crafted.serve(self.wfile)
             if ret["disconnect"]:
                 self.finish()
             ret["request"] = dict(
@@ -62,6 +69,14 @@ class PathodHandler(tcp.BaseHandler):
 class Pathod(tcp.TCPServer):
     LOGBUF = 500
     def __init__(self, addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None):
+        """
+            addr: (address, port) tuple. If port is 0, a free port will be
+            automatically chosen.
+            ssloptions: a dictionary containing certfile and keyfile specifications.
+            prefix: string specifying the prefix at which to anchor response generation. 
+            staticdir: path to a directory of static resources, or None.
+            anchors: A list of (regex, spec) tuples, or None.
+        """
         tcp.TCPServer.__init__(self, addr)
         self.ssloptions = ssloptions
         self.staticdir = staticdir
@@ -70,6 +85,12 @@ class Pathod(tcp.TCPServer):
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0
+        self.anchors = []
+        if anchors:
+            for i in anchors:
+                arex = re.compile(i[0])
+                aresp = rparse.parse(self.request_settings, i[1])
+                self.anchors.append((arex, aresp))
 
     @property
     def request_settings(self):

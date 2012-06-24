@@ -38,7 +38,10 @@ class TestDaemonManual:
 class TestDaemon:
     @classmethod
     def setUpAll(self):
-        self.d = test.Daemon(staticdir=tutils.test_data.path("data"))
+        self.d = test.Daemon(
+            staticdir=tutils.test_data.path("data"),
+            anchors=[("/anchor/.*", "202")]
+        )
 
     @classmethod
     def tearDownAll(self):
@@ -46,6 +49,9 @@ class TestDaemon:
 
     def setUp(self):
         self.d.clear_log()
+
+    def getpath(self, path):
+        return requests.get("http://localhost:%s/%s"%(self.d.port, path))
 
     def get(self, spec):
         return requests.get("http://localhost:%s/p/%s"%(self.d.port, spec))
@@ -72,5 +78,7 @@ class TestDaemon:
         assert rsp.status_code == 200
         assert rsp.content.strip() == "testfile"
 
-
+    def test_anchor(self):
+        rsp = self.getpath("anchor/foo")
+        assert rsp.status_code == 202
 
