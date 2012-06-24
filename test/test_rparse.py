@@ -201,6 +201,16 @@ class TestParseRequest:
         assert r.method == "GET"
         assert r.path == "/foo"
 
+    def test_render(self):
+        s = cStringIO.StringIO()
+        r = rparse.parse_request({}, "GET:'/foo'")
+        assert r.serve(s)
+
+    def test_str(self):
+        r = rparse.parse_request({}, 'GET:"/foo"')
+        assert str(r)
+
+
 
 class TestParseResponse:
     def test_parse_err(self):

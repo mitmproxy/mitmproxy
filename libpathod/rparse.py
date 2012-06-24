@@ -4,6 +4,7 @@ from netlib import http_status
 import utils
 
 BLOCKSIZE = 1024
+TRUNCATE = 1024
 
 class ParseException(Exception):
     def __init__(self, msg, s, col):
@@ -421,82 +422,11 @@ class Code:
         return e.setParseAction(lambda x: klass(*x))
 
 
-class Request:
-    comps = (
-        Body,
-        Header,
-        PauseAt,
-        DisconnectAt,
-        ShortcutContentType,
-    )
+
+class Message:
     version = "HTTP/1.1"
-    def __init__(self):
-        self.method = None
-        self.path = None
-        self.body = LiteralGenerator("")
-        self.headers = []
-        self.actions = []
-
-    @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
-        atom = pp.MatchFirst(parts)
-        resp = pp.And(
-            [
-                Method.expr(),
-                pp.Literal(":").suppress(),
-                Path.expr(),
-                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
-            ]
-        )
-        return resp
-
-
-class CraftedRequest(Request):
-    def __init__(self, settings, spec, tokens):
-        Request.__init__(self)
-        self.spec, self.tokens = spec, tokens
-        for i in tokens:
-            i.accept(settings, self)
-
-    def serve(self, fp):
-        d = Request.serve(self, fp)
-        d["spec"] = self.spec
-        return d
-
-
-class Response:
-    comps = (
-        Body,
-        Header,
-        PauseAt,
-        DisconnectAt,
-        ShortcutContentType,
-        ShortcutLocation,
-    )
-    version = "HTTP/1.1"
-    code = 200
-    msg = LiteralGenerator(http_status.RESPONSES[code])
-    body = LiteralGenerator("")
-    def __init__(self):
-        self.headers = []
-        self.actions = []
-
-    @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
-        atom = pp.MatchFirst(parts)
-        resp = pp.And(
-            [
-                Code.expr(),
-                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
-            ]
-        )
-        return resp
-
     def length(self):
-        l = len("%s %s "%(self.version, self.code))
-        l += len(self.msg)
+        l = sum(len(x) for x in self.preamble())
         l += 2
         for i in self.headers:
             l += len(i[0]) + len(i[1])
@@ -523,11 +453,8 @@ class Response:
                 v,
                 "\r\n",
             ])
-        vals = [
-            "%s %s "%(self.version, self.code),
-            self.msg,
-            "\r\n",
-        ]
+        vals = self.preamble()
+        vals.append("\r\n")
         vals.extend(hdrs)
         vals.append("\r\n")
         if self.body:
@@ -537,19 +464,111 @@ class Response:
         actions.reverse()
         disconnect = write_values(fp, vals, actions[:])
         duration = time.time() - started
-        return dict(
+        ret = dict(
             disconnect = disconnect,
             started = started,
             duration = duration,
             actions = actions,
-            code = self.code,
         )
+        for i in self.logattrs:
+            v = getattr(self, i)
+            # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
+            if hasattr(v, "__len__"):
+                v = v[:TRUNCATE]
+            ret[i] = v
+        return ret
+
+
+class Response(Message):
+    comps = (
+        Body,
+        Header,
+        PauseAt,
+        DisconnectAt,
+        ShortcutContentType,
+        ShortcutLocation,
+    )
+    logattrs = ["code", "version"]
+    def __init__(self):
+        self.headers = []
+        self.actions = []
+        self.code = 200
+        self.msg = LiteralGenerator(http_status.RESPONSES[self.code])
+        self.body = LiteralGenerator("")
+
+    def preamble(self):
+        return [self.version, " ", str(self.code), " ", self.msg]
+
+    @classmethod
+    def expr(klass):
+        parts = [i.expr() for i in klass.comps]
+        atom = pp.MatchFirst(parts)
+        resp = pp.And(
+            [
+                Code.expr(),
+                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
+            ]
+        )
+        return resp
 
     def __str__(self):
         parts = [
             "%s %s"%(self.code, self.msg[:])
         ]
         return "\n".join(parts)
+
+
+class Request(Message):
+    comps = (
+        Body,
+        Header,
+        PauseAt,
+        DisconnectAt,
+        ShortcutContentType,
+    )
+    logattrs = ["method", "path"]
+    def __init__(self):
+        self.method = None
+        self.path = None
+        self.body = LiteralGenerator("")
+        self.headers = []
+        self.actions = []
+
+    def preamble(self):
+        return [self.method, " ", self.path, " ", self.version]
+
+    @classmethod
+    def expr(klass):
+        parts = [i.expr() for i in klass.comps]
+        atom = pp.MatchFirst(parts)
+        resp = pp.And(
+            [
+                Method.expr(),
+                pp.Literal(":").suppress(),
+                Path.expr(),
+                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
+            ]
+        )
+        return resp
+
+    def __str__(self):
+        parts = [
+            "%s %s"%(self.method[:], self.path[:])
+        ]
+        return "\n".join(parts)
+
+
+class CraftedRequest(Request):
+    def __init__(self, settings, spec, tokens):
+        Request.__init__(self)
+        self.spec, self.tokens = spec, tokens
+        for i in tokens:
+            i.accept(settings, self)
+
+    def serve(self, fp):
+        d = Request.serve(self, fp)
+        d["spec"] = self.spec
+        return d
 
 
 class CraftedResponse(Response):

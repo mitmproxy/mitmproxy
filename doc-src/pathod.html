@@ -5,16 +5,16 @@
     </h1>
 </div>
 
-At __pathod__'s heart is a small, terse language for crafting HTTP responses,
+At pathod's heart is a small, terse language for crafting HTTP responses,
 designed to be easy to specify in a request URL.  The simplest way to use
-__pathod__ is to fire up the daemon, and specify the response behaviour you
+pathod is to fire up the daemon, and specify the response behaviour you
 want using this language in the request URL.  Here's a minimal example:
 
     http://localhost:9999/p/200
 
 Everything after the "/p/" path component is a response specifier - in this
 case just a vanilla 200 OK response. See the docs below to get (much) fancier.
-You can also add anchors to the __pathod__ server that serve a fixed response
+You can also add anchors to the pathod server that serve a fixed response
 whenever a matching URL is requested:
 
     pathod -a "/foo=200"
@@ -22,7 +22,7 @@ whenever a matching URL is requested:
 Here, "/foo" a regex specifying the anchor path, and the part after the "=" is
 a response specifier.
 
-__pathod__ also has a nifty built-in web interface, which lets you play with
+pathod also has a nifty built-in web interface, which lets you play with
 the language by previewing responses, exposes activity logs, online help and
 various other goodies. Try it by visiting the server root:
 
@@ -44,17 +44,17 @@ OK message with no headers and no content:
     200
 
 We can embellish this a bit by specifying an optional custom HTTP response
-message (if we don't, __pathod__ automatically creates an appropriate one). By
+message (if we don't, pathod automatically creates an appropriate one). By
 default for a 200 response code the message is "OK", but we can change it like
 this:
 
     200"YAY"
 
 The quoted string here is an example of a <a href=#valuespec>Value
-Specifier</a>, a syntax that is used throughout the __pathod__ response
+Specifier</a>, a syntax that is used throughout the pathod response
 specification language. In this case, the quotes mean we're specifying a
 literal string, but there are many other fun things we can do. For example, we
-can tell __pathod__ to generate 100k of random ASCII letters instead:
+can tell pathod to generate 100k of random ASCII letters instead:
 
     200@100k,ascii_letters
 
@@ -83,14 +83,14 @@ shortcut for the content-type header is "c":
 
 That's it for the basic response definition. Now we can start mucking with the
 responses to break clients. One common hard-to-test circumstance is hangs or
-slow responses. __pathod__ has a pause operator that you can use to define
+slow responses. pathod has a pause operator that you can use to define
 precisely when and how long the server should hang. Here, for instance, we hang
 for 120 seconds after sending 50 bytes (counted from the first byte of the HTTP
 response):
 
     200:b@1m:p120,50
 
-If that's not long enough, we can tell __pathod__ to hang forever:
+If that's not long enough, we can tell pathod to hang forever:
 
     200:b@1m:p120,f
 
@@ -98,12 +98,12 @@ Or to send all data, and then hang without disconnecting:
 
     200:b@1m:p120,a
 
-We can also ask __pathod__ to hang randomly:
+We can also ask pathod to hang randomly:
 
     200:b@1m:pr,a
 
 There is a similar mechanism for dropping connections mid-response. So, we can
-tell __pathod__ to disconnect after sending 50 bytes:
+tell pathod to disconnect after sending 50 bytes:
 
     200:b@1m:d50
 
@@ -136,7 +136,7 @@ once at 10 bytes and once at 20, then disconnects at 5000:
             </td>
             <td>
                 Set the body. VALUE is a <a href=#valuespec>Value
-                Specifier</a>. When the body is set, __pathod__ will
+                Specifier</a>. When the body is set, pathod will
                 automatically set the appropriate Content-Length header.
             </td>
         </tr>
@@ -171,7 +171,7 @@ once at 10 bytes and once at 20, then disconnects at 5000:
                 dOFFSET
             </td>
             <td>
-                Disconnect after OFFSET bytes. The offset can also be "r", in which case __pathod__
+                Disconnect after OFFSET bytes. The offset can also be "r", in which case pathod
                 will disconnect at a random point in the response.
             </td>
         </tr>
@@ -209,7 +209,7 @@ backslashes within the string:
 ### Files
 
 You can load a value from a specified file path. To do so, you have to specify
-a _staticdir_ option to __pathod__ on the command-line, like so: 
+a _staticdir_ option to pathod on the command-line, like so: 
 
     pathod -d ~/myassets
 
@@ -227,7 +227,7 @@ The path value can also be a quoted string, with the same syntax as literals:
 
 An @-symbol lead-in specifies that generated data should be used. There are two
 components to a generator specification - a size, and a data type. By default
-__pathod__ assumes a data type of "bytes". 
+pathod assumes a data type of "bytes". 
 
 Here's a value specifier for generating 100 bytes:
     
@@ -239,7 +239,7 @@ a specifier for generating 100 megabytes:
     @100m
 
 Data is generated and served efficiently - if you really want to send a
-terabyte of data to a client, __pathod__ can do it. The supported suffixes are:
+terabyte of data to a client, pathod can do it. The supported suffixes are:
 
 
 <table class="table table-bordered table-condensed">
@@ -290,7 +290,7 @@ Supported data types are:
    <h1>API</h1>
 </div>
 
-__pathod__ exposes a simple API, intended to make it possible to drive and
+pathod exposes a simple API, intended to make it possible to drive and
 inspect the daemon remotely for use in unit testing and the like. 
 
 
@@ -321,11 +321,8 @@ inspect the daemon remotely for use in unit testing and the like.
                 when the log grows larger than this, older entries are discarded. The returned
                 data is a JSON dictionary, with the form:
 
-                <pre>
-                    {
-                        'log': [ ENTRIES ]
-                    }
-                </pre>
+                <pre>{ 'log': [ ENTRIES ] } </pre>
+
                 You can preview the JSON data returned for a log entry through the built-in web
                 interface.
             </td>
