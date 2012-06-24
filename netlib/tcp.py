@@ -20,7 +20,7 @@ class FileLike:
         while len(result) < length:
             try:
                 data = self.o.read(length)
-            except SSL.ZeroReturnError:
+            except (SSL.ZeroReturnError, SSL.SysCallError):
                 break
             if not data:
                 break
@@ -86,6 +86,7 @@ class BaseHandler:
 
         self.client_address = client_address
         self.server = server
+        self.finished = False
 
     def convert_to_ssl(self, cert, key):
         ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -97,6 +98,7 @@ class BaseHandler:
         self.wfile = FileLike(self.connection)
 
     def finish(self):
+        self.finished = True
         try:
             if not getattr(self.wfile, "closed", False):
                 self.wfile.flush()
