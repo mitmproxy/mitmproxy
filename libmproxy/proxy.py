@@ -50,8 +50,8 @@ class RequestReplayThread(threading.Thread):
     def run(self):
         try:
             r = self.flow.request
-            server = ServerConnection(self.config, r.scheme, r.host, r.port)
-            server.connect()
+            server = ServerConnection(self.config, r.host, r.port)
+            server.connect(r.scheme)
             server.send(r)
             httpversion, code, msg, headers, content = http.read_response(
                 server.rfile, r.method, self.config.body_size_limit
@@ -68,21 +68,20 @@ class RequestReplayThread(threading.Thread):
 
 
 class ServerConnection(tcp.TCPClient):
-    def __init__(self, config, scheme, host, port):
-        clientcert = None
-        if config.clientcerts:
-            path = os.path.join(config.clientcerts, self.host) + ".pem"
-            if os.path.exists(clientcert):
-                clientcert = path
-        tcp.TCPClient.__init__(
-            self,
-            True if scheme == "https" else False,
-            host,
-            port,
-            clientcert
-        )
-        self.config, self.scheme = config, scheme
+    def __init__(self, config, host, port):
+        tcp.TCPClient.__init__(self, host, port)
+        self.config = config
         self.requestcount = 0
+
+    def connect(self, scheme):
+        tcp.TCPClient.connect(self)
+        if scheme == "https":
+            clientcert = None
+            if self.config.clientcerts:
+                path = os.path.join(self.config.clientcerts, self.host) + ".pem"
+                if os.path.exists(clientcert):
+                    clientcert = path
+            self.convert_to_ssl(clientcert=clientcert)
 
     def send(self, request):
         self.requestcount += 1
@@ -128,8 +127,8 @@ class ProxyHandler(tcp.BaseHandler):
             self.server_conn = None
         if not self.server_conn:
             try:
-                self.server_conn = ServerConnection(self.config, scheme, host, port)
-                self.server_conn.connect()
+                self.server_conn = ServerConnection(self.config, host, port)
+                self.server_conn.connect(scheme)
             except tcp.NetLibError, v:
                 raise ProxyError(502, v)
 
