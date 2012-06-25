@@ -48,29 +48,30 @@ class FileLike:
 
 
 class TCPClient:
-    def __init__(self, ssl, host, port, clientcert):
-        self.ssl, self.host, self.port, self.clientcert = ssl, host, port, clientcert
+    def __init__(self, host, port):
+        self.host, self.port = host, port
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
+
+    def convert_to_ssl(self, clientcert=None):
+        context = SSL.Context(SSL.SSLv23_METHOD)
+        if clientcert:
+            context.use_certificate_file(self.clientcert)
+        self.connection = SSL.Connection(context, self.connection)
+        self.connection.set_connect_state()
+        self.cert = self.connection.get_peer_certificate()
+        self.rfile = FileLike(self.connection)
+        self.wfile = FileLike(self.connection)
 
     def connect(self):
         try:
             addr = socket.gethostbyname(self.host)
-            server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if self.ssl:
-                context = SSL.Context(SSL.SSLv23_METHOD)
-                if self.clientcert:
-                    context.use_certificate_file(self.clientcert)
-                server = SSL.Connection(context, server)
-            server.connect((addr, self.port))
-            if self.ssl:
-                self.cert = server.get_peer_certificate()
-                self.rfile, self.wfile = FileLike(server), FileLike(server)
-            else:
-                self.rfile, self.wfile = server.makefile('rb'), server.makefile('wb')
+            connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            connection.connect((addr, self.port))
+            self.rfile, self.wfile = connection.makefile('rb'), connection.makefile('wb')
         except socket.error, err:
             raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
-        self.connection = server
+        self.connection = connection
 
 
 class BaseHandler:

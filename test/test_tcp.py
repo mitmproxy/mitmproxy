@@ -66,7 +66,7 @@ class TestServer(ServerTestBase):
 
     def test_echo(self):
         testval = "echo!\n"
-        c = tcp.TCPClient(False, "127.0.0.1", self.port, None)
+        c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
         c.wfile.write(testval)
         c.wfile.flush()
@@ -82,8 +82,9 @@ class TestServerSSL(ServerTestBase):
         return s
 
     def test_echo(self):
-        c = tcp.TCPClient(True, "127.0.0.1", self.port, None)
+        c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
+        c.convert_to_ssl()
         testval = "echo!\n"
         c.wfile.write(testval)
         c.wfile.flush()
@@ -92,7 +93,7 @@ class TestServerSSL(ServerTestBase):
 
 class TestTCPClient:
     def test_conerr(self):
-        c = tcp.TCPClient(True, "127.0.0.1", 0, None)
+        c = tcp.TCPClient("127.0.0.1", 0)
         tutils.raises(tcp.NetLibError, c.connect)
 
 
