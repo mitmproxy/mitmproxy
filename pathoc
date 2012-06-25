@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import argparse, sys
-from libpathod import pathoc, version
+from libpathod import pathoc, version, rparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A perverse HTTP client.')
     parser.add_argument('--port', "-p", type=int, default=None, help="Port. Defaults to 80, or 443 if SSL is active.")
     parser.add_argument('--ssl', "-s", action="store_true", default=False, help="Connect with SSL.")
+    parser.add_argument('--sni', "-n", type=str, default=False, help="SSL Server Name Indication.")
     parser.add_argument('--verbose', '-v', action='count')
     parser.add_argument('host', type=str, help='Host to connect to')
     parser.add_argument('request', type=str, nargs="+", help='Request specification')
@@ -17,16 +18,21 @@ if __name__ == "__main__":
     else:
         port = args.port
 
-
     try:
-        p = pathoc.Pathoc(args.ssl, args.host, port, None)
+        p = pathoc.Pathoc(args.host, port)
+        p.connect()
+        if args.ssl:
+            p.convert_to_ssl(sni=args.sni)
         for i in args.request:
             ret = p.request(i)
             if args.verbose:
                 pathoc.print_full(sys.stdout, *ret)
             else:
                 pathoc.print_short(sys.stdout, *ret)
-
     except pathoc.PathocError, v:
         print >> sys.stderr, str(v)
+        sys.exit(1)
+    except rparse.ParseException, v:
+        print >> sys.stderr, "Error parsing request spec: %s"%v.msg
+        print >> sys.stderr, v.marked()
         sys.exit(1)

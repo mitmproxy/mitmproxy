@@ -7,6 +7,10 @@ class PathodError(Exception): pass
 
 
 class PathodHandler(tcp.BaseHandler):
+    sni = None
+    def handle_sni(self, connection):
+        self.sni = connection.get_servername()
+
     def handle(self):
         if self.server.ssloptions:
             self.convert_to_ssl(
@@ -50,6 +54,7 @@ class PathodHandler(tcp.BaseHandler):
                     path = path,
                     method = method,
                     headers = headers.lst,
+                    sni = self.sni,
                     #remote_address = self.request.connection.address,
                     #full_url = self.request.full_url(),
                     #query = self.request.query,

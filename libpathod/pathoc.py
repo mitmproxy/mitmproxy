@@ -15,9 +15,9 @@ def print_full(fp, httpversion, code, msg, headers, content):
 
 
 class Pathoc(tcp.TCPClient):
-    def __init__(self, ssl, host, port, clientcert):
+    def __init__(self, host, port):
         try:
-            tcp.TCPClient.__init__(self, ssl, host, port, clientcert)
+            tcp.TCPClient.__init__(self, host, port)
         except tcp.NetLibError, v:
             raise PathocError(v)
 
