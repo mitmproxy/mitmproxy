@@ -25,7 +25,21 @@ class ServerTestBase:
         cls.server.shutdown()
 
 
+class SNIHandler(tcp.BaseHandler):
+    sni = None
+    def handle_sni(self, connection):
+        self.sni = connection.get_servername()
+
+    def handle(self):
+        self.wfile.write(self.sni)
+        self.wfile.flush()
+
+
 class EchoHandler(tcp.BaseHandler):
+    sni = None
+    def handle_sni(self, connection):
+        self.sni = connection.get_servername()
+
     def handle(self):
         v = self.rfile.readline()
         if v.startswith("echo"):
@@ -90,11 +104,26 @@ class TestServerSSL(ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
-        c.convert_to_ssl()
+        c.convert_to_ssl(sni="foo.com")
         testval = "echo!\n"
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
+
+
+class TestSNI(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        cls.q = Queue.Queue()
+        s = TServer(("127.0.0.1", 0), True, cls.q, SNIHandler)
+        cls.port = s.port
+        return s
+
+    def test_echo(self):
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        c.convert_to_ssl(sni="foo.com")
+        assert c.rfile.readline() == "foo.com"
 
 
 class TestSSLDisconnect(ServerTestBase):
