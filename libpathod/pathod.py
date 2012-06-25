@@ -13,10 +13,14 @@ class PathodHandler(tcp.BaseHandler):
 
     def handle(self):
         if self.server.ssloptions:
-            self.convert_to_ssl(
-                self.server.ssloptions["certfile"],
-                self.server.ssloptions["keyfile"],
-            )
+            try:
+                self.convert_to_ssl(
+                    self.server.ssloptions["certfile"],
+                    self.server.ssloptions["keyfile"],
+                )
+            except tcp.NetLibError, v:
+                logging.debug("%s: %s"%(self.client_address, str(v)))
+                self.finish()
 
         while not self.finished:
             line = self.rfile.readline()
@@ -47,21 +51,21 @@ class PathodHandler(tcp.BaseHandler):
                     )
 
             if crafted:
-                ret = crafted.serve(self.wfile)
-                if ret["disconnect"]:
+                response_log = crafted.serve(self.wfile)
+                if response_log["disconnect"]:
                     self.finish()
-                ret["request"] = dict(
+                request_log = dict(
                     path = path,
                     method = method,
                     headers = headers.lst,
                     sni = self.sni,
-                    #remote_address = self.request.connection.address,
+                    remote_address = self.client_address,
                     #full_url = self.request.full_url(),
                     #query = self.request.query,
                     httpversion = httpversion,
                     #uri = self.request.uri,
                 )
-                self.server.add_log(ret)
+                self.server.add_log(dict(request=request_log, response=response_log))
             else:
                 cc = wsgi.ClientConn(self.client_address)
                 req = wsgi.Request(cc, "http", method, path, headers, content)
@@ -73,6 +77,11 @@ class PathodHandler(tcp.BaseHandler):
                     version.NAMEVERSION
                 )
                 app.serve(req, self.wfile)
+                # FIXME: Tear down the connection. We have some problem with
+                # connection termination that causes some clients (e.g. Chrome)
+                # to hang. It appears to be related to responses that have no
+                # Content-Length header.
+                self.finish()
 
 
 class Pathod(tcp.TCPServer):
