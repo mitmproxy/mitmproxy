@@ -59,6 +59,7 @@ class TCPClient:
             context.use_certificate_file(self.clientcert)
         self.connection = SSL.Connection(context, self.connection)
         self.connection.set_connect_state()
+        self.connection.do_handshake()
         self.cert = self.connection.get_peer_certificate()
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
@@ -95,6 +96,7 @@ class BaseHandler:
         ctx.use_certificate_file(cert)
         self.connection = SSL.Connection(ctx, self.connection)
         self.connection.set_accept_state()
+        self.connection.do_handshake()
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
 
