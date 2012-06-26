@@ -175,6 +175,11 @@ def common_options(parser):
         help="Set sticky cookie filter. Matched against requests."
     )
     parser.add_option(
+        "-T",
+        action="store_true", dest="transparent_proxy", default=False,
+        help="Set transparent proxy mode."
+    )
+    parser.add_option(
         "-u",
         action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."

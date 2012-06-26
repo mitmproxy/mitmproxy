@@ -379,6 +379,8 @@ def certificate_option_group(parser):
     parser.add_option_group(group)
 
 
+TRANSPARENT_SSL_PORTS = [443, 8443]
+
 def process_proxy_options(parser, options):
     if options.cert:
         options.cert = os.path.expanduser(options.cert)
@@ -392,6 +394,17 @@ def process_proxy_options(parser, options):
     if getattr(options, "cache", None) is not None:
         options.cache = os.path.expanduser(options.cache)
     body_size_limit = utils.parse_size(options.body_size_limit)
+
+    if options.reverse_proxy and options.transparent_proxy:
+        parser.errror("Can't set both reverse proxy and transparent proxy.")
+
+    if options.transparent_proxy:
+        trans = dict(
+            resolver = None,
+            sslports = TRANSPARENT_SSL_PORTS
+        )
+    else:
+        trans = None
 
     if options.reverse_proxy:
         rp = utils.parse_proxy_spec(options.reverse_proxy)
@@ -412,5 +425,6 @@ def process_proxy_options(parser, options):
         cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
         upstream_cert = options.upstream_cert,
-        reverse_proxy = rp
+        reverse_proxy = rp,
+        transparent_proxy = trans
     )
