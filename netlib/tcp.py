@@ -61,7 +61,10 @@ class TCPClient:
         if sni:
             self.connection.set_tlsext_host_name(sni)
         self.connection.set_connect_state()
-        self.connection.do_handshake()
+        try:
+            self.connection.do_handshake()
+        except SSL.Error, v:
+            raise NetLibError("SSL handshake error: %s"%str(v))
         self.cert = self.connection.get_peer_certificate()
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
@@ -82,7 +85,7 @@ class BaseHandler:
         The instantiator is expected to call the handle() and finish() methods.
     """
     rbufsize = -1
-    wbufsize = 0
+    wbufsize = -1
     def __init__(self, connection, client_address, server):
         self.connection = connection
         self.rfile = self.connection.makefile('rb', self.rbufsize)
@@ -100,7 +103,10 @@ class BaseHandler:
         self.connection = SSL.Connection(ctx, self.connection)
         self.connection.set_accept_state()
         # SNI callback happens during do_handshake()
-        self.connection.do_handshake()
+        try:
+            self.connection.do_handshake()
+        except SSL.Error, v:
+            raise NetLibError("SSL handshake error: %s"%str(v))
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
 

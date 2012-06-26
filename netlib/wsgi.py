@@ -104,7 +104,8 @@ class WSGIAdaptor:
                 soc.write(str(h))
                 soc.write("\r\n")
                 state["headers_sent"] = True
-            soc.write(data)
+            if data:
+                soc.write(data)
             soc.flush()
 
         def start_response(status, headers, exc_info=None):
