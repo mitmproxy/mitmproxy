@@ -58,7 +58,7 @@ def preview():
         error = None
     )
     try:
-        r = rparse.parse(app.config["pathod"].request_settings, spec)
+        r = rparse.parse_response(app.config["pathod"].request_settings, spec)
     except rparse.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
