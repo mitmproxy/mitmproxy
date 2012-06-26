@@ -22,6 +22,9 @@ class Pathoc(tcp.TCPClient):
             raise PathocError(v)
 
     def request(self, spec):
+        """
+            Return an (httpversion, code, msg, headers, content) tuple.
+        """
         r = rparse.parse_request({}, spec)
         r.serve(self.wfile)
         self.wfile.flush()
