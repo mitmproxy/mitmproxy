@@ -122,7 +122,7 @@ class ProxyHandler(tcp.BaseHandler):
 
     def server_connect(self, scheme, host, port):
         sc = self.server_conn
-        if sc and (scheme, host, port) != (sc.scheme, sc.host, sc.port):
+        if sc and (host, port) != (sc.host, sc.port):
             sc.terminate()
             self.server_conn = None
         if not self.server_conn:
