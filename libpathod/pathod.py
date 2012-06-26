@@ -7,6 +7,7 @@ class PathodError(Exception): pass
 
 
 class PathodHandler(tcp.BaseHandler):
+    wbufsize = 0
     sni = None
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
@@ -77,11 +78,7 @@ class PathodHandler(tcp.BaseHandler):
                     version.NAMEVERSION
                 )
                 app.serve(req, self.wfile)
-                # FIXME: Tear down the connection. We have some problem with
-                # connection termination that causes some clients (e.g. Chrome)
-                # to hang. It appears to be related to responses that have no
-                # Content-Length header.
-                self.finish()
+                logging.debug("%s: wsgi %s %s"%(self.client_address, method, path))
 
 
 class Pathod(tcp.TCPServer):

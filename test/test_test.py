@@ -81,4 +81,3 @@ class TestDaemon:
     def test_anchor(self):
         rsp = self.getpath("anchor/foo")
         assert rsp.status_code == 202
-
