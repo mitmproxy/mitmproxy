@@ -207,21 +207,27 @@ class ProxyHandler(tcp.BaseHandler):
                 raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
             return ret
 
-    def read_request(self, client_conn):
-        line = self.rfile.readline()
+    def get_line(self, fp):
+        """
+            Get a line, possibly preceded by a blank.
+        """
+        line = fp.readline()
         if line == "\r\n" or line == "\n": # Possible leftover from previous message
-            line = self.rfile.readline()
-        if line == "":
-            return None
+            line = fp.readline()
+        return line
 
+    def read_request(self, client_conn):
         if self.config.transparent_proxy:
             host, port = self.config.transparent_proxy["resolver"].original_addr(self.connection)
-            if port in self.config.transparent_proxy["sslports"]:
+            if not self.ssl_established and (port in self.config.transparent_proxy["sslports"]):
                 scheme = "https"
                 certfile = self.find_cert(host, port)
                 self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
             else:
                 scheme = "http"
+            line = self.get_line(self.rfile)
+            if line == "":
+                return None
             r = http.parse_init_http(line)
             if not r:
                 raise ProxyError(400, "Bad HTTP request line.")
@@ -230,8 +236,11 @@ class ProxyHandler(tcp.BaseHandler):
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
-            return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
+            return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content)
         elif self.config.reverse_proxy:
+            line = self.get_line(self.rfile)
+            if line == "":
+                return None
             scheme, host, port = self.config.reverse_proxy
             r = http.parse_init_http(line)
             if not r:
@@ -243,6 +252,9 @@ class ProxyHandler(tcp.BaseHandler):
                     )
             return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
         else:
+            line = self.get_line(self.rfile)
+            if line == "":
+                return None
             if line.startswith("CONNECT"):
                 host, port, httpversion = http.parse_init_connect(line)
                 # FIXME: Discard additional headers sent to the proxy. Should I expose
