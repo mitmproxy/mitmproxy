@@ -17,7 +17,7 @@ import shutil, tempfile, threading
 import optparse, SocketServer
 from OpenSSL import SSL
 from netlib import odict, tcp, http, wsgi
-import utils, flow, certutils, version
+import utils, flow, certutils, version, platform
 
 
 class ProxyError(Exception):
@@ -222,7 +222,10 @@ class ProxyHandler(tcp.BaseHandler):
                 self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
             else:
                 scheme = "http"
-            method, path, httpversion = http.parse_init_http(line)
+            r = http.parse_init_http(line)
+            if not r:
+                raise ProxyError(400, "Bad HTTP request line.")
+            method, path, httpversion = r
             headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
@@ -230,7 +233,10 @@ class ProxyHandler(tcp.BaseHandler):
             return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
         elif self.config.reverse_proxy:
             scheme, host, port = self.config.reverse_proxy
-            method, path, httpversion = http.parse_init_http(line)
+            r = http.parse_init_http(line)
+            if not r:
+                raise ProxyError(400, "Bad HTTP request line.")
+            method, path, httpversion = r
             headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
@@ -257,7 +263,10 @@ class ProxyHandler(tcp.BaseHandler):
                 line = self.rfile.readline(line)
             if self.proxy_connect_state:
                 host, port, httpversion = self.proxy_connect_state
-                method, path, httpversion = http.parse_init_http(line)
+                r = http.parse_init_http(line)
+                if not r:
+                    raise ProxyError(400, "Bad HTTP request line.")
+                method, path, httpversion = r
                 headers = http.read_headers(self.rfile)
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
@@ -400,7 +409,7 @@ def process_proxy_options(parser, options):
 
     if options.transparent_proxy:
         trans = dict(
-            resolver = None,
+            resolver = platform.resolver,
             sslports = TRANSPARENT_SSL_PORTS
         )
     else:
