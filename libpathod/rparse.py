@@ -293,6 +293,8 @@ class Body:
 
 class Path:
     def __init__(self, value):
+        if isinstance(value, basestring):
+            value = ValueLiteral(value)
         self.value = value
 
     def accept(self, settings, r):
@@ -300,7 +302,7 @@ class Path:
 
     @classmethod
     def expr(klass):
-        e = Value.copy()
+        e = v_naked_literal.copy()
         return e.setParseAction(lambda x: klass(*x))
 
 

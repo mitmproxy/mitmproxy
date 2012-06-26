@@ -9,6 +9,9 @@ class PathodError(Exception): pass
 class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
+    def debug(self, s):
+        logging.debug("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
+
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
@@ -20,7 +23,7 @@ class PathodHandler(tcp.BaseHandler):
                     self.server.ssloptions["keyfile"],
                 )
             except tcp.NetLibError, v:
-                logging.debug("%s: %s"%(self.client_address, str(v)))
+                self.debug(v)
                 self.finish()
 
         while not self.finished:
@@ -61,10 +64,7 @@ class PathodHandler(tcp.BaseHandler):
                     headers = headers.lst,
                     sni = self.sni,
                     remote_address = self.client_address,
-                    #full_url = self.request.full_url(),
-                    #query = self.request.query,
                     httpversion = httpversion,
-                    #uri = self.request.uri,
                 )
                 self.server.add_log(dict(request=request_log, response=response_log))
             else:
@@ -78,7 +78,7 @@ class PathodHandler(tcp.BaseHandler):
                     version.NAMEVERSION
                 )
                 app.serve(req, self.wfile)
-                logging.debug("%s: wsgi %s %s"%(self.client_address, method, path))
+                self.debug("%s %s"%(method, path))
 
 
 class Pathod(tcp.TCPServer):
