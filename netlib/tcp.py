@@ -52,6 +52,7 @@ class TCPClient:
         self.host, self.port = host, port
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
+        self.ssl_established = False
 
     def convert_to_ssl(self, clientcert=None, sni=None):
         context = SSL.Context(SSL.SSLv23_METHOD)
@@ -68,6 +69,7 @@ class TCPClient:
         self.cert = self.connection.get_peer_certificate()
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
+        self.ssl_established = True
 
     def connect(self):
         try:
@@ -94,6 +96,7 @@ class BaseHandler:
         self.client_address = client_address
         self.server = server
         self.finished = False
+        self.ssl_established = False
 
     def convert_to_ssl(self, cert, key):
         ctx = SSL.Context(SSL.SSLv23_METHOD)
@@ -109,6 +112,7 @@ class BaseHandler:
             raise NetLibError("SSL handshake error: %s"%str(v))
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
+        self.ssl_established = True
 
     def finish(self):
         self.finished = True
