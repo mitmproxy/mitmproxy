@@ -73,14 +73,10 @@ def parse_replace_hook(s):
 
 def get_common_options(options):
     stickycookie, stickyauth = None, None
-    if options.stickycookie_all:
-        stickycookie = ".*"
-    elif options.stickycookie_filt:
+    if options.stickycookie_filt:
         stickycookie = options.stickycookie_filt
 
-    if options.stickyauth_all:
-        stickyauth = ".*"
-    elif options.stickyauth_filt:
+    if options.stickyauth_filt:
         stickyauth = options.stickyauth_filt
 
     reps = []
@@ -175,21 +171,11 @@ def common_options(parser):
     )
     parser.add_option(
         "-t",
-        action="store_true", dest="stickycookie_all", default=None,
-        help="Set sticky cookie for all requests."
-    )
-    parser.add_option(
-        "-T",
         action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
     )
     parser.add_option(
         "-u",
-        action="store_true", dest="stickyauth_all", default=None,
-        help="Set sticky auth for all requests."
-    )
-    parser.add_option(
-        "-U",
         action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."
     )
