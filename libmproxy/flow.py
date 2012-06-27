@@ -198,6 +198,7 @@ class Request(HTTPMsg):
             path: Path portion of the URL
 
             timestamp: Seconds since the epoch
+
             method: HTTP method
     """
     def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp=None):

@@ -193,13 +193,13 @@ class ProxyHandler(tcp.BaseHandler):
         else:
             return True
 
-    def find_cert(self, host, port):
+    def find_cert(self, host, port, sni):
         if self.config.certfile:
             return self.config.certfile
         else:
             sans = []
             if self.config.upstream_cert:
-                cert = certutils.get_remote_cert(host, port)
+                cert = certutils.get_remote_cert(host, port, sni)
                 sans = cert.altnames
                 host = cert.cn
             ret = certutils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
@@ -225,7 +225,7 @@ class ProxyHandler(tcp.BaseHandler):
             host, port = self.config.transparent_proxy["resolver"].original_addr(self.connection)
             if not self.ssl_established and (port in self.config.transparent_proxy["sslports"]):
                 scheme = "https"
-                certfile = self.find_cert(host, port)
+                certfile = self.find_cert(host, port, None)
                 self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
             else:
                 scheme = "http"
@@ -274,7 +274,7 @@ class ProxyHandler(tcp.BaseHandler):
                             '\r\n'
                             )
                 self.wfile.flush()
-                certfile = self.find_cert(host, port)
+                certfile = self.find_cert(host, port, None)
                 self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
                 self.proxy_connect_state = (host, port, httpversion)
                 line = self.rfile.readline(line)
