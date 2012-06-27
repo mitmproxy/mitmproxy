@@ -248,6 +248,9 @@ def read_http_body_response(rfile, headers, all, limit):
 
 
 def read_response(rfile, method, body_size_limit):
+    """
+        Return an (httpversion, code, msg, headers, content) tuple.
+    """
     line = rfile.readline()
     if line == "\r\n" or line == "\n": # Possible leftover from previous message
         line = rfile.readline()

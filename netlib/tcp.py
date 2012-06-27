@@ -1,5 +1,6 @@
 import select, socket, threading, traceback, sys
 from OpenSSL import SSL
+import certutils
 
 
 class NetLibError(Exception): pass
@@ -154,8 +155,8 @@ class TCPServer:
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
         self.server_address = self.socket.getsockname()
+        self.port = self.server_address[1]
         self.socket.listen(self.request_queue_size)
-        self.port = self.socket.getsockname()[1]
 
     def request_thread(self, request, client_address):
         try:
