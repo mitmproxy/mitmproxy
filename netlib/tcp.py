@@ -117,14 +117,11 @@ class BaseHandler:
 
     def finish(self):
         self.finished = True
-        try:
-            if not getattr(self.wfile, "closed", False):
-                self.wfile.flush()
-            self.connection.close()
-            self.wfile.close()
-            self.rfile.close()
-        except IOError: # pragma: no cover
-            pass
+        if not getattr(self.wfile, "closed", False):
+            self.wfile.flush()
+        self.connection.close()
+        self.wfile.close()
+        self.rfile.close()
 
     def handle_sni(self, connection):
         """
@@ -165,8 +162,15 @@ class TCPServer:
             self.handle_connection(request, client_address)
             request.close()
         except:
-            self.handle_error(request, client_address)
-            request.close()
+            try:
+                self.handle_error(request, client_address)
+                request.close()
+            # Why a blanket except here? In some circumstances, a thread can
+            # persist until the interpreter exits. When this happens, all modules
+            # and builtins are set to None, and things balls up indeterminate
+            # ways.
+            except:
+                pass
 
     def serve_forever(self, poll_interval=0.1):
         self.__is_shut_down.clear()
