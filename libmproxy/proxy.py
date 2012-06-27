@@ -57,7 +57,7 @@ class RequestReplayThread(threading.Thread):
                 server.rfile, r.method, self.config.body_size_limit
             )
             response = flow.Response(
-                request, httpversion, code, msg, headers, content, server.cert
+                self.flow.request, httpversion, code, msg, headers, content, server.cert
             )
             response._send(self.masterq)
         except (ProxyError, http.HttpError), v:
