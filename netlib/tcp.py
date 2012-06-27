@@ -68,7 +68,7 @@ class TCPClient:
             self.connection.do_handshake()
         except SSL.Error, v:
             raise NetLibError("SSL handshake error: %s"%str(v))
-        self.cert = self.connection.get_peer_certificate()
+        self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
         self.ssl_established = True
