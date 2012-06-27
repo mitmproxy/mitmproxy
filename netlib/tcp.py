@@ -17,7 +17,7 @@ class FileLike:
 
     def read(self, length):
         result = ''
-        while len(result) < length:
+        while length > 0:
             try:
                 data = self.o.read(length)
             except (SSL.ZeroReturnError, SSL.SysCallError):
@@ -25,6 +25,7 @@ class FileLike:
             if not data:
                 break
             result += data
+            length -= len(data)
         return result
 
     def write(self, v):
