@@ -16,8 +16,8 @@ import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer
 from OpenSSL import SSL
-from netlib import odict, tcp, http, wsgi
-import utils, flow, certutils, version, platform
+from netlib import odict, tcp, http, wsgi, certutils
+import utils, flow, version, platform
 
 
 class ProxyError(Exception):

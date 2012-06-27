@@ -21,8 +21,8 @@ import hashlib, Cookie, cookielib, copy, re, urlparse
 import time
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-from netlib import odict, http
-import controller, version, certutils
+from netlib import odict, http, certutils
+import controller, version
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
