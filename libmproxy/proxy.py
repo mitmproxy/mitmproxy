@@ -109,6 +109,7 @@ class ProxyHandler(tcp.BaseHandler):
         self.config = config
         self.server_conn = None
         self.proxy_connect_state = None
+        self.sni = None
         tcp.BaseHandler.__init__(self, connection, client_address, server)
 
     def handle(self):
@@ -216,6 +217,9 @@ class ProxyHandler(tcp.BaseHandler):
             line = fp.readline()
         return line
 
+    def handle_sni(self, conn):
+        self.sni = conn.get_servername()
+
     def read_request(self, client_conn):
         if self.config.transparent_proxy:
             host, port = self.config.transparent_proxy["resolver"].original_addr(self.connection)
@@ -225,12 +229,13 @@ class ProxyHandler(tcp.BaseHandler):
                 self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
             else:
                 scheme = "http"
+            host = self.sni or host
             line = self.get_line(self.rfile)
             if line == "":
                 return None
             r = http.parse_init_http(line)
             if not r:
-                raise ProxyError(400, "Bad HTTP request line.")
+                raise ProxyError(400, "Bad HTTP request line: %s"%line)
             method, path, httpversion = r
             headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
@@ -244,7 +249,7 @@ class ProxyHandler(tcp.BaseHandler):
             scheme, host, port = self.config.reverse_proxy
             r = http.parse_init_http(line)
             if not r:
-                raise ProxyError(400, "Bad HTTP request line.")
+                raise ProxyError(400, "Bad HTTP request line: %s"%line)
             method, path, httpversion = r
             headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
@@ -277,7 +282,7 @@ class ProxyHandler(tcp.BaseHandler):
                 host, port, httpversion = self.proxy_connect_state
                 r = http.parse_init_http(line)
                 if not r:
-                    raise ProxyError(400, "Bad HTTP request line.")
+                    raise ProxyError(400, "Bad HTTP request line: %s"%line)
                 method, path, httpversion = r
                 headers = http.read_headers(self.rfile)
                 content = http.read_http_body_request(
