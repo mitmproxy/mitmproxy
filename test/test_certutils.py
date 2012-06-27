@@ -50,11 +50,11 @@ class TestDummyCert:
 
 class TestSSLCert:
     def test_simple(self):
-        c = certutils.SSLCert(file(tutils.test_data.path("data/text_cert"), "r").read())
+        c = certutils.SSLCert.from_pem(file(tutils.test_data.path("data/text_cert"), "r").read())
         assert c.cn == "google.com"
         assert len(c.altnames) == 436
 
-        c = certutils.SSLCert(file(tutils.test_data.path("data/text_cert_2"), "r").read())
+        c = certutils.SSLCert.from_pem(file(tutils.test_data.path("data/text_cert_2"), "r").read())
         assert c.cn == "www.inode.co.nz"
         assert len(c.altnames) == 2
         assert c.digest("sha1")

@@ -141,49 +141,54 @@ class _GeneralNames(univ.SequenceOf):
 
 
 class SSLCert:
-    def __init__(self, pemtxt):
+    def __init__(self, cert):
         """
             Returns a (common name, [subject alternative names]) tuple.
         """
-        self.cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, pemtxt)
+        self.x509 = cert
+
+    @classmethod
+    def from_pem(klass, txt):
+        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, txt)
+        return klass(x509)
 
     @classmethod
     def from_der(klass, der):
         pem = ssl.DER_cert_to_PEM_cert(der)
-        return klass(pem)
+        return klass.from_pem(pem)
 
     def digest(self, name):
-        return self.cert.digest(name)
+        return self.x509.digest(name)
 
     @property
     def issuer(self):
-        return self.cert.get_issuer().get_components()
+        return self.x509.get_issuer().get_components()
 
     @property
     def notbefore(self):
-        t = self.cert.get_notBefore()
+        t = self.x509.get_notBefore()
         return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
 
     @property
     def notafter(self):
-        t = self.cert.get_notAfter()
+        t = self.x509.get_notAfter()
         return datetime.datetime.strptime(t, "%Y%m%d%H%M%SZ")
 
     @property
     def has_expired(self):
-        return self.cert.has_expired()
+        return self.x509.has_expired()
 
     @property
     def subject(self):
-        return self.cert.get_subject().get_components()
+        return self.x509.get_subject().get_components()
 
     @property
     def serial(self):
-        return self.cert.get_serial_number()
+        return self.x509.get_serial_number()
 
     @property
     def keyinfo(self):
-        pk = self.cert.get_pubkey()
+        pk = self.x509.get_pubkey()
         types = {
             OpenSSL.crypto.TYPE_RSA: "RSA",
             OpenSSL.crypto.TYPE_DSA: "DSA",
@@ -204,8 +209,8 @@ class SSLCert:
     @property
     def altnames(self):
         altnames = []
-        for i in range(self.cert.get_extension_count()):
-            ext = self.cert.get_extension(i)
+        for i in range(self.x509.get_extension_count()):
+            ext = self.x509.get_extension(i)
             if ext.get_short_name() == "subjectAltName":
                 dec = decode(ext.get_data(), asn1Spec=_GeneralNames())
                 for i in dec[0]:
