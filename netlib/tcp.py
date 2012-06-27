@@ -1,5 +1,6 @@
 import select, socket, threading, traceback, sys
 from OpenSSL import SSL
+import certutils
 
 
 class NetLibError(Exception): pass

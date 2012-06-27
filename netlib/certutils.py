@@ -2,6 +2,7 @@ import os, ssl, hashlib, socket, time, datetime
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 import OpenSSL
+import tcp
 
 CERT_SLEEP_TIME = 1
 CERT_EXPIRY = str(365 * 3)
@@ -218,7 +219,8 @@ class SSLCert:
         return altnames
 
 
-def get_remote_cert(host, port): # pragma: no cover
-    addr = socket.gethostbyname(host)
-    s = ssl.get_server_certificate((addr, port))
-    return SSLCert(s)
+def get_remote_cert(host, port, sni):
+    c = tcp.TCPClient(host, port)
+    c.connect()
+    c.convert_to_ssl(sni=sni)
+    return c.cert

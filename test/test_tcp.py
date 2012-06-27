@@ -1,5 +1,5 @@
 import cStringIO, threading, Queue
-from netlib import tcp
+from netlib import tcp, certutils
 import tutils
 
 class ServerThread(threading.Thread):
@@ -109,6 +109,9 @@ class TestServerSSL(ServerTestBase):
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
+
+    def test_get_remote_cert(self):
+        assert certutils.get_remote_cert("127.0.0.1", self.port, None).digest("sha1")
 
 
 class TestSNI(ServerTestBase):
