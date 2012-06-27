@@ -1,4 +1,4 @@
-import urllib, threading, re, logging
+import urllib, threading, re, logging, socket, sys
 from netlib import tcp, http, odict, wsgi
 import version, app, rparse
 
@@ -27,7 +27,10 @@ class PathodHandler(tcp.BaseHandler):
                 self.finish()
 
         while not self.finished:
-            line = self.rfile.readline()
+            try:
+                line = self.rfile.readline()
+            except socket.error:
+                return None
             if line == "\r\n" or line == "\n": # Possible leftover from previous message
                 line = self.rfile.readline()
             if line == "":
