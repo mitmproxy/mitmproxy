@@ -2,6 +2,7 @@ import threading, Queue, time
 import os, shutil, tempfile
 from contextlib import contextmanager
 from libmproxy import proxy, flow, controller, utils
+from netlib import certutils
 import human_curl as hurl
 import libpathod.test
 import random
@@ -19,7 +20,8 @@ def tresp(req=None):
         req = treq()
     headers = flow.ODictCaseless()
     headers["header_response"] = ["svalue"]
-    return flow.Response(req, (1, 1), 200, "message", headers, "content_response", None)
+    cert = certutils.SSLCert.from_der(file(test_data.path("data/dercert")).read())
+    return flow.Response(req, (1, 1), 200, "message", headers, "content_response", cert)
 
 
 def tflow():

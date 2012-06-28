@@ -463,12 +463,12 @@ class Response(HTTPMsg):
 
             timestamp: Seconds since the epoch
     """
-    def __init__(self, request, httpversion, code, msg, headers, content, der_cert, timestamp=None):
+    def __init__(self, request, httpversion, code, msg, headers, content, cert, timestamp=None):
         assert isinstance(headers, ODictCaseless)
         self.request = request
         self.httpversion, self.code, self.msg = httpversion, code, msg
         self.headers, self.content = headers, content
-        self.der_cert = der_cert
+        self.cert = cert
         self.timestamp = timestamp or utils.timestamp()
         controller.Msg.__init__(self)
         self.replay = False
@@ -538,14 +538,7 @@ class Response(HTTPMsg):
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp = state["timestamp"]
-        self.der_cert = state["der_cert"]
-
-    def get_cert(self):
-        """
-            Returns a certutils.SSLCert object, or None.
-        """
-        if self.der_cert:
-            return certutils.SSLCert.from_der(self.der_cert)
+        self.cert = state["cert"]
 
     def _get_state(self):
         return dict(
@@ -554,7 +547,7 @@ class Response(HTTPMsg):
             msg = self.msg,
             headers = self.headers._get_state(),
             timestamp = self.timestamp,
-            der_cert = self.der_cert,
+            cert = self.cert.to_pem() if self.cert else None,
             content = self.content
         )
 
@@ -567,7 +560,7 @@ class Response(HTTPMsg):
             str(state["msg"]),
             ODictCaseless._from_state(state["headers"]),
             state["content"],
-            state.get("der_cert"),
+            certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None,
             state["timestamp"],
         )
 

@@ -2,6 +2,7 @@ import Queue, time
 from cStringIO import StringIO
 import email.utils
 from libmproxy import filt, flow, controller, utils, tnetstring
+from netlib import certutils
 import tutils
 import libpry
 
@@ -864,17 +865,6 @@ class TestResponse:
 
         c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
         assert "00:21:38" in r._refresh_cookie(c, 60)
-
-    def test_get_cert(self):
-        req = tutils.treq()
-        resp = flow.Response(
-            req, (1, 1), 200, "msg", flow.ODictCaseless(), "content",
-            file(tutils.test_data.path("data/dercert")).read()
-        )
-        assert resp.get_cert()
-
-        resp = tutils.tresp()
-        assert not resp.get_cert()
 
     def test_getset_state(self):
         h = flow.ODictCaseless()
