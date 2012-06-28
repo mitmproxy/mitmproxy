@@ -42,6 +42,10 @@ class TestMisc:
         assert v.expr()
         assert str(v)
 
+    def test_valuenakedliteral(self):
+        v = rparse.ValueNakedLiteral("foo")
+        assert v.expr()
+
     def test_file_value(self):
         v = rparse.Value.parseString("<'one two'")[0]
         assert str(v)
@@ -200,6 +204,10 @@ class TestParseRequest:
         r = rparse.parse_request({}, 'GET:"/foo"')
         assert r.method == "GET"
         assert r.path == "/foo"
+        r = rparse.parse_request({}, 'GET:/foo')
+        assert r.path == "/foo"
+        r = rparse.parse_request({}, 'GET:@1k')
+        assert len(r.path) == 1024
 
     def test_render(self):
         s = cStringIO.StringIO()

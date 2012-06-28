@@ -155,20 +155,29 @@ class FileGenerator:
         return self.map.__getslice__(a, b)
 
 
-class ValueLiteral:
+class _Value:
     def __init__(self, val):
         self.val = val
 
     def get_generator(self, settings):
         return LiteralGenerator(self.val)
 
+    def __str__(self):
+        return self.val
+
+
+class ValueLiteral(_Value):
     @classmethod
     def expr(klass):
         e = v_literal.copy()
         return e.setParseAction(lambda x: klass(*x))
 
-    def __str__(self):
-        return self.val
+
+class ValueNakedLiteral(_Value):
+    @classmethod
+    def expr(klass):
+        e = v_naked_literal.copy()
+        return e.setParseAction(lambda x: klass(*x))
 
 
 class ValueGenerate:
@@ -238,6 +247,16 @@ Value = pp.MatchFirst(
 )
 
 
+NakedValue = pp.MatchFirst(
+    [
+        ValueGenerate.expr(),
+        ValueFile.expr(),
+        ValueLiteral.expr(),
+        ValueNakedLiteral.expr(),
+    ]
+)
+
+
 class ShortcutContentType:
     def __init__(self, value):
         self.value = value
@@ -302,7 +321,7 @@ class Path:
 
     @classmethod
     def expr(klass):
-        e = v_naked_literal.copy()
+        e = NakedValue.copy()
         return e.setParseAction(lambda x: klass(*x))
 
 

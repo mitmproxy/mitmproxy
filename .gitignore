@@ -8,3 +8,4 @@ MANIFEST
 /doc
 .coverage
 netlib
+venv
