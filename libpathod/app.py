@@ -31,9 +31,19 @@ def index():
     return render_template("index.html", section="main")
 
 
-@app.route('/help')
-def help():
-    return render_template("help.html", section="help")
+@app.route('/docs/pathod')
+def docs_pathod():
+    return render_template("docs_pathod.html", section="docs")
+
+
+@app.route('/docs/pathoc')
+def docs_pathoc():
+    return render_template("docs_pathoc.html", section="docs")
+
+
+@app.route('/docs/test')
+def docs_test():
+    return render_template("docs_test.html", section="docs")
 
 
 @app.route('/log')

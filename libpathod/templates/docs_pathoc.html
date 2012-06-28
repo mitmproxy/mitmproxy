@@ -1,3 +1,5 @@
+{% extends "frame.html" %}
+{% block body %}  
 <div class="page-header">
    <h1>
         pathoc
@@ -8,3 +10,4 @@
 pathoc hostname get:"/foo/bar":h"foo"="bar" get:/wah:b@1m
 
 pathoc --ssl hostname get:"/foo/bar":h"foo"="bar" get:"/wah":b@1m
+{% endblock %}  

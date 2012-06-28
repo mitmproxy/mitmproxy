@@ -1,4 +1,37 @@
 {% extends "frame.html" %}
 {% block body %}  
-    {% include "previewform.html" %}
+{% include "previewform.html" %}
+
+<div class="hero-unit">
+<h1>Tools for testing and torturing HTTP clients, servers and proxies.</h1>
+</div>
+
+<div class="row">
+    <div class="span4">
+        <div class="well">
+            <h1> <a href="/docs/pathod">pathod</a> </h1>
+
+            A pathological web daemon.
+
+        </div>
+    </div>
+    <div class="span4">
+        <div class="well">
+            <h1> <a href="/docs/pathoc">pathoc</a> </h1>
+
+            A perverse HTTP client.
+
+        </div>
+    </div>
+    <div class="span4">
+        <div class="well">
+            <h1> <a href="/docs/test">libpathod.test</a> </h1>
+
+            Using pathod and pathoc in your unit tests.
+
+        </div>
+    </div>
+</div>
+
+
 {% endblock %}  
