@@ -158,6 +158,9 @@ class SSLCert:
         pem = ssl.DER_cert_to_PEM_cert(der)
         return klass.from_pem(pem)
 
+    def to_pem(self):
+        return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, self.x509)
+
     def digest(self, name):
         return self.x509.digest(name)
 

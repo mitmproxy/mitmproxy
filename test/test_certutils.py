@@ -64,6 +64,7 @@ class TestSSLCert:
         assert c.keyinfo == ("RSA", 2048)
         assert c.serial
         assert c.issuer
+        assert c.to_pem()
         c.has_expired
 
     def test_der(self):
