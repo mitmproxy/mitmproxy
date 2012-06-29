@@ -107,3 +107,98 @@ light = [
     ('field_error', 'dark red', 'black'),
     ('editfield', 'black', 'light cyan'),
 ]
+
+# Palettes for terminals that use the Solarized precision colors
+# (http://ethanschoonover.com/solarized#the-values)
+
+# For dark backgrounds
+solarized_dark = [
+    ('body', 'dark cyan', 'default'),
+    ('foot', 'dark gray', 'default'),
+    ('title', 'white,bold', 'default',),
+    ('editline', 'white', 'default',),
+
+    # Status bar & heading
+    ('heading', 'light gray', 'light cyan',),
+    ('heading_key', 'dark blue', 'white',),
+    ('heading_inactive', 'light cyan', 'default',),
+
+    # Help
+    ('key', 'dark blue', 'default',),
+    ('head', 'white,underline', 'default'),
+    ('text', 'light cyan', 'default'),
+
+    # List and Connections
+    ('method', 'dark cyan', 'default'),
+    ('focus', 'white', 'default'),
+
+    ('code_200', 'dark green', 'default'),
+    ('code_300', 'light blue', 'default'),
+    ('code_400', 'dark red', 'default',),
+    ('code_500', 'dark red', 'default'),
+    ('code_other', 'light red', 'default'),
+
+    ('error', 'light red', 'default'),
+
+    ('header', 'yellow', 'default'),
+    ('highlight', 'white', 'default'),
+    ('intercept', 'brown', 'default',),
+    ('replay', 'dark green', 'default',),
+    ('ack', 'dark red', 'default'),
+
+    # Hex view
+    ('offset', 'yellow', 'default'),
+    ('text', 'light cyan', 'default'),
+
+    # Grid Editor
+    ('focusfield', 'white', 'light cyan'),
+    ('focusfield_error', 'dark red', 'light gray'),
+    ('field_error', 'dark red', 'black'),
+    ('editfield', 'black', 'light gray'),
+]
+
+# For light backgrounds
+solarized_light = [
+    ('body', 'dark cyan', 'default'),
+    ('foot', 'dark gray', 'default'),
+    ('title', 'white,bold', 'default',),
+    ('editline', 'white', 'default',),
+
+    # Status bar & heading
+    ('heading', 'white,standout', 'light cyan',),
+    ('heading_key', 'dark blue', 'white',),
+    ('heading_inactive', 'light gray', 'default',),
+
+    # Help
+    ('key', 'dark blue', 'default',),
+    ('head', 'black,underline', 'default'),
+    ('text', 'light cyan', 'default'),
+
+    # List and Connections
+    ('method', 'dark cyan', 'default'),
+    ('focus', 'black', 'default'),
+
+    ('code_200', 'dark green', 'default'),
+    ('code_300', 'light blue', 'default'),
+    ('code_400', 'dark red', 'default',),
+    ('code_500', 'dark red', 'default'),
+    ('code_other', 'light red', 'default'),
+
+    ('error', 'light red', 'default'),
+
+    ('header', 'light cyan', 'default'),
+    ('highlight', 'black,bold', 'default'),
+    ('intercept', 'brown', 'default',),
+    ('replay', 'dark green', 'default',),
+    ('ack', 'dark red', 'default'),
+
+    # Hex view
+    ('offset', 'light cyan', 'default'),
+    ('text', 'yellow', 'default'),
+
+    # Grid Editor
+    ('focusfield', 'black', 'light gray'),
+    ('focusfield_error', 'dark red', 'light gray'),
+    ('field_error', 'dark red', 'black'),
+    ('editfield', 'white', 'light cyan'),
+]
