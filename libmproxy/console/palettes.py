@@ -67,7 +67,7 @@ dark = [
 light = [
     ('body', 'black', 'dark cyan'),
     ('foot', 'dark gray', 'default'),
-    ('title', 'white,bold', 'default',),
+    ('title', 'white,bold', 'light blue',),
     ('editline', 'white', 'default',),
 
     # Status bar & heading
@@ -161,7 +161,7 @@ solarized_dark = [
 solarized_light = [
     ('body', 'dark cyan', 'default'),
     ('foot', 'dark gray', 'default'),
-    ('title', 'white,bold', 'default',),
+    ('title', 'white,bold', 'light cyan',),
     ('editline', 'white', 'default',),
 
     # Status bar & heading
