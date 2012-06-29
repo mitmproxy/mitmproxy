@@ -50,6 +50,8 @@ class FileLike:
 
 
 class TCPClient:
+    rbufsize = -1
+    wbufsize = -1
     def __init__(self, host, port):
         self.host, self.port = host, port
         self.connection, self.rfile, self.wfile = None, None, None
@@ -78,7 +80,8 @@ class TCPClient:
             addr = socket.gethostbyname(self.host)
             connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             connection.connect((addr, self.port))
-            self.rfile, self.wfile = connection.makefile('rb'), connection.makefile('wb')
+            self.rfile = connection.makefile('rb', self.rbufsize)
+            self.wfile = connection.makefile('wb', self.wbufsize)
         except socket.error, err:
             raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
         self.connection = connection

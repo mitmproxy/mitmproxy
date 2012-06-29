@@ -260,15 +260,15 @@ def read_response(rfile, method, body_size_limit):
     if len(parts) == 2: # handle missing message gracefully
         parts.append("")
     if not len(parts) == 3:
-        raise HttpError(502, "Invalid server response: %s."%line)
+        raise HttpError(502, "Invalid server response: %s"%repr(line))
     proto, code, msg = parts
     httpversion = parse_http_protocol(proto)
     if httpversion is None:
-        raise HttpError(502, "Invalid HTTP version: %s."%httpversion)
+        raise HttpError(502, "Invalid HTTP version: %s"%repr(httpversion))
     try:
         code = int(code)
     except ValueError:
-        raise HttpError(502, "Invalid server response: %s."%line)
+        raise HttpError(502, "Invalid server response: %s"%repr(line))
     headers = read_headers(rfile)
     if code >= 100 and code <= 199:
         return read_response(rfile, method, body_size_limit)
