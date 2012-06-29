@@ -21,9 +21,9 @@ dark = [
     ('editline', 'white', 'default',),
 
     # Status bar & heading
-    ('heading', 'light gray', "dark blue", None, "g85", "dark blue"),
-    ('heading_key', 'light cyan', "dark blue", None, "light cyan", "dark blue"),
-    ('heading_inactive', 'white', 'dark gray', None, "g58", "g11"),
+    ('heading', 'light gray', 'dark blue', None, 'g85', 'dark blue'),
+    ('heading_key', 'light cyan', 'dark blue', None, 'light cyan', 'dark blue'),
+    ('heading_inactive', 'white', 'dark gray', None, 'g58', 'g11'),
 
     # Help
     ('key', 'light cyan', 'default'),
@@ -36,7 +36,7 @@ dark = [
 
     ('code_200', 'light green', 'default'),
     ('code_300', 'light blue', 'default'),
-    ('code_400', 'light red', 'default', None, "#f60", "default"),
+    ('code_400', 'light red', 'default', None, '#f60', 'default'),
     ('code_500', 'light red', 'default'),
     ('code_other', 'dark red', 'default'),
 
@@ -44,8 +44,8 @@ dark = [
 
     ('header', 'dark cyan', 'default'),
     ('highlight', 'white,bold', 'default'),
-    ('intercept', 'brown', 'default', None, "#f60", "default"),
-    ('replay', 'light green', 'default', None, "#0f0", "default"),
+    ('intercept', 'brown', 'default', None, '#f60', 'default'),
+    ('replay', 'light green', 'default', None, '#0f0', 'default'),
     ('ack', 'light red', 'default'),
 
     # Hex view
