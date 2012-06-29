@@ -124,7 +124,7 @@ class Pathod(tcp.TCPServer):
 
     def handle_connection(self, request, client_address):
         h = PathodHandler(request, client_address, self)
-        h.handle()
+        h.handle() 
         h.finish()
 
     def add_log(self, d):

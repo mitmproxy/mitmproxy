@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse, sys
 from libpathod import pathoc, version, rparse
+from netlib import tcp
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A perverse HTTP client.')
@@ -18,21 +19,12 @@ if __name__ == "__main__":
     else:
         port = args.port
 
+    p = pathoc.Pathoc(args.host, port)
     try:
-        p = pathoc.Pathoc(args.host, port)
         p.connect()
-        if args.ssl:
-            p.convert_to_ssl(sni=args.sni)
-        for i in args.request:
-            ret = p.request(i)
-            if args.verbose:
-                pathoc.print_full(sys.stdout, *ret)
-            else:
-                pathoc.print_short(sys.stdout, *ret)
-    except pathoc.PathocError, v:
+    except tcp.NetLibError, v:
         print >> sys.stderr, str(v)
         sys.exit(1)
-    except rparse.ParseException, v:
-        print >> sys.stderr, "Error parsing request spec: %s"%v.msg
-        print >> sys.stderr, v.marked()
-        sys.exit(1)
+    if args.ssl:
+        p.convert_to_ssl(sni=args.sni)
+    p.print_requests(args.request, args.verbose)

@@ -1,3 +1,4 @@
+import sys
 from netlib import tcp, http
 import rparse
 
@@ -16,16 +17,35 @@ def print_full(fp, httpversion, code, msg, headers, content):
 
 class Pathoc(tcp.TCPClient):
     def __init__(self, host, port):
-        try:
-            tcp.TCPClient.__init__(self, host, port)
-        except tcp.NetLibError, v:
-            raise PathocError(v)
+        tcp.TCPClient.__init__(self, host, port)
 
     def request(self, spec):
         """
             Return an (httpversion, code, msg, headers, content) tuple.
+
+            May raise rparse.ParseException and netlib.http.HttpError.
         """
         r = rparse.parse_request({}, spec)
         r.serve(self.wfile)
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
+
+    def print_requests(self, reqs, verbose, fp=sys.stdout):
+        """
+            Performs a series of requests, and prints results to the specified
+            file pointer.
+        """
+        for i in reqs:
+            try:
+                ret = self.request(i)
+            except rparse.ParseException, v:
+                print >> fp, "Error parsing request spec: %s"%v.msg
+                print >> fp, v.marked()
+                return
+            except http.HttpError, v:
+                print >> fp, v.msg
+                return
+            if verbose:
+                print_full(fp, *ret)
+            else:
+                print_short(fp, *ret)
