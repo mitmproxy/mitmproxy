@@ -14,7 +14,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Default palette for dark background
 dark = [
+    # name, foreground, background, mono, foreground_high, background_high
+    # For details on the meaning of the elements refer to
+    # http://excess.org/urwid/reference.html#Screen-register_palette
+
     ('body', 'black', 'dark cyan'),
     ('foot', 'light gray', 'default'),
     ('title', 'white,bold', 'default',),
@@ -50,6 +55,51 @@ dark = [
 
     # Hex view
     ('offset', 'dark cyan', 'default'),
+
+    # Grid Editor
+    ('focusfield', 'black', 'light gray'),
+    ('focusfield_error', 'dark red', 'light gray'),
+    ('field_error', 'dark red', 'black'),
+    ('editfield', 'black', 'light cyan'),
+]
+
+# Palette for light background
+light = [
+    ('body', 'black', 'dark cyan'),
+    ('foot', 'dark gray', 'default'),
+    ('title', 'white,bold', 'default',),
+    ('editline', 'white', 'default',),
+
+    # Status bar & heading
+    ('heading', 'white', 'light gray', None, 'g85', 'dark blue'),
+    ('heading_key', 'dark blue', 'light gray', None, 'light cyan', 'dark blue'),
+    ('heading_inactive', 'light gray', 'dark gray', None, 'g58', 'g11'),
+
+    # Help
+    ('key', 'dark blue,bold', 'default'),
+    ('head', 'black,bold', 'default'),
+    ('text', 'dark gray', 'default'),
+
+    # List and Connections
+    ('method', 'dark cyan', 'default'),
+    ('focus', 'black', 'default'),
+
+    ('code_200', 'dark green', 'default'),
+    ('code_300', 'light blue', 'default'),
+    ('code_400', 'dark red', 'default', None, '#f60', 'default'),
+    ('code_500', 'dark red', 'default'),
+    ('code_other', 'light red', 'default'),
+
+    ('error', 'light red', 'default'),
+
+    ('header', 'dark blue', 'default'),
+    ('highlight', 'black,bold', 'default'),
+    ('intercept', 'brown', 'default', None, '#f60', 'default'),
+    ('replay', 'dark green', 'default', None, '#0f0', 'default'),
+    ('ack', 'dark red', 'default'),
+
+    # Hex view
+    ('offset', 'dark blue', 'default'),
 
     # Grid Editor
     ('focusfield', 'black', 'light gray'),
