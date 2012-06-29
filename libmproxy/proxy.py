@@ -425,6 +425,8 @@ def process_proxy_options(parser, options):
         parser.errror("Can't set both reverse proxy and transparent proxy.")
 
     if options.transparent_proxy:
+        if not platform.resolver:
+            parser.error("Transparent mode not supported on this platform.")
         trans = dict(
             resolver = platform.resolver,
             sslports = TRANSPARENT_SSL_PORTS
