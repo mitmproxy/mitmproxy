@@ -1,6 +1,7 @@
 import urllib, urllib2, unittest
 import time
 import libpathod.test, requests
+from netlib import tcp, http
 import tutils
 
 """
@@ -21,7 +22,19 @@ class SanityMixin:
 
 
 class TestHTTP(tutils.HTTPProxTest, SanityMixin):
-    pass
+    def test_invalid_http(self):
+        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
+        t.connect()
+        t.wfile.write("invalid\n\n")
+        t.wfile.flush()
+        assert "Bad Request" in t.rfile.readline()
+
+    def test_invalid_connect(self):
+        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
+        t.connect()
+        t.wfile.write("CONNECT invalid\n\n")
+        t.wfile.flush()
+        assert "Bad Request" in t.rfile.readline()
 
 
 class TestHTTPS(tutils.HTTPProxTest, SanityMixin):

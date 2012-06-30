@@ -189,7 +189,7 @@ class ProxyHandler(tcp.BaseHandler):
             if request:
                 err = flow.Error(request, e.msg)
                 err._send(self.mqueue)
-                self.send_error(e.code, e.msg)
+            self.send_error(e.code, e.msg)
         else:
             return True
 
@@ -261,7 +261,10 @@ class ProxyHandler(tcp.BaseHandler):
             if line == "":
                 return None
             if line.startswith("CONNECT"):
-                host, port, httpversion = http.parse_init_connect(line)
+                r = http.parse_init_connect(line)
+                if not r:
+                    raise ProxyError(400, "Bad HTTP request line: %s"%line)
+                host, port, httpversion = r
                 # FIXME: Discard additional headers sent to the proxy. Should I expose
                 # these to users?
                 while 1:
@@ -290,6 +293,9 @@ class ProxyHandler(tcp.BaseHandler):
                 )
                 return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content)
             else:
+                r = http.parse_init_proxy(line)
+                if not r:
+                    raise ProxyError(400, "Bad HTTP request line: %s"%line)
                 method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
                 headers = http.read_headers(self.rfile)
                 content = http.read_http_body_request(
