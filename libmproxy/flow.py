@@ -655,12 +655,14 @@ class ClientConnect(controller.Msg):
 
     def _load_state(self, state):
         self.close = True
+        self.error = state["error"]
         self.requestcount = state["requestcount"]
 
     def _get_state(self):
         return dict(
             address = list(self.address),
             requestcount = self.requestcount,
+            error = self.error,
         )
 
     @classmethod
