@@ -948,6 +948,10 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlist.set_focus(len(self.eventlist))
 
     # Handlers
+    def handle_log(self, l):
+        self.add_event(l.msg)
+        l._ack()
+
     def handle_error(self, r):
         f = flow.FlowMaster.handle_error(self, r)
         if f:

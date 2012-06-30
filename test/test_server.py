@@ -55,6 +55,6 @@ class TestProxy(tutils.HTTPProxTest):
         assert f.status_code == 304
 
         l = self.log()
-        assert l[0].address
-        assert "host" in l[1].headers
-        assert l[2].code == 304
+        assert l[1].address
+        assert "host" in l[2].headers
+        assert l[3].code == 304

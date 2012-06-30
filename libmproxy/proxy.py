@@ -16,8 +16,8 @@ import sys, os, string, socket, time
 import shutil, tempfile, threading
 import optparse, SocketServer
 from OpenSSL import SSL
-from netlib import odict, tcp, http, wsgi, certutils
-import utils, flow, version, platform
+from netlib import odict, tcp, http, wsgi, certutils, http_status
+import utils, flow, version, platform, controller
 
 
 class ProxyError(Exception):
@@ -26,6 +26,13 @@ class ProxyError(Exception):
 
     def __str__(self):
         return "ProxyError(%s, %s)"%(self.code, self.msg)
+
+
+class Log(controller.Msg):
+    def __init__(self, msg):
+        controller.Msg.__init__(self)
+        self.msg = msg
+
 
 
 class ProxyConfig:
@@ -114,11 +121,18 @@ class ProxyHandler(tcp.BaseHandler):
 
     def handle(self):
         cc = flow.ClientConnect(self.client_address)
+        self.log(cc, "connect")
         cc._send(self.mqueue)
         while self.handle_request(cc) and not cc.close:
             pass
         cc.close = True
         cd = flow.ClientDisconnect(cc)
+
+        self.log(
+            cc, "disconnect",
+            [
+                "handled %s requests"%cc.requestcount]
+        )
         cd._send(self.mqueue)
 
     def server_connect(self, scheme, host, port):
@@ -182,16 +196,36 @@ class ProxyHandler(tcp.BaseHandler):
                 # disconnect.
                 if http.response_connection_close(response.httpversion, response.headers):
                     return
-        except IOError, v:
-            cc.connection_error = v
-        except (ProxyError, http.HttpError), e:
-            cc.connection_error = "%s: %s"%(e.code, e.msg)
+        except (IOError, ProxyError, http.HttpError), e:
+            if isinstance(e, IOError):
+                cc.error = str(e)
+            else:
+                cc.error = "%s: %s"%(e.code, e.msg)
+
             if request:
-                err = flow.Error(request, e.msg)
+                err = flow.Error(request, cc.error)
                 err._send(self.mqueue)
-            self.send_error(e.code, e.msg)
+                self.log(
+                    cc, cc.error,
+                    ["url: %s"%request.get_url()]
+                )
+            else:
+                self.log(cc, cc.error)
+
+            if isinstance(e, ProxyError):
+                self.send_error(e.code, e.msg)
         else:
             return True
+
+    def log(self, cc, msg, subs=()):
+        msg = [
+            "%s:%s: "%cc.address + msg
+        ]
+        for i in subs:
+            msg.append("  -> "+i)
+        msg = "\n".join(msg)
+        l = Log(msg)
+        l._send(self.mqueue)
 
     def find_cert(self, host, port, sni):
         if self.config.certfile:
@@ -235,7 +269,7 @@ class ProxyHandler(tcp.BaseHandler):
                 return None
             r = http.parse_init_http(line)
             if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%line)
+                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
             method, path, httpversion = r
             headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
@@ -249,7 +283,7 @@ class ProxyHandler(tcp.BaseHandler):
             scheme, host, port = self.config.reverse_proxy
             r = http.parse_init_http(line)
             if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%line)
+                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
             method, path, httpversion = r
             headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
@@ -263,7 +297,7 @@ class ProxyHandler(tcp.BaseHandler):
             if line.startswith("CONNECT"):
                 r = http.parse_init_connect(line)
                 if not r:
-                    raise ProxyError(400, "Bad HTTP request line: %s"%line)
+                    raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 host, port, httpversion = r
                 # FIXME: Discard additional headers sent to the proxy. Should I expose
                 # these to users?
@@ -285,7 +319,7 @@ class ProxyHandler(tcp.BaseHandler):
                 host, port, httpversion = self.proxy_connect_state
                 r = http.parse_init_http(line)
                 if not r:
-                    raise ProxyError(400, "Bad HTTP request line: %s"%line)
+                    raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, path, httpversion = r
                 headers = http.read_headers(self.rfile)
                 content = http.read_http_body_request(
@@ -295,7 +329,7 @@ class ProxyHandler(tcp.BaseHandler):
             else:
                 r = http.parse_init_proxy(line)
                 if not r:
-                    raise ProxyError(400, "Bad HTTP request line: %s"%line)
+                    raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
                 headers = http.read_headers(self.rfile)
                 content = http.read_http_body_request(
@@ -312,8 +346,7 @@ class ProxyHandler(tcp.BaseHandler):
 
     def send_error(self, code, body):
         try:
-            import BaseHTTPServer
-            response = BaseHTTPServer.BaseHTTPRequestHandler.responses[code][0]
+            response = http_status.RESPONSES.get(code, "Unknown")
             self.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
             self.wfile.write("Server: %s\r\n"%version.NAMEVERSION)
             self.wfile.write("Connection: close\r\n")

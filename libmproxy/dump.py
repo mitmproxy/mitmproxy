@@ -144,6 +144,10 @@ class DumpMaster(flow.FlowMaster):
         if self.eventlog:
             print >> self.outfile, e
 
+    def handle_log(self, l):
+        self.add_event(l.msg)
+        l._ack()
+
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
         if f:

@@ -637,7 +637,7 @@ class ClientConnect(controller.Msg):
             address: (address, port) tuple, or None if the connection is replayed.
             requestcount: Number of requests created by this client connection.
             close: Is the client connection closed?
-            connection_error: Error string or None.
+            error: Error string or None.
     """
     def __init__(self, address):
         """
@@ -647,7 +647,7 @@ class ClientConnect(controller.Msg):
         self.address = address
         self.close = False
         self.requestcount = 0
-        self.connection_error = None
+        self.error = None
         controller.Msg.__init__(self)
 
     def __eq__(self, other):
@@ -1388,20 +1388,10 @@ class FlowMaster(controller.Master):
 
     def handle_clientconnect(self, cc):
         self.run_script_hook("clientconnect", cc)
-        self.add_event("Connect from: %s:%s"%cc.address)
         cc._ack()
 
     def handle_clientdisconnect(self, r):
         self.run_script_hook("clientdisconnect", r)
-        s = "Disconnect from: %s:%s"%r.client_conn.address
-        self.add_event(s)
-        if r.client_conn.requestcount:
-            s = "    -> handled %s requests"%r.client_conn.requestcount
-            self.add_event(s)
-        if r.client_conn.connection_error:
-            self.add_event(
-                "   -> error: %s"%r.client_conn.connection_error, "error"
-            )
         r._ack()
 
     def handle_error(self, r):
