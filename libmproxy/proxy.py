@@ -88,7 +88,7 @@ class ServerConnection(tcp.TCPClient):
                 path = os.path.join(self.config.clientcerts, self.host) + ".pem"
                 if os.path.exists(clientcert):
                     clientcert = path
-            self.convert_to_ssl(clientcert=clientcert)
+            self.convert_to_ssl(clientcert=clientcert, sni=self.host)
 
     def send(self, request):
         self.requestcount += 1
