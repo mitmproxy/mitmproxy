@@ -143,6 +143,7 @@ class DumpMaster(flow.FlowMaster):
     def add_event(self, e, level="info"):
         if self.eventlog:
             print >> self.outfile, e
+            self.outfile.flush()
 
     def handle_log(self, l):
         self.add_event(l.msg)
@@ -200,6 +201,8 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile
             print >> self.outfile, result
             print >> self.outfile, "\n"
+        if self.o.verbosity:
+            self.outfile.flush()
 
         self.state.delete_flow(f)
         if self.o.wfile:
