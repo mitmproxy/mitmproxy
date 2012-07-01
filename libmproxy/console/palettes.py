@@ -13,9 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+palettes = {
 
 # Default palette for dark background
-dark = [
+  'dark': [
     # name, foreground, background, mono, foreground_high, background_high
     # For details on the meaning of the elements refer to
     # http://excess.org/urwid/reference.html#Screen-register_palette
@@ -61,10 +62,10 @@ dark = [
     ('focusfield_error', 'dark red', 'light gray'),
     ('field_error', 'dark red', 'black'),
     ('editfield', 'black', 'light cyan'),
-]
+  ],
 
 # Palette for light background
-light = [
+  'light': [
     ('body', 'black', 'dark cyan'),
     ('foot', 'dark gray', 'default'),
     ('title', 'white,bold', 'light blue',),
@@ -73,7 +74,7 @@ light = [
     # Status bar & heading
     ('heading', 'white', 'light gray', None, 'g85', 'dark blue'),
     ('heading_key', 'dark blue', 'light gray', None, 'light cyan', 'dark blue'),
-    ('heading_inactive', 'light gray', 'dark gray', None, 'g58', 'g11'),
+    ('heading_inactive', 'light gray', 'dark gray', None, 'dark gray', 'dark blue'),
 
     # Help
     ('key', 'dark blue,bold', 'default'),
@@ -106,13 +107,13 @@ light = [
     ('focusfield_error', 'dark red', 'light gray'),
     ('field_error', 'dark red', 'black'),
     ('editfield', 'black', 'light cyan'),
-]
+  ],
 
 # Palettes for terminals that use the Solarized precision colors
 # (http://ethanschoonover.com/solarized#the-values)
 
 # For dark backgrounds
-solarized_dark = [
+  'solarized_dark': [
     ('body', 'dark cyan', 'default'),
     ('foot', 'dark gray', 'default'),
     ('title', 'white,bold', 'default',),
@@ -121,7 +122,7 @@ solarized_dark = [
     # Status bar & heading
     ('heading', 'light gray', 'light cyan',),
     ('heading_key', 'dark blue', 'white',),
-    ('heading_inactive', 'light cyan', 'default',),
+    ('heading_inactive', 'light cyan', 'light gray',),
 
     # Help
     ('key', 'dark blue', 'default',),
@@ -155,19 +156,19 @@ solarized_dark = [
     ('focusfield_error', 'dark red', 'light gray'),
     ('field_error', 'dark red', 'black'),
     ('editfield', 'black', 'light gray'),
-]
+  ],
 
 # For light backgrounds
-solarized_light = [
+  'solarized_light': [
     ('body', 'dark cyan', 'default'),
     ('foot', 'dark gray', 'default'),
     ('title', 'white,bold', 'light cyan',),
     ('editline', 'white', 'default',),
 
     # Status bar & heading
-    ('heading', 'white,standout', 'light cyan',),
+    ('heading', 'light cyan', 'light gray',),
     ('heading_key', 'dark blue', 'white',),
-    ('heading_inactive', 'light gray', 'default',),
+    ('heading_inactive', 'white', 'light gray',),
 
     # Help
     ('key', 'dark blue', 'default',),
@@ -201,4 +202,6 @@ solarized_light = [
     ('focusfield_error', 'dark red', 'light gray'),
     ('field_error', 'dark red', 'black'),
     ('editfield', 'white', 'light cyan'),
-]
+  ],
+
+}
