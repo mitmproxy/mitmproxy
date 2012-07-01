@@ -15,6 +15,7 @@
 
 import proxy
 import optparse, re, filt
+from console import palettes
 
 
 class ParseReplaceException(Exception): pass
@@ -115,6 +116,7 @@ def get_common_options(options):
         wfile = options.wfile,
         verbosity = options.verbose,
         nopop = options.nopop,
+        palette = options.palette,
     )
 
 
@@ -215,6 +217,11 @@ def common_options(parser):
         "--upstream-cert", default=False,
         action="store_true", dest="upstream_cert",
         help="Connect to upstream server to look up certificate details."
+    )
+    parser.add_option(
+        "--palette", type="str", default="dark",
+        action="store", dest="palette",
+        help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
 
     group = optparse.OptionGroup(parser, "Client Replay")

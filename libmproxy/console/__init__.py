@@ -335,6 +335,7 @@ class Options(object):
         "verbosity",
         "wfile",
         "nopop",
+        "palette",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -358,7 +359,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.replacehooks.add(*i)
 
         self.flow_list_walker = None
-        self.set_palette()
+        self.set_palette(options.palette)
 
         r = self.set_intercept(options.intercept)
         if r:
@@ -504,8 +505,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui.start()
         os.unlink(name)
 
-    def set_palette(self):
-        self.palette = palettes.dark
+    def set_palette(self, name):
+        self.palette = palettes.palettes[name]
 
     def run(self):
         self.currentflow = None
