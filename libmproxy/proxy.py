@@ -88,7 +88,10 @@ class ServerConnection(tcp.TCPClient):
                 path = os.path.join(self.config.clientcerts, self.host) + ".pem"
                 if os.path.exists(clientcert):
                     clientcert = path
-            self.convert_to_ssl(clientcert=clientcert, sni=self.host)
+            try:
+                self.convert_to_ssl(clientcert=clientcert, sni=self.host)
+            except tcp.NetLibError, v:
+                raise ProxyError(400, str(v))
 
     def send(self, request):
         self.requestcount += 1
@@ -260,7 +263,10 @@ class ProxyHandler(tcp.BaseHandler):
             if not self.ssl_established and (port in self.config.transparent_proxy["sslports"]):
                 scheme = "https"
                 certfile = self.find_cert(host, port, None)
-                self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
+                try:
+                    self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
+                except tcp.NetLibError, v:
+                    raise ProxyError(400, str(v))
             else:
                 scheme = "http"
             host = self.sni or host
@@ -312,7 +318,10 @@ class ProxyHandler(tcp.BaseHandler):
                             )
                 self.wfile.flush()
                 certfile = self.find_cert(host, port, None)
-                self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
+                try:
+                    self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert)
+                except tcp.NetLibError, v:
+                    raise ProxyError(400, str(v))
                 self.proxy_connect_state = (host, port, httpversion)
                 line = self.rfile.readline(line)
             if self.proxy_connect_state:

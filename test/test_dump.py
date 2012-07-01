@@ -1,7 +1,7 @@
 import os
 from cStringIO import StringIO
 import libpry
-from libmproxy import dump, flow
+from libmproxy import dump, flow, proxy
 import tutils
 
 def test_strfuncs():
@@ -20,6 +20,8 @@ class TestDumpMaster:
     def _cycle(self, m, content):
         req = tutils.treq()
         req.content = content
+        l = proxy.Log("connect")
+        m.handle_log(l)
         cc = req.client_conn
         cc.connection_error = "error"
         resp = tutils.tresp(req)
