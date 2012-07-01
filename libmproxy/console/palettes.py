@@ -74,7 +74,7 @@ palettes = {
     # Status bar & heading
     ('heading', 'white', 'light gray', None, 'g85', 'dark blue'),
     ('heading_key', 'dark blue', 'light gray', None, 'light cyan', 'dark blue'),
-    ('heading_inactive', 'light gray', 'dark gray', None, 'g58', 'g11'),
+    ('heading_inactive', 'light gray', 'dark gray', None, 'dark gray', 'dark blue'),
 
     # Help
     ('key', 'dark blue,bold', 'default'),
@@ -122,7 +122,7 @@ palettes = {
     # Status bar & heading
     ('heading', 'light gray', 'light cyan',),
     ('heading_key', 'dark blue', 'white',),
-    ('heading_inactive', 'light cyan', 'default',),
+    ('heading_inactive', 'light cyan', 'light gray',),
 
     # Help
     ('key', 'dark blue', 'default',),
@@ -166,9 +166,9 @@ palettes = {
     ('editline', 'white', 'default',),
 
     # Status bar & heading
-    ('heading', 'white,standout', 'light cyan',),
+    ('heading', 'light cyan', 'light gray',),
     ('heading_key', 'dark blue', 'white',),
-    ('heading_inactive', 'light gray', 'default',),
+    ('heading_inactive', 'white', 'light gray',),
 
     # Help
     ('key', 'dark blue', 'default',),
