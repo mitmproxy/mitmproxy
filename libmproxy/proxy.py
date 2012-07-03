@@ -114,8 +114,8 @@ class ServerConnection(tcp.TCPClient):
 
 
 class ProxyHandler(tcp.BaseHandler):
-    def __init__(self, config, connection, client_address, server, q):
-        self.mqueue = q
+    def __init__(self, config, connection, client_address, server, mqueue, server_version):
+        self.mqueue, self.server_version = mqueue, server_version
         self.config = config
         self.server_conn = None
         self.proxy_connect_state = None
@@ -313,7 +313,7 @@ class ProxyHandler(tcp.BaseHandler):
                         break
                 self.wfile.write(
                             'HTTP/1.1 200 Connection established\r\n' +
-                            ('Proxy-agent: %s\r\n'%version.NAMEVERSION) +
+                            ('Proxy-agent: %s\r\n'%self.server_version) +
                             '\r\n'
                             )
                 self.wfile.flush()
@@ -357,7 +357,7 @@ class ProxyHandler(tcp.BaseHandler):
         try:
             response = http_status.RESPONSES.get(code, "Unknown")
             self.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-            self.wfile.write("Server: %s\r\n"%version.NAMEVERSION)
+            self.wfile.write("Server: %s\r\n"%self.server_version)
             self.wfile.write("Connection: close\r\n")
             self.wfile.write("Content-type: text/html\r\n")
             self.wfile.write("\r\n")
@@ -374,11 +374,12 @@ class ProxyServerError(Exception): pass
 class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
-    def __init__(self, config, port, address=''):
+    def __init__(self, config, port, address='', server_version=version.NAMEVERSION):
         """
             Raises ProxyServerError if there's a startup problem.
         """
         self.config, self.port, self.address = config, port, address
+        self.server_version = server_version
         try:
             tcp.TCPServer.__init__(self, (address, port))
         except socket.error, v:
@@ -396,7 +397,7 @@ class ProxyServer(tcp.TCPServer):
         self.masterq = q
 
     def handle_connection(self, request, client_address):
-        h = ProxyHandler(self.config, request, client_address, self, self.masterq)
+        h = ProxyHandler(self.config, request, client_address, self, self.masterq, self.server_version)
         h.handle()
         h.finish()
 
