@@ -238,7 +238,7 @@ class ProxyHandler(tcp.BaseHandler):
             if self.config.upstream_cert:
                 cert = certutils.get_remote_cert(host, port, sni)
                 sans = cert.altnames
-                host = cert.cn
+                host = cert.cn.decode("utf8").encode("idna")
             ret = certutils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
             time.sleep(self.config.cert_wait_time)
             if not ret:
@@ -255,7 +255,7 @@ class ProxyHandler(tcp.BaseHandler):
         return line
 
     def handle_sni(self, conn):
-        self.sni = conn.get_servername()
+        self.sni = conn.get_servername().decode("utf8").encode("idna")
 
     def read_request(self, client_conn):
         if self.config.transparent_proxy:
