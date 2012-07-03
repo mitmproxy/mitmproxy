@@ -36,14 +36,14 @@ class Log(controller.Msg):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None):
         assert not (reverse_proxy and transparent_proxy)
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
         self.certdir = None
         self.cert_wait_time = cert_wait_time
-        self.upstream_cert = upstream_cert
+        self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
         self.transparent_proxy = transparent_proxy
@@ -235,7 +235,7 @@ class ProxyHandler(tcp.BaseHandler):
             return self.config.certfile
         else:
             sans = []
-            if self.config.upstream_cert:
+            if not self.config.no_upstream_cert:
                 cert = certutils.get_remote_cert(host, port, sni)
                 sans = cert.altnames
                 host = cert.cn.decode("utf8").encode("idna")
@@ -503,7 +503,7 @@ def process_proxy_options(parser, options):
         clientcerts = options.clientcerts,
         cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
-        upstream_cert = options.upstream_cert,
+        no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
         transparent_proxy = trans
     )
