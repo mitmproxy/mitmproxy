@@ -17,6 +17,7 @@
 
 import sys
 from libmproxy import proxy, console, cmdline
+from libmproxy.console import palettes
 from libmproxy.version import VERSION
 from optparse import OptionParser, OptionGroup
 
@@ -28,6 +29,11 @@ if __name__ == '__main__':
             )
     cmdline.common_options(parser)
     parser.add_option("--debug", dest="debug", default=False, action="store_true")
+    parser.add_option(
+        "--palette", type="str", default="dark",
+        action="store", dest="palette",
+        help="Select color palette: " + ", ".join(palettes.palettes.keys())
+    )
 
 
     group = OptionGroup(
@@ -60,6 +66,8 @@ if __name__ == '__main__':
         parser.error(v.message)
     opts.intercept = options.intercept
     opts.debug = options.debug
+    opts.palette = options.palette
+
     m = console.ConsoleMaster(server, opts)
     try:
         m.run()
