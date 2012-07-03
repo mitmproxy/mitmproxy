@@ -255,7 +255,9 @@ class ProxyHandler(tcp.BaseHandler):
         return line
 
     def handle_sni(self, conn):
-        self.sni = conn.get_servername().decode("utf8").encode("idna")
+        sn = conn.get_servername()
+        if sn:
+            self.sni = sn.decode("utf8").encode("idna")
 
     def read_request(self, client_conn):
         if self.config.transparent_proxy:
