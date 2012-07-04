@@ -229,6 +229,10 @@ class GridListBox(urwid.ListBox):
 FIRST_WIDTH_MAX = 40
 FIRST_WIDTH_MIN = 20
 class GridEditor(common.WWrap):
+    title = None
+    columns = None
+    headings = None
+    encoding = None
     def __init__(self, master, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
         self.master, self.value, self.callback = master, value, callback
@@ -299,7 +303,10 @@ class GridEditor(common.WWrap):
             res = []
             for i in self.walker.lst:
                 if any([x.strip() for x in i[0]]):
-                    res.append(i[0])
+                    v = i[0]
+                    if self.encoding:
+                        v = [x.encode(self.encoding) for x in v]
+                    res.append(v)
             self.callback(res, *self.cb_args, **self.cb_kwargs)
             self.master.pop_view()
         elif key in ["h", "left"]:
@@ -334,18 +341,21 @@ class QueryEditor(GridEditor):
     title = "Editing query"
     columns = 2
     headings = ("Key", "Value")
+    encoding = "ascii"
 
 
 class HeaderEditor(GridEditor):
     title = "Editing headers"
     columns = 2
     headings = ("Key", "Value")
+    encoding = "ascii"
 
 
 class URLEncodedFormEditor(GridEditor):
     title = "Editing URL-encoded form"
     columns = 2
     headings = ("Key", "Value")
+    encoding = "ascii"
 
 
 class ReplaceEditor(GridEditor):
