@@ -538,7 +538,7 @@ class Response(HTTPMsg):
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp = state["timestamp"]
-        self.cert = state["cert"]
+        self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     def _get_state(self):
         return dict(

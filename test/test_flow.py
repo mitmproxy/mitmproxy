@@ -192,6 +192,13 @@ class TestFlow:
         f.revert()
         assert f.request.content == "foo"
 
+    def test_backup_idempotence(self):
+        f = tutils.tflow_full()
+        f.backup()
+        f.revert()
+        f.backup()
+        f.revert()
+
     def test_getset_state(self):
         f = tutils.tflow()
         f.response = tutils.tresp(f.request)
