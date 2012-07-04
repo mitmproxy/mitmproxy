@@ -2,6 +2,37 @@ import select, socket, threading, traceback, sys
 from OpenSSL import SSL
 import certutils
 
+SSLv2_METHOD = SSL.SSLv2_METHOD
+SSLv3_METHOD = SSL.SSLv3_METHOD
+SSLv23_METHOD = SSL.SSLv23_METHOD
+TLSv1_METHOD = SSL.TLSv1_METHOD
+
+OP_ALL = SSL.OP_ALL
+OP_CIPHER_SERVER_PREFERENCE = SSL.OP_CIPHER_SERVER_PREFERENCE
+OP_COOKIE_EXCHANGE = SSL.OP_COOKIE_EXCHANGE
+OP_DONT_INSERT_EMPTY_FRAGMENTS = SSL.OP_DONT_INSERT_EMPTY_FRAGMENTS
+OP_EPHEMERAL_RSA = SSL.OP_EPHEMERAL_RSA
+OP_MICROSOFT_BIG_SSLV3_BUFFER = SSL.OP_MICROSOFT_BIG_SSLV3_BUFFER
+OP_MICROSOFT_SESS_ID_BUG = SSL.OP_MICROSOFT_SESS_ID_BUG
+OP_MSIE_SSLV2_RSA_PADDING = SSL.OP_MSIE_SSLV2_RSA_PADDING
+OP_NETSCAPE_CA_DN_BUG = SSL.OP_NETSCAPE_CA_DN_BUG
+OP_NETSCAPE_CHALLENGE_BUG = SSL.OP_NETSCAPE_CHALLENGE_BUG
+OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG = SSL.OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG = SSL.OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+OP_NO_QUERY_MTU = SSL.OP_NO_QUERY_MTU
+OP_NO_SSLv2 = SSL.OP_NO_SSLv2
+OP_NO_SSLv3 = SSL.OP_NO_SSLv3
+OP_NO_TICKET = SSL.OP_NO_TICKET
+OP_NO_TLSv1 = SSL.OP_NO_TLSv1
+OP_PKCS1_CHECK_1 = SSL.OP_PKCS1_CHECK_1
+OP_PKCS1_CHECK_2 = SSL.OP_PKCS1_CHECK_2
+OP_SINGLE_DH_USE = SSL.OP_SINGLE_DH_USE
+OP_SSLEAY_080_CLIENT_DH_BUG = SSL.OP_SSLEAY_080_CLIENT_DH_BUG
+OP_SSLREF2_REUSE_CERT_TYPE_BUG = SSL.OP_SSLREF2_REUSE_CERT_TYPE_BUG
+OP_TLS_BLOCK_PADDING_BUG = SSL.OP_TLS_BLOCK_PADDING_BUG
+OP_TLS_D5_BUG = SSL.OP_TLS_D5_BUG
+OP_TLS_ROLLBACK_BUG = SSL.OP_TLS_ROLLBACK_BUG
+
 
 class NetLibError(Exception): pass
 
@@ -58,8 +89,10 @@ class TCPClient:
         self.cert = None
         self.ssl_established = False
 
-    def convert_to_ssl(self, clientcert=None, sni=None):
-        context = SSL.Context(SSL.SSLv23_METHOD)
+    def convert_to_ssl(self, clientcert=None, sni=None, method=TLSv1_METHOD, options=None):
+        context = SSL.Context(method)
+        if not options is None:
+            ctx.set_options(options)
         if clientcert:
             context.use_certificate_file(self.clientcert)
         self.connection = SSL.Connection(context, self.connection)
@@ -103,8 +136,13 @@ class BaseHandler:
         self.finished = False
         self.ssl_established = False
 
-    def convert_to_ssl(self, cert, key):
-        ctx = SSL.Context(SSL.SSLv23_METHOD)
+    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None):
+        """
+            method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
+        """
+        ctx = SSL.Context(method)
+        if not options is None:
+            ctx.set_options(options)
         ctx.set_tlsext_servername_callback(self.handle_sni)
         ctx.use_privatekey_file(key)
         ctx.use_certificate_file(cert)

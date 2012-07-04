@@ -55,17 +55,26 @@ class DisconnectHandler(tcp.BaseHandler):
 
 
 class TServer(tcp.TCPServer):
-    def __init__(self, addr, ssl, q, handler):
+    def __init__(self, addr, ssl, q, handler, v3_only=False):
         tcp.TCPServer.__init__(self, addr)
         self.ssl, self.q = ssl, q
+        self.v3_only = v3_only
         self.handler = handler
 
     def handle_connection(self, request, client_address):
         h = self.handler(request, client_address, self)
         if self.ssl:
+            if self.v3_only:
+                method = tcp.SSLv3_METHOD
+                options = tcp.OP_NO_SSLv2|tcp.OP_NO_TLSv1
+            else:
+                method = tcp.SSLv23_METHOD
+                options = None
             h.convert_to_ssl(
                 tutils.test_data.path("data/server.crt"),
                 tutils.test_data.path("data/server.key"),
+                method = method,
+                options = options,
             )
         h.handle()
         h.finish()
@@ -112,6 +121,20 @@ class TestServerSSL(ServerTestBase):
 
     def test_get_remote_cert(self):
         assert certutils.get_remote_cert("127.0.0.1", self.port, None).digest("sha1")
+
+
+class TestSSLv3Only(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        cls.q = Queue.Queue()
+        s = TServer(("127.0.0.1", 0), True, cls.q, EchoHandler, True)
+        cls.port = s.port
+        return s
+
+    def test_failure(self):
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com", method=tcp.TLSv1_METHOD)
 
 
 class TestSNI(ServerTestBase):
