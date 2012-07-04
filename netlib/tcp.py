@@ -209,7 +209,7 @@ class TCPServer:
                 request.close()
             # Why a blanket except here? In some circumstances, a thread can
             # persist until the interpreter exits. When this happens, all modules
-            # and builtins are set to None, and things balls up indeterminate
+            # and builtins are set to None, and things balls up in indeterminate
             # ways.
             except:
                 pass

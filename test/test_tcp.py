@@ -17,7 +17,10 @@ class ServerThread(threading.Thread):
 class ServerTestBase:
     @classmethod
     def setupAll(cls):
-        cls.server = ServerThread(cls.makeserver())
+        cls.q = Queue.Queue()
+        s = cls.makeserver()
+        cls.port = s.port
+        cls.server = ServerThread(s)
         cls.server.start()
 
     @classmethod
@@ -88,10 +91,7 @@ class TServer(tcp.TCPServer):
 class TestServer(ServerTestBase):
     @classmethod
     def makeserver(cls):
-        cls.q = Queue.Queue()
-        s = TServer(("127.0.0.1", 0), False, cls.q, EchoHandler)
-        cls.port = s.port
-        return s
+        return TServer(("127.0.0.1", 0), False, cls.q, EchoHandler)
 
     def test_echo(self):
         testval = "echo!\n"
@@ -105,10 +105,7 @@ class TestServer(ServerTestBase):
 class TestServerSSL(ServerTestBase):
     @classmethod
     def makeserver(cls):
-        cls.q = Queue.Queue()
-        s = TServer(("127.0.0.1", 0), True, cls.q, EchoHandler)
-        cls.port = s.port
-        return s
+        return TServer(("127.0.0.1", 0), True, cls.q, EchoHandler)
 
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
@@ -126,10 +123,7 @@ class TestServerSSL(ServerTestBase):
 class TestSSLv3Only(ServerTestBase):
     @classmethod
     def makeserver(cls):
-        cls.q = Queue.Queue()
-        s = TServer(("127.0.0.1", 0), True, cls.q, EchoHandler, True)
-        cls.port = s.port
-        return s
+        return TServer(("127.0.0.1", 0), True, cls.q, EchoHandler, True)
 
     def test_failure(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
@@ -140,10 +134,7 @@ class TestSSLv3Only(ServerTestBase):
 class TestSNI(ServerTestBase):
     @classmethod
     def makeserver(cls):
-        cls.q = Queue.Queue()
-        s = TServer(("127.0.0.1", 0), True, cls.q, SNIHandler)
-        cls.port = s.port
-        return s
+        return TServer(("127.0.0.1", 0), True, cls.q, SNIHandler)
 
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
@@ -155,10 +146,7 @@ class TestSNI(ServerTestBase):
 class TestSSLDisconnect(ServerTestBase):
     @classmethod
     def makeserver(cls):
-        cls.q = Queue.Queue()
-        s = TServer(("127.0.0.1", 0), True, cls.q, DisconnectHandler)
-        cls.port = s.port
-        return s
+        return TServer(("127.0.0.1", 0), True, cls.q, DisconnectHandler)
 
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
