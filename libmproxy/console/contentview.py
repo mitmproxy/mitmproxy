@@ -234,12 +234,7 @@ def view_urlencoded(hdrs, content, limit):
 def view_javascript(hdrs, content, limit):
     opts = jsbeautifier.default_options()
     opts.indent_size = 2
-    try:
-        res = jsbeautifier.beautify(content[:limit], opts)
-    except:                                     # pragma: no cover 
-        # Bugs in jsbeautifier mean that it 
-        # can throw arbitrary errors.
-        return None                             # pragma: no cover
+    res = jsbeautifier.beautify(content[:limit], opts)
     return "JavaScript", _view_text(res, len(content), limit)
 
 
@@ -320,7 +315,11 @@ def get_content_view(viewmode, hdrItems, content, limit):
             content = decoded
             msg.append("[decoded %s]"%enc[0])
     func = get_view_func(viewmode, hdrs, content)
-    ret = func(hdrs, content, limit)
+    try:
+        ret = func(hdrs, content, limit)
+    # Third-party viewers can fail in unexpected ways...
+    except:
+        ret = None
     if not ret:
         viewmode = VIEW_RAW
         ret = view_raw(hdrs, content, limit)
