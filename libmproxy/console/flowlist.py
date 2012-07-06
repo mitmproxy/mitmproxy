@@ -29,8 +29,8 @@ def _mkhelp():
         ("L", "load saved flows"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
-        ("w", "save all flows matching current limit"),
-        ("W", "save this flow"),
+        ("w", "save flows "),
+        ("W", "stream flows to file"),
         ("X", "kill and delete flow, even if it's mid-intercept"),
         ("tab", "tab between eventlog and flow list"),
         ("enter", "view flow"),
@@ -161,8 +161,6 @@ class ConnectionItem(common.WWrap):
                 ),
                 self.save_flows_prompt,
             )
-        elif key == "W":
-            pass
         elif key == "X":
             self.flow.kill(self.master)
         elif key == "enter":
@@ -227,5 +225,14 @@ class FlowListBox(urwid.ListBox):
                 self.master.state.last_saveload,
                 self.master.load_flows_callback
             )
+        elif key == "W":
+            if self.master.stream:
+                self.master.stop_stream()
+            else:
+                self.master.path_prompt(
+                    "Stream flows to: ",
+                    self.master.state.last_saveload,
+                    self.master.start_stream
+                )
         else:
             return urwid.ListBox.keypress(self, size, key)

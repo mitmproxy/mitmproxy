@@ -25,8 +25,6 @@ EVENTLOG_SIZE = 500
 class Stop(Exception): pass
 
 
-
-
 class _PathCompleter:
     def __init__(self, _testing=False):
         """
@@ -186,6 +184,9 @@ class StatusBar(common.WWrap):
 
         if self.master.debug:
             r.append("[lt:%0.3f]"%self.master.looptime)
+
+        if self.master.stream:
+            r.append("[W:%s]"%self.master.stream_path)
 
         return r
 
@@ -353,6 +354,7 @@ class ConsoleMaster(flow.FlowMaster):
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
         self.looptime = 0
+        self.stream = None
         self.options = options
 
         for i in options.replacements:
@@ -399,6 +401,25 @@ class ConsoleMaster(flow.FlowMaster):
             if err:
                 print >> sys.stderr, "Script load error:", err
                 sys.exit(1)
+
+        if options.wfile:
+            err = self.start_stream(options.wfile)
+            if err:
+                print >> sys.stderr, "Script load error:", err
+                sys.exit(1)
+
+    def start_stream(self, path):
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, "ab")
+            self.stream = flow.FlowWriter(f)
+        except IOError, v:
+            return str(v)
+        self.stream_path = path
+
+    def stop_stream(self):
+        self.stream = None
+        self.stream_path = None
 
     def run_script_once(self, path, f):
         if not path:
@@ -905,6 +926,8 @@ class ConsoleMaster(flow.FlowMaster):
 
     def shutdown(self):
         self.state.killall(self)
+        if self.stream:
+            self.stream.fo.close()
         controller.Master.shutdown(self)
 
     def sync_list_view(self):
@@ -969,4 +992,6 @@ class ConsoleMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_response(self, r)
         if f:
             self.process_flow(f, r)
+        if self.stream:
+            self.stream.add(f)
         return f
