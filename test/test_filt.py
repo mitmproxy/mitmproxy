@@ -195,6 +195,12 @@ class TestMatching:
         q.request.method = "oink"
         assert not self.q("~m get", q)
 
+    def test_domain(self):
+        q = self.req()
+        s = self.resp()
+        assert self.q("~d host", q)
+        assert not self.q("~d none", q)
+
     def test_url(self):
         q = self.req()
         s = self.resp()

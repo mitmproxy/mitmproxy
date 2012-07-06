@@ -992,6 +992,6 @@ class ConsoleMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_response(self, r)
         if f:
             self.process_flow(f, r)
-        if self.stream:
-            self.stream.add(f)
+            if self.stream:
+                self.stream.add(f)
         return f

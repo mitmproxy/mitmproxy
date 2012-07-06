@@ -182,6 +182,13 @@ class FMethod(_Rex):
         return bool(re.search(self.expr, f.request.method, re.IGNORECASE))
 
 
+class FDomain(_Rex):
+    code = "d"
+    help = "Domain"
+    def __call__(self, f):
+        return bool(re.search(self.expr, f.request.host, re.IGNORECASE))
+
+
 class FUrl(_Rex):
     code = "u"
     help = "URL"
@@ -260,6 +267,7 @@ filt_rex = [
     FBodResponse,
     FBod,
     FMethod,
+    FDomain,
     FUrl,
     FRequestContentType,
     FResponseContentType,
