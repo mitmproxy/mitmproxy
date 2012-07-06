@@ -33,6 +33,7 @@
         ~bq rex     Expression in the body of response
         ~t rex      Shortcut for content-type header.
 
+        ~d rex      Request domain
         ~m rex      Method
         ~u rex      URL
         ~c CODE     Response code.
@@ -114,7 +115,7 @@ class FRequestContentType(_Rex):
 
 class FResponseContentType(_Rex):
     code = "ts"
-    help = "Request Content-Type header"
+    help = "Response Content-Type header"
     def __call__(self, f):
         if f.response:
             return _check_content_type(self.expr, f.response)
