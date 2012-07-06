@@ -49,7 +49,7 @@ class FlowDetailsView(urwid.ListBox):
         text.append(title)
 
         if self.flow.response:
-            c = self.flow.response.get_cert()
+            c = self.flow.response.cert
             if c:
                 text.append(urwid.Text([("head", "Server Certificate:")]))
                 parts = [
