@@ -20,7 +20,7 @@ def _mkhelp():
     text = []
     keys = [
         ("A", "accept all intercepted flows"),
-        ("a", "accept this intercepted flows"),
+        ("a", "accept this intercepted flow"),
         ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
@@ -111,6 +111,21 @@ class ConnectionItem(common.WWrap):
     def selectable(self):
         return True
 
+    def save_flows_prompt(self, k):
+        if k == "a":
+            self.master.path_prompt(
+                "Save all flows to: ",
+                self.state.last_saveload,
+                self.master.save_flows
+            )
+        else:
+            self.master.path_prompt(
+                "Save this flow to: ",
+                self.state.last_saveload,
+                self.master.save_one_flow,
+                self.flow
+            )
+
     def keypress(self, (maxcol,), key):
         key = common.shortcuts(key)
         if key == "a":
@@ -138,18 +153,16 @@ class ConnectionItem(common.WWrap):
             self.master.sync_list_view()
             self.master.statusbar.message("Reverted.")
         elif key == "w":
-            self.master.path_prompt(
-                "Save flows: ",
-                self.state.last_saveload,
-                self.master.save_flows
+            self.master.prompt_onekey(
+                "Save",
+                (
+                    ("all flows", "a"),
+                    ("this flow", "t"),
+                ),
+                self.save_flows_prompt,
             )
         elif key == "W":
-            self.master.path_prompt(
-                "Save this flow: ",
-                self.state.last_saveload,
-                self.master.save_one_flow,
-                self.flow
-            )
+            pass
         elif key == "X":
             self.flow.kill(self.master)
         elif key == "enter":
