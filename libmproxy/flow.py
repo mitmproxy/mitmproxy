@@ -1382,6 +1382,7 @@ class FlowMaster(controller.Master):
                     self.masterq,
                 )
             rt.start() # pragma: no cover
+        return rt
 
     def run_script_hook(self, name, *args, **kwargs):
         if self.script and not self.pause_scripts:

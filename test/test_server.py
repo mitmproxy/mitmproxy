@@ -20,6 +20,16 @@ class SanityMixin:
     def test_large(self):
         assert len(self.pathod("200:b@50k").content) == 1024*50
 
+    def test_replay(self):
+        assert self.pathod("304").status_code == 304
+        assert len(self.master.state.view) == 1
+        l = self.master.state.view[0]
+        assert l.response.code == 304
+        l.request.path = "/p/305"
+        rt = self.master.replay_request(l)
+        rt.join()
+        assert l.response.code == 305
+
 
 class TestHTTP(tutils.HTTPProxTest, SanityMixin):
     def test_invalid_http(self):
