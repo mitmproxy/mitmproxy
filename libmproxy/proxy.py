@@ -199,11 +199,11 @@ class ProxyHandler(tcp.BaseHandler):
                 # disconnect.
                 if http.response_connection_close(response.httpversion, response.headers):
                     return
-        except (IOError, ProxyError, http.HttpError), e:
-            if isinstance(e, IOError):
-                cc.error = str(e)
-            else:
+        except (IOError, ProxyError, http.HttpError, tcp.NetLibDisconnect), e:
+            if hasattr(e, "code"):
                 cc.error = "%s: %s"%(e.code, e.msg)
+            else:
+                cc.error = str(e)
 
             if request:
                 err = flow.Error(request, cc.error)
