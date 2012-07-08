@@ -8,5 +8,6 @@ MANIFEST
 *.swo
 mitmproxyc
 mitmdumpc
-netlib
 .coverage
+netlib
+libpathod

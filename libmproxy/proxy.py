@@ -67,11 +67,9 @@ class RequestReplayThread(threading.Thread):
                 self.flow.request, httpversion, code, msg, headers, content, server.cert
             )
             response._send(self.masterq)
-        except (ProxyError, http.HttpError), v:
-            err = flow.Error(self.flow.request, v.msg)
+        except (ProxyError, http.HttpError, tcp.NetLibError), v:
+            err = flow.Error(self.flow.request, str(v))
             err._send(self.masterq)
-        except tcp.NetLibError, v:
-            raise ProxyError(502, v)
 
 
 class ServerConnection(tcp.TCPClient):

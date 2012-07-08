@@ -30,6 +30,18 @@ class SanityMixin:
         rt.join()
         assert l.response.code == 305
 
+        # Disconnect error
+        l.request.path = "/p/305:d0"
+        rt = self.master.replay_request(l)
+        rt.join()
+        assert l.error
+
+        # Port error
+        l.request.port = 1
+        rt = self.master.replay_request(l)
+        rt.join()
+        assert l.error
+
 
 class TestHTTP(tutils.HTTPProxTest, SanityMixin):
     def test_invalid_http(self):
