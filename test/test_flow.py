@@ -1,4 +1,4 @@
-import Queue, time
+import Queue, time, os.path
 from cStringIO import StringIO
 import email.utils
 from libmproxy import filt, flow, controller, utils, tnetstring
@@ -688,6 +688,32 @@ class TestFlowMaster:
         assert not "authorization" in f.request.headers
         fm.handle_request(f.request)
         assert f.request.headers["authorization"] == ["foo"]
+
+    def test_stream(self):
+        with tutils.tmpdir() as tdir:
+            p = os.path.join(tdir, "foo")
+            def r():
+                r = flow.FlowReader(open(p))
+                return list(r.stream())
+
+            s = flow.State()
+            fm = flow.FlowMaster(None, s)
+            tf = tutils.tflow_full()
+
+            fm.start_stream(file(p, "ab"))
+            fm.handle_request(tf.request)
+            fm.handle_response(tf.response)
+            fm.stop_stream()
+
+            assert r()[0].response
+
+            tf = tutils.tflow_full()
+            fm.start_stream(file(p, "ab"))
+            fm.handle_request(tf.request)
+            fm.shutdown()
+
+            assert not r()[1].response
+
 
 class TestRequest:
     def test_simple(self):

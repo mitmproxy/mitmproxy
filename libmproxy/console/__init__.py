@@ -928,7 +928,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.killall(self)
         if self.stream:
             self.stream.fo.close()
-        controller.Master.shutdown(self)
+        flow.FlowMaster.shutdown(self)
 
     def sync_list_view(self):
         self.flow_list_walker._modified()
