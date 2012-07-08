@@ -1,6 +1,6 @@
 import operator, string, random, mmap, os, time
 import contrib.pyparsing as pp
-from netlib import http_status
+from netlib import http_status, tcp
 import utils
 
 BLOCKSIZE = 1024
@@ -43,29 +43,32 @@ def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
 
         Return True if connection should disconnect.
     """
-    while vals:
-        part = vals.pop()
-        for i in range(skip, len(part), blocksize):
-            d = part[i:i+blocksize]
-            if actions and actions[-1][0] < (sofar + len(d)):
-                p = actions.pop()
-                offset = p[0]-sofar
-                vals.append(part)
-                if p[1] == "pause":
-                    fp.write(d[:offset])
-                    time.sleep(p[2])
-                    return write_values(
-                        fp, vals, actions,
-                        sofar=sofar+offset,
-                        skip=i+offset,
-                        blocksize=blocksize
-                    )
-                elif p[1] == "disconnect":
-                    fp.write(d[:offset])
-                    return True
-            fp.write(d)
-            sofar += len(d)
-        skip = 0
+    try:
+        while vals:
+            part = vals.pop()
+            for i in range(skip, len(part), blocksize):
+                d = part[i:i+blocksize]
+                if actions and actions[-1][0] < (sofar + len(d)):
+                    p = actions.pop()
+                    offset = p[0]-sofar
+                    vals.append(part)
+                    if p[1] == "pause":
+                        fp.write(d[:offset])
+                        time.sleep(p[2])
+                        return write_values(
+                            fp, vals, actions,
+                            sofar=sofar+offset,
+                            skip=i+offset,
+                            blocksize=blocksize
+                        )
+                    elif p[1] == "disconnect":
+                        fp.write(d[:offset])
+                        return True
+                fp.write(d)
+                sofar += len(d)
+            skip = 0
+    except tcp.NetLibDisconnect:
+        return True
 
 
 DATATYPES = dict(
