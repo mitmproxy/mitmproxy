@@ -91,7 +91,7 @@ class DumpMaster(flow.FlowMaster):
             path = os.path.expanduser(options.wfile)
             try:
                 f = file(path, "wb")
-                self.fwriter = flow.FlowWriter(f)
+                self.start_stream(f)
             except IOError, v:
                 raise DumpError(v.strerror)
 
@@ -203,10 +203,7 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile, "\n"
         if self.o.verbosity:
             self.outfile.flush()
-
         self.state.delete_flow(f)
-        if self.o.wfile:
-            self.fwriter.add(f)
 
     def handle_response(self, msg):
         f = flow.FlowMaster.handle_response(self, msg)
@@ -222,8 +219,6 @@ class DumpMaster(flow.FlowMaster):
         return f
 
     def shutdown(self):  # pragma: no cover
-        if self.o.wfile:
-            self.fwriter.fo.close()
         return flow.FlowMaster.shutdown(self)
 
     def run(self):  # pragma: no cover
