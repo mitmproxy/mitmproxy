@@ -36,6 +36,8 @@ OP_TLS_ROLLBACK_BUG = SSL.OP_TLS_ROLLBACK_BUG
 
 class NetLibError(Exception): pass
 
+class NetLibDisconnect(Exception): pass
+
 
 class FileLike:
     def __init__(self, o):
@@ -61,7 +63,10 @@ class FileLike:
         return result
 
     def write(self, v):
-        self.o.sendall(v)
+        try:
+            return self.o.sendall(v)
+        except SSL.SysCallError:
+            raise NetLibDisconnect()
 
     def readline(self, size = None):
         result = ''
@@ -159,11 +164,15 @@ class BaseHandler:
 
     def finish(self):
         self.finished = True
-        if not getattr(self.wfile, "closed", False):
-            self.wfile.flush()
-        self.connection.close()
-        self.wfile.close()
-        self.rfile.close()
+        try:
+            if not getattr(self.wfile, "closed", False):
+                self.wfile.flush()
+            self.wfile.close()
+            self.rfile.close()
+            self.connection.close()
+        except socket.error:
+            # Remote has disconnected
+            pass
 
     def handle_sni(self, connection):
         """
