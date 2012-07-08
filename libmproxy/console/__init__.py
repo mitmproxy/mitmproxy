@@ -354,7 +354,7 @@ class ConsoleMaster(flow.FlowMaster):
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
         self.looptime = 0
-        self.stream = None
+        self.stream_path = None
         self.options = options
 
         for i in options.replacements:
@@ -412,14 +412,10 @@ class ConsoleMaster(flow.FlowMaster):
         path = os.path.expanduser(path)
         try:
             f = file(path, "ab")
-            self.stream = flow.FlowWriter(f)
+            flow.FlowMaster.start_stream(self, f)
         except IOError, v:
             return str(v)
         self.stream_path = path
-
-    def stop_stream(self):
-        self.stream = None
-        self.stream_path = None
 
     def run_script_once(self, path, f):
         if not path:
@@ -926,8 +922,6 @@ class ConsoleMaster(flow.FlowMaster):
 
     def shutdown(self):
         self.state.killall(self)
-        if self.stream:
-            self.stream.fo.close()
         flow.FlowMaster.shutdown(self)
 
     def sync_list_view(self):
@@ -992,6 +986,4 @@ class ConsoleMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_response(self, r)
         if f:
             self.process_flow(f, r)
-            if self.stream:
-                self.stream.add(f)
         return f
