@@ -43,45 +43,33 @@ def tflow_err():
     return f
 
 
-class TestMaster(controller.Master):
-    def __init__(self, port, testq, config):
-        s = proxy.ProxyServer(config, port)
-        controller.Master.__init__(self, s)
+class TestMaster(flow.FlowMaster):
+    def __init__(self, testq, config):
+        s = proxy.ProxyServer(config, 0)
+        state = flow.State()
+        flow.FlowMaster.__init__(self, s, state)
         self.testq = testq
-        self.log = []
-
-    def clear(self):
-        self.log = []
 
     def handle(self, m):
-        self.log.append(m)
+        f = flow.FlowMaster.handle(self, m)
         m._ack()
 
 
 class ProxyThread(threading.Thread):
     def __init__(self, testq, config):
-        self.port = random.randint(10000, 20000)
-        self.tmaster = TestMaster(self.port, testq, config)
+        self.tmaster = TestMaster(testq, config)
         controller.should_exit = False
         threading.Thread.__init__(self)
+
+    @property
+    def port(self):
+        return self.tmaster.server.port
 
     def run(self):
         self.tmaster.run()
 
     def shutdown(self):
         self.tmaster.shutdown()
-
-
-class ServerThread(threading.Thread):
-    def __init__(self, server):
-        self.server = server
-        threading.Thread.__init__(self)
-
-    def run(self):
-        self.server.serve_forever()
-
-    def shutdown(self):
-        self.server.shutdown()
 
 
 class ProxTestBase:
@@ -97,13 +85,17 @@ class ProxTestBase:
         cls.proxy = ProxyThread(cls.tqueue, config)
         cls.proxy.start()
 
+    @property
+    def master(cls):
+        return cls.proxy.tmaster
+
     @classmethod
     def teardownAll(cls):
         cls.proxy.shutdown()
         cls.server.shutdown()
 
     def setUp(self):
-        self.proxy.tmaster.clear()
+        self.master.state.clear()
 
     @property
     def scheme(self):

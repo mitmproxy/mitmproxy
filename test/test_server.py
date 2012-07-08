@@ -15,7 +15,7 @@ import tutils
 class SanityMixin:
     def test_http(self):
         assert self.pathod("304").status_code == 304
-        assert self.log()
+        assert self.master.state.view
 
     def test_large(self):
         assert len(self.pathod("200:b@50k").content) == 1024*50
@@ -54,7 +54,7 @@ class TestProxy(tutils.HTTPProxTest):
         f = self.pathod("304")
         assert f.status_code == 304
 
-        l = self.log()
-        assert l[1].address
-        assert "host" in l[2].headers
-        assert l[3].code == 304
+        l = self.master.state.view[0]
+        assert l.request.client_conn.address
+        assert "host" in l.request.headers
+        assert l.response.code == 304
