@@ -1361,7 +1361,7 @@ class FlowMaster(controller.Master):
         if self.stickycookie_state:
             self.stickycookie_state.handle_response(f)
 
-    def replay_request(self, f):
+    def replay_request(self, f, block=False):
         """
             Returns None if successful, or error message if not.
         """
@@ -1382,7 +1382,8 @@ class FlowMaster(controller.Master):
                     self.masterq,
                 )
             rt.start() # pragma: no cover
-        return rt
+            if block:
+                rt.join()
 
     def run_script_hook(self, name, *args, **kwargs):
         if self.script and not self.pause_scripts:

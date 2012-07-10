@@ -26,20 +26,17 @@ class SanityMixin:
         l = self.master.state.view[0]
         assert l.response.code == 304
         l.request.path = "/p/305"
-        rt = self.master.replay_request(l)
-        rt.join()
+        rt = self.master.replay_request(l, block=True)
         assert l.response.code == 305
 
         # Disconnect error
         l.request.path = "/p/305:d0"
-        rt = self.master.replay_request(l)
-        rt.join()
+        rt = self.master.replay_request(l, block=True)
         assert l.error
 
         # Port error
         l.request.port = 1
-        rt = self.master.replay_request(l)
-        rt.join()
+        rt = self.master.replay_request(l, block=True)
         assert l.error
 
 
