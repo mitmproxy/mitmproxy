@@ -131,6 +131,7 @@ class WSGIAdaptor:
         except Exception, v:
             try:
                 s = traceback.format_exc()
+                errs.write(s)
                 self.error_page(soc, state["headers_sent"], s)
             except Exception, v:    # pragma: no cover
                 pass                # pragma: no cover
