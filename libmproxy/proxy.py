@@ -423,7 +423,11 @@ class AppRegistry:
         """
             Returns an WSGIAdaptor instance if request matches an app, or None.
         """
-        return self.apps.get((request.host, request.port), None)
+        if (request.host, request.port) in self.apps:
+            return self.apps[(request.host, request.port)]
+        if "host" in request.headers:
+            host = request.headers["host"][0]
+            return self.apps.get((host, request.port), None)
 
 
 class DummyServer:

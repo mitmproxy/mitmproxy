@@ -21,3 +21,11 @@ def test_app_registry():
 
     r.port = 81
     assert not ar.get(r)
+
+
+    r = tutils.treq()
+    r.host = "domain2"
+    r.port = 80
+    assert not ar.get(r)
+    r.headers["host"] = ["domain"]
+    assert ar.get(r)
