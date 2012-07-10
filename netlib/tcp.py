@@ -63,10 +63,11 @@ class FileLike:
         return result
 
     def write(self, v):
-        try:
-            return self.o.sendall(v)
-        except SSL.SysCallError:
-            raise NetLibDisconnect()
+        if v:
+            try:
+                return self.o.sendall(v)
+            except SSL.SysCallError:
+                raise NetLibDisconnect()
 
     def readline(self, size = None):
         result = ''
