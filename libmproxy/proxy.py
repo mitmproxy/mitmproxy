@@ -158,7 +158,10 @@ class ProxyHandler(tcp.BaseHandler):
 
             app = self.server.apps.get(request)
             if app:
-                app.serve(request, self.wfile)
+                err = app.serve(request, self.wfile)
+                self.log(cc, "Error in wsgi app.", err.split("\n"))
+                if err:
+                    return
             else:
                 request = request._send(self.mqueue)
                 if request is None:
@@ -234,7 +237,10 @@ class ProxyHandler(tcp.BaseHandler):
         else:
             sans = []
             if not self.config.no_upstream_cert:
-                cert = certutils.get_remote_cert(host, port, sni)
+                try:
+                    cert = certutils.get_remote_cert(host, port, sni)
+                except tcp.NetLibError, v:
+                    raise ProxyError(502, "Unable to get remote cert: %s"%str(v))
                 sans = cert.altnames
                 host = cert.cn.decode("utf8").encode("idna")
             ret = certutils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
