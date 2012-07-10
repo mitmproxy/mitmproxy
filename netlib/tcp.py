@@ -213,15 +213,8 @@ class TCPServer:
             self.handle_connection(request, client_address)
             request.close()
         except:
-            try:
-                self.handle_error(request, client_address)
-                request.close()
-            # Why a blanket except here? In some circumstances, a thread can
-            # persist until the interpreter exits. When this happens, all modules
-            # and builtins are set to None, and things balls up in indeterminate
-            # ways.
-            except:
-                pass
+            self.handle_error(request, client_address)
+            request.close()
 
     def serve_forever(self, poll_interval=0.1):
         self.__is_shut_down.clear()
@@ -257,10 +250,14 @@ class TCPServer:
         """
             Called when handle_connection raises an exception.
         """
-        print >> fp, '-'*40
-        print >> fp, "Error processing of request from %s:%s"%client_address
-        print >> fp, traceback.format_exc()
-        print >> fp, '-'*40
+        # If a thread has persisted after interpreter exit, the module might be
+        # none. 
+        if traceback:
+            exc = traceback.format_exc()
+            print >> fp, '-'*40
+            print >> fp, "Error in processing of request from %s:%s"%client_address
+            print >> fp, exc
+            print >> fp, '-'*40
 
     def handle_connection(self, request, client_address): # pragma: no cover
         """
