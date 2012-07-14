@@ -562,7 +562,7 @@ class ConsoleMaster(flow.FlowMaster):
     def focus_current(self):
         if self.currentflow:
             try:
-                self.flow_list_walker.set_focus(self.state.index(self.currentflow))
+                self.flow_list_walker.set_focus(self.state.view.index(self.currentflow))
             except (IndexError, ValueError):
                 pass
 
