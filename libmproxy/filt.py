@@ -24,6 +24,12 @@
         Patterns are matched against "name: value" strings. Field names are
         all-lowercase.
 
+        ~a          Asset content-type in response. Asset content types are:
+                        text/javascript
+                        application/x-javascript
+                        text/css
+                        image/*
+                        application/x-shockwave-flash
         ~h rex      Header line in either request or response
         ~hq rex     Header in request
         ~hs rex     Header in response
@@ -93,6 +99,24 @@ def _check_content_type(expr, o):
     if val and re.search(expr, val[0]):
         return True
     return False
+
+
+class FAsset(_Action):
+    code = "a"
+    help = "Match asset in response: CSS, Javascript, Flash, images."
+    ASSET_TYPES = [
+        "text/javascript",
+        "application/x-javascript",
+        "text/css",
+        "image/.*",
+        "application/x-shockwave-flash"
+    ]
+    def __call__(self, f):
+        if f.response:
+            for i in self.ASSET_TYPES:
+                if _check_content_type(i, f.response):
+                    return True
+        return False
 
 
 class FContentType(_Rex):
@@ -258,6 +282,7 @@ class FNot(_Token):
 filt_unary = [
     FReq,
     FResp,
+    FAsset,
     FErr
 ]
 filt_rex = [
@@ -322,7 +347,7 @@ bnf = _make()
 def parse(s):
     try:
         return bnf.parseString(s, parseAll=True)[0]
-    except pp.ParseException:
+    except pp.ParseException, v:
         return None
     except ValueError:
         return None

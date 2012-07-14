@@ -112,6 +112,12 @@ class TestMatching:
     def q(self, q, o):
         return filt.parse(q)(o)
 
+    def test_asset(self):
+        s = self.resp()
+        assert not self.q("~a", s)
+        s.response.headers["content-type"] = ["text/javascript"]
+        assert self.q("~a", s)
+
     def test_fcontenttype(self):
         q = self.req()
         s = self.resp()
