@@ -1,6 +1,4 @@
-import sys
 import libmproxy.console.help as help
-from libmproxy import utils, flow, encoding
 
 class DummyMaster:
     def make_view(self):

@@ -1,7 +1,4 @@
-import urllib, urllib2, unittest
-import time
-import libpathod.test, requests
-from netlib import tcp, http
+from netlib import tcp
 import tutils
 
 """
@@ -36,7 +33,7 @@ class SanityMixin:
 
         # Port error
         l.request.port = 1
-        rt = self.master.replay_request(l, block=True)
+        self.master.replay_request(l, block=True)
         assert l.error
 
 

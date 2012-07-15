@@ -1,11 +1,10 @@
-import threading, Queue, time
+import threading, Queue
 import os, shutil, tempfile
 from contextlib import contextmanager
 from libmproxy import proxy, flow, controller, utils
 from netlib import certutils
 import human_curl as hurl
 import libpathod.test
-import random
 
 def treq(conn=None):
     if not conn:
@@ -51,7 +50,7 @@ class TestMaster(flow.FlowMaster):
         self.testq = testq
 
     def handle(self, m):
-        f = flow.FlowMaster.handle(self, m)
+        flow.FlowMaster.handle(self, m)
         m._ack()
 
 

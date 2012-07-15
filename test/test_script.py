@@ -1,4 +1,3 @@
-import os
 from libmproxy import script, flow
 import tutils
 
