@@ -1,7 +1,4 @@
-import urllib, urllib2, unittest
-import time
-import libpathod.test, requests
-from netlib import tcp, http
+from netlib import tcp
 import tutils
 
 """

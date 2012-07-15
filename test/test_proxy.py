@@ -1,7 +1,4 @@
-import cStringIO, textwrap
-from cStringIO import StringIO
-import libpry
-from libmproxy import proxy, flow
+from libmproxy import proxy
 import tutils
 
 
