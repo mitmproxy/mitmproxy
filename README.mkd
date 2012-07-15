@@ -60,7 +60,8 @@ The following auxiliary components may be needed if you plan to hack on
 mitmproxy:
 
 * The test suite uses the [nose](http://readthedocs.org/docs/nose/en/latest/) unit testing
-  framework.
+  framework and requires [human_curl](https://github.com/Lispython/human_curl) and
+  [pathod](http://pypi.python.org/pypi/pathod).
 * Rendering the documentation requires [countershape](http://github.com/cortesi/countershape).
 
 __mitmproxy__ is tested and developed on OSX, Linux and OpenBSD. Windows is not
