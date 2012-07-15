@@ -143,7 +143,7 @@ class TestServerPlaybackState:
         s = flow.ServerPlaybackState(None, [r, r2], False, True)
 
         assert s.count() == 2
-        n = s.next_flow(r)
+        s.next_flow(r)
         assert s.count() == 2
 
 

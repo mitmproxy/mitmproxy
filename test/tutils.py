@@ -50,7 +50,7 @@ class TestMaster(flow.FlowMaster):
         self.testq = testq
 
     def handle(self, m):
-        f = flow.FlowMaster.handle(self, m)
+        flow.FlowMaster.handle(self, m)
         m._ack()
 
 

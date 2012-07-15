@@ -33,7 +33,7 @@ class SanityMixin:
 
         # Port error
         l.request.port = 1
-        rt = self.master.replay_request(l, block=True)
+        self.master.replay_request(l, block=True)
         assert l.error
 
 
