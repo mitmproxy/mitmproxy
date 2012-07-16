@@ -1,6 +1,5 @@
-import textwrap, re, json
+import json
 from libmproxy import utils
-from nose.tools import assert_raises
 import tutils
 
 utils.CERT_SLEEP_TIME = 0
