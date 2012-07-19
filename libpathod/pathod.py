@@ -12,6 +12,9 @@ class PathodHandler(tcp.BaseHandler):
     def debug(self, s):
         logging.debug("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
 
+    def info(self, s):
+        logging.info("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
+
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
@@ -23,7 +26,7 @@ class PathodHandler(tcp.BaseHandler):
                     self.server.ssloptions["keyfile"],
                 )
             except tcp.NetLibError, v:
-                self.debug(v)
+                self.info(v)
                 self.finish()
 
         while not self.finished:
@@ -36,7 +39,19 @@ class PathodHandler(tcp.BaseHandler):
             if line == "":
                 return None
 
-            method, path, httpversion = http.parse_init_http(line)
+            parts = http.parse_init_http(line)
+            if not parts:
+                s = "Invalid first line: %s"%line.rstrip()
+                self.info(s)
+                self.server.add_log(
+                    dict(
+                        type = "error",
+                        msg = s
+                    )
+                )
+                return None
+            method, path, httpversion = parts
+
             headers = http.read_headers(self.rfile)
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, None
@@ -57,19 +72,25 @@ class PathodHandler(tcp.BaseHandler):
                         "Error parsing response spec: %s\n"%v.msg + v.marked()
                     )
 
+            request_log = dict(
+                path = path,
+                method = method,
+                headers = headers.lst,
+                sni = self.sni,
+                remote_address = self.client_address,
+                httpversion = httpversion,
+            )
             if crafted:
                 response_log = crafted.serve(self.wfile)
                 if response_log["disconnect"]:
                     self.finish()
-                request_log = dict(
-                    path = path,
-                    method = method,
-                    headers = headers.lst,
-                    sni = self.sni,
-                    remote_address = self.client_address,
-                    httpversion = httpversion,
+                self.server.add_log(
+                    dict(
+                        type = "crafted",
+                        request=request_log,
+                        response=response_log
+                    )
                 )
-                self.server.add_log(dict(request=request_log, response=response_log))
             else:
                 cc = wsgi.ClientConn(self.client_address)
                 req = wsgi.Request(cc, "http", method, path, headers, content)
@@ -124,7 +145,7 @@ class Pathod(tcp.TCPServer):
 
     def handle_connection(self, request, client_address):
         h = PathodHandler(request, client_address, self)
-        h.handle() 
+        h.handle()
         h.finish()
 
     def add_log(self, d):

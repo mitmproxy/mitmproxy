@@ -1,5 +1,6 @@
 import requests
 from libpathod import pathod, test, version
+from netlib import tcp
 import tutils
 
 class _TestApplication:
@@ -60,12 +61,22 @@ class TestDaemon:
     def get(self, spec):
         return requests.get("http://localhost:%s/p/%s"%(self.d.port, spec))
 
+    def test_invalid_first_line(self):
+        c = tcp.TCPClient("localhost", self.d.port)
+        c.connect()
+        c.wfile.write("foo\n\n\n")
+        c.wfile.flush()
+        l = self.d.log()[0]
+        assert l["type"] == "error"
+        assert "foo" in l["msg"]
+
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
 
     def test_logs(self):
+        l = len(self.d.log())
         rsp = self.get("202")
-        assert len(self.d.log()) == 1
+        assert len(self.d.log()) == l+1
         assert self.d.clear_log()
         assert len(self.d.log()) == 0
 
