@@ -26,7 +26,14 @@ class PathodHandler(tcp.BaseHandler):
                     self.server.ssloptions["keyfile"],
                 )
             except tcp.NetLibError, v:
-                self.info(v)
+                s = str(v)
+                self.server.add_log(
+                    dict(
+                        type = "error",
+                        msg = s
+                    )
+                )
+                self.info(s)
                 self.finish()
 
         while not self.finished:

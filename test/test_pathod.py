@@ -40,12 +40,13 @@ class TestPathod:
         assert len(p.get_log()) <= p.LOGBUF
 
 
-class TestDaemon:
+class _DaemonTests:
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
             staticdir=tutils.test_data.path("data"),
-            anchors=[("/anchor/.*", "202")]
+            anchors=[("/anchor/.*", "202")],
+            ssl = self.SSL
         )
 
     @classmethod
@@ -56,19 +57,12 @@ class TestDaemon:
         self.d.clear_log()
 
     def getpath(self, path):
-        return requests.get("http://localhost:%s/%s"%(self.d.port, path))
+        scheme = "https" if self.SSL else "http"
+        return requests.get("%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False)
 
     def get(self, spec):
-        return requests.get("http://localhost:%s/p/%s"%(self.d.port, spec))
-
-    def test_invalid_first_line(self):
-        c = tcp.TCPClient("localhost", self.d.port)
-        c.connect()
-        c.wfile.write("foo\n\n\n")
-        c.wfile.flush()
-        l = self.d.log()[0]
-        assert l["type"] == "error"
-        assert "foo" in l["msg"]
+        scheme = "https" if self.SSL else "http"
+        return requests.get("%s://localhost:%s/p/%s"%(scheme, self.d.port, spec), verify=False)
 
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
@@ -96,3 +90,38 @@ class TestDaemon:
     def test_anchor(self):
         rsp = self.getpath("anchor/foo")
         assert rsp.status_code == 202
+
+    def test_invalid_first_line(self):
+        c = tcp.TCPClient("localhost", self.d.port)
+        c.connect()
+        if self.SSL:
+            c.convert_to_ssl()
+        c.wfile.write("foo\n\n\n")
+        c.wfile.flush()
+        l = self.d.log()[0]
+        assert l["type"] == "error"
+        assert "foo" in l["msg"]
+
+
+class TestDaemon(_DaemonTests):
+    SSL = False
+
+
+class TestDaemonSSL(_DaemonTests):
+    SSL = True
+    def test_ssl_conn_failure(self):
+        c = tcp.TCPClient("localhost", self.d.port)
+        c.rbufsize = 0
+        c.wbufsize = 0
+        c.connect()
+        try:
+            while 1:
+                c.wfile.write("\r\n\r\n\r\n")
+        except:
+            pass
+        l = self.d.log()[0]
+        assert l["type"] == "error"
+        assert "SSL" in l["msg"]
+
+
+
