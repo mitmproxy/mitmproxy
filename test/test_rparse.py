@@ -169,6 +169,23 @@ class TestDisconnects:
         assert v.value == "r"
 
 
+class TestInject:
+    def test_parse_response(self):
+        a = rparse.parse_response({}, "400:ir,@100").actions[0]
+        assert a[0] == "r"
+        assert a[1] == "inject"
+
+    def test_at(self):
+        e = rparse.InjectAt.expr()
+        v = e.parseString("i0,'foo'")[0]
+        assert v.value.val == "foo"
+        assert v.offset == 0
+        assert isinstance(v, rparse.InjectAt)
+
+        v = e.parseString("ir,'foo'")[0]
+        assert v.offset == "r"
+
+
 class TestShortcuts:
     def test_parse_response(self):
         assert rparse.parse_response({}, "400:c'foo'").headers[0][0][:] == "Content-Type"
@@ -261,6 +278,21 @@ class TestWriteValues:
                     s = cStringIO.StringIO()
                     rparse.send_chunk(s, v, bs, start, end)
                     assert s.getvalue() == v[start:end]
+
+    def test_write_values_inject(self):
+        tst = "foo"
+
+        s = cStringIO.StringIO()
+        rparse.write_values(s, [tst], [(0, "inject", "aaa")], blocksize=5)
+        assert s.getvalue() == "aaafoo"
+
+        s = cStringIO.StringIO()
+        rparse.write_values(s, [tst], [(1, "inject", "aaa")], blocksize=5)
+        assert s.getvalue() == "faaaoo"
+
+        s = cStringIO.StringIO()
+        rparse.write_values(s, [tst], [(1, "inject", "aaa")], blocksize=5)
+        assert s.getvalue() == "faaaoo"
 
     def test_write_values_disconnects(self):
         s = cStringIO.StringIO()

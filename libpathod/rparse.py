@@ -49,10 +49,10 @@ def send_chunk(fp, val, blocksize, start, end):
 
 def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
     """
-        vals: A list of values, which may be strings or Value objects. 
+        vals: A list of values, which may be strings or Value objects.
         actions: A list of (offset, action, arg) tuples. Action may be "pause" or "disconnect".
 
-        Both vals and actions are in reverse order, with the first items last. 
+        Both vals and actions are in reverse order, with the first items last.
 
         Return True if connection should disconnect.
     """
@@ -66,6 +66,8 @@ def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
                 offset += send_chunk(fp, v, blocksize, offset, a[0]-sofar-offset)
                 if a[1] == "pause":
                     time.sleep(a[2])
+                elif a[1] == "inject":
+                    send_chunk(fp, a[2], blocksize, 0, len(a[2]))
                 elif a[1] == "disconnect":
                     return True
             send_chunk(fp, v, blocksize, offset, len(v))
@@ -409,6 +411,27 @@ class DisconnectAt:
         return e.setParseAction(lambda x: klass(*x))
 
 
+class InjectAt:
+    def __init__(self, offset, value):
+        self.offset, self.value = offset, value
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("i").suppress()
+        e = e + pp.MatchFirst(
+                    [
+                        v_integer,
+                        pp.Literal("r")
+                    ]
+                )
+        e += pp.Literal(",").suppress()
+        e += Value
+        return e.setParseAction(lambda x: klass(*x))
+
+    def accept(self, settings, r):
+        r.actions.append((self.offset, "inject", self.value))
+
+
 class Header:
     def __init__(self, key, value):
         self.key, self.value = key, value
@@ -512,6 +535,7 @@ class Response(Message):
         Header,
         PauseAt,
         DisconnectAt,
+        InjectAt,
         ShortcutContentType,
         ShortcutLocation,
     )
@@ -551,6 +575,7 @@ class Request(Message):
         Header,
         PauseAt,
         DisconnectAt,
+        InjectAt,
         ShortcutContentType,
     )
     logattrs = ["method", "path"]
