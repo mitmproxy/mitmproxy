@@ -36,37 +36,40 @@ def ready_actions(length, lst):
     return ret
 
 
+def send_chunk(fp, val, blocksize, start, end):
+    """
+        (start, end): Inclusive lower bound, exclusive upper bound.
+    """
+    for i in range(start, end, blocksize):
+        fp.write(
+            val[i:min(i+blocksize, end)]
+        )
+    return end-start
+
+
 def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
     """
-        vals: A list of values, which may be strings or Value objects.
+        vals: A list of values, which may be strings or Value objects. 
         actions: A list of (offset, action, arg) tuples. Action may be "pause" or "disconnect".
+
+        Both vals and actions are in reverse order, with the first items last. 
 
         Return True if connection should disconnect.
     """
+    sofar = 0
     try:
         while vals:
-            part = vals.pop()
-            for i in range(skip, len(part), blocksize):
-                d = part[i:i+blocksize]
-                if actions and actions[-1][0] < (sofar + len(d)):
-                    p = actions.pop()
-                    offset = p[0]-sofar
-                    vals.append(part)
-                    if p[1] == "pause":
-                        fp.write(d[:offset])
-                        time.sleep(p[2])
-                        return write_values(
-                            fp, vals, actions,
-                            sofar=sofar+offset,
-                            skip=i+offset,
-                            blocksize=blocksize
-                        )
-                    elif p[1] == "disconnect":
-                        fp.write(d[:offset])
-                        return True
-                fp.write(d)
-                sofar += len(d)
-            skip = 0
+            v = vals.pop()
+            offset = 0
+            while actions and actions[-1][0] < (sofar + len(v)):
+                a = actions.pop()
+                offset += send_chunk(fp, v, blocksize, offset, a[0]-sofar-offset)
+                if a[1] == "pause":
+                    time.sleep(a[2])
+                elif a[1] == "disconnect":
+                    return True
+            send_chunk(fp, v, blocksize, offset, len(v))
+            sofar += len(v)
     except tcp.NetLibDisconnect:
         return True
 
