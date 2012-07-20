@@ -54,7 +54,7 @@ class EchoHandler(tcp.BaseHandler):
 
 class DisconnectHandler(tcp.BaseHandler):
     def handle(self):
-        self.finish()
+        self.close()
 
 
 class TServer(tcp.TCPServer):
@@ -89,6 +89,20 @@ class TServer(tcp.TCPServer):
 
 
 class TestServer(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        return TServer(("127.0.0.1", 0), False, cls.q, EchoHandler)
+
+    def test_echo(self):
+        testval = "echo!\n"
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
+
+class TestDisconnect(ServerTestBase):
     @classmethod
     def makeserver(cls):
         return TServer(("127.0.0.1", 0), False, cls.q, EchoHandler)
@@ -154,6 +168,24 @@ class TestSSLDisconnect(ServerTestBase):
         c.convert_to_ssl()
         # Excercise SSL.ZeroReturnError
         c.rfile.read(10)
+        c.close()
+        tutils.raises(tcp.NetLibDisconnect, c.wfile.write, "foo")
+        tutils.raises(Queue.Empty, self.q.get_nowait)
+
+
+class TestDisconnect(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        return TServer(("127.0.0.1", 0), False, cls.q, DisconnectHandler)
+
+    def test_echo(self):
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        # Excercise SSL.ZeroReturnError
+        c.rfile.read(10)
+        c.wfile.write("foo")
+        c.close()
+        c.close()
 
 
 class TestTCPClient:

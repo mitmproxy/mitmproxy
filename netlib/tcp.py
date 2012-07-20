@@ -66,7 +66,7 @@ class FileLike:
         if v:
             try:
                 return self.o.sendall(v)
-            except SSL.SysCallError:
+            except SSL.Error:
                 raise NetLibDisconnect()
 
     def readline(self, size = None):
@@ -125,6 +125,20 @@ class TCPClient:
             raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
         self.connection = connection
 
+    def close(self):
+        """
+            Does a hard close of the socket, i.e. a shutdown, followed by a close.
+        """
+        try:
+            if self.ssl_established:
+                self.connection.shutdown()
+            else:
+                self.connection.shutdown(socket.SHUT_RDWR)
+            self.connection.close()
+        except (socket.error, SSL.Error):
+            # Socket probably already closed
+            pass
+
 
 class BaseHandler:
     """
@@ -170,7 +184,7 @@ class BaseHandler:
                 self.wfile.flush()
             self.wfile.close()
             self.rfile.close()
-            self.connection.close()
+            self.close()
         except socket.error:
             # Remote has disconnected
             pass
@@ -194,6 +208,20 @@ class BaseHandler:
 
     def handle(self): # pragma: no cover
         raise NotImplementedError
+
+    def close(self):
+        """
+            Does a hard close of the socket, i.e. a shutdown, followed by a close.
+        """
+        try:
+            if self.ssl_established:
+                self.connection.shutdown()
+            else:
+                self.connection.shutdown(socket.SHUT_RDWR)
+            self.connection.close()
+        except (socket.error, SSL.Error):
+            # Socket probably already closed
+            pass
 
 
 class TCPServer:
@@ -252,7 +280,7 @@ class TCPServer:
             Called when handle_connection raises an exception.
         """
         # If a thread has persisted after interpreter exit, the module might be
-        # none. 
+        # none.
         if traceback:
             exc = traceback.format_exc()
             print >> fp, '-'*40
