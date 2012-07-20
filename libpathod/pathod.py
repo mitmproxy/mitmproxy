@@ -37,10 +37,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.finish()
 
         while not self.finished:
-            try:
-                line = self.rfile.readline()
-            except socket.error:
-                return None
+            line = self.rfile.readline()
             if line == "\r\n" or line == "\n": # Possible leftover from previous message
                 line = self.rfile.readline()
             if line == "":
