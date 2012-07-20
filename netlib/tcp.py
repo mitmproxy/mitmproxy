@@ -102,6 +102,7 @@ class TCPClient:
         if clientcert:
             context.use_certificate_file(self.clientcert)
         self.connection = SSL.Connection(context, self.connection)
+        self.ssl_established = True
         if sni:
             self.connection.set_tlsext_host_name(sni)
         self.connection.set_connect_state()
@@ -112,7 +113,6 @@ class TCPClient:
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
-        self.ssl_established = True
 
     def connect(self):
         try:
@@ -167,6 +167,7 @@ class BaseHandler:
         ctx.use_privatekey_file(key)
         ctx.use_certificate_file(cert)
         self.connection = SSL.Connection(ctx, self.connection)
+        self.ssl_established = True
         self.connection.set_accept_state()
         # SNI callback happens during do_handshake()
         try:
@@ -175,7 +176,6 @@ class BaseHandler:
             raise NetLibError("SSL handshake error: %s"%str(v))
         self.rfile = FileLike(self.connection)
         self.wfile = FileLike(self.connection)
-        self.ssl_established = True
 
     def finish(self):
         self.finished = True
