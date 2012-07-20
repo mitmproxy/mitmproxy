@@ -45,7 +45,7 @@ def dummy_ca(path):
         basename, _ = os.path.splitext(path)
         basename = os.path.basename(basename)
     else:
-        basename = os.path.basename(basename)
+        basename = os.path.basename(path)
 
     key, ca = create_ca()
 
