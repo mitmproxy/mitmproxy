@@ -1,5 +1,6 @@
 {% extends "frame.html" %}
 {% block body %}  
+
 <div class="page-header">
    <h1>
         pathod
@@ -7,340 +8,349 @@
     </h1>
 </div>
 
-At pathod's heart is a small, terse language for crafting HTTP responses,
+<p>At pathod's heart is a small, terse language for crafting HTTP responses,
 designed to be easy to specify in a request URL.  The simplest way to use
 pathod is to fire up the daemon, and specify the response behaviour you
-want using this language in the request URL.  Here's a minimal example:
+want using this language in the request URL.  Here's a minimal example:</p>
 
-    http://localhost:9999/p/200
+<pre class="example">http://localhost:9999/p/200</pre>
 
-Everything after the "/p/" path component is a response specifier - in this
+<p>Everything after the "/p/" path component is a response specifier - in this
 case just a vanilla 200 OK response. See the docs below to get (much) fancier.
 You can also add anchors to the pathod server that serve a fixed response
-whenever a matching URL is requested:
+whenever a matching URL is requested:</p>
 
-    pathod -a "/foo=200"
+<pre class="terminal">pathod -a "/foo=200"</pre>
 
-Here, "/foo" a regex specifying the anchor path, and the part after the "=" is
-a response specifier.
+<p>Here, "/foo" a regex specifying the anchor path, and the part after the "=" is
+a response specifier.</p>
 
-pathod also has a nifty built-in web interface, which lets you play with
+<p>pathod also has a nifty built-in web interface, which lets you play with
 the language by previewing responses, exposes activity logs, online help and
-various other goodies. Try it by visiting the server root:
+various other goodies. Try it by visiting the server root:</p>
 
-    http://localhost:9999
-
-
-
-<div class="page-header">
-   <h1>Specifying Responses</h1>
-</div>
-
-The general form of a response is as follows:
-    
-    code[MESSAGE]:[colon-separated list of features]
-
-Here's the simplest possible response specification, returning just an HTTP 200
-OK message with no headers and no content:
-    
-    200
-
-We can embellish this a bit by specifying an optional custom HTTP response
-message (if we don't, pathod automatically creates an appropriate one). By
-default for a 200 response code the message is "OK", but we can change it like
-this:
-
-    200"YAY"
-
-The quoted string here is an example of a <a href=#valuespec>Value
-Specifier</a>, a syntax that is used throughout the pathod response
-specification language. In this case, the quotes mean we're specifying a
-literal string, but there are many other fun things we can do. For example, we
-can tell pathod to generate 100k of random ASCII letters instead:
-
-    200@100k,ascii_letters
-
-Full documentation on the value specification syntax can be found in the next
-section. 
-   
-Following the response code specifier is a colon-separated list of features.
-For instance, this specifies a response with a body consisting of 1 megabyte of
-random data:
-
-    200:b@1m
-
-And this is the same response with an ETag header added:
-
-    200:b@1m:h"Etag"="foo"
-
-Both the header name and the header value are full value specifiers. Here's the
-same response again, but with a 1k randomly generated header name:
-
-    200:b@1m:h@1k,ascii_letters="foo"
-
-A few specific headers have shortcuts, because they're used so often. The
-shortcut for the content-type header is "c":
-
-    200:b@1m:c"text/json"
-
-That's it for the basic response definition. Now we can start mucking with the
-responses to break clients. One common hard-to-test circumstance is hangs or
-slow responses. pathod has a pause operator that you can use to define
-precisely when and how long the server should hang. Here, for instance, we hang
-for 120 seconds after sending 50 bytes (counted from the first byte of the HTTP
-response):
-
-    200:b@1m:p120,50
-
-If that's not long enough, we can tell pathod to hang forever:
-
-    200:b@1m:p120,f
-
-Or to send all data, and then hang without disconnecting:
-
-    200:b@1m:p120,a
-
-We can also ask pathod to hang randomly:
-
-    200:b@1m:pr,a
-
-There is a similar mechanism for dropping connections mid-response. So, we can
-tell pathod to disconnect after sending 50 bytes:
-
-    200:b@1m:d50
-
-Or randomly:
-
-    200:b@1m:dr
-
-All of these features can be combined. Here's a response that pauses twice,
-once at 10 bytes and once at 20, then disconnects at 5000:
-
-    200:b@1m:p10,10:p20,10:d5000
+<pre class="example">http://localhost:9999</pre>
 
 
-## Response Features
+<section id="specifying_responses">
 
-<table class="table table-bordered table-condensed">
-    <tbody >
-        <tr>
-            <td>
-                hKEY=VALUE
-            </td>
-            <td>
-                Set a header. Both KEY and VALUE are full <a href=#valuespec>Value Specifiers</a>. 
-            </td>
-        </tr>
+    <div class="page-header">
+       <h1>Specifying Responses</h1>
+    </div>
 
-        <tr>
-            <td> 
-                bVALUE
-            </td>
-            <td>
-                Set the body. VALUE is a <a href=#valuespec>Value
-                Specifier</a>. When the body is set, pathod will
-                automatically set the appropriate Content-Length header.
-            </td>
-        </tr>
+    <p>The general form of a response is as follows:
+        
+    <pre class="example">code[MESSAGE]:[colon-separated list of features]</pre></p>
 
-        <tr>
-            <td>
-                cVALUE
-            </td>
-            <td>
-                A shortcut for setting the Content-Type header. Equivalent to:
+    <p>Here's the simplest possible response specification, returning just an HTTP 200
+    OK message with no headers and no content:
+        
+    <pre class="example">200</pre></p>
 
-                <pre>h"Content-Type"=VALUE</pre>
+    <p>We can embellish this a bit by specifying an optional custom HTTP response
+    message (if we don't, pathod automatically creates an appropriate one). By
+    default for a 200 response code the message is "OK", but we can change it like
+    this:</p>
 
-            </td>
-        </tr>
+    <pre class="example">200"YAY"</pre>
 
-        <tr>
-            <td>
-                lVALUE
-            </td>
-            <td>
-                A shortcut for setting the Location header. Equivalent to:
+    <p>The quoted string here is an example of a <a href=#valuespec>Value
+    Specifier</a>, a syntax that is used throughout the pathod response
+    specification language. In this case, the quotes mean we're specifying a
+    literal string, but there are many other fun things we can do. For example, we
+    can tell pathod to generate 100k of random ASCII letters instead:</p>
+
+    <pre class="example">200@100k,ascii_letters</pre>
+
+    <p>Full documentation on the value specification syntax can be found in the next
+    section. 
+       
+    Following the response code specifier is a colon-separated list of features.
+    For instance, this specifies a response with a body consisting of 1 megabyte of
+    random data:</p>
+
+    <pre class="example">200:b@1m</pre>
+
+    <p>And this is the same response with an ETag header added:</p>
+
+    <pre class="example">200:b@1m:h"Etag"="foo"</pre>
+
+    <p>Both the header name and the header value are full value specifiers. Here's the
+    same response again, but with a 1k randomly generated header name:</p>
+
+    <pre class="example">200:b@1m:h@1k,ascii_letters="foo"</pre>
+
+    <p>A few specific headers have shortcuts, because they're used so often. The
+    shortcut for the content-type header is "c":</p>
+
+    <pre class="example">200:b@1m:c"text/json"</pre>
+
+    <p>That's it for the basic response definition. Now we can start mucking with the
+    responses to break clients. One common hard-to-test circumstance is hangs or
+    slow responses. pathod has a pause operator that you can use to define
+    precisely when and how long the server should hang. Here, for instance, we hang
+    for 120 seconds after sending 50 bytes (counted from the first byte of the HTTP
+    response):</p>
+
+    <pre class="example">200:b@1m:p120,50</pre>
+
+    <p>If that's not long enough, we can tell pathod to hang forever:</p>
+
+    <pre class="example">200:b@1m:p120,f</pre>
+
+    <p>Or to send all data, and then hang without disconnecting:</p>
+
+    <pre class="example">200:b@1m:p120,a</pre>
+
+    <p>We can also ask pathod to hang randomly:</p>
+
+    <pre class="example">200:b@1m:pr,a</pre>
+
+    <p>There is a similar mechanism for dropping connections mid-response. So, we can
+    tell pathod to disconnect after sending 50 bytes:</p>
+
+    <pre class="example">200:b@1m:d50</pre>
+
+    <p>Or randomly:</p>
+
+    <pre class="example">200:b@1m:dr</pre>
+
+    <p>All of these features can be combined. Here's a response that pauses twice,
+    once at 10 bytes and once at 20, then disconnects at 5000:</p>
+
+    <pre class="example">200:b@1m:p10,10:p20,10:d5000</pre>
+
+
+    <h2>Response Features</h2>
+
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td>
+                    hKEY=VALUE
+                </td>
+                <td>
+                    Set a header. Both KEY and VALUE are full <a href=#valuespec>Value Specifiers</a>. 
+                </td>
+            </tr>
+
+            <tr>
+                <td> 
+                    bVALUE
+                </td>
+                <td>
+                    Set the body. VALUE is a <a href=#valuespec>Value
+                    Specifier</a>. When the body is set, pathod will
+                    automatically set the appropriate Content-Length header.
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    cVALUE
+                </td>
+                <td>
+                    A shortcut for setting the Content-Type header. Equivalent to:
 
                     <pre>h"Content-Type"=VALUE</pre>
 
-            </td>
-        </tr>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    lVALUE
+                </td>
+                <td>
+                    A shortcut for setting the Location header. Equivalent to:
+
+                        <pre>h"Location"=VALUE</pre>
+
+                </td>
+            </tr>
 
 
-        <tr>
-            <td>
-                dOFFSET
-            </td>
-            <td>
-                Disconnect after OFFSET bytes. The offset can also be "r", in which case pathod
-                will disconnect at a random point in the response.
-            </td>
-        </tr>
+            <tr>
+                <td>
+                    dOFFSET
+                </td>
+                <td>
+                    Disconnect after OFFSET bytes. The offset can also be "r", in which case pathod
+                    will disconnect at a random point in the response.
+                </td>
+            </tr>
 
-        <tr>
-            <td>
-                pSECONDS,OFFSET
-            </td>
-            <td>
-                Pause for SECONDS seconds after OFFSET bytes. SECONDS can also be "f" to pause
-                forever. OFFSET can also be "r" to generate a random offset, or "a" for an
-                offset just after all data has been sent.
-            </td>
-        </tr>
-    </tbody>
-</table>
+            <tr>
+                <td>
+                    pSECONDS,OFFSET
+                </td>
+                <td>
+                    Pause for SECONDS seconds after OFFSET bytes. SECONDS can also be "f" to pause
+                    forever. OFFSET can also be "r" to generate a random offset, or "a" for an
+                    offset just after all data has been sent.
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-<a id="valuespec"></a>
-## VALUE Specifiers
+    <a id="valuespec"></a>
+    <h2>VALUE Specifiers</h2>
 
-There are three different flavours of value specification. 
+    <h3>Literals</h3>
 
-### Literal
+    <p>Literal values are specified as a quoted strings: </p>
 
-Literal values are specified as a quoted strings: 
+    <pre class="example">"foo"</pre>
 
-    "foo"
+    <p>Either single or double quotes are accepted, and quotes can be escaped with
+    backslashes within the string:</p>
 
-Either single or double quotes are accepted, and quotes can be escaped with
-backslashes within the string:
-
-    'fo\'o'
+    <pre class="example">'fo\'o'</pre>
 
 
-### Files
+    <h3>Files</h3>
 
-You can load a value from a specified file path. To do so, you have to specify
-a _staticdir_ option to pathod on the command-line, like so: 
+    <p>You can load a value from a specified file path. To do so, you have to specify
+    a _staticdir_ option to pathod on the command-line, like so: </p>
 
-    pathod -d ~/myassets
+    <pre class="example">pathod -d ~/myassets</pre>
 
-All paths are relative paths under this directory. File loads are indicated by
-starting the value specifier with the left angle bracket:
-    
-    <my/path
+    <p>All paths are relative paths under this directory. File loads are indicated by
+    starting the value specifier with the left angle bracket:
+        
+    <pre class="example">&lt;my/path</pre></p>
 
-The path value can also be a quoted string, with the same syntax as literals:
+    <p>The path value can also be a quoted string, with the same syntax as literals:</p>
 
-    <"my/path"
-
-
-### Generated values
-
-An @-symbol lead-in specifies that generated data should be used. There are two
-components to a generator specification - a size, and a data type. By default
-pathod assumes a data type of "bytes". 
-
-Here's a value specifier for generating 100 bytes:
-    
-    @100
-
-You can use standard suffixes to indicate larger values. Here, for instance, is
-a specifier for generating 100 megabytes:
-
-    @100m
-
-Data is generated and served efficiently - if you really want to send a
-terabyte of data to a client, pathod can do it. The supported suffixes are:
+    <pre class="example">&lt;"my/path"</pre>
 
 
-<table class="table table-bordered table-condensed">
-    <tbody >
-        <tr>
-            <td>b</td> <td>1024**0 (bytes)</td>
-        </tr>
-        <tr>
-            <td>k</td> <td>1024**1 (kilobytes)</td>
-        </tr>
-        <tr>
-            <td>m</td> <td>1024**2 (megabytes)</td>
-        </tr>
-        <tr>
-            <td>g</td> <td>1024**3 (gigabytes)</td>
-        </tr>
-        <tr>
-            <td>t</td> <td>1024**4 (terabytes)</td>
-        </tr>
-    </tbody>
-</table>
+    <h3>Generated values</h3>
 
-Data types are separated from the size specification by a comma. This
-specification generates 100mb of ASCII:
+    <p>An @-symbol lead-in specifies that generated data should be used. There are two
+    components to a generator specification - a size, and a data type. By default
+    pathod assumes a data type of "bytes". </p>
 
-    @100m,ascii
+    <p>Here's a value specifier for generating 100 bytes:
+        
+    <pre class="example">@100</pre></p>
 
-Supported data types are:
+    <p>You can use standard suffixes to indicate larger values. Here, for instance, is
+    a specifier for generating 100 megabytes:</p>
 
-    
-- ascii_letters
-- ascii_lowercase
-- ascii_uppercase
-- digits
-- hexdigits
-- letters
-- lowercase
-- octdigits
-- printable
-- punctuation
-- uppercase
-- whitespace
-- ascii
-- bytes
+    <pre class="example">@100m</pre>
+
+    <p>Data is generated and served efficiently - if you really want to send a
+    terabyte of data to a client, pathod can do it. The supported suffixes are:</p>
 
 
-<div class="page-header">
-   <h1>API</h1>
-</div>
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td>b</td> <td>1024**0 (bytes)</td>
+            </tr>
+            <tr>
+                <td>k</td> <td>1024**1 (kilobytes)</td>
+            </tr>
+            <tr>
+                <td>m</td> <td>1024**2 (megabytes)</td>
+            </tr>
+            <tr>
+                <td>g</td> <td>1024**3 (gigabytes)</td>
+            </tr>
+            <tr>
+                <td>t</td> <td>1024**4 (terabytes)</td>
+            </tr>
+        </tbody>
+    </table>
 
-pathod exposes a simple API, intended to make it possible to drive and
-inspect the daemon remotely for use in unit testing and the like. 
+    <p>Data types are separated from the size specification by a comma. This
+    specification generates 100mb of ASCII:</p>
+
+    <pre class="example">@100m,ascii</pre>
+
+    <p>Supported data types are:</p>
 
 
-<table class="table table-bordered table-condensed">
-    <tbody >
-        <tr>
-            <td>
-                /api/clear_log
-            </td>
-            <td>
-                A POST to this URL clears the log buffer.
-            </td>
-        </tr>
-        <tr>
-            <td>
-                /api/info
-            </td>
-            <td>
-                Basic version and configuration info.
-            </td>
-        </tr>
-        <tr>
-            <td>
-                /api/log
-            </td>
-            <td>
-                Returns the current log buffer. At the moment the buffer size is 500 entries -
-                when the log grows larger than this, older entries are discarded. The returned
-                data is a JSON dictionary, with the form:
+    <ul>
+        <li>ascii_letters</li>
+        <li>ascii_lowercase</li>
+        <li>ascii_uppercase</li>
+        <li>digits</li>
+        <li>hexdigits</li>
+        <li>letters</li>
+        <li>lowercase</li>
+        <li>octdigits</li>
+        <li>printable</li>
+        <li>punctuation</li>
+        <li>uppercase</li>
+        <li>whitespace</li>
+        <li>ascii</li>
+        <li>bytes</li>
+    </ul>
 
-                <pre>{ 'log': [ ENTRIES ] } </pre>
+</section>
 
-                You can preview the JSON data returned for a log entry through the built-in web
-                interface.
-            </td>
-        </tr>
-    </tbody>
-</table>
 
-<div class="page-header">
-   <h1>Error Responses</h1>
-</div>
+<section id="api">
+    <div class="page-header">
+       <h1>API</h1>
+    </div>
 
-To let users distinguish crafted responses from internal pathod responses,
-pathod uses the non-standard 800 response code to indicate errors. For example,
-a request to:
+    <p>pathod exposes a simple API, intended to make it possible to drive and
+    inspect the daemon remotely for use in unit testing and the like. </p>
 
-    http://localhost:9999/p/foo
 
-... will return an 800 response, because "foo" is not a valid page specifier.
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td>
+                    /api/clear_log
+                </td>
+                <td>
+                    A POST to this URL clears the log buffer.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    /api/info
+                </td>
+                <td>
+                    Basic version and configuration info.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    /api/log
+                </td>
+                <td>
+                    Returns the current log buffer. At the moment the buffer size is 500 entries -
+                    when the log grows larger than this, older entries are discarded. The returned
+                    data is a JSON dictionary, with the form:
+
+                    <pre>{ 'log': [ ENTRIES ] } </pre>
+
+                    You can preview the JSON data returned for a log entry through the built-in web
+                    interface.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<section>
+    <div class="page-header">
+       <h1>Error Responses</h1>
+    </div>
+
+    <p>To let users distinguish crafted responses from internal pathod responses,
+    pathod uses the non-standard 800 response code to indicate errors. For example,
+    a request to:</p>
+
+    <pre class="example">http://localhost:9999/p/foo</pre>
+
+    <p>... will return an 800 response, because "foo" is not a valid page specifier.</p>
+
+</section>
+
 {% endblock %}  
