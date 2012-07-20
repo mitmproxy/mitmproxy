@@ -421,7 +421,8 @@ class InjectAt:
         e = e + pp.MatchFirst(
                     [
                         v_integer,
-                        pp.Literal("r")
+                        pp.Literal("r"),
+                        pp.Literal("a")
                     ]
                 )
         e += pp.Literal(",").suppress()
@@ -429,7 +430,13 @@ class InjectAt:
         return e.setParseAction(lambda x: klass(*x))
 
     def accept(self, settings, r):
-        r.actions.append((self.offset, "inject", self.value))
+        r.actions.append(
+            (
+                self.offset,
+                "inject",
+                self.value.get_generator(settings)
+            )
+        )
 
 
 class Header:

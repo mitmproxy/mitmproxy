@@ -175,6 +175,10 @@ class TestInject:
         assert a[0] == "r"
         assert a[1] == "inject"
 
+        a = rparse.parse_response({}, "400:ia,@100").actions[0]
+        assert a[0] == "a"
+        assert a[1] == "inject"
+
     def test_at(self):
         e = rparse.InjectAt.expr()
         v = e.parseString("i0,'foo'")[0]
@@ -184,6 +188,11 @@ class TestInject:
 
         v = e.parseString("ir,'foo'")[0]
         assert v.offset == "r"
+
+    def test_serve(self):
+        s = cStringIO.StringIO()
+        r = rparse.parse_response({}, "400:i0,'foo'")
+        assert r.serve(s)
 
 
 class TestShortcuts:
