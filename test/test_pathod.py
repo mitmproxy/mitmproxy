@@ -64,11 +64,13 @@ class _DaemonTests:
         scheme = "https" if self.SSL else "http"
         return requests.get("%s://localhost:%s/p/%s"%(scheme, self.d.port, spec), verify=False)
 
-    def pathoc(self, spec):
+    def pathoc(self, spec, timeout=None):
         c = pathoc.Pathoc("localhost", self.d.port)
         c.connect()
         if self.SSL:
             c.convert_to_ssl()
+        if timeout:
+            c.settimeout(timeout)
         return c.request(spec)
 
     def test_preline(self):
@@ -112,6 +114,7 @@ class _DaemonTests:
         l = self.d.log()[0]
         assert l["type"] == "error"
         assert "foo" in l["msg"]
+
 
 
 class TestDaemon(_DaemonTests):

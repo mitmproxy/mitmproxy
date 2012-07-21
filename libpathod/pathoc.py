@@ -40,23 +40,23 @@ class Pathoc(tcp.TCPClient):
                 r = rparse.parse_request({}, i)
                 req = r.serve(self.wfile)
                 if reqdump:
-                    print >> fp, ">>", req["method"], req["path"]
+                    print >> fp, "\n>>", req["method"], req["path"]
                     for a in req["actions"]:
                         print >> fp, "\t",
                         for x in a:
-                            print x,
-                        print
+                            print >> fp, x,
+                        print >> fp
                 self.wfile.flush()
-                resp = self.request(i)
+                resp = http.read_response(self.rfile, r.method, None)
             except rparse.ParseException, v:
                 print >> fp, "Error parsing request spec: %s"%v.msg
                 print >> fp, v.marked()
                 return
             except http.HttpError, v:
-                print >> fp, v.msg
+                print >> fp, "<<", v.msg
                 return
             except tcp.NetLibTimeout:
-                print >> fp, "Timeout"
+                print >> fp, "<<", "Timeout"
             else:
                 if respdump:
                     print_full(fp, *resp)

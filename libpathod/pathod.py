@@ -18,6 +18,82 @@ class PathodHandler(tcp.BaseHandler):
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
+    def handle_request(self):
+        """
+            Returns True if handling should continue.
+        """
+        line = self.rfile.readline()
+        if line == "\r\n" or line == "\n": # Possible leftover from previous message
+            line = self.rfile.readline()
+        if line == "":
+            return
+
+        parts = http.parse_init_http(line)
+        if not parts:
+            s = "Invalid first line: %s"%line.rstrip()
+            self.info(s)
+            self.server.add_log(
+                dict(
+                    type = "error",
+                    msg = s
+                )
+            )
+            return
+        method, path, httpversion = parts
+
+        headers = http.read_headers(self.rfile)
+        content = http.read_http_body_request(
+                    self.rfile, self.wfile, headers, httpversion, None
+                )
+
+        crafted = None
+        for i in self.server.anchors:
+            if i[0].match(path):
+                crafted = i[1]
+
+        if not crafted and path.startswith(self.server.prefix):
+            spec = urllib.unquote(path)[len(self.server.prefix):]
+            try:
+                crafted = rparse.parse_response(self.server.request_settings, spec)
+            except rparse.ParseException, v:
+                crafted = rparse.InternalResponse(
+                    800,
+                    "Error parsing response spec: %s\n"%v.msg + v.marked()
+                )
+
+        request_log = dict(
+            path = path,
+            method = method,
+            headers = headers.lst,
+            sni = self.sni,
+            remote_address = self.client_address,
+            httpversion = httpversion,
+        )
+        if crafted:
+            response_log = crafted.serve(self.wfile)
+            if response_log["disconnect"]:
+                return
+            self.server.add_log(
+                dict(
+                    type = "crafted",
+                    request=request_log,
+                    response=response_log
+                )
+            )
+        else:
+            cc = wsgi.ClientConn(self.client_address)
+            req = wsgi.Request(cc, "http", method, path, headers, content)
+            sn = self.connection.getsockname()
+            app = wsgi.WSGIAdaptor(
+                self.server.app,
+                sn[0],
+                self.server.port,
+                version.NAMEVERSION
+            )
+            app.serve(req, self.wfile)
+            self.debug("%s %s"%(method, path))
+        return True
+
     def handle(self):
         if self.server.ssloptions:
             try:
@@ -34,79 +110,21 @@ class PathodHandler(tcp.BaseHandler):
                     )
                 )
                 self.info(s)
-                self.finish()
+                return
 
         while not self.finished:
-            line = self.rfile.readline()
-            if line == "\r\n" or line == "\n": # Possible leftover from previous message
-                line = self.rfile.readline()
-            if line == "":
-                return None
-
-            parts = http.parse_init_http(line)
-            if not parts:
-                s = "Invalid first line: %s"%line.rstrip()
-                self.info(s)
+            try:
+                if not self.handle_request():
+                    return
+            except tcp.NetLibDisconnect:
+                self.info("Disconnect")
                 self.server.add_log(
                     dict(
                         type = "error",
-                        msg = s
+                        msg = "Disconnect"
                     )
                 )
-                return None
-            method, path, httpversion = parts
-
-            headers = http.read_headers(self.rfile)
-            content = http.read_http_body_request(
-                        self.rfile, self.wfile, headers, httpversion, None
-                    )
-
-            crafted = None
-            for i in self.server.anchors:
-                if i[0].match(path):
-                    crafted = i[1]
-
-            if not crafted and path.startswith(self.server.prefix):
-                spec = urllib.unquote(path)[len(self.server.prefix):]
-                try:
-                    crafted = rparse.parse_response(self.server.request_settings, spec)
-                except rparse.ParseException, v:
-                    crafted = rparse.InternalResponse(
-                        800,
-                        "Error parsing response spec: %s\n"%v.msg + v.marked()
-                    )
-
-            request_log = dict(
-                path = path,
-                method = method,
-                headers = headers.lst,
-                sni = self.sni,
-                remote_address = self.client_address,
-                httpversion = httpversion,
-            )
-            if crafted:
-                response_log = crafted.serve(self.wfile)
-                if response_log["disconnect"]:
-                    self.finish()
-                self.server.add_log(
-                    dict(
-                        type = "crafted",
-                        request=request_log,
-                        response=response_log
-                    )
-                )
-            else:
-                cc = wsgi.ClientConn(self.client_address)
-                req = wsgi.Request(cc, "http", method, path, headers, content)
-                sn = self.connection.getsockname()
-                app = wsgi.WSGIAdaptor(
-                    self.server.app,
-                    sn[0],
-                    self.server.port,
-                    version.NAMEVERSION
-                )
-                app.serve(req, self.wfile)
-                self.debug("%s %s"%(method, path))
+                return
 
 
 class Pathod(tcp.TCPServer):
