@@ -66,6 +66,8 @@ class FileLike:
                     raise NetLibTimeout
             except socket.timeout:
                 raise NetLibTimeout
+            except socket.error:
+                raise NetLibDisconnect
             if not data:
                 break
             result += data
