@@ -1,4 +1,4 @@
-import cStringIO, threading, Queue
+import cStringIO, threading, Queue, time
 from netlib import tcp, certutils
 import tutils
 
@@ -55,6 +55,12 @@ class EchoHandler(tcp.BaseHandler):
 class DisconnectHandler(tcp.BaseHandler):
     def handle(self):
         self.close()
+
+
+class HangHandler(tcp.BaseHandler):
+    def handle(self):
+        while 1:
+            time.sleep(1)
 
 
 class TServer(tcp.TCPServer):
@@ -186,6 +192,31 @@ class TestDisconnect(ServerTestBase):
         c.wfile.write("foo")
         c.close()
         c.close()
+
+
+class TestTimeOut(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        return TServer(("127.0.0.1", 0), False, cls.q, HangHandler)
+
+    def test_timeout_client(self):
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        c.settimeout(0.1)
+        tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
+
+
+class TestSSLTimeOut(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        return TServer(("127.0.0.1", 0), True, cls.q, HangHandler)
+
+    def test_timeout_client(self):
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        c.convert_to_ssl()
+        c.settimeout(0.1)
+        tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
 
 
 class TestTCPClient:

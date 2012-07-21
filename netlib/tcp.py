@@ -1,4 +1,4 @@
-import select, socket, threading, traceback, sys
+import select, socket, threading, traceback, sys, time
 from OpenSSL import SSL
 import certutils
 
@@ -35,8 +35,8 @@ OP_TLS_ROLLBACK_BUG = SSL.OP_TLS_ROLLBACK_BUG
 
 
 class NetLibError(Exception): pass
-
 class NetLibDisconnect(Exception): pass
+class NetLibTimeout(Exception): pass
 
 
 class FileLike:
@@ -47,15 +47,25 @@ class FileLike:
         return getattr(self.o, attr)
 
     def flush(self):
-        pass
+        if hasattr(self.o, "flush"):
+            self.o.flush()
 
     def read(self, length):
         result = ''
+        start = time.time()
         while length > 0:
             try:
                 data = self.o.read(length)
             except (SSL.ZeroReturnError, SSL.SysCallError):
                 break
+            except SSL.WantReadError:
+                if (time.time() - start) < self.o.gettimeout():
+                    time.sleep(0.1)
+                    continue
+                else:
+                    raise NetLibTimeout
+            except socket.timeout:
+                raise NetLibTimeout
             if not data:
                 break
             result += data
@@ -65,7 +75,11 @@ class FileLike:
     def write(self, v):
         if v:
             try:
-                return self.o.sendall(v)
+                if hasattr(self.o, "sendall"):
+                    return self.o.sendall(v)
+                else:
+                    r = self.o.write(v)
+                    return r
             except SSL.Error:
                 raise NetLibDisconnect()
 
@@ -119,11 +133,17 @@ class TCPClient:
             addr = socket.gethostbyname(self.host)
             connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             connection.connect((addr, self.port))
-            self.rfile = connection.makefile('rb', self.rbufsize)
-            self.wfile = connection.makefile('wb', self.wbufsize)
+            self.rfile = FileLike(connection.makefile('rb', self.rbufsize))
+            self.wfile = FileLike(connection.makefile('wb', self.wbufsize))
         except socket.error, err:
             raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
         self.connection = connection
+
+    def settimeout(self, n):
+        self.connection.settimeout(n)
+
+    def gettimeout(self):
+        self.connection.gettimeout()
 
     def close(self):
         """
@@ -148,8 +168,8 @@ class BaseHandler:
     wbufsize = -1
     def __init__(self, connection, client_address, server):
         self.connection = connection
-        self.rfile = self.connection.makefile('rb', self.rbufsize)
-        self.wfile = self.connection.makefile('wb', self.wbufsize)
+        self.rfile = FileLike(self.connection.makefile('rb', self.rbufsize))
+        self.wfile = FileLike(self.connection.makefile('wb', self.wbufsize))
 
         self.client_address = client_address
         self.server = server
