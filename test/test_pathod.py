@@ -1,5 +1,5 @@
 import requests
-from libpathod import pathod, test, version
+from libpathod import pathod, test, version, pathoc
 from netlib import tcp
 import tutils
 
@@ -63,6 +63,17 @@ class _DaemonTests:
     def get(self, spec):
         scheme = "https" if self.SSL else "http"
         return requests.get("%s://localhost:%s/p/%s"%(scheme, self.d.port, spec), verify=False)
+
+    def pathoc(self, spec):
+        c = pathoc.Pathoc("localhost", self.d.port)
+        c.connect()
+        if self.SSL:
+            c.convert_to_ssl()
+        return c.request(spec)
+
+    def test_preline(self):
+        v = self.pathoc(r"get:'/p/200':i0,'\r\n'")
+        assert v[1] == 200
 
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
