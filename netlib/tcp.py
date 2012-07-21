@@ -56,7 +56,7 @@ class FileLike:
         while length > 0:
             try:
                 data = self.o.read(length)
-            except (SSL.ZeroReturnError, SSL.SysCallError):
+            except SSL.ZeroReturnError:
                 break
             except SSL.WantReadError:
                 if (time.time() - start) < self.o.gettimeout():
@@ -67,6 +67,8 @@ class FileLike:
             except socket.timeout:
                 raise NetLibTimeout
             except socket.error:
+                raise NetLibDisconnect
+            except SSL.SysCallError, v:
                 raise NetLibDisconnect
             if not data:
                 break
@@ -82,7 +84,7 @@ class FileLike:
                 else:
                     r = self.o.write(v)
                     return r
-            except SSL.Error:
+            except (SSL.Error, socket.error):
                 raise NetLibDisconnect()
 
     def readline(self, size = None):
@@ -91,7 +93,10 @@ class FileLike:
         while True:
             if size is not None and bytes_read >= size:
                 break
-            ch = self.read(1)
+            try:
+                ch = self.read(1)
+            except NetLibDisconnect:
+                break
             bytes_read += 1
             if not ch:
                 break
