@@ -40,7 +40,11 @@ class TestMisc:
     def test_valueliteral(self):
         v = rparse.ValueLiteral("foo")
         assert v.expr()
-        assert str(v)
+        assert v.val == "foo"
+
+        v = rparse.ValueLiteral(r"foo\n")
+        assert v.expr()
+        assert v.val == "foo\n"
 
     def test_valuenakedliteral(self):
         v = rparse.ValueNakedLiteral("foo")

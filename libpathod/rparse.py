@@ -165,7 +165,7 @@ class FileGenerator:
 
 class _Value:
     def __init__(self, val):
-        self.val = val
+        self.val = val.decode("string_escape")
 
     def get_generator(self, settings):
         return LiteralGenerator(self.val)
