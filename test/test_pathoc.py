@@ -28,11 +28,11 @@ class TestDaemon:
         c = pathoc.Pathoc("127.0.0.1", self.d.port)
         c.connect()
         s = cStringIO.StringIO()
-        c.print_requests(requests, verbose, s)
+        c.print_requests(requests, verbose, True, s)
         return s.getvalue()
 
     def test_print_requests(self):
-        reqs = [ "get:/api/info", "get:/api/info" ]
+        reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
         assert self.tval(reqs, False).count("200") == 2
         assert self.tval(reqs, True).count("Date") == 2
 

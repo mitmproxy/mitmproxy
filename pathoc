@@ -18,6 +18,10 @@ if __name__ == "__main__":
         help="Port. Defaults to 80, or 443 if SSL is active."
     )
     parser.add_argument(
+        "-d", dest="reqdump", action="store_true", default=False,
+        help="Print request record before each response."
+    )
+    parser.add_argument(
         "-s", dest="ssl", action="store_true", default=False,
         help="Connect with SSL."
     )
@@ -56,4 +60,4 @@ if __name__ == "__main__":
             p.convert_to_ssl(sni=args.sni)
         if args.timeout:
             p.settimeout(args.timeout)
-        p.print_requests(args.request, args.verbose)
+        p.print_requests(args.request, args.verbose, args.reqdump)

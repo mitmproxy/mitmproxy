@@ -12,7 +12,8 @@ class TestMisc:
         assert g[:] == "val"
 
     def test_randomgenerator(self):
-        g = rparse.RandomGenerator("one", 100)
+        g = rparse.RandomGenerator("bytes", 100)
+        assert repr(g)
         assert len(g[:10]) == 10
         assert len(g[1:10]) == 9
         assert len(g[:1000]) == 100
@@ -21,6 +22,7 @@ class TestMisc:
 
     def test_literalgenerator(self):
         g = rparse.LiteralGenerator("one")
+        assert repr(g)
         assert g == "one"
         assert g[:] == "one"
         assert g[1] == "n"

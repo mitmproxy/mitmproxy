@@ -130,21 +130,28 @@ class LiteralGenerator:
     def __getslice__(self, a, b):
         return self.s.__getslice__(a, b)
 
+    def __repr__(self):
+        return '"%s"'%self.s
+
 
 class RandomGenerator:
-    def __init__(self, chars, length):
-        self.chars = chars
+    def __init__(self, dtype, length):
+        self.dtype = dtype
         self.length = length
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, x):
-        return random.choice(self.chars)
+        return random.choice(DATATYPES[self.dtype])
 
     def __getslice__(self, a, b):
         b = min(b, self.length)
-        return "".join(random.choice(self.chars) for x in range(a, b))
+        chars = DATATYPES[self.dtype]
+        return "".join(random.choice(chars) for x in range(a, b))
+
+    def __repr__(self):
+        return "%s random from %s"%(self.length, self.dtype)
 
 
 class FileGenerator:
@@ -205,7 +212,7 @@ class ValueGenerate:
         return self.usize * self.UNITS[self.unit]
 
     def get_generator(self, settings):
-        return RandomGenerator(DATATYPES[self.datatype], self.bytes())
+        return RandomGenerator(self.datatype, self.bytes())
 
     @classmethod
     def expr(klass):
