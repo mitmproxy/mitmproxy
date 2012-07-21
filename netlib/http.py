@@ -145,8 +145,11 @@ def parse_http_protocol(s):
     if "." not in version:
         return None
     major, minor = version.split('.')
-    major = int(major)
-    minor = int(minor)
+    try:
+        major = int(major)
+        minor = int(minor)
+    except ValueError:
+        return None
     return major, minor
 
 

@@ -106,6 +106,8 @@ def test_read_http_body():
 def test_parse_http_protocol():
     assert http.parse_http_protocol("HTTP/1.1") == (1, 1)
     assert http.parse_http_protocol("HTTP/0.0") == (0, 0)
+    assert not http.parse_http_protocol("HTTP/a.1")
+    assert not http.parse_http_protocol("HTTP/1.a")
     assert not http.parse_http_protocol("foo/0.0")
     assert not http.parse_http_protocol("HTTP/x")
 
