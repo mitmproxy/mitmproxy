@@ -6,6 +6,10 @@ from netlib import tcp
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A perverse HTTP client.')
     parser.add_argument(
+        "-i", dest="sni", type=str, default=False,
+        help="SSL Server Name Indication."
+    )
+    parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
         help='Repeat requests N times.'
     )
@@ -18,8 +22,8 @@ if __name__ == "__main__":
         help="Connect with SSL."
     )
     parser.add_argument(
-        "-i", dest="sni", type=str, default=False,
-        help="SSL Server Name Indication."
+        "-t", dest="timeout", type=int, default=None,
+        help="Connection timeout."
     )
     parser.add_argument(
         "-v", dest="verbose", action='count',
@@ -50,4 +54,6 @@ if __name__ == "__main__":
             sys.exit(1)
         if args.ssl:
             p.convert_to_ssl(sni=args.sni)
+        if args.timeout:
+            p.settimeout(args.timeout)
         p.print_requests(args.request, args.verbose)

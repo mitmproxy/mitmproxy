@@ -45,7 +45,10 @@ class Pathoc(tcp.TCPClient):
             except http.HttpError, v:
                 print >> fp, v.msg
                 return
-            if verbose:
-                print_full(fp, *ret)
+            except tcp.NetLibTimeout:
+                print >> fp, "Timeout"
             else:
-                print_short(fp, *ret)
+                if verbose:
+                    print_full(fp, *ret)
+                else:
+                    print_short(fp, *ret)
