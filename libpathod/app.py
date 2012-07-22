@@ -36,6 +36,11 @@ def docs_pathod():
     return render_template("docs_pathod.html", section="docs")
 
 
+@app.route('/docs/language')
+def docs_language():
+    return render_template("docs_lang.html", section="docs")
+
+
 @app.route('/docs/pathoc')
 def docs_pathoc():
     return render_template("docs_pathoc.html", section="docs")

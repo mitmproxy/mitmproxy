@@ -1,0 +1,220 @@
+{% extends "frame.html" %}
+{% block body %}  
+
+<div class="page-header">
+   <h1>
+        Language Spec
+        <small>The mini-language at the heart of pathoc and pathod.</small>
+    </h1>
+</div>
+
+
+<div class="page-header">
+   <h1>Responses</h1>
+</div>
+
+    <p>The general form of a response is as follows:</p>
+        
+    <pre class="example">code[MESSAGE]:[colon-separated list of features]</pre></p>
+
+
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td>
+                    hKEY=VALUE
+                </td>
+                <td>
+                    Set a header. Both KEY and VALUE are full <a href=#valuespec>Value Specifiers</a>. 
+                </td>
+            </tr>
+
+            <tr>
+                <td> 
+                    bVALUE
+                </td>
+                <td>
+                    Set the body. VALUE is a <a href=#valuespec>Value
+                    Specifier</a>. When the body is set, pathod will
+                    automatically set the appropriate Content-Length header.
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    cVALUE
+                </td>
+                <td>
+                    A shortcut for setting the Content-Type header. Equivalent to:
+
+                    <pre>h"Content-Type"=VALUE</pre>
+
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    iOFFSET,VALUE
+                </td>
+                <td>
+                    Inject the specified value at the offset.  OFFSET can be an
+                    integer, or "r" to generate a random offset or "a" for an
+                    offset just after all data has been sent.
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    lVALUE
+                </td>
+                <td>
+                    A shortcut for setting the Location header. Equivalent to:
+
+                        <pre>h"Location"=VALUE</pre>
+
+                </td>
+            </tr>
+
+
+            <tr>
+                <td>
+                    dOFFSET
+                </td>
+                <td>
+                    Disconnect after OFFSET bytes. The offset can also be "r", in which case pathod
+                    will disconnect at a random point in the response.
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    pSECONDS,OFFSET
+                </td>
+                <td>
+                    Pause for SECONDS seconds after OFFSET bytes. SECONDS can also be "f" to pause
+                    forever. OFFSET can also be "r" to generate a random offset, or "a" for an
+                    offset just after all data has been sent.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+<div class="page-header">
+   <h1>Requests</h1>
+</div>
+
+
+<div class="page-header">
+   <h1>Executing specs from file</h1>
+</div>
+
+    <pre class="example">=./path/to/spec</pre>
+
+
+<div class="page-header">
+   <h1>Components</h1>
+</div>
+
+    <a id="valuespec"></a>
+    <h2>VALUEs</h2>
+
+    <h3>Literals</h3>
+
+    <p>Literal values are specified as a quoted strings: </p>
+
+    <pre class="example">"foo"</pre>
+
+    <p>Either single or double quotes are accepted, and quotes can be escaped with
+    backslashes within the string:</p>
+
+    <pre class="example">'fo\'o'</pre>
+
+    <p>Literal values can contain Python-style backslash escape sequences:</p>
+
+    <pre class="example">'foo\r\nbar'</pre>
+
+
+    <h3>Files</h3>
+
+    <p>You can load a value from a specified file path. To do so, you have to specify
+    a _staticdir_ option to pathod on the command-line, like so: </p>
+
+    <pre class="example">pathod -d ~/myassets</pre>
+
+    <p>All paths are relative paths under this directory. File loads are indicated by
+    starting the value specifier with the left angle bracket:
+        
+    <pre class="example">&lt;my/path</pre></p>
+
+    <p>The path value can also be a quoted string, with the same syntax as literals:</p>
+
+    <pre class="example">&lt;"my/path"</pre>
+
+
+    <h3>Generated values</h3>
+
+    <p>An @-symbol lead-in specifies that generated data should be used. There are two
+    components to a generator specification - a size, and a data type. By default
+    pathod assumes a data type of "bytes". </p>
+
+    <p>Here's a value specifier for generating 100 bytes:
+        
+    <pre class="example">@100</pre></p>
+
+    <p>You can use standard suffixes to indicate larger values. Here, for instance, is
+    a specifier for generating 100 megabytes:</p>
+
+    <pre class="example">@100m</pre>
+
+    <p>Data is generated and served efficiently - if you really want to send a
+    terabyte of data to a client, pathod can do it. The supported suffixes are:</p>
+
+
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td>b</td> <td>1024**0 (bytes)</td>
+            </tr>
+            <tr>
+                <td>k</td> <td>1024**1 (kilobytes)</td>
+            </tr>
+            <tr>
+                <td>m</td> <td>1024**2 (megabytes)</td>
+            </tr>
+            <tr>
+                <td>g</td> <td>1024**3 (gigabytes)</td>
+            </tr>
+            <tr>
+                <td>t</td> <td>1024**4 (terabytes)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>Data types are separated from the size specification by a comma. This
+    specification generates 100mb of ASCII:</p>
+
+    <pre class="example">@100m,ascii</pre>
+
+    <p>Supported data types are:</p>
+
+
+    <ul>
+        <li>ascii</li>
+        <li>ascii_letters</li>
+        <li>ascii_lowercase</li>
+        <li>ascii_uppercase</li>
+        <li>bytes</li>
+        <li>digits</li>
+        <li>hexdigits</li>
+        <li>letters</li>
+        <li>lowercase</li>
+        <li>octdigits</li>
+        <li>printable</li>
+        <li>punctuation</li>
+        <li>uppercase</li>
+        <li>whitespace</li>
+    </ul>
+
+</section>
+{% endblock %}  
