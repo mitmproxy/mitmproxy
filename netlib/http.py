@@ -141,10 +141,10 @@ def parse_http_protocol(s):
     """
     if not s.startswith("HTTP/"):
         return None
-    _, version = s.split('/')
+    _, version = s.split('/', 1)
     if "." not in version:
         return None
-    major, minor = version.split('.')
+    major, minor = version.split('.', 1)
     try:
         major = int(major)
         minor = int(minor)
