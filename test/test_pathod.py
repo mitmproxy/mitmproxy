@@ -122,7 +122,6 @@ class _DaemonTests:
         assert "Invalid" in l["msg"]
 
 
-
 class TestDaemon(_DaemonTests):
     SSL = False
 

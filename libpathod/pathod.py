@@ -30,7 +30,7 @@ class PathodHandler(tcp.BaseHandler):
 
         parts = http.parse_init_http(line)
         if not parts:
-            s = "Invalid first line: %s"%line.rstrip()
+            s = "Invalid first line: %s"%repr(line)
             self.info(s)
             self.server.add_log(
                 dict(
