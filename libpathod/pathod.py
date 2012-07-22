@@ -42,9 +42,20 @@ class PathodHandler(tcp.BaseHandler):
         method, path, httpversion = parts
 
         headers = http.read_headers(self.rfile)
-        content = http.read_http_body_request(
-                    self.rfile, self.wfile, headers, httpversion, None
+        try:
+            content = http.read_http_body_request(
+                        self.rfile, self.wfile, headers, httpversion, None
+                    )
+        except http.HttpError, s:
+            s = str(s)
+            self.info(s)
+            self.server.add_log(
+                dict(
+                    type = "error",
+                    msg = s
                 )
+            )
+            return
 
         crafted = None
         for i in self.server.anchors:

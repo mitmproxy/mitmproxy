@@ -1,6 +1,6 @@
 import requests
 from libpathod import pathod, test, version, pathoc
-from netlib import tcp
+from netlib import tcp, http
 import tutils
 
 class _TestApplication:
@@ -114,6 +114,12 @@ class _DaemonTests:
         l = self.d.log()[0]
         assert l["type"] == "error"
         assert "foo" in l["msg"]
+
+    def test_invalid_body(self):
+        tutils.raises(http.HttpError, self.pathoc, "get:/:h'content-length'='foo'")
+        l = self.d.log()[0]
+        assert l["type"] == "error"
+        assert "Invalid" in l["msg"]
 
 
 
