@@ -49,15 +49,24 @@ if __name__ == "__main__":
     else:
         port = args.port
 
-    for i in range(args.repeat):
-        p = pathoc.Pathoc(args.host, port)
-        try:
-            p.connect()
-        except tcp.NetLibError, v:
-            print >> sys.stderr, str(v)
-            sys.exit(1)
-        if args.ssl:
-            p.convert_to_ssl(sni=args.sni)
-        if args.timeout:
-            p.settimeout(args.timeout)
-        p.print_requests(args.request, args.verbose, args.reqdump)
+    try:
+        for i in range(args.repeat):
+            p = pathoc.Pathoc(args.host, port)
+            try:
+                p.connect()
+            except tcp.NetLibError, v:
+                print >> sys.stderr, str(v)
+                sys.exit(1)
+            if args.ssl:
+                try:
+                    p.convert_to_ssl(sni=args.sni)
+                except tcp.NetLibError, v:
+                    print "\n>> %s"%v
+                    continue
+            if args.timeout:
+                p.settimeout(args.timeout)
+            p.print_requests(args.request, args.verbose, args.reqdump)
+            sys.stdout.flush()
+    except KeyboardInterrupt:
+        pass
+
