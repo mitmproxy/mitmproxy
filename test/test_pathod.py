@@ -121,6 +121,10 @@ class _DaemonTests:
         assert l["type"] == "error"
         assert "Invalid" in l["msg"]
 
+    def test_access_denied(self):
+        rsp = self.get("=nonexistent")
+        assert rsp.status_code == 800
+
 
 class TestDaemon(_DaemonTests):
     SSL = False

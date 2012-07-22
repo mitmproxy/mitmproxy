@@ -6,6 +6,8 @@ import utils
 BLOCKSIZE = 1024
 TRUNCATE = 1024
 
+class FileAccessDenied(Exception): pass
+
 class ParseException(Exception):
     def __init__(self, msg, s, col):
         Exception.__init__(self)
@@ -675,7 +677,29 @@ class InternalResponse(Response):
         return d
 
 
+FILESTART = "+"
+def read_file(settings, s):
+    uf = settings.get("unconstrained_file_access")
+    sd = settings.get("staticdir")
+    if not sd:
+        raise FileAccessDenied("File access disabled.")
+    sd = os.path.normpath(os.path.abspath(sd))
+    s = s[1:]
+    s = os.path.expanduser(s)
+    s = os.path.normpath(os.path.abspath(os.path.join(sd, s)))
+    if not uf and not s.startswith(sd):
+        raise FileAccessDenied("File access outside of configured directory")
+    if not os.path.isfile(s):
+        raise FileAccessDenied("File not readable")
+    return file(s, "r").read()
+
+
 def parse_response(settings, s):
+    """
+        May raise ParseException or FileAccessDenied
+    """
+    if s.startswith(FILESTART):
+        s = read_file(settings, s)
     try:
         return CraftedResponse(settings, s, Response.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
@@ -683,6 +707,11 @@ def parse_response(settings, s):
 
 
 def parse_request(settings, s):
+    """
+        May raise ParseException or FileAccessDenied
+    """
+    if s.startswith(FILESTART):
+        s = read_file(settings, s)
     try:
         return CraftedRequest(settings, s, Request.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:

@@ -229,6 +229,12 @@ class TestPauses:
 
 
 class TestParseRequest:
+    def test_file(self):
+        p = tutils.test_data.path("data")
+        d = dict(staticdir=p)
+        r = rparse.parse_request(d, "+request")
+        assert r.path == "/foo"
+
     def test_err(self):
         tutils.raises(rparse.ParseException, rparse.parse_request, {}, 'GET')
 
@@ -266,9 +272,9 @@ class TestParseRequest:
             GET
 
             "/foo
-            
-            
-            
+
+
+
             bar"
 
             ir,@1
@@ -394,6 +400,12 @@ class TestResponse:
     def dummy_response(self):
         return rparse.parse_response({}, "400'msg'")
 
+    def test_file(self):
+        p = tutils.test_data.path("data")
+        d = dict(staticdir=p)
+        r = rparse.parse_response(d, "+response")
+        assert r.code == 202
+
     def test_response(self):
         r = rparse.parse_response({}, "400'msg'")
         assert r.code == 400
@@ -417,3 +429,18 @@ class TestResponse:
         testlen(rparse.parse_response({}, "400'msg'"))
         testlen(rparse.parse_response({}, "400'msg':h'foo'='bar'"))
         testlen(rparse.parse_response({}, "400'msg':h'foo'='bar':b@100b"))
+
+
+
+def test_read_file():
+    tutils.raises(rparse.FileAccessDenied, rparse.read_file, {}, "=/foo")
+    p = tutils.test_data.path("data")
+    d = dict(staticdir=p)
+    assert rparse.read_file(d, "+./file").strip() == "testfile"
+    assert rparse.read_file(d, "+file").strip() == "testfile"
+    tutils.raises(rparse.FileAccessDenied, rparse.read_file, d, "+./nonexistent")
+    tutils.raises(rparse.FileAccessDenied, rparse.read_file, d, "+/nonexistent")
+
+    tutils.raises(rparse.FileAccessDenied, rparse.read_file, d, "+../test_rparse.py")
+    d["unconstrained_file_access"] = True
+    assert rparse.read_file(d, "+../test_rparse.py")

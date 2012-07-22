@@ -71,6 +71,11 @@ class PathodHandler(tcp.BaseHandler):
                     800,
                     "Error parsing response spec: %s\n"%v.msg + v.marked()
                 )
+            except rparse.FileAccessDenied:
+                crafted = rparse.InternalResponse(
+                    800,
+                    "Access Denied"
+                )
 
         request_log = dict(
             path = path,

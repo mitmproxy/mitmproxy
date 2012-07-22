@@ -1,4 +1,4 @@
-import sys
+import sys, os
 from netlib import tcp, http
 import rparse
 
@@ -18,14 +18,19 @@ def print_full(fp, httpversion, code, msg, headers, content):
 class Pathoc(tcp.TCPClient):
     def __init__(self, host, port):
         tcp.TCPClient.__init__(self, host, port)
+        self.settings = dict(
+            staticdir = os.getcwd(),
+            unconstrained_file_access = True
+        )
 
     def request(self, spec):
         """
             Return an (httpversion, code, msg, headers, content) tuple.
 
-            May raise rparse.ParseException and netlib.http.HttpError.
+            May raise rparse.ParseException, netlib.http.HttpError or
+            rparse.FileAccessDenied.
         """
-        r = rparse.parse_request({}, spec)
+        r = rparse.parse_request(self.settings, spec)
         ret = r.serve(self.wfile)
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
@@ -37,7 +42,7 @@ class Pathoc(tcp.TCPClient):
         """
         for i in reqs:
             try:
-                r = rparse.parse_request({}, i)
+                r = rparse.parse_request(self.settings, i)
                 req = r.serve(self.wfile)
                 if reqdump:
                     print >> fp, "\n>>", req["method"], repr(req["path"])
@@ -51,6 +56,9 @@ class Pathoc(tcp.TCPClient):
             except rparse.ParseException, v:
                 print >> fp, "Error parsing request spec: %s"%v.msg
                 print >> fp, v.marked()
+                return
+            except rparse.FileAccessDenied, v:
+                print >> fp, "File access error: %s"%v
                 return
             except http.HttpError, v:
                 print >> fp, "<<", v.msg
