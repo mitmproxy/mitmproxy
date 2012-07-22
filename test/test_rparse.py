@@ -70,7 +70,10 @@ class TestMisc:
 
             v = rparse.Value.parseString("<path2")[0]
             tutils.raises(rparse.ServerError, v.get_generator, dict(staticdir=t))
-            tutils.raises("no static directory", v.get_generator, dict())
+            tutils.raises("access disabled", v.get_generator, dict())
+
+            v = rparse.Value.parseString("</outside")[0]
+            tutils.raises("outside", v.get_generator, dict(staticdir=t))
 
     def test_generated_value(self):
         v = rparse.Value.parseString("@10b")[0]
@@ -429,7 +432,6 @@ class TestResponse:
         testlen(rparse.parse_response({}, "400'msg'"))
         testlen(rparse.parse_response({}, "400'msg':h'foo'='bar'"))
         testlen(rparse.parse_response({}, "400'msg':h'foo'='bar':b@100b"))
-
 
 
 def test_read_file():

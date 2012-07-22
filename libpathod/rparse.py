@@ -243,13 +243,19 @@ class ValueFile:
         return e.setParseAction(lambda x: klass(*x))
 
     def get_generator(self, settings):
+        uf = settings.get("unconstrained_file_access")
         sd = settings.get("staticdir")
         if not sd:
-            raise ServerError("No static directory specified.")
-        path = os.path.join(sd, self.path)
-        if not os.path.exists(path):
-            raise ServerError("Static file does not exist: %s"%path)
-        return FileGenerator(path)
+            raise ServerError("File access disabled.")
+        sd = os.path.normpath(os.path.abspath(sd))
+
+        s = os.path.expanduser(self.path)
+        s = os.path.normpath(os.path.abspath(os.path.join(sd, s)))
+        if not uf and not s.startswith(sd):
+            raise ServerError("File access outside of configured directory")
+        if not os.path.isfile(s):
+            raise ServerError("File not readable")
+        return FileGenerator(s)
 
     def __str__(self):
         return "<%s"%(self.path)
