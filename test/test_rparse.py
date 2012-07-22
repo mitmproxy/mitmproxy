@@ -433,6 +433,36 @@ class TestResponse:
         testlen(rparse.parse_response({}, "400'msg':h'foo'='bar'"))
         testlen(rparse.parse_response({}, "400'msg':h'foo'='bar':b@100b"))
 
+    def test_effective_length(self):
+        def testlen(x, actions):
+            s = cStringIO.StringIO()
+            x.serve(s)
+            assert x.effective_length(actions) == len(s.getvalue())
+        actions = [
+
+        ]
+        r = rparse.parse_response({}, "400'msg':b@100")
+
+        actions = [
+            (0, "disconnect"),
+        ]
+        r.actions = actions
+        testlen(r, actions)
+
+        actions = [
+            (0, "disconnect"),
+            (0, "inject", "foo")
+        ]
+        r.actions = actions
+        testlen(r, actions)
+
+        actions = [
+            (0, "inject", "foo")
+        ]
+        r.actions = actions
+        testlen(r, actions)
+
+
 
 def test_read_file():
     tutils.raises(rparse.FileAccessDenied, rparse.read_file, {}, "=/foo")
