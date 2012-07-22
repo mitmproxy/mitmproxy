@@ -171,6 +171,9 @@ class FileGenerator:
     def __getslice__(self, a, b):
         return self.map.__getslice__(a, b)
 
+    def __repr__(self):
+        return "<%s"%self.path
+
 
 class _Value:
     def __init__(self, val):
