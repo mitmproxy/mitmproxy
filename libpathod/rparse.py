@@ -17,7 +17,7 @@ class ParseException(Exception):
         return "%s\n%s"%(self.s, " "*(self.col-1) + "^")
 
     def __str__(self):
-        return self.msg
+        return "%s at offset %s of %s"%(self.msg, self.col, repr(self.s))
 
 
 class ServerError(Exception): pass
@@ -101,15 +101,15 @@ v_integer = pp.Regex(r"[+-]?\d+")\
 
 v_literal = pp.MatchFirst(
     [
-        pp.QuotedString("\"", escChar="\\", unquoteResults=True),
-        pp.QuotedString("'", escChar="\\", unquoteResults=True),
+        pp.QuotedString("\"", escChar="\\", unquoteResults=True, multiline=True),
+        pp.QuotedString("'", escChar="\\", unquoteResults=True, multiline=True),
     ]
 )
 
 v_naked_literal = pp.MatchFirst(
     [
         v_literal,
-        pp.Word("".join(i for i in pp.printables if i not in ",:"))
+        pp.Word("".join(i for i in pp.printables if i not in ",:\n"))
     ]
 )
 
@@ -543,6 +543,8 @@ class Message:
         return ret
 
 
+Sep = pp.Optional(pp.Literal(":")).suppress()
+
 class Response(Message):
     comps = (
         Body,
@@ -571,7 +573,7 @@ class Response(Message):
         resp = pp.And(
             [
                 Code.expr(),
-                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
+                pp.ZeroOrMore(Sep + atom)
             ]
         )
         return resp
@@ -610,9 +612,9 @@ class Request(Message):
         resp = pp.And(
             [
                 Method.expr(),
-                pp.Literal(":").suppress(),
+                Sep,
                 Path.expr(),
-                pp.ZeroOrMore(pp.Literal(":").suppress() + atom)
+                pp.ZeroOrMore(Sep + atom)
             ]
         )
         return resp

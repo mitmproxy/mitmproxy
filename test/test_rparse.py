@@ -250,6 +250,34 @@ class TestParseRequest:
         r = rparse.parse_request({}, 'GET:"/foo"')
         assert str(r)
 
+    def test_multiline(self):
+        l = """
+            GET
+            "/foo"
+            ir,@1
+        """
+        r = rparse.parse_request({}, l)
+        assert r.method == "GET"
+        assert r.path == "/foo"
+        assert r.actions
+
+
+        l = """
+            GET
+
+            "/foo
+            
+            
+            
+            bar"
+
+            ir,@1
+        """
+        r = rparse.parse_request({}, l)
+        assert r.method == "GET"
+        assert r.path.s.endswith("bar")
+        assert r.actions
+
 
 class TestParseResponse:
     def test_parse_err(self):

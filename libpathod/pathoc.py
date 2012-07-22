@@ -40,7 +40,7 @@ class Pathoc(tcp.TCPClient):
                 r = rparse.parse_request({}, i)
                 req = r.serve(self.wfile)
                 if reqdump:
-                    print >> fp, "\n>>", req["method"], req["path"]
+                    print >> fp, "\n>>", req["method"], repr(req["path"])
                     for a in req["actions"]:
                         print >> fp, "\t",
                         for x in a:
