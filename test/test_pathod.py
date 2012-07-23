@@ -1,20 +1,6 @@
-import requests
-from libpathod import pathod, test, version, pathoc
+from libpathod import pathod, version
 from netlib import tcp, http
 import tutils
-
-class _TestApplication:
-    def test_anchors(self):
-        a = pathod.PathodApp(staticdir=None)
-        a.add_anchor("/foo", "200")
-        assert a.get_anchors() == [("/foo", "200")]
-        a.add_anchor("/bar", "400")
-        assert a.get_anchors() == [("/bar", "400"), ("/foo", "200")]
-        a.remove_anchor("/bar", "400")
-        assert a.get_anchors() == [("/foo", "200")]
-        a.remove_anchor("/oink", "400")
-        assert a.get_anchors() == [("/foo", "200")]
-
 
 class TestPathod:
     def test_instantiation(self):
@@ -40,40 +26,7 @@ class TestPathod:
         assert len(p.get_log()) <= p.LOGBUF
 
 
-class _DaemonTests:
-    @classmethod
-    def setUpAll(self):
-        self.d = test.Daemon(
-            staticdir=tutils.test_data.path("data"),
-            anchors=[("/anchor/.*", "202")],
-            ssl = self.SSL,
-            sizelimit=1*1024*1024
-        )
-
-    @classmethod
-    def tearDownAll(self):
-        self.d.shutdown()
-
-    def setUp(self):
-        self.d.clear_log()
-
-    def getpath(self, path):
-        scheme = "https" if self.SSL else "http"
-        return requests.get("%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False)
-
-    def get(self, spec):
-        scheme = "https" if self.SSL else "http"
-        return requests.get("%s://localhost:%s/p/%s"%(scheme, self.d.port, spec), verify=False)
-
-    def pathoc(self, spec, timeout=None):
-        c = pathoc.Pathoc("localhost", self.d.port)
-        c.connect()
-        if self.SSL:
-            c.convert_to_ssl()
-        if timeout:
-            c.settimeout(timeout)
-        return c.request(spec)
-
+class CommonTests(tutils.DaemonTests):
     def test_sizelimit(self):
         r = self.get("200:b@1g")
         assert r.status_code == 800
@@ -133,11 +86,11 @@ class _DaemonTests:
         assert rsp.status_code == 800
 
 
-class TestDaemon(_DaemonTests):
+class TestDaemon(CommonTests):
     SSL = False
 
 
-class TestDaemonSSL(_DaemonTests):
+class TestDaemonSSL(CommonTests):
     SSL = True
     def test_ssl_conn_failure(self):
         c = tcp.TCPClient("localhost", self.d.port)

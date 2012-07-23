@@ -1,6 +1,41 @@
 import tempfile, os, shutil
 from contextlib import contextmanager
-from libpathod import utils
+from libpathod import utils, test, pathoc
+import requests
+
+class DaemonTests:
+    @classmethod
+    def setUpAll(self):
+        self.d = test.Daemon(
+            staticdir=test_data.path("data"),
+            anchors=[("/anchor/.*", "202")],
+            ssl = self.SSL,
+            sizelimit=1*1024*1024
+        )
+
+    @classmethod
+    def tearDownAll(self):
+        self.d.shutdown()
+
+    def setUp(self):
+        self.d.clear_log()
+
+    def getpath(self, path):
+        scheme = "https" if self.SSL else "http"
+        return requests.get("%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False)
+
+    def get(self, spec):
+        scheme = "https" if self.SSL else "http"
+        return requests.get("%s://localhost:%s/p/%s"%(scheme, self.d.port, spec), verify=False)
+
+    def pathoc(self, spec, timeout=None):
+        c = pathoc.Pathoc("localhost", self.d.port)
+        c.connect()
+        if self.SSL:
+            c.convert_to_ssl()
+        if timeout:
+            c.settimeout(timeout)
+        return c.request(spec)
 
 
 

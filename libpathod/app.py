@@ -1,5 +1,5 @@
 import logging, pprint, cStringIO
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, abort
 import version, rparse
 
 logging.basicConfig(level="DEBUG")
@@ -58,7 +58,10 @@ def log():
 
 @app.route('/log/<int:lid>')
 def onelog(lid):
-    l = pprint.pformat(app.config["pathod"].log_by_id(int(lid)))
+    item = app.config["pathod"].log_by_id(int(lid))
+    if not item:
+        abort(404)
+    l = pprint.pformat(item)
     return render_template("onelog.html", section="log", alog=l, lid=lid)
 
 

@@ -1,7 +1,6 @@
 import json, threading, Queue
 import requests
 import pathod, utils
-import tutils
 
 IFACE = "127.0.0.1"
 

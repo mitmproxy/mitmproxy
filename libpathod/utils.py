@@ -1,5 +1,4 @@
 import os, re
-import rparse
 
 SIZE_UNITS = dict(
     b = 1024**0,
