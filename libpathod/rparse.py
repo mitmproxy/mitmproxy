@@ -96,12 +96,8 @@ DATATYPES = dict(
     ascii_uppercase = string.ascii_uppercase,
     digits = string.digits,
     hexdigits = string.hexdigits,
-    letters = string.letters,
-    lowercase = string.lowercase,
     octdigits = string.octdigits,
-    printable = string.printable,
     punctuation = string.punctuation,
-    uppercase = string.uppercase,
     whitespace = string.whitespace,
     ascii = string.printable,
     bytes = "".join(chr(i) for i in range(256))
@@ -288,6 +284,15 @@ NakedValue = pp.MatchFirst(
 )
 
 
+Offset = pp.MatchFirst(
+        [
+            v_integer,
+            pp.Literal("r"),
+            pp.Literal("a")
+        ]
+    )
+
+
 class ShortcutContentType:
     def __init__(self, value):
         self.value = value
@@ -402,13 +407,7 @@ class PauseAt:
                     ]
                 )
         e += pp.Literal(",").suppress()
-        e += pp.MatchFirst(
-                    [
-                        v_integer,
-                        pp.Literal("r"),
-                        pp.Literal("a"),
-                    ]
-                )
+        e += Offset
         return e.setParseAction(lambda x: klass(*x))
 
     def accept(self, settings, r):
@@ -441,13 +440,7 @@ class InjectAt:
     @classmethod
     def expr(klass):
         e = pp.Literal("i").suppress()
-        e = e + pp.MatchFirst(
-                    [
-                        v_integer,
-                        pp.Literal("r"),
-                        pp.Literal("a")
-                    ]
-                )
+        e += Offset
         e += pp.Literal(",").suppress()
         e += Value
         return e.setParseAction(lambda x: klass(*x))
