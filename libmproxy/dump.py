@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import sys, os
 import flow, filt, utils
 
@@ -20,7 +21,7 @@ class DumpError(Exception): pass
 
 
 class Options(object):
-    __slots__ = [
+    _slots = [
         "anticache",
         "anticomp",
         "client_replay",
@@ -43,7 +44,7 @@ class Options(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
-        for i in self.__slots__:
+        for i in self._slots:
             if not hasattr(self, i):
                 setattr(self, i, None)
 
