@@ -1,5 +1,6 @@
 from libpathod import pathod, version
 from netlib import tcp, http
+import requests
 import tutils
 
 class TestPathod:
@@ -24,6 +25,17 @@ class TestPathod:
         for i in range(p.LOGBUF + 1):
             p.add_log(dict(s="foo"))
         assert len(p.get_log()) <= p.LOGBUF
+
+
+class TestNoWeb(tutils.DaemonTests):
+    noweb = True
+    def setUp(self):
+        # Over ride log clearing
+        pass
+
+    def test_noweb(self):
+        assert self.get("200").status_code == 200
+        assert self.getpath("/").status_code == 800
 
 
 class CommonTests(tutils.DaemonTests):
@@ -67,7 +79,7 @@ class CommonTests(tutils.DaemonTests):
     def test_invalid_first_line(self):
         c = tcp.TCPClient("localhost", self.d.port)
         c.connect()
-        if self.SSL:
+        if self.ssl:
             c.convert_to_ssl()
         c.wfile.write("foo\n\n\n")
         c.wfile.flush()
@@ -92,11 +104,11 @@ class CommonTests(tutils.DaemonTests):
 
 
 class TestDaemon(CommonTests):
-    SSL = False
+    ssl = False
 
 
 class TestDaemonSSL(CommonTests):
-    SSL = True
+    ssl = True
     def test_ssl_conn_failure(self):
         c = tcp.TCPClient("localhost", self.d.port)
         c.rbufsize = 0

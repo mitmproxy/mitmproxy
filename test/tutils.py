@@ -4,13 +4,16 @@ from libpathod import utils, test, pathoc
 import requests
 
 class DaemonTests:
+    noweb = False
+    ssl = False
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
             staticdir=test_data.path("data"),
             anchors=[("/anchor/.*", "202")],
-            ssl = self.SSL,
-            sizelimit=1*1024*1024
+            ssl = self.ssl,
+            sizelimit=1*1024*1024,
+            noweb = self.noweb
         )
 
     @classmethod
@@ -21,19 +24,19 @@ class DaemonTests:
         self.d.clear_log()
 
     def getpath(self, path, params=None):
-        scheme = "https" if self.SSL else "http"
+        scheme = "https" if self.ssl else "http"
         return requests.get(
             "%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False, params=params
         )
 
     def get(self, spec):
-        scheme = "https" if self.SSL else "http"
+        scheme = "https" if self.ssl else "http"
         return requests.get("%s://localhost:%s/p/%s"%(scheme, self.d.port, spec), verify=False)
 
     def pathoc(self, spec, timeout=None):
         c = pathoc.Pathoc("localhost", self.d.port)
         c.connect()
-        if self.SSL:
+        if self.ssl:
             c.convert_to_ssl()
         if timeout:
             c.settimeout(timeout)

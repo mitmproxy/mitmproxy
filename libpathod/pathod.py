@@ -92,7 +92,13 @@ class PathodHandler(tcp.BaseHandler):
                 )
             )
             if response_log["disconnect"]:
-                return
+                return False
+            return True
+
+        if self.server.noweb:
+            crafted = rparse.PathodErrorResponse("Access Denied")
+            crafted.serve(self.wfile, self.server.check_size)
+            return False
         else:
             cc = wsgi.ClientConn(self.client_address)
             req = wsgi.Request(cc, "http", method, path, headers, content)
@@ -105,7 +111,7 @@ class PathodHandler(tcp.BaseHandler):
             )
             app.serve(req, self.wfile)
             self.debug("%s %s"%(method, path))
-        return True
+            return True
 
     def handle(self):
         if self.server.ssloptions:
@@ -142,7 +148,10 @@ class PathodHandler(tcp.BaseHandler):
 
 class Pathod(tcp.TCPServer):
     LOGBUF = 500
-    def __init__(self, addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None, sizelimit=None):
+    def __init__(   self,
+                    addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None,
+                    sizelimit=None, noweb=False
+                ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
@@ -158,6 +167,7 @@ class Pathod(tcp.TCPServer):
         self.prefix = prefix
         self.sizelimit = sizelimit
         self.app = app.app
+        self.noweb = noweb
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0

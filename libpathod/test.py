@@ -5,9 +5,9 @@ import pathod, utils
 IFACE = "127.0.0.1"
 
 class Daemon:
-    def __init__(self, staticdir=None, anchors=(), ssl=None, sizelimit=None):
+    def __init__(self, staticdir=None, anchors=(), ssl=None, sizelimit=None, noweb=False):
         self.q = Queue.Queue()
-        self.thread = PaThread(self.q, staticdir, anchors, ssl, sizelimit)
+        self.thread = PaThread(self.q, staticdir, anchors, ssl, sizelimit, noweb)
         self.thread.start()
         self.port = self.q.get(True, 5)
         self.urlbase = "%s://%s:%s"%("https" if ssl else "http", IFACE, self.port)
@@ -42,9 +42,10 @@ class Daemon:
 
 
 class PaThread(threading.Thread):
-    def __init__(self, q, staticdir, anchors, ssl, sizelimit):
+    def __init__(self, q, staticdir, anchors, ssl, sizelimit, noweb):
         threading.Thread.__init__(self)
         self.q, self.staticdir, self.anchors, self.ssl, self.sizelimit = q, staticdir, anchors, ssl, sizelimit
+        self.noweb = noweb
 
     def run(self):
         if self.ssl is True:
@@ -59,7 +60,8 @@ class PaThread(threading.Thread):
             ssloptions = ssloptions,
             anchors = self.anchors,
             staticdir = self.staticdir,
-            sizelimit = self.sizelimit
+            sizelimit = self.sizelimit,
+            noweb = self.noweb
         )
         self.q.put(self.server.port)
         self.server.serve_forever()

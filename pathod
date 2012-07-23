@@ -15,28 +15,27 @@ if __name__ == "__main__":
         help='Directory for static files.'
     )
     parser.add_argument(
-        "--debug", dest='debug', default=False,
-        action="store_true",
+        "--debug", dest='debug', default=False, action="store_true",
         help='Enable debug output.'
     )
     parser.add_argument(
-        "-s", dest='ssl', default=False,
-        action="store_true",
+        "-s", dest='ssl', default=False, action="store_true",
         help='Serve with SSL.'
     )
     parser.add_argument(
-        "--limit-size", dest='sizelimit', default=None,
-        type=str,
+        "--limit-size", dest='sizelimit', default=None, type=str,
         help='Size limit of served responses. Understands size suffixes, i.e. 100k.'
     )
     parser.add_argument(
-        "--keyfile", dest='ssl_keyfile', default=None,
-        type=str,
+        "--noweb", dest='noweb', default=False, action="store_true",
+        help='Disable web interface and API.'
+    )
+    parser.add_argument(
+        "--keyfile", dest='ssl_keyfile', default=None, type=str,
         help='SSL key file. If not specified, a default key is used.'
     )
     parser.add_argument(
-        "--certfile", dest='ssl_certfile', default=None,
-        type=str,
+        "--certfile", dest='ssl_certfile', default=None, type=str,
         help='SSL cert file. If not specified, a default cert is used.'
     )
     args = parser.parse_args()
@@ -86,6 +85,7 @@ if __name__ == "__main__":
             staticdir = args.staticdir,
             anchors = alst,
             sizelimit = sizelimit,
+            noweb = args.noweb
         )
     except pathod.PathodError, v:
         parser.error(str(v))
