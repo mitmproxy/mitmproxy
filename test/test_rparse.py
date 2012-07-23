@@ -155,7 +155,7 @@ class TestMisc:
 
     def test_internal_response(self):
         d = cStringIO.StringIO()
-        s = rparse.InternalResponse(400, "foo")
+        s = rparse.PathodErrorResponse("foo")
         s.serve(d)
 
 

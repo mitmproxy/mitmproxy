@@ -67,15 +67,12 @@ class PathodHandler(tcp.BaseHandler):
             try:
                 crafted = rparse.parse_response(self.server.request_settings, spec)
             except rparse.ParseException, v:
-                crafted = rparse.InternalResponse(
-                    800,
+                crafted = rparse.PathodErrorResponse(
+                    "Parse Error",
                     "Error parsing response spec: %s\n"%v.msg + v.marked()
                 )
             except rparse.FileAccessDenied:
-                crafted = rparse.InternalResponse(
-                    800,
-                    "Access Denied"
-                )
+                crafted = rparse.PathodErrorResponse("Access Denied")
 
         request_log = dict(
             path = path,

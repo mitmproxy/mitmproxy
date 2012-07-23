@@ -570,10 +570,7 @@ class Message:
         if check:
             ret = check(self, actions)
             if ret:
-                err = InternalResponse(
-                    800,
-                    ret
-                )
+                err = PathodErrorResponse(ret)
                 err.serve(fp)
                 return dict(
                     disconnect = True,
@@ -706,12 +703,12 @@ class CraftedResponse(Response):
         return d
 
 
-class InternalResponse(Response):
-    def __init__(self, code, body):
+class PathodErrorResponse(Response):
+    def __init__(self, msg, body=None):
         Response.__init__(self)
-        self.code = code
-        self.msg = LiteralGenerator(http_status.RESPONSES.get(code, "Unknown error"))
-        self.body = LiteralGenerator(body)
+        self.code = 800
+        self.msg = LiteralGenerator(msg)
+        self.body = LiteralGenerator(body or msg)
         self.headers = [
             (
                 LiteralGenerator("Content-Type"),
