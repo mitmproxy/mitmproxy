@@ -41,6 +41,15 @@ def parse_anchor_spec(s):
     return tuple(s.split("=", 1))
 
 
+def escape_unprintables(s):
+    s = s.replace("\r\n", "PATHOD_MARKER_RN")
+    s = s.replace("\n", "PATHOD_MARKER_N")
+    s = repr(s)[1:-1]
+    s = s.replace("PATHOD_MARKER_RN", "\n")
+    s = s.replace("PATHOD_MARKER_N", "\n")
+    return s
+
+
 class Data:
     def __init__(self, name):
         m = __import__(name)

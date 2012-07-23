@@ -34,4 +34,8 @@ class TestApp(tutils.DaemonTests):
         assert r.status_code == 200
         assert "too large" in r.content
 
+        r = self.getpath("/preview", params=dict(spec="200:b@5k"))
+        assert r.status_code == 200
+        assert 'Response' in r.content
+
 

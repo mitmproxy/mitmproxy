@@ -1,6 +1,6 @@
 import logging, pprint, cStringIO
 from flask import Flask, jsonify, render_template, request, abort
-import version, rparse
+import version, rparse, utils
 
 logging.basicConfig(level="DEBUG")
 app = Flask(__name__)
@@ -83,5 +83,5 @@ def preview():
 
     s = cStringIO.StringIO()
     r.serve(s, check=app.config["pathod"].check_size)
-    args["output"] = s.getvalue()
+    args["output"] = utils.escape_unprintables(s.getvalue())
     return render_template("preview.html", **args)
