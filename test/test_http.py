@@ -64,7 +64,28 @@ def test_read_http_body_response():
     h = odict.ODictCaseless()
     h["content-length"] = [7]
     s = cStringIO.StringIO("testing")
-    assert http.read_http_body_response(s, h, False, None) == "testing"
+    assert http.read_http_body_response(s, h, None) == "testing"
+
+
+    h = odict.ODictCaseless()
+    s = cStringIO.StringIO("testing")
+    assert not http.read_http_body_response(s, h, None)
+
+    h = odict.ODictCaseless()
+    h["connection"] = ["close"]
+    s = cStringIO.StringIO("testing")
+    assert http.read_http_body_response(s, h, None) == "testing"
+
+
+def test_get_header_tokens():
+    h = odict.ODictCaseless()
+    assert http.get_header_tokens(h, "foo") == []
+    h["foo"] = ["bar"]
+    assert http.get_header_tokens(h, "foo") == ["bar"]
+    h["foo"] = ["bar, voing"]
+    assert http.get_header_tokens(h, "foo") == ["bar", "voing"]
+    h["foo"] = ["bar, voing", "oink"]
+    assert http.get_header_tokens(h, "foo") == ["bar", "voing", "oink"]
 
 
 def test_read_http_body_request():

@@ -97,12 +97,21 @@ def read_chunked(code, fp, limit):
     return content
 
 
-def has_chunked_encoding(headers):
-    for i in headers["transfer-encoding"]:
+def get_header_tokens(headers, key):
+    """
+        Retrieve all tokens for a header key. A number of different headers
+        follow a pattern where each header line can containe comma-separated
+        tokens, and headers can be set multiple times.
+    """
+    toks = []
+    for i in headers[key]:
         for j in i.split(","):
-            if j.lower() == "chunked":
-                return True
-    return False
+            toks.append(j.strip())
+    return toks
+
+
+def has_chunked_encoding(headers):
+    return "chunked" in [i.lower() for i in get_header_tokens(headers, "transfer-encoding")]
 
 
 def read_http_body(code, rfile, headers, all, limit):
@@ -207,12 +216,11 @@ def request_connection_close(httpversion, headers):
         Checks the request to see if the client connection should be closed.
     """
     if "connection" in headers:
-        for value in ",".join(headers['connection']).split(","):
-            value = value.strip()
-            if value == "close":
-                return True
-            elif value == "keep-alive":
-                return False
+        toks = get_header_tokens(headers, "connection")
+        if "close" in toks:
+            return True
+        elif "keep-alive" in toks:
+            return False
     # HTTP 1.1 connections are assumed to be persistent
     if httpversion == (1, 1):
         return False
@@ -243,10 +251,11 @@ def read_http_body_request(rfile, wfile, headers, httpversion, limit):
     return read_http_body(400, rfile, headers, False, limit)
 
 
-def read_http_body_response(rfile, headers, all, limit):
+def read_http_body_response(rfile, headers, limit):
     """
         Read the HTTP body from a server response.
     """
+    all = "close" in get_header_tokens(headers, "connection")
     return read_http_body(500, rfile, headers, all, limit)
 
 
@@ -267,7 +276,7 @@ def read_response(rfile, method, body_size_limit):
     proto, code, msg = parts
     httpversion = parse_http_protocol(proto)
     if httpversion is None:
-        raise HttpError(502, "Invalid HTTP version: %s"%repr(httpversion))
+        raise HttpError(502, "Invalid HTTP version in line: %s"%repr(proto))
     try:
         code = int(code)
     except ValueError:
@@ -278,5 +287,5 @@ def read_response(rfile, method, body_size_limit):
     if method == "HEAD" or code == 204 or code == 304:
         content = ""
     else:
-        content = read_http_body_response(rfile, headers, False, body_size_limit)
+        content = read_http_body_response(rfile, headers, body_size_limit)
     return httpversion, code, msg, headers, content

@@ -40,6 +40,7 @@ class NetLibTimeout(Exception): pass
 
 
 class FileLike:
+    BLOCKSIZE = 1024 * 32
     def __init__(self, o):
         self.o = o
 
@@ -51,11 +52,14 @@ class FileLike:
             self.o.flush()
 
     def read(self, length):
+        """
+            If length is None, we read until connection closes.
+        """
         result = ''
         start = time.time()
-        while length > 0:
+        while length == -1 or length > 0:
             try:
-                data = self.o.read(length)
+                data = self.o.read(self.BLOCKSIZE if length == -1 else length)
             except SSL.ZeroReturnError:
                 break
             except SSL.WantReadError:
@@ -73,7 +77,8 @@ class FileLike:
             if not data:
                 break
             result += data
-            length -= len(data)
+            if length != -1:
+                length -= len(data)
         return result
 
     def write(self, v):

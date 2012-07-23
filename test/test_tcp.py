@@ -239,3 +239,9 @@ class TestFileLike:
         s = cStringIO.StringIO("foobar\nfoobar")
         s = tcp.FileLike(s)
         assert s.readline(3) == "foo"
+
+    def test_limitless(self):
+        s = cStringIO.StringIO("f"*(50*1024))
+        s = tcp.FileLike(s)
+        ret = s.read(-1)
+        assert len(ret) == 50 * 1024
