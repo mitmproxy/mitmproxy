@@ -1,18 +1,18 @@
 import sys, os
 from netlib import tcp, http
-import rparse
+import rparse, utils
 
 class PathocError(Exception): pass
 
 
 def print_short(fp, httpversion, code, msg, headers, content):
-    print >> fp, "<< %s %s: %s bytes"%(code, msg, len(content))
+    print >> fp, "<< %s %s: %s bytes"%(code, utils.xrepr(msg), len(content))
 
 
 def print_full(fp, httpversion, code, msg, headers, content):
-    print >> fp, "<< HTTP%s/%s %s %s"%(httpversion[0], httpversion[1], code, msg)
-    print >> fp, headers
-    print >> fp, content
+    print >> fp, "<< HTTP%s/%s %s %s"%(httpversion[0], httpversion[1], code, utils.xrepr(msg))
+    print >> fp, utils.escape_unprintables(str(headers))
+    print >> fp, utils.escape_unprintables(content)
 
 
 class Pathoc(tcp.TCPClient):

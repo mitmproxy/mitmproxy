@@ -41,6 +41,10 @@ def parse_anchor_spec(s):
     return tuple(s.split("=", 1))
 
 
+def xrepr(s):
+    return repr(s)[1:-1]
+
+
 def escape_unprintables(s):
     s = s.replace("\r\n", "PATHOD_MARKER_RN")
     s = s.replace("\n", "PATHOD_MARKER_N")
