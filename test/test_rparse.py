@@ -38,6 +38,7 @@ class TestMisc:
             assert g[0] == "x"
             assert g[-1] == "x"
             assert g[0:5] == "xxxxx"
+            assert repr(g)
 
     def test_valueliteral(self):
         v = rparse.ValueLiteral("foo")
@@ -47,10 +48,12 @@ class TestMisc:
         v = rparse.ValueLiteral(r"foo\n")
         assert v.expr()
         assert v.val == "foo\n"
+        assert repr(v)
 
     def test_valuenakedliteral(self):
         v = rparse.ValueNakedLiteral("foo")
         assert v.expr()
+        assert repr(v)
 
     def test_file_value(self):
         v = rparse.Value.parseString("<'one two'")[0]
@@ -104,7 +107,9 @@ class TestMisc:
     def test_path(self):
         e = rparse.Path.expr()
         assert e.parseString('"/foo"')[0].value.val == "/foo"
-
+        e = rparse.Path("/foo")
+        assert e.value.val == "/foo"
+        
     def test_method(self):
         e = rparse.Method.expr()
         assert e.parseString("get")[0].value.val == "GET"

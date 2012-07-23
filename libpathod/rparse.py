@@ -84,7 +84,7 @@ def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
                     send_chunk(fp, a[2], blocksize, 0, len(a[2]))
             send_chunk(fp, v, blocksize, offset, len(v))
             sofar += len(v)
-    except tcp.NetLibDisconnect:
+    except tcp.NetLibDisconnect: # pragma: no cover
         return True
 
 
@@ -188,7 +188,7 @@ class _Value:
     def get_generator(self, settings):
         return LiteralGenerator(self.val)
 
-    def __str__(self):
+    def __repr__(self):
         return self.val
 
 
