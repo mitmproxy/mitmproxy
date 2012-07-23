@@ -86,7 +86,7 @@ class PathodHandler(tcp.BaseHandler):
             httpversion = httpversion,
         )
         if crafted:
-            response_log = crafted.serve(self.wfile)
+            response_log = crafted.serve(self.wfile, self.check_size)
             if response_log["disconnect"]:
                 return
             self.server.add_log(
@@ -109,6 +109,9 @@ class PathodHandler(tcp.BaseHandler):
             app.serve(req, self.wfile)
             self.debug("%s %s"%(method, path))
         return True
+
+    def check_size(self, req, actions):
+        return False
 
     def handle(self):
         if self.server.ssloptions:
@@ -145,7 +148,7 @@ class PathodHandler(tcp.BaseHandler):
 
 class Pathod(tcp.TCPServer):
     LOGBUF = 500
-    def __init__(self, addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None):
+    def __init__(self, addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None, sizelimit=None):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
@@ -153,11 +156,13 @@ class Pathod(tcp.TCPServer):
             prefix: string specifying the prefix at which to anchor response generation.
             staticdir: path to a directory of static resources, or None.
             anchors: A list of (regex, spec) tuples, or None.
+            sizelimit: Limit size of served data.
         """
         tcp.TCPServer.__init__(self, addr)
         self.ssloptions = ssloptions
         self.staticdir = staticdir
         self.prefix = prefix
+        self.sizelimit = sizelimit
         self.app = app.app
         self.app.config["pathod"] = self
         self.log = []

@@ -419,6 +419,13 @@ class TestResponse:
         assert r.body[:]
         assert str(r)
 
+    def test_checkfunc(self):
+        s = cStringIO.StringIO()
+        r = rparse.parse_response({}, "400:b@100k")
+        def check(req, acts):
+            return "errmsg"
+        assert r.serve(s, check=check)["error"] == "errmsg"
+
     def test_render(self):
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400'msg'")

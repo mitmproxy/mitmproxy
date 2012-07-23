@@ -25,6 +25,18 @@ class ParseException(Exception):
 class ServerError(Exception): pass
 
 
+def actions_log(lst):
+    ret = []
+    for i in lst:
+        if i[1] == "inject":
+            ret.append(
+                [i[0], i[1], repr(i[2])]
+            )
+        else:
+            ret.append(i)
+    return ret
+
+
 def ready_actions(length, lst):
     ret = []
     for i in lst:
@@ -527,7 +539,15 @@ class Message:
                 l += len(i[2])
         return l
 
-    def serve(self, fp):
+    def serve(self, fp, check):
+        """
+            fp: The file pointer to write to.
+
+            check: A function called with the effective actions (after random
+            values have been calculated).  If it returns False service
+            proceeds, otherwise the return is treated as an error message to be
+            sent to the client, and service stops.
+        """
         started = time.time()
         if self.body and not utils.get_header("Content-Length", self.headers):
             self.headers.append(
@@ -554,13 +574,26 @@ class Message:
         vals.reverse()
         actions = ready_actions(self.length(), self.actions)
         actions.reverse()
+        if check:
+            ret = check(self, actions)
+            if ret:
+                err = InternalResponse(
+                    800,
+                    ret
+                )
+                err.serve(fp)
+                return dict(
+                    disconnect = True,
+                    actions = actions_log(actions),
+                    error = ret
+                )
         disconnect = write_values(fp, vals, actions[:])
         duration = time.time() - started
         ret = dict(
             disconnect = disconnect,
             started = started,
             duration = duration,
-            actions = actions,
+            actions = actions_log(actions),
         )
         for i in self.logattrs:
             v = getattr(self, i)
@@ -661,8 +694,8 @@ class CraftedRequest(Request):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, fp):
-        d = Request.serve(self, fp)
+    def serve(self, fp, check=None):
+        d = Request.serve(self, fp, check)
         d["spec"] = self.spec
         return d
 
@@ -674,8 +707,8 @@ class CraftedResponse(Response):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, fp):
-        d = Response.serve(self, fp)
+    def serve(self, fp, check=None):
+        d = Response.serve(self, fp, check)
         d["spec"] = self.spec
         return d
 
@@ -697,8 +730,8 @@ class InternalResponse(Response):
             )
         ]
 
-    def serve(self, fp):
-        d = Response.serve(self, fp)
+    def serve(self, fp, check=None):
+        d = Response.serve(self, fp, check)
         d["internal"] = True
         return d
 
