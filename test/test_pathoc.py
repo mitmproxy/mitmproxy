@@ -24,6 +24,17 @@ class TestDaemon:
         _, _, _, _, content = c.request("get:/api/info")
         assert tuple(json.loads(content)["version"]) == version.IVERSION
 
+    def test_timeout(self):
+        c = pathoc.Pathoc("127.0.0.1", self.d.port)
+        c.connect()
+        c.settimeout(0.01)
+
+        s = cStringIO.StringIO()
+        c.print_requests(
+            ["get:'/p/200:p10,0'"], True, True, s
+        )
+        assert "Timeout" in s.getvalue()
+
     def tval(self, requests, verbose=False):
         c = pathoc.Pathoc("127.0.0.1", self.d.port)
         c.connect()
