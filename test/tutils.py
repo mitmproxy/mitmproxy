@@ -20,9 +20,11 @@ class DaemonTests:
     def setUp(self):
         self.d.clear_log()
 
-    def getpath(self, path):
+    def getpath(self, path, params=None):
         scheme = "https" if self.SSL else "http"
-        return requests.get("%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False)
+        return requests.get(
+            "%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False, params=params
+        )
 
     def get(self, spec):
         scheme = "https" if self.SSL else "http"
