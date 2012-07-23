@@ -209,9 +209,9 @@ class BaseHandler:
         try:
             if not getattr(self.wfile, "closed", False):
                 self.wfile.flush()
+            self.close()
             self.wfile.close()
             self.rfile.close()
-            self.close()
         except socket.error:
             # Remote has disconnected
             pass
@@ -245,10 +245,10 @@ class BaseHandler:
                 self.connection.shutdown()
             else:
                 self.connection.shutdown(socket.SHUT_RDWR)
-            self.connection.close()
-        except (socket.error, SSL.Error):
+        except (socket.error, SSL.Error), v:
             # Socket probably already closed
             pass
+        self.connection.close()
 
 
 class TCPServer:
