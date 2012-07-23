@@ -192,7 +192,7 @@ class ProxyHandler(tcp.BaseHandler):
                 if response is None:
                     return
                 self.send_response(response)
-                if http.request_connection_close(request.httpversion, request.headers):
+                if request and http.request_connection_close(request.httpversion, request.headers):
                     return
                 # We could keep the client connection when the server
                 # connection needs to go away.  However, we want to mimic
