@@ -18,6 +18,19 @@ class PathodHandler(tcp.BaseHandler):
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
+    def serve_crafted(self, crafted, request_log):
+        response_log = crafted.serve(self.wfile, self.server.check_size)
+        self.server.add_log(
+            dict(
+                type = "crafted",
+                request=request_log,
+                response=response_log
+            )
+        )
+        if response_log["disconnect"]:
+            return False
+        return True
+
     def handle_request(self):
         """
             Returns True if handling should continue.
@@ -39,9 +52,18 @@ class PathodHandler(tcp.BaseHandler):
                 )
             )
             return
-        method, path, httpversion = parts
 
+        method, path, httpversion = parts
         headers = http.read_headers(self.rfile)
+        request_log = dict(
+            path = path,
+            method = method,
+            headers = headers.lst,
+            httpversion = httpversion,
+            sni = self.sni,
+            remote_address = self.client_address,
+        )
+
         try:
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, None
@@ -57,45 +79,23 @@ class PathodHandler(tcp.BaseHandler):
             )
             return
 
-        crafted = None
         for i in self.server.anchors:
             if i[0].match(path):
-                crafted = i[1]
+                return self.serve_crafted(i[1], request_log)
 
-        if not crafted and path.startswith(self.server.prefix):
+        if not self.server.nocraft and path.startswith(self.server.prefix):
             spec = urllib.unquote(path)[len(self.server.prefix):]
             try:
                 crafted = rparse.parse_response(self.server.request_settings, spec)
             except rparse.ParseException, v:
                 crafted = rparse.PathodErrorResponse(
-                    "Parse Error",
-                    "Error parsing response spec: %s\n"%v.msg + v.marked()
-                )
+                        "Parse Error",
+                        "Error parsing response spec: %s\n"%v.msg + v.marked()
+                    )
             except rparse.FileAccessDenied:
                 crafted = rparse.PathodErrorResponse("Access Denied")
-
-        request_log = dict(
-            path = path,
-            method = method,
-            headers = headers.lst,
-            sni = self.sni,
-            remote_address = self.client_address,
-            httpversion = httpversion,
-        )
-        if crafted:
-            response_log = crafted.serve(self.wfile, self.server.check_size)
-            self.server.add_log(
-                dict(
-                    type = "crafted",
-                    request=request_log,
-                    response=response_log
-                )
-            )
-            if response_log["disconnect"]:
-                return False
-            return True
-
-        if self.server.noweb:
+            return self.serve_crafted(crafted, request_log)
+        elif self.server.noweb:
             crafted = rparse.PathodErrorResponse("Access Denied")
             crafted.serve(self.wfile, self.server.check_size)
             return False
@@ -150,7 +150,7 @@ class Pathod(tcp.TCPServer):
     LOGBUF = 500
     def __init__(   self,
                     addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None,
-                    sizelimit=None, noweb=False
+                    sizelimit=None, noweb=False, nocraft=False  
                 ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
@@ -168,6 +168,7 @@ class Pathod(tcp.TCPServer):
         self.sizelimit = sizelimit
         self.app = app.app
         self.noweb = noweb
+        self.nocraft = nocraft
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0
