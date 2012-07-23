@@ -5,24 +5,25 @@ import version, rparse, utils
 logging.basicConfig(level="DEBUG")
 app = Flask(__name__)
 
-@app.route('/api/info')
-def api_info():
-    return jsonify(
-        version = version.IVERSION
-    )
+def api():
+    @app.route('/api/info')
+    def api_info():
+        return jsonify(
+            version = version.IVERSION
+        )
 
 
-@app.route('/api/log')
-def api_log():
-    return jsonify(
-        log = app.config["pathod"].get_log()
-    )
+    @app.route('/api/log')
+    def api_log():
+        return jsonify(
+            log = app.config["pathod"].get_log()
+        )
 
 
-@app.route('/api/clear_log')
-def api_clear_log():
-    app.config["pathod"].clear_log()
-    return "OK"
+    @app.route('/api/clear_log')
+    def api_clear_log():
+        app.config["pathod"].clear_log()
+        return "OK"
 
 
 @app.route('/')

@@ -150,7 +150,7 @@ class Pathod(tcp.TCPServer):
     LOGBUF = 500
     def __init__(   self,
                     addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None,
-                    sizelimit=None, noweb=False, nocraft=False  
+                    sizelimit=None, noweb=False, nocraft=False, noapi=False
                 ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
@@ -166,9 +166,10 @@ class Pathod(tcp.TCPServer):
         self.staticdir = staticdir
         self.prefix = prefix
         self.sizelimit = sizelimit
+        self.noweb, self.nocraft, self.noapi = noweb, nocraft, noapi
+        if not noapi:
+            app.api()
         self.app = app.app
-        self.noweb = noweb
-        self.nocraft = nocraft
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0

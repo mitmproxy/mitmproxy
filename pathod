@@ -27,8 +27,12 @@ if __name__ == "__main__":
         help='Size limit of served responses. Understands size suffixes, i.e. 100k.'
     )
     parser.add_argument(
+        "--noapi", dest='noapi', default=False, action="store_true",
+        help='Disable API.'
+    )
+    parser.add_argument(
         "--noweb", dest='noweb', default=False, action="store_true",
-        help='Disable web interface and API.'
+        help='Disable both web interface and API.'
     )
     parser.add_argument(
         "--nocraft", dest='nocraft', default=False, action="store_true",
@@ -90,7 +94,8 @@ if __name__ == "__main__":
             anchors = alst,
             sizelimit = sizelimit,
             noweb = args.noweb,
-            nocraft = args.nocraft
+            nocraft = args.nocraft,
+            noapi = args.noapi
         )
     except pathod.PathodError, v:
         parser.error(str(v))
