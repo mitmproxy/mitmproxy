@@ -708,7 +708,7 @@ class PathodErrorResponse(Response):
         Response.__init__(self)
         self.code = 800
         self.msg = LiteralGenerator(msg)
-        self.body = LiteralGenerator(body or msg)
+        self.body = LiteralGenerator("pathod error: " + (body or msg))
         self.headers = [
             (
                 LiteralGenerator("Content-Type"),

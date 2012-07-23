@@ -83,7 +83,7 @@ class PathodHandler(tcp.BaseHandler):
             httpversion = httpversion,
         )
         if crafted:
-            response_log = crafted.serve(self.wfile, self.check_size)
+            response_log = crafted.serve(self.wfile, self.server.check_size)
             self.server.add_log(
                 dict(
                     type = "crafted",
@@ -106,11 +106,6 @@ class PathodHandler(tcp.BaseHandler):
             app.serve(req, self.wfile)
             self.debug("%s %s"%(method, path))
         return True
-
-    def check_size(self, req, actions):
-        if self.server.sizelimit and req.effective_length(actions) > self.server.sizelimit:
-            return "Response too large."
-        return False
 
     def handle(self):
         if self.server.ssloptions:
@@ -178,6 +173,14 @@ class Pathod(tcp.TCPServer):
                 except rparse.ParseException, v:
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, aresp))
+
+    def check_size(self, req, actions):
+        """
+            A policy check that verifies the request size is withing limits.
+        """
+        if self.sizelimit and req.effective_length(actions) > self.sizelimit:
+            return "Response too large."
+        return False
 
     @property
     def request_settings(self):

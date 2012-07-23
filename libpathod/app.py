@@ -62,7 +62,6 @@ def onelog(lid):
     return render_template("onelog.html", section="log", alog=l, lid=lid)
 
 
-SANITY = 1024*1024
 @app.route('/preview')
 def preview():
     spec = request.args["spec"]
@@ -78,11 +77,8 @@ def preview():
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
         return render_template("preview.html", **args)
-    if r.length() > SANITY:
-        error = "Refusing to preview a response of %s bytes. This is for your own good."%r.length()
-        args["error"] = error
-    else:
-        s = cStringIO.StringIO()
-        r.serve(s)
-        args["output"] = s.getvalue()
+
+    s = cStringIO.StringIO()
+    r.serve(s, check=app.config["pathod"].check_size)
+    args["output"] = s.getvalue()
     return render_template("preview.html", **args)
