@@ -129,7 +129,7 @@ class PathodHandler(tcp.BaseHandler):
             try:
                 if not self.handle_request():
                     return
-            except tcp.NetLibDisconnect:
+            except tcp.NetLibDisconnect: # pragma: no cover
                 self.info("Disconnect")
                 self.server.add_log(
                     dict(

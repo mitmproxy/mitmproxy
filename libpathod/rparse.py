@@ -22,8 +22,6 @@ class ParseException(Exception):
         return "%s at offset %s of %s"%(self.msg, self.col, repr(self.s))
 
 
-class ServerError(Exception): pass
-
 
 def actions_log(lst):
     ret = []
@@ -250,15 +248,15 @@ class ValueFile:
         uf = settings.get("unconstrained_file_access")
         sd = settings.get("staticdir")
         if not sd:
-            raise ServerError("File access disabled.")
+            raise FileAccessDenied("File access disabled.")
         sd = os.path.normpath(os.path.abspath(sd))
 
         s = os.path.expanduser(self.path)
         s = os.path.normpath(os.path.abspath(os.path.join(sd, s)))
         if not uf and not s.startswith(sd):
-            raise ServerError("File access outside of configured directory")
+            raise FileAccessDenied("File access outside of configured directory")
         if not os.path.isfile(s):
-            raise ServerError("File not readable")
+            raise FileAccessDenied("File not readable")
         return FileGenerator(s)
 
     def __str__(self):
@@ -707,10 +705,6 @@ class PathodErrorResponse(Response):
                 LiteralGenerator("Content-Type"),
                 LiteralGenerator("text/plain")
             ),
-            (
-                LiteralGenerator("Content-Length"),
-                LiteralGenerator(str(len(self.body)))
-            )
         ]
 
     def serve(self, fp, check=None):

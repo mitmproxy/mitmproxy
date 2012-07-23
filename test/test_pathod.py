@@ -85,6 +85,11 @@ class CommonTests(tutils.DaemonTests):
         rsp = self.get("=nonexistent")
         assert rsp.status_code == 800
 
+    def test_source_access_denied(self):
+        rsp = self.get("200:b</foo")
+        assert rsp.status_code == 800
+        assert "Access Denied" in rsp.content
+
 
 class TestDaemon(CommonTests):
     SSL = False

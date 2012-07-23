@@ -69,7 +69,7 @@ class TestMisc:
             assert v.get_generator(dict(staticdir=t))
 
             v = rparse.Value.parseString("<path2")[0]
-            tutils.raises(rparse.ServerError, v.get_generator, dict(staticdir=t))
+            tutils.raises(rparse.FileAccessDenied, v.get_generator, dict(staticdir=t))
             tutils.raises("access disabled", v.get_generator, dict())
 
             v = rparse.Value.parseString("</outside")[0]
