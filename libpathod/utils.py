@@ -1,6 +1,28 @@
 import os, re
 import rparse
 
+SIZE_UNITS = dict(
+    b = 1024**0,
+    k = 1024**1,
+    m = 1024**2,
+    g = 1024**3,
+    t = 1024**4,
+)
+
+def parse_size(s):
+    try:
+        return int(s)
+    except ValueError:
+        pass
+    for i in SIZE_UNITS.keys():
+        if s.endswith(i):
+            try:
+                return int(s[:-1]) * SIZE_UNITS[i]
+            except ValueError:
+                break
+    raise ValueError("Invalid size specification.")
+
+
 def get_header(val, headers):
     """
         Header keys may be Values, so we have to "generate" them as we try the match.

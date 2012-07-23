@@ -46,7 +46,8 @@ class _DaemonTests:
         self.d = test.Daemon(
             staticdir=tutils.test_data.path("data"),
             anchors=[("/anchor/.*", "202")],
-            ssl = self.SSL
+            ssl = self.SSL,
+            sizelimit=1*1024*1024
         )
 
     @classmethod
@@ -72,6 +73,12 @@ class _DaemonTests:
         if timeout:
             c.settimeout(timeout)
         return c.request(spec)
+
+    def test_sizelimit(self):
+        r = self.get("200:b@1g")
+        assert r.status_code == 800
+        l = self.d.log()[0]
+        assert "too large" in l["response"]["error"]
 
     def test_preline(self):
         v = self.pathoc(r"get:'/p/200':i0,'\r\n'")

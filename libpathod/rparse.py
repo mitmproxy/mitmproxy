@@ -213,20 +213,13 @@ class ValueNakedLiteral(_Value):
 
 
 class ValueGenerate:
-    UNITS = dict(
-        b = 1024**0,
-        k = 1024**1,
-        m = 1024**2,
-        g = 1024**3,
-        t = 1024**4,
-    )
     def __init__(self, usize, unit, datatype):
         if not unit:
             unit = "b"
         self.usize, self.unit, self.datatype = usize, unit, datatype
 
     def bytes(self):
-        return self.usize * self.UNITS[self.unit]
+        return self.usize * utils.SIZE_UNITS[self.unit]
 
     def get_generator(self, settings):
         return RandomGenerator(self.datatype, self.bytes())
@@ -235,7 +228,7 @@ class ValueGenerate:
     def expr(klass):
         e = pp.Literal("@").suppress() + v_integer
 
-        u = reduce(operator.or_, [pp.Literal(i) for i in klass.UNITS.keys()])
+        u = reduce(operator.or_, [pp.Literal(i) for i in utils.SIZE_UNITS.keys()])
         e = e + pp.Optional(u, default=None)
 
         s = pp.Literal(",").suppress()

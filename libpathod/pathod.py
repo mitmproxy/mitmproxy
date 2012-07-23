@@ -87,8 +87,6 @@ class PathodHandler(tcp.BaseHandler):
         )
         if crafted:
             response_log = crafted.serve(self.wfile, self.check_size)
-            if response_log["disconnect"]:
-                return
             self.server.add_log(
                 dict(
                     type = "crafted",
@@ -96,6 +94,8 @@ class PathodHandler(tcp.BaseHandler):
                     response=response_log
                 )
             )
+            if response_log["disconnect"]:
+                return
         else:
             cc = wsgi.ClientConn(self.client_address)
             req = wsgi.Request(cc, "http", method, path, headers, content)
@@ -111,6 +111,8 @@ class PathodHandler(tcp.BaseHandler):
         return True
 
     def check_size(self, req, actions):
+        if self.server.sizelimit and req.effective_length(actions) > self.server.sizelimit:
+            return "Response too large."
         return False
 
     def handle(self):

@@ -25,6 +25,11 @@ if __name__ == "__main__":
         help='Serve with SSL.'
     )
     parser.add_argument(
+        "--limit-size", dest='sizelimit', default=None,
+        type=str,
+        help='Size limit of served responses. Understands size suffixes, i.e. 100k.'
+    )
+    parser.add_argument(
         "--keyfile", dest='ssl_keyfile', default=None,
         type=str,
         help='SSL key file. If not specified, a default key is used.'
@@ -67,12 +72,20 @@ if __name__ == "__main__":
     if not args.debug:
         logging.disable(logging.DEBUG)
 
+    sizelimit = None
+    if args.sizelimit:
+        try:
+            sizelimit = utils.parse_size(args.sizelimit)
+        except ValueError, v:
+            parser.error(v)
+
     try:
         pd = pathod.Pathod(
             (args.address, args.port),
             ssloptions = ssl,
             staticdir = args.staticdir,
-            anchors = alst
+            anchors = alst,
+            sizelimit = sizelimit,
         )
     except pathod.PathodError, v:
         parser.error(str(v))
