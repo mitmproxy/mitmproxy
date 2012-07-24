@@ -1,6 +1,7 @@
 import os, ssl, hashlib, socket, time, datetime
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
+from pyasn1.error import PyAsn1Error
 import OpenSSL
 import tcp
 
@@ -217,7 +218,10 @@ class SSLCert:
         for i in range(self.x509.get_extension_count()):
             ext = self.x509.get_extension(i)
             if ext.get_short_name() == "subjectAltName":
-                dec = decode(ext.get_data(), asn1Spec=_GeneralNames())
+                try:
+                    dec = decode(ext.get_data(), asn1Spec=_GeneralNames())
+                except PyAsn1Error:
+                    continue
                 for i in dec[0]:
                     altnames.append(i[0].asOctets())
         return altnames

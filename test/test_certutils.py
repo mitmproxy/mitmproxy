@@ -67,6 +67,11 @@ class TestSSLCert:
         assert c.to_pem()
         c.has_expired
 
+    def test_err_broken_sans(self):
+        c = certutils.SSLCert.from_pem(file(tutils.test_data.path("data/text_cert_weird1"), "r").read())
+        # This breaks unless we ignore a decoding error.
+        c.altnames
+
     def test_der(self):
         d = file(tutils.test_data.path("data/dercert")).read()
         s = certutils.SSLCert.from_der(d)
