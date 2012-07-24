@@ -159,8 +159,8 @@ class ProxyHandler(tcp.BaseHandler):
             app = self.server.apps.get(request)
             if app:
                 err = app.serve(request, self.wfile)
-                self.log(cc, "Error in wsgi app.", err.split("\n"))
                 if err:
+                    self.log(cc, "Error in wsgi app.", err.split("\n"))
                     return
             else:
                 request = request._send(self.mqueue)
