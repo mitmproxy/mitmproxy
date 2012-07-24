@@ -109,12 +109,16 @@ class TestMisc:
         assert e.parseString('"/foo"')[0].value.val == "/foo"
         e = rparse.Path("/foo")
         assert e.value.val == "/foo"
-        
+
     def test_method(self):
         e = rparse.Method.expr()
         assert e.parseString("get")[0].value.val == "GET"
         assert e.parseString("'foo'")[0].value.val == "foo"
         assert e.parseString("'get'")[0].value.val == "get"
+
+    def test_raw(self):
+        e = rparse.Raw.expr()
+        assert e.parseString("r")[0]
 
     def test_body(self):
         e = rparse.Body.expr()
@@ -435,6 +439,17 @@ class TestResponse:
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400'msg'")
         assert r.serve(s)
+
+    def test_raw(self):
+        s = cStringIO.StringIO()
+        r = rparse.parse_response({}, "400:b'foo'")
+        r.serve(s)
+        assert "Content-Length" in s.getvalue()
+
+        s = cStringIO.StringIO()
+        r = rparse.parse_response({}, "400:b'foo':r")
+        r.serve(s)
+        assert not "Content-Length" in s.getvalue()
 
     def test_length(self):
         def testlen(x):

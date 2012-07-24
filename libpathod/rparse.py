@@ -8,6 +8,7 @@ TRUNCATE = 1024
 
 class FileAccessDenied(Exception): pass
 
+
 class ParseException(Exception):
     def __init__(self, msg, s, col):
         Exception.__init__(self)
@@ -20,7 +21,6 @@ class ParseException(Exception):
 
     def __str__(self):
         return "%s at offset %s of %s"%(self.msg, self.col, repr(self.s))
-
 
 
 def actions_log(lst):
@@ -344,6 +344,16 @@ class Body:
         return e.setParseAction(lambda x: klass(*x))
 
 
+class Raw:
+    def accept(self, settings, r):
+        r.raw = True
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("r").suppress()
+        return e.setParseAction(lambda x: klass(*x))
+
+
 class Path:
     def __init__(self, value):
         if isinstance(value, basestring):
@@ -496,6 +506,12 @@ class Code:
 
 class Message:
     version = "HTTP/1.1"
+    def __init__(self):
+        self.body = LiteralGenerator("")
+        self.headers = []
+        self.actions = []
+        self.raw = False
+
     def length(self):
         """
             Calculate the length of the base message without any applied actions.
@@ -528,12 +544,12 @@ class Message:
             fp: The file pointer to write to.
 
             check: A function called with the effective actions (after random
-            values have been calculated).  If it returns False service
-            proceeds, otherwise the return is treated as an error message to be
-            sent to the client, and service stops.
+            values have been calculated). If it returns False service proceeds,
+            otherwise the return is treated as an error message to be sent to
+            the client, and service stops.
         """
         started = time.time()
-        if self.body and not utils.get_header("Content-Length", self.headers):
+        if self.body and not self.raw and not utils.get_header("Content-Length", self.headers):
             self.headers.append(
                 (
                     LiteralGenerator("Content-Length"),
@@ -596,14 +612,13 @@ class Response(Message):
         InjectAt,
         ShortcutContentType,
         ShortcutLocation,
+        Raw
     )
     logattrs = ["code", "version"]
     def __init__(self):
-        self.headers = []
-        self.actions = []
+        Message.__init__(self)
         self.code = 200
         self.msg = LiteralGenerator(http_status.RESPONSES[self.code])
-        self.body = LiteralGenerator("")
 
     def preamble(self):
         return [self.version, " ", str(self.code), " ", self.msg]
@@ -635,14 +650,13 @@ class Request(Message):
         DisconnectAt,
         InjectAt,
         ShortcutContentType,
+        Raw
     )
     logattrs = ["method", "path"]
     def __init__(self):
+        Message.__init__(self)
         self.method = None
         self.path = None
-        self.body = LiteralGenerator("")
-        self.headers = []
-        self.actions = []
 
     def preamble(self):
         return [self.method, " ", self.path, " ", self.version]
