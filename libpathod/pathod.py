@@ -83,8 +83,8 @@ class PathodHandler(tcp.BaseHandler):
             if i[0].match(path):
                 return self.serve_crafted(i[1], request_log)
 
-        if not self.server.nocraft and path.startswith(self.server.prefix):
-            spec = urllib.unquote(path)[len(self.server.prefix):]
+        if not self.server.nocraft and path.startswith(self.server.craftanchor):
+            spec = urllib.unquote(path)[len(self.server.craftanchor):]
             try:
                 crafted = rparse.parse_response(self.server.request_settings, spec)
             except rparse.ParseException, v:
@@ -149,14 +149,14 @@ class PathodHandler(tcp.BaseHandler):
 class Pathod(tcp.TCPServer):
     LOGBUF = 500
     def __init__(   self,
-                    addr, ssloptions=None, prefix="/p/", staticdir=None, anchors=None,
+                    addr, ssloptions=None, craftanchor="/p/", staticdir=None, anchors=None,
                     sizelimit=None, noweb=False, nocraft=False, noapi=False
                 ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
             ssloptions: a dictionary containing certfile and keyfile specifications.
-            prefix: string specifying the prefix at which to anchor response generation.
+            craftanchor: string specifying the path under which to anchor response generation.
             staticdir: path to a directory of static resources, or None.
             anchors: A list of (regex, spec) tuples, or None.
             sizelimit: Limit size of served data.
@@ -164,7 +164,7 @@ class Pathod(tcp.TCPServer):
         tcp.TCPServer.__init__(self, addr)
         self.ssloptions = ssloptions
         self.staticdir = staticdir
-        self.prefix = prefix
+        self.craftanchor = craftanchor
         self.sizelimit = sizelimit
         self.noweb, self.nocraft, self.noapi = noweb, nocraft, noapi
         if not noapi:

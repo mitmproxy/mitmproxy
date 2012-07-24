@@ -11,6 +11,10 @@ if __name__ == "__main__":
         help='Add an anchor. Specified as a string with the form pattern=pagespec'
     )
     parser.add_argument(
+        "-c", dest='craftanchor', default="/p/", type=str,
+        help='Anchorpoint for URL crafting commands.'
+    )
+    parser.add_argument(
         "-d", dest='staticdir', default=None, type=str,
         help='Directory for static files.'
     )
@@ -89,6 +93,7 @@ if __name__ == "__main__":
     try:
         pd = pathod.Pathod(
             (args.address, args.port),
+            craftanchor = args.craftanchor,
             ssloptions = ssl,
             staticdir = args.staticdir,
             anchors = alst,
