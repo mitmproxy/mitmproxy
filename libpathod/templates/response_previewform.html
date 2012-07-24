@@ -12,6 +12,43 @@
     <a href="#" id="submitspec" class="btn">go to</a>
     {% endif %}
 </form>
+
+<a data-toggle="collapse" data-target="#responseexamples">more examples...</a>
+<div id="responseexamples" class="collapse">
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td><a href="/response_preview?spec=200">200</a></td>
+                <td>A basic HTTP 200 response</td>
+            </tr>
+        </tbody>
+        <tbody >
+            <tr>
+                <td><a href="/response_preview?spec=200:b@100">200:b@100</a></td>
+                <td>100 random bytes as the body</td>
+            </tr>
+        </tbody>
+        <tbody >
+            <tr>
+                <td><a href='/response_preview?spec=200:b@100:h"Server"="&apos;;drop table servers;"'>200:b@100:h"Etag"="';drop table servers;"</a></td>
+                <td>Add a Server header</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr>
+                <td><a href="/response_preview?spec=200:b@100:dr">200:b@100:dr</a></td>
+                <td>Drop the connection randomly</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr>
+                <td><a href="/response_preview?spec=200:b@100,ascii:ir,@1">200:b@100,ascii:ir,@1</a></td>
+                <td>100 ASCII bytes as the body, and randomly inject a random byte</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 <script>
     $(function(){
         {% if not nocraft %}

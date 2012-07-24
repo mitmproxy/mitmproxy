@@ -9,3 +9,39 @@
     >
     <input type="submit" class="btn" value="preview">
 </form>
+
+<a data-toggle="collapse" data-target="#requestexamples">more examples...</a>
+<div id="requestexamples" class="collapse">
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td><a href="/request_preview?spec=get:/">get:/</a></td>
+                <td>Get path /</td>
+            </tr>
+        </tbody>
+        <tbody >
+            <tr>
+                <td><a href="/request_preview?spec=get:/:b@100">get:/:b@100</a></td>
+                <td>100 random bytes as the body</td>
+            </tr>
+        </tbody>
+        <tbody >
+            <tr>
+                <td><a href='/request_preview?spec=get:/:h"User-Agent"="&apos;;drop table browsers;"'>get:/:h"User-Agent"="';drop table browsers;"</a></td>
+                <td>Add a User-Agent header</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr>
+                <td><a href="/request_preview?spec=get:/:b@100:dr">get:/:b@100:dr</a></td>
+                <td>Drop the connection randomly</td>
+            </tr>
+        </tbody>
+        <tbody>
+            <tr>
+                <td><a href="/request_preview?spec=get:/:b@100,ascii:ir,@1">get:/:b@100,ascii:ir,@1</a></td>
+                <td>100 ASCII bytes as the body, and randomly inject a random byte</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
