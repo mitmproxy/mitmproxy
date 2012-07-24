@@ -21,18 +21,14 @@
     <table class="table table-bordered">
         <tbody >
             <tr>
-                <td>
-                    h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a>
-                </td>
+                <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
                 <td>
                     Set a header. 
                 </td>
             </tr>
 
             <tr>
-                <td> 
-                    b<a href="#valuespec">VALUE</a>
-                </td>
+                <td> b<a href="#valuespec">VALUE</a> </td>
                 <td>
                     Set the body. When the body is set, pathod will
                     automatically set the appropriate Content-Length header.
@@ -40,9 +36,7 @@
             </tr>
 
             <tr>
-                <td>
-                    c<a href="#valuespec">VALUE</a>
-                </td>
+                <td> c<a href="#valuespec">VALUE</a> </td>
                 <td>
                     A shortcut for setting the Content-Type header. Equivalent to
                     h"Content-Type"=VALUE
@@ -50,18 +44,14 @@
             </tr>
 
             <tr>
-                <td>
-                    i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a>
-                </td>
+                <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
                 <td>
                     Inject the specified value at the offset. 
                 </td>
             </tr>
 
             <tr>
-                <td>
-                    l<a href="#valuespec">VALUE</a>
-                </td>
+                <td> l<a href="#valuespec">VALUE</a> </td>
                 <td>
                     A shortcut for setting the Location header. Equivalent to
                     h"Location"=VALUE
@@ -69,18 +59,14 @@
             </tr>
 
             <tr>
-                <td>
-                    d<a href="#offsetspec">OFFSET</a>
-                </td>
+                <td> d<a href="#offsetspec">OFFSET</a> </td>
                 <td>
                     Disconnect after OFFSET bytes. 
                 </td>
             </tr>
 
             <tr>
-                <td>
-                    pSECONDS,<a href="#offsetspec">OFFSET</a>
-                </td>
+                <td> pSECONDS,<a href="#offsetspec">OFFSET</a> </td>
                 <td>
                     Pause for SECONDS seconds after OFFSET bytes. SECONDS can
                     be an integer or "f" to pause forever. 
@@ -88,9 +74,7 @@
             </tr>
 
             <tr>
-                <td>
-                    r
-                </td>
+                <td> r </td>
                 <td>
                     Set the "raw" flag on this response. Pathod will not
                     calculate a Content-Length header if a body is set, or add
@@ -106,6 +90,69 @@
     <div class="page-header">
        <h1>Requests</h1>
     </div>
+
+    <p>The general form of a request is as follows:</p>
+        
+    <pre class="example">method:path:[colon-separated list of features]</pre></p>
+
+    <table class="table table-bordered">
+        <tbody >
+            <tr>
+                <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
+                <td>
+                    Set a header. 
+                </td>
+            </tr>
+
+            <tr>
+                <td> b<a href="#valuespec">VALUE</a> </td>
+                <td>
+                    Set the body. When the body is set, pathod will
+                    automatically set the appropriate Content-Length header.
+                </td>
+            </tr>
+
+            <tr>
+                <td> c<a href="#valuespec">VALUE</a> </td>
+                <td>
+                    A shortcut for setting the Content-Type header. Equivalent to
+                    h"Content-Type"=VALUE
+                </td>
+            </tr>
+
+            <tr>
+                <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
+                <td>
+                    Inject the specified value at the offset. 
+                </td>
+            </tr>
+
+            <tr>
+                <td> d<a href="#offsetspec">OFFSET</a> </td>
+                <td>
+                    Disconnect after OFFSET bytes. 
+                </td>
+            </tr>
+
+            <tr>
+                <td> pSECONDS,<a href="#offsetspec">OFFSET</a> </td>
+                <td>
+                    Pause for SECONDS seconds after OFFSET bytes. SECONDS can
+                    be an integer or "f" to pause forever. 
+                </td>
+            </tr>
+
+            <tr>
+                <td> r </td>
+                <td>
+                    Set the "raw" flag on this response. Pathod will not
+                    calculate a Content-Length header if a body is set, or add
+                    a Date header to the response.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
 </section>
 
 
