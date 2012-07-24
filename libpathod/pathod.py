@@ -206,14 +206,15 @@ class Pathod(tcp.TCPServer):
         h.finish()
 
     def add_log(self, d):
-        lock = threading.Lock()
-        with lock:
-            d["id"] = self.logid
-            self.log.insert(0, d)
-            if len(self.log) > self.LOGBUF:
-                self.log.pop()
-            self.logid += 1
-        return d["id"]
+        if not self.noapi:
+            lock = threading.Lock()
+            with lock:
+                d["id"] = self.logid
+                self.log.insert(0, d)
+                if len(self.log) > self.LOGBUF:
+                    self.log.pop()
+                self.logid += 1
+            return d["id"]
 
     def clear_log(self):
         lock = threading.Lock()
