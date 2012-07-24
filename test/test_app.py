@@ -59,6 +59,3 @@ class TestApp(tutils.DaemonTests):
         assert r.status_code == 200
         assert 'Request' in r.content
 
-
-
-
