@@ -5,6 +5,7 @@ import requests
 
 class DaemonTests:
     noweb = False
+    noapi = False
     ssl = False
     @classmethod
     def setUpAll(self):
@@ -13,7 +14,8 @@ class DaemonTests:
             anchors=[("/anchor/.*", "202")],
             ssl = self.ssl,
             sizelimit=1*1024*1024,
-            noweb = self.noweb
+            noweb = self.noweb,
+            noapi = self.noapi
         )
 
     @classmethod
@@ -21,7 +23,8 @@ class DaemonTests:
         self.d.shutdown()
 
     def setUp(self):
-        self.d.clear_log()
+        if not (self.noweb or self.noapi):
+            self.d.clear_log()
 
     def getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"

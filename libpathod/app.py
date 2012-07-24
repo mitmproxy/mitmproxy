@@ -116,7 +116,7 @@ def _preview(is_request):
 @app.route('/response_preview')
 def response_preview():
     return _preview(False)
-    
+
 
 @app.route('/request_preview')
 def request_preview():

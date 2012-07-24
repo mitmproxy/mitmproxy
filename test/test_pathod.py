@@ -29,13 +29,18 @@ class TestPathod:
 
 class TestNoWeb(tutils.DaemonTests):
     noweb = True
-    def setUp(self):
-        # Over ride log clearing
-        pass
-
     def test_noweb(self):
         assert self.get("200").status_code == 200
         assert self.getpath("/").status_code == 800
+
+
+class TestNoApi(tutils.DaemonTests):
+    noapi = True
+    def test_noapi(self):
+        assert self.getpath("/log").status_code == 404
+        r = self.getpath("/")
+        assert r.status_code == 200
+        assert not "Log" in r.content
 
 
 class CommonTests(tutils.DaemonTests):
