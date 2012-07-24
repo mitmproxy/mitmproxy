@@ -86,6 +86,17 @@
                     be an integer or "f" to pause forever. 
                 </td>
             </tr>
+
+            <tr>
+                <td>
+                    r
+                </td>
+                <td>
+                    Set the "raw" flag on this response. Pathod will not
+                    calculate a Content-Length header if a body is set, or add
+                    a Date header to the response.
+                </td>
+            </tr>
         </tbody>
     </table>
 </section>
@@ -238,7 +249,7 @@
                 </tr>
                 <tr>
                     <td>octdigits</td>
-                    <td>0-8</td>
+                    <td>0-7</td>
                 </tr>
                 <tr>
                     <td>punctuation</td>
