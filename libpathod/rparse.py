@@ -22,7 +22,7 @@ class ParseException(Exception):
         return "%s\n%s"%(self.s, " "*(self.col-1) + "^")
 
     def __str__(self):
-        return "%s at offset %s of %s"%(self.msg, self.col, repr(self.s))
+        return "%s at char %s"%(self.msg, self.col)
 
 
 def actions_log(lst):

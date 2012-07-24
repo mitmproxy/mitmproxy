@@ -17,6 +17,11 @@ def test_data_path():
     tutils.raises(ValueError, utils.data.path, "nonexistent")
 
 
+def test_inner_repr():
+    assert utils.inner_repr("\x66") == "\x66"
+    assert utils.inner_repr(u"foo") == "foo"
+
+
 def test_escape_unprintables():
     s = "".join([chr(i) for i in range(255)])
     e = utils.escape_unprintables(s)
