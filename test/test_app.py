@@ -59,3 +59,7 @@ class TestApp(tutils.DaemonTests):
         assert r.status_code == 200
         assert 'Request' in r.content
 
+        r = self.getpath("/request_preview", params=dict(spec=""))
+        assert r.status_code == 200
+        assert 'empty spec' in r.content
+

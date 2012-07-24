@@ -82,12 +82,17 @@ def _preview(is_request):
         template = "response_preview.html"
 
     spec = request.args["spec"]
+
     args = dict(
         spec = spec,
         section = "main",
         syntaxerror = None,
         error = None
     )
+    if not spec.strip():
+        args["error"] = "Can't parse an empty spec."
+        return render(template, **args)
+
     try:
         if is_request:
             r = rparse.parse_request(app.config["pathod"].request_settings, spec)
