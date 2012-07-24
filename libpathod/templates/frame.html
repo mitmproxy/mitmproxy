@@ -38,7 +38,9 @@
           <div class="nav-collapse">
             <ul class="nav">
               <li {% if section== "main" %} class="active" {% endif %}><a href="/">home</a></li>
+              {% if not noapi %}
               <li {% if section== "log" %} class="active" {% endif %}><a href="/log">log</a></li>
+              {% endif %}
               <li class="dropdown {% if section== "docs" %}active{% endif %}">
                 <a class="dropdown-toggle" data-toggle="dropdown">
                     docs

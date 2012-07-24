@@ -26,35 +26,42 @@ def api():
         return "OK"
 
 
+def render(s, **kwargs):
+    kwargs["noapi"] = app.config["pathod"].noapi
+    return render_template(s, **kwargs)
+
+
 @app.route('/')
 @app.route('/index.html')
 def index():
-    return render_template("index.html", section="main")
+    return render("index.html", section="main")
 
 
 @app.route('/docs/pathod')
 def docs_pathod():
-    return render_template("docs_pathod.html", section="docs")
+    return render("docs_pathod.html", section="docs")
 
 
 @app.route('/docs/language')
 def docs_language():
-    return render_template("docs_lang.html", section="docs")
+    return render("docs_lang.html", section="docs")
 
 
 @app.route('/docs/pathoc')
 def docs_pathoc():
-    return render_template("docs_pathoc.html", section="docs")
+    return render("docs_pathoc.html", section="docs")
 
 
 @app.route('/docs/test')
 def docs_test():
-    return render_template("docs_test.html", section="docs")
+    return render("docs_test.html", section="docs")
 
 
 @app.route('/log')
 def log():
-    return render_template("log.html", section="log", log=app.config["pathod"].get_log())
+    if app.config["pathod"].noapi:
+        abort(404)
+    return render("log.html", section="log", log=app.config["pathod"].get_log())
 
 
 @app.route('/log/<int:lid>')
@@ -63,7 +70,7 @@ def onelog(lid):
     if not item:
         abort(404)
     l = pprint.pformat(item)
-    return render_template("onelog.html", section="log", alog=l, lid=lid)
+    return render("onelog.html", section="log", alog=l, lid=lid)
 
 
 @app.route('/preview')
@@ -80,9 +87,9 @@ def preview():
     except rparse.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
-        return render_template("preview.html", **args)
+        return render("preview.html", **args)
 
     s = cStringIO.StringIO()
     r.serve(s, check=app.config["pathod"].check_size)
     args["output"] = utils.escape_unprintables(s.getvalue())
-    return render_template("preview.html", **args)
+    return render("preview.html", **args)
