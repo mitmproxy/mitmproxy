@@ -73,8 +73,8 @@ def onelog(lid):
     return render("onelog.html", section="log", alog=l, lid=lid)
 
 
-@app.route('/preview')
-def preview():
+@app.route('/response_preview')
+def response_preview():
     spec = request.args["spec"]
     args = dict(
         spec = spec,
@@ -87,10 +87,33 @@ def preview():
     except rparse.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
-        return render("preview.html", **args)
+        return render("preview_response.html", **args)
 
     s = cStringIO.StringIO()
     r.preview_safe()
     r.serve(s, check=app.config["pathod"].check_size)
     args["output"] = utils.escape_unprintables(s.getvalue())
-    return render("preview.html", **args)
+    return render("preview_response.html", **args)
+
+
+@app.route('/request_preview')
+def request_preview():
+    spec = request.args["spec"]
+    args = dict(
+        spec = spec,
+        section = "main",
+        syntaxerror = None,
+        error = None
+    )
+    try:
+        r = rparse.parse_request(app.config["pathod"].request_settings, spec)
+    except rparse.ParseException, v:
+        args["syntaxerror"] = str(v)
+        args["marked"] = v.marked()
+        return render("preview_request.html", **args)
+
+    s = cStringIO.StringIO()
+    r.preview_safe()
+    r.serve(s, check=app.config["pathod"].check_size, host="example.com")
+    args["output"] = utils.escape_unprintables(s.getvalue())
+    return render("preview_request.html", **args)

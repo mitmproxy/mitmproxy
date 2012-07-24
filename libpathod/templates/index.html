@@ -1,29 +1,33 @@
 {% extends "frame.html" %}
 {% block body %}  
-{% include "previewform.html" %}
 
 <div class="hero-unit">
-<h1>Tools for testing and torturing HTTP clients, servers and proxies.</h1>
+<h1>Testing and torturing HTTP clients and servers.</h1>
 </div>
 
 <div class="row">
-    <div class="span4">
+    <div class="span6">
         <div class="well">
             <h1> <a href="/docs/pathod">pathod</a> </h1>
 
             A pathological web daemon.
 
+            {% include "response_previewform.html" %}
         </div>
     </div>
-    <div class="span4">
+    <div class="span6">
         <div class="well">
             <h1> <a href="/docs/pathoc">pathoc</a> </h1>
 
             A perverse HTTP client.
 
+            {% include "request_previewform.html" %}
         </div>
     </div>
-    <div class="span4">
+</div>
+
+<div class="row">
+    <div class="span12">
         <div class="well">
             <h1> <a href="/docs/test">libpathod.test</a> </h1>
 
@@ -32,6 +36,5 @@
         </div>
     </div>
 </div>
-
 
 {% endblock %}  
