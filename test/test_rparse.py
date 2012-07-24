@@ -210,7 +210,7 @@ class TestInject:
     def test_serve(self):
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400:i0,'foo'")
-        assert r.serve(s)
+        assert r.serve(s, None)
 
 
 class TestShortcuts:
@@ -262,7 +262,7 @@ class TestParseRequest:
     def test_render(self):
         s = cStringIO.StringIO()
         r = rparse.parse_request({}, "GET:'/foo'")
-        assert r.serve(s)
+        assert r.serve(s, None, "foo.com")
 
     def test_str(self):
         r = rparse.parse_request({}, 'GET:"/foo"')
@@ -438,19 +438,19 @@ class TestResponse:
     def test_render(self):
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400'msg'")
-        assert r.serve(s)
+        assert r.serve(s, None)
 
     def test_raw(self):
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400:b'foo'")
-        r.serve(s)
+        r.serve(s, None)
         v = s.getvalue()
         assert "Content-Length" in v
         assert "Date" in v
 
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400:b'foo':r")
-        r.serve(s)
+        r.serve(s, None)
         v = s.getvalue()
         assert not "Content-Length" in v
         assert not "Date" in v
@@ -458,7 +458,7 @@ class TestResponse:
     def test_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
-            x.serve(s)
+            x.serve(s, None)
             assert x.length() == len(s.getvalue())
         testlen(rparse.parse_response({}, "400'msg'"))
         testlen(rparse.parse_response({}, "400'msg':h'foo'='bar'"))
@@ -467,7 +467,7 @@ class TestResponse:
     def test_effective_length(self):
         def testlen(x, actions):
             s = cStringIO.StringIO()
-            x.serve(s)
+            x.serve(s, None)
             assert x.effective_length(actions) == len(s.getvalue())
         actions = [
 

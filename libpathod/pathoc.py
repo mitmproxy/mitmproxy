@@ -20,7 +20,7 @@ class Pathoc(tcp.TCPClient):
         tcp.TCPClient.__init__(self, host, port)
         self.settings = dict(
             staticdir = os.getcwd(),
-            unconstrained_file_access = True
+            unconstrained_file_access = True,
         )
 
     def request(self, spec):
@@ -31,7 +31,7 @@ class Pathoc(tcp.TCPClient):
             rparse.FileAccessDenied.
         """
         r = rparse.parse_request(self.settings, spec)
-        ret = r.serve(self.wfile)
+        ret = r.serve(self.wfile, None, self.host)
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
 
@@ -43,7 +43,7 @@ class Pathoc(tcp.TCPClient):
         for i in reqs:
             try:
                 r = rparse.parse_request(self.settings, i)
-                req = r.serve(self.wfile)
+                req = r.serve(self.wfile, None, self.host)
                 if reqdump:
                     print >> fp, "\n>>", req["method"], repr(req["path"])
                     for a in req["actions"]:

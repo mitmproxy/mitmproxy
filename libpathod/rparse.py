@@ -541,7 +541,7 @@ class Message:
                 l += len(i[2])
         return l
 
-    def serve(self, fp, check, is_request):
+    def serve(self, fp, check, request_host):
         """
             fp: The file pointer to write to.
 
@@ -550,9 +550,11 @@ class Message:
             otherwise the return is treated as an error message to be sent to
             the client, and service stops.
 
-            is_request: Is this a request? If False, we assume it's a response.
-            Used to decide what standard modifications to make if raw is not
-            set.
+            request_host: If this a request, this is the connecting host. If
+            None, we assume it's a response. Used to decide what standard
+            modifications to make if raw is not set.
+
+            Calling this function may modify the object.
         """
         started = time.time()
         if not self.raw:
@@ -563,8 +565,15 @@ class Message:
                         LiteralGenerator(str(len(self.body))),
                     )
                 )
-            if is_request:
-                pass
+            if request_host:
+                if not utils.get_header("Host", self.headers):
+                    self.headers.append(
+                        (
+                            LiteralGenerator("Host"),
+                            LiteralGenerator(request_host)
+                        )
+                    )
+
             else:
                 if not utils.get_header("Date", self.headers):
                     self.headers.append(
@@ -706,8 +715,8 @@ class CraftedRequest(Request):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, fp, check=None):
-        d = Request.serve(self, fp, check, True)
+    def serve(self, fp, check, host):
+        d = Request.serve(self, fp, check, host)
         d["spec"] = self.spec
         return d
 
@@ -719,8 +728,8 @@ class CraftedResponse(Response):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, fp, check=None):
-        d = Response.serve(self, fp, check, False)
+    def serve(self, fp, check):
+        d = Response.serve(self, fp, check, None)
         d["spec"] = self.spec
         return d
 
@@ -738,7 +747,7 @@ class PathodErrorResponse(Response):
         ]
 
     def serve(self, fp, check=None):
-        d = Response.serve(self, fp, check, False)
+        d = Response.serve(self, fp, check, None)
         d["internal"] = True
         return d
 
