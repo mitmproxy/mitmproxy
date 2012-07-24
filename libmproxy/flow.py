@@ -1482,7 +1482,7 @@ class FlowReader:
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
                 yield Flow._from_state(data)
-        except ValueError:
+        except ValueError, v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':
                 return

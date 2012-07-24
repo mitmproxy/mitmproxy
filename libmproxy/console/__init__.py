@@ -548,7 +548,9 @@ class ConsoleMaster(flow.FlowMaster):
 
         if self.options.rfile:
             ret = self.load_flows(self.options.rfile)
-            if ret:
+            if ret and self.state.flow_count():
+                self.add_event("File truncated or corrupted. Loaded as many flows as possible.")
+            else:
                 self.shutdown()
                 print >> sys.stderr, "Could not load file:", ret
                 sys.exit(1)
@@ -653,14 +655,16 @@ class ConsoleMaster(flow.FlowMaster):
             fr = flow.FlowReader(f)
         except IOError, v:
             return v.strerror
+        reterr = None
         try:
             flow.FlowMaster.load_flows(self, fr)
         except flow.FlowReadError, v:
-            return v.strerror
+            reterr = v.strerror
         f.close()
         if self.flow_list_walker:
             self.sync_list_view()
             self.focus_current()
+        return reterr
 
     def path_prompt(self, prompt, text, callback, *args):
         self.statusbar.path_prompt(prompt, text)
