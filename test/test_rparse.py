@@ -444,12 +444,16 @@ class TestResponse:
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400:b'foo'")
         r.serve(s)
-        assert "Content-Length" in s.getvalue()
+        v = s.getvalue()
+        assert "Content-Length" in v
+        assert "Date" in v
 
         s = cStringIO.StringIO()
         r = rparse.parse_response({}, "400:b'foo':r")
         r.serve(s)
-        assert not "Content-Length" in s.getvalue()
+        v = s.getvalue()
+        assert not "Content-Length" in v
+        assert not "Date" in v
 
     def test_length(self):
         def testlen(x):

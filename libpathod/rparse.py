@@ -1,6 +1,8 @@
 import operator, string, random, mmap, os, time
+from email.utils import formatdate
 import contrib.pyparsing as pp
 from netlib import http_status, tcp
+
 import utils
 
 BLOCKSIZE = 1024
@@ -539,7 +541,7 @@ class Message:
                 l += len(i[2])
         return l
 
-    def serve(self, fp, check):
+    def serve(self, fp, check, is_request):
         """
             fp: The file pointer to write to.
 
@@ -547,15 +549,30 @@ class Message:
             values have been calculated). If it returns False service proceeds,
             otherwise the return is treated as an error message to be sent to
             the client, and service stops.
+
+            is_request: Is this a request? If False, we assume it's a response.
+            Used to decide what standard modifications to make if raw is not
+            set.
         """
         started = time.time()
-        if self.body and not self.raw and not utils.get_header("Content-Length", self.headers):
-            self.headers.append(
-                (
-                    LiteralGenerator("Content-Length"),
-                    LiteralGenerator(str(len(self.body))),
+        if not self.raw:
+            if self.body and not utils.get_header("Content-Length", self.headers):
+                self.headers.append(
+                    (
+                        LiteralGenerator("Content-Length"),
+                        LiteralGenerator(str(len(self.body))),
+                    )
                 )
-            )
+            if is_request:
+                pass
+            else:
+                if not utils.get_header("Date", self.headers):
+                    self.headers.append(
+                        (
+                            LiteralGenerator("Date"),
+                            LiteralGenerator(formatdate(timeval=None, localtime=False, usegmt=True))
+                        )
+                    )
 
         hdrs = []
         for k, v in self.headers:
@@ -690,7 +707,7 @@ class CraftedRequest(Request):
             i.accept(settings, self)
 
     def serve(self, fp, check=None):
-        d = Request.serve(self, fp, check)
+        d = Request.serve(self, fp, check, True)
         d["spec"] = self.spec
         return d
 
@@ -703,7 +720,7 @@ class CraftedResponse(Response):
             i.accept(settings, self)
 
     def serve(self, fp, check=None):
-        d = Response.serve(self, fp, check)
+        d = Response.serve(self, fp, check, False)
         d["spec"] = self.spec
         return d
 
@@ -716,13 +733,12 @@ class PathodErrorResponse(Response):
         self.body = LiteralGenerator("pathod error: " + (body or msg))
         self.headers = [
             (
-                LiteralGenerator("Content-Type"),
-                LiteralGenerator("text/plain")
+                LiteralGenerator("Content-Type"), LiteralGenerator("text/plain")
             ),
         ]
 
     def serve(self, fp, check=None):
-        d = Response.serve(self, fp, check)
+        d = Response.serve(self, fp, check, False)
         d["internal"] = True
         return d
 
