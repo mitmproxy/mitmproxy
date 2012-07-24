@@ -226,13 +226,13 @@ class TestPauses:
         assert v.seconds == 10
         assert v.offset == 10
 
-        v = e.parseString("pf,10")[0]
+        v = e.parseString("p10,f")[0]
         assert v.seconds == "f"
 
-        v = e.parseString("pf,r")[0]
+        v = e.parseString("pr,f")[0]
         assert v.offset == "r"
 
-        v = e.parseString("pf,a")[0]
+        v = e.parseString("pa,f")[0]
         assert v.offset == "a"
 
     def test_request(self):
@@ -311,15 +311,15 @@ class TestParseResponse:
         assert utils.get_header("foo", r.headers)
 
     def test_parse_pause_before(self):
-        r = rparse.parse_response({}, "400:p10,0")
+        r = rparse.parse_response({}, "400:p0,10")
         assert (0, "pause", 10) in r.actions
 
     def test_parse_pause_after(self):
-        r = rparse.parse_response({}, "400:p10,a")
+        r = rparse.parse_response({}, "400:pa,10")
         assert ("a", "pause", 10) in r.actions
 
     def test_parse_pause_random(self):
-        r = rparse.parse_response({}, "400:p10,r")
+        r = rparse.parse_response({}, "400:pr,10")
         assert ("r", "pause", 10) in r.actions
 
     def test_parse_stress(self):
@@ -397,7 +397,7 @@ class TestWriteValues:
         r.serve(s, None)
 
         s = cStringIO.StringIO()
-        r = rparse.parse_response({}, "400:p0,a")
+        r = rparse.parse_response({}, "400:pa,0")
         r.serve(s, None)
 
         s = cStringIO.StringIO()

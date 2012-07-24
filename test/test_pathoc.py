@@ -31,7 +31,7 @@ class TestDaemon:
 
         s = cStringIO.StringIO()
         c.print_requests(
-            ["get:'/p/200:p10,0'"], True, True, s
+            ["get:'/p/200:p0,10'"], True, True, s
         )
         assert "Timeout" in s.getvalue()
 

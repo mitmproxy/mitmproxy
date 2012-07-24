@@ -92,19 +92,19 @@ various other goodies. Try it by visiting the server root:</p>
     for 120 seconds after sending 50 bytes (counted from the first byte of the HTTP
     response):</p>
 
-    <pre class="example">200:b@1m:p120,50</pre>
+    <pre class="example">200:b@1m:p50,120</pre>
 
     <p>If that's not long enough, we can tell pathod to hang forever:</p>
 
-    <pre class="example">200:b@1m:p120,f</pre>
+    <pre class="example">200:b@1m:pf,120</pre>
 
     <p>Or to send all data, and then hang without disconnecting:</p>
 
-    <pre class="example">200:b@1m:p120,a</pre>
+    <pre class="example">200:b@1m:pa,120</pre>
 
     <p>We can also ask pathod to hang randomly:</p>
 
-    <pre class="example">200:b@1m:pr,a</pre>
+    <pre class="example">200:b@1m:pr,10</pre>
 
     <p>There is a similar mechanism for dropping connections mid-response. So, we can
     tell pathod to disconnect after sending 50 bytes:</p>

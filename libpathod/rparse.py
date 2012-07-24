@@ -413,20 +413,20 @@ class Method:
 
 
 class PauseAt:
-    def __init__(self, seconds, offset):
-        self.seconds, self.offset = seconds, offset
+    def __init__(self, offset, seconds):
+        self.offset, self.seconds = offset, seconds
 
     @classmethod
     def expr(klass):
         e = pp.Literal("p").suppress()
+        e += Offset
+        e += pp.Literal(",").suppress()
         e += pp.MatchFirst(
                     [
                         v_integer,
                         pp.Literal("f")
                     ]
                 )
-        e += pp.Literal(",").suppress()
-        e += Offset
         return e.setParseAction(lambda x: klass(*x))
 
     def accept(self, settings, r):
