@@ -649,7 +649,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.last_saveload = path
         path = os.path.expanduser(path)
         try:
-            f = file(path, "r")
+            f = file(path, "rb")
             fr = flow.FlowReader(f)
         except IOError, v:
             return v.strerror
