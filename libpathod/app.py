@@ -90,6 +90,7 @@ def preview():
         return render("preview.html", **args)
 
     s = cStringIO.StringIO()
+    r.preview_safe()
     r.serve(s, check=app.config["pathod"].check_size)
     args["output"] = utils.escape_unprintables(s.getvalue())
     return render("preview.html", **args)

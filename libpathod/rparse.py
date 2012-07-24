@@ -527,6 +527,12 @@ class Message:
         l += len(self.body)
         return l
 
+    def preview_safe(self):
+        """
+            Modify this message to be safe for previews.
+        """
+        self.actions = [i for i in self.actions if i[1] != "pause"]
+
     def effective_length(self, actions):
         """
             Calculate the length of the base message with all applied actions.
