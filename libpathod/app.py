@@ -28,6 +28,8 @@ def api():
 
 def render(s, **kwargs):
     kwargs["noapi"] = app.config["pathod"].noapi
+    kwargs["nocraft"] = app.config["pathod"].nocraft
+    kwargs["craftanchor"] = app.config["pathod"].craftanchor
     return render_template(s, **kwargs)
 
 
@@ -87,13 +89,13 @@ def response_preview():
     except rparse.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
-        return render("preview_response.html", **args)
+        return render("response_preview.html", **args)
 
     s = cStringIO.StringIO()
     r.preview_safe()
     r.serve(s, check=app.config["pathod"].check_size)
     args["output"] = utils.escape_unprintables(s.getvalue())
-    return render("preview_response.html", **args)
+    return render("response_preview.html", **args)
 
 
 @app.route('/request_preview')
@@ -110,10 +112,10 @@ def request_preview():
     except rparse.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
-        return render("preview_request.html", **args)
+        return render("request_preview.html", **args)
 
     s = cStringIO.StringIO()
     r.preview_safe()
     r.serve(s, check=app.config["pathod"].check_size, host="example.com")
     args["output"] = utils.escape_unprintables(s.getvalue())
-    return render("preview_request.html", **args)
+    return render("request_preview.html", **args)

@@ -434,7 +434,7 @@ class DisconnectAt:
     @classmethod
     def expr(klass):
         e = pp.Literal("d").suppress()
-        e = e + pp.MatchFirst(
+        e += e + pp.MatchFirst(
                     [
                         v_integer,
                         pp.Literal("r")
