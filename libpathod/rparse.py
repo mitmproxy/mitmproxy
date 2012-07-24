@@ -86,6 +86,15 @@ def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
                     send_chunk(fp, a[2], blocksize, 0, len(a[2]))
             send_chunk(fp, v, blocksize, offset, len(v))
             sofar += len(v)
+        # Remainders
+        while actions:
+            a = actions.pop()
+            if a[1] == "pause":
+                time.sleep(a[2])
+            elif a[1] == "disconnect":
+                return True
+            elif a[1] == "inject":
+                send_chunk(fp, a[2], blocksize, 0, len(a[2]))
     except tcp.NetLibDisconnect: # pragma: no cover
         return True
 
@@ -434,12 +443,7 @@ class DisconnectAt:
     @classmethod
     def expr(klass):
         e = pp.Literal("d").suppress()
-        e += e + pp.MatchFirst(
-                    [
-                        v_integer,
-                        pp.Literal("r")
-                    ]
-                )
+        e += Offset
         return e.setParseAction(lambda x: klass(*x))
 
 

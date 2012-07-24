@@ -391,6 +391,20 @@ class TestWriteValues:
             rparse.write_values(s, tst[:], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == "".join(tst)
 
+    def test_write_values_after(self):
+        s = cStringIO.StringIO()
+        r = rparse.parse_response({}, "400:da")
+        r.serve(s, None)
+
+        s = cStringIO.StringIO()
+        r = rparse.parse_response({}, "400:p0,a")
+        r.serve(s, None)
+
+        s = cStringIO.StringIO()
+        r = rparse.parse_response({}, "400:ia,'xx'")
+        r.serve(s, None)
+        assert s.getvalue().endswith('xx')
+
 
 def test_ready_actions():
     x = [(0, 5)]
