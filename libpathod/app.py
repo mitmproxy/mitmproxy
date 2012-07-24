@@ -75,8 +75,12 @@ def onelog(lid):
     return render("onelog.html", section="log", alog=l, lid=lid)
 
 
-@app.route('/response_preview')
-def response_preview():
+def _preview(is_request):
+    if is_request:
+        template = "request_preview.html"
+    else:
+        template = "response_preview.html"
+
     spec = request.args["spec"]
     args = dict(
         spec = spec,
@@ -85,37 +89,36 @@ def response_preview():
         error = None
     )
     try:
-        r = rparse.parse_response(app.config["pathod"].request_settings, spec)
+        if is_request:
+            r = rparse.parse_request(app.config["pathod"].request_settings, spec)
+        else:
+            r = rparse.parse_response(app.config["pathod"].request_settings, spec)
     except rparse.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
-        return render("response_preview.html", **args)
+        return render(template, **args)
+    except rparse.FileAccessDenied:
+        args["error"] = "File access is disabled."
+        return render(template, **args)
 
     s = cStringIO.StringIO()
     r.preview_safe()
-    r.serve(s, check=app.config["pathod"].check_size)
-    args["output"] = utils.escape_unprintables(s.getvalue())
-    return render("response_preview.html", **args)
 
+    if is_request:
+        r.serve(s, check=app.config["pathod"].check_size, host="example.com")
+    else:
+        r.serve(s, check=app.config["pathod"].check_size)
+
+    args["output"] = utils.escape_unprintables(s.getvalue())
+    return render(template, **args)
+
+
+@app.route('/response_preview')
+def response_preview():
+    return _preview(False)
+    
 
 @app.route('/request_preview')
 def request_preview():
-    spec = request.args["spec"]
-    args = dict(
-        spec = spec,
-        section = "main",
-        syntaxerror = None,
-        error = None
-    )
-    try:
-        r = rparse.parse_request(app.config["pathod"].request_settings, spec)
-    except rparse.ParseException, v:
-        args["syntaxerror"] = str(v)
-        args["marked"] = v.marked()
-        return render("request_preview.html", **args)
+    return _preview(True)
 
-    s = cStringIO.StringIO()
-    r.preview_safe()
-    r.serve(s, check=app.config["pathod"].check_size, host="example.com")
-    args["output"] = utils.escape_unprintables(s.getvalue())
-    return render("request_preview.html", **args)
