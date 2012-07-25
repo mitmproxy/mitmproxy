@@ -13,37 +13,50 @@
     {% endif %}
 </form>
 
-<a data-toggle="collapse" data-target="#responseexamples">more examples...</a>
+<a data-toggle="collapse" data-target="#responseexamples">Don't know what to type?</a>
 <div id="responseexamples" class="collapse">
+    <p>Check out the <a href="/docs/language">complete language docs</a>. Here
+    are some examples to get you started:</p>
+
     <table class="table table-bordered">
         <tbody >
             <tr>
                 <td><a href="/response_preview?spec=200">200</a></td>
                 <td>A basic HTTP 200 response</td>
             </tr>
-        </tbody>
-        <tbody >
             <tr>
                 <td><a href="/response_preview?spec=200:b@100">200:b@100</a></td>
                 <td>100 random bytes as the body</td>
             </tr>
-        </tbody>
-        <tbody >
             <tr>
                 <td><a href='/response_preview?spec=200:b@100:h"Server"="&apos;;drop table servers;"'>200:b@100:h"Etag"="';drop table servers;"</a></td>
                 <td>Add a Server header</td>
             </tr>
-        </tbody>
-        <tbody>
             <tr>
                 <td><a href="/response_preview?spec=200:b@100:dr">200:b@100:dr</a></td>
                 <td>Drop the connection randomly</td>
             </tr>
-        </tbody>
-        <tbody>
             <tr>
                 <td><a href="/response_preview?spec=200:b@100,ascii:ir,@1">200:b@100,ascii:ir,@1</a></td>
                 <td>100 ASCII bytes as the body, and randomly inject a random byte</td>
+            </tr>
+            <tr>
+                <td><a href='/response_preview?spec=200:b@1k:c"text/json"'>200:b@1k:c"text/json"</a></td>
+                <td>1k of random bytes, with a text/json content type</td>
+            </tr>
+            <tr>
+                <td><a href='/response_preview?spec=200:b@1k:p50,120'>200:b@1k:p50,120</a></td>
+                <td>1k of random bytes, pause for 120 seconds after 50 bytes</td>
+            </tr>
+            <tr>
+                <td><a href='/response_preview?spec=200:b@1k:pr,f'>200:b@1k:pr,f</a></td>
+                <td>1k of random bytes, but hang forever at a random location</td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="/response_preview?spec=200:b@100:h@1k,ascii_letters='foo'">200:b@100:h@1k,ascii_letters='foo'</a>
+                </td>
+                <td>100 ASCII bytes as the body, randomly generated 100k header name, with the value 'foo'.</td>
             </tr>
         </tbody>
     </table>
