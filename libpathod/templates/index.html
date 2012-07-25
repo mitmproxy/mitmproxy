@@ -13,6 +13,30 @@
             A pathological web daemon.
 
             {% include "response_previewform.html" %}
+
+
+            <h1>public pathod server</h1>
+
+            <p>http://p.pathod.org/<input 
+                    style="width: 15em"
+                    id="publicspec"
+                    name="spec"
+                    class="input-medium search-query"
+                    value="{{spec}}"
+                    placeholder="code[msg]:[features]"
+                >
+                <a href="#" id="submitspec" class="btn">go</a>
+            </p>
+            
+            <p>Please use responsibly. There are some restrictions on the
+            public server.</p>
+            <script>
+                $(function(){
+                    $("#submitspec").click(function(){
+                        document.location = "http://p.pathod.org/" + $("#publicspec").val()
+                    });
+                });
+            </script>
         </div>
     </div>
     <div class="span6">
@@ -22,6 +46,7 @@
             A perverse HTTP client.
 
             {% include "request_previewform.html" %}
+
         </div>
     </div>
 </div>
