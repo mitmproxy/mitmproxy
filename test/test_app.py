@@ -7,6 +7,10 @@ class TestApp(tutils.DaemonTests):
         assert r.status_code == 200
         assert r.content
 
+    def test_about(self):
+        r = self.getpath("/about")
+        assert r.ok
+
     def test_docs(self):
         assert self.getpath("/docs/pathod").status_code == 200
         assert self.getpath("/docs/pathoc").status_code == 200

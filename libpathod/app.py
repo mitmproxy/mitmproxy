@@ -37,7 +37,7 @@ def render(s, **kwargs):
 @app.route('/index.html')
 def index():
     return render("index.html", section="main")
-    j
+
 
 @app.route('/about')
 @app.route('/about.html')
