@@ -510,7 +510,7 @@ class TestResponse:
     def test_render(self):
         r = rparse.parse_response({}, "400:p0,100:dr")
         assert r.actions[0][1] == "pause"
-        r.preview_safe()
+        assert len(r.preview_safe()) == 1
         assert not r.actions[0][1] == "pause"
 
 

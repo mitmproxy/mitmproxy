@@ -17,6 +17,10 @@
 
     <pre>{{ output }}</pre>
 
+    {% if pauses %}
+        <p>Note: pauses are skipped when generating previews!</p>
+    {% endif %}  
+
 {% endif %}  
 {% include "request_previewform.html" %}
 {% endblock %}  

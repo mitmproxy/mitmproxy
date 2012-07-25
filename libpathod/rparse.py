@@ -533,9 +533,11 @@ class Message:
 
     def preview_safe(self):
         """
-            Modify this message to be safe for previews.
+            Modify this message to be safe for previews. Returns a list of elided actions.
         """
+        pauses = [i for i in self.actions if i[1] == "pause"]
         self.actions = [i for i in self.actions if i[1] != "pause"]
+        return pauses
 
     def effective_length(self, actions):
         """

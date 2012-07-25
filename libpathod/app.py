@@ -93,7 +93,8 @@ def _preview(is_request):
         spec = spec,
         section = "main",
         syntaxerror = None,
-        error = None
+        error = None,
+        pauses = None
     )
     if not spec.strip():
         args["error"] = "Can't parse an empty spec."
@@ -113,7 +114,7 @@ def _preview(is_request):
         return render(template, **args)
 
     s = cStringIO.StringIO()
-    r.preview_safe()
+    args["pauses"] = r.preview_safe()
 
     if is_request:
         r.serve(s, check=app.config["pathod"].check_size, host="example.com")
