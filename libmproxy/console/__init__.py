@@ -550,7 +550,7 @@ class ConsoleMaster(flow.FlowMaster):
             ret = self.load_flows(self.options.rfile)
             if ret and self.state.flow_count():
                 self.add_event("File truncated or corrupted. Loaded as many flows as possible.")
-            else:
+            elif not self.state.flow_count():
                 self.shutdown()
                 print >> sys.stderr, "Could not load file:", ret
                 sys.exit(1)
