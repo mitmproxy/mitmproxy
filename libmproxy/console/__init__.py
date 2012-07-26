@@ -960,9 +960,9 @@ class ConsoleMaster(flow.FlowMaster):
 
     def add_event(self, e, level="info"):
         if level == "info":
-            e = urwid.Text(e)
+            e = urwid.Text(str(e))
         elif level == "error":
-            e = urwid.Text(("error", e))
+            e = urwid.Text(("error", str(e)))
 
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:
