@@ -19,7 +19,7 @@ class PathodHandler(tcp.BaseHandler):
         self.sni = connection.get_servername()
 
     def serve_crafted(self, crafted, request_log):
-        response_log = crafted.serve(self.wfile, self.server.check_size)
+        response_log = crafted.serve(self.wfile, self.server.check_policy)
         self.server.add_log(
             dict(
                 type = "crafted",
@@ -97,7 +97,7 @@ class PathodHandler(tcp.BaseHandler):
             return self.serve_crafted(crafted, request_log)
         elif self.server.noweb:
             crafted = rparse.PathodErrorResponse("Access Denied")
-            crafted.serve(self.wfile, self.server.check_size)
+            crafted.serve(self.wfile, self.server.check_policy)
             return False
         else:
             cc = wsgi.ClientConn(self.client_address)
@@ -150,7 +150,7 @@ class Pathod(tcp.TCPServer):
     LOGBUF = 500
     def __init__(   self,
                     addr, ssloptions=None, craftanchor="/p/", staticdir=None, anchors=None,
-                    sizelimit=None, noweb=False, nocraft=False, noapi=False
+                    sizelimit=None, noweb=False, nocraft=False, noapi=False, nohang=False
                 ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
@@ -160,13 +160,16 @@ class Pathod(tcp.TCPServer):
             staticdir: path to a directory of static resources, or None.
             anchors: A list of (regex, spec) tuples, or None.
             sizelimit: Limit size of served data.
+            nocraft: Disable response crafting.
+            noapi: Disable the API.
+            nohang: Disable pauses.
         """
         tcp.TCPServer.__init__(self, addr)
         self.ssloptions = ssloptions
         self.staticdir = staticdir
         self.craftanchor = craftanchor
         self.sizelimit = sizelimit
-        self.noweb, self.nocraft, self.noapi = noweb, nocraft, noapi
+        self.noweb, self.nocraft, self.noapi, self.nohang = noweb, nocraft, noapi, nohang
         if not noapi:
             app.api()
         self.app = app.app
@@ -186,12 +189,14 @@ class Pathod(tcp.TCPServer):
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, aresp))
 
-    def check_size(self, req, actions):
+    def check_policy(self, req, actions):
         """
             A policy check that verifies the request size is withing limits.
         """
         if self.sizelimit and req.effective_length(actions) > self.sizelimit:
             return "Response too large."
+        if self.nohang and any([i[1] == "pause" for i in actions]):
+            return "Pauses have been disabled."
         return False
 
     @property

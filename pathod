@@ -35,6 +35,10 @@ if __name__ == "__main__":
         help='Disable API.'
     )
     parser.add_argument(
+        "--nohang", dest='nohang', default=False, action="store_true",
+        help='Disable pauses during crafted response generation.'
+    )
+    parser.add_argument(
         "--noweb", dest='noweb', default=False, action="store_true",
         help='Disable both web interface and API.'
     )
@@ -100,7 +104,8 @@ if __name__ == "__main__":
             sizelimit = sizelimit,
             noweb = args.noweb,
             nocraft = args.nocraft,
-            noapi = args.noapi
+            noapi = args.noapi, 
+            nohang = args.nohang
         )
     except pathod.PathodError, v:
         parser.error(str(v))

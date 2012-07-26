@@ -6,6 +6,7 @@ import requests
 class DaemonTests:
     noweb = False
     noapi = False
+    nohang = False
     ssl = False
     @classmethod
     def setUpAll(self):
@@ -15,7 +16,8 @@ class DaemonTests:
             ssl = self.ssl,
             sizelimit=1*1024*1024,
             noweb = self.noweb,
-            noapi = self.noapi
+            noapi = self.noapi,
+            nohang = self.nohang
         )
 
     @classmethod

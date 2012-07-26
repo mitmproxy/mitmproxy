@@ -117,9 +117,9 @@ def _preview(is_request):
     args["pauses"] = r.preview_safe()
 
     if is_request:
-        r.serve(s, check=app.config["pathod"].check_size, host="example.com")
+        r.serve(s, check=app.config["pathod"].check_policy, host="example.com")
     else:
-        r.serve(s, check=app.config["pathod"].check_size)
+        r.serve(s, check=app.config["pathod"].check_policy)
 
     args["output"] = utils.escape_unprintables(s.getvalue())
     return render(template, **args)

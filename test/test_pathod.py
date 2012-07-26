@@ -43,6 +43,15 @@ class TestNoApi(tutils.DaemonTests):
         assert not "Log" in r.content
 
 
+class TestNohang(tutils.DaemonTests):
+    nohang = True
+    def test_nohang(self):
+        r = self.get("200:p0,0")
+        assert r.status_code == 800
+        l = self.d.log()[0]
+        assert "Pauses have been disabled" in l["response"]["error"]
+
+
 class CommonTests(tutils.DaemonTests):
     def test_sizelimit(self):
         r = self.get("200:b@1g")
