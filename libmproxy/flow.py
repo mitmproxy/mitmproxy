@@ -1439,13 +1439,13 @@ class FlowMaster(controller.Master):
             for i in self.state._flow_list:
                 if not i.response:
                     self.stream.add(i)
-            self.stream.fo.close()
             self.stop_stream()
 
     def start_stream(self, fp):
         self.stream = FlowWriter(fp)
 
     def stop_stream(self):
+        self.stream.fo.close()
         self.stream = None
 
 
