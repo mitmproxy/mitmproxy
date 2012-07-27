@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import argparse, sys, logging
+import argparse, sys, logging, logging.handlers
 from libpathod import pathod, utils, version
 
 if __name__ == "__main__":
@@ -17,6 +17,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d", dest='staticdir', default=None, type=str,
         help='Directory for static files.'
+    )
+    parser.add_argument(
+        "-f", dest='logfile', default=None, type=str,
+        help='Log file.'
     )
     parser.add_argument(
         "--debug", dest='debug', default=False, action="store_true",
@@ -86,6 +90,10 @@ if __name__ == "__main__":
     )
     if not args.debug:
         logging.disable(logging.DEBUG)
+    if args.logfile:
+        ch = logging.handlers.WatchedFileHandler(args.logfile)
+        root.addHandler(ch)
+
 
     sizelimit = None
     if args.sizelimit:
@@ -104,7 +112,7 @@ if __name__ == "__main__":
             sizelimit = sizelimit,
             noweb = args.noweb,
             nocraft = args.nocraft,
-            noapi = args.noapi, 
+            noapi = args.noapi,
             nohang = args.nohang
         )
     except pathod.PathodError, v:

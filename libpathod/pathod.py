@@ -81,18 +81,22 @@ class PathodHandler(tcp.BaseHandler):
 
         for i in self.server.anchors:
             if i[0].match(path):
+                self.info("Serving anchor: %s"%path)
                 return self.serve_crafted(i[1], request_log)
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
+            self.info("Serving spec: %s"%spec)
             try:
                 crafted = rparse.parse_response(self.server.request_settings, spec)
             except rparse.ParseException, v:
+                self.info("Parse error: %s"%v.msg)
                 crafted = rparse.PathodErrorResponse(
                         "Parse Error",
                         "Error parsing response spec: %s\n"%v.msg + v.marked()
                     )
             except rparse.FileAccessDenied:
+                self.info("File access denied")
                 crafted = rparse.PathodErrorResponse("Access Denied")
             return self.serve_crafted(crafted, request_log)
         elif self.server.noweb:
@@ -100,6 +104,7 @@ class PathodHandler(tcp.BaseHandler):
             crafted.serve(self.wfile, self.server.check_policy)
             return False
         else:
+            self.info("app: %s %s"%(method, path))
             cc = wsgi.ClientConn(self.client_address)
             req = wsgi.Request(cc, "http", method, path, headers, content)
             sn = self.connection.getsockname()
@@ -110,7 +115,6 @@ class PathodHandler(tcp.BaseHandler):
                 version.NAMEVERSION
             )
             app.serve(req, self.wfile)
-            self.debug("%s %s"%(method, path))
             return True
 
     def handle(self):
