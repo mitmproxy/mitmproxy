@@ -5,7 +5,7 @@ from libpathod import pathod, utils, version, rparse
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A pathological HTTP/S daemon.')
     parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
-    parser.add_argument("-l", dest='address', default="0.0.0.0", type=str, help='Listening address.')
+    parser.add_argument("-l", dest='address', default="127.0.0.1", type=str, help='Listening address.')
     parser.add_argument(
         "-a", dest='anchors', default=[], type=str, action="append", metavar="ANCHOR",
         help='Add an anchor. Specified as a string with the form pattern=pagespec'
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         parser.error("%s You probably want to a -d argument."%str(v))
 
     try:
-        print "%s listening on port %s"%(version.NAMEVERSION, pd.port)
+        print "%s listening on %s:%s"%(version.NAMEVERSION, args.address, pd.port)
         pd.serve_forever()
     except KeyboardInterrupt:
         pass
