@@ -1,20 +1,44 @@
 {% extends "frame.html" %}
 {% block body %}  
 
-<div class="hero-unit">
-<h1>Testing and torturing HTTP clients and servers.</h1>
+<div class="row">
+    <div class="span6 bigtitle">
+        <div>
+            <img src="/static/torture.png">
+        </div>
+    </div>
+    <div class="span6 bigtitle">
+        <div>Tormenting HTTP clients and servers</div>
+    </div>
 </div>
 
+<br>
 <div class="row">
     <div class="span6">
         <div class="well">
             <h1> <a href="/docs/pathod">pathod</a> </h1>
 
-            A pathological web daemon.
+            <p>A pathological web daemon.</p>
 
             {% include "response_previewform.html" %}
+        </div>
+    </div>
+    <div class="span6">
+        <div class="well">
+            <h1> <a href="/docs/pathoc">pathoc</a> </h1>
+
+            <p>A perverse HTTP client.</p>
+
+            {% include "request_previewform.html" %}
+
+        </div>
+    </div>
+</div>
 
 
+<div class="row">
+    <div class="span6">
+        <div class="well">
             <h1>public pathod server</h1>
 
             <p>http://p.pathod.org/<input 
@@ -30,6 +54,7 @@
             
             <p>Please use responsibly. There are some restrictions on the
             public server.</p>
+
             <script>
                 $(function(){
                     $("#submitspec").click(function(){
@@ -41,22 +66,9 @@
     </div>
     <div class="span6">
         <div class="well">
-            <h1> <a href="/docs/pathoc">pathoc</a> </h1>
-
-            A perverse HTTP client.
-
-            {% include "request_previewform.html" %}
-
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="span12">
-        <div class="well">
             <h1> <a href="/docs/test">libpathod.test</a> </h1>
 
-            Using pathod and pathoc in your unit tests.
+            <p>Using pathod and pathoc in your unit tests.</p>
 
         </div>
     </div>

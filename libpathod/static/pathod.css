@@ -1,4 +1,21 @@
 
+.fronttable {
+}
+
+.bigtitle {
+    font-weight: bold;
+    font-size: 50px;
+    line-height: 55px;
+    text-align: center;
+    display: table;
+    height: 300px;
+}
+
+.bigtitle>div {
+    display: table-cell;
+    vertical-align: middle;
+}
+
 section {
     margin-top: 50px;
 }
