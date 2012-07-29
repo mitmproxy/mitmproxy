@@ -44,7 +44,7 @@ class Daemon:
 class PaThread(threading.Thread):
     def __init__(self, q, ssl, daemonargs):
         threading.Thread.__init__(self)
-        self.q, self.ssl = q, ssl 
+        self.q, self.ssl = q, ssl
         self.daemonargs = daemonargs
 
     def run(self):

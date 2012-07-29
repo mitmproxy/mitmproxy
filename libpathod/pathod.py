@@ -136,17 +136,7 @@ class PathodHandler(tcp.BaseHandler):
                 return
 
         while not self.finished:
-            try:
-                if not self.handle_request():
-                    return
-            except tcp.NetLibDisconnect: # pragma: no cover
-                self.info("Disconnect")
-                self.server.add_log(
-                    dict(
-                        type = "error",
-                        msg = "Disconnect"
-                    )
-                )
+            if not self.handle_request():
                 return
 
 
@@ -211,8 +201,18 @@ class Pathod(tcp.TCPServer):
 
     def handle_connection(self, request, client_address):
         h = PathodHandler(request, client_address, self)
-        h.handle()
-        h.finish()
+        try:
+            h.handle()
+            h.finish()
+        except tcp.NetLibDisconnect: # pragma: no cover
+            h.info("Disconnect")
+            self.add_log(
+                dict(
+                    type = "error",
+                    msg = "Disconnect"
+                )
+            )
+            return
 
     def add_log(self, d):
         if not self.noapi:
