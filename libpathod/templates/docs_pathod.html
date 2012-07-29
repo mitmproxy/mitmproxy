@@ -8,28 +8,87 @@
     </h1>
 </div>
 
-<p>At pathod's heart is a small, terse language for crafting HTTP responses,
-designed to be easy to specify in a request URL.  The simplest way to use
-pathod is to fire up the daemon, and specify the response behaviour you
-want using this language in the request URL.  Here's a minimal example:</p>
+<p>Pathod is a pathological HTTP daemon, designed to let you craft arbitrarily
+malevolent HTTP responses. It lets you thoroughly exercise the failure modes of
+HTTP clients by creatively violating the standards. HTTP responses are
+specified using a <a href="/docs/language">small, terse language</a>, which
+pathod shares with its evil twin pathoc. </p>
 
-<pre class="example">http://localhost:9999/p/200</pre>
 
-<p>Everything after the "/p/" path component is a response specifier - in this
-case just a vanilla 200 OK response. See the docs below to get (much) fancier.
+<section id="api">
+    <div class="page-header">
+       <h1>Getting started</h1>
+    </div>
+
+<p> To start playing with pathod, simply fire up the daemon: </p>
+
+<pre class="terminal">./pathod</pre>
+
+<p>By default, the service listens on port 9999 of localhost. Pathod's
+documentation is self-hosting, and the pathod daemon exposes an interface that
+lets you play with the specifciation language, preview what responses and
+requests would look like on the wire, and view internal logs. To access all of
+this, just fire up your browser, and point it to the following URL:</p>
+
+<pre class="example">http://localhost:9999</pre>
+
+<p>The default crafting anchor point is the path <b>/p/</b>. Anything after
+this URL prefix is treated as a response specifier. Hitting the following URL
+will generate an HTTP 200 response with 100 bytes of random data:</p>
+
+<pre class="example">http://localhost:9999/p/200:b@100</pre>
+
+<p>See the <a href="/docs/language">language documentation</a> to get (much)
+fancier. The pathod daemon also takes a number of configuration options. To
+view those, use the command-line help:</p>
+
+<pre class="terminal">./pathod --help</pre>
+
+
+</section>
+
+
+<section id="api">
+    <div class="page-header">
+       <h1>Anchors</h1>
+    </div>
+
 You can also add anchors to the pathod server that serve a fixed response
 whenever a matching URL is requested:</p>
 
-<pre class="terminal">pathod -a "/foo=200"</pre>
+<pre class="terminal">./pathod -a "/foo=200"</pre>
 
 <p>Here, "/foo" a regex specifying the anchor path, and the part after the "=" is
 a response specifier.</p>
 
-<p>pathod also has a nifty built-in web interface, which lets you play with
-the language by previewing responses, exposes activity logs, online help and
-various other goodies. Try it by visiting the server root:</p>
+</section>
 
-<pre class="example">http://localhost:9999</pre>
+
+<section id="files">
+    <div class="page-header">
+       <h1>File Access</h1>
+    </div>
+
+
+</section>
+
+
+<section>
+    <div class="page-header">
+       <h1>Internal Error Responses</h1>
+    </div>
+
+    <p>Pathod uses the non-standard 800 response code to indicate internal
+    errors, to distinguish them from crafted responses. For example, a request
+    to:</p>
+
+    <pre class="example">http://localhost:9999/p/foo</pre>
+
+    <p>... will return an 800 response because "foo" is not a valid page
+    specifier.</p>
+
+</section>
+
 
 <section id="api">
     <div class="page-header">
@@ -75,22 +134,6 @@ various other goodies. Try it by visiting the server root:</p>
             </tr>
         </tbody>
     </table>
-</section>
-
-<section>
-    <div class="page-header">
-       <h1>Error Responses</h1>
-    </div>
-
-    <p>Pathod uses the non-standard 800 response code to indicate internal
-    errors, to distinguish them from crafted responses. For example, a request
-    to:</p>
-
-    <pre class="example">http://localhost:9999/p/foo</pre>
-
-    <p>... will return an 800 response because "foo" is not a valid page
-    specifier.</p>
-
 </section>
 
 {% endblock %}  
