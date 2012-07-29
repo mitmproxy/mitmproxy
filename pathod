@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse, sys, logging, logging.handlers
-from libpathod import pathod, utils, version
+from libpathod import pathod, utils, version, rparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A pathological HTTP/S daemon.')
@@ -117,6 +117,9 @@ if __name__ == "__main__":
         )
     except pathod.PathodError, v:
         parser.error(str(v))
+    except rparse.FileAccessDenied, v:
+        parser.error("%s You probably want to a -d argument."%str(v))
+
     try:
         print "%s listening on port %s"%(version.NAMEVERSION, pd.port)
         pd.serve_forever()
