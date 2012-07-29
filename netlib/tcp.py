@@ -48,8 +48,11 @@ class FileLike:
         return getattr(self.o, attr)
 
     def flush(self):
-        if hasattr(self.o, "flush"):
-            self.o.flush()
+        try:
+            if hasattr(self.o, "flush"):
+                self.o.flush()
+        except socket.error, v:
+            raise NetLibDisconnect(str(v))
 
     def read(self, length):
         """
