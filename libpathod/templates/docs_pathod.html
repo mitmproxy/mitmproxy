@@ -33,17 +33,16 @@ this, just fire up your browser, and point it to the following URL:</p>
 <pre class="example">http://localhost:9999</pre>
 
 <p>The default crafting anchor point is the path <b>/p/</b>. Anything after
-this URL prefix is treated as a response specifier. Hitting the following URL
-will generate an HTTP 200 response with 100 bytes of random data:</p>
+this URL prefix is treated as a response specifier. So, hitting the following
+URL will generate an HTTP 200 response with 100 bytes of random data:</p>
 
 <pre class="example">http://localhost:9999/p/200:b@100</pre>
 
 <p>See the <a href="/docs/language">language documentation</a> to get (much)
-fancier. The pathod daemon also takes a number of configuration options. To
-view those, use the command-line help:</p>
+fancier. The pathod daemon also takes a range of configuration options. To view
+those, use the command-line help:</p>
 
 <pre class="terminal">./pathod --help</pre>
-
 
 </section>
 
@@ -53,13 +52,15 @@ view those, use the command-line help:</p>
        <h1>Anchors</h1>
     </div>
 
-You can also add anchors to the pathod server that serve a fixed response
-whenever a matching URL is requested:</p>
+<p>Anchors provide an alternative to specifying the response in the URL.
+Instead, you attach a response to a pre-configured anchor point, specified with
+a regex.  When a URL matching the regex is requested, the specified response is
+served.</p>
 
 <pre class="terminal">./pathod -a "/foo=200"</pre>
 
-<p>Here, "/foo" a regex specifying the anchor path, and the part after the "=" is
-a response specifier.</p>
+<p>Here, "/foo" is ithe regex specifying the anchor path, and the part after
+the "=" is a response specifier.</p>
 
 </section>
 
@@ -69,6 +70,13 @@ a response specifier.</p>
        <h1>File Access</h1>
     </div>
 
+<p>There are two operators in the <a href="/docs/language">language</a> that
+load contents from file - the <b>+</b> operator to load an entire request
+specification from file, and the <b>&gt;</b> value specifier. In pathod, both
+of these operators are restricted to a directory specified at startup, or
+disabled if no directory is specified:</p>
+
+<pre class="terminal">./pathod -d ~/staticdir"</pre>
 
 </section>
 
