@@ -1,26 +1,50 @@
 {% extends "frame.html" %}
 {% block body %}  
 
-<h1>Preview</h1>
+<div class="page-header">
+    <h1>pathod preview</h1>
+</div>
+
+<div style="margin-bottom: 20px" class="row">
+    <div class="span2">
+        <h3>Specification:</h3>
+    </div>
+    <div class="span10">
+        {% include "response_previewform.html" %}
+    </div>
+</div>
 
 {% if syntaxerror %}
-    <h2> Error: {{ syntaxerror }} </h2>
-    <pre>{{ marked }}</pre>
+    <div class="row">
+        <div class="span2">
+            <h3>Error:</h3>
+        </div>
+        <div class="span10">
+            <p style="color: #ff0000">{{ syntaxerror }}</p>
+            <pre>{{ marked }}</pre>
+        </div>
+    </div>
 {% elif error %}
-    <p style="color: #ff0000">{{ error }}</p>
+    <div class="row">
+        <div class="span2">
+            <h3>Error:</h3>
+        </div>
+        <div class="span10">
+            <p style="color: #ff0000">{{ error }}</p>
+        </div>
+    </div>
 {% else %}
-    <h2>Spec:</h2>
-
-    <pre>{{ spec }}</pre>
-
-    <h2>Response:</h2>
-
-    <pre>{{ output }}</pre>
-
-    {% if pauses %}
-        <p>Note: pauses are skipped when generating previews!</p>
-    {% endif %}  
-
+    <div class="row">
+        <div class="span2">
+            <h3>Response:</h3>
+        </div>
+        <div class="span10">
+            <pre>{{ output }}</pre>
+            {% if pauses %}
+                <p>Note: pauses are skipped when generating previews!</p>
+            {% endif %}  
+        </div>
+    </div>
 {% endif %}  
-{% include "response_previewform.html" %}
+
 {% endblock %}  

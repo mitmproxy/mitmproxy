@@ -1,4 +1,5 @@
 
+
 .fronttable {
 }
 
@@ -30,4 +31,10 @@ section {
     margin-bottom: 10px;
     background: #000;
     color: #fff;
+}
+
+.innerlink {
+    text-decoration: none;
+    border-bottom:1px dotted;
+    margin-bottom: 15px;
 }
