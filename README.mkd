@@ -5,6 +5,14 @@ clients and servers. The project has three components:
 - __pathoc__, a perverse HTTP client. 
 - __libpathod.test__, an API for easily using __pathod__ and __pathoc__ in unit tests.
 
+The pathod documentation is self-hosted. Just fire up pathod, like so:
+    
+    ./pathod 
+
+And then browse to:
+
+    http://localhost:9999
+
 
 # Installing
 
@@ -13,6 +21,10 @@ dependencies is dead simple:
     
     pip install pathod
 
-The project uses the __nose__ unit testing framework, which you can get here:
+The project has the following dependencies:
 
-    FIXME
+* [netlib](http://github.com/cortesi/netlib)
+* [requests](http://docs.python-requests.org/en/latest/index.html) 
+
+The project's test suite uses the
+[nose](http://nose.readthedocs.org/en/latest/) unit testing framework.
