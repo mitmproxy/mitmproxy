@@ -1,2 +1,4 @@
 #!/bin/sh
-pygmentize -f html ./examples_test.py > ../libpathod/templates/examples_test.html
+pygmentize -f html ./examples_context.py > ../libpathod/templates/examples_context.html
+pygmentize -f html ./examples_setup.py > ../libpathod/templates/examples_setup.html
+pygmentize -f html ./examples_setupall.py > ../libpathod/templates/examples_setupall.html

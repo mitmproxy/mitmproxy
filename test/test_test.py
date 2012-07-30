@@ -7,11 +7,10 @@ logging.disable(logging.CRITICAL)
 
 class TestDaemonManual:
     def test_simple(self):
-        d = test.Daemon()
-        rsp = requests.get("http://localhost:%s/p/202"%d.port)
-        assert rsp.ok
-        assert rsp.status_code == 202
-        d.shutdown()
+        with test.Daemon() as d:
+            rsp = requests.get("http://localhost:%s/p/202"%d.port)
+            assert rsp.ok
+            assert rsp.status_code == 202
         tutils.raises(requests.ConnectionError, requests.get, "http://localhost:%s/p/202"%d.port)
 
     def test_startstop_ssl(self):

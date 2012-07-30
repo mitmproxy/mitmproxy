@@ -12,6 +12,13 @@ class Daemon:
         self.port = self.q.get(True, 5)
         self.urlbase = "%s://%s:%s"%("https" if ssl else "http", self.IFACE, self.port)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.shutdown()
+        return False
+
     def p(self, spec):
         """
             Return a URL that will render the response in spec.
