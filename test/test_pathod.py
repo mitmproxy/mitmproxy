@@ -107,6 +107,12 @@ class CommonTests(tutils.DaemonTests):
         assert l["type"] == "error"
         assert "Invalid" in l["msg"]
 
+    def test_invalid_headers(self):
+        tutils.raises(http.HttpError, self.pathoc, "get:/:h'\t'='foo'")
+        l = self.d.log()[0]
+        assert l["type"] == "error"
+        assert "Invalid headers" in l["msg"]
+
     def test_access_denied(self):
         rsp = self.get("=nonexistent")
         assert rsp.status_code == 800

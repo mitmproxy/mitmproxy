@@ -65,8 +65,10 @@ class Pathoc(tcp.TCPClient):
                 return
             except tcp.NetLibTimeout:
                 print >> fp, "<<", "Timeout"
-            except tcp.NetLibDisconnect:
+                return
+            except tcp.NetLibDisconnect: # pragma: nocover
                 print >> fp, "<<", "Disconnect"
+                return
             else:
                 if respdump:
                     print_full(fp, *resp)

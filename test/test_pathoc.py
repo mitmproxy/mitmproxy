@@ -57,3 +57,4 @@ class TestDaemon:
         d = tutils.test_data.path("data/request")
         assert "foo" in self.tval(["+%s"%d])
         assert "File" in self.tval(["+/nonexistent"])
+

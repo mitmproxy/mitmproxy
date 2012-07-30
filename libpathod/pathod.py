@@ -9,9 +9,6 @@ class PathodError(Exception): pass
 class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
-    def debug(self, s):
-        logging.debug("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
-
     def info(self, s):
         logging.info("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
 
