@@ -2,15 +2,21 @@ import json, threading, Queue
 import requests
 import pathod, utils
 
-IFACE = "127.0.0.1"
 
 class Daemon:
+    IFACE = "127.0.0.1"
     def __init__(self, ssl=None, **daemonargs):
         self.q = Queue.Queue()
-        self.thread = PaThread(self.q, ssl, daemonargs)
+        self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()
         self.port = self.q.get(True, 5)
-        self.urlbase = "%s://%s:%s"%("https" if ssl else "http", IFACE, self.port)
+        self.urlbase = "%s://%s:%s"%("https" if ssl else "http", self.IFACE, self.port)
+
+    def p(self, spec):
+        """
+            Return a URL that will render the response in spec.
+        """
+        return "%s/p/%s"%(self.urlbase, spec)
 
     def info(self):
         """
@@ -18,6 +24,16 @@ class Daemon:
         """
         resp = requests.get("%s/api/info"%self.urlbase, verify=False)
         return resp.json
+
+    def last_log(self):
+        """
+            Returns the last logged request. Raises AssertionError if no
+            requests have been logged.
+        """
+        l = self.log()
+        if not l:
+            raise AssertionError("No requests logged")
+        return l[-1]
 
     def log(self):
         """
@@ -41,10 +57,10 @@ class Daemon:
         self.thread.join()
 
 
-class PaThread(threading.Thread):
-    def __init__(self, q, ssl, daemonargs):
+class _PaThread(threading.Thread):
+    def __init__(self, iface, q, ssl, daemonargs):
         threading.Thread.__init__(self)
-        self.q, self.ssl = q, ssl
+        self.iface, self.q, self.ssl = iface, q, ssl
         self.daemonargs = daemonargs
 
     def run(self):
@@ -56,7 +72,7 @@ class PaThread(threading.Thread):
         else:
             ssloptions = self.ssl
         self.server = pathod.Pathod(
-            (IFACE, 0),
+            (self.iface, 0),
             ssloptions = ssloptions,
             **self.daemonargs
         )

@@ -35,8 +35,7 @@ class DaemonTests:
         )
 
     def get(self, spec):
-        scheme = "https" if self.ssl else "http"
-        return requests.get("%s://localhost:%s/p/%s"%(scheme, self.d.port, spec), verify=False)
+        return requests.get(self.d.p(spec), verify=False)
 
     def pathoc(self, spec, timeout=None):
         c = pathoc.Pathoc("localhost", self.d.port)

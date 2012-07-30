@@ -48,7 +48,7 @@ class TestNohang(tutils.DaemonTests):
     def test_nohang(self):
         r = self.get("200:p0,0")
         assert r.status_code == 800
-        l = self.d.log()[0]
+        l = self.d.last_log()
         assert "Pauses have been disabled" in l["response"]["error"]
 
 
@@ -56,7 +56,7 @@ class CommonTests(tutils.DaemonTests):
     def test_sizelimit(self):
         r = self.get("200:b@1g")
         assert r.status_code == 800
-        l = self.d.log()[0]
+        l = self.d.last_log()
         assert "too large" in l["response"]["error"]
 
     def test_preline(self):
@@ -67,9 +67,10 @@ class CommonTests(tutils.DaemonTests):
         assert tuple(self.d.info()["version"]) == version.IVERSION
 
     def test_logs(self):
-        l = len(self.d.log())
+        assert self.d.clear_log()
+        tutils.raises("no requests logged", self.d.last_log)
         rsp = self.get("202")
-        assert len(self.d.log()) == l+1
+        assert len(self.d.log()) == 1
         assert self.d.clear_log()
         assert len(self.d.log()) == 0
 
@@ -97,19 +98,19 @@ class CommonTests(tutils.DaemonTests):
             c.convert_to_ssl()
         c.wfile.write("foo\n\n\n")
         c.wfile.flush()
-        l = self.d.log()[0]
+        l = self.d.last_log()
         assert l["type"] == "error"
         assert "foo" in l["msg"]
 
     def test_invalid_body(self):
         tutils.raises(http.HttpError, self.pathoc, "get:/:h'content-length'='foo'")
-        l = self.d.log()[0]
+        l = self.d.last_log()
         assert l["type"] == "error"
         assert "Invalid" in l["msg"]
 
     def test_invalid_headers(self):
         tutils.raises(http.HttpError, self.pathoc, "get:/:h'\t'='foo'")
-        l = self.d.log()[0]
+        l = self.d.last_log()
         assert l["type"] == "error"
         assert "Invalid headers" in l["msg"]
 
@@ -139,7 +140,7 @@ class TestDaemonSSL(CommonTests):
                 c.wfile.write("\r\n\r\n\r\n")
         except:
             pass
-        l = self.d.log()[0]
+        l = self.d.last_log()
         assert l["type"] == "error"
         assert "SSL" in l["msg"]
 

@@ -1,0 +1,2 @@
+#!/bin/sh
+pygmentize -f html ./examples_test.py > ../libpathod/templates/examples_test.html

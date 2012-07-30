@@ -31,8 +31,8 @@
                 <tr>
                     <td> b<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Set the body. When the body is set, pathod will
-                        automatically set the appropriate Content-Length header.
+                        Set the body. The appropriate Content-Length header is
+                        added automatically unless the "r" flag is set.
                     </td>
                 </tr>
 
@@ -104,8 +104,8 @@
                 <tr>
                     <td> b<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Set the body. When the body is set, pathod will
-                        automatically set the appropriate Content-Length header.
+                        Set the body. The appropriate Content-Length header is
+                        added automatically unless the "r" flag is set.
                     </td>
                 </tr>
 
@@ -143,8 +143,7 @@
                     <td> r </td>
                     <td>
                         Set the "raw" flag on this response. Pathod will not
-                        calculate a Content-Length header if a body is set, or add
-                        a Date header to the response.
+                        calculate a Content-Length header if a body is set.
                     </td>
                 </tr>
             </tbody>
