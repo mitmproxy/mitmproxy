@@ -36,8 +36,8 @@ def parse_url(url):
 
 def read_headers(fp):
     """
-        Read a set of headers from a file pointer. Stop once a blank line
-        is reached. Return a ODictCaseless object.
+        Read a set of headers from a file pointer. Stop once a blank line is
+        reached. Return a ODictCaseless object, or None if headers are invalid.
     """
     ret = []
     name = ''
@@ -46,6 +46,8 @@ def read_headers(fp):
         if not line or line == '\r\n' or line == '\n':
             break
         if line[0] in ' \t':
+            if not ret:
+                return None
             # continued header
             ret[-1][1] = ret[-1][1] + '\r\n ' + line.strip()
         else:
@@ -55,6 +57,8 @@ def read_headers(fp):
                 name = line[:i]
                 value = line[i+1:].strip()
                 ret.append([name, value])
+            else:
+                return None
     return odict.ODictCaseless(ret)
 
 
@@ -282,6 +286,8 @@ def read_response(rfile, method, body_size_limit):
     except ValueError:
         raise HttpError(502, "Invalid server response: %s"%repr(line))
     headers = read_headers(rfile)
+    if headers is None:
+        raise HttpError(502, "Invalid headers.")
     if code >= 100 and code <= 199:
         return read_response(rfile, method, body_size_limit)
     if method == "HEAD" or code == 204 or code == 304:

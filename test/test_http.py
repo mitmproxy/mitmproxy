@@ -169,16 +169,20 @@ def test_parse_init_http():
 
 
 class TestReadHeaders:
+    def _read(self, data, verbatim=False):
+        if not verbatim:
+            data = textwrap.dedent(data)
+            data = data.strip()
+        s = cStringIO.StringIO(data)
+        return http.read_headers(s)
+
     def test_read_simple(self):
         data = """
             Header: one
             Header2: two
             \r\n
         """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = cStringIO.StringIO(data)
-        h = http.read_headers(s)
+        h = self._read(data)
         assert h.lst == [["Header", "one"], ["Header2", "two"]]
 
     def test_read_multi(self):
@@ -187,10 +191,7 @@ class TestReadHeaders:
             Header: two
             \r\n
         """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = cStringIO.StringIO(data)
-        h = http.read_headers(s)
+        h = self._read(data)
         assert h.lst == [["Header", "one"], ["Header", "two"]]
 
     def test_read_continued(self):
@@ -200,11 +201,18 @@ class TestReadHeaders:
             Header2: three
             \r\n
         """
-        data = textwrap.dedent(data)
-        data = data.strip()
-        s = cStringIO.StringIO(data)
-        h = http.read_headers(s)
+        h = self._read(data)
         assert h.lst == [["Header", "one\r\n two"], ["Header2", "three"]]
+
+    def test_read_continued_err(self):
+        data = "\tfoo: bar\r\n"
+        assert self._read(data, True) is None
+
+    def test_read_err(self):
+        data = """
+            foo
+        """
+        assert self._read(data) is None
 
 
 def test_read_response():
@@ -247,6 +255,14 @@ def test_read_response():
     """
     assert tst(data, "GET", None)[4] == 'foo'
     assert tst(data, "HEAD", None)[4] == ''
+
+    data = """
+        HTTP/1.1 200 OK
+        \tContent-Length: 3
+
+        foo
+    """
+    tutils.raises("invalid headers", tst, data, "GET", None)
 
 
 def test_parse_url():
