@@ -55,6 +55,17 @@ class PathodHandler(tcp.BaseHandler):
 
         method, path, httpversion = parts
         headers = http.read_headers(self.rfile)
+        if headers is None:
+            s = "Invalid headers"
+            self.info(s)
+            self.server.add_log(
+                dict(
+                    type = "error",
+                    msg = s
+                )
+            )
+            return
+
         request_log = dict(
             path = path,
             method = method,
@@ -82,7 +93,8 @@ class PathodHandler(tcp.BaseHandler):
         for i in self.server.anchors:
             if i[0].match(path):
                 self.info("Serving anchor: %s"%path)
-                return self.serve_crafted(i[1], request_log)
+                aresp = rparse.parse_response(self.server.request_settings, i[1])
+                return self.serve_crafted(aresp, request_log)
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
@@ -181,7 +193,7 @@ class Pathod(tcp.TCPServer):
                     aresp = rparse.parse_response(self.request_settings, i[1])
                 except rparse.ParseException, v:
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
-                self.anchors.append((arex, aresp))
+                self.anchors.append((arex, i[1]))
 
     def check_policy(self, req, actions):
         """
