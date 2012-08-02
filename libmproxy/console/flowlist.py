@@ -25,6 +25,7 @@ def _mkhelp():
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
+        ("F", "toggle follow flow list"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -225,6 +226,8 @@ class FlowListBox(urwid.ListBox):
                 self.master.state.last_saveload,
                 self.master.load_flows_callback
             )
+        elif key == "F":
+            self.master.toggle_follow_flows()
         elif key == "W":
             if self.master.stream:
                 self.master.stop_stream()
