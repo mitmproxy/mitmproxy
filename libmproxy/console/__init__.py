@@ -605,7 +605,11 @@ class ConsoleMaster(flow.FlowMaster):
     def view_flowlist(self):
         if self.ui.started:
             self.ui.clear()
-        self.focus_current()
+        if self.state.follow_focus:
+            self.state.set_focus(self.state.flow_count())
+        else:
+            self.focus_current()
+
         if self.eventlog:
             self.body = flowlist.BodyPile(self)
         else:
