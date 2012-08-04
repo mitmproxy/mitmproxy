@@ -174,6 +174,18 @@ class HTTPMsg(controller.Msg):
         self.content = encoding.encode(e, self.content)
         self.headers["content-encoding"] = [e]
 
+    def size(self, **kwargs):
+        """
+            Size in bytes of a fully rendered message, including headers and
+            HTTP lead-in.
+        """
+        hl = len(self._assemble_head(**kwargs))
+        if self.content:
+            return hl + len(self.content)
+        else:
+            return hl
+
+
 
 class Request(HTTPMsg):
     """
@@ -374,17 +386,9 @@ class Request(HTTPMsg):
         self.scheme, self.host, self.port, self.path = parts
         return True
 
-    def _assemble(self, _proxy = False):
-        """
-            Assembles the request for transmission to the server. We make some
-            modifications to make sure interception works properly.
-
-            Returns None if the request cannot be assembled.
-        """
-        if self.content == CONTENT_MISSING:
-            return None
-        FMT = '%s %s HTTP/%s.%s\r\n%s\r\n%s'
-        FMT_PROXY = '%s %s://%s:%s%s HTTP/%s.%s\r\n%s\r\n%s'
+    def _assemble_head(self, proxy=False):
+        FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
+        FMT_PROXY = '%s %s://%s:%s%s HTTP/%s.%s\r\n%s\r\n'
 
         headers = self.headers.copy()
         utils.del_all(
@@ -405,14 +409,13 @@ class Request(HTTPMsg):
             content = ""
         if self.close:
             headers["connection"] = ["close"]
-        if not _proxy:
+        if not proxy:
             return FMT % (
                 self.method,
                 self.path,
                 self.httpversion[0],
                 self.httpversion[1],
-                str(headers),
-                content
+                str(headers)
             )
         else:
             return FMT_PROXY % (
@@ -423,9 +426,23 @@ class Request(HTTPMsg):
                 self.path,
                 self.httpversion[0],
                 self.httpversion[1],
-                str(headers),
-                content
+                str(headers)
             )
+
+    def _assemble(self, _proxy = False):
+        """
+            Assembles the request for transmission to the server. We make some
+            modifications to make sure interception works properly.
+
+            Returns None if the request cannot be assembled.
+        """
+        if self.content == CONTENT_MISSING:
+            return None
+        head = self._assemble_head(_proxy)
+        if self.content:
+            return head + self.content
+        else:
+            return head
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -576,6 +593,19 @@ class Response(HTTPMsg):
         c.headers = self.headers.copy()
         return c
 
+    def _assemble_head(self):
+        FMT = '%s\r\n%s\r\n'
+        headers = self.headers.copy()
+        utils.del_all(
+            headers,
+            ['proxy-connection', 'transfer-encoding']
+        )
+        if self.content:
+            headers["content-length"] = [str(len(self.content))]
+        proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
+        data = (proto, str(headers))
+        return FMT%data
+
     def _assemble(self):
         """
             Assembles the response for transmission to the client. We make some
@@ -585,20 +615,11 @@ class Response(HTTPMsg):
         """
         if self.content == CONTENT_MISSING:
             return None
-        FMT = '%s\r\n%s\r\n%s'
-        headers = self.headers.copy()
-        utils.del_all(
-            headers,
-            ['proxy-connection', 'transfer-encoding']
-        )
-        content = self.content
-        if content:
-            headers["content-length"] = [str(len(content))]
+        head = self._assemble_head()
+        if self.content:
+            return head + self.content
         else:
-            content = ""
-        proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
-        data = (proto, str(headers), content)
-        return FMT%data
+            return head
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
