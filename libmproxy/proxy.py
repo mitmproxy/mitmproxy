@@ -159,8 +159,8 @@ class ProxyHandler(tcp.BaseHandler):
             app = self.server.apps.get(request)
             if app:
                 err = app.serve(request, self.wfile)
-                self.log(cc, "Error in wsgi app.", err.split("\n"))
                 if err:
+                    self.log(cc, "Error in wsgi app.", err.split("\n"))
                     return
             else:
                 request = request._send(self.mqueue)
@@ -284,6 +284,8 @@ class ProxyHandler(tcp.BaseHandler):
                 raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
             method, path, httpversion = r
             headers = http.read_headers(self.rfile)
+            if headers is None:
+                raise ProxyError(400, "Invalid headers")
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -298,6 +300,8 @@ class ProxyHandler(tcp.BaseHandler):
                 raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
             method, path, httpversion = r
             headers = http.read_headers(self.rfile)
+            if headers is None:
+                raise ProxyError(400, "Invalid headers")
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -337,6 +341,8 @@ class ProxyHandler(tcp.BaseHandler):
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, path, httpversion = r
                 headers = http.read_headers(self.rfile)
+                if headers is None:
+                    raise ProxyError(400, "Invalid headers")
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
@@ -347,6 +353,8 @@ class ProxyHandler(tcp.BaseHandler):
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
                 headers = http.read_headers(self.rfile)
+                if headers is None:
+                    raise ProxyError(400, "Invalid headers")
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )

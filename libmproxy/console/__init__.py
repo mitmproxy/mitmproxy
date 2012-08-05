@@ -175,6 +175,8 @@ class StatusBar(common.WWrap):
             opts.append("killextra")
         if self.master.server.config.no_upstream_cert:
             opts.append("no-upstream-cert")
+        if self.master.state.follow_focus:
+            opts.append("following")
 
         if opts:
             r.append("[%s]"%(":".join(opts)))
@@ -252,6 +254,7 @@ class ConsoleState(flow.State):
     def __init__(self):
         flow.State.__init__(self)
         self.focus = None
+        self.follow_focus = None
         self.default_body_view = contentview.VIEW_AUTO
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
@@ -270,6 +273,8 @@ class ConsoleState(flow.State):
         f = flow.State.add_request(self, req)
         if self.focus is None:
             self.set_focus(0)
+        elif self.follow_focus:
+            self.set_focus(len(self.view) - 1)
         return f
 
     def add_response(self, resp):
@@ -548,7 +553,9 @@ class ConsoleMaster(flow.FlowMaster):
 
         if self.options.rfile:
             ret = self.load_flows(self.options.rfile)
-            if ret:
+            if ret and self.state.flow_count():
+                self.add_event("File truncated or corrupted. Loaded as many flows as possible.")
+            elif not self.state.flow_count():
                 self.shutdown()
                 print >> sys.stderr, "Could not load file:", ret
                 sys.exit(1)
@@ -598,7 +605,11 @@ class ConsoleMaster(flow.FlowMaster):
     def view_flowlist(self):
         if self.ui.started:
             self.ui.clear()
-        self.focus_current()
+        if self.state.follow_focus:
+            self.state.set_focus(self.state.flow_count())
+        else:
+            self.focus_current()
+
         if self.eventlog:
             self.body = flowlist.BodyPile(self)
         else:
@@ -649,18 +660,20 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.last_saveload = path
         path = os.path.expanduser(path)
         try:
-            f = file(path, "r")
+            f = file(path, "rb")
             fr = flow.FlowReader(f)
         except IOError, v:
             return v.strerror
+        reterr = None
         try:
             flow.FlowMaster.load_flows(self, fr)
         except flow.FlowReadError, v:
-            return v.strerror
+            reterr = v.strerror
         f.close()
         if self.flow_list_walker:
             self.sync_list_view()
             self.focus_current()
+        return reterr
 
     def path_prompt(self, prompt, text, callback, *args):
         self.statusbar.path_prompt(prompt, text)
@@ -931,6 +944,14 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.clear()
         self.sync_list_view()
 
+    def toggle_follow_flows(self):
+        # toggle flow follow
+        self.state.follow_focus = not self.state.follow_focus
+        # jump to most recent flow if follow is now on
+        if self.state.follow_focus:
+            self.state.set_focus(self.state.flow_count())
+            self.sync_list_view()
+
     def delete_flow(self, f):
         self.state.delete_flow(f)
         self.sync_list_view()
@@ -956,9 +977,9 @@ class ConsoleMaster(flow.FlowMaster):
 
     def add_event(self, e, level="info"):
         if level == "info":
-            e = urwid.Text(e)
+            e = urwid.Text(str(e))
         elif level == "error":
-            e = urwid.Text(("error", e))
+            e = urwid.Text(("error", str(e)))
 
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:

@@ -82,10 +82,8 @@ class TestDumpMaster:
                 0, None, "", verbosity=1, rfile="/nonexistent"
             )
 
-            libpry.raises(
-                dump.DumpError, self._dummy_cycle,
-                0, None, "", verbosity=1, rfile=tutils.test_data.path("test_dump.py")
-            )
+            # We now just ignore errors
+            self._dummy_cycle(0, None, "", verbosity=1, rfile=tutils.test_data.path("test_dump.py"))
 
     def test_options(self):
         o = dump.Options(verbosity = 2)

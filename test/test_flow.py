@@ -724,12 +724,14 @@ class TestRequest:
         assert not r.set_url("")
         assert r.get_url() == u
         assert r._assemble()
+        assert r.size() == len(r._assemble())
 
         r2 = r.copy()
         assert r == r2
 
         r.content = None
         assert r._assemble()
+        assert r.size() == len(r._assemble())
 
         r.close = True
         assert "connection: close" in r._assemble()
@@ -738,6 +740,8 @@ class TestRequest:
 
         r.content = flow.CONTENT_MISSING
         assert not r._assemble()
+
+
 
     def test_getset_form_urlencoded(self):
         h = flow.ODictCaseless()
@@ -860,12 +864,15 @@ class TestResponse:
         req = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         resp = flow.Response(req, (1, 1), 200, "msg", h.copy(), "content", None)
         assert resp._assemble()
+        assert resp.size() == len(resp._assemble())
+
 
         resp2 = resp.copy()
         assert resp2 == resp
 
         resp.content = None
         assert resp._assemble()
+        assert resp.size() == len(resp._assemble())
 
         resp.content = flow.CONTENT_MISSING
         assert not resp._assemble()
