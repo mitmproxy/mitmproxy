@@ -7,11 +7,38 @@
     </h1>
 </div>
 
+<p>Pathoc is a perverse HTTP daemon designed to let you craft almost any
+conceivable HTTP request, including ones that creatively violate the standards.
+HTTP requests are specified using a <a href="/docs/language">small, terse
+language</a>, which pathod shares with its server-side twin <a
+href="/docs/pathod">pathod</a>. To view pathoc's complete range of options, use
+the command-line help:</p>
+
+    <pre class="terminal">pathoc --help</pre>
 
 <section>
     <div class="page-header">
        <h1>Getting Started</h1>
     </div>
+    
+    <p>The basic pattern for pathoc commands is as follows: </p>
+
+    <pre class="terminal">pathoc hostname request [request ...]</pre>
+
+    <p>That is, we specify the hostname to connect to, followed by one or more
+    requests. Lets start with a simple example:</p>
+        
+    <pre class="terminal">&gt; pathoc google.com get:/
+&lt;&lt; 301 Moved Permanently: 219 bytes</pre>
+
+    <p>Here, we make a GET request to the path / on port 80 of google.com.
+    Pathoc's output tells us that the server responded with a 301. We can tell
+    pathoc to connect using SSL, in which case the default port is changed to
+    443 (you can over-ride the default port with the <b>-p</b> command-line
+    option):</p>
+
+    <pre class="terminal">&gt; pathoc -s google.com get:/
+&lt;&lt; 301 Moved Permanently: 219 bytes</pre>
 
 </section>
 
@@ -20,6 +47,40 @@
     <div class="page-header">
        <h1>Basic Fuzzing</h1>
     </div>
+
+    <p>The combination of pathoc's powerful request specification language and
+    a few of its command-line options makes for quite a powerful basic fuzzer.
+    Here's an example:</p>
+
+    <pre class="terminal">&gt; pathoc -t 2 -n 1000 localhost get:/:b@10:ir,@1</pre>
+
+    <p>The request specified here is a valid GET with a body consisting of 10
+    random bytes, but with 1 random byte inserted in a random place. This could
+    be in the headers, in the initial request line, or in the body itself.
+    Corrupting the request in this way will often make the server enter a state
+    where it's awaiting more input from the client. This is where the <b>-t</b>
+    option comes in, which sets a timeout that causes pathoc to disconnect
+    after two seconds. Finally, the <b>-n</b> option tells pathoc to repeat the
+    request 1000 times.</p>
+
+</section>
+
+
+<section>
+
+    <div class="page-header">
+       <h1>Interacting with Proxies</h1>
+    </div>
+
+    <p>At the moment, pathoc has no explicit support for proxies, but there's a
+    workaround that serves many use cases. Instead of specifying just a path,
+    specify an entire URL to the GET request, like so (assuming there's a proxy
+    running on port 8080 of localhost):</p>
+
+    <pre class="terminal">&gt; pathoc -p 8080 localhost "get:'http://google.com'"</pre>
+
+    <p>Proxy support is going to be a major focus of development for the next
+    version of pathoc, so keep an eye on the repo.</p>
 
 </section>
 
