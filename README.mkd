@@ -49,7 +49,7 @@ Requirements
 ------------
 
 * [Python](http://www.python.org) 2.6.x or 2.7.x.
-* [PyOpenSSL](http://pypi.python.org/pypi/pyOpenSSL) 0.12 or newer.
+* [PyOpenSSL](http://pypi.python.org/pypi/pyOpenSSL) 0.13 or newer.
 * [pyasn1](http://pypi.python.org/pypi/pyasn1) 0.1.2 or newer.
 * [urwid](http://excess.org/urwid/) version 0.9.8 or newer.
 * [PIL](http://www.pythonware.com/products/pil/) version 1.1 or newer.
