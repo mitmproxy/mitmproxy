@@ -1,5 +1,5 @@
 import logging, pprint, cStringIO
-from flask import Flask, jsonify, render_template, request, abort
+from flask import Flask, jsonify, render_template, request, abort, make_response
 import version, rparse, utils
 
 logging.basicConfig(level="DEBUG")
@@ -26,50 +26,53 @@ def api():
         return "OK"
 
 
-def render(s, **kwargs):
+def render(s, cacheable, **kwargs):
     kwargs["noapi"] = app.config["pathod"].noapi
     kwargs["nocraft"] = app.config["pathod"].nocraft
     kwargs["craftanchor"] = app.config["pathod"].craftanchor
-    return render_template(s, **kwargs)
+    resp = make_response(render_template(s, **kwargs), 200)
+    if cacheable:
+        resp.headers["Cache-control"] = "public, max-age=4320"
+    return resp
 
 
 @app.route('/')
 @app.route('/index.html')
 def index():
-    return render("index.html", section="main")
+    return render("index.html", True, section="main")
 
 
 @app.route('/about')
 @app.route('/about.html')
 def about():
-    return render("about.html", section="about")
+    return render("about.html", True, section="about")
 
 
 @app.route('/docs/pathod')
 def docs_pathod():
-    return render("docs_pathod.html", section="docs")
+    return render("docs_pathod.html", True, section="docs")
 
 
 @app.route('/docs/language')
 def docs_language():
-    return render("docs_lang.html", section="docs")
+    return render("docs_lang.html", True, section="docs")
 
 
 @app.route('/docs/pathoc')
 def docs_pathoc():
-    return render("docs_pathoc.html", section="docs")
+    return render("docs_pathoc.html", True, section="docs")
 
 
 @app.route('/docs/test')
 def docs_test():
-    return render("docs_test.html", section="docs")
+    return render("docs_test.html", True, section="docs")
 
 
 @app.route('/log')
 def log():
     if app.config["pathod"].noapi:
         abort(404)
-    return render("log.html", section="log", log=app.config["pathod"].get_log())
+    return render("log.html", False, section="log", log=app.config["pathod"].get_log())
 
 
 @app.route('/log/<int:lid>')
@@ -78,7 +81,7 @@ def onelog(lid):
     if not item:
         abort(404)
     l = pprint.pformat(item)
-    return render("onelog.html", section="log", alog=l, lid=lid)
+    return render("onelog.html", False, section="log", alog=l, lid=lid)
 
 
 def _preview(is_request):
@@ -98,7 +101,7 @@ def _preview(is_request):
     )
     if not spec.strip():
         args["error"] = "Can't parse an empty spec."
-        return render(template, **args)
+        return render(template, False, **args)
 
     try:
         if is_request:
@@ -108,10 +111,10 @@ def _preview(is_request):
     except rparse.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
-        return render(template, **args)
+        return render(template, False, **args)
     except rparse.FileAccessDenied:
         args["error"] = "File access is disabled."
-        return render(template, **args)
+        return render(template, False, **args)
 
     s = cStringIO.StringIO()
     args["pauses"] = r.preview_safe()
@@ -122,7 +125,7 @@ def _preview(is_request):
         r.serve(s, check=app.config["pathod"].check_policy)
 
     args["output"] = utils.escape_unprintables(s.getvalue())
-    return render(template, **args)
+    return render(template, False, **args)
 
 
 @app.route('/response_preview')
