@@ -279,4 +279,10 @@ def common_options(parser):
     )
     parser.add_option_group(group)
 
+    group.add_option(
+        "--dummy-certs", action="store",
+        type = "str", dest = "certdir", default=None,
+        help = "Generated dummy certs directory."
+    )
+
     proxy.certificate_option_group(parser)

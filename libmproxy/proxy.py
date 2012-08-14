@@ -36,12 +36,12 @@ class Log(controller.Msg):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None):
         assert not (reverse_proxy and transparent_proxy)
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
-        self.certdir = None
+        self.certdir = certdir
         self.cert_wait_time = cert_wait_time
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
@@ -399,8 +399,13 @@ class ProxyServer(tcp.TCPServer):
         except socket.error, v:
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.masterq = None
-        self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
-        config.certdir = self.certdir
+        if config.certdir:
+            self.certdir = config.certdir
+            self.remove_certdir = False
+        else:
+            self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
+            config.certdir = self.certdir
+            self.remove_certdir = True
         self.apps = AppRegistry()
 
     def start_slave(self, klass, masterq):
@@ -417,7 +422,8 @@ class ProxyServer(tcp.TCPServer):
 
     def handle_shutdown(self):
         try:
-            shutil.rmtree(self.certdir)
+            if self.remove_certdir:
+                shutil.rmtree(self.certdir)
         except OSError:
             pass
 
@@ -513,6 +519,11 @@ def process_proxy_options(parser, options):
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
             parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
 
+    if options.certdir:
+        options.certdir = os.path.expanduser(options.certdir)
+        if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
+            parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
+
     return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
@@ -521,5 +532,6 @@ def process_proxy_options(parser, options):
         body_size_limit = body_size_limit,
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
-        transparent_proxy = trans
+        transparent_proxy = trans,
+        certdir = options.certdir
     )
