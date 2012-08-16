@@ -23,11 +23,16 @@
         <tbody >
             <tr>
                 <td><a href="/response_preview?spec=200">200</a></td>
-                <td>A basic HTTP 200 response</td>
+                <td>A basic HTTP 200 response (this will hang).</td>
+            </tr>
+            <tr>
+                <td><a href="/response_preview?spec=200:da">200:da</a></td>
+                <td>Server-side disconnect after all content has been sent.</td>
             </tr>
             <tr>
                 <td><a href="/response_preview?spec=200:b@100">200:b@100</a></td>
-                <td>100 random bytes as the body</td>
+                <td>100 random bytes as the body. A Content-Lenght header is
+                added, so the disconnect is no longer needed.</td>
             </tr>
             <tr>
                 <td><a href='/response_preview?spec=200:b@100:h"Server"="&apos;;drop table servers;"'>200:b@100:h"Etag"="';drop table servers;"</a></td>

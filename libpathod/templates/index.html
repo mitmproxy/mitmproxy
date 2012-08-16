@@ -42,7 +42,7 @@
 
             <p>A live, public instance of pathod</p>
 
-            <p><b>http://p.pathod.org/</b><input 
+            <p><b>http://public.pathod.net/</b><input 
                     style="width: 14em"
                     id="publicspec"
                     name="spec"
@@ -50,7 +50,7 @@
                     value="{{spec}}"
                     placeholder="code[msg]:[features]"
                 >
-                <a href="#" id="submitspec" class="btn">go</a>
+                <a id="gopublic" class="btn">go</a>
             </p>
             
             <p>Please use responsibly. There are some restrictions on the
@@ -58,8 +58,8 @@
 
             <script>
                 $(function(){
-                    $("#submitspec").click(function(){
-                        document.location = "http://p.pathod.org/" + $("#publicspec").val()
+                    $("#gopublic").click(function(){
+                        document.location = "http://public.pathod.net/" + $("#publicspec").val()
                     });
                 });
             </script>
