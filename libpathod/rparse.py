@@ -113,7 +113,8 @@ DATATYPES = dict(
 )
 
 
-v_integer = pp.Regex(r"[+-]?\d+")\
+#v_integer = pp.Regex(r"[+-]?\d+")\
+v_integer = pp.Regex(r"\d+")\
     .setName("integer")\
     .setParseAction(lambda toks: int(toks[0]))
 
