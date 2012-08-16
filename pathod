@@ -1,65 +1,35 @@
 #!/usr/bin/env python
 import argparse, sys, logging, logging.handlers
+import os
 from libpathod import pathod, utils, version, rparse
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='A pathological HTTP/S daemon.')
-    parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
-    parser.add_argument("-l", dest='address', default="127.0.0.1", type=str, help='Listening address.')
-    parser.add_argument(
-        "-a", dest='anchors', default=[], type=str, action="append", metavar="ANCHOR",
-        help='Add an anchor. Specified as a string with the form pattern=pagespec'
-    )
-    parser.add_argument(
-        "-c", dest='craftanchor', default="/p/", type=str,
-        help='Anchorpoint for URL crafting commands.'
-    )
-    parser.add_argument(
-        "-d", dest='staticdir', default=None, type=str,
-        help='Directory for static files.'
-    )
-    parser.add_argument(
-        "-f", dest='logfile', default=None, type=str,
-        help='Log file.'
-    )
-    parser.add_argument(
-        "--debug", dest='debug', default=False, action="store_true",
-        help='Enable debug output.'
-    )
-    parser.add_argument(
-        "-s", dest='ssl', default=False, action="store_true",
-        help='Serve with SSL.'
-    )
-    parser.add_argument(
-        "--limit-size", dest='sizelimit', default=None, type=str,
-        help='Size limit of served responses. Understands size suffixes, i.e. 100k.'
-    )
-    parser.add_argument(
-        "--noapi", dest='noapi', default=False, action="store_true",
-        help='Disable API.'
-    )
-    parser.add_argument(
-        "--nohang", dest='nohang', default=False, action="store_true",
-        help='Disable pauses during crafted response generation.'
-    )
-    parser.add_argument(
-        "--noweb", dest='noweb', default=False, action="store_true",
-        help='Disable both web interface and API.'
-    )
-    parser.add_argument(
-        "--nocraft", dest='nocraft', default=False, action="store_true",
-        help='Disable response crafting. If anchors are specified, they still work.'
-    )
-    parser.add_argument(
-        "--keyfile", dest='ssl_keyfile', default=None, type=str,
-        help='SSL key file. If not specified, a default key is used.'
-    )
-    parser.add_argument(
-        "--certfile", dest='ssl_certfile', default=None, type=str,
-        help='SSL cert file. If not specified, a default cert is used.'
-    )
-    args = parser.parse_args()
+def daemonize (stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write ("fork #1 failed: (%d) %s\n" % (e.errno, e.strerror) )
+        sys.exit(1)
+    os.chdir("/")
+    os.umask(0)
+    os.setsid()
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write ("fork #2 failed: (%d) %s\n" % (e.errno, e.strerror) )
+        sys.exit(1)
+    si = open(stdin, 'r')
+    so = open(stdout, 'a+')
+    se = open(stderr, 'a+', 0)
+    os.dup2(si.fileno(), sys.stdin.fileno())
+    os.dup2(so.fileno(), sys.stdout.fileno())
+    os.dup2(se.fileno(), sys.stderr.fileno())
 
+
+def main(parser, args):
     sl = [args.ssl_keyfile, args.ssl_certfile]
     if any(sl) and not all(sl):
         parser.error("Both --certfile and --keyfile must be specified.")
@@ -125,3 +95,70 @@ if __name__ == "__main__":
         pd.serve_forever()
     except KeyboardInterrupt:
         pass
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='A pathological HTTP/S daemon.')
+    parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
+    parser.add_argument("-l", dest='address', default="127.0.0.1", type=str, help='Listening address.')
+    parser.add_argument(
+        "-a", dest='anchors', default=[], type=str, action="append", metavar="ANCHOR",
+        help='Add an anchor. Specified as a string with the form pattern=pagespec'
+    )
+    parser.add_argument(
+        "-c", dest='craftanchor', default="/p/", type=str,
+        help='Anchorpoint for URL crafting commands.'
+    )
+    parser.add_argument(
+        "-d", dest='staticdir', default=None, type=str,
+        help='Directory for static files.'
+    )
+    parser.add_argument(
+        "-D", dest='daemonize', default=False, action="store_true",
+        help='Daemonize.'
+    )
+    parser.add_argument(
+        "-f", dest='logfile', default=None, type=str,
+        help='Log file.'
+    )
+    parser.add_argument(
+        "--debug", dest='debug', default=False, action="store_true",
+        help='Enable debug output.'
+    )
+    parser.add_argument(
+        "-s", dest='ssl', default=False, action="store_true",
+        help='Serve with SSL.'
+    )
+    parser.add_argument(
+        "--limit-size", dest='sizelimit', default=None, type=str,
+        help='Size limit of served responses. Understands size suffixes, i.e. 100k.'
+    )
+    parser.add_argument(
+        "--noapi", dest='noapi', default=False, action="store_true",
+        help='Disable API.'
+    )
+    parser.add_argument(
+        "--nohang", dest='nohang', default=False, action="store_true",
+        help='Disable pauses during crafted response generation.'
+    )
+    parser.add_argument(
+        "--noweb", dest='noweb', default=False, action="store_true",
+        help='Disable both web interface and API.'
+    )
+    parser.add_argument(
+        "--nocraft", dest='nocraft', default=False, action="store_true",
+        help='Disable response crafting. If anchors are specified, they still work.'
+    )
+    parser.add_argument(
+        "--keyfile", dest='ssl_keyfile', default=None, type=str,
+        help='SSL key file. If not specified, a default key is used.'
+    )
+    parser.add_argument(
+        "--certfile", dest='ssl_certfile', default=None, type=str,
+        help='SSL cert file. If not specified, a default cert is used.'
+    )
+    args = parser.parse_args()
+    if args.daemonize:
+        daemonize()
+    main(parser, args)
+
