@@ -1317,6 +1317,8 @@ class FlowMaster(controller.Master):
             if self.refresh_server_playback:
                 response.refresh()
             flow.request._ack(response)
+            if self.server_playback.count() == 0:
+                self.stop_server_playback()
             return True
         return None
 

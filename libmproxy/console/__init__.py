@@ -868,7 +868,7 @@ class ConsoleMaster(flow.FlowMaster):
                             elif k == "S":
                                 if not self.server_playback:
                                     self.path_prompt(
-                                        "Server replay: ",
+                                        "Server replay path: ",
                                         self.state.last_saveload,
                                         self.server_playback_path
                                     )

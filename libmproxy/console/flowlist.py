@@ -146,7 +146,7 @@ class ConnectionItem(common.WWrap):
             )
         else:
             self.master.path_prompt(
-                "Server replay: ",
+                "Server replay path: ",
                 self.state.last_saveload,
                 self.master.server_playback_path
             )
