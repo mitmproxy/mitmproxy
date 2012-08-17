@@ -275,9 +275,9 @@ def common_options(parser):
         help="Replacement pattern, where the replacement clause is a path to a file."
     )
 
-    group.add_option(
+    group.add_argument(
         "--dummy-certs", action="store",
-        type = "str", dest = "certdir", default=None,
+        type = str, dest = "certdir", default=None,
         help = "Generated dummy certs directory."
     )
 
