@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys, os, string, socket, time
 import shutil, tempfile, threading
-import optparse, SocketServer
+import SocketServer
 from OpenSSL import SSL
 from netlib import odict, tcp, http, wsgi, certutils, http_status
 import utils, flow, version, platform, controller
@@ -464,18 +464,17 @@ class DummyServer:
 
 # Command-line utils
 def certificate_option_group(parser):
-    group = optparse.OptionGroup(parser, "SSL")
-    group.add_option(
+    group = parser.add_argument_group("SSL")
+    group.add_argument(
         "--cert", action="store",
-        type = "str", dest="cert", default=None,
+        type = str, dest="cert", default=None,
         help = "User-created SSL certificate file."
     )
-    group.add_option(
+    group.add_argument(
         "--client-certs", action="store",
-        type = "str", dest = "clientcerts", default=None,
+        type = str, dest = "clientcerts", default=None,
         help = "Client certificate directory."
     )
-    parser.add_option_group(group)
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]

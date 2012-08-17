@@ -16,24 +16,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, signal
-from libmproxy import proxy, dump, cmdline
-from libmproxy.version import VERSION
-from optparse import OptionParser
-
+from libmproxy import proxy, dump, cmdline, version
+import argparse
 
 if __name__ == '__main__':
-    parser = OptionParser(
-                usage = "%prog [options] [filter]",
-                version="%%prog %s"%VERSION,
-            )
+    parser = argparse.ArgumentParser(usage = "%(prog)s [options] [filter]")
+    parser.add_argument('--version', action='version', version=version.NAMEVERSION)
     cmdline.common_options(parser)
-    parser.add_option(
+    parser.add_argument(
         "--keepserving",
         action="store_true", dest="keepserving", default=False,
         help="Continue serving after client playback or file read. We exit by default."
     )
+    parser.add_argument('args', nargs=argparse.REMAINDER)
 
-    options, args = parser.parse_args()
+    options = parser.parse_args()
 
     if options.quiet:
         options.verbose = 0
@@ -55,8 +52,8 @@ if __name__ == '__main__':
         parser.error(v.message)
     dumpopts.keepserving = options.keepserving
 
-    if args:
-        filt = " ".join(args)
+    if options.args:
+        filt = " ".join(options.args)
     else:
         filt = None
 
