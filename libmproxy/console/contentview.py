@@ -1,11 +1,11 @@
-import re, cStringIO
+import re, cStringIO, traceback
 import urwid
 from PIL import Image
 from PIL.ExifTags import TAGS
 import lxml.html, lxml.etree
 import common
 from .. import utils, encoding, flow
-from ..contrib import jsbeautifier
+from ..contrib import jsbeautifier, html2text
 
 VIEW_CUTOFF = 1024*50
 
@@ -19,6 +19,7 @@ VIEW_IMAGE = 6
 VIEW_RAW = 7
 VIEW_HEX = 8
 VIEW_HTML = 9
+VIEW_OUTLINE = 10
 
 VIEW_NAMES = {
     VIEW_AUTO: "Auto",
@@ -31,6 +32,7 @@ VIEW_NAMES = {
     VIEW_RAW: "Raw",
     VIEW_HEX: "Hex",
     VIEW_HTML: "HTML",
+    VIEW_OUTLINE: "HTML Outline",
 }
 
 
@@ -40,6 +42,7 @@ VIEW_PROMPT = (
     ("html", "h"),
     ("image", "i"),
     ("javascript", "j"),
+    ("html outline", "o"),
     ("json", "s"),
     ("raw", "r"),
     ("multipart", "m"),
@@ -56,6 +59,7 @@ VIEW_SHORTCUTS = {
     "s": VIEW_JSON,
     "u": VIEW_URLENCODED,
     "m": VIEW_MULTIPART,
+    "o": VIEW_OUTLINE,
     "r": VIEW_RAW,
     "e": VIEW_HEX,
 }
@@ -170,6 +174,16 @@ def view_html(hdrs, content, limit):
         return "HTML", _view_text(s[:limit], len(s), limit)
 
 
+def view_outline(hdrs, content, limit):
+    content = content.decode("utf-8")
+    h = html2text.HTML2Text(baseurl="")
+    h.ignore_images = True
+    h.body_width = 0
+    content = h.handle(content)
+    txt = _view_text(content[:limit], len(content), limit)
+    return "HTML Outline", txt
+
+
 def view_json(hdrs, content, limit):
     lines = utils.pretty_json(content)
     if lines:
@@ -282,6 +296,7 @@ PRETTY_FUNCTION_MAP = {
     VIEW_IMAGE: view_image,
     VIEW_HEX: view_hex,
     VIEW_RAW: view_raw,
+    VIEW_OUTLINE: view_outline,
 }
 
 def get_view_func(viewmode, hdrs, content):
@@ -318,7 +333,9 @@ def get_content_view(viewmode, hdrItems, content, limit):
     try:
         ret = func(hdrs, content, limit)
     # Third-party viewers can fail in unexpected ways...
-    except:
+    except Exception, e:
+        s = traceback.format_exc()
+        return "", _view_text(s, len(s), len(s))
         ret = None
     if not ret:
         viewmode = VIEW_RAW
