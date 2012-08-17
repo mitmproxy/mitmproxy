@@ -20,6 +20,7 @@ VIEW_RAW = 7
 VIEW_HEX = 8
 VIEW_HTML = 9
 VIEW_OUTLINE = 10
+VIEW_AMF = 11
 
 VIEW_NAMES = {
     VIEW_AUTO: "Auto",
@@ -36,7 +37,7 @@ VIEW_NAMES = {
 }
 
 
-VIEW_PROMPT = (
+VIEW_PROMPT = [
     ("auto detect", "a"),
     ("hex", "e"),
     ("html", "h"),
@@ -48,7 +49,7 @@ VIEW_PROMPT = (
     ("multipart", "m"),
     ("urlencoded", "u"),
     ("xml", "x"),
-)
+]
 
 VIEW_SHORTCUTS = {
     "a": VIEW_AUTO,
@@ -285,6 +286,10 @@ def view_image(hdrs, content, limit):
         )
     return "%s image"%img.format, fmt
 
+def view_amf(hdrs, content, limit):
+    s = utils.pretty_amf(content)
+    if s:
+        return "AMF", _view_text(s[:limit], len(s), limit)
 
 PRETTY_FUNCTION_MAP = {
     VIEW_XML: view_xml,
@@ -344,3 +349,22 @@ def get_content_view(viewmode, hdrItems, content, limit):
     else:
         msg.append(ret[0])
     return " ".join(msg), ret[1]
+
+
+#
+# Enable optional decoding methods at runtime
+#
+
+# AMF decoding requires pyamf
+try:
+    import pyamf
+
+    VIEW_SHORTCUTS["f"] = VIEW_AMF
+    VIEW_PROMPT.append(("amf", "f"))
+    VIEW_NAMES[VIEW_AMF] = "AMF"
+    CONTENT_TYPES_MAP["application/x-amf"] = VIEW_AMF
+    PRETTY_FUNCTION_MAP[VIEW_AMF] = view_amf
+except ImportError:
+    pass
+
+

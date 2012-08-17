@@ -53,6 +53,20 @@ class TestContentView:
               )
         assert f is cv.view_xml
 
+        try:
+            import pyamf
+
+            f = cv.get_view_func(
+                    cv.VIEW_AUTO,
+                    flow.ODictCaseless(
+                        [["content-type", "application/x-amf"]],
+                    ),
+                    ""
+                  )
+            assert f is cv.view_amf
+        except ImportError:
+            pass
+
     def test_view_urlencoded(self):
         d = utils.urlencode([("one", "two"), ("three", "four")])
         assert cv.view_urlencoded([], d, 100)
@@ -110,6 +124,15 @@ class TestContentView:
         assert cv.view_image([], file(p).read(), sys.maxint)
 
         assert not cv.view_image([], "flibble", sys.maxint)
+
+    def test_view_amf(self):
+        try:
+            import pyamf
+
+            p = tutils.test_data.path("data/test.amf")
+            assert cv.view_amf([], file(p).read(), sys.maxint)
+        except ImportError:
+            pass
 
     def test_view_multipart(self):
         v = """
