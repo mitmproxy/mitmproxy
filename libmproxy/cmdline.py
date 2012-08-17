@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import proxy
-import optparse, re, filt
+import re, filt
 
 
 class ParseReplaceException(Exception): pass
@@ -119,145 +119,142 @@ def get_common_options(options):
 
 
 def common_options(parser):
-    parser.add_option(
+    parser.add_argument(
         "-a",
-        action="store", type = "str", dest="addr", default='',
+        action="store", type = str, dest="addr", default='',
         help = "Address to bind proxy to (defaults to all interfaces)"
     )
-    parser.add_option(
+    parser.add_argument(
         "--anticache",
         action="store_true", dest="anticache", default=False,
         help="Strip out request headers that might cause the server to return 304-not-modified."
     )
-    parser.add_option(
+    parser.add_argument(
         "--confdir",
-        action="store", type = "str", dest="confdir", default='~/.mitmproxy',
+        action="store", type = str, dest="confdir", default='~/.mitmproxy',
         help = "Configuration directory. (~/.mitmproxy)"
     )
-    parser.add_option(
+    parser.add_argument(
         "-e",
         action="store_true", dest="eventlog",
         help="Show event log."
     )
-    parser.add_option(
+    parser.add_argument(
         "-n",
         action="store_true", dest="no_server",
         help="Don't start a proxy server."
     )
-    parser.add_option(
+    parser.add_argument(
         "-p",
-        action="store", type = "int", dest="port", default=8080,
+        action="store", type = int, dest="port", default=8080,
         help = "Proxy service port."
     )
-    parser.add_option(
+    parser.add_argument(
         "-P",
         action="store", dest="reverse_proxy", default=None,
         help="Reverse proxy to upstream server: http[s]://host[:port]"
     )
-    parser.add_option(
+    parser.add_argument(
         "-q",
         action="store_true", dest="quiet",
         help="Quiet."
     )
-    parser.add_option(
+    parser.add_argument(
         "-r",
         action="store", dest="rfile", default=None,
         help="Read flows from file."
     )
-    parser.add_option(
+    parser.add_argument(
         "-s",
         action="store", dest="script", default=None,
         help="Run a script."
     )
-    parser.add_option(
+    parser.add_argument(
         "-t",
         action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
     )
-    parser.add_option(
+    parser.add_argument(
         "-T",
         action="store_true", dest="transparent_proxy", default=False,
         help="Set transparent proxy mode."
     )
-    parser.add_option(
+    parser.add_argument(
         "-u",
         action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."
     )
-    parser.add_option(
+    parser.add_argument(
         "-v",
         action="count", dest="verbose", default=1,
         help="Increase verbosity. Can be passed multiple times."
     )
-    parser.add_option(
+    parser.add_argument(
         "-w",
         action="store", dest="wfile", default=None,
         help="Write flows to file."
     )
-    parser.add_option(
+    parser.add_argument(
         "-z",
         action="store_true", dest="anticomp", default=False,
         help="Try to convince servers to send us un-compressed data."
     )
-    parser.add_option(
+    parser.add_argument(
         "-Z",
         action="store", dest="body_size_limit", default=None,
         metavar="SIZE",
         help="Byte size limit of HTTP request and response bodies."\
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
-    parser.add_option(
-        "--cert-wait-time", type="float",
+    parser.add_argument(
+        "--cert-wait-time", type=float,
         action="store", dest="cert_wait_time", default=0,
         help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
     )
-    parser.add_option(
+    parser.add_argument(
         "--no-upstream-cert", default=False,
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
     )
 
-    group = optparse.OptionGroup(parser, "Client Replay")
-    group.add_option(
+    group = parser.add_argument_group("Client Replay")
+    group.add_argument(
         "-c",
         action="store", dest="client_replay", default=None, metavar="PATH",
         help="Replay client requests from a saved file."
     )
-    parser.add_option_group(group)
 
-    group = optparse.OptionGroup(parser, "Server Replay")
-    group.add_option(
+    group = parser.add_argument_group("Server Replay")
+    group.add_argument(
         "-S",
         action="store", dest="server_replay", default=None, metavar="PATH",
         help="Replay server responses from a saved file."
     )
-    group.add_option(
+    group.add_argument(
         "-k",
         action="store_true", dest="kill", default=False,
         help="Kill extra requests during replay."
     )
-    group.add_option(
+    group.add_argument(
         "--rheader",
-        action="append", dest="rheaders", type="str",
+        action="append", dest="rheaders", type=str,
         help="Request headers to be considered during replay. "
            "Can be passed multiple times."
     )
-    group.add_option(
+    group.add_argument(
         "--norefresh",
         action="store_true", dest="norefresh", default=False,
         help= "Disable response refresh, "
         "which updates times in cookies and headers for replayed responses."
     )
-    group.add_option(
+    group.add_argument(
         "--no-pop",
         action="store_true", dest="nopop", default=False,
         help="Disable response pop from response flow. "
         "This makes it possible to replay same response multiple times."
     )
-    parser.add_option_group(group)
 
-    group = optparse.OptionGroup(
-        parser,
+    group = parser.add_argument_group(
         "Replacements",
         """
             Replacements are of the form "/pattern/regex/replacement", where
@@ -265,23 +262,22 @@ def common_options(parser):
             for more information.
         """.strip()
     )
-    group.add_option(
+    group.add_argument(
         "--replace",
-        action="append", type="str", dest="replace", default=[],
+        action="append", type=str, dest="replace", default=[],
         metavar="PATTERN",
         help="Replacement pattern."
     )
-    group.add_option(
+    group.add_argument(
         "--replace-from-file",
-        action="append", type="str", dest="replace_file", default=[],
+        action="append", type=str, dest="replace_file", default=[],
         metavar="PATTERN",
         help="Replacement pattern, where the replacement clause is a path to a file."
     )
-    parser.add_option_group(group)
 
-    group.add_option(
+    group.add_argument(
         "--dummy-certs", action="store",
-        type = "str", dest = "certdir", default=None,
+        type = str, dest = "certdir", default=None,
         help = "Generated dummy certs directory."
     )
 
