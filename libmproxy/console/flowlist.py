@@ -127,6 +127,30 @@ class ConnectionItem(common.WWrap):
                 self.flow
             )
 
+    def stop_server_playback_prompt(self, a):
+        if a != "n":
+            self.master.stop_server_playback()
+
+    def server_replay_prompt(self, k):
+        if k == "a":
+            self.master.start_server_playback(
+                [i.copy() for i in self.master.state.view],
+                self.master.killextra, self.master.rheaders,
+                False, self.master.nopop
+            )
+        elif k == "t":
+            self.master.start_server_playback(
+                [self.flow.copy()],
+                self.master.killextra, self.master.rheaders,
+                False, self.master.nopop
+            )
+        else:
+            self.master.path_prompt(
+                "Server replay: ",
+                self.state.last_saveload,
+                self.master.server_playback_path
+            )
+
     def keypress(self, (maxcol,), key):
         key = common.shortcuts(key)
         if key == "a":
@@ -146,6 +170,26 @@ class ConnectionItem(common.WWrap):
             if r:
                 self.master.statusbar.message(r)
             self.master.sync_list_view()
+        elif key == "S":
+            if not self.master.server_playback:
+                self.master.prompt_onekey(
+                    "Server Replay",
+                    (
+                        ("all flows", "a"),
+                        ("this flow", "t"),
+                        ("file", "f"),
+                    ),
+                    self.server_replay_prompt,
+                )
+            else:
+                self.master.prompt_onekey(
+                    "Stop current server replay?",
+                    (
+                        ("yes", "y"),
+                        ("no", "n"),
+                    ),
+                    self.stop_server_playback_prompt,
+                )
         elif key == "V":
             if not self.flow.modified():
                 self.master.statusbar.message("Flow not modified.")
