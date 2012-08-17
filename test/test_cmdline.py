@@ -1,4 +1,4 @@
-import optparse
+import argparse
 from libmproxy import cmdline
 import tutils
 
@@ -35,9 +35,9 @@ def test_parse_replace_hook():
     )
 
 def test_common():
-    parser = optparse.OptionParser()
+    parser = argparse.ArgumentParser()
     cmdline.common_options(parser)
-    opts, args = parser.parse_args(args=[])
+    opts = parser.parse_args(args=[])
 
     assert cmdline.get_common_options(opts)
 
