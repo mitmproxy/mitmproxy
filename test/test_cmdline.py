@@ -14,7 +14,7 @@ def test_parse_replace_hook():
     assert x == (".*", "bar", "voing")
 
     tutils.raises(
-        cmdline.ParseReplaceException,
+        cmdline.ParseException,
         cmdline.parse_replace_hook,
         "/foo"
     )
@@ -29,10 +29,16 @@ def test_parse_replace_hook():
         "/~/foo/rep"
     )
     tutils.raises(
-        "empty replacement regex",
+        "empty clause",
         cmdline.parse_replace_hook,
         "//"
     )
+
+
+def test_parse_setheaders():
+    x = cmdline.parse_replace_hook("/foo/bar/voing")
+    assert x == ("foo", "bar", "voing")
+
 
 def test_common():
     parser = argparse.ArgumentParser()
@@ -53,7 +59,7 @@ def test_common():
 
     opts.replace = ["//"]
     tutils.raises(
-        "empty replacement regex",
+        "empty clause",
         cmdline.get_common_options,
         opts
     )

@@ -33,6 +33,7 @@ class Options(object):
         "replacements",
         "rfile",
         "rheaders",
+        "setheaders",
         "server_replay",
         "script",
         "stickycookie",
@@ -98,6 +99,10 @@ class DumpMaster(flow.FlowMaster):
         if options.replacements:
             for i in options.replacements:
                 self.replacehooks.add(*i)
+
+        if options.setheaders:
+            for i in options.setheaders:
+                self.setheaders.add(*i)
 
         if options.server_replay:
             self.start_server_playback(

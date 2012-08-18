@@ -339,6 +339,7 @@ class Options(object):
         "script",
         "replacements",
         "rheaders",
+        "setheaders",
         "server_replay",
         "stickycookie",
         "stickyauth",
@@ -368,6 +369,9 @@ class ConsoleMaster(flow.FlowMaster):
 
         for i in options.replacements:
             self.replacehooks.add(*i)
+
+        for i in options.setheaders:
+            self.setheaders.add(*i)
 
         self.flow_list_walker = None
         self.set_palette(options.palette)

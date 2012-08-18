@@ -475,6 +475,11 @@ def certificate_option_group(parser):
         type = str, dest = "clientcerts", default=None,
         help = "Client certificate directory."
     )
+    group.add_argument(
+        "--dummy-certs", action="store",
+        type = str, dest = "certdir", default=None,
+        help = "Generated dummy certs directory."
+    )
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]

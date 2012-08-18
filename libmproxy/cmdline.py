@@ -17,8 +17,27 @@ import proxy
 import re, filt
 
 
-class ParseReplaceException(Exception): pass
+class ParseException(Exception): pass
 class OptionException(Exception): pass
+
+def _parse_hook(s):
+    sep, rem = s[0], s[1:]
+    parts = rem.split(sep, 2)
+    if len(parts) == 2:
+        patt = ".*"
+        a, b = parts
+    elif len(parts) == 3:
+        patt, a, b = parts
+    else:
+        raise ParseException("Malformed hook specifier - too few clauses: %s"%s)
+
+    if not a:
+        raise ParseException("Empty clause: %s"%str(patt))
+
+    if not filt.parse(patt):
+        raise ParseException("Malformed filter pattern: %s"%patt)
+
+    return patt, a, b
 
 
 def parse_replace_hook(s):
@@ -45,30 +64,43 @@ def parse_replace_hook(s):
             /one/two/foo/bar/
 
         Checks that pattern and regex are both well-formed. Raises
-        ParseReplaceException on error.
+        ParseException on error.
     """
-    sep, rem = s[0], s[1:]
-    parts = rem.split(sep, 2)
-    if len(parts) == 2:
-        patt = ".*"
-        regex, replacement = parts
-    elif len(parts) == 3:
-        patt, regex, replacement = parts
-    else:
-        raise ParseReplaceException("Malformed replacement specifier - too few clauses: %s"%s)
-
-    if not regex:
-        raise ParseReplaceException("Empty replacement regex: %s"%str(patt))
-
+    patt, regex, replacement = _parse_hook(s)
     try:
         re.compile(regex)
     except re.error, e:
-        raise ParseReplaceException("Malformed replacement regex: %s"%str(e.message))
-
-    if not filt.parse(patt):
-        raise ParseReplaceException("Malformed replacement filter pattern: %s"%patt)
-
+        raise ParseException("Malformed replacement regex: %s"%str(e.message))
     return patt, regex, replacement
+
+
+def parse_setheader(s):
+    """
+        Returns a (pattern, header, value) tuple.
+
+        The general form for a replacement hook is as follows:
+
+            /patt/header/value
+
+        The first character specifies the separator. Example:
+
+            :~q:foo:bar
+
+        If only two clauses are specified, the pattern is set to match
+        universally (i.e. ".*"). Example:
+
+            /foo/bar/
+
+        Clauses are parsed from left to right. Extra separators are taken to be
+        part of the final clause. For instance, the value clause below is
+        "foo/bar/":
+
+            /one/two/foo/bar/
+
+        Checks that pattern and regex are both well-formed. Raises
+        ParseException on error.
+    """
+    return _parse_hook(s)
 
 
 def get_common_options(options):
@@ -83,19 +115,28 @@ def get_common_options(options):
     for i in options.replace:
         try:
             p = parse_replace_hook(i)
-        except ParseReplaceException, e:
+        except ParseException, e:
             raise OptionException(e.message)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
-        except ParseReplaceException, e:
+        except ParseException, e:
             raise OptionException(e.message)
         try:
             v = open(path, "r").read()
         except IOError, e:
             raise OptionException("Could not read replace file: %s"%path)
         reps.append((patt, rex, v))
+
+
+    setheaders = []
+    for i in options.setheader:
+        try:
+            p = parse_setheader(i)
+        except ParseException, e:
+            raise OptionException(e.message)
+        setheaders.append(p)
 
     return dict(
         anticache = options.anticache,
@@ -108,6 +149,7 @@ def get_common_options(options):
         rheaders = options.rheaders,
         rfile = options.rfile,
         replacements = reps,
+        setheaders = setheaders,
         server_replay = options.server_replay,
         script = options.script,
         stickycookie = stickycookie,
@@ -211,6 +253,7 @@ def common_options(parser):
         action="store", dest="cert_wait_time", default=0,
         help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
     )
+
     parser.add_argument(
         "--no-upstream-cert", default=False,
         action="store_true", dest="no_upstream_cert",
@@ -271,14 +314,24 @@ def common_options(parser):
     group.add_argument(
         "--replace-from-file",
         action="append", type=str, dest="replace_file", default=[],
-        metavar="PATTERN",
+        metavar="PATH",
         help="Replacement pattern, where the replacement clause is a path to a file."
     )
 
+
+    group = parser.add_argument_group(
+        "Set Headers",
+        """
+            Header specifications are of the form "/pattern/header/value",
+            where the separator can be any character. Please see the
+            documentation for more information.
+        """.strip()
+    )
     group.add_argument(
-        "--dummy-certs", action="store",
-        type = str, dest = "certdir", default=None,
-        help = "Generated dummy certs directory."
+        "--setheader",
+        action="append", type=str, dest="setheader", default=[],
+        metavar="PATTERN",
+        help="Header set pattern."
     )
 
     proxy.certificate_option_group(parser)
