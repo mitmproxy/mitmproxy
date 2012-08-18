@@ -35,6 +35,11 @@ class ReplaceHooks:
     def __init__(self):
         self.lst = []
 
+    def set(self, r):
+        self.clear()
+        for i in r:
+            self.add(*i)
+
     def add(self, fpatt, rex, s):
         """
             Add a replacement hook.
@@ -56,17 +61,6 @@ class ReplaceHooks:
         self.lst.append((fpatt, rex, s, cpatt))
         return True
 
-    def remove(self, fpatt, rex, s):
-        """
-            Remove a hook.
-
-            patt: A string specifying a filter pattern.
-            func: Optional callable. If not specified, all hooks matching patt are removed.
-        """
-        for i in range(len(self.lst)-1, -1, -1):
-            if (fpatt, rex, s) == self.lst[i][:3]:
-                del self.lst[i]
-
     def get_specs(self):
         """
             Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
@@ -86,6 +80,59 @@ class ReplaceHooks:
 
     def clear(self):
         self.lst = []
+
+
+class SetHeaders:
+    def __init__(self):
+        self.lst = []
+
+    def set(self, r):
+        self.clear()
+        for i in r:
+            self.add(*i)
+
+    def add(self, fpatt, header, value):
+        """
+            Add a set header hook.
+
+            fpatt: String specifying a filter pattern.
+            header: Header name.
+            value: Header value string
+
+            Returns True if hook was added, False if the pattern could not be
+            parsed.
+        """
+        cpatt = filt.parse(fpatt)
+        if not cpatt:
+            return False
+        self.lst.append((fpatt, header, value, cpatt))
+        return True
+
+    def get_specs(self):
+        """
+            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
+        """
+        return [i[:3] for i in self.lst]
+
+    def count(self):
+        return len(self.lst)
+
+    def clear(self):
+        self.lst = []
+
+    def run(self, f):
+        for _, header, value, cpatt in self.lst:
+            if cpatt(f):
+                if f.response:
+                    del f.response.headers[header]
+                else:
+                    del f.request.headers[header]
+        for _, header, value, cpatt in self.lst:
+            if cpatt(f):
+                if f.response:
+                    f.response.headers.add(header, value)
+                else:
+                    f.request.headers.add(header, value)
 
 
 class ScriptContext:
@@ -1220,6 +1267,7 @@ class FlowMaster(controller.Master):
         self.anticomp = False
         self.refresh_server_playback = False
         self.replacehooks = ReplaceHooks()
+        self.setheaders = SetHeaders()
 
         self.stream = None
 
@@ -1426,6 +1474,7 @@ class FlowMaster(controller.Master):
     def handle_error(self, r):
         f = self.state.add_error(r)
         self.replacehooks.run(f)
+        self.setheaders.run(f)
         if f:
             self.run_script_hook("error", f)
         if self.client_playback:
@@ -1436,6 +1485,7 @@ class FlowMaster(controller.Master):
     def handle_request(self, r):
         f = self.state.add_request(r)
         self.replacehooks.run(f)
+        self.setheaders.run(f)
         self.run_script_hook("request", f)
         self.process_new_request(f)
         return f
@@ -1444,6 +1494,7 @@ class FlowMaster(controller.Master):
         f = self.state.add_response(r)
         if f:
             self.replacehooks.run(f)
+            self.setheaders.run(f)
             self.run_script_hook("response", f)
             if self.client_playback:
                 self.client_playback.clear(f)

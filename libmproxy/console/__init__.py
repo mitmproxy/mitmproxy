@@ -124,6 +124,10 @@ class StatusBar(common.WWrap):
     def get_status(self):
         r = []
 
+        if self.master.setheaders.count():
+            r.append("[")
+            r.append(("heading_key", "H"))
+            r.append("eaders]")
         if self.master.replacehooks.count():
             r.append("[")
             r.append(("heading_key", "R"))
@@ -762,11 +766,6 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             self.view_flowlist()
 
-    def set_replace(self, r):
-        self.replacehooks.clear()
-        for i in r:
-            self.replacehooks.add(*i)
-
     def loop(self):
         changed = True
         try:
@@ -815,6 +814,14 @@ class ConsoleMaster(flow.FlowMaster):
                                         ),
                                         self.stop_client_playback_prompt,
                                     )
+                            elif k == "H":
+                                self.view_grideditor(
+                                    grideditor.SetHeadersEditor(
+                                        self,
+                                        self.setheaders.get_specs(),
+                                        self.setheaders.set
+                                    )
+                                )
                             elif k == "i":
                                 self.prompt(
                                     "Intercept filter: ",
@@ -853,7 +860,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     grideditor.ReplaceEditor(
                                         self,
                                         self.replacehooks.get_specs(),
-                                        self.set_replace
+                                        self.replacehooks.set
                                     )
                                 )
                             elif k == "s":

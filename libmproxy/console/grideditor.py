@@ -373,3 +373,14 @@ class ReplaceEditor(GridEditor):
                 return True
         return False
 
+
+class SetHeadersEditor(GridEditor):
+    title = "Editing header set patterns"
+    columns = 3
+    headings = ("Filter", "Header", "Value")
+    def is_error(self, col, val):
+        if col == 0:
+            if not filt.parse(val):
+                return True
+        return False
+
