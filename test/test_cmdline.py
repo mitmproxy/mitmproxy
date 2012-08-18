@@ -36,7 +36,7 @@ def test_parse_replace_hook():
 
 
 def test_parse_setheaders():
-    x = cmdline.parse_replace_hook("/foo/bar/voing")
+    x = cmdline.parse_setheader("/foo/bar/voing")
     assert x == ("foo", "bar", "voing")
 
 
@@ -52,6 +52,18 @@ def test_common():
     v = cmdline.get_common_options(opts)
     assert v["stickycookie"] == "foo"
     assert v["stickyauth"] == "foo"
+
+    opts.setheader = ["/foo/bar/voing"]
+    v = cmdline.get_common_options(opts)
+    assert v["setheaders"] == [("foo", "bar", "voing")]
+
+    opts.setheader = ["//"]
+    tutils.raises(
+        "empty clause",
+        cmdline.get_common_options,
+        opts
+    )
+    opts.setheader = []
 
     opts.replace = ["/foo/bar/voing"]
     v = cmdline.get_common_options(opts)
