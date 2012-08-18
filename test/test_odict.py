@@ -85,6 +85,12 @@ class TestODict:
         assert self.od.get("one") == ["two"]
         assert self.od.get("two") == None
 
+    def test_get_first(self):
+        self.od.add("one", "two")
+        self.od.add("one", "three")
+        assert self.od.get_first("one") == "two"
+        assert self.od.get_first("two") == None
+
 
 class TestODictCaseless:
     def setUp(self):

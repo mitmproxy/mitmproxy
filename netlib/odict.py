@@ -80,6 +80,12 @@ class ODict:
         else:
             return d
 
+    def get_first(self, k, d=None):
+        if k in self:
+            return self[k][0]
+        else:
+            return d
+
     def items(self):
         return self.lst[:]
 
