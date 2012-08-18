@@ -134,9 +134,9 @@ class decoded(object):
     """
     def __init__(self, o):
         self.o = o
-        ce = o.headers["content-encoding"]
-        if ce and ce[0] in encoding.ENCODINGS:
-            self.ce = ce[0]
+        ce = o.headers.get_first("content-encoding")
+        if ce in encoding.ENCODINGS:
+            self.ce = ce
         else:
             self.ce = None
 
@@ -156,11 +156,11 @@ class HTTPMsg(controller.Msg):
             removes the header. If there is no Content-Encoding header, no
             action is taken.
         """
-        ce = self.headers["content-encoding"]
-        if not self.content or not ce or ce[0] not in encoding.ENCODINGS:
+        ce = self.headers.get_first("content-encoding")
+        if not self.content or ce not in encoding.ENCODINGS:
             return
         self.content = encoding.decode(
-            ce[0],
+            ce,
             self.content
         )
         del self.headers["content-encoding"]

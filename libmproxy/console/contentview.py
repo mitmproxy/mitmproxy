@@ -50,11 +50,9 @@ class ViewAuto:
     prompt = ("auto", "a")
     content_types = []
     def __call__(self, hdrs, content, limit):
-        ctype = hdrs.get("content-type")
+        ctype = hdrs.get_first("content-type")
         if ctype:
-            ctype = ctype[0]
-        ct = utils.parse_content_type(ctype) if ctype else None
-        if ct:
+            ct = utils.parse_content_type(ctype) if ctype else None
             ct = "%s/%s"%(ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](hdrs, content, limit)
@@ -199,9 +197,9 @@ class ViewMultipart:
     prompt = ("multipart", "m")
     content_types = ["multipart/form-data"]
     def __call__(self, hdrs, content, limit):
-        v = hdrs.get("content-type")
+        v = hdrs.get_first("content-type")
         if v:
-            v = utils.parse_content_type(v[0])
+            v = utils.parse_content_type(v)
             if not v:
                 return
             boundary = v[2].get("boundary")
@@ -363,12 +361,12 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc):
 
     hdrs = flow.ODictCaseless([list(i) for i in hdrItems])
 
-    enc = hdrs.get("content-encoding")
-    if enc and enc[0] != "identity":
-        decoded = encoding.decode(enc[0], content)
+    enc = hdrs.get_first("content-encoding")
+    if enc and enc != "identity":
+        decoded = encoding.decode(enc, content)
         if decoded:
             content = decoded
-            msg.append("[decoded %s]"%enc[0])
+            msg.append("[decoded %s]"%enc)
     try:
         ret = viewmode(hdrs, content, limit)
     # Third-party viewers can fail in unexpected ways...

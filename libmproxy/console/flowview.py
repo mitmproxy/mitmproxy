@@ -555,8 +555,8 @@ class FlowView(common.WWrap):
         elif key == "z":
             if conn:
                 self.flow.backup()
-                e = conn.headers["content-encoding"] or ["identity"]
-                if e[0] != "identity":
+                e = conn.headers.get_first("content-encoding", "identity")
+                if e != "identity":
                     conn.decode()
                 else:
                     self.master.prompt_onekey(
