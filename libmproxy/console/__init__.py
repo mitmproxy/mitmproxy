@@ -255,7 +255,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.follow_focus = None
-        self.default_body_view = contentview.ViewAuto
+        self.default_body_view = contentview.get("Auto")
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
         self.last_saveload = ""

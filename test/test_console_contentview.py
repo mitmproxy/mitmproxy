@@ -11,61 +11,42 @@ class TestContentView:
         cv.trailer(cv.VIEW_CUTOFF + 10, txt, cv.VIEW_CUTOFF)
         assert txt
 
-    def test_get_view_func(self):
-        f = cv.get_view_func(
-                cv.get("Hex"),
+    def test_view_auto(self):
+        v = cv.ViewAuto()
+        f = v(
                 flow.ODictCaseless(),
-                "foo"
+                "foo",
+                1000
               )
-        assert f.name == "Hex"
+        assert f[0] == "Raw"
 
-        f = cv.get_view_func(
-                cv.get("Auto"),
-                flow.ODictCaseless(),
-                "foo"
-              )
-        assert f.name == "Raw"
-
-        f = cv.get_view_func(
-                cv.get("Auto"),
+        f = v(
                 flow.ODictCaseless(
                     [["content-type", "text/html"]],
                 ),
-                "foo"
+                "<html></html>",
+                1000
               )
-        assert f.name == "HTML"
+        assert f[0] == "HTML"
 
-        f = cv.get_view_func(
-                cv.get("Auto"),
+        f = v(
                 flow.ODictCaseless(
                     [["content-type", "text/flibble"]],
                 ),
-                "foo"
+                "foo",
+                1000
               )
-        assert f.name == "Raw"
+        assert f[0] == "Raw"
 
-        f = cv.get_view_func(
-                cv.get("Auto"),
+        f = v(
                 flow.ODictCaseless(
                     [["content-type", "text/flibble"]],
                 ),
-                "<xml></xml>"
+                "<xml></xml>",
+                1000
               )
-        assert f.name == "XML" 
+        assert f[0].startswith("XML")
 
-        try:
-            import pyamf
-
-            f = cv.get_view_func(
-                    cv.get("Auto"),
-                    flow.ODictCaseless(
-                        [["content-type", "application/x-amf"]],
-                    ),
-                    ""
-                  )
-            assert f.name == "AMF"
-        except ImportError:
-            pass
 
     def test_view_urlencoded(self):
         d = utils.urlencode([("one", "two"), ("three", "four")])
@@ -223,3 +204,6 @@ Larry
         assert "decoded gzip" in r[0]
         assert "Raw" in r[0]
 
+
+def test_get_by_shortcut():
+    assert cv.get_by_shortcut("h")

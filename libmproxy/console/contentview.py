@@ -42,6 +42,18 @@ class ViewAuto:
     name = "Auto"
     prompt = ("auto", "a")
     content_types = []
+    def __call__(self, hdrs, content, limit):
+        ctype = hdrs.get("content-type")
+        if ctype:
+            ctype = ctype[0]
+        ct = utils.parse_content_type(ctype) if ctype else None
+        if ct:
+            ct = "%s/%s"%(ct[0], ct[1])
+            if ct in content_types_map:
+                return content_types_map[ct][0](hdrs, content, limit)
+            elif utils.isXML(content):
+                return get("XML")(hdrs, content, limit)
+        return get("Raw")(hdrs, content, limit)
 
 
 class ViewRaw:
@@ -324,26 +336,6 @@ def get(name):
             return i
 
 
-def get_view_func(viewmode, hdrs, content):
-    """
-        Returns a function object.
-    """
-    if viewmode.name == "Auto":
-        ctype = hdrs.get("content-type")
-        if ctype:
-            ctype = ctype[0]
-        ct = utils.parse_content_type(ctype) if ctype else None
-        if ct:
-            ct = "%s/%s"%(ct[0], ct[1])
-            if ct in content_types_map:
-                return content_types_map[ct][0]
-            elif utils.isXML(content):
-                return ViewXML
-        return ViewRaw
-    else:
-        return viewmode
-
-
 def get_content_view(viewmode, hdrItems, content, limit):
     """
         Returns a (msg, body) tuple.
@@ -358,13 +350,12 @@ def get_content_view(viewmode, hdrItems, content, limit):
         if decoded:
             content = decoded
             msg.append("[decoded %s]"%enc[0])
-    func = get_view_func(viewmode, hdrs, content)
     try:
-        ret = func(hdrs, content, limit)
+        ret = viewmode(hdrs, content, limit)
     # Third-party viewers can fail in unexpected ways...
     except Exception, e:
-        #s = traceback.format_exc()
-        #return "", _view_text(s, len(s), len(s))
+        s = traceback.format_exc()
+        return "", _view_text(s, len(s), len(s))
         ret = None
     if not ret:
         ret = get("Raw")(hdrs, content, limit)
@@ -372,5 +363,3 @@ def get_content_view(viewmode, hdrItems, content, limit):
     else:
         msg.append(ret[0])
     return " ".join(msg), ret[1]
-
-
