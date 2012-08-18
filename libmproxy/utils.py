@@ -81,41 +81,6 @@ def pretty_json(s):
     return json.dumps(p, sort_keys=True, indent=4).split("\n")
 
 
-def pretty_amf(s):
-    """
-        Takes an AMF encoded string, decodes it and returns a nicely indented
-        string in JSON format.
-
-        Reqires pyamf module. The function returns None if pyamf is not
-        installed.
-    """
-    try:
-        import pyamf
-        from pyamf import remoting
-    except ImportError: # pragma nocover
-        return None
-
-    envelope = remoting.decode(s)
-    if not envelope:
-        return None
-
-    data = {}
-    data['amfVersion'] = envelope.amfVersion
-    for target, message in iter(envelope):
-        one_message = {}
-
-        if hasattr(message, 'status'):
-            one_message['status'] = message.status
-
-        if hasattr(message, 'target'):
-            one_message['target'] = message.target
-
-        one_message['body'] = message.body
-        data[target] = one_message
-
-    return json.dumps(data, indent=4)
-
-
 def urldecode(s):
     """
         Takes a urlencoded string and returns a list of (key, value) tuples.

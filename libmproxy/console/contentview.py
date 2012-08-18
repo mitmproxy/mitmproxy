@@ -1,4 +1,4 @@
-import re, cStringIO, traceback
+import re, cStringIO, traceback, json
 import urwid
 from PIL import Image
 from PIL.ExifTags import TAGS
@@ -6,6 +6,13 @@ import lxml.html, lxml.etree
 import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier, html2text
+
+try:
+    import pyamf
+    from pyamf import remoting
+except ImportError: # pragma nocover
+    pyamf = None
+
 
 VIEW_CUTOFF = 1024*50
 
@@ -230,9 +237,25 @@ class ViewAMF:
     prompt = ("amf", "f")
     content_types = ["application/x-amf"]
     def __call__(self, hdrs, content, limit):
-        s = utils.pretty_amf(content)
-        if s:
-            return "AMF", _view_text(s[:limit], len(s), limit)
+        envelope = remoting.decode(content)
+        if not envelope:
+            return None
+
+        data = {}
+        data['amfVersion'] = envelope.amfVersion
+        for target, message in iter(envelope):
+            one_message = {}
+
+            if hasattr(message, 'status'):
+                one_message['status'] = message.status
+
+            if hasattr(message, 'target'):
+                one_message['target'] = message.target
+
+            one_message['body'] = message.body
+            data[target] = one_message
+        s = json.dumps(data, indent=4)
+        return "AMF", _view_text(s[:limit], len(s), limit)
 
 
 class ViewJavaScript:
@@ -307,12 +330,8 @@ views = [
     ViewMultipart(),
     ViewImage(),
 ]
-try:
-    import pyamf
+if pyamf:
     views.append(ViewAMF())
-except ImportError: # pragma nocover
-    pass
-
 
 content_types_map = {}
 for i in views:
