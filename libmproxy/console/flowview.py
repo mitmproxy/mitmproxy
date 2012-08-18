@@ -180,7 +180,7 @@ class FlowView(common.WWrap):
                             " ",
                             ('heading', "["),
                             ('heading_key', "m"),
-                            ('heading', (":%s]"%contentview.VIEW_NAMES[viewmode])),
+                            ('heading', (":%s]"%viewmode.name)),
                         ],
                         align="right"
                     )
@@ -392,7 +392,7 @@ class FlowView(common.WWrap):
         self.state.add_flow_setting(
             self.flow,
             (self.state.view_flow_mode, "prettyview"),
-            contentview.VIEW_SHORTCUTS.get(t)
+            contentview.get_by_shortcut(t)
         )
         self.master.refresh_flow(self.flow)
 
@@ -500,7 +500,7 @@ class FlowView(common.WWrap):
             self.master.refresh_flow(self.flow)
             self.master.statusbar.message("")
         elif key == "m":
-            p = list(contentview.VIEW_PROMPT)
+            p = list(contentview.view_prompts)
             p.insert(0, ("clear", "c"))
             self.master.prompt_onekey(
                 "Display mode",

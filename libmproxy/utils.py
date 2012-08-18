@@ -92,7 +92,7 @@ def pretty_amf(s):
     try:
         import pyamf
         from pyamf import remoting
-    except ImportError:
+    except ImportError: # pragma nocover
         return None
 
     envelope = remoting.decode(s)
@@ -102,7 +102,6 @@ def pretty_amf(s):
     data = {}
     data['amfVersion'] = envelope.amfVersion
     for target, message in iter(envelope):
-
         one_message = {}
 
         if hasattr(message, 'status'):

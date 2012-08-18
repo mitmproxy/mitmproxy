@@ -159,10 +159,10 @@ class StatusBar(common.WWrap):
             r.append("[")
             r.append(("heading_key", "P"))
             r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
-        if self.master.state.default_body_view != contentview.VIEW_AUTO:
+        if self.master.state.default_body_view.name != "Auto":
             r.append("[")
             r.append(("heading_key", "M"))
-            r.append(":%s]"%contentview.VIEW_NAMES[self.master.state.default_body_view])
+            r.append(":%s]"%self.master.state.default_body_view.name)
 
         opts = []
         if self.master.anticache:
@@ -255,7 +255,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.follow_focus = None
-        self.default_body_view = contentview.VIEW_AUTO
+        self.default_body_view = contentview.ViewAuto
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
         self.last_saveload = ""
@@ -736,7 +736,7 @@ class ConsoleMaster(flow.FlowMaster):
         return self.state.set_intercept(txt)
 
     def change_default_display_mode(self, t):
-        v = contentview.VIEW_SHORTCUTS.get(t)
+        v = contentview.get_by_shortcut(t)
         self.state.default_body_view = v
         if self.currentflow:
             self.refresh_flow(self.currentflow)
@@ -835,7 +835,7 @@ class ConsoleMaster(flow.FlowMaster):
                             elif k == "M":
                                 self.prompt_onekey(
                                     "Global default display mode",
-                                    contentview.VIEW_PROMPT,
+                                    contentview.view_prompts,
                                     self.change_default_display_mode
                                 )
                             elif k == "P":
