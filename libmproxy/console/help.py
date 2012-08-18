@@ -83,6 +83,10 @@ class HelpView(urwid.ListBox):
                     common.highlight_key("xml", "x") +
                     [("text", ": XML")]
                 ),
+                (None,
+                    common.highlight_key("amf", "f") +
+                    [("text", ": AMF (requires PyAMF)")]
+                ),
             ("o", "toggle options:"),
                 (None,
                     common.highlight_key("anticache", "a") +
