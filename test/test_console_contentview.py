@@ -160,7 +160,8 @@ Larry
                 cv.get("Raw"),
                 [["content-type", "application/json"]],
                 "[1, 2, 3]",
-                1000
+                1000,
+                lambda x: None
               )
         assert "Raw" in r[0]
 
@@ -168,7 +169,8 @@ Larry
                 cv.get("Auto"),
                 [["content-type", "application/json"]],
                 "[1, 2, 3]",
-                1000
+                1000,
+                lambda x: None
               )
         assert r[0] == "JSON"
 
@@ -176,9 +178,20 @@ Larry
                 cv.get("Auto"),
                 [["content-type", "application/json"]],
                 "[1, 2",
-                1000
+                1000,
+                lambda x: None
               )
         assert "Raw" in r[0]
+
+        r = cv.get_content_view(
+                cv.get("AMF"),
+                [],
+                "[1, 2",
+                1000,
+                lambda x: None
+              )
+        assert "Raw" in r[0]
+
 
         r = cv.get_content_view(
                 cv.get("Auto"),
@@ -187,7 +200,8 @@ Larry
                     ["content-encoding", "gzip"]
                 ],
                 encoding.encode('gzip', "[1, 2, 3]"),
-                1000
+                1000,
+                lambda x: None
               )
         assert "decoded gzip" in r[0]
         assert "JSON" in r[0]
@@ -199,7 +213,8 @@ Larry
                     ["content-encoding", "gzip"]
                 ],
                 encoding.encode('gzip', "[1, 2, 3]"),
-                1000
+                1000,
+                lambda x: None
               )
         assert "decoded gzip" in r[0]
         assert "Raw" in r[0]

@@ -336,7 +336,7 @@ def get(name):
             return i
 
 
-def get_content_view(viewmode, hdrItems, content, limit):
+def get_content_view(viewmode, hdrItems, content, limit, logfunc):
     """
         Returns a (msg, body) tuple.
     """
@@ -355,7 +355,8 @@ def get_content_view(viewmode, hdrItems, content, limit):
     # Third-party viewers can fail in unexpected ways...
     except Exception, e:
         s = traceback.format_exc()
-        return "", _view_text(s, len(s), len(s))
+        s = "Content viewer failed: \n"  + s
+        logfunc(s)
         ret = None
     if not ret:
         ret = get("Raw")(hdrs, content, limit)

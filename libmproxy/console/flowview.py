@@ -128,7 +128,7 @@ class FlowView(common.WWrap):
             self.view_request()
 
     def _cached_content_view(self, viewmode, hdrItems, content, limit):
-        return contentview.get_content_view(viewmode, hdrItems, content, limit)
+        return contentview.get_content_view(viewmode, hdrItems, content, limit, self.master.add_event)
 
     def content_view(self, viewmode, conn):
         full = self.state.get_flow_setting(
