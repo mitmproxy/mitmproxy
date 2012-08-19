@@ -741,7 +741,25 @@ class TestRequest:
         r.content = flow.CONTENT_MISSING
         assert not r._assemble()
 
+    def test_path_components(self):
+        h = flow.ODictCaseless()
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        assert r.get_path_components() == []
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/foo/bar", h, "content")
+        assert r.get_path_components() == ["foo", "bar"]
+        q = flow.ODict()
+        q["test"] = ["123"]
+        r.set_query(q)
+        assert r.get_path_components() == ["foo", "bar"]
 
+        r.set_path_components([])
+        assert r.get_path_components() == []
+        r.set_path_components(["foo"])
+        assert r.get_path_components() == ["foo"]
+        r.set_path_components(["/oo"])
+        assert r.get_path_components() == ["/oo"]
+        assert "%2F" in r.path
 
     def test_getset_form_urlencoded(self):
         h = flow.ODictCaseless()

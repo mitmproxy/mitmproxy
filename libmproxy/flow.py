@@ -18,7 +18,7 @@
     with their responses, and provide filtering and interception facilities.
 """
 import hashlib, Cookie, cookielib, copy, re, urlparse, os
-import time
+import time, urllib
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 from netlib import odict, http, certutils
@@ -396,6 +396,26 @@ class Request(HTTPMsg):
         # url-encoded form, leave it alone.
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(odict.lst)
+
+    def get_path_components(self):
+        """
+            Returns the path components of the URL as a list of strings.
+
+            Components are unquoted.
+        """
+        _, _, path, _, _, _ = urlparse.urlparse(self.get_url())
+        return [urllib.unquote(i) for i in path.split("/") if i]
+
+    def set_path_components(self, lst):
+        """
+            Takes a list of strings, and sets the path component of the URL.
+
+            Components are quoted.
+        """
+        lst = [urllib.quote(i, safe="") for i in lst]
+        path = "/" + "/".join(lst)
+        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.get_url())
+        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def get_query(self):
         """
