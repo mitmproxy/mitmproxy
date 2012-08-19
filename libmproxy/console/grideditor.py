@@ -95,7 +95,8 @@ class GridRow(common.WWrap):
                 )
 
         fspecs = self.fields[:]
-        fspecs[0] = ("fixed", self.editor.first_width + 2, fspecs[0])
+        if len(self.fields) > 1:
+            fspecs[0] = ("fixed", self.editor.first_width + 2, fspecs[0])
         w = urwid.Columns(
             fspecs,
             dividechars = 2
@@ -252,7 +253,7 @@ class GridEditor(common.WWrap):
         headings = []
         for i, h in enumerate(self.headings):
             c = urwid.Text(h)
-            if i == 0:
+            if i == 0 and len(self.headings) > 1:
                 headings.append(("fixed", first_width + 2, c))
             else:
                 headings.append(c)
@@ -383,4 +384,11 @@ class SetHeadersEditor(GridEditor):
             if not filt.parse(val):
                 return True
         return False
+
+
+class PathEditor(GridEditor):
+    title = "Editing URL path components"
+    columns = 1
+    headings = ("Component",)
+    encoding = "ascii"
 

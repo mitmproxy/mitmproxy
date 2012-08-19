@@ -317,6 +317,9 @@ class FlowView(common.WWrap):
     def set_query(self, lst, conn):
         conn.set_query(flow.ODict(lst))
 
+    def set_path_components(self, lst, conn):
+        conn.set_path_components([i[0] for i in lst])
+
     def set_form(self, lst, conn):
         conn.set_form_urlencoded(flow.ODict(lst))
 
@@ -356,6 +359,10 @@ class FlowView(common.WWrap):
                 self.edit_form(conn)
         elif part == "h":
             self.master.view_grideditor(grideditor.HeaderEditor(self.master, conn.headers.lst, self.set_headers, conn))
+        elif part == "p":
+            p = conn.get_path_components()
+            p = [[i] for i in p]
+            self.master.view_grideditor(grideditor.PathEditor(self.master, p, self.set_path_components, conn))
         elif part == "q":
             self.master.view_grideditor(grideditor.QueryEditor(self.master, conn.get_query().lst, self.set_query, conn))
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
@@ -470,9 +477,10 @@ class FlowView(common.WWrap):
                     "Edit request",
                     (
                         ("query", "q"),
-                        ("form", "f"),
+                        ("path", "p"),
                         ("url", "u"),
                         ("header", "h"),
+                        ("form", "f"),
                         ("raw body", "r"),
                         ("method", "m"),
                     ),
