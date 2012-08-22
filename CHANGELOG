@@ -1,0 +1,21 @@
+22 August 2012: pathod 0.2:
+
+    * Add pathoc, a pathological HTTP client.
+    
+    * Add libpathod.test, a truss for using pathod in unit tests.
+    
+    * Add an injection operator to the specification language.
+    
+    * Allow Python escape sequences in value literals.
+    
+    * Allow execution of requests and responses from file, using the new + operator.
+    
+    * Add daemonization to Pathod, and make it more robust for public-facing use. 
+   
+    * Let pathod pick an arbitrary open port if -p 0 is specified.
+    
+    * Move from Tornado to netlib, the network library written for mitmproxy.
+    
+    * Move the web application to Flask.
+    
+    * Massively expand the documentation.
