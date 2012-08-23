@@ -59,7 +59,7 @@ def main(parser, args):
     log.setLevel(logging.DEBUG)
     fmt = logging.Formatter(
         '%(asctime)s: %(message)s',
-        datefmt='%d-%m-%y %I:%M:%S',
+        datefmt='%d-%m-%y %H:%M:%S',
     )
     if args.logfile:
         fh = logging.handlers.WatchedFileHandler(args.logfile)
