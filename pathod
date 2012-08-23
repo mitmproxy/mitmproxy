@@ -3,6 +3,7 @@ import argparse, sys, logging, logging.handlers
 import os
 from libpathod import pathod, utils, version, rparse
 
+
 def daemonize (stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     try:
         pid = os.fork()
@@ -53,17 +54,21 @@ def main(parser, args):
     if root.handlers:
         for handler in root.handlers:
             root.removeHandler(handler)
-    logging.basicConfig(
-        format='%(asctime)s: %(message)s',
-        datefmt='%d-%m-%y %I:%M:%S',
-        level=logging.DEBUG
-    )
-    if not args.debug:
-        logging.disable(logging.DEBUG)
-    if args.logfile:
-        ch = logging.handlers.WatchedFileHandler(args.logfile)
-        root.addHandler(ch)
 
+    log = logging.getLogger('pathod')
+    log.setLevel(logging.DEBUG)
+    fmt = logging.Formatter(
+        '%(asctime)s: %(message)s',
+        datefmt='%d-%m-%y %I:%M:%S',
+    )
+    if args.logfile:
+        fh = logging.handlers.WatchedFileHandler(args.logfile)
+        fh.setFormatter(fmt)
+        log.addHandler(fh)
+    if not args.daemonize:
+        sh = logging.StreamHandler()
+        sh.setFormatter(fmt)
+        log.addHandler(sh)
 
     sizelimit = None
     if args.sizelimit:

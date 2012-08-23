@@ -2,6 +2,8 @@ import urllib, threading, re, logging, socket, sys
 from netlib import tcp, http, odict, wsgi
 import version, app, rparse
 
+logger = logging.getLogger('pathod')
+
 
 class PathodError(Exception): pass
 
@@ -10,7 +12,7 @@ class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
     def info(self, s):
-        logging.info("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
+        logger.info("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
 
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
@@ -89,13 +91,13 @@ class PathodHandler(tcp.BaseHandler):
 
         for i in self.server.anchors:
             if i[0].match(path):
-                self.info("Serving anchor: %s"%path)
+                self.info("crafting anchor: %s"%path)
                 aresp = rparse.parse_response(self.server.request_settings, i[1])
                 return self.serve_crafted(aresp, request_log)
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
-            self.info("Serving spec: %s"%spec)
+            self.info("crafting spec: %s"%spec)
             try:
                 crafted = rparse.parse_response(self.server.request_settings, spec)
             except rparse.ParseException, v:
