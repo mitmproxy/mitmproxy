@@ -89,8 +89,5 @@ setup(
             "Topic :: Software Development :: Testing :: Traffic Generation",
             "Topic :: Internet :: WWW/HTTP",
         ],
-        install_requires=['netlib', "requests>=0.13"],
-        dependency_links=[
-            'https://github.com/cortesi/netlib/tarball/master#egg=netlib-0.1'
-        ],
+        install_requires=['netlib>=0.2.1', "requests>=0.13"],
 )
