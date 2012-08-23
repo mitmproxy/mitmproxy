@@ -42,6 +42,12 @@ def index():
     return render("index.html", True, section="main")
 
 
+@app.route('/download')
+@app.route('/download.html')
+def download():
+    return render("download.html", True, section="download")
+
+
 @app.route('/about')
 @app.route('/about.html')
 def about():

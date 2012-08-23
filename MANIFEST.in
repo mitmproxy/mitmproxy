@@ -1,0 +1,9 @@
+include LICENSE
+include CHANGELOG
+include README.txt
+exclude README.mkd
+recursive-include test *
+recursive-include libpathod/resources *
+recursive-include libpathod/templates *
+recursive-include libpathod/static *
+recursive-exclude test *.swo *.swp *.pyc

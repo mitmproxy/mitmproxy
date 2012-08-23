@@ -1,5 +1,0 @@
-base = ..
-coverage = ../libpathod
-exclude = .
-          ../libpathod/contrib
-
