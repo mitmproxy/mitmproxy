@@ -77,7 +77,7 @@ setup(
         url = "http://pathod.net",
         packages = packages,
         package_data = package_data,
-        scripts = ["pathod"],
+        scripts = ["pathod", "pathoc"],
         classifiers = [
             "License :: OSI Approved :: MIT License",
             "Development Status :: 3 - Alpha",
