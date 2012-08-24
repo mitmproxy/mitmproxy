@@ -45,7 +45,7 @@ def index():
 @app.route('/download')
 @app.route('/download.html')
 def download():
-    return render("download.html", True, section="download")
+    return render("download.html", True, section="download", version=version.VERSION)
 
 
 @app.route('/about')
