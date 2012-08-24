@@ -74,7 +74,7 @@ setup(
         long_description = long_description,
         author = "Aldo Cortesi",
         author_email = "aldo@corte.si",
-        url = "http://cortesi.github.com/pathod",
+        url = "http://pathod.net",
         packages = packages,
         package_data = package_data,
         scripts = ["pathod"],
