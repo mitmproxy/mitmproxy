@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy, re
+import copy, re, os
 import urwid
 import common
 from .. import utils, filt
@@ -27,6 +27,7 @@ def _mkhelp():
         ("d", "delete row"),
         ("e", "spawn external editor on current field"),
         ("q", "return to flow view"),
+        ("r", "read value from file"),
         ("esc", "return to flow view/exit field edit mode"),
         ("tab", "next field"),
         ("enter", "edit field"),
@@ -112,6 +113,8 @@ class GridRow(common.WWrap):
             v = f.get_text()
             vals.append(v)
             if self.editor.is_error(i, v):
+                errors.add(i)
+            elif self.editor.encode(v) is None:
                 errors.add(i)
         return [vals, errors]
 
@@ -286,6 +289,20 @@ class GridEditor(common.WWrap):
                 )
             )
 
+    def encode(self, s):
+        if not self.encoding:
+            return s
+        try:
+            return s.encode(self.encoding)
+        except ValueError:
+            return None
+
+    def read_file(self, p):
+        p = os.path.expanduser(p)
+        d = file(p, "r").read()
+        self.walker.set_current_value(d)
+        self.walker._modified()
+
     def keypress(self, size, key):
         if self.walker.editing:
             if key in ["esc"]:
@@ -303,11 +320,11 @@ class GridEditor(common.WWrap):
         if key in ["q", "esc"]:
             res = []
             for i in self.walker.lst:
-                if any([x.strip() for x in i[0]]):
+                if not i[1] and any([x.strip() for x in i[0]]):
                     v = i[0]
                     if self.encoding:
-                        v = [x.encode(self.encoding) for x in v]
-                    res.append(v)
+                        v = [self.encode(x) for x in v]
+                        res.append(v)
             self.callback(res, *self.cb_args, **self.cb_kwargs)
             self.master.pop_view()
         elif key in ["h", "left"]:
@@ -322,6 +339,8 @@ class GridEditor(common.WWrap):
             self.walker.insert()
         elif key == "d":
             self.walker.delete_focus()
+        elif key == "r":
+            self.master.path_prompt("Read file: ", "", self.read_file)
         elif key == "e":
             o = self.walker.get_current_value()
             if o is not None:
