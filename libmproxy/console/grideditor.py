@@ -28,6 +28,7 @@ def _mkhelp():
         ("e", "spawn external editor on current field"),
         ("q", "return to flow view"),
         ("r", "read value from file"),
+        ("R", "read unescaped value from file"),
         ("esc", "return to flow view/exit field edit mode"),
         ("tab", "next field"),
         ("enter", "edit field"),
@@ -142,14 +143,15 @@ class GridWalker(urwid.ListWalker):
         if self.lst:
             return self.lst[self.focus][0][self.focus_col]
 
-    def set_current_value(self, val):
-        try:
-            val = val.decode("string-escape")
-        except ValueError:
-            self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
-            return
-        errors = self.lst[self.focus][1]
+    def set_current_value(self, val, unescaped):
+        if not unescaped:
+            try:
+                val = val.decode("string-escape")
+            except ValueError:
+                self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
+                return
 
+        errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
         if emsg:
             self.editor.master.statusbar.message(emsg, 1000)
@@ -186,7 +188,7 @@ class GridWalker(urwid.ListWalker):
     def stop_edit(self):
         if self.editing:
             self.editor.master.statusbar.update(footer)
-            self.set_current_value(self.editing.get_edit_value())
+            self.set_current_value(self.editing.get_edit_value(), False)
             self.editing = False
             self._modified()
 
@@ -301,10 +303,10 @@ class GridEditor(common.WWrap):
         except ValueError:
             return None
 
-    def read_file(self, p):
+    def read_file(self, p, unescaped=False):
         p = os.path.expanduser(p)
         d = file(p, "r").read()
-        self.walker.set_current_value(d)
+        self.walker.set_current_value(d, unescaped)
         self.walker._modified()
 
     def keypress(self, size, key):
@@ -342,12 +344,14 @@ class GridEditor(common.WWrap):
             self.walker.delete_focus()
         elif key == "r":
             self.master.path_prompt("Read file: ", "", self.read_file)
+        elif key == "R":
+            self.master.path_prompt("Read unescaped file: ", "", self.read_file, True)
         elif key == "e":
             o = self.walker.get_current_value()
             if o is not None:
                 n = self.master.spawn_editor(o.encode("string-escape"))
                 n = utils.clean_hanging_newline(n)
-                self.walker.set_current_value(n)
+                self.walker.set_current_value(n, False)
                 self.walker._modified()
         elif key in ["enter"]:
             self.walker.start_edit()
