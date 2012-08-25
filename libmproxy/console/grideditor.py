@@ -47,6 +47,7 @@ footer_editing = [
 
 class SText(common.WWrap):
     def __init__(self, txt, focused, error):
+        txt = txt.encode("string-escape")
         w = urwid.Text(txt, wrap="any")
         if focused:
             if error:
@@ -69,6 +70,7 @@ class SText(common.WWrap):
 
 class SEdit(common.WWrap):
     def __init__(self, txt):
+        txt = txt.encode("string-escape")
         w = urwid.Edit(edit_text=txt, wrap="any", multiline=True)
         w = urwid.AttrWrap(w, "editfield")
         common.WWrap.__init__(self, w)
@@ -106,17 +108,8 @@ class GridRow(common.WWrap):
             w.set_focus_column(focused)
         common.WWrap.__init__(self, w)
 
-    def get_value(self):
-        vals = []
-        errors = set([])
-        for i, f in enumerate(self.fields):
-            v = f.get_text()
-            vals.append(v)
-            if self.editor.is_error(i, v):
-                errors.add(i)
-            elif self.editor.encode(v) is None:
-                errors.add(i)
-        return [vals, errors]
+    def get_edit_value(self):
+        return self.editing.get_text()
 
     def keypress(self, s, k):
         if self.editing:
@@ -150,9 +143,19 @@ class GridWalker(urwid.ListWalker):
             return self.lst[self.focus][0][self.focus_col]
 
     def set_current_value(self, val):
+        try:
+            val = val.decode("string-escape")
+        except ValueError:
+            self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
+            return
+        errors = self.lst[self.focus][1]
+        if self.editor.is_error(self.focus_col, val):
+            errors.add(self.focus_col)
+        elif self.editor.encode(val) is None:
+            errors.add(self.focus_col)
         row = list(self.lst[self.focus][0])
         row[self.focus_col] = val
-        self.lst[self.focus] = [tuple(row), set([])]
+        self.lst[self.focus] = [tuple(row), errors]
 
     def delete_focus(self):
         if self.lst:
@@ -181,7 +184,7 @@ class GridWalker(urwid.ListWalker):
     def stop_edit(self):
         if self.editing:
             self.editor.master.statusbar.update(footer)
-            self.lst[self.focus] = self.editing.get_value()
+            self.set_current_value(self.editing.get_edit_value())
             self.editing = False
             self._modified()
 
@@ -344,7 +347,7 @@ class GridEditor(common.WWrap):
         elif key == "e":
             o = self.walker.get_current_value()
             if o is not None:
-                n = self.master.spawn_editor(o)
+                n = self.master.spawn_editor(o.encode("string-escape"))
                 n = utils.clean_hanging_newline(n)
                 self.walker.set_current_value(n)
                 self.walker._modified()
