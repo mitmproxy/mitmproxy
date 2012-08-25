@@ -149,10 +149,12 @@ class GridWalker(urwid.ListWalker):
             self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
             return
         errors = self.lst[self.focus][1]
-        if self.editor.is_error(self.focus_col, val):
+
+        emsg = self.editor.is_error(self.focus_col, val)
+        if emsg:
+            self.editor.master.statusbar.message(emsg, 1000)
             errors.add(self.focus_col)
-        elif self.editor.encode(val) is None:
-            errors.add(self.focus_col)
+
         row = list(self.lst[self.focus][0])
         row[self.focus_col] = val
         self.lst[self.focus] = [tuple(row), errors]
@@ -239,7 +241,6 @@ class GridEditor(common.WWrap):
     title = None
     columns = None
     headings = None
-    encoding = None
     def __init__(self, master, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
         self.master, self.value, self.callback = master, value, callback
@@ -324,10 +325,7 @@ class GridEditor(common.WWrap):
             res = []
             for i in self.walker.lst:
                 if not i[1] and any([x.strip() for x in i[0]]):
-                    v = i[0]
-                    if self.encoding:
-                        v = [self.encode(x) for x in v]
-                        res.append(v)
+                    res.append(i[0])
             self.callback(res, *self.cb_args, **self.cb_kwargs)
             self.master.pop_view()
         elif key in ["h", "left"]:
@@ -357,6 +355,9 @@ class GridEditor(common.WWrap):
             return self.w.keypress(size, key)
 
     def is_error(self, col, val):
+        """
+            Return False, or a string error message.
+        """
         return False
 
 
@@ -364,21 +365,18 @@ class QueryEditor(GridEditor):
     title = "Editing query"
     columns = 2
     headings = ("Key", "Value")
-    encoding = "ascii"
 
 
 class HeaderEditor(GridEditor):
     title = "Editing headers"
     columns = 2
     headings = ("Key", "Value")
-    encoding = "ascii"
 
 
 class URLEncodedFormEditor(GridEditor):
     title = "Editing URL-encoded form"
     columns = 2
     headings = ("Key", "Value")
-    encoding = "ascii"
 
 
 class ReplaceEditor(GridEditor):
@@ -388,12 +386,12 @@ class ReplaceEditor(GridEditor):
     def is_error(self, col, val):
         if col == 0:
             if not filt.parse(val):
-                return True
+                return "Invalid filter specification."
         elif col == 1:
             try:
                 re.compile(val)
             except re.error:
-                return True
+                return "Invalid regular expression."
         return False
 
 
@@ -404,7 +402,7 @@ class SetHeadersEditor(GridEditor):
     def is_error(self, col, val):
         if col == 0:
             if not filt.parse(val):
-                return True
+                return "Invalid filter specification"
         return False
 
 
@@ -412,5 +410,4 @@ class PathEditor(GridEditor):
     title = "Editing URL path components"
     columns = 1
     headings = ("Component",)
-    encoding = "ascii"
 
