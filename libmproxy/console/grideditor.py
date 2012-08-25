@@ -34,6 +34,14 @@ def _mkhelp():
         ("enter", "edit field"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+    text.append(
+        urwid.Text(
+            [
+                "\n",
+                ("text", "    Values are displayed and edited as escaped Python-style strings.\n"),
+            ]
+        )
+    )
     return text
 help_context = _mkhelp()
 
