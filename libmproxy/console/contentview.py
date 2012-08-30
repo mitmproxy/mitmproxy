@@ -357,6 +357,8 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc):
     """
         Returns a (msg, body) tuple.
     """
+    if not content:
+        return ("No content", "")
     msg = []
 
     hdrs = flow.ODictCaseless([list(i) for i in hdrItems])
