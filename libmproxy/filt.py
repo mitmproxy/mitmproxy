@@ -27,6 +27,7 @@
         ~a          Asset content-type in response. Asset content types are:
                         text/javascript
                         application/x-javascript
+                        application/javascript
                         text/css
                         image/*
                         application/x-shockwave-flash
@@ -107,6 +108,7 @@ class FAsset(_Action):
     ASSET_TYPES = [
         "text/javascript",
         "application/x-javascript",
+        "application/javascript",
         "text/css",
         "image/.*",
         "application/x-shockwave-flash"
