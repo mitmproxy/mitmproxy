@@ -98,6 +98,7 @@ class ActionBar(common.WWrap):
         return True
 
     def path_prompt(self, prompt, text):
+        self.expire = None
         self.w = PathEdit(prompt, text)
 
     def prompt(self, prompt, text = ""):
