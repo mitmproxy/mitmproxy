@@ -291,10 +291,14 @@ class GridEditor(common.WWrap):
             return None
 
     def read_file(self, p, unescaped=False):
-        p = os.path.expanduser(p)
-        d = file(p, "r").read()
-        self.walker.set_current_value(d, unescaped)
-        self.walker._modified()
+        if p:
+            try:
+                p = os.path.expanduser(p)
+                d = file(p, "r").read()
+                self.walker.set_current_value(d, unescaped)
+                self.walker._modified()
+            except IOError, v:
+                return str(v)
 
     def keypress(self, size, key):
         if self.walker.editing:
