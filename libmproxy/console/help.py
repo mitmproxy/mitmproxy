@@ -33,7 +33,7 @@ class HelpView(urwid.ListBox):
 
     def helptext(self):
         text = []
-        text.append(urwid.Text([("head", "Keys for this view:\n")]))
+        text.append(urwid.Text([("head", "This view:\n")]))
         text.extend(self.help_context)
 
         text.append(urwid.Text([("head", "\n\nMovement:\n")]))

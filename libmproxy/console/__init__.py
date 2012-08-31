@@ -606,7 +606,7 @@ class ConsoleMaster(flow.FlowMaster):
     def view_grideditor(self, ge):
         self.body = ge
         self.header = None
-        self.help_context = grideditor.help_context
+        self.help_context = ge.make_help()
         self.statusbar = StatusBar(self, grideditor.footer)
         self.make_view()
 

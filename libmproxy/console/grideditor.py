@@ -17,33 +17,8 @@ import copy, re, os
 import urwid
 import common
 from .. import utils, filt
+from netlib import http_uastrings
 
-
-def _mkhelp():
-    text = []
-    keys = [
-        ("A", "insert row before cursor"),
-        ("a", "add row after cursor"),
-        ("d", "delete row"),
-        ("e", "spawn external editor on current field"),
-        ("q", "return to flow view"),
-        ("r", "read value from file"),
-        ("R", "read unescaped value from file"),
-        ("esc", "return to flow view/exit field edit mode"),
-        ("tab", "next field"),
-        ("enter", "edit field"),
-    ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-    text.append(
-        urwid.Text(
-            [
-                "\n",
-                ("text", "    Values are displayed and edited as escaped Python-style strings.\n"),
-            ]
-        )
-    )
-    return text
-help_context = _mkhelp()
 
 footer = [
     ('heading_key', "enter"), ":edit ",
@@ -146,6 +121,10 @@ class GridWalker(urwid.ListWalker):
     def _modified(self):
         self.editor.show_empty_msg()
         return urwid.ListWalker._modified(self)
+
+    def add_value(self, lst):
+        self.lst.append((lst[:], set([])))
+        self._modified()
 
     def get_current_value(self):
         if self.lst:
@@ -363,7 +342,7 @@ class GridEditor(common.WWrap):
                 self.walker._modified()
         elif key in ["enter"]:
             self.walker.start_edit()
-        else:
+        elif not self.handle_key(key):
             return self.w.keypress(size, key)
 
     def is_error(self, col, val):
@@ -371,6 +350,35 @@ class GridEditor(common.WWrap):
             Return False, or a string error message.
         """
         return False
+
+    def handle_key(self, key):
+        return False
+
+    def make_help(self):
+        text = []
+        text.append(urwid.Text([("text", "Editor control:\n")]))
+        keys = [
+            ("A", "insert row before cursor"),
+            ("a", "add row after cursor"),
+            ("d", "delete row"),
+            ("e", "spawn external editor on current field"),
+            ("q", "return to flow view"),
+            ("r", "read value from file"),
+            ("R", "read unescaped value from file"),
+            ("esc", "return to flow view/exit field edit mode"),
+            ("tab", "next field"),
+            ("enter", "edit field"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.append(
+            urwid.Text(
+                [
+                    "\n",
+                    ("text", "Values are escaped Python-style strings.\n"),
+                ]
+            )
+        )
+        return text
 
 
 class QueryEditor(GridEditor):
@@ -383,6 +391,37 @@ class HeaderEditor(GridEditor):
     title = "Editing headers"
     columns = 2
     headings = ("Key", "Value")
+    def make_help(self):
+        h = GridEditor.make_help(self)
+
+        text = []
+        text.append(urwid.Text([("text", "Special keys:\n")]))
+        keys = [
+            ("U", "add User-Agent header"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.append(urwid.Text([("text", "\n")]))
+        text.extend(h)
+        return text
+
+    def set_user_agent(self, k):
+        ua = http_uastrings.get_by_shortcut(k)
+        if ua:
+            self.walker.add_value(
+                [
+                    "User-Agent",
+                    ua[2]
+                ]
+            )
+
+    def handle_key(self, key):
+        if key == "U":
+            self.master.prompt_onekey(
+                "Add User-Agent header:",
+                [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                self.set_user_agent,
+            )
+            return True
 
 
 class URLEncodedFormEditor(GridEditor):
