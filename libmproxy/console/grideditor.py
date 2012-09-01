@@ -397,7 +397,6 @@ class HeaderEditor(GridEditor):
     headings = ("Key", "Value")
     def make_help(self):
         h = GridEditor.make_help(self)
-
         text = []
         text.append(urwid.Text([("text", "Special keys:\n")]))
         keys = [
@@ -459,6 +458,38 @@ class SetHeadersEditor(GridEditor):
             if not filt.parse(val):
                 return "Invalid filter specification"
         return False
+
+    def make_help(self):
+        h = GridEditor.make_help(self)
+        text = []
+        text.append(urwid.Text([("text", "Special keys:\n")]))
+        keys = [
+            ("U", "add User-Agent header"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.append(urwid.Text([("text", "\n")]))
+        text.extend(h)
+        return text
+
+    def set_user_agent(self, k):
+        ua = http_uastrings.get_by_shortcut(k)
+        if ua:
+            self.walker.add_value(
+                [
+                    ".*",
+                    "User-Agent",
+                    ua[2]
+                ]
+            )
+
+    def handle_key(self, key):
+        if key == "U":
+            self.master.prompt_onekey(
+                "Add User-Agent header:",
+                [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                self.set_user_agent,
+            )
+            return True
 
 
 class PathEditor(GridEditor):
