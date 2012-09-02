@@ -1493,8 +1493,6 @@ class FlowMaster(controller.Master):
 
     def handle_error(self, r):
         f = self.state.add_error(r)
-        self.replacehooks.run(f)
-        self.setheaders.run(f)
         if f:
             self.run_script_hook("error", f)
         if self.client_playback:
