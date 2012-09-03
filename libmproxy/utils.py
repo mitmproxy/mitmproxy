@@ -253,7 +253,7 @@ def clean_hanging_newline(t):
         problem at the risk of removing a hanging newline in the rare cases
         where the user actually intends it.
     """
-    if t[-1] == "\n":
+    if t and t[-1] == "\n":
         return t[:-1]
     return t
 

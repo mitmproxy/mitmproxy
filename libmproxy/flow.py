@@ -18,7 +18,7 @@
     with their responses, and provide filtering and interception facilities.
 """
 import hashlib, Cookie, cookielib, copy, re, urlparse, os
-import time
+import time, urllib
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 from netlib import odict, http, certutils
@@ -34,6 +34,11 @@ ODictCaseless = odict.ODictCaseless
 class ReplaceHooks:
     def __init__(self):
         self.lst = []
+
+    def set(self, r):
+        self.clear()
+        for i in r:
+            self.add(*i)
 
     def add(self, fpatt, rex, s):
         """
@@ -56,17 +61,6 @@ class ReplaceHooks:
         self.lst.append((fpatt, rex, s, cpatt))
         return True
 
-    def remove(self, fpatt, rex, s):
-        """
-            Remove a hook.
-
-            patt: A string specifying a filter pattern.
-            func: Optional callable. If not specified, all hooks matching patt are removed.
-        """
-        for i in range(len(self.lst)-1, -1, -1):
-            if (fpatt, rex, s) == self.lst[i][:3]:
-                del self.lst[i]
-
     def get_specs(self):
         """
             Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
@@ -86,6 +80,59 @@ class ReplaceHooks:
 
     def clear(self):
         self.lst = []
+
+
+class SetHeaders:
+    def __init__(self):
+        self.lst = []
+
+    def set(self, r):
+        self.clear()
+        for i in r:
+            self.add(*i)
+
+    def add(self, fpatt, header, value):
+        """
+            Add a set header hook.
+
+            fpatt: String specifying a filter pattern.
+            header: Header name.
+            value: Header value string
+
+            Returns True if hook was added, False if the pattern could not be
+            parsed.
+        """
+        cpatt = filt.parse(fpatt)
+        if not cpatt:
+            return False
+        self.lst.append((fpatt, header, value, cpatt))
+        return True
+
+    def get_specs(self):
+        """
+            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
+        """
+        return [i[:3] for i in self.lst]
+
+    def count(self):
+        return len(self.lst)
+
+    def clear(self):
+        self.lst = []
+
+    def run(self, f):
+        for _, header, value, cpatt in self.lst:
+            if cpatt(f):
+                if f.response:
+                    del f.response.headers[header]
+                else:
+                    del f.request.headers[header]
+        for _, header, value, cpatt in self.lst:
+            if cpatt(f):
+                if f.response:
+                    f.response.headers.add(header, value)
+                else:
+                    f.request.headers.add(header, value)
 
 
 class ScriptContext:
@@ -134,9 +181,9 @@ class decoded(object):
     """
     def __init__(self, o):
         self.o = o
-        ce = o.headers["content-encoding"]
-        if ce and ce[0] in encoding.ENCODINGS:
-            self.ce = ce[0]
+        ce = o.headers.get_first("content-encoding")
+        if ce in encoding.ENCODINGS:
+            self.ce = ce
         else:
             self.ce = None
 
@@ -156,11 +203,11 @@ class HTTPMsg(controller.Msg):
             removes the header. If there is no Content-Encoding header, no
             action is taken.
         """
-        ce = self.headers["content-encoding"]
-        if not self.content or not ce or ce[0] not in encoding.ENCODINGS:
+        ce = self.headers.get_first("content-encoding")
+        if not self.content or ce not in encoding.ENCODINGS:
             return
         self.content = encoding.decode(
-            ce[0],
+            ce,
             self.content
         )
         del self.headers["content-encoding"]
@@ -349,6 +396,26 @@ class Request(HTTPMsg):
         # url-encoded form, leave it alone.
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(odict.lst)
+
+    def get_path_components(self):
+        """
+            Returns the path components of the URL as a list of strings.
+
+            Components are unquoted.
+        """
+        _, _, path, _, _, _ = urlparse.urlparse(self.get_url())
+        return [urllib.unquote(i) for i in path.split("/") if i]
+
+    def set_path_components(self, lst):
+        """
+            Takes a list of strings, and sets the path component of the URL.
+
+            Components are quoted.
+        """
+        lst = [urllib.quote(i, safe="") for i in lst]
+        path = "/" + "/".join(lst)
+        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.get_url())
+        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
     def get_query(self):
         """
@@ -1220,6 +1287,7 @@ class FlowMaster(controller.Master):
         self.anticomp = False
         self.refresh_server_playback = False
         self.replacehooks = ReplaceHooks()
+        self.setheaders = SetHeaders()
 
         self.stream = None
 
@@ -1317,6 +1385,8 @@ class FlowMaster(controller.Master):
             if self.refresh_server_playback:
                 response.refresh()
             flow.request._ack(response)
+            if self.server_playback.count() == 0:
+                self.stop_server_playback()
             return True
         return None
 
@@ -1424,6 +1494,7 @@ class FlowMaster(controller.Master):
     def handle_error(self, r):
         f = self.state.add_error(r)
         self.replacehooks.run(f)
+        self.setheaders.run(f)
         if f:
             self.run_script_hook("error", f)
         if self.client_playback:
@@ -1434,6 +1505,7 @@ class FlowMaster(controller.Master):
     def handle_request(self, r):
         f = self.state.add_request(r)
         self.replacehooks.run(f)
+        self.setheaders.run(f)
         self.run_script_hook("request", f)
         self.process_new_request(f)
         return f
@@ -1442,6 +1514,7 @@ class FlowMaster(controller.Master):
         f = self.state.add_response(r)
         if f:
             self.replacehooks.run(f)
+            self.setheaders.run(f)
             self.run_script_hook("response", f)
             if self.client_playback:
                 self.client_playback.clear(f)

@@ -741,7 +741,25 @@ class TestRequest:
         r.content = flow.CONTENT_MISSING
         assert not r._assemble()
 
+    def test_path_components(self):
+        h = flow.ODictCaseless()
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        assert r.get_path_components() == []
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/foo/bar", h, "content")
+        assert r.get_path_components() == ["foo", "bar"]
+        q = flow.ODict()
+        q["test"] = ["123"]
+        r.set_query(q)
+        assert r.get_path_components() == ["foo", "bar"]
 
+        r.set_path_components([])
+        assert r.get_path_components() == []
+        r.set_path_components(["foo"])
+        assert r.get_path_components() == ["foo"]
+        r.set_path_components(["/oo"])
+        assert r.get_path_components() == ["/oo"]
+        assert "%2F" in r.path
 
     def test_getset_form_urlencoded(self):
         h = flow.ODictCaseless()
@@ -1017,7 +1035,16 @@ def test_replacehooks():
     h = flow.ReplaceHooks()
     h.add("~q", "foo", "bar")
     assert h.lst
-    h.remove("~q", "foo", "bar")
+
+    h.set(
+        [
+            (".*", "one", "two"),
+            (".*", "three", "four"),
+        ]
+    )
+    assert h.count() == 2
+
+    h.clear()
     assert not h.lst
 
     h.add("~q", "foo", "bar")
@@ -1026,10 +1053,6 @@ def test_replacehooks():
     v = h.get_specs()
     assert v == [('~q', 'foo', 'bar'), ('~s', 'foo', 'bar')]
     assert h.count() == 2
-    h.remove("~q", "foo", "bar")
-    assert h.count() == 1
-    h.remove("~q", "foo", "bar")
-    assert h.count() == 1
     h.clear()
     assert h.count() == 0
 
@@ -1056,3 +1079,55 @@ def test_replacehooks():
     assert not h.add("~", "foo", "bar")
     assert not h.add("foo", "*", "bar")
 
+
+def test_setheaders():
+    h = flow.SetHeaders()
+    h.add("~q", "foo", "bar")
+    assert h.lst
+
+    h.set(
+        [
+            (".*", "one", "two"),
+            (".*", "three", "four"),
+        ]
+    )
+    assert h.count() == 2
+
+    h.clear()
+    assert not h.lst
+
+    h.add("~q", "foo", "bar")
+    h.add("~s", "foo", "bar")
+
+    v = h.get_specs()
+    assert v == [('~q', 'foo', 'bar'), ('~s', 'foo', 'bar')]
+    assert h.count() == 2
+    h.clear()
+    assert h.count() == 0
+
+    f = tutils.tflow()
+    f.request.content = "foo"
+    h.add("~s", "foo", "bar")
+    h.run(f)
+    assert f.request.content == "foo"
+
+
+    h.clear()
+    h.add("~s", "one", "two")
+    h.add("~s", "one", "three")
+    f = tutils.tflow_full()
+    f.request.headers["one"] = ["xxx"]
+    f.response.headers["one"] = ["xxx"]
+    h.run(f)
+    assert f.request.headers["one"] == ["xxx"]
+    assert f.response.headers["one"] == ["two", "three"]
+
+    h.clear()
+    h.add("~q", "one", "two")
+    h.add("~q", "one", "three")
+    f = tutils.tflow()
+    f.request.headers["one"] = ["xxx"]
+    h.run(f)
+    assert f.request.headers["one"] == ["two", "three"]
+
+    assert not h.add("~", "foo", "bar")

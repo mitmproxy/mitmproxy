@@ -13,27 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy, re
+import copy, re, os
 import urwid
 import common
 from .. import utils, filt
+from netlib import http_uastrings
 
-
-def _mkhelp():
-    text = []
-    keys = [
-        ("A", "insert row before cursor"),
-        ("a", "add row after cursor"),
-        ("d", "delete row"),
-        ("e", "spawn external editor on current field"),
-        ("q", "return to flow view"),
-        ("esc", "return to flow view/exit field edit mode"),
-        ("tab", "next field"),
-        ("enter", "edit field"),
-    ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-    return text
-help_context = _mkhelp()
 
 footer = [
     ('heading_key', "enter"), ":edit ",
@@ -46,6 +31,7 @@ footer_editing = [
 
 class SText(common.WWrap):
     def __init__(self, txt, focused, error):
+        txt = txt.encode("string-escape")
         w = urwid.Text(txt, wrap="any")
         if focused:
             if error:
@@ -68,6 +54,7 @@ class SText(common.WWrap):
 
 class SEdit(common.WWrap):
     def __init__(self, txt):
+        txt = txt.encode("string-escape")
         w = urwid.Edit(edit_text=txt, wrap="any", multiline=True)
         w = urwid.AttrWrap(w, "editfield")
         common.WWrap.__init__(self, w)
@@ -95,7 +82,8 @@ class GridRow(common.WWrap):
                 )
 
         fspecs = self.fields[:]
-        fspecs[0] = ("fixed", self.editor.first_width + 2, fspecs[0])
+        if len(self.fields) > 1:
+            fspecs[0] = ("fixed", self.editor.first_width + 2, fspecs[0])
         w = urwid.Columns(
             fspecs,
             dividechars = 2
@@ -104,15 +92,8 @@ class GridRow(common.WWrap):
             w.set_focus_column(focused)
         common.WWrap.__init__(self, w)
 
-    def get_value(self):
-        vals = []
-        errors = set([])
-        for i, f in enumerate(self.fields):
-            v = f.get_text()
-            vals.append(v)
-            if self.editor.is_error(i, v):
-                errors.add(i)
-        return [vals, errors]
+    def get_edit_value(self):
+        return self.editing.get_text()
 
     def keypress(self, s, k):
         if self.editing:
@@ -141,14 +122,31 @@ class GridWalker(urwid.ListWalker):
         self.editor.show_empty_msg()
         return urwid.ListWalker._modified(self)
 
+    def add_value(self, lst):
+        self.lst.append((lst[:], set([])))
+        self._modified()
+
     def get_current_value(self):
         if self.lst:
             return self.lst[self.focus][0][self.focus_col]
 
-    def set_current_value(self, val):
+    def set_current_value(self, val, unescaped):
+        if not unescaped:
+            try:
+                val = val.decode("string-escape")
+            except ValueError:
+                self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
+                return
+
+        errors = self.lst[self.focus][1]
+        emsg = self.editor.is_error(self.focus_col, val)
+        if emsg:
+            self.editor.master.statusbar.message(emsg, 1000)
+            errors.add(self.focus_col)
+
         row = list(self.lst[self.focus][0])
         row[self.focus_col] = val
-        self.lst[self.focus] = [tuple(row), set([])]
+        self.lst[self.focus] = [tuple(row), errors]
 
     def delete_focus(self):
         if self.lst:
@@ -177,7 +175,7 @@ class GridWalker(urwid.ListWalker):
     def stop_edit(self):
         if self.editing:
             self.editor.master.statusbar.update(footer)
-            self.lst[self.focus] = self.editing.get_value()
+            self.set_current_value(self.editing.get_edit_value(), False)
             self.editing = False
             self._modified()
 
@@ -232,7 +230,6 @@ class GridEditor(common.WWrap):
     title = None
     columns = None
     headings = None
-    encoding = None
     def __init__(self, master, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
         self.master, self.value, self.callback = master, value, callback
@@ -252,7 +249,7 @@ class GridEditor(common.WWrap):
         headings = []
         for i, h in enumerate(self.headings):
             c = urwid.Text(h)
-            if i == 0:
+            if i == 0 and len(self.headings) > 1:
                 headings.append(("fixed", first_width + 2, c))
             else:
                 headings.append(c)
@@ -285,6 +282,24 @@ class GridEditor(common.WWrap):
                 )
             )
 
+    def encode(self, s):
+        if not self.encoding:
+            return s
+        try:
+            return s.encode(self.encoding)
+        except ValueError:
+            return None
+
+    def read_file(self, p, unescaped=False):
+        if p:
+            try:
+                p = os.path.expanduser(p)
+                d = file(p, "r").read()
+                self.walker.set_current_value(d, unescaped)
+                self.walker._modified()
+            except IOError, v:
+                return str(v)
+
     def keypress(self, size, key):
         if self.walker.editing:
             if key in ["esc"]:
@@ -302,11 +317,8 @@ class GridEditor(common.WWrap):
         if key in ["q", "esc"]:
             res = []
             for i in self.walker.lst:
-                if any([x.strip() for x in i[0]]):
-                    v = i[0]
-                    if self.encoding:
-                        v = [x.encode(self.encoding) for x in v]
-                    res.append(v)
+                if not i[1] and any([x.strip() for x in i[0]]):
+                    res.append(i[0])
             self.callback(res, *self.cb_args, **self.cb_kwargs)
             self.master.pop_view()
         elif key in ["h", "left"]:
@@ -321,41 +333,104 @@ class GridEditor(common.WWrap):
             self.walker.insert()
         elif key == "d":
             self.walker.delete_focus()
+        elif key == "r":
+            self.master.path_prompt("Read file: ", "", self.read_file)
+        elif key == "R":
+            self.master.path_prompt("Read unescaped file: ", "", self.read_file, True)
         elif key == "e":
             o = self.walker.get_current_value()
             if o is not None:
-                n = self.master.spawn_editor(o)
+                n = self.master.spawn_editor(o.encode("string-escape"))
                 n = utils.clean_hanging_newline(n)
-                self.walker.set_current_value(n)
+                self.walker.set_current_value(n, False)
                 self.walker._modified()
         elif key in ["enter"]:
             self.walker.start_edit()
-        else:
+        elif not self.handle_key(key):
             return self.w.keypress(size, key)
 
     def is_error(self, col, val):
+        """
+            Return False, or a string error message.
+        """
         return False
+
+    def handle_key(self, key):
+        return False
+
+    def make_help(self):
+        text = []
+        text.append(urwid.Text([("text", "Editor control:\n")]))
+        keys = [
+            ("A", "insert row before cursor"),
+            ("a", "add row after cursor"),
+            ("d", "delete row"),
+            ("e", "spawn external editor on current field"),
+            ("q", "return to flow view"),
+            ("r", "read value from file"),
+            ("R", "read unescaped value from file"),
+            ("esc", "return to flow view/exit field edit mode"),
+            ("tab", "next field"),
+            ("enter", "edit field"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.append(
+            urwid.Text(
+                [
+                    "\n",
+                    ("text", "Values are escaped Python-style strings.\n"),
+                ]
+            )
+        )
+        return text
 
 
 class QueryEditor(GridEditor):
     title = "Editing query"
     columns = 2
     headings = ("Key", "Value")
-    encoding = "ascii"
 
 
 class HeaderEditor(GridEditor):
     title = "Editing headers"
     columns = 2
     headings = ("Key", "Value")
-    encoding = "ascii"
+    def make_help(self):
+        h = GridEditor.make_help(self)
+        text = []
+        text.append(urwid.Text([("text", "Special keys:\n")]))
+        keys = [
+            ("U", "add User-Agent header"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.append(urwid.Text([("text", "\n")]))
+        text.extend(h)
+        return text
+
+    def set_user_agent(self, k):
+        ua = http_uastrings.get_by_shortcut(k)
+        if ua:
+            self.walker.add_value(
+                [
+                    "User-Agent",
+                    ua[2]
+                ]
+            )
+
+    def handle_key(self, key):
+        if key == "U":
+            self.master.prompt_onekey(
+                "Add User-Agent header:",
+                [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                self.set_user_agent,
+            )
+            return True
 
 
 class URLEncodedFormEditor(GridEditor):
     title = "Editing URL-encoded form"
     columns = 2
     headings = ("Key", "Value")
-    encoding = "ascii"
 
 
 class ReplaceEditor(GridEditor):
@@ -365,11 +440,60 @@ class ReplaceEditor(GridEditor):
     def is_error(self, col, val):
         if col == 0:
             if not filt.parse(val):
-                return True
+                return "Invalid filter specification."
         elif col == 1:
             try:
                 re.compile(val)
             except re.error:
-                return True
+                return "Invalid regular expression."
         return False
+
+
+class SetHeadersEditor(GridEditor):
+    title = "Editing header set patterns"
+    columns = 3
+    headings = ("Filter", "Header", "Value")
+    def is_error(self, col, val):
+        if col == 0:
+            if not filt.parse(val):
+                return "Invalid filter specification"
+        return False
+
+    def make_help(self):
+        h = GridEditor.make_help(self)
+        text = []
+        text.append(urwid.Text([("text", "Special keys:\n")]))
+        keys = [
+            ("U", "add User-Agent header"),
+        ]
+        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.append(urwid.Text([("text", "\n")]))
+        text.extend(h)
+        return text
+
+    def set_user_agent(self, k):
+        ua = http_uastrings.get_by_shortcut(k)
+        if ua:
+            self.walker.add_value(
+                [
+                    ".*",
+                    "User-Agent",
+                    ua[2]
+                ]
+            )
+
+    def handle_key(self, key):
+        if key == "U":
+            self.master.prompt_onekey(
+                "Add User-Agent header:",
+                [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                self.set_user_agent,
+            )
+            return True
+
+
+class PathEditor(GridEditor):
+    title = "Editing URL path components"
+    columns = 1
+    headings = ("Component",)
 

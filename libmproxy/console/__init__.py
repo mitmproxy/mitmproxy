@@ -98,6 +98,7 @@ class ActionBar(common.WWrap):
         return True
 
     def path_prompt(self, prompt, text):
+        self.expire = None
         self.w = PathEdit(prompt, text)
 
     def prompt(self, prompt, text = ""):
@@ -124,6 +125,10 @@ class StatusBar(common.WWrap):
     def get_status(self):
         r = []
 
+        if self.master.setheaders.count():
+            r.append("[")
+            r.append(("heading_key", "H"))
+            r.append("eaders]")
         if self.master.replacehooks.count():
             r.append("[")
             r.append(("heading_key", "R"))
@@ -159,10 +164,10 @@ class StatusBar(common.WWrap):
             r.append("[")
             r.append(("heading_key", "P"))
             r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
-        if self.master.state.default_body_view != contentview.VIEW_AUTO:
+        if self.master.state.default_body_view.name != "Auto":
             r.append("[")
             r.append(("heading_key", "M"))
-            r.append(":%s]"%contentview.VIEW_NAMES[self.master.state.default_body_view])
+            r.append(":%s]"%self.master.state.default_body_view.name)
 
         opts = []
         if self.master.anticache:
@@ -255,7 +260,7 @@ class ConsoleState(flow.State):
         flow.State.__init__(self)
         self.focus = None
         self.follow_focus = None
-        self.default_body_view = contentview.VIEW_AUTO
+        self.default_body_view = contentview.get("Auto")
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.last_script = ""
         self.last_saveload = ""
@@ -335,6 +340,7 @@ class Options(object):
         "script",
         "replacements",
         "rheaders",
+        "setheaders",
         "server_replay",
         "stickycookie",
         "stickyauth",
@@ -364,6 +370,9 @@ class ConsoleMaster(flow.FlowMaster):
 
         for i in options.replacements:
             self.replacehooks.add(*i)
+
+        for i in options.setheaders:
+            self.setheaders.add(*i)
 
         self.flow_list_walker = None
         self.set_palette(options.palette)
@@ -598,7 +607,7 @@ class ConsoleMaster(flow.FlowMaster):
     def view_grideditor(self, ge):
         self.body = ge
         self.header = None
-        self.help_context = grideditor.help_context
+        self.help_context = ge.make_help()
         self.statusbar = StatusBar(self, grideditor.footer)
         self.make_view()
 
@@ -736,7 +745,7 @@ class ConsoleMaster(flow.FlowMaster):
         return self.state.set_intercept(txt)
 
     def change_default_display_mode(self, t):
-        v = contentview.VIEW_SHORTCUTS.get(t)
+        v = contentview.get_by_shortcut(t)
         self.state.default_body_view = v
         if self.currentflow:
             self.refresh_flow(self.currentflow)
@@ -761,11 +770,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.view_flow(self.currentflow)
         else:
             self.view_flowlist()
-
-    def set_replace(self, r):
-        self.replacehooks.clear()
-        for i in r:
-            self.replacehooks.add(*i)
 
     def loop(self):
         changed = True
@@ -815,6 +819,14 @@ class ConsoleMaster(flow.FlowMaster):
                                         ),
                                         self.stop_client_playback_prompt,
                                     )
+                            elif k == "H":
+                                self.view_grideditor(
+                                    grideditor.SetHeadersEditor(
+                                        self,
+                                        self.setheaders.get_specs(),
+                                        self.setheaders.set
+                                    )
+                                )
                             elif k == "i":
                                 self.prompt(
                                     "Intercept filter: ",
@@ -835,7 +847,7 @@ class ConsoleMaster(flow.FlowMaster):
                             elif k == "M":
                                 self.prompt_onekey(
                                     "Global default display mode",
-                                    contentview.VIEW_PROMPT,
+                                    contentview.view_prompts,
                                     self.change_default_display_mode
                                 )
                             elif k == "P":
@@ -853,7 +865,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     grideditor.ReplaceEditor(
                                         self,
                                         self.replacehooks.get_specs(),
-                                        self.set_replace
+                                        self.replacehooks.set
                                     )
                                 )
                             elif k == "s":
@@ -868,7 +880,7 @@ class ConsoleMaster(flow.FlowMaster):
                             elif k == "S":
                                 if not self.server_playback:
                                     self.path_prompt(
-                                        "Server replay: ",
+                                        "Server replay path: ",
                                         self.state.last_saveload,
                                         self.server_playback_path
                                     )

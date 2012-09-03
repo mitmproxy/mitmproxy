@@ -33,7 +33,7 @@ class HelpView(urwid.ListBox):
 
     def helptext(self):
         text = []
-        text.append(urwid.Text([("head", "Keys for this view:\n")]))
+        text.append(urwid.Text([("head", "This view:\n")]))
         text.extend(self.help_context)
 
         text.append(urwid.Text([("head", "\n\nMovement:\n")]))
@@ -49,6 +49,7 @@ class HelpView(urwid.ListBox):
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
             ("c", "client replay"),
+            ("H", "edit global header set patterns"),
             ("i", "set interception pattern"),
             ("M", "change global default display mode"),
                 (None,
@@ -82,6 +83,10 @@ class HelpView(urwid.ListBox):
                 (None,
                     common.highlight_key("xml", "x") +
                     [("text", ": XML")]
+                ),
+                (None,
+                    common.highlight_key("amf", "f") +
+                    [("text", ": AMF (requires PyAMF)")]
                 ),
             ("o", "toggle options:"),
                 (None,
@@ -173,5 +178,3 @@ class HelpView(urwid.ListBox):
         elif key == "?":
             key = None
         return urwid.ListBox.keypress(self, size, key)
-
-

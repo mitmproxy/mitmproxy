@@ -99,6 +99,12 @@ class TestDumpMaster:
         f = self._cycle(m, "content")
         assert f.request.content == "foo"
 
+    def test_setheader(self):
+        o = dump.Options(setheaders=[(".*", "one", "two")])
+        m = dump.DumpMaster(None, o, None)
+        f = self._cycle(m, "content")
+        assert f.request.headers["one"] == ["two"]
+
     def test_basic(self):
         for i in (1, 2, 3):
             assert "GET" in self._dummy_cycle(1, "~s", "", verbosity=i, eventlog=True)

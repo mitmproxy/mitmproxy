@@ -1,4 +1,4 @@
-import optparse
+import argparse
 from libmproxy import cmdline
 import tutils
 
@@ -14,7 +14,7 @@ def test_parse_replace_hook():
     assert x == (".*", "bar", "voing")
 
     tutils.raises(
-        cmdline.ParseReplaceException,
+        cmdline.ParseException,
         cmdline.parse_replace_hook,
         "/foo"
     )
@@ -29,15 +29,21 @@ def test_parse_replace_hook():
         "/~/foo/rep"
     )
     tutils.raises(
-        "empty replacement regex",
+        "empty clause",
         cmdline.parse_replace_hook,
         "//"
     )
 
+
+def test_parse_setheaders():
+    x = cmdline.parse_setheader("/foo/bar/voing")
+    assert x == ("foo", "bar", "voing")
+
+
 def test_common():
-    parser = optparse.OptionParser()
+    parser = argparse.ArgumentParser()
     cmdline.common_options(parser)
-    opts, args = parser.parse_args(args=[])
+    opts = parser.parse_args(args=[])
 
     assert cmdline.get_common_options(opts)
 
@@ -47,13 +53,25 @@ def test_common():
     assert v["stickycookie"] == "foo"
     assert v["stickyauth"] == "foo"
 
+    opts.setheader = ["/foo/bar/voing"]
+    v = cmdline.get_common_options(opts)
+    assert v["setheaders"] == [("foo", "bar", "voing")]
+
+    opts.setheader = ["//"]
+    tutils.raises(
+        "empty clause",
+        cmdline.get_common_options,
+        opts
+    )
+    opts.setheader = []
+
     opts.replace = ["/foo/bar/voing"]
     v = cmdline.get_common_options(opts)
     assert v["replacements"] == [("foo", "bar", "voing")]
 
     opts.replace = ["//"]
     tutils.raises(
-        "empty replacement regex",
+        "empty clause",
         cmdline.get_common_options,
         opts
     )

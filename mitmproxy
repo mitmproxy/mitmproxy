@@ -15,39 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-from libmproxy import proxy, console, cmdline
+import sys, argparse
+from libmproxy import proxy, console, cmdline, version
 from libmproxy.console import palettes
-from libmproxy.version import VERSION
-from optparse import OptionParser, OptionGroup
 
 
 if __name__ == '__main__':
-    parser = OptionParser(
-                usage = "%prog [options]",
-                version="%%prog %s"%VERSION,
-            )
+    parser = argparse.ArgumentParser(usage = "%(prog)s [options]")
+    parser.add_argument('--version', action='version', version=version.NAMEVERSION)
     cmdline.common_options(parser)
-    parser.add_option("--debug", dest="debug", default=False, action="store_true")
-    parser.add_option(
-        "--palette", type="str", default="dark",
+    parser.add_argument("--debug", dest="debug", default=False, action="store_true")
+    parser.add_argument(
+        "--palette", type=str, default="dark",
         action="store", dest="palette",
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
 
 
-    group = OptionGroup(
-                        parser,
+    group = parser.add_argument_group(
                         "Filters",
                         "See help in mitmproxy for filter expression syntax."
                     )
-    group.add_option(
+    group.add_argument(
         "-i", "--intercept", action="store",
-        type = "str", dest="intercept", default=None,
+        type = str, dest="intercept", default=None,
         help = "Intercept filter expression."
     )
-    parser.add_option_group(group)
-    options, args = parser.parse_args()
+    options = parser.parse_args()
 
     config = proxy.process_proxy_options(parser, options)
 

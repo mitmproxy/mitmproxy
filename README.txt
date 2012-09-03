@@ -48,7 +48,7 @@ Requirements
 ------------
 
 * Python_ 2.6.x or 2.7.x.
-* PyOpenSSL_ 0.12 or newer.
+* PyOpenSSL_ 0.13 or newer.
 * pyasn1_ 0.1.2 or newer.
 * urwid_  version 0.9.8 or newer.
 * PIL_  version 1.1 or newer.
