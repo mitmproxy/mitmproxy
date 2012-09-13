@@ -418,7 +418,10 @@ class ProxyServer(tcp.TCPServer):
     def handle_connection(self, request, client_address):
         h = ProxyHandler(self.config, request, client_address, self, self.masterq, self.server_version)
         h.handle()
-        h.finish()
+        try:
+            h.finish()
+        except tcp.NetLibDisconnect, e:
+            pass
 
     def handle_shutdown(self):
         try:
