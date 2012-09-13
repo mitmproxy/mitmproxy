@@ -1092,7 +1092,14 @@ class Flow:
         """
             Match this flow against a compiled filter expression. Returns True
             if matched, False if not.
+
+            If f is a string, it will be compiled as a filter expression. If
+            the expression is invalid, ValueError is raised.
         """
+        if isinstance(f, basestring):
+            f = filt.parse(f)
+            if not f:
+                raise ValueError("Invalid filter expression.")
         if f:
             return f(self)
         return True

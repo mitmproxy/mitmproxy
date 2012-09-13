@@ -171,12 +171,15 @@ class TestFlow:
         f = tutils.tflow()
         f.response = tutils.tresp()
         f.request = f.response.request
-        assert not f.match(filt.parse("~b test"))
+        assert not f.match("~b test")
         assert f.match(None)
-        assert not f.match(filt.parse("~b test"))
+        assert not f.match("~b test")
 
         f = tutils.tflow_err()
-        assert f.match(filt.parse("~e"))
+        assert f.match("~e")
+
+        tutils.raises(ValueError, f.match, "~")
+
 
     def test_backup(self):
         f = tutils.tflow()
