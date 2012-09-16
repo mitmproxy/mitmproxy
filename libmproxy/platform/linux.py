@@ -1,4 +1,4 @@
-import socket, struct
+import socket, struct, fcntl
 
 # Python socket module does not have this constant
 SO_ORIGINAL_DST = 80

@@ -508,7 +508,7 @@ def process_proxy_options(parser, options):
         if not platform.resolver:
             parser.error("Transparent mode not supported on this platform.")
         trans = dict(
-            resolver = platform.resolver,
+            resolver = platform.resolver(),
             sslports = TRANSPARENT_SSL_PORTS
         )
     else:
