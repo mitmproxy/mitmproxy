@@ -79,10 +79,9 @@ pages = [
     Page("reverseproxy.html", "Reverse proxy mode"),
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
-    Page("scripting.html", "Scripts"),
-    Directory("scripting"),
     Page("ssl.html", "Setting up SSL interception"),
     Directory("certinstall"),
+    Directory("scripting"),
     Directory("tutorials"),
     Page("faq.html", "FAQ"),
     Page("admin.html", "Administrivia")
