@@ -79,10 +79,10 @@ pages = [
     Page("reverseproxy.html", "Reverse proxy mode"),
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
-    Page("scripts.html", "Scripts"),
+    Page("scripting.html", "Scripts"),
+    Directory("scripting"),
     Page("ssl.html", "Setting up SSL interception"),
     Directory("certinstall"),
-    Page("library.html", "libmproxy: mitmproxy as a library"),
     Directory("tutorials"),
     Page("faq.html", "FAQ"),
     Page("admin.html", "Administrivia")
