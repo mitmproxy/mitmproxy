@@ -228,8 +228,8 @@ class TestTCPClient:
 class TestFileLike:
     def test_wrap(self):
         s = cStringIO.StringIO("foobar\nfoobar")
-        s = tcp.FileLike(s)
         s.flush()
+        s = tcp.Reader(s)
         assert s.readline() == "foobar\n"
         assert s.readline() == "foobar"
         # Test __getattr__
@@ -237,11 +237,39 @@ class TestFileLike:
 
     def test_limit(self):
         s = cStringIO.StringIO("foobar\nfoobar")
-        s = tcp.FileLike(s)
+        s = tcp.Reader(s)
         assert s.readline(3) == "foo"
 
     def test_limitless(self):
         s = cStringIO.StringIO("f"*(50*1024))
-        s = tcp.FileLike(s)
+        s = tcp.Reader(s)
         ret = s.read(-1)
         assert len(ret) == 50 * 1024
+
+    def test_readlog(self):
+        s = cStringIO.StringIO("foobar\nfoobar")
+        s = tcp.Reader(s)
+        assert not s.is_logging()
+        s.start_log()
+        assert s.is_logging()
+        s.readline()
+        assert s.get_log() == "foobar\n"
+        s.read(1)
+        assert s.get_log() == "foobar\nf"
+        s.start_log()
+        assert s.get_log() == ""
+        s.read(1)
+        assert s.get_log() == "o"
+        s.stop_log()
+        tutils.raises(ValueError, s.get_log)
+
+    def test_writelog(self):
+        s = cStringIO.StringIO()
+        s = tcp.Writer(s)
+        s.start_log()
+        assert s.is_logging()
+        s.write("x")
+        assert s.get_log() == "x"
+        s.write("x")
+        assert s.get_log() == "xx"
+
