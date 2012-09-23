@@ -27,7 +27,7 @@ def get_header(val, headers):
         Header keys may be Values, so we have to "generate" them as we try the match.
     """
     for k, v in headers:
-        if len(k) == len(val) and k[:].lower() == val:
+        if len(k) == len(val) and k[:].lower() == val.lower():
             return v
     return None
 
