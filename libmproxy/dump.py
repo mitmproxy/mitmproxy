@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, os
+import netlib.utils
 import flow, filt, utils
 
 class DumpError(Exception): pass
@@ -175,7 +176,7 @@ class DumpMaster(flow.FlowMaster):
                 result = result + "\n\n" + self.indent(4, f.response.headers)
             if self.o.verbosity > 2:
                 if utils.isBin(f.response.content):
-                    d = utils.hexdump(f.response.content)
+                    d = netlib.utils.hexdump(f.response.content)
                     d = "\n".join("%s\t%s %s"%i for i in d)
                     cont = self.indent(4, d)
                 elif f.response.content:
@@ -199,7 +200,7 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile, str_request(f.request)
             print >> self.outfile, self.indent(4, f.request.headers)
             if utils.isBin(f.request.content):
-                print >> self.outfile, self.indent(4, utils.hexdump(f.request.content))
+                print >> self.outfile, self.indent(4, netlib.utils.hexdump(f.request.content))
             elif f.request.content:
                 print >> self.outfile, self.indent(4, f.request.content)
             print >> self.outfile

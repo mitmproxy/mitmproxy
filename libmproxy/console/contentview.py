@@ -3,6 +3,7 @@ import urwid
 from PIL import Image
 from PIL.ExifTags import TAGS
 import lxml.html, lxml.etree
+import netlib.utils
 import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier, html2text
@@ -22,7 +23,7 @@ def _view_text(content, total, limit):
         Generates a body for a chunk of text.
     """
     txt = []
-    for i in utils.cleanBin(content).splitlines():
+    for i in netlib.utils.cleanBin(content).splitlines():
         txt.append(
             urwid.Text(("text", i), wrap="any")
         )
@@ -76,7 +77,7 @@ class ViewHex:
     content_types = []
     def __call__(self, hdrs, content, limit):
         txt = []
-        for offset, hexa, s in utils.hexdump(content[:limit]):
+        for offset, hexa, s in netlib.utils.hexdump(content[:limit]):
             txt.append(urwid.Text([
                 ("offset", offset),
                 " ",
@@ -216,7 +217,7 @@ class ViewMultipart:
                     match = rx.search(parts[1])
                     if match:
                         keys.append(match.group(1) + ":")
-                        vals.append(utils.cleanBin(
+                        vals.append(netlib.utils.cleanBin(
                             "\n".join(parts[3+parts[2:].index(""):])
                         ))
             r = [
@@ -306,7 +307,7 @@ class ViewImage:
                     )
         clean = []
         for i in parts:
-            clean.append([utils.cleanBin(i[0]), utils.cleanBin(i[1])])
+            clean.append([netlib.utils.cleanBin(i[0]), netlib.utils.cleanBin(i[1])])
         fmt = common.format_keyvals(
                 clean,
                 key = "header",
