@@ -44,6 +44,9 @@ class FileLike:
     def __init__(self, o):
         self.o = o
 
+    def set_descriptor(self, o):
+        self.o = o
+
     def __getattr__(self, attr):
         return getattr(self.o, attr)
 
@@ -140,8 +143,8 @@ class TCPClient:
         except SSL.Error, v:
             raise NetLibError("SSL handshake error: %s"%str(v))
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
-        self.rfile = FileLike(self.connection)
-        self.wfile = FileLike(self.connection)
+        self.rfile.set_descriptor(self.connection)
+        self.wfile.set_descriptor(self.connection)
 
     def connect(self):
         try:
@@ -209,8 +212,8 @@ class BaseHandler:
             self.connection.do_handshake()
         except SSL.Error, v:
             raise NetLibError("SSL handshake error: %s"%str(v))
-        self.rfile = FileLike(self.connection)
-        self.wfile = FileLike(self.connection)
+        self.rfile.set_descriptor(self.connection)
+        self.wfile.set_descriptor(self.connection)
 
     def finish(self):
         self.finished = True
