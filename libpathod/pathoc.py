@@ -1,5 +1,6 @@
 import sys, os
 from netlib import tcp, http
+import netlib.utils
 import rparse, utils
 
 class PathocError(Exception): pass
@@ -49,15 +50,25 @@ class Pathoc(tcp.TCPClient):
         for i in reqs:
             try:
                 r = rparse.parse_request(self.settings, i)
+                if showreq:
+                    self.wfile.start_log()
                 req = r.serve(self.wfile, None, self.host)
                 if explain:
-                    print >> fp, ">>", req["method"], repr(req["path"])
+                    print >> fp, ">> ", req["method"], repr(req["path"])
                     for a in req["actions"]:
                         print >> fp, "\t",
                         for x in a:
                             print >> fp, x,
                         print >> fp
-                    print req
+                if showreq:
+                    data = self.wfile.get_log()
+                    if hexdump:
+                        print >> fp, ">> Request (hex dump):"
+                        for line in netlib.utils.hexdump(data):
+                            print >> fp, "\t%s %s %s"%line
+                    else:
+                        print >> fp, ">> Request (unprintables escaped):"
+                        print >> fp, netlib.utils.cleanBin(data)
                 self.wfile.flush()
                 resp = http.read_response(self.rfile, r.method, None)
             except rparse.ParseException, v:

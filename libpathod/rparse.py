@@ -653,7 +653,7 @@ class Response(Message):
         ShortcutLocation,
         Raw
     )
-    logattrs = ["code", "version"]
+    logattrs = ["code", "version", "body"]
     def __init__(self):
         Message.__init__(self)
         self.code = 200
@@ -691,7 +691,7 @@ class Request(Message):
         ShortcutContentType,
         Raw
     )
-    logattrs = ["method", "path"]
+    logattrs = ["method", "path", "body"]
     def __init__(self):
         Message.__init__(self)
         self.method = None

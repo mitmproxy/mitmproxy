@@ -49,10 +49,15 @@ class TestDaemon:
         )
         return s.getvalue()
 
-    def test_print_requests(self):
+    def test_showresp(self):
         reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
         assert self.tval(reqs).count("200") == 2
         assert self.tval(reqs, showresp=True).count("Date") == 2
+
+    def test_showreq(self):
+        reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
+        assert self.tval(reqs, showreq=True).count("unprintables escaped") == 2
+        assert self.tval(reqs, showreq=True, hexdump=True).count("hex dump") == 2
 
     def test_parse_err(self):
         assert "Error parsing" in self.tval(["foo"])
