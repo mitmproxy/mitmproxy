@@ -35,22 +35,29 @@ class Pathoc(tcp.TCPClient):
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
 
-    def print_requests(self, reqs, respdump, reqdump, fp=sys.stdout):
+    def print_requests(self, reqs, showreq, showresp, explain, hexdump, fp=sys.stdout):
         """
             Performs a series of requests, and prints results to the specified
-            file pointer.
+            file descriptor.
+
+            reqs: A sequence of request specifications
+            showreq: Print requests
+            showresp: Print responses
+            explain: Print request explanation
+            hexdump: When printing requests or responses, use hex dump output
         """
         for i in reqs:
             try:
                 r = rparse.parse_request(self.settings, i)
                 req = r.serve(self.wfile, None, self.host)
-                if reqdump:
-                    print >> fp, "\n>>", req["method"], repr(req["path"])
+                if explain:
+                    print >> fp, ">>", req["method"], repr(req["path"])
                     for a in req["actions"]:
                         print >> fp, "\t",
                         for x in a:
                             print >> fp, x,
                         print >> fp
+                    print req
                 self.wfile.flush()
                 resp = http.read_response(self.rfile, r.method, None)
             except rparse.ParseException, v:
@@ -61,7 +68,7 @@ class Pathoc(tcp.TCPClient):
                 print >> fp, "File access error: %s"%v
                 return
             except http.HttpError, v:
-                print >> fp, "<<", v.msg
+                print >> fp, "<< HTTP Error:", v.msg
                 return
             except tcp.NetLibTimeout:
                 print >> fp, "<<", "Timeout"
@@ -70,7 +77,7 @@ class Pathoc(tcp.TCPClient):
                 print >> fp, "<<", "Disconnect"
                 return
             else:
-                if respdump:
+                if showresp:
                     print_full(fp, *resp)
                 else:
                     print_short(fp, *resp)

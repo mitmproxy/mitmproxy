@@ -18,10 +18,6 @@ if __name__ == "__main__":
         help="Port. Defaults to 80, or 443 if SSL is active."
     )
     parser.add_argument(
-        "-d", dest="reqdump", action="store_true", default=False,
-        help="Print request record before each response."
-    )
-    parser.add_argument(
         "-s", dest="ssl", action="store_true", default=False,
         help="Connect with SSL."
     )
@@ -30,16 +26,29 @@ if __name__ == "__main__":
         help="Connection timeout."
     )
     parser.add_argument(
-        "-v", dest="verbose", action='count',
-        help="Increase verbosity."
-    )
-    parser.add_argument(
         'host', type=str,
         help='Host to connect to'
     )
     parser.add_argument(
         'request', type=str, nargs="+",
         help='Request specification'
+    )
+    group = parser.add_argument_group('Controlling Output')
+    group.add_argument(
+        "-e", dest="explain", action="store_true", default=False,
+        help="Explain requests."
+    )
+    group.add_argument(
+        "-q", dest="showreq", action="store_true", default=False,
+        help="Print full request."
+    )
+    group.add_argument(
+        "-r", dest="showresp", action="store_true", default=False,
+        help="Print full response."
+    )
+    group.add_argument(
+        "-x", dest="hexdump", action="store_true", default=False,
+        help="Output in hexdump format."
     )
 
     args = parser.parse_args()
@@ -65,7 +74,13 @@ if __name__ == "__main__":
                     continue
             if args.timeout:
                 p.settimeout(args.timeout)
-            p.print_requests(args.request, args.verbose, args.reqdump)
+            p.print_requests(
+                args.request, 
+                showreq=args.showreq,
+                showresp=args.showresp,
+                explain=args.explain,
+                hexdump=args.hexdump,
+            )
             sys.stdout.flush()
     except KeyboardInterrupt:
         pass

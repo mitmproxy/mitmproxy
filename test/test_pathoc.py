@@ -31,21 +31,28 @@ class TestDaemon:
 
         s = cStringIO.StringIO()
         c.print_requests(
-            ["get:'/p/200:p0,10'"], True, True, s
+            ["get:'/p/200:p0,10'"], True, True, True, True, s
         )
         assert "Timeout" in s.getvalue()
 
-    def tval(self, requests, verbose=False):
+    def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False):
         c = pathoc.Pathoc("127.0.0.1", self.d.port)
         c.connect()
         s = cStringIO.StringIO()
-        c.print_requests(requests, verbose, True, s)
+        c.print_requests(
+            requests, 
+            showreq = showreq,
+            showresp = showresp,
+            explain = explain,
+            hexdump = hexdump,
+            fp = s
+        )
         return s.getvalue()
 
     def test_print_requests(self):
         reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
-        assert self.tval(reqs, False).count("200") == 2
-        assert self.tval(reqs, True).count("Date") == 2
+        assert self.tval(reqs).count("200") == 2
+        assert self.tval(reqs, showresp=True).count("Date") == 2
 
     def test_parse_err(self):
         assert "Error parsing" in self.tval(["foo"])
@@ -53,8 +60,12 @@ class TestDaemon:
     def test_conn_err(self):
         assert "Invalid server response" in self.tval(["get:'/p/200:d2'"])
 
+    def test_explain(self):
+        reqs = [ "get:/api/info:ir,'x'"]
+        assert "inject" in self.tval(reqs, explain=True)
+
     def test_fileread(self):
         d = tutils.test_data.path("data/request")
-        assert "foo" in self.tval(["+%s"%d])
+        assert "foo" in self.tval(["+%s"%d], explain=True)
         assert "File" in self.tval(["+/nonexistent"])
 
