@@ -24,20 +24,11 @@ class TestDaemon:
         _, _, _, _, content = c.request("get:/api/info")
         assert tuple(json.loads(content)["version"]) == version.IVERSION
 
-    def test_timeout(self):
+    def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False, timeout=None):
         c = pathoc.Pathoc("127.0.0.1", self.d.port)
         c.connect()
-        c.settimeout(0.01)
-
-        s = cStringIO.StringIO()
-        c.print_requests(
-            ["get:'/p/200:p0,10'"], True, True, True, True, s
-        )
-        assert "Timeout" in s.getvalue()
-
-    def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False):
-        c = pathoc.Pathoc("127.0.0.1", self.d.port)
-        c.connect()
+        if timeout:
+            c.settimeout(timeout)
         s = cStringIO.StringIO()
         c.print_requests(
             requests, 
@@ -49,10 +40,20 @@ class TestDaemon:
         )
         return s.getvalue()
 
+    def test_timeout(self):
+        assert "Timeout" in self.tval(["get:'/p/200:p0,10'"], timeout=0.01)
+        assert "HTTP" in self.tval(["get:'/p/200:p5,10'"], showresp=True, timeout=0.01)
+
     def test_showresp(self):
         reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
         assert self.tval(reqs).count("200") == 2
-        assert self.tval(reqs, showresp=True).count("Date") == 2
+        assert self.tval(reqs, showresp=True).count("unprintables escaped") == 2
+        assert self.tval(reqs, showresp=True, hexdump=True).count("hex dump") == 2
+
+    def test_showresp_httperr(self):
+        v = self.tval(["get:'/p/200:d20'"], showresp=True)
+        assert "Invalid headers" in v
+        assert "HTTP/" in v
 
     def test_showreq(self):
         reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]

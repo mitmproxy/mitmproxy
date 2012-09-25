@@ -6,16 +6,6 @@ import rparse, utils
 class PathocError(Exception): pass
 
 
-def print_short(fp, httpversion, code, msg, headers, content):
-    print >> fp, "<< %s %s: %s bytes"%(code, utils.xrepr(msg), len(content))
-
-
-def print_full(fp, httpversion, code, msg, headers, content):
-    print >> fp, "<< HTTP%s/%s %s %s"%(httpversion[0], httpversion[1], code, utils.xrepr(msg))
-    print >> fp, utils.escape_unprintables(str(headers))
-    print >> fp, utils.escape_unprintables(content)
-
-
 class Pathoc(tcp.TCPClient):
     def __init__(self, host, port):
         tcp.TCPClient.__init__(self, host, port)
@@ -35,6 +25,18 @@ class Pathoc(tcp.TCPClient):
         ret = r.serve(self.wfile, None, self.host)
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
+
+    def _show_summary(self, fp, httpversion, code, msg, headers, content):
+        print >> fp, "<< %s %s: %s bytes"%(code, utils.xrepr(msg), len(content))
+
+    def _show(self, fp, header, data, hexdump):
+        if hexdump:
+            print >> fp, "%s (hex dump):"%header
+            for line in netlib.utils.hexdump(data):
+                print >> fp, "\t%s %s %s"%line
+        else:
+            print >> fp, "%s (unprintables escaped):"%header
+            print >> fp, netlib.utils.cleanBin(data)
 
     def print_requests(self, reqs, showreq, showresp, explain, hexdump, fp=sys.stdout):
         """
@@ -61,15 +63,10 @@ class Pathoc(tcp.TCPClient):
                             print >> fp, x,
                         print >> fp
                 if showreq:
-                    data = self.wfile.get_log()
-                    if hexdump:
-                        print >> fp, ">> Request (hex dump):"
-                        for line in netlib.utils.hexdump(data):
-                            print >> fp, "\t%s %s %s"%line
-                    else:
-                        print >> fp, ">> Request (unprintables escaped):"
-                        print >> fp, netlib.utils.cleanBin(data)
+                    self._show(fp, ">> Request", self.wfile.get_log(), hexdump)
                 self.wfile.flush()
+                if showresp:
+                    self.rfile.start_log()
                 resp = http.read_response(self.rfile, r.method, None)
             except rparse.ParseException, v:
                 print >> fp, "Error parsing request spec: %s"%v.msg
@@ -80,15 +77,19 @@ class Pathoc(tcp.TCPClient):
                 return
             except http.HttpError, v:
                 print >> fp, "<< HTTP Error:", v.msg
+                if showresp:
+                    self._show(fp, "<< Response", self.rfile.get_log(), hexdump)
                 return
             except tcp.NetLibTimeout:
                 print >> fp, "<<", "Timeout"
+                if showresp:
+                    self._show(fp, "<< Response", self.rfile.get_log(), hexdump)
                 return
             except tcp.NetLibDisconnect: # pragma: nocover
                 print >> fp, "<<", "Disconnect"
                 return
             else:
                 if showresp:
-                    print_full(fp, *resp)
+                    self._show(fp, "<< Response", self.rfile.get_log(), hexdump)
                 else:
-                    print_short(fp, *resp)
+                    self._show_summary(fp, *resp)
