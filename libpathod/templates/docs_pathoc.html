@@ -45,6 +45,43 @@ the command-line help:</p>
 
 <section>
     <div class="page-header">
+       <h1>Multiple Requests</h1>
+    </div>
+    
+    <p>There are two ways to tell pathoc to issue multiple requests. The first
+    is to specify them on the command-line, like so:</p>
+
+    <pre class="terminal">&gt; pathoc google.com get:/ get:/
+&lt;&lt; 301 Moved Permanently: 219 bytes
+&lt;&lt; 301 Moved Permanently: 219 bytes</pre>
+
+    <p> In this case, pathoc issues the specified requests over the same TCP
+    connection - so in the above example only one connection is made to
+    google.com </p>
+    
+    <p> The other way to issue multiple requets is to use the <b>-n</b> flag:</p> 
+
+    <pre class="terminal">&gt; pathoc -n 2 google.com get:/
+&lt;&lt; 301 Moved Permanently: 219 bytes
+&lt;&lt; 301 Moved Permanently: 219 bytes</pre>
+
+    <p> The output is identical, but two separate TCP connections are made to
+    the upstream server. These two specification styles can be combined:</p>
+
+    <pre class="terminal">&gt; pathoc -n 2 google.com get:/ get:/
+&lt;&lt; 301 Moved Permanently: 219 bytes
+&lt;&lt; 301 Moved Permanently: 219 bytes
+&lt;&lt; 301 Moved Permanently: 219 bytes
+&lt;&lt; 301 Moved Permanently: 219 bytes</pre>
+
+    <p> Here, two distinct TCP connections are made, with two requests issued
+    over each. </p>
+
+</section>
+
+
+<section>
+    <div class="page-header">
        <h1>Basic Fuzzing</h1>
     </div>
 
