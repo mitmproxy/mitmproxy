@@ -36,11 +36,15 @@ if __name__ == "__main__":
     group = parser.add_argument_group('Controlling Output')
     group.add_argument(
         "-c", dest="ignorecodes", type=str, default="",
-        help="Comma-separated list of response codes filter"
+        help="Comma-separated list of response codes to ignore"
     )
     group.add_argument(
         "-e", dest="explain", action="store_true", default=False,
         help="Explain requests"
+    )
+    group.add_argument(
+        "-o", dest="oneshot", action="store_true", default=False,
+        help="Oneshot - exit after first non-ignored response"
     )
     group.add_argument(
         "-q", dest="showreq", action="store_true", default=False,
@@ -84,7 +88,7 @@ if __name__ == "__main__":
             if args.timeout:
                 p.settimeout(args.timeout)
             for spec in args.request:
-                p.print_request(
+                ret = p.print_request(
                     spec,
                     showreq=args.showreq,
                     showresp=args.showresp,
@@ -93,6 +97,8 @@ if __name__ == "__main__":
                     ignorecodes=codes
                 )
                 sys.stdout.flush()
+                if ret and args.oneshot:
+                    sys.exit(0)
     except KeyboardInterrupt:
         pass
 

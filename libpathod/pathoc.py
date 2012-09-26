@@ -49,6 +49,8 @@ class Pathoc(tcp.TCPClient):
             explain: Print request explanation
             hexdump: When printing requests or responses, use hex dump output
             ignorecodes: Sequence of return codes to ignore
+
+            Returns True if we have a non-ignored response.
         """
         try:
             r = rparse.parse_request(self.settings, spec)
@@ -94,3 +96,4 @@ class Pathoc(tcp.TCPClient):
             else:
                 if resp:
                     self._show_summary(fp, *resp)
+            return True
