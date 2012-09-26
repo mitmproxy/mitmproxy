@@ -7,23 +7,23 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A perverse HTTP client.')
     parser.add_argument(
         "-i", dest="sni", type=str, default=False,
-        help="SSL Server Name Indication."
+        help="SSL Server Name Indication"
     )
     parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
-        help='Repeat requests N times.'
+        help='Repeat requests N times'
     )
     parser.add_argument(
         "-p", dest="port", type=int, default=None,
-        help="Port. Defaults to 80, or 443 if SSL is active."
+        help="Port. Defaults to 80, or 443 if SSL is active"
     )
     parser.add_argument(
         "-s", dest="ssl", action="store_true", default=False,
-        help="Connect with SSL."
+        help="Connect with SSL"
     )
     parser.add_argument(
         "-t", dest="timeout", type=int, default=None,
-        help="Connection timeout."
+        help="Connection timeout"
     )
     parser.add_argument(
         'host', type=str,
@@ -35,20 +35,24 @@ if __name__ == "__main__":
     )
     group = parser.add_argument_group('Controlling Output')
     group.add_argument(
+        "-c", dest="ignorecodes", type=str, default="",
+        help="Comma-separated list of response codes filter"
+    )
+    group.add_argument(
         "-e", dest="explain", action="store_true", default=False,
-        help="Explain requests."
+        help="Explain requests"
     )
     group.add_argument(
         "-q", dest="showreq", action="store_true", default=False,
-        help="Print full request."
+        help="Print full request"
     )
     group.add_argument(
         "-r", dest="showresp", action="store_true", default=False,
-        help="Print full response."
+        help="Print full response"
     )
     group.add_argument(
         "-x", dest="hexdump", action="store_true", default=False,
-        help="Output in hexdump format."
+        help="Output in hexdump format"
     )
 
     args = parser.parse_args()
@@ -57,6 +61,11 @@ if __name__ == "__main__":
         port = 443 if args.ssl else 80
     else:
         port = args.port
+
+    try:
+        codes = [int(i) for i in args.ignorecodes.split(",") if i]
+    except ValueError:
+        parser.error("Invalid return code specification: %s"%args.ignorecodes)
 
     try:
         for i in range(args.repeat):
@@ -81,6 +90,7 @@ if __name__ == "__main__":
                     showresp=args.showresp,
                     explain=args.explain,
                     hexdump=args.hexdump,
+                    ignorecodes=codes
                 )
                 sys.stdout.flush()
     except KeyboardInterrupt:

@@ -24,7 +24,7 @@ class TestDaemon:
         _, _, _, _, content = c.request("get:/api/info")
         assert tuple(json.loads(content)["version"]) == version.IVERSION
 
-    def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False, timeout=None):
+    def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False, timeout=None, ignorecodes=None):
         c = pathoc.Pathoc("127.0.0.1", self.d.port)
         c.connect()
         if timeout:
@@ -37,9 +37,16 @@ class TestDaemon:
                 showresp = showresp,
                 explain = explain,
                 hexdump = hexdump,
+                ignorecodes = ignorecodes,
                 fp = s
             )
         return s.getvalue()
+
+    def test_ignorecodes(self):
+        assert "200" in self.tval(["get:'/p/200:b@1'"])
+        assert "200" not in self.tval(["get:'/p/200:b@1'"], ignorecodes=[200])
+        assert "200" not in self.tval(["get:'/p/200:b@1'"], ignorecodes=[200, 201])
+        assert "202" in self.tval(["get:'/p/202:b@1'"], ignorecodes=[200, 201])
 
     def test_timeout(self):
         assert "Timeout" in self.tval(["get:'/p/200:p0,10'"], timeout=0.01)
