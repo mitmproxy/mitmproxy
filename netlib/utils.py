@@ -10,7 +10,7 @@ def cleanBin(s, fixspacing=False):
         o = ord(i)
         if (o > 31 and o < 127):
             parts.append(i)
-        elif i in "\n\r\t" and not fixspacing:
+        elif i in "\n\t" and not fixspacing:
             parts.append(i)
         else:
             parts.append(".")
