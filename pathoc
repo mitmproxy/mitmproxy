@@ -74,14 +74,15 @@ if __name__ == "__main__":
                     continue
             if args.timeout:
                 p.settimeout(args.timeout)
-            p.print_requests(
-                args.request, 
-                showreq=args.showreq,
-                showresp=args.showresp,
-                explain=args.explain,
-                hexdump=args.hexdump,
-            )
-            sys.stdout.flush()
+            for spec in args.request:
+                p.print_request(
+                    spec,
+                    showreq=args.showreq,
+                    showresp=args.showresp,
+                    explain=args.explain,
+                    hexdump=args.hexdump,
+                )
+                sys.stdout.flush()
     except KeyboardInterrupt:
         pass
 

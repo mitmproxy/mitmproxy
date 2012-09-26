@@ -30,14 +30,15 @@ class TestDaemon:
         if timeout:
             c.settimeout(timeout)
         s = cStringIO.StringIO()
-        c.print_requests(
-            requests, 
-            showreq = showreq,
-            showresp = showresp,
-            explain = explain,
-            hexdump = hexdump,
-            fp = s
-        )
+        for i in requests:
+            c.print_request(
+                i,
+                showreq = showreq,
+                showresp = showresp,
+                explain = explain,
+                hexdump = hexdump,
+                fp = s
+            )
         return s.getvalue()
 
     def test_timeout(self):
