@@ -38,7 +38,7 @@ class Pathoc(tcp.TCPClient):
             print >> fp, "%s (unprintables escaped):"%header
             print >> fp, netlib.utils.cleanBin(data)
 
-    def print_request(self, spec, showreq, showresp, explain, hexdump, ignorecodes, fp=sys.stdout):
+    def print_request(self, spec, showreq, showresp, explain, hexdump, ignorecodes, ignoretimeout, fp=sys.stdout):
         """
             Performs a series of requests, and prints results to the specified
             file descriptor.
@@ -74,6 +74,8 @@ class Pathoc(tcp.TCPClient):
         except http.HttpError, v:
             print >> fp, "<< HTTP Error:", v.msg
         except tcp.NetLibTimeout:
+            if ignoretimeout:
+                return
             print >> fp, "<<", "Timeout"
         except tcp.NetLibDisconnect: # pragma: nocover
             print >> fp, "<<", "Disconnect"

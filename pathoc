@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
     group = parser.add_argument_group('Controlling Output')
     group.add_argument(
-        "-c", dest="ignorecodes", type=str, default="",
+        "-C", dest="ignorecodes", type=str, default="",
         help="Comma-separated list of response codes to ignore"
     )
     group.add_argument(
@@ -53,6 +53,10 @@ if __name__ == "__main__":
     group.add_argument(
         "-r", dest="showresp", action="store_true", default=False,
         help="Print full response"
+    )
+    group.add_argument(
+        "-T", dest="ignoretimeout", action="store_true", default=False,
+        help="Ignore timeouts"
     )
     group.add_argument(
         "-x", dest="hexdump", action="store_true", default=False,
@@ -94,7 +98,8 @@ if __name__ == "__main__":
                     showresp=args.showresp,
                     explain=args.explain,
                     hexdump=args.hexdump,
-                    ignorecodes=codes
+                    ignorecodes=codes,
+                    ignoretimeout=args.ignoretimeout
                 )
                 sys.stdout.flush()
                 if ret and args.oneshot:
