@@ -284,6 +284,9 @@ class BaseHandler:
     def handle(self): # pragma: no cover
         raise NotImplementedError
 
+    def settimeout(self, n):
+        self.connection.settimeout(n)
+
     def close(self):
         """
             Does a hard close of the socket, i.e. a shutdown, followed by a close.
