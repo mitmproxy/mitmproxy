@@ -8,6 +8,7 @@ class DaemonTests:
     noapi = False
     nohang = False
     ssl = False
+    timeout = None
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
@@ -17,7 +18,8 @@ class DaemonTests:
             sizelimit=1*1024*1024,
             noweb = self.noweb,
             noapi = self.noapi,
-            nohang = self.nohang
+            nohang = self.nohang,
+            timeout = self.timeout,
         )
 
     @classmethod

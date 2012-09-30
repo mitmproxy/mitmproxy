@@ -145,7 +145,7 @@ class PathodHandler(tcp.BaseHandler):
                 )
                 self.info(s)
                 return
-
+        self.settimeout(self.server.timeout)
         while not self.finished:
             if not self.handle_request():
                 return
@@ -155,7 +155,8 @@ class Pathod(tcp.TCPServer):
     LOGBUF = 500
     def __init__(   self,
                     addr, ssloptions=None, craftanchor="/p/", staticdir=None, anchors=None,
-                    sizelimit=None, noweb=False, nocraft=False, noapi=False, nohang=False
+                    sizelimit=None, noweb=False, nocraft=False, noapi=False, nohang=False,
+                    timeout=None
                 ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
@@ -175,6 +176,7 @@ class Pathod(tcp.TCPServer):
         self.craftanchor = craftanchor
         self.sizelimit = sizelimit
         self.noweb, self.nocraft, self.noapi, self.nohang = noweb, nocraft, noapi, nohang
+        self.timeout = timeout
         if not noapi:
             app.api()
         self.app = app.app
@@ -221,6 +223,14 @@ class Pathod(tcp.TCPServer):
                 dict(
                     type = "error",
                     msg = "Disconnect"
+                )
+            )
+            return
+        except tcp.NetLibTimeout: # pragma: no cover
+            h.info("Timeout")
+            self.add_log(
+                dict(
+                    type = "timeout",
                 )
             )
             return

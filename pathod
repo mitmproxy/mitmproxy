@@ -88,7 +88,8 @@ def main(parser, args):
             noweb = args.noweb,
             nocraft = args.nocraft,
             noapi = args.noapi,
-            nohang = args.nohang
+            nohang = args.nohang,
+            timeout = args.timeout
         )
     except pathod.PathodError, v:
         parser.error(str(v))
@@ -133,6 +134,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "-s", dest='ssl', default=False, action="store_true",
         help='Serve with SSL.'
+    )
+    parser.add_argument(
+        "-t", dest="timeout", type=int, default=None,
+        help="Connection timeout"
     )
     parser.add_argument(
         "--limit-size", dest='sizelimit', default=None, type=str,
