@@ -20,6 +20,8 @@ class DaemonTests:
             noapi = self.noapi,
             nohang = self.nohang,
             timeout = self.timeout,
+            logreq = True,
+            logresp = True
         )
 
     @classmethod

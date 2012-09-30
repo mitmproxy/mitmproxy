@@ -1,9 +1,9 @@
 import urllib, threading, re, logging, socket, sys
 from netlib import tcp, http, odict, wsgi
+import netlib.utils
 import version, app, rparse
 
 logger = logging.getLogger('pathod')
-
 
 class PathodError(Exception): pass
 
@@ -19,51 +19,41 @@ class PathodHandler(tcp.BaseHandler):
 
     def serve_crafted(self, crafted, request_log):
         response_log = crafted.serve(self.wfile, self.server.check_policy)
-        self.server.add_log(
-            dict(
+        log = dict(
                 type = "crafted",
                 request=request_log,
                 response=response_log
             )
-        )
         if response_log["disconnect"]:
-            return False
-        return True
+            return False, log
+        return True, log
 
     def handle_request(self):
         """
-            Returns True if handling should continue.
+            Returns a (again, log) tuple. 
+
+            again: True if request handling should continue.
+            log: A dictionary, or None
         """
         line = self.rfile.readline()
         if line == "\r\n" or line == "\n": # Possible leftover from previous message
             line = self.rfile.readline()
         if line == "":
-            return
+            # Normal termination
+            return False, None
 
         parts = http.parse_init_http(line)
         if not parts:
             s = "Invalid first line: %s"%repr(line)
             self.info(s)
-            self.server.add_log(
-                dict(
-                    type = "error",
-                    msg = s
-                )
-            )
-            return
+            return False, dict(type = "error", msg = s)
 
         method, path, httpversion = parts
         headers = http.read_headers(self.rfile)
         if headers is None:
             s = "Invalid headers"
             self.info(s)
-            self.server.add_log(
-                dict(
-                    type = "error",
-                    msg = s
-                )
-            )
-            return
+            return False, dict(type = "error", msg = s)
 
         request_log = dict(
             path = path,
@@ -81,13 +71,7 @@ class PathodHandler(tcp.BaseHandler):
         except http.HttpError, s:
             s = str(s)
             self.info(s)
-            self.server.add_log(
-                dict(
-                    type = "error",
-                    msg = s
-                )
-            )
-            return
+            return False, dict(type = "error", msg = s)
 
         for i in self.server.anchors:
             if i[0].match(path):
@@ -113,7 +97,7 @@ class PathodHandler(tcp.BaseHandler):
         elif self.server.noweb:
             crafted = rparse.PathodErrorResponse("Access Denied")
             crafted.serve(self.wfile, self.server.check_policy)
-            return False
+            return False, dict(type = "error", msg="Access denied: web interface disabled")
         else:
             self.info("app: %s %s"%(method, path))
             cc = wsgi.ClientConn(self.client_address)
@@ -126,7 +110,18 @@ class PathodHandler(tcp.BaseHandler):
                 version.NAMEVERSION
             )
             app.serve(req, self.wfile)
-            return True
+            return True, None
+
+    def _log_bytes(self, header, data, hexdump):
+        s = []
+        if hexdump:
+            s.append("%s (hex dump):"%header)
+            for line in netlib.utils.hexdump(data):
+                s.append("\t%s %s %s"%line)
+        else:
+            s.append("%s (unprintables escaped):"%header)
+            s.append(netlib.utils.cleanBin(data))
+        self.info("\n".join(s))
 
     def handle(self):
         if self.server.ssloptions:
@@ -147,7 +142,20 @@ class PathodHandler(tcp.BaseHandler):
                 return
         self.settimeout(self.server.timeout)
         while not self.finished:
-            if not self.handle_request():
+            if self.server.logreq:
+                self.rfile.start_log()
+            if self.server.logresp:
+                self.wfile.start_log()
+            again, log = self.handle_request()
+            if log:
+                if self.server.logreq:
+                    log["request_bytes"] = self.rfile.get_log()
+                    self._log_bytes("Request", log["request_bytes"], self.server.hexdump)
+                if self.server.logresp:
+                    log["response_bytes"] = self.wfile.get_log()
+                    self._log_bytes("Response", log["response_bytes"], self.server.hexdump)
+                self.server.add_log(log)
+            if not again:
                 return
 
 
@@ -156,7 +164,7 @@ class Pathod(tcp.TCPServer):
     def __init__(   self,
                     addr, ssloptions=None, craftanchor="/p/", staticdir=None, anchors=None,
                     sizelimit=None, noweb=False, nocraft=False, noapi=False, nohang=False,
-                    timeout=None
+                    timeout=None, logreq=False, logresp=False, hexdump=False
                 ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
@@ -176,7 +184,8 @@ class Pathod(tcp.TCPServer):
         self.craftanchor = craftanchor
         self.sizelimit = sizelimit
         self.noweb, self.nocraft, self.noapi, self.nohang = noweb, nocraft, noapi, nohang
-        self.timeout = timeout
+        self.timeout, self.logreq, self.logresp, self.hexdump = timeout, logreq, logresp, hexdump
+
         if not noapi:
             app.api()
         self.app = app.app

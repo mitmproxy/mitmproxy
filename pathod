@@ -89,7 +89,10 @@ def main(parser, args):
             nocraft = args.nocraft,
             noapi = args.noapi,
             nohang = args.nohang,
-            timeout = args.timeout
+            timeout = args.timeout,
+            logreq = args.logreq,
+            logresp = args.logresp,
+            hexdump = args.hexdump
         )
     except pathod.PathodError, v:
         parser.error(str(v))
@@ -122,14 +125,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-D", dest='daemonize', default=False, action="store_true",
         help='Daemonize.'
-    )
-    parser.add_argument(
-        "-f", dest='logfile', default=None, type=str,
-        help='Log file.'
-    )
-    parser.add_argument(
-        "--debug", dest='debug', default=False, action="store_true",
-        help='Enable debug output.'
     )
     parser.add_argument(
         "-s", dest='ssl', default=False, action="store_true",
@@ -167,6 +162,26 @@ if __name__ == "__main__":
         "--certfile", dest='ssl_certfile', default=None, type=str,
         help='SSL cert file. If not specified, a default cert is used.'
     )
+
+
+    group = parser.add_argument_group('Controlling Output')
+    group.add_argument(
+        "-f", dest='logfile', default=None, type=str,
+        help='Log to file.'
+    )
+    group.add_argument(
+        "-q", dest="logreq", action="store_true", default=False,
+        help="Log full request"
+    )
+    group.add_argument(
+        "-r", dest="logresp", action="store_true", default=False,
+        help="Log full response"
+    )
+    group.add_argument(
+        "-x", dest="hexdump", action="store_true", default=False,
+        help="Log request/response in hexdump format"
+    )
+
     args = parser.parse_args()
     if args.daemonize:
         daemonize()
