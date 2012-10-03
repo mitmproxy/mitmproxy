@@ -69,6 +69,11 @@ def docs_pathoc():
     return render("docs_pathoc.html", True, section="docs")
 
 
+@app.route('/docs/libpathod')
+def docs_libpathod():
+    return render("docs_libpathod.html", True, section="docs")
+
+
 @app.route('/docs/test')
 def docs_test():
     return render("docs_test.html", True, section="docs")

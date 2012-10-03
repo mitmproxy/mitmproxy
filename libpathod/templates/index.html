@@ -20,27 +20,10 @@
             <p>A pathological web daemon.</p>
 
             {% include "response_previewform.html" %}
-        </div>
-    </div>
-    <div class="span6">
-        <div>
-            <h1> <a href="/docs/pathoc">pathoc</a> </h1>
 
-            <p>A perverse HTTP client.</p>
+            <br>
 
-            {% include "request_previewform.html" %}
-
-        </div>
-    </div>
-</div>
-
-
-<div style="margin-top: 50px" class="row">
-    <div class="span6">
-        <div>
-            <h1>pathod server</h1>
-
-            <p>A live, public instance of pathod</p>
+            <p>There is also a live, public instance of pathod here:</p>
 
             <p><b>http://public.pathod.net/</b><input 
                     style="width: 14em"
@@ -63,6 +46,34 @@
                     });
                 });
             </script>
+
+        </div>
+    </div>
+    <div class="span6">
+        <div>
+            <h1> <a href="/docs/pathoc">pathoc</a> </h1>
+
+            <p>A perverse HTTP client.</p>
+
+            {% include "request_previewform.html" %}
+
+            <pre class="terminal">&gt; pathoc -n 3 google.com "get:/:ir,@1"
+&lt;&lt; 200 OK: 44177 bytes
+&lt;&lt; 405 Method Not Allowed: 959 bytes
+&lt;&lt; 200 OK: 44107 bytes</pre>
+
+        </div>
+    </div>
+</div>
+
+
+<div style="margin-top: 50px" class="row">
+    <div class="span6">
+        <div>
+            <h1> <a href="/docs/test">libpathod.test</a> </h1>
+
+            <p>Using pathod in your unit tests.</p>
+
         </div>
     </div>
     <div class="span6">
