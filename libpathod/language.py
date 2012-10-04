@@ -401,9 +401,23 @@ class Method:
         return spec
 
 
-class PauseAt:
+class _Action:
+    """
+        An action that operates on the raw data stream of the message. All
+        actions have one thing in common: an offset that specifies where the
+        action should take place.
+    """
+    def __init__(self, offset):
+        self.offset = offset
+
+    def __cmp__(self, other):
+        return cmp(self.offset, other.offset)
+
+
+class PauseAt(_Action):
     def __init__(self, offset, seconds):
-        self.offset, self.seconds = offset, seconds
+        _Action.__init__(self, offset)
+        self.seconds = seconds
 
     @classmethod
     def expr(klass):
@@ -422,12 +436,12 @@ class PauseAt:
         r.actions.append((self.offset, "pause", self.seconds))
 
 
-class DisconnectAt:
-    def __init__(self, value):
-        self.value = value
+class DisconnectAt(_Action):
+    def __init__(self, offset):
+        _Action.__init__(self, offset)
 
     def accept(self, settings, r):
-        r.actions.append((self.value, "disconnect"))
+        r.actions.append((self.offset, "disconnect"))
 
     @classmethod
     def expr(klass):
@@ -436,9 +450,10 @@ class DisconnectAt:
         return e.setParseAction(lambda x: klass(*x))
 
 
-class InjectAt:
+class InjectAt(_Action):
     def __init__(self, offset, value):
-        self.offset, self.value = offset, value
+        _Action.__init__(self, offset)
+        self.value = value
 
     @classmethod
     def expr(klass):

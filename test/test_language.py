@@ -168,6 +168,18 @@ class TestMisc:
         s.serve(d)
 
 
+class Test_Action:
+    def test_cmp(self):
+        a = language._Action(0)
+        b = language._Action(1)
+        c = language._Action(0)
+        assert a < b
+        assert a == c
+        l = [b, a]
+        l.sort()
+        assert l[0].offset == 0
+
+
 class TestDisconnects:
     def test_parse_response(self):
         assert (0, "disconnect") in language.parse_response({}, "400:d0").actions
@@ -177,14 +189,14 @@ class TestDisconnects:
         e = language.DisconnectAt.expr()
         v = e.parseString("d0")[0]
         assert isinstance(v, language.DisconnectAt)
-        assert v.value == 0
+        assert v.offset == 0
 
         v = e.parseString("d100")[0]
-        assert v.value == 100
+        assert v.offset == 100
 
         e = language.DisconnectAt.expr()
         v = e.parseString("dr")[0]
-        assert v.value == "r"
+        assert v.offset == "r"
 
 
 class TestInject:
