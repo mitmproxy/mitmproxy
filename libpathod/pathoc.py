@@ -83,13 +83,6 @@ class Pathoc(tcp.TCPClient):
         if req:
             if ignorecodes and resp and resp[1] in ignorecodes:
                 return
-            if explain:
-                print >> fp, ">>", req["method"], repr(req["path"])
-                for a in req["actions"]:
-                    print >> fp, "\t",
-                    for x in a:
-                        print >> fp, x,
-                    print >> fp
             if showreq:
                 self._show(fp, ">> Request", self.wfile.get_log(), hexdump)
 

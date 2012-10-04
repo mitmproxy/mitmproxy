@@ -75,12 +75,8 @@ class TestDaemon:
     def test_conn_err(self):
         assert "Invalid server response" in self.tval(["get:'/p/200:d2'"])
 
-    def test_explain(self):
-        reqs = [ "get:/api/info:ir,'x'"]
-        assert "inject" in self.tval(reqs, explain=True)
-
     def test_fileread(self):
         d = tutils.test_data.path("data/request")
-        assert "foo" in self.tval(["+%s"%d], explain=True)
+        assert "foo" in self.tval(["+%s"%d], showreq=True)
         assert "File" in self.tval(["+/nonexistent"])
 

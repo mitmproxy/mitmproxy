@@ -25,18 +25,6 @@ class ParseException(Exception):
         return "%s at char %s"%(self.msg, self.col)
 
 
-def actions_log(lst):
-    ret = []
-    for i in lst:
-        if i[1] == "inject":
-            ret.append(
-                [i[0], i[1], repr(i[2])]
-            )
-        else:
-            ret.append(i)
-    return ret
-
-
 def ready_actions(length, lst):
     ret = []
     for i in lst:
@@ -620,7 +608,6 @@ class Message:
                 err.serve(fp)
                 return dict(
                     disconnect = True,
-                    actions = actions_log(actions),
                     error = ret
                 )
         disconnect = write_values(fp, vals, actions[:])
@@ -629,7 +616,6 @@ class Message:
             disconnect = disconnect,
             started = started,
             duration = duration,
-            actions = actions_log(actions),
         )
         for i in self.logattrs:
             v = getattr(self, i)
@@ -656,8 +642,8 @@ class Response(Message):
     logattrs = ["code", "version", "body"]
     def __init__(self):
         Message.__init__(self)
-        self.code = 200
-        self.msg = LiteralGenerator(http_status.RESPONSES[self.code])
+        self.code = None
+        self.msg = None
 
     def preamble(self):
         return [self.version, " ", str(self.code), " ", self.msg]
