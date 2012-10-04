@@ -1,7 +1,7 @@
 import sys, os
 from netlib import tcp, http
 import netlib.utils
-import rparse, utils
+import language, utils
 
 class PathocError(Exception): pass
 
@@ -18,10 +18,10 @@ class Pathoc(tcp.TCPClient):
         """
             Return an (httpversion, code, msg, headers, content) tuple.
 
-            May raise rparse.ParseException, netlib.http.HttpError or
-            rparse.FileAccessDenied.
+            May raise language.ParseException, netlib.http.HttpError or
+            language.FileAccessDenied.
         """
-        r = rparse.parse_request(self.settings, spec)
+        r = language.parse_request(self.settings, spec)
         ret = r.serve(self.wfile, None, self.host)
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
@@ -53,23 +53,23 @@ class Pathoc(tcp.TCPClient):
             Returns True if we have a non-ignored response.
         """
         try:
-            r = rparse.parse_request(self.settings, spec)
-        except rparse.ParseException, v:
+            r = language.parse_request(self.settings, spec)
+        except language.ParseException, v:
             print >> fp, "Error parsing request spec: %s"%v.msg
             print >> fp, v.marked()
             return
-        except rparse.FileAccessDenied, v:
+        except language.FileAccessDenied, v:
             print >> fp, "File access error: %s"%v
             return
 
         resp, req = None, None
         if showreq:
             self.wfile.start_log()
+        if showresp:
+            self.rfile.start_log()
         try:
             req = r.serve(self.wfile, None, self.host)
             self.wfile.flush()
-            if showresp:
-                self.rfile.start_log()
             resp = http.read_response(self.rfile, r.method, None)
         except http.HttpError, v:
             print >> fp, "<< HTTP Error:", v.msg

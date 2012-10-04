@@ -1,6 +1,6 @@
 import logging, pprint, cStringIO
 from flask import Flask, jsonify, render_template, request, abort, make_response
-import version, rparse, utils
+import version, language, utils
 
 logging.basicConfig(level="DEBUG")
 app = Flask(__name__)
@@ -116,14 +116,14 @@ def _preview(is_request):
 
     try:
         if is_request:
-            r = rparse.parse_request(app.config["pathod"].request_settings, spec)
+            r = language.parse_request(app.config["pathod"].request_settings, spec)
         else:
-            r = rparse.parse_response(app.config["pathod"].request_settings, spec)
-    except rparse.ParseException, v:
+            r = language.parse_response(app.config["pathod"].request_settings, spec)
+    except language.ParseException, v:
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
         return render(template, False, **args)
-    except rparse.FileAccessDenied:
+    except language.FileAccessDenied:
         args["error"] = "File access is disabled."
         return render(template, False, **args)
 

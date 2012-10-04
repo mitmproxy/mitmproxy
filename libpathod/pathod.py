@@ -1,7 +1,7 @@
 import urllib, threading, re, logging, socket, sys
 from netlib import tcp, http, odict, wsgi
 import netlib.utils
-import version, app, rparse
+import version, app, language
 
 logger = logging.getLogger('pathod')
 
@@ -30,7 +30,7 @@ class PathodHandler(tcp.BaseHandler):
 
     def handle_request(self):
         """
-            Returns a (again, log) tuple. 
+            Returns a (again, log) tuple.
 
             again: True if request handling should continue.
             log: A dictionary, or None
@@ -76,26 +76,26 @@ class PathodHandler(tcp.BaseHandler):
         for i in self.server.anchors:
             if i[0].match(path):
                 self.info("crafting anchor: %s"%path)
-                aresp = rparse.parse_response(self.server.request_settings, i[1])
+                aresp = language.parse_response(self.server.request_settings, i[1])
                 return self.serve_crafted(aresp, request_log)
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
             self.info("crafting spec: %s"%spec)
             try:
-                crafted = rparse.parse_response(self.server.request_settings, spec)
-            except rparse.ParseException, v:
+                crafted = language.parse_response(self.server.request_settings, spec)
+            except language.ParseException, v:
                 self.info("Parse error: %s"%v.msg)
-                crafted = rparse.PathodErrorResponse(
+                crafted = language.PathodErrorResponse(
                         "Parse Error",
                         "Error parsing response spec: %s\n"%v.msg + v.marked()
                     )
-            except rparse.FileAccessDenied:
+            except language.FileAccessDenied:
                 self.info("File access denied")
-                crafted = rparse.PathodErrorResponse("Access Denied")
+                crafted = language.PathodErrorResponse("Access Denied")
             return self.serve_crafted(crafted, request_log)
         elif self.server.noweb:
-            crafted = rparse.PathodErrorResponse("Access Denied")
+            crafted = language.PathodErrorResponse("Access Denied")
             crafted.serve(self.wfile, self.server.check_policy)
             return False, dict(type = "error", msg="Access denied: web interface disabled")
         else:
@@ -200,8 +200,8 @@ class Pathod(tcp.TCPServer):
                 except re.error:
                     raise PathodError("Invalid regex in anchor: %s"%i[0])
                 try:
-                    aresp = rparse.parse_response(self.request_settings, i[1])
-                except rparse.ParseException, v:
+                    aresp = language.parse_response(self.request_settings, i[1])
+                except language.ParseException, v:
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, i[1]))
 

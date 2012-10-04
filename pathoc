@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse, sys
-from libpathod import pathoc, version, rparse
+from libpathod import pathoc, version, language
 from netlib import tcp
 
 if __name__ == "__main__":

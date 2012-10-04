@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse, sys, logging, logging.handlers
 import os
-from libpathod import pathod, utils, version, rparse
+from libpathod import pathod, utils, version, language
 
 
 def daemonize (stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
@@ -96,7 +96,7 @@ def main(parser, args):
         )
     except pathod.PathodError, v:
         parser.error(str(v))
-    except rparse.FileAccessDenied, v:
+    except language.FileAccessDenied, v:
         parser.error("%s You probably want to a -d argument."%str(v))
 
     try:
