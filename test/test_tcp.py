@@ -255,6 +255,17 @@ class TestTCPClient:
 
 
 class TestFileLike:
+    def test_blocksize(self):
+        s = cStringIO.StringIO("1234567890abcdefghijklmnopqrstuvwxyz")
+        s = tcp.Reader(s)
+        s.BLOCKSIZE = 2
+        assert s.read(1) == "1"
+        assert s.read(2) == "23"
+        assert s.read(3) == "456"
+        assert s.read(4) == "7890"
+        d = s.read(-1)
+        assert d.startswith("abc") and d.endswith("xyz")
+
     def test_wrap(self):
         s = cStringIO.StringIO("foobar\nfoobar")
         s.flush()

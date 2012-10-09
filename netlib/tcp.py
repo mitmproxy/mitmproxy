@@ -106,13 +106,17 @@ class Writer(_FileLike):
 class Reader(_FileLike):
     def read(self, length):
         """
-            If length is None, we read until connection closes.
+            If length is -1, we read until connection closes.
         """
         result = ''
         start = time.time()
         while length == -1 or length > 0:
+            if length == -1 or length > self.BLOCKSIZE:
+                rlen = self.BLOCKSIZE
+            else:
+                rlen = length
             try:
-                data = self.o.read(self.BLOCKSIZE if length == -1 else length)
+                data = self.o.read(rlen)
             except SSL.ZeroReturnError:
                 break
             except SSL.WantReadError:
