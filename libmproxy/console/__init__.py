@@ -431,20 +431,31 @@ class ConsoleMaster(flow.FlowMaster):
             return str(v)
         self.stream_path = path
 
+    
+    def _run_script_method(self, method, s, f):
+        status, val = s.run(method, f)
+        if val:
+            if status:
+                self.add_event("Method %s return: %s"%(method, val))
+            else:
+                self.add_event("Method %s error: %s"%(method, val[1]))
+
     def run_script_once(self, path, f):
         if not path:
             return
+        self.add_event("Running script on flow: %s"%path)
         ret = self.get_script(path)
         if ret[0]:
-            self.statusbar.message(ret[0])
+            self.statusbar.message("Error loading script.")
+            self.add_event("Error loading script:\n%s"%ret[0])
             return
         s = ret[1]
         if f.request:
-            s.run("request", f)
+            self._run_script_method("request", s, f)
         if f.response:
-            s.run("response", f)
+            self._run_script_method("response", s, f)
         if f.error:
-            s.run("error", f)
+            self._run_script_method("error", s, f)
         s.run("done")
         self.refresh_flow(f)
         self.state.last_script = path
