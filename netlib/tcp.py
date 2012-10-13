@@ -99,8 +99,8 @@ class Writer(_FileLike):
                     r = self.o.write(v)
                     self.add_log(v[:r])
                     return r
-            except (SSL.Error, socket.error):
-                raise NetLibDisconnect()
+            except (SSL.Error, socket.error), v:
+                raise NetLibDisconnect(str(v))
 
 
 class Reader(_FileLike):
