@@ -22,10 +22,6 @@ def test_isXml():
     assert utils.isXML("  \n<foo")
 
 
-def test_hexdump():
-    assert utils.hexdump("one\0"*10)
-
-
 def test_del_all():
     d = dict(a=1, b=2, c=3)
     utils.del_all(d, ["a", "x", "b"])
@@ -123,13 +119,6 @@ def test_parse_content_type():
 
     v = p("text/html; charset=UTF-8")
     assert v == ('text', 'html', {'charset': 'UTF-8'})
-
-
-def test_cleanBin():
-    assert utils.cleanBin("one") == "one"
-    assert utils.cleanBin("\00ne") == ".ne"
-    assert utils.cleanBin("\nne") == "\nne"
-    assert utils.cleanBin("\nne", True) == ".ne"
 
 
 def test_safe_subn():

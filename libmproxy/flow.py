@@ -1092,7 +1092,14 @@ class Flow:
         """
             Match this flow against a compiled filter expression. Returns True
             if matched, False if not.
+
+            If f is a string, it will be compiled as a filter expression. If
+            the expression is invalid, ValueError is raised.
         """
+        if isinstance(f, basestring):
+            f = filt.parse(f)
+            if not f:
+                raise ValueError("Invalid filter expression.")
         if f:
             return f(self)
         return True
@@ -1493,8 +1500,6 @@ class FlowMaster(controller.Master):
 
     def handle_error(self, r):
         f = self.state.add_error(r)
-        self.replacehooks.run(f)
-        self.setheaders.run(f)
         if f:
             self.run_script_hook("error", f)
         if self.client_playback:
