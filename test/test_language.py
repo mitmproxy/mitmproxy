@@ -5,6 +5,106 @@ import tutils
 language.TESTING = True
 
 
+class TestValueNakedLiteral:
+    def test_expr(self):
+        v = language.ValueNakedLiteral("foo")
+        assert v.expr()
+
+    def test_spec(self):
+        v = language.ValueNakedLiteral("foo")
+        assert v.spec() == repr(v) == "foo"
+
+        v = language.ValueNakedLiteral("f\x00oo")
+        assert v.spec() == repr(v) == r"f\x00oo"
+
+
+class TestValueLiteral:
+    def test_espr(self):
+        v = language.ValueLiteral("foo")
+        assert v.expr()
+        assert v.val == "foo"
+
+        v = language.ValueLiteral(r"foo\n")
+        assert v.expr()
+        assert v.val == "foo\n"
+        assert repr(v)
+
+    def test_spec(self):
+        v = language.ValueLiteral("foo")
+        assert v.spec() == r'"foo"'
+
+        v = language.ValueLiteral("f\x00oo")
+        assert v.spec() == repr(v) == r'"f\x00oo"'
+
+
+class TestValueGenerate:
+    def test_basic(self):
+        v = language.Value.parseString("@10b")[0]
+        assert v.usize == 10
+        assert v.unit == "b"
+        assert v.bytes() == 10
+        v = language.Value.parseString("@10")[0]
+        assert v.unit == "b"
+        v = language.Value.parseString("@10k")[0]
+        assert v.bytes() == 10240
+        v = language.Value.parseString("@10g")[0]
+        assert v.bytes() == 1024**3 * 10
+
+        v = language.Value.parseString("@10g,digits")[0]
+        assert v.datatype == "digits"
+        g = v.get_generator({})
+        assert g[:100]
+
+        v = language.Value.parseString("@10,digits")[0]
+        assert v.unit == "b"
+        assert v.datatype == "digits"
+
+    def test_spec(self):
+        v = language.ValueGenerate(1, "b", "bytes")
+        assert v.spec() == repr(v) == "@1"
+
+        v = language.ValueGenerate(1, "k", "bytes")
+        assert v.spec() == repr(v) == "@1k"
+
+        v = language.ValueGenerate(1, "k", "ascii")
+        assert v.spec() == repr(v) == "@1k,ascii"
+
+        v = language.ValueGenerate(1, "b", "ascii")
+        assert v.spec() == repr(v) == "@1,ascii"
+
+
+class TestValueFile:
+    def test_file_value(self):
+        v = language.Value.parseString("<'one two'")[0]
+        assert str(v)
+        assert v.path == "one two"
+
+        v = language.Value.parseString("<path")[0]
+        assert v.path == "path"
+
+    def test_access_control(self):
+        v = language.Value.parseString("<path")[0]
+        with tutils.tmpdir() as t:
+            p = os.path.join(t, "path")
+            f = open(p, "w")
+            f.write("x"*10000)
+            f.close()
+
+            assert v.get_generator(dict(staticdir=t))
+
+            v = language.Value.parseString("<path2")[0]
+            tutils.raises(language.FileAccessDenied, v.get_generator, dict(staticdir=t))
+            tutils.raises("access disabled", v.get_generator, dict())
+
+            v = language.Value.parseString("</outside")[0]
+            tutils.raises("outside", v.get_generator, dict(staticdir=t))
+
+    def test_spec(self):
+        v = language.Value.parseString("<'one two'")[0]
+        v2 = language.Value.parseString(v.spec())[0]
+        assert v2.path == "one two"
+
+
 class TestMisc:
     def test_generators(self):
         v = language.Value.parseString("'val'")[0]
@@ -40,65 +140,6 @@ class TestMisc:
             assert g[0:5] == "xxxxx"
             assert repr(g)
 
-    def test_valueliteral(self):
-        v = language.ValueLiteral("foo")
-        assert v.expr()
-        assert v.val == "foo"
-
-        v = language.ValueLiteral(r"foo\n")
-        assert v.expr()
-        assert v.val == "foo\n"
-        assert repr(v)
-
-    def test_valuenakedliteral(self):
-        v = language.ValueNakedLiteral("foo")
-        assert v.expr()
-        assert repr(v)
-
-    def test_file_value(self):
-        v = language.Value.parseString("<'one two'")[0]
-        assert str(v)
-        assert v.path == "one two"
-
-        v = language.Value.parseString("<path")[0]
-        assert v.path == "path"
-
-        with tutils.tmpdir() as t:
-            p = os.path.join(t, "path")
-            f = open(p, "w")
-            f.write("x"*10000)
-            f.close()
-
-            assert v.get_generator(dict(staticdir=t))
-
-            v = language.Value.parseString("<path2")[0]
-            tutils.raises(language.FileAccessDenied, v.get_generator, dict(staticdir=t))
-            tutils.raises("access disabled", v.get_generator, dict())
-
-            v = language.Value.parseString("</outside")[0]
-            tutils.raises("outside", v.get_generator, dict(staticdir=t))
-
-    def test_generated_value(self):
-        v = language.Value.parseString("@10b")[0]
-        assert v.usize == 10
-        assert v.unit == "b"
-        assert v.bytes() == 10
-        v = language.Value.parseString("@10")[0]
-        assert v.unit == "b"
-        v = language.Value.parseString("@10k")[0]
-        assert v.bytes() == 10240
-        v = language.Value.parseString("@10g")[0]
-        assert v.bytes() == 1024**3 * 10
-
-        v = language.Value.parseString("@10g,digits")[0]
-        assert v.datatype == "digits"
-        g = v.get_generator({})
-        assert g[:100]
-
-        v = language.Value.parseString("@10,digits")[0]
-        assert v.unit == "b"
-        assert v.datatype == "digits"
-
     def test_value(self):
         assert language.Value.parseString("'val'")[0].val == "val"
         assert language.Value.parseString('"val"')[0].val == "val"
@@ -126,7 +167,7 @@ class TestMisc:
         assert v.value.val == "foo"
 
         v = e.parseString("b@100")[0]
-        assert str(v.value) == "@100b,bytes"
+        assert str(v.value) == "@100"
 
         v = e.parseString("b@100g,digits", parseAll=True)[0]
         assert v.value.datatype == "digits"
@@ -179,6 +220,12 @@ class Test_Action:
         l.sort()
         assert l[0].offset == 0
 
+    def test_resolve_offset(self):
+        r = language.parse_request({}, 'GET:"/foo"')
+        e = language.DisconnectAt("r")
+        ret = e.resolve_offset(r)
+        assert isinstance(ret.offset, int)
+
 
 class TestDisconnects:
     def test_parse_response(self):
@@ -197,6 +244,10 @@ class TestDisconnects:
         e = language.DisconnectAt.expr()
         v = e.parseString("dr")[0]
         assert v.offset == "r"
+
+    def test_spec(self):
+        assert language.DisconnectAt("r").spec() == "dr"
+        assert language.DisconnectAt(10).spec() == "d10"
 
 
 class TestInject:
@@ -224,11 +275,11 @@ class TestInject:
         r = language.parse_response({}, "400:i0,'foo'")
         assert r.serve(s, None)
 
-
-class TestShortcuts:
-    def test_parse_response(self):
-        assert language.parse_response({}, "400:c'foo'").headers[0][0][:] == "Content-Type"
-        assert language.parse_response({}, "400:l'foo'").headers[0][0][:] == "Location"
+    def test_spec(self):
+        e = language.InjectAt.expr()
+        v = e.parseString("i0,'foo'")[0]
+        assert v.spec() == 'i0,"foo"'
+        
 
 
 class TestPauses:
@@ -250,6 +301,17 @@ class TestPauses:
     def test_request(self):
         r = language.parse_response({}, '400:p10,10')
         assert r.actions[0] == (10, "pause", 10)
+
+    def test_spec(self):
+        assert language.PauseAt("r", 5).spec() == "pr,5"
+        assert language.PauseAt(0, 5).spec() == "p0,5"
+        assert language.PauseAt(0, "f").spec() == "p0,f"
+
+
+class TestShortcuts:
+    def test_parse_response(self):
+        assert language.parse_response({}, "400:c'foo'").headers[0][0][:] == "Content-Type"
+        assert language.parse_response({}, "400:l'foo'").headers[0][0][:] == "Location"
 
 
 class TestParseRequest:

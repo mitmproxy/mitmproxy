@@ -1,4 +1,4 @@
-import operator, string, random, mmap, os, time
+import operator, string, random, mmap, os, time, copy
 from email.utils import formatdate
 import contrib.pyparsing as pp
 from netlib import http_status, tcp
@@ -189,7 +189,7 @@ class _Value:
         return LiteralGenerator(self.val)
 
     def __repr__(self):
-        return self.val
+        return self.spec()
 
 
 class ValueLiteral(_Value):
@@ -198,12 +198,18 @@ class ValueLiteral(_Value):
         e = v_literal.copy()
         return e.setParseAction(lambda x: klass(*x))
 
+    def spec(self):
+        return '"%s"'%self.val.encode("string_escape")
+
 
 class ValueNakedLiteral(_Value):
     @classmethod
     def expr(klass):
         e = v_naked_literal.copy()
         return e.setParseAction(lambda x: klass(*x))
+
+    def spec(self):
+        return self.val.encode("string_escape")
 
 
 class ValueGenerate:
@@ -230,8 +236,16 @@ class ValueGenerate:
         e += pp.Optional(s, default="bytes")
         return e.setParseAction(lambda x: klass(*x))
 
-    def __str__(self):
-        return "@%s%s,%s"%(self.usize, self.unit, self.datatype)
+    def spec(self):
+        s = "@%s"%self.usize
+        if self.unit != "b":
+            s += self.unit
+        if self.datatype != "bytes":
+            s += ",%s"%self.datatype
+        return s
+
+    def __repr__(self):
+        return self.spec()
 
 
 class ValueFile:
@@ -259,8 +273,8 @@ class ValueFile:
             raise FileAccessDenied("File not readable")
         return FileGenerator(s)
 
-    def __str__(self):
-        return "<%s"%(self.path)
+    def spec(self):
+        return '<"%s"'%self.path.encode("string_escape")
 
 
 Value = pp.MatchFirst(
@@ -410,8 +424,23 @@ class _Action:
     def __init__(self, offset):
         self.offset = offset
 
+    def resolve_offset(self, msg):
+        """
+            Resolves offset specifications to a numeric offset. Returns a copy
+            of the action object.
+        """
+        c = copy.copy(self)
+        if c.offset == "r":
+            c.offset = random.randrange(msg.length())
+        elif c.offset == "a":
+            c.offset = msg.length() + 1
+        return c
+
     def __cmp__(self, other):
         return cmp(self.offset, other.offset)
+
+    def __repr__(self):
+        return self.spec()
 
 
 class PauseAt(_Action):
@@ -432,6 +461,9 @@ class PauseAt(_Action):
                 )
         return e.setParseAction(lambda x: klass(*x))
 
+    def spec(self):
+        return "p%s,%s"%(self.offset, self.seconds)
+
     def accept(self, settings, r):
         r.actions.append((self.offset, "pause", self.seconds))
 
@@ -449,6 +481,9 @@ class DisconnectAt(_Action):
         e += Offset
         return e.setParseAction(lambda x: klass(*x))
 
+    def spec(self):
+        return "d%s"%self.offset
+
 
 class InjectAt(_Action):
     def __init__(self, offset, value):
@@ -462,6 +497,9 @@ class InjectAt(_Action):
         e += pp.Literal(",").suppress()
         e += Value
         return e.setParseAction(lambda x: klass(*x))
+
+    def spec(self):
+        return "i%s,%s"%(self.offset, self.value.spec())
 
     def accept(self, settings, r):
         r.actions.append(
