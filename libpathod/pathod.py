@@ -18,7 +18,7 @@ class PathodHandler(tcp.BaseHandler):
         self.sni = connection.get_servername()
 
     def serve_crafted(self, crafted, request_log):
-        response_log = crafted.serve(self.wfile, self.server.check_policy)
+        response_log = crafted.serve(self.server.request_settings, self.wfile, self.server.check_policy)
         log = dict(
                 type = "crafted",
                 request=request_log,
@@ -96,7 +96,7 @@ class PathodHandler(tcp.BaseHandler):
             return self.serve_crafted(crafted, request_log)
         elif self.server.noweb:
             crafted = language.PathodErrorResponse("Access Denied")
-            crafted.serve(self.wfile, self.server.check_policy)
+            crafted.serve(self.server.request_settings, self.wfile, self.server.check_policy)
             return False, dict(type = "error", msg="Access denied: web interface disabled")
         else:
             self.info("app: %s %s"%(method, path))

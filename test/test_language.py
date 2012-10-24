@@ -206,7 +206,7 @@ class TestMisc:
     def test_internal_response(self):
         d = cStringIO.StringIO()
         s = language.PathodErrorResponse("foo")
-        s.serve(d)
+        s.serve({}, d)
 
 
 class Test_Action:
@@ -229,8 +229,10 @@ class Test_Action:
 
 class TestDisconnects:
     def test_parse_response(self):
-        assert (0, "disconnect") in language.parse_response({}, "400:d0").actions
-        assert ("r", "disconnect") in language.parse_response({}, "400:dr").actions
+        a = language.parse_response({}, "400:d0").actions[0]
+        assert a.spec() == "d0"
+        a = language.parse_response({}, "400:dr").actions[0]
+        assert a.spec() == "dr"
 
     def test_at(self):
         e = language.DisconnectAt.expr()
@@ -253,12 +255,12 @@ class TestDisconnects:
 class TestInject:
     def test_parse_response(self):
         a = language.parse_response({}, "400:ir,@100").actions[0]
-        assert a[0] == "r"
-        assert a[1] == "inject"
+        assert a.offset == "r"
+        assert a.value.datatype == "bytes"
+        assert a.value.usize == 100
 
         a = language.parse_response({}, "400:ia,@100").actions[0]
-        assert a[0] == "a"
-        assert a[1] == "inject"
+        assert a.offset == "a"
 
     def test_at(self):
         e = language.InjectAt.expr()
@@ -273,14 +275,13 @@ class TestInject:
     def test_serve(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:i0,'foo'")
-        assert r.serve(s, None)
+        assert r.serve({}, s, None)
 
     def test_spec(self):
         e = language.InjectAt.expr()
         v = e.parseString("i0,'foo'")[0]
         assert v.spec() == 'i0,"foo"'
         
-
 
 class TestPauses:
     def test_parse_response(self):
@@ -300,7 +301,7 @@ class TestPauses:
 
     def test_request(self):
         r = language.parse_response({}, '400:p10,10')
-        assert r.actions[0] == (10, "pause", 10)
+        assert r.actions[0].spec() == "p10,10"
 
     def test_spec(self):
         assert language.PauseAt("r", 5).spec() == "pr,5"
@@ -336,7 +337,7 @@ class TestParseRequest:
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_request({}, "GET:'/foo'")
-        assert r.serve(s, None, "foo.com")
+        assert r.serve({}, s, None, "foo.com")
 
     def test_str(self):
         r = language.parse_request({}, 'GET:"/foo"')
@@ -386,15 +387,15 @@ class TestParseResponse:
 
     def test_parse_pause_before(self):
         r = language.parse_response({}, "400:p0,10")
-        assert (0, "pause", 10) in r.actions
+        assert r.actions[0].spec() == "p0,10"
 
     def test_parse_pause_after(self):
         r = language.parse_response({}, "400:pa,10")
-        assert ("a", "pause", 10) in r.actions
+        assert r.actions[0].spec() == "pa,10"
 
     def test_parse_pause_random(self):
         r = language.parse_response({}, "400:pr,10")
-        assert ("r", "pause", 10) in r.actions
+        assert r.actions[0].spec() == "pr,10"
 
     def test_parse_stress(self):
         r = language.parse_response({}, "400:b@100g")
@@ -468,32 +469,16 @@ class TestWriteValues:
     def test_write_values_after(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:da")
-        r.serve(s, None)
+        r.serve({}, s, None)
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:pa,0")
-        r.serve(s, None)
+        r.serve({}, s, None)
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:ia,'xx'")
-        r.serve(s, None)
+        r.serve({}, s, None)
         assert s.getvalue().endswith('xx')
-
-
-def test_ready_actions():
-    x = [(0, 5)]
-    assert language.ready_actions(100, x) == x
-
-    x = [("r", 5)]
-    ret = language.ready_actions(100, x)
-    assert 0 <= ret[0][0] < 100
-
-    x = [("a", "pause", 5)]
-    ret = language.ready_actions(100, x)
-    assert ret[0][0] > 100
-
-    x = [(1, 5), (0, 5)]
-    assert language.ready_actions(100, x) == sorted(x)
 
 
 class TestResponse:
@@ -521,24 +506,24 @@ class TestResponse:
         r = language.parse_response({}, "400:b@100k")
         def check(req, acts):
             return "errmsg"
-        assert r.serve(s, check=check)["error"] == "errmsg"
+        assert r.serve({}, s, check=check)["error"] == "errmsg"
 
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400'msg'")
-        assert r.serve(s, None)
+        assert r.serve({}, s, None)
 
     def test_raw(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo'")
-        r.serve(s, None)
+        r.serve({}, s, None)
         v = s.getvalue()
         assert "Content-Length" in v
         assert "Date" in v
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo':r")
-        r.serve(s, None)
+        r.serve({}, s, None)
         v = s.getvalue()
         assert not "Content-Length" in v
         assert not "Date" in v
@@ -546,46 +531,48 @@ class TestResponse:
     def test_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
-            x.serve(s, None)
+            x.serve({}, s, None)
             assert x.length() == len(s.getvalue())
         testlen(language.parse_response({}, "400'msg'"))
         testlen(language.parse_response({}, "400'msg':h'foo'='bar'"))
         testlen(language.parse_response({}, "400'msg':h'foo'='bar':b@100b"))
 
     def test_effective_length(self):
+        l = [None]
+        def check(req, actions):
+            l[0] = req.effective_length(actions)
+
         def testlen(x, actions):
             s = cStringIO.StringIO()
-            x.serve(s, None)
-            assert x.effective_length(actions) == len(s.getvalue())
-        actions = [
+            x.serve({}, s, check)
+            assert l[0] == len(s.getvalue())
 
-        ]
         r = language.parse_response({}, "400'msg':b@100")
 
         actions = [
-            (0, "disconnect"),
+            language.DisconnectAt(0)
         ]
         r.actions = actions
         testlen(r, actions)
 
         actions = [
-            (0, "disconnect"),
-            (0, "inject", "foo")
+            language.DisconnectAt(0),
+            language.InjectAt(0, language.ValueLiteral("foo"))
         ]
         r.actions = actions
         testlen(r, actions)
 
         actions = [
-            (0, "inject", "foo")
+            language.InjectAt(0, language.ValueLiteral("foo"))
         ]
         r.actions = actions
         testlen(r, actions)
 
     def test_render(self):
         r = language.parse_response({}, "400:p0,100:dr")
-        assert r.actions[0][1] == "pause"
+        assert r.actions[0].spec() == "p0,100"
         assert len(r.preview_safe()) == 1
-        assert not r.actions[0][1] == "pause"
+        assert not r.actions[0].spec().startswith("p")
 
 
 

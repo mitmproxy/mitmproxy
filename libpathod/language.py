@@ -25,19 +25,6 @@ class ParseException(Exception):
         return "%s at char %s"%(self.msg, self.col)
 
 
-def ready_actions(length, lst):
-    ret = []
-    for i in lst:
-        itms = list(i)
-        if i[0] == "r":
-            itms[0] = random.randrange(length)
-        elif i[0] == "a":
-            itms[0] = length+1
-        ret.append(tuple(itms))
-    ret.sort()
-    return ret
-
-
 def send_chunk(fp, val, blocksize, start, end):
     """
         (start, end): Inclusive lower bound, exclusive upper bound.
@@ -441,6 +428,9 @@ class _Action:
 
     def __repr__(self):
         return self.spec()
+        
+    def accept(self, settings, r):
+        r.actions.append(self)
 
 
 class PauseAt(_Action):
@@ -464,16 +454,13 @@ class PauseAt(_Action):
     def spec(self):
         return "p%s,%s"%(self.offset, self.seconds)
 
-    def accept(self, settings, r):
-        r.actions.append((self.offset, "pause", self.seconds))
+    def intermediate(self, settings):
+        return (self.offset, "pause", self.seconds)
 
 
 class DisconnectAt(_Action):
     def __init__(self, offset):
         _Action.__init__(self, offset)
-
-    def accept(self, settings, r):
-        r.actions.append((self.offset, "disconnect"))
 
     @classmethod
     def expr(klass):
@@ -483,6 +470,9 @@ class DisconnectAt(_Action):
 
     def spec(self):
         return "d%s"%self.offset
+
+    def intermediate(self, settings):
+        return (self.offset, "disconnect")
 
 
 class InjectAt(_Action):
@@ -501,14 +491,12 @@ class InjectAt(_Action):
     def spec(self):
         return "i%s,%s"%(self.offset, self.value.spec())
 
-    def accept(self, settings, r):
-        r.actions.append(
-            (
+    def intermediate(self, settings):
+        return (
                 self.offset,
                 "inject",
                 self.value.get_generator(settings)
             )
-        )
 
 
 class Header:
@@ -577,8 +565,8 @@ class Message:
         """
             Modify this message to be safe for previews. Returns a list of elided actions.
         """
-        pauses = [i for i in self.actions if i[1] == "pause"]
-        self.actions = [i for i in self.actions if i[1] != "pause"]
+        pauses = [i for i in self.actions if isinstance(i, PauseAt)]
+        self.actions = [i for i in self.actions if not isinstance(i, PauseAt)]
         return pauses
 
     def effective_length(self, actions):
@@ -595,7 +583,7 @@ class Message:
                 l += len(i[2])
         return l
 
-    def serve(self, fp, check, request_host):
+    def serve(self, settings, fp, check, request_host):
         """
             fp: The file pointer to write to.
 
@@ -652,13 +640,15 @@ class Message:
         if self.body:
             vals.append(self.body)
         vals.reverse()
-        actions = ready_actions(self.length(), self.actions)
+        actions = [i.resolve_offset(self) for i in self.actions]
+        actions.sort()
         actions.reverse()
+        actions = [i.intermediate(settings) for i in actions]
         if check:
             ret = check(self, actions)
             if ret:
                 err = PathodErrorResponse(ret)
-                err.serve(fp)
+                err.serve(settings, fp)
                 return dict(
                     disconnect = True,
                     error = ret
@@ -767,8 +757,8 @@ class CraftedRequest(Request):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, fp, check, host):
-        d = Request.serve(self, fp, check, host)
+    def serve(self, settings, fp, check, host):
+        d = Request.serve(self, settings, fp, check, host)
         d["spec"] = self.spec
         return d
 
@@ -780,8 +770,8 @@ class CraftedResponse(Response):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, fp, check):
-        d = Response.serve(self, fp, check, None)
+    def serve(self, settings, fp, check):
+        d = Response.serve(self, settings, fp, check, None)
         d["spec"] = self.spec
         return d
 
@@ -798,8 +788,8 @@ class PathodErrorResponse(Response):
             ),
         ]
 
-    def serve(self, fp, check=None):
-        d = Response.serve(self, fp, check, None)
+    def serve(self, settings, fp, check=None):
+        d = Response.serve(self, settings, fp, check, None)
         d["internal"] = True
         return d
 
