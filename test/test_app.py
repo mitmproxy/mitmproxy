@@ -11,10 +11,15 @@ class TestApp(tutils.DaemonTests):
         r = self.getpath("/about")
         assert r.ok
 
+    def test_download(self):
+        r = self.getpath("/download")
+        assert r.ok
+
     def test_docs(self):
         assert self.getpath("/docs/pathod").status_code == 200
         assert self.getpath("/docs/pathoc").status_code == 200
         assert self.getpath("/docs/language").status_code == 200
+        assert self.getpath("/docs/libpathod").status_code == 200
         assert self.getpath("/docs/test").status_code == 200
 
     def test_log(self):

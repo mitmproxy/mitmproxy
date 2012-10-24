@@ -13,17 +13,17 @@ def api():
         )
 
 
-    @app.route('/api/log')
-    def api_log():
-        return jsonify(
-            log = app.config["pathod"].get_log()
-        )
+@app.route('/api/log')
+def api_log():
+    return jsonify(
+        log = app.config["pathod"].get_log()
+    )
 
 
-    @app.route('/api/clear_log')
-    def api_clear_log():
-        app.config["pathod"].clear_log()
-        return "OK"
+@app.route('/api/clear_log')
+def api_clear_log():
+    app.config["pathod"].clear_log()
+    return "OK"
 
 
 def render(s, cacheable, **kwargs):

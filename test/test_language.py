@@ -226,6 +226,10 @@ class Test_Action:
         ret = e.resolve_offset(r)
         assert isinstance(ret.offset, int)
 
+    def test_repr(self):
+        e = language.DisconnectAt("r")
+        assert repr(e)
+
 
 class TestDisconnects:
     def test_parse_response(self):
@@ -281,7 +285,7 @@ class TestInject:
         e = language.InjectAt.expr()
         v = e.parseString("i0,'foo'")[0]
         assert v.spec() == 'i0,"foo"'
-        
+
 
 class TestPauses:
     def test_parse_response(self):
@@ -321,6 +325,9 @@ class TestParseRequest:
         d = dict(staticdir=p)
         r = language.parse_request(d, "+request")
         assert r.path == "/foo"
+
+    def test_nonascii(self):
+        tutils.raises("ascii", language.parse_request, {}, "get:\xf0")
 
     def test_err(self):
         tutils.raises(language.ParseException, language.parse_request, {}, 'GET')
@@ -380,6 +387,9 @@ class TestParseResponse:
         except language.ParseException, v:
             assert v.marked()
             assert str(v)
+
+    def test_nonascii(self):
+        tutils.raises("ascii", language.parse_response, {}, "foo:b\xf0")
 
     def test_parse_header(self):
         r = language.parse_response({}, '400:h"foo"="bar"')

@@ -9,6 +9,7 @@ class DaemonTests:
     nohang = False
     ssl = False
     timeout = None
+    hexdump = False
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
@@ -20,6 +21,7 @@ class DaemonTests:
             noapi = self.noapi,
             nohang = self.nohang,
             timeout = self.timeout,
+            hexdump = self.hexdump,
             logreq = True,
             logresp = True
         )

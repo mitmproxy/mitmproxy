@@ -1,4 +1,4 @@
-import urllib, threading, re, logging, socket, sys
+import urllib, threading, re, logging, socket, sys, base64
 from netlib import tcp, http, odict, wsgi
 import netlib.utils
 import version, app, language
@@ -149,10 +149,10 @@ class PathodHandler(tcp.BaseHandler):
             again, log = self.handle_request()
             if log:
                 if self.server.logreq:
-                    log["request_bytes"] = self.rfile.get_log()
+                    log["request_bytes"] = self.rfile.get_log().encode("string_escape")
                     self._log_bytes("Request", log["request_bytes"], self.server.hexdump)
                 if self.server.logresp:
-                    log["response_bytes"] = self.wfile.get_log()
+                    log["response_bytes"] = self.wfile.get_log().encode("string_escape")
                     self._log_bytes("Response", log["response_bytes"], self.server.hexdump)
                 self.server.add_log(log)
             if not again:

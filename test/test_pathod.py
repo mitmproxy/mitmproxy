@@ -61,7 +61,18 @@ class TestNohang(tutils.DaemonTests):
         assert "Pauses have been disabled" in l["response"]["error"]
 
 
+class TestHexdump(tutils.DaemonTests):
+    hexdump = True
+    def test_hexdump(self):
+        r = self.get(r"200:b'\xf0'")
+
+
 class CommonTests(tutils.DaemonTests):
+    def test_binarydata(self):
+        r = self.get(r"200:b'\xf0'")
+        l = self.d.last_log()
+        # FIXME: Other binary data elements
+
     def test_sizelimit(self):
         r = self.get("200:b@1g")
         assert r.status_code == 800

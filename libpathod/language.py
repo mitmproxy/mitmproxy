@@ -428,7 +428,7 @@ class _Action:
 
     def __repr__(self):
         return self.spec()
-        
+
     def accept(self, settings, r):
         r.actions.append(self)
 
@@ -665,6 +665,7 @@ class Message:
             # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
             if hasattr(v, "__len__"):
                 v = v[:TRUNCATE]
+                v = v.encode("string_escape")
             ret[i] = v
         return ret
 
@@ -815,6 +816,10 @@ def parse_response(settings, s):
     """
         May raise ParseException or FileAccessDenied
     """
+    try:
+        s.decode("ascii")
+    except UnicodeError:
+        raise ParseException("Spec must be valid ASCII.", 0, 0)
     if s.startswith(FILESTART):
         s = read_file(settings, s)
     try:
@@ -827,6 +832,10 @@ def parse_request(settings, s):
     """
         May raise ParseException or FileAccessDenied
     """
+    try:
+        s.decode("ascii")
+    except UnicodeError:
+        raise ParseException("Spec must be valid ASCII.", 0, 0)
     if s.startswith(FILESTART):
         s = read_file(settings, s)
     try:
