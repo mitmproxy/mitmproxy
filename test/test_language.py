@@ -206,7 +206,7 @@ class TestMisc:
     def test_internal_response(self):
         d = cStringIO.StringIO()
         s = language.PathodErrorResponse("foo")
-        s.serve({}, d)
+        s.serve(d, {})
 
 
 class Test_Action:
@@ -279,7 +279,7 @@ class TestInject:
     def test_serve(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:i0,'foo'")
-        assert r.serve({}, s)
+        assert r.serve(s, {})
 
     def test_spec(self):
         e = language.InjectAt.expr()
@@ -344,7 +344,7 @@ class TestParseRequest:
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_request({}, "GET:'/foo'")
-        assert r.serve({}, s, "foo.com")
+        assert r.serve(s, {}, "foo.com")
 
     def test_str(self):
         r = language.parse_request({}, 'GET:"/foo"')
@@ -479,15 +479,15 @@ class TestWriteValues:
     def test_write_values_after(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:da")
-        r.serve({}, s)
+        r.serve(s, {})
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:pa,0")
-        r.serve({}, s)
+        r.serve(s, {})
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:ia,'xx'")
-        r.serve({}, s)
+        r.serve(s, {})
         assert s.getvalue().endswith('xx')
 
 
@@ -514,19 +514,19 @@ class TestResponse:
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400'msg'")
-        assert r.serve({}, s)
+        assert r.serve(s, {})
 
     def test_raw(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo'")
-        r.serve({}, s)
+        r.serve(s, {})
         v = s.getvalue()
         assert "Content-Length" in v
         assert "Date" in v
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo':r")
-        r.serve({}, s)
+        r.serve(s, {})
         v = s.getvalue()
         assert not "Content-Length" in v
         assert not "Date" in v
@@ -534,7 +534,7 @@ class TestResponse:
     def test_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
-            x.serve({}, s)
+            x.serve(s, {})
             assert x.length({}, None) == len(s.getvalue())
         testlen(language.parse_response({}, "400'msg'"))
         testlen(language.parse_response({}, "400'msg':h'foo'='bar'"))
@@ -544,7 +544,7 @@ class TestResponse:
         def testlen(x, actions):
             s = cStringIO.StringIO()
             m = x.maximum_length({}, None)
-            x.serve({}, s)
+            x.serve(s, {})
             assert m >= len(s.getvalue())
 
         r = language.parse_response({}, "400'msg':b@100")

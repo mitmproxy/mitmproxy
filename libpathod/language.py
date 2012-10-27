@@ -605,7 +605,7 @@ class Message:
         actions.reverse()
         return [i.intermediate(settings) for i in actions]
 
-    def serve(self, settings, fp, request_host):
+    def serve(self, fp, settings, request_host):
         """
             fp: The file pointer to write to.
 
@@ -733,8 +733,8 @@ class CraftedRequest(Request):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, settings, fp, host):
-        d = Request.serve(self, settings, fp, host)
+    def serve(self, fp, settings, host):
+        d = Request.serve(self, fp, settings, host)
         d["spec"] = self.spec
         return d
 
@@ -746,8 +746,8 @@ class CraftedResponse(Response):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, settings, fp):
-        d = Response.serve(self, settings, fp, None)
+    def serve(self, fp, settings):
+        d = Response.serve(self, fp, settings, None)
         d["spec"] = self.spec
         return d
 
@@ -759,11 +759,11 @@ class PathodErrorResponse(Response):
         self.msg = LiteralGenerator(msg)
         self.body = LiteralGenerator("pathod error: " + (body or msg))
         self.headers = [
-            Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")), 
+            Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")),
         ]
 
-    def serve(self, settings, fp):
-        d = Response.serve(self, settings, fp, None)
+    def serve(self, fp, settings):
+        d = Response.serve(self, fp, settings, None)
         d["internal"] = True
         return d
 
