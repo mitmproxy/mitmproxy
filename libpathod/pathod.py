@@ -18,7 +18,7 @@ class PathodHandler(tcp.BaseHandler):
         self.sni = connection.get_servername()
 
     def serve_crafted(self, crafted, request_log):
-        c = self.server.check_policy(crafted)
+        c = self.server.check_policy(crafted, self.server.request_settings)
         if c:
             err = language.PathodErrorResponse(c)
             err.serve(self.wfile, self.server.request_settings)
@@ -100,9 +100,6 @@ class PathodHandler(tcp.BaseHandler):
                         "Parse Error",
                         "Error parsing response spec: %s\n"%v.msg + v.marked()
                     )
-            except language.FileAccessDenied:
-                self.info("File access denied")
-                crafted = language.PathodErrorResponse("Access Denied")
             return self.serve_crafted(crafted, request_log)
         elif self.server.noweb:
             crafted = language.PathodErrorResponse("Access Denied")
@@ -215,11 +212,15 @@ class Pathod(tcp.TCPServer):
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, i[1]))
 
-    def check_policy(self, req):
+    def check_policy(self, req, settings):
         """
             A policy check that verifies the request size is withing limits.
         """
-        if self.sizelimit and req.maximum_length({}, None) > self.sizelimit:
+        try:
+            l = req.maximum_length(settings, None)
+        except language.FileAccessDenied, v:
+            return "File access denied."
+        if self.sizelimit and l > self.sizelimit:
             return "Response too large."
         if self.nohang and any([isinstance(i, language.PauseAt) for i in req.actions]):
             return "Pauses have been disabled."

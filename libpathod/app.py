@@ -123,18 +123,14 @@ def _preview(is_request):
         args["syntaxerror"] = str(v)
         args["marked"] = v.marked()
         return render(template, False, **args)
-    except language.FileAccessDenied:
-        args["error"] = "File access is disabled."
-        return render(template, False, **args)
 
     s = cStringIO.StringIO()
     args["pauses"] = r.preview_safe()
 
-    c = app.config["pathod"].check_policy(r)
+    c = app.config["pathod"].check_policy(r, app.config["pathod"].request_settings)
     if c:
         args["error"] = c
         return render(template, False, **args)
-
     if is_request:
         r.serve(s, app.config["pathod"].request_settings, host="example.com")
     else:

@@ -47,9 +47,13 @@ class TestApp(tutils.DaemonTests):
         assert r.status_code == 200
         assert 'Response' in r.content
 
-        r = self.getpath("/response_preview", params=dict(spec="200:b<foo"))
+        r = self.getpath("/response_preview", params=dict(spec="200:b<nonexistent"))
         assert r.status_code == 200
-        assert 'File access is disabled' in r.content
+        assert 'File access denied' in r.content
+
+        r = self.getpath("/response_preview", params=dict(spec="200:b<file"))
+        assert r.status_code == 200
+        assert 'testfile' in r.content
 
     def test_request_preview(self):
         r = self.getpath("/request_preview", params=dict(spec="get:/"))

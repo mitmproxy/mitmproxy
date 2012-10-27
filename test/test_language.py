@@ -508,7 +508,7 @@ class TestResponse:
 
         r = language.parse_response({}, "400'msg':b@100b")
         assert r.msg == "msg"
-        assert r.body[:]
+        assert r.body.values({})
         assert str(r)
 
     def test_render(self):

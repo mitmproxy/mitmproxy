@@ -345,13 +345,18 @@ class Body:
         self.value = value
 
     def accept(self, settings, r):
-        r.body = self.value.get_generator(settings)
+        r.body = self
 
     @classmethod
     def expr(klass):
         e = pp.Literal("b").suppress()
         e = e + Value
         return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [
+                self.value.get_generator(settings),
+            ]
 
 
 class Raw:
@@ -532,7 +537,7 @@ class Code:
 class Message:
     version = "HTTP/1.1"
     def __init__(self):
-        self.body = LiteralGenerator("")
+        self.body = None
         self.headers = []
         self.actions = []
         self.raw = False
@@ -546,7 +551,8 @@ class Message:
         for h in self.headervals(settings, request_host):
             l += len(h)
         l += 2
-        l += len(self.body)
+        if self.body:
+            l += len(self.body.value.get_generator(settings))
         return l
 
     def preview_safe(self):
@@ -574,7 +580,7 @@ class Message:
                 hdrs.append(
                     Header(
                         ValueLiteral("Content-Length"),
-                        ValueLiteral(str(len(self.body))),
+                        ValueLiteral(str(len(self.body.value.get_generator(settings)))),
                     )
                 )
             if request_host:
@@ -624,7 +630,7 @@ class Message:
         vals.extend(hdrs)
         vals.append("\r\n")
         if self.body:
-            vals.append(self.body)
+            vals.append(self.body.value.get_generator(settings))
         vals.reverse()
         actions = self.ready_actions(settings, request_host)
 
@@ -638,6 +644,9 @@ class Message:
         for i in self.logattrs:
             v = getattr(self, i)
             # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
+            if hasattr(v, "values"):
+                v = [x[:TRUNCATE] for x in v.values(settings)]
+                v = "".join(v)
             if hasattr(v, "__len__"):
                 v = v[:TRUNCATE]
                 v = v.encode("string_escape")
@@ -757,7 +766,7 @@ class PathodErrorResponse(Response):
         Response.__init__(self)
         self.code = 800
         self.msg = LiteralGenerator(msg)
-        self.body = LiteralGenerator("pathod error: " + (body or msg))
+        self.body = Body(ValueLiteral("pathod error: " + (body or msg)))
         self.headers = [
             Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")),
         ]

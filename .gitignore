@@ -7,5 +7,7 @@ MANIFEST
 *.swp
 /doc
 .coverage
+.noseids
 netlib
 venv
+
