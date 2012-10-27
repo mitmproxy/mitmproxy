@@ -209,7 +209,7 @@ class Pathod(tcp.TCPServer):
         """
             A policy check that verifies the request size is withing limits.
         """
-        if self.sizelimit and req.effective_length(actions) > self.sizelimit:
+        if self.sizelimit and req.effective_length({}, None) > self.sizelimit:
             return "Response too large."
         if self.nohang and any([i[1] == "pause" for i in actions]):
             return "Pauses have been disabled."

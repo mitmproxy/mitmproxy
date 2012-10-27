@@ -223,7 +223,7 @@ class Test_Action:
     def test_resolve_offset(self):
         r = language.parse_request({}, 'GET:"/foo"')
         e = language.DisconnectAt("r")
-        ret = e.resolve_offset(r)
+        ret = e.resolve_offset(r, {}, None)
         assert isinstance(ret.offset, int)
 
     def test_repr(self):
@@ -315,8 +315,8 @@ class TestPauses:
 
 class TestShortcuts:
     def test_parse_response(self):
-        assert language.parse_response({}, "400:c'foo'").headers[0][0][:] == "Content-Type"
-        assert language.parse_response({}, "400:l'foo'").headers[0][0][:] == "Location"
+        assert language.parse_response({}, "400:c'foo'").headers[0].key.val == "Content-Type"
+        assert language.parse_response({}, "400:l'foo'").headers[0].key.val == "Location"
 
 
 class TestParseRequest:
@@ -409,7 +409,7 @@ class TestParseResponse:
 
     def test_parse_stress(self):
         r = language.parse_response({}, "400:b@100g")
-        assert r.length()
+        assert r.length({}, None)
 
 
 class TestWriteValues:
@@ -542,7 +542,7 @@ class TestResponse:
         def testlen(x):
             s = cStringIO.StringIO()
             x.serve({}, s, None)
-            assert x.length() == len(s.getvalue())
+            assert x.length({}, None) == len(s.getvalue())
         testlen(language.parse_response({}, "400'msg'"))
         testlen(language.parse_response({}, "400'msg':h'foo'='bar'"))
         testlen(language.parse_response({}, "400'msg':h'foo'='bar':b@100b"))
@@ -550,7 +550,7 @@ class TestResponse:
     def test_effective_length(self):
         l = [None]
         def check(req, actions):
-            l[0] = req.effective_length(actions)
+            l[0] = req.effective_length({}, None)
 
         def testlen(x, actions):
             s = cStringIO.StringIO()

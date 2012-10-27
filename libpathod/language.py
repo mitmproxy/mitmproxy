@@ -292,17 +292,35 @@ Offset = pp.MatchFirst(
     )
 
 
-class ShortcutContentType:
-    def __init__(self, value):
-        self.value = value
+class _Header:
+    def __init__(self, key, value):
+        self.key, self.value = key, value
+
+    def values(self, settings):
+        return [
+                self.key.get_generator(settings),
+                ": ",
+                self.value.get_generator(settings),
+                "\r\n",
+            ]
 
     def accept(self, settings, r):
-        r.headers.append(
-            (
-                LiteralGenerator("Content-Type"),
-                self.value.get_generator(settings)
-            )
-        )
+        r.headers.append(self)
+
+
+class Header(_Header):
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("h").suppress()
+        e += Value
+        e += pp.Literal("=").suppress()
+        e += Value
+        return e.setParseAction(lambda x: klass(*x))
+
+
+class ShortcutContentType(_Header):
+    def __init__(self, value):
+        _Header.__init__(self, ValueLiteral("Content-Type"), value)
 
     @classmethod
     def expr(klass):
@@ -311,18 +329,9 @@ class ShortcutContentType:
         return e.setParseAction(lambda x: klass(*x))
 
 
-
-class ShortcutLocation:
+class ShortcutLocation(_Header):
     def __init__(self, value):
-        self.value = value
-
-    def accept(self, settings, r):
-        r.headers.append(
-            (
-                LiteralGenerator("Location"),
-                self.value.get_generator(settings)
-            )
-        )
+        _Header.__init__(self, ValueLiteral("Location"), value)
 
     @classmethod
     def expr(klass):
@@ -411,16 +420,17 @@ class _Action:
     def __init__(self, offset):
         self.offset = offset
 
-    def resolve_offset(self, msg):
+    def resolve_offset(self, msg, settings, request_host):
         """
             Resolves offset specifications to a numeric offset. Returns a copy
             of the action object.
         """
         c = copy.copy(self)
+        l = msg.length(settings, request_host)
         if c.offset == "r":
-            c.offset = random.randrange(msg.length())
+            c.offset = random.randrange(l)
         elif c.offset == "a":
-            c.offset = msg.length() + 1
+            c.offset = l + 1
         return c
 
     def __cmp__(self, other):
@@ -499,27 +509,6 @@ class InjectAt(_Action):
             )
 
 
-class Header:
-    def __init__(self, key, value):
-        self.key, self.value = key, value
-
-    def accept(self, settings, r):
-        r.headers.append(
-            (
-                self.key.get_generator(settings),
-                self.value.get_generator(settings)
-            )
-        )
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("h").suppress()
-        e += Value
-        e += pp.Literal("=").suppress()
-        e += Value
-        return e.setParseAction(lambda x: klass(*x))
-
-
 class Code:
     def __init__(self, code, msg=None):
         self.code, self.msg = code, msg
@@ -548,15 +537,14 @@ class Message:
         self.actions = []
         self.raw = False
 
-    def length(self):
+    def length(self, settings, request_host):
         """
             Calculate the length of the base message without any applied actions.
         """
         l = sum(len(x) for x in self.preamble())
         l += 2
-        for i in self.headers:
-            l += len(i[0]) + len(i[1])
-            l += 4
+        for h in self.headervals(settings, request_host):
+            l += len(h)
         l += 2
         l += len(self.body)
         return l
@@ -569,19 +557,57 @@ class Message:
         self.actions = [i for i in self.actions if not isinstance(i, PauseAt)]
         return pauses
 
-    def effective_length(self, actions):
+    def effective_length(self, settings, request_host):
         """
             Calculate the length of the base message with all applied actions.
         """
         # Order matters here, and must match the order of application in
         # write_values.
-        l = self.length()
-        for i in reversed(actions):
+        l = self.length(settings, request_host)
+        for i in reversed(self.ready_actions(settings, request_host)):
             if i[1] == "disconnect":
                 return i[0]
             elif i[1] == "inject":
                 l += len(i[2])
         return l
+
+    def headervals(self, settings, request_host):
+        hdrs = self.headers[:]
+        if not self.raw:
+            if self.body and not utils.get_header("Content-Length", self.headers):
+                hdrs.append(
+                    Header(
+                        ValueLiteral("Content-Length"),
+                        ValueLiteral(str(len(self.body))),
+                    )
+                )
+            if request_host:
+                if not utils.get_header("Host", self.headers):
+                    hdrs.append(
+                        Header(
+                            ValueLiteral("Host"),
+                            ValueLiteral(request_host)
+                        )
+                    )
+
+            else:
+                if not utils.get_header("Date", self.headers):
+                    hdrs.append(
+                        Header(
+                            ValueLiteral("Date"),
+                            ValueLiteral(formatdate(timeval=None, localtime=False, usegmt=True))
+                        )
+                    )
+        values = []
+        for h in hdrs:
+            values.extend(h.values(settings))
+        return values
+
+    def ready_actions(self, settings, request_host):
+        actions = [i.resolve_offset(self, settings, request_host) for i in self.actions]
+        actions.sort()
+        actions.reverse()
+        return [i.intermediate(settings) for i in actions]
 
     def serve(self, settings, fp, check, request_host):
         """
@@ -599,40 +625,9 @@ class Message:
             Calling this function may modify the object.
         """
         started = time.time()
-        if not self.raw:
-            if self.body and not utils.get_header("Content-Length", self.headers):
-                self.headers.append(
-                    (
-                        LiteralGenerator("Content-Length"),
-                        LiteralGenerator(str(len(self.body))),
-                    )
-                )
-            if request_host:
-                if not utils.get_header("Host", self.headers):
-                    self.headers.append(
-                        (
-                            LiteralGenerator("Host"),
-                            LiteralGenerator(request_host)
-                        )
-                    )
 
-            else:
-                if not utils.get_header("Date", self.headers):
-                    self.headers.append(
-                        (
-                            LiteralGenerator("Date"),
-                            LiteralGenerator(formatdate(timeval=None, localtime=False, usegmt=True))
-                        )
-                    )
+        hdrs = self.headervals(settings, request_host)
 
-        hdrs = []
-        for k, v in self.headers:
-            hdrs.extend([
-                k,
-                ": ",
-                v,
-                "\r\n",
-            ])
         vals = self.preamble()
         vals.append("\r\n")
         vals.extend(hdrs)
@@ -640,10 +635,7 @@ class Message:
         if self.body:
             vals.append(self.body)
         vals.reverse()
-        actions = [i.resolve_offset(self) for i in self.actions]
-        actions.sort()
-        actions.reverse()
-        actions = [i.intermediate(settings) for i in actions]
+        actions = self.ready_actions(settings, request_host)
         if check:
             ret = check(self, actions)
             if ret:
@@ -653,6 +645,7 @@ class Message:
                     disconnect = True,
                     error = ret
                 )
+
         disconnect = write_values(fp, vals, actions[:])
         duration = time.time() - started
         ret = dict(
@@ -784,9 +777,7 @@ class PathodErrorResponse(Response):
         self.msg = LiteralGenerator(msg)
         self.body = LiteralGenerator("pathod error: " + (body or msg))
         self.headers = [
-            (
-                LiteralGenerator("Content-Type"), LiteralGenerator("text/plain")
-            ),
+            Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")), 
         ]
 
     def serve(self, settings, fp, check=None):
