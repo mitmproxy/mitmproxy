@@ -557,18 +557,14 @@ class Message:
         self.actions = [i for i in self.actions if not isinstance(i, PauseAt)]
         return pauses
 
-    def effective_length(self, settings, request_host):
+    def maximum_length(self, settings, request_host):
         """
-            Calculate the length of the base message with all applied actions.
+            Calculate the maximum length of the base message with all applied actions.
         """
-        # Order matters here, and must match the order of application in
-        # write_values.
         l = self.length(settings, request_host)
-        for i in reversed(self.ready_actions(settings, request_host)):
-            if i[1] == "disconnect":
-                return i[0]
-            elif i[1] == "inject":
-                l += len(i[2])
+        for i in self.actions:
+            if isinstance(i, InjectAt):
+                l += len(i.value.get_generator(settings))
         return l
 
     def headervals(self, settings, request_host):
@@ -609,14 +605,9 @@ class Message:
         actions.reverse()
         return [i.intermediate(settings) for i in actions]
 
-    def serve(self, settings, fp, check, request_host):
+    def serve(self, settings, fp, request_host):
         """
             fp: The file pointer to write to.
-
-            check: A function called with the effective actions (after random
-            values have been calculated). If it returns False service proceeds,
-            otherwise the return is treated as an error message to be sent to
-            the client, and service stops.
 
             request_host: If this a request, this is the connecting host. If
             None, we assume it's a response. Used to decide what standard
@@ -636,15 +627,6 @@ class Message:
             vals.append(self.body)
         vals.reverse()
         actions = self.ready_actions(settings, request_host)
-        if check:
-            ret = check(self, actions)
-            if ret:
-                err = PathodErrorResponse(ret)
-                err.serve(settings, fp)
-                return dict(
-                    disconnect = True,
-                    error = ret
-                )
 
         disconnect = write_values(fp, vals, actions[:])
         duration = time.time() - started
@@ -751,8 +733,8 @@ class CraftedRequest(Request):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, settings, fp, check, host):
-        d = Request.serve(self, settings, fp, check, host)
+    def serve(self, settings, fp, host):
+        d = Request.serve(self, settings, fp, host)
         d["spec"] = self.spec
         return d
 
@@ -764,8 +746,8 @@ class CraftedResponse(Response):
         for i in tokens:
             i.accept(settings, self)
 
-    def serve(self, settings, fp, check):
-        d = Response.serve(self, settings, fp, check, None)
+    def serve(self, settings, fp):
+        d = Response.serve(self, settings, fp, None)
         d["spec"] = self.spec
         return d
 
@@ -780,8 +762,8 @@ class PathodErrorResponse(Response):
             Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")), 
         ]
 
-    def serve(self, settings, fp, check=None):
-        d = Response.serve(self, settings, fp, check, None)
+    def serve(self, settings, fp):
+        d = Response.serve(self, settings, fp, None)
         d["internal"] = True
         return d
 

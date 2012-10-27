@@ -18,7 +18,17 @@ class PathodHandler(tcp.BaseHandler):
         self.sni = connection.get_servername()
 
     def serve_crafted(self, crafted, request_log):
-        response_log = crafted.serve(self.server.request_settings, self.wfile, self.server.check_policy)
+        c = self.server.check_policy(crafted)
+        if c:
+            err = language.PathodErrorResponse(c)
+            err.serve(self.server.request_settings, self.wfile)
+            log = dict(
+                type = "error",
+                msg = c
+            )
+            return False, log
+
+        response_log = crafted.serve(self.server.request_settings, self.wfile)
         log = dict(
                 type = "crafted",
                 request=request_log,
@@ -96,7 +106,7 @@ class PathodHandler(tcp.BaseHandler):
             return self.serve_crafted(crafted, request_log)
         elif self.server.noweb:
             crafted = language.PathodErrorResponse("Access Denied")
-            crafted.serve(self.server.request_settings, self.wfile, self.server.check_policy)
+            crafted.serve(self.server.request_settings, self.wfile)
             return False, dict(type = "error", msg="Access denied: web interface disabled")
         else:
             self.info("app: %s %s"%(method, path))
@@ -205,13 +215,13 @@ class Pathod(tcp.TCPServer):
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, i[1]))
 
-    def check_policy(self, req, actions):
+    def check_policy(self, req):
         """
             A policy check that verifies the request size is withing limits.
         """
-        if self.sizelimit and req.effective_length({}, None) > self.sizelimit:
+        if self.sizelimit and req.maximum_length({}, None) > self.sizelimit:
             return "Response too large."
-        if self.nohang and any([i[1] == "pause" for i in actions]):
+        if self.nohang and any([isinstance(i, language.PauseAt) for i in req.actions]):
             return "Pauses have been disabled."
         return False
 

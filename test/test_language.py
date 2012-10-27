@@ -279,7 +279,7 @@ class TestInject:
     def test_serve(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:i0,'foo'")
-        assert r.serve({}, s, None)
+        assert r.serve({}, s)
 
     def test_spec(self):
         e = language.InjectAt.expr()
@@ -344,7 +344,7 @@ class TestParseRequest:
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_request({}, "GET:'/foo'")
-        assert r.serve({}, s, None, "foo.com")
+        assert r.serve({}, s, "foo.com")
 
     def test_str(self):
         r = language.parse_request({}, 'GET:"/foo"')
@@ -479,15 +479,15 @@ class TestWriteValues:
     def test_write_values_after(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:da")
-        r.serve({}, s, None)
+        r.serve({}, s)
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:pa,0")
-        r.serve({}, s, None)
+        r.serve({}, s)
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:ia,'xx'")
-        r.serve({}, s, None)
+        r.serve({}, s)
         assert s.getvalue().endswith('xx')
 
 
@@ -511,29 +511,22 @@ class TestResponse:
         assert r.body[:]
         assert str(r)
 
-    def test_checkfunc(self):
-        s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:b@100k")
-        def check(req, acts):
-            return "errmsg"
-        assert r.serve({}, s, check=check)["error"] == "errmsg"
-
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400'msg'")
-        assert r.serve({}, s, None)
+        assert r.serve({}, s)
 
     def test_raw(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo'")
-        r.serve({}, s, None)
+        r.serve({}, s)
         v = s.getvalue()
         assert "Content-Length" in v
         assert "Date" in v
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo':r")
-        r.serve({}, s, None)
+        r.serve({}, s)
         v = s.getvalue()
         assert not "Content-Length" in v
         assert not "Date" in v
@@ -541,21 +534,18 @@ class TestResponse:
     def test_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
-            x.serve({}, s, None)
+            x.serve({}, s)
             assert x.length({}, None) == len(s.getvalue())
         testlen(language.parse_response({}, "400'msg'"))
         testlen(language.parse_response({}, "400'msg':h'foo'='bar'"))
         testlen(language.parse_response({}, "400'msg':h'foo'='bar':b@100b"))
 
-    def test_effective_length(self):
-        l = [None]
-        def check(req, actions):
-            l[0] = req.effective_length({}, None)
-
+    def test_maximum_length(self):
         def testlen(x, actions):
             s = cStringIO.StringIO()
-            x.serve({}, s, check)
-            assert l[0] == len(s.getvalue())
+            m = x.maximum_length({}, None)
+            x.serve({}, s)
+            assert m >= len(s.getvalue())
 
         r = language.parse_response({}, "400'msg':b@100")
 

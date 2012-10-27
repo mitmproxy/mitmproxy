@@ -58,7 +58,7 @@ class TestNohang(tutils.DaemonTests):
         r = self.get("200:p0,0")
         assert r.status_code == 800
         l = self.d.last_log()
-        assert "Pauses have been disabled" in l["response"]["error"]
+        assert "Pauses have been disabled" in l["msg"]
 
 
 class TestHexdump(tutils.DaemonTests):
@@ -77,7 +77,7 @@ class CommonTests(tutils.DaemonTests):
         r = self.get("200:b@1g")
         assert r.status_code == 800
         l = self.d.last_log()
-        assert "too large" in l["response"]["error"]
+        assert "too large" in l["msg"]
 
     def test_preline(self):
         v = self.pathoc(r"get:'/p/200':i0,'\r\n'")

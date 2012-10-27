@@ -129,11 +129,16 @@ def _preview(is_request):
 
     s = cStringIO.StringIO()
     args["pauses"] = r.preview_safe()
+    
+    c = app.config["pathod"].check_policy(r)
+    if c:
+        args["error"] = c
+        return render(template, False, **args)
 
     if is_request:
-        r.serve(app.config["pathod"].request_settings, s, check=app.config["pathod"].check_policy, host="example.com")
+        r.serve(app.config["pathod"].request_settings, s, host="example.com")
     else:
-        r.serve(app.config["pathod"].request_settings, s, check=app.config["pathod"].check_policy)
+        r.serve(app.config["pathod"].request_settings, s)
 
     args["output"] = utils.escape_unprintables(s.getvalue())
     return render(template, False, **args)

@@ -22,7 +22,7 @@ class Pathoc(tcp.TCPClient):
             language.FileAccessDenied.
         """
         r = language.parse_request(self.settings, spec)
-        ret = r.serve(self.settings, self.wfile, None, self.host)
+        ret = r.serve(self.settings, self.wfile, self.host)
         self.wfile.flush()
         return http.read_response(self.rfile, r.method, None)
 
@@ -68,7 +68,7 @@ class Pathoc(tcp.TCPClient):
         if showresp:
             self.rfile.start_log()
         try:
-            req = r.serve(self.settings, self.wfile, None, self.host)
+            req = r.serve(self.settings, self.wfile, self.host)
             self.wfile.flush()
             resp = http.read_response(self.rfile, r.method, None)
         except http.HttpError, v:
