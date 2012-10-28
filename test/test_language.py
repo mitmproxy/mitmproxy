@@ -211,9 +211,9 @@ class TestMisc:
 
 class Test_Action:
     def test_cmp(self):
-        a = language._Action(0)
-        b = language._Action(1)
-        c = language._Action(0)
+        a = language.DisconnectAt(0)
+        b = language.DisconnectAt(1)
+        c = language.DisconnectAt(0)
         assert a < b
         assert a == c
         l = [b, a]

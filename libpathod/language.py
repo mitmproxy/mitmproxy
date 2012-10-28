@@ -297,18 +297,11 @@ Offset = pp.MatchFirst(
     )
 
 
-class _Component(object):
+class _Spec(object):
     """
-        A component of the specification of an HTTP message.
+        A specification token.
     """
     __metaclass__ = abc.ABCMeta
-    @abc.abstractmethod
-    def values(self, settings): # pragma: no cover
-        """
-           A sequence of value objects.
-        """
-        return None
-
     @abc.abstractmethod
     def expr(klass): # pragma: no cover
         """
@@ -320,6 +313,28 @@ class _Component(object):
     def accept(self, r): # pragma: no cover
         """
             Notifies the component to register itself with message r.
+        """
+        return None
+
+
+class Raw(_Spec):
+    def accept(self, r):
+        r.raw = True
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("r").suppress()
+        return e.setParseAction(lambda x: klass(*x))
+
+
+class _Component(_Spec):
+    """
+        A value component of the primary specification of an HTTP message.
+    """
+    @abc.abstractmethod
+    def values(self, settings): # pragma: no cover
+        """
+           A sequence of value objects.
         """
         return None
 
@@ -397,16 +412,6 @@ class Body(_Component):
             ]
 
 
-class Raw:
-    def accept(self, r):
-        r.raw = True
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("r").suppress()
-        return e.setParseAction(lambda x: klass(*x))
-
-
 class Path(_Component):
     def __init__(self, value):
         if isinstance(value, basestring):
@@ -463,7 +468,40 @@ class Method(_Component):
         ]
 
 
-class _Action:
+class Code(_Component):
+    def __init__(self, code):
+        self.code = str(code)
+
+    def accept(self, r):
+        r.code = self
+
+    @classmethod
+    def expr(klass):
+        e = v_integer.copy()
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [LiteralGenerator(self.code)]
+
+
+class Reason(_Component):
+    def __init__(self, value):
+        self.value = value
+
+    def accept(self, r):
+        r.reason = self
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("m").suppress()
+        e = e + Value
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [self.value.get_generator(settings)]
+
+
+class _Action(_Spec):
     """
         An action that operates on the raw data stream of the message. All
         actions have one thing in common: an offset that specifies where the
@@ -493,6 +531,14 @@ class _Action:
 
     def accept(self, r):
         r.actions.append(self)
+
+    @abc.abstractmethod
+    def spec(self): # pragma: no cover
+        pass
+        
+    @abc.abstractmethod
+    def intermediate(self): # pragma: no cover
+        pass
 
 
 class PauseAt(_Action):
@@ -561,40 +607,8 @@ class InjectAt(_Action):
             )
 
 
-class Code(_Component):
-    def __init__(self, code):
-        self.code = str(code)
-
-    def accept(self, r):
-        r.code = self
-
-    @classmethod
-    def expr(klass):
-        e = v_integer.copy()
-        return e.setParseAction(lambda x: klass(*x))
-
-    def values(self, settings):
-        return [LiteralGenerator(self.code)]
-
-
-class Reason(_Component):
-    def __init__(self, value):
-        self.value = value
-
-    def accept(self, r):
-        r.reason = self
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("m").suppress()
-        e = e + Value
-        return e.setParseAction(lambda x: klass(*x))
-
-    def values(self, settings):
-        return [self.value.get_generator(settings)]
-
-
-class Message:
+class _Message(object):
+    __metaclass__ = abc.ABCMeta
     version = "HTTP/1.1"
     def __init__(self):
         self.body = None
@@ -713,10 +727,18 @@ class Message:
             ret[i] = v
         return ret
 
+    @abc.abstractmethod
+    def preamble(self, settings): # pragma: no cover
+        pass
+
+    @abc.abstractmethod
+    def expr(klass): # pragma: no cover
+        pass
+
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
 
-class Response(Message):
+class Response(_Message):
     comps = (
         Body,
         Header,
@@ -730,7 +752,7 @@ class Response(Message):
     )
     logattrs = ["code", "reason", "version", "body"]
     def __init__(self):
-        Message.__init__(self)
+        _Message.__init__(self)
         self.code = None
         self.reason = None
 
@@ -757,7 +779,7 @@ class Response(Message):
         return resp
 
 
-class Request(Message):
+class Request(_Message):
     comps = (
         Body,
         Header,
@@ -769,7 +791,7 @@ class Request(Message):
     )
     logattrs = ["method", "path", "body"]
     def __init__(self):
-        Message.__init__(self)
+        _Message.__init__(self)
         self.method = None
         self.path = None
 
