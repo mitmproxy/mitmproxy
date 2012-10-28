@@ -89,7 +89,6 @@ DATATYPES = dict(
 )
 
 
-#v_integer = pp.Regex(r"[+-]?\d+")\
 v_integer = pp.Regex(r"\d+")\
     .setName("integer")\
     .setParseAction(lambda toks: int(toks[0]))
@@ -541,24 +540,36 @@ class InjectAt(_Action):
             )
 
 
-class Code:
-    def __init__(self, code, msg=None):
-        self.code, self.msg = code, msg
-        if msg is None:
-            self.msg = ValueLiteral(http_status.RESPONSES.get(self.code, "Unknown code"))
+class Code(_Component):
+    def __init__(self, code):
+        self.code = str(code)
 
     def accept(self, settings, r):
-        r.code = self.code
-        r.msg = self.msg.get_generator(settings)
+        r.code = self
 
     @classmethod
     def expr(klass):
-        e = v_integer
-        e = e + pp.Optional(
-            Value
-        )
+        e = v_integer.copy()
         return e.setParseAction(lambda x: klass(*x))
 
+    def values(self, settings):
+        return [LiteralGenerator(self.code)]
+
+
+class Reason(_Component):
+    def __init__(self, value):
+        self.value = value
+
+    def accept(self, settings, r):
+        r.reason = self
+
+    @classmethod
+    def expr(klass):
+        e = Value.copy()
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [self.value.get_generator(settings)]
 
 
 class Message:
@@ -673,8 +684,8 @@ class Message:
             # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
             if hasattr(v, "values"):
                 v = [x[:TRUNCATE] for x in v.values(settings)]
-                v = "".join(v)
-            if hasattr(v, "__len__"):
+                v = "".join(v).encode("string_escape")
+            elif hasattr(v, "__len__"):
                 v = v[:TRUNCATE]
                 v = v.encode("string_escape")
             ret[i] = v
@@ -694,14 +705,21 @@ class Response(Message):
         ShortcutLocation,
         Raw
     )
-    logattrs = ["code", "version", "body"]
+    logattrs = ["code", "reason", "version", "body"]
     def __init__(self):
         Message.__init__(self)
         self.code = None
-        self.msg = None
+        self.reason = None
 
     def preamble(self, settings):
-        return [self.version, " ", str(self.code), " ", self.msg]
+        l = [self.version, " "]
+        l.extend(self.code.values(settings))
+        l.append(" ")
+        if self.reason:
+            l.extend(self.reason.values(settings))
+        else:
+            l.append(LiteralGenerator(http_status.RESPONSES.get(int(self.code.code), "Unknown code")))
+        return l
 
     @classmethod
     def expr(klass):
@@ -710,16 +728,14 @@ class Response(Message):
         resp = pp.And(
             [
                 Code.expr(),
+                pp.Optional(Reason.expr()),
                 pp.ZeroOrMore(Sep + atom)
             ]
         )
         return resp
 
-    def __str__(self):
-        parts = [
-            "%s %s"%(self.code, self.msg[:])
-        ]
-        return "\n".join(parts)
+    def string(self, settings):
+        return "%s"%self.code
 
 
 class Request(Message):
@@ -796,7 +812,7 @@ class CraftedResponse(Response):
 class PathodErrorResponse(Response):
     def __init__(self, msg, body=None):
         Response.__init__(self)
-        self.code = 800
+        self.code = Code("800")
         self.msg = LiteralGenerator(msg)
         self.body = Body(ValueLiteral("pathod error: " + (body or msg)))
         self.headers = [

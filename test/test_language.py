@@ -182,11 +182,12 @@ class TestMisc:
     def test_code(self):
         e = language.Code.expr()
         v = e.parseString("200")[0]
-        assert v.code == 200
+        assert v.string() == "200"
 
+    def _test_reason(self):
         v = e.parseString("404'msg'")[0]
-        assert v.code == 404
-        assert v.msg.val == "msg"
+        assert v.code.string() == "404"
+        assert v.reason == "msg"
 
         r = e.parseString("200'foo'")[0]
         assert r.msg.val == "foo"
@@ -499,17 +500,22 @@ class TestResponse:
         p = tutils.test_data.path("data")
         d = dict(staticdir=p)
         r = language.parse_response(d, "+response")
-        assert r.code == 202
+        assert r.code.string() == "202"
 
     def test_response(self):
         r = language.parse_response({}, "400'msg'")
-        assert r.code == 400
-        assert r.msg == "msg"
+        assert r.code.string() == "400"
+        assert r.reason.string() == "msg"
 
         r = language.parse_response({}, "400'msg':b@100b")
-        assert r.msg == "msg"
+        assert r.reason.string() == "msg"
         assert r.body.values({})
         assert str(r)
+
+        r = language.parse_response({}, "200")
+        assert r.code.string() == "200"
+        assert not r.reason
+        assert "OK" in [i[:] for i in r.preamble({})]
 
     def test_render(self):
         s = cStringIO.StringIO()
