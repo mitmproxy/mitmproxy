@@ -113,9 +113,6 @@ class LiteralGenerator:
     def __init__(self, s):
         self.s = s
 
-    def __eq__(self, other):
-        return self[:] == other
-
     def __len__(self):
         return len(self.s)
 
@@ -168,18 +165,29 @@ class FileGenerator:
         return "<%s"%self.path
 
 
-class _Value:
+class _Value(object):
+    __metaclass__ = abc.ABCMeta
+    def __repr__(self):
+        return self.spec()
+
+    @abc.abstractmethod
+    def spec(self): # pragma: no cover
+        return None
+
+    @abc.abstractmethod
+    def expr(self): # pragma: no cover
+        return None
+
+
+class _ValueLiteral(_Value):
     def __init__(self, val):
         self.val = val.decode("string_escape")
 
     def get_generator(self, settings):
         return LiteralGenerator(self.val)
 
-    def __repr__(self):
-        return self.spec()
 
-
-class ValueLiteral(_Value):
+class ValueLiteral(_ValueLiteral):
     @classmethod
     def expr(klass):
         e = v_literal.copy()
@@ -189,7 +197,7 @@ class ValueLiteral(_Value):
         return '"%s"'%self.val.encode("string_escape")
 
 
-class ValueNakedLiteral(_Value):
+class ValueNakedLiteral(_ValueLiteral):
     @classmethod
     def expr(klass):
         e = v_naked_literal.copy()
@@ -199,7 +207,7 @@ class ValueNakedLiteral(_Value):
         return self.val.encode("string_escape")
 
 
-class ValueGenerate:
+class ValueGenerate(_Value):
     def __init__(self, usize, unit, datatype):
         if not unit:
             unit = "b"
@@ -231,11 +239,8 @@ class ValueGenerate:
             s += ",%s"%self.datatype
         return s
 
-    def __repr__(self):
-        return self.spec()
 
-
-class ValueFile:
+class ValueFile(_Value):
     def __init__(self, path):
         self.path = path
 
@@ -294,7 +299,7 @@ Offset = pp.MatchFirst(
 
 class _Component(object):
     """
-        A component of the specification of an HTTP message. 
+        A component of the specification of an HTTP message.
     """
     __metaclass__ = abc.ABCMeta
     @abc.abstractmethod
@@ -316,11 +321,11 @@ class _Component(object):
         """
             Notifies the component to register itself with message r.
         """
-        return None 
+        return None
 
     def string(self, settings=None):
         """
-            A string representation of the object. 
+            A string representation of the object.
         """
         return "".join(i[:] for i in self.values(settings or {}))
 
@@ -420,8 +425,6 @@ class Path(_Component):
         return [
                 self.value.get_generator(settings),
             ]
-
-
 
 
 class Method(_Component):
@@ -790,7 +793,6 @@ class Request(Message):
             ]
         )
         return resp
-
 
 
 class CraftedRequest(Request):

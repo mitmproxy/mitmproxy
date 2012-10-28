@@ -123,7 +123,6 @@ class TestMisc:
     def test_literalgenerator(self):
         g = language.LiteralGenerator("one")
         assert repr(g)
-        assert g == "one"
         assert g[:] == "one"
         assert g[1] == "n"
 
