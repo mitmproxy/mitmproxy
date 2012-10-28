@@ -1,4 +1,5 @@
 import operator, string, random, mmap, os, time, copy
+import abc
 from email.utils import formatdate
 import contrib.pyparsing as pp
 from netlib import http_status, tcp
@@ -292,7 +293,22 @@ Offset = pp.MatchFirst(
     )
 
 
-class _Header:
+class _Component(object):
+    __metaclass__ = abc.ABCMeta
+    @abc.abstractmethod
+    def values(self, settings): return None # pragma: no cover
+
+    @abc.abstractmethod
+    def expr(klass): return None # pragma: no cover
+
+    @abc.abstractmethod
+    def accept(self, settings): return None # pragma: no cover
+
+    def string(self, settings=None):
+        return "".join(i[:] for i in self.values(settings or {}))
+
+
+class _Header(_Component):
     def __init__(self, key, value):
         self.key, self.value = key, value
 
@@ -340,7 +356,7 @@ class ShortcutLocation(_Header):
         return e.setParseAction(lambda x: klass(*x))
 
 
-class Body:
+class Body(_Component):
     def __init__(self, value):
         self.value = value
 
@@ -369,23 +385,29 @@ class Raw:
         return e.setParseAction(lambda x: klass(*x))
 
 
-class Path:
+class Path(_Component):
     def __init__(self, value):
         if isinstance(value, basestring):
             value = ValueLiteral(value)
         self.value = value
 
     def accept(self, settings, r):
-        r.path = self.value.get_generator(settings)
+        r.path = self
 
     @classmethod
     def expr(klass):
         e = NakedValue.copy()
         return e.setParseAction(lambda x: klass(*x))
 
+    def values(self, settings):
+        return [
+                self.value.get_generator(settings),
+            ]
 
 
-class Method:
+
+
+class Method(_Component):
     methods = [
         "get",
         "head",
@@ -405,7 +427,7 @@ class Method:
         self.value = value
 
     def accept(self, settings, r):
-        r.method = self.value.get_generator(settings)
+        r.method = self
 
     @classmethod
     def expr(klass):
@@ -414,6 +436,11 @@ class Method:
         spec = m | Value.copy()
         spec = spec.setParseAction(lambda x: klass(*x))
         return spec
+
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings)
+        ]
 
 
 class _Action:
@@ -546,7 +573,7 @@ class Message:
         """
             Calculate the length of the base message without any applied actions.
         """
-        l = sum(len(x) for x in self.preamble())
+        l = sum(len(x) for x in self.preamble(settings))
         l += 2
         for h in self.headervals(settings, request_host):
             l += len(h)
@@ -625,7 +652,7 @@ class Message:
 
         hdrs = self.headervals(settings, request_host)
 
-        vals = self.preamble()
+        vals = self.preamble(settings)
         vals.append("\r\n")
         vals.extend(hdrs)
         vals.append("\r\n")
@@ -673,7 +700,7 @@ class Response(Message):
         self.code = None
         self.msg = None
 
-    def preamble(self):
+    def preamble(self, settings):
         return [self.version, " ", str(self.code), " ", self.msg]
 
     @classmethod
@@ -711,8 +738,13 @@ class Request(Message):
         self.method = None
         self.path = None
 
-    def preamble(self):
-        return [self.method, " ", self.path, " ", self.version]
+    def preamble(self, settings):
+        v = self.method.values(settings)
+        v.append(" ")
+        v.extend(self.path.values(settings))
+        v.append(" ")
+        v.append(self.version)
+        return v
 
     @classmethod
     def expr(klass):
@@ -728,9 +760,9 @@ class Request(Message):
         )
         return resp
 
-    def __str__(self):
+    def string(self, values=None):
         parts = [
-            "%s %s"%(self.method[:], self.path[:])
+            "%s %s"%(self.method.string(values), self.path.string(values))
         ]
         return "\n".join(parts)
 

@@ -324,7 +324,7 @@ class TestParseRequest:
         p = tutils.test_data.path("data")
         d = dict(staticdir=p)
         r = language.parse_request(d, "+request")
-        assert r.path == "/foo"
+        assert r.path.values({})[0][:] == "/foo"
 
     def test_nonascii(self):
         tutils.raises("ascii", language.parse_request, {}, "get:\xf0")
@@ -334,21 +334,21 @@ class TestParseRequest:
 
     def test_simple(self):
         r = language.parse_request({}, 'GET:"/foo"')
-        assert r.method == "GET"
-        assert r.path == "/foo"
+        assert r.method.string() == "GET"
+        assert r.path.string() == "/foo"
         r = language.parse_request({}, 'GET:/foo')
-        assert r.path == "/foo"
+        assert r.path.string() == "/foo"
         r = language.parse_request({}, 'GET:@1k')
-        assert len(r.path) == 1024
+        assert len(r.path.string()) == 1024
 
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_request({}, "GET:'/foo'")
         assert r.serve(s, {}, "foo.com")
 
-    def test_str(self):
+    def test_string(self):
         r = language.parse_request({}, 'GET:"/foo"')
-        assert str(r)
+        assert r.string()
 
     def test_multiline(self):
         l = """
@@ -357,8 +357,8 @@ class TestParseRequest:
             ir,@1
         """
         r = language.parse_request({}, l)
-        assert r.method == "GET"
-        assert r.path == "/foo"
+        assert r.method.string() == "GET"
+        assert r.path.string() == "/foo"
         assert r.actions
 
 
@@ -374,8 +374,8 @@ class TestParseRequest:
             ir,@1
         """
         r = language.parse_request({}, l)
-        assert r.method == "GET"
-        assert r.path.s.endswith("bar")
+        assert r.method.string() == "GET"
+        assert r.path.string().endswith("bar")
         assert r.actions
 
 
