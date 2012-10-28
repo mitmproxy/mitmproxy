@@ -498,11 +498,11 @@ class TestResponse:
         assert r.code.string() == "202"
 
     def test_response(self):
-        r = language.parse_response({}, "400'msg'")
+        r = language.parse_response({}, "400:m'msg'")
         assert r.code.string() == "400"
         assert r.reason.string() == "msg"
 
-        r = language.parse_response({}, "400'msg':b@100b")
+        r = language.parse_response({}, "400:m'msg':b@100b")
         assert r.reason.string() == "msg"
         assert r.body.values({})
         assert str(r)
@@ -514,7 +514,7 @@ class TestResponse:
 
     def test_render(self):
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400'msg'")
+        r = language.parse_response({}, "400:m'msg'")
         assert r.serve(s, {})
 
     def test_raw(self):
@@ -537,9 +537,9 @@ class TestResponse:
             s = cStringIO.StringIO()
             x.serve(s, {})
             assert x.length({}, None) == len(s.getvalue())
-        testlen(language.parse_response({}, "400'msg'"))
-        testlen(language.parse_response({}, "400'msg':h'foo'='bar'"))
-        testlen(language.parse_response({}, "400'msg':h'foo'='bar':b@100b"))
+        testlen(language.parse_response({}, "400:m'msg'"))
+        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar'"))
+        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':b@100b"))
 
     def test_maximum_length(self):
         def testlen(x, actions):
@@ -548,7 +548,7 @@ class TestResponse:
             x.serve(s, {})
             assert m >= len(s.getvalue())
 
-        r = language.parse_response({}, "400'msg':b@100")
+        r = language.parse_response({}, "400:m'msg':b@100")
 
         actions = [
             language.DisconnectAt(0)

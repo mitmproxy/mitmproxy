@@ -17,17 +17,10 @@
     <div class="tab-pane active" id="specifying_responses">
         <p>The general form of a response is as follows:</p>
             
-        <pre class="example">code[MESSAGE]:[colon-separated list of features]</pre></p>
+        <pre class="example">code:[colon-separated list of features]</pre></p>
 
         <table class="table table-bordered">
             <tbody >
-                <tr>
-                    <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
-                    <td>
-                        Set a header. 
-                    </td>
-                </tr>
-
                 <tr>
                     <td> b<a href="#valuespec">VALUE</a> </td>
                     <td>
@@ -45,6 +38,21 @@
                 </tr>
 
                 <tr>
+                    <td> d<a href="#offsetspec">OFFSET</a> </td>
+                    <td>
+                        Disconnect after OFFSET bytes. 
+                    </td>
+                </tr>
+
+                <tr>
+                    <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
+                    <td>
+                        Set a header. 
+                    </td>
+                </tr>
+
+
+                <tr>
                     <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
                     <td>
                         Inject the specified value at the offset. 
@@ -60,9 +68,10 @@
                 </tr>
 
                 <tr>
-                    <td> d<a href="#offsetspec">OFFSET</a> </td>
+                    <td> m<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Disconnect after OFFSET bytes. 
+                        HTTP Reason message. Automatically chosen according to
+                        the response code if not specified. 
                     </td>
                 </tr>
 
@@ -95,13 +104,6 @@
         <table class="table table-bordered">
             <tbody >
                 <tr>
-                    <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
-                    <td>
-                        Set a header. 
-                    </td>
-                </tr>
-
-                <tr>
                     <td> b<a href="#valuespec">VALUE</a> </td>
                     <td>
                         Set the body. The appropriate Content-Length header is
@@ -118,16 +120,23 @@
                 </tr>
 
                 <tr>
-                    <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
+                    <td> d<a href="#offsetspec">OFFSET</a> </td>
                     <td>
-                        Inject the specified value at the offset. 
+                        Disconnect after OFFSET bytes. 
                     </td>
                 </tr>
 
                 <tr>
-                    <td> d<a href="#offsetspec">OFFSET</a> </td>
+                    <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Disconnect after OFFSET bytes. 
+                        Set a header. 
+                    </td>
+                </tr>
+
+                <tr>
+                    <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
+                    <td>
+                        Inject the specified value at the offset. 
                     </td>
                 </tr>
 

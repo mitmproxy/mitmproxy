@@ -586,7 +586,8 @@ class Reason(_Component):
 
     @classmethod
     def expr(klass):
-        e = Value.copy()
+        e = pp.Literal("m").suppress()
+        e = e + Value
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
@@ -724,7 +725,8 @@ class Response(Message):
         InjectAt,
         ShortcutContentType,
         ShortcutLocation,
-        Raw
+        Raw,
+        Reason
     )
     logattrs = ["code", "reason", "version", "body"]
     def __init__(self):
@@ -749,7 +751,6 @@ class Response(Message):
         resp = pp.And(
             [
                 Code.expr(),
-                pp.Optional(Reason.expr()),
                 pp.ZeroOrMore(Sep + atom)
             ]
         )
