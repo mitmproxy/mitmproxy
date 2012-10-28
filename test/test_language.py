@@ -347,10 +347,6 @@ class TestParseRequest:
         r = language.parse_request({}, "GET:'/foo'")
         assert r.serve(s, {}, "foo.com")
 
-    def test_string(self):
-        r = language.parse_request({}, 'GET:"/foo"')
-        assert r.string()
-
     def test_multiline(self):
         l = """
             GET

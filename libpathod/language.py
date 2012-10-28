@@ -293,17 +293,35 @@ Offset = pp.MatchFirst(
 
 
 class _Component(object):
+    """
+        A component of the specification of an HTTP message. 
+    """
     __metaclass__ = abc.ABCMeta
     @abc.abstractmethod
-    def values(self, settings): return None # pragma: no cover
+    def values(self, settings): # pragma: no cover
+        """
+           A sequence of value objects.
+        """
+        return None
 
     @abc.abstractmethod
-    def expr(klass): return None # pragma: no cover
+    def expr(klass): # pragma: no cover
+        """
+            A parse expression.
+        """
+        return None
 
     @abc.abstractmethod
-    def accept(self, settings): return None # pragma: no cover
+    def accept(self, r): # pragma: no cover
+        """
+            Notifies the component to register itself with message r.
+        """
+        return None 
 
     def string(self, settings=None):
+        """
+            A string representation of the object. 
+        """
         return "".join(i[:] for i in self.values(settings or {}))
 
 
@@ -319,7 +337,7 @@ class _Header(_Component):
                 "\r\n",
             ]
 
-    def accept(self, settings, r):
+    def accept(self, r):
         r.headers.append(self)
 
 
@@ -359,7 +377,7 @@ class Body(_Component):
     def __init__(self, value):
         self.value = value
 
-    def accept(self, settings, r):
+    def accept(self, r):
         r.body = self
 
     @classmethod
@@ -375,7 +393,7 @@ class Body(_Component):
 
 
 class Raw:
-    def accept(self, settings, r):
+    def accept(self, r):
         r.raw = True
 
     @classmethod
@@ -390,7 +408,7 @@ class Path(_Component):
             value = ValueLiteral(value)
         self.value = value
 
-    def accept(self, settings, r):
+    def accept(self, r):
         r.path = self
 
     @classmethod
@@ -425,7 +443,7 @@ class Method(_Component):
             value = ValueLiteral(value.upper())
         self.value = value
 
-    def accept(self, settings, r):
+    def accept(self, r):
         r.method = self
 
     @classmethod
@@ -470,7 +488,7 @@ class _Action:
     def __repr__(self):
         return self.spec()
 
-    def accept(self, settings, r):
+    def accept(self, r):
         r.actions.append(self)
 
 
@@ -544,7 +562,7 @@ class Code(_Component):
     def __init__(self, code):
         self.code = str(code)
 
-    def accept(self, settings, r):
+    def accept(self, r):
         r.code = self
 
     @classmethod
@@ -560,7 +578,7 @@ class Reason(_Component):
     def __init__(self, value):
         self.value = value
 
-    def accept(self, settings, r):
+    def accept(self, r):
         r.reason = self
 
     @classmethod
@@ -734,9 +752,6 @@ class Response(Message):
         )
         return resp
 
-    def string(self, settings):
-        return "%s"%self.code
-
 
 class Request(Message):
     comps = (
@@ -776,11 +791,6 @@ class Request(Message):
         )
         return resp
 
-    def string(self, values=None):
-        parts = [
-            "%s %s"%(self.method.string(values), self.path.string(values))
-        ]
-        return "\n".join(parts)
 
 
 class CraftedRequest(Request):
@@ -788,7 +798,7 @@ class CraftedRequest(Request):
         Request.__init__(self)
         self.spec, self.tokens = spec, tokens
         for i in tokens:
-            i.accept(settings, self)
+            i.accept(self)
 
     def serve(self, fp, settings, host):
         d = Request.serve(self, fp, settings, host)
@@ -801,7 +811,7 @@ class CraftedResponse(Response):
         Response.__init__(self)
         self.spec, self.tokens = spec, tokens
         for i in tokens:
-            i.accept(settings, self)
+            i.accept(self)
 
     def serve(self, fp, settings):
         d = Response.serve(self, fp, settings, None)
