@@ -309,12 +309,21 @@ class _Spec(object):
         """
         return None
 
+    def spec(self): # pragma: no cover
+        """
+            A parseable specification for this token.
+        """
+        return None
+
 
 class Raw(_Spec):
     @classmethod
     def expr(klass):
         e = pp.Literal("r").suppress()
         return e.setParseAction(lambda x: klass(*x))
+
+    def spec(self):
+        return "r"
 
 
 class _Component(_Spec):
@@ -357,6 +366,9 @@ class Header(_Header):
         e += Value
         return e.setParseAction(lambda x: klass(*x))
 
+    def spec(self):
+        return "h%s=%s"%(self.key.spec(), self.value.spec())
+
 
 class ShortcutContentType(_Header):
     def __init__(self, value):
@@ -368,6 +380,9 @@ class ShortcutContentType(_Header):
         e = e + Value
         return e.setParseAction(lambda x: klass(*x))
 
+    def spec(self):
+        return "c%s"%(self.value.spec())
+
 
 class ShortcutLocation(_Header):
     def __init__(self, value):
@@ -378,6 +393,9 @@ class ShortcutLocation(_Header):
         e = pp.Literal("l").suppress()
         e = e + Value
         return e.setParseAction(lambda x: klass(*x))
+
+    def spec(self):
+        return "l%s"%(self.value.spec())
 
 
 class Body(_Component):
@@ -395,6 +413,9 @@ class Body(_Component):
                 self.value.get_generator(settings),
             ]
 
+    def spec(self):
+        return "b%s"%(self.value.spec())
+
 
 class Path(_Component):
     def __init__(self, value):
@@ -411,6 +432,9 @@ class Path(_Component):
         return [
                 self.value.get_generator(settings),
             ]
+
+    def spec(self):
+        return "%s"%(self.value.spec())
 
 
 class Method(_Component):
@@ -445,6 +469,12 @@ class Method(_Component):
             self.value.get_generator(settings)
         ]
 
+    def spec(self):
+        s = self.value.spec()
+        if s[1:-1].lower() in self.methods:
+            s = s[1:-1].lower()
+        return "%s"%s
+
 
 class Code(_Component):
     def __init__(self, code):
@@ -458,11 +488,13 @@ class Code(_Component):
     def values(self, settings):
         return [LiteralGenerator(self.code)]
 
+    def spec(self):
+        return "%s"%(self.code)
+
 
 class Reason(_Component):
     def __init__(self, value):
         self.value = value
-
 
     @classmethod
     def expr(klass):
@@ -472,6 +504,9 @@ class Reason(_Component):
 
     def values(self, settings):
         return [self.value.get_generator(settings)]
+
+    def spec(self):
+        return "m%s"%(self.value.spec())
 
 
 class _Action(_Spec):
