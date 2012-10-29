@@ -242,7 +242,7 @@ class ValueGenerate(_Value):
 
 class ValueFile(_Value):
     def __init__(self, path):
-        self.path = path
+        self.path = str(path)
 
     @classmethod
     def expr(klass):
@@ -807,6 +807,9 @@ class _Response(_Message):
         )
         return resp
 
+    def spec(self):
+        return ":".join([i.spec() for i in self.tokens])
+
 
 class _Request(_Message):
     comps = (
@@ -849,26 +852,27 @@ class _Request(_Message):
         )
         return resp
 
+    def spec(self):
+        return ":".join([i.spec() for i in self.tokens])
+
 
 class CraftedRequest(_Request):
     def __init__(self, spec, tokens):
         _Request.__init__(self, tokens)
-        self.spec, self.tokens = spec, tokens
 
     def serve(self, fp, settings, host):
         d = _Request.serve(self, fp, settings, host)
-        d["spec"] = self.spec
+        d["spec"] = self.spec()
         return d
 
 
 class CraftedResponse(_Response):
     def __init__(self, spec, tokens):
         _Response.__init__(self, tokens)
-        self.spec, self.tokens = spec, tokens
 
     def serve(self, fp, settings):
         d = _Response.serve(self, fp, settings, None)
-        d["spec"] = self.spec
+        d["spec"] = self.spec()
         return d
 
 
@@ -910,7 +914,7 @@ def parse_response(settings, s):
         May raise ParseException or FileAccessDenied
     """
     try:
-        s.decode("ascii")
+        s = s.decode("ascii")
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
     if s.startswith(FILESTART):
@@ -926,7 +930,7 @@ def parse_request(settings, s):
         May raise ParseException or FileAccessDenied
     """
     try:
-        s.decode("ascii")
+        s = s.decode("ascii")
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
     if s.startswith(FILESTART):

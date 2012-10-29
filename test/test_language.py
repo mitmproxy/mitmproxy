@@ -406,6 +406,13 @@ class TestParseRequest:
         assert r.path.string().endswith("bar")
         assert r.actions
 
+    def test_spec(self):
+        def rt(s):
+            s = language.parse_request({}, s).spec()
+            assert language.parse_request({}, s).spec() == s
+        rt("get:/foo")
+        rt("get:/foo:da")
+
 
 class TestParseResponse:
     def test_parse_err(self):
@@ -438,6 +445,14 @@ class TestParseResponse:
     def test_parse_stress(self):
         r = language.parse_response({}, "400:b@100g")
         assert r.length({}, None)
+
+    def test_spec(self):
+        def rt(s):
+            s = language.parse_response({}, s).spec()
+            assert language.parse_response({}, s).spec() == s
+        rt("400:b@100g")
+        rt("400")
+        rt("400:da")
 
 
 class TestWriteValues:
