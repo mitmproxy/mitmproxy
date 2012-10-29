@@ -165,21 +165,29 @@ class FileGenerator:
         return "<%s"%self.path
 
 
-class _Value(object):
+class _Token(object):
+    """
+        A specification token.
+    """
     __metaclass__ = abc.ABCMeta
+    @abc.abstractmethod
+    def expr(klass): # pragma: no cover
+        """
+            A parse expression.
+        """
+        return None
+
+    def spec(self): # pragma: no cover
+        """
+            A parseable specification for this token.
+        """
+        return None
+
     def __repr__(self):
         return self.spec()
 
-    @abc.abstractmethod
-    def spec(self): # pragma: no cover
-        return None
 
-    @abc.abstractmethod
-    def expr(self): # pragma: no cover
-        return None
-
-
-class _ValueLiteral(_Value):
+class _ValueLiteral(_Token):
     def __init__(self, val):
         self.val = val.decode("string_escape")
 
@@ -207,7 +215,7 @@ class ValueNakedLiteral(_ValueLiteral):
         return self.val.encode("string_escape")
 
 
-class ValueGenerate(_Value):
+class ValueGenerate(_Token):
     def __init__(self, usize, unit, datatype):
         if not unit:
             unit = "b"
@@ -240,7 +248,7 @@ class ValueGenerate(_Value):
         return s
 
 
-class ValueFile(_Value):
+class ValueFile(_Token):
     def __init__(self, path):
         self.path = str(path)
 
@@ -297,26 +305,7 @@ Offset = pp.MatchFirst(
     )
 
 
-class _Spec(object):
-    """
-        A specification token.
-    """
-    __metaclass__ = abc.ABCMeta
-    @abc.abstractmethod
-    def expr(klass): # pragma: no cover
-        """
-            A parse expression.
-        """
-        return None
-
-    def spec(self): # pragma: no cover
-        """
-            A parseable specification for this token.
-        """
-        return None
-
-
-class Raw(_Spec):
+class Raw(_Token):
     @classmethod
     def expr(klass):
         e = pp.Literal("r").suppress()
@@ -326,7 +315,7 @@ class Raw(_Spec):
         return "r"
 
 
-class _Component(_Spec):
+class _Component(_Token):
     """
         A value component of the primary specification of an HTTP message.
     """
@@ -509,7 +498,7 @@ class Reason(_Component):
         return "m%s"%(self.value.spec())
 
 
-class _Action(_Spec):
+class _Action(_Token):
     """
         An action that operates on the raw data stream of the message. All
         actions have one thing in common: an offset that specifies where the
@@ -540,7 +529,7 @@ class _Action(_Spec):
     @abc.abstractmethod
     def spec(self): # pragma: no cover
         pass
-        
+
     @abc.abstractmethod
     def intermediate(self): # pragma: no cover
         pass
@@ -751,6 +740,7 @@ class _Message(object):
                 v = v[:TRUNCATE]
                 v = v.encode("string_escape")
             ret[i] = v
+        ret["spec"] = self.spec()
         return ret
 
     @abc.abstractmethod
@@ -764,7 +754,7 @@ class _Message(object):
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
 
-class _Response(_Message):
+class Response(_Message):
     comps = (
         Body,
         Header,
@@ -810,8 +800,12 @@ class _Response(_Message):
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
+    def serve(self, fp, settings):
+        d = _Message.serve(self, fp, settings, None)
+        return d
 
-class _Request(_Message):
+
+class Request(_Message):
     comps = (
         Body,
         Header,
@@ -855,28 +849,12 @@ class _Request(_Message):
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
-
-class CraftedRequest(_Request):
-    def __init__(self, spec, tokens):
-        _Request.__init__(self, tokens)
-
     def serve(self, fp, settings, host):
-        d = _Request.serve(self, fp, settings, host)
-        d["spec"] = self.spec()
+        d = _Message.serve(self, fp, settings, host)
         return d
 
 
-class CraftedResponse(_Response):
-    def __init__(self, spec, tokens):
-        _Response.__init__(self, tokens)
-
-    def serve(self, fp, settings):
-        d = _Response.serve(self, fp, settings, None)
-        d["spec"] = self.spec()
-        return d
-
-
-class PathodErrorResponse(_Response):
+class PathodErrorResponse(Response):
     def __init__(self, reason, body=None):
         tokens = [
             Code("800"),
@@ -884,10 +862,10 @@ class PathodErrorResponse(_Response):
             Reason(ValueLiteral(reason)),
             Body(ValueLiteral("pathod error: " + (body or reason))),
         ]
-        _Response.__init__(self, tokens)
+        Response.__init__(self, tokens)
 
     def serve(self, fp, settings):
-        d = _Response.serve(self, fp, settings, None)
+        d = Response.serve(self, fp, settings)
         d["internal"] = True
         return d
 
@@ -920,7 +898,7 @@ def parse_response(settings, s):
     if s.startswith(FILESTART):
         s = read_file(settings, s)
     try:
-        return CraftedResponse(s, _Response.expr().parseString(s, parseAll=True))
+        return Response(Response.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)
 
@@ -936,6 +914,6 @@ def parse_request(settings, s):
     if s.startswith(FILESTART):
         s = read_file(settings, s)
     try:
-        return CraftedRequest(s, _Request.expr().parseString(s, parseAll=True))
+        return Request(Request.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)

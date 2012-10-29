@@ -604,8 +604,7 @@ class TestResponse:
         r = language.parse_response({}, "400:m'msg':b@100:d0:i0,'foo'")
         testlen(r)
 
-    # FIXME
-    def _test_render(self):
+    def test_render(self):
         r = language.parse_response({}, "400:p0,100:dr")
         assert r.actions[0].spec() == "p0,100"
         assert len(r.preview_safe()) == 1
