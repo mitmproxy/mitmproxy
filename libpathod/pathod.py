@@ -250,7 +250,7 @@ class Pathod(tcp.TCPServer):
                 )
             )
             return
-        except tcp.NetLibTimeout: # pragma: no cover
+        except tcp.NetLibTimeout:
             h.info("Timeout")
             self.add_log(
                 dict(

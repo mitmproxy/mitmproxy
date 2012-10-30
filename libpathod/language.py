@@ -216,7 +216,7 @@ class _Token(object):
         """
         return None
 
-    def resolve(self, msg, settings): # pragma: no cover
+    def resolve(self, msg, settings):
         """
             Resolves this token to ready it for transmission. This means that
             the calculated offsets of actions are fixed.
