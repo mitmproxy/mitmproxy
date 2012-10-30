@@ -1,3 +1,32 @@
+31 October 2012: pathod 0.3:
+
+    A release focusing on shoring up our fuzzing capabilities, especially with
+    pathoc.
+
+    * pathoc -q and -r options, output full request and response text.
+
+    * pathod -q and -r options, add full request and response text to pathod's
+      log buffer.
+    
+    * pathoc and pathod -x option, makes -q and -r options log in hex dump
+      format.
+
+    * pathoc -C option, specify response codes to ignore.
+    
+    * pathoc -T option, instructs pathoc to ignore timeouts.
+    
+    * pathoc -o option, a one-shot mode that exits after the first non-ignored
+      response. 
+    
+    * pathoc and pathod -e option, which explains the resulting message by
+      expanding random and generated portions, and logging a reproducible
+      specification.
+
+    * Major internal refactoring and cleanup.
+    
+    * Many bugfixes.
+    
+
 22 August 2012: pathod 0.2:
 
     * Add pathoc, a pathological HTTP client.
