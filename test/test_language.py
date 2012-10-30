@@ -257,10 +257,10 @@ class Test_Action:
         l.sort()
         assert l[0].offset == 0
 
-    def test_resolve_offset(self):
+    def test_resolve(self):
         r = language.parse_request({}, 'GET:"/foo"')
         e = language.DisconnectAt("r")
-        ret = e.resolve_offset(r, {}, None)
+        ret = e.resolve(r, {}, None)
         assert isinstance(ret.offset, int)
 
     def test_repr(self):
@@ -530,7 +530,7 @@ class TestWriteValues:
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:ia,'xx'")
-        language.serve(r, s, {}) 
+        language.serve(r, s, {})
         assert s.getvalue().endswith('xx')
 
 
@@ -584,9 +584,9 @@ class TestResponse:
             s = cStringIO.StringIO()
             language.serve(x, s, {})
             assert x.length({}, None) == len(s.getvalue())
-        testlen(language.parse_response({}, "400:m'msg'"))
-        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar'"))
-        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':b@100b"))
+        testlen(language.parse_response({}, "400:m'msg':r"))
+        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':r"))
+        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':b@100b:r"))
 
     def test_maximum_length(self):
         def testlen(x):

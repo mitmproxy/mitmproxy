@@ -85,6 +85,7 @@ def serve(msg, fp, settings, request_host=None):
 
         Calling this function may modify the object.
     """
+    msg = msg.resolve(settings, request_host)
     started = time.time()
 
     hdrs = msg.headervals(settings, request_host)
@@ -96,7 +97,11 @@ def serve(msg, fp, settings, request_host=None):
     if msg.body:
         vals.append(msg.body.value.get_generator(settings))
     vals.reverse()
-    actions = msg.ready_actions(settings, request_host)
+
+    actions = msg.actions[:]
+    actions.sort()
+    actions.reverse()
+    actions = [i.intermediate(settings) for i in actions]
 
     disconnect = write_values(fp, vals, actions[:])
     duration = time.time() - started
@@ -105,18 +110,7 @@ def serve(msg, fp, settings, request_host=None):
         started = started,
         duration = duration,
     )
-    for i in msg.logattrs:
-        v = getattr(msg, i)
-        # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
-        if hasattr(v, "values"):
-            v = [x[:TRUNCATE] for x in v.values(settings)]
-            v = "".join(v).encode("string_escape")
-        elif hasattr(v, "__len__"):
-            v = v[:TRUNCATE]
-            v = v.encode("string_escape")
-        ret[i] = v
-    ret["spec"] = msg.spec()
-    ret.update(msg.logflags)
+    ret.update(msg.log(settings))
     return ret
 
 
@@ -228,7 +222,7 @@ class _Token(object):
         """
         return None
 
-    def resolve(self, msg): # pragma: no cover
+    def resolve(self, msg, settings, request_host): # pragma: no cover
         """
             Resolves this token to ready it for transmission. This means that
             the calculated offsets of actions are fixed.
@@ -559,7 +553,7 @@ class _Action(_Token):
     def __init__(self, offset):
         self.offset = offset
 
-    def resolve_offset(self, msg, settings, request_host):
+    def resolve(self, msg, settings, request_host):
         """
             Resolves offset specifications to a numeric offset. Returns a copy
             of the action object.
@@ -713,11 +707,11 @@ class _Message(object):
                 l += len(i.value.get_generator(settings))
         return l
 
-    def headervals(self, settings, request_host):
-        hdrs = self.headers[:]
+    def resolve(self, settings, request_host):
+        tokens = self.tokens[:]
         if not self.raw:
             if self.body and not utils.get_header("Content-Length", self.headers):
-                hdrs.append(
+                tokens.append(
                     Header(
                         ValueLiteral("Content-Length"),
                         ValueLiteral(str(len(self.body.value.get_generator(settings)))),
@@ -725,7 +719,7 @@ class _Message(object):
                 )
             if request_host:
                 if not utils.get_header("Host", self.headers):
-                    hdrs.append(
+                    tokens.append(
                         Header(
                             ValueLiteral("Host"),
                             ValueLiteral(request_host)
@@ -733,22 +727,20 @@ class _Message(object):
                     )
             else:
                 if not utils.get_header("Date", self.headers):
-                    hdrs.append(
+                    tokens.append(
                         Header(
                             ValueLiteral("Date"),
                             ValueLiteral(formatdate(timeval=None, localtime=False, usegmt=True))
                         )
                     )
+        intermediate = self.__class__(tokens)
+        return self.__class__([i.resolve(intermediate, settings, request_host) for i in tokens])
+
+    def headervals(self, settings, request_host):
         values = []
-        for h in hdrs:
+        for h in self.headers:
             values.extend(h.values(settings))
         return values
-
-    def ready_actions(self, settings, request_host):
-        actions = [i.resolve_offset(self, settings, request_host) for i in self.actions]
-        actions.sort()
-        actions.reverse()
-        return [i.intermediate(settings) for i in actions]
 
     @abc.abstractmethod
     def preamble(self, settings): # pragma: no cover
@@ -757,6 +749,24 @@ class _Message(object):
     @abc.abstractmethod
     def expr(klass): # pragma: no cover
         pass
+
+    def log(self, settings):
+        """
+            A dictionary that should be logged if this message is served.
+        """
+        ret = {}
+        for i in self.logattrs:
+            v = getattr(self, i)
+            # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
+            if hasattr(v, "values"):
+                v = [x[:TRUNCATE] for x in v.values(settings)]
+                v = "".join(v).encode("string_escape")
+            elif hasattr(v, "__len__"):
+                v = v[:TRUNCATE]
+                v = v.encode("string_escape")
+            ret[i] = v
+        ret["spec"] = self.spec()
+        return ret
 
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
@@ -774,7 +784,6 @@ class Response(_Message):
         Reason
     )
     logattrs = ["code", "reason", "version", "body"]
-    logflags = dict()
     @property
     def code(self):
         return self._get_token(Code)
@@ -820,7 +829,6 @@ class Request(_Message):
         Raw
     )
     logattrs = ["method", "path", "body"]
-    logflags = dict()
     @property
     def method(self):
         return self._get_token(Method)
@@ -855,16 +863,14 @@ class Request(_Message):
         return ":".join([i.spec() for i in self.tokens])
 
 
-class PathodErrorResponse(Response):
-    logflags = dict(internal=True)
-    def __init__(self, reason, body=None):
-        tokens = [
-            Code("800"),
-            Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")),
-            Reason(ValueLiteral(reason)),
-            Body(ValueLiteral("pathod error: " + (body or reason))),
-        ]
-        Response.__init__(self, tokens)
+def PathodErrorResponse(reason, body=None):
+    tokens = [
+        Code("800"),
+        Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")),
+        Reason(ValueLiteral(reason)),
+        Body(ValueLiteral("pathod error: " + (body or reason))),
+    ]
+    return Response(tokens)
 
 
 FILESTART = "+"
