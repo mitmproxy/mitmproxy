@@ -217,7 +217,7 @@ class Pathod(tcp.TCPServer):
             A policy check that verifies the request size is withing limits.
         """
         try:
-            l = req.maximum_length(settings, None)
+            l = req.maximum_length(settings)
         except language.FileAccessDenied, v:
             return "File access denied."
         if self.sizelimit and l > self.sizelimit:

@@ -260,7 +260,7 @@ class Test_Action:
     def test_resolve(self):
         r = language.parse_request({}, 'GET:"/foo"')
         e = language.DisconnectAt("r")
-        ret = e.resolve(r, {}, None)
+        ret = e.resolve(r, {})
         assert isinstance(ret.offset, int)
 
     def test_repr(self):
@@ -444,7 +444,7 @@ class TestParseResponse:
 
     def test_parse_stress(self):
         r = language.parse_response({}, "400:b@100g")
-        assert r.length({}, None)
+        assert r.length({})
 
     def test_spec(self):
         def rt(s):
@@ -583,7 +583,7 @@ class TestResponse:
         def testlen(x):
             s = cStringIO.StringIO()
             language.serve(x, s, {})
-            assert x.length({}, None) == len(s.getvalue())
+            assert x.length({}) == len(s.getvalue())
         testlen(language.parse_response({}, "400:m'msg':r"))
         testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':r"))
         testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':b@100b:r"))
@@ -591,7 +591,7 @@ class TestResponse:
     def test_maximum_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
-            m = x.maximum_length({}, None)
+            m = x.maximum_length({})
             language.serve(x, s, {})
             assert m >= len(s.getvalue())
 
