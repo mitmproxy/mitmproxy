@@ -108,7 +108,6 @@ def _preview(is_request):
         section = "main",
         syntaxerror = None,
         error = None,
-        pauses = None
     )
     if not spec.strip():
         args["error"] = "Can't parse an empty spec."
@@ -125,16 +124,16 @@ def _preview(is_request):
         return render(template, False, **args)
 
     s = cStringIO.StringIO()
-    args["pauses"] = r.preview_safe()
+    safe = r.preview_safe()
 
-    c = app.config["pathod"].check_policy(r, app.config["pathod"].request_settings)
+    c = app.config["pathod"].check_policy(safe, app.config["pathod"].request_settings)
     if c:
         args["error"] = c
         return render(template, False, **args)
     if is_request:
-        r.serve(s, app.config["pathod"].request_settings, host="example.com")
+        safe.serve(s, app.config["pathod"].request_settings, host="example.com")
     else:
-        r.serve(s, app.config["pathod"].request_settings)
+        safe.serve(s, app.config["pathod"].request_settings)
 
     args["output"] = utils.escape_unprintables(s.getvalue())
     return render(template, False, **args)

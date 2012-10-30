@@ -167,7 +167,7 @@ class FileGenerator:
 
 class _Token(object):
     """
-        A specification token.
+        A specification token. Tokens are immutable.
     """
     __metaclass__ = abc.ABCMeta
     @abc.abstractmethod
@@ -646,11 +646,10 @@ class _Message(object):
 
     def preview_safe(self):
         """
-            Modify this message to be safe for previews. Returns a list of elided actions.
+            Return a copy of this message that issafe for previews.
         """
-        pauses = [i for i in self.actions if isinstance(i, PauseAt)]
-        #self.actions = [i for i in self.actions if not isinstance(i, PauseAt)]
-        return pauses
+        tokens = [i for i in self.tokens if not isinstance(i, PauseAt)]
+        return self.__class__(tokens)
 
     def maximum_length(self, settings, request_host):
         """

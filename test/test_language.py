@@ -606,9 +606,9 @@ class TestResponse:
 
     def test_render(self):
         r = language.parse_response({}, "400:p0,100:dr")
-        assert r.actions[0].spec() == "p0,100"
-        assert len(r.preview_safe()) == 1
-        assert not r.actions[0].spec().startswith("p")
+        assert "p0" in r.spec()
+        s = r.preview_safe()
+        assert not "p0" in s.spec()
 
 
 
