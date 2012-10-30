@@ -62,6 +62,9 @@ class Pathoc(tcp.TCPClient):
             print >> fp, "File access error: %s"%v
             return
 
+        if explain:
+            r = r.freeze(self.settings, self.host)
+
         resp, req = None, None
         if showreq:
             self.wfile.start_log()
@@ -83,6 +86,9 @@ class Pathoc(tcp.TCPClient):
         if req:
             if ignorecodes and resp and resp[1] in ignorecodes:
                 return
+            if explain:
+                print >> fp, ">> Spec:", r.spec()
+
             if showreq:
                 self._show(fp, ">> Request", self.wfile.get_log(), hexdump)
 

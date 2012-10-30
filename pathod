@@ -92,7 +92,8 @@ def main(parser, args):
             timeout = args.timeout,
             logreq = args.logreq,
             logresp = args.logresp,
-            hexdump = args.hexdump
+            hexdump = args.hexdump,
+            explain = args.explain
         )
     except pathod.PathodError, v:
         parser.error(str(v))
@@ -164,7 +165,17 @@ if __name__ == "__main__":
     )
 
 
-    group = parser.add_argument_group('Controlling Output')
+    group = parser.add_argument_group(
+        'Controlling Logging', 
+        """
+            Some of these options expand generated values for logging - if
+            you're generating large data, use them with caution.
+        """
+    )
+    group.add_argument(
+        "-e", dest="explain", action="store_true", default=False,
+        help="Explain responses"
+    )
     group.add_argument(
         "-f", dest='logfile', default=None, type=str,
         help='Log to file.'

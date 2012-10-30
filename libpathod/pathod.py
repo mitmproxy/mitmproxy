@@ -28,6 +28,9 @@ class PathodHandler(tcp.BaseHandler):
             )
             return False, log
 
+        if self.server.explain:
+            crafted = crafted.freeze(self.server.request_settings, None)
+            print crafted
         response_log = language.serve(crafted, self.wfile, self.server.request_settings, None)
         log = dict(
                 type = "crafted",
@@ -171,7 +174,7 @@ class Pathod(tcp.TCPServer):
     def __init__(   self,
                     addr, ssloptions=None, craftanchor="/p/", staticdir=None, anchors=None,
                     sizelimit=None, noweb=False, nocraft=False, noapi=False, nohang=False,
-                    timeout=None, logreq=False, logresp=False, hexdump=False
+                    timeout=None, logreq=False, logresp=False, explain=False, hexdump=False
                 ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
@@ -192,6 +195,7 @@ class Pathod(tcp.TCPServer):
         self.sizelimit = sizelimit
         self.noweb, self.nocraft, self.noapi, self.nohang = noweb, nocraft, noapi, nohang
         self.timeout, self.logreq, self.logresp, self.hexdump = timeout, logreq, logresp, hexdump
+        self.explain = explain
 
         if not noapi:
             app.api()

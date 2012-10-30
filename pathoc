@@ -33,7 +33,13 @@ if __name__ == "__main__":
         'request', type=str, nargs="+",
         help='Request specification'
     )
-    group = parser.add_argument_group('Controlling Output')
+    group = parser.add_argument_group(
+        'Controlling Output', 
+        """
+            Some of these options expand generated values for logging - if
+            you're generating large data, use them with caution.
+        """
+    )
     group.add_argument(
         "-C", dest="ignorecodes", type=str, default="",
         help="Comma-separated list of response codes to ignore"

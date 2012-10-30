@@ -23,7 +23,8 @@ class DaemonTests:
             timeout = self.timeout,
             hexdump = self.hexdump,
             logreq = True,
-            logresp = True
+            logresp = True,
+            explain = True
         )
 
     @classmethod

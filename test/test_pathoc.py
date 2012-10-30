@@ -65,6 +65,10 @@ class TestDaemon:
         assert "Invalid headers" in v
         assert "HTTP/" in v
 
+    def test_explain(self):
+        reqs = [ "get:/p/200:b@100" ]
+        assert not "b@100" in self.tval(reqs, explain=True)
+
     def test_showreq(self):
         reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
         assert self.tval(reqs, showreq=True).count("unprintables escaped") == 2

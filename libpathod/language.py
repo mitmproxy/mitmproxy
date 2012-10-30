@@ -805,8 +805,9 @@ class _Message(object):
             vals.append(self.body.value.get_generator(settings))
         return vals
 
-    def freeze(self, settings):
-        return self.__class__([i.freeze(settings) for i in self.tokens])
+    def freeze(self, settings, request_host=None):
+        r = self.resolve(settings, request_host=None)
+        return self.__class__([i.freeze(settings) for i in r.tokens])
 
     def __repr__(self):
         return self.spec()
