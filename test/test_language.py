@@ -36,6 +36,10 @@ class TestValueLiteral:
         v = language.ValueLiteral("f\x00oo")
         assert v.spec() == repr(v) == r'"f\x00oo"'
 
+    def test_freeze(self):
+        v = language.ValueLiteral("foo")
+        assert v.freeze({}).val == v.val
+
 
 class TestValueGenerate:
     def test_basic(self):
@@ -72,6 +76,11 @@ class TestValueGenerate:
         v = language.ValueGenerate(1, "b", "ascii")
         assert v.spec() == repr(v) == "@1,ascii"
 
+    def test_freeze(self):
+        v = language.ValueGenerate(100, "b", "ascii")
+        f = v.freeze({})
+        assert len(f.val) == 100
+
 
 class TestValueFile:
     def test_file_value(self):
@@ -103,6 +112,11 @@ class TestValueFile:
         v = language.Value.parseString("<'one two'")[0]
         v2 = language.Value.parseString(v.spec())[0]
         assert v2.path == "one two"
+
+    def test_freeze(self):
+        v = language.Value.parseString("<'one two'")[0]
+        v2 = v.freeze({})
+        assert v2.path == v.path
 
 
 class TestMisc:
@@ -147,11 +161,17 @@ class TestMisc:
     def test_path(self):
         e = language.Path.expr()
         assert e.parseString('"/foo"')[0].value.val == "/foo"
-        e = language.Path("/foo")
-        assert e.value.val == "/foo"
 
-        s = e.spec()
-        assert s == e.expr().parseString(s)[0].spec()
+        v = language.Path("/foo")
+        assert v.value.val == "/foo"
+
+        v = e.parseString("@100")[0]
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
+
+        s = v.spec()
+        assert s == v.expr().parseString(s)[0].spec()
 
     def test_method(self):
         e = language.Method.expr()
@@ -168,10 +188,16 @@ class TestMisc:
         s = e.parseString("'foo'")[0].spec()
         assert s == e.parseString(s)[0].spec()
 
+        v = e.parseString("@100")[0]
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
+
     def test_raw(self):
         e = language.Raw.expr().parseString("r")[0]
         assert e
         assert e.spec() == "r"
+        assert e.freeze({}).spec() == "r"
 
     def test_body(self):
         e = language.Body.expr()
@@ -180,6 +206,9 @@ class TestMisc:
 
         v = e.parseString("b@100")[0]
         assert str(v.value) == "@100"
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
 
         v = e.parseString("b@100g,digits", parseAll=True)[0]
         assert v.value.datatype == "digits"
@@ -194,6 +223,8 @@ class TestMisc:
         assert v.string() == "200"
         assert v.spec() == "200"
 
+        assert v.freeze({}).code == v.code
+
     def test_reason(self):
         e = language.Reason.expr()
         v = e.parseString("m'msg'")[0]
@@ -201,6 +232,11 @@ class TestMisc:
 
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
+
+        v = e.parseString("m@100")[0]
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
 
     def test_internal_response(self):
         d = cStringIO.StringIO()
@@ -222,6 +258,14 @@ class TestHeaders:
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
 
+    def test_header_freeze(self):
+        e = language.Header.expr()
+        v = e.parseString("h@10=@10'")[0]
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.key.val == v3.key.val
+        assert v2.value.val == v3.value.val
+
     def test_ctype_shortcut(self):
         e = language.ShortcutContentType.expr()
         v = e.parseString("c'foo'")[0]
@@ -230,6 +274,12 @@ class TestHeaders:
 
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
+
+        e = language.ShortcutContentType.expr()
+        v = e.parseString("c@100")[0]
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
 
     def test_location_shortcut(self):
         e = language.ShortcutLocation.expr()
@@ -240,9 +290,16 @@ class TestHeaders:
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
 
+        e = language.ShortcutLocation.expr()
+        v = e.parseString("l@100")[0]
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
+
     def test_shortcut_content_type(self):
         assert language.parse_response({}, "400:c'foo'").headers[0].key.val == "Content-Type"
         assert language.parse_response({}, "400:l'foo'").headers[0].key.val == "Location"
+
 
 
 
@@ -266,6 +323,10 @@ class Test_Action:
     def test_repr(self):
         e = language.DisconnectAt("r")
         assert repr(e)
+
+    def test_freeze(self):
+        l = language.DisconnectAt(5)
+        assert l.freeze({}).spec() == l.spec()
 
 
 class TestDisconnects:
@@ -323,6 +384,13 @@ class TestInject:
         v = e.parseString("i0,'foo'")[0]
         assert v.spec() == 'i0,"foo"'
 
+    def test_spec(self):
+        e = language.InjectAt.expr()
+        v = e.parseString("i0,@100")[0]
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
+
 
 class TestPauses:
     def test_parse_response(self):
@@ -349,9 +417,12 @@ class TestPauses:
         assert language.PauseAt(0, 5).spec() == "p0,5"
         assert language.PauseAt(0, "f").spec() == "p0,f"
 
+    def test_freeze(self):
+        l = language.PauseAt("r", 5)
+        assert l.freeze({}).spec() == l.spec()
 
 
-class TestParseRequest:
+class TestRequest:
     def test_file(self):
         p = tutils.test_data.path("data")
         d = dict(staticdir=p)
@@ -413,46 +484,9 @@ class TestParseRequest:
         rt("get:/foo")
         rt("get:/foo:da")
 
-
-class TestParseResponse:
-    def test_parse_err(self):
-        tutils.raises(language.ParseException, language.parse_response, {}, "400:msg,b:")
-        try:
-            language.parse_response({}, "400'msg':b:")
-        except language.ParseException, v:
-            assert v.marked()
-            assert str(v)
-
-    def test_nonascii(self):
-        tutils.raises("ascii", language.parse_response, {}, "foo:b\xf0")
-
-    def test_parse_header(self):
-        r = language.parse_response({}, '400:h"foo"="bar"')
-        assert utils.get_header("foo", r.headers)
-
-    def test_parse_pause_before(self):
-        r = language.parse_response({}, "400:p0,10")
-        assert r.actions[0].spec() == "p0,10"
-
-    def test_parse_pause_after(self):
-        r = language.parse_response({}, "400:pa,10")
-        assert r.actions[0].spec() == "pa,10"
-
-    def test_parse_pause_random(self):
-        r = language.parse_response({}, "400:pr,10")
-        assert r.actions[0].spec() == "pr,10"
-
-    def test_parse_stress(self):
-        r = language.parse_response({}, "400:b@100g")
-        assert r.length({})
-
-    def test_spec(self):
-        def rt(s):
-            s = language.parse_response({}, s).spec()
-            assert language.parse_response({}, s).spec() == s
-        rt("400:b@100g")
-        rt("400")
-        rt("400:da")
+    def test_freeze(self):
+        r = language.parse_request({}, "GET:/:b@100").freeze({})
+        assert len(r.spec()) > 100
 
 
 class TestWriteValues:
@@ -609,6 +643,45 @@ class TestResponse:
         assert "p0" in r.spec()
         s = r.preview_safe()
         assert not "p0" in s.spec()
+
+    def test_parse_err(self):
+        tutils.raises(language.ParseException, language.parse_response, {}, "400:msg,b:")
+        try:
+            language.parse_response({}, "400'msg':b:")
+        except language.ParseException, v:
+            assert v.marked()
+            assert str(v)
+
+    def test_nonascii(self):
+        tutils.raises("ascii", language.parse_response, {}, "foo:b\xf0")
+
+    def test_parse_header(self):
+        r = language.parse_response({}, '400:h"foo"="bar"')
+        assert utils.get_header("foo", r.headers)
+
+    def test_parse_pause_before(self):
+        r = language.parse_response({}, "400:p0,10")
+        assert r.actions[0].spec() == "p0,10"
+
+    def test_parse_pause_after(self):
+        r = language.parse_response({}, "400:pa,10")
+        assert r.actions[0].spec() == "pa,10"
+
+    def test_parse_pause_random(self):
+        r = language.parse_response({}, "400:pr,10")
+        assert r.actions[0].spec() == "pr,10"
+
+    def test_parse_stress(self):
+        r = language.parse_response({}, "400:b@100g")
+        assert r.length({})
+
+    def test_spec(self):
+        def rt(s):
+            s = language.parse_response({}, s).spec()
+            assert language.parse_response({}, s).spec() == s
+        rt("400:b@100g")
+        rt("400")
+        rt("400:da")
 
 
 

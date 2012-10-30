@@ -209,6 +209,7 @@ class _Token(object):
         """
         return None
 
+    @abc.abstractmethod
     def spec(self): # pragma: no cover
         """
             A parseable specification for this token.
@@ -232,6 +233,9 @@ class _ValueLiteral(_Token):
 
     def get_generator(self, settings):
         return LiteralGenerator(self.val)
+
+    def freeze(self, settings):
+        return self
 
 
 class ValueLiteral(_ValueLiteral):
@@ -266,6 +270,10 @@ class ValueGenerate(_Token):
     def get_generator(self, settings):
         return RandomGenerator(self.datatype, self.bytes())
 
+    def freeze(self, settings):
+        g = self.get_generator(settings)
+        return ValueLiteral(g[:].encode("string_escape"))
+
     @classmethod
     def expr(klass):
         e = pp.Literal("@").suppress() + v_integer
@@ -296,6 +304,9 @@ class ValueFile(_Token):
         e = pp.Literal("<").suppress()
         e = e + v_naked_literal
         return e.setParseAction(lambda x: klass(*x))
+
+    def freeze(self, settings):
+        return self
 
     def get_generator(self, settings):
         uf = settings.get("unconstrained_file_access")
@@ -353,6 +364,9 @@ class Raw(_Token):
     def spec(self):
         return "r"
 
+    def freeze(self, settings):
+        return self
+
 
 class _Component(_Token):
     """
@@ -397,6 +411,9 @@ class Header(_Header):
     def spec(self):
         return "h%s=%s"%(self.key.spec(), self.value.spec())
 
+    def freeze(self, settings):
+        return Header(self.key.freeze(settings), self.value.freeze(settings))
+
 
 class ShortcutContentType(_Header):
     def __init__(self, value):
@@ -411,6 +428,9 @@ class ShortcutContentType(_Header):
     def spec(self):
         return "c%s"%(self.value.spec())
 
+    def freeze(self, settings):
+        return ShortcutContentType(self.value.freeze(settings))
+
 
 class ShortcutLocation(_Header):
     def __init__(self, value):
@@ -424,6 +444,9 @@ class ShortcutLocation(_Header):
 
     def spec(self):
         return "l%s"%(self.value.spec())
+
+    def freeze(self, settings):
+        return ShortcutLocation(self.value.freeze(settings))
 
 
 class Body(_Component):
@@ -444,6 +467,9 @@ class Body(_Component):
     def spec(self):
         return "b%s"%(self.value.spec())
 
+    def freeze(self, settings):
+        return Body(self.value.freeze(settings))
+
 
 class Path(_Component):
     def __init__(self, value):
@@ -463,6 +489,9 @@ class Path(_Component):
 
     def spec(self):
         return "%s"%(self.value.spec())
+
+    def freeze(self, settings):
+        return Path(self.value.freeze(settings))
 
 
 class Method(_Component):
@@ -503,6 +532,9 @@ class Method(_Component):
             s = s[1:-1].lower()
         return "%s"%s
 
+    def freeze(self, settings):
+        return Method(self.value.freeze(settings))
+
 
 class Code(_Component):
     def __init__(self, code):
@@ -518,6 +550,9 @@ class Code(_Component):
 
     def spec(self):
         return "%s"%(self.code)
+
+    def freeze(self, settings):
+        return Code(self.code)
 
 
 class Reason(_Component):
@@ -535,6 +570,9 @@ class Reason(_Component):
 
     def spec(self):
         return "m%s"%(self.value.spec())
+
+    def freeze(self, settings):
+        return Reason(self.value.freeze(settings))
 
 
 class _Action(_Token):
@@ -598,6 +636,9 @@ class PauseAt(_Action):
     def intermediate(self, settings):
         return (self.offset, "pause", self.seconds)
 
+    def freeze(self, settings):
+        return self
+
 
 class DisconnectAt(_Action):
     def __init__(self, offset):
@@ -614,6 +655,9 @@ class DisconnectAt(_Action):
 
     def intermediate(self, settings):
         return (self.offset, "disconnect")
+
+    def freeze(self, settings):
+        return self
 
 
 class InjectAt(_Action):
@@ -638,6 +682,9 @@ class InjectAt(_Action):
                 "inject",
                 self.value.get_generator(settings)
             )
+
+    def freeze(self, settings):
+        return InjectAt(self.offset, self.value.freeze(settings))
 
 
 class _Message(object):
@@ -757,6 +804,12 @@ class _Message(object):
         if self.body:
             vals.append(self.body.value.get_generator(settings))
         return vals
+
+    def freeze(self, settings):
+        return self.__class__([i.freeze(settings) for i in self.tokens])
+
+    def __repr__(self):
+        return self.spec()
 
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
