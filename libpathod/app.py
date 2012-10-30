@@ -131,9 +131,9 @@ def _preview(is_request):
         args["error"] = c
         return render(template, False, **args)
     if is_request:
-        safe.serve(s, app.config["pathod"].request_settings, host="example.com")
+        language.serve(safe, s, app.config["pathod"].request_settings, "example.com")
     else:
-        safe.serve(s, app.config["pathod"].request_settings)
+        language.serve(safe, s, app.config["pathod"].request_settings, None)
 
     args["output"] = utils.escape_unprintables(s.getvalue())
     return render(template, False, **args)

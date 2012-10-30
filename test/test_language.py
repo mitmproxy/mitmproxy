@@ -205,7 +205,7 @@ class TestMisc:
     def test_internal_response(self):
         d = cStringIO.StringIO()
         s = language.PathodErrorResponse("foo")
-        s.serve(d, {})
+        language.serve(s, d, {})
 
 
 class TestHeaders:
@@ -316,7 +316,7 @@ class TestInject:
     def test_serve(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:i0,'foo'")
-        assert r.serve(s, {})
+        assert language.serve(r, s, {})
 
     def test_spec(self):
         e = language.InjectAt.expr()
@@ -376,7 +376,7 @@ class TestParseRequest:
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_request({}, "GET:'/foo'")
-        assert r.serve(s, {}, "foo.com")
+        assert language.serve(r, s, {}, "foo.com")
 
     def test_multiline(self):
         l = """
@@ -522,15 +522,15 @@ class TestWriteValues:
     def test_write_values_after(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:da")
-        r.serve(s, {})
+        language.serve(r, s, {})
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:pa,0")
-        r.serve(s, {})
+        language.serve(r, s, {})
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:ia,'xx'")
-        r.serve(s, {})
+        language.serve(r, s, {}) 
         assert s.getvalue().endswith('xx')
 
 
@@ -562,19 +562,19 @@ class TestResponse:
     def test_render(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:m'msg'")
-        assert r.serve(s, {})
+        assert language.serve(r, s, {})
 
     def test_raw(self):
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo'")
-        r.serve(s, {})
+        language.serve(r, s, {})
         v = s.getvalue()
         assert "Content-Length" in v
         assert "Date" in v
 
         s = cStringIO.StringIO()
         r = language.parse_response({}, "400:b'foo':r")
-        r.serve(s, {})
+        language.serve(r, s, {})
         v = s.getvalue()
         assert not "Content-Length" in v
         assert not "Date" in v
@@ -582,7 +582,7 @@ class TestResponse:
     def test_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
-            x.serve(s, {})
+            language.serve(x, s, {})
             assert x.length({}, None) == len(s.getvalue())
         testlen(language.parse_response({}, "400:m'msg'"))
         testlen(language.parse_response({}, "400:m'msg':h'foo'='bar'"))
@@ -592,7 +592,7 @@ class TestResponse:
         def testlen(x):
             s = cStringIO.StringIO()
             m = x.maximum_length({}, None)
-            x.serve(s, {})
+            language.serve(x, s, {})
             assert m >= len(s.getvalue())
 
         r = language.parse_response({}, "400:m'msg':b@100:d0")

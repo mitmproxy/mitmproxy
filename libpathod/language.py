@@ -75,6 +75,51 @@ def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
         return True
 
 
+def serve(msg, fp, settings, request_host=None):
+    """
+        fp: The file pointer to write to.
+
+        request_host: If this a request, this is the connecting host. If
+        None, we assume it's a response. Used to decide what standard
+        modifications to make if raw is not set.
+
+        Calling this function may modify the object.
+    """
+    started = time.time()
+
+    hdrs = msg.headervals(settings, request_host)
+
+    vals = msg.preamble(settings)
+    vals.append("\r\n")
+    vals.extend(hdrs)
+    vals.append("\r\n")
+    if msg.body:
+        vals.append(msg.body.value.get_generator(settings))
+    vals.reverse()
+    actions = msg.ready_actions(settings, request_host)
+
+    disconnect = write_values(fp, vals, actions[:])
+    duration = time.time() - started
+    ret = dict(
+        disconnect = disconnect,
+        started = started,
+        duration = duration,
+    )
+    for i in msg.logattrs:
+        v = getattr(msg, i)
+        # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
+        if hasattr(v, "values"):
+            v = [x[:TRUNCATE] for x in v.values(settings)]
+            v = "".join(v).encode("string_escape")
+        elif hasattr(v, "__len__"):
+            v = v[:TRUNCATE]
+            v = v.encode("string_escape")
+        ret[i] = v
+    ret["spec"] = msg.spec()
+    ret.update(msg.logflags)
+    return ret
+
+
 DATATYPES = dict(
     ascii_letters = string.ascii_letters,
     ascii_lowercase = string.ascii_lowercase,
@@ -182,6 +227,13 @@ class _Token(object):
             A parseable specification for this token.
         """
         return None
+
+    def resolve(self, msg): # pragma: no cover
+        """
+            Resolves this token to ready it for transmission. This means that
+            the calculated offsets of actions are fixed.
+        """
+        return self
 
     def __repr__(self):
         return self.spec()
@@ -679,7 +731,6 @@ class _Message(object):
                             ValueLiteral(request_host)
                         )
                     )
-
             else:
                 if not utils.get_header("Date", self.headers):
                     hdrs.append(
@@ -698,49 +749,6 @@ class _Message(object):
         actions.sort()
         actions.reverse()
         return [i.intermediate(settings) for i in actions]
-
-    def serve(self, fp, settings, request_host):
-        """
-            fp: The file pointer to write to.
-
-            request_host: If this a request, this is the connecting host. If
-            None, we assume it's a response. Used to decide what standard
-            modifications to make if raw is not set.
-
-            Calling this function may modify the object.
-        """
-        started = time.time()
-
-        hdrs = self.headervals(settings, request_host)
-
-        vals = self.preamble(settings)
-        vals.append("\r\n")
-        vals.extend(hdrs)
-        vals.append("\r\n")
-        if self.body:
-            vals.append(self.body.value.get_generator(settings))
-        vals.reverse()
-        actions = self.ready_actions(settings, request_host)
-
-        disconnect = write_values(fp, vals, actions[:])
-        duration = time.time() - started
-        ret = dict(
-            disconnect = disconnect,
-            started = started,
-            duration = duration,
-        )
-        for i in self.logattrs:
-            v = getattr(self, i)
-            # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
-            if hasattr(v, "values"):
-                v = [x[:TRUNCATE] for x in v.values(settings)]
-                v = "".join(v).encode("string_escape")
-            elif hasattr(v, "__len__"):
-                v = v[:TRUNCATE]
-                v = v.encode("string_escape")
-            ret[i] = v
-        ret["spec"] = self.spec()
-        return ret
 
     @abc.abstractmethod
     def preamble(self, settings): # pragma: no cover
@@ -766,6 +774,7 @@ class Response(_Message):
         Reason
     )
     logattrs = ["code", "reason", "version", "body"]
+    logflags = dict()
     @property
     def code(self):
         return self._get_token(Code)
@@ -799,10 +808,6 @@ class Response(_Message):
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
-    def serve(self, fp, settings):
-        d = _Message.serve(self, fp, settings, None)
-        return d
-
 
 class Request(_Message):
     comps = (
@@ -815,6 +820,7 @@ class Request(_Message):
         Raw
     )
     logattrs = ["method", "path", "body"]
+    logflags = dict()
     @property
     def method(self):
         return self._get_token(Method)
@@ -848,12 +854,9 @@ class Request(_Message):
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
-    def serve(self, fp, settings, host):
-        d = _Message.serve(self, fp, settings, host)
-        return d
-
 
 class PathodErrorResponse(Response):
+    logflags = dict(internal=True)
     def __init__(self, reason, body=None):
         tokens = [
             Code("800"),
@@ -862,11 +865,6 @@ class PathodErrorResponse(Response):
             Body(ValueLiteral("pathod error: " + (body or reason))),
         ]
         Response.__init__(self, tokens)
-
-    def serve(self, fp, settings):
-        d = Response.serve(self, fp, settings)
-        d["internal"] = True
-        return d
 
 
 FILESTART = "+"
