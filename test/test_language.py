@@ -169,6 +169,7 @@ class TestMisc:
         v2 = v.freeze({})
         v3 = v2.freeze({})
         assert v2.value.val == v3.value.val
+        assert len(v2.value.val) == 100
 
         s = v.spec()
         assert s == v.expr().parseString(s)[0].spec()
@@ -486,6 +487,10 @@ class TestRequest:
 
     def test_freeze(self):
         r = language.parse_request({}, "GET:/:b@100").freeze({})
+        assert len(r.spec()) > 100
+
+    def test_path_generator(self):
+        r = language.parse_request({}, "GET:@100").freeze({})
         assert len(r.spec()) > 100
 
 

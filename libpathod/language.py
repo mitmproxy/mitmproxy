@@ -136,7 +136,7 @@ v_literal = pp.MatchFirst(
 v_naked_literal = pp.MatchFirst(
     [
         v_literal,
-        pp.Word("".join(i for i in pp.printables if i not in ",:\n"))
+        pp.Word("".join(i for i in pp.printables if i not in ",:\n@\'\""))
     ]
 )
 
@@ -479,7 +479,7 @@ class Path(_Component):
 
     @classmethod
     def expr(klass):
-        e = NakedValue.copy()
+        e = Value | NakedValue
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
