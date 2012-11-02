@@ -1,0 +1,7 @@
+<div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="kn">from</span> <span class="nn">libpathod</span> <span class="kn">import</span> <span class="n">pathoc</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">pathoc</span><span class="o">.</span><span class="n">Pathoc</span><span class="p">(</span><span class="s">&quot;google.com&quot;</span><span class="p">,</span> <span class="mi">80</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<span class="k">print</span> <span class="n">p</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&quot;get:/&quot;</span><span class="p">)</span>
+</pre></div>
