@@ -297,11 +297,30 @@ class TestHeaders:
         v3 = v2.freeze({})
         assert v2.value.val == v3.value.val
 
-    def test_shortcut_content_type(self):
+    def test_shortcuts(self):
         assert language.parse_response({}, "400:c'foo'").headers[0].key.val == "Content-Type"
         assert language.parse_response({}, "400:l'foo'").headers[0].key.val == "Location"
+        assert 'Android' in language.parse_response({}, "400:ua").headers[0].value.val
+        assert language.parse_response({}, "400:ua").headers[0].key.val == "User-Agent"
 
 
+class TestShortcutUserAgent:
+    def test_location_shortcut(self):
+        e = language.ShortcutUserAgent.expr()
+        v = e.parseString("ua")[0]
+        assert "Android" in str(v.value)
+        assert v.spec() == "ua"
+        assert v.key.val == "User-Agent"
+
+        v = e.parseString("u'foo'")[0]
+        assert "foo" in str(v.value)
+        assert "foo" in v.spec()
+
+        v = e.parseString("u@100'")[0]
+        assert len(str(v.freeze({}).value)) > 100
+        v2 = v.freeze({})
+        v3 = v2.freeze({})
+        assert v2.value.val == v3.value.val
 
 
 class Test_Action:

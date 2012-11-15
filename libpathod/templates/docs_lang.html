@@ -155,6 +155,27 @@
                         calculate a Content-Length header if a body is set.
                     </td>
                 </tr>
+
+                <tr>
+                    <td> u<a href="#valuespec">VALUE</a> <br> uSHORTCUT </td>
+
+                    <td>
+
+                        Set a User-Agent header on this request. You can
+                        specify either a complete <a
+                        href="#valuespec">VALUE</a>, or a User-Agent shortcut:
+
+                        <table class="table table-condensed">
+                        {% for i in uastrings %}
+                            <tr>
+                                <td><b>{{ i[1] }}</b></td>
+                                <td>{{ i[0] }}</td>
+                            </tr>
+                        {% endfor %}
+                        </table>
+
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>

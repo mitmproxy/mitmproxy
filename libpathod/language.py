@@ -2,7 +2,7 @@ import operator, string, random, mmap, os, time, copy
 import abc
 from email.utils import formatdate
 import contrib.pyparsing as pp
-from netlib import http_status, tcp
+from netlib import http_status, tcp, http_uastrings
 
 import utils
 
@@ -449,6 +449,28 @@ class ShortcutLocation(_Header):
         return ShortcutLocation(self.value.freeze(settings))
 
 
+class ShortcutUserAgent(_Header):
+    def __init__(self, value):
+        self.specvalue = value
+        if isinstance(value, basestring):
+            value = ValueLiteral(http_uastrings.get_by_shortcut(value)[2])
+        _Header.__init__(self, ValueLiteral("User-Agent"), value)
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("u").suppress()
+        u = reduce(operator.or_, [pp.Literal(i[1]) for i in http_uastrings.UASTRINGS])
+        e += u | Value
+        return e.setParseAction(lambda x: klass(*x))
+
+    def spec(self):
+        return "u%s"%self.specvalue
+
+    def freeze(self, settings):
+        return ShortcutUserAgent(self.value.freeze(settings))
+
+
+
 class Body(_Component):
     def __init__(self, value):
         self.value = value
@@ -824,6 +846,7 @@ class Response(_Message):
         InjectAt,
         ShortcutContentType,
         ShortcutLocation,
+        ShortcutUserAgent,
         Raw,
         Reason
     )

@@ -1,6 +1,7 @@
 import logging, pprint, cStringIO
 from flask import Flask, jsonify, render_template, request, abort, make_response
 import version, language, utils
+from netlib import http_uastrings
 
 logging.basicConfig(level="DEBUG")
 app = Flask(__name__)
@@ -61,7 +62,7 @@ def docs_pathod():
 
 @app.route('/docs/language')
 def docs_language():
-    return render("docs_lang.html", True, section="docs")
+    return render("docs_lang.html", True, section="docs", uastrings=http_uastrings.UASTRINGS)
 
 
 @app.route('/docs/pathoc')

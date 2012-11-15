@@ -1,10 +1,22 @@
 #!/usr/bin/env python
 import argparse, sys
 from libpathod import pathoc, version, language
-from netlib import tcp
+from netlib import tcp, http_uastrings
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='A perverse HTTP client.')
+    preparser = argparse.ArgumentParser(add_help=False)
+    preparser.add_argument(
+        "--show-uas", dest="showua", action="store_true", default=False,
+        help="Print user agent shortcuts and exit."
+    )
+    pa = preparser.parse_known_args()[0]
+    if pa.showua:
+        print "User agent strings:"
+        for i in http_uastrings.UASTRINGS:
+            print "  ", i[1], i[0]
+        sys.exit(0)
+
+    parser = argparse.ArgumentParser(description='A perverse HTTP client.', parents=[preparser])
     parser.add_argument(
         "-i", dest="sni", type=str, default=False,
         help="SSL Server Name Indication"
@@ -33,8 +45,9 @@ if __name__ == "__main__":
         'request', type=str, nargs="+",
         help='Request specification'
     )
+
     group = parser.add_argument_group(
-        'Controlling Output', 
+        'Controlling Output',
         """
             Some of these options expand generated values for logging - if
             you're generating large data, use them with caution.

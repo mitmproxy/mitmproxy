@@ -30,7 +30,6 @@ class PathodHandler(tcp.BaseHandler):
 
         if self.server.explain:
             crafted = crafted.freeze(self.server.request_settings, None)
-            print crafted
         response_log = language.serve(crafted, self.wfile, self.server.request_settings, None)
         log = dict(
                 type = "crafted",
