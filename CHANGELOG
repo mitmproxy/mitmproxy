@@ -1,4 +1,4 @@
-31 October 2012: pathod 0.3:
+16 November 2012: pathod 0.3:
 
     A release focusing on shoring up our fuzzing capabilities, especially with
     pathoc.
@@ -21,6 +21,12 @@
     * pathoc and pathod -e option, which explains the resulting message by
       expanding random and generated portions, and logging a reproducible
       specification.
+
+    * Streamline the specification langauge. HTTP response message is now
+      specified using the "r" mnemonic.
+
+    * Add a "u" mnemonic for specifying User-Agent strings. Add a set of
+      standard user-agent strings accessible through shortcuts.
 
     * Major internal refactoring and cleanup.
     
