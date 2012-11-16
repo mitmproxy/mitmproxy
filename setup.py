@@ -80,7 +80,7 @@ setup(
         scripts = ["pathod", "pathoc"],
         classifiers = [
             "License :: OSI Approved :: MIT License",
-            "Development Status :: 3 - Alpha",
+            "Development Status :: 5 - Production/Stable",
             "Operating System :: POSIX",
             "Programming Language :: Python",
             "Topic :: Internet",
@@ -89,5 +89,5 @@ setup(
             "Topic :: Software Development :: Testing :: Traffic Generation",
             "Topic :: Internet :: WWW/HTTP",
         ],
-        install_requires=['netlib>=0.2.1', "requests>=0.13", "flask"],
+        install_requires=['netlib>=0.2.2', "requests>=0.13", "flask"],
 )
