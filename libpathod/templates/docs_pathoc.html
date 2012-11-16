@@ -89,16 +89,33 @@ the command-line help:</p>
     a few of its command-line options makes for quite a powerful basic fuzzer.
     Here's an example:</p>
 
-    <pre class="terminal">&gt; pathoc -t 2 -n 1000 localhost get:/:b@10:ir,@1</pre>
+    <pre class="terminal">&gt; pathoc -e -C 200 -t 2 -n 1000 localhost get:/:b@10:ir,@1</pre>
 
     <p>The request specified here is a valid GET with a body consisting of 10
     random bytes, but with 1 random byte inserted in a random place. This could
     be in the headers, in the initial request line, or in the body itself.
-    Corrupting the request in this way will often make the server enter a state
-    where it's awaiting more input from the client. This is where the <b>-t</b>
-    option comes in, which sets a timeout that causes pathoc to disconnect
-    after two seconds. Finally, the <b>-n</b> option tells pathoc to repeat the
-    request 1000 times.</p>
+    There are a few things to note here:<p>
+
+    <ul>
+
+        <li> Corrupting the request in this way will often make the server
+        enter a state where it's awaiting more input from the client. This is
+        where the <b>-t</b> option comes in, which sets a timeout that causes
+        pathoc to disconnect after two seconds. </li>
+    
+        <li> The <b>-n</b> option tells pathoc to repeat the request 1000
+        times.</li>
+
+        <li> The <b>-C</b> option tells pathoc to ignore HTTP 200 response
+        codes. You can use this to fine-tune what pathoc considers to be an
+        exceptional condition, and therefore log-worthy.</li>
+
+        <li> The <b>-e</b> option tells pathoc to print an explanation of each
+        logged request, in the form of an expanded pathoc specification with
+        all random portions and automatic header additions resolved. This lets
+        you precisely replay a request that triggered an error </li>
+
+    </ul>
 
 </section>
 
