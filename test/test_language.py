@@ -300,8 +300,9 @@ class TestHeaders:
     def test_shortcuts(self):
         assert language.parse_response({}, "400:c'foo'").headers[0].key.val == "Content-Type"
         assert language.parse_response({}, "400:l'foo'").headers[0].key.val == "Location"
-        assert 'Android' in language.parse_response({}, "400:ua").headers[0].value.val
-        assert language.parse_response({}, "400:ua").headers[0].key.val == "User-Agent"
+
+        assert 'Android' in language.parse_request({}, "get:/:ua").headers[0].value.val
+        assert language.parse_request({}, "get:/:ua").headers[0].key.val == "User-Agent"
 
 
 class TestShortcutUserAgent:

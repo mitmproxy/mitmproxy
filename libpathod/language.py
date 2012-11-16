@@ -846,7 +846,6 @@ class Response(_Message):
         InjectAt,
         ShortcutContentType,
         ShortcutLocation,
-        ShortcutUserAgent,
         Raw,
         Reason
     )
@@ -893,6 +892,7 @@ class Request(_Message):
         DisconnectAt,
         InjectAt,
         ShortcutContentType,
+        ShortcutUserAgent,
         Raw
     )
     logattrs = ["method", "path", "body"]
