@@ -14,7 +14,7 @@ class DaemonTests:
     def setUpAll(self):
         self.d = test.Daemon(
             staticdir=test_data.path("data"),
-            anchors=[("/anchor/.*", "202")],
+            anchors=[("/anchor/.*", "202:da")],
             ssl = self.ssl,
             sizelimit=1*1024*1024,
             noweb = self.noweb,

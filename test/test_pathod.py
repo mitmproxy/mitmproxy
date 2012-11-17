@@ -7,10 +7,10 @@ class TestPathod:
     def test_instantiation(self):
         p = pathod.Pathod(
                 ("127.0.0.1", 0),
-                anchors = [(".*", "200")]
+                anchors = [(".*", "200:da")]
             )
         assert p.anchors
-        tutils.raises("invalid regex", pathod.Pathod, ("127.0.0.1", 0), anchors=[("*", "200")])
+        tutils.raises("invalid regex", pathod.Pathod, ("127.0.0.1", 0), anchors=[("*", "200:da")])
         tutils.raises("invalid page spec", pathod.Pathod, ("127.0.0.1", 0), anchors=[("foo", "bar")])
 
     def test_logging(self):
@@ -30,16 +30,16 @@ class TestPathod:
 class TestNoWeb(tutils.DaemonTests):
     noweb = True
     def test_noweb(self):
-        assert self.get("200").status_code == 200
+        assert self.get("200:da").status_code == 200
         assert self.getpath("/").status_code == 800
 
 
 class TestTimeout(tutils.DaemonTests):
-    timeout = 0.001
+    timeout = 0.00001
     def test_noweb(self):
         # FIXME: Add float values to spec language, reduce test timeout to
         # increase test performance
-        assert self.get("200:p1,1").status_code == 200
+        assert self.get("200:p1,2").status_code == 200
         assert self.d.last_log()["type"] == "timeout"
 
 
@@ -89,7 +89,7 @@ class CommonTests(tutils.DaemonTests):
     def test_logs(self):
         assert self.d.clear_log()
         tutils.raises("no requests logged", self.d.last_log)
-        rsp = self.get("202")
+        rsp = self.get("202:da")
         assert len(self.d.log()) == 1
         assert self.d.clear_log()
         assert len(self.d.log()) == 0
