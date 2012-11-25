@@ -1,7 +1,12 @@
 import re, cStringIO, traceback, json
 import urwid
-from PIL import Image
-from PIL.ExifTags import TAGS
+
+try: from PIL import Image
+except ImportError: import Image
+
+try: from PIL.ExifTags import TAGS
+except ImportError: from ExifTags import TAGS
+
 import lxml.html, lxml.etree
 import netlib.utils
 import common
