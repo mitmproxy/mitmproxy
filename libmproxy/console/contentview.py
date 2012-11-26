@@ -15,10 +15,9 @@ from ..contrib import jsbeautifier, html2text
 
 try:
     import pyamf
-    from pyamf import remoting
+    from pyamf import remoting, flex
 except ImportError: # pragma nocover
     pyamf = None
-
 
 VIEW_CUTOFF = 1024*50
 
@@ -236,30 +235,75 @@ class ViewMultipart:
             return "Multipart form", r
 
 
-class ViewAMF:
-    name = "AMF"
-    prompt = ("amf", "f")
-    content_types = ["application/x-amf"]
-    def __call__(self, hdrs, content, limit):
-        envelope = remoting.decode(content)
-        if not envelope:
-            return None
+if pyamf:
+    class DummyObject(dict):
+        def __init__(self, alias):
+            dict.__init__(self)
 
-        data = {}
-        data['amfVersion'] = envelope.amfVersion
-        for target, message in iter(envelope):
-            one_message = {}
+        def __readamf__(self, input):
+            data = input.readObject()
+            self["data"] = data
 
-            if hasattr(message, 'status'):
-                one_message['status'] = message.status
+    def pyamf_class_loader(s):
+        for i in pyamf.CLASS_LOADERS:
+            if i != pyamf_class_loader:
+                v = i(s)
+                if v:
+                    return v
+        return DummyObject
 
-            if hasattr(message, 'target'):
-                one_message['target'] = message.target
+    pyamf.register_class_loader(pyamf_class_loader)
 
-            one_message['body'] = message.body
-            data[target] = one_message
-        s = json.dumps(data, indent=4)
-        return "AMF", _view_text(s[:limit], len(s), limit)
+    class ViewAMF:
+        name = "AMF"
+        prompt = ("amf", "f")
+        content_types = ["application/x-amf"]
+
+        def unpack(self, b, seen=set([])):
+            if hasattr(b, "body"):
+                return self.unpack(b.body, seen)
+            if isinstance(b, DummyObject):
+                if id(b) in seen:
+                    return "<recursion>"
+                else:
+                    seen.add(id(b))
+                    for k, v in b.items():
+                        b[k] = self.unpack(v, seen)
+                    return b
+            elif isinstance(b, dict):
+                for k, v in b.items():
+                    b[k] = self.unpack(v, seen)
+                return b
+            elif isinstance(b, list):
+                return [self.unpack(i) for i in b]
+            elif isinstance(b, flex.ArrayCollection):
+                return [self.unpack(i, seen) for i in b]
+            else:
+                return b
+
+        def __call__(self, hdrs, content, limit):
+            envelope = remoting.decode(content, strict=False)
+            if not envelope:
+                return None
+
+
+            txt = []
+            for target, message in iter(envelope):
+                if isinstance(message, pyamf.remoting.Request):
+                    txt.append(urwid.Text([
+                        ("header", "Request: "),
+                        ("text", str(target)),
+                    ]))
+                else:
+                    txt.append(urwid.Text([
+                        ("header", "Response: "),
+                        ("text", "%s, code %s"%(target, message.status)),
+                    ]))
+
+                s = json.dumps(self.unpack(message), indent=4)
+                txt.extend(_view_text(s[:limit], len(s), limit))
+
+            return "AMF v%s"%envelope.amfVersion, txt
 
 
 class ViewJavaScript:

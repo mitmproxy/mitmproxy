@@ -3,6 +3,12 @@ import libmproxy.console.contentview as cv
 from libmproxy import utils, flow, encoding
 import tutils
 
+try:
+    import pyamf
+except ImportError:
+    pyamf = None
+
+
 class TestContentView:
     def test_trailer(self):
         txt = []
@@ -119,15 +125,6 @@ class TestContentView:
 
         assert not v([], "flibble", sys.maxint)
 
-    def test_view_amf(self):
-        try:
-            import pyamf
-            v = cv.ViewAMF()
-            p = tutils.test_data.path("data/test.amf")
-            assert v([], file(p).read(), sys.maxint)
-        except ImportError:
-            pass
-
     def test_view_multipart(self):
         view = cv.ViewMultipart()
         v = """
@@ -218,6 +215,22 @@ Larry
               )
         assert "decoded gzip" in r[0]
         assert "Raw" in r[0]
+
+
+if pyamf:
+    def test_view_amf_request():
+        v = cv.ViewAMF()
+
+        p = tutils.test_data.path("data/amf01")
+        assert v([], file(p).read(), sys.maxint)
+
+        p = tutils.test_data.path("data/amf02")
+        assert v([], file(p).read(), sys.maxint)
+
+    def test_view_amf_response():
+        v = cv.ViewAMF()
+        p = tutils.test_data.path("data/amf03")
+        assert v([], file(p).read(), sys.maxint)
 
 
 def test_get_by_shortcut():
