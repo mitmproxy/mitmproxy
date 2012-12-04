@@ -431,7 +431,7 @@ class ConsoleMaster(flow.FlowMaster):
             return str(v)
         self.stream_path = path
 
-    
+
     def _run_script_method(self, method, s, f):
         status, val = s.run(method, f)
         if val:
@@ -1007,7 +1007,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:
             self.eventlist.pop(0)
-        self.eventlist.set_focus(len(self.eventlist))
+        self.eventlist.set_focus(len(self.eventlist)-1)
 
     # Handlers
     def handle_log(self, l):

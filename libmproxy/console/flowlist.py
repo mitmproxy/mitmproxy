@@ -74,13 +74,11 @@ class BodyPile(urwid.Pile):
             ]
         )
         self.master = master
-        self.focus = 0
 
     def keypress(self, size, key):
         if key == "tab":
-            self.focus = (self.focus + 1)%len(self.widget_list)
-            self.set_focus(self.focus)
-            if self.focus == 1:
+            self.focus_position = (self.focus_position + 1)%len(self.widget_list)
+            if self.focus_position == 1:
                 self.widget_list[1].header = self.active_header
             else:
                 self.widget_list[1].header = self.inactive_header
@@ -102,12 +100,12 @@ class BodyPile(urwid.Pile):
 class ConnectionItem(common.WWrap):
     def __init__(self, master, state, flow, focus):
         self.master, self.state, self.flow = master, state, flow
-        self.focus = focus
+        self.f = focus
         w = self.get_text()
         common.WWrap.__init__(self, w)
 
     def get_text(self):
-        return common.format_flow(self.flow, self.focus)
+        return common.format_flow(self.flow, self.f)
 
     def selectable(self):
         return True
