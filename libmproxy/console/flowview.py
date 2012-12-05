@@ -542,7 +542,10 @@ class FlowView(common.WWrap):
             if conn and conn.content:
                 t = conn.headers["content-type"] or [None]
                 t = t[0]
-                self.master.spawn_external_viewer(conn.content, t)
+                if os.environ.has_key("EDITOR") or os.environ.has_key("PAGER"):
+                    self.master.spawn_external_viewer(conn.content, t)
+                else:
+                    self.master.statusbar.message("Error! Set $EDITOR or $PAGER.")
         elif key == "|":
             self.master.path_prompt(
                 "Send flow to script: ", self.state.last_script,
