@@ -17,7 +17,7 @@ Features
 - Replay the client-side of an HTTP conversations.
 - Replay HTTP responses of a previously recorded server.
 - Reverse proxy mode to forward traffic to a specified server.
-- Make scripted changes to HTTP traffic using Python. 
+- Make scripted changes to HTTP traffic using Python.
 - SSL certificates for interception are generated on the fly.
 
 
@@ -28,7 +28,7 @@ Releases and rendered documentation can be found on the mitmproxy website:
 
 mitmproxy.org_
 
-Source is hosted on github: 
+Source is hosted on github:
 
 `github.com/cortesi/mitmproxy`_
 
@@ -65,8 +65,8 @@ mitmproxy:
 supported at the moment.
 
 You should also make sure that your console environment is set up with the
-following: 
-    
+following:
+
 * EDITOR environment variable to determine the external editor.
 * PAGER environment variable to determine the external pager.
 * Appropriate entries in your mailcap files to determine external
