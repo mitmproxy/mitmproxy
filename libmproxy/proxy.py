@@ -346,7 +346,8 @@ class ProxyHandler(tcp.BaseHandler):
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
-                return flow.Request(client_conn, httpversion, headers['Host'][0], port, "https", method, path, headers, content)
+                display_host = headers['Host'][0] if 'Host' in headers else host
+                return flow.Request(client_conn, httpversion, display_host, port, "https", method, path, headers, content)
             else:
                 r = http.parse_init_proxy(line)
                 if not r:
