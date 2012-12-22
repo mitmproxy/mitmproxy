@@ -89,6 +89,18 @@ def fcol(s, attr):
         )
     )
 
+def fcoln(s, n, attr):
+    s = unicode(s)
+    return (
+        "fixed",
+        n,
+        urwid.Text(
+            [
+                (attr, s)
+            ], align='right', wrap='clip'
+        )
+    )
+
 if urwid.util.detected_encoding:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
@@ -104,68 +116,130 @@ def raw_format_flow(f, focus, extended, padding):
     pile = []
     req = []
     if extended:
+        req.append(fcoln(f["count"], 4, "highlight"))
         req.append(
             fcol(
                 utils.format_timestamp(f["req_timestamp"]),
                 "highlight"
             )
         )
-    else:
-        req.append(fcol(">>" if focus else "  ", "focus"))
-    if f["req_is_replay"]:
-        req.append(fcol(SYMBOL_REPLAY, "replay"))
-    req.append(fcol(f["req_method"], "method"))
+        if f["req_is_replay"]:
+            req.append(fcol(SYMBOL_REPLAY, "replay"))
+        req.append(fcol(f["req_method"], "method"))
 
-    preamble = sum(i[1] for i in req) + len(req) -1
+        preamble = sum(i[1] for i in req) + len(req) -1
 
-    if f["intercepting"] and not f["req_acked"]:
-        uc = "intercept"
-    elif f["resp_code"] or f["err_msg"]:
-        uc = "text"
-    else:
-        uc = "title"
-
-    req.append(
-        urwid.Text([(uc, f["req_url"])])
-    )
-
-    pile.append(urwid.Columns(req, dividechars=1))
-
-    resp = []
-    resp.append(
-        ("fixed", preamble, urwid.Text(""))
-    )
-
-    if f["resp_code"]:
-        codes = {
-            2: "code_200",
-            3: "code_300",
-            4: "code_400",
-            5: "code_500",
-        }
-        ccol = codes.get(f["resp_code"]/100, "code_other")
-        resp.append(fcol(SYMBOL_RETURN, ccol))
-        if f["resp_is_replay"]:
-            resp.append(fcol(SYMBOL_REPLAY, "replay"))
-        resp.append(fcol(f["resp_code"], ccol))
-        if f["intercepting"] and f["resp_code"] and not f["resp_acked"]:
-            rc = "intercept"
+        if f["intercepting"] and not f["req_acked"]:
+            uc = "intercept"
+        elif f["resp_code"] or f["err_msg"]:
+            uc = "text"
         else:
-            rc = "text"
+            uc = "title"
 
-        if f["resp_ctype"]:
-            resp.append(fcol(f["resp_ctype"], rc))
-        resp.append(fcol(f["resp_clen"], rc))
-    elif f["err_msg"]:
-        resp.append(fcol(SYMBOL_RETURN, "error"))
-        resp.append(
-            urwid.Text([
-                (
-                    "error",
-                    f["err_msg"]
-                )
-            ])
+        req.append(
+            urwid.Text([(uc, f["req_url"])])
         )
+
+        pile.append(urwid.Columns(req, dividechars=1))
+
+        resp = []
+        resp.append(
+            ("fixed", preamble, urwid.Text(""))
+        )
+
+        if f["resp_code"]:
+            codes = {
+                2: "code_200",
+                3: "code_300",
+                4: "code_400",
+                5: "code_500",
+            }
+            ccol = codes.get(f["resp_code"]/100, "code_other")
+            resp.append(fcol(SYMBOL_RETURN, ccol))
+            if f["resp_is_replay"]:
+                resp.append(fcol(SYMBOL_REPLAY, "replay"))
+            resp.append(fcol(f["resp_code"], ccol))
+            if f["intercepting"] and f["resp_code"] and not f["resp_acked"]:
+                rc = "intercept"
+            else:
+                rc = "text"
+
+            if f["resp_ctype"]:
+                resp.append(fcol(f["resp_ctype"], rc))
+            resp.append(fcol(f["resp_clen"], rc))
+        elif f["err_msg"]:
+            resp.append(fcol(SYMBOL_RETURN, "error"))
+            resp.append(
+                urwid.Text([
+                    (
+                        "error",
+                        f["err_msg"]
+                    )
+                ])
+            )
+    else:
+        req.append(fcoln(f["count"], 4, "highlight"))
+        req.append(
+            fcol(
+                utils.format_timestamp_time(f["req_timestamp"]),
+                "highlight"
+            )
+        )
+        req.append(fcoln(">>" if focus else "  ", 2, "focus"))
+        if f["origin"] == "xss":
+            req.append(fcol("X", "replay"))
+        elif f["req_is_replay"]:
+            req.append(fcol(SYMBOL_REPLAY, "replay"))
+        else:
+            req.append(fcol(" ", "replay"))
+
+        req.append(fcoln(f["req_method"], 4, "method"))
+
+        preamble = sum(i[1] for i in req) + len(req) -1
+
+        if f["intercepting"] and not f["req_acked"]:
+            uc = "intercept"
+        elif f["resp_code"] or f["err_msg"]:
+            uc = "text"
+        else:
+            uc = "title"
+
+        req.append(
+            urwid.Text([(uc, f["req_url"])], wrap='clip')
+        )
+
+        resp = req
+
+        if f["resp_code"]:
+            codes = {
+                2: "code_200",
+                3: "code_300",
+                4: "code_400",
+                5: "code_500",
+            }
+            ccol = codes.get(f["resp_code"]/100, "code_other")
+            resp.append(fcol(SYMBOL_RETURN, ccol))
+            if f["resp_is_replay"]:
+                resp.append(fcol(SYMBOL_REPLAY, "replay"))
+            resp.append(fcol(f["resp_code"], ccol))
+            if f["intercepting"] and f["resp_code"] and not f["resp_acked"]:
+                rc = "intercept"
+            else:
+                rc = "text"
+
+            if f["resp_ctype"]:
+                resp.append(fcoln(f["resp_ctype"], 15, rc))
+            resp.append(fcoln(f["resp_clen"], 8, rc))
+        elif f["err_msg"]:
+            resp.append(fcol(SYMBOL_RETURN, "error"))
+            resp.append(
+                urwid.Text([
+                    (
+                        "error",
+                        f["err_msg"]
+                    )
+                ])
+            )
     pile.append(urwid.Columns(resp, dividechars=1))
     return urwid.Pile(pile)
 
@@ -186,6 +260,8 @@ def format_flow(f, focus, extended=False, padding=2):
         req_method = f.request.method,
         req_acked = f.request.acked,
         req_url = f.request.get_url(),
+        count = f.count,
+        origin = f.origin,
 
         err_msg = f.error.msg if f.error else None,
         resp_code = f.response.code if f.response else None,
@@ -194,9 +270,9 @@ def format_flow(f, focus, extended=False, padding=2):
         if f.response.content:
             contentdesc = utils.pretty_size(len(f.response.content))
         elif f.response.content == flow.CONTENT_MISSING:
-            contentdesc = "[content missing]"
+            contentdesc = "[missing]"
         else:
-            contentdesc = "[no content]"
+            contentdesc = "[empty]"
         d.update(dict(
             resp_code = f.response.code,
             resp_is_replay = f.response.is_replay(),

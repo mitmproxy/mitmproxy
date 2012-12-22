@@ -975,6 +975,12 @@ class ConsoleMaster(flow.FlowMaster):
             self.state.set_focus(self.state.flow_count())
             self.sync_list_view()
 
+    def set_focus(self, idx):
+        idx = int(idx) - 1
+        self.state.set_focus(idx)
+        self.sync_list_view()
+
+
     def delete_flow(self, f):
         self.state.delete_flow(f)
         self.sync_list_view()

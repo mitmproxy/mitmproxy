@@ -29,6 +29,11 @@ def format_timestamp(s):
     d = datetime.datetime.fromtimestamp(time.mktime(s))
     return d.strftime("%Y-%m-%d %H:%M:%S")
 
+def format_timestamp_time(s):
+    s = time.localtime(s)
+    d = datetime.datetime.fromtimestamp(time.mktime(s))
+    return d.strftime("%H:%M:%S")
+
 
 def isBin(s):
     """

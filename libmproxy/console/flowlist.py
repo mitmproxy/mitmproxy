@@ -26,6 +26,8 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
+        ("g", "Goto top flow"),
+        ("G", "Goto bottom flow"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -36,6 +38,7 @@ def _mkhelp():
         ("tab", "tab between eventlog and flow list"),
         ("enter", "view flow"),
         ("|", "run script on this flow"),
+        (":", "Goto line"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
@@ -216,6 +219,17 @@ class ConnectionItem(common.WWrap):
                 self.master.run_script_once,
                 self.flow
             )
+        elif key == ":":
+            line = ""
+            self.master.path_prompt(
+                "Goto line: ",
+                line,
+                self.master.set_focus,
+            )
+        elif key == "G":
+                self.master.set_focus(self.master.state.flow_count())
+        elif key == "g":
+                self.master.set_focus(1)
         else:
             return key
 
