@@ -343,7 +343,7 @@ class FlowView(common.WWrap):
         self.flow.backup()
         if part == "r":
             c = self.master.spawn_editor(conn.content or "")
-            conn.content = c.rstrip("\n")
+            conn.content = c.rstrip("\n") # what?
         elif part == "f":
             if not conn.get_form_urlencoded() and conn.content:
                 self.master.prompt_onekey(

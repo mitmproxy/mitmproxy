@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex
+import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex, stat
 import os.path, sys, weakref
 import urwid
 from .. import controller, utils, flow
@@ -504,7 +504,7 @@ class ConsoleMaster(flow.FlowMaster):
         os.write(fd, data)
         os.close(fd)
         c = os.environ.get("EDITOR")
-        #If no EDITOR is set, assume 'vi'
+        # if no EDITOR is set, assume 'vi'
         if not c:
             c = "vi"
         cmd = shlex.split(c)
@@ -513,12 +513,10 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             subprocess.call(cmd)
         except:
-            self.statusbar.message("Can't start editor: %s" % c)
-            self.ui.start()
-            os.unlink(name)
-            return data
+            self.statusbar.message("Can't start editor: %s" % " ".join(c))
+        else:
+            data = open(name).read()
         self.ui.start()
-        data = open(name).read()
         os.unlink(name)
         return data
 
@@ -531,6 +529,9 @@ class ConsoleMaster(flow.FlowMaster):
         os.write(fd, data)
         os.close(fd)
 
+        # read-only to remind the user that this is a view function
+        os.chmod(name, stat.S_IREAD)
+
         cmd = None
         shell = False
 
@@ -540,10 +541,17 @@ class ConsoleMaster(flow.FlowMaster):
             if cmd:
                 shell = True
         if not cmd:
+            # hm which one should get priority?
             c = os.environ.get("PAGER") or os.environ.get("EDITOR")
-            cmd = [c, name]
+            if not c:
+                c = "less"
+            cmd = shlex.split(c)
+            cmd.append(name)
         self.ui.stop()
-        subprocess.call(cmd, shell=shell)
+        try:
+            subprocess.call(cmd, shell=shell)
+        except:
+            self.statusbar.message("Can't start external viewer: %s" % " ".join(c))
         self.ui.start()
         os.unlink(name)
 
