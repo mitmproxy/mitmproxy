@@ -27,18 +27,14 @@ class BasicProxyAuth(NullProxyAuth):
 
     def authenticate(self, auth_value):
         if (not auth_value) or (not auth_value[0]):
-            print "ROULI: no auth specified"
             return False;
         try:
             scheme, username, password = self.parse_authorization_header(auth_value[0])
         except:
-            print "ROULI: Malformed Proxy-Authorization header"
             return False
         if scheme.lower()!='basic':
-            print "ROULI: Unexpected Authorization scheme"
             return False
         if not self.password_manager.test(username, password):
-            print "ROULI: authorization failed!"
             return False
         self.username = username
         return True
@@ -47,12 +43,9 @@ class BasicProxyAuth(NullProxyAuth):
         return {'Proxy-Authenticate':'Basic realm="%s"'%self.realm}
 
     def parse_authorization_header(self, auth_value):
-        print "ROULI: ", auth_value
         words = auth_value.split()
-        print "ROULI basic auth: ", words
         scheme = words[0]
         user = binascii.a2b_base64(words[1])
-        print "ROULI basic auth user: ", user
         username, password = user.split(':')
         return scheme, username, password
 
@@ -85,12 +78,10 @@ class HtpasswdPasswordManager(PasswordManager):
 
     def test(self, username, password_token):
         if username not in self.usernames:
-            print "ROULI: username not in db"
             return False
         full_token = self.usernames[username]
         dummy, magic, salt, hashed_password = full_token.split('$')
         expected = md5crypt.md5crypt(password_token, salt, '$'+magic+'$')
-        print "ROULI: password", binascii.hexlify(expected), binascii.hexlify(full_token), expected==full_token
         return expected==full_token
 
 class SingleUserPasswordManager(PasswordManager):
