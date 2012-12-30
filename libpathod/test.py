@@ -30,7 +30,7 @@ class Daemon:
             Return some basic info about the remote daemon.
         """
         resp = requests.get("%s/api/info"%self.urlbase, verify=False)
-        return resp.json
+        return resp.json()
 
     def last_log(self):
         """
@@ -47,7 +47,7 @@ class Daemon:
             Return the log buffer as a list of dictionaries.
         """
         resp = requests.get("%s/api/log"%self.urlbase, verify=False)
-        return resp.json["log"]
+        return resp.json()["log"]
 
     def clear_log(self):
         """

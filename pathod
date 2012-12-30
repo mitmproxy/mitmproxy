@@ -166,7 +166,7 @@ if __name__ == "__main__":
 
 
     group = parser.add_argument_group(
-        'Controlling Logging', 
+        'Controlling Logging',
         """
             Some of these options expand generated values for logging - if
             you're generating large data, use them with caution.
