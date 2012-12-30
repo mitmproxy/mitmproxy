@@ -18,14 +18,16 @@ import SocketServer
 from OpenSSL import SSL
 from netlib import odict, tcp, http, wsgi, certutils, http_status
 import utils, flow, version, platform, controller
+import authentication
 
 
 class ProxyError(Exception):
-    def __init__(self, code, msg):
-        self.code, self.msg = code, msg
+    def __init__(self, code, msg, headers=None):
+        self.code, self.msg, self.headers = code, msg, headers
 
     def __str__(self):
         return "ProxyError(%s, %s)"%(self.code, self.msg)
+
 
 
 class Log(controller.Msg):
@@ -36,7 +38,7 @@ class Log(controller.Msg):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
         assert not (reverse_proxy and transparent_proxy)
         self.certfile = certfile
         self.cacert = cacert
@@ -47,7 +49,7 @@ class ProxyConfig:
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
         self.transparent_proxy = transparent_proxy
-
+        self.authenticator = authenticator
 
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
@@ -217,7 +219,7 @@ class ProxyHandler(tcp.BaseHandler):
                 self.log(cc, cc.error)
 
             if isinstance(e, ProxyError):
-                self.send_error(e.code, e.msg)
+                self.send_error(e.code, e.msg, e.headers)
         else:
             return True
 
@@ -283,9 +285,7 @@ class ProxyHandler(tcp.BaseHandler):
             if not r:
                 raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
             method, path, httpversion = r
-            headers = http.read_headers(self.rfile)
-            if headers is None:
-                raise ProxyError(400, "Invalid headers")
+            headers = self.read_headers(authenticate=False)
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -299,9 +299,7 @@ class ProxyHandler(tcp.BaseHandler):
             if not r:
                 raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
             method, path, httpversion = r
-            headers = http.read_headers(self.rfile)
-            if headers is None:
-                raise ProxyError(400, "Invalid headers")
+            headers = self.read_headers(authenticate=False)
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
@@ -315,12 +313,9 @@ class ProxyHandler(tcp.BaseHandler):
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 host, port, httpversion = r
-                # FIXME: Discard additional headers sent to the proxy. Should I expose
-                # these to users?
-                while 1:
-                    d = self.rfile.readline()
-                    if d == '\r\n' or d == '\n':
-                        break
+
+                headers = self.read_headers(authenticate=True)
+
                 self.wfile.write(
                             'HTTP/1.1 200 Connection established\r\n' +
                             ('Proxy-agent: %s\r\n'%self.server_version) +
@@ -340,9 +335,8 @@ class ProxyHandler(tcp.BaseHandler):
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, path, httpversion = r
-                headers = http.read_headers(self.rfile)
-                if headers is None:
-                    raise ProxyError(400, "Invalid headers")
+                headers = self.read_headers(authenticate=False)
+
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
@@ -352,13 +346,19 @@ class ProxyHandler(tcp.BaseHandler):
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
-                headers = http.read_headers(self.rfile)
-                if headers is None:
-                    raise ProxyError(400, "Invalid headers")
+                headers = self.read_headers(authenticate=True)
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
                 return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content)
+
+    def read_headers(self, authenticate=False):
+        headers = http.read_headers(self.rfile)
+        if headers is None:
+            raise ProxyError(400, "Invalid headers")
+        if authenticate and self.config.authenticator and not self.config.authenticator.authenticate(headers.get('Proxy-Authorization', [])):
+            raise ProxyError(407, "Proxy Authentication Required", self.config.authenticator.auth_challenge_headers())
+        return headers
 
     def send_response(self, response):
         d = response._assemble()
@@ -367,16 +367,19 @@ class ProxyHandler(tcp.BaseHandler):
         self.wfile.write(d)
         self.wfile.flush()
 
-    def send_error(self, code, body):
+    def send_error(self, code, body, headers):
         try:
             response = http_status.RESPONSES.get(code, "Unknown")
+            html_content = '<html><head>\n<title>%d %s</title>\n</head>\n<body>\n%s\n</body>\n</html>'%(code, response, body)
             self.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
             self.wfile.write("Server: %s\r\n"%self.server_version)
-            self.wfile.write("Connection: close\r\n")
             self.wfile.write("Content-type: text/html\r\n")
+            self.wfile.write("Content-Length: %d\r\n"%len(html_content))
+            for key, value in headers.items():
+                self.wfile.write("%s: %s\r\n"%(key, value))
+            self.wfile.write("Connection: close\r\n")
             self.wfile.write("\r\n")
-            self.wfile.write('<html><head>\n<title>%d %s</title>\n</head>\n'
-                    '<body>\n%s\n</body>\n</html>' % (code, response, body))
+            self.wfile.write(html_content)
             self.wfile.flush()
         except:
             pass
@@ -531,6 +534,25 @@ def process_proxy_options(parser, options):
         if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
             parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
 
+    if options.authscheme and (options.authscheme!='none'):
+        if not (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
+            parser.error("Proxy authentication scheme is specified, but no allowed user list is given.")
+        if options.auth_singleuser and len(options.auth_singleuser.split(':'))!=2:
+            parser.error("Authorized user is not given in correct format username:password")
+        if options.auth_nonanonymous:
+            password_manager = authentication.PermissivePasswordManager()
+        elif options.auth_singleuser:
+            username, password = options.auth_singleuser.split(':')
+            password_manager = authentication.SingleUserPasswordManager(username, password)
+        elif options.auth_htpasswd:
+            password_manager = authentication.HtpasswdPasswordManager(options.auth_htpasswd)
+        # in the meanwhile, basic auth is the only true authentication scheme we support
+        # so just use it
+        authenticator = authentication.BasicProxyAuth(password_manager)
+    else:
+        authenticator = authentication.NullProxyAuth(None)
+
+
     return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
@@ -540,5 +562,6 @@ def process_proxy_options(parser, options):
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
         transparent_proxy = trans,
-        certdir = options.certdir
+        certdir = options.certdir,
+        authenticator = authenticator
     )
