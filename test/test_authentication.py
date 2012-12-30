@@ -1,5 +1,7 @@
+import binascii
 from libmproxy import authentication
 from netlib import odict
+import tutils
 
 
 class TestNullProxyAuth:
@@ -15,4 +17,14 @@ class TestBasicProxyAuth:
         h = odict.ODictCaseless()
         assert ba.auth_challenge_headers()
         assert not ba.authenticate(h)
+
+    def test_parse_auth_value(self):
+        ba = authentication.BasicProxyAuth(authentication.PermissivePasswordManager())
+        vals = ("basic", "foo", "bar")
+        assert ba.parse_auth_value(ba.unparse_auth_value(*vals)) == vals
+        tutils.raises(ValueError, ba.parse_auth_value, "")
+        tutils.raises(ValueError, ba.parse_auth_value, "foo bar")
+
+        v = "basic " + binascii.b2a_base64("foo")
+        tutils.raises(ValueError, ba.parse_auth_value, v)
 
