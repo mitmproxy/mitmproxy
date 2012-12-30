@@ -2,32 +2,35 @@ import binascii
 import contrib.md5crypt as md5crypt
 
 class NullProxyAuth():
-    """ No proxy auth at all (returns empty challange headers) """
-    def __init__(self, password_manager=None):
+    """
+        No proxy auth at all (returns empty challange headers)
+    """
+    def __init__(self, password_manager):
         self.password_manager = password_manager
         self.username = ""
 
-    def authenticate(self, auth_value):
-        """ Tests that the specified user is allowed to use the proxy (stub) """
+    def authenticate(self, headers):
+        """
+            Tests that the specified user is allowed to use the proxy (stub)
+        """
         return True
 
     def auth_challenge_headers(self):
-        """ Returns a dictionary containing the headers require to challenge the user """
+        """
+            Returns a dictionary containing the headers require to challenge the user
+        """
         return {}
-
-    def get_username(self):
-        return self.username
 
 
 class BasicProxyAuth(NullProxyAuth):
-
     def __init__(self, password_manager, realm="mitmproxy"):
         NullProxyAuth.__init__(self, password_manager)
         self.realm = "mitmproxy"
 
-    def authenticate(self, auth_value):
-        if (not auth_value) or (not auth_value[0]):
-            return False;
+    def authenticate(self, headers):
+        auth_value = headers.get('Proxy-Authorization', [])
+        if not auth_value:
+            return False
         try:
             scheme, username, password = self.parse_authorization_header(auth_value[0])
         except:
@@ -49,6 +52,7 @@ class BasicProxyAuth(NullProxyAuth):
         username, password = user.split(':')
         return scheme, username, password
 
+
 class PasswordManager():
     def __init__(self):
         pass
@@ -56,8 +60,8 @@ class PasswordManager():
     def test(self, username, password_token):
         return False
 
-class PermissivePasswordManager(PasswordManager):
 
+class PermissivePasswordManager(PasswordManager):
     def __init__(self):
         PasswordManager.__init__(self)
 
@@ -66,15 +70,16 @@ class PermissivePasswordManager(PasswordManager):
             return True
         return False
 
-class HtpasswdPasswordManager(PasswordManager):
-    """ Read usernames and passwords from a file created by Apache htpasswd"""
 
+class HtpasswdPasswordManager(PasswordManager):
+    """
+        Read usernames and passwords from a file created by Apache htpasswd
+    """
     def __init__(self, filehandle):
         PasswordManager.__init__(self)
         entries = (line.strip().split(':') for line in filehandle)
         valid_entries = (entry for entry in entries if len(entry)==2)
         self.usernames = {username:token for username,token in valid_entries}
-
 
     def test(self, username, password_token):
         if username not in self.usernames:
@@ -84,8 +89,8 @@ class HtpasswdPasswordManager(PasswordManager):
         expected = md5crypt.md5crypt(password_token, salt, '$'+magic+'$')
         return expected==full_token
 
-class SingleUserPasswordManager(PasswordManager):
 
+class SingleUserPasswordManager(PasswordManager):
     def __init__(self, username, password):
         PasswordManager.__init__(self)
         self.username = username

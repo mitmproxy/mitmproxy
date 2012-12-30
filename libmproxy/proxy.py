@@ -356,8 +356,12 @@ class ProxyHandler(tcp.BaseHandler):
         headers = http.read_headers(self.rfile)
         if headers is None:
             raise ProxyError(400, "Invalid headers")
-        if authenticate and self.config.authenticator and not self.config.authenticator.authenticate(headers.get('Proxy-Authorization', [])):
-            raise ProxyError(407, "Proxy Authentication Required", self.config.authenticator.auth_challenge_headers())
+        if authenticate and self.config.authenticator and not self.config.authenticator.authenticate(headers):
+            raise ProxyError(
+                        407,
+                        "Proxy Authentication Required",
+                        self.config.authenticator.auth_challenge_headers()
+                   )
         return headers
 
     def send_response(self, response):
