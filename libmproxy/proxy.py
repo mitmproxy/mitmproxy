@@ -356,12 +356,15 @@ class ProxyHandler(tcp.BaseHandler):
         headers = http.read_headers(self.rfile)
         if headers is None:
             raise ProxyError(400, "Invalid headers")
-        if authenticate and self.config.authenticator and not self.config.authenticator.authenticate(headers):
-            raise ProxyError(
-                        407,
-                        "Proxy Authentication Required",
-                        self.config.authenticator.auth_challenge_headers()
-                   )
+        if authenticate and self.config.authenticator:
+            if self.config.authenticator.authenticate(headers):
+                self.config.authenticator.clean(headers)
+            else:
+                raise ProxyError(
+                            407,
+                            "Proxy Authentication Required",
+                            self.config.authenticator.auth_challenge_headers()
+                       )
         return headers
 
     def send_response(self, response):
@@ -552,7 +555,7 @@ def process_proxy_options(parser, options):
             password_manager = authentication.HtpasswdPasswordManager(options.auth_htpasswd)
         # in the meanwhile, basic auth is the only true authentication scheme we support
         # so just use it
-        authenticator = authentication.BasicProxyAuth(password_manager)
+        authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
     else:
         authenticator = authentication.NullProxyAuth(None)
 

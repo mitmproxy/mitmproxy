@@ -9,9 +9,15 @@ class NullProxyAuth():
         self.password_manager = password_manager
         self.username = ""
 
+    def clean(self, headers):
+        """
+            Clean up authentication headers, so they're not passed upstream.
+        """ 
+        pass
+
     def authenticate(self, headers):
         """
-            Tests that the specified user is allowed to use the proxy (stub)
+            Tests that the user is allowed to use the proxy
         """
         return True
 
@@ -23,12 +29,17 @@ class NullProxyAuth():
 
 
 class BasicProxyAuth(NullProxyAuth):
-    def __init__(self, password_manager, realm="mitmproxy"):
+    CHALLENGE_HEADER = 'Proxy-Authenticate'
+    AUTH_HEADER = 'Proxy-Authorization'
+    def __init__(self, password_manager, realm):
         NullProxyAuth.__init__(self, password_manager)
-        self.realm = "mitmproxy"
+        self.realm = realm 
+
+    def clean(self, headers):
+        del headers[self.AUTH_HEADER]
 
     def authenticate(self, headers):
-        auth_value = headers.get('Proxy-Authorization', [])
+        auth_value = headers.get(self.AUTH_HEADER, [])
         if not auth_value:
             return False
         try:
@@ -43,7 +54,7 @@ class BasicProxyAuth(NullProxyAuth):
         return True
 
     def auth_challenge_headers(self):
-        return {'Proxy-Authenticate':'Basic realm="%s"'%self.realm}
+        return {self.CHALLENGE_HEADER:'Basic realm="%s"'%self.realm}
 
     def unparse_auth_value(self, scheme, username, password):
         v = binascii.b2a_base64(username + ":" + password)
