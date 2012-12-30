@@ -1012,6 +1012,8 @@ class Flow:
         self.response, self.error = None, None
         self.intercepting = False
         self._backup = None
+        self.count = 0
+        self.origin = "proxy"
 
     def copy(self):
         rc = self.request.copy()
@@ -1183,6 +1185,7 @@ class State(object):
             Add a request to the state. Returns the matching flow.
         """
         f = Flow(req)
+        f.count = self.flow_count() + 1
         self._flow_list.append(f)
         self._flow_map[req] = f
         assert len(self._flow_list) == len(self._flow_map)
