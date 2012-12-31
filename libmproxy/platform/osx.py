@@ -16,5 +16,8 @@ class Resolver:
 
     def original_addr(self, csock):
         peer = csock.getpeername()
-        stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
+        try:
+            stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError:
+            return None
         return pf.lookup(peer[0], peer[1], stxt)

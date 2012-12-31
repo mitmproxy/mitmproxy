@@ -267,7 +267,10 @@ class ProxyHandler(tcp.BaseHandler):
 
     def read_request(self, client_conn):
         if self.config.transparent_proxy:
-            host, port = self.config.transparent_proxy["resolver"].original_addr(self.connection)
+            orig = self.config.transparent_proxy["resolver"].original_addr(self.connection)
+            if not orig:
+                raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
+            host, port = orig
             if not self.ssl_established and (port in self.config.transparent_proxy["sslports"]):
                 scheme = "https"
                 certfile = self.find_cert(host, port, None)
