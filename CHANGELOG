@@ -1,4 +1,46 @@
 
+x January 2013: mitmproxy 0.9:
+
+    * Add a WSGI container that lets you host in-proxy web applications.
+    
+    * Full transparent proxy support for Linux and OSX.
+    
+    * Introduce netlib, a common codebase for mitmproxy and pathod
+      (http://github.com/cortesi/netlib).
+
+    * Full support for SNI.
+    
+    * Color palettes for mitmproxy, tailored for light and dark terminal
+      backgrounds.
+
+    * Stream flows to file as responses arrive with the "W" shortcut in
+      mitmproxy.
+
+    * Extend the filter language, including ~d domain match operator, ~a to
+      match asset flows (js, images, css).
+
+    * Follow mode in mitmproxy ("F" shortcut) to "tail" flows as they arrive.
+    
+    * --dummy-certs option to specify and preserve the dummy certificate
+      directory.
+
+    * Server replay from the current captured buffer.
+    
+    * Huge improvements in content views. We now have viewers for AMF, HTML,
+      JSON, Javascript, images, XML, URL-encoded forms, as well as hexadecimal
+      and raw views.
+
+    * Add Set Headers, analagous to replacement hooks. Defines headers that are set
+      on flows, based on a matching pattern.
+
+    * A graphical editor for path components in mitmproxy.
+    
+    * A small set of standard user-agent strings, which can be used easily in
+      the header editor.
+
+    * Proxy authentication to limit access to mitmproxy
+
+
 5 April 2012: mitmproxy 0.8:
 
     * Detailed tutorial for Android interception. Some features that land in
