@@ -6,37 +6,24 @@ sys.path.insert(0, "..")
 from libmproxy import filt
 
 MITMPROXY_SRC = "~/git/public/mitmproxy"
-
-if ns.options.website:
-    ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
-    this.layout = countershape.Layout("_websitelayout.html")
-else:
-    ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
-    this.layout = countershape.Layout("_layout.html")
-
+this.layout = countershape.Layout("_layout.html")
+this.titlePrefix = "mitmproxy 0.9 - "
 this.markup = markup.Markdown()
+
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
-ns.copyright = u"\u00a9 mitmproxy project, 2012"
-
-ns.index = countershape.widgets.SiblingPageIndex('/index.html', divclass="pageindex")
+ns.copyright = u"\u00a9 mitmproxy project, 2013"
 
 def mpath(p):
     p = os.path.join(MITMPROXY_SRC, p)
     return os.path.expanduser(p)
 
-ns.license = file(mpath("LICENSE")).read()
 ns.index_contents = file(mpath("README.mkd")).read()
 
-
-
-top = os.path.abspath(os.getcwd())
 def example(s):
     d = file(mpath(s)).read()
     extemp = """<div class="example">%s<div class="example_legend">(%s)</div></div>"""
     return extemp%(countershape.template.Syntax("py")(d), s)
-
-
 ns.example = example
 
 filt_help = []
@@ -73,10 +60,8 @@ def nav(page, current, state):
     return pre + '<a href="%s">%s</a></li>'%(model.UrlTo(page), p.title)
 ns.nav = nav
 
-
 pages = [
-    Page("index.html", "docs"),
-    Page("intro.html", "Introduction"),
+    Page("index.html", "Introduction"),
     Page("install.html", "Installation"),
     Page("mitmproxy.html", "mitmproxy"),
     Page("mitmdump.html", "mitmdump"),
