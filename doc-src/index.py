@@ -80,9 +80,10 @@ pages = [
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
     Page("ssl.html", "Setting up SSL interception"),
+    Page("transparent.html", "Transparent Proxying"),
     Directory("certinstall"),
     Directory("scripting"),
     Directory("tutorials"),
+    Directory("transparent"),
     Page("faq.html", "FAQ"),
-    Page("admin.html", "Administrivia")
 ]
