@@ -1,6 +1,6 @@
 import os, sys
 import countershape
-from countershape import Page, Directory, PythonModule, markup
+from countershape import Page, Directory, PythonModule, markup, model
 import countershape.template
 sys.path.insert(0, "..")
 from libmproxy import filt
@@ -64,6 +64,15 @@ filt_help.extend(
 ns.filt_help = filt_help
 
 
+def nav(page, current, state):
+    if current.match(page, False):
+        pre = '<li class="active">'
+    else:
+        pre = "<li>"
+    p = state.application.getPage(page)
+    return pre + '<a href="%s">%s</a></li>'%(model.UrlTo(page), p.title)
+ns.nav = nav
+
 
 pages = [
     Page("index.html", "docs"),
@@ -79,8 +88,8 @@ pages = [
     Page("reverseproxy.html", "Reverse proxy mode"),
     Page("anticache.html", "Anticache"),
     Page("filters.html", "Filter expressions"),
-    Page("ssl.html", "Setting up SSL interception"),
-    Page("transparent.html", "Transparent Proxying"),
+    Page("ssl.html", "SSL Overview"),
+    Page("transparent.html", "Transparent Overview"),
     Directory("certinstall"),
     Directory("scripting"),
     Directory("tutorials"),
