@@ -176,13 +176,28 @@ class ProxyHandler(tcp.BaseHandler):
                         scheme, host, port = self.config.reverse_proxy
                     else:
                         scheme, host, port = request.scheme, request.host, request.port
-                    self.server_connect(scheme, host, port)
-                    self.server_conn.send(request)
-                    httpversion, code, msg, headers, content = http.read_response(
-                        self.server_conn.rfile,
-                        request.method,
-                        self.config.body_size_limit
-                    )
+
+                    try:
+                        self.server_connect(scheme, host, port)
+                        self.server_conn.send(request)
+                        httpversion, code, msg, headers, content = http.read_response(
+                            self.server_conn.rfile,
+                            request.method,
+                            self.config.body_size_limit
+                        )
+                    except (IOError, ProxyError, http.HttpError, tcp.NetLibDisconnect), e:
+                        l = Log("Got 502: Blank server response. Server probably closed connection, retrying")
+                        l._send(self.mqueue)
+                        self.server_conn.terminate()
+                        self.server_conn = None
+                        self.server_connect(scheme, host, port)
+                        self.server_conn.send(request)
+                        httpversion, code, msg, headers, content = http.read_response(
+                            self.server_conn.rfile,
+                            request.method,
+                            self.config.body_size_limit
+                        )
+
                     response = flow.Response(
                         request, httpversion, code, msg, headers, content, self.server_conn.cert
                     )
