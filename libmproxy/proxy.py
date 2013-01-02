@@ -544,24 +544,19 @@ def process_proxy_options(parser, options):
         if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
             parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
 
-    if options.authscheme and (options.authscheme!='none'):
-        if not (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
-            parser.error("Proxy authentication scheme is specified, but no allowed user list is given.")
-        if options.auth_singleuser and len(options.auth_singleuser.split(':'))!=2:
-            parser.error("Authorized user is not given in correct format username:password")
-        if options.auth_nonanonymous:
-            password_manager = authentication.PermissivePasswordManager()
-        elif options.auth_singleuser:
+    if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
+        if options.auth_singleuser:
+            if len(options.auth_singleuser.split(':')) != 2:
+                parser.error("Please specify user in the format username:password")
             username, password = options.auth_singleuser.split(':')
             password_manager = authentication.SingleUserPasswordManager(username, password)
+        elif options.auth_nonanonymous:
+            password_manager = authentication.PermissivePasswordManager()
         elif options.auth_htpasswd:
             password_manager = authentication.HtpasswdPasswordManager(options.auth_htpasswd)
-        # in the meanwhile, basic auth is the only true authentication scheme we support
-        # so just use it
         authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
     else:
         authenticator = authentication.NullProxyAuth(None)
-
 
     return ProxyConfig(
         certfile = options.cert,

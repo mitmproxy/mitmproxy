@@ -338,46 +338,29 @@ def common_options(parser):
     group = parser.add_argument_group(
         "Proxy Authentication",
         """
-            Specification of which users are allowed to access the proxy and the method used for authenticating them.
-            If authscheme is specified, one must specify a list of authorized users and their passwords.
-            In case that authscheme is not specified, or set to None, any list of authorized users will be ignored.
-        """.strip()
+            Specify which users are allowed to access the proxy and the method
+            used for authenticating them. These options are ignored if the
+            proxy is in transparent or reverse proxy mode.
+        """
     )
-
-    group.add_argument(
-        "--authscheme", type=str,
-        action="store", dest="authscheme", default=None, choices=["none", "basic"],
-        help="""
-            Specify the scheme used by the proxy to identify users.
-            If not none, requires the specification of a list of authorized users.
-            This option is ignored if the proxy is in transparent or reverse mode.
-            """.strip()
-
-    )
-
     user_specification_group = group.add_mutually_exclusive_group()
-
-
     user_specification_group.add_argument(
         "--nonanonymous",
         action="store_true", dest="auth_nonanonymous",
-        help="Allow access to any user as long as a username is specified. Ignores the provided password."
+        help="Allow access to any user long as a credentials are specified."
     )
 
     user_specification_group.add_argument(
         "--singleuser",
         action="store", dest="auth_singleuser", type=str,
-        help="Allows access to a single user as specified by the option value. Specify a username and password in the form username:password."
+        metavar="USER",
+        help="Allows access to a a single user, specified in the form username:password."
     )
-
     user_specification_group.add_argument(
         "--htpasswd",
         action="store", dest="auth_htpasswd", type=argparse.FileType('r'),
+        metavar="PATH",
         help="Allow access to users specified in an Apache htpasswd file."
     )
-
-
-
-
 
     proxy.certificate_option_group(parser)
