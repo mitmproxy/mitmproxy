@@ -12,7 +12,7 @@ class NullProxyAuth():
     def clean(self, headers):
         """
             Clean up authentication headers, so they're not passed upstream.
-        """ 
+        """
         pass
 
     def authenticate(self, headers):
@@ -33,7 +33,7 @@ class BasicProxyAuth(NullProxyAuth):
     AUTH_HEADER = 'Proxy-Authorization'
     def __init__(self, password_manager, realm):
         NullProxyAuth.__init__(self, password_manager)
-        self.realm = realm 
+        self.realm = realm
 
     def clean(self, headers):
         del headers[self.AUTH_HEADER]

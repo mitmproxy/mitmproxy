@@ -24,14 +24,16 @@
             $!nav("faq.html", this, state)!$
 
             <li class="nav-header">Features</li>
+                    $!nav("anticache.html", this, state)!$
                     $!nav("clientreplay.html", this, state)!$
+                    $!nav("filters.html", this, state)!$
+                    $!nav("proxyauth.html", this, state)!$
+                    $!nav("replacements.html", this, state)!$
                     $!nav("serverreplay.html", this, state)!$
+                    $!nav("setheaders.html", this, state)!$
                     $!nav("sticky.html", this, state)!$
                     $!nav("reverseproxy.html", this, state)!$
                     $!nav("upstreamcerts.html", this, state)!$
-                    $!nav("replacements.html", this, state)!$
-                    $!nav("anticache.html", this, state)!$
-                    $!nav("filters.html", this, state)!$
 
             <li class="nav-header">SSL interception</li>
                     $!nav("ssl.html", this, state)!$
@@ -58,7 +60,9 @@
     </div>
 
     <div class="span9">
+        <div class="page-header">
         <h1>@!this.title!@</h1>
+        </div>
         $!body!$
     </div>
 

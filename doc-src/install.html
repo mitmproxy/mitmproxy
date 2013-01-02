@@ -1,54 +1,49 @@
 
-## Using Pip 
+The preferred way to install mitmproxy - whether you're installing the latest
+release or from source - is to use [pip](http://www.pip-installer.org/). If you
+don't already have pip on your system, you can find installation instructions
+[here](http://www.pip-installer.org/en/latest/installing.html).
 
-The preferred way to install mitmproxy is to use
-[pip](http://pypi.python.org/pypi/pip). A single command will install the
-latest release of mitmproxy, along with all its dependencies:
 
-<pre>
-sudo pip install mitmproxy
+## Installing the latest release
+
+A single command will download and install the latest release of mitmproxy,
+along with all its dependencies:
+
+<pre class="terminal">
+pip install mitmproxy
 </pre>
 
 
-## From Source
+## Installing from source
 
-- When installing from source, you will need to install the
-[dependencies](@!urlTo("index.html")!@) by hand. 
-- Then run the following command from the base of the source distribution:
+When installing from source, the easiest method is still to use pip. In this
+case run:
     
-<pre>
-sudo python setup.py install
+<pre class="terminal">
+pip install /path/to/source
 </pre>
 
+Note that if you're installing current git master, you will also have to
+install the current git master of [netlib](http://github.com/cortesi/netlib) by
+hand.
 
 ## OSX
 
+- If you're running a Python interpreter installed with homebrew (or similar),
+you may have to install some dependencies by hand. 
 - Make sure that XCode is installed from the App Store, and that the
 command-line tools have been downloaded (XCode/Preferences/Downloads).
-- Install __pip__ using the following command:
-    
-<pre>
-sudo easy_install pip
-</pre>
-
-- Now use __pip__ to set up the dependencies and do the install:
-
-<pre>
-sudo pip install mitmproxy
-</pre>
-
-This procedure may vary if, for instance, you've installed Python from an
-external source like [homebrew](http://mxcl.github.com/homebrew/). In that
-case, the easiest way to proceed is to first install __easy_install__, then
-continue as above.
+- Now use __pip__ to do the installation, as above.
 
 There are a few bits of customization you might want to do to make mitmproxy
-comfortable to use. At the moment, mitmproxy's color scheme is optimized for a
-dark background terminal, so you probably want to change the default. You can
-use the OSX <b>open</b> program to create a simple and effective
-<b>~/.mailcap</b> file to view HTTP bodies:
+comfortable to use on OSX. The default color scheme is optimized for a dark
+background terminal, but you can select a palette for a light terminal
+background with the --palette option. You can use the OSX <b>open</b> program
+to create a simple and effective <b>~/.mailcap</b> file to view request and
+response bodies:
 
-<pre>
+<pre class="terminal">
 application/*; /usr/bin/open -Wn %s
 audio/*; /usr/bin/open -Wn %s
 image/*; /usr/bin/open -Wn %s
