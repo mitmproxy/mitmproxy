@@ -1,6 +1,8 @@
 
 x January 2013: mitmproxy 0.9:
 
+    * Upstream certs mode is now the default.
+
     * Add a WSGI container that lets you host in-proxy web applications.
     
     * Full transparent proxy support for Linux and OSX.
