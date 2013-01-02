@@ -1,10 +1,6 @@
 
 ## Sticky cookies
 
-- command-line: _-t_ (sticky cookies on all requests)
-- command-line: _-T filt_ (sticky cookies on requests matching filt)
-- mitmproxy shortcut: _t_
-
 When the sticky cookie option is set, __mitmproxy__ will add the cookie most
 recently set by the server to any cookie-less request. Consider a service that
 sets a cookie to track the session after authentication. Using sticky cookies,
@@ -20,15 +16,47 @@ replay](@!urlTo("clientreplay.html")!@) - you can record the authentication
 process once, and simply replay it on startup every time you need to interact
 with the secured resources.
 
+<table class="table">
+    <tbody>
+        <tr>
+            <th width="20%">command-line</th>
+            <td>
+                <ul>
+                    <li>-t (sticky cookies on all requests)</li>
+                    <li>-T FILTER (sticky cookies on requests matching filter</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <th>mitmproxy shortcut</th> <td><b>t</b></td>
+        </tr>
+    </tbody>
+</table>
+
 
 ## Sticky auth
-
-- command-line: _-u_ (sticky auth on all requests)
-- command-line: _-U filt_ (sticky auth on requests matching filt)
-- mitmproxy shortcut: _u_
 
 The sticky auth option is analogous to the sticky cookie option, in that HTTP
 __Authorization__ headers are simply replayed to the server once they have been
 seen. This is enough to allow you to access a server resource using HTTP Basic
 authentication through the proxy. Note that __mitmproxy__ doesn't (yet) support
 replay of HTTP Digest authentication. 
+
+<table class="table">
+    <tbody>
+        <tr>
+            <th width="20%">command-line</th>
+            <td>
+                <ul>
+                    <li>-u (sticky auth on all requests)</li>
+                    <li>-U FILTER (sticky auth on requests matching filter</li>
+                </ul>
+            </td>
+        </tr>
+        <tr>
+            <th>mitmproxy shortcut</th> <td><b>u</b></td>
+        </tr>
+    </tbody>
+</table>
+
+

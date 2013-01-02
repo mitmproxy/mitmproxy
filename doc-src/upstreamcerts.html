@@ -1,15 +1,21 @@
-- command-line: _--upstream-cert_ 
-- mitmproxy shortcut: _o_, then _u_
+When mitmproxy receives a connection destined for an SSL-protected service, it
+freezes the connection before reading its request data, and makes a connection
+to the upstream server to "sniff" the contents of its SSL certificate. The
+information gained - the __Common Name__ and __Subject Alternative Names__ - is
+then used to generate the interception certificate, which is sent to the client
+so the connection can continue.
 
-Normally, mitmproxy uses the target domain specified in a client's proxy
-request to generate an interception certificate. When __upstream-cert__ mode is
-activated a different procedure is followed: a connection is made to the
-specified remote server to retrieve its __Common Name__ and __Subject
-Alternative Names__. This feature is especially useful when the client
-specifies an IP address rather than a host name in the proxy request. If this
-is the case, we can only generate a certificate if we can establish the __CN__
-and __SANs__ from the upstream server.
+This rather intricate little dance lets us seamlessly generate correct
+certificates even if the client has specifed only an IP address rather than the
+hostname. It also means that we don't need to sniff additional data to generate
+certs in transparent mode.
 
-Note that __upstream-cert__ mode does not work when the remote server relies on
-[Server Name Indication](http://en.wikipedia.org/wiki/Server_Name_Indication).
-Luckily, SNI is still not very widely used.
+Upstream cert sniffing is on by default, and can optionally be turned off.
+
+<table class="table">
+    <tbody>
+        <tr>
+            <th width="20%">command-line</th> <td>--no-upstream-cert</td>
+        </tr>
+    </tbody>
+</table>
