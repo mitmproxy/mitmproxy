@@ -22,6 +22,9 @@ class ODict:
     def __eq__(self, other):
         return self.lst == other.lst
 
+    def __iter__(self):
+        return self.lst.__iter__()
+
     def __getitem__(self, k):
         """
             Returns a list of values matching key.
