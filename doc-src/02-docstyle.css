@@ -4,6 +4,13 @@
     background: #000000;
 }
 
+
 pre {
+    margin-top: 10px;
     color: #333;
+}
+
+
+.tablenum {
+    font-weight: bold;
 }

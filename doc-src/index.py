@@ -65,12 +65,13 @@ pages = [
     Page("install.html", "Installation"),
     Page("mitmproxy.html", "mitmproxy"),
     Page("mitmdump.html", "mitmdump"),
+    Page("howmitmproxy.html", "How mitmproxy works"),
 
     Page("ssl.html", "Overview"),
-    Page("transparent.html", "Overview"),
     Directory("certinstall"),
     Directory("scripting"),
     Directory("tutorials"),
+    Page("transparent.html", "Overview"),
     Directory("transparent"),
     Page("faq.html", "FAQ"),
 ]
