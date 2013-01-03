@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+import sys
+sys.path.insert(0, "../../")
+from netlib import certutils
+
+if len(sys.argv) > 2:
+    port = int(sys.argv[2])
+else:
+    port = 443
+
+cert =  certutils.get_remote_cert(sys.argv[1], port, None)
+print "CN:", cert.cn
+if cert.altnames:
+    print "SANs:", 
+    for i in cert.altnames:
+        print "\t", i
