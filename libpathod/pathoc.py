@@ -7,12 +7,21 @@ class PathocError(Exception): pass
 
 
 class Pathoc(tcp.TCPClient):
-    def __init__(self, host, port):
+    def __init__(self, host, port, ssl=None, sni=None):
         tcp.TCPClient.__init__(self, host, port)
         self.settings = dict(
             staticdir = os.getcwd(),
             unconstrained_file_access = True,
         )
+        self.ssl, self.sni = ssl, sni
+
+    def connect(self):
+        tcp.TCPClient.connect(self)
+        if self.ssl:
+            try:
+                self.convert_to_ssl(sni=self.sni)
+            except tcp.NetLibError, v:
+                raise PathocError(str(v))
 
     def request(self, spec):
         """

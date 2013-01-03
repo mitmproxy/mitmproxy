@@ -3,10 +3,11 @@ from libpathod import pathoc, test, version
 import tutils
 
 
-class TestDaemon:
+class _TestDaemon:
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
+            ssl=self.ssl,
             staticdir=tutils.test_data.path("data"),
             anchors=[("/anchor/.*", "202")]
         )
@@ -19,11 +20,34 @@ class TestDaemon:
         self.d.clear_log()
 
     def test_info(self):
-        c = pathoc.Pathoc("127.0.0.1", self.d.port)
+        c = pathoc.Pathoc(
+            "127.0.0.1",
+            self.d.port,
+            ssl = self.ssl
+        )
         c.connect()
         _, _, _, _, content = c.request("get:/api/info")
         assert tuple(json.loads(content)["version"]) == version.IVERSION
 
+
+class TestDaemonSSL(_TestDaemon):
+    ssl = True
+    def test_sni(self):
+        c = pathoc.Pathoc(
+            "127.0.0.1",
+            self.d.port,
+            ssl = True,
+            sni = "foobar.com"
+        )
+        c.connect()
+        c.request("get:/p/200")
+        _, _, _, _, content = c.request("get:/api/log")
+        d = json.loads(content)
+        assert d["log"][0]["request"]["sni"] == "foobar.com"
+
+
+class TestDaemon(_TestDaemon):
+    ssl = False
     def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False, timeout=None, ignorecodes=None, ignoretimeout=None):
         c = pathoc.Pathoc("127.0.0.1", self.d.port)
         c.connect()
@@ -42,6 +66,10 @@ class TestDaemon:
                 fp = s
             )
         return s.getvalue()
+
+    def test_ssl_error(self):
+        c = pathoc.Pathoc("127.0.0.1", self.d.port, ssl = True)
+        tutils.raises("ssl handshake", c.connect)
 
     def test_ignorecodes(self):
         assert "200" in self.tval(["get:'/p/200:b@1'"])
