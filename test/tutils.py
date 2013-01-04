@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from libmproxy import proxy, flow, controller, utils
 from netlib import certutils
 import human_curl as hurl
-import libpathod.test
+import libpathod.test, libpathod.pathoc
 
 def treq(conn=None):
     if not conn:
@@ -194,7 +194,6 @@ class ReverseProxTest(ProxTestBase):
         return r
 
 
-
 @contextmanager
 def tmpdir(*args, **kwargs):
     orig_workdir = os.getcwd()
@@ -244,5 +243,6 @@ def raises(exc, obj, *args, **kwargs):
                     )
                 )
     raise AssertionError("No exception raised.")
+    
 
 test_data = utils.Data(__name__)

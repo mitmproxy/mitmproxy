@@ -51,6 +51,7 @@ class ProxyConfig:
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
 
+
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
         self.config, self.flow, self.masterq = config, flow, masterq
@@ -311,7 +312,7 @@ class ProxyHandler(tcp.BaseHandler):
             line = self.get_line(self.rfile)
             if line == "":
                 return None
-            if line.startswith("CONNECT"):
+            if http.parse_init_connect(line):
                 r = http.parse_init_connect(line)
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
@@ -332,14 +333,15 @@ class ProxyHandler(tcp.BaseHandler):
                     raise ProxyError(400, str(v))
                 self.proxy_connect_state = (host, port, httpversion)
                 line = self.rfile.readline(line)
+
             if self.proxy_connect_state:
-                host, port, httpversion = self.proxy_connect_state
                 r = http.parse_init_http(line)
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, path, httpversion = r
                 headers = self.read_headers(authenticate=False)
 
+                host, port, _ = self.proxy_connect_state
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
@@ -348,7 +350,7 @@ class ProxyHandler(tcp.BaseHandler):
                 r = http.parse_init_proxy(line)
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
-                method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
+                method, scheme, host, port, path, httpversion = r
                 headers = self.read_headers(authenticate=True)
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
