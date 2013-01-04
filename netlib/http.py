@@ -166,36 +166,43 @@ def parse_http_protocol(s):
     return major, minor
 
 
-def parse_init_connect(line):
+def parse_init(line):
     try:
         method, url, protocol = string.split(line)
     except ValueError:
         return None
-    if method != 'CONNECT':
+    httpversion = parse_http_protocol(protocol)
+    if not httpversion:
+        return None
+    return method, url, httpversion
+
+
+def parse_init_connect(line):
+    v = parse_init(line)
+    if not v:
+        return None
+    method, url, httpversion = v
+
+    if method.upper() != 'CONNECT':
         return None
     try:
         host, port = url.split(":")
     except ValueError:
         return None
     port = int(port)
-    httpversion = parse_http_protocol(protocol)
-    if not httpversion:
-        return None
     return host, port, httpversion
 
 
 def parse_init_proxy(line):
-    try:
-        method, url, protocol = string.split(line)
-    except ValueError:
+    v = parse_init(line)
+    if not v:
         return None
+    method, url, httpversion = v
+
     parts = parse_url(url)
     if not parts:
         return None
     scheme, host, port, path = parts
-    httpversion = parse_http_protocol(protocol)
-    if not httpversion:
-        return None
     return method, scheme, host, port, path, httpversion
 
 
@@ -203,14 +210,12 @@ def parse_init_http(line):
     """
         Returns (method, url, httpversion)
     """
-    try:
-        method, url, protocol = string.split(line)
-    except ValueError:
+    v = parse_init(line)
+    if not v:
         return None
+    method, url, httpversion = v
+
     if not (url.startswith("/") or url == "*"):
-        return None
-    httpversion = parse_http_protocol(protocol)
-    if not httpversion:
         return None
     return method, url, httpversion
 
