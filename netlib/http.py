@@ -189,7 +189,10 @@ def parse_init_connect(line):
         host, port = url.split(":")
     except ValueError:
         return None
-    port = int(port)
+    try:
+        port = int(port)
+    except ValueError:
+        return None
     return host, port, httpversion
 
 

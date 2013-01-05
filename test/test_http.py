@@ -139,6 +139,7 @@ def test_parse_init_connect():
     assert not http.parse_init_connect("GET host.com:443 HTTP/1.0")
     assert not http.parse_init_connect("CONNECT host.com443 HTTP/1.0")
     assert not http.parse_init_connect("CONNECT host.com:443 foo/1.0")
+    assert not http.parse_init_connect("CONNECT host.com:foo HTTP/1.0")
 
 
 def test_prase_init_proxy():
