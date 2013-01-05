@@ -1,4 +1,4 @@
-import os, ssl, hashlib, socket, time, datetime
+import os, ssl, hashlib, socket, time, datetime, tempfile, shutil
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
@@ -76,30 +76,24 @@ def dummy_ca(path):
     return True
 
 
-def dummy_cert(certdir, ca, commonname, sans):
+def dummy_cert(fp, ca, commonname, sans):
     """
-        certdir: Certificate directory.
+        Generates and writes a certificate to fp.
+
         ca: Path to the certificate authority file, or None.
         commonname: Common name for the generated certificate.
+        sans: A list of Subject Alternate Names.
 
         Returns cert path if operation succeeded, None if not.
     """
-    namehash = hashlib.sha256(commonname).hexdigest()
-    certpath = os.path.join(certdir, namehash + ".pem")
-    if os.path.exists(certpath):
-        return certpath
-
     ss = []
     for i in sans:
         ss.append("DNS: %s"%i)
     ss = ", ".join(ss)
 
-    if ca:
-        raw = file(ca, "r").read()
-        ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
-        key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
-    else:
-        key, ca = create_ca()
+    raw = file(ca, "r").read()
+    ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
+    key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
 
     req = OpenSSL.crypto.X509Req()
     subj = req.get_subject()
@@ -110,7 +104,7 @@ def dummy_cert(certdir, ca, commonname, sans):
         req.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
 
     cert = OpenSSL.crypto.X509()
-    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notBefore()
     cert.gmtime_adj_notAfter(60 * 60 * 24 * 30)
     cert.set_issuer(ca.get_subject())
     cert.set_subject(req.get_subject())
@@ -120,11 +114,51 @@ def dummy_cert(certdir, ca, commonname, sans):
     cert.set_pubkey(req.get_pubkey())
     cert.sign(key, "sha1")
 
-    f = open(certpath, "w")
-    f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert))
-    f.close()
+    fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert))
+    fp.close()
 
-    return certpath
+
+
+class CertStore:
+    """
+        Implements an on-disk certificate store.
+    """
+    def __init__(self, certdir=None):
+        """
+            certdir: The certificate store directory. If None, a temporary
+            directory will be created, and destroyed when the .cleanup() method
+            is called.
+        """
+        if certdir:
+            self.remove = False
+            self.certdir = certdir
+        else:
+            self.remove = True
+            self.certdir = tempfile.mkdtemp(prefix="certstore")
+
+    def get_cert(self, commonname, sans, cacert=False):
+        """
+            Returns the path to a certificate.
+
+            commonname: Common name for the generated certificate. Must be a
+            valid, plain-ASCII, IDNA-encoded domain name.
+
+            sans: A list of Subject Alternate Names.
+
+            cacert: An optional path to a CA certificate. If specified, the
+            cert is created if it does not exist, else return None.
+        """
+        certpath = os.path.join(self.certdir, commonname + ".pem")
+        if os.path.exists(certpath):
+            return certpath
+        elif cacert:
+            f = open(certpath, "w")
+            dummy_cert(f, cacert, commonname, sans)
+            return certpath
+
+    def cleanup(self):
+        if self.remove:
+            shutil.rmtree(self.certdir)
 
 
 class _GeneralName(univ.Choice):

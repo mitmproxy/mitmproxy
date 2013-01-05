@@ -16,36 +16,40 @@ def test_dummy_ca():
         assert os.path.exists(os.path.join(d, "foo/cert2-cert.p12"))
 
 
+class TestCertStore:
+    def test_create_explicit(self):
+        with tutils.tmpdir() as d:
+            ca = os.path.join(d, "ca")
+            assert certutils.dummy_ca(ca)
+            c = certutils.CertStore(d)
+            c.cleanup()
+            assert os.path.exists(d)
+
+    def test_create_tmp(self):
+        with tutils.tmpdir() as d:
+            ca = os.path.join(d, "ca")
+            assert certutils.dummy_ca(ca)
+            c = certutils.CertStore()
+            assert not c.get_cert("foo.com", [])
+            assert c.get_cert("foo.com", [], ca)
+            assert c.get_cert("foo.com", [], ca)
+            c.cleanup()
+
+
 class TestDummyCert:
     def test_with_ca(self):
         with tutils.tmpdir() as d:
-            cacert = os.path.join(d, "foo/cert.cnf")
+            cacert = os.path.join(d, "cacert")
             assert certutils.dummy_ca(cacert)
-            p = certutils.dummy_cert(
-                os.path.join(d, "foo"),
+            p = os.path.join(d, "foo")
+            certutils.dummy_cert(
+                file(p, "w"),
                 cacert,
                 "foo.com",
                 ["one.com", "two.com", "*.three.com"]
             )
-            assert os.path.exists(p)
+            assert file(p).read()
 
-            # Short-circuit
-            assert certutils.dummy_cert(
-                os.path.join(d, "foo"),
-                cacert,
-                "foo.com",
-                []
-            )
-
-    def test_no_ca(self):
-        with tutils.tmpdir() as d:
-            p = certutils.dummy_cert(
-                d,
-                None,
-                "foo.com",
-                []
-            )
-            assert os.path.exists(p)
 
 
 class TestSSLCert:
