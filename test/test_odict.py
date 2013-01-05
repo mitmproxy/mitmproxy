@@ -58,6 +58,11 @@ class TestODict:
         assert not self.od.in_any("one", "TWO")
         assert self.od.in_any("one", "TWO", True)
 
+    def test_iter(self):
+        assert not [i for i in self.od]
+        self.od.add("foo", 1)
+        assert [i for i in self.od]
+
     def test_copy(self):
         self.od.add("foo", 1)
         self.od.add("foo", 2)
