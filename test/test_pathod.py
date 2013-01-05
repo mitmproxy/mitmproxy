@@ -150,6 +150,12 @@ class CommonTests(tutils.DaemonTests):
 
 class TestDaemon(CommonTests):
     ssl = False
+    def test_connect(self):
+        v = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port), ssl=True)
+        assert v[1] == 202
+
+    def test_connect_err(self):
+        tutils.raises(http.HttpError, self.pathoc, r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port))
 
 
 class TestDaemonSSL(CommonTests):

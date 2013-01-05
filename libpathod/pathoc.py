@@ -15,8 +15,23 @@ class Pathoc(tcp.TCPClient):
         )
         self.ssl, self.sni = ssl, sni
 
-    def connect(self):
+    def http_connect(self, connect_to, wfile, rfile):
+        wfile.write(
+                    'CONNECT %s:%s HTTP/1.1\r\n'%tuple(connect_to) +
+                    '\r\n'
+                    )
+        wfile.flush()
+        rfile.readline()
+        headers = http.read_headers(self.rfile)
+
+    def connect(self, connect_to=None):
+        """
+            connect_to: A (host, port) tuple, which will be connected to with an
+            HTTP CONNECT request.
+        """
         tcp.TCPClient.connect(self)
+        if connect_to:
+            self.http_connect(connect_to, self.wfile, self.rfile)
         if self.ssl:
             try:
                 self.convert_to_ssl(sni=self.sni)

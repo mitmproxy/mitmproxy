@@ -44,11 +44,11 @@ class DaemonTests:
     def get(self, spec):
         return requests.get(self.d.p(spec), verify=False)
 
-    def pathoc(self, spec, timeout=None):
-        c = pathoc.Pathoc("localhost", self.d.port)
-        c.connect()
-        if self.ssl:
-            c.convert_to_ssl()
+    def pathoc(self, spec, timeout=None, connect_to=None, ssl=None):
+        if ssl is None:
+            ssl = self.ssl
+        c = pathoc.Pathoc("localhost", self.d.port, ssl=ssl)
+        c.connect(connect_to)
         if timeout:
             c.settimeout(timeout)
         return c.request(spec)

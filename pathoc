@@ -18,6 +18,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='A perverse HTTP client.', parents=[preparser])
     parser.add_argument(
+        "-c", dest="connect_to", type=str, default=False,
+        metavar = "HOST:PORT",
+        help="Issue an HTTP CONNECT to connect to the specified host."
+    )
+    parser.add_argument(
         "-i", dest="sni", type=str, default=False,
         help="SSL Server Name Indication"
     )
@@ -94,11 +99,23 @@ if __name__ == "__main__":
     except ValueError:
         parser.error("Invalid return code specification: %s"%args.ignorecodes)
 
+    if args.connect_to:
+        parts = args.connect_to.split(":")
+        if len(parts) != 2:
+            parser.error("Invalid CONNECT specification: %s"%args.connect_to)
+        try:
+            parts[1] = int(parts[1])
+        except ValueError:
+            parser.error("Invalid CONNECT specification: %s"%args.connect_to)
+        connect_to = parts
+    else:
+        connect_to = None
+
     try:
         for i in range(args.repeat):
             p = pathoc.Pathoc(args.host, port, args.ssl, args.sni)
             try:
-                p.connect()
+                p.connect(connect_to)
             except tcp.NetLibError, v:
                 print >> sys.stderr, str(v)
                 sys.exit(1)
