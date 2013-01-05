@@ -248,11 +248,6 @@ def common_options(parser):
         help="Byte size limit of HTTP request and response bodies."\
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
-    parser.add_argument(
-        "--cert-wait-time", type=float,
-        action="store", dest="cert_wait_time", default=0,
-        help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
-    )
 
     parser.add_argument(
         "--no-upstream-cert", default=False,

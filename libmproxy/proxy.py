@@ -38,12 +38,11 @@ class Log(controller.Msg):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
         assert not (reverse_proxy and transparent_proxy)
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
-        self.cert_wait_time = cert_wait_time
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
@@ -247,9 +246,6 @@ class ProxyHandler(tcp.BaseHandler):
                 sans = cert.altnames
                 host = cert.cn.decode("utf8").encode("idna")
             ret = self.config.certstore.get_cert(host, sans, self.config.cacert)
-            # FIXME: Is this still necessary? Can we now set a proper
-            # commencement date, since we're using PyOpenSSL?
-            time.sleep(self.config.cert_wait_time)
             if not ret:
                 raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
             return ret
@@ -555,7 +551,6 @@ def process_proxy_options(parser, options):
         certfile = options.cert,
         cacert = cacert,
         clientcerts = options.clientcerts,
-        cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
