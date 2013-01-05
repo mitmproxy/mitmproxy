@@ -104,7 +104,7 @@ def dummy_cert(fp, ca, commonname, sans):
         req.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
 
     cert = OpenSSL.crypto.X509()
-    cert.gmtime_adj_notBefore()
+    cert.gmtime_adj_notBefore(-3600)
     cert.gmtime_adj_notAfter(60 * 60 * 24 * 30)
     cert.set_issuer(ca.get_subject())
     cert.set_subject(req.get_subject())
