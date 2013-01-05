@@ -8,6 +8,19 @@ SIZE_UNITS = dict(
     t = 1024**4,
 )
 
+
+class MemBool:
+    """
+        Truth-checking with a memory, for use in chained if statements.
+    """
+    def __init__(self):
+        self.v = None
+
+    def __call__(self, v):
+        self.v = v
+        return bool(v)
+
+
 def parse_size(s):
     try:
         return int(s)

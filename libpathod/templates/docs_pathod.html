@@ -45,6 +45,22 @@ those, use the command-line help:</p>
 
 </section>
 
+<section>
+    <div class="page-header">
+       <h1>Acting as a proxy</h1>
+    </div>
+
+<p>Pathod automatically responds to both straight HTTP and proxy requests. For
+proxy requests, the upstream host is ignored, and the path portion of the URL
+is used to match anchors. This lets you test software that supports a proxy
+configuration by spoofing responses from upstream servers.</p>
+
+<p>Proxy mode operates even when Pathod is run in SSL mode, but we do not
+support nested SSL connections. This means that CONNECT requests will cause an
+error response.</p>
+
+</section>
+
 
 <section>
     <div class="page-header">

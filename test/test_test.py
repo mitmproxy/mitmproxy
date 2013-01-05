@@ -25,6 +25,7 @@ class TestDaemonManual:
         ssloptions = dict(
              keyfile = utils.data.path("resources/server.key"),
              certfile = utils.data.path("resources/server.crt"),
+             ssl_after_connect = False
         )
         d = test.Daemon(ssl=ssloptions)
         rsp = requests.get("https://localhost:%s/p/202:da"%d.port, verify=False)

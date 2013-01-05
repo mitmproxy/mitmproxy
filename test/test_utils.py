@@ -1,6 +1,16 @@
 from libpathod import utils
 import tutils
 
+
+def test_membool():
+    m = utils.MemBool()
+    assert not m.v
+    assert m(1)
+    assert m.v == 1
+    assert m(2)
+    assert m.v == 2
+
+
 def test_parse_size():
     assert utils.parse_size("100") == 100
     assert utils.parse_size("100k") == 100 * 1024

@@ -75,6 +75,7 @@ class _PaThread(threading.Thread):
             ssloptions = dict(
                  keyfile = utils.data.path("resources/server.key"),
                  certfile = utils.data.path("resources/server.crt"),
+                 ssl_after_connect = False
             )
         else:
             ssloptions = self.ssl

@@ -36,12 +36,13 @@ def main(parser, args):
         parser.error("Both --certfile and --keyfile must be specified.")
 
     if args.ssl:
-        ssl = dict(
+        ssloptions = dict(
              keyfile = args.ssl_keyfile or utils.data.path("resources/server.key"),
              certfile = args.ssl_certfile or utils.data.path("resources/server.crt"),
+             ssl_after_connect = args.ssl_after_connect
         )
     else:
-        ssl = None
+        ssloptions = None
 
     alst = []
     for i in args.anchors:
@@ -81,7 +82,7 @@ def main(parser, args):
         pd = pathod.Pathod(
             (args.address, args.port),
             craftanchor = args.craftanchor,
-            ssloptions = ssl,
+            ssloptions = ssloptions,
             staticdir = args.staticdir,
             anchors = alst,
             sizelimit = sizelimit,
@@ -93,7 +94,7 @@ def main(parser, args):
             logreq = args.logreq,
             logresp = args.logresp,
             hexdump = args.hexdump,
-            explain = args.explain
+            explain = args.explain,
         )
     except pathod.PathodError, v:
         parser.error(str(v))
@@ -128,10 +129,6 @@ if __name__ == "__main__":
         help='Daemonize.'
     )
     parser.add_argument(
-        "-s", dest='ssl', default=False, action="store_true",
-        help='Serve with SSL.'
-    )
-    parser.add_argument(
         "-t", dest="timeout", type=int, default=None,
         help="Connection timeout"
     )
@@ -155,11 +152,24 @@ if __name__ == "__main__":
         "--nocraft", dest='nocraft', default=False, action="store_true",
         help='Disable response crafting. If anchors are specified, they still work.'
     )
-    parser.add_argument(
+
+
+    group = parser.add_argument_group(
+        'SSL',
+    )
+    group.add_argument(
+        "-C", dest='ssl_after_connect', default=False, action="store_true",
+        help='Expect SSL after a CONNECT request.'
+    )
+    group.add_argument(
+        "-s", dest='ssl', default=False, action="store_true",
+        help='Serve with SSL.'
+    )
+    group.add_argument(
         "--keyfile", dest='ssl_keyfile', default=None, type=str,
         help='SSL key file. If not specified, a default key is used.'
     )
-    parser.add_argument(
+    group.add_argument(
         "--certfile", dest='ssl_certfile', default=None, type=str,
         help='SSL cert file. If not specified, a default cert is used.'
     )

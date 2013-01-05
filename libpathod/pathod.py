@@ -1,7 +1,7 @@
 import urllib, threading, re, logging, socket, sys, base64
 from netlib import tcp, http, odict, wsgi
 import netlib.utils
-import version, app, language
+import version, app, language, utils
 
 logger = logging.getLogger('pathod')
 
@@ -54,13 +54,24 @@ class PathodHandler(tcp.BaseHandler):
             # Normal termination
             return False, None
 
-        parts = http.parse_init_http(line)
-        if not parts:
+        m = utils.MemBool()
+        if m(http.parse_init_connect(line)):
+            self.wfile.write(
+                        'HTTP/1.1 200 Connection established\r\n' +
+                        ('Proxy-agent: %s\r\n'%version.NAMEVERSION) +
+                        '\r\n'
+                        )
+            self.wfile.flush()
+
+        if m(http.parse_init_proxy(line)):
+            method, _, _, _, path, httpversion = m.v
+        elif m(http.parse_init_http(line)):
+            method, path, httpversion = m.v
+        else:
             s = "Invalid first line: %s"%repr(line)
             self.info(s)
             return False, dict(type = "error", msg = s)
 
-        method, path, httpversion = parts
         headers = http.read_headers(self.rfile)
         if headers is None:
             s = "Invalid headers"
@@ -133,7 +144,7 @@ class PathodHandler(tcp.BaseHandler):
         self.info("\n".join(s))
 
     def handle(self):
-        if self.server.ssloptions:
+        if self.server.ssloptions and not self.server.ssloptions["ssl_after_connect"]:
             try:
                 self.convert_to_ssl(
                     self.server.ssloptions["certfile"],
