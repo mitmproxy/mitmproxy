@@ -1,6 +1,6 @@
 import tempfile, os, shutil
 from contextlib import contextmanager
-from libpathod import utils, test, pathoc
+from libpathod import utils, test, pathoc, pathod
 import requests
 
 class DaemonTests:
@@ -10,12 +10,15 @@ class DaemonTests:
     ssl = False
     timeout = None
     hexdump = False
+    not_after_connect = False
     @classmethod
     def setUpAll(self):
+        so = pathod.SSLOptions(not_after_connect = self.not_after_connect)
         self.d = test.Daemon(
             staticdir=test_data.path("data"),
             anchors=[("/anchor/.*", "202:da")],
             ssl = self.ssl,
+            ssloptions = so,
             sizelimit=1*1024*1024,
             noweb = self.noweb,
             noapi = self.noapi,

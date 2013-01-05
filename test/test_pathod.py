@@ -52,6 +52,14 @@ class TestNoApi(tutils.DaemonTests):
         assert not "Log" in r.content
 
 
+class TestNotAfterConnect(tutils.DaemonTests):
+    ssl = False
+    not_after_connect = True
+    def test_connect(self):
+        v = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port))
+        assert v[1] == 202
+
+
 class TestNohang(tutils.DaemonTests):
     nohang = True
     def test_nohang(self):

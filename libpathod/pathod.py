@@ -70,15 +70,16 @@ class PathodHandler(tcp.BaseHandler):
                         '\r\n'
                         )
             self.wfile.flush()
-            try:
-                self.convert_to_ssl(
-                    self.server.ssloptions.certfile,
-                    self.server.ssloptions.keyfile,
-                )
-            except tcp.NetLibError, v:
-                s = str(v)
-                self.info(s)
-                return False, dict(type = "error", msg = s)
+            if not self.server.ssloptions.not_after_connect:
+                try:
+                    self.convert_to_ssl(
+                        self.server.ssloptions.certfile,
+                        self.server.ssloptions.keyfile,
+                    )
+                except tcp.NetLibError, v:
+                    s = str(v)
+                    self.info(s)
+                    return False, dict(type = "error", msg = s)
             return True, None
         elif m(http.parse_init_proxy(line)):
             method, _, _, _, path, httpversion = m.v
