@@ -126,15 +126,25 @@ the command-line help:</p>
        <h1>Interacting with Proxies</h1>
     </div>
 
-    <p>At the moment, pathoc has no explicit support for proxies, but there's a
-    workaround that serves many use cases. Instead of specifying just a path,
-    specify an entire URL to the GET request, like so (assuming there's a proxy
-    running on port 8080 of localhost):</p>
+    <p>Pathoc has a reasonably sophisticated suite of features for interacting
+    with proxies. The proxy request syntax very closely mirrors that of
+    straight HTTP, which means that it is possible to make proxy-style requests
+    using pathoc without any additional syntax, by simply specifying a full URL
+    instead of a simple path::</p>
 
     <pre class="terminal">&gt; pathoc -p 8080 localhost "get:'http://google.com'"</pre>
 
-    <p>Proxy support is going to be a major focus of development for the next
-    version of pathoc, so keep an eye on the repo.</p>
+    <p>Another common use case is to use an HTTP CONNECT request to probe
+    remote servers via a proxy. This is done with the <b>-c</b> command-line
+    option, which allows you to specify a remote host and port pair:</p>
+
+    <pre class="terminal">&gt; pathoc -c google.com:80 -p 8080 localhost get:/</pre>
+
+    <p>Note that pathoc does <b>not</b> negotiate SSL without being explictly
+    instructed to do so. If you're making a CONNECT request to an SSL-protected
+    resource, you must also pass the <b>-s</b> flag:</p>
+
+    <pre class="terminal">&gt; pathoc -sc google.com:443 -p 8080 localhost get:/</pre>
 
 </section>
 

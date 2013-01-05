@@ -55,9 +55,11 @@ proxy requests, the upstream host is ignored, and the path portion of the URL
 is used to match anchors. This lets you test software that supports a proxy
 configuration by spoofing responses from upstream servers.</p>
 
-<p>Proxy mode operates even when Pathod is run in SSL mode, but we do not
-support nested SSL connections. This means that CONNECT requests will cause an
-error response.</p>
+<p>By default, we treat all proxy CONNECT requests as HTTPS traffic, serving
+the response using either pathod's built-in certificates, or the cert/key pair
+specified by the user. You can over-ride this behaviour if you're testing a
+client that makes a non-SSL CONNECT request using the -C command-line
+option.</p>
 
 </section>
 
