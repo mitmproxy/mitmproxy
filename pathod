@@ -35,14 +35,11 @@ def main(parser, args):
     if any(sl) and not all(sl):
         parser.error("Both --certfile and --keyfile must be specified.")
 
-    if args.ssl:
-        ssloptions = dict(
-             keyfile = args.ssl_keyfile or utils.data.path("resources/server.key"),
-             certfile = args.ssl_certfile or utils.data.path("resources/server.crt"),
-             ssl_after_connect = args.ssl_after_connect
-        )
-    else:
-        ssloptions = None
+    ssloptions = pathod.SSLOptions(
+         keyfile = args.ssl_keyfile,
+         certfile = args.ssl_certfile,
+         not_after_connect = args.ssl_not_after_connect
+    )
 
     alst = []
     for i in args.anchors:
@@ -82,6 +79,7 @@ def main(parser, args):
         pd = pathod.Pathod(
             (args.address, args.port),
             craftanchor = args.craftanchor,
+            ssl = args.ssl,
             ssloptions = ssloptions,
             staticdir = args.staticdir,
             anchors = alst,
@@ -158,12 +156,12 @@ if __name__ == "__main__":
         'SSL',
     )
     group.add_argument(
-        "-C", dest='ssl_after_connect', default=False, action="store_true",
-        help='Expect SSL after a CONNECT request.'
+        "-C", dest='ssl_not_after_connect', default=False, action="store_true",
+        help="Don't expect SSL after a CONNECT request."
     )
     group.add_argument(
         "-s", dest='ssl', default=False, action="store_true",
-        help='Serve with SSL.'
+        help='Run in HTTPS mode.'
     )
     group.add_argument(
         "--keyfile", dest='ssl_keyfile', default=None, type=str,

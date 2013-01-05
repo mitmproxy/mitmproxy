@@ -8,6 +8,13 @@ logger = logging.getLogger('pathod')
 class PathodError(Exception): pass
 
 
+class SSLOptions:
+    def __init__(self, certfile=None, keyfile=None, not_after_connect=None):
+        self.keyfile = keyfile or utils.data.path("resources/server.key")
+        self.certfile = certfile or utils.data.path("resources/server.crt")
+        self.not_after_connect = not_after_connect
+
+
 class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
@@ -144,11 +151,11 @@ class PathodHandler(tcp.BaseHandler):
         self.info("\n".join(s))
 
     def handle(self):
-        if self.server.ssloptions and not self.server.ssloptions["ssl_after_connect"]:
+        if self.server.ssl:
             try:
                 self.convert_to_ssl(
-                    self.server.ssloptions["certfile"],
-                    self.server.ssloptions["keyfile"],
+                    self.server.ssloptions.certfile,
+                    self.server.ssloptions.keyfile,
                 )
             except tcp.NetLibError, v:
                 s = str(v)
@@ -182,7 +189,7 @@ class PathodHandler(tcp.BaseHandler):
 class Pathod(tcp.TCPServer):
     LOGBUF = 500
     def __init__(   self,
-                    addr, ssloptions=None, craftanchor="/p/", staticdir=None, anchors=None,
+                    addr, ssl=False, ssloptions=None, craftanchor="/p/", staticdir=None, anchors=None,
                     sizelimit=None, noweb=False, nocraft=False, noapi=False, nohang=False,
                     timeout=None, logreq=False, logresp=False, explain=False, hexdump=False
                 ):
@@ -199,7 +206,8 @@ class Pathod(tcp.TCPServer):
             nohang: Disable pauses.
         """
         tcp.TCPServer.__init__(self, addr)
-        self.ssloptions = ssloptions
+        self.ssl = ssl
+        self.ssloptions = ssloptions or SSLOptions()
         self.staticdir = staticdir
         self.craftanchor = craftanchor
         self.sizelimit = sizelimit

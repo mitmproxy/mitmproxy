@@ -71,17 +71,9 @@ class _PaThread(threading.Thread):
         self.daemonargs = daemonargs
 
     def run(self):
-        if self.ssl is True:
-            ssloptions = dict(
-                 keyfile = utils.data.path("resources/server.key"),
-                 certfile = utils.data.path("resources/server.crt"),
-                 ssl_after_connect = False
-            )
-        else:
-            ssloptions = self.ssl
         self.server = pathod.Pathod(
             (self.iface, 0),
-            ssloptions = ssloptions,
+            ssl = self.ssl,
             **self.daemonargs
         )
         self.q.put(self.server.port)
