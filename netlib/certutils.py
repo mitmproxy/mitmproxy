@@ -136,6 +136,18 @@ class CertStore:
             self.remove = True
             self.certdir = tempfile.mkdtemp(prefix="certstore")
 
+    def check_domain(self, commonname):
+        try:
+            commonname.decode("idna")
+            commonname.decode("ascii")
+        except:
+            return False
+        if ".." in commonname:
+            return False
+        if "/" in commonname:
+            return False
+        return True
+
     def get_cert(self, commonname, sans, cacert=False):
         """
             Returns the path to a certificate.
@@ -147,7 +159,11 @@ class CertStore:
 
             cacert: An optional path to a CA certificate. If specified, the
             cert is created if it does not exist, else return None.
+
+            Return None if the certificate could not be found or generated.
         """
+        if not self.check_domain(commonname):
+            return None
         certpath = os.path.join(self.certdir, commonname + ".pem")
         if os.path.exists(certpath):
             return certpath

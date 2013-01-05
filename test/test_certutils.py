@@ -35,6 +35,15 @@ class TestCertStore:
             assert c.get_cert("foo.com", [], ca)
             c.cleanup()
 
+    def test_check_domain(self):
+        c = certutils.CertStore()
+        assert c.check_domain("foo")
+        assert c.check_domain("\x01foo")
+        assert not c.check_domain("\xfefoo")
+        assert not c.check_domain("xn--\0")
+        assert not c.check_domain("foo..foo")
+        assert not c.check_domain("foo/foo")
+
 
 class TestDummyCert:
     def test_with_ca(self):
