@@ -624,6 +624,7 @@ class TestFlowMaster:
         fm.handle_error(flow.Error(f.request, "error"))
 
     def test_server_playback(self):
+        controller.should_exit = False
         s = flow.State()
 
         f = tutils.tflow()
@@ -641,14 +642,29 @@ class TestFlowMaster:
         r = tutils.tflow()
         r.request.content = "gibble"
         assert not fm.do_server_playback(r)
-
         assert fm.do_server_playback(tutils.tflow())
+
+        fm.start_server_playback(pb, False, [], True, False)
         q = Queue.Queue()
         fm.tick(q)
         assert controller.should_exit
 
         fm.stop_server_playback()
         assert not fm.server_playback
+
+    def test_server_playback_kill(self):
+        s = flow.State()
+        f = tutils.tflow()
+        f.response = tutils.tresp(f.request)
+        pb = [f]
+        fm = flow.FlowMaster(None, s)
+        fm.refresh_server_playback = True
+        fm.start_server_playback(pb, True, [], False, False)
+
+        f = tutils.tflow()
+        f.request.host = "nonexistent"
+        fm.process_new_request(f)
+        assert "killed" in f.error.msg
 
     def test_stickycookie(self):
         s = flow.State()
