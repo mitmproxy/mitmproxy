@@ -243,6 +243,6 @@ def raises(exc, obj, *args, **kwargs):
                     )
                 )
     raise AssertionError("No exception raised.")
-    
+
 
 test_data = utils.Data(__name__)

@@ -43,7 +43,6 @@ class ProxyConfig:
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
-        self.certdir = certdir
         self.cert_wait_time = cert_wait_time
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
@@ -51,6 +50,7 @@ class ProxyConfig:
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
 
+        self.certstore = certutils.CertStore(certdir)
 
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
@@ -246,7 +246,9 @@ class ProxyHandler(tcp.BaseHandler):
                     raise ProxyError(502, "Unable to get remote cert: %s"%str(v))
                 sans = cert.altnames
                 host = cert.cn.decode("utf8").encode("idna")
-            ret = certutils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
+            ret = self.config.certstore.get_cert(host, sans, self.config.cacert)
+            # FIXME: Is this still necessary? Can we now set a proper
+            # commencement date, since we're using PyOpenSSL?
             time.sleep(self.config.cert_wait_time)
             if not ret:
                 raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
@@ -414,13 +416,6 @@ class ProxyServer(tcp.TCPServer):
         except socket.error, v:
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.masterq = None
-        if config.certdir:
-            self.certdir = config.certdir
-            self.remove_certdir = False
-        else:
-            self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
-            config.certdir = self.certdir
-            self.remove_certdir = True
         self.apps = AppRegistry()
 
     def start_slave(self, klass, masterq):
@@ -439,11 +434,7 @@ class ProxyServer(tcp.TCPServer):
             pass
 
     def handle_shutdown(self):
-        try:
-            if self.remove_certdir:
-                shutil.rmtree(self.certdir)
-        except OSError:
-            pass
+        self.config.certstore.cleanup()
 
 
 class AppRegistry:
