@@ -63,14 +63,24 @@ class PathodHandler(tcp.BaseHandler):
 
         m = utils.MemBool()
         if m(http.parse_init_connect(line)):
+            headers = http.read_headers(self.rfile)
             self.wfile.write(
                         'HTTP/1.1 200 Connection established\r\n' +
                         ('Proxy-agent: %s\r\n'%version.NAMEVERSION) +
                         '\r\n'
                         )
             self.wfile.flush()
-
-        if m(http.parse_init_proxy(line)):
+            try:
+                self.convert_to_ssl(
+                    self.server.ssloptions.certfile,
+                    self.server.ssloptions.keyfile,
+                )
+            except tcp.NetLibError, v:
+                s = str(v)
+                self.info(s)
+                return False, dict(type = "error", msg = s)
+            return True, None
+        elif m(http.parse_init_proxy(line)):
             method, _, _, _, path, httpversion = m.v
         elif m(http.parse_init_http(line)):
             method, path, httpversion = m.v

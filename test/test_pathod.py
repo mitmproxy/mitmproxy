@@ -143,6 +143,10 @@ class CommonTests(tutils.DaemonTests):
         assert rsp.status_code == 800
         assert "File access denied" in rsp.content
 
+    def test_proxy(self):
+        v = self.pathoc(r"get:'http://foo.com/p/202':da")
+        assert v[1] == 202
+
 
 class TestDaemon(CommonTests):
     ssl = False
