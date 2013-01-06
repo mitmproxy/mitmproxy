@@ -1,4 +1,5 @@
 from netlib import tcp
+from libpathod import pathoc
 import tutils
 
 """
@@ -52,6 +53,20 @@ class TestHTTP(tutils.HTTPProxTest, SanityMixin):
         t.wfile.flush()
         assert "Bad Request" in t.rfile.readline()
 
+    def test_upstream_ssl_error(self):
+        p = self.pathoc()
+        ret = p.request("get:'https://localhost:%s/'"%self.server.port)
+        assert ret[1] == 400
+
+    def test_http(self):
+        f = self.pathod("304")
+        assert f.status_code == 304
+
+        l = self.master.state.view[0]
+        assert l.request.client_conn.address
+        assert "host" in l.request.headers
+        assert l.response.code == 304
+
 
 class TestHTTPS(tutils.HTTPProxTest, SanityMixin):
     ssl = True
@@ -65,12 +80,3 @@ class TestTransparent(tutils.TransparentProxTest, SanityMixin):
     transparent = True
 
 
-class TestProxy(tutils.HTTPProxTest):
-    def test_http(self):
-        f = self.pathod("304")
-        assert f.status_code == 304
-
-        l = self.master.state.view[0]
-        assert l.request.client_conn.address
-        assert "host" in l.request.headers
-        assert l.response.code == 304

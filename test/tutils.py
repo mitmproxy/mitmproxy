@@ -127,6 +127,11 @@ class HTTPProxTest(ProxTestBase):
     def get_proxy_config(cls):
         return dict()
 
+    def pathoc(self, connect_to = None):
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
+        p.connect(connect_to)
+        return p
+
     def pathod(self, spec):
         """
             Constructs a pathod request, with the appropriate base and proxy.

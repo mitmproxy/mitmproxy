@@ -48,8 +48,8 @@ class ProxyConfig:
         self.reverse_proxy = reverse_proxy
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
-
         self.certstore = certutils.CertStore(certdir)
+
 
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
@@ -86,7 +86,7 @@ class ServerConnection(tcp.TCPClient):
             clientcert = None
             if self.config.clientcerts:
                 path = os.path.join(self.config.clientcerts, self.host) + ".pem"
-                if os.path.exists(clientcert):
+                if os.path.exists(path):
                     clientcert = path
             try:
                 self.convert_to_ssl(clientcert=clientcert, sni=self.host)
@@ -95,10 +95,10 @@ class ServerConnection(tcp.TCPClient):
 
     def send(self, request):
         self.requestcount += 1
+        d = request._assemble()
+        if not d:
+            raise ProxyError(502, "Cannot transmit an incomplete request.")
         try:
-            d = request._assemble()
-            if not d:
-                raise ProxyError(502, "Incomplete request could not not be readied for transmission.")
             self.wfile.write(d)
             self.wfile.flush()
         except socket.error, err:
@@ -373,7 +373,7 @@ class ProxyHandler(tcp.BaseHandler):
     def send_response(self, response):
         d = response._assemble()
         if not d:
-            raise ProxyError(502, "Incomplete response could not not be readied for transmission.")
+            raise ProxyError(502, "Cannot transmit an incomplete response.")
         self.wfile.write(d)
         self.wfile.flush()
 
