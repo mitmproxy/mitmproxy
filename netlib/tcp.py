@@ -44,6 +44,7 @@ class _FileLike:
     def __init__(self, o):
         self.o = o
         self._log = None
+        self.timestamp = None
 
     def set_descriptor(self, o):
         self.o = o
@@ -80,6 +81,8 @@ class _FileLike:
         if self.is_logging():
             self._log.append(v)
 
+    def reset_timestamp(self):
+        self.timestamp = None
 
 class Writer(_FileLike):
     def flush(self):
@@ -131,6 +134,7 @@ class Reader(_FileLike):
                 raise NetLibDisconnect
             except SSL.SysCallError, v:
                 raise NetLibDisconnect
+            self.timestamp = self.timestamp or time.time()
             if not data:
                 break
             result += data
