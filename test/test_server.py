@@ -1,5 +1,6 @@
 from netlib import tcp
-import tutils
+from time import sleep
+import tutils, socket
 
 """
     Note that the choice of response code in these tests matters more than you
