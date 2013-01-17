@@ -313,3 +313,27 @@ class TestFileLike:
         s.write("x")
         assert s.get_log() == "xx"
 
+    def test_reset_timestamps(self):
+        s = cStringIO.StringIO("foobar\nfoobar")
+        s = tcp.Reader(s)
+        s.first_byte_timestamp = 500
+        s.reset_timestamps()
+        assert not s.first_byte_timestamp
+
+    def test_first_byte_timestamp_updated_on_read(self):
+        s = cStringIO.StringIO("foobar\nfoobar")
+        s = tcp.Reader(s)
+        s.read(1)
+        assert s.first_byte_timestamp
+        expected = s.first_byte_timestamp
+        s.read(5)
+        assert s.first_byte_timestamp == expected
+
+    def test_first_byte_timestamp_updated_on_readline(self):
+        s = cStringIO.StringIO("foobar\nfoobar\nfoobar")
+        s = tcp.Reader(s)
+        s.readline()
+        assert s.first_byte_timestamp
+        expected = s.first_byte_timestamp
+        s.readline()
+        assert s.first_byte_timestamp == expected
