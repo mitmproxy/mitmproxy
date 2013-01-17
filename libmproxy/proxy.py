@@ -38,18 +38,18 @@ class Log(controller.Msg):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, cert_wait_time=0, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
         assert not (reverse_proxy and transparent_proxy)
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
-        self.certdir = certdir
-        self.cert_wait_time = cert_wait_time
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
+
+        self.certstore = certutils.CertStore(certdir)
 
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
@@ -247,8 +247,7 @@ class ProxyHandler(tcp.BaseHandler):
                     raise ProxyError(502, "Unable to get remote cert: %s"%str(v))
                 sans = cert.altnames
                 host = cert.cn.decode("utf8").encode("idna")
-            ret = certutils.dummy_cert(self.config.certdir, self.config.cacert, host, sans)
-            time.sleep(self.config.cert_wait_time)
+            ret = self.config.certstore.get_cert(host, sans, self.config.cacert)
             if not ret:
                 raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
             return ret
@@ -270,7 +269,10 @@ class ProxyHandler(tcp.BaseHandler):
     def read_request(self, client_conn):
         self.rfile.reset_timestamps()
         if self.config.transparent_proxy:
-            host, port = self.config.transparent_proxy["resolver"].original_addr(self.connection)
+            orig = self.config.transparent_proxy["resolver"].original_addr(self.connection)
+            if not orig:
+                raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
+            host, port = orig
             if not self.ssl_established and (port in self.config.transparent_proxy["sslports"]):
                 scheme = "https"
                 certfile = self.find_cert(host, port, None)
@@ -311,7 +313,7 @@ class ProxyHandler(tcp.BaseHandler):
             line = self.get_line(self.rfile)
             if line == "":
                 return None
-            if line.startswith("CONNECT"):
+            if http.parse_init_connect(line):
                 r = http.parse_init_connect(line)
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
@@ -332,14 +334,15 @@ class ProxyHandler(tcp.BaseHandler):
                     raise ProxyError(400, str(v))
                 self.proxy_connect_state = (host, port, httpversion)
                 line = self.rfile.readline(line)
+
             if self.proxy_connect_state:
-                host, port, httpversion = self.proxy_connect_state
                 r = http.parse_init_http(line)
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
                 method, path, httpversion = r
                 headers = self.read_headers(authenticate=False)
 
+                host, port, _ = self.proxy_connect_state
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
@@ -348,7 +351,7 @@ class ProxyHandler(tcp.BaseHandler):
                 r = http.parse_init_proxy(line)
                 if not r:
                     raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
-                method, scheme, host, port, path, httpversion = http.parse_init_proxy(line)
+                method, scheme, host, port, path, httpversion = r
                 headers = self.read_headers(authenticate=True)
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
@@ -359,8 +362,15 @@ class ProxyHandler(tcp.BaseHandler):
         headers = http.read_headers(self.rfile)
         if headers is None:
             raise ProxyError(400, "Invalid headers")
-        if authenticate and self.config.authenticator and not self.config.authenticator.authenticate(headers.get('Proxy-Authorization', [])):
-            raise ProxyError(407, "Proxy Authentication Required", self.config.authenticator.auth_challenge_headers())
+        if authenticate and self.config.authenticator:
+            if self.config.authenticator.authenticate(headers):
+                self.config.authenticator.clean(headers)
+            else:
+                raise ProxyError(
+                            407,
+                            "Proxy Authentication Required",
+                            self.config.authenticator.auth_challenge_headers()
+                       )
         return headers
 
     def send_response(self, response):
@@ -405,13 +415,6 @@ class ProxyServer(tcp.TCPServer):
         except socket.error, v:
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.masterq = None
-        if config.certdir:
-            self.certdir = config.certdir
-            self.remove_certdir = False
-        else:
-            self.certdir = tempfile.mkdtemp(prefix="mitmproxy")
-            config.certdir = self.certdir
-            self.remove_certdir = True
         self.apps = AppRegistry()
 
     def start_slave(self, klass, masterq):
@@ -430,11 +433,7 @@ class ProxyServer(tcp.TCPServer):
             pass
 
     def handle_shutdown(self):
-        try:
-            if self.remove_certdir:
-                shutil.rmtree(self.certdir)
-        except OSError:
-            pass
+        self.config.certstore.cleanup()
 
 
 class AppRegistry:
@@ -537,30 +536,24 @@ def process_proxy_options(parser, options):
         if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
             parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
 
-    if options.authscheme and (options.authscheme!='none'):
-        if not (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
-            parser.error("Proxy authentication scheme is specified, but no allowed user list is given.")
-        if options.auth_singleuser and len(options.auth_singleuser.split(':'))!=2:
-            parser.error("Authorized user is not given in correct format username:password")
-        if options.auth_nonanonymous:
-            password_manager = authentication.PermissivePasswordManager()
-        elif options.auth_singleuser:
+    if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
+        if options.auth_singleuser:
+            if len(options.auth_singleuser.split(':')) != 2:
+                parser.error("Please specify user in the format username:password")
             username, password = options.auth_singleuser.split(':')
             password_manager = authentication.SingleUserPasswordManager(username, password)
+        elif options.auth_nonanonymous:
+            password_manager = authentication.PermissivePasswordManager()
         elif options.auth_htpasswd:
             password_manager = authentication.HtpasswdPasswordManager(options.auth_htpasswd)
-        # in the meanwhile, basic auth is the only true authentication scheme we support
-        # so just use it
-        authenticator = authentication.BasicProxyAuth(password_manager)
+        authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
     else:
         authenticator = authentication.NullProxyAuth(None)
-
 
     return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
         clientcerts = options.clientcerts,
-        cert_wait_time = options.cert_wait_time,
         body_size_limit = body_size_limit,
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,

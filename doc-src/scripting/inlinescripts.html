@@ -1,4 +1,3 @@
-
 __mitmproxy__ has a powerful scripting API that allows you to modify flows
 on-the-fly or rewrite previously saved flows locally. 
 
@@ -22,13 +21,13 @@ response itself.
 Called once on startup, before any other events.
 
 
-###clientconnect(ScriptContext, ClientConnect)
+### clientconnect(ScriptContext, ClientConnect)
 
 Called when a client initiates a connection to the proxy. Note that
 a connection can correspond to multiple HTTP requests.
 
 
-###request(ScriptContext, Flow)
+### request(ScriptContext, Flow)
 
 Called when a client request has been received. The __Flow__ object is
 guaranteed to have a non-None __request__ attribute.

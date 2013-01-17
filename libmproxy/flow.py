@@ -1387,6 +1387,8 @@ class FlowMaster(controller.Master):
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
+        if self.server_playback.exit:
+            self.shutdown()
         self.server_playback = None
 
     def do_server_playback(self, flow):
@@ -1419,10 +1421,6 @@ class FlowMaster(controller.Master):
             if all(e):
                 self.shutdown()
             self.client_playback.tick(self)
-
-        if self.server_playback:
-            if self.server_playback.exit and self.server_playback.count() == 0:
-                self.shutdown()
 
         return controller.Master.tick(self, q)
 

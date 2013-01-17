@@ -1,30 +1,80 @@
-<div id="doc">
-    <div style="" id="hd" class="doc">
-        <!--(block nav)-->
-        <div id="nav">
-            <!--(block pb)-->
-            <a href="@!urlTo(previous)!@">prev</a>
-            <!--(end)-->
-            <!--(block nb)-->
-            <a href="@!urlTo(next)!@">next</a>
-            <!--(end)-->
-            $!pb if previous else "prev"!$ |
-            <a href="@!urlTo('/index.html')!@">index</a> |
-            $!nb if next else "next"!$
-        </div>
-        <!--(end)-->
-        $!nav if this.title!="docs" else ""!$
-        <h1><a href="@!urlTo("/index.html")!@">mitmproxy 0.9 docs</a></h1>
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="container-fluid">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+      <a class="brand" href="@!urlTo("/index.html")!@">mitmproxy 0.9 docs</a>
+      </div><!--/.nav-collapse -->
     </div>
-    <div id="bd">
-        <div id="yui-main">
-            <div style="" class="yui-b">
-                $!title if this.title!="docs" else ""!$
-                $!body!$
-            </div>
-        </div>
-    </div>
-    <div style="" id="ft" class="doc">
-        <p>@!copyright!@</p>
-    </div>
+  </div>
 </div>
+
+<div class="container-fluid">
+  <div class="row-fluid">
+    <div class="span3">
+      <div class="well sidebar-nav">
+        <ul class="nav nav-list">
+            $!nav("index.html", this, state)!$
+            $!nav("install.html", this, state)!$
+            $!nav("howmitmproxy.html", this, state)!$
+            $!nav("faq.html", this, state)!$
+
+            <li class="nav-header">Tools</li>
+                $!nav("mitmproxy.html", this, state)!$
+                $!nav("mitmdump.html", this, state)!$
+
+            <li class="nav-header">Features</li>
+                $!nav("anticache.html", this, state)!$
+                $!nav("clientreplay.html", this, state)!$
+                $!nav("filters.html", this, state)!$
+                $!nav("proxyauth.html", this, state)!$
+                $!nav("replacements.html", this, state)!$
+                $!nav("serverreplay.html", this, state)!$
+                $!nav("setheaders.html", this, state)!$
+                $!nav("sticky.html", this, state)!$
+                $!nav("reverseproxy.html", this, state)!$
+                $!nav("upstreamcerts.html", this, state)!$
+
+            <li class="nav-header">SSL interception</li>
+                $!nav("ssl.html", this, state)!$
+                $!nav("certinstall/firefox.html", this, state)!$
+                $!nav("certinstall/osx.html", this, state)!$
+                $!nav("certinstall/windows7.html", this, state)!$
+                $!nav("certinstall/ios.html", this, state)!$
+                $!nav("certinstall/android.html", this, state)!$
+
+            <li class="nav-header">Transparent Proxying</li>
+                $!nav("transparent.html", this, state)!$
+                $!nav("transparent/linux.html", this, state)!$
+                $!nav("transparent/osx.html", this, state)!$
+
+             <li class="nav-header">Tutorials</li>
+                $!nav("tutorials/30second.html", this, state)!$
+                $!nav("tutorials/gamecenter.html", this, state)!$
+
+            <li class="nav-header">Scripting mitmproxy</li>
+                $!nav("scripting/inlinescripts.html", this, state)!$
+                $!nav("scripting/libmproxy.html", this, state)!$
+        </ul>
+      </div>
+    </div>
+
+    <div class="span9">
+        <div class="page-header">
+        <h1>@!this.title!@</h1>
+        </div>
+        $!body!$
+    </div>
+
+  </div><!--/row-->
+
+  <hr>
+
+  <footer>
+    <p>@!copyright!@</p>
+  </footer>
+
+</div><!--/.fluid-container-->

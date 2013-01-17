@@ -48,6 +48,15 @@ class TestDumpMaster:
         fw.add(t)
         f.close()
 
+    def test_error(self):
+        cs = StringIO()
+        o = dump.Options(verbosity=1)
+        m = dump.DumpMaster(None, o, None, outfile=cs)
+        f = tutils.tflow_err()
+        m.handle_request(f.request)
+        assert m.handle_error(f.error)
+        assert "error" in cs.getvalue()
+
     def test_replay(self):
         cs = StringIO()
 
