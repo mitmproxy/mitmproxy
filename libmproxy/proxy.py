@@ -180,14 +180,16 @@ class ProxyHandler(tcp.BaseHandler):
                         scheme, host, port = request.scheme, request.host, request.port
                     self.server_connect(scheme, host, port)
                     self.server_conn.send(request)
+                    self.server_conn.rfile.reset_timestamps()
                     httpversion, code, msg, headers, content = http.read_response(
                         self.server_conn.rfile,
                         request.method,
                         self.config.body_size_limit
                     )
                     response = flow.Response(
-                        request, httpversion, code, msg, headers, content, self.server_conn.cert
+                        request, httpversion, code, msg, headers, content, self.server_conn.cert, self.server_conn.rfile.first_byte_timestamp, utils.timestamp()
                     )
+
                     response = response._send(self.mqueue)
                     if response is None:
                         self.server_conn.terminate()
@@ -265,6 +267,7 @@ class ProxyHandler(tcp.BaseHandler):
             self.sni = sn.decode("utf8").encode("idna")
 
     def read_request(self, client_conn):
+        self.rfile.reset_timestamps()
         if self.config.transparent_proxy:
             orig = self.config.transparent_proxy["resolver"].original_addr(self.connection)
             if not orig:
@@ -291,7 +294,7 @@ class ProxyHandler(tcp.BaseHandler):
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
-            return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content)
+            return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content, self.rfile.first_byte_timestamp, utils.timestamp())
         elif self.config.reverse_proxy:
             line = self.get_line(self.rfile)
             if line == "":
@@ -305,7 +308,7 @@ class ProxyHandler(tcp.BaseHandler):
             content = http.read_http_body_request(
                         self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                     )
-            return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content)
+            return flow.Request(client_conn, httpversion, host, port, "http", method, path, headers, content, self.rfile.first_byte_timestamp, utils.timestamp())
         else:
             line = self.get_line(self.rfile)
             if line == "":
@@ -343,7 +346,7 @@ class ProxyHandler(tcp.BaseHandler):
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
-                return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content)
+                return flow.Request(client_conn, httpversion, host, port, "https", method, path, headers, content, self.rfile.first_byte_timestamp, utils.timestamp())
             else:
                 r = http.parse_init_proxy(line)
                 if not r:
@@ -353,7 +356,7 @@ class ProxyHandler(tcp.BaseHandler):
                 content = http.read_http_body_request(
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
-                return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content)
+                return flow.Request(client_conn, httpversion, host, port, scheme, method, path, headers, content, self.rfile.first_byte_timestamp, utils.timestamp())
 
     def read_headers(self, authenticate=False):
         headers = http.read_headers(self.rfile)
