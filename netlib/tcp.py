@@ -177,7 +177,7 @@ class TCPClient:
         if not options is None:
             ctx.set_options(options)
         if clientcert:
-            context.use_certificate_file(self.clientcert)
+            context.use_certificate_file(clientcert)
         self.connection = SSL.Connection(context, self.connection)
         self.ssl_established = True
         if sni:
