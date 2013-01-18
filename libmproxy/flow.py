@@ -256,17 +256,20 @@ class Request(HTTPMsg):
 
             path: Path portion of the URL
 
-            timestamp: Seconds since the epoch
+            timestamp_start: Seconds since the epoch signifying request transmission started
 
             method: HTTP method
+
+            timestamp_end: Seconds since the epoch signifying request transmission ended
     """
-    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp=None):
+    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp_start=None, timestamp_end=None):
         assert isinstance(headers, ODictCaseless)
         self.client_conn = client_conn
         self.httpversion = httpversion
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
-        self.timestamp = timestamp or utils.timestamp()
+        self.timestamp_start = timestamp_start or utils.timestamp()
+        self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         self.close = False
         controller.Msg.__init__(self)
 
@@ -330,7 +333,8 @@ class Request(HTTPMsg):
         self.path = state["path"]
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
-        self.timestamp = state["timestamp"]
+        self.timestamp_start = state["timestamp_start"]
+        self.timestamp_end = state["timestamp_end"]
 
     def _get_state(self):
         return dict(
@@ -343,7 +347,8 @@ class Request(HTTPMsg):
             path = self.path,
             headers = self.headers._get_state(),
             content = self.content,
-            timestamp = self.timestamp,
+            timestamp_start = self.timestamp_start,
+            timestamp_end = self.timestamp_end
         )
 
     @classmethod
@@ -358,7 +363,8 @@ class Request(HTTPMsg):
             str(state["path"]),
             ODictCaseless._from_state(state["headers"]),
             state["content"],
-            state["timestamp"]
+            state["timestamp_start"],
+            state["timestamp_end"],
         )
 
     def __hash__(self):
@@ -545,15 +551,18 @@ class Response(HTTPMsg):
             is content associated, but not present. CONTENT_MISSING evaluates
             to False to make checking for the presence of content natural.
 
-            timestamp: Seconds since the epoch
+            timestamp_start: Seconds since the epoch signifying response transmission started
+
+            timestamp_end: Seconds since the epoch signifying response transmission ended
     """
-    def __init__(self, request, httpversion, code, msg, headers, content, cert, timestamp=None):
+    def __init__(self, request, httpversion, code, msg, headers, content, cert, timestamp_start=None, timestamp_end=None):
         assert isinstance(headers, ODictCaseless)
         self.request = request
         self.httpversion, self.code, self.msg = httpversion, code, msg
         self.headers, self.content = headers, content
         self.cert = cert
-        self.timestamp = timestamp or utils.timestamp()
+        self.timestamp_start = timestamp_start or utils.timestamp()
+        self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         controller.Msg.__init__(self)
         self.replay = False
 
@@ -589,7 +598,7 @@ class Response(HTTPMsg):
         """
         if not now:
             now = time.time()
-        delta = now - self.timestamp
+        delta = now - self.timestamp_start
         refresh_headers = [
             "date",
             "expires",
@@ -621,7 +630,8 @@ class Response(HTTPMsg):
         self.msg = state["msg"]
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
-        self.timestamp = state["timestamp"]
+        self.timestamp_start = state["timestamp_start"]
+        self.timestamp_end = state["timestamp_end"]
         self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     def _get_state(self):
@@ -630,9 +640,10 @@ class Response(HTTPMsg):
             code = self.code,
             msg = self.msg,
             headers = self.headers._get_state(),
-            timestamp = self.timestamp,
+            timestamp_start = self.timestamp_start,
+            timestamp_end = self.timestamp_end,
             cert = self.cert.to_pem() if self.cert else None,
-            content = self.content
+            content = self.content,
         )
 
     @classmethod
@@ -645,7 +656,8 @@ class Response(HTTPMsg):
             ODictCaseless._from_state(state["headers"]),
             state["content"],
             certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None,
-            state["timestamp"],
+            state["timestamp_start"],
+            state["timestamp_end"],
         )
 
     def __eq__(self, other):
