@@ -71,6 +71,9 @@ class TestHTTP(tutils.HTTPProxTest, SanityMixin):
 
 class TestHTTPS(tutils.HTTPProxTest, SanityMixin):
     ssl = True
+    # FIXME: Instrument pathod to actually test that client cert is being sent
+    # correctly.
+    clientcerts = True
 
 
 class TestReverse(tutils.ReverseProxTest, SanityMixin):
