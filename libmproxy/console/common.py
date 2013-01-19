@@ -181,7 +181,7 @@ def format_flow(f, focus, extended=False, padding=2):
     d = dict(
         intercepting = f.intercepting,
 
-        req_timestamp = f.request.timestamp,
+        req_timestamp = f.request.timestamp_start,
         req_is_replay = f.request.is_replay(),
         req_method = f.request.method,
         req_acked = f.request.acked,
