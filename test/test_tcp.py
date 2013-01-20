@@ -57,6 +57,16 @@ class EchoHandler(tcp.BaseHandler):
         self.wfile.flush()
 
 
+class CertHandler(tcp.BaseHandler):
+    sni = None
+    def handle_sni(self, connection):
+        self.sni = connection.get_servername()
+
+    def handle(self):
+        self.wfile.write("%s\n"%self.clientcert.serial)
+        self.wfile.flush()
+
+
 class DisconnectHandler(tcp.BaseHandler):
     def handle(self):
         self.close()
@@ -166,6 +176,18 @@ class TestSSLv3Only(ServerTestBase):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
         tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com", method=tcp.TLSv1_METHOD)
+
+
+class TestSSLClientCert(ServerTestBase):
+    @classmethod
+    def makeserver(cls):
+        return TServer(("127.0.0.1", 0), True, cls.q, CertHandler)
+
+    def test_clientcert(self):
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        c.convert_to_ssl(clientcert=tutils.test_data.path("data/clientcert/client.pem"))
+        assert c.rfile.readline().strip() == "1"
 
 
 class TestSNI(ServerTestBase):

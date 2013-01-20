@@ -173,10 +173,14 @@ class TCPClient:
         self.ssl_established = False
 
     def convert_to_ssl(self, clientcert=None, sni=None, method=TLSv1_METHOD, options=None):
+        """
+            clientcert: Path to a file containing both client cert and private key.
+        """
         context = SSL.Context(method)
         if not options is None:
             ctx.set_options(options)
         if clientcert:
+            context.use_privatekey_file(clientcert)
             context.use_certificate_file(clientcert)
         self.connection = SSL.Connection(context, self.connection)
         self.ssl_established = True
@@ -238,6 +242,7 @@ class BaseHandler:
         self.server = server
         self.finished = False
         self.ssl_established = False
+        self.clientcert = None
 
     def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None):
         """
@@ -246,13 +251,16 @@ class BaseHandler:
         ctx = SSL.Context(method)
         if not options is None:
             ctx.set_options(options)
+        # SNI callback happens during do_handshake()
         ctx.set_tlsext_servername_callback(self.handle_sni)
         ctx.use_privatekey_file(key)
         ctx.use_certificate_file(cert)
+        def ver(*args):
+            self.clientcert = certutils.SSLCert(args[1])
+        ctx.set_verify(SSL.VERIFY_PEER, ver)
         self.connection = SSL.Connection(ctx, self.connection)
         self.ssl_established = True
         self.connection.set_accept_state()
-        # SNI callback happens during do_handshake()
         try:
             self.connection.do_handshake()
         except SSL.Error, v:

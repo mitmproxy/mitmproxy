@@ -256,11 +256,11 @@ class SSLCert:
 
     @property
     def cn(self):
-        cn = None
+        c = None
         for i in self.subject:
             if i[0] == "CN":
-                cn = i[1]
-        return cn
+                c = i[1]
+        return c
 
     @property
     def altnames(self):
