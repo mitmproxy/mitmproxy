@@ -96,6 +96,17 @@ class PathodHandler(tcp.BaseHandler):
             self.info(s)
             return False, dict(type = "error", msg = s)
 
+        clientcert = None
+        if self.clientcert:
+            clientcert = dict(
+                cn = self.clientcert.cn,
+                subject = self.clientcert.subject,
+                serial = self.clientcert.serial,
+                notbefore = self.clientcert.notbefore.isoformat(),
+                notafter = self.clientcert.notafter.isoformat(),
+                keyinfo = self.clientcert.keyinfo,
+            )
+
         request_log = dict(
             path = path,
             method = method,
@@ -103,6 +114,7 @@ class PathodHandler(tcp.BaseHandler):
             httpversion = httpversion,
             sni = self.sni,
             remote_address = self.client_address,
+            clientcert = clientcert
         )
 
         try:

@@ -45,6 +45,19 @@ class TestDaemonSSL(_TestDaemon):
         d = json.loads(content)
         assert d["log"][0]["request"]["sni"] == "foobar.com"
 
+    def test_clientcert(self):
+        c = pathoc.Pathoc(
+            "127.0.0.1",
+            self.d.port,
+            ssl = True,
+            clientcert = tutils.test_data.path("data/clientcert/client.pem")
+        )
+        c.connect()
+        c.request("get:/p/200")
+        _, _, _, _, content = c.request("get:/api/log")
+        d = json.loads(content)
+        assert d["log"][0]["request"]["clientcert"]["keyinfo"]
+
 
 class TestDaemon(_TestDaemon):
     ssl = False

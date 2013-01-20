@@ -7,13 +7,14 @@ class PathocError(Exception): pass
 
 
 class Pathoc(tcp.TCPClient):
-    def __init__(self, host, port, ssl=None, sni=None):
+    def __init__(self, host, port, ssl=None, sni=None, clientcert=None):
         tcp.TCPClient.__init__(self, host, port)
         self.settings = dict(
             staticdir = os.getcwd(),
             unconstrained_file_access = True,
         )
         self.ssl, self.sni = ssl, sni
+        self.clientcert = clientcert
 
     def http_connect(self, connect_to, wfile, rfile):
         wfile.write(
@@ -34,7 +35,7 @@ class Pathoc(tcp.TCPClient):
             self.http_connect(connect_to, self.wfile, self.rfile)
         if self.ssl:
             try:
-                self.convert_to_ssl(sni=self.sni)
+                self.convert_to_ssl(sni=self.sni, clientcert=self.clientcert)
             except tcp.NetLibError, v:
                 raise PathocError(str(v))
 

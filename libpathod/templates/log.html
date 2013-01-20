@@ -17,9 +17,13 @@
         <tbody>
             {% for i in log %}
                 <tr>
-                    <td>{{ i["id"] }}</td>
-                    <td>{{ i["request"]["method"] }}</td>
-                    <td><a href="/log/{{ i["id"] }}">{{ i["request"]["path"] }}</a></td>
+                    {% if i["type"] == 'error' %}
+                        <td colspan="3">ERROR: {{ i["msg"] }}</td>
+                    {% else %}
+                        <td>{{ i["id"] }}</td>
+                        <td>{{ i["request"]["method"] }}</td>
+                        <td><a href="/log/{{ i["id"] }}">{{ i["request"]["path"] }}</a></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>

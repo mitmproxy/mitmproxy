@@ -23,20 +23,12 @@ if __name__ == "__main__":
         help="Issue an HTTP CONNECT to connect to the specified host."
     )
     parser.add_argument(
-        "-i", dest="sni", type=str, default=False,
-        help="SSL Server Name Indication"
-    )
-    parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
         help='Repeat requests N times'
     )
     parser.add_argument(
         "-p", dest="port", type=int, default=None,
         help="Port. Defaults to 80, or 443 if SSL is active"
-    )
-    parser.add_argument(
-        "-s", dest="ssl", action="store_true", default=False,
-        help="Connect with SSL"
     )
     parser.add_argument(
         "-t", dest="timeout", type=int, default=None,
@@ -51,6 +43,24 @@ if __name__ == "__main__":
         help='Request specification'
     )
 
+
+    group = parser.add_argument_group(
+        'SSL',
+    )
+    group.add_argument(
+        "-s", dest="ssl", action="store_true", default=False,
+        help="Connect with SSL"
+    )
+    group.add_argument(
+        "-C", dest="clientcert", type=str, default=False,
+        help="Path to a file containing client certificate and private key"
+    )
+    group.add_argument(
+        "-i", dest="sni", type=str, default=False,
+        help="SSL Server Name Indication"
+    )
+
+
     group = parser.add_argument_group(
         'Controlling Output',
         """
@@ -59,7 +69,7 @@ if __name__ == "__main__":
         """
     )
     group.add_argument(
-        "-C", dest="ignorecodes", type=str, default="",
+        "-I", dest="ignorecodes", type=str, default="",
         help="Comma-separated list of response codes to ignore"
     )
     group.add_argument(
@@ -113,10 +123,10 @@ if __name__ == "__main__":
 
     try:
         for i in range(args.repeat):
-            p = pathoc.Pathoc(args.host, port, args.ssl, args.sni)
+            p = pathoc.Pathoc(args.host, port, ssl=args.ssl, sni=args.sni, clientcert=args.clientcert)
             try:
                 p.connect(connect_to)
-            except tcp.NetLibError, v:
+            except (tcp.NetLibError, pathoc.PathocError), v:
                 print >> sys.stderr, str(v)
                 sys.exit(1)
             if args.timeout:
