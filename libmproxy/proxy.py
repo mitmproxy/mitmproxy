@@ -29,12 +29,10 @@ class ProxyError(Exception):
         return "ProxyError(%s, %s)"%(self.code, self.msg)
 
 
-
 class Log(controller.Msg):
     def __init__(self, msg):
         controller.Msg.__init__(self)
         self.msg = msg
-
 
 
 class ProxyConfig:

@@ -116,9 +116,8 @@ class ProxTestBase:
         """
         return self.server.urlbase
 
-    def log(self):
-        pthread = self.proxy
-        return pthread.tmaster.log
+    def last_log(self):
+        return self.server.last_log()
 
 
 class HTTPProxTest(ProxTestBase):
