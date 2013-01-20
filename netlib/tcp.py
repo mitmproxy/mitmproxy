@@ -177,11 +177,14 @@ class TCPClient:
             clientcert: Path to a file containing both client cert and private key.
         """
         context = SSL.Context(method)
-        if not options is None:
+        if options is not None:
             ctx.set_options(options)
         if clientcert:
-            context.use_privatekey_file(clientcert)
-            context.use_certificate_file(clientcert)
+            try:
+                context.use_privatekey_file(clientcert)
+                context.use_certificate_file(clientcert)
+            except SSL.Error, v:
+                raise NetLibError("SSL client certificate error: %s"%str(v))
         self.connection = SSL.Connection(context, self.connection)
         self.ssl_established = True
         if sni:
