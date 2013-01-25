@@ -30,6 +30,7 @@ class TestCertStore:
             ca = os.path.join(d, "ca")
             assert certutils.dummy_ca(ca)
             c = certutils.CertStore()
+            assert not c.get_cert("../foo.com", [])
             assert not c.get_cert("foo.com", [])
             assert c.get_cert("foo.com", [], ca)
             assert c.get_cert("foo.com", [], ca)

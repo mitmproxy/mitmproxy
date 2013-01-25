@@ -1,4 +1,4 @@
-import select, socket, threading, traceback, sys, time
+import select, socket, threading, sys, time, traceback
 from OpenSSL import SSL
 import certutils
 
@@ -84,13 +84,14 @@ class _FileLike:
     def reset_timestamps(self):
         self.first_byte_timestamp = None
 
+
 class Writer(_FileLike):
     def flush(self):
-        try:
-            if hasattr(self.o, "flush"):
+        if hasattr(self.o, "flush"):
+            try:
                 self.o.flush()
-        except socket.error, v:
-            raise NetLibDisconnect(str(v))
+            except socket.error, v:
+                raise NetLibDisconnect(str(v))
 
     def write(self, v):
         if v:
