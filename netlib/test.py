@@ -14,6 +14,8 @@ class ServerThread(threading.Thread):
 
 
 class ServerTestBase:
+    ssl = None
+    handler = None
     @classmethod
     def setupAll(cls):
         cls.q = Queue.Queue()
@@ -23,9 +25,12 @@ class ServerTestBase:
         cls.server.start()
 
     @classmethod
+    def makeserver(cls):
+        return TServer(cls.ssl, cls.q, cls.handler)
+
+    @classmethod
     def teardownAll(cls):
         cls.server.shutdown()
-
 
     @property
     def last_handler(self):

@@ -58,10 +58,7 @@ class TimeoutHandler(tcp.BaseHandler):
 
 
 class TestServer(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(False, cls.q, EchoHandler)
-
+    handler = EchoHandler
     def test_echo(self):
         testval = "echo!\n"
         c = tcp.TCPClient("127.0.0.1", self.port)
@@ -72,10 +69,7 @@ class TestServer(test.ServerTestBase):
 
 
 class TestDisconnect(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(False, cls.q, EchoHandler)
-
+    handler = EchoHandler
     def test_echo(self):
         testval = "echo!\n"
         c = tcp.TCPClient("127.0.0.1", self.port)
@@ -86,18 +80,12 @@ class TestDisconnect(test.ServerTestBase):
 
 
 class TestServerSSL(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(
-            dict(
+    handler = EchoHandler
+    ssl = dict(
                 cert = tutils.test_data.path("data/server.crt"),
                 key = tutils.test_data.path("data/server.key"),
                 v3_only = False
-            ),
-            cls.q,
-            EchoHandler
-        )
-
+            )
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
@@ -112,19 +100,12 @@ class TestServerSSL(test.ServerTestBase):
 
 
 class TestSSLv3Only(test.ServerTestBase):
-    v3_only = True
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(
-            dict(
-                cert = tutils.test_data.path("data/server.crt"),
-                key = tutils.test_data.path("data/server.key"),
-                v3_only = True
-            ),
-            cls.q,
-            EchoHandler,
-        )
-
+    handler = EchoHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        v3_only = True
+    )
     def test_failure(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
@@ -132,18 +113,12 @@ class TestSSLv3Only(test.ServerTestBase):
 
 
 class TestSSLClientCert(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(
-            dict(
-                cert = tutils.test_data.path("data/server.crt"),
-                key = tutils.test_data.path("data/server.key"),
-                v3_only = False
-            ),
-            cls.q,
-            CertHandler
-        )
-
+    handler = CertHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        v3_only = False
+    )
     def test_clientcert(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
@@ -161,18 +136,12 @@ class TestSSLClientCert(test.ServerTestBase):
 
 
 class TestSNI(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(
-            dict(
-                cert = tutils.test_data.path("data/server.crt"),
-                key = tutils.test_data.path("data/server.key"),
-                v3_only = False
-            ),
-            cls.q,
-            SNIHandler
-        )
-
+    handler = SNIHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        v3_only = False
+    )
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
@@ -181,18 +150,12 @@ class TestSNI(test.ServerTestBase):
 
 
 class TestSSLDisconnect(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(
-            dict(
-                cert = tutils.test_data.path("data/server.crt"),
-                key = tutils.test_data.path("data/server.key"),
-                v3_only = False
-            ),
-            cls.q,
-            DisconnectHandler
-        )
-
+    handler = DisconnectHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        v3_only = False
+    )
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
@@ -204,15 +167,10 @@ class TestSSLDisconnect(test.ServerTestBase):
         tutils.raises(Queue.Empty, self.q.get_nowait)
 
 
-class TestSSLDisconnect(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(False, cls.q, DisconnectHandler)
-
+class TestDisconnect(test.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
-        # Excercise SSL.ZeroReturnError
         c.rfile.read(10)
         c.wfile.write("foo")
         c.close()
@@ -220,10 +178,7 @@ class TestSSLDisconnect(test.ServerTestBase):
 
 
 class TestServerTimeOut(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(False, cls.q, TimeoutHandler)
-
+    handler = TimeoutHandler
     def test_timeout(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
@@ -232,10 +187,7 @@ class TestServerTimeOut(test.ServerTestBase):
 
 
 class TestTimeOut(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(False, cls.q, HangHandler)
-
+    handler = HangHandler
     def test_timeout(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
@@ -244,18 +196,12 @@ class TestTimeOut(test.ServerTestBase):
 
 
 class TestSSLTimeOut(test.ServerTestBase):
-    @classmethod
-    def makeserver(cls):
-        return test.TServer(
-            dict(
-                cert = tutils.test_data.path("data/server.crt"),
-                key = tutils.test_data.path("data/server.key"),
-                v3_only = False
-            ),
-            cls.q,
-            HangHandler
-        )
-
+    handler = HangHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        v3_only = False
+    )
     def test_timeout_client(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
