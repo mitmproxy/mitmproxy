@@ -101,6 +101,7 @@ def dump(value,file,encoding=None):
     the given file.
     """
     file.write(dumps(value,encoding))
+    file.flush()
 
 
 def _rdumpq(q,size,value,encoding=None):
