@@ -87,6 +87,9 @@ class _FileLike:
 
 class Writer(_FileLike):
     def flush(self):
+        """
+            May raise NetLibDisconnect
+        """
         if hasattr(self.o, "flush"):
             try:
                 self.o.flush()
@@ -94,6 +97,9 @@ class Writer(_FileLike):
                 raise NetLibDisconnect(str(v))
 
     def write(self, v):
+        """
+            May raise NetLibDisconnect
+        """
         if v:
             try:
                 if hasattr(self.o, "sendall"):

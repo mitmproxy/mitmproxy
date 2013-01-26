@@ -1,5 +1,6 @@
-import cStringIO, threading, Queue, time
+import cStringIO, threading, Queue, time, socket
 from netlib import tcp, certutils, test
+import mock
 import tutils
 
 class SNIHandler(tcp.BaseHandler):
@@ -274,6 +275,22 @@ class TestFileLike:
         assert s.get_log() == "x"
         s.write("x")
         assert s.get_log() == "xx"
+
+    def test_writer_flush_error(self):
+        s = cStringIO.StringIO()
+        s = tcp.Writer(s)
+        o = mock.MagicMock()
+        o.flush = mock.MagicMock(side_effect=socket.error)
+        s.o = o
+        tutils.raises(tcp.NetLibDisconnect, s.flush)
+
+    def test_reader_read_error(self):
+        s = cStringIO.StringIO("foobar\nfoobar")
+        s = tcp.Reader(s)
+        o = mock.MagicMock()
+        o.read = mock.MagicMock(side_effect=socket.error)
+        s.o = o
+        tutils.raises(tcp.NetLibDisconnect, s.read, 10)
 
     def test_reset_timestamps(self):
         s = cStringIO.StringIO("foobar\nfoobar")
