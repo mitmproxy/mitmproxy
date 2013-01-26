@@ -90,7 +90,7 @@ class TestServerSSL(test.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
-        c.convert_to_ssl(sni="foo.com")
+        c.convert_to_ssl(sni="foo.com", options=tcp.OP_ALL)
         testval = "echo!\n"
         c.wfile.write(testval)
         c.wfile.flush()
@@ -193,6 +193,7 @@ class TestTimeOut(test.ServerTestBase):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
         c.settimeout(0.1)
+        assert c.gettimeout() == 0.1
         tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
 
 

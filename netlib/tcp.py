@@ -185,7 +185,7 @@ class TCPClient:
         """
         context = SSL.Context(method)
         if options is not None:
-            ctx.set_options(options)
+            context.set_options(options)
         if clientcert:
             try:
                 context.use_privatekey_file(clientcert)
@@ -220,7 +220,7 @@ class TCPClient:
         self.connection.settimeout(n)
 
     def gettimeout(self):
-        self.connection.gettimeout()
+        return self.connection.gettimeout()
 
     def close(self):
         """
