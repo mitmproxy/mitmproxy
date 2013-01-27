@@ -355,20 +355,13 @@ class TCPServer:
             while not self.__shutdown_request:
                 r, w, e = select.select([self.socket], [], [], poll_interval)
                 if self.socket in r:
-                    try:
-                        request, client_address = self.socket.accept()
-                    except socket.error:
-                        return
-                    try:
-                        t = threading.Thread(
-                                target = self.request_thread,
-                                args = (request, client_address)
-                            )
-                        t.setDaemon(1)
-                        t.start()
-                    except:
-                        self.handle_error(request, client_address)
-                        request.close()
+                    request, client_address = self.socket.accept()
+                    t = threading.Thread(
+                            target = self.request_thread,
+                            args = (request, client_address)
+                        )
+                    t.setDaemon(1)
+                    t.start()
         finally:
             self.__shutdown_request = False
             self.__is_shut_down.set()

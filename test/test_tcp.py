@@ -20,10 +20,7 @@ class EchoHandler(tcp.BaseHandler):
 
     def handle(self):
         v = self.rfile.readline()
-        if v.startswith("echo"):
-            self.wfile.write(v)
-        elif v.startswith("error"):
-            raise ValueError("Testing an error.")
+        self.wfile.write(v)
         self.wfile.flush()
 
 
@@ -67,6 +64,35 @@ class TestServer(test.ServerTestBase):
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
+
+
+
+class FinishFailHandler(tcp.BaseHandler):
+    def handle(self):
+        v = self.rfile.readline()
+        self.wfile.write(v)
+        self.wfile.flush()
+        o = mock.MagicMock()
+        self.wfile.close()
+        self.rfile.close()
+        self.close = mock.MagicMock(side_effect=socket.error)
+
+
+class TestFinishFail(test.ServerTestBase):
+    """
+        This tests a difficult-to-trigger exception in the .finish() method of
+        the handler.
+    """
+    handler = FinishFailHandler
+    def test_disconnect_in_finish(self):
+        testval = "echo!\n"
+        c = tcp.TCPClient("127.0.0.1", self.port)
+        c.connect()
+        c.wfile.write("foo\n")
+        c.wfile.flush()
+        c.rfile.read(4)
+        h = self.last_handler
+        h.finish()
 
 
 class TestDisconnect(test.ServerTestBase):
@@ -317,3 +343,4 @@ class TestFileLike:
         expected = s.first_byte_timestamp
         s.readline()
         assert s.first_byte_timestamp == expected
+
