@@ -197,6 +197,16 @@ class decoded(object):
 
 
 class HTTPMsg(controller.Msg):
+    def get_decoded_content(self):
+        """
+            Returns the decoded content based on the current Content-Encoding header.
+            Doesn't change the message iteself or its headers.
+        """
+        ce = self.headers.get_first("content-encoding")
+        if not self.content or ce not in encoding.ENCODINGS:
+            return self.content
+        return encoding.decode(ce, self.content)
+
     def decode(self):
         """
             Decodes content based on the current Content-Encoding header, then
@@ -232,7 +242,15 @@ class HTTPMsg(controller.Msg):
         else:
             return hl
 
+    def get_content_type(self):
+        return self.headers.get_first("content-type")
 
+    def get_transmitted_size(self):
+        # FIXME: this is inprecise in case chunking is used
+        # (we should count the chunking headers)
+        if not self.content:
+            return 0
+        return len(self.content)
 
 class Request(HTTPMsg):
     """
@@ -458,6 +476,28 @@ class Request(HTTPMsg):
             return False
         self.scheme, self.host, self.port, self.path = parts
         return True
+
+    def get_cookies(self):
+        cookie_headers = self.headers.get("cookie")
+        if not cookie_headers:
+            return None
+
+        cookies = []
+        for header in cookie_headers:
+            pairs = [pair.partition("=") for pair in header.split(';')]
+            cookies.extend((pair[0],(pair[2],{})) for pair in pairs)
+        return dict(cookies)
+
+    def get_header_size(self):
+        FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
+        assembled_header = FMT % (
+                self.method,
+                self.path,
+                self.httpversion[0],
+                self.httpversion[1],
+                str(self.headers)
+            )
+        return len(assembled_header)
 
     def _assemble_head(self, proxy=False):
         FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
@@ -713,6 +753,25 @@ class Response(HTTPMsg):
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
+    def get_header_size(self):
+        FMT = '%s\r\n%s\r\n'
+        proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
+        assembled_header = FMT % (proto, str(self.headers))
+        return len(assembled_header)
+
+    def get_cookies(self):
+        cookie_headers = self.headers.get("set-cookie")
+        if not cookie_headers:
+            return None
+
+        cookies = []
+        for header in cookie_headers:
+            pairs = [pair.partition("=") for pair in header.split(';')]
+            cookie_name = pairs[0][0] # the key of the first key/value pairs
+            cookie_value = pairs[0][2] # the value of the first key/value pairs
+            cookie_parameters = {key.strip().lower():value.strip() for key,sep,value in pairs[1:]}
+            cookies.append((cookie_name, (cookie_value, cookie_parameters)))
+        return dict(cookies)
 
 class ClientDisconnect(controller.Msg):
     """
