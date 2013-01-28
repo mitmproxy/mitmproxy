@@ -98,28 +98,26 @@ class TestProxy(tutils.HTTPProxTest):
     def test_response_timestamps(self):
         # test that we notice at least 2 sec delay between timestamps
         # in response object
-        f = self.pathod("304:b@1k:p50,2")
+        f = self.pathod("304:b@1k:p50,1")
         assert f.status_code == 304
 
         response = self.master.state.view[0].response
-        assert 2 <= response.timestamp_end - response.timestamp_start <= 2.2
+        assert 1 <= response.timestamp_end - response.timestamp_start <= 1.2
 
     def test_request_timestamps(self):
-        # test that we notice at least 2 sec delay between timestamps
-        # in request object
+        # test that we notice a delay between timestamps in request object
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("127.0.0.1", self.proxy.port))
 
         # call pathod server, wait a second to complete the request
         connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
-        time.sleep(0.1)
         connection.send("\r\n");
         connection.recv(50000)
         connection.close()
 
         request, response = self.master.state.view[0].request, self.master.state.view[0].response
         assert response.code == 304  # sanity test for our low level request
-        assert 0 <= request.timestamp_end - request.timestamp_start <= 0.2
+        assert request.timestamp_end - request.timestamp_start > 0
 
     def test_request_timestamps_not_affected_by_client_time(self):
         # test that don't include user wait time in request's timestamps

@@ -892,6 +892,22 @@ class TestRequest:
         assert not r.headers["content-encoding"]
         assert r.content == "falafel"
 
+    def test_get_decoded_content(self):
+        r = tutils.treq()
+        r.content = None
+        r.headers["content-encoding"] = ["identity"]
+        assert r.get_decoded_content() == None
+
+        r.content = "falafel"
+        r.encode("gzip")
+        assert r.get_decoded_content() == "falafel"
+
+    def test_get_cookies_none(self):
+        h = flow.ODictCaseless()
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        assert r.get_cookies() == None
+
     def test_get_cookies_single(self):
         h = flow.ODictCaseless()
         h["Cookie"] = ["cookiename=cookievalue"]
@@ -936,6 +952,8 @@ class TestRequest:
         r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
         result = r.get_transmitted_size()
         assert result==len("content")
+        r.content = None
+        assert r.get_transmitted_size() == 0
 
     def test_get_content_type(self):
         h = flow.ODictCaseless()
@@ -1045,12 +1063,10 @@ class TestResponse:
         result = r.get_header_size()
         assert result==49
 
-    def test_get_transmitted_size(self):
-        r = tutils.tresp()
-        r.headers["content-encoding"] = ["identity"]
-        r.content = "falafel"
-        result = r.get_transmitted_size()
-        assert result==len("falafel")
+    def test_get_cookies_none(self):
+        h = flow.ODictCaseless()
+        resp = flow.Response(None, (1, 1), 200, "OK", h, "content", None)
+        assert not resp.get_cookies()
 
     def test_get_cookies_simple(self):
         h = flow.ODictCaseless()
