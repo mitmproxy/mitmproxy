@@ -107,6 +107,7 @@ class ServerConnection(tcp.TCPClient):
         except IOError:
             pass
 
+
 class ServerConnectionPool:
     def __init__(self, config):
         self.config = config

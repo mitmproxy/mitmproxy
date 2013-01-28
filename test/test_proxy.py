@@ -1,7 +1,7 @@
 from libmproxy import proxy, flow
 import tutils
 from libpathod import test
-from netlib import http
+from netlib import http, tcp
 import mock
 
 
@@ -58,3 +58,31 @@ class TestServerConnection:
         sc.connection = mock.Mock()
         sc.connection.close = mock.Mock(side_effect=IOError)
         sc.terminate()
+
+
+
+def _dummysc(config, host, port):
+    return mock.MagicMock(config=config, host=host, port=port)
+
+
+def _errsc(config, host, port):
+    m = mock.MagicMock(config=config, host=host, port=port)
+    m.connect = mock.MagicMock(side_effect=tcp.NetLibError()) 
+    return m
+
+
+class TestServerConnectionPool:
+    @mock.patch("libmproxy.proxy.ServerConnection", _dummysc)
+    def test_pooling(self):
+        p = proxy.ServerConnectionPool(proxy.ProxyConfig())
+        c = p.get_connection("http", "localhost", 80)
+        c2 = p.get_connection("http", "localhost", 80)
+        assert c is c2
+        c3 = p.get_connection("http", "foo", 80)
+        assert not c is c3
+
+    @mock.patch("libmproxy.proxy.ServerConnection", _errsc)
+    def test_connection_error(self):
+        p = proxy.ServerConnectionPool(proxy.ProxyConfig())
+        tutils.raises("502", p.get_connection, "http", "localhost", 80)
+
