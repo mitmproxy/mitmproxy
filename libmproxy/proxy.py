@@ -96,11 +96,8 @@ class ServerConnection(tcp.TCPClient):
         d = request._assemble()
         if not d:
             raise ProxyError(502, "Cannot transmit an incomplete request.")
-        try:
-            self.wfile.write(d)
-            self.wfile.flush()
-        except socket.error, err:
-            raise ProxyError(502, 'Error sending data to "%s": %s' % (request.host, err))
+        self.wfile.write(d)
+        self.wfile.flush()
 
     def terminate(self):
         try:
