@@ -1,4 +1,48 @@
 
+x January 2013: mitmproxy 0.9:
+
+    * Upstream certs mode is now the default.
+
+    * Add a WSGI container that lets you host in-proxy web applications.
+    
+    * Full transparent proxy support for Linux and OSX.
+    
+    * Introduce netlib, a common codebase for mitmproxy and pathod
+      (http://github.com/cortesi/netlib).
+
+    * Full support for SNI.
+    
+    * Color palettes for mitmproxy, tailored for light and dark terminal
+      backgrounds.
+
+    * Stream flows to file as responses arrive with the "W" shortcut in
+      mitmproxy.
+
+    * Extend the filter language, including ~d domain match operator, ~a to
+      match asset flows (js, images, css).
+
+    * Follow mode in mitmproxy ("F" shortcut) to "tail" flows as they arrive.
+    
+    * --dummy-certs option to specify and preserve the dummy certificate
+      directory.
+
+    * Server replay from the current captured buffer.
+    
+    * Huge improvements in content views. We now have viewers for AMF, HTML,
+      JSON, Javascript, images, XML, URL-encoded forms, as well as hexadecimal
+      and raw views.
+
+    * Add Set Headers, analagous to replacement hooks. Defines headers that are set
+      on flows, based on a matching pattern.
+
+    * A graphical editor for path components in mitmproxy.
+    
+    * A small set of standard user-agent strings, which can be used easily in
+      the header editor.
+
+    * Proxy authentication to limit access to mitmproxy
+
+
 5 April 2012: mitmproxy 0.8:
 
     * Detailed tutorial for Android interception. Some features that land in
@@ -29,14 +73,14 @@
 20 February 2012: mitmproxy 0.7:
 
     * New built-in key/value editor. This lets you interactively edit URL query
-      strings, headers and URL-encoded form data. 
+      strings, headers and URL-encoded form data.
 
     * Extend script API to allow duplication and replay of flows.
-    
+
     * API for easy manipulation of URL-encoded forms and query strings.
-    
+
     * Add "D" shortcut in mitmproxy to duplicate a flow.
-    
+
     * Reverse proxy mode. In this mode mitmproxy acts as an HTTP server,
       forwarding all traffic to a specified upstream server.
 
@@ -44,13 +88,13 @@
       improve spacing and layout throughout.
 
     * Add support for filtering by HTTP method.
-   
+
     * Add the ability to specify an HTTP body size limit.
-    
+
     * Move to typed netstrings for serialization format - this makes 0.7
       backwards-incompatible with serialized data from 0.6!
 
-    * Significant improvements in speed and responsiveness of UI. 
+    * Significant improvements in speed and responsiveness of UI.
 
     * Many minor bugfixes and improvements.
 
@@ -115,14 +159,14 @@
       100% of CPU.
 
 
-30 March 2011: mitmproxy 0.4 
+30 March 2011: mitmproxy 0.4
 
     * Full serialization of HTTP conversations
-    
+
     * Client and server replay
-    
+
     * On-the-fly generation of dummy SSL certificates
-   
+
     * mitmdump has "grown up" into a powerful tcpdump-like tool for HTTP/S
 
     * Dozens of improvements to the mitmproxy console interface
@@ -130,22 +174,22 @@
     * Python scripting hooks for programmatic modification of traffic
 
 
-1 March 2010: mitmproxy 0.2 
+1 March 2010: mitmproxy 0.2
 
     * Big speed and responsiveness improvements, thanks to Thomas Roth
-    
+
     * Support urwid 0.9.9
-    
+
     * Terminal beeping based on filter expressions
-    
+
     * Filter expressions for terminal beeps, limits, interceptions and sticky
       cookies can now be passed on the command line.
 
     * Save requests and responses to file
-    
+
     * Split off non-interactive dump functionality into a new tool called
       mitmdump
-    
+
     * "A" will now accept all intercepted connections
-    
+
     * Lots of bugfixes

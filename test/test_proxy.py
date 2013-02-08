@@ -1,5 +1,8 @@
-from libmproxy import proxy
+from libmproxy import proxy, flow
 import tutils
+from libpathod import test
+from netlib import http
+import mock
 
 
 def test_proxy_error():
@@ -26,3 +29,32 @@ def test_app_registry():
     assert not ar.get(r)
     r.headers["host"] = ["domain"]
     assert ar.get(r)
+
+
+class TestServerConnection:
+    def setUp(self):
+        self.d = test.Daemon()
+
+    def tearDown(self):
+        self.d.shutdown()
+
+    def test_simple(self):
+        sc = proxy.ServerConnection(proxy.ProxyConfig(), self.d.IFACE, self.d.port)
+        sc.connect("http")
+        r = tutils.treq()
+        r.path = "/p/200:da"
+        sc.send(r)
+        assert http.read_response(sc.rfile, r.method, 1000)
+        assert self.d.last_log()
+
+        r.content = flow.CONTENT_MISSING
+        tutils.raises("incomplete request", sc.send, r)
+
+        sc.terminate()
+
+    def test_terminate_error(self):
+        sc = proxy.ServerConnection(proxy.ProxyConfig(), self.d.IFACE, self.d.port)
+        sc.connect("http")
+        sc.connection = mock.Mock()
+        sc.connection.close = mock.Mock(side_effect=IOError)
+        sc.terminate()

@@ -624,6 +624,7 @@ class TestFlowMaster:
         fm.handle_error(flow.Error(f.request, "error"))
 
     def test_server_playback(self):
+        controller.should_exit = False
         s = flow.State()
 
         f = tutils.tflow()
@@ -641,14 +642,29 @@ class TestFlowMaster:
         r = tutils.tflow()
         r.request.content = "gibble"
         assert not fm.do_server_playback(r)
-
         assert fm.do_server_playback(tutils.tflow())
+
+        fm.start_server_playback(pb, False, [], True, False)
         q = Queue.Queue()
         fm.tick(q)
         assert controller.should_exit
 
         fm.stop_server_playback()
         assert not fm.server_playback
+
+    def test_server_playback_kill(self):
+        s = flow.State()
+        f = tutils.tflow()
+        f.response = tutils.tresp(f.request)
+        pb = [f]
+        fm = flow.FlowMaster(None, s)
+        fm.refresh_server_playback = True
+        fm.start_server_playback(pb, True, [], False, False)
+
+        f = tutils.tflow()
+        f.request.host = "nonexistent"
+        fm.process_new_request(f)
+        assert "killed" in f.error.msg
 
     def test_stickycookie(self):
         s = flow.State()
@@ -876,6 +892,75 @@ class TestRequest:
         assert not r.headers["content-encoding"]
         assert r.content == "falafel"
 
+    def test_get_decoded_content(self):
+        r = tutils.treq()
+        r.content = None
+        r.headers["content-encoding"] = ["identity"]
+        assert r.get_decoded_content() == None
+
+        r.content = "falafel"
+        r.encode("gzip")
+        assert r.get_decoded_content() == "falafel"
+
+    def test_get_cookies_none(self):
+        h = flow.ODictCaseless()
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        assert r.get_cookies() == None
+
+    def test_get_cookies_single(self):
+        h = flow.ODictCaseless()
+        h["Cookie"] = ["cookiename=cookievalue"]
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        result = r.get_cookies()
+        assert len(result)==1
+        assert result['cookiename']==('cookievalue',{})
+
+    def test_get_cookies_double(self):
+        h = flow.ODictCaseless()
+        h["Cookie"] = ["cookiename=cookievalue;othercookiename=othercookievalue"]
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        result = r.get_cookies()
+        assert len(result)==2
+        assert result['cookiename']==('cookievalue',{})
+        assert result['othercookiename']==('othercookievalue',{})
+
+    def test_get_cookies_withequalsign(self):
+        h = flow.ODictCaseless()
+        h["Cookie"] = ["cookiename=coo=kievalue;othercookiename=othercookievalue"]
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        result = r.get_cookies()
+        assert len(result)==2
+        assert result['cookiename']==('coo=kievalue',{})
+        assert result['othercookiename']==('othercookievalue',{})
+
+    def test_get_header_size(self):
+        h = flow.ODictCaseless()
+        h["headername"] = ["headervalue"]
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        result = r.get_header_size()
+        assert result==43
+
+    def test_get_transmitted_size(self):
+        h = flow.ODictCaseless()
+        h["headername"] = ["headervalue"]
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        result = r.get_transmitted_size()
+        assert result==len("content")
+        r.content = None
+        assert r.get_transmitted_size() == 0
+
+    def test_get_content_type(self):
+        h = flow.ODictCaseless()
+        h["Content-Type"] = ["text/plain"]
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        assert r.get_content_type()=="text/plain"
 
 class TestResponse:
     def test_simple(self):
@@ -972,6 +1057,66 @@ class TestResponse:
         r.decode()
         assert not r.headers["content-encoding"]
         assert r.content == "falafel"
+
+    def test_get_header_size(self):
+        r = tutils.tresp()
+        result = r.get_header_size()
+        assert result==49
+
+    def test_get_cookies_none(self):
+        h = flow.ODictCaseless()
+        resp = flow.Response(None, (1, 1), 200, "OK", h, "content", None)
+        assert not resp.get_cookies()
+
+    def test_get_cookies_simple(self):
+        h = flow.ODictCaseless()
+        h["Set-Cookie"] = ["cookiename=cookievalue"]
+        resp = flow.Response(None, (1, 1), 200, "OK", h, "content", None)
+        result = resp.get_cookies()
+        assert len(result)==1
+        assert "cookiename" in result
+        assert result["cookiename"] == ("cookievalue", {})
+
+    def test_get_cookies_with_parameters(self):
+        h = flow.ODictCaseless()
+        h["Set-Cookie"] = ["cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly"]
+        resp = flow.Response(None, (1, 1), 200, "OK", h, "content", None)
+        result = resp.get_cookies()
+        assert len(result)==1
+        assert "cookiename" in result
+        assert result["cookiename"][0] == "cookievalue"
+        assert len(result["cookiename"][1])==4
+        assert result["cookiename"][1]["domain"]=="example.com"
+        assert result["cookiename"][1]["expires"]=="Wed Oct  21 16:29:41 2015"
+        assert result["cookiename"][1]["path"]=="/"
+        assert result["cookiename"][1]["httponly"]==""
+
+    def test_get_cookies_no_value(self):
+        h = flow.ODictCaseless()
+        h["Set-Cookie"] = ["cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"]
+        resp = flow.Response(None, (1, 1), 200, "OK", h, "content", None)
+        result = resp.get_cookies()
+        assert len(result)==1
+        assert "cookiename" in result
+        assert result["cookiename"][0] == ""
+        assert len(result["cookiename"][1])==2
+
+    def test_get_cookies_twocookies(self):
+        h = flow.ODictCaseless()
+        h["Set-Cookie"] = ["cookiename=cookievalue","othercookie=othervalue"]
+        resp = flow.Response(None, (1, 1), 200, "OK", h, "content", None)
+        result = resp.get_cookies()
+        assert len(result)==2
+        assert "cookiename" in result
+        assert result["cookiename"] == ("cookievalue", {})
+        assert "othercookie" in result
+        assert result["othercookie"] == ("othervalue", {})
+
+    def test_get_content_type(self):
+        h = flow.ODictCaseless()
+        h["Content-Type"] = ["text/plain"]
+        resp = flow.Response(None, (1, 1), 200, "OK", h, "content", None)
+        assert resp.get_content_type()=="text/plain"
 
 
 class TestError:

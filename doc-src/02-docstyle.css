@@ -1,137 +1,16 @@
-
-a {
-    color: #3F8ED8;
-    text-decoration: none;
-}
-
-
-#hd.doc {
-    -x-system-font:none;
-    font-family: Helvetica,Arial,Tahoma,Verdana,Sans-Serif;
-    color: #444444;
-    margin: 0;
-    margin-bottom: 1em;
-}
-
-#hd.doc h1 {
-    letter-spacing: 3px;
-    font-size: 2.5em;
-    margin: 0.3em 0;
-    font-weight: normal;
-}
-
-#nav {
-    float: right;
-}
-
-
-#bd {
-    font: 16px/21px "HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
-    line-height: 1.5;
-    color: #444444;
-}
-
-#bd h1, #bd h2, #bd h3 {
-    font-family: "Georgia","Times New Roman",Helvetica,Arial,sans-serif;
-    font-weight: normal;
-    color: #181818;
-}
-
-#bd h1 {
-    font-size: 1.9em;
-    border-bottom: 2px solid #ff7033;
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
-#bd h2 {
-    font-size: 1.4em;
-    border-bottom: 1px solid #cccccc;
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
-
-#bd h3 {
-    margin-bottom: 0px;
-}
-
-#bd p {
-    margin: 1em 0;
-    margin-top: 0.5em;
-}
-
-/* Keyboard shortcuts */
-#bd em {
-    font-weight: bold;
-    color: #00A700; 
-    font-style: normal;
-}
-
-#ft.doc {
-    color: #aaa;
-    border-top: 1px solid #aaa;
-    clear: both;
-    margin-top: 2em;
-    font-size: 0.8em;
-    letter-spacing: 0.5px;
-}
-
-.faq .question {
-    font-size: 1.1em;
-    font-weight: bold;
-}
-
-pre {
-    font-size: 0.9em;
-    line-height: 1.4;
-    padding: 10px;
-    background-color: #dddddd;
-    margin: 1em 0;
-}
-
 .terminal {
     color: #c0c0c0;
     font-size: 1em;
     background: #000000;
 }
 
-.docindex {
-    font-size: 1.3em;
-    line-height: 1.3;
-    margin-top: 0.1em;
-    margin-bottom: 0;
-    margin-left: 0px;
+
+pre {
+    margin-top: 10px;
+    color: #333;
 }
 
-.docindex li {
-    list-style-position: inside;
-    margin-left: 0;
-}
 
-.docindex ul {
-    margin-left: 2em;
-    margin-top: 0.1em;
-    margin-bottom: 0.1em;
+.tablenum {
+    font-weight: bold;
 }
-
-li a {
-    text-decoration: none;
-}
-
-.highlight {
-    font-size: 14px;
-}
-.example_legend{
-    line-height: 1;
-    font-size: 12px;
-}
-.example pre {
-    margin: 0;
-}
-
-.kvtable th {
-    text-align: left;
-    white-space: nowrap;
-}
-

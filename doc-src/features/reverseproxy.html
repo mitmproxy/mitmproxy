@@ -1,0 +1,17 @@
+
+In reverse proxy mode, mitmproxy acts as a standard HTTP server and forwards
+all requests to the specified upstream server. Note that the displayed URL for
+flows in this mode will use the value of the __Host__ header field from the
+request, not the reverse proxy server.
+
+
+<table class="table">
+    <tbody>
+        <tr>
+            <th width="20%">command-line</th> <td>-P http[s]://hostname[:port]</td>
+        </tr>
+        <tr>
+            <th>mitmproxy shortcut</th> <td><b>P</b></td>
+        </tr>
+    </tbody>
+</table>

@@ -197,6 +197,16 @@ class decoded(object):
 
 
 class HTTPMsg(controller.Msg):
+    def get_decoded_content(self):
+        """
+            Returns the decoded content based on the current Content-Encoding header.
+            Doesn't change the message iteself or its headers.
+        """
+        ce = self.headers.get_first("content-encoding")
+        if not self.content or ce not in encoding.ENCODINGS:
+            return self.content
+        return encoding.decode(ce, self.content)
+
     def decode(self):
         """
             Decodes content based on the current Content-Encoding header, then
@@ -232,7 +242,15 @@ class HTTPMsg(controller.Msg):
         else:
             return hl
 
+    def get_content_type(self):
+        return self.headers.get_first("content-type")
 
+    def get_transmitted_size(self):
+        # FIXME: this is inprecise in case chunking is used
+        # (we should count the chunking headers)
+        if not self.content:
+            return 0
+        return len(self.content)
 
 class Request(HTTPMsg):
     """
@@ -256,17 +274,20 @@ class Request(HTTPMsg):
 
             path: Path portion of the URL
 
-            timestamp: Seconds since the epoch
+            timestamp_start: Seconds since the epoch signifying request transmission started
 
             method: HTTP method
+
+            timestamp_end: Seconds since the epoch signifying request transmission ended
     """
-    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp=None):
+    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp_start=None, timestamp_end=None):
         assert isinstance(headers, ODictCaseless)
         self.client_conn = client_conn
         self.httpversion = httpversion
         self.host, self.port, self.scheme = host, port, scheme
         self.method, self.path, self.headers, self.content = method, path, headers, content
-        self.timestamp = timestamp or utils.timestamp()
+        self.timestamp_start = timestamp_start or utils.timestamp()
+        self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         self.close = False
         controller.Msg.__init__(self)
 
@@ -330,7 +351,8 @@ class Request(HTTPMsg):
         self.path = state["path"]
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
-        self.timestamp = state["timestamp"]
+        self.timestamp_start = state["timestamp_start"]
+        self.timestamp_end = state["timestamp_end"]
 
     def _get_state(self):
         return dict(
@@ -343,7 +365,8 @@ class Request(HTTPMsg):
             path = self.path,
             headers = self.headers._get_state(),
             content = self.content,
-            timestamp = self.timestamp,
+            timestamp_start = self.timestamp_start,
+            timestamp_end = self.timestamp_end
         )
 
     @classmethod
@@ -358,7 +381,8 @@ class Request(HTTPMsg):
             str(state["path"]),
             ODictCaseless._from_state(state["headers"]),
             state["content"],
-            state["timestamp"]
+            state["timestamp_start"],
+            state["timestamp_end"],
         )
 
     def __hash__(self):
@@ -453,6 +477,28 @@ class Request(HTTPMsg):
         self.scheme, self.host, self.port, self.path = parts
         return True
 
+    def get_cookies(self):
+        cookie_headers = self.headers.get("cookie")
+        if not cookie_headers:
+            return None
+
+        cookies = []
+        for header in cookie_headers:
+            pairs = [pair.partition("=") for pair in header.split(';')]
+            cookies.extend((pair[0],(pair[2],{})) for pair in pairs)
+        return dict(cookies)
+
+    def get_header_size(self):
+        FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
+        assembled_header = FMT % (
+                self.method,
+                self.path,
+                self.httpversion[0],
+                self.httpversion[1],
+                str(self.headers)
+            )
+        return len(assembled_header)
+
     def _assemble_head(self, proxy=False):
         FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
         FMT_PROXY = '%s %s://%s:%s%s HTTP/%s.%s\r\n%s\r\n'
@@ -545,15 +591,18 @@ class Response(HTTPMsg):
             is content associated, but not present. CONTENT_MISSING evaluates
             to False to make checking for the presence of content natural.
 
-            timestamp: Seconds since the epoch
+            timestamp_start: Seconds since the epoch signifying response transmission started
+
+            timestamp_end: Seconds since the epoch signifying response transmission ended
     """
-    def __init__(self, request, httpversion, code, msg, headers, content, cert, timestamp=None):
+    def __init__(self, request, httpversion, code, msg, headers, content, cert, timestamp_start=None, timestamp_end=None):
         assert isinstance(headers, ODictCaseless)
         self.request = request
         self.httpversion, self.code, self.msg = httpversion, code, msg
         self.headers, self.content = headers, content
         self.cert = cert
-        self.timestamp = timestamp or utils.timestamp()
+        self.timestamp_start = timestamp_start or utils.timestamp()
+        self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         controller.Msg.__init__(self)
         self.replay = False
 
@@ -589,7 +638,7 @@ class Response(HTTPMsg):
         """
         if not now:
             now = time.time()
-        delta = now - self.timestamp
+        delta = now - self.timestamp_start
         refresh_headers = [
             "date",
             "expires",
@@ -621,7 +670,8 @@ class Response(HTTPMsg):
         self.msg = state["msg"]
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
-        self.timestamp = state["timestamp"]
+        self.timestamp_start = state["timestamp_start"]
+        self.timestamp_end = state["timestamp_end"]
         self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     def _get_state(self):
@@ -630,9 +680,10 @@ class Response(HTTPMsg):
             code = self.code,
             msg = self.msg,
             headers = self.headers._get_state(),
-            timestamp = self.timestamp,
+            timestamp_start = self.timestamp_start,
+            timestamp_end = self.timestamp_end,
             cert = self.cert.to_pem() if self.cert else None,
-            content = self.content
+            content = self.content,
         )
 
     @classmethod
@@ -645,7 +696,8 @@ class Response(HTTPMsg):
             ODictCaseless._from_state(state["headers"]),
             state["content"],
             certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None,
-            state["timestamp"],
+            state["timestamp_start"],
+            state["timestamp_end"],
         )
 
     def __eq__(self, other):
@@ -701,6 +753,25 @@ class Response(HTTPMsg):
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
+    def get_header_size(self):
+        FMT = '%s\r\n%s\r\n'
+        proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
+        assembled_header = FMT % (proto, str(self.headers))
+        return len(assembled_header)
+
+    def get_cookies(self):
+        cookie_headers = self.headers.get("set-cookie")
+        if not cookie_headers:
+            return None
+
+        cookies = []
+        for header in cookie_headers:
+            pairs = [pair.partition("=") for pair in header.split(';')]
+            cookie_name = pairs[0][0] # the key of the first key/value pairs
+            cookie_value = pairs[0][2] # the value of the first key/value pairs
+            cookie_parameters = {key.strip().lower():value.strip() for key,sep,value in pairs[1:]}
+            cookies.append((cookie_name, (cookie_value, cookie_parameters)))
+        return dict(cookies)
 
 class ClientDisconnect(controller.Msg):
     """
@@ -1375,6 +1446,8 @@ class FlowMaster(controller.Master):
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
+        if self.server_playback.exit:
+            self.shutdown()
         self.server_playback = None
 
     def do_server_playback(self, flow):
@@ -1407,10 +1480,6 @@ class FlowMaster(controller.Master):
             if all(e):
                 self.shutdown()
             self.client_playback.tick(self)
-
-        if self.server_playback:
-            if self.server_playback.exit and self.server_playback.count() == 0:
-                self.shutdown()
 
         return controller.Master.tick(self, q)
 

@@ -93,7 +93,4 @@ setup(
             "Topic :: Software Development :: Testing"
         ],
         install_requires=["netlib", "urwid>=1.1", "pyasn1>0.1.2", "pyopenssl>=0.12", "PIL", "lxml"],
-        dependency_links=[
-            'https://github.com/cortesi/netlib/tarball/master#egg=netlib-0.1'
-        ],
 )

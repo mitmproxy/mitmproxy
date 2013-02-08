@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from libmproxy import proxy, flow, controller, utils
 from netlib import certutils
 import human_curl as hurl
-import libpathod.test
+import libpathod.test, libpathod.pathoc
 
 def treq(conn=None):
     if not conn:
@@ -116,16 +116,24 @@ class ProxTestBase:
         """
         return self.server.urlbase
 
-    def log(self):
-        pthread = self.proxy
-        return pthread.tmaster.log
+    def last_log(self):
+        return self.server.last_log()
 
 
 class HTTPProxTest(ProxTestBase):
     ssl = None
+    clientcerts = False
     @classmethod
     def get_proxy_config(cls):
-        return dict()
+        d = dict()
+        if cls.clientcerts:
+            d["clientcerts"] = test_data.path("data/clientcert")
+        return d
+
+    def pathoc(self, connect_to = None):
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
+        p.connect(connect_to)
+        return p
 
     def pathod(self, spec):
         """
@@ -194,7 +202,6 @@ class ReverseProxTest(ProxTestBase):
         return r
 
 
-
 @contextmanager
 def tmpdir(*args, **kwargs):
     orig_workdir = os.getcwd()
@@ -244,5 +251,6 @@ def raises(exc, obj, *args, **kwargs):
                     )
                 )
     raise AssertionError("No exception raised.")
+
 
 test_data = utils.Data(__name__)

@@ -1,9 +1,9 @@
-__mitmproxy__ is an SSL-capable man-in-the-middle proxy for HTTP. It provides a
-console interface that allows traffic flows to be inspected and edited on the
-fly.
+__mitmproxy__ is an interactive, SSL-capable man-in-the-middle proxy for HTTP
+with a console interface.
 
-__mitmdump__ is the command-line version of mitmproxy, with the same
-functionality but without the user interface. Think tcpdump for HTTP.
+__mitmdump__ is the command-line version of mitmproxy. Think tcpdump for HTTP.
+
+__libmproxy__ is the library that mitmproxy and mitmdump are built on.
 
 Complete documentation and a set of practical tutorials is included in the
 distribution package, and is also available at
@@ -18,18 +18,19 @@ Features
 - Replay the client-side of an HTTP conversations.
 - Replay HTTP responses of a previously recorded server.
 - Reverse proxy mode to forward traffic to a specified server.
-- Make scripted changes to HTTP traffic using Python. 
+- Transparent proxy mode on OSX and Linux.
+- Make scripted changes to HTTP traffic using Python.
 - SSL certificates for interception are generated on the fly.
-
+- And much, much more.
 
 Download
 --------
 
-Releases and rendered documentation can be found on the mitmproxy website:
+Releases and documentation can be found on the mitmproxy website:
 
 [mitmproxy.org](http://mitmproxy.org)
 
-Source is hosted on github: 
+Source is hosted on github:
 
 [github.com/cortesi/mitmproxy](http://github.com/cortesi/mitmproxy)
 
@@ -42,7 +43,7 @@ Come join us in the #mitmproxy channel on the OFTC IRC network
 
 We also have a mailing list, hosted here:
 
-    http://groups.google.com/group/mitmproxy
+[groups.google.com/group/mitmproxy](http://groups.google.com/group/mitmproxy)
 
 
 Requirements
@@ -51,25 +52,25 @@ Requirements
 * [Python](http://www.python.org) 2.7.x.
 * [PyOpenSSL](http://pypi.python.org/pypi/pyOpenSSL) 0.13 or newer.
 * [pyasn1](http://pypi.python.org/pypi/pyasn1) 0.1.2 or newer.
-* [urwid](http://excess.org/urwid/) version 0.9.8 or newer.
+* [urwid](http://excess.org/urwid/) version 1.1 or newer.
 * [PIL](http://www.pythonware.com/products/pil/) version 1.1 or newer.
 * [lxml](http://lxml.de/) version 2.3 or newer.
-* [netlib](http://pypi.python.org/pypi/netlib) 0.1 or newer.
+* [netlib](http://pypi.python.org/pypi/netlib) 0.2.2 or newer.
 
 The following auxiliary components may be needed if you plan to hack on
 mitmproxy:
 
 * The test suite uses the [nose](http://readthedocs.org/docs/nose/en/latest/) unit testing
   framework and requires [human_curl](https://github.com/Lispython/human_curl) and
-  [pathod](http://pypi.python.org/pypi/pathod).
+  [pathod](http://pathod.org).
 * Rendering the documentation requires [countershape](http://github.com/cortesi/countershape).
 
 __mitmproxy__ is tested and developed on OSX, Linux and OpenBSD. Windows is not
 supported at the moment.
 
 You should also make sure that your console environment is set up with the
-following: 
-    
+following:
+
 * EDITOR environment variable to determine the external editor.
 * PAGER environment variable to determine the external pager.
 * Appropriate entries in your mailcap files to determine external

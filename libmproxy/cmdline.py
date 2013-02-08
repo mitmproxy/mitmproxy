@@ -15,7 +15,7 @@
 
 import proxy
 import re, filt
-
+import argparse
 
 class ParseException(Exception): pass
 class OptionException(Exception): pass
@@ -248,11 +248,6 @@ def common_options(parser):
         help="Byte size limit of HTTP request and response bodies."\
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
-    parser.add_argument(
-        "--cert-wait-time", type=float,
-        action="store", dest="cert_wait_time", default=0,
-        help="Wait for specified number of seconds after a new cert is generated. This can smooth over small discrepancies between the client and server times."
-    )
 
     parser.add_argument(
         "--no-upstream-cert", default=False,
@@ -332,6 +327,35 @@ def common_options(parser):
         action="append", type=str, dest="setheader", default=[],
         metavar="PATTERN",
         help="Header set pattern."
+    )
+
+
+    group = parser.add_argument_group(
+        "Proxy Authentication",
+        """
+            Specify which users are allowed to access the proxy and the method
+            used for authenticating them. These options are ignored if the
+            proxy is in transparent or reverse proxy mode.
+        """
+    )
+    user_specification_group = group.add_mutually_exclusive_group()
+    user_specification_group.add_argument(
+        "--nonanonymous",
+        action="store_true", dest="auth_nonanonymous",
+        help="Allow access to any user long as a credentials are specified."
+    )
+
+    user_specification_group.add_argument(
+        "--singleuser",
+        action="store", dest="auth_singleuser", type=str,
+        metavar="USER",
+        help="Allows access to a a single user, specified in the form username:password."
+    )
+    user_specification_group.add_argument(
+        "--htpasswd",
+        action="store", dest="auth_htpasswd", type=argparse.FileType('r'),
+        metavar="PATH",
+        help="Allow access to users specified in an Apache htpasswd file."
     )
 
     proxy.certificate_option_group(parser)

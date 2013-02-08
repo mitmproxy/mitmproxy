@@ -31,7 +31,7 @@ def error(ctx, flow):
     """
         Called when a flow error has occured, e.g. invalid server responses, or
         interrupted connections. This is distinct from a valid server HTTP error
-        response, which is simply a response with an HTTP error code. 
+        response, which is simply a response with an HTTP error code.
     """
     ctx.log("error")
 
