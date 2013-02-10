@@ -351,7 +351,7 @@ class Request(HTTPMsg):
         self.path = state["path"]
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
-        self.timestamp_start = state.get("timestamp_start")
+        self.timestamp_start = state.get("timestamp_start", state.get("timestamp"))
         self.timestamp_end = state.get("timestamp_end")
 
     def _get_state(self):
@@ -381,7 +381,7 @@ class Request(HTTPMsg):
             str(state["path"]),
             ODictCaseless._from_state(state["headers"]),
             state["content"],
-            state.get("timestamp_start"),
+            state.get("timestamp_start",state.get("timestamp")),
             state.get("timestamp_end"),
         )
 
@@ -671,7 +671,7 @@ class Response(HTTPMsg):
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
         self.timestamp_start = state.get("timestamp_start")
-        self.timestamp_end = state.get("timestamp_end")
+        self.timestamp_end = state.get("timestamp_end",state.get("timestamp"))
         self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     def _get_state(self):
@@ -697,7 +697,7 @@ class Response(HTTPMsg):
             state["content"],
             certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None,
             state.get("timestamp_start"),
-            state.get("timestamp_end"),
+            state.get("timestamp_end",state.get("timestamp")),
         )
 
     def __eq__(self, other):
