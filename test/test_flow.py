@@ -807,7 +807,7 @@ class TestRequest:
 
         r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/?adsfa", h, "content")
         q = r.get_query()
-        assert not q
+        assert q.lst == [("adsfa", "")]
 
         r = flow.Request(None, (1, 1), "host", 22, "https", "GET", "/foo?x=y&a=b", h, "content")
         assert r.get_query()
