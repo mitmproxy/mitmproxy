@@ -1,7 +1,7 @@
 import socket, time
 from netlib import tcp
 from libpathod import pathoc
-import tutils
+import tutils, tservers
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -39,7 +39,19 @@ class SanityMixin:
         assert l.error
 
 
-class TestHTTP(tutils.HTTPProxTest, SanityMixin):
+class TestHTTP(tservers.HTTPProxTest, SanityMixin):
+    def test_app(self):
+        p = self.pathoc()
+        ret = p.request("get:'http://testapp/'")
+        assert ret[1] == 200
+        assert ret[4] == "testapp"
+
+    def test_app_err(self):
+        p = self.pathoc()
+        ret = p.request("get:'http://errapp/'")
+        assert ret[1] == 500
+        assert "ValueError" in ret[4]
+
     def test_invalid_http(self):
         t = tcp.TCPClient("127.0.0.1", self.proxy.port)
         t.connect()
@@ -69,7 +81,7 @@ class TestHTTP(tutils.HTTPProxTest, SanityMixin):
         assert l.response.code == 304
 
 
-class TestHTTPS(tutils.HTTPProxTest, SanityMixin):
+class TestHTTPS(tservers.HTTPProxTest, SanityMixin):
     ssl = True
     clientcerts = True
     def test_clientcert(self):
@@ -77,15 +89,15 @@ class TestHTTPS(tutils.HTTPProxTest, SanityMixin):
         assert self.last_log()["request"]["clientcert"]["keyinfo"]
 
 
-class TestReverse(tutils.ReverseProxTest, SanityMixin):
+class TestReverse(tservers.ReverseProxTest, SanityMixin):
     reverse = True
 
 
-class TestTransparent(tutils.TransparentProxTest, SanityMixin):
+class TestTransparent(tservers.TransparentProxTest, SanityMixin):
     transparent = True
 
 
-class TestProxy(tutils.HTTPProxTest):
+class TestProxy(tservers.HTTPProxTest):
     def test_http(self):
         f = self.pathod("304")
         assert f.status_code == 304

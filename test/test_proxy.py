@@ -67,7 +67,7 @@ def _dummysc(config, host, port):
 
 def _errsc(config, host, port):
     m = mock.MagicMock(config=config, host=host, port=port)
-    m.connect = mock.MagicMock(side_effect=tcp.NetLibError()) 
+    m.connect = mock.MagicMock(side_effect=tcp.NetLibError())
     return m
 
 
