@@ -184,7 +184,7 @@ def format_flow(f, focus, extended=False, padding=2):
         req_timestamp = f.request.timestamp_start,
         req_is_replay = f.request.is_replay(),
         req_method = f.request.method,
-        req_acked = f.request.acked,
+        req_acked = f.request.reply.acked,
         req_url = f.request.get_url(),
 
         err_msg = f.error.msg if f.error else None,
@@ -200,7 +200,7 @@ def format_flow(f, focus, extended=False, padding=2):
         d.update(dict(
             resp_code = f.response.code,
             resp_is_replay = f.response.is_replay(),
-            resp_acked = f.response.acked,
+            resp_acked = f.response.reply.acked,
             resp_clen = contentdesc
         ))
         t = f.response.headers["content-type"]

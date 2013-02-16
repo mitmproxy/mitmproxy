@@ -1,15 +1,18 @@
 import os, shutil, tempfile
 from contextlib import contextmanager
-from libmproxy import flow, utils
+from libmproxy import flow, utils, controller
 from netlib import certutils
-
+import mock
 
 def treq(conn=None):
     if not conn:
         conn = flow.ClientConnect(("address", 22))
+    conn.reply = controller.DummyReply()
     headers = flow.ODictCaseless()
     headers["header"] = ["qvalue"]
-    return flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers, "content")
+    r = flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers, "content")
+    r.reply = controller.DummyReply()
+    return r
 
 
 def tresp(req=None):
@@ -18,7 +21,9 @@ def tresp(req=None):
     headers = flow.ODictCaseless()
     headers["header_response"] = ["svalue"]
     cert = certutils.SSLCert.from_der(file(test_data.path("data/dercert")).read())
-    return flow.Response(req, (1, 1), 200, "message", headers, "content_response", cert)
+    resp = flow.Response(req, (1, 1), 200, "message", headers, "content_response", cert)
+    resp.reply = controller.DummyReply()
+    return resp
 
 
 def tflow():
@@ -37,7 +42,9 @@ def tflow_err():
     r = treq()
     f = flow.Flow(r)
     f.error = flow.Error(r, "error")
+    f.error.reply = controller.DummyReply()
     return f
+
 
 
 @contextmanager

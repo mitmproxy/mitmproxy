@@ -31,7 +31,7 @@ class TestMaster(flow.FlowMaster):
 
     def handle(self, m):
         flow.FlowMaster.handle(self, m)
-        m._ack()
+        m.reply()
 
 
 class ProxyThread(threading.Thread):

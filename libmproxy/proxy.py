@@ -29,9 +29,8 @@ class ProxyError(Exception):
         return "ProxyError(%s, %s)"%(self.code, self.msg)
 
 
-class Log(controller.Msg):
+class Log:
     def __init__(self, msg):
-        controller.Msg.__init__(self)
         self.msg = msg
 
 
@@ -51,7 +50,7 @@ class ProxyConfig:
 
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
-        self.config, self.flow, self.masterq = config, flow, masterq
+        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq)
         threading.Thread.__init__(self)
 
     def run(self):
@@ -66,10 +65,10 @@ class RequestReplayThread(threading.Thread):
             response = flow.Response(
                 self.flow.request, httpversion, code, msg, headers, content, server.cert
             )
-            response._send(self.masterq)
+            self.channel.ask(response)
         except (ProxyError, http.HttpError, tcp.NetLibError), v:
             err = flow.Error(self.flow.request, str(v))
-            err._send(self.masterq)
+            self.channel.ask(err)
 
 
 class ServerConnection(tcp.TCPClient):
@@ -128,8 +127,8 @@ class ServerConnectionPool:
 
 
 class ProxyHandler(tcp.BaseHandler):
-    def __init__(self, config, connection, client_address, server, mqueue, server_version):
-        self.mqueue, self.server_version = mqueue, server_version
+    def __init__(self, config, connection, client_address, server, channel, server_version):
+        self.channel, self.server_version = channel, server_version
         self.config = config
         self.server_conn_pool = ServerConnectionPool(config)
         self.proxy_connect_state = None
@@ -139,18 +138,18 @@ class ProxyHandler(tcp.BaseHandler):
     def handle(self):
         cc = flow.ClientConnect(self.client_address)
         self.log(cc, "connect")
-        cc._send(self.mqueue)
+        self.channel.ask(cc)
         while self.handle_request(cc) and not cc.close:
             pass
         cc.close = True
-        cd = flow.ClientDisconnect(cc)
 
+        cd = flow.ClientDisconnect(cc)
         self.log(
             cc, "disconnect",
             [
                 "handled %s requests"%cc.requestcount]
         )
-        cd._send(self.mqueue)
+        self.channel.ask(cd)
 
     def handle_request(self, cc):
         try:
@@ -167,14 +166,14 @@ class ProxyHandler(tcp.BaseHandler):
                     self.log(cc, "Error in wsgi app.", err.split("\n"))
                     return
             else:
-                request = request._send(self.mqueue)
+                request = self.channel.ask(request)
                 if request is None:
                     return
 
                 if isinstance(request, flow.Response):
                     response = request
                     request = False
-                    response = response._send(self.mqueue)
+                    response = self.channel.ask(response)
                 else:
                     if self.config.reverse_proxy:
                         scheme, host, port = self.config.reverse_proxy
@@ -192,7 +191,7 @@ class ProxyHandler(tcp.BaseHandler):
                         request, httpversion, code, msg, headers, content, sc.cert,
                         sc.rfile.first_byte_timestamp, utils.timestamp()
                     )
-                    response = response._send(self.mqueue)
+                    response = self.channel.ask(response)
                     if response is None:
                         sc.terminate()
                 if response is None:
@@ -214,7 +213,7 @@ class ProxyHandler(tcp.BaseHandler):
 
             if request:
                 err = flow.Error(request, cc.error)
-                err._send(self.mqueue)
+                self.channel.ask(err)
                 self.log(
                     cc, cc.error,
                     ["url: %s"%request.get_url()]
@@ -235,7 +234,7 @@ class ProxyHandler(tcp.BaseHandler):
             msg.append("  -> "+i)
         msg = "\n".join(msg)
         l = Log(msg)
-        l._send(self.mqueue)
+        self.channel.ask(l)
 
     def find_cert(self, host, port, sni):
         if self.config.certfile:
@@ -438,18 +437,18 @@ class ProxyServer(tcp.TCPServer):
             tcp.TCPServer.__init__(self, (address, port))
         except socket.error, v:
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
-        self.masterq = None
+        self.channel = None
         self.apps = AppRegistry()
 
-    def start_slave(self, klass, masterq):
-        slave = klass(masterq, self)
+    def start_slave(self, klass, channel):
+        slave = klass(channel, self)
         slave.start()
 
-    def set_mqueue(self, q):
-        self.masterq = q
+    def set_channel(self, channel):
+        self.channel = channel
 
     def handle_connection(self, request, client_address):
-        h = ProxyHandler(self.config, request, client_address, self, self.masterq, self.server_version)
+        h = ProxyHandler(self.config, request, client_address, self, self.channel, self.server_version)
         h.handle()
         try:
             h.finish()
@@ -487,7 +486,7 @@ class DummyServer:
     def __init__(self, config):
         self.config = config
 
-    def start_slave(self, klass, masterq):
+    def start_slave(self, klass, channel):
         pass
 
     def shutdown(self):
