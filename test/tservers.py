@@ -29,16 +29,20 @@ class TestMaster(flow.FlowMaster):
         flow.FlowMaster.__init__(self, s, state)
         self.testq = testq
 
-    def handle(self, m):
-        flow.FlowMaster.handle(self, m)
+    def handle_request(self, m):
+        flow.FlowMaster.handle_request(self, m)
+        m.reply()
+
+    def handle_response(self, m):
+        flow.FlowMaster.handle_response(self, m)
         m.reply()
 
 
 class ProxyThread(threading.Thread):
-    def __init__(self, testq, config):
-        self.tmaster = TestMaster(testq, config)
-        controller.should_exit = False
+    def __init__(self, tmaster):
         threading.Thread.__init__(self)
+        self.tmaster = tmaster
+        controller.should_exit = False
 
     @property
     def port(self):
@@ -52,6 +56,7 @@ class ProxyThread(threading.Thread):
 
 
 class ProxTestBase:
+    masterclass = TestMaster
     @classmethod
     def setupAll(cls):
         cls.tqueue = Queue.Queue()
@@ -61,7 +66,8 @@ class ProxTestBase:
             certfile=tutils.test_data.path("data/testkey.pem"),
             **pconf
         )
-        cls.proxy = ProxyThread(cls.tqueue, config)
+        tmaster = cls.masterclass(cls.tqueue, config)
+        cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
     @property

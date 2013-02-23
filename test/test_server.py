@@ -2,6 +2,7 @@ import socket, time
 from netlib import tcp
 from libpathod import pathoc
 import tutils, tservers
+from libmproxy import flow
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -144,3 +145,18 @@ class TestProxy(tservers.HTTPProxTest):
 
         request = self.master.state.view[1].request
         assert request.timestamp_end - request.timestamp_start <= 0.1
+
+
+class MasterFakeResponse(tservers.TestMaster):
+    def handle_request(self, m):
+        resp = tutils.tresp()
+        m.reply(resp)
+
+
+class TestFakeResponse(tservers.HTTPProxTest):
+    masterclass = MasterFakeResponse
+    def test_kill(self):
+        p = self.pathoc()
+        f = self.pathod("200")
+        assert "header_response" in f.headers.keys()
+

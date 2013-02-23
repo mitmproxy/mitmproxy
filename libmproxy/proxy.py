@@ -194,7 +194,8 @@ class ProxyHandler(tcp.BaseHandler):
                         sc.rfile.first_byte_timestamp, utils.timestamp()
                     )
                     response_reply = self.channel.ask(response)
-                    # Not replying to the server invalidates the server connection, so we terminate.
+                    # Not replying to the server invalidates the server
+                    # connection, so we terminate.
                     if response_reply == KILL:
                         sc.terminate()
 
