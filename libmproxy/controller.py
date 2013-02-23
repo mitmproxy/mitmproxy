@@ -56,13 +56,14 @@ class Channel:
 
     def ask(self, m):
         """
-            Send a message to the master, and wait for a response.
+            Decorate a message with a reply attribute, and send it to the
+            master.  then wait for a response.
         """
         m.reply = Reply(m)
         self.q.put(m)
         while not should_exit:
             try:
-                # The timeout is here so we can handle a should_exit event. 
+                # The timeout is here so we can handle a should_exit event.
                 g = m.reply.q.get(timeout=0.5)
             except Queue.Empty:
                 continue
@@ -70,9 +71,10 @@ class Channel:
 
     def tell(self, m):
         """
-            Send a message to the master, and keep going. 
+            Decorate a message with a dummy reply attribute, send it to the
+            master, then return immediately.
         """
-        m.reply = None
+        m.reply = DummyReply()
         self.q.put(m)
 
 

@@ -196,7 +196,15 @@ class decoded(object):
             self.o.encode(self.ce)
 
 
-class HTTPMsg:
+class StateObject:
+    def __eq__(self, other):
+        try:
+            return self._get_state() == other._get_state()
+        except AttributeError:
+            return False
+
+
+class HTTPMsg(StateObject):
     def get_decoded_content(self):
         """
             Returns the decoded content based on the current Content-Encoding header.
@@ -388,13 +396,7 @@ class Request(HTTPMsg):
     def __hash__(self):
         return id(self)
 
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
-
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
         c = copy.copy(self)
         c.headers = self.headers.copy()
         return c
@@ -698,13 +700,7 @@ class Response(HTTPMsg):
             state["timestamp_end"],
         )
 
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
-
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
         c = copy.copy(self)
         c.headers = self.headers.copy()
         return c
@@ -782,7 +778,7 @@ class ClientDisconnect:
         self.client_conn = client_conn
 
 
-class ClientConnect:
+class ClientConnect(StateObject):
     """
         A single client connection. Each connection can result in multiple HTTP
         Requests.
@@ -803,9 +799,6 @@ class ClientConnect:
         self.close = False
         self.requestcount = 0
         self.error = None
-
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
 
     def _load_state(self, state):
         self.close = True
@@ -829,14 +822,10 @@ class ClientConnect:
             return None
 
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
-        c = copy.copy(self)
-        return c
+        return copy.copy(self)
 
 
-class Error:
+class Error(StateObject):
     """
         An Error.
 
@@ -860,9 +849,6 @@ class Error:
         self.timestamp = state["timestamp"]
 
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
         c = copy.copy(self)
         return c
 
@@ -879,9 +865,6 @@ class Error:
             state["msg"],
             state["timestamp"],
         )
-
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -1174,9 +1157,9 @@ class Flow:
         self.error = Error(self.request, "Connection killed")
         self.error.reply = controller.DummyReply()
         if self.request and not self.request.reply.acked:
-            self.request.reply(None)
+            self.request.reply(proxy.KILL)
         elif self.response and not self.response.reply.acked:
-            self.response.reply(None)
+            self.response.reply(proxy.KILL)
         master.handle_error(self.error)
         self.intercepting = False
 

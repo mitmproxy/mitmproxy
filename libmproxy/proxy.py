@@ -20,6 +20,8 @@ from netlib import odict, tcp, http, wsgi, certutils, http_status
 import utils, flow, version, platform, controller
 import authentication
 
+KILL = 0
+
 
 class ProxyError(Exception):
     def __init__(self, code, msg, headers=None):
@@ -149,7 +151,7 @@ class ProxyHandler(tcp.BaseHandler):
             [
                 "handled %s requests"%cc.requestcount]
         )
-        self.channel.ask(cd)
+        self.channel.tell(cd)
 
     def handle_request(self, cc):
         try:
@@ -166,15 +168,15 @@ class ProxyHandler(tcp.BaseHandler):
                     self.log(cc, "Error in wsgi app.", err.split("\n"))
                     return
             else:
-                request = self.channel.ask(request)
-                if request is None:
+                request_reply = self.channel.ask(request)
+                if request_reply == KILL:
                     return
-
-                if isinstance(request, flow.Response):
-                    response = request
+                elif isinstance(request_reply, flow.Response):
                     request = False
-                    response = self.channel.ask(response)
+                    response = request_reply
+                    response_reply = self.channel.ask(response)
                 else:
+                    request = request_reply
                     if self.config.reverse_proxy:
                         scheme, host, port = self.config.reverse_proxy
                     else:
@@ -191,20 +193,24 @@ class ProxyHandler(tcp.BaseHandler):
                         request, httpversion, code, msg, headers, content, sc.cert,
                         sc.rfile.first_byte_timestamp, utils.timestamp()
                     )
-                    response = self.channel.ask(response)
-                    if response is None:
+                    response_reply = self.channel.ask(response)
+                    # Not replying to the server invalidates the server connection, so we terminate.
+                    if response_reply == KILL:
                         sc.terminate()
-                if response is None:
+
+                if response_reply == KILL:
                     return
-                self.send_response(response)
-                if request and http.request_connection_close(request.httpversion, request.headers):
-                    return
-                # We could keep the client connection when the server
-                # connection needs to go away.  However, we want to mimic
-                # behaviour as closely as possible to the client, so we
-                # disconnect.
-                if http.response_connection_close(response.httpversion, response.headers):
-                    return
+                else:
+                    response = response_reply
+                    self.send_response(response)
+                    if request and http.request_connection_close(request.httpversion, request.headers):
+                        return
+                    # We could keep the client connection when the server
+                    # connection needs to go away.  However, we want to mimic
+                    # behaviour as closely as possible to the client, so we
+                    # disconnect.
+                    if http.response_connection_close(response.httpversion, response.headers):
+                        return
         except (IOError, ProxyError, http.HttpError, tcp.NetLibDisconnect), e:
             if hasattr(e, "code"):
                 cc.error = "%s: %s"%(e.code, e.msg)
@@ -234,7 +240,7 @@ class ProxyHandler(tcp.BaseHandler):
             msg.append("  -> "+i)
         msg = "\n".join(msg)
         l = Log(msg)
-        self.channel.ask(l)
+        self.channel.tell(l)
 
     def find_cert(self, host, port, sni):
         if self.config.certfile:
