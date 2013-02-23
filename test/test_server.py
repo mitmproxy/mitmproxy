@@ -81,6 +81,22 @@ class TestHTTP(tservers.HTTPProxTest, SanityMixin):
         assert "host" in l.request.headers
         assert l.response.code == 304
 
+    def test_connection_close(self):
+        # Add a body, so we have a content-length header, which combined with
+        # HTTP1.1 means the connection is kept alive.
+        response = '%s/p/200:b@1'%self.urlbase
+
+        # Lets sanity check that the connection does indeed stay open by
+        # issuing two requests over the same connection
+        p = self.pathoc()
+        assert p.request("get:'%s'"%response)
+        assert p.request("get:'%s'"%response)
+
+        # Now check that the connection is closed as the client specifies
+        p = self.pathoc()
+        assert p.request("get:'%s':h'Connection'='close'"%response)
+        tutils.raises("disconnect", p.request, "get:'%s'"%response)
+
 
 class TestHTTPS(tservers.HTTPProxTest, SanityMixin):
     ssl = True

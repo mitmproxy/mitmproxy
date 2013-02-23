@@ -117,6 +117,9 @@ class HTTPProxTest(ProxTestBase):
         return d
 
     def pathoc(self, connect_to = None):
+        """
+            Returns a connected Pathoc instance.
+        """
         p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
         p.connect(connect_to)
         return p
