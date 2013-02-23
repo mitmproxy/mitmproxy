@@ -44,10 +44,7 @@ class Reply:
     def __call__(self, msg=False):
         if not self.acked:
             self.acked = True
-            if msg is None:
-                self.q.put(msg)
-            else:
-                self.q.put(msg or self.obj)
+            self.q.put(msg or self.obj)
 
 
 class Channel:
