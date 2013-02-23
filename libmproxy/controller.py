@@ -41,10 +41,13 @@ class Reply:
         self.q = Queue.Queue()
         self.acked = False
 
-    def __call__(self, msg=False):
+    def __call__(self, msg=None):
         if not self.acked:
             self.acked = True
-            self.q.put(msg or self.obj)
+            if msg is None:
+                self.q.put(self.obj)
+            else:
+                self.q.put(msg)
 
 
 class Channel:
@@ -62,7 +65,7 @@ class Channel:
             try:
                 # The timeout is here so we can handle a should_exit event.
                 g = m.reply.q.get(timeout=0.5)
-            except Queue.Empty:
+            except Queue.Empty: # pragma: nocover
                 continue
             return g
 

@@ -2,7 +2,7 @@ import socket, time
 from netlib import tcp
 from libpathod import pathoc
 import tutils, tservers
-from libmproxy import flow
+from libmproxy import flow, proxy
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -147,6 +147,7 @@ class TestProxy(tservers.HTTPProxTest):
         assert request.timestamp_end - request.timestamp_start <= 0.1
 
 
+
 class MasterFakeResponse(tservers.TestMaster):
     def handle_request(self, m):
         resp = tutils.tresp()
@@ -159,4 +160,33 @@ class TestFakeResponse(tservers.HTTPProxTest):
         p = self.pathoc()
         f = self.pathod("200")
         assert "header_response" in f.headers.keys()
+
+
+
+class MasterKillRequest(tservers.TestMaster):
+    def handle_request(self, m):
+        m.reply(proxy.KILL)
+
+
+class TestKillRequest(tservers.HTTPProxTest):
+    masterclass = MasterKillRequest
+    def test_kill(self):
+        p = self.pathoc()
+        tutils.raises("empty reply", self.pathod, "200")
+        # Nothing should have hit the server
+        assert not self.last_log()
+
+
+class MasterKillResponse(tservers.TestMaster):
+    def handle_response(self, m):
+        m.reply(proxy.KILL)
+
+
+class TestKillResponse(tservers.HTTPProxTest):
+    masterclass = MasterKillResponse
+    def test_kill(self):
+        p = self.pathoc()
+        tutils.raises("empty reply", self.pathod, "200")
+        # The server should have seen a request
+        assert self.last_log()
 
