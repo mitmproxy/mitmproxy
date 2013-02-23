@@ -96,7 +96,7 @@ class CommonTests(tutils.DaemonTests):
 
     def test_logs(self):
         assert self.d.clear_log()
-        tutils.raises("no requests logged", self.d.last_log)
+        assert not self.d.last_log()
         rsp = self.get("202:da")
         assert len(self.d.log()) == 1
         assert self.d.clear_log()

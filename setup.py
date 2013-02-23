@@ -89,5 +89,5 @@ setup(
             "Topic :: Software Development :: Testing :: Traffic Generation",
             "Topic :: Internet :: WWW/HTTP",
         ],
-        install_requires=['netlib>=0.2.2', "requests>=1.0.4", "flask"],
+        install_requires=['netlib>=0.2.2', "requests>=1.1.0", "flask"],
 )

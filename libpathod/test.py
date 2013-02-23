@@ -34,12 +34,11 @@ class Daemon:
 
     def last_log(self):
         """
-            Returns the last logged request. Raises AssertionError if no
-            requests have been logged.
+            Returns the last logged request, or None.
         """
         l = self.log()
         if not l:
-            raise AssertionError("No requests logged")
+            return None
         return l[-1]
 
     def log(self):
