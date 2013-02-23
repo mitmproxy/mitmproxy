@@ -222,7 +222,7 @@ def test_read_response():
         r = cStringIO.StringIO(data)
         return  http.read_response(r, method, limit)
 
-    tutils.raises("blank server response", tst, "", "GET", None)
+    tutils.raises("server disconnect", tst, "", "GET", None)
     tutils.raises("invalid server response", tst, "foo", "GET", None)
     data = """
         HTTP/1.1 200 OK

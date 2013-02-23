@@ -139,7 +139,7 @@ class Reader(_FileLike):
                 raise NetLibTimeout
             except socket.error:
                 raise NetLibDisconnect
-            except SSL.SysCallError, v:
+            except SSL.SysCallError:
                 raise NetLibDisconnect
             self.first_byte_timestamp = self.first_byte_timestamp or time.time()
             if not data:
@@ -322,7 +322,7 @@ class BaseHandler:
                 self.connection.shutdown()
             else:
                 self.connection.shutdown(socket.SHUT_RDWR)
-        except (socket.error, SSL.Error), v:
+        except (socket.error, SSL.Error):
             # Socket probably already closed
             pass
         self.connection.close()

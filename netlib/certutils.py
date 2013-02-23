@@ -1,4 +1,4 @@
-import os, ssl, hashlib, socket, time, datetime, tempfile, shutil
+import os, ssl, time, datetime, tempfile, shutil
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error

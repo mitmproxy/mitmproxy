@@ -1,4 +1,4 @@
-import cStringIO, urllib, time, sys, traceback
+import cStringIO, urllib, time, traceback
 import odict
 
 
@@ -128,13 +128,13 @@ class WSGIAdaptor:
                 write(i)
             if not state["headers_sent"]:
                 write("")
-        except Exception, v:
+        except Exception:
             try:
                 s = traceback.format_exc()
                 errs.write(s)
                 self.error_page(soc, state["headers_sent"], s)
-            except Exception, v:    # pragma: no cover
-                pass                # pragma: no cover
+            except Exception:    # pragma: no cover
+                pass
         return errs.getvalue()
 
 

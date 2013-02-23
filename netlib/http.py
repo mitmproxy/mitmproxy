@@ -279,7 +279,7 @@ def read_response(rfile, method, body_size_limit):
     if line == "\r\n" or line == "\n": # Possible leftover from previous message
         line = rfile.readline()
     if not line:
-        raise HttpError(502, "Blank server response.")
+        raise HttpError(502, "Server disconnect.")
     parts = line.strip().split(" ", 2)
     if len(parts) == 2: # handle missing message gracefully
         parts.append("")

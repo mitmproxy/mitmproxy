@@ -1,4 +1,4 @@
-import cStringIO, threading, Queue, time, socket
+import cStringIO, Queue, time, socket
 from netlib import tcp, certutils, test
 import mock
 import tutils
