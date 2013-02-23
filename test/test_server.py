@@ -1,4 +1,5 @@
 import socket, time
+import mock
 from netlib import tcp
 from libpathod import pathoc
 import tutils, tservers
@@ -96,6 +97,14 @@ class TestHTTP(tservers.HTTPProxTest, SanityMixin):
         p = self.pathoc()
         assert p.request("get:'%s':h'Connection'='close'"%response)
         tutils.raises("disconnect", p.request, "get:'%s'"%response)
+
+    def test_proxy_ioerror(self):
+        # Tests a difficult-to-trigger condition, where an IOError is raised
+        # within our read loop.
+        with mock.patch("libmproxy.proxy.ProxyHandler.read_request") as m:
+            m.side_effect = IOError("error!")
+            tutils.raises("empty reply", self.pathod, "304")
+
 
 
 class TestHTTPS(tservers.HTTPProxTest, SanityMixin):

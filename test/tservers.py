@@ -63,7 +63,7 @@ class ProxTestBase:
         cls.server = libpathod.test.Daemon(ssl=cls.ssl)
         pconf = cls.get_proxy_config()
         config = proxy.ProxyConfig(
-            certfile=tutils.test_data.path("data/testkey.pem"),
+            cacert = tutils.test_data.path("data/serverkey.pem"),
             **pconf
         )
         tmaster = cls.masterclass(cls.tqueue, config)
