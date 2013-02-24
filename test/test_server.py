@@ -143,6 +143,13 @@ class TestHTTPS(tservers.HTTPProxTest, SanityMixin):
         assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
 
 
+class TestHTTPSCertfile(tservers.HTTPProxTest, SanityMixin):
+    ssl = True
+    certfile = True
+    def test_certfile(self):
+        assert self.pathod("304")
+
+
 class TestReverse(tservers.ReverseProxTest, SanityMixin):
     reverse = True
 

@@ -65,6 +65,11 @@ class ProxyThread(threading.Thread):
 
 
 class ProxTestBase:
+    # Test Configuration
+    ssl = None
+    clientcerts = False
+    certfile = None
+
     masterclass = TestMaster
     @classmethod
     def setupAll(cls):
@@ -106,17 +111,17 @@ class ProxTestBase:
             (self.scheme, ("127.0.0.1", self.proxy.port))
         )
 
-
-class HTTPProxTest(ProxTestBase):
-    ssl = None
-    clientcerts = False
     @classmethod
     def get_proxy_config(cls):
         d = dict()
         if cls.clientcerts:
             d["clientcerts"] = tutils.test_data.path("data/clientcert")
+        if cls.certfile:
+            d["certfile"]  =tutils.test_data.path("data/testkey.pem")
         return d
 
+
+class HTTPProxTest(ProxTestBase):
     def pathoc(self, connect_to = None):
         """
             Returns a connected Pathoc instance.
@@ -149,12 +154,12 @@ class TransparentProxTest(ProxTestBase):
     ssl = None
     @classmethod
     def get_proxy_config(cls):
-        return dict(
-                transparent_proxy = dict(
-                    resolver = TResolver(cls.server.port),
-                    sslports = []
-                )
-            )
+        d = ProxTestBase.get_proxy_config()
+        d["transparent_proxy"] = dict(
+            resolver = TResolver(cls.server.port),
+            sslports = []
+        )
+        return d
 
     def pathod(self, spec):
         """
@@ -172,13 +177,13 @@ class ReverseProxTest(ProxTestBase):
     ssl = None
     @classmethod
     def get_proxy_config(cls):
-        return dict(
-            reverse_proxy = (
+        d = ProxTestBase.get_proxy_config()
+        d["reverse_proxy"] = (
                 "https" if cls.ssl else "http",
                 "127.0.0.1",
                 cls.server.port
             )
-        )
+        return d
 
     def pathod(self, spec):
         """
