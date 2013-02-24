@@ -98,13 +98,25 @@ class TestHTTP(tservers.HTTPProxTest, SanityMixin):
         assert p.request("get:'%s':h'Connection'='close'"%response)
         tutils.raises("disconnect", p.request, "get:'%s'"%response)
 
+    def test_reconnect(self):
+        req = "get:'%s/p/200:b@1:da'"%self.urlbase
+        p = self.pathoc()
+        assert p.request(req)
+        # Server has disconnected. Mitmproxy should detect this, and reconnect.
+        assert p.request(req)
+        assert p.request(req)
+
+        # However, if the server disconnects on our first try, it's an error.
+        req = "get:'%s/p/200:b@1:d0'"%self.urlbase
+        p = self.pathoc()
+        tutils.raises("server disconnect", p.request, req)
+
     def test_proxy_ioerror(self):
         # Tests a difficult-to-trigger condition, where an IOError is raised
         # within our read loop.
         with mock.patch("libmproxy.proxy.ProxyHandler.read_request") as m:
             m.side_effect = IOError("error!")
             tutils.raises("empty reply", self.pathod, "304")
-
 
 
 class TestHTTPS(tservers.HTTPProxTest, SanityMixin):

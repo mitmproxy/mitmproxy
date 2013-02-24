@@ -117,8 +117,8 @@ class ServerConnectionPool:
     def get_connection(self, scheme, host, port):
         sc = self.conn
         if self.conn and (host, port) != (sc.host, sc.port):
-            sc.terminate()
-            self.conn = None
+                sc.terminate()
+                self.conn = None
         if not self.conn:
             try:
                 self.conn = ServerConnection(self.config, host, port)
@@ -126,6 +126,9 @@ class ServerConnectionPool:
             except tcp.NetLibError, v:
                 raise ProxyError(502, v)
         return self.conn
+
+    def del_connection(self, scheme, host, port):
+        self.conn = None
 
 
 class ProxyHandler(tcp.BaseHandler):
@@ -181,14 +184,30 @@ class ProxyHandler(tcp.BaseHandler):
                         scheme, host, port = self.config.reverse_proxy
                     else:
                         scheme, host, port = request.scheme, request.host, request.port
-                    sc = self.server_conn_pool.get_connection(scheme, host, port)
-                    sc.send(request)
-                    sc.rfile.reset_timestamps()
-                    httpversion, code, msg, headers, content = http.read_response(
-                        sc.rfile,
-                        request.method,
-                        self.config.body_size_limit
-                    )
+
+                    # If we've already pumped a request over this connection,
+                    # it's possible that the server has timed out. If this is
+                    # the case, we want to reconnect without sending an error
+                    # to the client.
+                    while 1:
+                        try:
+                            sc = self.server_conn_pool.get_connection(scheme, host, port)
+                            sc.send(request)
+                            sc.rfile.reset_timestamps()
+                            httpversion, code, msg, headers, content = http.read_response(
+                                sc.rfile,
+                                request.method,
+                                self.config.body_size_limit
+                            )
+                        except http.HttpErrorConnClosed, v:
+                            if sc.requestcount > 1:
+                                self.server_conn_pool.del_connection(scheme, host, port)
+                                continue
+                            else:
+                                raise
+                        else:
+                            break
+
                     response = flow.Response(
                         request, httpversion, code, msg, headers, content, sc.cert,
                         sc.rfile.first_byte_timestamp, utils.timestamp()
