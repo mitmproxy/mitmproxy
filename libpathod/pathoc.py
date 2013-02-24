@@ -35,7 +35,7 @@ class Pathoc(tcp.TCPClient):
             self.http_connect(connect_to, self.wfile, self.rfile)
         if self.ssl:
             try:
-                self.convert_to_ssl(sni=self.sni, clientcert=self.clientcert)
+                self.convert_to_ssl(sni=self.sni, cert=self.clientcert)
             except tcp.NetLibError, v:
                 raise PathocError(str(v))
 
