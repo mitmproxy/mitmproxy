@@ -51,21 +51,22 @@ class ProxyConfig:
 
 
 class ServerConnection(tcp.TCPClient):
-    def __init__(self, config, host, port):
+    def __init__(self, config, scheme, host, port, sni):
         tcp.TCPClient.__init__(self, host, port)
         self.config = config
+        self.scheme, self.sni = scheme, sni
         self.requestcount = 0
 
-    def connect(self, scheme, sni):
+    def connect(self):
         tcp.TCPClient.connect(self)
-        if scheme == "https":
+        if self.scheme == "https":
             clientcert = None
             if self.config.clientcerts:
                 path = os.path.join(self.config.clientcerts, self.host.encode("idna")) + ".pem"
                 if os.path.exists(path):
                     clientcert = path
             try:
-                self.convert_to_ssl(cert=clientcert, sni=sni)
+                self.convert_to_ssl(cert=clientcert, sni=self.sni)
             except tcp.NetLibError, v:
                 raise ProxyError(400, str(v))
 
@@ -94,8 +95,8 @@ class RequestReplayThread(threading.Thread):
     def run(self):
         try:
             r = self.flow.request
-            server = ServerConnection(self.config, r.host, r.port)
-            server.connect(r.scheme, r.host)
+            server = ServerConnection(self.config, r.scheme, r.host, r.port, r.host)
+            server.connect()
             server.send(r)
             httpversion, code, msg, headers, content = http.read_response(
                 server.rfile, r.method, self.config.body_size_limit
@@ -109,36 +110,39 @@ class RequestReplayThread(threading.Thread):
             self.channel.ask(err)
 
 
-class ServerConnectionPool:
-    def __init__(self, config):
-        self.config = config
-        self.conn = None
-
-    def get_connection(self, scheme, host, port, sni):
-        sc = self.conn
-        if self.conn and (host, port) != (sc.host, sc.port):
-                sc.terminate()
-                self.conn = None
-        if not self.conn:
-            try:
-                self.conn = ServerConnection(self.config, host, port)
-                self.conn.connect(scheme, sni)
-            except tcp.NetLibError, v:
-                raise ProxyError(502, v)
-        return self.conn
-
-    def del_connection(self, scheme, host, port):
-        self.conn = None
-
-
 class ProxyHandler(tcp.BaseHandler):
     def __init__(self, config, connection, client_address, server, channel, server_version):
         self.channel, self.server_version = channel, server_version
         self.config = config
-        self.server_conn_pool = ServerConnectionPool(config)
         self.proxy_connect_state = None
         self.sni = None
+        self.server_conn = None
         tcp.BaseHandler.__init__(self, connection, client_address, server)
+
+    def get_server_connection(self, cc, scheme, host, port, sni):
+        sc = self.server_conn
+        if sc and (scheme, host, port, sni) != (sc.scheme, sc.host, sc.port, sc.sni):
+            sc.terminate()
+            self.server_conn = None
+            self.log(
+                cc,
+                "switching connection", [
+                    "%s://%s:%s (sni=%s) -> %s://%s:%s (sni=%s)"%(
+                        scheme, host, port, sni,
+                        sc.scheme, sc.host, sc.port, sc.sni
+                    )
+                ]
+            )
+        if not self.server_conn:
+            try:
+                self.server_conn = ServerConnection(self.config, scheme, host, port, sni)
+                self.server_conn.connect()
+            except tcp.NetLibError, v:
+                raise ProxyError(502, v)
+        return self.server_conn
+
+    def del_server_connection(self):
+        self.server_conn = None
 
     def handle(self):
         cc = flow.ClientConnect(self.client_address)
@@ -190,7 +194,7 @@ class ProxyHandler(tcp.BaseHandler):
                     # the case, we want to reconnect without sending an error
                     # to the client.
                     while 1:
-                        sc = self.server_conn_pool.get_connection(scheme, host, port, host)
+                        sc = self.get_server_connection(cc, scheme, host, port, host)
                         sc.send(request)
                         sc.rfile.reset_timestamps()
                         try:
@@ -200,7 +204,7 @@ class ProxyHandler(tcp.BaseHandler):
                                 self.config.body_size_limit
                             )
                         except http.HttpErrorConnClosed, v:
-                            self.server_conn_pool.del_connection(scheme, host, port)
+                            self.del_server_connection()
                             if sc.requestcount > 1:
                                 continue
                             else:

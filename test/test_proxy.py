@@ -39,8 +39,8 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = proxy.ServerConnection(proxy.ProxyConfig(), self.d.IFACE, self.d.port)
-        sc.connect("http", "host.com")
+        sc = proxy.ServerConnection(proxy.ProxyConfig(), "http", self.d.IFACE, self.d.port, "host.com")
+        sc.connect()
         r = tutils.treq()
         r.path = "/p/200:da"
         sc.send(r)
@@ -53,36 +53,9 @@ class TestServerConnection:
         sc.terminate()
 
     def test_terminate_error(self):
-        sc = proxy.ServerConnection(proxy.ProxyConfig(), self.d.IFACE, self.d.port)
-        sc.connect("http", "host.com")
+        sc = proxy.ServerConnection(proxy.ProxyConfig(), "http", self.d.IFACE, self.d.port, "host.com")
+        sc.connect()
         sc.connection = mock.Mock()
         sc.connection.close = mock.Mock(side_effect=IOError)
         sc.terminate()
-
-
-
-def _dummysc(config, host, port):
-    return mock.MagicMock(config=config, host=host, port=port)
-
-
-def _errsc(config, host, port):
-    m = mock.MagicMock(config=config, host=host, port=port)
-    m.connect = mock.MagicMock(side_effect=tcp.NetLibError())
-    return m
-
-
-class TestServerConnectionPool:
-    @mock.patch("libmproxy.proxy.ServerConnection", _dummysc)
-    def test_pooling(self):
-        p = proxy.ServerConnectionPool(proxy.ProxyConfig())
-        c = p.get_connection("http", "localhost", 80, "localhost")
-        c2 = p.get_connection("http", "localhost", 80, "localhost")
-        assert c is c2
-        c3 = p.get_connection("http", "foo", 80, "localhost")
-        assert not c is c3
-
-    @mock.patch("libmproxy.proxy.ServerConnection", _errsc)
-    def test_connection_error(self):
-        p = proxy.ServerConnectionPool(proxy.ProxyConfig())
-        tutils.raises("502", p.get_connection, "http", "localhost", 80, "localhost")
 

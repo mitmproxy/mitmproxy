@@ -28,6 +28,7 @@ class TestMaster(flow.FlowMaster):
         state = flow.State()
         flow.FlowMaster.__init__(self, s, state)
         self.testq = testq
+        self.log = []
 
     def handle_request(self, m):
         flow.FlowMaster.handle_request(self, m)
@@ -36,6 +37,10 @@ class TestMaster(flow.FlowMaster):
     def handle_response(self, m):
         flow.FlowMaster.handle_response(self, m)
         m.reply()
+
+    def handle_log(self, l):
+        self.log.append(l.msg)
+        l.reply()
 
 
 class ProxyThread(threading.Thread):
@@ -47,6 +52,10 @@ class ProxyThread(threading.Thread):
     @property
     def port(self):
         return self.tmaster.server.port
+
+    @property
+    def log(self):
+        return self.tmaster.log
 
     def run(self):
         self.tmaster.run()
@@ -61,6 +70,7 @@ class ProxTestBase:
     def setupAll(cls):
         cls.tqueue = Queue.Queue()
         cls.server = libpathod.test.Daemon(ssl=cls.ssl)
+        cls.server2 = libpathod.test.Daemon(ssl=cls.ssl)
         pconf = cls.get_proxy_config()
         config = proxy.ProxyConfig(
             cacert = tutils.test_data.path("data/serverkey.pem"),
@@ -78,6 +88,7 @@ class ProxTestBase:
     def teardownAll(cls):
         cls.proxy.shutdown()
         cls.server.shutdown()
+        cls.server2.shutdown()
 
     def setUp(self):
         self.master.state.clear()
@@ -94,16 +105,6 @@ class ProxTestBase:
         return (
             (self.scheme, ("127.0.0.1", self.proxy.port))
         )
-
-    @property
-    def urlbase(self):
-        """
-            The URL base for the server instance.
-        """
-        return self.server.urlbase
-
-    def last_log(self):
-        return self.server.last_log()
 
 
 class HTTPProxTest(ProxTestBase):
@@ -129,7 +130,7 @@ class HTTPProxTest(ProxTestBase):
             Constructs a pathod request, with the appropriate base and proxy.
         """
         return hurl.get(
-            self.urlbase + "/p/" + spec,
+            self.server.urlbase + "/p/" + spec,
             proxy=self.proxies,
             validate_cert=False,
             #debug=hurl.utils.stdout_debug
