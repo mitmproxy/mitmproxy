@@ -238,9 +238,7 @@ class Pathod(tcp.TCPServer):
         self.timeout, self.logreq, self.logresp, self.hexdump = timeout, logreq, logresp, hexdump
         self.explain = explain
 
-        if not noapi:
-            app.api()
-        self.app = app.app
+        self.app = app.make_app(noapi)
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0
