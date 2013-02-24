@@ -9,6 +9,9 @@ class HttpError(Exception):
         return "HttpError(%s, %s)"%(self.code, self.msg)
 
 
+class HttpErrorConnClosed(HttpError): pass
+
+
 def parse_url(url):
     """
         Returns a (scheme, host, port, path) tuple, or None on error.
@@ -73,7 +76,7 @@ def read_chunked(code, fp, limit):
     while 1:
         line = fp.readline(128)
         if line == "":
-            raise HttpError(code, "Connection closed prematurely")
+            raise HttpErrorConnClosed(code, "Connection closed prematurely")
         if line != '\r\n' and line != '\n':
             try:
                 length = int(line, 16)
@@ -95,7 +98,7 @@ def read_chunked(code, fp, limit):
     while 1:
         line = fp.readline()
         if line == "":
-            raise HttpError(code, "Connection closed prematurely")
+            raise HttpErrorConnClosed(code, "Connection closed prematurely")
         if line == '\r\n' or line == '\n':
             break
     return content
@@ -279,7 +282,7 @@ def read_response(rfile, method, body_size_limit):
     if line == "\r\n" or line == "\n": # Possible leftover from previous message
         line = rfile.readline()
     if not line:
-        raise HttpError(502, "Server disconnect.")
+        raise HttpErrorConnClosed(502, "Server disconnect.")
     parts = line.strip().split(" ", 2)
     if len(parts) == 2: # handle missing message gracefully
         parts.append("")

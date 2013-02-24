@@ -118,7 +118,6 @@ def dummy_cert(fp, ca, commonname, sans):
     fp.close()
 
 
-
 class CertStore:
     """
         Implements an on-disk certificate store.

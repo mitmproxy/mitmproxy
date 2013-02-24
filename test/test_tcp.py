@@ -149,7 +149,7 @@ class TestSSLClientCert(test.ServerTestBase):
     def test_clientcert(self):
         c = tcp.TCPClient("127.0.0.1", self.port)
         c.connect()
-        c.convert_to_ssl(clientcert=tutils.test_data.path("data/clientcert/client.pem"))
+        c.convert_to_ssl(cert=tutils.test_data.path("data/clientcert/client.pem"))
         assert c.rfile.readline().strip() == "1"
 
     def test_clientcert_err(self):
@@ -158,7 +158,7 @@ class TestSSLClientCert(test.ServerTestBase):
         tutils.raises(
             tcp.NetLibError,
             c.convert_to_ssl,
-            clientcert=tutils.test_data.path("data/clientcert/make")
+            cert=tutils.test_data.path("data/clientcert/make")
         )
 
 

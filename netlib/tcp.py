@@ -179,17 +179,17 @@ class TCPClient:
         self.cert = None
         self.ssl_established = False
 
-    def convert_to_ssl(self, clientcert=None, sni=None, method=TLSv1_METHOD, options=None):
+    def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
         """
-            clientcert: Path to a file containing both client cert and private key.
+            cert: Path to a file containing both client cert and private key.
         """
         context = SSL.Context(method)
         if options is not None:
             context.set_options(options)
-        if clientcert:
+        if cert:
             try:
-                context.use_privatekey_file(clientcert)
-                context.use_certificate_file(clientcert)
+                context.use_privatekey_file(cert)
+                context.use_certificate_file(cert)
             except SSL.Error, v:
                 raise NetLibError("SSL client certificate error: %s"%str(v))
         self.connection = SSL.Connection(context, self.connection)
