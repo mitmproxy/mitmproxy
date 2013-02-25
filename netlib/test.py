@@ -62,6 +62,7 @@ class TServer(tcp.TCPServer):
                 self.ssl["key"],
                 method = method,
                 options = options,
+                handle_sni = getattr(h, "handle_sni", None)
             )
         h.handle()
         h.finish()
