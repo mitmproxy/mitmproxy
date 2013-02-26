@@ -6,6 +6,12 @@ import language, utils
 class PathocError(Exception): pass
 
 
+class Response:
+    def __init__(self, httpversion, status_code, msg, headers, content):
+        self.httpversion, self.status_code, self.msg = httpversion, status_code, msg
+        self.headers, self.content = headers, content
+
+
 class Pathoc(tcp.TCPClient):
     def __init__(self, host, port, ssl=None, sni=None, clientcert=None):
         tcp.TCPClient.__init__(self, host, port)
@@ -49,7 +55,7 @@ class Pathoc(tcp.TCPClient):
         r = language.parse_request(self.settings, spec)
         ret = language.serve(r, self.wfile, self.settings, self.host)
         self.wfile.flush()
-        return http.read_response(self.rfile, r.method, None)
+        return Response(*http.read_response(self.rfile, r.method, None))
 
     def _show_summary(self, fp, httpversion, code, msg, headers, content):
         print >> fp, "<< %s %s: %s bytes"%(code, utils.xrepr(msg), len(content))

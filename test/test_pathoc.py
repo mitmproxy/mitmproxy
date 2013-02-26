@@ -26,8 +26,8 @@ class _TestDaemon:
             ssl = self.ssl
         )
         c.connect()
-        _, _, _, _, content = c.request("get:/api/info")
-        assert tuple(json.loads(content)["version"]) == version.IVERSION
+        r = c.request("get:/api/info")
+        assert tuple(json.loads(r.content)["version"]) == version.IVERSION
 
 
 class TestDaemonSSL(_TestDaemon):
@@ -41,8 +41,8 @@ class TestDaemonSSL(_TestDaemon):
         )
         c.connect()
         c.request("get:/p/200")
-        _, _, _, _, content = c.request("get:/api/log")
-        d = json.loads(content)
+        r = c.request("get:/api/log")
+        d = json.loads(r.content)
         assert d["log"][0]["request"]["sni"] == "foobar.com"
 
     def test_clientcert(self):
@@ -54,8 +54,8 @@ class TestDaemonSSL(_TestDaemon):
         )
         c.connect()
         c.request("get:/p/200")
-        _, _, _, _, content = c.request("get:/api/log")
-        d = json.loads(content)
+        r = c.request("get:/api/log")
+        d = json.loads(r.content)
         assert d["log"][0]["request"]["clientcert"]["keyinfo"]
 
 

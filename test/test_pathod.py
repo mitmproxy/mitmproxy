@@ -56,8 +56,8 @@ class TestNotAfterConnect(tutils.DaemonTests):
     ssl = False
     not_after_connect = True
     def test_connect(self):
-        v = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port))
-        assert v[1] == 202
+        r = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port))
+        assert r.status_code == 202
 
 
 class TestNohang(tutils.DaemonTests):
@@ -88,8 +88,8 @@ class CommonTests(tutils.DaemonTests):
         assert "too large" in l["msg"]
 
     def test_preline(self):
-        v = self.pathoc(r"get:'/p/200':i0,'\r\n'")
-        assert v[1] == 200
+        r = self.pathoc(r"get:'/p/200':i0,'\r\n'")
+        assert r.status_code == 200
 
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
@@ -152,15 +152,15 @@ class CommonTests(tutils.DaemonTests):
         assert "File access denied" in rsp.content
 
     def test_proxy(self):
-        v = self.pathoc(r"get:'http://foo.com/p/202':da")
-        assert v[1] == 202
+        r = self.pathoc(r"get:'http://foo.com/p/202':da")
+        assert r.status_code == 202
 
 
 class TestDaemon(CommonTests):
     ssl = False
     def test_connect(self):
-        v = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port), ssl=True)
-        assert v[1] == 202
+        r = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port), ssl=True)
+        assert r.status_code == 202
 
     def test_connect_err(self):
         tutils.raises(http.HttpError, self.pathoc, r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port))
