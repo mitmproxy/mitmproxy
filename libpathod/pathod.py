@@ -75,6 +75,7 @@ class PathodHandler(tcp.BaseHandler):
                     self.convert_to_ssl(
                         self.server.ssloptions.certfile,
                         self.server.ssloptions.keyfile,
+                        handle_sni = self.handle_sni
                     )
                 except tcp.NetLibError, v:
                     s = str(v)
@@ -179,6 +180,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.convert_to_ssl(
                     self.server.ssloptions.certfile,
                     self.server.ssloptions.keyfile,
+                    handle_sni = self.handle_sni
                 )
             except tcp.NetLibError, v:
                 s = str(v)
