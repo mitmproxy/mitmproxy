@@ -36,6 +36,9 @@ class ODict:
                 ret.append(i[1])
         return ret
 
+    def keys(self):
+        return list(set([self._kconv(i[0]) for i in self.lst]))
+
     def _filter_lst(self, k, lst):
         k = self._kconv(k)
         new = []

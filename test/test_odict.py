@@ -63,6 +63,15 @@ class TestODict:
         self.od.add("foo", 1)
         assert [i for i in self.od]
 
+    def test_keys(self):
+        assert not self.od.keys()
+        self.od.add("foo", 1)
+        assert self.od.keys() == ["foo"]
+        self.od.add("foo", 2)
+        assert self.od.keys() == ["foo"]
+        self.od.add("bar", 2)
+        assert len(self.od.keys()) == 2
+
     def test_copy(self):
         self.od.add("foo", 1)
         self.od.add("foo", 2)
@@ -122,3 +131,13 @@ class TestODictCaseless:
         self.od.add("bar", 3)
         del self.od["foo"]
         assert len(self.od) == 1
+
+    def test_keys(self):
+        assert not self.od.keys()
+        self.od.add("foo", 1)
+        assert self.od.keys() == ["foo"]
+        self.od.add("Foo", 2)
+        assert self.od.keys() == ["foo"]
+        self.od.add("bar", 2)
+        assert len(self.od.keys()) == 2
+
