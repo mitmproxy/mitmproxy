@@ -1,7 +1,9 @@
 import socket, time
+import mock
 from netlib import tcp
 from libpathod import pathoc
-import tutils
+import tutils, tservers
+from libmproxy import flow, proxy
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -39,7 +41,19 @@ class SanityMixin:
         assert l.error
 
 
-class TestHTTP(tutils.HTTPProxTest, SanityMixin):
+class TestHTTP(tservers.HTTPProxTest, SanityMixin):
+    def test_app(self):
+        p = self.pathoc()
+        ret = p.request("get:'http://testapp/'")
+        assert ret[1] == 200
+        assert ret[4] == "testapp"
+
+    def test_app_err(self):
+        p = self.pathoc()
+        ret = p.request("get:'http://errapp/'")
+        assert ret[1] == 500
+        assert "ValueError" in ret[4]
+
     def test_invalid_http(self):
         t = tcp.TCPClient("127.0.0.1", self.proxy.port)
         t.connect()
@@ -68,24 +82,83 @@ class TestHTTP(tutils.HTTPProxTest, SanityMixin):
         assert "host" in l.request.headers
         assert l.response.code == 304
 
+    def test_connection_close(self):
+        # Add a body, so we have a content-length header, which combined with
+        # HTTP1.1 means the connection is kept alive.
+        response = '%s/p/200:b@1'%self.server.urlbase
 
-class TestHTTPS(tutils.HTTPProxTest, SanityMixin):
+        # Lets sanity check that the connection does indeed stay open by
+        # issuing two requests over the same connection
+        p = self.pathoc()
+        assert p.request("get:'%s'"%response)
+        assert p.request("get:'%s'"%response)
+
+        # Now check that the connection is closed as the client specifies
+        p = self.pathoc()
+        assert p.request("get:'%s':h'Connection'='close'"%response)
+        tutils.raises("disconnect", p.request, "get:'%s'"%response)
+
+    def test_reconnect(self):
+        req = "get:'%s/p/200:b@1:da'"%self.server.urlbase
+        p = self.pathoc()
+        assert p.request(req)
+        # Server has disconnected. Mitmproxy should detect this, and reconnect.
+        assert p.request(req)
+        assert p.request(req)
+
+        # However, if the server disconnects on our first try, it's an error.
+        req = "get:'%s/p/200:b@1:d0'"%self.server.urlbase
+        p = self.pathoc()
+        tutils.raises("server disconnect", p.request, req)
+
+    def test_proxy_ioerror(self):
+        # Tests a difficult-to-trigger condition, where an IOError is raised
+        # within our read loop.
+        with mock.patch("libmproxy.proxy.ProxyHandler.read_request") as m:
+            m.side_effect = IOError("error!")
+            tutils.raises("empty reply", self.pathod, "304")
+
+    def test_get_connection_switching(self):
+        def switched(l):
+            for i in l:
+                if "switching" in i:
+                    return True
+        req = "get:'%s/p/200:b@1'"
+        p = self.pathoc()
+        assert p.request(req%self.server.urlbase)
+        assert p.request(req%self.server2.urlbase)
+        assert switched(self.proxy.log)
+
+    def test_get_connection_err(self):
+        p = self.pathoc()
+        ret = p.request("get:'http://localhost:0'")
+        assert ret[1] == 502
+
+
+class TestHTTPS(tservers.HTTPProxTest, SanityMixin):
     ssl = True
     clientcerts = True
     def test_clientcert(self):
         f = self.pathod("304")
-        assert self.last_log()["request"]["clientcert"]["keyinfo"]
+        assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
 
 
-class TestReverse(tutils.ReverseProxTest, SanityMixin):
+class TestHTTPSCertfile(tservers.HTTPProxTest, SanityMixin):
+    ssl = True
+    certfile = True
+    def test_certfile(self):
+        assert self.pathod("304")
+
+
+class TestReverse(tservers.ReverseProxTest, SanityMixin):
     reverse = True
 
 
-class TestTransparent(tutils.TransparentProxTest, SanityMixin):
+class TestTransparent(tservers.TransparentProxTest, SanityMixin):
     transparent = True
 
 
-class TestProxy(tutils.HTTPProxTest):
+class TestProxy(tservers.HTTPProxTest):
     def test_http(self):
         f = self.pathod("304")
         assert f.status_code == 304
@@ -132,3 +205,48 @@ class TestProxy(tutils.HTTPProxTest):
 
         request = self.master.state.view[1].request
         assert request.timestamp_end - request.timestamp_start <= 0.1
+
+
+
+class MasterFakeResponse(tservers.TestMaster):
+    def handle_request(self, m):
+        resp = tutils.tresp()
+        m.reply(resp)
+
+
+class TestFakeResponse(tservers.HTTPProxTest):
+    masterclass = MasterFakeResponse
+    def test_kill(self):
+        p = self.pathoc()
+        f = self.pathod("200")
+        assert "header_response" in f.headers.keys()
+
+
+
+class MasterKillRequest(tservers.TestMaster):
+    def handle_request(self, m):
+        m.reply(proxy.KILL)
+
+
+class TestKillRequest(tservers.HTTPProxTest):
+    masterclass = MasterKillRequest
+    def test_kill(self):
+        p = self.pathoc()
+        tutils.raises("empty reply", self.pathod, "200")
+        # Nothing should have hit the server
+        assert not self.server.last_log()
+
+
+class MasterKillResponse(tservers.TestMaster):
+    def handle_response(self, m):
+        m.reply(proxy.KILL)
+
+
+class TestKillResponse(tservers.HTTPProxTest):
+    masterclass = MasterKillResponse
+    def test_kill(self):
+        p = self.pathoc()
+        tutils.raises("empty reply", self.pathod, "200")
+        # The server should have seen a request
+        assert self.server.last_log()
+

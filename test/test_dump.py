@@ -3,6 +3,7 @@ from cStringIO import StringIO
 import libpry
 from libmproxy import dump, flow, proxy
 import tutils
+import mock
 
 def test_strfuncs():
     t = tutils.tresp()
@@ -21,6 +22,7 @@ class TestDumpMaster:
         req = tutils.treq()
         req.content = content
         l = proxy.Log("connect")
+        l.reply = mock.MagicMock()
         m.handle_log(l)
         cc = req.client_conn
         cc.connection_error = "error"
@@ -29,7 +31,9 @@ class TestDumpMaster:
         m.handle_clientconnect(cc)
         m.handle_request(req)
         f = m.handle_response(resp)
-        m.handle_clientdisconnect(flow.ClientDisconnect(cc))
+        cd = flow.ClientDisconnect(cc)
+        cd.reply = mock.MagicMock()
+        m.handle_clientdisconnect(cd)
         return f
 
     def _dummy_cycle(self, n, filt, content, **options):

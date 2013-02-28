@@ -1,17 +1,18 @@
-import threading, Queue
 import os, shutil, tempfile
 from contextlib import contextmanager
-from libmproxy import proxy, flow, controller, utils
+from libmproxy import flow, utils, controller
 from netlib import certutils
-import human_curl as hurl
-import libpathod.test, libpathod.pathoc
+import mock
 
 def treq(conn=None):
     if not conn:
         conn = flow.ClientConnect(("address", 22))
+    conn.reply = controller.DummyReply()
     headers = flow.ODictCaseless()
     headers["header"] = ["qvalue"]
-    return flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers, "content")
+    r = flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers, "content")
+    r.reply = controller.DummyReply()
+    return r
 
 
 def tresp(req=None):
@@ -20,7 +21,9 @@ def tresp(req=None):
     headers = flow.ODictCaseless()
     headers["header_response"] = ["svalue"]
     cert = certutils.SSLCert.from_der(file(test_data.path("data/dercert")).read())
-    return flow.Response(req, (1, 1), 200, "message", headers, "content_response", cert)
+    resp = flow.Response(req, (1, 1), 200, "message", headers, "content_response", cert)
+    resp.reply = controller.DummyReply()
+    return resp
 
 
 def tflow():
@@ -39,167 +42,9 @@ def tflow_err():
     r = treq()
     f = flow.Flow(r)
     f.error = flow.Error(r, "error")
+    f.error.reply = controller.DummyReply()
     return f
 
-
-class TestMaster(flow.FlowMaster):
-    def __init__(self, testq, config):
-        s = proxy.ProxyServer(config, 0)
-        state = flow.State()
-        flow.FlowMaster.__init__(self, s, state)
-        self.testq = testq
-
-    def handle(self, m):
-        flow.FlowMaster.handle(self, m)
-        m._ack()
-
-
-class ProxyThread(threading.Thread):
-    def __init__(self, testq, config):
-        self.tmaster = TestMaster(testq, config)
-        controller.should_exit = False
-        threading.Thread.__init__(self)
-
-    @property
-    def port(self):
-        return self.tmaster.server.port
-
-    def run(self):
-        self.tmaster.run()
-
-    def shutdown(self):
-        self.tmaster.shutdown()
-
-
-class ProxTestBase:
-    @classmethod
-    def setupAll(cls):
-        cls.tqueue = Queue.Queue()
-        cls.server = libpathod.test.Daemon(ssl=cls.ssl)
-        pconf = cls.get_proxy_config()
-        config = proxy.ProxyConfig(
-            certfile=test_data.path("data/testkey.pem"),
-            **pconf
-        )
-        cls.proxy = ProxyThread(cls.tqueue, config)
-        cls.proxy.start()
-
-    @property
-    def master(cls):
-        return cls.proxy.tmaster
-
-    @classmethod
-    def teardownAll(cls):
-        cls.proxy.shutdown()
-        cls.server.shutdown()
-
-    def setUp(self):
-        self.master.state.clear()
-
-    @property
-    def scheme(self):
-        return "https" if self.ssl else "http"
-
-    @property
-    def proxies(self):
-        """
-            The URL base for the server instance.
-        """
-        return (
-            (self.scheme, ("127.0.0.1", self.proxy.port))
-        )
-
-    @property
-    def urlbase(self):
-        """
-            The URL base for the server instance.
-        """
-        return self.server.urlbase
-
-    def last_log(self):
-        return self.server.last_log()
-
-
-class HTTPProxTest(ProxTestBase):
-    ssl = None
-    clientcerts = False
-    @classmethod
-    def get_proxy_config(cls):
-        d = dict()
-        if cls.clientcerts:
-            d["clientcerts"] = test_data.path("data/clientcert")
-        return d
-
-    def pathoc(self, connect_to = None):
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
-        p.connect(connect_to)
-        return p
-
-    def pathod(self, spec):
-        """
-            Constructs a pathod request, with the appropriate base and proxy.
-        """
-        return hurl.get(
-            self.urlbase + "/p/" + spec,
-            proxy=self.proxies,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
-
-
-class TResolver:
-    def __init__(self, port):
-        self.port = port
-
-    def original_addr(self, sock):
-        return ("127.0.0.1", self.port)
-
-
-class TransparentProxTest(ProxTestBase):
-    ssl = None
-    @classmethod
-    def get_proxy_config(cls):
-        return dict(
-                transparent_proxy = dict(
-                    resolver = TResolver(cls.server.port),
-                    sslports = []
-                )
-            )
-
-    def pathod(self, spec):
-        """
-            Constructs a pathod request, with the appropriate base and proxy.
-        """
-        r = hurl.get(
-            "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
-        return r
-
-
-class ReverseProxTest(ProxTestBase):
-    ssl = None
-    @classmethod
-    def get_proxy_config(cls):
-        return dict(
-            reverse_proxy = (
-                "https" if cls.ssl else "http",
-                "127.0.0.1",
-                cls.server.port
-            )
-        )
-
-    def pathod(self, spec):
-        """
-            Constructs a pathod request, with the appropriate base and proxy.
-        """
-        r = hurl.get(
-            "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
-        return r
 
 
 @contextmanager
@@ -251,6 +96,5 @@ def raises(exc, obj, *args, **kwargs):
                     )
                 )
     raise AssertionError("No exception raised.")
-
 
 test_data = utils.Data(__name__)

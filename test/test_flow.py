@@ -223,16 +223,16 @@ class TestFlow:
         f = tutils.tflow()
         f.request = tutils.treq()
         f.intercept()
-        assert not f.request.acked
+        assert not f.request.reply.acked
         f.kill(fm)
-        assert f.request.acked
+        assert f.request.reply.acked
         f.intercept()
         f.response = tutils.tresp()
         f.request = f.response.request
-        f.request._ack()
-        assert not f.response.acked
+        f.request.reply()
+        assert not f.response.reply.acked
         f.kill(fm)
-        assert f.response.acked
+        assert f.response.reply.acked
 
     def test_killall(self):
         s = flow.State()
@@ -245,25 +245,25 @@ class TestFlow:
         fm.handle_request(r)
 
         for i in s.view:
-            assert not i.request.acked
+            assert not i.request.reply.acked
         s.killall(fm)
         for i in s.view:
-            assert i.request.acked
+            assert i.request.reply.acked
 
     def test_accept_intercept(self):
         f = tutils.tflow()
         f.request = tutils.treq()
         f.intercept()
-        assert not f.request.acked
+        assert not f.request.reply.acked
         f.accept_intercept()
-        assert f.request.acked
+        assert f.request.reply.acked
         f.response = tutils.tresp()
         f.request = f.response.request
         f.intercept()
-        f.request._ack()
-        assert not f.response.acked
+        f.request.reply()
+        assert not f.response.reply.acked
         f.accept_intercept()
-        assert f.response.acked
+        assert f.response.reply.acked
 
     def test_serialization(self):
         f = flow.Flow(None)
@@ -562,9 +562,11 @@ class TestFlowMaster:
         fm.handle_response(resp)
         assert fm.script.ns["log"][-1] == "response"
         dc = flow.ClientDisconnect(req.client_conn)
+        dc.reply = controller.DummyReply()
         fm.handle_clientdisconnect(dc)
         assert fm.script.ns["log"][-1] == "clientdisconnect"
         err = flow.Error(f.request, "msg")
+        err.reply = controller.DummyReply()
         fm.handle_error(err)
         assert fm.script.ns["log"][-1] == "error"
 
@@ -598,10 +600,12 @@ class TestFlowMaster:
         assert not fm.handle_response(rx)
 
         dc = flow.ClientDisconnect(req.client_conn)
+        dc.reply = controller.DummyReply()
         req.client_conn.requestcount = 1
         fm.handle_clientdisconnect(dc)
 
         err = flow.Error(f.request, "msg")
+        err.reply = controller.DummyReply()
         fm.handle_error(err)
 
         fm.load_script(tutils.test_data.path("scripts/a.py"))
@@ -621,7 +625,9 @@ class TestFlowMaster:
         fm.tick(q)
         assert fm.state.flow_count()
 
-        fm.handle_error(flow.Error(f.request, "error"))
+        err = flow.Error(f.request, "error")
+        err.reply = controller.DummyReply()
+        fm.handle_error(err)
 
     def test_server_playback(self):
         controller.should_exit = False

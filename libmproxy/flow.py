@@ -196,7 +196,15 @@ class decoded(object):
             self.o.encode(self.ce)
 
 
-class HTTPMsg(controller.Msg):
+class StateObject:
+    def __eq__(self, other):
+        try:
+            return self._get_state() == other._get_state()
+        except AttributeError:
+            return False
+
+
+class HTTPMsg(StateObject):
     def get_decoded_content(self):
         """
             Returns the decoded content based on the current Content-Encoding header.
@@ -252,6 +260,7 @@ class HTTPMsg(controller.Msg):
             return 0
         return len(self.content)
 
+
 class Request(HTTPMsg):
     """
         An HTTP request.
@@ -289,7 +298,6 @@ class Request(HTTPMsg):
         self.timestamp_start = timestamp_start or utils.timestamp()
         self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         self.close = False
-        controller.Msg.__init__(self)
 
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
@@ -388,15 +396,8 @@ class Request(HTTPMsg):
     def __hash__(self):
         return id(self)
 
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
-
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
         c = copy.copy(self)
-        c.acked = True
         c.headers = self.headers.copy()
         return c
 
@@ -603,7 +604,6 @@ class Response(HTTPMsg):
         self.cert = cert
         self.timestamp_start = timestamp_start or utils.timestamp()
         self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
-        controller.Msg.__init__(self)
         self.replay = False
 
     def _refresh_cookie(self, c, delta):
@@ -700,15 +700,8 @@ class Response(HTTPMsg):
             state["timestamp_end"],
         )
 
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
-
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
         c = copy.copy(self)
-        c.acked = True
         c.headers = self.headers.copy()
         return c
 
@@ -773,7 +766,7 @@ class Response(HTTPMsg):
             cookies.append((cookie_name, (cookie_value, cookie_parameters)))
         return dict(cookies)
 
-class ClientDisconnect(controller.Msg):
+class ClientDisconnect:
     """
         A client disconnection event.
 
@@ -782,11 +775,10 @@ class ClientDisconnect(controller.Msg):
             client_conn: ClientConnect object.
     """
     def __init__(self, client_conn):
-        controller.Msg.__init__(self)
         self.client_conn = client_conn
 
 
-class ClientConnect(controller.Msg):
+class ClientConnect(StateObject):
     """
         A single client connection. Each connection can result in multiple HTTP
         Requests.
@@ -807,10 +799,6 @@ class ClientConnect(controller.Msg):
         self.close = False
         self.requestcount = 0
         self.error = None
-        controller.Msg.__init__(self)
-
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
 
     def __str__(self):
         if self.address:
@@ -839,15 +827,10 @@ class ClientConnect(controller.Msg):
             return None
 
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
-        c = copy.copy(self)
-        c.acked = True
-        return c
+        return copy.copy(self)
 
 
-class Error(controller.Msg):
+class Error(StateObject):
     """
         An Error.
 
@@ -865,18 +848,13 @@ class Error(controller.Msg):
     def __init__(self, request, msg, timestamp=None):
         self.request, self.msg = request, msg
         self.timestamp = timestamp or utils.timestamp()
-        controller.Msg.__init__(self)
 
     def _load_state(self, state):
         self.msg = state["msg"]
         self.timestamp = state["timestamp"]
 
     def copy(self):
-        """
-            Returns a copy of this object.
-        """
         c = copy.copy(self)
-        c.acked = True
         return c
 
     def _get_state(self):
@@ -892,9 +870,6 @@ class Error(controller.Msg):
             state["msg"],
             state["timestamp"],
         )
-
-    def __eq__(self, other):
-        return self._get_state() == other._get_state()
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -1185,10 +1160,11 @@ class Flow:
             Kill this request.
         """
         self.error = Error(self.request, "Connection killed")
-        if self.request and not self.request.acked:
-            self.request._ack(None)
-        elif self.response and not self.response.acked:
-            self.response._ack(None)
+        self.error.reply = controller.DummyReply()
+        if self.request and not self.request.reply.acked:
+            self.request.reply(proxy.KILL)
+        elif self.response and not self.response.reply.acked:
+            self.response.reply(proxy.KILL)
         master.handle_error(self.error)
         self.intercepting = False
 
@@ -1204,10 +1180,10 @@ class Flow:
             Continue with the flow - called after an intercept().
         """
         if self.request:
-            if not self.request.acked:
-                self.request._ack()
-            elif self.response and not self.response.acked:
-                self.response._ack()
+            if not self.request.reply.acked:
+                self.request.reply()
+            elif self.response and not self.response.reply.acked:
+                self.response.reply()
             self.intercepting = False
 
     def replace(self, pattern, repl, *args, **kwargs):
@@ -1469,7 +1445,7 @@ class FlowMaster(controller.Master):
             flow.response = response
             if self.refresh_server_playback:
                 response.refresh()
-            flow.request._ack(response)
+            flow.request.reply(response)
             if self.server_playback.count() == 0:
                 self.stop_server_playback()
             return True
@@ -1496,10 +1472,13 @@ class FlowMaster(controller.Master):
             Loads a flow, and returns a new flow object.
         """
         if f.request:
+            f.request.reply = controller.DummyReply()
             fr = self.handle_request(f.request)
         if f.response:
+            f.response.reply = controller.DummyReply()
             self.handle_response(f.response)
         if f.error:
+            f.error.reply = controller.DummyReply()
             self.handle_error(f.error)
         return fr
 
@@ -1527,7 +1506,7 @@ class FlowMaster(controller.Master):
                 if self.kill_nonreplay:
                     f.kill(self)
                 else:
-                    f.request._ack()
+                    f.request.reply()
 
     def process_new_response(self, f):
         if self.stickycookie_state:
@@ -1566,11 +1545,11 @@ class FlowMaster(controller.Master):
 
     def handle_clientconnect(self, cc):
         self.run_script_hook("clientconnect", cc)
-        cc._ack()
+        cc.reply()
 
     def handle_clientdisconnect(self, r):
         self.run_script_hook("clientdisconnect", r)
-        r._ack()
+        r.reply()
 
     def handle_error(self, r):
         f = self.state.add_error(r)
@@ -1578,7 +1557,7 @@ class FlowMaster(controller.Master):
             self.run_script_hook("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
-        r._ack()
+        r.reply()
         return f
 
     def handle_request(self, r):
@@ -1601,7 +1580,7 @@ class FlowMaster(controller.Master):
             if self.stream:
                 self.stream.add(f)
         else:
-            r._ack()
+            r.reply()
         return f
 
     def shutdown(self):

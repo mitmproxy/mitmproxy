@@ -1,7 +1,7 @@
 from libmproxy import proxy, flow
 import tutils
 from libpathod import test
-from netlib import http
+from netlib import http, tcp
 import mock
 
 
@@ -39,8 +39,8 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = proxy.ServerConnection(proxy.ProxyConfig(), self.d.IFACE, self.d.port)
-        sc.connect("http")
+        sc = proxy.ServerConnection(proxy.ProxyConfig(), "http", self.d.IFACE, self.d.port, "host.com")
+        sc.connect()
         r = tutils.treq()
         r.path = "/p/200:da"
         sc.send(r)
@@ -53,8 +53,9 @@ class TestServerConnection:
         sc.terminate()
 
     def test_terminate_error(self):
-        sc = proxy.ServerConnection(proxy.ProxyConfig(), self.d.IFACE, self.d.port)
-        sc.connect("http")
+        sc = proxy.ServerConnection(proxy.ProxyConfig(), "http", self.d.IFACE, self.d.port, "host.com")
+        sc.connect()
         sc.connection = mock.Mock()
         sc.connection.close = mock.Mock(side_effect=IOError)
         sc.terminate()
+

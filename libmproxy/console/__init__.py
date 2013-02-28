@@ -580,7 +580,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.view_flowlist()
 
-        self.server.start_slave(controller.Slave, self.masterq)
+        self.server.start_slave(controller.Slave, controller.Channel(self.masterq))
 
         if self.options.rfile:
             ret = self.load_flows(self.options.rfile)
@@ -1002,7 +1002,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay():
             f.intercept()
         else:
-            r._ack()
+            r.reply()
         self.sync_list_view()
         self.refresh_flow(f)
 
@@ -1023,7 +1023,7 @@ class ConsoleMaster(flow.FlowMaster):
     # Handlers
     def handle_log(self, l):
         self.add_event(l.msg)
-        l._ack()
+        l.reply()
 
     def handle_error(self, r):
         f = flow.FlowMaster.handle_error(self, r)
