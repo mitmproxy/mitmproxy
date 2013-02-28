@@ -126,20 +126,21 @@ class HTTPProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl)
         p.connect(connect_to)
         return p
 
     def pathod(self, spec):
         """
-            Constructs a pathod request, with the appropriate base and proxy.
+            Constructs a pathod GET request, with the appropriate base and proxy.
         """
-        return hurl.get(
-            self.server.urlbase + "/p/" + spec,
-            proxy=self.proxies,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
+        if self.ssl:
+            p = self.pathoc(("127.0.0.1", self.server.port))
+            q = "get:'/p/%s'"%spec
+        else:
+            p = self.pathoc()
+            q = "get:'%s/p/%s'"%(self.server.urlbase, spec)
+        return p.request(q)
 
 
 class TResolver:
@@ -155,9 +156,13 @@ class TransparentProxTest(ProxTestBase):
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
+        if cls.ssl:
+            ports = [cls.server.port, cls.server2.port]
+        else:
+            ports = []
         d["transparent_proxy"] = dict(
             resolver = TResolver(cls.server.port),
-            sslports = []
+            sslports = ports
         )
         return d
 
@@ -166,11 +171,19 @@ class TransparentProxTest(ProxTestBase):
             Constructs a pathod request, with the appropriate base and proxy.
         """
         r = hurl.get(
-            "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
+            "%s://127.0.0.1:%s"%(self.scheme, self.proxy.port) + "/p/" + spec,
             validate_cert=False,
             #debug=hurl.utils.stdout_debug
         )
         return r
+
+    def pathoc(self, connect= None):
+        """
+            Returns a connected Pathoc instance.
+        """
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
+        p.connect(connect_to)
+        return p
 
 
 class ReverseProxTest(ProxTestBase):
