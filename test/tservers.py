@@ -131,7 +131,7 @@ class ProxTestBase:
 class HTTPProxTest(ProxTestBase):
     def pathoc_raw(self):
         return libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port)
-    
+
     def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
@@ -148,6 +148,7 @@ class HTTPProxTest(ProxTestBase):
             Constructs a pathod GET request, with the appropriate base and proxy.
         """
         p = self.pathoc(sni=sni)
+        spec = spec.encode("string_escape")
         if self.ssl:
             q = "get:'/p/%s'"%spec
         else:
@@ -165,6 +166,7 @@ class TResolver:
 
 class TransparentProxTest(ProxTestBase):
     ssl = None
+    resolver = TResolver
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
@@ -173,7 +175,7 @@ class TransparentProxTest(ProxTestBase):
         else:
             ports = []
         d["transparent_proxy"] = dict(
-            resolver = TResolver(cls.server.port),
+            resolver = cls.resolver(cls.server.port),
             sslports = ports
         )
         return d

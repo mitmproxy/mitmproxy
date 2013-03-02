@@ -45,6 +45,12 @@ class CommonMixin:
         assert "host" in l.request.headers
         assert l.response.code == 304
 
+    def test_invalid_http(self):
+        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
+        t.connect()
+        t.wfile.write("invalid\r\n\r\n")
+        t.wfile.flush()
+        assert "Bad Request" in t.rfile.readline()
 
 
 class TestHTTP(tservers.HTTPProxTest, CommonMixin):
@@ -53,13 +59,6 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin):
         ret = p.request("get:'http://errapp/'")
         assert ret.status_code == 500
         assert "ValueError" in ret.content
-
-    def test_invalid_http(self):
-        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
-        t.connect()
-        t.wfile.write("invalid\n\n")
-        t.wfile.flush()
-        assert "Bad Request" in t.rfile.readline()
 
     def test_invalid_connect(self):
         t = tcp.TCPClient("127.0.0.1", self.proxy.port)
@@ -125,6 +124,25 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin):
         ret = p.request("get:'http://localhost:0'")
         assert ret.status_code == 502
 
+    def test_blank_leading_line(self):
+        p = self.pathoc()
+        req = "get:'%s/p/201':i0,'\r\n'"
+        assert p.request(req%self.server.urlbase).status_code == 201
+
+    def test_invalid_headers(self):
+        p = self.pathoc()
+        req = p.request("get:'http://foo':h':foo'='bar'")
+        print req
+
+
+class TestHTTPConnectSSLError(tservers.HTTPProxTest):
+    certfile = True
+    def test_go(self):
+        p = self.pathoc()
+        req = "connect:'localhost:%s'"%self.proxy.port
+        assert p.request(req).status_code == 200
+        assert p.request(req).status_code == 400
+
 
 class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
     ssl = True
@@ -139,6 +157,11 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
         assert f.status_code == 304
         l = self.server.last_log()
         assert self.server.last_log()["request"]["sni"] == "testserver.com"
+
+    def test_error_post_connect(self):
+        p = self.pathoc()
+        assert p.request("get:/:i0,'invalid\r\n\r\n'").status_code == 400
+
 
 
 class TestHTTPSNoUpstream(tservers.HTTPProxTest, CommonMixin):
@@ -163,12 +186,10 @@ class TestReverse(tservers.ReverseProxTest, CommonMixin):
 
 
 class TestTransparent(tservers.TransparentProxTest, CommonMixin):
-    transparent = True
     ssl = False
 
 
 class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin):
-    transparent = True
     ssl = True
     def test_sni(self):
         f = self.pathod("304", sni="testserver.com")
@@ -176,6 +197,10 @@ class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin):
         l = self.server.last_log()
         assert self.server.last_log()["request"]["sni"] == "testserver.com"
 
+    def test_sslerr(self):
+        p = pathoc.Pathoc("localhost", self.proxy.port)
+        p.connect()
+        assert p.request("get:/").status_code == 400
 
 
 class TestProxy(tservers.HTTPProxTest):
@@ -266,4 +291,20 @@ class TestKillResponse(tservers.HTTPProxTest):
         tutils.raises("server disconnect", self.pathod, "200")
         # The server should have seen a request
         assert self.server.last_log()
+
+
+class EResolver(tservers.TResolver):
+    def original_addr(self, sock):
+        return None
+
+
+class TestTransparentResolveError(tservers.TransparentProxTest):
+    resolver = EResolver
+    def test_resolve_error(self):
+        assert self.pathod("304").status_code == 502
+
+
+
+
+
 

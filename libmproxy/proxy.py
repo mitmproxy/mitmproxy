@@ -326,11 +326,11 @@ class ProxyHandler(tcp.BaseHandler):
         if not self.ssl_established and (port in self.config.transparent_proxy["sslports"]):
             scheme = "https"
             dummycert = self.find_cert(client_conn, host, port, host)
+            sni = HandleSNI(
+                self, client_conn, host, port,
+                dummycert, self.config.certfile or self.config.cacert
+            )
             try:
-                sni = HandleSNI(
-                    self, client_conn, host, port,
-                    dummycert, self.config.certfile or self.config.cacert
-                )
                 self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
             except tcp.NetLibError, v:
                 raise ProxyError(400, str(v))
@@ -356,31 +356,29 @@ class ProxyHandler(tcp.BaseHandler):
         line = self.get_line(self.rfile)
         if line == "":
             return None
-        if http.parse_init_connect(line):
-            r = http.parse_init_connect(line)
-            if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
-            host, port, httpversion = r
 
-            headers = self.read_headers(authenticate=True)
-
-            self.wfile.write(
-                        'HTTP/1.1 200 Connection established\r\n' +
-                        ('Proxy-agent: %s\r\n'%self.server_version) +
-                        '\r\n'
-                        )
-            self.wfile.flush()
-            dummycert = self.find_cert(client_conn, host, port, host)
-            try:
+        if not self.proxy_connect_state:
+            connparts = http.parse_init_connect(line)
+            if connparts:
+                host, port, httpversion = connparts
+                headers = self.read_headers(authenticate=True)
+                self.wfile.write(
+                            'HTTP/1.1 200 Connection established\r\n' +
+                            ('Proxy-agent: %s\r\n'%self.server_version) +
+                            '\r\n'
+                            )
+                self.wfile.flush()
+                dummycert = self.find_cert(client_conn, host, port, host)
                 sni = HandleSNI(
                     self, client_conn, host, port,
                     dummycert, self.config.certfile or self.config.cacert
                 )
-                self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
-            except tcp.NetLibError, v:
-                raise ProxyError(400, str(v))
-            self.proxy_connect_state = (host, port, httpversion)
-            line = self.rfile.readline(line)
+                try:
+                    self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
+                except tcp.NetLibError, v:
+                    raise ProxyError(400, str(v))
+                self.proxy_connect_state = (host, port, httpversion)
+                line = self.rfile.readline(line)
 
         if self.proxy_connect_state:
             r = http.parse_init_http(line)
