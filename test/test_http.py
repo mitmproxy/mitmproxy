@@ -2,6 +2,7 @@ import cStringIO, textwrap, binascii
 from netlib import http, odict
 import tutils
 
+
 def test_httperror():
     e = http.HttpError(404, "Not found")
     assert str(e)

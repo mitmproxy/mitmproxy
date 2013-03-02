@@ -298,7 +298,7 @@ class BaseHandler:
             self.close()
             self.wfile.close()
             self.rfile.close()
-        except socket.error:
+        except (socket.error, NetLibDisconnect):
             # Remote has disconnected
             pass
 

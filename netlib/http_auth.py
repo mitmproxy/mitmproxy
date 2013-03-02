@@ -96,7 +96,7 @@ class PassManHtpasswd:
                 salt = parts[2],
                 hashed_password = parts[3]
             )
-            
+
     def test(self, username, password_token):
         ui = self.usernames.get(username)
         if not ui:
