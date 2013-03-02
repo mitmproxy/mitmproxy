@@ -274,6 +274,20 @@ def read_http_body_response(rfile, headers, limit):
     return read_http_body(500, rfile, headers, all, limit)
 
 
+def parse_response_line(line):
+    parts = line.strip().split(" ", 2)
+    if len(parts) == 2: # handle missing message gracefully
+        parts.append("")
+    if len(parts) != 3:
+        return None
+    proto, code, msg = parts
+    try:
+        code = int(code)
+    except ValueError:
+        return None
+    return (proto, code, msg)
+
+
 def read_response(rfile, method, body_size_limit):
     """
         Return an (httpversion, code, msg, headers, content) tuple.
@@ -283,19 +297,13 @@ def read_response(rfile, method, body_size_limit):
         line = rfile.readline()
     if not line:
         raise HttpErrorConnClosed(502, "Server disconnect.")
-    parts = line.strip().split(" ", 2)
-    if len(parts) == 2: # handle missing message gracefully
-        parts.append("")
-    if not len(parts) == 3:
+    parts = parse_response_line(line)
+    if not parts:
         raise HttpError(502, "Invalid server response: %s"%repr(line))
     proto, code, msg = parts
     httpversion = parse_http_protocol(proto)
     if httpversion is None:
         raise HttpError(502, "Invalid HTTP version in line: %s"%repr(proto))
-    try:
-        code = int(code)
-    except ValueError:
-        raise HttpError(502, "Invalid server response: %s"%repr(line))
     headers = read_headers(rfile)
     if headers is None:
         raise HttpError(502, "Invalid headers.")
