@@ -132,7 +132,7 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin):
     def test_invalid_headers(self):
         p = self.pathoc()
         req = p.request("get:'http://foo':h':foo'='bar'")
-        print req
+        assert req.status_code == 400
 
 
 class TestHTTPConnectSSLError(tservers.HTTPProxTest):

@@ -16,9 +16,8 @@ import sys, os, string, socket, time
 import shutil, tempfile, threading
 import SocketServer
 from OpenSSL import SSL
-from netlib import odict, tcp, http, wsgi, certutils, http_status
+from netlib import odict, tcp, http, wsgi, certutils, http_status, http_auth
 import utils, flow, version, platform, controller
-import authentication
 
 KILL = 0
 
@@ -619,14 +618,14 @@ def process_proxy_options(parser, options):
             if len(options.auth_singleuser.split(':')) != 2:
                 parser.error("Please specify user in the format username:password")
             username, password = options.auth_singleuser.split(':')
-            password_manager = authentication.SingleUserPasswordManager(username, password)
+            password_manager = http_auth.PassManSingleUser(username, password)
         elif options.auth_nonanonymous:
-            password_manager = authentication.PermissivePasswordManager()
+            password_manager = http_auth.PassManNonAnon()
         elif options.auth_htpasswd:
-            password_manager = authentication.HtpasswdPasswordManager(options.auth_htpasswd)
-        authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
+            password_manager = http_auth.PassManHtpasswd(options.auth_htpasswd)
+        authenticator = http_auth.BasicProxyAuth(password_manager, "mitmproxy")
     else:
-        authenticator = authentication.NullProxyAuth(None)
+        authenticator = http_auth.NullProxyAuth(None)
 
     return ProxyConfig(
         certfile = options.cert,

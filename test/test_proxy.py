@@ -58,3 +58,11 @@ class TestServerConnection:
         sc.connection.close = mock.Mock(side_effect=IOError)
         sc.terminate()
 
+
+class TestProcessOptions:
+    def test_auth(self):
+        parser = mock.MagicMock()
+        
+
+
+
