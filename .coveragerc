@@ -1,2 +1,3 @@
 [report]
-include = *netlib*
+omit = *contrib*
+include = *netlib/netlib*

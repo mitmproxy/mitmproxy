@@ -1,4 +1,4 @@
-import cStringIO, textwrap
+import cStringIO, textwrap, binascii
 from netlib import http, odict
 import tutils
 
@@ -290,4 +290,13 @@ def test_parse_url():
 
     assert not http.parse_url("https://foo:bar")
     assert not http.parse_url("https://foo:")
+
+
+def test_parse_http_basic_auth():
+    vals = ("basic", "foo", "bar")
+    assert http.parse_http_basic_auth(http.assemble_http_basic_auth(*vals)) == vals
+    assert not http.parse_http_basic_auth("")
+    assert not http.parse_http_basic_auth("foo bar")
+    v = "basic " + binascii.b2a_base64("foo")
+    assert not http.parse_http_basic_auth(v)
 
