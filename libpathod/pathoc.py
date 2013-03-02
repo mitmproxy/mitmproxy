@@ -11,6 +11,9 @@ class Response:
         self.httpversion, self.status_code, self.msg = httpversion, status_code, msg
         self.headers, self.content = headers, content
 
+    def __repr__(self):
+        return "Response(%s - %s)"%(self.status_code, self.msg)
+
 
 class Pathoc(tcp.TCPClient):
     def __init__(self, host, port, ssl=None, sni=None, clientcert=None):
@@ -28,8 +31,13 @@ class Pathoc(tcp.TCPClient):
                     '\r\n'
                     )
         wfile.flush()
-        rfile.readline()
-        headers = http.read_headers(self.rfile)
+        l = rfile.readline()
+        if not l:
+            raise PathocError("Proxy CONNECT failed")
+        parsed = http.parse_response_line(l)
+        if not parsed[1] == 200:
+            raise PathocError("Proxy CONNECT failed: %s - %s"%(parsed[1], parsed[2]))
+        headers = http.read_headers(rfile)
 
     def connect(self, connect_to=None):
         """

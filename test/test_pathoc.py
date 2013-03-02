@@ -2,6 +2,10 @@ import json, cStringIO
 from libpathod import pathoc, test, version
 import tutils
 
+def test_response():
+    r = pathoc.Response("1.1", 200, "Message", {}, None)
+    assert repr(r)
+
 
 class _TestDaemon:
     @classmethod
@@ -125,4 +129,20 @@ class TestDaemon(_TestDaemon):
         d = tutils.test_data.path("data/request")
         assert "foo" in self.tval(["+%s"%d], showreq=True)
         assert "File" in self.tval(["+/nonexistent"])
+
+    def test_connect_fail(self):
+        to = ("foobar", 80)
+        c = pathoc.Pathoc("127.0.0.1", self.d.port)
+        r, w = cStringIO.StringIO(), cStringIO.StringIO()
+        tutils.raises("connect failed", c.http_connect, to, w, r)
+        r = cStringIO.StringIO(
+            "HTTP/1.1 500 OK\r\n"
+        )
+        tutils.raises("connect failed", c.http_connect, to, w, r)
+        r = cStringIO.StringIO(
+            "HTTP/1.1 200 OK\r\n"
+        )
+        c.http_connect(to, w, r)
+
+
 
