@@ -573,22 +573,19 @@ def process_proxy_options(parser, options):
     if options.cert:
         options.cert = os.path.expanduser(options.cert)
         if not os.path.exists(options.cert):
-            parser.error("Manually created certificate does not exist: %s"%options.cert)
+            return parser.error("Manually created certificate does not exist: %s"%options.cert)
 
     cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
     cacert = os.path.expanduser(cacert)
     if not os.path.exists(cacert):
         certutils.dummy_ca(cacert)
-    if getattr(options, "cache", None) is not None:
-        options.cache = os.path.expanduser(options.cache)
     body_size_limit = utils.parse_size(options.body_size_limit)
-
     if options.reverse_proxy and options.transparent_proxy:
-        parser.errror("Can't set both reverse proxy and transparent proxy.")
+        return parser.error("Can't set both reverse proxy and transparent proxy.")
 
     if options.transparent_proxy:
         if not platform.resolver:
-            parser.error("Transparent mode not supported on this platform.")
+            return parser.error("Transparent mode not supported on this platform.")
         trans = dict(
             resolver = platform.resolver(),
             sslports = TRANSPARENT_SSL_PORTS
@@ -599,30 +596,33 @@ def process_proxy_options(parser, options):
     if options.reverse_proxy:
         rp = utils.parse_proxy_spec(options.reverse_proxy)
         if not rp:
-            parser.error("Invalid reverse proxy specification: %s"%options.reverse_proxy)
+            return parser.error("Invalid reverse proxy specification: %s"%options.reverse_proxy)
     else:
         rp = None
 
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
-            parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
+            return parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
 
     if options.certdir:
         options.certdir = os.path.expanduser(options.certdir)
         if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
-            parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
+            return parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
 
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
             if len(options.auth_singleuser.split(':')) != 2:
-                parser.error("Please specify user in the format username:password")
+                return parser.error("Invalid single-user specification. Please use the format username:password")
             username, password = options.auth_singleuser.split(':')
             password_manager = http_auth.PassManSingleUser(username, password)
         elif options.auth_nonanonymous:
             password_manager = http_auth.PassManNonAnon()
         elif options.auth_htpasswd:
-            password_manager = http_auth.PassManHtpasswd(options.auth_htpasswd)
+            try:
+                password_manager = http_auth.PassManHtpasswd(options.auth_htpasswd)
+            except ValueError, v:
+                return parser.error(v.message)
         authenticator = http_auth.BasicProxyAuth(password_manager, "mitmproxy")
     else:
         authenticator = http_auth.NullProxyAuth(None)
