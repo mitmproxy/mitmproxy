@@ -71,6 +71,7 @@ class ProxTestBase:
     ssl = None
     clientcerts = False
     certfile = None
+    no_upstream_cert = False
 
     masterclass = TestMaster
     @classmethod
@@ -80,6 +81,7 @@ class ProxTestBase:
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl)
         pconf = cls.get_proxy_config()
         config = proxy.ProxyConfig(
+            no_upstream_cert = cls.no_upstream_cert,
             cacert = tutils.test_data.path("data/serverkey.pem"),
             **pconf
         )
@@ -127,23 +129,28 @@ class ProxTestBase:
 
 
 class HTTPProxTest(ProxTestBase):
-    def pathoc(self, connect_to = None, sni=None):
+    def pathoc_raw(self):
+        return libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port)
+    
+    def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
         p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
-        p.connect(connect_to)
+        if self.ssl:
+            p.connect(("127.0.0.1", self.server.port))
+        else:
+            p.connect()
         return p
 
     def pathod(self, spec, sni=None):
         """
             Constructs a pathod GET request, with the appropriate base and proxy.
         """
+        p = self.pathoc(sni=sni)
         if self.ssl:
-            p = self.pathoc(("127.0.0.1", self.server.port), sni=sni)
             q = "get:'/p/%s'"%spec
         else:
-            p = self.pathoc()
             q = "get:'%s/p/%s'"%(self.server.urlbase, spec)
         return p.request(q)
 

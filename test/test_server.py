@@ -141,6 +141,16 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
         assert self.server.last_log()["request"]["sni"] == "testserver.com"
 
 
+class TestHTTPSNoUpstream(tservers.HTTPProxTest, CommonMixin):
+    ssl = True
+    no_upstream_cert = True
+    def test_cert_gen_error(self):
+        f = self.pathoc_raw()
+        f.connect((u"\u2102\u0001".encode("utf8"), 0))
+        f.request("get:/")
+        assert "dummy cert" in "".join(self.proxy.log)
+
+
 class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
     ssl = True
     certfile = True
@@ -227,7 +237,6 @@ class MasterFakeResponse(tservers.TestMaster):
 class TestFakeResponse(tservers.HTTPProxTest):
     masterclass = MasterFakeResponse
     def test_kill(self):
-        p = self.pathoc()
         f = self.pathod("200")
         assert "header_response" in f.headers.keys()
 
@@ -241,7 +250,6 @@ class MasterKillRequest(tservers.TestMaster):
 class TestKillRequest(tservers.HTTPProxTest):
     masterclass = MasterKillRequest
     def test_kill(self):
-        p = self.pathoc()
         tutils.raises("server disconnect", self.pathod, "200")
         # Nothing should have hit the server
         assert not self.server.last_log()
@@ -255,7 +263,6 @@ class MasterKillResponse(tservers.TestMaster):
 class TestKillResponse(tservers.HTTPProxTest):
     masterclass = MasterKillResponse
     def test_kill(self):
-        p = self.pathoc()
         tutils.raises("server disconnect", self.pathod, "200")
         # The server should have seen a request
         assert self.server.last_log()

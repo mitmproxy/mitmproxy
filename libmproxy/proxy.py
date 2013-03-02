@@ -306,7 +306,7 @@ class ProxyHandler(tcp.BaseHandler):
                 host = conn.cert.cn.decode("utf8").encode("idna")
             ret = self.config.certstore.get_cert(host, sans, self.config.cacert)
             if not ret:
-                raise ProxyError(502, "mitmproxy: Unable to generate dummy cert.")
+                raise ProxyError(502, "Unable to generate dummy cert.")
             return ret
 
     def get_line(self, fp):
