@@ -359,8 +359,8 @@ class Request(HTTPMsg):
         self.path = state["path"]
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
-        self.timestamp_start = state["timestamp_start"]
-        self.timestamp_end = state["timestamp_end"]
+        self.timestamp_start = state.get("timestamp_start", state.get("timestamp"))
+        self.timestamp_end = state.get("timestamp_end")
 
     def _get_state(self):
         return dict(
@@ -389,8 +389,8 @@ class Request(HTTPMsg):
             str(state["path"]),
             ODictCaseless._from_state(state["headers"]),
             state["content"],
-            state["timestamp_start"],
-            state["timestamp_end"],
+            state.get("timestamp_start",state.get("timestamp")),
+            state.get("timestamp_end"),
         )
 
     def __hash__(self):
@@ -670,8 +670,8 @@ class Response(HTTPMsg):
         self.msg = state["msg"]
         self.headers = ODictCaseless._from_state(state["headers"])
         self.content = state["content"]
-        self.timestamp_start = state["timestamp_start"]
-        self.timestamp_end = state["timestamp_end"]
+        self.timestamp_start = state.get("timestamp_start")
+        self.timestamp_end = state.get("timestamp_end",state.get("timestamp"))
         self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     def _get_state(self):
@@ -696,8 +696,8 @@ class Response(HTTPMsg):
             ODictCaseless._from_state(state["headers"]),
             state["content"],
             certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None,
-            state["timestamp_start"],
-            state["timestamp_end"],
+            state.get("timestamp_start"),
+            state.get("timestamp_end",state.get("timestamp")),
         )
 
     def copy(self):
