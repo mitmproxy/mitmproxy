@@ -126,7 +126,7 @@ class HandleSNI:
                 self.handler.sni = sn.decode("utf8").encode("idna")
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
-        except Exception, e:
+        except Exception, e: # pragma: no cover
             pass
 
 
@@ -141,6 +141,8 @@ class ProxyHandler(tcp.BaseHandler):
 
     def get_server_connection(self, cc, scheme, host, port, sni):
         sc = self.server_conn
+        if not sni:
+            sni = host
         if sc and (scheme, host, port, sni) != (sc.scheme, sc.host, sc.port, sc.sni):
             sc.terminate()
             self.server_conn = None
@@ -214,7 +216,7 @@ class ProxyHandler(tcp.BaseHandler):
                     # the case, we want to reconnect without sending an error
                     # to the client.
                     while 1:
-                        sc = self.get_server_connection(cc, scheme, host, port, host)
+                        sc = self.get_server_connection(cc, scheme, host, port, self.sni)
                         sc.send(request)
                         sc.rfile.reset_timestamps()
                         try:
@@ -362,14 +364,13 @@ class ProxyHandler(tcp.BaseHandler):
                         '\r\n'
                         )
             self.wfile.flush()
-            certfile = self.find_cert(client_conn, host, port, host)
-
-            sni = HandleSNI(
-                self, client_conn, host, port,
-                dummycert, self.config.certfile or self.config.cacert
-            )
+            dummycert = self.find_cert(client_conn, host, port, host)
             try:
-                self.convert_to_ssl(certfile, self.config.certfile or self.config.cacert, handle_sni=sni)
+                sni = HandleSNI(
+                    self, client_conn, host, port,
+                    dummycert, self.config.certfile or self.config.cacert
+                )
+                self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
             except tcp.NetLibError, v:
                 raise ProxyError(400, str(v))
             self.proxy_connect_state = (host, port, httpversion)

@@ -131,10 +131,14 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
     clientcerts = True
     def test_clientcert(self):
         f = self.pathod("304")
+        assert f.status_code == 304
         assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
 
     def test_sni(self):
-        pass
+        f = self.pathod("304", sni="testserver.com")
+        assert f.status_code == 304
+        l = self.server.last_log()
+        assert self.server.last_log()["request"]["sni"] == "testserver.com"
 
 
 class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):

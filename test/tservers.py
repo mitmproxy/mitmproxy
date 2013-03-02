@@ -28,7 +28,7 @@ class TestMaster(flow.FlowMaster):
         state = flow.State()
         flow.FlowMaster.__init__(self, s, state)
         self.testq = testq
-        self.log = []
+        self.clear_log()
 
     def handle_request(self, m):
         flow.FlowMaster.handle_request(self, m)
@@ -37,6 +37,9 @@ class TestMaster(flow.FlowMaster):
     def handle_response(self, m):
         flow.FlowMaster.handle_response(self, m)
         m.reply()
+
+    def clear_log(self):
+        self.log = []
 
     def handle_log(self, l):
         self.log.append(l.msg)
@@ -96,7 +99,10 @@ class ProxTestBase:
         cls.server2.shutdown()
 
     def setUp(self):
+        self.master.clear_log()
         self.master.state.clear()
+        self.server.clear_log()
+        self.server2.clear_log()
 
     @property
     def scheme(self):
@@ -122,20 +128,20 @@ class ProxTestBase:
 
 
 class HTTPProxTest(ProxTestBase):
-    def pathoc(self, connect_to = None):
+    def pathoc(self, connect_to = None, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl)
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
         p.connect(connect_to)
         return p
 
-    def pathod(self, spec):
+    def pathod(self, spec, sni=None):
         """
             Constructs a pathod GET request, with the appropriate base and proxy.
         """
         if self.ssl:
-            p = self.pathoc(("127.0.0.1", self.server.port))
+            p = self.pathoc(("127.0.0.1", self.server.port), sni=sni)
             q = "get:'/p/%s'"%spec
         else:
             p = self.pathoc()
