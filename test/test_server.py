@@ -1,6 +1,6 @@
 import socket, time
 import mock
-from netlib import tcp
+from netlib import tcp, http_auth, http
 from libpathod import pathoc
 import tutils, tservers
 from libmproxy import flow, proxy
@@ -135,6 +135,23 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin):
         assert req.status_code == 400
 
 
+class TestHTTPAuth(tservers.HTTPProxTest):
+    authenticator = http_auth.BasicProxyAuth(http_auth.PassManSingleUser("test", "test"), "realm")
+    def test_auth(self):
+        assert self.pathod("202").status_code == 407
+        p = self.pathoc()
+        ret = p.request("""
+            get
+            'http://localhost:%s/p/202'
+            h'%s'='%s'
+        """%(
+            self.server.port,
+            http_auth.BasicProxyAuth.AUTH_HEADER,
+            http.assemble_http_basic_auth("basic", "test", "test")
+        ))
+        assert ret.status_code == 202
+
+
 class TestHTTPConnectSSLError(tservers.HTTPProxTest):
     certfile = True
     def test_go(self):
@@ -161,7 +178,6 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
     def test_error_post_connect(self):
         p = self.pathoc()
         assert p.request("get:/:i0,'invalid\r\n\r\n'").status_code == 400
-
 
 
 class TestHTTPSNoUpstream(tservers.HTTPProxTest, CommonMixin):
@@ -302,9 +318,4 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
     resolver = EResolver
     def test_resolve_error(self):
         assert self.pathod("304").status_code == 502
-
-
-
-
-
 

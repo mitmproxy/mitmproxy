@@ -72,7 +72,7 @@ class ProxTestBase:
     clientcerts = False
     certfile = None
     no_upstream_cert = False
-
+    authenticator = None
     masterclass = TestMaster
     @classmethod
     def setupAll(cls):
@@ -83,6 +83,7 @@ class ProxTestBase:
         config = proxy.ProxyConfig(
             no_upstream_cert = cls.no_upstream_cert,
             cacert = tutils.test_data.path("data/serverkey.pem"),
+            authenticator = cls.authenticator,
             **pconf
         )
         tmaster = cls.masterclass(cls.tqueue, config)
