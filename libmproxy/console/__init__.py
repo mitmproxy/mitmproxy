@@ -195,9 +195,6 @@ class StatusBar(common.WWrap):
         if self.master.stream:
             r.append("[W:%s]"%self.master.stream_path)
 
-        if self.master.state.last_saveload:
-            r.append("[%s]"%self.master.state.last_saveload)
-
         return r
 
     def redraw(self):
