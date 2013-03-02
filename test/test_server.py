@@ -160,6 +160,12 @@ class TestTransparent(tservers.TransparentProxTest, CommonMixin):
 class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin):
     transparent = True
     ssl = True
+    def test_sni(self):
+        f = self.pathod("304", sni="testserver.com")
+        assert f.status_code == 304
+        l = self.server.last_log()
+        assert self.server.last_log()["request"]["sni"] == "testserver.com"
+
 
 
 class TestProxy(tservers.HTTPProxTest):

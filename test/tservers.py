@@ -172,23 +172,24 @@ class TransparentProxTest(ProxTestBase):
         )
         return d
 
-    def pathod(self, spec):
+    def pathod(self, spec, sni=None):
         """
-            Constructs a pathod request, with the appropriate base and proxy.
+            Constructs a pathod GET request, with the appropriate base and proxy.
         """
-        r = hurl.get(
-            "%s://127.0.0.1:%s"%(self.scheme, self.proxy.port) + "/p/" + spec,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
-        return r
+        if self.ssl:
+            p = self.pathoc(sni=sni)
+            q = "get:'/p/%s'"%spec
+        else:
+            p = self.pathoc()
+            q = "get:'/p/%s'"%spec
+        return p.request(q)
 
-    def pathoc(self, connect= None):
+    def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
-        p.connect(connect_to)
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
+        p.connect()
         return p
 
 

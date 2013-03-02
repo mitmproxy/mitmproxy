@@ -140,6 +140,13 @@ class ProxyHandler(tcp.BaseHandler):
         tcp.BaseHandler.__init__(self, connection, client_address, server)
 
     def get_server_connection(self, cc, scheme, host, port, sni):
+        """
+            When SNI is in play, this means we have an SSL-encrypted
+            connection, which means that the entire handler is dedicated to a
+            single server connection - no multiplexing. If this assumption ever
+            breaks, we'll have to do something different with the SNI host
+            variable on the handler object.
+        """
         sc = self.server_conn
         if not sni:
             sni = host
@@ -329,7 +336,6 @@ class ProxyHandler(tcp.BaseHandler):
                 raise ProxyError(400, str(v))
         else:
             scheme = "http"
-        host = self.sni or host
         line = self.get_line(self.rfile)
         if line == "":
             return None
