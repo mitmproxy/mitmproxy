@@ -101,7 +101,6 @@ class TestDumpMaster:
     def test_options(self):
         o = dump.Options(verbosity = 2)
         assert o.verbosity == 2
-        libpry.raises(AttributeError, dump.Options, nonexistent = 2)
 
     def test_filter(self):
         assert not "GET" in self._dummy_cycle(1, "~u foo", "", verbosity=1)

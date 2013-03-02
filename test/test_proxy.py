@@ -146,4 +146,3 @@ class TestDummyServer:
         d.start_slave()
         d.shutdown()
 
-

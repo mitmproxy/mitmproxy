@@ -21,7 +21,7 @@ class DumpError(Exception): pass
 
 
 class Options(object):
-    __slots__ = [
+    attributes = [
         "anticache",
         "anticomp",
         "client_replay",
@@ -45,7 +45,7 @@ class Options(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
-        for i in self.__slots__:
+        for i in self.attributes:
             if not hasattr(self, i):
                 setattr(self, i, None)
 
