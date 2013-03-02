@@ -277,7 +277,7 @@ class MasterFakeResponse(tservers.TestMaster):
 
 class TestFakeResponse(tservers.HTTPProxTest):
     masterclass = MasterFakeResponse
-    def test_kill(self):
+    def test_fake(self):
         f = self.pathod("200")
         assert "header_response" in f.headers.keys()
 
@@ -318,4 +318,20 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
     resolver = EResolver
     def test_resolve_error(self):
         assert self.pathod("304").status_code == 502
+
+
+
+class MasterIncomplete(tservers.TestMaster):
+    def handle_request(self, m):
+        resp = tutils.tresp()
+        resp.content = flow.CONTENT_MISSING
+        m.reply(resp)
+
+
+class TestIncompleteResponse(tservers.HTTPProxTest):
+    masterclass = MasterIncomplete
+    def test_incomplete(self):
+        assert self.pathod("200").status_code == 502
+
+
 

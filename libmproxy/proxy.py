@@ -504,10 +504,7 @@ class ProxyServer(tcp.TCPServer):
     def handle_connection(self, request, client_address):
         h = ProxyHandler(self.config, request, client_address, self, self.channel, self.server_version)
         h.handle()
-        try:
-            h.finish()
-        except tcp.NetLibDisconnect, e:
-            pass
+        h.finish()
 
     def handle_shutdown(self):
         self.config.certstore.cleanup()
@@ -540,7 +537,7 @@ class DummyServer:
     def __init__(self, config):
         self.config = config
 
-    def start_slave(self, klass, channel):
+    def start_slave(self, *args):
         pass
 
     def shutdown(self):

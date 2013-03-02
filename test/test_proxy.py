@@ -69,7 +69,7 @@ class MockParser:
 
     def __repr__(self):
         return "ParseError(%s)"%self.err
-        
+
 
 class TestProcessProxyOptions:
     def p(self, *args):
@@ -131,5 +131,19 @@ class TestProcessProxyOptions:
         assert p.authenticator
         self.assert_err("invalid single-user specification", "--singleuser", "test")
 
+
+class TestProxyServer:
+    def test_err(self):
+        parser = argparse.ArgumentParser()
+        cmdline.common_options(parser)
+        opts = parser.parse_args(args=[])
+        tutils.raises("error starting proxy server", proxy.ProxyServer, opts, 1)
+
+
+class TestDummyServer:
+    def test_simple(self):
+        d = proxy.DummyServer(None)
+        d.start_slave()
+        d.shutdown()
 
 
