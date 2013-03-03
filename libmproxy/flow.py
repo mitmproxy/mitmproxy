@@ -463,7 +463,7 @@ class Request(HTTPMsg):
         """
             Returns a URL string, constructed from the Request's URL compnents.
         """
-        return utils.unparse_url(self.scheme, self.host.decode("idna"), self.port, self.path).encode('ascii')
+        return utils.unparse_url(self.scheme, self.host.encode("idna"), self.port, self.path).encode('ascii')
 
     def set_url(self, url):
         """

@@ -3,6 +3,7 @@ MANIFEST
 /dist
 /tmp
 /doc
+/venv
 *.py[cdo]
 *.swp
 *.swo
