@@ -227,6 +227,8 @@ def parse_init(line):
     httpversion = parse_http_protocol(protocol)
     if not httpversion:
         return None
+    if not utils.isascii(method):
+        return None
     return method, url, httpversion
 
 
