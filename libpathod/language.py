@@ -930,15 +930,18 @@ class Request(_Message):
         return ":".join([i.spec() for i in self.tokens])
 
 
-def PathodErrorResponse(reason, body=None):
+class PathodErrorResponse(Response):
+    pass
+
+
+def make_error_response(reason, body=None):
     tokens = [
         Code("800"),
         Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")),
         Reason(ValueLiteral(reason)),
         Body(ValueLiteral("pathod error: " + (body or reason))),
     ]
-    return Response(tokens)
-
+    return PathodErrorResponse(tokens)
 
 FILESTART = "+"
 def read_file(settings, s):

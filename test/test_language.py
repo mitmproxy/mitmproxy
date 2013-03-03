@@ -241,7 +241,7 @@ class TestMisc:
 
     def test_internal_response(self):
         d = cStringIO.StringIO()
-        s = language.PathodErrorResponse("foo")
+        s = language.make_error_response("foo")
         language.serve(s, d, {})
 
 

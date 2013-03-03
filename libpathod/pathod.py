@@ -27,7 +27,7 @@ class PathodHandler(tcp.BaseHandler):
     def serve_crafted(self, crafted, request_log):
         c = self.server.check_policy(crafted, self.server.request_settings)
         if c:
-            err = language.PathodErrorResponse(c)
+            err = language.make_error_response(c)
             language.serve(err, self.wfile, self.server.request_settings)
             log = dict(
                 type = "error",
@@ -35,8 +35,9 @@ class PathodHandler(tcp.BaseHandler):
             )
             return False, log
 
-        if self.server.explain:
+        if self.server.explain and not isinstance(crafted, language.PathodErrorResponse):
             crafted = crafted.freeze(self.server.request_settings, None)
+            self.info(">> Spec: %s"%crafted.spec())
         response_log = language.serve(crafted, self.wfile, self.server.request_settings, None)
         log = dict(
                 type = "crafted",
@@ -140,13 +141,13 @@ class PathodHandler(tcp.BaseHandler):
                 crafted = language.parse_response(self.server.request_settings, spec)
             except language.ParseException, v:
                 self.info("Parse error: %s"%v.msg)
-                crafted = language.PathodErrorResponse(
+                crafted = language.make_error_response(
                         "Parse Error",
                         "Error parsing response spec: %s\n"%v.msg + v.marked()
                     )
             return self.serve_crafted(crafted, request_log)
         elif self.server.noweb:
-            crafted = language.PathodErrorResponse("Access Denied")
+            crafted = language.make_error_response("Access Denied")
             language.serve(crafted, self.wfile, self.server.request_settings)
             return False, dict(type = "error", msg="Access denied: web interface disabled")
         else:
