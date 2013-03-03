@@ -3,7 +3,7 @@
 #   mitmproxy/mitmdump is running on port 8080 in straight proxy mode.
 #   pathod is running on port 9999
 
-BASE="/Users/aldo/git/public/pathod/venv/bin/pathoc -eo -I 200,400,502 -p 8080 localhost "
-$BASE -n 1000 "get:'http://localhost:9999':ir,@1"
+BASE="/Users/aldo/git/public/pathod/venv/bin/pathoc -eo -I 200,400,405,502 -p 8080 localhost "
+$BASE -n 10000 "get:'http://localhost:9999':ir,@1"
 
 
