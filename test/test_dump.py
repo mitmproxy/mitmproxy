@@ -1,6 +1,5 @@
 import os
 from cStringIO import StringIO
-import libpry
 from libmproxy import dump, flow, proxy
 import tutils
 import mock
@@ -65,7 +64,7 @@ class TestDumpMaster:
         cs = StringIO()
 
         o = dump.Options(server_replay="nonexistent", kill=True)
-        libpry.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
+        tutils.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
@@ -90,7 +89,7 @@ class TestDumpMaster:
             self._flowfile(p)
             assert "GET" in self._dummy_cycle(0, None, "", verbosity=1, rfile=p)
 
-            libpry.raises(
+            tutils.raises(
                 dump.DumpError, self._dummy_cycle,
                 0, None, "", verbosity=1, rfile="/nonexistent"
             )
@@ -130,7 +129,7 @@ class TestDumpMaster:
             assert len(list(flow.FlowReader(open(p)).stream())) == 1
 
     def test_write_err(self):
-        libpry.raises(
+        tutils.raises(
             dump.DumpError,
             self._dummy_cycle,
             1,
@@ -148,11 +147,11 @@ class TestDumpMaster:
         assert "XREQUEST" in ret
         assert "XRESPONSE" in ret
         assert "XCLIENTDISCONNECT" in ret
-        libpry.raises(
+        tutils.raises(
             dump.DumpError,
             self._dummy_cycle, 1, None, "", script="nonexistent"
         )
-        libpry.raises(
+        tutils.raises(
             dump.DumpError,
             self._dummy_cycle, 1, None, "", script="starterr.py"
         )

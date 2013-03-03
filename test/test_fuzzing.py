@@ -25,3 +25,15 @@ class TestFuzzy(tservers.HTTPProxTest):
         req = 'get:"http://localhost:%s":i13,"["'
         p = self.pathoc()
         assert p.request(req%self.server.port).status_code == 400
+
+    def test_invalid_upstream(self):
+        req = r"get:'http://localhost:%s/p/200:i10,\'+\''"
+        p = self.pathoc()
+        assert p.request(req%self.server.port).status_code == 502
+
+    def test_upstream_disconnect(self):
+        req = r'200:d0:h"Date"="Sun, 03 Mar 2013 04:00:00 GMT"'
+        p = self.pathod(req)
+        assert p.status_code == 400
+
+

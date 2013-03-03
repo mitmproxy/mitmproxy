@@ -185,7 +185,7 @@ class TestHTTPSNoUpstream(tservers.HTTPProxTest, CommonMixin):
     no_upstream_cert = True
     def test_cert_gen_error(self):
         f = self.pathoc_raw()
-        f.connect((u"\u2102\u0001".encode("utf8"), 0))
+        f.connect((u"foo..bar".encode("utf8"), 0))
         f.request("get:/")
         assert "dummy cert" in "".join(self.proxy.log)
 

@@ -237,6 +237,8 @@ class ProxyHandler(tcp.BaseHandler):
                                 continue
                             else:
                                 raise
+                        except http.HttpError, v:
+                            raise ProxyError(502, "Invalid server response.")
                         else:
                             break
 
@@ -278,7 +280,6 @@ class ProxyHandler(tcp.BaseHandler):
                 )
             else:
                 self.log(cc, cc.error)
-
             if isinstance(e, ProxyError):
                 self.send_error(e.code, e.msg, e.headers)
         else:
