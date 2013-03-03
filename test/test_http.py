@@ -294,11 +294,14 @@ def test_parse_url():
 
     # Invalid IDNA
     assert not http.parse_url("http://\xfafoo")
+    # Invalid PATH
     assert not http.parse_url("http:/\xc6/localhost:56121")
+    # Null byte in host
     assert not http.parse_url("http://foo\0")
+    # Port out of range
     assert not http.parse_url("http://foo:999999")
-
-
+    # Invalid IPv6 URL - see http://www.ietf.org/rfc/rfc2732.txt
+    assert not http.parse_url('http://lo[calhost')
 
 def test_parse_http_basic_auth():
     vals = ("basic", "foo", "bar")

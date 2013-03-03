@@ -21,7 +21,10 @@ def parse_url(url):
             host is a valid IDNA-encoded hostname with no null-bytes
             path is valid ASCII
     """
-    scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+    try:
+        scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+    except ValueError:
+        return None
     if not scheme:
         return None
     if ':' in netloc:
