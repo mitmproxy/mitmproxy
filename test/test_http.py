@@ -294,8 +294,9 @@ def test_parse_url():
 
     # Invalid IDNA
     assert not http.parse_url("http://\xfafoo")
-
     assert not http.parse_url("http:/\xc6/localhost:56121")
+    assert not http.parse_url("http://foo\0")
+
 
 
 def test_parse_http_basic_auth():

@@ -18,7 +18,7 @@ def parse_url(url):
 
         Checks that:
             port is an integer
-            host is a valid IDNA-encoded hostname
+            host is a valid IDNA-encoded hostname with no null-bytes
             path is valid ASCII
     """
     scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
@@ -42,6 +42,8 @@ def parse_url(url):
     try:
         host.decode("idna")
     except ValueError:
+        return None
+    if "\0" in host:
         return None
     try:
         path.decode("ascii")
