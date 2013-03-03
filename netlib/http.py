@@ -15,6 +15,11 @@ class HttpErrorConnClosed(HttpError): pass
 def parse_url(url):
     """
         Returns a (scheme, host, port, path) tuple, or None on error.
+
+        Checks that:
+            port is an integer
+            host is a valid IDNA-encoded hostname
+            path is valid ASCII
     """
     scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
     if not scheme:
@@ -34,6 +39,14 @@ def parse_url(url):
     path = urlparse.urlunparse(('', '', path, params, query, fragment))
     if not path.startswith("/"):
         path = "/" + path
+    try:
+        host.decode("idna")
+    except ValueError:
+        return None
+    try:
+        path.decode("ascii")
+    except ValueError:
+        return None
     return scheme, host, port, path
 
 
