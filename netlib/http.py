@@ -1,5 +1,5 @@
 import string, urlparse, binascii
-import odict
+import odict, utils
 
 class HttpError(Exception):
     def __init__(self, code, msg):
@@ -10,6 +10,22 @@ class HttpError(Exception):
 
 
 class HttpErrorConnClosed(HttpError): pass
+
+
+def _is_valid_port(port):
+    if not 0 <= port <= 65535:
+        return False
+    return True
+
+
+def _is_valid_host(host):
+    try:
+        host.decode("idna")
+    except ValueError:
+        return False
+    if "\0" in host:
+        return None
+    return True
 
 
 def parse_url(url):
@@ -42,17 +58,11 @@ def parse_url(url):
     path = urlparse.urlunparse(('', '', path, params, query, fragment))
     if not path.startswith("/"):
         path = "/" + path
-    try:
-        host.decode("idna")
-    except ValueError:
+    if not _is_valid_host(host):
         return None
-    if "\0" in host:
+    if not utils.isascii(path):
         return None
-    try:
-        path.decode("ascii")
-    except ValueError:
-        return None
-    if not 0 <= port <= 65535:
+    if not _is_valid_port(port):
         return None
     return scheme, host, port, path
 
@@ -236,6 +246,10 @@ def parse_init_connect(line):
         port = int(port)
     except ValueError:
         return None
+    if not _is_valid_port(port):
+        return None
+    if not _is_valid_host(host):
+        return None
     return host, port, httpversion
 
 
@@ -260,7 +274,8 @@ def parse_init_http(line):
     if not v:
         return None
     method, url, httpversion = v
-
+    if not utils.isascii(url):
+        return None
     if not (url.startswith("/") or url == "*"):
         return None
     return method, url, httpversion

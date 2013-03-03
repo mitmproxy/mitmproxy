@@ -1,4 +1,12 @@
 
+def isascii(s):
+    try:
+        s.decode("ascii")
+    except ValueError:
+        return False
+    return True
+
+
 def cleanBin(s, fixspacing=False):
     """
         Cleans binary data to make it safe to display. If fixspacing is True,
