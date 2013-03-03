@@ -296,6 +296,7 @@ def test_parse_url():
     assert not http.parse_url("http://\xfafoo")
     assert not http.parse_url("http:/\xc6/localhost:56121")
     assert not http.parse_url("http://foo\0")
+    assert not http.parse_url("http://foo:999999")
 
 
 

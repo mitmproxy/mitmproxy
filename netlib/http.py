@@ -17,7 +17,7 @@ def parse_url(url):
         Returns a (scheme, host, port, path) tuple, or None on error.
 
         Checks that:
-            port is an integer
+            port is an integer 0-65535
             host is a valid IDNA-encoded hostname with no null-bytes
             path is valid ASCII
     """
@@ -48,6 +48,8 @@ def parse_url(url):
     try:
         path.decode("ascii")
     except ValueError:
+        return None
+    if not 0 <= port <= 65535:
         return None
     return scheme, host, port, path
 
