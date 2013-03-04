@@ -1,5 +1,4 @@
 import cStringIO, sys
-import libpry
 from netlib import wsgi, odict
 
 
