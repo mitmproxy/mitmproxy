@@ -1,4 +1,4 @@
-IVERSION = (0, 3, 0)
+IVERSION = (0, 9)
 VERSION = ".".join(str(i) for i in IVERSION)
 NAME = "pathod"
 NAMEVERSION = NAME + " " + VERSION
