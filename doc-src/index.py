@@ -6,9 +6,15 @@ sys.path.insert(0, "..")
 from libmproxy import filt
 
 MITMPROXY_SRC = "~/git/public/mitmproxy"
-this.layout = countershape.Layout("_layout.html")
+
+if ns.options.website:
+    this.layout = countershape.Layout("_websitelayout.html")
+else:
+    this.layout = countershape.Layout("_layout.html")
+
+ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
 this.titlePrefix = "mitmproxy 0.9 - "
-this.markup = markup.Markdown()
+this.markup = markup.Markdown(extras=["footnotes"])
 
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
@@ -73,5 +79,4 @@ pages = [
     Directory("tutorials"),
     Page("transparent.html", "Overview"),
     Directory("transparent"),
-    Page("faq.html", "FAQ"),
 ]

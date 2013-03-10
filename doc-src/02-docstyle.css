@@ -1,3 +1,8 @@
+body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+}
+
 .terminal {
     color: #c0c0c0;
     font-size: 1em;
