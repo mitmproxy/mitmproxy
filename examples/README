@@ -3,6 +3,7 @@ dup_and_replay.py       Duplicates each request, changes it, and then replays th
 flowbasic               Basic use of mitmproxy as a library.
 modify_form.py          Modify all form submissions to add a parameter.
 modify_querystring.py   Modify all query strings to add a parameters.
+proxapp                 How to embed a WSGI app in a mitmproxy server
 stub.py                 Script stub with a method definition for every event.
 stickycookies           An example of writing a custom proxy with libmproxy.
 upsidedownternet.py     Rewrites traffic to turn PNGs upside down.

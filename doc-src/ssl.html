@@ -3,7 +3,7 @@ The first time __mitmproxy__ or __mitmdump__ is started, the following set of
 certificate files for a dummy Certificate Authority are created in the config
 directory (~/.mitmproxy by default): 
 
-<table>
+<table class="table">
     <tr>
         <td>mitmproxy-ca.pem</td>
         <td>The private key and certificate in PEM format.</td>
@@ -16,6 +16,11 @@ directory (~/.mitmproxy by default):
     <tr>
         <td>mitmproxy-ca-cert.p12</td>
         <td>The certificate in PKCS12 format. For use on Windows.</td>
+    </tr>
+    <tr>
+        <td>mitmproxy-ca-cert.cer</td>
+        <td>Same file as .pem, but with an extension expected by some Android
+        devices.</td>
     </tr>
 </table>
     

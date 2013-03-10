@@ -27,10 +27,11 @@ def mpath(p):
 ns.index_contents = file(mpath("README.mkd")).read()
 
 def example(s):
-    d = file(mpath(s)).read()
+    d = file(mpath(s)).read().rstrip()
     extemp = """<div class="example">%s<div class="example_legend">(%s)</div></div>"""
     return extemp%(countershape.template.Syntax("py")(d), s)
 ns.example = example
+
 
 filt_help = []
 for i in filt.filt_unary:
