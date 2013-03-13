@@ -426,7 +426,7 @@ class ConsoleMaster(flow.FlowMaster):
         path = os.path.expanduser(path)
         try:
             f = file(path, "wb")
-            flow.FlowMaster.start_stream(self, f)
+            flow.FlowMaster.start_stream(self, f, None)
         except IOError, v:
             return str(v)
         self.stream_path = path

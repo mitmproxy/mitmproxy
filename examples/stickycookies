@@ -25,13 +25,13 @@ class StickyMaster(controller.Master):
             self.stickyhosts[hid] = msg.headers["cookie"]
         elif hid in self.stickyhosts:
             msg.headers["cookie"] = self.stickyhosts[hid]
-        msg._ack()
+        msg.reply()
 
     def handle_response(self, msg):
         hid = (msg.request.host, msg.request.port)
         if msg.headers["set-cookie"]:
             self.stickyhosts[hid] = msg.headers["set-cookie"]
-        msg._ack()
+        msg.reply()
 
 
 config = proxy.ProxyConfig(

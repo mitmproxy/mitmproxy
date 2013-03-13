@@ -93,7 +93,7 @@ class DumpMaster(flow.FlowMaster):
             path = os.path.expanduser(options.wfile)
             try:
                 f = file(path, "wb")
-                self.start_stream(f)
+                self.start_stream(f, self.filt)
             except IOError, v:
                 raise DumpError(v.strerror)
 
@@ -155,6 +155,7 @@ class DumpMaster(flow.FlowMaster):
         return "\n".join(" "*n + i for i in l)
 
     def _process_flow(self, f):
+        self.state.delete_flow(f)
         if self.filt and not f.match(self.filt):
             return
 
@@ -198,7 +199,6 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile, "\n"
         if self.o.verbosity:
             self.outfile.flush()
-        self.state.delete_flow(f)
 
     def handle_log(self, l):
         self.add_event(l.msg)

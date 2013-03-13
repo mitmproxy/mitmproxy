@@ -1588,8 +1588,8 @@ class FlowMaster(controller.Master):
                     self.stream.add(i)
             self.stop_stream()
 
-    def start_stream(self, fp):
-        self.stream = FlowWriter(fp)
+    def start_stream(self, fp, filt):
+        self.stream = FilteredFlowWriter(fp, filt)
 
     def stop_stream(self):
         self.stream.fo.close()
@@ -1634,4 +1634,17 @@ class FlowReader:
             if self.fo.tell() == off and self.fo.read() == '':
                 return
             raise FlowReadError("Invalid data format.")
+
+
+class FilteredFlowWriter:
+    def __init__(self, fo, filt):
+        self.fo = fo
+        self.filt = filt
+
+    def add(self, f):
+        if self.filt and not f.match(self.filt):
+            return
+        d = f._get_state()
+        tnetstring.dump(d, self.fo)
+
 

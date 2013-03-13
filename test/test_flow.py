@@ -497,6 +497,23 @@ class TestSerialize:
         fm = flow.FlowMaster(None, s)
         fm.load_flows(r)
         assert len(s._flow_list) == 6
+        
+    def test_filter(self):
+        sio = StringIO()
+        fl = filt.parse("~c 200")
+        w = flow.FilteredFlowWriter(sio, fl)
+
+        f = tutils.tflow_full()
+        f.response.code = 200
+        w.add(f)
+
+        f = tutils.tflow_full()
+        f.response.code = 201
+        w.add(f)
+
+        sio.seek(0)
+        r = flow.FlowReader(sio)
+        assert len(list(r.stream()))
 
 
     def test_error(self):
@@ -723,7 +740,7 @@ class TestFlowMaster:
             fm = flow.FlowMaster(None, s)
             tf = tutils.tflow_full()
 
-            fm.start_stream(file(p, "ab"))
+            fm.start_stream(file(p, "ab"), None)
             fm.handle_request(tf.request)
             fm.handle_response(tf.response)
             fm.stop_stream()
@@ -731,7 +748,7 @@ class TestFlowMaster:
             assert r()[0].response
 
             tf = tutils.tflow_full()
-            fm.start_stream(file(p, "ab"))
+            fm.start_stream(file(p, "ab"), None)
             fm.handle_request(tf.request)
             fm.shutdown()
 
