@@ -6,7 +6,10 @@ documentation.
 
 
 
-## Example: saving traffic
+# Examples
+
+
+## Saving traffic
 
 <pre class="terminal">
 > mitmdump -w outfile
@@ -15,7 +18,18 @@ documentation.
 Start up mitmdump in proxy mode, and write all traffic to __outfile__. 
 
 
-## Example: client replay
+## Filtering saved traffic
+
+<pre class="terminal">
+> mitmdump -nr infile -w outfile "~m post"
+</pre>
+
+Start mitmdump without binding to the proxy port (_-n_), read all flows from
+infile, apply the specified filter expression (only match POSTs), and write to
+outfile.
+
+
+## Client replay
 
 <pre class="terminal">
 > mitmdump -nc outfile
@@ -33,7 +47,7 @@ another:
 See the [Client-side Replay](@!urlTo("clientreplay.html")!@) section for more information.
 
 
-## Example: running a script
+## Running a script
 
 <pre class="terminal">
 > mitmdump -s examples/add_header.py
@@ -43,7 +57,7 @@ This runs the __add_header.py__ example script, which simply adds a new header
 to all responses.
 
 
-## Example: scripted data transformation
+## Scripted data transformation
 
 <pre class="terminal">
 > mitmdump -ns examples/add_header.py -r srcfile -w dstfile
