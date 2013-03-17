@@ -1309,7 +1309,7 @@ class State(object):
         if f.request in self._flow_map:
             del self._flow_map[f.request]
         self._flow_list.remove(f)
-        if f.match(self._limit):
+        if f in self.view:
             self.view.remove(f)
         return True
 
