@@ -323,17 +323,18 @@ class ProxyHandler(tcp.BaseHandler):
         if not orig:
             raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
         host, port = orig
-        if not self.ssl_established and (port in self.config.transparent_proxy["sslports"]):
+        if port in self.config.transparent_proxy["sslports"]:
             scheme = "https"
-            dummycert = self.find_cert(client_conn, host, port, host)
-            sni = HandleSNI(
-                self, client_conn, host, port,
-                dummycert, self.config.certfile or self.config.cacert
-            )
-            try:
-                self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
-            except tcp.NetLibError, v:
-                raise ProxyError(400, str(v))
+            if not self.ssl_established:
+                dummycert = self.find_cert(client_conn, host, port, host)
+                sni = HandleSNI(
+                    self, client_conn, host, port,
+                    dummycert, self.config.certfile or self.config.cacert
+                )
+                try:
+                    self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
+                except tcp.NetLibError, v:
+                    raise ProxyError(400, str(v))
         else:
             scheme = "http"
         line = self.get_line(self.rfile)
