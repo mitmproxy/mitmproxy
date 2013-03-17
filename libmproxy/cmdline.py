@@ -154,6 +154,7 @@ def get_common_options(options):
         script = options.script,
         stickycookie = stickycookie,
         stickyauth = stickyauth,
+        showhost = options.showhost,
         wfile = options.wfile,
         verbosity = options.verbose,
         nopop = options.nopop,
@@ -247,6 +248,11 @@ def common_options(parser):
         metavar="SIZE",
         help="Byte size limit of HTTP request and response bodies."\
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
+    )
+    parser.add_argument(
+        "--host",
+        action="store_true", dest="showhost", default=False,
+        help="Use the Host header to construct URLs for display."
     )
 
     parser.add_argument(

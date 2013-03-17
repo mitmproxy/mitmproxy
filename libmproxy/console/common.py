@@ -177,7 +177,7 @@ class FlowCache:
 flowcache = FlowCache()
 
 
-def format_flow(f, focus, extended=False, padding=2):
+def format_flow(f, focus, extended=False, hostheader=False, padding=2):
     d = dict(
         intercepting = f.intercepting,
 
@@ -185,7 +185,7 @@ def format_flow(f, focus, extended=False, padding=2):
         req_is_replay = f.request.is_replay(),
         req_method = f.request.method,
         req_acked = f.request.reply.acked,
-        req_url = f.request.get_url(),
+        req_url = f.request.get_url(hostheader=hostheader),
 
         err_msg = f.error.msg if f.error else None,
         resp_code = f.response.code if f.response else None,

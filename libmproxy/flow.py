@@ -459,11 +459,19 @@ class Request(HTTPMsg):
         query = utils.urlencode(odict.lst)
         self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
-    def get_url(self):
+    def get_url(self, hostheader=False):
         """
             Returns a URL string, constructed from the Request's URL compnents.
+
+            If hostheader is True, we use the value specified in the request
+            Host header to construct the URL.
         """
-        return utils.unparse_url(self.scheme, self.host.encode("idna"), self.port, self.path).encode('ascii')
+        if hostheader:
+            host = self.headers.get_first("host") or self.host
+        else:
+            host = self.host
+        host = host.encode("idna")
+        return utils.unparse_url(self.scheme, host, self.port, self.path).encode('ascii')
 
     def set_url(self, url):
         """

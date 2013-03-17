@@ -497,7 +497,7 @@ class TestSerialize:
         fm = flow.FlowMaster(None, s)
         fm.load_flows(r)
         assert len(s._flow_list) == 6
-        
+
     def test_filter(self):
         sio = StringIO()
         fl = filt.parse("~c 200")
@@ -782,6 +782,17 @@ class TestRequest:
 
         r.content = flow.CONTENT_MISSING
         assert not r._assemble()
+
+    def test_get_url(self):
+        h = flow.ODictCaseless()
+        h["test"] = ["test"]
+        c = flow.ClientConnect(("addr", 2222))
+        r = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
+        assert r.get_url() == "https://host:22/"
+        assert r.get_url(hostheader=True) == "https://host:22/"
+        r.headers["Host"] = ["foo.com"]
+        assert r.get_url() == "https://host:22/"
+        assert r.get_url(hostheader=True) == "https://foo.com:22/"
 
     def test_path_components(self):
         h = flow.ODictCaseless()

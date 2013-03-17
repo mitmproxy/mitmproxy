@@ -174,6 +174,8 @@ class StatusBar(common.WWrap):
             opts.append("anticache")
         if self.master.anticomp:
             opts.append("anticomp")
+        if self.master.showhost:
+            opts.append("showhost")
         if not self.master.refresh_server_playback:
             opts.append("norefresh")
         if self.master.killextra:
@@ -338,6 +340,7 @@ class Options(object):
         "refresh_server_playback",
         "rfile",
         "script",
+        "showhost",
         "replacements",
         "rheaders",
         "setheaders",
@@ -398,6 +401,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.killextra = options.kill
         self.rheaders = options.rheaders
         self.nopop = options.nopop
+        self.showhost = options.showhost
 
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
@@ -918,6 +922,7 @@ class ConsoleMaster(flow.FlowMaster):
                                         (
                                             ("anticache", "a"),
                                             ("anticomp", "c"),
+                                            ("showhost", "h"),
                                             ("killextra", "k"),
                                             ("norefresh", "n"),
                                             ("no-upstream-certs", "u"),
@@ -957,6 +962,10 @@ class ConsoleMaster(flow.FlowMaster):
             self.anticache = not self.anticache
         if a == "c":
             self.anticomp = not self.anticomp
+        if a == "h":
+            self.showhost = not self.showhost
+            self.sync_list_view()
+            self.refresh_flow(self.currentflow)
         elif a == "k":
             self.killextra = not self.killextra
         elif a == "n":

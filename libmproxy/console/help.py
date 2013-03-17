@@ -98,6 +98,10 @@ class HelpView(urwid.ListBox):
                     [("text", ": prevent compressed responses")]
                 ),
                 (None,
+                    common.highlight_key("showhost", "h") +
+                    [("text", ": use Host header for URL display")]
+                ),
+                (None,
                     common.highlight_key("killextra", "k") +
                     [("text", ": kill requests not part of server replay")]
                 ),
