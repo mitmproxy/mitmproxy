@@ -37,6 +37,7 @@ class Options(object):
         "setheaders",
         "server_replay",
         "script",
+        "showhost",
         "stickycookie",
         "stickyauth",
         "verbosity",

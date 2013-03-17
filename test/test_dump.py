@@ -12,8 +12,10 @@ def test_strfuncs():
     t = tutils.treq()
     t.client_conn = None
     t.stickycookie = True
-    assert "stickycookie" in dump.str_request(t)
-    assert "replay" in dump.str_request(t)
+    assert "stickycookie" in dump.str_request(t, False)
+    assert "stickycookie" in dump.str_request(t, True)
+    assert "replay" in dump.str_request(t, False)
+    assert "replay" in dump.str_request(t, True)
 
 
 class TestDumpMaster:
