@@ -12,22 +12,20 @@ We used an Asus Transformer Prime TF201 with Android 4.0.3 in the examples
 below - your device may differ, but the broad process should be similar. 
 
 
-Installing the mitmproxy certificate
-====================================
+## Getting the certificate onto the device
 
-The first step is to install mitmproxy's interception certificate on the
-Android device. In your ~/.mitmproxy directory, there is a file called
-__mitmproxy-ca-cert.cer__ - we need to transfer this file to
-__/sdcard/Downloads__ on the Android device. If this file doesn't exist for
-you, your certs were generated with an older version of mitmproxy - just copy
-the __mitmproxy-ca-cert.pem__ file to __mitmproxy-ca-cert.cer__ and proceed
-from there.
-
-In this case, we're using wget from Better Terminal Emulator Pro to transfer
-the certificate from a local HTTP server. Other terminal applications may work,
-and you might also transfer the file via external media like an SDcard:
+First we need to get the __mitmproxy-ca-cert.cer__ file into the
+__/sdcard/Downloads__ folder on the device. There are a number of ways to do
+this. If you have the Android Developer Tools installed, you can use [__adb
+push__](http://developer.android.com/tools/help/adb.html) to accomplish this.
+Depending on your device, you could also transfer the file using external media
+like an SD Card. In this example, we're using wget from within a terminal
+emulator  to transfer the certificate from a local HTTP server: 
 
 <img src="android-shellwgetmitmproxyca.png"/>
+
+
+## Installing the certificate
 
 Once we have the certificate on the local disk, we need to import it into the
 list of trusted CAs. Go to Settings -&gt; Security -&gt; Credential Storage,
@@ -45,9 +43,4 @@ Afterwards, you should see the certificate listed in the Trusted Credentials
 store:
 
 <img src="android-settingssecurityuserinstalledca.png"/>
-
-If you're lucky enough to be working with an app that obeys the wireless proxy
-settings, you're just about done - simply configure the settings to point at
-mitmproxy. If not, proceed to the next step...
-
 

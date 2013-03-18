@@ -1,6 +1,5 @@
 import os
 from cStringIO import StringIO
-import libpry
 from libmproxy import dump, flow, proxy
 import tutils
 import mock
@@ -13,8 +12,10 @@ def test_strfuncs():
     t = tutils.treq()
     t.client_conn = None
     t.stickycookie = True
-    assert "stickycookie" in dump.str_request(t)
-    assert "replay" in dump.str_request(t)
+    assert "stickycookie" in dump.str_request(t, False)
+    assert "stickycookie" in dump.str_request(t, True)
+    assert "replay" in dump.str_request(t, False)
+    assert "replay" in dump.str_request(t, True)
 
 
 class TestDumpMaster:
@@ -65,7 +66,7 @@ class TestDumpMaster:
         cs = StringIO()
 
         o = dump.Options(server_replay="nonexistent", kill=True)
-        libpry.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
+        tutils.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
@@ -90,7 +91,7 @@ class TestDumpMaster:
             self._flowfile(p)
             assert "GET" in self._dummy_cycle(0, None, "", verbosity=1, rfile=p)
 
-            libpry.raises(
+            tutils.raises(
                 dump.DumpError, self._dummy_cycle,
                 0, None, "", verbosity=1, rfile="/nonexistent"
             )
@@ -101,7 +102,6 @@ class TestDumpMaster:
     def test_options(self):
         o = dump.Options(verbosity = 2)
         assert o.verbosity == 2
-        libpry.raises(AttributeError, dump.Options, nonexistent = 2)
 
     def test_filter(self):
         assert not "GET" in self._dummy_cycle(1, "~u foo", "", verbosity=1)
@@ -131,7 +131,7 @@ class TestDumpMaster:
             assert len(list(flow.FlowReader(open(p)).stream())) == 1
 
     def test_write_err(self):
-        libpry.raises(
+        tutils.raises(
             dump.DumpError,
             self._dummy_cycle,
             1,
@@ -149,11 +149,11 @@ class TestDumpMaster:
         assert "XREQUEST" in ret
         assert "XRESPONSE" in ret
         assert "XCLIENTDISCONNECT" in ret
-        libpry.raises(
+        tutils.raises(
             dump.DumpError,
             self._dummy_cycle, 1, None, "", script="nonexistent"
         )
-        libpry.raises(
+        tutils.raises(
             dump.DumpError,
             self._dummy_cycle, 1, None, "", script="starterr.py"
         )

@@ -1,16 +1,12 @@
-.terminal {
-    color: #c0c0c0;
-    font-size: 1em;
-    background: #000000;
+body {
+    padding-top: 60px;
+    padding-bottom: 40px;
 }
-
-
-pre {
-    margin-top: 10px;
-    color: #333;
-}
-
 
 .tablenum {
     font-weight: bold;
+} 
+
+.nowrap {
+     white-space: nowrap;
 }

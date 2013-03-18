@@ -23,13 +23,13 @@ class MyMaster(flow.FlowMaster):
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
         if f:
-            r._ack()
+            r.reply()
         return f
 
     def handle_response(self, r):
         f = flow.FlowMaster.handle_response(self, r)
         if f:
-            r._ack()
+            r.reply()
         print f
         return f
 

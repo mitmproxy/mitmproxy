@@ -1,6 +1,6 @@
-<div class="navbar">
+<div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
-    <div class="container-fluid">
+    <div class="container">
       <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
@@ -12,15 +12,14 @@
   </div>
 </div>
 
-<div class="container-fluid">
-  <div class="row-fluid">
+<div class="container">
+  <div class="row">
     <div class="span3">
       <div class="well sidebar-nav">
         <ul class="nav nav-list">
             $!nav("index.html", this, state)!$
             $!nav("install.html", this, state)!$
             $!nav("howmitmproxy.html", this, state)!$
-            $!nav("faq.html", this, state)!$
 
             <li class="nav-header">Tools</li>
                 $!nav("mitmproxy.html", this, state)!$
@@ -38,12 +37,13 @@
                 $!nav("reverseproxy.html", this, state)!$
                 $!nav("upstreamcerts.html", this, state)!$
 
-            <li class="nav-header">SSL interception</li>
+            <li class="nav-header">Installing Certificates</li>
                 $!nav("ssl.html", this, state)!$
                 $!nav("certinstall/firefox.html", this, state)!$
                 $!nav("certinstall/osx.html", this, state)!$
                 $!nav("certinstall/windows7.html", this, state)!$
                 $!nav("certinstall/ios.html", this, state)!$
+                $!nav("certinstall/ios-simulator.html", this, state)!$
                 $!nav("certinstall/android.html", this, state)!$
 
             <li class="nav-header">Transparent Proxying</li>
@@ -68,13 +68,11 @@
         </div>
         $!body!$
     </div>
-
-  </div><!--/row-->
+  </div>
 
   <hr>
 
   <footer>
     <p>@!copyright!@</p>
   </footer>
-
-</div><!--/.fluid-container-->
+</div>

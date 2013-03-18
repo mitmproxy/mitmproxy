@@ -23,14 +23,14 @@ class InjectingMaster(controller.Master):
     def handle_request(self, msg):
         if 'Accept-Encoding' in msg.headers:
             msg.headers["Accept-Encoding"] = 'none'
-        msg._ack()
+        msg.reply()
 
     def handle_response(self, msg):
         if msg.content:
             c = msg.replace('<body>', '<body><iframe src="%s" frameborder="0" height="0" width="0"></iframe>' % self._iframe_url)
             if c > 0:
                 print 'Iframe injected!'
-        msg._ack()
+        msg.reply()
 
 
 def main(argv):

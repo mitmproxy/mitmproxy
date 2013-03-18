@@ -105,7 +105,7 @@ class ConnectionItem(common.WWrap):
         common.WWrap.__init__(self, w)
 
     def get_text(self):
-        return common.format_flow(self.flow, self.f)
+        return common.format_flow(self.flow, self.f, hostheader=self.master.showhost)
 
     def selectable(self):
         return True

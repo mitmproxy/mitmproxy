@@ -39,14 +39,21 @@ The contents of the submission are particularly interesting:
 
 <!--(block|syntax("xml"))-->
 <plist version="1.0">
-<dict>
-    <key>category</key>
-    <string>SMW_Adv_USA1</string>
-    <key>score-value</key>
-    <integer>55</integer>
-    <key>timestamp</key>
-    <integer>1301553284461</integer>
-</dict>
+  <dict>
+    <key>scores</key>
+    <array>
+      <dict>
+        <key>category</key>
+        <string>SMW_Adv_USA1</string>
+        <key>context</key>
+        <integer>0</integer>
+        <key>score-value</key>
+        <integer>0</integer>
+        <key>timestamp</key>
+        <integer>1363515361321</integer>
+      </dict>
+    </array>
+  </dict>
 </plist>
 <!--(end)-->
 
@@ -66,14 +73,21 @@ now fire up. Lets bump the score up to something a bit more ambitious:
 
 <!--(block|syntax("xml"))-->
 <plist version="1.0">
-<dict>
-    <key>category</key>
-    <string>SMW_Adv_USA1</string>
-    <key>score-value</key>
-    <integer>2200272667</integer>
-    <key>timestamp</key>
-    <integer>1301553284461</integer>
-</dict>
+  <dict>
+    <key>scores</key>
+    <array>
+      <dict>
+        <key>category</key>
+        <string>SMW_Adv_USA1</string>
+        <key>context</key>
+        <integer>0</integer>
+        <key>score-value</key>
+        <integer>2200272667</integer>
+        <key>timestamp</key>
+        <integer>1363515361321</integer>
+      </dict>
+    </array>
+  </dict>
 </plist>
 <!--(end)-->
 
@@ -91,15 +105,18 @@ replay.
 And that's it - according to the records, I am the greatest Super Mega Worm
 player of all time. 
 
-Curiously, the top competitors' scores are all the same: 2,147,483,647. If you
-think that number seems familiar, you're right: it's 2^31-1, the maximum value
-you can fit into a signed 32-bit int. Now let me tell you another peculiar
-thing about Super Mega Worm - at the end of every game, it submits your highest
-previous score to the Game Center, not your current score.  This means that it
-stores your highscore somewhere, and I'm guessing that it reads that stored
-score back into a signed integer. So, if you _were_ to cheat by the relatively
-pedestrian means of modifying the saved score on your jailbroken phone, then
-2^31-1 might well be the maximum score you could get. Then again, if the game
-itself stores its score in a signed 32-bit int, you could get the same score
-through perfect play, effectively beating the game. So, which is it in this
-case? I'll leave that for you to decide.
+There's a curious addendum to this tale. When I first wrote this tutorial, all
+the top competitors' scores were the same: 2,147,483,647 (this is no longer the
+case, beacause there are now so many fellow cheaters using this tutorial). If
+you think that number seems familiar, you're right: it's 2^31-1, the maximum
+value you can fit into a signed 32-bit int. Now let me tell you another
+peculiar thing about Super Mega Worm - at the end of every game, it submits
+your highest previous score to the Game Center, not your current score.  This
+means that it stores your highscore somewhere, and I'm guessing that it reads
+that stored score back into a signed integer. So, if you _were_ to cheat by the
+relatively pedestrian means of modifying the saved score on your jailbroken
+phone, then 2^31-1 might well be the maximum score you could get. Then again,
+if the game itself stores its score in a signed 32-bit int, you could get the
+same score through perfect play, effectively beating the game. So, which is it
+in this case? I'll leave that for you to decide.
+

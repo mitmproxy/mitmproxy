@@ -1,42 +1,83 @@
-<a href="http://github.com/cortesi/mitmproxy"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://d3nwyuy0nl342s.cloudfront.net/img/e6bef7a091f5f3138b8cd40bc3e114258dd68ddf/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub"></a>
-<div class="yui-t7" id="doc">
-    <div style="" id="hd">
-        <div class="HorizontalNavBar">
-            <ul>
-                <li class="inactive"><a href="@!urlTo("/index.html")!@">home</a></li>
-                <li class="active"><a href="@!urlTo("doc/index.html")!@">docs</a></li>
-                <li class="inactive"><a href="@!urlTo("/about.html")!@">about</a></li>
-            </ul>
-        </div>
-        <h1><a href="@!urlTo("/index.html")!@">mitmproxy</a> </h1>
-        <br>
-        <p>an SSL-capable man-in-the-middle proxy</p>
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+      <a class="brand" href="@!urlTo("/index.html")!@">mitmproxy</a>
+      <div class="nav">
+        <ul class="nav">
+          <li $!'class="active"' if this.match("/index.html", True) else ""!$> <a href="@!top!@/index.html">home</a> </li>
+          <li $!'class="active"' if this.under("/doc") else ""!$><a href="@!top!@/doc/index.html">docs</a></li>
+          <li $!'class="active"' if this.under("/about.html") else ""!$><a href="@!top!@/about.html">about</a></li>
+        </ul>
+      </div>
     </div>
-    <div id="bd">
-        <div id="yui-main">
-            <div style="" class="yui-b">
-                <!--(block nav)-->
-                <div id="nav">
-                    <!--(block pb)-->
-                    <a href="@!urlTo(previous)!@">prev</a>
-                    <!--(end)-->
-                    <!--(block nb)-->
-                    <a href="@!urlTo(next)!@">next</a>
-                    <!--(end)-->
-                    $!pb if previous and not previous.parent.root else "prev"!$ |
-                    <a href="@!urlTo('doc/index.html')!@">index</a> |
-                    $!nb if next and not next.parent.root else "next"!$
-                </div>
-                <!--(end)-->
-                $!nav if this.title!="docs" else ""!$
-                $!title if this.title!="docs" else "<h1>mitmproxy 0.9 docs</h1>"!$
-                $!body!$
-            </div>
-        </div>
-    </div>
-    <div style="" id="ft">
-        <p>Copyright 2011 Aldo Cortesi</p>
-    </div>
+  </div>
 </div>
 
-$!ga!$
+<div class="container">
+  <div class="row">
+
+    <div class="span3">
+      <div class="well sidebar-nav">
+        <ul class="nav nav-list">
+            $!nav("/doc/index.html", this, state)!$
+            $!nav("install.html", this, state)!$
+            $!nav("howmitmproxy.html", this, state)!$
+
+            <li class="nav-header">Tools</li>
+                $!nav("mitmproxy.html", this, state)!$
+                $!nav("mitmdump.html", this, state)!$
+
+            <li class="nav-header">Features</li>
+                $!nav("anticache.html", this, state)!$
+                $!nav("clientreplay.html", this, state)!$
+                $!nav("filters.html", this, state)!$
+                $!nav("proxyauth.html", this, state)!$
+                $!nav("replacements.html", this, state)!$
+                $!nav("serverreplay.html", this, state)!$
+                $!nav("setheaders.html", this, state)!$
+                $!nav("sticky.html", this, state)!$
+                $!nav("reverseproxy.html", this, state)!$
+                $!nav("upstreamcerts.html", this, state)!$
+
+            <li class="nav-header">SSL interception</li>
+                $!nav("ssl.html", this, state)!$
+                $!nav("certinstall/firefox.html", this, state)!$
+                $!nav("certinstall/osx.html", this, state)!$
+                $!nav("certinstall/windows7.html", this, state)!$
+                $!nav("certinstall/ios.html", this, state)!$
+                $!nav("certinstall/android.html", this, state)!$
+
+            <li class="nav-header">Transparent Proxying</li>
+                $!nav("transparent.html", this, state)!$
+                $!nav("transparent/linux.html", this, state)!$
+                $!nav("transparent/osx.html", this, state)!$
+
+             <li class="nav-header">Tutorials</li>
+                $!nav("tutorials/30second.html", this, state)!$
+                $!nav("tutorials/gamecenter.html", this, state)!$
+
+            <li class="nav-header">Scripting mitmproxy</li>
+                $!nav("scripting/inlinescripts.html", this, state)!$
+                $!nav("scripting/libmproxy.html", this, state)!$
+        </ul>
+      </div>
+    </div>
+    <div class="span9">
+        <div class="page-header">
+        <h1>@!this.title!@</h1>
+        </div>
+        $!body!$
+    </div>
+  </div>
+
+  <hr>
+
+  <footer>
+    <p>@!copyright!@</p>
+  </footer>
+</div>

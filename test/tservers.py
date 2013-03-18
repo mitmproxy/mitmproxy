@@ -1,6 +1,5 @@
 import threading, Queue
 import flask
-import human_curl as hurl
 import libpathod.test, libpathod.pathoc
 from libmproxy import proxy, flow, controller
 import tutils
@@ -28,7 +27,7 @@ class TestMaster(flow.FlowMaster):
         state = flow.State()
         flow.FlowMaster.__init__(self, s, state)
         self.testq = testq
-        self.log = []
+        self.clear_log()
 
     def handle_request(self, m):
         flow.FlowMaster.handle_request(self, m)
@@ -37,6 +36,9 @@ class TestMaster(flow.FlowMaster):
     def handle_response(self, m):
         flow.FlowMaster.handle_response(self, m)
         m.reply()
+
+    def clear_log(self):
+        self.log = []
 
     def handle_log(self, l):
         self.log.append(l.msg)
@@ -69,7 +71,8 @@ class ProxTestBase:
     ssl = None
     clientcerts = False
     certfile = None
-
+    no_upstream_cert = False
+    authenticator = None
     masterclass = TestMaster
     @classmethod
     def setupAll(cls):
@@ -78,7 +81,9 @@ class ProxTestBase:
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl)
         pconf = cls.get_proxy_config()
         config = proxy.ProxyConfig(
+            no_upstream_cert = cls.no_upstream_cert,
             cacert = tutils.test_data.path("data/serverkey.pem"),
+            authenticator = cls.authenticator,
             **pconf
         )
         tmaster = cls.masterclass(cls.tqueue, config)
@@ -96,7 +101,10 @@ class ProxTestBase:
         cls.server2.shutdown()
 
     def setUp(self):
+        self.master.clear_log()
         self.master.state.clear()
+        self.server.clear_log()
+        self.server2.clear_log()
 
     @property
     def scheme(self):
@@ -122,24 +130,31 @@ class ProxTestBase:
 
 
 class HTTPProxTest(ProxTestBase):
-    def pathoc(self, connect_to = None):
+    def pathoc_raw(self):
+        return libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port)
+
+    def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
-        p.connect(connect_to)
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
+        if self.ssl:
+            p.connect(("127.0.0.1", self.server.port))
+        else:
+            p.connect()
         return p
 
-    def pathod(self, spec):
+    def pathod(self, spec, sni=None):
         """
-            Constructs a pathod request, with the appropriate base and proxy.
+            Constructs a pathod GET request, with the appropriate base and proxy.
         """
-        return hurl.get(
-            self.server.urlbase + "/p/" + spec,
-            proxy=self.proxies,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
+        p = self.pathoc(sni=sni)
+        spec = spec.encode("string_escape")
+        if self.ssl:
+            q = "get:'/p/%s'"%spec
+        else:
+            q = "get:'%s/p/%s'"%(self.server.urlbase, spec)
+        return p.request(q)
 
 
 class TResolver:
@@ -152,25 +167,39 @@ class TResolver:
 
 class TransparentProxTest(ProxTestBase):
     ssl = None
+    resolver = TResolver
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
+        if cls.ssl:
+            ports = [cls.server.port, cls.server2.port]
+        else:
+            ports = []
         d["transparent_proxy"] = dict(
-            resolver = TResolver(cls.server.port),
-            sslports = []
+            resolver = cls.resolver(cls.server.port),
+            sslports = ports
         )
         return d
 
-    def pathod(self, spec):
+    def pathod(self, spec, sni=None):
         """
-            Constructs a pathod request, with the appropriate base and proxy.
+            Constructs a pathod GET request, with the appropriate base and proxy.
         """
-        r = hurl.get(
-            "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
-        return r
+        if self.ssl:
+            p = self.pathoc(sni=sni)
+            q = "get:'/p/%s'"%spec
+        else:
+            p = self.pathoc()
+            q = "get:'/p/%s'"%spec
+        return p.request(q)
+
+    def pathoc(self, sni=None):
+        """
+            Returns a connected Pathoc instance.
+        """
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
+        p.connect()
+        return p
 
 
 class ReverseProxTest(ProxTestBase):
@@ -185,14 +214,23 @@ class ReverseProxTest(ProxTestBase):
             )
         return d
 
-    def pathod(self, spec):
+    def pathoc(self, sni=None):
         """
-            Constructs a pathod request, with the appropriate base and proxy.
+            Returns a connected Pathoc instance.
         """
-        r = hurl.get(
-            "http://127.0.0.1:%s"%self.proxy.port + "/p/" + spec,
-            validate_cert=False,
-            #debug=hurl.utils.stdout_debug
-        )
-        return r
+        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
+        p.connect()
+        return p
+
+    def pathod(self, spec, sni=None):
+        """
+            Constructs a pathod GET request, with the appropriate base and proxy.
+        """
+        if self.ssl:
+            p = self.pathoc(sni=sni)
+            q = "get:'/p/%s'"%spec
+        else:
+            p = self.pathoc()
+            q = "get:'/p/%s'"%spec
+        return p.request(q)
 

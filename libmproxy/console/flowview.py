@@ -88,11 +88,11 @@ footer = [
 class FlowViewHeader(common.WWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
-        self.w = common.format_flow(f, False, extended=True, padding=0)
+        self.w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
 
     def refresh_flow(self, f):
         if f == self.flow:
-            self.w = common.format_flow(f, False, extended=True, padding=0)
+            self.w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
 
 
 class CallbackCache:

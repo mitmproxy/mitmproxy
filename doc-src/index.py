@@ -6,9 +6,15 @@ sys.path.insert(0, "..")
 from libmproxy import filt
 
 MITMPROXY_SRC = "~/git/public/mitmproxy"
-this.layout = countershape.Layout("_layout.html")
+
+if ns.options.website:
+    this.layout = countershape.Layout("_websitelayout.html")
+else:
+    this.layout = countershape.Layout("_layout.html")
+
+ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
 this.titlePrefix = "mitmproxy 0.9 - "
-this.markup = markup.Markdown()
+this.markup = markup.Markdown(extras=["footnotes"])
 
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
@@ -21,10 +27,11 @@ def mpath(p):
 ns.index_contents = file(mpath("README.mkd")).read()
 
 def example(s):
-    d = file(mpath(s)).read()
+    d = file(mpath(s)).read().rstrip()
     extemp = """<div class="example">%s<div class="example_legend">(%s)</div></div>"""
     return extemp%(countershape.template.Syntax("py")(d), s)
 ns.example = example
+
 
 filt_help = []
 for i in filt.filt_unary:
@@ -73,5 +80,4 @@ pages = [
     Directory("tutorials"),
     Page("transparent.html", "Overview"),
     Directory("transparent"),
-    Page("faq.html", "FAQ"),
 ]

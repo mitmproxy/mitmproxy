@@ -459,11 +459,19 @@ class Request(HTTPMsg):
         query = utils.urlencode(odict.lst)
         self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
-    def get_url(self):
+    def get_url(self, hostheader=False):
         """
             Returns a URL string, constructed from the Request's URL compnents.
+
+            If hostheader is True, we use the value specified in the request
+            Host header to construct the URL.
         """
-        return utils.unparse_url(self.scheme, self.host.decode("idna"), self.port, self.path).encode('ascii')
+        if hostheader:
+            host = self.headers.get_first("host") or self.host
+        else:
+            host = self.host
+        host = host.encode("idna")
+        return utils.unparse_url(self.scheme, host, self.port, self.path).encode('ascii')
 
     def set_url(self, url):
         """
@@ -1306,7 +1314,7 @@ class State(object):
         if f.request in self._flow_map:
             del self._flow_map[f.request]
         self._flow_list.remove(f)
-        if f.match(self._limit):
+        if f in self.view:
             self.view.remove(f)
         return True
 
@@ -1593,8 +1601,8 @@ class FlowMaster(controller.Master):
                     self.stream.add(i)
             self.stop_stream()
 
-    def start_stream(self, fp):
-        self.stream = FlowWriter(fp)
+    def start_stream(self, fp, filt):
+        self.stream = FilteredFlowWriter(fp, filt)
 
     def stop_stream(self):
         self.stream.fo.close()
@@ -1639,4 +1647,17 @@ class FlowReader:
             if self.fo.tell() == off and self.fo.read() == '':
                 return
             raise FlowReadError("Invalid data format.")
+
+
+class FilteredFlowWriter:
+    def __init__(self, fo, filt):
+        self.fo = fo
+        self.filt = filt
+
+    def add(self, f):
+        if self.filt and not f.match(self.filt):
+            return
+        d = f._get_state()
+        tnetstring.dump(d, self.fo)
+
 

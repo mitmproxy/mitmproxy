@@ -21,7 +21,7 @@ class DumpError(Exception): pass
 
 
 class Options(object):
-    __slots__ = [
+    attributes = [
         "anticache",
         "anticomp",
         "client_replay",
@@ -37,6 +37,7 @@ class Options(object):
         "setheaders",
         "server_replay",
         "script",
+        "showhost",
         "stickycookie",
         "stickyauth",
         "verbosity",
@@ -45,7 +46,7 @@ class Options(object):
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
-        for i in self.__slots__:
+        for i in self.attributes:
             if not hasattr(self, i):
                 setattr(self, i, None)
 
@@ -57,12 +58,12 @@ def str_response(resp):
     return r
 
 
-def str_request(req):
+def str_request(req, showhost):
     if req.client_conn:
         c = req.client_conn.address[0]
     else:
         c = "[replay]"
-    r = "%s %s %s"%(c, req.method, req.get_url())
+    r = "%s %s %s"%(c, req.method, req.get_url(showhost))
     if req.stickycookie:
         r = "[stickycookie] " + r
     return r
@@ -76,6 +77,7 @@ class DumpMaster(flow.FlowMaster):
         self.anticache = options.anticache
         self.anticomp = options.anticomp
         self.eventlog = options.eventlog
+        self.showhost = options.showhost
         self.refresh_server_playback = options.refresh_server_playback
 
         if filtstr:
@@ -93,7 +95,7 @@ class DumpMaster(flow.FlowMaster):
             path = os.path.expanduser(options.wfile)
             try:
                 f = file(path, "wb")
-                self.start_stream(f)
+                self.start_stream(f, self.filt)
             except IOError, v:
                 raise DumpError(v.strerror)
 
@@ -155,6 +157,7 @@ class DumpMaster(flow.FlowMaster):
         return "\n".join(" "*n + i for i in l)
 
     def _process_flow(self, f):
+        self.state.delete_flow(f)
         if self.filt and not f.match(self.filt):
             return
 
@@ -178,16 +181,16 @@ class DumpMaster(flow.FlowMaster):
             result = " << %s"%f.error.msg
 
         if self.o.verbosity == 1:
-            print >> self.outfile, str_request(f.request)
+            print >> self.outfile, str_request(f.request, self.showhost)
             print >> self.outfile, result
         elif self.o.verbosity == 2:
-            print >> self.outfile, str_request(f.request)
+            print >> self.outfile, str_request(f.request, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
             print >> self.outfile
             print >> self.outfile, result
             print >> self.outfile, "\n"
         elif self.o.verbosity >= 3:
-            print >> self.outfile, str_request(f.request)
+            print >> self.outfile, str_request(f.request, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
             if utils.isBin(f.request.content):
                 print >> self.outfile, self.indent(4, netlib.utils.hexdump(f.request.content))
@@ -198,7 +201,6 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile, "\n"
         if self.o.verbosity:
             self.outfile.flush()
-        self.state.delete_flow(f)
 
     def handle_log(self, l):
         self.add_event(l.msg)
