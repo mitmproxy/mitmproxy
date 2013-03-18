@@ -298,6 +298,7 @@ class Request(HTTPMsg):
         self.timestamp_start = timestamp_start or utils.timestamp()
         self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         self.close = False
+        self.acked = False
 
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
@@ -613,6 +614,7 @@ class Response(HTTPMsg):
         self.timestamp_start = timestamp_start or utils.timestamp()
         self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         self.replay = False
+        self.acked = False
 
     def _refresh_cookie(self, c, delta):
         """
