@@ -55,9 +55,13 @@ class ServerConnection(tcp.TCPClient):
         self.config = config
         self.scheme, self.sni = scheme, sni
         self.requestcount = 0
+        self.tcp_setup_timestamp = None
+        self.ssl_setup_timestamp = None
+
 
     def connect(self):
         tcp.TCPClient.connect(self)
+        self.tcp_setup_timestamp = time.time()
         if self.scheme == "https":
             clientcert = None
             if self.config.clientcerts:
@@ -66,6 +70,7 @@ class ServerConnection(tcp.TCPClient):
                     clientcert = path
             try:
                 self.convert_to_ssl(cert=clientcert, sni=self.sni)
+                self.ssl_setup_timestamp = time.time()
             except tcp.NetLibError, v:
                 raise ProxyError(400, str(v))
 
@@ -224,6 +229,9 @@ class ProxyHandler(tcp.BaseHandler):
                     while 1:
                         sc = self.get_server_connection(cc, scheme, host, port, self.sni)
                         sc.send(request)
+                        if sc.requestcount == 1: # add timestamps only for first request (others are not directly affected)
+                            request.tcp_setup_timestamp = sc.tcp_setup_timestamp
+                            request.ssl_setup_timestamp = sc.ssl_setup_timestamp
                         sc.rfile.reset_timestamps()
                         try:
                             httpversion, code, msg, headers, content = http.read_response(

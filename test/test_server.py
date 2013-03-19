@@ -267,7 +267,35 @@ class TestProxy(tservers.HTTPProxTest):
         request = self.master.state.view[1].request
         assert request.timestamp_end - request.timestamp_start <= 0.1
 
+    def test_request_tcp_setup_timestamp_presence(self):
+        # tests that the first request in a tcp connection has a tcp_setup_timestamp
+        # while others do not
+        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection.connect(("localhost", self.proxy.port))
+        connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
+        connection.send("\r\n");
+        connection.recv(5000)
+        connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
+        connection.send("\r\n");
+        connection.recv(5000)
+        connection.close()
 
+        first_request = self.master.state.view[0].request
+        second_request = self.master.state.view[1].request
+        assert first_request.tcp_setup_timestamp
+        assert first_request.ssl_setup_timestamp == None
+        assert second_request.tcp_setup_timestamp == None
+        assert second_request.ssl_setup_timestamp == None
+
+
+class TestProxySSL(tservers.HTTPProxTest):
+    ssl=True
+    def test_request_ssl_setup_timestamp_presence(self):
+        # tests that the ssl timestamp is present when ssl is used
+        f = self.pathod("304:b@10k")
+        assert f.status_code == 304
+        first_request = self.master.state.view[0].request
+        assert first_request.ssl_setup_timestamp
 
 class MasterFakeResponse(tservers.TestMaster):
     def handle_request(self, m):
