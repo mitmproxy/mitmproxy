@@ -322,6 +322,8 @@ class ProxyHandler(tcp.BaseHandler):
         orig = self.config.transparent_proxy["resolver"].original_addr(self.connection)
         if not orig:
             raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
+        self.log(client_conn, "transparent to %s:%s"%orig)
+
         host, port = orig
         if port in self.config.transparent_proxy["sslports"]:
             scheme = "https"
