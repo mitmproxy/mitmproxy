@@ -163,7 +163,7 @@ def get_common_options(options):
 
 def common_options(parser):
     parser.add_argument(
-        "-a",
+        "-b",
         action="store", type = str, dest="addr", default='',
         help = "Address to bind proxy to (defaults to all interfaces)"
     )
@@ -259,6 +259,13 @@ def common_options(parser):
         "--no-upstream-cert", default=False,
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
+    )
+
+    group = parser.add_argument_group("Web App")
+    group.add_argument(
+        "-a",
+        action="store_true", dest="app", default=False,
+        help="Enable the mitmproxy web app."
     )
 
     group = parser.add_argument_group("Client Replay")

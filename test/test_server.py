@@ -53,7 +53,16 @@ class CommonMixin:
         assert "Bad Request" in t.rfile.readline()
 
 
-class TestHTTP(tservers.HTTPProxTest, CommonMixin):
+
+class AppMixin:
+    def test_app(self):
+        ret = self.app("/")
+        assert ret.status_code == 200
+        assert "mitmproxy" in ret.content
+
+
+
+class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
     def test_app_err(self):
         p = self.pathoc()
         ret = p.request("get:'http://errapp/'")
@@ -133,6 +142,7 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin):
         p = self.pathoc()
         req = p.request("get:'http://foo':h':foo'='bar'")
         assert req.status_code == 400
+
 
 
 class TestHTTPAuth(tservers.HTTPProxTest):

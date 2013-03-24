@@ -23,6 +23,7 @@ import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 from netlib import odict, http, certutils
 import controller, version
+import app
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
@@ -42,13 +43,13 @@ class ReplaceHooks:
 
     def add(self, fpatt, rex, s):
         """
-            Add a replacement hook.
+            add a replacement hook.
 
-            fpatt: A string specifying a filter pattern.
-            rex: A regular expression.
-            s: The replacement string
+            fpatt: a string specifying a filter pattern.
+            rex: a regular expression.
+            s: the replacement string
 
-            Returns True if hook was added, False if the pattern could not be
+            returns true if hook was added, false if the pattern could not be
             parsed.
         """
         cpatt = filt.parse(fpatt)
@@ -1352,6 +1353,7 @@ class FlowMaster(controller.Master):
         self.setheaders = SetHeaders()
 
         self.stream = None
+        app.mapp.config["PMASTER"] = self
 
     def add_event(self, e, level="info"):
         """

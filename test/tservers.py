@@ -84,6 +84,7 @@ class ProxTestBase:
             no_upstream_cert = cls.no_upstream_cert,
             cacert = tutils.test_data.path("data/serverkey.pem"),
             authenticator = cls.authenticator,
+            app = True,
             **pconf
         )
         tmaster = cls.masterclass(cls.tqueue, config)
@@ -155,6 +156,17 @@ class HTTPProxTest(ProxTestBase):
         else:
             q = "get:'%s/p/%s'"%(self.server.urlbase, spec)
         return p.request(q)
+
+    def app(self, page):
+        if self.ssl:
+            p = libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port, True)
+            print "PRE"
+            p.connect((proxy.APP_IP, 80))
+            print "POST"
+            return p.request("get:'/%s'"%page)
+        else:
+            p = self.pathoc()
+            return p.request("get:'http://%s/%s'"%(proxy.APP_DOMAIN, page))
 
 
 class TResolver:
@@ -233,4 +245,7 @@ class ReverseProxTest(ProxTestBase):
             p = self.pathoc()
             q = "get:'/p/%s'"%spec
         return p.request(q)
+
+
+
 
