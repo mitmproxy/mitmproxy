@@ -58,7 +58,9 @@ class TestContentView:
         d = utils.urlencode([("one", "two"), ("three", "four")])
         v = cv.ViewURLEncoded()
         assert v([], d, 100)
-        assert not v([], "foo", 100)
+        d = utils.urlencode([("adsfa", "")])
+        v = cv.ViewURLEncoded()
+        assert v([], d, 100)
 
     def test_view_html(self):
         v = cv.ViewHTML()
