@@ -20,7 +20,7 @@ OSX.
 <pre class="terminal">rdr on en2 inet proto tcp to any port 80 -&gt; 127.0.0.1 port 8080
 rdr on en2 inet proto tcp to any port 443 -&gt; 127.0.0.1 port 8080
 </pre>
-        
+
         These rules tell pf to redirect all traffic destined for port 80 or 443
         to the local mitmproxy instance running on port 8080. You should
         replace <b>en2</b> with the interface on which your test device will
@@ -28,7 +28,7 @@ rdr on en2 inet proto tcp to any port 443 -&gt; 127.0.0.1 port 8080
 
     </li>
 
-    <li> Configure pf with the rules: 
+    <li> Configure pf with the rules:
 
         <pre class="terminal">sudo pfctl -f pf.conf</pre>
 
@@ -39,9 +39,6 @@ rdr on en2 inet proto tcp to any port 443 -&gt; 127.0.0.1 port 8080
         <pre class="terminal">sudo pfctl -e</pre>
 
     </li>
-
-    <li> Configure your test device to use the host on which mitmproxy is
-    running as the default gateway.</li>
 
     <li> Configure sudoers to allow mitmproxy to access pfctl. Edit the file
     <b>/etc/sudoers</b> on your system as root. Add the following line to the end
@@ -55,7 +52,7 @@ rdr on en2 inet proto tcp to any port 443 -&gt; 127.0.0.1 port 8080
     you're special feel free to tighten the restriction up to the user running
     mitmproxy.</li>
 
-    <li> Finally, fire up mitmproxy. You probably want a command like this:
+    <li> Fire up mitmproxy. You probably want a command like this:
 
         <pre class="terminal">mitmproxy -T --host</pre>
 
@@ -64,5 +61,9 @@ rdr on en2 inet proto tcp to any port 443 -&gt; 127.0.0.1 port 8080
         display.
 
     </li>
+
+    <li> Finally, configure your test device to use the host on which mitmproxy is
+    running as the default gateway.</li>
+
 
 </ol>
