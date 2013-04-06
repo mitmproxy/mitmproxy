@@ -12,7 +12,7 @@ import netlib.utils
 import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier, html2text
-
+import subprocess
 try:
     import pyamf
     from pyamf import remoting, flex
@@ -364,6 +364,38 @@ class ViewImage:
             )
         return "%s image"%img.format, fmt
 
+class ViewProtobuf:
+    """Human friendly view of protocol buffers
+    The view uses the protoc compiler to decode the binary
+    """
+
+    name = "Protocol Buffer"
+    prompt = ("protobuf", "p")
+    content_types = ["application/x-protobuf"]
+
+    @staticmethod
+    def is_available():
+        try:
+            p = subprocess.Popen(["protoc", "--version"], stdout=subprocess.PIPE)
+            out, _ = p.communicate()
+            return out.startswith("libprotoc")
+        except:
+            return False
+
+    def decode_protobuf(self, content):
+        # if Popen raises OSError, it will be caught in
+        # get_content_view and fall back to Raw
+        p = subprocess.Popen(['protoc', '--decode_raw'],
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, _ = p.communicate(input=content)
+        return out
+
+    def __call__(self, hdrs, content, limit):
+        decoded = self.decode_protobuf(content)
+        txt = _view_text(decoded[:limit], len(decoded), limit)
+        return "Protobuf", txt
 
 views = [
     ViewAuto(),
@@ -380,6 +412,9 @@ views = [
 ]
 if pyamf:
     views.append(ViewAMF())
+
+if ViewProtobuf.is_available():
+    views.append(ViewProtobuf())
 
 content_types_map = {}
 for i in views:
