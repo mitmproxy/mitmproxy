@@ -34,8 +34,12 @@ def _mkhelp():
                 [("text", ": automatic detection")]
             ),
             (None,
-                common.highlight_key("hex", "h") +
+                common.highlight_key("hex", "e") +
                 [("text", ": Hex")]
+            ),
+            (None,
+                common.highlight_key("html", "h") +
+                [("text", ": HTML")]
             ),
             (None,
                 common.highlight_key("image", "i") +
