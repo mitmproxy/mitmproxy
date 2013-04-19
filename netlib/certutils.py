@@ -110,6 +110,7 @@ def dummy_cert(fp, ca, commonname, sans):
     cert.set_subject(req.get_subject())
     cert.set_serial_number(int(time.time()*10000))
     if ss:
+        cert.set_version(2)
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
     cert.set_pubkey(req.get_pubkey())
     cert.sign(key, "sha1")
