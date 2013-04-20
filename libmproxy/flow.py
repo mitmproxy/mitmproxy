@@ -289,8 +289,15 @@ class Request(HTTPMsg):
             method: HTTP method
 
             timestamp_end: Seconds since the epoch signifying request transmission ended
+
+            tcp_setup_timestamp: Seconds since the epoch signifying remote TCP connection setup completion time
+            (or None, if request didn't results TCP setup)
+
+            ssl_setup_timestamp: Seconds since the epoch signifying remote SSL encryption setup completion time
+            (or None, if request didn't results SSL setup)
+
     """
-    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp_start=None, timestamp_end=None):
+    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp_start=None, timestamp_end=None, tcp_setup_timestamp=None, ssl_setup_timestamp=None):
         assert isinstance(headers, ODictCaseless)
         self.client_conn = client_conn
         self.httpversion = httpversion
@@ -299,6 +306,8 @@ class Request(HTTPMsg):
         self.timestamp_start = timestamp_start or utils.timestamp()
         self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
         self.close = False
+        self.tcp_setup_timestamp = tcp_setup_timestamp
+        self.ssl_setup_timestamp = ssl_setup_timestamp
 
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
@@ -362,6 +371,8 @@ class Request(HTTPMsg):
         self.content = state["content"]
         self.timestamp_start = state["timestamp_start"]
         self.timestamp_end = state["timestamp_end"]
+        self.tcp_setup_timestamp = state["tcp_setup_timestamp"]
+        self.ssl_setup_timestamp = state["ssl_setup_timestamp"]
 
     def _get_state(self):
         return dict(
@@ -375,7 +386,9 @@ class Request(HTTPMsg):
             headers = self.headers._get_state(),
             content = self.content,
             timestamp_start = self.timestamp_start,
-            timestamp_end = self.timestamp_end
+            timestamp_end = self.timestamp_end,
+            tcp_setup_timestamp = self.tcp_setup_timestamp,
+            ssl_setup_timestamp = self.ssl_setup_timestamp
         )
 
     @classmethod
@@ -392,6 +405,8 @@ class Request(HTTPMsg):
             state["content"],
             state["timestamp_start"],
             state["timestamp_end"],
+            state["tcp_setup_timestamp"],
+            state["ssl_setup_timestamp"]
         )
 
     def __hash__(self):
@@ -808,6 +823,11 @@ class ClientConnect(StateObject):
         self.close = False
         self.requestcount = 0
         self.error = None
+
+    def __str__(self):
+        if self.address:
+            return "%s:%d"%(self.address[0],self.address[1])
+        return "None"
 
     def _load_state(self, state):
         self.close = True
