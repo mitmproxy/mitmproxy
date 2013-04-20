@@ -137,7 +137,7 @@ class ViewXML:
 
 class ViewJSON:
     name = "JSON"
-    prompt = ("json", "j")
+    prompt = ("json", "s")
     content_types = ["application/json"]
     def __call__(self, hdrs, content, limit):
         lines = utils.pretty_json(content)
