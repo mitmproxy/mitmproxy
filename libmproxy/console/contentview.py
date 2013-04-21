@@ -389,8 +389,11 @@ class ViewProtobuf:
                              stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
-        out, _ = p.communicate(input=content)
-        return out
+        out, err = p.communicate(input=content)
+        if out:
+            return out
+        else:
+            return err
 
     def __call__(self, hdrs, content, limit):
         decoded = self.decode_protobuf(content)
