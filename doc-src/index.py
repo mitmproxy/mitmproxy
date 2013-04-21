@@ -5,8 +5,7 @@ import countershape.template
 sys.path.insert(0, "..")
 from libmproxy import filt
 
-#MITMPROXY_SRC = "~/git/public/mitmproxy"
-MITMPROXY_SRC = "/Users/jason/Development/virtualenvs/mitmproxy-github/mitmproxy"
+MITMPROXY_SRC = "~/git/public/mitmproxy"
 
 if ns.options.website:
     this.layout = countershape.Layout("_websitelayout.html")
