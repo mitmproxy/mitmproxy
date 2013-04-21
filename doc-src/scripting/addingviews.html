@@ -1,4 +1,4 @@
-As discussed in [the Flow View section of the mitmproxy overview](@!urlTo("mitmproxy.html")!@) allows you to inspect and manipulate flows.  When inspecting a single flow, mitmproxy uses a number of heuristics to show a friendly view of various content types; if mitmproxy cannot show a friendly view, mitmproxy defaults to a __raw__ view.
+As discussed in [the Flow View section of the mitmproxy overview](@!urlTo("mitmproxy.html")!@), mitmproxy allows you to inspect and manipulate flows.  When inspecting a single flow, mitmproxy uses a number of heuristics to show a friendly view of various content types; if mitmproxy cannot show a friendly view, mitmproxy defaults to a __raw__ view.
 
 By default, mitmproxy has support for displaying the following content types in a friendly view:
 
@@ -14,13 +14,22 @@ By default, mitmproxy has support for displaying the following content types in 
 
 Each content type invokes a different flow viewer to parse the data and display the friendly view.  Users can add support for custom viewers by adding a view class to contentview.py, discussed below.
 
-## Adding a View class to contentview.py
+## Adding a new View class to contentview.py
 
-The viewers used by mitmproxy to present a friendly view of various content types are stored in contentview.py.  Reviewing this file shows a number of classes named ViewSomeDataType, each with the properties: name, prompt, and content\_types and a function named "\_\_call\_\_".
+The viewers used by mitmproxy to present a friendly view of various content types are stored in contentview.py.  Reviewing this file shows a number of classes named ViewSomeDataType, each with the properties: __name__, __prompt__, and __content\_types__ and a function named __\_\_call\_\___.
 
-Adding code to parse additional data types is as simple as writing a new View class.  It should have the same properties and function as the other View classes.  The name property should be a string describing the contents and view; the prompt property should be a two item tuple where the first item is a string that will be used to display the View's type and the second item is a one character string that will be the hotkey used to select the view from the Flow View screen; the content-type property should be a list of strings of content\_types that the view can parse.  Note that mitmproxy will use the content\_types to try and heuristically show a friendly view of content and that you can override the built-in views by populating content\_types with values for content\_types that are already parsed -- e.g. "image/png".
+Adding code to parse additional data types is as simple as writing a new View class.  Your new View class should have the same properties as the other View classes: __name__, __prompt__, and __content\_types__ and a __\_\_call\_\___ function to parse the content of the request/response. 
 
-After defining the name, prompt, and content\_type properties of the class, you should write the \_\_call\_\_ function, which will parse the request/response data and provide a friendly view of the data.  The \_\_call\_\_ function should take the following arguments: self, hdrs, content, limit; hdrs is a ODictCaseless object containing the headers of the request/response; content is the content of the request/response, and limit is an integer representing the amount of data to display in the view window.
+* The __name__ property should be a string describing the contents and new View; 
+* The __prompt__ property should be a two item tuple:
 
-The \_\_call\_\_ function returns two values: (1) a string describing the parsed data; and (2) the parsed data for friendly display.  The parsed data to be displayed should be a list of strings formatted for display.  You can use the __\_view\_text__ function in contentview.py to format text for display.  Alternatively, you can display content as a series of key-value pairs; to do so, prepare a list of lists, where each list item is a two item list -- a key that describes the data, and then the data itself; after preparing the list of lists, use the __common.format\_keyvals__ function on it to prepare it as text for display.  
+  - __1__: A string that will be used to display the new View's type; and
+  - __2__: A one character string that will be the hotkey used to select the new View from the Flow View screen; 
+
+* The __content\_types__ property should be a list of strings of HTTP Content\-Types that the new View class can parse.  
+  * Note that mitmproxy will use the content\_types to try and heuristically show a friendly view of content and that you can override the built-in views by populating content\_types with values for content\_types that are already parsed -- e.g. "image/png".
+
+After defining the __name__, __prompt__, and __content\_types__ properties of the class, you should write the __\_\_call\_\___ function, which will parse the request/response data and provide a friendly view of the data.  The __\_\_call\_\___ function should take the following arguments: __self__, __hdrs__, __content__, __limit__; __hdrs__ is a ODictCaseless object containing the headers of the request/response; __content__ is the content of the request/response, and __limit__ is an integer representing the amount of data to display in the view window.
+
+The __\_\_call\_\___ function returns two values: (1) a string describing the parsed data; and (2) the parsed data for friendly display.  The parsed data to be displayed should be a list of strings formatted for display.  You can use the __\_view\_text__ function in contentview.py to format text for display.  Alternatively, you can display content as a series of key-value pairs; to do so, prepare a list of lists, where each list item is a two item list -- a key that describes the data, and then the data itself; after preparing the list of lists, use the __common.format\_keyvals__ function on it to prepare it as text for display.  
 
