@@ -1191,6 +1191,8 @@ class TestClientConnect:
         c3 = c.copy()
         assert c3 == c
 
+        assert str(c)
+
 
 def test_decoded():
     r = tutils.treq()

@@ -827,7 +827,6 @@ class ClientConnect(StateObject):
     def __str__(self):
         if self.address:
             return "%s:%d"%(self.address[0],self.address[1])
-        return "None"
 
     def _load_state(self, state):
         self.close = True
