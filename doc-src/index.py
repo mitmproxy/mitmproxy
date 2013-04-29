@@ -8,9 +8,12 @@ from libmproxy import filt
 MITMPROXY_SRC = "~/git/public/mitmproxy"
 
 if ns.options.website:
+    ns.idxpath = "doc/index.html"
     this.layout = countershape.Layout("_websitelayout.html")
 else:
+    ns.idxpath = "index.html"
     this.layout = countershape.Layout("_layout.html")
+
 
 ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
 this.titlePrefix = "mitmproxy 0.9 - "
