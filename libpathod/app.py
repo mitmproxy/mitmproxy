@@ -58,27 +58,31 @@ def make_app(noapi):
 
     @app.route('/docs/pathod')
     def docs_pathod():
-        return render("docs_pathod.html", True, section="docs")
+        return render("docs_pathod.html", True, section="docs", subsection="pathod")
 
 
     @app.route('/docs/language')
     def docs_language():
-        return render("docs_lang.html", True, section="docs", uastrings=http_uastrings.UASTRINGS)
+        return render(
+            "docs_lang.html", True,
+            section="docs", uastrings=http_uastrings.UASTRINGS,
+            subsection="lang"
+        )
 
 
     @app.route('/docs/pathoc')
     def docs_pathoc():
-        return render("docs_pathoc.html", True, section="docs")
+        return render("docs_pathoc.html", True, section="docs", subsection="pathoc")
 
 
     @app.route('/docs/libpathod')
     def docs_libpathod():
-        return render("docs_libpathod.html", True, section="docs")
+        return render("docs_libpathod.html", True, section="docs", subsection="libpathod")
 
 
     @app.route('/docs/test')
     def docs_test():
-        return render("docs_test.html", True, section="docs")
+        return render("docs_test.html", True, section="docs", subsection="test")
 
 
     @app.route('/log')
