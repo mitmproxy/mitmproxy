@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-    This example shows how to graft a WSGI app onto mitmproxy. In this
-    instance, we're using the Bottle framework (http://bottlepy.org/) to expose
-    a single simplest-possible page.
+This example shows how to graft a WSGI app onto mitmproxy. In this
+instance, we're using the Bottle framework (http://bottlepy.org/) to expose
+a single simplest-possible page.
 """
 import bottle
 import os
