@@ -146,7 +146,7 @@ def test_parse_init_connect():
     assert not http.parse_init_connect("CONNECT host.com:foo HTTP/1.0")
 
 
-def test_prase_init_proxy():
+def test_parse_init_proxy():
     u = "GET http://foo.com:8888/test HTTP/1.1"
     m, s, h, po, pa, httpversion = http.parse_init_proxy(u)
     assert m == "GET"

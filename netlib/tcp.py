@@ -35,8 +35,8 @@ OP_TLS_ROLLBACK_BUG = SSL.OP_TLS_ROLLBACK_BUG
 
 
 class NetLibError(Exception): pass
-class NetLibDisconnect(Exception): pass
-class NetLibTimeout(Exception): pass
+class NetLibDisconnect(NetLibError): pass
+class NetLibTimeout(NetLibError): pass
 
 
 class _FileLike:
