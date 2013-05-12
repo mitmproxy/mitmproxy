@@ -240,6 +240,7 @@ class TCPClient:
 class BaseHandler:
     """
         The instantiator is expected to call the handle() and finish() methods.
+            
     """
     rbufsize = -1
     wbufsize = -1
@@ -252,9 +253,10 @@ class BaseHandler:
         self.server = server
         self.finished = False
         self.ssl_established = False
+
         self.clientcert = None
 
-    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None):
+    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False):
         """
             method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
             handle_sni: SNI handler, should take a connection object. Server
@@ -268,6 +270,15 @@ class BaseHandler:
                             new_context.use_privatekey(key)
                             new_context.use_certificate(cert)
                             connection.set_context(new_context)
+
+            The request_client_cert argument requires some explanation. We're
+            supposed to be able to do this with no negative effects - if the
+            client has no cert to present, we're notified and proceed as usual.
+            Unfortunately, Android seems to have a bug (tested on 4.2.2) - when
+            an Android client is asked to present a certificate it does not
+            have, it hangs up, which is frankly bogus. Some time down the track
+            we may be able to make the proper behaviour the default again, but
+            until then we're conservative.
         """
         ctx = SSL.Context(method)
         if not options is None:
@@ -277,9 +288,10 @@ class BaseHandler:
             ctx.set_tlsext_servername_callback(handle_sni)
         ctx.use_privatekey_file(key)
         ctx.use_certificate_file(cert)
-        def ver(*args):
-            self.clientcert = certutils.SSLCert(args[1])
-        ctx.set_verify(SSL.VERIFY_PEER, ver)
+        if request_client_cert:
+            def ver(*args):
+                self.clientcert = certutils.SSLCert(args[1])
+            ctx.set_verify(SSL.VERIFY_PEER, ver)
         self.connection = SSL.Connection(ctx, self.connection)
         self.ssl_established = True
         self.connection.set_accept_state()

@@ -111,6 +111,7 @@ class TestServerSSL(test.ServerTestBase):
     ssl = dict(
                 cert = tutils.test_data.path("data/server.crt"),
                 key = tutils.test_data.path("data/server.key"),
+                request_client_cert = False,
                 v3_only = False
             )
     def test_echo(self):
@@ -131,6 +132,7 @@ class TestSSLv3Only(test.ServerTestBase):
     ssl = dict(
         cert = tutils.test_data.path("data/server.crt"),
         key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
         v3_only = True
     )
     def test_failure(self):
@@ -144,6 +146,7 @@ class TestSSLClientCert(test.ServerTestBase):
     ssl = dict(
         cert = tutils.test_data.path("data/server.crt"),
         key = tutils.test_data.path("data/server.key"),
+        request_client_cert = True,
         v3_only = False
     )
     def test_clientcert(self):
@@ -167,6 +170,7 @@ class TestSNI(test.ServerTestBase):
     ssl = dict(
         cert = tutils.test_data.path("data/server.crt"),
         key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
         v3_only = False
     )
     def test_echo(self):
@@ -181,6 +185,7 @@ class TestSSLDisconnect(test.ServerTestBase):
     ssl = dict(
         cert = tutils.test_data.path("data/server.crt"),
         key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
         v3_only = False
     )
     def test_echo(self):
@@ -228,6 +233,7 @@ class TestSSLTimeOut(test.ServerTestBase):
     ssl = dict(
         cert = tutils.test_data.path("data/server.crt"),
         key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
         v3_only = False
     )
     def test_timeout_client(self):

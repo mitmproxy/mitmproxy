@@ -5,9 +5,6 @@ from pyasn1.error import PyAsn1Error
 import OpenSSL
 import tcp
 
-CERT_SLEEP_TIME = 1
-CERT_EXPIRY = str(365 * 3)
-
 
 def create_ca():
     key = OpenSSL.crypto.PKey()
