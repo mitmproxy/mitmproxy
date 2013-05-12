@@ -69,6 +69,7 @@ class ProxyThread(threading.Thread):
 class ProxTestBase:
     # Test Configuration
     ssl = None
+    ssloptions = False
     clientcerts = False
     certfile = None
     no_upstream_cert = False
@@ -77,8 +78,8 @@ class ProxTestBase:
     @classmethod
     def setupAll(cls):
         cls.tqueue = Queue.Queue()
-        cls.server = libpathod.test.Daemon(ssl=cls.ssl)
-        cls.server2 = libpathod.test.Daemon(ssl=cls.ssl)
+        cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
+        cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         pconf = cls.get_proxy_config()
         config = proxy.ProxyConfig(
             no_upstream_cert = cls.no_upstream_cert,

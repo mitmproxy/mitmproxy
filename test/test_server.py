@@ -1,7 +1,7 @@
 import socket, time
 import mock
 from netlib import tcp, http_auth, http
-from libpathod import pathoc
+from libpathod import pathoc, pathod
 import tutils, tservers
 from libmproxy import flow, proxy
 
@@ -173,6 +173,7 @@ class TestHTTPConnectSSLError(tservers.HTTPProxTest):
 
 class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
     ssl = True
+    ssloptions = pathod.SSLOptions(request_client_cert=True)
     clientcerts = True
     def test_clientcert(self):
         f = self.pathod("304")
