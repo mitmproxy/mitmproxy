@@ -9,10 +9,11 @@ class PathodError(Exception): pass
 
 
 class SSLOptions:
-    def __init__(self, certfile=None, keyfile=None, not_after_connect=None):
+    def __init__(self, certfile=None, keyfile=None, not_after_connect=None, request_client_cert=False):
         self.keyfile = keyfile or utils.data.path("resources/server.key")
         self.certfile = certfile or utils.data.path("resources/server.crt")
         self.not_after_connect = not_after_connect
+        self.request_client_cert = request_client_cert
 
 
 class PathodHandler(tcp.BaseHandler):
@@ -76,7 +77,8 @@ class PathodHandler(tcp.BaseHandler):
                     self.convert_to_ssl(
                         self.server.ssloptions.certfile,
                         self.server.ssloptions.keyfile,
-                        handle_sni = self.handle_sni
+                        handle_sni = self.handle_sni,
+                        request_client_cert = self.server.ssloptions.request_client_cert
                     )
                 except tcp.NetLibError, v:
                     s = str(v)
@@ -181,7 +183,8 @@ class PathodHandler(tcp.BaseHandler):
                 self.convert_to_ssl(
                     self.server.ssloptions.certfile,
                     self.server.ssloptions.keyfile,
-                    handle_sni = self.handle_sni
+                    handle_sni = self.handle_sni,
+                    request_client_cert = self.server.ssloptions.request_client_cert
                 )
             except tcp.NetLibError, v:
                 s = str(v)
@@ -222,7 +225,7 @@ class Pathod(tcp.TCPServer):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
-            ssloptions: a dictionary containing certfile and keyfile specifications.
+            ssloptions: an SSLOptions object.
             craftanchor: string specifying the path under which to anchor response generation.
             staticdir: path to a directory of static resources, or None.
             anchors: A list of (regex, spec) tuples, or None.

@@ -1,5 +1,5 @@
 import json, cStringIO
-from libpathod import pathoc, test, version
+from libpathod import pathoc, test, version, pathod
 import tutils
 
 def test_response():
@@ -8,10 +8,12 @@ def test_response():
 
 
 class _TestDaemon:
+    ssloptions = pathod.SSLOptions()
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
             ssl=self.ssl,
+            ssloptions=self.ssloptions,
             staticdir=tutils.test_data.path("data"),
             anchors=[("/anchor/.*", "202")]
         )
@@ -36,6 +38,7 @@ class _TestDaemon:
 
 class TestDaemonSSL(_TestDaemon):
     ssl = True
+    ssloptions = pathod.SSLOptions(request_client_cert=True)
     def test_sni(self):
         c = pathoc.Pathoc(
             "127.0.0.1",
