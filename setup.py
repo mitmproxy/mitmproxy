@@ -98,6 +98,7 @@ setup(
             "pyasn1>0.1.2",
             "pyopenssl>=0.12",
             "PIL",
-            "lxml"
+            "lxml",
+            "flask"
         ],
 )

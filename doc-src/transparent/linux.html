@@ -1,0 +1,40 @@
+On Linux, mitmproxy integrates with the iptables redirection mechanism to
+achieve transparent mode.
+
+<ol class="tlist">
+
+    <li> <a href="@!urlTo("ssl.html")!@">Install the mitmproxy
+    certificates on the test device</a>. </li>
+
+    <li> Enable IP forwarding:
+
+    <pre class="terminal">sysctl -w net.ipv4.ip_forward=1</pre>
+
+    You may also want to consider enabling this permanently in
+    <b>/etc/sysctl.conf</b>.
+
+    </li>
+
+    <li> Create an iptables ruleset that redirects the desired traffic to the
+    mitmproxy port. Details will differ according to your setup, but the
+    ruleset should look something like this:
+
+<pre class="terminal">iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080</pre>
+    
+    </li>
+
+    <li> Fire up mitmproxy. You probably want a command like this:
+
+        <pre class="terminal">mitmproxy -T --host</pre>
+
+        The <b>-T</b> flag turns on transparent mode, and the <b>--host</b>
+        argument tells mitmproxy to use the value of the Host header for URL
+        display.
+
+    </li>
+
+    <li> Finally, configure your test device to use the host on which mitmproxy is
+    running as the default gateway.</li>
+
+</ol>
