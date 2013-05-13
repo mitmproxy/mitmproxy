@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, argparse
+import sys, argparse, os
 from libmproxy import proxy, console, cmdline, version
 from libmproxy.console import palettes
 
@@ -61,6 +61,12 @@ if __name__ == '__main__':
     opts.intercept = options.intercept
     opts.debug = options.debug
     opts.palette = options.palette
+
+    if "utf" not in os.environ.get("LANG", "").lower():
+        print >> sys.stderr, "Error: mitmproxy requires a UTF console environment."
+        print >> sys.stderr, "Set your LANG enviroment variable to something like en_US.UTF-8"
+        sys.exit(1)
+        
 
     m = console.ConsoleMaster(server, opts)
     try:
