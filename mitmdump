@@ -16,7 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, signal
-from libmproxy import proxy, dump, cmdline, version
+# The unneccesary console import here is to work around a bug in pyinstaller
+from libmproxy import proxy, dump, cmdline, version, console
 import argparse
 
 if __name__ == '__main__':

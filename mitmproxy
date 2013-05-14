@@ -66,7 +66,7 @@ if __name__ == '__main__':
         print >> sys.stderr, "Error: mitmproxy requires a UTF console environment."
         print >> sys.stderr, "Set your LANG enviroment variable to something like en_US.UTF-8"
         sys.exit(1)
-        
+
 
     m = console.ConsoleMaster(server, opts)
     try:
