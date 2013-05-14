@@ -6,8 +6,8 @@
 </div>
 
 <div style="margin-bottom: 20px" class="row">
-    <div class="span2">
-        <h3>Specification:</h3>
+    <div class="span2 header">
+        Specification:
     </div>
     <div class="span10">
         {% include "request_previewform.html" %}
@@ -16,8 +16,8 @@
 
 {% if syntaxerror %}
     <div class="row">
-        <div class="span2">
-            <h3>Error:</h3>
+        <div class="span2 header">
+            Error:
         </div>
         <div class="span10">
             <p style="color: #ff0000">{{ syntaxerror }}</p>
@@ -26,8 +26,8 @@
     </div>
 {% elif error %}
     <div class="row">
-        <div class="span2">
-            <h3>Error:</h3>
+        <div class="span2 header">
+            Error:
         </div>
         <div class="span10">
             <p style="color: #ff0000">{{ error }}</p>
@@ -35,8 +35,8 @@
     </div>
 {% else %}
     <div class="row">
-        <div class="span2">
-            <h3>Request:</h3>
+        <div class="span2 header">
+            Request:
         </div>
         <div class="span10">
             <pre>{{ output }}</pre>

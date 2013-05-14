@@ -1,21 +1,22 @@
 {% extends "frame.html" %}
 {% block body %}  
 
-<div class="row">
-    <div class="span6 bigtitle">
-        <div>
-            <img src="/static/torture.png">
-        </div>
-    </div>
-    <div class="span6 bigtitle">
-        <div>Tormenting HTTP clients and servers</div>
+
+<div class="masthead">
+    <div class="container">
+        <h1>pathod: pathological HTTP</h1>
+
+        <p>Crafted malice for tormenting HTTP clients and servers</p>
+
+        <img src="/static/torture.png">
     </div>
 </div>
+
 
 <div class="row">
     <div class="span6">
         <div>
-            <h1> <a href="/docs/pathod">pathod</a> </h1>
+            <h2> <a href="/docs/pathod">pathod</a> </h2>
 
             <p>A pathological web daemon.</p>
 
@@ -23,47 +24,46 @@
 
             <br>
 
-            <p>There is also a live, public instance of pathod here:</p>
-
-            <p><b>http://public.pathod.net/</b><input 
-                    style="width: 14em"
-                    id="publicspec"
-                    name="spec"
-                    class="input-medium search-query"
-                    value="{{spec}}"
-                    placeholder="code:[features]"
-                >
-                <a id="gopublic" class="btn">go</a>
-            </p>
-            
-            <p>Please use responsibly. There are some restrictions on the
-            public server.</p>
-
-            <script>
-                $(function(){
-                    $("#gopublic").click(function(){
-                        document.location = "http://public.pathod.net/" + $("#publicspec").val()
-                    });
-                });
-            </script>
-
         </div>
     </div>
     <div class="span6">
         <div>
-            <h1> <a href="/docs/pathoc">pathoc</a> </h1>
+            <h2> <a href="/docs/pathoc">pathoc</a> </h2>
 
             <p>A perverse HTTP client.</p>
 
             {% include "request_previewform.html" %}
 
-            <pre class="terminal">&gt; pathoc -n 3 google.com "get:/:ir,@1"
-&lt;&lt; 200 OK: 44177 bytes
-&lt;&lt; 405 Method Not Allowed: 959 bytes
-&lt;&lt; 200 OK: 44107 bytes</pre>
-
         </div>
     </div>
 </div>
+
+<section>
+<div class="page-header">
+    <h1>Install</h1>
+</div>
+<div class="row">
+    <div class="span6">
+        <div>
+            <h2>pip</h2>
+
+            <pre>pip install pathod</pre>
+
+        </div>
+    </div>
+    <div class="span6">
+        <div>
+            <h2>source</h2>
+
+            <ul>
+                <li>Current release: <a href="">pathod 0.9</a></li>
+
+                <li>GitHub: <a href="http://github.com/cortesi/pathod">github.com/cortesi/pathod</a></li>
+            </li>
+        </div>
+    </div>
+</div>
+</section>
+
 
 {% endblock %}  

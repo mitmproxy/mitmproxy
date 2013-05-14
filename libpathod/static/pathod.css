@@ -38,3 +38,13 @@ section {
     border-bottom:1px dotted;
     margin-bottom: 15px;
 }
+
+.masthead {
+    padding: 50px 0 60px;
+    text-align: center;
+
+}
+
+.header {
+    font-size: 1.5em;
+}
