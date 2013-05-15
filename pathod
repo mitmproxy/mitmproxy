@@ -108,6 +108,7 @@ def main(parser, args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A pathological HTTP/S daemon.')
+    parser.add_argument('--version', action='version', version="pathod " + version.VERSION)
     parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
     parser.add_argument("-l", dest='address', default="127.0.0.1", type=str, help='Listening address.')
     parser.add_argument(
