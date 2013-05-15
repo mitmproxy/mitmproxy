@@ -1,15 +1,14 @@
-30 April 2013: pathod 0.9 (version synced with mitmproxy):
+15 May 2013: pathod 0.9 (version synced with mitmproxy):
 
     * Pathod proxy mode. You can now configure clients to use pathod as an
       HTTP/S proxy.
 
     * Pathoc proxy support, including using CONNECT to tunnel directly to
-      tragets. 
+      targets. 
 
     * Pathoc client certificate support.
     
     * API improvements, bugfixes.
-
 
 
 16 November 2012: pathod 0.3:
