@@ -7,3 +7,4 @@ proxapp                 How to embed a WSGI app in a mitmproxy server
 stub.py                 Script stub with a method definition for every event.
 stickycookies           An example of writing a custom proxy with libmproxy.
 upsidedownternet.py     Rewrites traffic to turn PNGs upside down.
+mitmproxywrapper.py     Bracket mitmproxy run with proxy enable/disable on OS X
