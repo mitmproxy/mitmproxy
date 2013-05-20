@@ -96,7 +96,7 @@ setup(
             "netlib>=%s"%version.VERSION,
             "urwid>=1.1",
             "pyasn1>0.1.2",
-            "pyopenssl>=0.12",
+            "pyopenssl>=0.13",
             "PIL",
             "lxml",
             "flask"
