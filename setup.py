@@ -79,7 +79,7 @@ setup(
         package_data = package_data,
         scripts = ["mitmproxy", "mitmdump"],
         classifiers = [
-            "License :: OSI Approved :: GNU General Public License (GPL)",
+            "License :: OSI Approved :: MIT License",
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
             "Environment :: Console :: Curses",
