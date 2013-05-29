@@ -1,0 +1,14 @@
+Flask==0.9
+Jinja2==2.7
+MarkupSafe==0.18
+PIL==1.1.7
+Werkzeug==0.8.3
+lxml==3.2.1
+netlib==0.9
+nose==1.3.0
+pathod==0.9
+pyOpenSSL==0.13
+pyasn1==0.1.7
+requests==1.2.2
+urwid==1.1.1
+wsgiref==0.1.2
