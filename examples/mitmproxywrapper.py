@@ -11,6 +11,8 @@ import subprocess
 import re
 import argparse
 import contextlib
+import os
+import sys
 
 class Wrapper(object):
     
@@ -104,6 +106,12 @@ class Wrapper(object):
                 self.disable_proxy_for_service(service_name)
 
     @classmethod
+    def ensure_superuser(cls):
+        if os.getuid() != 0:
+            print 'Relaunching with sudo...'
+            os.execv('/usr/bin/sudo', ['/usr/bin/sudo'] + sys.argv)
+
+    @classmethod
     def main(cls):
         parser = argparse.ArgumentParser(description='Helper tool for OS X proxy configuration and mitmproxy')
         parser.add_argument('-t', '--toggle', action='store_true', help='just toggle the proxy configuration')
@@ -122,5 +130,6 @@ class Wrapper(object):
 
 
 if __name__ == '__main__':
+    Wrapper.ensure_superuser()
     Wrapper.main()
 
