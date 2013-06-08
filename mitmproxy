@@ -62,11 +62,13 @@ if __name__ == '__main__':
     opts.debug = options.debug
     opts.palette = options.palette
 
-    if "utf" not in os.environ.get("LANG", "").lower():
+    spec = ""
+    for i in ["LANG", "LC_CTYPE", "LC_ALL"]:
+        spec += os.environ.get(i, "").lower()
+    if "utf" not in spec:
         print >> sys.stderr, "Error: mitmproxy requires a UTF console environment."
         print >> sys.stderr, "Set your LANG enviroment variable to something like en_US.UTF-8"
         sys.exit(1)
-
 
     m = console.ConsoleMaster(server, opts)
     try:
