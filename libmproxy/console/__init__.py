@@ -526,6 +526,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def spawn_external_viewer(self, data, contenttype):
         if contenttype:
+            contenttype = contenttype.split(";")[0]
             ext = mimetypes.guess_extension(contenttype) or ""
         else:
             ext = ""
