@@ -542,7 +542,7 @@ class Request(HTTPMsg):
             headers["host"] = [utils.hostport(self.scheme, self.host, self.port)]
         content = self.content
         if content:
-            headers["content-length"] = [str(len(content))]
+            headers["Content-Length"] = [str(len(content))]
         else:
             content = ""
         if self.close:
@@ -737,7 +737,7 @@ class Response(HTTPMsg):
             ['proxy-connection', 'transfer-encoding']
         )
         if self.content:
-            headers["content-length"] = [str(len(self.content))]
+            headers["Content-Length"] = [str(len(self.content))]
         proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
         data = (proto, str(headers))
         return FMT%data
@@ -1548,7 +1548,7 @@ class FlowMaster(controller.Master):
         if f.request:
             f.request._set_replay()
             if f.request.content:
-                f.request.headers["content-length"] = [str(len(f.request.content))]
+                f.request.headers["Content-Length"] = [str(len(f.request.content))]
             f.response = None
             f.error = None
             self.process_new_request(f)
