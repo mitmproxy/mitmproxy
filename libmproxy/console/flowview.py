@@ -16,7 +16,7 @@
 import os, sys
 import urwid
 import common, grideditor, contentview
-from .. import utils, flow
+from .. import utils, flow, controller
 
 def _mkhelp():
     text = []
@@ -341,7 +341,12 @@ class FlowView(common.WWrap):
             conn = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = flow.Response(self.flow.request, 200, "OK", flow.ODictCaseless(), "", None)
+                self.flow.response = flow.Response(
+                    self.flow.request, 
+                    self.flow.request.httpversion,
+                    200, "OK", flow.ODictCaseless(), "", None
+                )
+                self.flow.response.reply = controller.DummyReply()
             conn = self.flow.response
 
         self.flow.backup()
