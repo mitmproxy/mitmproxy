@@ -1,5 +1,7 @@
 from libmproxy import script, flow
 import tutils
+import shlex
+import os
 
 class TestScript:
     def test_simple(self):
@@ -7,11 +9,12 @@ class TestScript:
         fm = flow.FlowMaster(None, s)
         ctx = flow.ScriptContext(fm)
 
-        p = script.Script(tutils.test_data.path("scripts/a.py"), ctx)
+        p = script.Script(shlex.split(tutils.test_data.path("scripts/a.py")+" --var 40", posix=(os.name != "nt")), ctx)
         p.load()
+
         assert "here" in p.ns
-        assert p.run("here") == (True, 1)
-        assert p.run("here") == (True, 2)
+        assert p.run("here") == (True, 41)
+        assert p.run("here") == (True, 42)
 
         ret = p.run("errargs")
         assert not ret[0]
@@ -19,12 +22,12 @@ class TestScript:
 
         # Check reload
         p.load()
-        assert p.run("here") == (True, 1)
+        assert p.run("here") == (True, 41)
 
     def test_duplicate_flow(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        fm.load_script(tutils.test_data.path("scripts/duplicate_flow.py"))
+        fm.load_script([tutils.test_data.path("scripts/duplicate_flow.py")])
         r = tutils.treq()
         fm.handle_request(r)
         assert fm.state.flow_count() == 2
@@ -37,25 +40,25 @@ class TestScript:
         ctx = flow.ScriptContext(fm)
 
 
-        s = script.Script("nonexistent", ctx)
+        s = script.Script(["nonexistent"], ctx)
         tutils.raises(
             "no such file",
             s.load
         )
 
-        s = script.Script(tutils.test_data.path("scripts"), ctx)
+        s = script.Script([tutils.test_data.path("scripts")], ctx)
         tutils.raises(
             "not a file",
             s.load
         )
 
-        s = script.Script(tutils.test_data.path("scripts/syntaxerr.py"), ctx)
+        s = script.Script([tutils.test_data.path("scripts/syntaxerr.py")], ctx)
         tutils.raises(
             script.ScriptError,
             s.load
         )
 
-        s = script.Script(tutils.test_data.path("scripts/loaderr.py"), ctx)
+        s = script.Script([tutils.test_data.path("scripts/loaderr.py")], ctx)
         tutils.raises(
             script.ScriptError,
             s.load
