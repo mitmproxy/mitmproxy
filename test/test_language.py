@@ -95,7 +95,7 @@ class TestValueFile:
         v = language.Value.parseString("<path")[0]
         with tutils.tmpdir() as t:
             p = os.path.join(t, "path")
-            f = open(p, "w")
+            f = open(p, "wb")
             f.write("x"*10000)
             f.close()
 
@@ -143,7 +143,7 @@ class TestMisc:
     def test_filegenerator(self):
         with tutils.tmpdir() as t:
             path = os.path.join(t, "foo")
-            f = open(path, "w")
+            f = open(path, "wb")
             f.write("x"*10000)
             f.close()
             g = language.FileGenerator(path)
