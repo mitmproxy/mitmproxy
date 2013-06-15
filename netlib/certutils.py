@@ -48,23 +48,23 @@ def dummy_ca(path):
     key, ca = create_ca()
 
     # Dump the CA plus private key
-    f = open(path, "w")
+    f = open(path, "wb")
     f.write(OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key))
     f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
     f.close()
 
     # Dump the certificate in PEM format
-    f = open(os.path.join(dirname, basename + "-cert.pem"), "w")
+    f = open(os.path.join(dirname, basename + "-cert.pem"), "wb")
     f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
     f.close()
 
     # Create a .cer file with the same contents for Android
-    f = open(os.path.join(dirname, basename + "-cert.cer"), "w")
+    f = open(os.path.join(dirname, basename + "-cert.cer"), "wb")
     f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
     f.close()
 
     # Dump the certificate in PKCS12 format for Windows devices
-    f = open(os.path.join(dirname, basename + "-cert.p12"), "w")
+    f = open(os.path.join(dirname, basename + "-cert.p12"), "wb")
     p12 = OpenSSL.crypto.PKCS12()
     p12.set_certificate(ca)
     p12.set_privatekey(key)
@@ -88,7 +88,7 @@ def dummy_cert(fp, ca, commonname, sans):
         ss.append("DNS: %s"%i)
     ss = ", ".join(ss)
 
-    raw = file(ca, "r").read()
+    raw = file(ca, "rb").read()
     ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
     key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
 
@@ -165,7 +165,7 @@ class CertStore:
         if os.path.exists(certpath):
             return certpath
         elif cacert:
-            f = open(certpath, "w")
+            f = open(certpath, "wb")
             dummy_cert(f, cacert, commonname, sans)
             return certpath
 
