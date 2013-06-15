@@ -181,7 +181,7 @@ class RandomGenerator:
 class FileGenerator:
     def __init__(self, path):
         self.path = path
-        self.fp = file(path, "r")
+        self.fp = file(path, "rb")
         self.map = mmap.mmap(self.fp.fileno(), 0, prot=mmap.PROT_READ)
 
     def __len__(self):
@@ -957,7 +957,7 @@ def read_file(settings, s):
         raise FileAccessDenied("File access outside of configured directory")
     if not os.path.isfile(s):
         raise FileAccessDenied("File not readable")
-    return file(s, "r").read()
+    return file(s, "rb").read()
 
 
 def parse_response(settings, s):
