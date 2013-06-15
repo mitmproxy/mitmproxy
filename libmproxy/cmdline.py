@@ -124,7 +124,7 @@ def get_common_options(options):
         except ParseException, e:
             raise OptionException(e.message)
         try:
-            v = open(path, "r").read()
+            v = open(path, "rb").read()
         except IOError, e:
             raise OptionException("Could not read replace file: %s"%path)
         reps.append((patt, rex, v))

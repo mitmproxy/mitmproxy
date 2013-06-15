@@ -141,7 +141,7 @@ class DumpMaster(flow.FlowMaster):
     def _readflow(self, path):
         path = os.path.expanduser(path)
         try:
-            f = file(path, "r")
+            f = file(path, "rb")
             flows = list(flow.FlowReader(f).stream())
         except (IOError, flow.FlowReadError), v:
             raise DumpError(v.strerror)

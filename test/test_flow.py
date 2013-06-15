@@ -733,7 +733,7 @@ class TestFlowMaster:
         with tutils.tmpdir() as tdir:
             p = os.path.join(tdir, "foo")
             def r():
-                r = flow.FlowReader(open(p))
+                r = flow.FlowReader(open(p,"rb"))
                 return list(r.stream())
 
             s = flow.State()

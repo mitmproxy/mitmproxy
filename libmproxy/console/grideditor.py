@@ -294,7 +294,7 @@ class GridEditor(common.WWrap):
         if p:
             try:
                 p = os.path.expanduser(p)
-                d = file(p, "r").read()
+                d = file(p, "rb").read()
                 self.walker.set_current_value(d, unescaped)
                 self.walker._modified()
             except IOError, v:
