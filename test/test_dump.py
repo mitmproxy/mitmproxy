@@ -46,7 +46,7 @@ class TestDumpMaster:
         return cs.getvalue()
 
     def _flowfile(self, path):
-        f = open(path, "w")
+        f = open(path, "wb")
         fw = flow.FlowWriter(f)
         t = tutils.tflow_full()
         t.response = tutils.tresp(t.request)
@@ -128,7 +128,7 @@ class TestDumpMaster:
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a")
             self._dummy_cycle(1, None, "", wfile=p, verbosity=0)
-            assert len(list(flow.FlowReader(open(p)).stream())) == 1
+            assert len(list(flow.FlowReader(open(p,"rb")).stream())) == 1
 
     def test_write_err(self):
         tutils.raises(
