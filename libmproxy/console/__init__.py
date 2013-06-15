@@ -479,7 +479,7 @@ class ConsoleMaster(flow.FlowMaster):
     def _readflow(self, path):
         path = os.path.expanduser(path)
         try:
-            f = file(path, "r")
+            f = file(path, "rb")
             flows = list(flow.FlowReader(f).stream())
         except (IOError, flow.FlowReadError), v:
             return True, v.strerror
@@ -519,7 +519,7 @@ class ConsoleMaster(flow.FlowMaster):
         except:
             self.statusbar.message("Can't start editor: %s" % " ".join(c))
         else:
-            data = open(name).read()
+            data = open(name,"rb").read()
         self.ui.start()
         os.unlink(name)
         return data
