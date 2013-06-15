@@ -34,6 +34,7 @@ class TestCertStore:
             assert not c.get_cert("foo.com", [])
             assert c.get_cert("foo.com", [], ca)
             assert c.get_cert("foo.com", [], ca)
+            assert c.get_cert("*.foo.com", [], ca)
             c.cleanup()
 
     def test_check_domain(self):
