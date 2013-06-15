@@ -36,7 +36,7 @@ class Options(object):
         "rheaders",
         "setheaders",
         "server_replay",
-        "script",
+        "scripts",
         "showhost",
         "stickycookie",
         "stickyauth",
@@ -121,8 +121,8 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
-        if options.script:
-            err = self.load_script(options.script)
+        for script_argv in options.scripts:
+            err = self.load_script(script_argv)
             if err:
                 raise DumpError(err)
 
@@ -230,8 +230,8 @@ class DumpMaster(flow.FlowMaster):
 
     def run(self):  # pragma: no cover
         if self.o.rfile and not self.o.keepserving:
-            if self.script:
-                self.load_script(None)
+            for script in self.scripts:
+                self.unload_script(script)
             return
         try:
             return flow.FlowMaster.run(self)

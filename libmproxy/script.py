@@ -23,12 +23,12 @@ class Script:
     """
         The instantiator should do something along this vein:
 
-            s = Script(path, master)
+            s = Script(argv, master)
             s.load()
-            s.run("start")
     """
-    def __init__(self, path, ctx):
-        self.path, self.ctx = path, ctx
+    def __init__(self, argv, ctx):
+        self.argv = argv
+        self.ctx = ctx
         self.ns = None
 
     def load(self):
@@ -38,17 +38,21 @@ class Script:
             Raises ScriptError on failure, with argument equal to an error
             message that may be a formatted traceback.
         """
-        path = os.path.expanduser(self.path)
+        path = os.path.expanduser(self.argv[0])
         if not os.path.exists(path):
-            raise ScriptError("No such file: %s"%self.path)
+            raise ScriptError("No such file: %s" % path)
         if not os.path.isfile(path):
-            raise ScriptError("Not a file: %s"%self.path)
+            raise ScriptError("Not a file: %s" % path)
         ns = {}
         try:
             execfile(path, ns, ns)
+            self.ns = ns
+            self.run("start", self.argv)
         except Exception, v:
             raise ScriptError(traceback.format_exc(v))
-        self.ns = ns
+
+    def unload(self):
+        return self.run("done")
 
     def run(self, name, *args, **kwargs):
         """

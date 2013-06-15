@@ -16,6 +16,8 @@
 import proxy
 import re, filt
 import argparse
+import shlex
+import os
 
 class ParseException(Exception): pass
 class OptionException(Exception): pass
@@ -151,7 +153,7 @@ def get_common_options(options):
         replacements = reps,
         setheaders = setheaders,
         server_replay = options.server_replay,
-        script = options.script,
+        scripts = options.scripts,
         stickycookie = stickycookie,
         stickyauth = stickyauth,
         showhost = options.showhost,
@@ -209,8 +211,9 @@ def common_options(parser):
     )
     parser.add_argument(
         "-s",
-        action="store", dest="script", default=None,
-        help="Run a script."
+        action="append", type=lambda x: shlex.split(x,posix=(os.name != "nt")), dest="scripts", default=[],
+        metavar='"script.py --bar"',
+        help="Run a script. Surround with quotes to pass script arguments. Can be passed multiple times."
     )
     parser.add_argument(
         "-t",

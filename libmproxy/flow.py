@@ -1357,7 +1357,7 @@ class FlowMaster(controller.Master):
         self.server_playback = None
         self.client_playback = None
         self.kill_nonreplay = False
-        self.script = None
+        self.scripts = []
         self.pause_scripts = False
 
         self.stickycookie_state = False
@@ -1381,37 +1381,43 @@ class FlowMaster(controller.Master):
         """
         pass
 
-    def get_script(self, path):
+    def get_script(self, script_argv):
         """
             Returns an (error, script) tuple.
         """
-        s = script.Script(path, ScriptContext(self))
+        s = script.Script(script_argv, ScriptContext(self))
         try:
             s.load()
         except script.ScriptError, v:
             return (v.args[0], None)
-        ret = s.run("start")
-        if not ret[0] and ret[1]:
-            return ("Error in script start:\n\n" + ret[1][1], None)
         return (None, s)
 
-    def load_script(self, path):
+    def unload_script(self,script):
+        script.unload()
+        self.scripts.remove(script)
+
+    def load_script(self, script_argv):
         """
             Loads a script. Returns an error description if something went
-            wrong. If path is None, the current script is terminated.
+            wrong.
         """
-        if path is None:
-            self.run_script_hook("done")
-            self.script = None
+        r = self.get_script(script_argv)
+        if r[0]:
+            return r[0]
         else:
-            r = self.get_script(path)
-            if r[0]:
-                return r[0]
-            else:
-                if self.script:
-                    self.run_script_hook("done")
-                self.script = r[1]
+            self.scripts.append(r[1])
 
+    def run_single_script_hook(self, script, name, *args, **kwargs):
+        if script and not self.pause_scripts:
+            ret = script.run(name, *args, **kwargs)
+            if not ret[0] and ret[1]:
+                e = "Script error:\n" + ret[1][1]
+                self.add_event(e, "error")
+
+    def run_script_hook(self, name, *args, **kwargs):
+        for script in self.scripts:
+            self.run_single_script_hook(script, name, *args, **kwargs)
+      
     def set_stickycookie(self, txt):
         if txt:
             flt = filt.parse(txt)
@@ -1561,13 +1567,6 @@ class FlowMaster(controller.Master):
             if block:
                 rt.join()
 
-    def run_script_hook(self, name, *args, **kwargs):
-        if self.script and not self.pause_scripts:
-            ret = self.script.run(name, *args, **kwargs)
-            if not ret[0] and ret[1]:
-                e = "Script error:\n" + ret[1][1]
-                self.add_event(e, "error")
-
     def handle_clientconnect(self, cc):
         self.run_script_hook("clientconnect", cc)
         cc.reply()
@@ -1609,8 +1608,8 @@ class FlowMaster(controller.Master):
         return f
 
     def shutdown(self):
-        if self.script:
-            self.load_script(None)
+        for script in self.scripts:
+            self.unload_script(script)
         controller.Master.shutdown(self)
         if self.stream:
             for i in self.state._flow_list:
