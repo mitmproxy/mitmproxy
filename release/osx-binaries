@@ -5,12 +5,19 @@
 # First, have a recent checkout of the dev version of pyinstaller. Change into
 # the pyinstaller directory, and then run this script.
 
-mkdir -p /tmp/osx-mitmproxy
+DST=/tmp/osx-mitmproxy
+MITMPROXY=~/mitmproxy/mitmproxy
+PYINST_CMD="./pyinstaller.py -F --clean"
+
+rm -rf $DST
+mkdir -p $DST
 rm -rf mitmproxy
 rm -rf mitmdump
 
-./pyinstaller.py -F ~/mitmproxy/mitmproxy/mitmproxy
-cp mitmproxy/dist/mitmproxy /tmp/osx-mitmproxy
+$PYINST_CMD $MITMPROXY/mitmproxy
+cp mitmproxy/dist/mitmproxy $DST
 
-./pyinstaller.py -F ~/mitmproxy/mitmproxy/mitmdump
-cp mitmdump/dist/mitmdump /tmp/osx-mitmproxy
+$PYINST_CMD $MITMPROXY/mitmdump
+cp mitmdump/dist/mitmdump $DST
+
+cshape $MITMPROXY/doc-src $DST/doc
