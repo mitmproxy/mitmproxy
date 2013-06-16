@@ -7,9 +7,6 @@
 
     * Improved MIME-type detection for viewers.
     
-    * More flexible transparent proxying for OSX. We now work for versions
-      prior to Mountain Lion, and with both pf and ipfw. 
-
     * Always read files in binary mode (Windows compatibility fix).
     
     * Some developer documentation.
