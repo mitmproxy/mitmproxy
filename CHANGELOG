@@ -1,5 +1,21 @@
 
-x January 2013: mitmproxy 0.9:
+16 June 2013: mitmproxy 0.9.1:
+
+    * Use "correct" case for Content-Type headers added by mitmproxy.
+    
+    * Make UTF environment detection more robust. 
+
+    * Improved MIME-type detection for viewers.
+    
+    * More flexible transparent proxying for OSX. We now work for versions
+      prior to Mountain Lion, and with both pf and ipfw. 
+
+    * Always read files in binary mode (Windows compatibility fix).
+    
+    * Some developer documentation.
+    
+
+15 May 2013: mitmproxy 0.9:
 
     * Upstream certs mode is now the default.
 
