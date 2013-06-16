@@ -1,4 +1,3 @@
-import re
 
 def lookup(address, port, s):
     """
@@ -9,9 +8,9 @@ def lookup(address, port, s):
     """
     spec = "%s:%s"%(address, port)
     for i in s.split("\n"):
-        if "ESTABLISHED" in i and spec in i:
-            m = re.match(".* (\S*)->%s" % spec, i)
-            if m:
-                s = m.group(1).split(":")
+        if "ESTABLISHED:ESTABLISHED" in i and spec in i:
+            s = i.split()
+            if len(s) > 4:
+                s = s[4].split(":")
                 if len(s) == 2:
                     return s[0], int(s[1])
