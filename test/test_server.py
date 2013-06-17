@@ -256,13 +256,14 @@ class TestProxy(tservers.HTTPProxTest):
 
         # call pathod server, wait a second to complete the request
         connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
+        time.sleep(1)
         connection.send("\r\n");
         connection.recv(50000)
         connection.close()
 
         request, response = self.master.state.view[0].request, self.master.state.view[0].response
         assert response.code == 304  # sanity test for our low level request
-        assert request.timestamp_end - request.timestamp_start > 0
+        assert 0.95 < (request.timestamp_end - request.timestamp_start) < 1.2 #time.sleep might be a little bit shorter than a second
 
     def test_request_timestamps_not_affected_by_client_time(self):
         # test that don't include user wait time in request's timestamps
