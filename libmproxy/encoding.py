@@ -54,7 +54,7 @@ def decode_gzip(content):
     gfile = gzip.GzipFile(fileobj=cStringIO.StringIO(content))
     try:
         return gfile.read()
-    except IOError:
+    except (IOError, EOFError):
         return None
 
 def encode_gzip(content):
