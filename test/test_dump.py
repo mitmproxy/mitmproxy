@@ -43,6 +43,7 @@ class TestDumpMaster:
         m = dump.DumpMaster(None, o, filt, outfile=cs)
         for i in range(n):
             self._cycle(m, content)
+        m.shutdown()
         return cs.getvalue()
 
     def _flowfile(self, path):
@@ -143,7 +144,7 @@ class TestDumpMaster:
     def test_script(self):
         ret = self._dummy_cycle(
             1, None, "",
-            script=tutils.test_data.path("scripts/all.py"), verbosity=0, eventlog=True
+            scripts=[[tutils.test_data.path("scripts/all.py")]], verbosity=0, eventlog=True
         )
         assert "XCLIENTCONNECT" in ret
         assert "XREQUEST" in ret
@@ -151,11 +152,11 @@ class TestDumpMaster:
         assert "XCLIENTDISCONNECT" in ret
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", script="nonexistent"
+            self._dummy_cycle, 1, None, "", scripts=[["nonexistent"]]
         )
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", script="starterr.py"
+            self._dummy_cycle, 1, None, "", scripts=[["starterr.py"]]
         )
 
     def test_stickycookie(self):

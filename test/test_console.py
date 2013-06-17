@@ -1,4 +1,8 @@
 import os
+from nose.plugins.skip import SkipTest
+if os.name == "nt":
+    raise SkipTest("Skipped on Windows.")
+
 from libmproxy import console
 from libmproxy.console import common
 import tutils

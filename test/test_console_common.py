@@ -1,3 +1,8 @@
+import os
+from nose.plugins.skip import SkipTest
+if os.name == "nt":
+    raise SkipTest("Skipped on Windows.")
+
 import libmproxy.console.common as common
 from libmproxy import utils, flow, encoding
 import tutils

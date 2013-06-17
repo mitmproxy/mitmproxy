@@ -46,10 +46,12 @@ class Script:
         ns = {}
         try:
             execfile(path, ns, ns)
-            self.ns = ns
-            self.run("start", self.argv)
         except Exception, v:
             raise ScriptError(traceback.format_exc(v))
+        self.ns = ns
+        r = self.run("start", self.argv)
+        if not r[0] and r[1]:
+            raise ScriptError(r[1][1])
 
     def unload(self):
         return self.run("done")

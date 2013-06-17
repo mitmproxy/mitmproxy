@@ -121,7 +121,8 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving
             )
 
-        for script_argv in options.scripts:
+        scripts = options.scripts or []
+        for script_argv in scripts:
             err = self.load_script(script_argv)
             if err:
                 raise DumpError(err)

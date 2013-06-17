@@ -1,3 +1,8 @@
+import os
+from nose.plugins.skip import SkipTest
+if os.name == "nt":
+    raise SkipTest("Skipped on Windows.")
+
 import libmproxy.console.help as help
 
 class DummyMaster:
