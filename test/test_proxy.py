@@ -133,6 +133,7 @@ class TestProcessProxyOptions:
 
 
 class TestProxyServer:
+    @tutils.SkipWindows # binding to 0.0.0.0:1 works without special permissions on Windows
     def test_err(self):
         parser = argparse.ArgumentParser()
         cmdline.common_options(parser)

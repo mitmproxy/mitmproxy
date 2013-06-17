@@ -2,7 +2,15 @@ import os, shutil, tempfile
 from contextlib import contextmanager
 from libmproxy import flow, utils, controller
 from netlib import certutils
-import mock
+from nose.plugins.skip import SkipTest
+
+def _SkipWindows():
+    raise SkipTest("Skipped on Windows.")
+def SkipWindows(fn):
+    if os.name == "nt":
+        return _SkipWindows
+    else:
+        return fn
 
 def treq(conn=None):
     if not conn:
