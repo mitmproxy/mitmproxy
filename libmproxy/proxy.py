@@ -481,8 +481,9 @@ class ProxyHandler(tcp.BaseHandler):
             self.wfile.write("Server: %s\r\n"%self.server_version)
             self.wfile.write("Content-type: text/html\r\n")
             self.wfile.write("Content-Length: %d\r\n"%len(html_content))
-            for key, value in headers.items():
-                self.wfile.write("%s: %s\r\n"%(key, value))
+            if headers:
+                for key, value in headers.items():
+                    self.wfile.write("%s: %s\r\n"%(key, value))
             self.wfile.write("Connection: close\r\n")
             self.wfile.write("\r\n")
             self.wfile.write(html_content)
