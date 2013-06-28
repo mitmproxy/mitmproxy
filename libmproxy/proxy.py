@@ -216,7 +216,7 @@ class ProxyHandler(tcp.BaseHandler):
                     return
             else:
                 request_reply = self.channel.ask(request)
-                if request_reply == KILL:
+                if request_reply is None or request_reply == KILL:
                     return
                 elif isinstance(request_reply, flow.Response):
                     request = False
