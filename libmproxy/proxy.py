@@ -88,6 +88,9 @@ class ServerConnection(tcp.TCPClient):
     def terminate(self):
         try:
             self.wfile.flush()
+        except IOError:
+            pass
+        try:
             self.connection.close()
         except IOError:
             pass
@@ -213,7 +216,7 @@ class ProxyHandler(tcp.BaseHandler):
                     return
             else:
                 request_reply = self.channel.ask(request)
-                if request_reply == KILL:
+                if request_reply is None or request_reply == KILL:
                     return
                 elif isinstance(request_reply, flow.Response):
                     request = False
