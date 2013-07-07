@@ -173,11 +173,12 @@ class Reader(_FileLike):
 class TCPClient:
     rbufsize = -1
     wbufsize = -1
-    def __init__(self, host, port):
+    def __init__(self, host, port, source_address=None):
         self.host, self.port = host, port
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.ssl_established = False
+        self.source_address = source_address
 
     def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
         """
@@ -209,6 +210,8 @@ class TCPClient:
         try:
             addr = socket.gethostbyname(self.host)
             connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if self.source_address:
+                connection.bind(self.source_address)
             connection.connect((addr, self.port))
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
