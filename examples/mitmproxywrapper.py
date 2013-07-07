@@ -16,9 +16,10 @@ import sys
 
 class Wrapper(object):
     
-    def __init__(self, port, script_path=None):
+    def __init__(self, port, script_path=None, show_eventlog=False):
         self.port = port
         self.script_path = script_path
+        self.show_eventlog = show_eventlog
 
     def run_networksetup_command(self, *arguments):
         return subprocess.check_output(['sudo', 'networksetup'] + list(arguments))
@@ -86,6 +87,8 @@ class Wrapper(object):
             cmd = ['mitmproxy', '-p', str(self.port)]
             if self.script_path:
                 cmd.extend(['-s', self.script_path])
+            if self.show_eventlog:
+                cmd.append('-e')
             cmd.extend(['--palette', 'light'])
             subprocess.check_call(cmd)
 
@@ -122,9 +125,11 @@ class Wrapper(object):
         parser.add_argument('-t', '--toggle', action='store_true', help='just toggle the proxy configuration')
 #         parser.add_argument('--honeyproxy', action='store_true', help='run honeyproxy instead of mitmproxy')
         parser.add_argument('-p', '--port', type=int, help='override the default port of 8080', default=8080)
+        parser.add_argument('-s', metavar='SCRIPT', dest='script_path', help='Run a script')
+        parser.add_argument('-e', action='store_true', dest='show_eventlog', help='Show event log')
         args = parser.parse_args()
 
-        wrapper = cls(port=args.port, script_path=args.script_path)
+        wrapper = cls(port=args.port, script_path=args.script_path, show_eventlog=args.show_eventlog)
         
         if args.toggle:
             wrapper.toggle_proxy()
