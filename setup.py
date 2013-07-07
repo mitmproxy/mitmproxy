@@ -79,7 +79,7 @@ setup(
         package_data = package_data,
         scripts = ["mitmproxy", "mitmdump"],
         classifiers = [
-            "License :: OSI Approved :: GNU General Public License (GPL)",
+            "License :: OSI Approved :: MIT License",
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
             "Environment :: Console :: Curses",
@@ -96,7 +96,7 @@ setup(
             "netlib>=%s"%version.VERSION,
             "urwid>=1.1",
             "pyasn1>0.1.2",
-            "pyopenssl>=0.12",
+            "pyopenssl>=0.13",
             "PIL",
             "lxml",
             "flask"

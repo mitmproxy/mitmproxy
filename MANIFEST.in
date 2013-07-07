@@ -2,6 +2,7 @@ include LICENSE
 include CHANGELOG
 include CONTRIBUTORS
 include README.txt
+include setup.py
 exclude README.mkd
 recursive-include examples *
 recursive-include doc *
