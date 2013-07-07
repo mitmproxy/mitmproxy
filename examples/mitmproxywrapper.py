@@ -16,8 +16,9 @@ import sys
 
 class Wrapper(object):
     
-    def __init__(self, port):
+    def __init__(self, port, extra_arguments=None):
         self.port = port
+        self.extra_arguments = extra_arguments
 
     def run_networksetup_command(self, *arguments):
         return subprocess.check_output(['sudo', 'networksetup'] + list(arguments))
@@ -82,7 +83,11 @@ class Wrapper(object):
 
     def wrap_mitmproxy(self):
         with self.wrap_proxy():
-            subprocess.check_call(['mitmproxy', '-p', str(self.port), '--palette', 'light'])
+            cmd = ['mitmproxy', '-p', str(self.port)]
+            if self.extra_arguments:
+                cmd.extend(self.extra_arguments)
+            cmd.extend(['--palette', 'light'])
+            subprocess.check_call(cmd)
 
     def wrap_honeyproxy(self):
         with self.wrap_proxy():
@@ -113,13 +118,16 @@ class Wrapper(object):
 
     @classmethod
     def main(cls):
-        parser = argparse.ArgumentParser(description='Helper tool for OS X proxy configuration and mitmproxy')
+        parser = argparse.ArgumentParser(
+            description='Helper tool for OS X proxy configuration and mitmproxy.',
+            epilog='Any additional arguments will be passed on unchanged to mitmproxy.'
+        )
         parser.add_argument('-t', '--toggle', action='store_true', help='just toggle the proxy configuration')
 #         parser.add_argument('--honeyproxy', action='store_true', help='run honeyproxy instead of mitmproxy')
         parser.add_argument('-p', '--port', type=int, help='override the default port of 8080', default=8080)
-        args = parser.parse_args()
+        args, extra_arguments = parser.parse_known_args()
 
-        wrapper = cls(port=args.port)
+        wrapper = cls(port=args.port, extra_arguments=extra_arguments)
         
         if args.toggle:
             wrapper.toggle_proxy()
