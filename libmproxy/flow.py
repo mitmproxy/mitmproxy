@@ -790,6 +790,7 @@ class Response(HTTPMsg):
             cookies.append((cookie_name, (cookie_value, cookie_parameters)))
         return dict(cookies)
 
+
 class ClientDisconnect:
     """
         A client disconnection event.
@@ -1654,7 +1655,7 @@ class FlowReader:
         try:
             while 1:
                 data = tnetstring.load(self.fo)
-                if tuple(data["version"]) != version.IVERSION:
+                if tuple(data["version"][:1]) != version.IVERSION[:1]:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()

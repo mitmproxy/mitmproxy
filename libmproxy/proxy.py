@@ -88,7 +88,7 @@ class ServerConnection(tcp.TCPClient):
     def terminate(self):
         try:
             self.wfile.flush()
-        except IOError:
+        except IOError: # pragma: no cover
             pass
         try:
             self.connection.close()
