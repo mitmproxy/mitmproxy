@@ -543,6 +543,7 @@ class ProxyServer(tcp.TCPServer):
 class AppRegistry:
     def __init__(self):
         self.apps = {}
+        self.app_default = None
 
     def add(self, app, domain, port):
         """
@@ -550,6 +551,13 @@ class AppRegistry:
             specified domain, on the specified port.
         """
         self.apps[(domain, port)] = wsgi.WSGIAdaptor(app, domain, port, version.NAMEVERSION)
+
+    def add_default(self, app):
+        """
+            Add a default WSGI app, that will be served for requests not
+            having a dedicated app.
+        """
+        self.app_default = app
 
     def get(self, request):
         """
@@ -560,7 +568,8 @@ class AppRegistry:
         if "host" in request.headers:
             host = request.headers["host"][0]
             return self.apps.get((host, request.port), None)
-
+        if self.app_default:
+            return wsgi.WSGIAdaptor(self.app_default, request.host, request.port, version.NAMEVERSION)
 
 class DummyServer:
     bound = False
