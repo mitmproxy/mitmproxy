@@ -106,6 +106,12 @@ class TestDumpMaster:
     def test_filter(self):
         assert not "GET" in self._dummy_cycle(1, "~u foo", "", verbosity=1)
 
+    def test_app(self):
+        o = dump.Options(app=True)
+        s = mock.MagicMock()
+        m = dump.DumpMaster(s, o, None)
+        assert s.apps.add.call_count == 2
+
     def test_replacements(self):
         o = dump.Options(replacements=[(".*", "content", "foo")])
         m = dump.DumpMaster(None, o, None)

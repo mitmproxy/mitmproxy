@@ -1376,6 +1376,18 @@ class FlowMaster(controller.Master):
         self.stream = None
         app.mapp.config["PMASTER"] = self
 
+    def start_app(self, domain, ip):
+        self.server.apps.add(
+            app.mapp,
+            domain,
+            80
+        )
+        self.server.apps.add(
+            app.mapp,
+            ip,
+            80
+        )
+
     def add_event(self, e, level="info"):
         """
             level: info, error
@@ -1655,7 +1667,7 @@ class FlowReader:
         try:
             while 1:
                 data = tnetstring.load(self.fo)
-                if tuple(data["version"][:1]) != version.IVERSION[:1]:
+                if tuple(data["version"][:2]) != version.IVERSION[:2]:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
@@ -1677,5 +1689,4 @@ class FilteredFlowWriter:
             return
         d = f._get_state()
         tnetstring.dump(d, self.fo)
-
 

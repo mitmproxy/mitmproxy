@@ -17,11 +17,9 @@ import shutil, tempfile, threading
 import SocketServer
 from OpenSSL import SSL
 from netlib import odict, tcp, http, wsgi, certutils, http_status, http_auth
-import utils, flow, version, platform, controller, app
+import utils, flow, version, platform, controller
 
 
-APP_DOMAIN = "mitm"
-APP_IP = "1.1.1.1"
 KILL = 0
 
 
@@ -39,8 +37,7 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, app=False, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
-        self.app = app
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
@@ -512,17 +509,6 @@ class ProxyServer(tcp.TCPServer):
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.channel = None
         self.apps = AppRegistry()
-        if config.app:
-            self.apps.add(
-                app.mapp,
-                APP_DOMAIN,
-                80
-            )
-            self.apps.add(
-                app.mapp,
-                APP_IP,
-                80
-            )
 
     def start_slave(self, klass, channel):
         slave = klass(channel, self)
@@ -655,7 +641,6 @@ def process_proxy_options(parser, options):
         authenticator = http_auth.NullProxyAuth(None)
 
     return ProxyConfig(
-        app = options.app,
         certfile = options.cert,
         cacert = cacert,
         clientcerts = options.clientcerts,

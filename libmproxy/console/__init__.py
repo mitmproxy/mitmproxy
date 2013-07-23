@@ -328,6 +328,9 @@ class ConsoleState(flow.State):
 
 class Options(object):
     attributes = [
+        "app",
+        "app_domain",
+        "app_ip",
         "anticache",
         "anticomp",
         "client_replay",
@@ -425,6 +428,9 @@ class ConsoleMaster(flow.FlowMaster):
             if err:
                 print >> sys.stderr, "Script load error:", err
                 sys.exit(1)
+
+        if options.app:
+            self.start_app(options.app_domain, options.app_ip)
 
     def start_stream(self, path):
         path = os.path.expanduser(path)

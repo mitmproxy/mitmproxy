@@ -22,6 +22,9 @@ class DumpError(Exception): pass
 
 class Options(object):
     attributes = [
+        "app",
+        "app_domain",
+        "app_ip", 
         "anticache",
         "anticomp",
         "client_replay",
@@ -137,6 +140,9 @@ class DumpMaster(flow.FlowMaster):
                 self.load_flows(freader)
             except flow.FlowReadError, v:
                 self.add_event("Flow file corrupted. Stopped loading.")
+
+        if self.o.app:
+            self.start_app(self.o.app_domain, self.o.app_ip)
 
     def _readflow(self, path):
         path = os.path.expanduser(path)
