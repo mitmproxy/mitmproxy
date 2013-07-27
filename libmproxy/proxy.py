@@ -58,7 +58,6 @@ class ServerConnection(tcp.TCPClient):
         self.tcp_setup_timestamp = None
         self.ssl_setup_timestamp = None
 
-
     def connect(self):
         tcp.TCPClient.connect(self)
         self.tcp_setup_timestamp = time.time()
@@ -179,6 +178,8 @@ class ProxyHandler(tcp.BaseHandler):
         return self.server_conn
 
     def del_server_connection(self):
+        if self.server_conn:
+            self.server_conn.terminate()
         self.server_conn = None
 
     def handle(self):
@@ -188,6 +189,7 @@ class ProxyHandler(tcp.BaseHandler):
         while self.handle_request(cc) and not cc.close:
             pass
         cc.close = True
+        self.del_server_connection()
 
         cd = flow.ClientDisconnect(cc)
         self.log(
