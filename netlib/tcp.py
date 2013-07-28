@@ -233,11 +233,15 @@ class TCPClient:
             if self.ssl_established:
                 self.connection.shutdown()
             else:
-                self.connection.shutdown(socket.SHUT_RDWR)
-            self.connection.close()
+                self.connection.shutdown(socket.SHUT_WR)
+            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
+            #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
+            while self.connection.recv(4096):
+                pass
         except (socket.error, SSL.Error):
             # Socket probably already closed
             pass
+        self.connection.close()
 
 
 class BaseHandler:
@@ -331,10 +335,15 @@ class BaseHandler:
             if self.ssl_established:
                 self.connection.shutdown()
             else:
-                self.connection.shutdown(socket.SHUT_RDWR)
+                self.connection.shutdown(socket.SHUT_WR)
+            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
+            #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
+            while self.connection.recv(4096):
+                pass
         except (socket.error, SSL.Error):
             # Socket probably already closed
             pass
+
         self.connection.close()
 
 
