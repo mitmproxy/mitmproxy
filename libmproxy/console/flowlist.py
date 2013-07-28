@@ -160,8 +160,7 @@ class ConnectionItem(common.WWrap):
             self.master.sync_list_view()
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
-            self.master.currentflow = f
-            self.master.focus_current()
+            self.master.view_flow(f)
         elif key == "r":
             self.flow.backup()
             r = self.master.replay_request(self.flow)

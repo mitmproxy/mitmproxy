@@ -204,15 +204,10 @@ class StatusBar(common.WWrap):
             self.message("")
 
         fc = self.master.state.flow_count()
-        if self.master.currentflow:
-            idx = self.master.state.view.index(self.master.currentflow) + 1
-            t = [
-                ('heading', ("[%s/%s]"%(idx, fc)).ljust(9))
-            ]
-        else:
-            t = [
-                ('heading', ("[%s]"%fc).ljust(9))
-            ]
+        offset = min(self.master.state.focus + 1, fc)
+        t = [
+            ('heading', ("[%s/%s]"%(offset, fc)).ljust(9))
+        ]
 
         if self.master.server.bound:
             boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
@@ -263,7 +258,10 @@ class ConsoleState(flow.State):
         self.focus = None
         self.follow_focus = None
         self.default_body_view = contentview.get("Auto")
+
+        self.view_mode = common.VIEW_LIST
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
+
         self.last_script = ""
         self.last_saveload = ""
         self.flowsettings = weakref.WeakKeyDictionary()
@@ -308,6 +306,9 @@ class ConsoleState(flow.State):
                 idx = 0
             self.focus = idx
 
+    def set_focus_flow(self, f):
+        self.set_focus(self.view.index(f))
+
     def get_from_pos(self, pos):
         if len(self.view) <= pos or pos < 0:
             return None, None
@@ -320,6 +321,8 @@ class ConsoleState(flow.State):
         return self.get_from_pos(pos-1)
 
     def delete_flow(self, f):
+        if f in self.view and self.view.index(f) <= self.focus:
+            self.focus -= 1
         ret = flow.State.delete_flow(self, f)
         self.set_focus(self.focus)
         return ret
@@ -570,8 +573,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.palette = palettes.palettes[name]
 
     def run(self):
-        self.currentflow = None
-
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
         self.ui.register_palette(self.palette)
@@ -604,13 +605,6 @@ class ConsoleMaster(flow.FlowMaster):
         print >> sys.stderr, "Shutting down..."
         sys.stderr.flush()
         self.shutdown()
-
-    def focus_current(self):
-        if self.currentflow:
-            try:
-                self.flow_list_walker.set_focus(self.state.view.index(self.currentflow))
-            except (IndexError, ValueError):
-                pass
 
     def make_view(self):
         self.view = urwid.Frame(
@@ -646,8 +640,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.ui.clear()
         if self.state.follow_focus:
             self.state.set_focus(self.state.flow_count())
-        else:
-            self.focus_current()
 
         if self.eventlog:
             self.body = flowlist.BodyPile(self)
@@ -655,7 +647,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.body = flowlist.FlowListBox(self)
         self.statusbar = StatusBar(self, flowlist.footer)
         self.header = None
-        self.currentflow = None
+        self.state.view_mode = common.VIEW_LIST
 
         self.make_view()
         self.help_context = flowlist.help_context
@@ -664,7 +656,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.body = flowview.FlowView(self, self.state, flow)
         self.header = flowview.FlowViewHeader(self, flow)
         self.statusbar = StatusBar(self, flowview.footer)
-        self.currentflow = flow
+        self.state.set_focus_flow(flow)
+        self.state.view_mode = common.VIEW_FLOW
 
         self.make_view()
         self.help_context = flowview.help_context
@@ -711,7 +704,6 @@ class ConsoleMaster(flow.FlowMaster):
         f.close()
         if self.flow_list_walker:
             self.sync_list_view()
-            self.focus_current()
         return reterr
 
     def path_prompt(self, prompt, text, callback, *args):
@@ -777,8 +769,7 @@ class ConsoleMaster(flow.FlowMaster):
     def change_default_display_mode(self, t):
         v = contentview.get_by_shortcut(t)
         self.state.default_body_view = v
-        if self.currentflow:
-            self.refresh_flow(self.currentflow)
+        self.refresh_focus()
 
     def set_reverse_proxy(self, txt):
         if not txt:
@@ -796,8 +787,8 @@ class ConsoleMaster(flow.FlowMaster):
         return size
 
     def pop_view(self):
-        if self.currentflow:
-            self.view_flow(self.currentflow)
+        if self.state.view_mode == common.VIEW_FLOW:
+            self.view_flow(self.state.view[self.state.focus])
         else:
             self.view_flowlist()
 
@@ -972,7 +963,7 @@ class ConsoleMaster(flow.FlowMaster):
         if a == "h":
             self.showhost = not self.showhost
             self.sync_list_view()
-            self.refresh_flow(self.currentflow)
+            self.refresh_focus()
         elif a == "k":
             self.killextra = not self.killextra
         elif a == "n":
@@ -1002,6 +993,10 @@ class ConsoleMaster(flow.FlowMaster):
     def delete_flow(self, f):
         self.state.delete_flow(f)
         self.sync_list_view()
+
+    def refresh_focus(self):
+        if self.state.view:
+            self.refresh_flow(self.state.view[self.state.focus])
 
     def refresh_flow(self, c):
         if hasattr(self.header, "refresh_flow"):

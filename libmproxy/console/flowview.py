@@ -342,7 +342,7 @@ class FlowView(common.WWrap):
         else:
             if not self.flow.response:
                 self.flow.response = flow.Response(
-                    self.flow.request, 
+                    self.flow.request,
                     self.flow.request.httpversion,
                     200, "OK", flow.ODictCaseless(), "", None
                 )
@@ -393,7 +393,7 @@ class FlowView(common.WWrap):
             new_flow, new_idx = self.state.get_next(idx)
         else:
             new_flow, new_idx = self.state.get_prev(idx)
-        if new_idx is None:
+        if new_flow is None:
             self.master.statusbar.message("No more flows!")
             return
         self.master.view_flow(new_flow)
@@ -478,7 +478,6 @@ class FlowView(common.WWrap):
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
-            self.master.currentflow = f
             self.master.statusbar.message("Duplicated.")
         elif key == "e":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:

@@ -18,6 +18,9 @@ import urwid.util
 from .. import utils, flow
 
 
+VIEW_LIST = 0
+VIEW_FLOW = 1
+
 
 VIEW_FLOW_REQUEST = 0
 VIEW_FLOW_RESPONSE = 1
