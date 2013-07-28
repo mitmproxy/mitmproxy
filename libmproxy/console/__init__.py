@@ -204,7 +204,10 @@ class StatusBar(common.WWrap):
             self.message("")
 
         fc = self.master.state.flow_count()
-        offset = min(self.master.state.focus + 1, fc)
+        if self.master.state.focus is None:
+            offset = 0
+        else:
+            offset = min(self.master.state.focus + 1, fc)
         t = [
             ('heading', ("[%s/%s]"%(offset, fc)).ljust(9))
         ]
