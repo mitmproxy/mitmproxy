@@ -85,12 +85,9 @@ class ServerConnection(tcp.TCPClient):
         if self.connection:
             try:
                 self.wfile.flush()
-            except IOError, tcp.NetLibDisconnect: # pragma: no cover
+            except tcp.NetLibDisconnect: # pragma: no cover
                 pass
-            try:
-                self.connection.close()
-            except IOError:
-                pass
+            self.connection.close()
 
 
 
