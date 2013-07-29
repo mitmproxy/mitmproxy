@@ -326,6 +326,8 @@ class ConsoleState(flow.State):
     def delete_flow(self, f):
         if f in self.view and self.view.index(f) <= self.focus:
             self.focus -= 1
+        if self.focus < 0:
+            self.focus = None
         ret = flow.State.delete_flow(self, f)
         self.set_focus(self.focus)
         return ret
