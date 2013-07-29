@@ -221,15 +221,21 @@ class HTTPMsg(StateObject):
             Decodes content based on the current Content-Encoding header, then
             removes the header. If there is no Content-Encoding header, no
             action is taken.
+            
+            Returns True if decoding succeeded, False otherwise.
         """
         ce = self.headers.get_first("content-encoding")
         if not self.content or ce not in encoding.ENCODINGS:
-            return
-        self.content = encoding.decode(
+            return False
+        data = encoding.decode(
             ce,
             self.content
         )
+        if data is None:
+            return False
+        self.content = data
         del self.headers["content-encoding"]
+        return True
 
     def encode(self, e):
         """

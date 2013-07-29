@@ -576,7 +576,8 @@ class FlowView(common.WWrap):
                 self.flow.backup()
                 e = conn.headers.get_first("content-encoding", "identity")
                 if e != "identity":
-                    conn.decode()
+                    if not conn.decode():
+                        self.master.statusbar.message("Could not decode - invalid data?")
                 else:
                     self.master.prompt_onekey(
                         "Select encoding: ",
