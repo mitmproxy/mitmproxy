@@ -93,7 +93,7 @@ class Writer(_FileLike):
         if hasattr(self.o, "flush"):
             try:
                 self.o.flush()
-            except socket.error, v:
+            except (socket.error, IOError), v:
                 raise NetLibDisconnect(str(v))
 
     def write(self, v):
@@ -215,7 +215,7 @@ class TCPClient:
             connection.connect((addr, self.port))
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
-        except socket.error, err:
+        except (socket.error, IOError), err:
             raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
         self.connection = connection
 
@@ -238,16 +238,16 @@ class TCPClient:
             #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
             while self.connection.recv(4096):
                 pass
-        except (socket.error, SSL.Error):
+            self.connection.close()
+        except (socket.error, SSL.Error, IOError):
             # Socket probably already closed
             pass
-        self.connection.close()
 
 
 class BaseHandler:
     """
         The instantiator is expected to call the handle() and finish() methods.
-            
+
     """
     rbufsize = -1
     wbufsize = -1
