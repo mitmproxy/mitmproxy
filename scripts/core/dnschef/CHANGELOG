@@ -1,0 +1,14 @@
+Version 0.2.1
+* Fixed a Python 2.6 compatibility issue. (thanks Mehran Goudarzi)
+
+Version 0.2
+
+Changes
+* Added IPv6 support.
+* Added AAAA, MX, CNAME, NS, SOA and NAPTR support.
+* Added support for ANY queries (returns all known fake records).
+* Changed file format to support more DNS record types.
+* Added alternative DNS port support (contributed by fnv).
+* Added alternative listening port support for the server (contributed by Mark Straver).
+* Updated bundled dnslib library to the latest version - 0.8.2.
+* Included IPy library for IPv6 support.
