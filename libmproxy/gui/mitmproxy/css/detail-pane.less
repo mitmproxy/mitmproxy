@@ -1,0 +1,60 @@
+.detailPane {
+	height: 300px;
+}
+
+.detailPane .dijitTabPane {
+	padding: 1px 10px 20px;
+}
+
+//Don't let the navbar push content down because of the clearfix.
+.detailPane .nav {
+    margin-bottom: 0;
+}
+
+//Scroll bar for detailpane
+.detailPane .dijitTabPaneWrapper {
+	overflow: auto;
+}
+
+//### Preview ###
+.preview-empty {
+	display: none;
+}
+
+//### Details ###
+.details {
+	table {
+		font-size: 12px;
+		width: 100%;
+		//Neccessary to set first column to fixed width
+		table-layout: fixed;
+	}
+	td {
+		padding: 0;
+		vertical-align: top;
+		&.valign-middle {
+			vertical-align: middle;
+		}
+
+		//No text overflow for simple fields and checksums (lis) as well.
+		li {
+			.no-text-overflow;
+		}
+		.no-text-overflow;
+	}
+	tr td:first-child {
+		//Format first column
+		color: hsl(0,0,33%);
+		font-weight: bold;
+		width: 150px;
+		
+	}
+	//Monospace font for all table values
+	td:nth-child(2) {
+		.font-console;
+	};
+	pre {
+		//Server Certificate
+		display: inline-block;
+	}
+}

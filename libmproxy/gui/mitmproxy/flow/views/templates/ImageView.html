@@ -1,0 +1,12 @@
+<div>
+<div class="text-center">
+	<img class="img-polaroid" alt="preview" data-bind="src: ResponseUtils.getViewUrl(response); load: view.onImageLoad.bind(view)"/>
+	</div>
+	<dl class="dl-horizontal">
+		<dt>Dimensions</dt> <dd><span data-bind="bind: [view,'imageWidth']"></span> × <span data-bind="bind: [view,'imageHeight']"></span></dd>
+		<dt>File size</dt>  <dd data-bind="textContent: ResponseUtils.getContentLengthFormatted(response)"></dd>
+		<dt>Mime</dt>       <dd data-bind="textContent: ResponseUtils.getContentType(response)"></dd>
+	</dl>
+</div>
+
+

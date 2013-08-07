@@ -1,0 +1,58 @@
+<div class="details">
+	<ul class="nav nav-pills pull-right">
+	  <li><a title="Filter for similar requests" class="searchlink" data-bind='data-search: "similarTo:"+id+",3"' href="#">
+	  	<i class="icon-filter"></i></a></li>
+	  <li><a title="Pop out" href="#" data-bind="click: view.popOut.bind(view)">
+	  	<i class="icon-fullscreen"></i></a></li>
+	</ul>
+
+	<h5 class="no-text-overflow">
+		<span data-bind="textContent: RequestUtils.getFullPath(request)"></span><br>
+		<small data-bind="textContent: RequestUtils.getQueryString(request)"></small>
+	</h5>
+
+	<table>
+		<tbody>
+			<tr data-bind="hide: request.client_conn.address[0] === '127.0.0.1'">
+				<td>Client Connection:</td><td data-bind="textContent: request.client_conn.address.join(':')"></td></tr>
+			<tr><td>Request URL:</td><td data-bind="textContent: RequestUtils.getFullPath(request)"></td></tr>
+			<tr><td>Request Method:</td><td data-bind="textContent: request.method"></td></tr>
+			<tr><td>Status Code:</td><td data-bind="textContent: response.code"></td></tr>
+		</tbody>
+
+		<tbody data-bind="headerTable: request"></tbody>
+		
+		<tbody data-bind="show: RequestUtils.hasContent(request)">
+			<tr>
+				<td><h5>Request Data:</h5></td>
+				<td class="valign-middle">
+					<a data-bind="href: RequestUtils.getDownloadUrl(request)">
+						<i class="icon-download-alt"></i>  (<span data-bind="textContent: RequestUtils.getContentLengthFormatted(request)"></span>)</a></td>
+			</tr>		 	
+		</tbody>
+
+		<tbody data-bind="checksumTable: request"></tbody>
+
+		<tbody data-bind="formDataTable: request"></tbody>
+
+		<tbody data-bind="headerTable: response"></tbody>
+
+		<tbody data-bind="show: ResponseUtils.hasContent(response)">
+			<tr>
+				<td><h5>Response Data:</h5></td>
+				<td class="valign-middle">
+					<a data-bind="href: ResponseUtils.getDownloadUrl(response)">
+						<i class="icon-download-alt"></i> (<span data-bind="textContent: ResponseUtils.getContentLengthFormatted(response)"></span>)</a></td>
+			</tr>		 	
+		</tbody>
+
+		<tbody data-bind="checksumTable: response"></tbody>
+
+		<tbody data-bind="show: response.cert">
+				<tr><td colspan=2 ><h5>Server certificate:</h5></td></tr>
+		 	<tr><td colspan=2>
+				<pre data-bind="textContent: response.cert"></pre>
+			</td></tr>
+		</tbody>
+	</table>
+</div>

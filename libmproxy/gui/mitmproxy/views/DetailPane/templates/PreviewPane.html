@@ -1,0 +1,15 @@
+<ul class="nav nav-pills pull-right">
+  <li><a title="Download" data-bind="href: ResponseUtils.getDownloadUrl(response)">
+  	<i class="icon-download-alt"></i></a></li>
+  <li><a title="Pop out" href="#" data-bind="click: view.popOut.bind(view)">
+  	<i class="icon-fullscreen"></i></a></li>
+</ul>
+
+<h5 class="no-text-overflow">
+	<span data-bind="textContent: RequestUtils.getFullPath(request)"></span><br>
+	<small data-bind="textContent: RequestUtils.getQueryString(request)"></small>
+</h5>
+
+<div class="clearfix"></div>
+
+<div data-bind="widget: new model.View({model: model})"></div>

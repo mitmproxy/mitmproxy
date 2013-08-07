@@ -1,0 +1,20 @@
+.searchbar {
+	padding-top: 10px;
+
+	.query button {
+		padding-left: 6px;
+		padding-right: 6px;
+		width: 26px;
+	}
+	.query {
+		transition: opacity 0.2s;
+		text-align: center;
+		&.empty:not(.always-visible) {
+			opacity: 0.3;
+			
+			&:hover {
+				opacity: 0.7;
+			};
+		}
+	}
+}

@@ -1,0 +1,122 @@
+// General Layout
+
+.dgrid.dgrid-grid {
+ 	border-top: none;
+ 	border-left: none;
+	border-right: @lightSeperator;
+    border-bottom: @lightSeperator;
+}
+
+//Move quickstart away from the borders
+.dgrid-no-data {
+	padding: 30px;
+}
+
+.dgrid-loading > div {
+	text-align: center;
+	padding: 2em;
+	width: 100%;
+	box-sizing:	border-box;
+}
+
+//Fix: .dgrid-content overrides text-right by default
+.dgrid-content .text-right {
+	text-align: right;
+}
+
+.dgrid-row-odd {
+	background-color: hsla(0, 0%, 0%, 0.05);
+}
+
+//Remove yellow Chrome outline
+.dgrid-selected {
+	outline: 0;
+}
+
+//Forbid overflow to assure that all rows have the same height.
+.dgrid-cell {
+	.no-text-overflow;
+}
+
+.dgrid-content .dgrid-cell {
+	cursor: pointer;
+
+	// No vertical borders
+    border-left: none;
+    border-right: none;
+}
+
+.dgrid-hider-toggle {
+	// center the hider toggle in the upper right corner
+	margin: 3px 2px;
+}
+
+//### Row Styling ###
+.field-ssl {
+	width: 10px;
+	&.https {
+		background-color: rgba(0, 185, 0, 0.5);;
+	}
+}
+.field-icon {
+	width: 32px;
+}
+.field-status {
+	width: 50px;
+}
+.field-response-type {
+	width: 130px;
+}
+.field-method {
+	width: 60px;
+}
+.field-size {
+	width: 80px;
+}
+.field-time {
+	width: 120px;
+}
+
+//### Icon Row ###
+.dgrid-content .field-icon {
+	background-image: url(../images/resourcePlainIcon.png);
+	background-repeat: no-repeat;
+	background-position: 50% 50%;
+	min-height: 32px;
+}
+	
+ .flow-html .field-icon, .flow-xml .field-icon, .flow-text .field-icon {
+	background-image: url(../images/resourceDocumentIcon.png);
+}
+
+ .flow-image .field-icon {
+	background-image: url(../images/resourceImageIcon.png);
+}
+
+ .flow-css .field-icon {
+	background-image: url(../images/resourceCSSIcon.png);
+}
+
+.flow-javascript .field-icon {
+	background-image: url(../images/resourceJSIcon.png);
+}
+
+.flow-pe .field-icon {
+	background-image: url(../images/resourceExecutableIcon.png);
+}
+
+.flow-java .field-icon {
+	background-image: url(../images/resourceJavaIcon.png);
+}
+
+.flow-flash .field-icon {
+	background-image: url(../images/resourceFlashIcon.png);
+}
+
+.flow-redirect .field-icon {
+	background-image: url(../images/resourceRedirectIcon.png);
+}
+
+.flow-not-modified .field-icon {
+	background-image: url(../images/resourceNotModifiedIcon.png);
+}

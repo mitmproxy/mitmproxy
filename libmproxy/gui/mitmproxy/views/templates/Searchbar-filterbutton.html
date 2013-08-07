@@ -1,0 +1,18 @@
+<form class="query input-prepend input-append span3" data-bind="toggleClass: ['empty',view.empty && !view.highlightSubmit,'always-visible',view.alwaysVisible];
+														 submit: view.onSubmit.bind(view)">
+	<span class="add-on">
+		<i data-bind="css: ['color',view.color];
+                      className: view.filter?'icon-filter': 'icon-tag';
+                      title: view.filter? 'Only show items that match' : 'Highlight matching rows'"></i>
+    </span>
+	<input type="text" class="span2" data-bind="bind: [view,'inputNode'];
+												input: view.onInput.bind(view);
+                                                focus: view.onFocus.bind(view);
+												blur: view.onBlur.bind(view);
+												placeholder: view.filter?'Filter':'Highlight'">
+	<button class="btn" tabindex="-1" data-bind="toggleClass: ['btn-info',view.state == 'warn'];
+                                                 click: view.onClick.bind(view);
+                                                 disabled: view.state =='done';
+												 title: (view.state == 'warn') ? 'This query has not been submitted yet.' : 'Submit'">
+		<i data-bind="className: (view.state=='closable') ? 'icon-remove' : 'icon-caret-right'"></i></button>
+</form>

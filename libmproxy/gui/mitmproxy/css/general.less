@@ -1,0 +1,36 @@
+@lightSeperator: solid hsl(0, 0%, 80%) 1px;
+@darkSeperator: solid hsl(0, 0%, 27%) 1px;
+
+.no-text-overflow {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.font-console {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+
+.valign-middle {
+	vertical-align: middle;
+}
+
+#appLayout {
+	height: 100%;
+	width: 100%;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	width: 100%;
+}
+
+.sidebar {
+	border-left: @lightSeperator;
+	padding: 20px;
+	background-color: hsl(0,0%,97%);
+	//Add scrollbar for the sidebar
+	overflow-y: auto;
+}

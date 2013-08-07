@@ -1,0 +1,8 @@
+<div>
+	<dl class="dl-horizontal">
+		<dt>File size</dt>  <dd data-bind="textContent: ResponseUtils.getContentLengthFormatted(response)"></dd>
+		<dt>Mime</dt>       <dd data-bind="textContent: ResponseUtils.getContentType(response)"></dd>
+	    <dt>Machine</dt>  <dd data-bind="textContent: view.machine"></dd>
+		<dt>Sections</dt> <dd data-bind="innerHTML: view.sections"></dd>
+	</dl>
+</div>

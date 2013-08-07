@@ -1,0 +1,19 @@
+<ul class="nav nav-pills pull-right">
+  <li><a title="Pop out" href="#" data-bind="click: view.popOut.bind(view)">
+  	<i class="icon-fullscreen"></i></a></li>
+</ul>
+
+<h5 class="no-text-overflow">
+	<span data-bind="textContent: RequestUtils.getFullPath(request)"></span><br>
+	<small data-bind="textContent: RequestUtils.getQueryString(request)"></small>
+</h5>
+
+<pre class="raw raw-request"><!--
+--><span data-bind="textContent: RequestUtils.getRawFirstLine(request)"></span><!--
+--><span data-bind="textContent: RequestUtils.getRawHeaders(request)"></span><!--
+--><span data-bind="displayContent: request"></span></pre>
+
+<pre class="raw raw-response"><!--
+--><span data-bind="textContent: ResponseUtils.getRawFirstLine(response)"></span><!--
+--><span data-bind="textContent: ResponseUtils.getRawHeaders(response)"></span><!--
+--><span data-bind="displayContent: response"></span></pre>

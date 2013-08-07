@@ -1,0 +1,48 @@
+.reportEditor {
+	//Hide empty active indicator
+
+	width: 50%;
+
+	.progress {
+		margin-top: 6px;
+		margin-bottom: 4px;
+	}
+	.bar {
+		&:empty {
+			width: 0%;
+			transition: width 0s;
+		}
+		overflow: hidden;
+		transition: width 2s;
+		width: 100%;
+	}
+
+	.CodeMirror {
+		height: auto;
+	}
+	.CodeMirror-lines {
+		background-color: white;
+	}
+	span.CodeMirror-matchhighlight { 
+		background-color: rgb(255, 247, 192); 
+	}
+}
+
+.reportOutput {
+
+	padding: 15px;
+	border-right: @lightSeperator;
+	border-bottom: @lightSeperator;
+
+	.out {
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+	}
+
+	ul.nav {
+		margin-top: -15px;
+		position: absolute;
+		right: 0;
+	}
+}

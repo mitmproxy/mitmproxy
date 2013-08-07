@@ -1,0 +1,3 @@
+<pre class="preview preview-request"  data-bind="displayContent: request">  </pre>
+<pre class="preview preview-response" data-bind="displayContent: response"> </pre>
+<div class="alert alert-info" data-bind="hide: RequestUtils.hasContent(request) || ResponseUtils.hasContent(response)">There's neither a request content nor a response content.</div>
