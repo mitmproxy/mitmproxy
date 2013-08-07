@@ -43,13 +43,14 @@ from libmproxy.flow import Flow, Request, Response, ClientConnect
 from netlib.odict import ODictCaseless
 ctx = None
 server = None
+options = None
 def add_flow(address,request,response):
     flow = Flow(
             Request(
                 client_conn=ClientConnect(address), 
                 httpversion=[1,1], 
                 host="dnschef",
-                port=53, 
+                port=options.port, 
                 scheme="dns", 
                 method="DNS", 
                 path="/%s/%s-record" % (str(request.q.qname),str(QTYPE[request.q.qtype]).lower()), 
@@ -317,6 +318,7 @@ def done(ctx):
 
 def start(_ctx, argv=[]): #FIXME remove mitmproxy 0.9 compatibility
     global ctx
+    global options
     ctx = _ctx
 
     header  = "          _                _          __  \n"
