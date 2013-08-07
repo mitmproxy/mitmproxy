@@ -33,10 +33,6 @@ define([
 
 					var _mid;
 					try {
-                        
-                        if(self.active){
-                            self.active.shutdown();
-                        }
 
 						/*jshint evil:true, withstmt:true*/
 						// https://developers.google.com/closure/compiler/docs/compilation_levels
@@ -52,16 +48,9 @@ define([
 						//Adjust RequireJS module loading path
 						_mid = require.module.mid;
 						require.module.mid = "ReportScripts/" + self.reportEditor.filename;
-                        var module;
 						with(window._reportPaneExterns) {
-							module = eval(code);
+							eval(code);
 						}
-                        if(module && typeof module === "object"){
-                            self.active = module;
-                            if(module.start)
-                                module.start();
-                            
-                        }
 
 					} catch (e) {
 
