@@ -263,7 +263,7 @@ class ProxyHandler(tcp.BaseHandler):
                     # disconnect.
                     if http.response_connection_close(response.httpversion, response.headers):
                         return
-        except (IOError, ProxyError, http.HttpError, tcp.NetLibDisconnect), e:
+        except (IOError, ProxyError, http.HttpError, tcp.NetLibError), e:
             if hasattr(e, "code"):
                 cc.error = "%s: %s"%(e.code, e.msg)
             else:
