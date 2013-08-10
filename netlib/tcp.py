@@ -130,8 +130,6 @@ class Reader(_FileLike):
                 data = self.o.read(rlen)
             except SSL.ZeroReturnError:
                 break
-            except SSL.Error, v:
-                raise NetLibSSLError(v.message)
             except SSL.WantReadError:
                 if (time.time() - start) < self.o.gettimeout():
                     time.sleep(0.1)
@@ -144,6 +142,8 @@ class Reader(_FileLike):
                 raise NetLibDisconnect
             except SSL.SysCallError:
                 raise NetLibDisconnect
+            except SSL.Error, v:
+                raise NetLibSSLError(v.message)
             self.first_byte_timestamp = self.first_byte_timestamp or time.time()
             if not data:
                 break
