@@ -37,6 +37,7 @@ OP_TLS_ROLLBACK_BUG = SSL.OP_TLS_ROLLBACK_BUG
 class NetLibError(Exception): pass
 class NetLibDisconnect(NetLibError): pass
 class NetLibTimeout(NetLibError): pass
+class NetLibSSLError(NetLibError): pass
 
 
 class _FileLike:
@@ -129,6 +130,8 @@ class Reader(_FileLike):
                 data = self.o.read(rlen)
             except SSL.ZeroReturnError:
                 break
+            except SSL.Error, v:
+                raise NetLibSSLError(v.message)
             except SSL.WantReadError:
                 if (time.time() - start) < self.o.gettimeout():
                     time.sleep(0.1)
