@@ -73,7 +73,7 @@ def dummy_ca(path):
     return True
 
 
-def dummy_cert(fp, ca, commonname, sans):
+def dummy_cert(ca, commonname, sans):
     """
         Generates and writes a certificate to fp.
 
@@ -111,27 +111,15 @@ def dummy_cert(fp, ca, commonname, sans):
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
     cert.set_pubkey(req.get_pubkey())
     cert.sign(key, "sha1")
-
-    fp.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, cert))
-    fp.close()
+    return SSLCert(cert)
 
 
 class CertStore:
     """
-        Implements an on-disk certificate store.
+        Implements an in-memory certificate store.
     """
-    def __init__(self, certdir=None):
-        """
-            certdir: The certificate store directory. If None, a temporary
-            directory will be created, and destroyed when the .cleanup() method
-            is called.
-        """
-        if certdir:
-            self.remove = False
-            self.certdir = certdir
-        else:
-            self.remove = True
-            self.certdir = tempfile.mkdtemp(prefix="certstore")
+    def __init__(self):
+        self.certs = {}
 
     def check_domain(self, commonname):
         try:
@@ -145,33 +133,26 @@ class CertStore:
             return False
         return True
 
-    def get_cert(self, commonname, sans, cacert=False):
+    def get_cert(self, commonname, sans, cacert):
         """
-            Returns the path to a certificate.
+            Returns an SSLCert object.
 
             commonname: Common name for the generated certificate. Must be a
             valid, plain-ASCII, IDNA-encoded domain name.
 
             sans: A list of Subject Alternate Names.
 
-            cacert: An optional path to a CA certificate. If specified, the
-            cert is created if it does not exist, else return None.
+            cacert: The path to a CA certificate.
 
             Return None if the certificate could not be found or generated.
         """
         if not self.check_domain(commonname):
             return None
-        certpath = os.path.join(self.certdir, commonname + ".pem")
-        if os.path.exists(certpath):
-            return certpath
-        elif cacert:
-            f = open(certpath, "wb")
-            dummy_cert(f, cacert, commonname, sans)
-            return certpath
-
-    def cleanup(self):
-        if self.remove:
-            shutil.rmtree(self.certdir)
+        if commonname in self.certs:
+            return self.certs[commonname]
+        c = dummy_cert(cacert, commonname, sans)
+        self.certs[commonname] = c
+        return c
 
 
 class _GeneralName(univ.Choice):

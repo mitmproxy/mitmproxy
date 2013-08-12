@@ -21,21 +21,16 @@ class TestCertStore:
         with tutils.tmpdir() as d:
             ca = os.path.join(d, "ca")
             assert certutils.dummy_ca(ca)
-            c = certutils.CertStore(d)
-            c.cleanup()
-            assert os.path.exists(d)
+            c = certutils.CertStore()
 
     def test_create_tmp(self):
         with tutils.tmpdir() as d:
             ca = os.path.join(d, "ca")
             assert certutils.dummy_ca(ca)
             c = certutils.CertStore()
-            assert not c.get_cert("../foo.com", [])
-            assert not c.get_cert("foo.com", [])
             assert c.get_cert("foo.com", [], ca)
             assert c.get_cert("foo.com", [], ca)
             assert c.get_cert("*.foo.com", [], ca)
-            c.cleanup()
 
     def test_check_domain(self):
         c = certutils.CertStore()
@@ -52,15 +47,12 @@ class TestDummyCert:
         with tutils.tmpdir() as d:
             cacert = os.path.join(d, "cacert")
             assert certutils.dummy_ca(cacert)
-            p = os.path.join(d, "foo")
-            certutils.dummy_cert(
-                file(p, "wb"),
+            r = certutils.dummy_cert(
                 cacert,
                 "foo.com",
                 ["one.com", "two.com", "*.three.com"]
             )
-            assert file(p,"rb").read()
-
+            assert r.cn == "foo.com"
 
 
 class TestSSLCert:

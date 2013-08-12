@@ -268,6 +268,7 @@ class BaseHandler:
 
     def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False):
         """
+            cert: A certutils.SSLCert object.
             method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
             handle_sni: SNI handler, should take a connection object. Server
             name can be retrieved like this:
@@ -297,7 +298,7 @@ class BaseHandler:
             # SNI callback happens during do_handshake()
             ctx.set_tlsext_servername_callback(handle_sni)
         ctx.use_privatekey_file(key)
-        ctx.use_certificate_file(cert)
+        ctx.use_certificate(cert.x509)
         if request_client_cert:
             def ver(*args):
                 self.clientcert = certutils.SSLCert(args[1])
