@@ -23,7 +23,7 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, authenticator=None):
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
@@ -32,7 +32,7 @@ class ProxyConfig:
         self.reverse_proxy = reverse_proxy
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
-        self.certstore = certutils.CertStore(certdir)
+        self.certstore = certutils.CertStore()
 
 
 class ServerConnection(tcp.TCPClient):
@@ -112,7 +112,7 @@ class HandleSNI:
                 self.handler.get_server_connection(self.client_conn, "https", self.host, self.port, sn)
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.key)
-                new_context.use_certificate_file(self.cert)
+                new_context.use_certificate(self.cert.x509)
                 connection.set_context(new_context)
                 self.handler.sni = sn.decode("utf8").encode("idna")
         # An unhandled exception in this method will core dump PyOpenSSL, so
@@ -295,7 +295,7 @@ class ProxyHandler(tcp.BaseHandler):
 
     def find_cert(self, cc, host, port, sni):
         if self.config.certfile:
-            return self.config.certfile
+            return certutils.SSLCert.from_pem(file(self.config.certfile, "r").read())
         else:
             sans = []
             if not self.config.no_upstream_cert:
@@ -508,9 +508,6 @@ class ProxyServer(tcp.TCPServer):
         h.handle()
         h.finish()
 
-    def handle_shutdown(self):
-        self.config.certstore.cleanup()
-
 
 class AppRegistry:
     def __init__(self):
@@ -559,11 +556,6 @@ def certificate_option_group(parser):
         type = str, dest = "clientcerts", default=None,
         help = "Client certificate directory."
     )
-    group.add_argument(
-        "--dummy-certs", action="store",
-        type = str, dest = "certdir", default=None,
-        help = "Generated dummy certs directory."
-    )
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
@@ -604,11 +596,6 @@ def process_proxy_options(parser, options):
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
             return parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
 
-    if options.certdir:
-        options.certdir = os.path.expanduser(options.certdir)
-        if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
-            return parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
-
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
             if len(options.auth_singleuser.split(':')) != 2:
@@ -634,6 +621,5 @@ def process_proxy_options(parser, options):
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
         transparent_proxy = trans,
-        certdir = options.certdir,
         authenticator = authenticator
     )

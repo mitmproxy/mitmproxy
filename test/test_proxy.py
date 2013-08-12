@@ -116,9 +116,6 @@ class TestProcessProxyOptions:
             self.assert_noerr("--client-certs", confdir)
             self.assert_err("directory does not exist", "--client-certs", "nonexistent")
 
-            self.assert_noerr("--dummy-certs", confdir)
-            self.assert_err("directory does not exist", "--dummy-certs", "nonexistent")
-
     def test_auth(self):
         p = self.assert_noerr("--nonanonymous")
         assert p.authenticator
