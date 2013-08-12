@@ -1,5 +1,5 @@
 import urllib, threading, re, logging, socket, sys, base64
-from netlib import tcp, http, odict, wsgi
+from netlib import tcp, http, odict, wsgi, certutils
 import netlib.utils
 import version, app, language, utils
 
@@ -12,6 +12,7 @@ class SSLOptions:
     def __init__(self, certfile=None, keyfile=None, not_after_connect=None, request_client_cert=False):
         self.keyfile = keyfile or utils.data.path("resources/server.key")
         self.certfile = certfile or utils.data.path("resources/server.crt")
+        self.cert = certutils.SSLCert.from_pem(file(self.certfile, "r").read())
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
 
@@ -75,7 +76,7 @@ class PathodHandler(tcp.BaseHandler):
             if not self.server.ssloptions.not_after_connect:
                 try:
                     self.convert_to_ssl(
-                        self.server.ssloptions.certfile,
+                        self.server.ssloptions.cert,
                         self.server.ssloptions.keyfile,
                         handle_sni = self.handle_sni,
                         request_client_cert = self.server.ssloptions.request_client_cert
@@ -181,7 +182,7 @@ class PathodHandler(tcp.BaseHandler):
         if self.server.ssl:
             try:
                 self.convert_to_ssl(
-                    self.server.ssloptions.certfile,
+                    self.server.ssloptions.cert,
                     self.server.ssloptions.keyfile,
                     handle_sni = self.handle_sni,
                     request_client_cert = self.server.ssloptions.request_client_cert
