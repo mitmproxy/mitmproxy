@@ -57,7 +57,7 @@ define([
 						//TODO: This is ugly.
 						self.reportOutput.out.innerHTML = "<pre>" + e.message + "\n\n" + e.stack.replace(/http.+?\/\/.+?\//g, "") + "</pre>";
 						console.log(e);
-						window.HoneyProxy.exception = e;
+						window.mitmproxy.exception = e;
 
 					} finally {
 

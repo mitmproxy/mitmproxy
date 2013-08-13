@@ -1,5 +1,5 @@
 {
-    "name": "HoneyProxy",
+    "name": "mitmproxy",
     "description": "HTTPS traffic analyzer",
     "version": 1.1,
     "dojoBuild": "package.js"

@@ -1,70 +1,69 @@
 /*jshint unused:false */
 var dojoConfig = {
 	async: true,
-	basePath: "..",
+	basePath: ".",
 	baseUrl: ".",
-	
-	packages: [ {
-		name: "HoneyProxy",
-		location: "./HoneyProxy"
+
+	packages: [{
+		name: "mitmproxy",
+		location: "./mitmproxy"
 	}, {
 		name: "ReportScripts",
 		location: "/api/fs/report_scripts"
 	}, {
 		name: "jquery",
 		main: "jquery.min",
-		location: "./lib/jquery",
-		destLocation:"./lib/jquery"
+		location: "./jquery",
+		destLocation: "./jquery"
 	}, {
 		name: "highlight",
 		main: "highlight",
-		location: "./lib/highlight",
-		destLocation:"./lib/highlight"
+		location: "./highlight",
+		destLocation: "./highlight"
 	}, {
 		name: "lodash",
 		main: "lodash",
-		location: "./lib/lodash",
-		destLocation:"./lib/lodash"
+		location: "./lodash",
+		destLocation: "./lodash"
 	}, {
 		name: "codemirror",
-		location: "./lib/codemirror",
-		destLocation:"./lib/codemirror"
+		location: "./codemirror",
+		destLocation: "./codemirror"
 	}, {
 		name: "d3",
-		location: "./lib/d3",
-		destLocation:"./lib/d3"
+		location: "./d3",
+		destLocation: "./d3"
 	}, {
-    name: "dojo",
-    location: "./lib/dojo",
-    destLocation:"./lib/dojo"
+		name: "dojo",
+		location: "./dojo",
+		destLocation: "./dojo"
 	}, {
-    name: "dijit",
-    location: "./lib/dijit",
-    destLocation:"./lib/dijit"
+		name: "dijit",
+		location: "./dijit",
+		destLocation: "./dijit"
 	}, {
-    name: "dojox",
-    location: "./lib/dojox",
-    destLocation:"./lib/dojox"
+		name: "dojox",
+		location: "./dojox",
+		destLocation: "./dojox"
 	}, {
-	name: "dgrid",
-    location: "./lib/dgrid",
-    destLocation:"./lib/dgrid"
+		name: "dgrid",
+		location: "./dgrid",
+		destLocation: "./dgrid"
 	}, {
-    name: "xstyle",
-    location: "./lib/xstyle",
-    destLocation:"./lib/xstyle"
+		name: "xstyle",
+		location: "./xstyle",
+		destLocation: "./xstyle"
 	}, {
-    name: "put-selector",
-    location: "./lib/put-selector",
-    destLocation:"./lib/put-selector"
+		name: "put-selector",
+		location: "./put-selector",
+		destLocation: "./put-selector"
 	}, {
-    name: "bootstrap",
-    location: "./lib/bootstrap",
-    destLocation:"./lib/bootstrap"
+		name: "bootstrap",
+		location: "./bootstrap",
+		destLocation: "./bootstrap"
 	}, {
-    name: "legacy",
-    location: "./lib/legacy",
-    destLocation:"./lib/legacy"
-	}
-	]
+		name: "legacy",
+		location: "./legacy",
+		destLocation: "./legacy"
+	}]
 };

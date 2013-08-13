@@ -25,7 +25,7 @@ def response(context, flow):
         clamd_result = clamd.scan_stream(flow.response.content)
     if clamd_result:
         print "Virus detected: ",clamd_result
-        flow.response.content = "HoneyProxy has detected a virus and stopped this page from loading: %s" % str(clamd_result["stream"])
+        flow.response.content = "mitmproxy has detected a virus and stopped this page from loading: %s" % str(clamd_result["stream"])
         flow.response.headers["Content-Length"] = [str(len(flow.response.content))]
         flow.response.headers["Content-Type"] = ["text/html"]
         del flow.response.headers["Content-Disposition"]

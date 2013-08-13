@@ -2,7 +2,7 @@
 
 
 /**
- * HoneyProxy search & highlight feature. Parses search strings, and handles
+ * mitmproxy search & highlight feature. Parses search strings, and handles
  * search requests.
  * 
  * Terminology: A filter is an expression that filters flows for a given
@@ -114,7 +114,7 @@ define([ "lodash", "jquery", "./traffic" ], function(_, $, traffic) {
 		 * DOM part of the search/highlight feature. Basically just reacting on
 		 * VK_ENTER and blur events, also applies existing filters to incoming
 		 * requests. One could argue that this is a feature which should be present
-		 * in the HoneyProxy controller, but that would make the whole thing just
+		 * in the mitmproxy controller, but that would make the whole thing just
 		 * complicated.
 		 */
 		function _search($el, ids) {

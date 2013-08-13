@@ -2,7 +2,7 @@
  * This report scripts displays shows a traffic per hostname pie chart.
  */
 require([
-  "HoneyProxy/util/formatSize",
+  "mitmproxy/util/formatSize",
   "dojox/charting/Chart",
   "dojox/charting/themes/Claro",
   "dojox/charting/plot2d/Pie",

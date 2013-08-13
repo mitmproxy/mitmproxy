@@ -9,7 +9,7 @@ var features = ["websockets","flexboxlegacy","cssgradients"];
 var i = features.length;
 while(i--){
 	if(Modernizr[features[i]] !== true){
-		alert("Your browser does not support "+features[i]+". Some features of HoneyProxy won't work. Please upgrade your browser for a better experience. We support both Firefox and Chrome.");
+		alert("Your browser does not support "+features[i]+". Some features of mitmproxy won't work. Please upgrade your browser for a better experience. We support both Firefox and Chrome.");
 		//break;
 	}
 }

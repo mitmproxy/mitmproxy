@@ -4,24 +4,24 @@ require(
 ["dojo/when",
 		"dojo/on",
 		"dojo/topic",
-		"HoneyProxy/MainLayout",
-		"HoneyProxy/websocket",
-		"HoneyProxy/flow/FlowFactory",
-		"HoneyProxy/traffic",
-		"HoneyProxy/util/versionCheck",
-		"HoneyProxy/util/sampleFlow",
-		"HoneyProxy/util/requestAuthenticator",
-		"HoneyProxy/search"
+		"mitmproxy/MainLayout",
+		"mitmproxy/websocket",
+		"mitmproxy/flow/FlowFactory",
+		"mitmproxy/traffic",
+		"mitmproxy/util/versionCheck",
+		"mitmproxy/util/sampleFlow",
+		"mitmproxy/util/requestAuthenticator",
+		"mitmproxy/search"
 ], function(when, on, topic, MainLayout, websocket, FlowFactory, flowStore, versionCheck, sampleFlow) {
 
 	//Debug
-	window.HoneyProxy = {
+	window.mitmproxy = {
 		flowStore: flowStore,
 		sampleFlow: sampleFlow,
 		MainLayout: MainLayout
 	};
 
-	topic.subscribe("HoneyProxy/newFlow", function(flow) {
+	topic.subscribe("mitmproxy/newFlow", function(flow) {
 		FlowFactory.makeFlow(flow);
 		flowStore.notify(flow);
 	});

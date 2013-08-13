@@ -18,7 +18,7 @@ define(["dojo/_base/declare",
 			nav.removeClass("hide");
 
 			var html = template({
-				"title": this.title + " - HoneyProxy" || "HoneyProxy",
+				"title": this.title + " - mitmproxy" || "mitmproxy",
 				"content": content
 			});
 			var win = window.open("", _.uniqueId("popout"), "height=400,width=500");

@@ -2,7 +2,7 @@
  * This report script shows a scatter plot with requests over time
  */
 require([
-  "HoneyProxy/util/formatSize",
+  "mitmproxy/util/formatSize",
   "dojox/charting/Chart",
   "dojox/charting/themes/Claro",
   "dojox/charting/plot2d/Scatter",

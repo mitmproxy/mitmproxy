@@ -2,7 +2,7 @@ define([ "./config", "dojo/json", "dojo/topic", "dojo/Deferred" ], function(
 	config, JSON, topic, Deferred) {
 	
 	/**
-	 * HoneyProxy Websocket Client. Connect to the WS URL, perform authentication
+	 * mitmproxy Websocket Client. Connect to the WS URL, perform authentication
 	 * and listen for new flows or responses to sync requests.
 	 */
 	var websocket = {
@@ -26,7 +26,7 @@ define([ "./config", "dojo/json", "dojo/topic", "dojo/Deferred" ], function(
 				} */
 				break;
 			case "newflow":
-				topic.publish("HoneyProxy/newFlow", e.data);
+				topic.publish("mitmproxy/newFlow", e.data);
 				break;
 			default:
 				console.warn("unsupported message", e);
