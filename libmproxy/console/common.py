@@ -146,6 +146,7 @@ def raw_format_flow(f, focus, extended, padding):
         resp.append(fcol(f["resp_clen"], rc))
 
         resp.append(fcol(f["resp_et"], "time"))
+        resp.append(fcol(f["resp_rate"], "highlight"))
 
     elif f["err_msg"]:
         resp.append(fcol(SYMBOL_RETURN, "error"))
@@ -190,6 +191,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
             contentdesc = "[no content]"
 
         delta = f.response.timestamp_end - f.request.timestamp_start
+        rate = utils.pretty_size(len(f.response.content) / delta)
 
         d.update(dict(
             resp_code = f.response.code,
@@ -197,6 +199,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
             resp_acked = f.response.reply.acked,
             resp_clen = contentdesc,
             resp_et = "{0:2.0f}ms".format(delta * 1000),
+            resp_rate = "{0}/s".format(rate),
         ))
         t = f.response.headers["content-type"]
         if t:
