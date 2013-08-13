@@ -144,6 +144,9 @@ def raw_format_flow(f, focus, extended, padding):
         if f["resp_ctype"]:
             resp.append(fcol(f["resp_ctype"], rc))
         resp.append(fcol(f["resp_clen"], rc))
+
+        resp.append(fcol(f["resp_et"], "time"))
+
     elif f["err_msg"]:
         resp.append(fcol(SYMBOL_RETURN, "error"))
         resp.append(
@@ -185,11 +188,15 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
             contentdesc = "[content missing]"
         else:
             contentdesc = "[no content]"
+
+        delta = f.response.timestamp_end - f.request.timestamp_start
+
         d.update(dict(
             resp_code = f.response.code,
             resp_is_replay = f.response.is_replay(),
             resp_acked = f.response.reply.acked,
-            resp_clen = contentdesc
+            resp_clen = contentdesc,
+            resp_et = "{0:2.0f}ms".format(delta * 1000),
         ))
         t = f.response.headers["content-type"]
         if t:
