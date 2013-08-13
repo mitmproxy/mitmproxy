@@ -7,35 +7,29 @@ from libmproxy.console import palettes
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage = "%(prog)s [options]")
     cmdline.common_options(parser)
-    parser.add_argument("--debug", dest="debug", default=False, action="store_true")
+
+    # Add arguments unique to mitmproxy
+    parser.add_argument(
+        "--debug", default=False
+        action="store_true", dest="debug"
+    )
     parser.add_argument(
         "--palette", type=str, default="dark",
         action="store", dest="palette",
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
-
-
     group = parser.add_argument_group(
                         "Filters",
                         "See help in mitmproxy for filter expression syntax."
-                    )
+    )
     group.add_argument(
-        "-i", "--intercept", action="store",
-        type = str, dest="intercept", default=None,
+        "-i", "--intercept", type=str, default=None,
+        action="store", dest="intercept", 
         help = "Intercept filter expression."
     )
+
     options = parser.parse_args()
-
-    config = proxy.process_proxy_options(parser, options)
-
-    if options.no_server:
-        server = proxy.DummyServer(config)
-    else:
-        try:
-            server = proxy.ProxyServer(config, options.port, options.addr)
-        except proxy.ProxyServerError, v:
-            print >> sys.stderr, "mitmproxy:", v.args[0]
-            sys.exit(1)
+    server = proxy.get_server(parser,options)
 
     try:
         opts = console.Options(**cmdline.get_common_options(options))
@@ -58,5 +52,3 @@ if __name__ == '__main__':
         m.run()
     except KeyboardInterrupt:
         pass
-
-

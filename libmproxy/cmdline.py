@@ -197,11 +197,6 @@ def common_options(parser):
         help="Reverse proxy to upstream server: http[s]://host[:port]"
     )
     parser.add_argument(
-        "-q",
-        action="store_true", dest="quiet",
-        help="Quiet."
-    )
-    parser.add_argument(
         "-r",
         action="store", dest="rfile", default=None,
         help="Read flows from file."
@@ -227,10 +222,16 @@ def common_options(parser):
         action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-v",
         action="count", dest="verbose", default=1,
         help="Increase verbosity. Can be passed multiple times."
+    )
+    group.add_argument(
+        "-q",
+        action='store_const', dest="verbose", const=0,
+        help="Quiet."
     )
     parser.add_argument(
         "-w",
