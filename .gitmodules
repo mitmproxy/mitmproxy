@@ -19,6 +19,3 @@
 [submodule "libmproxy/gui/lib/util"]
 	path = libmproxy/gui/lib/util
 	url = https://github.com/dojo/util.git
-[submodule "util"]
-	path = libmproxy/gui/lib/util
-	url = https://github.com/dojo/util.git
