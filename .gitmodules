@@ -1,0 +1,18 @@
+[submodule "libmproxy/gui/dgrid"]
+	path = libmproxy/gui/dgrid
+	url = https://github.com/mhils/dgrid.git
+[submodule "libmproxy/gui/dojo"]
+	path = libmproxy/gui/dojo
+	url = https://github.com/dojo/dojo.git
+[submodule "libmproxy/gui/dijit"]
+	path = libmproxy/gui/dijit
+	url = https://github.com/dojo/dijit.git
+[submodule "libmproxy/gui/dojox"]
+	path = libmproxy/gui/dojox
+	url = https://github.com/dojo/dojox.git
+[submodule "libmproxy/gui/put-selector"]
+	path = libmproxy/gui/put-selector
+	url = https://github.com/kriszyp/put-selector
+[submodule "libmproxy/gui/xstyle"]
+	path = libmproxy/gui/xstyle
+	url = https://github.com/kriszyp/xstyle.git
