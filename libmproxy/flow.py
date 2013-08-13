@@ -1,18 +1,3 @@
-# Copyright (C) 2012  Aldo Cortesi
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 """
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
@@ -221,15 +206,21 @@ class HTTPMsg(StateObject):
             Decodes content based on the current Content-Encoding header, then
             removes the header. If there is no Content-Encoding header, no
             action is taken.
+
+            Returns True if decoding succeeded, False otherwise.
         """
         ce = self.headers.get_first("content-encoding")
         if not self.content or ce not in encoding.ENCODINGS:
-            return
-        self.content = encoding.decode(
+            return False
+        data = encoding.decode(
             ce,
             self.content
         )
+        if data is None:
+            return False
+        self.content = data
         del self.headers["content-encoding"]
+        return True
 
     def encode(self, e):
         """
@@ -789,6 +780,7 @@ class Response(HTTPMsg):
             cookie_parameters = {key.strip().lower():value.strip() for key,sep,value in pairs[1:]}
             cookies.append((cookie_name, (cookie_value, cookie_parameters)))
         return dict(cookies)
+
 
 class ClientDisconnect:
     """
@@ -1375,6 +1367,18 @@ class FlowMaster(controller.Master):
         self.stream = None
         app.mapp.config["PMASTER"] = self
 
+    def start_app(self, domain, ip):
+        self.server.apps.add(
+            app.mapp,
+            domain,
+            80
+        )
+        self.server.apps.add(
+            app.mapp,
+            ip,
+            80
+        )
+
     def add_event(self, e, level="info"):
         """
             level: info, error
@@ -1653,7 +1657,7 @@ class FlowReader:
         try:
             while 1:
                 data = tnetstring.load(self.fo)
-                if tuple(data["version"]) != version.IVERSION:
+                if tuple(data["version"][:2]) != version.IVERSION[:2]:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
@@ -1675,5 +1679,4 @@ class FilteredFlowWriter:
             return
         d = f._get_state()
         tnetstring.dump(d, self.fo)
-
 

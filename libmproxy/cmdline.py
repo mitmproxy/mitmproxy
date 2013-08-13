@@ -1,23 +1,11 @@
-# Copyright (C) 2012  Aldo Cortesi
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import proxy
 import re, filt
 import argparse
 import shlex
 import os
+
+APP_DOMAIN = "mitm"
+APP_IP = "1.1.1.1"
 
 class ParseException(Exception): pass
 class OptionException(Exception): pass
@@ -141,6 +129,10 @@ def get_common_options(options):
         setheaders.append(p)
 
     return dict(
+        app = options.app,
+        app_ip = options.app_ip,
+        app_domain = options.app_domain,
+
         anticache = options.anticache,
         anticomp = options.anticomp,
         client_replay = options.client_replay,
@@ -269,6 +261,17 @@ def common_options(parser):
         "-a",
         action="store_true", dest="app", default=False,
         help="Enable the mitmproxy web app."
+    )
+    group.add_argument(
+        "--appdomain",
+        action="store", dest="app_domain", default=APP_DOMAIN, metavar="domain",
+        help="Domain to serve the app from."
+    )
+    group.add_argument(
+        "--appip",
+        action="store", dest="app_ip", default=APP_IP, metavar="ip",
+        help="""IP to serve the app from. Useful for transparent mode, when a DNS
+        entry for the app domain is not present."""
     )
 
     group = parser.add_argument_group("Client Replay")

@@ -5,7 +5,7 @@ import countershape.template
 sys.path.insert(0, "..")
 from libmproxy import filt
 
-MITMPROXY_SRC = "~/git/public/mitmproxy"
+MITMPROXY_SRC = "~/mitmproxy/mitmproxy"
 
 if ns.options.website:
     ns.idxpath = "doc/index.html"

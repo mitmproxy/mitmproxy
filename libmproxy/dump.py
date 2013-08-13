@@ -1,18 +1,3 @@
-# Copyright (C) 2012  Aldo Cortesi
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import sys, os
 import netlib.utils
 import flow, filt, utils
@@ -22,6 +7,9 @@ class DumpError(Exception): pass
 
 class Options(object):
     attributes = [
+        "app",
+        "app_domain",
+        "app_ip",
         "anticache",
         "anticomp",
         "client_replay",
@@ -138,6 +126,9 @@ class DumpMaster(flow.FlowMaster):
                 self.load_flows(freader)
             except flow.FlowReadError, v:
                 self.add_event("Flow file corrupted. Stopped loading.")
+
+        if self.o.app:
+            self.start_app(self.o.app_domain, self.o.app_ip)
 
     def _readflow(self, path):
         path = os.path.expanduser(path)

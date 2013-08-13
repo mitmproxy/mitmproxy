@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Quick and dangerous script for building OSX binaries.
+
+# First, have a recent checkout of the dev version of pyinstaller. Change into
+# the pyinstaller directory, and then run this script.
+
+DST=/tmp/osx-mitmproxy
+MITMPROXY=~/mitmproxy/mitmproxy
+PYINST_CMD="./pyinstaller.py -F --clean"
+
+rm -rf $DST
+mkdir -p $DST
+rm -rf mitmproxy
+rm -rf mitmdump
+
+$PYINST_CMD $MITMPROXY/mitmproxy
+cp mitmproxy/dist/mitmproxy $DST
+
+$PYINST_CMD $MITMPROXY/mitmdump
+cp mitmdump/dist/mitmdump $DST
+
+cshape $MITMPROXY/doc-src $DST/doc
