@@ -16,3 +16,6 @@
 [submodule "libmproxy/gui/xstyle"]
 	path = libmproxy/gui/xstyle
 	url = https://github.com/kriszyp/xstyle.git
+[submodule "libmproxy/gui/util"]
+	path = libmproxy/gui/util
+	url = https://github.com/dojo/util.git
