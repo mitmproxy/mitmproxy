@@ -1,4 +1,5 @@
 import proxy
+import version
 import re, filt
 import argparse
 import shlex
@@ -156,6 +157,10 @@ def get_common_options(options):
 
 
 def common_options(parser):
+    parser.add_argument(
+        "--version",
+        action='version', version=version.NAMEVERSION
+    )
     parser.add_argument(
         "-b",
         action="store", type = str, dest="addr", default='',

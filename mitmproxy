@@ -6,7 +6,6 @@ from libmproxy.console import palettes
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage = "%(prog)s [options]")
-    parser.add_argument('--version', action='version', version=version.NAMEVERSION)
     cmdline.common_options(parser)
     parser.add_argument("--debug", dest="debug", default=False, action="store_true")
     parser.add_argument(
