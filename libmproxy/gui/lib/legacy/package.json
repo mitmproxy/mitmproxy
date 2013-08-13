@@ -1,0 +1,6 @@
+{
+    "name": "Legacy Non-AMD modules",
+    "description": "go away",
+    "version": 1.0,
+    "dojoBuild": "package.js"
+}

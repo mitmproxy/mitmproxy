@@ -1,0 +1,6 @@
+{
+    "name": "CodeMirror",
+    "description": "CodeMirror is a JavaScript component that provides a code editor in the browser. ",
+    "version": 3.0,
+    "dojoBuild": "package.js"
+}

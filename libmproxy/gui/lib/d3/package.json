@@ -1,0 +1,6 @@
+{
+    "name": "D3.js",
+    "description": "Data-Driven Documents",
+    "version": 3.06,
+    "dojoBuild": "package.js"
+}
