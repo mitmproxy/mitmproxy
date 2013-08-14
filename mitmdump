@@ -13,26 +13,14 @@ if __name__ == '__main__':
         help="Continue serving after client playback or file read. We exit by default."
     )
     parser.add_argument(
-        'args', nargs=argparse.REMAINDER
+        'filt', nargs=argparse.REMAINDER
     )
 
     options = parser.parse_args()
     server = proxy.get_server(parser,options)
 
-    # Create dump Options
     try:
-        dumpopts = dump.Options(**cmdline.get_common_options(options))
-    except cmdline.OptionException, v:
-        parser.error(v.message)
-    dumpopts.keepserving = options.keepserving
-
-    if options.args:
-        filt = " ".join(options.args)
-    else:
-        filt = None
-
-    try:
-        m = dump.DumpMaster(server, dumpopts, filt)
+        m = dump.DumpMaster(server, options)
         def cleankill(*args, **kwargs):
             m.shutdown()
         signal.signal(signal.SIGTERM, cleankill)

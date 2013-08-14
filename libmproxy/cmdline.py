@@ -4,12 +4,10 @@ import re, filt
 import argparse
 import shlex
 import os
+from argparse import ArgumentTypeError
 
 APP_DOMAIN = "mitm"
 APP_IP = "1.1.1.1"
-
-class ParseException(Exception): pass
-class OptionException(Exception): pass
 
 def _parse_hook(s):
     sep, rem = s[0], s[1:]
@@ -20,18 +18,18 @@ def _parse_hook(s):
     elif len(parts) == 3:
         patt, a, b = parts
     else:
-        raise ParseException("Malformed hook specifier - too few clauses: %s"%s)
+        raise ArgumentTypeError("Malformed hook specifier - too few clauses: %s"%s)
 
     if not a:
-        raise ParseException("Empty clause: %s"%str(patt))
+        raise ArgumentTypeError("Empty clause: %s"%str(patt))
 
     if not filt.parse(patt):
-        raise ParseException("Malformed filter pattern: %s"%patt)
+        raise ArgumentTypeError("Malformed filter pattern: %s"%patt)
 
     return patt, a, b
 
 
-def parse_replace_hook(s):
+def parse_replace_hook(s, from_file=False):
     """
         Returns a (pattern, regex, replacement) tuple.
 
@@ -55,13 +53,19 @@ def parse_replace_hook(s):
             /one/two/foo/bar/
 
         Checks that pattern and regex are both well-formed. Raises
-        ParseException on error.
+        ArgumentTypeError on error.
     """
     patt, regex, replacement = _parse_hook(s)
     try:
         re.compile(regex)
     except re.error, e:
-        raise ParseException("Malformed replacement regex: %s"%str(e.message))
+        raise ArgumentTypeError("Malformed replacement regex: %s"%str(e.message))
+    if from_file:
+        try:
+            with open(replacement, "rb") as f:
+                replacement = f.read()
+        except IOError:
+            raise ArgumentTypeError("Could not read replace file: %s" % replacement)
     return patt, regex, replacement
 
 
@@ -89,72 +93,9 @@ def parse_setheader(s):
             /one/two/foo/bar/
 
         Checks that pattern and regex are both well-formed. Raises
-        ParseException on error.
+        ArgumentTypeError on error.
     """
     return _parse_hook(s)
-
-
-def get_common_options(options):
-    stickycookie, stickyauth = None, None
-    if options.stickycookie_filt:
-        stickycookie = options.stickycookie_filt
-
-    if options.stickyauth_filt:
-        stickyauth = options.stickyauth_filt
-
-    reps = []
-    for i in options.replace:
-        try:
-            p = parse_replace_hook(i)
-        except ParseException, e:
-            raise OptionException(e.message)
-        reps.append(p)
-    for i in options.replace_file:
-        try:
-            patt, rex, path = parse_replace_hook(i)
-        except ParseException, e:
-            raise OptionException(e.message)
-        try:
-            v = open(path, "rb").read()
-        except IOError, e:
-            raise OptionException("Could not read replace file: %s"%path)
-        reps.append((patt, rex, v))
-
-
-    setheaders = []
-    for i in options.setheader:
-        try:
-            p = parse_setheader(i)
-        except ParseException, e:
-            raise OptionException(e.message)
-        setheaders.append(p)
-
-    return dict(
-        app = options.app,
-        app_ip = options.app_ip,
-        app_domain = options.app_domain,
-
-        anticache = options.anticache,
-        anticomp = options.anticomp,
-        client_replay = options.client_replay,
-        eventlog = options.eventlog,
-        kill = options.kill,
-        no_server = options.no_server,
-        refresh_server_playback = not options.norefresh,
-        rheaders = options.rheaders,
-        rfile = options.rfile,
-        replacements = reps,
-        setheaders = setheaders,
-        server_replay = options.server_replay,
-        scripts = options.scripts,
-        stickycookie = stickycookie,
-        stickyauth = stickyauth,
-        showhost = options.showhost,
-        wfile = options.wfile,
-        verbosity = options.verbose,
-        nopop = options.nopop,
-    )
-
 
 def common_options(parser):
     parser.add_argument(
@@ -209,7 +150,7 @@ def common_options(parser):
     )
     parser.add_argument(
         "-t",
-        action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
+        action="store", dest="stickycookie", default=None, metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
     )
     parser.add_argument(
@@ -219,18 +160,18 @@ def common_options(parser):
     )
     parser.add_argument(
         "-u",
-        action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
+        action="store", dest="stickyauth", default=None, metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-v",
-        action="count", dest="verbose", default=1,
+        action="count", dest="verbosity", default=1,
         help="Increase verbosity. Can be passed multiple times."
     )
     group.add_argument(
         "-q",
-        action='store_const', dest="verbose", const=0,
+        action='store_const', dest="verbosity", const=0,
         help="Quiet."
     )
     parser.add_argument(
@@ -306,7 +247,7 @@ def common_options(parser):
     )
     group.add_argument(
         "--norefresh",
-        action="store_true", dest="norefresh", default=False,
+        action="store_false", dest="refresh_server_playback",
         help= "Disable response refresh, "
         "which updates times in cookies and headers for replayed responses."
     )
@@ -327,13 +268,13 @@ def common_options(parser):
     )
     group.add_argument(
         "--replace",
-        action="append", type=str, dest="replace", default=[],
+        action="append", type=parse_replace_hook, dest="replacements",
         metavar="PATTERN",
         help="Replacement pattern."
     )
     group.add_argument(
         "--replace-from-file",
-        action="append", type=str, dest="replace_file", default=[],
+        action="append", type=lambda x: parse_replace_hook(x,True), dest="replacements",
         metavar="PATH",
         help="Replacement pattern, where the replacement clause is a path to a file."
     )
@@ -349,7 +290,7 @@ def common_options(parser):
     )
     group.add_argument(
         "--setheader",
-        action="append", type=str, dest="setheader", default=[],
+        action="append", type=parse_setheader, dest="setheaders", default=[],
         metavar="PATTERN",
         help="Header set pattern."
     )

@@ -58,7 +58,7 @@ def str_request(req, showhost):
 
 
 class DumpMaster(flow.FlowMaster):
-    def __init__(self, server, options, filtstr, outfile=sys.stdout):
+    def __init__(self, server, options, outfile=sys.stdout):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
@@ -68,8 +68,8 @@ class DumpMaster(flow.FlowMaster):
         self.showhost = options.showhost
         self.refresh_server_playback = options.refresh_server_playback
 
-        if filtstr:
-            self.filt = filt.parse(filtstr)
+        if options.filt:
+            self.filt = filt.parse(" ".join(options.filt))
         else:
             self.filt = None
 

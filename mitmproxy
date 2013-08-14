@@ -17,8 +17,8 @@ if __name__ == '__main__':
         help="Select color palette: " + ", ".join(console.palettes.palettes.keys())
     )
     group = parser.add_argument_group(
-                        "Filters",
-                        "See help in mitmproxy for filter expression syntax."
+    	"Filters",
+    	"See help in mitmproxy for filter expression syntax."
     )
     group.add_argument(
         "-i", "--intercept", type=str, default=None,
@@ -29,15 +29,6 @@ if __name__ == '__main__':
     options = parser.parse_args()
     server = proxy.get_server(parser,options)
 
-    # Create console Options
-    try:
-        opts = console.Options(**cmdline.get_common_options(options))
-    except cmdline.OptionException, v:
-        parser.error(v.message)
-    opts.intercept = options.intercept
-    opts.debug = options.debug
-    opts.palette = options.palette
-
     spec = ""
     for i in ["LANG", "LC_CTYPE", "LC_ALL"]:
         spec += os.environ.get(i, "").lower()
@@ -46,7 +37,7 @@ if __name__ == '__main__':
         print >> sys.stderr, "Set your LANG enviroment variable to something like en_US.UTF-8"
         sys.exit(1)
 
-    m = console.ConsoleMaster(server, opts)
+    m = console.ConsoleMaster(server, options)
     try:
         m.run()
     except KeyboardInterrupt:
