@@ -643,10 +643,10 @@ def get_server(parser,options):
     config = process_proxy_options(parser, options)
 
     if options.no_server:
-        server = proxy.DummyServer(config)
+        return DummyServer(config)
     else:
         try:
-            server = proxy.ProxyServer(config, options.port, options.addr)
-        except proxy.ProxyServerError, v:
+            return ProxyServer(config, options.port, options.addr)
+        except ProxyServerError, v:
             print >> sys.stderr, "%s: %s" % (sys.argv[0], v.args[0])
             sys.exit(1)
