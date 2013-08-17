@@ -4,27 +4,7 @@ from libmproxy import proxy, cmdline, version, console
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage = "%(prog)s [options]")
-    cmdline.common_options(parser)
-
-    # Add arguments unique to mitmproxy
-    parser.add_argument(
-        "--debug", default=False
-        action="store_true", dest="debug"
-    )
-    parser.add_argument(
-        "--palette", type=str, default="dark",
-        action="store", dest="palette",
-        help="Select color palette: " + ", ".join(console.palettes.palettes.keys())
-    )
-    group = parser.add_argument_group(
-    	"Filters",
-    	"See help in mitmproxy for filter expression syntax."
-    )
-    group.add_argument(
-        "-i", "--intercept", type=str, default=None,
-        action="store", dest="intercept", 
-        help = "Intercept filter expression."
-    )
+    console.ConsoleMaster.add_arguments(parser)
 
     options = parser.parse_args()
     server = proxy.get_server(parser,options)

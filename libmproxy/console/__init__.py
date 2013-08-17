@@ -1,7 +1,7 @@
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex, stat
 import os.path, sys, weakref
 import urwid
-from .. import controller, utils, flow
+from .. import controller, utils, flow, cmdline
 import flowlist, flowview, help, common, grideditor, palettes, contentview, flowdetailview
 
 EVENTLOG_SIZE = 500
@@ -317,50 +317,35 @@ class ConsoleState(flow.State):
         self.set_focus(self.focus)
         return ret
 
-
-
-class Options(object):
-    attributes = [
-        "app",
-        "app_domain",
-        "app_ip",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "debug",
-        "eventlog",
-        "keepserving",
-        "kill",
-        "intercept",
-        "no_server",
-        "refresh_server_playback",
-        "rfile",
-        "script",
-        "showhost",
-        "replacements",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "stickycookie",
-        "stickyauth",
-        "verbosity",
-        "wfile",
-        "nopop",
-        "palette",
-    ]
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
-
-
 #begin nocover
 
 
 class ConsoleMaster(flow.FlowMaster):
+
     palette = []
+
+    @classmethod
+    def add_arguments(cls, parser):
+        cmdline.add_common_arguments(parser)
+        parser.add_argument(
+            "--debug", default=False,
+            action="store_true", dest="debug"
+        )
+        parser.add_argument(
+            "--palette", type=str, default="dark",
+            action="store", dest="palette",
+            help="Select color palette: " + ", ".join(palettes.palettes.keys())
+        )
+        group = parser.add_argument_group(
+            "Filters",
+            "See help in mitmproxy for filter expression syntax."
+        )
+        group.add_argument(
+            "-i", "--intercept", type=str, default=None,
+            action="store", dest="intercept",
+            help = "Intercept filter expression."
+        )
+
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
         self.looptime = 0

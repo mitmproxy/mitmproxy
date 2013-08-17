@@ -4,29 +4,16 @@ from libmproxy import proxy, cmdline, version, dump
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage = "%(prog)s [options] [filter]")
-    cmdline.common_options(parser)
-
-    # Add arguments unique to mitmdump
-    parser.add_argument(
-        "--keepserving",
-        action="store_true", dest="keepserving", default=False,
-        help="Continue serving after client playback or file read. We exit by default."
-    )
-    parser.add_argument(
-        'filt', nargs=argparse.REMAINDER
-    )
+    dump.DumpMaster.add_arguments(parser)
 
     options = parser.parse_args()
     server = proxy.get_server(parser,options)
 
+    m = dump.DumpMaster(server, options)
+    def cleankill(*args, **kwargs):
+        m.shutdown()
+    signal.signal(signal.SIGTERM, cleankill)
     try:
-        m = dump.DumpMaster(server, options)
-        def cleankill(*args, **kwargs):
-            m.shutdown()
-        signal.signal(signal.SIGTERM, cleankill)
         m.run()
-    except dump.DumpError, e:
-        print >> sys.stderr, "mitmdump:", e
-        sys.exit(1)
     except KeyboardInterrupt:
         pass

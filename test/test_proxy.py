@@ -74,7 +74,7 @@ class MockParser:
 class TestProcessProxyOptions:
     def p(self, *args):
         parser = argparse.ArgumentParser()
-        cmdline.common_options(parser)
+        cmdline.add_common_arguments(parser)
         opts = parser.parse_args(args=args)
         m = MockParser()
         return m, proxy.process_proxy_options(m, opts)
@@ -136,7 +136,7 @@ class TestProxyServer:
     @tutils.SkipWindows # binding to 0.0.0.0:1 works without special permissions on Windows
     def test_err(self):
         parser = argparse.ArgumentParser()
-        cmdline.common_options(parser)
+        cmdline.add_common_arguments(parser)
         opts = parser.parse_args(args=[])
         tutils.raises("error starting proxy server", proxy.ProxyServer, opts, 1)
 

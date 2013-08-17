@@ -4,6 +4,15 @@ import tutils
 import os.path
 
 
+class MockParser(argparse.ArgumentParser):
+    """
+    argparse.ArgumentParser sys.exits() by default.
+    Make it more testable by throwing an exception instead.
+    """
+    def error(self, message):
+        raise Exception(message)
+
+
 def test_parse_replace_hook():
     x = cmdline.parse_replace_hook("/foo/bar/voing")
     assert x == ("foo", "bar", "voing")
@@ -14,11 +23,6 @@ def test_parse_replace_hook():
     x = cmdline.parse_replace_hook("/bar/voing")
     assert x == (".*", "bar", "voing")
 
-    tutils.raises(
-        cmdline.ParseException,
-        cmdline.parse_replace_hook,
-        "/foo"
-    )
     tutils.raises(
         "replacement regex",
         cmdline.parse_replace_hook,
@@ -47,66 +51,54 @@ def test_shlex():
     """
     absfilepath = os.path.normcase(os.path.abspath(__file__))
 
-    parser = argparse.ArgumentParser()
-    cmdline.common_options(parser)
+    parser = MockParser()
+    cmdline.add_common_arguments(parser)
     opts = parser.parse_args(args=["-s",absfilepath])
     
     assert os.path.isfile(opts.scripts[0][0])
 
 def test_common():
-    parser = argparse.ArgumentParser()
-    cmdline.common_options(parser)
+    parser = MockParser()
+    cmdline.add_common_arguments(parser)
     opts = parser.parse_args(args=[])
 
-    assert cmdline.get_common_options(opts)
+    opts = parser.parse_args(args=["-t","foo","-u","foo"])
 
-    opts.stickycookie_filt = "foo"
-    opts.stickyauth_filt = "foo"
-    v = cmdline.get_common_options(opts)
-    assert v["stickycookie"] == "foo"
-    assert v["stickyauth"] == "foo"
+    assert opts.stickycookie == "foo"
+    assert opts.stickyauth == "foo"
 
-    opts.setheader = ["/foo/bar/voing"]
-    v = cmdline.get_common_options(opts)
-    assert v["setheaders"] == [("foo", "bar", "voing")]
+    opts = parser.parse_args(args=["--setheader","/foo/bar/voing"])
+    assert opts.setheaders == [("foo", "bar", "voing")]
 
-    opts.setheader = ["//"]
     tutils.raises(
         "empty clause",
-        cmdline.get_common_options,
-        opts
+        parser.parse_args,
+        ["--setheader","//"]
     )
-    opts.setheader = []
 
-    opts.replace = ["/foo/bar/voing"]
-    v = cmdline.get_common_options(opts)
-    assert v["replacements"] == [("foo", "bar", "voing")]
+    opts = parser.parse_args(args=["--replace","/foo/bar/voing"])
+    assert opts.replacements == [("foo", "bar", "voing")]
 
-    opts.replace = ["//"]
     tutils.raises(
         "empty clause",
-        cmdline.get_common_options,
-        opts
+        parser.parse_args,
+        ["--replace","//"]
     )
 
-    opts.replace = []
-    opts.replace_file = [("/foo/bar/nonexistent")]
     tutils.raises(
         "could not read replace file",
-        cmdline.get_common_options,
-        opts
+        parser.parse_args,
+        ["--replace-from-file","/foo/bar/nonexistent"]
     )
 
-    opts.replace_file = [("/~/bar/nonexistent")]
     tutils.raises(
         "filter pattern",
-        cmdline.get_common_options,
-        opts
+        parser.parse_args,
+        ["--replace-from-file","/~/bar/nonexistent"]
     )
 
     p = tutils.test_data.path("data/replace")
-    opts.replace_file = [("/foo/bar/%s"%p)]
-    v = cmdline.get_common_options(opts)["replacements"]
-    assert len(v) == 1
-    assert v[0][2].strip() == "replacecontents"
+    opts = parser.parse_args(args=["--replace-from-file",("/foo/bar/%s"%p)])
+    assert len(opts.replacements) == 1
+    assert opts.replacements[0][2].strip() == "replacecontents"
 

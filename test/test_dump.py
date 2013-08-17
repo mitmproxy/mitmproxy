@@ -1,4 +1,4 @@
-import os
+import os, argparse
 from cStringIO import StringIO
 from libmproxy import dump, flow, proxy
 import tutils
@@ -17,6 +17,15 @@ def test_strfuncs():
     assert "replay" in dump.str_request(t, False)
     assert "replay" in dump.str_request(t, True)
 
+parser = argparse.ArgumentParser()
+dump.DumpMaster.add_arguments(parser)
+def _options(**opts):
+    o = parser.parse_args([])
+    for k,v in opts.items():
+        if not hasattr(o, k):
+            raise RuntimeError("Cannot set unknown option property")
+        setattr(o, k, v)
+    return o
 
 class TestDumpMaster:
     def _cycle(self, m, content):
@@ -37,10 +46,10 @@ class TestDumpMaster:
         m.handle_clientdisconnect(cd)
         return f
 
-    def _dummy_cycle(self, n, filt, content, **options):
+    def _dummy_cycle(self, n, content, **options):
         cs = StringIO()
-        o = dump.Options(**options)
-        m = dump.DumpMaster(None, o, filt, outfile=cs)
+        o = _options(**options)
+        m = dump.DumpMaster(None, o, outfile=cs)
         for i in range(n):
             self._cycle(m, content)
         m.shutdown()
@@ -56,8 +65,8 @@ class TestDumpMaster:
 
     def test_error(self):
         cs = StringIO()
-        o = dump.Options(verbosity=1)
-        m = dump.DumpMaster(None, o, None, outfile=cs)
+        o = _options(verbosity=1)
+        m = dump.DumpMaster(None, o, outfile=cs)
         f = tutils.tflow_err()
         m.handle_request(f.request)
         assert m.handle_error(f.error)
@@ -66,90 +75,89 @@ class TestDumpMaster:
     def test_replay(self):
         cs = StringIO()
 
-        o = dump.Options(server_replay="nonexistent", kill=True)
-        tutils.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
+        o = _options(server_replay="nonexistent", kill=True)
+        tutils.raises(dump.DumpError, dump.DumpMaster, None, o, outfile=cs)
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
             self._flowfile(p)
 
-            o = dump.Options(server_replay=p, kill=True)
-            m = dump.DumpMaster(None, o, None, outfile=cs)
+            o = _options(server_replay=p, kill=True)
+            m = dump.DumpMaster(None, o, outfile=cs)
 
             self._cycle(m, "content")
             self._cycle(m, "content")
 
-            o = dump.Options(server_replay=p, kill=False)
-            m = dump.DumpMaster(None, o, None, outfile=cs)
+            o = _options(server_replay=p, kill=False)
+            m = dump.DumpMaster(None, o, outfile=cs)
             self._cycle(m, "nonexistent")
 
-            o = dump.Options(client_replay=p, kill=False)
-            m = dump.DumpMaster(None, o, None, outfile=cs)
+            o = _options(client_replay=p, kill=False)
+            m = dump.DumpMaster(None, o, outfile=cs)
 
     def test_read(self):
         with tutils.tmpdir() as t:
             p = os.path.join(t, "read")
             self._flowfile(p)
-            assert "GET" in self._dummy_cycle(0, None, "", verbosity=1, rfile=p)
+            assert "GET" in self._dummy_cycle(0, "", verbosity=1, rfile=p)
 
             tutils.raises(
                 dump.DumpError, self._dummy_cycle,
-                0, None, "", verbosity=1, rfile="/nonexistent"
+                0, "", verbosity=1, rfile="/nonexistent"
             )
 
             # We now just ignore errors
-            self._dummy_cycle(0, None, "", verbosity=1, rfile=tutils.test_data.path("test_dump.py"))
+            self._dummy_cycle(0, "", verbosity=1, rfile=tutils.test_data.path("test_dump.py"))
 
     def test_options(self):
-        o = dump.Options(verbosity = 2)
+        o = _options(verbosity = 2)
         assert o.verbosity == 2
 
     def test_filter(self):
-        assert not "GET" in self._dummy_cycle(1, "~u foo", "", verbosity=1)
+        assert not "GET" in self._dummy_cycle(1, "", filt=["~u","foo"], verbosity=1)
 
     def test_app(self):
-        o = dump.Options(app=True)
+        o = _options(app=True)
         s = mock.MagicMock()
-        m = dump.DumpMaster(s, o, None)
+        m = dump.DumpMaster(s, o)
         assert s.apps.add.call_count == 2
 
     def test_replacements(self):
-        o = dump.Options(replacements=[(".*", "content", "foo")])
-        m = dump.DumpMaster(None, o, None)
+        o = _options(replacements=[(".*", "content", "foo")])
+        m = dump.DumpMaster(None, o)
         f = self._cycle(m, "content")
         assert f.request.content == "foo"
 
     def test_setheader(self):
-        o = dump.Options(setheaders=[(".*", "one", "two")])
-        m = dump.DumpMaster(None, o, None)
+        o = _options(setheaders=[(".*", "one", "two")])
+        m = dump.DumpMaster(None, o)
         f = self._cycle(m, "content")
         assert f.request.headers["one"] == ["two"]
 
     def test_basic(self):
         for i in (1, 2, 3):
-            assert "GET" in self._dummy_cycle(1, "~s", "", verbosity=i, eventlog=True)
-            assert "GET" in self._dummy_cycle(1, "~s", "\x00\x00\x00", verbosity=i)
-            assert "GET" in self._dummy_cycle(1, "~s", "ascii", verbosity=i)
+            assert "GET" in self._dummy_cycle(1, "",             filt=["~s"], verbosity=i, eventlog=True)
+            assert "GET" in self._dummy_cycle(1, "\x00\x00\x00", filt=["~s"], verbosity=i)
+            assert "GET" in self._dummy_cycle(1, "ascii",        filt=["~s"], verbosity=i)
 
     def test_write(self):
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a")
-            self._dummy_cycle(1, None, "", wfile=p, verbosity=0)
+            self._dummy_cycle(1, "", wfile=p, verbosity=0)
             assert len(list(flow.FlowReader(open(p,"rb")).stream())) == 1
 
     def test_write_err(self):
-        tutils.raises(
+        tutils.raises( 
             dump.DumpError,
             self._dummy_cycle,
             1,
-            None,
             "",
             wfile = "nonexistentdir/foo"
         )
 
     def test_script(self):
         ret = self._dummy_cycle(
-            1, None, "",
+            1, "",
             scripts=[[tutils.test_data.path("scripts/all.py")]], verbosity=0, eventlog=True
         )
         assert "XCLIENTCONNECT" in ret
@@ -158,16 +166,15 @@ class TestDumpMaster:
         assert "XCLIENTDISCONNECT" in ret
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", scripts=[["nonexistent"]]
+            self._dummy_cycle, 1, "", scripts=[["nonexistent"]]
         )
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", scripts=[["starterr.py"]]
+            self._dummy_cycle, 1, "", scripts=[[tutils.test_data.path("scripts/starterr.py")]]
         )
 
     def test_stickycookie(self):
-        self._dummy_cycle(1, None, "", stickycookie = ".*")
+        self._dummy_cycle(1, "", stickycookie = ".*")
 
     def test_stickyauth(self):
-        self._dummy_cycle(1, None, "", stickyauth = ".*")
-
+        self._dummy_cycle(1, "", stickyauth = ".*")

@@ -97,7 +97,7 @@ def parse_setheader(s):
     """
     return _parse_hook(s)
 
-def common_options(parser):
+def add_common_arguments(parser):
     parser.add_argument(
         "--version",
         action='version', version=version.NAMEVERSION

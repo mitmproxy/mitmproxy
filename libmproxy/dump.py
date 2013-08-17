@@ -1,43 +1,8 @@
-import sys, os
+import sys, os, argparse
 import netlib.utils
-import flow, filt, utils
+import flow, filt, utils, cmdline
 
 class DumpError(Exception): pass
-
-
-class Options(object):
-    attributes = [
-        "app",
-        "app_domain",
-        "app_ip",
-        "anticache",
-        "anticomp",
-        "client_replay",
-        "eventlog",
-        "keepserving",
-        "kill",
-        "no_server",
-        "nopop",
-        "refresh_server_playback",
-        "replacements",
-        "rfile",
-        "rheaders",
-        "setheaders",
-        "server_replay",
-        "scripts",
-        "showhost",
-        "stickycookie",
-        "stickyauth",
-        "verbosity",
-        "wfile",
-    ]
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-        for i in self.attributes:
-            if not hasattr(self, i):
-                setattr(self, i, None)
-
 
 def str_response(resp):
     r = "%s %s"%(resp.code, resp.msg)
@@ -58,6 +23,18 @@ def str_request(req, showhost):
 
 
 class DumpMaster(flow.FlowMaster):
+    @classmethod
+    def add_arguments(cls,parser):
+        cmdline.add_common_arguments(parser)
+        parser.add_argument(
+            "--keepserving",
+            action="store_true", dest="keepserving", default=False,
+            help="Continue serving after client playback or file read. We exit by default."
+        )
+        parser.add_argument(
+            'filt', nargs=argparse.REMAINDER
+        )
+
     def __init__(self, server, options, outfile=sys.stdout):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
