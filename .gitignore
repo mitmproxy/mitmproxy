@@ -7,3 +7,4 @@ MANIFEST
 *.swp
 *.swo
 .coverage
+.idea
