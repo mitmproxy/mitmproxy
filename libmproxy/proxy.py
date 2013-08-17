@@ -1,27 +1,11 @@
-# Copyright (C) 2012  Aldo Cortesi
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys, os, string, socket, time
 import shutil, tempfile, threading
 import SocketServer
 from OpenSSL import SSL
 from netlib import odict, tcp, http, wsgi, certutils, http_status, http_auth
-import utils, flow, version, platform, controller, app
+import utils, flow, version, platform, controller
 
 
-APP_DOMAIN = "mitm"
-APP_IP = "1.1.1.1"
 KILL = 0
 
 
@@ -39,8 +23,7 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, app=False, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
-        self.app = app
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, authenticator=None):
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
@@ -49,7 +32,7 @@ class ProxyConfig:
         self.reverse_proxy = reverse_proxy
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
-        self.certstore = certutils.CertStore(certdir)
+        self.certstore = certutils.CertStore()
 
 
 class ServerConnection(tcp.TCPClient):
@@ -60,7 +43,6 @@ class ServerConnection(tcp.TCPClient):
         self.requestcount = 0
         self.tcp_setup_timestamp = None
         self.ssl_setup_timestamp = None
-
 
     def connect(self):
         tcp.TCPClient.connect(self)
@@ -86,11 +68,12 @@ class ServerConnection(tcp.TCPClient):
         self.wfile.flush()
 
     def terminate(self):
-        try:
-            self.wfile.flush()
+        if self.connection:
+            try:
+                self.wfile.flush()
+            except tcp.NetLibDisconnect: # pragma: no cover
+                pass
             self.connection.close()
-        except IOError:
-            pass
 
 
 
@@ -129,7 +112,7 @@ class HandleSNI:
                 self.handler.get_server_connection(self.client_conn, "https", self.host, self.port, sn)
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.key)
-                new_context.use_certificate_file(self.cert)
+                new_context.use_certificate(self.cert.x509)
                 connection.set_context(new_context)
                 self.handler.sni = sn.decode("utf8").encode("idna")
         # An unhandled exception in this method will core dump PyOpenSSL, so
@@ -179,6 +162,8 @@ class ProxyHandler(tcp.BaseHandler):
         return self.server_conn
 
     def del_server_connection(self):
+        if self.server_conn:
+            self.server_conn.terminate()
         self.server_conn = None
 
     def handle(self):
@@ -188,6 +173,7 @@ class ProxyHandler(tcp.BaseHandler):
         while self.handle_request(cc) and not cc.close:
             pass
         cc.close = True
+        self.del_server_connection()
 
         cd = flow.ClientDisconnect(cc)
         self.log(
@@ -213,7 +199,7 @@ class ProxyHandler(tcp.BaseHandler):
                     return
             else:
                 request_reply = self.channel.ask(request)
-                if request_reply == KILL:
+                if request_reply is None or request_reply == KILL:
                     return
                 elif isinstance(request_reply, flow.Response):
                     request = False
@@ -277,7 +263,7 @@ class ProxyHandler(tcp.BaseHandler):
                     # disconnect.
                     if http.response_connection_close(response.httpversion, response.headers):
                         return
-        except (IOError, ProxyError, http.HttpError, tcp.NetLibDisconnect), e:
+        except (IOError, ProxyError, http.HttpError, tcp.NetLibError), e:
             if hasattr(e, "code"):
                 cc.error = "%s: %s"%(e.code, e.msg)
             else:
@@ -309,7 +295,7 @@ class ProxyHandler(tcp.BaseHandler):
 
     def find_cert(self, cc, host, port, sni):
         if self.config.certfile:
-            return self.config.certfile
+            return certutils.SSLCert.from_pem(file(self.config.certfile, "r").read())
         else:
             sans = []
             if not self.config.no_upstream_cert:
@@ -510,17 +496,6 @@ class ProxyServer(tcp.TCPServer):
             raise ProxyServerError('Error starting proxy server: ' + v.strerror)
         self.channel = None
         self.apps = AppRegistry()
-        if config.app:
-            self.apps.add(
-                app.mapp,
-                APP_DOMAIN,
-                80
-            )
-            self.apps.add(
-                app.mapp,
-                APP_IP,
-                80
-            )
 
     def start_slave(self, klass, channel):
         slave = klass(channel, self)
@@ -533,9 +508,6 @@ class ProxyServer(tcp.TCPServer):
         h = ProxyHandler(self.config, request, client_address, self, self.channel, self.server_version)
         h.handle()
         h.finish()
-
-    def handle_shutdown(self):
-        self.config.certstore.cleanup()
 
 
 class AppRegistry:
@@ -585,11 +557,6 @@ def certificate_option_group(parser):
         type = str, dest = "clientcerts", default=None,
         help = "Client certificate directory."
     )
-    group.add_argument(
-        "--dummy-certs", action="store",
-        type = str, dest = "certdir", default=None,
-        help = "Generated dummy certs directory."
-    )
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
@@ -630,11 +597,6 @@ def process_proxy_options(parser, options):
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
             return parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
 
-    if options.certdir:
-        options.certdir = os.path.expanduser(options.certdir)
-        if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
-            return parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
-
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
             if len(options.auth_singleuser.split(':')) != 2:
@@ -653,7 +615,6 @@ def process_proxy_options(parser, options):
         authenticator = http_auth.NullProxyAuth(None)
 
     return ProxyConfig(
-        app = options.app,
         certfile = options.cert,
         cacert = cacert,
         clientcerts = options.clientcerts,
@@ -661,6 +622,5 @@ def process_proxy_options(parser, options):
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
         transparent_proxy = trans,
-        certdir = options.certdir,
         authenticator = authenticator
     )

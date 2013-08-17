@@ -4,6 +4,9 @@ import libpathod.test, libpathod.pathoc
 from libmproxy import proxy, flow, controller
 import tutils
 
+APP_DOMAIN = "mitm"
+APP_IP = "1.1.1.1"
+
 testapp = flask.Flask(__name__)
 
 @testapp.route("/")
@@ -28,6 +31,7 @@ class TestMaster(flow.FlowMaster):
         flow.FlowMaster.__init__(self, s, state)
         self.testq = testq
         self.clear_log()
+        self.start_app(APP_DOMAIN, APP_IP)
 
     def handle_request(self, m):
         flow.FlowMaster.handle_request(self, m)
@@ -85,7 +89,6 @@ class ProxTestBase:
             no_upstream_cert = cls.no_upstream_cert,
             cacert = tutils.test_data.path("data/serverkey.pem"),
             authenticator = cls.authenticator,
-            app = True,
             **pconf
         )
         tmaster = cls.masterclass(cls.tqueue, config)
@@ -162,12 +165,12 @@ class HTTPProxTest(ProxTestBase):
         if self.ssl:
             p = libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port, True)
             print "PRE"
-            p.connect((proxy.APP_IP, 80))
+            p.connect((APP_IP, 80))
             print "POST"
             return p.request("get:'/%s'"%page)
         else:
             p = self.pathoc()
-            return p.request("get:'http://%s/%s'"%(proxy.APP_DOMAIN, page))
+            return p.request("get:'http://%s/%s'"%(APP_DOMAIN, page))
 
 
 class TResolver:

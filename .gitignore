@@ -10,5 +10,6 @@ MANIFEST
 mitmproxyc
 mitmdumpc
 .coverage
+.idea
 netlib
 libpathod

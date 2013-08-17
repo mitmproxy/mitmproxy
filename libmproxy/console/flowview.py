@@ -1,18 +1,3 @@
-# Copyright (C) 2012  Aldo Cortesi
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import os, sys
 import urwid
 import common, grideditor, contentview
@@ -342,7 +327,7 @@ class FlowView(common.WWrap):
         else:
             if not self.flow.response:
                 self.flow.response = flow.Response(
-                    self.flow.request, 
+                    self.flow.request,
                     self.flow.request.httpversion,
                     200, "OK", flow.ODictCaseless(), "", None
                 )
@@ -393,7 +378,7 @@ class FlowView(common.WWrap):
             new_flow, new_idx = self.state.get_next(idx)
         else:
             new_flow, new_idx = self.state.get_prev(idx)
-        if new_idx is None:
+        if new_flow is None:
             self.master.statusbar.message("No more flows!")
             return
         self.master.view_flow(new_flow)
@@ -478,7 +463,6 @@ class FlowView(common.WWrap):
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
-            self.master.currentflow = f
             self.master.statusbar.message("Duplicated.")
         elif key == "e":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
@@ -577,7 +561,8 @@ class FlowView(common.WWrap):
                 self.flow.backup()
                 e = conn.headers.get_first("content-encoding", "identity")
                 if e != "identity":
-                    conn.decode()
+                    if not conn.decode():
+                        self.master.statusbar.message("Could not decode - invalid data?")
                 else:
                     self.master.prompt_onekey(
                         "Select encoding: ",
