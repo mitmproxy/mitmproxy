@@ -220,6 +220,12 @@ def add_common_arguments(parser):
         help="""IP to serve the app from. Useful for transparent mode, when a DNS
         entry for the app domain is not present."""
     )
+    parser.add_argument(
+        "--readonly",
+        action="store_true", dest="readonly",
+        help="Don't allow web clients to modify files on disk (e.g. report scripts)"
+    )
+
 
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
