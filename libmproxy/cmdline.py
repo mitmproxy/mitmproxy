@@ -4,8 +4,8 @@ import argparse
 import shlex
 import os
 
-APP_DOMAIN = "mitm"
-APP_IP = "1.1.1.1"
+APP_HOST = "mitm"
+APP_PORT = 80
 
 class ParseException(Exception): pass
 class OptionException(Exception): pass
@@ -130,8 +130,9 @@ def get_common_options(options):
 
     return dict(
         app = options.app,
-        app_ip = options.app_ip,
-        app_domain = options.app_domain,
+        app_host = options.app_host,
+        app_port = options.app_port,
+        app_external = options.app_external,
 
         anticache = options.anticache,
         anticomp = options.anticomp,
@@ -263,15 +264,19 @@ def common_options(parser):
         help="Enable the mitmproxy web app."
     )
     group.add_argument(
-        "--appdomain",
-        action="store", dest="app_domain", default=APP_DOMAIN, metavar="domain",
-        help="Domain to serve the app from."
+        "--app-host",
+        action="store", dest="app_host", default=APP_HOST, metavar="host",
+        help="Domain to serve the app from. For transparent mode, use an IP when a DNS entry for the app domain is not present."
     )
     group.add_argument(
-        "--appip",
-        action="store", dest="app_ip", default=APP_IP, metavar="ip",
-        help="""IP to serve the app from. Useful for transparent mode, when a DNS
-        entry for the app domain is not present."""
+        "--app-port",
+        action="store", dest="app_port", default=APP_PORT, type=int, metavar="80",
+        help="Port to serve the app from."
+    )
+    group.add_argument(
+        "--app-external",
+        action="store_true", dest="app_external",
+        help="Serve the app outside of the proxy."
     )
 
     group = parser.add_argument_group("Client Replay")

@@ -128,7 +128,7 @@ class DumpMaster(flow.FlowMaster):
                 self.add_event("Flow file corrupted. Stopped loading.")
 
         if self.o.app:
-            self.start_app(self.o.app_domain, self.o.app_ip)
+            self.start_app(self.o.app_host, self.o.app_port, self.o.app_external)
 
     def _readflow(self, path):
         path = os.path.expanduser(path)

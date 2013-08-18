@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import hashlib, Cookie, cookielib, copy, re, urlparse, os
+import hashlib, Cookie, cookielib, copy, re, urlparse, os, threading
 import time, urllib
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
@@ -1367,17 +1367,19 @@ class FlowMaster(controller.Master):
         self.stream = None
         app.mapp.config["PMASTER"] = self
 
-    def start_app(self, domain, ip):
-        self.server.apps.add(
-            app.mapp,
-            domain,
-            80
-        )
-        self.server.apps.add(
-            app.mapp,
-            ip,
-            80
-        )
+    def start_app(self, host, port, external):
+        if not external:
+            self.server.apps.add(
+                app.mapp,
+                host,
+                port
+            )
+        else:
+            print host
+            threading.Thread(target=app.mapp.run,kwargs={
+                "use_reloader": False,
+                "host": host,
+                "port": port}).start()
 
     def add_event(self, e, level="info"):
         """
