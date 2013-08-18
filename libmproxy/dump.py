@@ -126,7 +126,8 @@ class DumpMaster(flow.FlowMaster):
         return "\n".join(" "*n + i for i in l)
 
     def _process_flow(self, f):
-        self.state.delete_flow(f)
+        if not self.o.app:
+            self.state.delete_flow(f)
         if self.filt and not f.match(self.filt):
             return
 
