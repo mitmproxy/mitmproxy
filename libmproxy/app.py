@@ -1,23 +1,44 @@
 import random
 import string
 import os
+import hashlib
 import flask
-from flask import request, send_from_directory, Response
+from flask import request, send_from_directory, Response, session, url_for, redirect
 from flask.json import jsonify, dumps
 from flask.helpers import safe_join
 from werkzeug.exceptions import *
 
 mapp = flask.Flask(__name__)
 mapp.debug = True
+mapp.secret_key = os.urandom(16).encode("hex")
 
-xsrf_token = ''.join(
-    random.choice(string.ascii_lowercase + string.digits) for _ in range(32))
+auth_token = os.urandom(16).encode("hex")
+xsrf_token = os.urandom(16).encode("hex")
+
+print "Auth token: ",auth_token
+
+@mapp.before_request
+def auth():
+    if session.get("auth",False):
+        if request.method == "GET":
+            return
+        else:
+            token = request.headers.get('X-Request-Token',False)
+            if token:
+                if hashlib.sha1(xsrf_token).hexdigest() == hashlib.sha1(token).hexdigest():
+                    return
+    else:
+        token = request.args.get("auth",False)
+        if token:
+            if hashlib.sha1(auth_token).hexdigest() == hashlib.sha1(token).hexdigest():
+                session['auth'] = True
+                return
+    raise Unauthorized()
 
 
 @mapp.route("/")
 def index():
     return flask.render_template("index.html", section="home")
-
 
 @mapp.route("/certs")
 def certs():
@@ -25,12 +46,12 @@ def certs():
 
 
 @mapp.route('/app/')
-def appindex():
-    return app("index.html")
+def app():
+    return app_static("index.html")
 
 
 @mapp.route('/app/<path:filename>')
-def app(filename):
+def app_static(filename):
     return send_from_directory(mapp.root_path + './gui/', filename)
 
 
@@ -86,16 +107,18 @@ def content(flowid, message):
         raise UnprocessableEntity()
     return content
 
+
 @mapp.route("/api/fs/<path:path>", methods=['GET', 'POST', 'PUT', 'DELETE'])
 def fsapi(path):
     path = safe_join(mapp.root_path + '/../scripts/gui', path)
-    func = getattr(FilesystemApi, request.method)
+    func = getattr(FilesystemApi, str(request.method))
     return func(
         path=path,
         exists=os.path.exists(path),
         isfile=os.path.isfile(path),
         isdir=os.path.isdir(path)
     )
+
 
 @mapp.route("/api/fs/")
 def fsapi_index():
@@ -133,11 +156,29 @@ class FilesystemApi:
     def POST(path, exists, isfile, isdir):
         if exists:
             raise Conflict()
-        json.loads(requestContent)
-        dir, file = os.path.split(path)
-        if not os.path.exists(dir):
-            os.makedirs(dir)
+        directory, filename = os.path.split(path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         with open(path, "wb") as f:
-            f.write(CONTENT)
-            #FIXME return 201 created status code
+            f.write(request.data)
+        return jsonify(success=True), 201
+
+    @staticmethod
+    def PUT(path, exists, isfile, isdir):
+        if not exists:
+            raise Conflict()
+        with open(path, "wb") as f:
+            f.write(request.data)
         return jsonify(success=True)
+
+    @staticmethod
+    def DELETE(path, exists, isfile, isdir):
+        if not exists:
+            raise NotFound()
+        if isfile:
+            os.remove(path)
+            return jsonify(success=True)
+        if isdir:
+            os.rmdir(path)
+            return jsonify(success=True)
+        raise InternalServerError()

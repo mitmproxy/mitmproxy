@@ -10,12 +10,11 @@
  * mitmproxy has NO built-in protection against MITM attacks.
  * Run it on localhost for sensitive operations or tunnel appropriately.
  */
-define(["exports", "dojo/request", "dojo/request/notify", "dojo/Deferred"],function(exports, request, notify, Deferred){
+define(["require", "exports", "dojo/request/notify", "dojo/Deferred"],function(require, exports, notify, Deferred){
 	
 	var def = new Deferred();
-	
-	request("/api/token",{handleAs:"json"}).then(function(data){
-		var token = data.token;
+	require(["../config"], function(config){
+		var token = config.get("token");
 		notify("send", function(req){
 			if(req.options.method !== "GET") {
 				req.xhr.setRequestHeader("X-Request-Token",token);

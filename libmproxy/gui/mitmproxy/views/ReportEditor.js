@@ -7,8 +7,8 @@ define(["lodash",
 		"dojo/query",
 		"dojo/request",
 		"codemirror",
-		"../report/context"
-		
+		"../report/context",
+        "../util/requestAuthenticator"
 ], function(_, declare, Deferred, _ReactiveTemplatedWidget, template, domConstruct, query, request,
 	CodeMirror, reportContext) {
 
@@ -90,7 +90,7 @@ define(["lodash",
 
 			});
 		},
-		api_path: "/api/fs/report_scripts/",
+		api_path: "/api/fs/",
 		onCodeChange: function() {
 			if (this._saveTimeout)
 				window.clearTimeout(this._saveTimeout);
@@ -153,9 +153,8 @@ define(["lodash",
 			var method = isNewFile ? request.post : request.put;
 			var code = this.getCode();
 			this.saveRequest = method(this.api_path + this.filename, {
-				data: JSON.stringify({
-					"content": code
-				})
+				data: code,
+                headers: { 'Content-Type': 'text/plain' }
 			});
 			this.saveRequest.then(function() {
 				self.setStatus("saved", false);

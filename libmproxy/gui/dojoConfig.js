@@ -9,7 +9,7 @@ var dojoConfig = {
 		location: "./mitmproxy"
 	}, {
 		name: "ReportScripts",
-		location: "/api/fs/report_scripts"
+		location: "/api/fs"
 	}, {
 		name: "jquery",
 		main: "jquery.min",
