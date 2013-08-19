@@ -8,9 +8,10 @@ define(["lodash",
 		"dojo/request",
 		"codemirror",
 		"../report/context",
-        "../util/requestAuthenticator"
+		"../config",
+		"../util/requestAuthenticator"
 ], function(_, declare, Deferred, _ReactiveTemplatedWidget, template, domConstruct, query, request,
-	CodeMirror, reportContext) {
+	CodeMirror, reportContext, config) {
 
 	var done = new Deferred();
 	done.resolve();
@@ -119,7 +120,7 @@ define(["lodash",
 			}
 		},
 		isFileReadOnly: function() {
-			if (this.readonly)
+			if (config.get("readonly"))
 				return true;
 			if (this.filename && this.filename[0] === "=")
 				return true;

@@ -12,10 +12,13 @@ mapp = flask.Flask(__name__)
 mapp.debug = True
 mapp.secret_key = os.urandom(16).encode("hex")
 
-auth_token = os.urandom(16).encode("hex")
-xsrf_token = os.urandom(16).encode("hex")
 
-print "Auth token: ",auth_token
+def auth_token():
+    if not mapp.config.get("auth_token",False):
+        mapp.config["auth_token"] = os.urandom(16).encode("hex")
+        print "Auth token:", mapp.config["auth_token"]
+    return mapp.config["auth_token"]
+xsrf_token = os.urandom(16).encode("hex")
 
 @mapp.before_request
 def auth():
@@ -29,11 +32,20 @@ def auth():
                     return
     else:
         token = request.args.get("auth",False)
+        if auth_token() == "NO_AUTH":
+            token = "NO_AUTH"
         if token:
-            if hashlib.sha1(auth_token).hexdigest() == hashlib.sha1(token).hexdigest():
+            if hashlib.sha1(auth_token()).hexdigest() == hashlib.sha1(token).hexdigest():
                 session['auth'] = True
                 return
     raise Unauthorized()
+
+def require_write_permission(f):
+    def wrap(*args, **kwargs):
+        if not mapp.config["readonly"]:
+            return f(*args, **kwargs)
+        raise Unauthorized()
+    return wrap
 
 
 @mapp.route("/")
@@ -60,7 +72,8 @@ def config():
     m = mapp.config["PMASTER"]
     return jsonify(
         proxy=m.server.server_address,
-        token=xsrf_token
+        token=xsrf_token,
+        readonly=mapp.config["readonly"]
     )
 
 
@@ -78,7 +91,8 @@ def _flow(flowid=None):
 @mapp.route("/api/flows")
 def flowlist():
     flows = list(f._get_state() for f in _flow())
-    for flow in flows:
+    for i, flow in enumerate(flows):
+        flow["id"] = i
         if flow["request"]:
             del flow["request"]["content"]
         if flow["response"]:
@@ -89,6 +103,7 @@ def flowlist():
 @mapp.route("/api/flows/<int:flowid>")
 def flow(flowid):
     flow = _flow(flowid)._get_state()
+    flow["id"] = flowid
     if flow["request"]:
         del flow["request"]["content"]
     if flow["response"]:
@@ -153,6 +168,7 @@ class FilesystemApi:
         raise InternalServerError()
 
     @staticmethod
+    @require_write_permission
     def POST(path, exists, isfile, isdir):
         if exists:
             raise Conflict()
@@ -164,6 +180,7 @@ class FilesystemApi:
         return jsonify(success=True), 201
 
     @staticmethod
+    @require_write_permission
     def PUT(path, exists, isfile, isdir):
         if not exists:
             raise Conflict()
@@ -172,6 +189,7 @@ class FilesystemApi:
         return jsonify(success=True)
 
     @staticmethod
+    @require_write_permission
     def DELETE(path, exists, isfile, isdir):
         if not exists:
             raise NotFound()

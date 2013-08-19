@@ -221,9 +221,14 @@ def add_common_arguments(parser):
         entry for the app domain is not present."""
     )
     parser.add_argument(
-        "--readonly",
-        action="store_true", dest="readonly",
+        "--app-readonly",
+        action="store_true", dest="app_readonly",
         help="Don't allow web clients to modify files on disk (e.g. report scripts)"
+    )
+    parser.add_argument(
+        "--app-auth",
+        action="store", dest="app_auth", default="NO_AUTH",
+        help="Authentication string for the API."
     )
 
 

@@ -1368,6 +1368,8 @@ class FlowMaster(controller.Master):
         app.mapp.config["PMASTER"] = self
 
     def start_app(self, domain, ip):
+        app.mapp.config["auth_token"] = self.o.app_auth
+        app.mapp.config["readonly"] = self.o.app_readonly
         self.server.apps.add(
             app.mapp,
             domain,
