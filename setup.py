@@ -65,7 +65,7 @@ def findPackages(path, dataExclude=[]):
     return packages, package_data
 
 
-long_description = file("README.txt").read()
+long_description = file("README.txt","rb").read()
 packages, package_data = findPackages("libpathod")
 setup(
         name = "pathod",

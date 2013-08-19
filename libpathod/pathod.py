@@ -12,7 +12,7 @@ class SSLOptions:
     def __init__(self, certfile=None, keyfile=None, not_after_connect=None, request_client_cert=False):
         self.keyfile = keyfile or utils.data.path("resources/server.key")
         self.certfile = certfile or utils.data.path("resources/server.crt")
-        self.cert = certutils.SSLCert.from_pem(file(self.certfile, "r").read())
+        self.cert = certutils.SSLCert.from_pem(file(self.certfile, "rb").read())
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
 
