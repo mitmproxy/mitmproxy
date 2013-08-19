@@ -7,6 +7,8 @@ from flask import request, send_from_directory, Response, session, url_for, redi
 from flask.json import jsonify, dumps
 from flask.helpers import safe_join
 from werkzeug.exceptions import *
+from werkzeug.datastructures import ContentRange
+from werkzeug.http import parse_range_header
 
 mapp = flask.Flask(__name__)
 mapp.debug = True
@@ -14,24 +16,25 @@ mapp.secret_key = os.urandom(16).encode("hex")
 
 
 def auth_token():
-    if not mapp.config.get("auth_token",False):
+    if not mapp.config.get("auth_token", False):
         mapp.config["auth_token"] = os.urandom(16).encode("hex")
         print "Auth token:", mapp.config["auth_token"]
     return mapp.config["auth_token"]
 xsrf_token = os.urandom(16).encode("hex")
 
+
 @mapp.before_request
 def auth():
-    if session.get("auth",False):
+    if session.get("auth", False):
         if request.method == "GET":
             return
         else:
-            token = request.headers.get('X-Request-Token',False)
+            token = request.headers.get('X-Request-Token', False)
             if token:
                 if hashlib.sha1(xsrf_token).hexdigest() == hashlib.sha1(token).hexdigest():
                     return
     else:
-        token = request.args.get("auth",False)
+        token = request.args.get("auth", False)
         if auth_token() == "NO_AUTH":
             token = "NO_AUTH"
         if token:
@@ -39,6 +42,7 @@ def auth():
                 session['auth'] = True
                 return
     raise Unauthorized()
+
 
 def require_write_permission(f):
     def wrap(*args, **kwargs):
@@ -51,6 +55,7 @@ def require_write_permission(f):
 @mapp.route("/")
 def index():
     return flask.render_template("index.html", section="home")
+
 
 @mapp.route("/certs")
 def certs():
@@ -90,14 +95,38 @@ def _flow(flowid=None):
 
 @mapp.route("/api/flows")
 def flowlist():
-    flows = list(f._get_state() for f in _flow())
-    for i, flow in enumerate(flows):
+    flows = _flow()
+    total = len(flows)
+
+    # Handle Range Header
+    range_str = request.headers.get("Range", False)
+    if range_str:
+        range_header = parse_range_header(range_str)
+        if len(range_header.ranges) != 1:
+            raise RequestedRangeNotSatisfiable()
+        range_start, range_end = range_header.ranges[0]
+    else:
+        range_start = 0
+        range_end = len(flows) - 1
+    flows = flows[range_start:range_end+1]
+
+    #Prepare flow list
+    flows = list(f._get_state() for f in flows)
+    i = range_start
+    for flow in flows:
         flow["id"] = i
-        if flow["request"]:
+        i += 1  # TODO: This should get unneccesary asap
+        if flow.get("request", False):
             del flow["request"]["content"]
-        if flow["response"]:
+        if flow.get("response", False):
             del flow["response"]["content"]
-    return Response(dumps(flows), mimetype='application/json')
+
+    code = 206 if range_str else 200
+    headers = {
+        'Content-Type': 'application/json',
+        'Content-Range': ContentRange("items", range_start, range_end, total).to_header()
+    }
+    return dumps(flows), code, headers
 
 
 @mapp.route("/api/flows/<int:flowid>")

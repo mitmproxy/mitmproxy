@@ -144,13 +144,6 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
 					options.count += 1;
 				//console.log("start: %d, count: %d, sum: %d, total: %d",options.start, options.count, options.start + options.count, resultsArray.length);
 			});
-			results.total = results.then(function(resultsArray){
-				return resultsArray.length;
-			});
-			results.then(function(resultsArray) {
-				resultsArray.splice(0,options.start);
-				resultsArray.splice(options.count,resultsArray.length - options.count);
-			});
 
 			if (options.plain) //used to speed up observe queries
 				return results;
