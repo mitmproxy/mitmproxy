@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+import sys, argparse, signal, webbrowser
+from libmproxy import proxy, dump
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(usage = "%(prog)s [options] [filter]")
+    dump.DumpMaster.add_arguments(parser)
+
+    options = parser.parse_args()
+    options.app = True
+
+    server = proxy.get_server(parser,options)
+
+    m = dump.DumpMaster(server, options)
+
+    # FIXME: If https://github.com/mitmproxy/mitmproxy/pull/161 gets merged..
+    # - Replace default port
+    # - force external app
+    url = "http://%s:%d/app" % (options.app_domain, 80)
+    if options.app_auth != "NO_AUTH":
+        url += "?auth=%s" % options.app_auth
+    webbrowser.open(url)
+
+    def cleankill(*args, **kwargs):
+        m.shutdown()
+    signal.signal(signal.SIGTERM, cleankill)
+    try:
+        m.run()
+    except KeyboardInterrupt:
+        pass
