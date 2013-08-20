@@ -22,6 +22,10 @@ def auth_token():
     return mapp.config["auth_token"]
 xsrf_token = os.urandom(16).encode("hex")
 
+@mapp.after_request
+def csp_header(response):
+    response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-eval'"
+    return response
 
 @mapp.before_request
 def auth():
@@ -107,7 +111,7 @@ def flowlist():
         range_start, range_end = range_header.ranges[0]
     else:
         range_start = 0
-        range_end = len(flows) - 1
+        range_end = max(len(flows) - 1, 0)
     flows = flows[range_start:range_end+1]
 
     #Prepare flow list
@@ -124,7 +128,9 @@ def flowlist():
     code = 206 if range_str else 200
     headers = {
         'Content-Type': 'application/json',
-        'Content-Range': ContentRange("items", range_start, range_end, total).to_header()
+        'Content-Range': ContentRange("items", None, None, total).to_header()
+        #Skip start and end parameters to please werkzeugs range validator.
+        #api users can only rely on the submitted total count
     }
     return dumps(flows), code, headers
 
