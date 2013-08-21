@@ -266,7 +266,7 @@ class BaseHandler:
 
         self.clientcert = None
 
-    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False):
+    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False, cipher_list=None):
         """
             cert: A certutils.SSLCert object.
             method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
@@ -294,6 +294,8 @@ class BaseHandler:
         ctx = SSL.Context(method)
         if not options is None:
             ctx.set_options(options)
+        if cipher_list:
+            ctx.set_cipher_list(cipher_list)
         if handle_sni:
             # SNI callback happens during do_handshake()
             ctx.set_tlsext_servername_callback(handle_sni)
