@@ -225,10 +225,12 @@ def add_common_arguments(parser):
         action="store_true", dest="app_readonly",
         help="Don't allow web clients to modify files on disk (e.g. report scripts)"
     )
+    # None: Generate random auth token. False: Disable Auth. str: Use as auth.
     parser.add_argument(
         "--app-auth",
-        action="store", dest="app_auth", default="NO_AUTH",
-        help="Authentication string for the API."
+        action="store", dest="app_auth", default=None,
+        type=(lambda x: False if str(x).lower() == "no_auth" else x),
+        help='Authentication string for the API. Use "NO_AUTH" to disable authentication.'
     )
 
 

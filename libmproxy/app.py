@@ -12,12 +12,11 @@ from werkzeug.http import parse_range_header
 
 mapp = flask.Flask(__name__)
 mapp.debug = True
-mapp.secret_key = os.urandom(16).encode("hex")
-
+mapp.secret_key = os.urandom(32)
 
 def auth_token():
-    if not mapp.config.get("auth_token", False):
-        mapp.config["auth_token"] = os.urandom(16).encode("hex")
+    if mapp.config["auth_token"] is None:
+        mapp.config["auth_token"] = os.urandom(32).encode("hex")
         print "Auth token:", mapp.config["auth_token"]
     return mapp.config["auth_token"]
 xsrf_token = os.urandom(16).encode("hex")
@@ -39,8 +38,8 @@ def auth():
                     return
     else:
         token = request.args.get("auth", False)
-        if auth_token() == "NO_AUTH":
-            token = "NO_AUTH"
+        if not auth_token():
+            return
         if token:
             if hashlib.sha1(auth_token()).hexdigest() == hashlib.sha1(token).hexdigest():
                 session['auth'] = True

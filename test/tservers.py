@@ -31,7 +31,7 @@ class TestMaster(flow.FlowMaster):
         flow.FlowMaster.__init__(self, s, state)
         self.testq = testq
         self.clear_log()
-        self.start_app(APP_DOMAIN, APP_IP, "NO_AUTH", False)
+        self.start_app(APP_DOMAIN, APP_IP, False, False)
 
     def handle_request(self, m):
         flow.FlowMaster.handle_request(self, m)

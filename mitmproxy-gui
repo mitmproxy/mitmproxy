@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, argparse, signal, webbrowser
-from libmproxy import proxy, dump
+from libmproxy import proxy, dump, app
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage = "%(prog)s [options] [filter]")
@@ -17,8 +17,8 @@ if __name__ == '__main__':
     # - Replace default port
     # - force external app
     url = "http://%s:%d/app" % (options.app_domain, 80)
-    if options.app_auth != "NO_AUTH":
-        url += "?auth=%s" % options.app_auth
+    if options.app_auth is not False:
+        url += "?auth=%s" % app.auth_token()
     webbrowser.open(url)
 
     def cleankill(*args, **kwargs):
