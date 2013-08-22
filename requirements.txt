@@ -12,3 +12,4 @@ pyasn1==0.1.7
 requests==1.2.2
 urwid==1.1.1
 wsgiref==0.1.2
+jsbeautifier==1.4.0
