@@ -156,7 +156,17 @@ define(["dojo/_base/declare",
 
 			var query = {};
 			this.filters.forEach(function(filter) {
-				var name = filter.filter ? "filter" : filter.color;
+                var name;
+                if(filter.filter) {
+                    name = "filter"
+                } else {
+                    //We change the color opacity already for the tag
+                    // more performant than recalculating rgba valuesfor every flow.
+                    name = ("rgba("+
+                        parseInt(filter.color.substr(1,2),16)+","+
+                        parseInt(filter.color.substr(3,2),16)+","+
+                        parseInt(filter.color.substr(5,2),16)+",0.5)");
+                }
 				if(filter.query){
 					query[name] = filter.query;
 				}

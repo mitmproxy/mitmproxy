@@ -18,20 +18,21 @@ define(["dojo/_base/declare", "lodash", "../util/Observer", "./views/all"], func
 			flow.notify = Observer.ObservablePolyfillMixin.prototype.notify;
 
 			["request", "response"].forEach(function(x) {
-				Object.defineProperties(flow[x],{
-					_flow: {
-						value: flow,
-						enumerable: false,
-						configurable: false,
-						writable: false
-					},
-					_attr: {
-						value: x,
-						enumerable: false,
-						configurable: false,
-						writable: false
-					}
-				});
+                if(flow[x])
+                    Object.defineProperties(flow[x],{
+                        _flow: {
+                            value: flow,
+                            enumerable: false,
+                            configurable: false,
+                            writable: false
+                        },
+                        _attr: {
+                            value: x,
+                            enumerable: false,
+                            configurable: false,
+                            writable: false
+                        }
+                    });
 			});
 
 			//TODO: Caching

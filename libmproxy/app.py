@@ -1,10 +1,9 @@
-import random
-import string
 import os
 import hashlib
 import base64
 import flask
-from flask import request, send_from_directory, Response, session, url_for, redirect
+import filt
+from flask import request, send_from_directory, Response, session
 from flask.json import jsonify, dumps
 from flask.helpers import safe_join
 from werkzeug.exceptions import *
@@ -24,7 +23,7 @@ xsrf_token = base64.b64encode(os.urandom(32))
 
 @mapp.after_request
 def csp_header(response):
-    response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-eval'"
+    response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-eval'; style-src 'unsafe-inline' 'self'"
     return response
 
 @mapp.before_request
@@ -97,10 +96,33 @@ def _flow(flowid=None):
         raise BadRequest()
 
 
+def _parsefilter(filtstr,key=""):
+    f = filt.parse(filtstr)
+    if not filt:
+        raise BadRequest(flask.json.htmlsafe_dumps({ #FIXME check for XSS
+            "status": "error",
+            "details": "invalid filter %s: %s" % (key, filtstr)
+        }))
+    return f
+
+
+def _prepareFlow(flow):
+    if flow.get("request", False):
+        flow["request"]["contentLength"] = len(flow["request"]["content"])
+        del flow["request"]["content"]
+    if flow.get("response", False):
+        flow["response"]["contentLength"] = len(flow["response"]["content"])
+        del flow["response"]["content"]
+
 @mapp.route("/api/flows")
 def flowlist():
     flows = _flow()
-    total = len(flows)
+
+    # Handle filter
+    f = request.args.get("filter", False)
+    if f:
+        f = _parsefilter(f)
+        flows = filter(lambda flow: f(flow), flows)
 
     # Handle Range Header
     range_str = request.headers.get("Range", False)
@@ -114,21 +136,30 @@ def flowlist():
         range_end = max(len(flows) - 1, 0)
     flows = flows[range_start:range_end+1]
 
-    #Prepare flow list
-    flows = list(f._get_state() for f in flows)
+    # Handle tags
+    flows = list((f, f._get_state()) for f in flows)
+    for _, state in flows:
+        state["tags"] = []
+    for k, v in request.args.iteritems():
+        if k in ["filter", ]:
+            continue
+        f = _parsefilter(v, k)
+        for flow, state in flows:
+            if f(flow):
+                state["tags"].append(k)
+    flows = map(lambda x: x[1], flows)
+
+    #Prepare flow list (remove content from state etc)
     i = range_start
     for flow in flows:
-        flow["id"] = i
-        i += 1  # TODO: This should get unneccesary asap
-        if flow.get("request", False):
-            del flow["request"]["content"]
-        if flow.get("response", False):
-            del flow["response"]["content"]
+        flow["id"] = i  # FIXME: Using filters, this leads to shit results (fixing id fixes this)
+        i += 1          # TODO: This should get unneccesary asap
+        _prepareFlow(flow)
 
     code = 206 if range_str else 200
     headers = {
         'Content-Type': 'application/json',
-        'Content-Range': ContentRange("items", None, None, total).to_header()
+        'Content-Range': ContentRange("items", None, None, len(flows)).to_header()
         #Skip start and end parameters to please werkzeugs range validator.
         #api users can only rely on the submitted total count
     }
@@ -139,10 +170,7 @@ def flowlist():
 def flow(flowid):
     flow = _flow(flowid)._get_state()
     flow["id"] = flowid
-    if flow["request"]:
-        del flow["request"]["content"]
-    if flow["response"]:
-        del flow["response"]["content"]
+    _prepareFlow(flow)
     return jsonify(flow)
 
 

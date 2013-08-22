@@ -15,7 +15,21 @@ define(["dojo/_base/declare",
 		constructor: function() {
 			aspect.after(this, "renderRow", function(row, args) {
 				var flow = args[0];
+                //flow.View.className can contain multiple classNames, breaks classList.add ...
 				row.className += " " + flow.View.className;
+                //Pure Code Beauty: Construct background gradient
+                var c = flow.tags.length;
+                if(c > 0){
+                    var background = "linear-gradient(90deg";
+                    flow.tags.forEach(function(tag,i){
+                        var ps = (100* i   /c) + "%";
+                        var pe = (100*(i+1)/c) + "%";
+                        background += ("," + tag + " " + ps +
+                                       "," + tag + " " + pe);
+                    });
+                    background += ")";
+                    row.style.background = background;
+                }
 				return row;
 			});
 		},
@@ -71,13 +85,13 @@ define(["dojo/_base/declare",
 				label: "Status",
 				className: "field-status.text-right",
 				get: function(flow) {
-					return flow.response.code;
+					return flow.response ? flow.response.code : "";
 				}
 			},
 			"response-type": {
 				label: "Response Type",
 				get: function(flow) {
-					var contentType = ResponseUtils.getContentType(flow.response);
+					var contentType = flow.response ? ResponseUtils.getContentType(flow.response) : false;
 					if (contentType) {
 						var split = contentType.indexOf(";");
 						return contentType.substr(0, split === -1 ? undefined : split);
@@ -88,7 +102,7 @@ define(["dojo/_base/declare",
 				label: "Size",
 				className: "field-size.text-right",
 				get: function(flow) {
-					return ResponseUtils.getContentLengthFormatted(flow.response);
+					return flow.response ? ResponseUtils.getContentLengthFormatted(flow.response) : "-";
 				}
 			},
 			time: {
@@ -100,7 +114,7 @@ define(["dojo/_base/declare",
 					node.innerHTML = (
 						'<span class="timestamp" title="UNIX Timestamp: ' + flow.request.timestamp_start + '">' +
 						date.toLocaleTimeString() + ', ' + ("0" + date.getDate()).slice(-2) + '.' + ("0" + (date.getMonth() + 1)).slice(-2) +
-						'.</span><br><small class="duration">' + Math.floor((flow.response.timestamp_end - flow.request.timestamp_start) * 1000) + 'ms</small>');
+						'.</span><br><small class="duration">' + (flow.response ? Math.floor((flow.response.timestamp_end - flow.request.timestamp_start) * 1000)+"ms" : "...") + '</small>');
 				}
 			}
 		},

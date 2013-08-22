@@ -4,7 +4,7 @@ define(["./RequestUtils","./ResponseUtils"],function(RequestUtils,ResponseUtils)
   
   return function(contentType, filename){
     return function(flow) {
-      var contentType_ = ResponseUtils.getContentType(flow.response);
+      var contentType_ = flow.response ? ResponseUtils.getContentType(flow.response) : false;
       if (contentType && contentType_ && !!contentType_.match(contentType))
         return true;
       var filename_ = RequestUtils.getFilename(flow.request);
