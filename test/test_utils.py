@@ -38,7 +38,7 @@ def test_pretty_size():
     assert utils.pretty_size(100) == "100B"
     assert utils.pretty_size(1024) == "1kB"
     assert utils.pretty_size(1024 + (1024/2.0)) == "1.5kB"
-    assert utils.pretty_size(1024*1024) == "1M"
+    assert utils.pretty_size(1024*1024) == "1MB"
 
 
 def test_pkg_data():
