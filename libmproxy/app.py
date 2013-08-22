@@ -2,6 +2,7 @@ import random
 import string
 import os
 import hashlib
+import base64
 import flask
 from flask import request, send_from_directory, Response, session, url_for, redirect
 from flask.json import jsonify, dumps
@@ -16,10 +17,10 @@ mapp.secret_key = os.urandom(32)
 
 def auth_token():
     if mapp.config["auth_token"] is None:
-        mapp.config["auth_token"] = os.urandom(32).encode("hex")
+        mapp.config["auth_token"] = base64.b64encode(os.urandom(32))
         print "Auth token:", mapp.config["auth_token"]
     return mapp.config["auth_token"]
-xsrf_token = os.urandom(16).encode("hex")
+xsrf_token = base64.b64encode(os.urandom(32))
 
 @mapp.after_request
 def csp_header(response):
