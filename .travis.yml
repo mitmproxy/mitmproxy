@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+install: 
+  - "pip install -r requirements.txt --use-mirrors"
+  - "pip install --upgrade git+https://github.com/mitmproxy/netlib.git"
+  - "pip install --upgrade git+https://github.com/mitmproxy/pathod.git"
+# command to run tests, e.g. python setup.py test
+script: nosetests
