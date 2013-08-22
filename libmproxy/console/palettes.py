@@ -35,6 +35,7 @@ palettes = {
 
     ('header', 'dark cyan', 'default'),
     ('highlight', 'white,bold', 'default'),
+    ('time', 'light red', 'default'),
     ('intercept', 'brown', 'default', None, '#f60', 'default'),
     ('replay', 'light green', 'default', None, '#0f0', 'default'),
     ('ack', 'light red', 'default'),
