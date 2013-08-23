@@ -4,10 +4,10 @@ define(["lodash", "dojo/_base/lang", "dojo/Deferred", "../util/formatSize"], fun
   //TODO: ES6: Implement a caching proxy. Remove custom caching in getHeader
 
   var contentUrl = function(message, action) {
-    return ("/files" +
+    return ("/api/flows" +
       "/" + message._flow.id +
       "/" + message._attr +
-      "/" + action);
+      "/content");
   };
 
 

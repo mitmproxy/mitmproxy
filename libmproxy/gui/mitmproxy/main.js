@@ -5,14 +5,13 @@ require(
 		"dojo/on",
 		"dojo/topic",
 		"mitmproxy/MainLayout",
-		"mitmproxy/websocket",
 		"mitmproxy/flow/FlowFactory",
 		"mitmproxy/traffic",
 		"mitmproxy/util/versionCheck",
 		"mitmproxy/util/sampleFlow",
 		"mitmproxy/util/requestAuthenticator",
 		"mitmproxy/search"
-], function(when, on, topic, MainLayout, websocket, FlowFactory, flowStore, versionCheck, sampleFlow) {
+], function(when, on, topic, MainLayout, FlowFactory, flowStore, versionCheck, sampleFlow) {
 
 	//Debug
 	window.mitmproxy = {

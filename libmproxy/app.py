@@ -1,12 +1,15 @@
 import os
+import re
 import hashlib
 import base64
 import flask
 import filt
+import httplib
 from flask import request, send_from_directory, Response, session
 from flask.json import jsonify, dumps
 from flask.helpers import safe_join
 from werkzeug.exceptions import *
+from werkzeug.exceptions import default_exceptions  # no idea why, but this is neccesary
 from werkzeug.datastructures import ContentRange
 from werkzeug.http import parse_range_header
 
@@ -21,10 +24,14 @@ def auth_token():
     return mapp.config["auth_token"]
 xsrf_token = base64.b64encode(os.urandom(32))
 
+
 @mapp.after_request
 def csp_header(response):
-    response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-eval'; style-src 'unsafe-inline' 'self'"
+    response.headers["Content-Security-Policy"] = ("default-src 'self' 'unsafe-eval'; " +
+                                                   "style-src   'self' 'unsafe-inline'; " +
+                                                   "connect-src 'self' honeyproxy.org")
     return response
+
 
 @mapp.before_request
 def auth():
@@ -89,17 +96,17 @@ def _flow(flowid=None):
     m = mapp.config["PMASTER"]
     try:
         if flowid:
-            return m.state._flow_list[flowid]
+            return m.state._flow_list[int(flowid)]  # FIXME: Change when id attr introduced
         else:
             return m.state._flow_list
     except:
         raise BadRequest()
 
 
-def _parsefilter(filtstr,key=""):
+def _parsefilter(filtstr, key=""):
     f = filt.parse(filtstr)
-    if not filt:
-        raise BadRequest(flask.json.htmlsafe_dumps({ #FIXME check for XSS
+    if not f:
+        raise BadRequest(response=jsonify({
             "status": "error",
             "details": "invalid filter %s: %s" % (key, filtstr)
         }))
@@ -107,12 +114,12 @@ def _parsefilter(filtstr,key=""):
 
 
 def _prepareFlow(flow):
-    if flow.get("request", False):
-        flow["request"]["contentLength"] = len(flow["request"]["content"])
-        del flow["request"]["content"]
+    flow["request"]["contentLength"] = len(flow["request"]["content"])
+    del flow["request"]["content"]
     if flow.get("response", False):
         flow["response"]["contentLength"] = len(flow["response"]["content"])
         del flow["response"]["content"]
+
 
 @mapp.route("/api/flows")
 def flowlist():
@@ -156,7 +163,7 @@ def flowlist():
         i += 1          # TODO: This should get unneccesary asap
         _prepareFlow(flow)
 
-    code = 206 if range_str else 200
+    code = httplib.PARTIAL_CONTENT if range_str else httplib.OK
     headers = {
         'Content-Type': 'application/json',
         'Content-Range': ContentRange("items", None, None, len(flows)).to_header()
@@ -166,7 +173,7 @@ def flowlist():
     return dumps(flows), code, headers
 
 
-@mapp.route("/api/flows/<int:flowid>")
+@mapp.route("/api/flows/<flowid>")
 def flow(flowid):
     flow = _flow(flowid)._get_state()
     flow["id"] = flowid
@@ -174,7 +181,33 @@ def flow(flowid):
     return jsonify(flow)
 
 
-@mapp.route("/api/flows/<int:flowid>/<message>/content")
+def range_request(f):
+    """
+    This wrapper adds support for simple Range headers.
+    If the range cannot be satisfied, status code 416 is returned.
+    If the range is valid, status code 206 is returned.
+    If there is no range header, the message is just passed as-is.
+    """
+    def wrap(*args, **kwargs):
+        response = flask.make_response(f(*args, **kwargs))
+        range_str = request.headers.get("Range", False)
+        if range_str:
+            range_header = parse_range_header(range_str)
+            if len(range_header.ranges) != 1:
+                raise RequestedRangeNotSatisfiable()
+            range_start, range_end = range_header.ranges[0]
+            if range_end > len(response.content_length):
+                raise RequestedRangeNotSatisfiable()
+            response.set_data(response.get_data()[range_start:range_end+1])
+            response.status_code = httplib.PARTIAL_CONTENT
+            # We should add a Content-Range Header if there is a use case
+            # (werkzeugs implementation is broken for Content-Range: 4-4 )
+        return response
+    return wrap
+
+#TODO: Add logic to distinguish between downloads an displays (TODO: Check if neccessary)
+@mapp.route("/api/flows/<flowid>/<message>/content")
+@range_request
 def content(flowid, message):
     flow = _flow(flowid)
     try:
@@ -183,7 +216,26 @@ def content(flowid, message):
         raise BadRequest()
     if not hasattr(message, "content"):
         raise UnprocessableEntity()
-    return content
+
+    headers = {}
+    c_enc = message.headers.get_first("content-encoding")
+    if c_enc:
+        headers["Content-Encoding"] = c_enc
+    c_type = message.headers.get_first("content-type")
+    if c_type:
+        headers["Content-Type"] = c_type
+    c_disp = message.headers.get_first("content-disposition")
+    if not c_disp:
+        #do minimal file name guessing
+        filename = re.sub("[^\w\.]", "", flow.request.path.split("?")[0].split("/")[-1])
+        c_disp = 'inline; filename="'+filename+'"'
+    #TODO: Check if there's a use case for content-disposition inline
+    #if request.args.get("disposition", "") == "inline":
+    #    headers["Content-Disposition"] = c_disp.replace("attachment", "inline")
+    #else:
+    headers["Content-Disposition"] = c_disp.replace("inline", "attachment")
+
+    return message.content, httplib.OK, headers
 
 
 @mapp.route("/api/fs/<path:path>", methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -203,6 +255,7 @@ def fsapi_index():
     return fsapi("")
 
 
+# noinspection PyUnusedLocal
 class FilesystemApi:
     @staticmethod
     def GET(path, exists, isfile, isdir):
@@ -240,7 +293,7 @@ class FilesystemApi:
             os.makedirs(directory)
         with open(path, "wb") as f:
             f.write(request.data)
-        return jsonify(success=True), 201
+        return jsonify(success=True), httplib.CREATED
 
     @staticmethod
     @require_write_permission
