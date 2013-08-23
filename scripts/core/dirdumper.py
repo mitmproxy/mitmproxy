@@ -6,7 +6,7 @@ from urllib2 import unquote
 
 forbidden_chars = re.compile("[^\\w\\-\\.]")
 
-parser = argparse.ArgumentParser(usage='mitmproxy -s "%(prog)s [options]"')
+parser = argparse.ArgumentParser(usage='mitmproxy -s "dirdumper.py [options]"')
 parser.add_argument('--dump-dir', type=os.path.abspath, metavar='"./dump"', 
 					action="store", default=os.path.abspath("./dump"),
                     help="Directory to dump all objects into.")
