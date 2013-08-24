@@ -16,6 +16,7 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
 		constructor: function() {
 			this.queryUpdaters = [];
 		},
+		sortParam: "sort",
 		_observeFunc: function(results) {
 			var store = this;
 			var listeners = [],

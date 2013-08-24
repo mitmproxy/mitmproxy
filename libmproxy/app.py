@@ -118,7 +118,7 @@ def _prepareFlow(flow):
     del flow["request"]["content"]
     if flow.get("response", False):
         flow["response"]["contentLength"] = len(flow["response"]["content"])
-        del flow["response"]["content"]
+        #del flow["response"]["content"]
 
 
 @mapp.route("/api/flows")
@@ -143,12 +143,15 @@ def flowlist():
         range_end = max(len(flows) - 1, 0)
     flows = flows[range_start:range_end+1]
 
+    # Handle Sort Header
+    # TODO: Implement when sqlite is done.
+
     # Handle tags
     flows = list((f, f._get_state()) for f in flows)
     for _, state in flows:
         state["tags"] = []
     for k, v in request.args.iteritems():
-        if k in ["filter", ]:
+        if k in ["filter", "sort"]:
             continue
         f = _parsefilter(v, k)
         for flow, state in flows:
