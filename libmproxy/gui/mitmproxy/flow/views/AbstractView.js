@@ -1,8 +1,8 @@
 /**
  * Flow View Interface. All views should implement this.
  */
-define(["dojo/_base/declare", "../../util/_ReactiveTemplatedWidget", "../FlowBindings","../MessageUtils","../RequestUtils","../ResponseUtils"], 
-         function(declare, _ReactiveTemplatedWidget, flowBindings, MessageUtils, RequestUtils, ResponseUtils) {
+define(["dojo/_base/declare", "../../util/_ReactiveTemplatedWidget", "../FlowBindings","../MessageUtils","../RequestUtils","../ResponseUtils", "dojo/text!./templates/BasicContentView.html"],
+         function(declare, _ReactiveTemplatedWidget, flowBindings, MessageUtils, RequestUtils, ResponseUtils, basicContentViewTemplate) {
            
   var AbstractView = declare([_ReactiveTemplatedWidget], {
     bindings: flowBindings,
@@ -10,6 +10,12 @@ define(["dojo/_base/declare", "../../util/_ReactiveTemplatedWidget", "../FlowBin
       MessageUtils: MessageUtils,
       RequestUtils: RequestUtils,
       ResponseUtils: ResponseUtils
+    },
+    buildRendering: function(){
+      if((!RequestUtils.hasContent(this.model.request)) && (!this.model.response || !ResponseUtils.hasContent(this.model.response))){
+        this.templateString = basicContentViewTemplate;
+      }
+      this.inherited(arguments);
     },
     templateString: undefined // Template file to fill
   });

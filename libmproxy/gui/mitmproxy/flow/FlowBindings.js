@@ -116,7 +116,7 @@ define([
 
       }
 
-      if (MessageUtils.hasContent(message)) {
+      if (message && MessageUtils.hasContent(message)) {
         node.classList.add("preview-loading");
         if (MessageUtils.hasLargeContent(message)) {
           var button = domConstruct.place("<button>Load Content (" + MessageUtils.getContentLengthFormatted(message) + ")</button>", node, "only");
