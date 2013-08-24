@@ -2,16 +2,16 @@
 
 	<h5>Report Editor</h5>
 
-		<div class="progress progress-striped active span2 text-right">
-		  <div class="bar" data-bind="bind: [view,'active']"></div>
-		  <div class="muted text-center" data-bind="bind: [view,'status']"></div>
-		</div>
+    <div class="progress progress-striped active col-sm-4 text-right">
+      <div class="bar" data-bind="bind: [view,'active']"></div>
+      <div class="muted text-center" data-bind="bind: [view,'status']"></div>
+    </div>
 
-	<div class="btn-toolbar text-right" >
+	<div class="text-right">
 
-	  	<select class="btn span3" data-bind="options: view.files; select: view.filename; change: view.fileChange.bind(view)"></select>
-	    <a class="btn" href="#" data-bind="hide: this.readonly; click: view.newFileClick.bind(view)"    title="New File"   ><i class="icon-file" ></i></a>
-	    <a class="btn" href="#" data-bind="hide: this.readonly; click: view.deleteFileClick.bind(view)" title="Delete File"><i class="icon-trash"></i></a>
+	  	<select class="btn btn-default" data-bind="options: view.files; select: view.filename; change: view.fileChange.bind(view)"></select>
+	    <a class="btn btn-default" href="#" data-bind="hide: this.readonly; click: view.newFileClick.bind(view)"    title="New File"   ><i class="icon-file" ></i></a>
+	    <a class="btn btn-default" href="#" data-bind="hide: this.readonly; click: view.deleteFileClick.bind(view)" title="Delete File"><i class="icon-trash"></i></a>
 	</div>
 
 	<textarea data-bind="bind: [view,'code']"></textarea>

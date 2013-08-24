@@ -1,0 +1,2 @@
+- @navbar-height:                    50px;
++ @navbar-height:                    40px;

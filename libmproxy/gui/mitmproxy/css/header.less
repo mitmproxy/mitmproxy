@@ -1,6 +1,18 @@
 .header {
-	height: 41px;
-	.brand {
-		margin-left: 0;
-	}
+  height: (@navbar-height + 1px);
+  //remove responsive nonsense
+  .navbar-nav {
+    margin: 0;
+    height: (@navbar-height + 1px); //background breaks on small screens otherwise
+    > li {
+      float: left;
+    }
+  }
+}
+
+.navbar .divider-vertical {
+  height: @navbar-height;
+  margin: 0 9px;
+  border-left: 1px solid #e5e5e5;
+  border-right: 1px solid #ffffff;
 }

@@ -1,12 +1,20 @@
 .searchbar {
-	padding-top: 10px;
 
+    @searchbar-padding: 5px;
+    // Fix .row padding
+    .row {
+      padding: @searchbar-padding @searchbar-padding 0 @searchbar-padding;
+    }
+
+    //make sure that button doesn't resize if we replace button icon
 	.query button {
 		padding-left: 6px;
 		padding-right: 6px;
 		width: 26px;
 	}
+
 	.query {
+        padding-bottom: @searchbar-padding;
 		transition: opacity 0.2s;
 		text-align: center;
 		&.empty:not(.always-visible) {

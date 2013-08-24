@@ -29,7 +29,7 @@ define([
 
     var html = "";
     for (var item in message.contentChecksums) {
-      html += '<tr><td>' + _.escape(item) + '</td><td><ul class="unstyled">';
+      html += '<tr><td>' + _.escape(item) + '</td><td><ul class="list-unstyled">';
 
       for (var algo in message.contentChecksums[item]) {
         var checksum = _.escape(message.contentChecksums[item][algo]);

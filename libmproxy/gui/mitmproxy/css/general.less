@@ -34,3 +34,8 @@ html, body {
 	//Add scrollbar for the sidebar
 	overflow-y: auto;
 }
+
+//dijit is too dumb for box-sizing border box (which is set by bootstrap)
+.dijitContainer > div {
+  box-sizing: content-box;
+}
