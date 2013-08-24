@@ -118,7 +118,8 @@ def _prepareFlow(flow):
     del flow["request"]["content"]
     if flow.get("response", False):
         flow["response"]["contentLength"] = len(flow["response"]["content"])
-        #del flow["response"]["content"]
+        del flow["response"]["content"]
+    #del flow["response"]
 
 
 @mapp.route("/api/flows")

@@ -8,13 +8,20 @@ define(["dojo/_base/declare",
 			var self = this;
 
 			if (this.detailView) {
-				this.detailView.setModel(flow);
+                var oldValue = this.detailView.model;
+				this.detailView.model = flow;
+                this.detailView.notify({
+						type: "updated",
+						name: "model",
+						object: this.detailView,
+						oldValue: oldValue
+				});
 			} else {
 				this.detailView = new DetailPane({
 					region: "bottom",
-					splitter: true
-				});
-				this.detailView.setModel(flow);
+					splitter: true,
+                    model: flow
+                });
 				var signal = aspect.before(this.detailView,"destroy",function(){
 					signal.remove();
 					self.removeChild(self.detailView);

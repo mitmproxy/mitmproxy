@@ -36,7 +36,9 @@ define(["dojo/_base/declare"], function(declare) {
   };
   Observer.unobserve = function(obj, observer) {
     var index = obj._observe.indexOf(observer);
-    obj._observe.splice(index,1);
+    if(index >= 0){
+        obj._observe.splice(index,1);
+    }
   };
   /*
   Observer.observeProperty = function(obj, prop, callback) {

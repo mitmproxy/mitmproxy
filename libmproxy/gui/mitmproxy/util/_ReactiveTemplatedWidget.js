@@ -211,9 +211,6 @@ define([
         Observer.observe(this.model, this.updateBindings);
         this.observedModel = this.model;
       }
-      if (this.requiresModel && !this.model) {
-        return;
-      }
 
       var handleBinding = function(node, binding) {
         var value = this._eval(binding[1]);
