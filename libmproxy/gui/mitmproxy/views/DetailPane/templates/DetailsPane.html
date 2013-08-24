@@ -17,7 +17,7 @@
 				<td>Client Connection:</td><td data-bind="textContent: request.client_conn.address.join(':')"></td></tr>
 			<tr><td>Request URL:</td><td data-bind="textContent: RequestUtils.getFullPath(request)"></td></tr>
 			<tr><td>Request Method:</td><td data-bind="textContent: request.method"></td></tr>
-			<tr><td>Status Code:</td><td data-bind="textContent: response.code"></td></tr>
+			<tr data-bind="show: response"><td>Status Code:</td><td data-bind="textContent: response.code"></td></tr>
 		</tbody>
 
 		<tbody data-bind="headerTable: request"></tbody>
@@ -35,9 +35,9 @@
 
 		<tbody data-bind="formDataTable: request"></tbody>
 
-		<tbody data-bind="headerTable: response"></tbody>
+		<tbody data-bind="show: response; headerTable: response"></tbody>
 
-		<tbody data-bind="show: ResponseUtils.hasContent(response)">
+		<tbody data-bind="show: response && ResponseUtils.hasContent(response)">
 			<tr>
 				<td><h5>Response Data:</h5></td>
 				<td class="valign-middle">
@@ -46,9 +46,9 @@
 			</tr>		 	
 		</tbody>
 
-		<tbody data-bind="checksumTable: response"></tbody>
+		<tbody data-bind="show: response; checksumTable: response"></tbody>
 
-		<tbody data-bind="show: response.cert">
+		<tbody data-bind="show: response && response.cert">
 				<tr><td colspan=2 ><h5>Server certificate:</h5></td></tr>
 		 	<tr><td colspan=2>
 				<pre data-bind="textContent: response.cert"></pre>

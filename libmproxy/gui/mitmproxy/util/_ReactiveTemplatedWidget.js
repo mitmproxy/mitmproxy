@@ -213,6 +213,16 @@ define([
       }
 
       var handleBinding = function(node, binding) {
+
+        //Don't handle nodes whose parentNode is hidden.
+        var parentNode = node;
+        while (parentNode !== self.domNode) {
+          if (parentNode.classList.contains("hide")) {
+            return;
+          }
+          parentNode = parentNode.parentNode;
+        }
+
         var value = this._eval(binding[1]);
         this.updateBinding(binding[0], node, value);
       };
