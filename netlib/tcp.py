@@ -376,7 +376,13 @@ class TCPServer:
         self.__is_shut_down.clear()
         try:
             while not self.__shutdown_request:
-                r, w, e = select.select([self.socket], [], [], poll_interval)
+                try:
+                    r, w, e = select.select([self.socket], [], [], poll_interval)
+                except select.error, ex:
+                        if ex[0] == 4:
+                            continue
+                        else:
+                            raise  
                 if self.socket in r:
                     request, client_address = self.socket.accept()
                     t = threading.Thread(
