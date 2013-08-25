@@ -10,6 +10,6 @@ install:
   - "pip install --upgrade git+https://github.com/mitmproxy/pathod.git"
 # command to run tests, e.g. python setup.py test
 script: 
-  - "nosetests --with-cov --cov-report term-missing"
+  - "nosetests -e TestHTTPS --with-cov --cov-report term-missing"
 after_success: 
   - coveralls
