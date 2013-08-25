@@ -23,7 +23,7 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, authenticator=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, authenticator=None, clientciphers=None):
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
@@ -33,6 +33,7 @@ class ProxyConfig:
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
         self.certstore = certutils.CertStore()
+        self.clientciphers = clientciphers
 
 
 class ServerConnection(tcp.TCPClient):
@@ -101,9 +102,10 @@ class RequestReplayThread(threading.Thread):
 
 
 class HandleSNI:
-    def __init__(self, handler, client_conn, host, port, cert, key):
+    def __init__(self, handler, client_conn, host, port, cert, key, cipher_list):
         self.handler, self.client_conn, self.host, self.port = handler, client_conn, host, port
         self.cert, self.key = cert, key
+        self.cipher_list = cipher_list
 
     def __call__(self, connection):
         try:
@@ -113,6 +115,8 @@ class HandleSNI:
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.key)
                 new_context.use_certificate(self.cert.x509)
+                if cipher_list:
+                    new_context.set_cipher_list(cipher_list)
                 connection.set_context(new_context)
                 self.handler.sni = sn.decode("utf8").encode("idna")
         # An unhandled exception in this method will core dump PyOpenSSL, so
@@ -329,7 +333,8 @@ class ProxyHandler(tcp.BaseHandler):
                 dummycert = self.find_cert(client_conn, host, port, host)
                 sni = HandleSNI(
                     self, client_conn, host, port,
-                    dummycert, self.config.certfile or self.config.cacert
+                    dummycert, self.config.certfile or self.config.cacert,
+                    self.config.clientciphers
                 )
                 try:
                     self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
@@ -372,10 +377,11 @@ class ProxyHandler(tcp.BaseHandler):
                 dummycert = self.find_cert(client_conn, host, port, host)
                 sni = HandleSNI(
                     self, client_conn, host, port,
-                    dummycert, self.config.certfile or self.config.cacert
+                    dummycert, self.config.certfile or self.config.cacert,
+                    self.config.clientciphers
                 )
                 try:
-                    self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
+                    self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni, cipher_list=self.config.clientciphers)
                 except tcp.NetLibError, v:
                     raise ProxyError(400, str(v))
                 self.proxy_connect_state = (host, port, httpversion)
@@ -556,7 +562,11 @@ def certificate_option_group(parser):
         type = str, dest = "clientcerts", default=None,
         help = "Client certificate directory."
     )
-
+    group.add_argument(
+        "--client-ciphers", action="store",
+        type = str, dest = "clientciphers", default=None,
+        help = "Client facing supported cipher suites."
+    )
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 
@@ -613,6 +623,7 @@ def process_proxy_options(parser, options):
     else:
         authenticator = http_auth.NullProxyAuth(None)
 
+
     return ProxyConfig(
         certfile = options.cert,
         cacert = cacert,
@@ -621,5 +632,6 @@ def process_proxy_options(parser, options):
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
         transparent_proxy = trans,
-        authenticator = authenticator
+        authenticator = authenticator,
+        clientciphers = options.clientciphers
     )
