@@ -19,10 +19,10 @@ mapp.secret_key = os.urandom(32)
 
 def auth_token():
     if mapp.config["auth_token"] is None:
-        mapp.config["auth_token"] = base64.b64encode(os.urandom(32))
+        mapp.config["auth_token"] = base64.b32encode(os.urandom(30))
         print "Auth token:", mapp.config["auth_token"]
     return mapp.config["auth_token"]
-xsrf_token = base64.b64encode(os.urandom(32))
+xsrf_token = base64.b32encode(os.urandom(30))
 
 
 @mapp.after_request
@@ -136,7 +136,7 @@ def flowlist():
     range_str = request.headers.get("Range", False)
     if range_str:
         range_header = parse_range_header(range_str)
-        if len(range_header.ranges) != 1:
+        if not range_header.ranges or len(range_header.ranges) != 1:
             raise RequestedRangeNotSatisfiable()
         range_start, range_end = range_header.ranges[0]
     else:
@@ -170,7 +170,7 @@ def flowlist():
     code = httplib.PARTIAL_CONTENT if range_str else httplib.OK
     headers = {
         'Content-Type': 'application/json',
-        'Content-Range': ContentRange("items", None, None, len(flows)).to_header()
+        'Content-Range': ContentRange("items", None, None, len(_flow())).to_header()
         #Skip start and end parameters to please werkzeugs range validator.
         #api users can only rely on the submitted total count
     }
