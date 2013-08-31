@@ -23,13 +23,14 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, authenticator=None):
+    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, forward_proxy=None, transparent_proxy=None, authenticator=None):
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
         self.reverse_proxy = reverse_proxy
+        self.forward_proxy = forward_proxy
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
         self.certstore = certutils.CertStore()
@@ -219,7 +220,12 @@ class ProxyHandler(tcp.BaseHandler):
                     # the case, we want to reconnect without sending an error
                     # to the client.
                     while 1:
-                        sc = self.get_server_connection(cc, scheme, host, port, self.sni)
+                        if self.config.forward_proxy:
+                            forward_scheme, forward_host, forward_port = self.config.forward_proxy
+                            sc = self.get_server_connection(cc, forward_scheme, forward_host, forward_port, self.sni)
+                        else:
+                            sc = self.get_server_connection(cc, scheme, host, port, self.sni)
+                            
                         sc.send(request)
                         if sc.requestcount == 1: # add timestamps only for first request (others are not directly affected)
                             request.tcp_setup_timestamp = sc.tcp_setup_timestamp
@@ -594,6 +600,13 @@ def process_proxy_options(parser, options):
     else:
         rp = None
 
+    if options.forward_proxy:
+        fp = utils.parse_proxy_spec(options.forward_proxy)
+        if not fp:
+            return parser.error("Invalid forward proxy specification: %s"%options.forward_proxy)
+    else:
+        fp = None
+
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
@@ -623,6 +636,7 @@ def process_proxy_options(parser, options):
         body_size_limit = body_size_limit,
         no_upstream_cert = options.no_upstream_cert,
         reverse_proxy = rp,
+        forward_proxy = fp,
         transparent_proxy = trans,
         authenticator = authenticator
     )
