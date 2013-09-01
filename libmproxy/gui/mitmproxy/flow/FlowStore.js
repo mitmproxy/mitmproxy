@@ -133,18 +133,25 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
 			};
 		},
 		query: function(query, options) {
+            if(this._total && this._total <= options.start + options.count){
+                options.count += 50;
+            }
+
 			console.log("query", query, options);
 			var results = this.inherited(arguments);
 			options = options || {};
 
-			//FIXME: Return to JsonRest solution
+            /* This is a very ugly workaround for https://github.com/SitePen/dgrid/issues/363 */
+            /* It makes your and my eyes bleed. */
+            var self = this;
+            results.total.then(function(total){
+                self._total = total;
+            });
+            if(options.count > 260){
+                console.log("Running dgrid total count bugfix...");
+                mitmproxy.MainLayout.trafficPane.grid.refresh({keepScrollPosition:true});
+            }
 
-			results.then(function(resultsArray){
-				//workaround for  https://github.com/SitePen/dgrid/issues/363
-				if(options.start + options.count === resultsArray.length)
-					options.count += 1;
-				//console.log("start: %d, count: %d, sum: %d, total: %d",options.start, options.count, options.start + options.count, resultsArray.length);
-			});
 
 			if (options.plain) //used to speed up observe queries
 				return results;

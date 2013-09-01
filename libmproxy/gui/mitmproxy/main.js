@@ -25,5 +25,9 @@ require(
 		flowStore.notify(flow);
 	});
 
+    window.setInterval(function(){
+        flowStore.notify();
+    },1000);
+
 	window.setTimeout(versionCheck, 3000);
 });
