@@ -12,7 +12,7 @@ define([
 
   bindings.headerTable = function(type, node, message) {
 
-    var html = '<tr><td colspan="2"><h5>R' + message._attr.substr(1) + ' Headers:</h5></td></tr> ';
+    var html = '<tr><td colspan="2"><h5><i class="icon-' + (message._attr == "request" ? "forward" : "backward") + '"></i> R' + message._attr.substr(1) + ' Headers:</h5></td></tr> ';
     var headers = message.headers;
     for (var i = 0; i < headers.length; i++) {
       html += (

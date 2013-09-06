@@ -1,7 +1,8 @@
 <div class="details">
 	<ul class="nav nav-pills pull-right">
+	  <!-- Add again as soon as sqlite has stabilized
 	  <li><a title="Filter for similar requests" class="searchlink" data-bind='data-search: "similarTo:"+id+",3"' href="#">
-	  	<i class="icon-filter"></i></a></li>
+	  	<i class="icon-filter"></i></a></li> -->
 	  <li><a title="Pop out" href="#" data-bind="click: view.popOut.bind(view)">
 	  	<i class="icon-fullscreen"></i></a></li>
 	</ul>
@@ -47,6 +48,13 @@
 		</tbody>
 
 		<tbody data-bind="show: response; checksumTable: response"></tbody>
+
+        <tbody data-bind="show: error">
+        	<tr>
+				<td><h5><i class="icon-warning-sign"></i> Error:</h5></td>
+				<td class="valign-middle" data-bind="textContent: error.msg"></td>
+			</tr>
+        </tbody>
 
 		<tbody data-bind="show: response && response.cert">
 				<tr><td colspan=2 ><h5>Server certificate:</h5></td></tr>
