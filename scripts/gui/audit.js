@@ -3,15 +3,9 @@
  */
 
 //you can get the flow id by hovering over the leftmost 10px of the traffic table.
-var flow_id = 41;
+var flow_id = 2;
+var flow = traffic.get(flow_id).then(function(flow){
 
-var flow = traffic.get(flow_id);
-
-if(!flow) {
-  
-  alert("Flow not found!");
-  
-} else {
   domConstruct.create("h2",{innerHTML:"Audit for "+_.escape(RequestUtils.getFullPath(flow.request))},out);
   domConstruct.create(
     "p",
@@ -41,7 +35,7 @@ if(!flow) {
   // X-Frame-Options Header
   var xFrameOptions = ResponseUtils.getHeader(flow.response,/X-Frame-Options/i);
   if(!xFrameOptions || !xFrameOptions.match(/Deny|SameOrigin|Allow-From/i)) {
-    badHeader("X-Frame-Options"," and is vulnerable to clickjacking therefore.");
+    badHeader("X-Frame-Options"," and could be vulnerable to clickjacking.");
   } else {
     goodHeader("X-Frame-Options",xFrameOptions);
   }
@@ -68,18 +62,18 @@ if(!flow) {
   if(xCSP) {
     goodHeader("X-Content-Security-Policy",xCSP);
   } else {
-    badHeader("X-Content-Security-Policy",". You should list all valid sources for scripts.");
+    badHeader("X-Content-Security-Policy",".");
   }
   
   // X-Content-Type-Options
   var xCTO = ResponseUtils.getHeader(flow.response,/X-Content-Type-Options/i);
   var CT = ResponseUtils.getHeader(flow.response,/Content-Type/i);
   if(!CT)
-    badHeader("Content-Type",". Always specify a valid MIME type!");
+    badHeader("Content-Type",".");
   if(CT && xCTO && !!xCTO.match(/nosniff/i)) {
     goodHeader("X-Content-Type-Options",xCTO);
   } else {
-    badHeader("X-Content-Type-Options",". This is a security feature that helps prevent attacks based on MIME-type confusion.");
+    badHeader("X-Content-Type-Options",". This could allow MIME-type confusion.");
   }
   
   // X-XSS-Protection
@@ -100,4 +94,6 @@ if(!flow) {
   }
   
   detailView.showDetails(flow);
-}
+},function(){
+  alert("Flow not found!");
+});
