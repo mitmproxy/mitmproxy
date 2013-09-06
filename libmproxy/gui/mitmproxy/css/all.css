@@ -917,6 +917,7 @@ html,body{margin:0;padding:0;height:100%;width:100%}
 .detailPane .nav{margin-bottom:0}
 .detailPane .dijitTabPaneWrapper{overflow:auto}
 .preview-empty{display:none}
+.message-icon{float:right;padding:4px;opacity:.3}
 .details table{font-size:12px;width:100%;table-layout:fixed}
 .details td{padding:0;vertical-align:top;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.details td.valign-middle{vertical-align:middle}
 .details td li{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}

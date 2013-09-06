@@ -131,6 +131,7 @@ def flowlist():
     if f:
         f = _parsefilter(f)
         flows = filter(lambda flow: f(flow), flows)
+    total = len(flows)
 
     # Handle Range Header
     range_str = request.headers.get("Range", False)
@@ -141,7 +142,7 @@ def flowlist():
         range_start, range_end = range_header.ranges[0]
     else:
         range_start = 0
-        range_end = max(len(flows) - 1, 0)
+        range_end = max(total - 1, 0)
     flows = flows[range_start:range_end+1]
 
     # Handle Sort Header
@@ -170,7 +171,7 @@ def flowlist():
     code = httplib.PARTIAL_CONTENT if range_str else httplib.OK
     headers = {
         'Content-Type': 'application/json',
-        'Content-Range': ContentRange("items", None, None, len(_flow())).to_header()
+        'Content-Range': ContentRange("items", None, None, total).to_header()
         #Skip start and end parameters to please werkzeugs range validator.
         #api users can only rely on the submitted total count
     }

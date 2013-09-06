@@ -84,8 +84,12 @@ define(["dojo/_base/declare",
 			status: {
 				label: "Status",
 				className: "field-status.text-right",
-				get: function(flow) {
-					return flow.response ? flow.response.code : "";
+				renderCell: function(flow, value, node) {
+					if(flow.error){
+                        node.innerHTML = '<i class="icon-warning-sign"></i>';
+                        return;
+                    }
+                    node.textContent = flow.response ? flow.response.code : "";
 				}
 			},
 			"response-type": {

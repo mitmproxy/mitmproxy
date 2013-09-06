@@ -2,17 +2,19 @@
   <li><a title="Pop out" href="#" data-bind="click: view.popOut.bind(view)">
   	<i class="icon-fullscreen"></i></a></li>
 </ul>
-
 <h5 class="no-text-overflow">
 	<span data-bind="textContent: RequestUtils.getFullPath(request)"></span><br>
 	<small data-bind="textContent: RequestUtils.getQueryString(request)"></small>
 </h5>
 
+<div class="clearfix"></div>
+<i class="icon-forward message-icon" title="Request"></i>
 <pre class="raw raw-request"><!--
 --><span data-bind="textContent: RequestUtils.getRawFirstLine(request)"></span><!--
 --><span data-bind="textContent: RequestUtils.getRawHeaders(request)"></span><!--
 --><span data-bind="displayContent: request"></span></pre>
 
+<i class="icon-backward message-icon" title="Response"></i>
 <pre class="raw raw-response" data-bind="show: response"><!--
 --><span data-bind="textContent: ResponseUtils.getRawFirstLine(response)"></span><!--
 --><span data-bind="textContent: ResponseUtils.getRawHeaders(response)"></span><!--

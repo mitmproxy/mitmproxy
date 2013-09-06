@@ -91,7 +91,6 @@ define([
         node._contentLoading.cancel("outdated");
       }
 
-      node.classList.remove("preview-empty");
       node.classList.remove("preview-active");
       node.classList.remove("preview-loading");
 
@@ -124,8 +123,6 @@ define([
         } else {
           load();
         }
-      } else {
-        node.classList.add("preview-empty");
       }
     };
   };

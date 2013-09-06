@@ -1,4 +1,11 @@
-<pre class="preview preview-request"  data-bind="displayContent: request">  </pre>
-<pre class="preview preview-response" data-bind="displayContent: response"> </pre>
+<div class="alert alert-danger" data-bind="show: error; textContent: error.msg"></div>
+<div data-bind="show: request && RequestUtils.hasContent(request)">
+    <i class="icon-forward message-icon" title="Request"></i>
+    <pre class="preview preview-request"  data-bind="displayContent: request">  </pre>
+</div>
+<div data-bind="show: response && ResponseUtils.hasContent(response)">
+    <i class="icon-backward message-icon" title="Response"></i>
+    <pre class="preview preview-response" data-bind="displayContent: response"> </pre>
+</div>
 <div class="alert alert-info" data-bind="hide: RequestUtils.hasContent(request) || response">There's no request content.</div>
 <div class="alert alert-info" data-bind="hide: RequestUtils.hasContent(request) || !response || ResponseUtils.hasContent(response)">There's neither a request content nor a response content.</div>
