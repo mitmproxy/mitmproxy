@@ -184,7 +184,7 @@ define(["lodash",
 		loadNext: function(i) {
 			var nextIndex = this.files.indexOf(this.filename) + i;
 			//nextIndex modulo this.files.length (% doesn't do modulo for negativ numbers)
-			nextIndex = ((this % this.files.length) + this.files.length) % this.files.length;
+			nextIndex = ((nextIndex % this.files.length) + this.files.length) % this.files.length;
 			this.load(this.files[nextIndex]);
 		},
 		submitClick: function() {},

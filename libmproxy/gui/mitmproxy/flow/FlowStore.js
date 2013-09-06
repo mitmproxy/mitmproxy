@@ -133,7 +133,7 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
 			};
 		},
 		query: function(query, options) {
-            if(this._total && this._total <= options.start + options.count){
+            if(this._total && options && options.count && this._total <= options.start + options.count){
                 options.count += 50;
             }
 
