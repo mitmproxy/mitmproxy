@@ -122,7 +122,7 @@ def _prepareFlow(flow):
     #del flow["response"]
 
 
-@mapp.route("/api/flows")
+@mapp.route("/api/flows/")
 def flowlist():
     flows = _flow()
 

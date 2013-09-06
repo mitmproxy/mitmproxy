@@ -1,3 +1,8 @@
+
+
+//FIXME: This is currently incompatible with mitmproxy
+
+
 /*
  * This report script summarizes all POSTed form data in a JSON array.
  * Great for a quick check to see whether there are any interesting POST requests in your data.

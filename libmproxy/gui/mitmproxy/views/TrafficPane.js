@@ -45,9 +45,17 @@ define(["dojo/_base/declare",
 				if(self.detailView)
 					self.detailView.destroyRecursive();
 			});
-			this.grid.addKeyHandler(13, function() { //ENTER
+            this.grid.addKeyHandler(13, function() { //ENTER
 				var selectedRow = Object.keys(self.grid.selection)[0];
 				self.showDetails(self.grid.row(selectedRow).data);
+			});
+            this.grid.addKeyHandler(37, function() { //ENTER
+                if(self.detailView)
+                    self.detailView.back();
+			});
+            this.grid.addKeyHandler(39, function() { //ENTER
+                if(self.detailView)
+                    self.detailView.forward();
 			});
 
 			//Grid Pane Wrapper
