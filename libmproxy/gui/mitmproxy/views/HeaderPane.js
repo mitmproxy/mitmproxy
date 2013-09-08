@@ -43,19 +43,23 @@ function(require, declare, _ReactiveTemplatedWidget, MainLayout, $, _, template)
                         var dist = Math.sqrt((dist_y*dist_y) + (dist_x*dist_x));
                         return dist;
                     }
-                    var onMouseMove = function(e){
+                    var onEvent = function(maxDist,e){
                         var tip = $brandNode.data("bs.popover").$tip;
                         var box = tip.offset();
                         box.width = tip.width();
                         box.height = tip.height();
                         var dist = getDistance({x: e.clientX,y: e.clientY}, box);
-                        if(dist > ($brandNode.data("bs.popover").options.hideDistance || 100)){
+                        if(dist > (maxDist === undefined ? 100 : maxDist)){
                             $brandNode.popover("hide");
                             _popoverActive = false;
                             $(document.body).off("mousemove", onMouseMove);
+                            $(document.body).off("click", onClick);
                         }
                     };
-                $(document.body).on("mousemove", onMouseMove);
+                    var onMouseMove = onEvent.bind(undefined,$brandNode.data("bs.popover").options.hideDistance);
+                    var onClick = onEvent.bind(undefined,0);
+                    $(document.body).on("mousemove", onMouseMove);
+                    $(document.body).on("click", onClick);
             });
         },
         destroy: function(){
