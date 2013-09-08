@@ -86,10 +86,14 @@ define(["dojo/_base/declare",
 				className: "field-status.text-right",
 				renderCell: function(flow, value, node) {
 					if(flow.error){
-                        node.innerHTML = '<i class="icon-warning-sign"></i>';
+                        var warn_icon = document.createElement("i");
+                        warn_icon.classList.add("icon-warning-sign");
+                        warn_icon.title = flow.error.msg;
+                        node.appendChild(warn_icon);
                         return;
                     }
                     node.textContent = flow.response ? flow.response.code : "";
+                    node.title = flow.response ? (flow.response.code + " " + flow.response.msg) : "";
 				}
 			},
 			"response-type": {

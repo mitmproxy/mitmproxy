@@ -111,19 +111,19 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
 
 					};
 
-					console.log("add queryUpdater #"+(store.queryUpdaters.length+1));
+					console.debug("add queryUpdater #"+(store.queryUpdaters.length+1));
 					store.queryUpdaters.push(queryUpdater);
 				}
 
 				var handle = {};
 				handle.cancel = function() {
-					console.log("handle.cancel");
+					console.debug("handle.cancel");
 					// remove this listener
 					var index = listeners.indexOf(listener);
 					if (index > -1) { // check to make sure we haven't already called cancel
 						listeners.splice(index, 1);
 						if (!listeners.length) {
-							console.log("remove queryUpdater");
+							console.debug("remove queryUpdater");
 							// no more listeners, remove the query updater too
 							store.queryUpdaters.splice(store.queryUpdaters.indexOf(queryUpdater), 1);
 						}
@@ -137,7 +137,7 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
                 options.count += 50;
             }
 
-			console.log("query", query, options);
+			console.debug("query", query, options);
 			var results = this.inherited(arguments);
 			options = options || {};
 
@@ -148,7 +148,7 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
                 self._total = total;
             });
             if(options.count > 260){
-                console.log("Running dgrid total count bugfix...");
+                console.debug("Running dgrid total count bugfix...");
                 mitmproxy.MainLayout.trafficPane.grid.refresh({keepScrollPosition:true});
             }
 

@@ -218,7 +218,11 @@ define([
         var parentNode = node;
         while (parentNode !== self.domNode) {
           if (parentNode.classList.contains("hide")) {
-            return;
+            //Edge Case: We are currently updating the display status of the current binding.
+            //Don't miss if the expression changes from hidden -> show
+            if(parentNode !== node || (binding[0] !== "hide" && binding[0] !== "show")){
+              return;
+            }
           }
           parentNode = parentNode.parentNode;
         }

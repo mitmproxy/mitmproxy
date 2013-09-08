@@ -1,11 +1,15 @@
 define(["dojo/_base/declare",
 		"../util/Observer",
+        "jquery",
+        "bootstrap/js/popover",
 		"../util/_ReactiveTemplatedWidget",
 		"dojo/text!./templates/Searchbar.html",
 		"dojo/text!./templates/Searchbar-filterbutton.html"
 ], function(
 	declare,
 	Observer,
+    $,
+    _,
 	_ReactiveTemplatedWidget,
 	template,
 	templateButton) {
@@ -84,7 +88,20 @@ define(["dojo/_base/declare",
 				fixed: true,
 				alwaysVisible: true
 			});
+            $(this.domNode).popover({
+                placement: "bottom",
+                selector: "input",
+                trigger: "focus",
+                html: true,
+                title: "Filter Syntax",
+                content:"content",
+                container:"body"
+            });
 		},
+        destroy: function(){
+            $(this.domNode).popover("destroy");
+            this.inherited(arguments);
+        },
 		addFilter: function(options) {
 			var self = this;
             options.last = true;
