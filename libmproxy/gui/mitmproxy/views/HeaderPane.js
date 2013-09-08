@@ -5,26 +5,27 @@ define([
         "../MainLayout",
         "jquery",
         "bootstrap/js/popover",
-        "dojo/text!./templates/HeaderPane.html" ], 
-function(require, declare, _ReactiveTemplatedWidget, MainLayout, $, _, template) {
+        "dojo/text!./templates/HeaderPane.html",
+        "dojo/text!./templates/HeaderPane-MainMenu.html"],
+function(require, declare, _ReactiveTemplatedWidget, MainLayout, $, _, template, template_menu) {
 
 	return declare([ _ReactiveTemplatedWidget ], {
 		templateString: template,
         postCreate: function(){
             var $brandNode = $(this.brandNode);
             window.$brandNode = $brandNode;
-            var _popoverActive = false;
+            var _popoverActive = false; //false: No active popover. event: The event that initiated the popover display.
             $brandNode.popover({
                 placement: "bottom",
                 trigger: "manual",
                 html: true,
                 title: "mitmproxy",
-                content: "content²content²content²<br>",
+                content: template_menu,
                 container: "body"
-            }).on("mouseenter",function(){
+            }).on("mouseenter click",function(e){
                     if(_popoverActive)
                         return;
-                    _popoverActive = true;
+                    _popoverActive = e;
                     $brandNode.popover('show');
 
                     /* Returns the distance of the given point to the closest point of the given box. */
@@ -44,6 +45,11 @@ function(require, declare, _ReactiveTemplatedWidget, MainLayout, $, _, template)
                         return dist;
                     }
                     var onEvent = function(maxDist,e){
+                        //Check if the triggering event is the one that just opened the popover
+                        //This is the case if we listen for a click event.
+                        if(e.originalEvent === _popoverActive.originalEvent){
+                            return;
+                        }
                         var tip = $brandNode.data("bs.popover").$tip;
                         var box = tip.offset();
                         box.width = tip.width();
