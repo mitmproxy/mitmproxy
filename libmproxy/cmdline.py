@@ -4,7 +4,8 @@ import re, filt
 import argparse
 import shlex
 import os
-from argparse import ArgumentTypeError
+from argparse import Action, ArgumentTypeError
+from utils import parse_size, parse_proxy_spec
 
 APP_DOMAIN = "mitm"
 APP_IP = "1.1.1.1"
@@ -97,6 +98,40 @@ def parse_setheader(s):
     """
     return _parse_hook(s)
 
+
+def parse_file_argument(expanduser=False, required_dir=False, required_file=False):
+    def _parser(path):
+        if expanduser:
+            path = os.path.expanduser(path)
+        if required_dir and not os.path.isdir(path):
+            raise ArgumentTypeError("Directory does not exist or is not a directory: %s" % path)
+        if required_dir and not os.path.isfile(path):
+            raise ArgumentTypeError("File does not exist os is not a file: %s" % path)
+        return path
+    return _parser
+
+
+def raiseIfNone(func):
+    """
+    Calls func with given parameter.
+    If func returns None, an error is raised.
+    Otherwise, the return value of func is returned.
+    """
+    def _check(val):
+        r = func(val)
+        if r is None:
+            raise ArgumentTypeError("Invalid value: %s" % val)
+        return r
+    return _check
+
+
+def lazy_const(func):
+    class StoreLazyConstAction(Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            setattr(namespace, self.dest, func())
+    return StoreLazyConstAction
+
+
 def add_common_arguments(parser):
     parser.add_argument(
         "--version",
@@ -133,11 +168,6 @@ def add_common_arguments(parser):
         help = "Proxy service port."
     )
     parser.add_argument(
-        "-P",
-        action="store", dest="reverse_proxy", default=None,
-        help="Reverse proxy to upstream server: http[s]://host[:port]"
-    )
-    parser.add_argument(
         "-r",
         action="store", dest="rfile", default=None,
         help="Read flows from file."
@@ -153,23 +183,21 @@ def add_common_arguments(parser):
         action="store", dest="stickycookie", default=None, metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
     )
-    parser.add_argument(
-        "-T",
-        action="store_true", dest="transparent_proxy", default=False,
-        help="Set transparent proxy mode."
-    )
+
+    proxy.add_arguments(parser)
+
     parser.add_argument(
         "-u",
         action="store", dest="stickyauth", default=None, metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."
     )
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument(
+    mgroup = parser.add_mutually_exclusive_group()
+    mgroup.add_argument(
         "-v",
         action="count", dest="verbosity", default=1,
         help="Increase verbosity. Can be passed multiple times."
     )
-    group.add_argument(
+    mgroup.add_argument(
         "-q",
         action='store_const', dest="verbosity", const=0,
         help="Quiet."
@@ -187,7 +215,7 @@ def add_common_arguments(parser):
     parser.add_argument(
         "-Z",
         action="store", dest="body_size_limit", default=None,
-        metavar="SIZE",
+        type=parse_size,  metavar="SIZE",
         help="Byte size limit of HTTP request and response bodies."\
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
@@ -292,7 +320,6 @@ def add_common_arguments(parser):
         help="Replacement pattern, where the replacement clause is a path to a file."
     )
 
-
     group = parser.add_argument_group(
         "Set Headers",
         """
@@ -307,7 +334,6 @@ def add_common_arguments(parser):
         metavar="PATTERN",
         help="Header set pattern."
     )
-
 
     group = parser.add_argument_group(
         "Proxy Authentication",
@@ -336,5 +362,3 @@ def add_common_arguments(parser):
         metavar="PATH",
         help="Allow access to users specified in an Apache htpasswd file."
     )
-
-    proxy.certificate_option_group(parser)

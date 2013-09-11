@@ -1,9 +1,11 @@
 import sys, os, string, socket, time
 import shutil, tempfile, threading
 import SocketServer
+from argparse import ArgumentTypeError
 from OpenSSL import SSL
 from netlib import odict, tcp, http, wsgi, certutils, http_status, http_auth
 import utils, flow, version, platform, controller
+from cmdline import parse_file_argument, lazy_const, raiseIfNone
 
 
 KILL = 0
@@ -74,7 +76,6 @@ class ServerConnection(tcp.TCPClient):
             except tcp.NetLibDisconnect: # pragma: no cover
                 pass
             self.connection.close()
-
 
 
 class RequestReplayThread(threading.Thread):
@@ -543,59 +544,49 @@ class DummyServer:
     def shutdown(self):
         pass
 
+TRANSPARENT_SSL_PORTS = [443, 8443]
+
+
+def get_transparent():
+    if not platform.resolver:
+        raise ArgumentTypeError("Transparent mode not supported on this platform.")
+    return dict(
+        resolver = platform.resolver(),
+        sslports = TRANSPARENT_SSL_PORTS
+    )
 
 # Command-line utils
-def certificate_option_group(parser):
+def add_arguments(parser):
+
+    mgroup = parser.add_mutually_exclusive_group()
+    mgroup.add_argument(
+        "-P",
+        action="store", dest="reverse_proxy", default=None, type=raiseIfNone(utils.parse_proxy_spec),
+        help="Reverse proxy to upstream server: http[s]://host[:port]"
+    )
+    mgroup.add_argument(
+        "-T", dest="transparent_proxy",
+        action=lazy_const(get_transparent), default=None,
+        help="Set transparent proxy mode.")
+
     group = parser.add_argument_group("SSL")
     group.add_argument(
         "--cert", action="store",
-        type = str, dest="cert", default=None,
-        help = "User-created SSL certificate file."
+        type=parse_file_argument(expanduser=True, required_file=True), dest="cert", default=None,
+        help="User-created SSL certificate file."
     )
     group.add_argument(
         "--client-certs", action="store",
-        type = str, dest = "clientcerts", default=None,
-        help = "Client certificate directory."
+        type=parse_file_argument(expanduser=True, required_dir=True), dest="clientcerts", default=None,
+        help="Client certificate directory."
     )
 
 
-TRANSPARENT_SSL_PORTS = [443, 8443]
-
 def process_proxy_options(parser, options):
-    if options.cert:
-        options.cert = os.path.expanduser(options.cert)
-        if not os.path.exists(options.cert):
-            return parser.error("Manually created certificate does not exist: %s"%options.cert)
-
     cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
     cacert = os.path.expanduser(cacert)
     if not os.path.exists(cacert):
         certutils.dummy_ca(cacert)
-    body_size_limit = utils.parse_size(options.body_size_limit)
-    if options.reverse_proxy and options.transparent_proxy:
-        return parser.error("Can't set both reverse proxy and transparent proxy.")
-
-    if options.transparent_proxy:
-        if not platform.resolver:
-            return parser.error("Transparent mode not supported on this platform.")
-        trans = dict(
-            resolver = platform.resolver(),
-            sslports = TRANSPARENT_SSL_PORTS
-        )
-    else:
-        trans = None
-
-    if options.reverse_proxy:
-        rp = utils.parse_proxy_spec(options.reverse_proxy)
-        if not rp:
-            return parser.error("Invalid reverse proxy specification: %s"%options.reverse_proxy)
-    else:
-        rp = None
-
-    if options.clientcerts:
-        options.clientcerts = os.path.expanduser(options.clientcerts)
-        if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
-            return parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
 
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
@@ -618,10 +609,10 @@ def process_proxy_options(parser, options):
         certfile = options.cert,
         cacert = cacert,
         clientcerts = options.clientcerts,
-        body_size_limit = body_size_limit,
+        body_size_limit = options.body_size_limit,
         no_upstream_cert = options.no_upstream_cert,
-        reverse_proxy = rp,
-        transparent_proxy = trans,
+        reverse_proxy = options.reverse_proxy,
+        transparent_proxy = options.transparent_proxy,
         authenticator = authenticator
     )
 
