@@ -76,8 +76,21 @@ define(["dojo/when", "dojo/_base/lang", "dojo/_base/declare", "dojo/store/JsonRe
 
 									//trivial case: already in the right position
 									if (id_is === id_should) {
-										if (includeObjectUpdates && existingId === id_is)
+										if (includeObjectUpdates && existingId === id_is) {
 											callListeners(listeners, obj_is, i, i);
+                                        }
+                                        else if(includeObjectUpdates) {
+                                            //Here we go for another super ugly workaround:
+                                            //As long as we don't get information on what changed,
+                                            //compare by JSONifying elements and trigger change
+                                            if(JSON.stringify(obj_is) !== JSON.stringify(obj_new)){
+                                                console.debug("Update Element "+i);
+                                                FlowFactory.makeFlow(obj_new);
+                                                lang.mixin(obj_is, obj_new);
+                                                obj_is.notify({});
+                                                callListeners(listeners, obj_is, i, i);
+                                            }
+                                        }
 										continue;
 									}
 

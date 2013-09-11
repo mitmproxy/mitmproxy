@@ -9,9 +9,9 @@ from flask import request, send_from_directory, Response, session, redirect, url
 from flask.json import jsonify, dumps
 from flask.helpers import safe_join
 from werkzeug.exceptions import *
-from werkzeug.exceptions import default_exceptions  # no idea why, but this is neccesary
 from werkzeug.datastructures import ContentRange
 from werkzeug.http import parse_range_header
+from werkzeug.utils import secure_filename
 
 mapp = flask.Flask(__name__)
 mapp.debug = True
@@ -253,7 +253,8 @@ def content(flowid, message):
 
 @mapp.route("/api/fs/<path:path>", methods=['GET', 'POST', 'PUT', 'DELETE'])
 def fsapi(path):
-    path = safe_join(mapp.root_path + '/../scripts/gui', path)
+    filename = ("="+secure_filename(path)) if path.startswith("=") else secure_filename(path)
+    path = safe_join(mapp.root_path + '/../scripts/gui', filename)
     func = getattr(FilesystemApi, str(request.method))
     return func(
         path=path,
