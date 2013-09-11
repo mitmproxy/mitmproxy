@@ -4,7 +4,8 @@ define(["dojo/_base/declare",
         "bootstrap/js/popover",
 		"../util/_ReactiveTemplatedWidget",
 		"dojo/text!./templates/Searchbar.html",
-		"dojo/text!./templates/Searchbar-filterbutton.html"
+        "dojo/text!./templates/Searchbar-filterbutton.html",
+		"dojo/text!./templates/Searchbar-syntaxhelp.html"
 ], function(
 	declare,
 	Observer,
@@ -12,7 +13,8 @@ define(["dojo/_base/declare",
     _,
 	_ReactiveTemplatedWidget,
 	template,
-	templateButton) {
+	templateButton,
+    syntaxHelp) {
         
 	var FilterButton = declare([_ReactiveTemplatedWidget], {
 		templateString: templateButton,
@@ -89,12 +91,12 @@ define(["dojo/_base/declare",
 				alwaysVisible: true
 			});
             $(this.domNode).popover({
+                trigger: "hover",
                 placement: "bottom",
-                selector: "input",
-                trigger: "focus",
+                selector: ".input-group-addon",
                 html: true,
                 title: "Filter Syntax",
-                content:"content",
+                content: syntaxHelp,
                 container:"body"
             });
 		},

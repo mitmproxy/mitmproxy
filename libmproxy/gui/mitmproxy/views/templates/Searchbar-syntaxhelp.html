@@ -1,0 +1,94 @@
+<table class="table table-condensed">
+    <tbody>
+        <tr>
+            <td class="filt_cmd">~a</td>
+            <td class="filt_help">Match asset in response: CSS, Javascript, Flash, images.</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~b&nbsp;regex</td>
+            <td class="filt_help">Body</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~bq&nbsp;regex</td>
+            <td class="filt_help">Request body</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~bs&nbsp;regex</td>
+            <td class="filt_help">Response body</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~c&nbsp;int</td>
+            <td class="filt_help">HTTP response code</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~d&nbsp;regex</td>
+            <td class="filt_help">Domain</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~e</td>
+            <td class="filt_help">Match error</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~h&nbsp;regex</td>
+            <td class="filt_help">Header (Form: "name: value")</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~hq&nbsp;regex</td>
+            <td class="filt_help">Request header</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~hs&nbsp;regex</td>
+            <td class="filt_help">Response header</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~m&nbsp;regex</td>
+            <td class="filt_help">Method</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~q</td>
+            <td class="filt_help">Match request with no response</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~s</td>
+            <td class="filt_help">Match response</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~t&nbsp;regex</td>
+            <td class="filt_help">Content-type header</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~tq&nbsp;regex</td>
+            <td class="filt_help">Request Content-Type header</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~ts&nbsp;regex</td>
+            <td class="filt_help">Response Content-Type header</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">~u&nbsp;regex</td>
+            <td class="filt_help">URL</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">!</td>
+            <td class="filt_help">unary not</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">&amp;</td>
+            <td class="filt_help">and</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">|</td>
+            <td class="filt_help">or</td>
+        </tr>
+        <tr>
+            <td class="filt_cmd">(...)</td>
+            <td class="filt_help">grouping</td>
+        </tr>
+    </tbody>
+</table>
+
+<ul>
+<li>Regexes can be specified as quoted strings</li>
+<li>Strings with no operators are matched against the request URL.</li>
+<li>Complete documentation and examples at mitmproxy.org</li>
+</ul>
