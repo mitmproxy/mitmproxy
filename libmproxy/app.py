@@ -5,7 +5,7 @@ import base64
 import flask
 import filt
 import httplib
-from flask import request, send_from_directory, Response, session
+from flask import request, send_from_directory, Response, session, redirect, url_for
 from flask.json import jsonify, dumps
 from flask.helpers import safe_join
 from werkzeug.exceptions import *
@@ -64,12 +64,21 @@ def require_write_permission(f):
 
 @mapp.route("/")
 def index():
-    return flask.render_template("index.html", section="home")
+    return redirect(url_for("app"))
 
 
-@mapp.route("/certs")
-def certs():
-    return flask.render_template("certs.html", section="certs")
+@mapp.route("/api/certs")
+def certs_index():
+    return certs("cer")
+
+
+@mapp.route("/api/certs.<ext>")
+def certs(ext):
+    if not ext:
+        ext = "cer"
+    if ext not in ["cer","pem"]:
+        raise BadRequest()
+    return "cert."+ext, 200
 
 
 @mapp.route('/app/')
@@ -90,7 +99,6 @@ def config():
         token=xsrf_token,
         readonly=mapp.config["readonly"]
     )
-
 
 def _flow(flowid=None):
     m = mapp.config["PMASTER"]
