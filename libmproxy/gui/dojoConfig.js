@@ -4,66 +4,24 @@ var dojoConfig = {
 	basePath: ".",
 	baseUrl: ".",
 
-	packages: [{
-		name: "mitmproxy",
-		location: "./mitmproxy"
-	}, {
-		name: "ReportScripts",
-		location: "/api/fs"
-	}, {
-		name: "jquery",
-		main: "jquery.min",
-		location: "./jquery",
-		destLocation: "./jquery"
-	}, {
-		name: "highlight",
-		main: "highlight",
-		location: "./highlight",
-		destLocation: "./highlight"
-	}, {
-		name: "lodash",
-		main: "lodash",
-		location: "./lodash",
-		destLocation: "./lodash"
-	}, {
-		name: "codemirror",
-		location: "./codemirror",
-		destLocation: "./codemirror"
-	}, {
-		name: "d3",
-		location: "./d3",
-		destLocation: "./d3"
-	}, {
-		name: "dojo",
-		location: "./dojo",
-		destLocation: "./dojo"
-	}, {
-		name: "dijit",
-		location: "./dijit",
-		destLocation: "./dijit"
-	}, {
-		name: "dojox",
-		location: "./dojox",
-		destLocation: "./dojox"
-	}, {
-		name: "dgrid",
-		location: "./dgrid",
-		destLocation: "./dgrid"
-	}, {
-		name: "xstyle",
-		location: "./xstyle",
-		destLocation: "./xstyle"
-	}, {
-		name: "put-selector",
-		location: "./put-selector",
-		destLocation: "./put-selector"
-	}, {
-		name: "bootstrap",
-		location: "./bootstrap",
-		destLocation: "./bootstrap"
-	}, {
-		name: "legacy",
-		location: "./legacy",
-		destLocation: "./legacy"
-	}]
+	packages: [
+		'mitmproxy', 
+		'bootstrap', 
+		'jquery', 
+		'font-awesome',
+		'highlight', 
+		'lodash', 
+		'codemirror', 
+		'd3', 
+		'dojo', 
+		'dijit', 
+		'dojox', 
+		'dgrid', 
+		'xstyle', 
+		'put-selector',
+		'legacy',
+		{
+			name: "ReportScripts",
+			location: "/api/fs"
+		} ]
 };

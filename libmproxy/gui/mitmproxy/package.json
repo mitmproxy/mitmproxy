@@ -1,6 +1,6 @@
 {
     "name": "mitmproxy",
     "description": "HTTPS traffic analyzer",
-    "version": 1.1,
+    "version": 0.10,
     "dojoBuild": "package.js"
 }

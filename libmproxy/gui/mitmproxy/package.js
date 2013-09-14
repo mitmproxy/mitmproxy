@@ -28,8 +28,6 @@ var profile = (function() {
 			copyOnly: copyOnly,
 			amd: amd,
 			ignore: ignore
-		}		
-		
-		//trees: [ [ ".", ".", /(\/\.)|(~$)/ ] ]
+		}				
 	};
 })();
