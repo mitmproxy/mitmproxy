@@ -2,8 +2,15 @@
 
 # Quick and dangerous script for building OSX binaries.
 
-# First, have a recent checkout of the dev version of pyinstaller. Change into
-# the pyinstaller directory, and then run this script.
+# A few quirks to note, which should be re-checked every release:
+# - We require the latest development version of PyInstaller.
+ 
+# - PyInstaller has trouble detecting the zope.interfaces package. This is
+# required by Twisted, which for mysterious reasons is required by Urwid. The
+# answer is to touch the __init__.py file in the zope directory. On my system:
+#   touch /Library/Python/2.7/site-packages/zope/__init__.py
+
+# To run, change into the pyinstaller directory, and then run this script.
 
 DST=/tmp/osx-mitmproxy
 MITMPROXY=~/mitmproxy/mitmproxy

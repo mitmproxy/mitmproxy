@@ -88,11 +88,13 @@ class RequestReplayThread(threading.Thread):
             server = ServerConnection(self.config, r.scheme, r.host, r.port, r.host)
             server.connect()
             server.send(r)
+            tsstart = utils.timestamp()
             httpversion, code, msg, headers, content = http.read_response(
                 server.rfile, r.method, self.config.body_size_limit
             )
             response = flow.Response(
-                self.flow.request, httpversion, code, msg, headers, content, server.cert
+                self.flow.request, httpversion, code, msg, headers, content, server.cert, 
+                server.rfile.first_byte_timestamp
             )
             self.channel.ask(response)
         except (ProxyError, http.HttpError, tcp.NetLibError), v:
@@ -224,6 +226,7 @@ class ProxyHandler(tcp.BaseHandler):
                             request.ssl_setup_timestamp = sc.ssl_setup_timestamp
                         sc.rfile.reset_timestamps()
                         try:
+                            tsstart = utils.timestamp()
                             httpversion, code, msg, headers, content = http.read_response(
                                 sc.rfile,
                                 request.method,
@@ -242,7 +245,7 @@ class ProxyHandler(tcp.BaseHandler):
 
                     response = flow.Response(
                         request, httpversion, code, msg, headers, content, sc.cert,
-                        sc.rfile.first_byte_timestamp, utils.timestamp()
+                        sc.rfile.first_byte_timestamp
                     )
                     response_reply = self.channel.ask(response)
                     # Not replying to the server invalidates the server
