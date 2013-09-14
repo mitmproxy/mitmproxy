@@ -74,7 +74,7 @@ def pretty_size(size):
     suffixes = [
         ("B",   2**10),
         ("kB",   2**20),
-        ("M",   2**30),
+        ("MB",   2**30),
     ]
     for suf, lim in suffixes:
         if size >= lim:

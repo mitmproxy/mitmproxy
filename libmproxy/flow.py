@@ -618,7 +618,7 @@ class Response(HTTPMsg):
         self.headers, self.content = headers, content
         self.cert = cert
         self.timestamp_start = timestamp_start or utils.timestamp()
-        self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
+        self.timestamp_end = timestamp_end or utils.timestamp()
         self.replay = False
 
     def _refresh_cookie(self, c, delta):

@@ -1,3 +1,25 @@
+25 August 2013: mitmproxy 0.9.2:
+
+    * Improvements to the mitmproxywrapper.py helper script for OSX.
+    
+    * Don't take minor version into account when checking for serialized file
+      compatibility.
+
+    * Fix a bug causing resource exhaustion under some circumstances for SSL
+      connections.
+
+    * Revamp the way we store interception certificates. We used to store these
+      on disk, they're now in-memory. This fixes a race condition related to
+      cert handling, and improves compatibility with Windows, where the rules
+      governing permitted file names are weird, resulting in errors for some
+      valid IDNA-encoded names.
+
+    * Display transfer rates for responses in the flow list.
+    
+    * Many other small bugfixes and improvements.
+    
+
+
 
 16 June 2013: mitmproxy 0.9.1:
 
