@@ -92,24 +92,16 @@ def dummy_cert(ca, commonname, sans):
     ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
     key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
 
-    req = OpenSSL.crypto.X509Req()
-    subj = req.get_subject()
-    subj.CN = commonname
-    req.set_pubkey(ca.get_pubkey())
-    req.sign(key, "sha1")
-    if ss:
-        req.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
-
     cert = OpenSSL.crypto.X509()
     cert.gmtime_adj_notBefore(-3600)
     cert.gmtime_adj_notAfter(60 * 60 * 24 * 30)
     cert.set_issuer(ca.get_subject())
-    cert.set_subject(req.get_subject())
+    cert.get_subject().CN = commonname
     cert.set_serial_number(int(time.time()*10000))
     if ss:
         cert.set_version(2)
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
-    cert.set_pubkey(req.get_pubkey())
+    cert.set_pubkey(ca.get_pubkey())
     cert.sign(key, "sha1")
     return SSLCert(cert)
 
