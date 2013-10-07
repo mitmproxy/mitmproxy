@@ -5,17 +5,20 @@ from pyasn1.error import PyAsn1Error
 import OpenSSL
 import tcp
 
+default_exp = 62208000 # =24 * 60 * 60 * 720
+default_o = "mitmproxy"
+default_cn = "mitmproxy"
 
-def create_ca():
+def create_ca(o=default_o, cn=default_cn, exp=default_exp):
     key = OpenSSL.crypto.PKey()
     key.generate_key(OpenSSL.crypto.TYPE_RSA, 1024)
     ca = OpenSSL.crypto.X509()
     ca.set_serial_number(int(time.time()*10000))
     ca.set_version(2)
-    ca.get_subject().CN = "mitmproxy"
-    ca.get_subject().O = "mitmproxy"
+    ca.get_subject().CN = cn
+    ca.get_subject().O = o
     ca.gmtime_adj_notBefore(0)
-    ca.gmtime_adj_notAfter(24 * 60 * 60 * 720)
+    ca.gmtime_adj_notAfter(exp)
     ca.set_issuer(ca.get_subject())
     ca.set_pubkey(key)
     ca.add_extensions([
@@ -35,7 +38,7 @@ def create_ca():
     return key, ca
 
 
-def dummy_ca(path):
+def dummy_ca(path, o=default_o, cn=default_cn, exp=default_exp):
     dirname = os.path.dirname(path)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -45,7 +48,7 @@ def dummy_ca(path):
     else:
         basename = os.path.basename(path)
 
-    key, ca = create_ca()
+    key, ca = create_ca(o=o, cn=cn, exp=exp)
 
     # Dump the CA plus private key
     f = open(path, "wb")
