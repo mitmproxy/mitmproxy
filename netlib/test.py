@@ -52,7 +52,7 @@ class TServer(tcp.TCPServer):
         self.last_handler = h
         if self.ssl:
             cert = certutils.SSLCert.from_pem(
-                file(self.ssl["cert"], "r").read()
+                file(self.ssl["cert"], "rb").read()
             )
             if self.ssl["v3_only"]:
                 method = tcp.SSLv3_METHOD

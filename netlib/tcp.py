@@ -235,6 +235,7 @@ class TCPClient:
         try:
             if self.ssl_established:
                 self.connection.shutdown()
+                self.connection.sock_shutdown(socket.SHUT_WR)
             else:
                 self.connection.shutdown(socket.SHUT_WR)
             #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
@@ -302,6 +303,8 @@ class BaseHandler:
         if request_client_cert:
             def ver(*args):
                 self.clientcert = certutils.SSLCert(args[1])
+                # err 20 = X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+                #return True
             ctx.set_verify(SSL.VERIFY_PEER, ver)
         self.connection = SSL.Connection(ctx, self.connection)
         self.ssl_established = True
@@ -338,6 +341,7 @@ class BaseHandler:
         try:
             if self.ssl_established:
                 self.connection.shutdown()
+                self.connection.sock_shutdown(socket.SHUT_WR)
             else:
                 self.connection.shutdown(socket.SHUT_WR)
             #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
