@@ -1,6 +1,7 @@
 import binascii
 import contrib.md5crypt as md5crypt
 import http
+from argparse import Action, ArgumentTypeError
 
 
 class NullProxyAuth():
@@ -111,3 +112,46 @@ class PassManSingleUser:
 
     def test(self, username, password_token):
         return self.username==username and self.password==password_token
+
+
+class AuthAction(Action):
+    """
+    Helper class to allow seamless integration int argparse. Example usage:
+    parser.add_argument(
+        "--nonanonymous",
+        action=NonanonymousAuthAction, nargs=0,
+        help="Allow access to any user long as a credentials are specified."
+    )
+    """
+    def __call__(self, parser, namespace, values, option_string=None):
+        passman = self.getPasswordManager(values)
+        if passman:
+            authenticator = BasicProxyAuth(passman, "mitmproxy")
+        else:
+            authenticator = NullProxyAuth(None)
+        setattr(namespace, "authenticator", authenticator)
+
+    def getPasswordManager(self, s):
+        """
+        returns the password manager
+        """
+        raise NotImplementedError()
+
+
+class SingleuserAuthAction(AuthAction):
+    def getPasswordManager(self, s):
+        if len(s.split(':')) != 2:
+            raise ArgumentTypeError("Invalid single-user specification. Please use the format username:password")
+        username, password = s.split(':')
+        return PassManSingleUser(username, password)
+
+
+class NonanonymousAuthAction(AuthAction):
+    def getPasswordManager(self, s):
+        return PassManNonAnon()
+
+
+class HtpasswdAuthAction(AuthAction):
+    def getPasswordManager(self, s):
+        with open(s, "r") as f:
+            return PassManHtpasswd(f)
