@@ -17,7 +17,7 @@ class TestPassManHtpasswd:
         tutils.raises("invalid htpasswd", http_auth.PassManHtpasswd, s)
 
     def test_simple(self):
-        f = open(tutils.test_data.path("data/htpasswd"))
+        f = open(tutils.test_data.path("data/htpasswd"),"rb")
         pm = http_auth.PassManHtpasswd(f)
 
         vals = ("basic", "test", "test")
