@@ -303,8 +303,8 @@ class BaseHandler:
         if request_client_cert:
             def ver(*args):
                 self.clientcert = certutils.SSLCert(args[1])
-                # err 20 = X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
-                #return True
+                # Return true to prevent cert verification error
+                return True
             ctx.set_verify(SSL.VERIFY_PEER, ver)
         self.connection = SSL.Connection(ctx, self.connection)
         self.ssl_established = True
