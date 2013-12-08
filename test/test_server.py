@@ -191,16 +191,6 @@ class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
         assert p.request("get:/:i0,'invalid\r\n\r\n'").status_code == 400
 
 
-class TestHTTPSNoUpstream(tservers.HTTPProxTest, CommonMixin):
-    ssl = True
-    no_upstream_cert = True
-    def test_cert_gen_error(self):
-        f = self.pathoc_raw()
-        f.connect((u"foo..bar".encode("utf8"), 0))
-        f.request("get:/")
-        assert "dummy cert" in "".join(self.proxy.log)
-
-
 class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
     ssl = True
     certfile = True

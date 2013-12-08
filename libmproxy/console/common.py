@@ -190,7 +190,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
 
         delta = f.response.timestamp_end - f.response.timestamp_start
         size = len(f.response.content) + f.response.get_header_size()
-        rate = utils.pretty_size(size / delta)
+        rate = utils.pretty_size(size / ( delta if delta > 0 else 1 ) )
 
         d.update(dict(
             resp_code = f.response.code,
