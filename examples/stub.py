@@ -1,8 +1,7 @@
 """
     This is a script stub, with definitions for all events.
 """
-
-def start(ctx):
+def start(ctx, argv):
     """
         Called once on script startup, before any other events.
     """
