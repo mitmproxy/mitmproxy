@@ -116,18 +116,6 @@ class CertStore:
     def __init__(self):
         self.certs = {}
 
-    def check_domain(self, commonname):
-        try:
-            commonname.decode("idna")
-            commonname.decode("ascii")
-        except:
-            return False
-        if ".." in commonname:
-            return False
-        if "/" in commonname:
-            return False
-        return True
-
     def get_cert(self, commonname, sans, cacert):
         """
             Returns an SSLCert object.
@@ -141,8 +129,6 @@ class CertStore:
 
             Return None if the certificate could not be found or generated.
         """
-        if not self.check_domain(commonname):
-            return None
         if commonname in self.certs:
             return self.certs[commonname]
         c = dummy_cert(cacert, commonname, sans)
