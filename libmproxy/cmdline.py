@@ -190,6 +190,11 @@ def common_options(parser):
         help="Reverse proxy to upstream server: http[s]://host[:port]"
     )
     parser.add_argument(
+        "-F",
+        action="store", dest="forward_proxy", default=None,
+        help="Proxy to unconditionally forward to: http[s]://host[:port]"
+    )
+    parser.add_argument(
         "-q",
         action="store_true", dest="quiet",
         help="Quiet."
