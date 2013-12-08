@@ -311,6 +311,17 @@ class ProxyHandler(tcp.BaseHandler):
                 raise ProxyError(502, "Unable to generate dummy cert.")
             return ret
 
+    def establish_ssl(self, client_conn, host, port):
+        dummycert = self.find_cert(client_conn, host, port, host)
+        sni = HandleSNI(
+            self, client_conn, host, port,
+            dummycert, self.config.certfile or self.config.cacert
+        )
+        try:
+            self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
+        except tcp.NetLibError, v:
+            raise ProxyError(400, str(v))
+
     def get_line(self, fp):
         """
             Get a line, possibly preceded by a blank.
@@ -330,15 +341,7 @@ class ProxyHandler(tcp.BaseHandler):
         if port in self.config.transparent_proxy["sslports"]:
             scheme = "https"
             if not self.ssl_established:
-                dummycert = self.find_cert(client_conn, host, port, host)
-                sni = HandleSNI(
-                    self, client_conn, host, port,
-                    dummycert, self.config.certfile or self.config.cacert
-                )
-                try:
-                    self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
-                except tcp.NetLibError, v:
-                    raise ProxyError(400, str(v))
+                self.establish_ssl(client_conn, host, port)
         else:
             scheme = "http"
         line = self.get_line(self.rfile)
@@ -373,15 +376,7 @@ class ProxyHandler(tcp.BaseHandler):
                             '\r\n'
                             )
                 self.wfile.flush()
-                dummycert = self.find_cert(client_conn, host, port, host)
-                sni = HandleSNI(
-                    self, client_conn, host, port,
-                    dummycert, self.config.certfile or self.config.cacert
-                )
-                try:
-                    self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
-                except tcp.NetLibError, v:
-                    raise ProxyError(400, str(v))
+                self.establish_ssl(client_conn, host, port)
                 self.proxy_connect_state = (host, port, httpversion)
                 line = self.rfile.readline(line)
 
@@ -415,10 +410,12 @@ class ProxyHandler(tcp.BaseHandler):
                     )
 
     def read_request_reverse(self, client_conn):
+        scheme, host, port = self.config.reverse_proxy
+        if scheme.lower() == "https" and not self.ssl_established:
+            self.establish_ssl(client_conn, host, port)
         line = self.get_line(self.rfile)
         if line == "":
             return None
-        scheme, host, port = self.config.reverse_proxy
         r = http.parse_init_http(line)
         if not r:
             raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
@@ -428,7 +425,7 @@ class ProxyHandler(tcp.BaseHandler):
                     self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
                 )
         return flow.Request(
-                    client_conn, httpversion, host, port, "http", method, path, headers, content,
+                    client_conn, httpversion, host, port, scheme, method, path, headers, content,
                     self.rfile.first_byte_timestamp, utils.timestamp()
                )
 
