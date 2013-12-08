@@ -80,7 +80,6 @@ class FinishFailHandler(tcp.BaseHandler):
         v = self.rfile.readline()
         self.wfile.write(v)
         self.wfile.flush()
-        o = mock.MagicMock()
         self.wfile.close()
         self.rfile.close()
         self.close = mock.MagicMock(side_effect=socket.error)
@@ -99,8 +98,6 @@ class TestFinishFail(test.ServerTestBase):
         c.wfile.write("foo\n")
         c.wfile.flush()
         c.rfile.read(4)
-        h = self.last_handler
-        h.finish()
 
 
 class TestDisconnect(test.ServerTestBase):

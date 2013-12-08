@@ -354,7 +354,6 @@ class BaseHandler:
         except (socket.error, SSL.Error):
             # Socket probably already closed
             pass
-
         self.connection.close()
 
 
