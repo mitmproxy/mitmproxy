@@ -38,7 +38,6 @@ class ClientCipherListHandler(tcp.BaseHandler):
     sni = None
 
     def handle(self):
-        print self.connection.get_cipher_list()
         self.wfile.write("%s"%self.connection.get_cipher_list())
         self.wfile.flush()
 
