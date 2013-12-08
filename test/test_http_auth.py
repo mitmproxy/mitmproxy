@@ -83,22 +83,23 @@ class TestBasicProxyAuth:
 
 class Bunch: pass
 
+
 class TestAuthAction:
     def test_nonanonymous(self):
         m = Bunch()
-        aa = http_auth.NonanonymousAuthAction(None, None)
+        aa = http_auth.NonanonymousAuthAction(None, "authenticator")
         aa(None, m, None, None)
         assert m.authenticator  
 
     def test_singleuser(self):
         m = Bunch()
-        aa = http_auth.SingleuserAuthAction(None, None)
+        aa = http_auth.SingleuserAuthAction(None, "authenticator")
         aa(None, m, "foo:bar", None)
         assert m.authenticator  
         tutils.raises("invalid", aa, None, m, "foo", None)
 
     def test_httppasswd(self):
         m = Bunch()
-        aa = http_auth.HtpasswdAuthAction(None, None)
+        aa = http_auth.HtpasswdAuthAction(None, "authenticator")
         aa(None, m, tutils.test_data.path("data/htpasswd"), None)
         assert m.authenticator  
