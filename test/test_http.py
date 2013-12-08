@@ -38,28 +38,16 @@ def test_read_chunked():
     tutils.raises("too large", http.read_chunked, 500, s, 2)
 
 
-def test_request_connection_close():
+def test_connection_close():
     h = odict.ODictCaseless()
-    assert http.request_connection_close((1, 0), h)
-    assert not http.request_connection_close((1, 1), h)
+    assert http.connection_close((1, 0), h)
+    assert not http.connection_close((1, 1), h)
 
     h["connection"] = ["keep-alive"]
-    assert not http.request_connection_close((1, 1), h)
+    assert not http.connection_close((1, 1), h)
 
     h["connection"] = ["close"]
-    assert http.request_connection_close((1, 1), h)
-
-
-def test_response_connection_close():
-    h = odict.ODictCaseless()
-    assert http.response_connection_close((1, 1), h)
-
-    h["content-length"] = [10]
-    assert not http.response_connection_close((1, 1), h)
-
-    h["connection"] = ["close"]
-    assert http.response_connection_close((1, 1), h)
-
+    assert http.connection_close((1, 1), h)
 
 def test_read_http_body_response():
     h = odict.ODictCaseless()

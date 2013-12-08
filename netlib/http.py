@@ -283,31 +283,22 @@ def parse_init_http(line):
     return method, url, httpversion
 
 
-def request_connection_close(httpversion, headers):
+def connection_close(httpversion, headers):
     """
-        Checks the request to see if the client connection should be closed.
+        Checks the message to see if the client connection should be closed according to RFC 2616 Section 8.1
     """
+    # At first, check if we have an explicit Connection header.
     if "connection" in headers:
         toks = get_header_tokens(headers, "connection")
         if "close" in toks:
             return True
         elif "keep-alive" in toks:
             return False
-    # HTTP 1.1 connections are assumed to be persistent
+    # If we don't have a Connection header, HTTP 1.1 connections are assumed to be persistent
     if httpversion == (1, 1):
         return False
     return True
 
-
-def response_connection_close(httpversion, headers):
-    """
-        Checks the response to see if the client connection should be closed.
-    """
-    if request_connection_close(httpversion, headers):
-        return True
-    elif (not has_chunked_encoding(headers)) and "content-length" in headers:
-        return False
-    return True
 
 
 def read_http_body_request(rfile, wfile, headers, httpversion, limit):

@@ -235,6 +235,7 @@ class TCPClient:
         try:
             if self.ssl_established:
                 self.connection.shutdown()
+                self.connection.sock_shutdown(socket.SHUT_WR)
             else:
                 self.connection.shutdown(socket.SHUT_WR)
             #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
@@ -266,7 +267,7 @@ class BaseHandler:
 
         self.clientcert = None
 
-    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False):
+    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False, cipher_list=None):
         """
             cert: A certutils.SSLCert object.
             method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
@@ -294,6 +295,8 @@ class BaseHandler:
         ctx = SSL.Context(method)
         if not options is None:
             ctx.set_options(options)
+        if cipher_list:
+            ctx.set_cipher_list(cipher_list)
         if handle_sni:
             # SNI callback happens during do_handshake()
             ctx.set_tlsext_servername_callback(handle_sni)
@@ -302,6 +305,8 @@ class BaseHandler:
         if request_client_cert:
             def ver(*args):
                 self.clientcert = certutils.SSLCert(args[1])
+                # Return true to prevent cert verification error
+                return True
             ctx.set_verify(SSL.VERIFY_PEER, ver)
         self.connection = SSL.Connection(ctx, self.connection)
         self.ssl_established = True
@@ -338,10 +343,12 @@ class BaseHandler:
         try:
             if self.ssl_established:
                 self.connection.shutdown()
+                self.connection.sock_shutdown(socket.SHUT_WR)
             else:
                 self.connection.shutdown(socket.SHUT_WR)
-            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
-            #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
+            # Section 4.2.2.13 of RFC 1122 tells us that a close() with any
+            # pending readable data could lead to an immediate RST being sent.
+            # http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
             while self.connection.recv(4096):
                 pass
         except (socket.error, SSL.Error):
@@ -376,7 +383,13 @@ class TCPServer:
         self.__is_shut_down.clear()
         try:
             while not self.__shutdown_request:
-                r, w, e = select.select([self.socket], [], [], poll_interval)
+                try:
+                    r, w, e = select.select([self.socket], [], [], poll_interval)
+                except select.error, ex:
+                        if ex[0] == 4:
+                            continue
+                        else:
+                            raise  
                 if self.socket in r:
                     request, client_address = self.socket.accept()
                     t = threading.Thread(
