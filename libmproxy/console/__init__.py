@@ -459,7 +459,7 @@ class ConsoleMaster(flow.FlowMaster):
             self._run_script_method("response", s, f)
         if f.error:
             self._run_script_method("error", s, f)
-        s.run("done")
+        s.unload()
         self.refresh_flow(f)
         self.state.last_script = path
 

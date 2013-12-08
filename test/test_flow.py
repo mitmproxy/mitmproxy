@@ -544,9 +544,11 @@ class TestFlowMaster:
         fm = flow.FlowMaster(None, s)
         assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
         assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
-        assert not fm.load_script(None)
+        assert not fm.unload_script(fm.scripts[0])
+        assert not fm.unload_script(fm.scripts[0])
         assert fm.load_script("nonexistent")
         assert "ValueError" in fm.load_script(tutils.test_data.path("scripts/starterr.py"))
+        assert len(fm.scripts) == 0
 
     def test_replay(self):
         s = flow.State()
@@ -572,20 +574,27 @@ class TestFlowMaster:
         assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
         req = tutils.treq()
         fm.handle_clientconnect(req.client_conn)
-        assert fm.script.ns["log"][-1] == "clientconnect"
+        assert fm.scripts[0].ns["log"][-1] == "clientconnect"
         f = fm.handle_request(req)
-        assert fm.script.ns["log"][-1] == "request"
+        assert fm.scripts[0].ns["log"][-1] == "request"
         resp = tutils.tresp(req)
         fm.handle_response(resp)
-        assert fm.script.ns["log"][-1] == "response"
+        assert fm.scripts[0].ns["log"][-1] == "response"
+        #load second script
+        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
+        assert len(fm.scripts) == 2
         dc = flow.ClientDisconnect(req.client_conn)
         dc.reply = controller.DummyReply()
         fm.handle_clientdisconnect(dc)
-        assert fm.script.ns["log"][-1] == "clientdisconnect"
+        assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
+        assert fm.scripts[1].ns["log"][-1] == "clientdisconnect"
+        #unload first script
+        fm.unload_script(fm.scripts[0])
+        assert len(fm.scripts) == 1
         err = flow.Error(f.request, "msg")
         err.reply = controller.DummyReply()
         fm.handle_error(err)
-        assert fm.script.ns["log"][-1] == "error"
+        assert fm.scripts[0].ns["log"][-1] == "error"
 
     def test_duplicate_flow(self):
         s = flow.State()
