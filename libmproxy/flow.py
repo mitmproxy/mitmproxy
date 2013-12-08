@@ -1580,6 +1580,13 @@ class FlowMaster(controller.Master):
         self.run_script_hook("clientdisconnect", r)
         r.reply()
 
+    def handle_serverconnection(self, sc):
+        # To unify the mitmproxy script API, we call the script hook "serverconnect" rather than "serverconnection".
+        # As things are handled differently in libmproxy (ClientConnect + ClientDisconnect vs ServerConnection class),
+        # there is no "serverdisonnect" event at the moment.
+        self.run_script_hook("serverconnect", sc)
+        sc.reply()
+
     def handle_error(self, r):
         f = self.state.add_error(r)
         if f:

@@ -158,6 +158,7 @@ class ProxyHandler(tcp.BaseHandler):
         if not self.server_conn:
             try:
                 self.server_conn = ServerConnection(self.config, scheme, host, port, sni)
+                self.channel.ask(self.server_conn)
                 self.server_conn.connect()
             except tcp.NetLibError, v:
                 raise ProxyError(502, v)
