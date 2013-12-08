@@ -8,8 +8,9 @@ class DumpError(Exception): pass
 class Options(object):
     attributes = [
         "app",
-        "app_domain",
-        "app_ip",
+        "app_external",
+        "app_host",
+        "app_port",
         "anticache",
         "anticomp",
         "client_replay",

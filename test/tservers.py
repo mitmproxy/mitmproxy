@@ -163,12 +163,12 @@ class HTTPProxTest(ProxTestBase):
         if self.ssl:
             p = libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port, True)
             print "PRE"
-            p.connect((APP_IP, 80))
+            p.connect((APP_HOST, APP_PORT))
             print "POST"
             return p.request("get:'/%s'"%page)
         else:
             p = self.pathoc()
-            return p.request("get:'http://%s/%s'"%(APP_DOMAIN, page))
+            return p.request("get:'http://%s/%s'"%(APP_HOST, page))
 
 
 class TResolver:
