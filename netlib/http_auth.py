@@ -33,6 +33,7 @@ class NullProxyAuth():
 class BasicProxyAuth(NullProxyAuth):
     CHALLENGE_HEADER = 'Proxy-Authenticate'
     AUTH_HEADER = 'Proxy-Authorization'
+
     def __init__(self, password_manager, realm):
         NullProxyAuth.__init__(self, password_manager)
         self.realm = realm
@@ -125,11 +126,10 @@ class AuthAction(Action):
     """
     def __call__(self, parser, namespace, values, option_string=None):
         passman = self.getPasswordManager(values)
-        if passman:
-            authenticator = BasicProxyAuth(passman, "mitmproxy")
-        else:
-            authenticator = NullProxyAuth(None)
-        setattr(namespace, "authenticator", authenticator)
+        if not passman:
+            raise ArgumentTypeError("Error creating password manager for proxy authentication.")
+        authenticator = BasicProxyAuth(passman, "mitmproxy")
+        setattr(namespace, self.dest, authenticator)
 
     def getPasswordManager(self, s):
         """
