@@ -125,23 +125,19 @@ class AuthAction(Action):
     """
     def __call__(self, parser, namespace, values, option_string=None):
         passman = self.getPasswordManager(values)
-        if passman:
-            authenticator = BasicProxyAuth(passman, "mitmproxy")
-        else:
-            authenticator = NullProxyAuth(None)
+        authenticator = BasicProxyAuth(passman, "mitmproxy")
         setattr(namespace, "authenticator", authenticator)
 
-    def getPasswordManager(self, s):
-        """
-        returns the password manager
-        """
+    def getPasswordManager(self, s): # pragma: nocover
         raise NotImplementedError()
 
 
 class SingleuserAuthAction(AuthAction):
     def getPasswordManager(self, s):
         if len(s.split(':')) != 2:
-            raise ArgumentTypeError("Invalid single-user specification. Please use the format username:password")
+            raise ArgumentTypeError(
+                "Invalid single-user specification. Please use the format username:password"
+            )
         username, password = s.split(':')
         return PassManSingleUser(username, password)
 
@@ -155,3 +151,4 @@ class HtpasswdAuthAction(AuthAction):
     def getPasswordManager(self, s):
         with open(s, "r") as f:
             return PassManHtpasswd(f)
+

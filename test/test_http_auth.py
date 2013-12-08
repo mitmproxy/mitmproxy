@@ -1,5 +1,6 @@
 import binascii, cStringIO
 from netlib import odict, http_auth, http
+import mock
 import tutils
 
 class TestPassManNonAnon:
@@ -79,3 +80,25 @@ class TestBasicProxyAuth:
         hdrs[ba.AUTH_HEADER] = [http.assemble_http_basic_auth(*vals)]
         assert not ba.authenticate(hdrs)
 
+
+class Bunch: pass
+
+class TestAuthAction:
+    def test_nonanonymous(self):
+        m = Bunch()
+        aa = http_auth.NonanonymousAuthAction(None, None)
+        aa(None, m, None, None)
+        assert m.authenticator  
+
+    def test_singleuser(self):
+        m = Bunch()
+        aa = http_auth.SingleuserAuthAction(None, None)
+        aa(None, m, "foo:bar", None)
+        assert m.authenticator  
+        tutils.raises("invalid", aa, None, m, "foo", None)
+
+    def test_httppasswd(self):
+        m = Bunch()
+        aa = http_auth.HtpasswdAuthAction(None, None)
+        aa(None, m, tutils.test_data.path("data/htpasswd"), None)
+        assert m.authenticator  
