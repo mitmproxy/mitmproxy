@@ -173,7 +173,7 @@ class StatusBar(common.WWrap):
         if opts:
             r.append("[%s]"%(":".join(opts)))
 
-        if self.master.script:
+        if self.master.scripts:
             r.append("[script:%s]"%self.master.script.path)
 
         if self.master.debug:
@@ -880,7 +880,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     )
                                 )
                             elif k == "s":
-                                if self.script:
+                                if self.scripts:
                                     self.load_script(None)
                                 else:
                                     self.path_prompt(
