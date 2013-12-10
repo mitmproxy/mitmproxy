@@ -378,6 +378,14 @@ class ProxyHandler(tcp.BaseHandler):
             return self._read_request_absolute_form(client_conn, line)
 
     def _read_request_authority_form(self, line):
+        """
+        The authority-form of request-target is only used for CONNECT requests.
+        The CONNECT method is used to request a tunnel to the destination server.
+        This function sends a "200 Connection established" response to the client
+        and returns the host information that can be used to process further requests in origin-form.
+        An example authority-form request line would be:
+            CONNECT www.example.com:80 HTTP/1.1
+        """
         connparts = http.parse_init_connect(line)
         if connparts:
             self.read_headers(authenticate=True)
@@ -391,6 +399,12 @@ class ProxyHandler(tcp.BaseHandler):
         return connparts
 
     def _read_request_absolute_form(self, client_conn, line):
+        """
+        When making a request to a proxy (other than CONNECT or OPTIONS),
+        a client must send the target uri in absolute-form.
+        An example absolute-form request line would be:
+            GET http://www.example.com/foo.html HTTP/1.1
+        """
         r = http.parse_init_proxy(line)
         if not r:
             raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
@@ -406,7 +420,10 @@ class ProxyHandler(tcp.BaseHandler):
 
     def _read_request_origin_form(self, client_conn, scheme, host, port):
         """
-        Read a HTTP request with regular (origin-form) request line (method, uri, httpversion - RFC2616 5.1).
+        Read a HTTP request with regular (origin-form) request line.
+        An example origin-form request line would be:
+            GET /foo.html HTTP/1.1
+
         The request destination is already known from one of the following sources:
         1) transparent proxy: destination provided by platform resolver
         2) reverse proxy: fixed destination
