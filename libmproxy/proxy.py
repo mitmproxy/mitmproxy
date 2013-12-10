@@ -302,7 +302,8 @@ class ProxyHandler(tcp.BaseHandler):
 
     def find_cert(self, cc, host, port, sni):
         if self.config.certfile:
-            return certutils.SSLCert.from_pem(file(self.config.certfile, "r").read())
+            with open(self.config.certfile, "rb") as f:
+                return certutils.SSLCert.from_pem(f.read())
         else:
             sans = []
             if not self.config.no_upstream_cert:
