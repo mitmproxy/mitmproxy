@@ -16,7 +16,7 @@ else:
 
 
 ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
-this.titlePrefix = "mitmproxy 0.9 - "
+this.titlePrefix = "mitmproxy 0.10 - "
 this.markup = markup.Markdown(extras=["footnotes"])
 
 ns.docMaintainer = "Aldo Cortesi"
