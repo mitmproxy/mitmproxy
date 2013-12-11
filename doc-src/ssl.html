@@ -39,6 +39,9 @@ Using a custom certificate
 
 You can use your own certificate by passing the __--cert__ option to mitmproxy.
 
+The certificate file is expected to be in the PEM format. You can generate
+a certificate in this format using these instructions:
+
 <pre class="terminal">
 > openssl genrsa -out cert.key 8192
 > openssl req -new -x509 -key cert.key -out cert.crt
