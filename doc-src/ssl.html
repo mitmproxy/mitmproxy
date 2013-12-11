@@ -34,6 +34,20 @@ testing system or browser to trust the __mitmproxy__ CA as a signing root
 authority.
 
 
+Using a custom certificate
+--------------------------
+
+You can use your own certificate by passing the __--cert__ option to mitmproxy.
+
+<pre class="terminal">
+> openssl genrsa -out cert.key 8192
+> openssl req -new -x509 -key cert.key -out cert.crt
+    (Specify the mitm domain as Common Name, e.g. *.google.com)
+> cat cert.key cert.crt > cert.pem
+> mitmproxy --cert=cert.pem
+</pre>
+
+
 Installing the mitmproxy CA
 ---------------------------
 
