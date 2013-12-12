@@ -140,11 +140,15 @@ class ProxyHandler(tcp.BaseHandler):
             single server connection - no multiplexing. If this assumption ever
             breaks, we'll have to do something different with the SNI host
             variable on the handler object.
+
+            `conn_info` holds the initial connection's parameters.
+            The hook might change them.
         """
         sc = self.server_conn
         if not sni:
             sni = host
-        if sc and (scheme, host, port, sni) != (sc.scheme, sc.host, sc.port, sc.sni):
+        conn_info = (scheme, host, port, sni)
+        if sc and conn_info != sc.conn_info:
             sc.terminate()
             self.server_conn = None
             self.log(
@@ -160,6 +164,7 @@ class ProxyHandler(tcp.BaseHandler):
             try:
                 self.server_conn = ServerConnection(self.config, scheme, host, port, sni)
                 self.server_conn.request = request # the hook might need it
+                self.server_conn.conn_info = conn_info
                 self.channel.ask(self.server_conn)
                 self.server_conn.connect()
             except tcp.NetLibError, v:
