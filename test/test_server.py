@@ -143,7 +143,18 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         req = p.request("get:'http://foo':h':foo'='bar'")
         assert req.status_code == 400
 
-
+    def test_empty_chunked_content(self):
+        """
+        https://github.com/mitmproxy/mitmproxy/issues/186
+        """
+        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection.connect(("127.0.0.1", self.proxy.port))
+        spec = '301:h"Transfer-Encoding"="chunked":r:b"0\\r\\n\\r\\n"'
+        connection.send("GET http://localhost:%d/p/%s HTTP/1.1\r\n"%(self.server.port, spec))
+        connection.send("\r\n");
+        resp = connection.recv(50000)
+        connection.close()
+        assert "content-length" in resp.lower()
 
 class TestHTTPAuth(tservers.HTTPProxTest):
     authenticator = http_auth.BasicProxyAuth(http_auth.PassManSingleUser("test", "test"), "realm")

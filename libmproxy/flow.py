@@ -735,6 +735,8 @@ class Response(HTTPMsg):
         )
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]
+        elif 'Transfer-Encoding' in self.headers:
+            headers["Content-Length"] = ["0"]
         proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
         data = (proto, str(headers))
         return FMT%data
