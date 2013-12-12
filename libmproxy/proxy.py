@@ -133,7 +133,7 @@ class ProxyHandler(tcp.BaseHandler):
         self.server_conn = None
         tcp.BaseHandler.__init__(self, connection, client_address, server)
 
-    def get_server_connection(self, cc, scheme, host, port, sni):
+    def get_server_connection(self, cc, scheme, host, port, sni, request=None):
         """
             When SNI is in play, this means we have an SSL-encrypted
             connection, which means that the entire handler is dedicated to a
@@ -159,6 +159,7 @@ class ProxyHandler(tcp.BaseHandler):
         if not self.server_conn:
             try:
                 self.server_conn = ServerConnection(self.config, scheme, host, port, sni)
+                self.server_conn.request = request # the hook might need it
                 self.channel.ask(self.server_conn)
                 self.server_conn.connect()
             except tcp.NetLibError, v:
@@ -223,7 +224,7 @@ class ProxyHandler(tcp.BaseHandler):
                     # the case, we want to reconnect without sending an error
                     # to the client.
                     while 1:
-                        sc = self.get_server_connection(cc, scheme, host, port, self.sni)
+                        sc = self.get_server_connection(cc, scheme, host, port, self.sni, request=request)
                         sc.send(request)
                         if sc.requestcount == 1: # add timestamps only for first request (others are not directly affected)
                             request.tcp_setup_timestamp = sc.tcp_setup_timestamp
