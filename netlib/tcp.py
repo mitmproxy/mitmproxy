@@ -182,7 +182,7 @@ class TCPClient:
         self.cert = None
         self.ssl_established = False
         self.source_address = source_address
-		self.use_ipv6 = use_ipv6
+        self.use_ipv6 = use_ipv6
 
     def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
         """
