@@ -288,7 +288,9 @@ class Request(HTTPMsg):
             (or None, if request didn't results SSL setup)
 
     """
-    def __init__(self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp_start=None, timestamp_end=None, tcp_setup_timestamp=None, ssl_setup_timestamp=None):
+    def __init__(
+            self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp_start=None,
+            timestamp_end=None, tcp_setup_timestamp=None, ssl_setup_timestamp=None, ip=None):
         assert isinstance(headers, ODictCaseless)
         self.client_conn = client_conn
         self.httpversion = httpversion
@@ -299,6 +301,7 @@ class Request(HTTPMsg):
         self.close = False
         self.tcp_setup_timestamp = tcp_setup_timestamp
         self.ssl_setup_timestamp = ssl_setup_timestamp
+        self.ip = ip
 
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
@@ -364,6 +367,7 @@ class Request(HTTPMsg):
         self.timestamp_end = state["timestamp_end"]
         self.tcp_setup_timestamp = state["tcp_setup_timestamp"]
         self.ssl_setup_timestamp = state["ssl_setup_timestamp"]
+        self.ip = state["ip"]
 
     def _get_state(self):
         return dict(
@@ -379,7 +383,8 @@ class Request(HTTPMsg):
             timestamp_start = self.timestamp_start,
             timestamp_end = self.timestamp_end,
             tcp_setup_timestamp = self.tcp_setup_timestamp,
-            ssl_setup_timestamp = self.ssl_setup_timestamp
+            ssl_setup_timestamp = self.ssl_setup_timestamp,
+            ip = self.ip
         )
 
     @classmethod
@@ -397,7 +402,8 @@ class Request(HTTPMsg):
             state["timestamp_start"],
             state["timestamp_end"],
             state["tcp_setup_timestamp"],
-            state["ssl_setup_timestamp"]
+            state["ssl_setup_timestamp"],
+            state["ip"]
         )
 
     def __hash__(self):

@@ -231,6 +231,9 @@ class ProxyHandler(tcp.BaseHandler):
                         sc.rfile.reset_timestamps()
                         try:
                             tsstart = utils.timestamp()
+                            peername = sc.connection.getpeername()
+                            if peername:
+                                request.ip = peername[0]
                             httpversion, code, msg, headers, content = http.read_response(
                                 sc.rfile,
                                 request.method,

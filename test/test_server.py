@@ -289,6 +289,11 @@ class TestProxy(tservers.HTTPProxTest):
         assert second_request.tcp_setup_timestamp == None
         assert second_request.ssl_setup_timestamp == None
 
+    def test_request_ip(self):
+        f = self.pathod("200:b@100")
+        assert f.status_code == 200
+        request = self.master.state.view[0].request
+        assert request.ip == "127.0.0.1"
 
 class TestProxySSL(tservers.HTTPProxTest):
     ssl=True
