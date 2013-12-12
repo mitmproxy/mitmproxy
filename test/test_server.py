@@ -197,6 +197,13 @@ class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
     def test_certfile(self):
         assert self.pathod("304")
 
+class TestHTTPSNoCommonName(tservers.HTTPProxTest, CommonMixin):
+    """
+    Test what happens if we get a cert without common name back.
+    """
+    ssl = True
+    ssloptions=pathod.SSLOptions(certfile=tutils.test_data.path("data/no_common_name.pem"),
+                                 keyfile=tutils.test_data.path("data/no_common_name.pem"))
 
 class TestReverse(tservers.ReverseProxTest, CommonMixin):
     reverse = True

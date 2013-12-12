@@ -312,7 +312,8 @@ class ProxyHandler(tcp.BaseHandler):
             if not self.config.no_upstream_cert:
                 conn = self.get_server_connection(cc, "https", host, port, sni)
                 sans = conn.cert.altnames
-                host = conn.cert.cn.decode("utf8").encode("idna")
+                if conn.cert.cn:
+                    host = conn.cert.cn.decode("utf8").encode("idna")
             ret = self.config.certstore.get_cert(host, sans, self.config.cacert)
             if not ret:
                 raise ProxyError(502, "Unable to generate dummy cert.")
