@@ -141,14 +141,17 @@ class ProxyHandler(tcp.BaseHandler):
             breaks, we'll have to do something different with the SNI host
             variable on the handler object.
 
-            `conn_info` holds the initial connection's parameters.
-            The hook might change them.
+            `conn_info` holds the initial connection's parameters, as the
+            hook might change them. Also, the hook might require an initial
+            request to figure out connection settings; in this case it can
+            set require_request, which will cause the connection to be
+            re-opened after the client's request arrives.
         """
         sc = self.server_conn
         if not sni:
             sni = host
         conn_info = (scheme, host, port, sni)
-        if sc and conn_info != sc.conn_info:
+        if sc and (conn_info != sc.conn_info or request and sc.require_request):
             sc.terminate()
             self.server_conn = None
             self.log(
@@ -163,7 +166,12 @@ class ProxyHandler(tcp.BaseHandler):
         if not self.server_conn:
             try:
                 self.server_conn = ServerConnection(self.config, scheme, host, port, sni)
-                self.server_conn.request = request # the hook might need it
+
+                # Additional attributes, used if the server_connect hook
+                # needs to change parameters
+                self.server_conn.request = request
+                self.server_conn.require_request = False
+
                 self.server_conn.conn_info = conn_info
                 self.channel.ask(self.server_conn)
                 self.server_conn.connect()
