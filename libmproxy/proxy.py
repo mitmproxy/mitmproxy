@@ -339,6 +339,15 @@ class ProxyHandler(tcp.BaseHandler):
             line = fp.readline()
         return line
 
+    def read_request(self, client_conn):
+        self.rfile.reset_timestamps()
+        if self.config.transparent_proxy:
+            return self.read_request_transparent(client_conn)
+        elif self.config.reverse_proxy:
+            return self.read_request_reverse(client_conn)
+        else:
+            return self.read_request_proxy(client_conn)
+
     def read_request_transparent(self, client_conn):
         orig = self.config.transparent_proxy["resolver"].original_addr(self.connection)
         if not orig:
@@ -351,95 +360,99 @@ class ProxyHandler(tcp.BaseHandler):
         else:
             scheme = "http"
 
-        return self._read_request_transparent(client_conn, scheme, host, port)
+        return self._read_request_origin_form(client_conn, scheme, host, port)
 
-    def _read_request_transparent(self, client_conn, scheme, host, port):
+    def read_request_reverse(self, client_conn):
+        scheme, host, port = self.config.reverse_proxy
+        return self._read_request_origin_form(client_conn, scheme, host, port)
+
+    def read_request_proxy(self, client_conn):
+        # Check for a CONNECT command.
+        if not self.proxy_connect_state:
+            line = self.get_line(self.rfile)
+            if line == "":
+                return None
+            self.proxy_connect_state = self._read_request_authority_form(line)
+
+        # Check for an actual request
+        if self.proxy_connect_state:
+            host, port, _ = self.proxy_connect_state
+            return self._read_request_origin_form(client_conn, "https", host, port)
+        else:
+            # noinspection PyUnboundLocalVariable
+            return self._read_request_absolute_form(client_conn, line)
+
+    def _read_request_authority_form(self, line):
         """
-        Read a transparent HTTP request. Transparent means that the client isn't aware of proxying.
-        In other words, the client request starts with
-        "GET /foo.html HTTP/1.1"
-        rather than
-        "CONNECT example.com:80 HTTP/1.1"
+        The authority-form of request-target is only used for CONNECT requests.
+        The CONNECT method is used to request a tunnel to the destination server.
+        This function sends a "200 Connection established" response to the client
+        and returns the host information that can be used to process further requests in origin-form.
+        An example authority-form request line would be:
+            CONNECT www.example.com:80 HTTP/1.1
+        """
+        connparts = http.parse_init_connect(line)
+        if connparts:
+            self.read_headers(authenticate=True)
+            # respond according to http://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01 section 3.2
+            self.wfile.write(
+                'HTTP/1.1 200 Connection established\r\n' +
+                ('Proxy-agent: %s\r\n'%self.server_version) +
+                '\r\n'
+            )
+            self.wfile.flush()
+        return connparts
+
+    def _read_request_absolute_form(self, client_conn, line):
+        """
+        When making a request to a proxy (other than CONNECT or OPTIONS),
+        a client must send the target uri in absolute-form.
+        An example absolute-form request line would be:
+            GET http://www.example.com/foo.html HTTP/1.1
+        """
+        r = http.parse_init_proxy(line)
+        if not r:
+            raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
+        method, scheme, host, port, path, httpversion = r
+        headers = self.read_headers(authenticate=True)
+        content = http.read_http_body_request(
+            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
+        )
+        return flow.Request(
+            client_conn, httpversion, host, port, scheme, method, path, headers, content,
+            self.rfile.first_byte_timestamp, utils.timestamp()
+        )
+
+    def _read_request_origin_form(self, client_conn, scheme, host, port):
+        """
+        Read a HTTP request with regular (origin-form) request line.
+        An example origin-form request line would be:
+            GET /foo.html HTTP/1.1
+
+        The request destination is already known from one of the following sources:
+        1) transparent proxy: destination provided by platform resolver
+        2) reverse proxy: fixed destination
+        3) regular proxy: known from CONNECT command.
         """
         if scheme.lower() == "https" and not self.ssl_established:
             self.establish_ssl(client_conn, host, port)
+
         line = self.get_line(self.rfile)
         if line == "":
             return None
+
         r = http.parse_init_http(line)
         if not r:
             raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
         method, path, httpversion = r
         headers = self.read_headers(authenticate=False)
         content = http.read_http_body_request(
-                    self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
-                )
+            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
+        )
         return flow.Request(
-                    client_conn,httpversion, host, port, scheme, method, path, headers, content,
-                    self.rfile.first_byte_timestamp, utils.timestamp()
-               )
-
-    def read_request_proxy(self, client_conn):
-        line = self.get_line(self.rfile)
-        if line == "":
-            return None
-
-        if not self.proxy_connect_state:
-            connparts = http.parse_init_connect(line)
-            if connparts:
-                host, port, httpversion = connparts
-                headers = self.read_headers(authenticate=True)
-                self.wfile.write(
-                            'HTTP/1.1 200 Connection established\r\n' +
-                            ('Proxy-agent: %s\r\n'%self.server_version) +
-                            '\r\n'
-                            )
-                self.wfile.flush()
-                self.establish_ssl(client_conn, host, port)
-                self.proxy_connect_state = (host, port, httpversion)
-                line = self.rfile.readline(line)
-
-        if self.proxy_connect_state:
-            r = http.parse_init_http(line)
-            if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
-            method, path, httpversion = r
-            headers = self.read_headers(authenticate=False)
-
-            host, port, _ = self.proxy_connect_state
-            content = http.read_http_body_request(
-                self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
-            )
-            return flow.Request(
-                        client_conn, httpversion, host, port, "https", method, path, headers, content,
-                        self.rfile.first_byte_timestamp, utils.timestamp()
-                   )
-        else:
-            r = http.parse_init_proxy(line)
-            if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
-            method, scheme, host, port, path, httpversion = r
-            headers = self.read_headers(authenticate=True)
-            content = http.read_http_body_request(
-                self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
-            )
-            return flow.Request(
-                        client_conn, httpversion, host, port, scheme, method, path, headers, content,
-                        self.rfile.first_byte_timestamp, utils.timestamp()
-                    )
-
-    def read_request_reverse(self, client_conn):
-        scheme, host, port = self.config.reverse_proxy
-        return self._read_request_transparent(client_conn, scheme, host, port)
-
-    def read_request(self, client_conn):
-        self.rfile.reset_timestamps()
-        if self.config.transparent_proxy:
-            return self.read_request_transparent(client_conn)
-        elif self.config.reverse_proxy:
-            return self.read_request_reverse(client_conn)
-        else:
-            return self.read_request_proxy(client_conn)
+            client_conn, httpversion, host, port, scheme, method, path, headers, content,
+            self.rfile.first_byte_timestamp, utils.timestamp()
+        )
 
     def read_headers(self, authenticate=False):
         headers = http.read_headers(self.rfile)
