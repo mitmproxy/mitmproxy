@@ -1,4 +1,4 @@
-include README
+include README.mkd
 recursive-include test *
 recursive-include netlib *
 recursive-exclude test *.swo *.swp *.pyc
