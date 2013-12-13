@@ -1,4 +1,4 @@
-import cStringIO, Queue, time, socket
+import cStringIO, Queue, time, socket, random
 from netlib import tcp, certutils, test
 import mock
 import tutils
@@ -21,6 +21,12 @@ class EchoHandler(tcp.BaseHandler):
     def handle(self):
         v = self.rfile.readline()
         self.wfile.write(v)
+        self.wfile.flush()
+
+
+class ClientPeernameHandler(tcp.BaseHandler):
+    def handle(self):
+        self.wfile.write(str(self.connection.getpeername()))
         self.wfile.flush()
 
 
@@ -72,6 +78,22 @@ class TestServer(test.ServerTestBase):
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
+
+
+class TestServerBind(test.ServerTestBase):
+    handler = ClientPeernameHandler
+
+    def test_bind(self):
+        """ Test to bind to a given random port. Try again if the random port turned out to be blocked. """
+        for i in range(20):
+            random_port = random.randrange(1024, 65535)
+            try:
+                c = tcp.TCPClient("127.0.0.1", self.port, source_address=("127.0.0.1", random_port))
+                c.connect()
+                assert c.rfile.readline() == str(("127.0.0.1", random_port))
+                return
+            except tcp.NetLibError: # port probably already in use
+                pass
 
 
 class TestServerIPv6(test.ServerTestBase):
