@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/mitmproxy/netlib.png)](https://travis-ci.org/mitmproxy/netlib) [![Coverage Status](https://coveralls.io/repos/mitmproxy/netlib/badge.png)](https://coveralls.io/r/mitmproxy/netlib)
 
 Netlib is a collection of network utility classes, used by the pathod and
 mitmproxy projects. It differs from other projects in some fundamental

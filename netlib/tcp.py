@@ -176,12 +176,13 @@ class Reader(_FileLike):
 class TCPClient:
     rbufsize = -1
     wbufsize = -1
-    def __init__(self, host, port, source_address=None):
+    def __init__(self, host, port, source_address=None, use_ipv6=False):
         self.host, self.port = host, port
+        self.source_address = source_address
+        self.use_ipv6 = use_ipv6
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.ssl_established = False
-        self.source_address = source_address
 
     def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
         """
@@ -211,11 +212,10 @@ class TCPClient:
 
     def connect(self):
         try:
-            addr = socket.gethostbyname(self.host)
-            connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            connection = socket.socket(socket.AF_INET6 if self.use_ipv6 else socket.AF_INET, socket.SOCK_STREAM)
             if self.source_address:
                 connection.bind(self.source_address)
-            connection.connect((addr, self.port))
+            connection.connect((self.host, self.port))
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
         except (socket.error, IOError), err:
@@ -359,11 +359,12 @@ class BaseHandler:
 
 class TCPServer:
     request_queue_size = 20
-    def __init__(self, server_address):
+    def __init__(self, server_address, use_ipv6=False):
         self.server_address = server_address
+        self.use_ipv6 = use_ipv6
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket = socket.socket(socket.AF_INET6 if self.use_ipv6 else socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
         self.server_address = self.socket.getsockname()

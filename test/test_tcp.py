@@ -74,6 +74,18 @@ class TestServer(test.ServerTestBase):
         assert c.rfile.readline() == testval
 
 
+class TestServerIPv6(test.ServerTestBase):
+    handler = EchoHandler
+    use_ipv6 = True
+
+    def test_echo(self):
+        testval = "echo!\n"
+        c = tcp.TCPClient("::1", self.port, use_ipv6=True)
+        c.connect()
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
 
 class FinishFailHandler(tcp.BaseHandler):
     def handle(self):

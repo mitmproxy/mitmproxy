@@ -16,6 +16,9 @@ class ServerThread(threading.Thread):
 class ServerTestBase:
     ssl = None
     handler = None
+    addr = ("localhost", 0)
+    use_ipv6 = False
+    
     @classmethod
     def setupAll(cls):
         cls.q = Queue.Queue()
@@ -26,7 +29,7 @@ class ServerTestBase:
 
     @classmethod
     def makeserver(cls):
-        return TServer(cls.ssl, cls.q, cls.handler)
+        return TServer(cls.ssl, cls.q, cls.handler, cls.addr, cls.use_ipv6)
 
     @classmethod
     def teardownAll(cls):
@@ -38,11 +41,11 @@ class ServerTestBase:
 
 
 class TServer(tcp.TCPServer):
-    def __init__(self, ssl, q, handler_klass, addr=("127.0.0.1", 0)):
+    def __init__(self, ssl, q, handler_klass, addr, use_ipv6):
         """
             ssl: A {cert, key, v3_only} dict.
         """
-        tcp.TCPServer.__init__(self, addr)
+        tcp.TCPServer.__init__(self, addr, use_ipv6=use_ipv6)
         self.ssl, self.q = ssl, q
         self.handler_klass = handler_klass
         self.last_handler = None
