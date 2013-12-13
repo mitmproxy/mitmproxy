@@ -126,8 +126,6 @@ class AuthAction(Action):
     """
     def __call__(self, parser, namespace, values, option_string=None):
         passman = self.getPasswordManager(values)
-        if not passman:
-            raise ArgumentTypeError("Error creating password manager for proxy authentication.")
         authenticator = BasicProxyAuth(passman, "mitmproxy")
         setattr(namespace, self.dest, authenticator)
 

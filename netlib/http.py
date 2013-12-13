@@ -233,6 +233,10 @@ def parse_init(line):
 
 
 def parse_init_connect(line):
+    """
+        Returns (host, port, httpversion) if line is a valid CONNECT line.
+        http://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01 section 3.1
+    """
     v = parse_init(line)
     if not v:
         return None
