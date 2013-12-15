@@ -1,4 +1,5 @@
-import os, traceback
+import os, traceback, threading
+import controller
 
 class ScriptError(Exception):
     pass
@@ -59,3 +60,26 @@ class Script:
                 return (False, (v, traceback.format_exc(v)))
         else:
             return (False, None)
+
+
+def _handle_concurrent_reply(fn, o, args=[], kwargs={}):
+    reply = o.reply
+    o.reply = controller.DummyReply()
+
+    def run():
+        fn(*args, **kwargs)
+        reply(o)
+    threading.Thread(target=run).start()
+
+
+def concurrent(fn):
+    if fn.func_name in ["request", "response", "error"]:
+        def _concurrent(ctx, flow):
+            r = getattr(flow, fn.func_name)
+            _handle_concurrent_reply(fn, r, [ctx, flow])
+        return _concurrent
+    elif fn.func_name in ["clientconnect", "clientdisconnect", "serverconnect"]:
+        def _concurrent(ctx, conn):
+            _handle_concurrent_reply(fn, conn, [ctx, conn])
+        return _concurrent
+    raise NotImplementedError("Concurrent decorator not supported for this method.")

@@ -123,6 +123,13 @@ using pydoc (which is installed with Python by default), like this:
 </pre>
 
 
+## Running scripts in parallel
+
+We have a single flow primitive, so when a script is handling something, other requests block.
+While that's a very desirable behaviour under some circumstances, scripts can be run threaded by using the <code>libmproxy.script.concurrent</code> decorator.
+
+$!example("examples/nonblocking.py")!$
+
 ## Running scripts on saved flows
 
 Sometimes, we want to run a script on __Flow__ objects that are already

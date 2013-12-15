@@ -2,6 +2,19 @@ from libmproxy import script, flow
 import tutils
 import shlex
 import os
+import time
+
+
+class TCounter:
+    count = 0
+
+    def __call__(self, *args, **kwargs):
+        self.count += 1
+
+
+class TScriptContext(TCounter):
+    def log(self, msg):
+        self.__call__()
 
 class TestScript:
     def test_simple(self):
@@ -64,3 +77,36 @@ class TestScript:
             s.load
         )
 
+    def test_concurrent(self):
+        s = flow.State()
+        fm = flow.FlowMaster(None, s)
+        fm.load_script([tutils.test_data.path("scripts/concurrent_decorator.py")])
+
+        reply = TCounter()
+        r1, r2 = tutils.treq(), tutils.treq()
+        r1.reply, r2.reply = reply, reply
+        t_start = time.time()
+        fm.handle_request(r1)
+        r1.reply()
+        fm.handle_request(r2)
+        r2.reply()
+        assert reply.count < 2
+        assert (time.time() - t_start) < 0.09
+        time.sleep(0.2)
+        assert reply.count == 2
+
+    def test_concurrent2(self):
+        ctx = TScriptContext()
+        s = script.Script(["scripts/concurrent_decorator.py"], ctx)
+        s.load()
+        f = tutils.tflow_full()
+        f.error = tutils.terr(f.request)
+        f.reply = f.request.reply
+
+        print s.run("response", f)
+        print s.run("error", f)
+        print s.run("clientconnect", f)
+        print s.run("clientdisconnect", f)
+        print s.run("serverconnect", f)
+        time.sleep(0.1)
+        assert ctx.count == 5

@@ -33,6 +33,13 @@ def tresp(req=None):
     resp.reply = controller.DummyReply()
     return resp
 
+def terr(req=None):
+    if not req:
+        req = treq()
+    err = flow.Error(req, "error")
+    err.reply = controller.DummyReply()
+    return err
+
 
 def tflow():
     r = treq()
@@ -40,19 +47,15 @@ def tflow():
 
 
 def tflow_full():
-    r = treq()
-    f = flow.Flow(r)
-    f.response = tresp(r)
+    f = tflow()
+    f.response = tresp(f.request)
     return f
 
 
 def tflow_err():
-    r = treq()
-    f = flow.Flow(r)
-    f.error = flow.Error(r, "error")
-    f.error.reply = controller.DummyReply()
+    f = tflow()
+    f.error = terr(f.request)
     return f
-
 
 
 @contextmanager
