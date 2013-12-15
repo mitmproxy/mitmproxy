@@ -26,19 +26,19 @@ class Pathoc(tcp.TCPClient):
         self.ssl, self.sni = ssl, sni
         self.clientcert = clientcert
 
-    def http_connect(self, connect_to, wfile, rfile):
-        wfile.write(
+    def http_connect(self, connect_to):
+        self.wfile.write(
                     'CONNECT %s:%s HTTP/1.1\r\n'%tuple(connect_to) +
                     '\r\n'
                     )
-        wfile.flush()
-        l = rfile.readline()
+        self.wfile.flush()
+        l = self.rfile.readline()
         if not l:
             raise PathocError("Proxy CONNECT failed")
         parsed = http.parse_response_line(l)
         if not parsed[1] == 200:
             raise PathocError("Proxy CONNECT failed: %s - %s"%(parsed[1], parsed[2]))
-        headers = http.read_headers(rfile)
+        headers = http.read_headers(self.rfile)
 
     def connect(self, connect_to=None):
         """
@@ -47,7 +47,7 @@ class Pathoc(tcp.TCPClient):
         """
         tcp.TCPClient.connect(self)
         if connect_to:
-            self.http_connect(connect_to, self.wfile, self.rfile)
+            self.http_connect(connect_to)
         if self.ssl:
             try:
                 self.convert_to_ssl(sni=self.sni, cert=self.clientcert)

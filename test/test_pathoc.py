@@ -136,16 +136,16 @@ class TestDaemon(_TestDaemon):
     def test_connect_fail(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc("127.0.0.1", self.d.port)
-        r, w = cStringIO.StringIO(), cStringIO.StringIO()
-        tutils.raises("connect failed", c.http_connect, to, w, r)
-        r = cStringIO.StringIO(
+        c.rfile, c.wfile = cStringIO.StringIO(), cStringIO.StringIO()
+        tutils.raises("connect failed", c.http_connect, to)
+        c.rfile = cStringIO.StringIO(
             "HTTP/1.1 500 OK\r\n"
         )
-        tutils.raises("connect failed", c.http_connect, to, w, r)
-        r = cStringIO.StringIO(
+        tutils.raises("connect failed", c.http_connect, to)
+        c.rfile = cStringIO.StringIO(
             "HTTP/1.1 200 OK\r\n"
         )
-        c.http_connect(to, w, r)
+        c.http_connect(to)
 
 
 
