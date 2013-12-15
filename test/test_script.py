@@ -97,7 +97,7 @@ class TestScript:
 
     def test_concurrent2(self):
         ctx = TScriptContext()
-        s = script.Script(["scripts/concurrent_decorator.py"], ctx)
+        s = script.Script([tutils.test_data.path("scripts/concurrent_decorator.py")], ctx)
         s.load()
         f = tutils.tflow_full()
         f.error = tutils.terr(f.request)
@@ -110,3 +110,10 @@ class TestScript:
         print s.run("serverconnect", f)
         time.sleep(0.1)
         assert ctx.count == 5
+
+    def test_concurrent_err(self):
+        s = script.Script([tutils.test_data.path("scripts/concurrent_decorator_err.py")], TScriptContext())
+        tutils.raises(
+            "decorator not supported for this method",
+            s.load
+        )
