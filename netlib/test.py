@@ -18,7 +18,7 @@ class ServerTestBase:
     handler = None
     addr = ("localhost", 0)
     use_ipv6 = False
-    
+
     @classmethod
     def setupAll(cls):
         cls.q = Queue.Queue()
