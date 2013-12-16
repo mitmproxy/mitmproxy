@@ -30,6 +30,9 @@ class TestDumpMaster:
         resp = tutils.tresp(req)
         resp.content = content
         m.handle_clientconnect(cc)
+        sc = proxy.ServerConnection(m.o, req.scheme, req.host, req.port, None)
+        sc.reply = mock.MagicMock()
+        m.handle_serverconnection(sc)
         m.handle_request(req)
         f = m.handle_response(resp)
         cd = flow.ClientDisconnect(cc)
@@ -153,6 +156,7 @@ class TestDumpMaster:
             scripts=[[tutils.test_data.path("scripts/all.py")]], verbosity=0, eventlog=True
         )
         assert "XCLIENTCONNECT" in ret
+        assert "XSERVERCONNECT" in ret
         assert "XREQUEST" in ret
         assert "XRESPONSE" in ret
         assert "XCLIENTDISCONNECT" in ret

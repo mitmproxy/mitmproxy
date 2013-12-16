@@ -1,7 +1,7 @@
 import Queue, time, os.path
 from cStringIO import StringIO
 import email.utils
-from libmproxy import filt, flow, controller, utils, tnetstring
+from libmproxy import filt, flow, controller, utils, tnetstring, proxy
 import tutils
 
 
@@ -575,6 +575,10 @@ class TestFlowMaster:
         req = tutils.treq()
         fm.handle_clientconnect(req.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
+        sc = proxy.ServerConnection(None, req.scheme, req.host, req.port, None)
+        sc.reply = controller.DummyReply()
+        fm.handle_serverconnection(sc)
+        assert fm.scripts[0].ns["log"][-1] == "serverconnect"
         f = fm.handle_request(req)
         assert fm.scripts[0].ns["log"][-1] == "request"
         resp = tutils.tresp(req)

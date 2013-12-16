@@ -36,6 +36,11 @@ Called when a client initiates a connection to the proxy. Note that
 a connection can correspond to multiple HTTP requests.
 
 
+### serverconnect(ScriptContext, ServerConnection)
+
+Called when the proxy initiates a connection to the target server. Note that
+a connection can correspond to multiple HTTP requests.
+
 ### request(ScriptContext, Flow)
 
 Called when a client request has been received. The __Flow__ object is

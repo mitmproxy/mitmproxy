@@ -103,11 +103,11 @@ class TestScript:
         f.error = tutils.terr(f.request)
         f.reply = f.request.reply
 
-        print s.run("response", f)
-        print s.run("error", f)
-        print s.run("clientconnect", f)
-        print s.run("clientdisconnect", f)
-        print s.run("serverconnect", f)
+        s.run("clientconnect", f)
+        s.run("serverconnect", f)
+        s.run("response", f)
+        s.run("error", f)
+        s.run("clientdisconnect", f)
         time.sleep(0.1)
         assert ctx.count == 5
 

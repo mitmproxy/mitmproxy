@@ -14,6 +14,13 @@ def clientconnect(ctx, client_connect):
     """
     ctx.log("clientconnect")
 
+def serverconnect(ctx, server_connection):
+    """
+        Called when the proxy initiates a connection to the target server. Note that a
+        connection can correspond to multiple HTTP requests
+    """
+    ctx.log("serverconnect")
+
 def request(ctx, flow):
     """
         Called when a client request has been received.

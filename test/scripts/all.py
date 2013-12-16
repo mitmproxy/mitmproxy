@@ -3,6 +3,10 @@ def clientconnect(ctx, cc):
     ctx.log("XCLIENTCONNECT")
     log.append("clientconnect")
 
+def serverconnect(ctx, cc):
+    ctx.log("XSERVERCONNECT")
+    log.append("serverconnect")
+
 def request(ctx, r):
     ctx.log("XREQUEST")
     log.append("request")

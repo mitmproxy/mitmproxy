@@ -1,6 +1,17 @@
 import time
 from libmproxy.script import concurrent
 
+
+@concurrent
+def clientconnect(context, cc):
+    context.log("clientconnect")
+
+
+@concurrent
+def serverconnect(context, sc):
+    context.log("serverconnect")
+
+
 @concurrent
 def request(context, flow):
     time.sleep(0.1)
@@ -17,15 +28,5 @@ def error(context, err):
 
 
 @concurrent
-def clientconnect(context, cc):
-    context.log("clientconnect")
-
-
-@concurrent
 def clientdisconnect(context, dc):
     context.log("clientdisconnect")
-
-
-@concurrent
-def serverconnect(context, sc):
-    context.log("serverconnect")

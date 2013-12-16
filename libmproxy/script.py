@@ -78,7 +78,7 @@ def concurrent(fn):
             r = getattr(flow, fn.func_name)
             _handle_concurrent_reply(fn, r, [ctx, flow])
         return _concurrent
-    elif fn.func_name in ["clientconnect", "clientdisconnect", "serverconnect"]:
+    elif fn.func_name in ["clientconnect", "serverconnect", "clientdisconnect"]:
         def _concurrent(ctx, conn):
             _handle_concurrent_reply(fn, conn, [ctx, conn])
         return _concurrent
