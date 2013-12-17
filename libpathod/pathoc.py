@@ -15,9 +15,15 @@ class Response:
     def __repr__(self):
         return "Response(%s - %s)"%(self.status_code, self.msg)
 
+SSLVERSIONS = {
+    1: tcp.TLSv1_METHOD,
+    2: tcp.SSLv2_METHOD,
+    3: tcp.SSLv3_METHOD,
+    4: tcp.SSLv23_METHOD,
+}
 
 class Pathoc(tcp.TCPClient):
-    def __init__(self, host, port, ssl=None, sni=None, clientcert=None):
+    def __init__(self, host, port, ssl=None, sni=None, sslversion=1, clientcert=None):
         tcp.TCPClient.__init__(self, host, port)
         self.settings = dict(
             staticdir = os.getcwd(),
@@ -25,6 +31,7 @@ class Pathoc(tcp.TCPClient):
         )
         self.ssl, self.sni = ssl, sni
         self.clientcert = clientcert
+        self.sslversion = SSLVERSIONS[sslversion]
 
     def http_connect(self, connect_to, wfile, rfile):
         wfile.write(
@@ -50,7 +57,7 @@ class Pathoc(tcp.TCPClient):
             self.http_connect(connect_to, self.wfile, self.rfile)
         if self.ssl:
             try:
-                self.convert_to_ssl(sni=self.sni, cert=self.clientcert)
+                self.convert_to_ssl(sni=self.sni, cert=self.clientcert, method=self.sslversion)
             except tcp.NetLibError, v:
                 raise PathocError(str(v))
 
