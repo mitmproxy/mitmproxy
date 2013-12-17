@@ -182,7 +182,7 @@ class FileGenerator:
     def __init__(self, path):
         self.path = path
         self.fp = file(path, "rb")
-        self.map = mmap.mmap(self.fp.fileno(), 0, prot=mmap.PROT_READ)
+        self.map = mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)
 
     def __len__(self):
         return len(self.map)

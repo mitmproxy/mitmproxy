@@ -95,9 +95,8 @@ class TestValueFile:
         v = language.Value.parseString("<path")[0]
         with tutils.tmpdir() as t:
             p = os.path.join(t, "path")
-            f = open(p, "wb")
-            f.write("x"*10000)
-            f.close()
+            with open(p, "wb") as f:
+                f.write("x" * 10000)
 
             assert v.get_generator(dict(staticdir=t))
 
@@ -152,6 +151,7 @@ class TestMisc:
             assert g[-1] == "x"
             assert g[0:5] == "xxxxx"
             assert repr(g)
+            del g  # remove all references to FileGenerator instance to close the file handle.
 
     def test_value(self):
         assert language.Value.parseString("'val'")[0].val == "val"
@@ -697,7 +697,10 @@ class TestResponse:
         assert r.actions[0].spec() == "pr,10"
 
     def test_parse_stress(self):
-        r = language.parse_response({}, "400:b@100g")
+        # While larger values are known to work on linux,
+        # len() technically returns an int and a python 2.7 int on windows has 32bit precision.
+        # Therefore, we should keep the body length < 2147483647 bytes in our tests.
+        r = language.parse_response({}, "400:b@1g")
         assert r.length({})
 
     def test_spec(self):
