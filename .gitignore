@@ -4,6 +4,8 @@ MANIFEST
 /tmp
 /doc
 /venv
+/libmproxy/gui
+/release/build
 *.py[cdo]
 *.swp
 *.swo
