@@ -250,3 +250,17 @@ if cv.ViewProtobuf.is_available():
 
 def test_get_by_shortcut():
     assert cv.get_by_shortcut("h")
+
+def test_search_highlights():
+    # Default text in requests is content. We will search for nt once, and
+    # expect the first bit to be highlighted. We will do it again and expect the
+    # second to be.
+    f = tutils.tflowview()
+
+    ui_elements = f.search("nt")
+    text_object = ui_elements.contents()[2]
+    assert text_object.get_text() == ('content', [(None, 2), ('dark red', 2)])
+
+    ui_elements = f.search("nt")
+    text_object = ui_elements.contents()[2]
+    assert text_object.get_text() == ('content', [(None, 5), ('dark red', 2)])

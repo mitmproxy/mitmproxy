@@ -1,8 +1,11 @@
 import os, shutil, tempfile
 from contextlib import contextmanager
 from libmproxy import flow, utils, controller
+from libmproxy.console.flowview import FlowView
+from libmproxy.console import ConsoleState
 from netlib import certutils
 from nose.plugins.skip import SkipTest
+from mock import Mock
 
 def _SkipWindows():
     raise SkipTest("Skipped on Windows.")
@@ -56,6 +59,13 @@ def tflow_err():
     f = tflow()
     f.error = terr(f.request)
     return f
+
+def tflowview():
+    m = Mock()
+    cs = ConsoleState()
+    flow = tflow()
+    fv = FlowView(m, cs, flow)
+    return fv
 
 
 @contextmanager

@@ -119,7 +119,7 @@ class FlowView(common.WWrap):
     def _cached_content_view(self, viewmode, hdrItems, content, limit):
         return contentview.get_content_view(viewmode, hdrItems, content, limit, self.master.add_event)
 
-    def content_view(self, viewmode, conn):
+    def content_view(self, viewmode, conn, highlight_string = None):
         full = self.state.get_flow_setting(
             self.flow,
             (self.state.view_flow_mode, "fullcontents"),
@@ -129,7 +129,7 @@ class FlowView(common.WWrap):
             limit = sys.maxint
         else:
             limit = contentview.VIEW_CUTOFF
-        return cache.callback(
+        description, text_object = cache.callback(
                     self, "_cached_content_view",
                     viewmode,
                     tuple(tuple(i) for i in conn.headers.lst),
@@ -137,12 +137,20 @@ class FlowView(common.WWrap):
                     limit
                 )
 
-    def conn_text(self, conn):
+        if highlight_string:
+            text_object = self.search_highlight_text(text_object[0],
+                    highlight_string)
+            text_object = [text_object]
+
+        return (description, text_object)
+
+    def conn_text(self, conn, highlight_string=""):
         txt = common.format_keyvals(
                 [(h+":", v) for (h, v) in conn.headers.lst],
                 key = "header",
                 val = "text"
             )
+
         if conn.content is not None:
             override = self.state.get_flow_setting(
                 self.flow,
@@ -153,15 +161,16 @@ class FlowView(common.WWrap):
             if conn.content == flow.CONTENT_MISSING:
                 msg, body = "", [urwid.Text([("error", "[content missing]")])]
             else:
-                msg, body = self.content_view(viewmode, conn)
+                msg, body = self.content_view(viewmode, conn, highlight_string)
 
             cols = [
-                urwid.Text(
+                    urwid.Text(
                     [
                         ("heading", msg),
                     ]
                 )
             ]
+
             if override is not None:
                 cols.append(
                     urwid.Text(
@@ -174,11 +183,15 @@ class FlowView(common.WWrap):
                         align="right"
                     )
                 )
+
             title = urwid.AttrWrap(urwid.Columns(cols), "heading")
             txt.append(title)
             txt.extend(body)
         elif conn.content == flow.CONTENT_MISSING:
             pass
+
+        print(txt)
+        print("\n\n\n")
         return urwid.ListBox(txt)
 
     def _tab(self, content, attr):
@@ -214,6 +227,58 @@ class FlowView(common.WWrap):
                     header=h
                 )
         return f
+
+    def search(self, search_string):
+        # two things need to happen. 1) text needs to be highlighted. 2) we
+        # need to focus on the highlighted text.
+        if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+            text = self.flow.request
+            const = common.VIEW_FLOW_REQUEST
+        else:
+            text = self.flow.response
+            const = common.VIEW_FLOW_RESPONSE
+            if not self.flow.response:
+                return "no response to search in"
+
+        # highlight
+        body = self.conn_text(text, search_string)
+
+        self.w = self.wrap_body(const, body)
+        self.master.statusbar.redraw()
+
+    def search_get_start(self, search_string):
+        last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
+        if search_string == last_search_string:
+            start_index = self.state.get_flow_setting(self.flow,
+                    "last_search_index") + len(search_string)
+        else:
+            self.state.add_flow_setting(self.flow, "last_search_string",
+                    search_string)
+            start_index = 0
+
+        return start_index
+
+    def search_highlight_text(self, text_object, search_string):
+        text, style = text_object.get_text()
+        start_index = self.search_get_start(search_string)
+        find_index = text.find(search_string, start_index)
+        if find_index != -1:
+            before = text[:find_index]
+            after = text[find_index+len(search_string):]
+            new_text = urwid.Text(
+                [
+                    before,
+                    ("dark red", search_string),
+                    after,
+                ]
+            )
+
+            self.state.add_flow_setting(self.flow, "last_search_index",
+                    find_index)
+
+            return new_text
+        else:
+            return text_object
 
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
@@ -574,6 +639,10 @@ class FlowView(common.WWrap):
                         conn
                     )
                 self.master.refresh_flow(self.flow)
+        elif key == "/":
+            self.master.prompt("Search body: ",
+                    self.state.get_flow_setting(self.flow, "last_search_string"),
+                    self.search)
         else:
             return key
 
