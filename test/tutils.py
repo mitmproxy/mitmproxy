@@ -15,13 +15,14 @@ def SkipWindows(fn):
     else:
         return fn
 
-def treq(conn=None):
+def treq(conn=None, content="content"):
     if not conn:
         conn = flow.ClientConnect(("address", 22))
     conn.reply = controller.DummyReply()
     headers = flow.ODictCaseless()
     headers["header"] = ["qvalue"]
-    r = flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers, "content")
+    r = flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers,
+            content)
     r.reply = controller.DummyReply()
     return r
 
@@ -44,8 +45,9 @@ def terr(req=None):
     return err
 
 
-def tflow():
-    r = treq()
+def tflow(r=None):
+    if r == None:
+        r = treq()
     return flow.Flow(r)
 
 
@@ -60,13 +62,20 @@ def tflow_err():
     f.error = terr(f.request)
     return f
 
-def tflowview():
+def tflowview(request_contents=None):
     m = Mock()
     cs = ConsoleState()
-    flow = tflow()
+    if request_contents == None:
+        flow = tflow()
+    else:
+        req = treq(None, request_contents)
+        flow = tflow(req)
+
     fv = FlowView(m, cs, flow)
     return fv
 
+def get_body_line(last_displayed_body, line_nb):
+    return last_displayed_body.contents()[line_nb + 2]
 
 @contextmanager
 def tmpdir(*args, **kwargs):

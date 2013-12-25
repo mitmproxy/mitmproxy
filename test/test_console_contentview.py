@@ -257,10 +257,53 @@ def test_search_highlights():
     # second to be.
     f = tutils.tflowview()
 
-    ui_elements = f.search("nt")
-    text_object = ui_elements.contents()[2]
-    assert text_object.get_text() == ('content', [(None, 2), ('dark red', 2)])
+    f.search("nt")
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    assert text_object.get_text() == ('content', [(None, 2), (f.highlight_color, 2)])
 
-    ui_elements = f.search("nt")
-    text_object = ui_elements.contents()[2]
-    assert text_object.get_text() == ('content', [(None, 5), ('dark red', 2)])
+    f.search("nt")
+    text_object = tutils.get_body_line(f.last_displayed_body, 1)
+    assert text_object.get_text() == ('content', [(None, 5), (f.highlight_color, 2)])
+
+def test_search_highlights_clears_prev():
+    f = tutils.tflowview(request_contents="this is string\nstring is string")
+
+    f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+
+    # search again, it should not be highlighted again.
+    f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    assert text_object.get_text() != ('this is string', [(None, 8), (f.highlight_color, 6)])
+
+def test_search_highlights_multi_line():
+    f = tutils.tflowview(request_contents="this is string\nstring is string")
+
+    # should highlight the first line.
+    f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+
+    # should highlight second line, first appearance of string.
+    f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 1)
+    assert text_object.get_text() == ('string is string', [(None, 0), ('key', 6)])
+
+    # should highlight third line, second appearance of string.
+    f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 1)
+    assert text_object.get_text() == ('string is string', [(None, 10), (f.highlight_color, 6)])
+
+def test_search_focuses():
+    f = tutils.tflowview(request_contents="this is string\nstring is string")
+
+    # should highlight the first line.
+    f.search("string")
+
+    # should be focusing on the 2nd text line.
+    f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 1)
+    assert f.last_displayed_body.focus == text_object
+
+
