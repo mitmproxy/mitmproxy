@@ -113,7 +113,7 @@ class FlowView(common.WWrap):
         ("edit raw", "e"),
     ]
 
-    highlight_color = "key"
+    highlight_color = "focusfield"
 
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
@@ -316,7 +316,7 @@ class FlowView(common.WWrap):
         if found:
             focus_pos = i
         else :
-            focus_post = None
+            focus_pos = None
 
         return text_objects, focus_pos
 
