@@ -288,7 +288,8 @@ def test_search_highlights_multi_line():
     # should highlight second line, first appearance of string.
     f.search("string")
     text_object = tutils.get_body_line(f.last_displayed_body, 1)
-    assert text_object.get_text() == ('string is string', [(None, 0), ('key', 6)])
+    print text_object.get_text()
+    assert text_object.get_text() == ('string is string', [(None, 0), (f.highlight_color, 6)])
 
     # should highlight third line, second appearance of string.
     f.search("string")
