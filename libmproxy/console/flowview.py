@@ -744,10 +744,18 @@ class FlowView(common.WWrap):
                 self.master.refresh_flow(self.flow)
         elif key == "/":
             last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
-            search_prompt = "Search body ["+last_search_string+"]: " if last_search_string else "Search body:"
+            search_prompt = "Search body ["+last_search_string+"]: " if last_search_string else "Search body: "
             self.master.prompt(search_prompt,
                     None,
                     self.search)
+        elif key == "n":
+            last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
+            if last_search_string:
+                message = self.search(last_search_string)
+                if message:
+                    self.master.statusbar.message(message)
+            else:
+                self.master.statusbar.message("no previous searches have been made")
         else:
             return key
 
