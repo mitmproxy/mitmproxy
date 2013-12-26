@@ -327,7 +327,12 @@ class FlowView(common.WWrap):
         if search_string == last_search_string:
             start_line = self.state.get_flow_setting(self.flow, "last_find_line")
             start_index = self.state.get_flow_setting(self.flow,
-                    "last_search_index") + len(search_string)
+                    "last_search_index")
+
+            if start_index != None:
+                start_index += len(search_string)
+            else:
+                start_index = 0
         else:
             self.state.add_flow_setting(self.flow, "last_search_string",
                     search_string)
