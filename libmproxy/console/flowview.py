@@ -323,21 +323,25 @@ class FlowView(common.WWrap):
             return "search hit BOTTOM, continuing at TOP"
 
     def search_get_start(self, search_string):
+        start_line = 0
+        start_index = 0
         last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
         if search_string == last_search_string:
             start_line = self.state.get_flow_setting(self.flow, "last_find_line")
             start_index = self.state.get_flow_setting(self.flow,
                     "last_search_index")
 
-            if start_index != None:
-                start_index += len(search_string)
-            else:
+            if start_index == None:
                 start_index = 0
+            else:
+                start_index += len(search_string)
+
+            if start_line == None:
+                start_line = 0
+
         else:
             self.state.add_flow_setting(self.flow, "last_search_string",
                     search_string)
-            start_line = 0
-            start_index = 0
 
         return (start_line, start_index)
 

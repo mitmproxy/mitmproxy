@@ -295,7 +295,6 @@ def test_search_highlights_multi_line():
     # should highlight second line, first appearance of string.
     f.search("string")
     text_object = tutils.get_body_line(f.last_displayed_body, 1)
-    print text_object.get_text()
     assert text_object.get_text() == ('string is string', [(None, 0), (f.highlight_color, 6)])
 
     # should highlight third line, second appearance of string.
@@ -327,5 +326,25 @@ def test_search_focuses():
     f.search("string")
     text_object = tutils.get_body_line(f.last_displayed_body, 1)
     assert f.last_displayed_body.focus == text_object
+
+def test_search_does_not_crash_on_bad():
+    """
+        this used to crash, kept for reference.
+    """
+
+    f = tutils.tflowview(request_contents="this is string\nstring is string\n"+("A" * cv.VIEW_CUTOFF)+"AFTERCUTOFF")
+    f.search("AFTERCUTOFF")
+
+    # pretend F
+    f.state.add_flow_setting(
+        f.flow,
+        (f.state.view_flow_mode, "fullcontents"),
+        True
+    )
+    f.master.refresh_flow(f.flow)
+
+    # text changed, now this string will exist. can happen when user presses F
+    # for full text view
+    f.search("AFTERCUTOFF")
 
 
