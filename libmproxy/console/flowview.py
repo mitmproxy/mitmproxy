@@ -126,7 +126,7 @@ class FlowView(common.WWrap):
     def _cached_content_view(self, viewmode, hdrItems, content, limit):
         return contentview.get_content_view(viewmode, hdrItems, content, limit, self.master.add_event)
 
-    def content_view(self, viewmode, conn, highlight_string = None):
+    def content_view(self, viewmode, conn):
         full = self.state.get_flow_setting(
             self.flow,
             (self.state.view_flow_mode, "fullcontents"),
@@ -145,67 +145,84 @@ class FlowView(common.WWrap):
                     limit
                 )
 
-        if highlight_string:
-            text_objects, focus_position = self.search_highlight_text(text_objects,
-                    highlight_string)
-        else:
-            focus_position = None
+        return (description, text_objects)
 
-        return (description, text_objects, focus_position)
+    def cont_view_handle_missing(self, conn, viewmode):
+            if conn.content == flow.CONTENT_MISSING:
+                msg, body = "", [urwid.Text([("error", "[content missing]")])], 0
+            else:
+                msg, body = self.content_view(viewmode, conn)
 
-    def conn_text(self, conn, highlight_string=""):
-        txt = common.format_keyvals(
+            return (msg, body)
+
+    def viewmode_get(self, override):
+        return self.state.default_body_view if override is None else override
+
+    def override_get(self):
+        return self.state.get_flow_setting(self.flow,
+                (self.state.view_flow_mode, "prettyview"))
+
+    def conn_text_raw(self, conn):
+        """
+            Based on a request/response, conn, returns the elements for
+            display.
+        """
+        headers = common.format_keyvals(
                 [(h+":", v) for (h, v) in conn.headers.lst],
                 key = "header",
                 val = "text"
             )
 
         if conn.content is not None:
-            override = self.state.get_flow_setting(
-                self.flow,
-                (self.state.view_flow_mode, "prettyview"),
-            )
-            viewmode = self.state.default_body_view if override is None else override
-
-            if conn.content == flow.CONTENT_MISSING:
-                msg, body, text_focus_position = "", [urwid.Text([("error", "[content missing]")])], 0
-            else:
-                msg, body, text_focus_position = self.content_view(viewmode, conn, highlight_string)
-
-            cols = [
-                    urwid.Text(
-                    [
-                        ("heading", msg),
-                    ]
-                )
-            ]
-
-            if override is not None:
-                cols.append(
-                    urwid.Text(
-                        [
-                            " ",
-                            ('heading', "["),
-                            ('heading_key', "m"),
-                            ('heading', (":%s]"%viewmode.name)),
-                        ],
-                        align="right"
-                    )
-                )
-
-            title = urwid.AttrWrap(urwid.Columns(cols), "heading")
-            txt.append(title)
-            txt.extend(body)
+            override = self.override_get()
+            viewmode = self.viewmode_get(override)
+            msg, body = self.cont_view_handle_missing(conn, viewmode)
         elif conn.content == flow.CONTENT_MISSING:
             pass
 
-        self.last_displayed_body = urwid.ListBox(txt)
+        return headers, msg, body
 
-        if text_focus_position :
-            # +2 because of the two header columns
-            self.last_displayed_body.set_focus(text_focus_position + 2)
+    def conn_text_merge(self, headers, msg, body):
+        """
+            Grabs what is returned by conn_text_raw and merges them all
+            toghether, mainly used by conn_text and search
+        """
 
-        return self.last_displayed_body
+        override = self.override_get()
+        viewmode = self.viewmode_get(override)
+
+        cols = [urwid.Text(
+                [
+                    ("heading", msg),
+                ]
+            )
+        ]
+
+        if override is not None:
+            cols.append(urwid.Text([
+                        " ",
+                        ('heading', "["),
+                        ('heading_key', "m"),
+                        ('heading', (":%s]"%viewmode.name)),
+                    ],
+                    align="right"
+                )
+            )
+
+        title = urwid.AttrWrap(urwid.Columns(cols), "heading")
+        headers.append(title)
+        headers.extend(body)
+
+        return headers
+
+    def conn_text(self, conn):
+        """
+        Same as conn_text_raw, but returns result wrapped in a listbox ready for usage.
+        """
+        headers, msg, body = self.conn_text_raw(conn)
+        merged = self.conn_text_merge(headers, msg, body)
+
+        return urwid.ListBox(merged)
 
     def _tab(self, content, attr):
         p = urwid.Text(content)
@@ -241,14 +258,35 @@ class FlowView(common.WWrap):
                 )
         return f
 
+    def search_wrapped_around(self, last_find_line, last_search_index):
+        """
+            returns true if search wrapped around the bottom.
+        """
+
+        current_find_line = self.state.get_flow_setting(self.flow,
+                "last_find_line")
+        current_search_index = self.state.get_flow_setting(self.flow,
+                "last_search_index")
+
+        if current_find_line <= last_find_line:
+            return True
+        elif current_find_line == last_find_line:
+            if current_search_index <= last_search_index:
+                return True
+
+        return False
+
     def search(self, search_string):
+        """
+            similar to view_response or view_request, but instead of just
+            displaying the conn, it highlights a word that the user is
+            searching for and handles all the logic surrounding that.
+        """
 
         if search_string == "":
             search_string = self.state.get_flow_setting(self.flow,
                     "last_search_string")
 
-        # two things need to happen. 1) text needs to be highlighted. 2) we
-        # need to focus on the highlighted text.
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             text = self.flow.request
             const = common.VIEW_FLOW_REQUEST
@@ -258,11 +296,30 @@ class FlowView(common.WWrap):
             if not self.flow.response:
                 return "no response to search in"
 
-        # highlight
-        body = self.conn_text(text, search_string)
+        last_find_line = self.state.get_flow_setting(self.flow,
+                "last_find_line")
+        last_search_index = self.state.get_flow_setting(self.flow,
+                "last_search_index")
 
-        self.w = self.wrap_body(const, body)
+        # generate the body, highlight the words and get focus
+        headers, msg, body = self.conn_text_raw(text)
+        body, focus_position = self.search_highlight_text(body, search_string)
+
+        if focus_position == None:
+            # no results found.
+            return "no matches for '%s'" % search_string
+
+        # UI stuff.
+        merged = self.conn_text_merge(headers, msg, body)
+        list_box = urwid.ListBox(merged)
+        list_box.set_focus(focus_position + 2)
+        self.w = self.wrap_body(const, list_box)
         self.master.statusbar.redraw()
+
+        self.last_displayed_body = list_box
+
+        if self.search_wrapped_around(last_find_line, last_search_index):
+            return "search hit BOTTOM, continuing at TOP"
 
     def search_get_start(self, search_string):
         last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
@@ -278,7 +335,7 @@ class FlowView(common.WWrap):
 
         return (start_line, start_index)
 
-    def search_highlight_text(self, text_objects, search_string):
+    def search_highlight_text(self, text_objects, search_string, looping = False):
         start_line, start_index = self.search_get_start(search_string)
         i = start_line
 
@@ -316,7 +373,13 @@ class FlowView(common.WWrap):
         if found:
             focus_pos = i
         else :
-            focus_pos = None
+            # loop from the beginning, but not forever.
+            if (start_line == 0 and start_index == 0) or looping:
+                focus_pos = None
+            else:
+                self.state.add_flow_setting(self.flow, "last_search_index", 0)
+                self.state.add_flow_setting(self.flow, "last_find_line", 0)
+                text_objects, focus_pos = self.search_highlight_text(text_objects, search_string, True)
 
         return text_objects, focus_pos
 

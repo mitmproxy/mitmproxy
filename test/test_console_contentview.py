@@ -265,6 +265,13 @@ def test_search_highlights():
     text_object = tutils.get_body_line(f.last_displayed_body, 1)
     assert text_object.get_text() == ('content', [(None, 5), (f.highlight_color, 2)])
 
+def test_search_returns_useful_messages():
+    f = tutils.tflowview()
+
+    # original string is content. this string should not be in there.
+    response = f.search("oranges and other fruit.")
+    assert response == "no matches for 'oranges and other fruit.'"
+
 def test_search_highlights_clears_prev():
     f = tutils.tflowview(request_contents="this is string\nstring is string")
 
@@ -295,6 +302,20 @@ def test_search_highlights_multi_line():
     f.search("string")
     text_object = tutils.get_body_line(f.last_displayed_body, 1)
     assert text_object.get_text() == ('string is string', [(None, 10), (f.highlight_color, 6)])
+
+def test_search_loops():
+    f = tutils.tflowview(request_contents="this is string\nstring is string")
+
+    # get to the end.
+    f.search("string")
+    f.search("string")
+    f.search("string")
+
+    # should highlight the first line.
+    message = f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+    assert message == "search hit BOTTOM, continuing at TOP"
 
 def test_search_focuses():
     f = tutils.tflowview(request_contents="this is string\nstring is string")
