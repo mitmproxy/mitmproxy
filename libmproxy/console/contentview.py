@@ -335,7 +335,7 @@ class ViewJavaScript:
 
 class ViewCSS:
     name = "CSS"
-    prompt = ("CSS", "c")
+    prompt = ("css", "c")
     content_types = [
         "text/css"
     ]

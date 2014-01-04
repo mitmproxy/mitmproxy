@@ -62,6 +62,10 @@ class HelpView(urwid.ListBox):
                     [("text", ": JSON")]
                 ),
                 (None,
+                    common.highlight_key("css", "c") +
+                    [("text", ": CSS")]
+                ),
+                (None,
                     common.highlight_key("urlencoded", "u") +
                     [("text", ": URL-encoded data")]
                 ),
