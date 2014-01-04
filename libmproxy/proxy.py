@@ -424,8 +424,9 @@ class ProxyHandler(tcp.BaseHandler):
             raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
         method, scheme, host, port, path, httpversion = r
         headers = self.read_headers(authenticate=True)
-        content = http.read_http_body_request(
-            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
+        self.handle_expect_header(headers, httpversion)
+        content = http.read_http_body(
+            self.rfile, headers, self.config.body_size_limit, True
         )
         r = flow.Request(
             client_conn, httpversion, host, port, scheme, method, path, headers, content,
@@ -457,8 +458,9 @@ class ProxyHandler(tcp.BaseHandler):
             raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
         method, path, httpversion = r
         headers = self.read_headers(authenticate=False)
-        content = http.read_http_body_request(
-            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
+        self.handle_expect_header(headers, httpversion)
+        content = http.read_http_body(
+            self.rfile, headers, self.config.body_size_limit, True
         )
         r = flow.Request(
             client_conn, httpversion, host, port, scheme, method, path, headers, content,
@@ -466,6 +468,14 @@ class ProxyHandler(tcp.BaseHandler):
         )
         r.set_live(self.rfile, self.wfile)
         return r
+
+    def handle_expect_header(self, headers, httpversion):
+        if "expect" in headers:
+            if "100-continue" in headers['expect'] and httpversion >= (1, 1):
+                #FIXME: Check if content-length is over limit
+                self.wfile.write('HTTP/1.1 100 Continue\r\n'
+                                 '\r\n')
+                del headers['expect']
 
     def read_headers(self, authenticate=False):
         headers = http.read_headers(self.rfile)
