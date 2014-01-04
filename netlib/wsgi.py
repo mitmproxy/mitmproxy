@@ -33,7 +33,7 @@ class WSGIAdaptor:
     def __init__(self, app, domain, port, sversion):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion
 
-    def make_environ(self, request, errsoc):
+    def make_environ(self, request, errsoc, **extra):
         if '?' in request.path:
             path_info, query = request.path.split('?', 1)
         else:
@@ -59,6 +59,7 @@ class WSGIAdaptor:
             # FIXME: We need to pick up the protocol read from the request.
             'SERVER_PROTOCOL':      "HTTP/1.1",
         }
+        environ.update(extra)
         if request.client_conn.address:
             environ["REMOTE_ADDR"], environ["REMOTE_PORT"] = request.client_conn.address
 
@@ -86,7 +87,7 @@ class WSGIAdaptor:
             soc.write("\r\n")
         soc.write(c)
 
-    def serve(self, request, soc):
+    def serve(self, request, soc, **env):
         state = dict(
             response_started = False,
             headers_sent = False,
@@ -123,7 +124,7 @@ class WSGIAdaptor:
 
         errs = cStringIO.StringIO()
         try:
-            dataiter = self.app(self.make_environ(request, errs), start_response)
+            dataiter = self.app(self.make_environ(request, errs, **env), start_response)
             for i in dataiter:
                 write(i)
             if not state["headers_sent"]:
