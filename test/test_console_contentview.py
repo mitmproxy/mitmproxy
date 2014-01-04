@@ -13,6 +13,11 @@ try:
 except ImportError:
     pyamf = None
 
+try:
+    import cssutils
+except:
+    cssutils = None
+
 
 class TestContentView:
     def test_trailer(self):
@@ -111,6 +116,26 @@ class TestContentView:
         assert v([], "[1, 2, 3]", 100)
         assert v([], "[1, 2, 3", 100)
         assert v([], "function(a){[1, 2, 3]}", 100)
+
+    def test_view_css(self):
+        v = cv.ViewCSS()
+
+        with open('./test/data/1.css', 'r') as fp:
+            fixture_1 = fp.read()
+
+        result = v([], 'a', 100)
+
+        if cssutils:
+            assert len(result[1]) == 0
+        else:
+            assert len(result[1]) == 1
+
+        result = v([], fixture_1, 100)
+
+        if cssutils:
+            assert len(result[1]) > 1
+        else:
+            assert len(result[1]) == 1
 
     def test_view_hex(self):
         v = cv.ViewHex()
