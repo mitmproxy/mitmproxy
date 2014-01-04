@@ -1,3 +1,4 @@
+import logging
 import re, cStringIO, traceback, json
 import urwid
 
@@ -18,6 +19,13 @@ try:
     from pyamf import remoting, flex
 except ImportError: # pragma nocover
     pyamf = None
+
+try:
+    import cssutils
+except ImportError: # pragma nocover
+    cssutils = None
+else:
+    cssutils.log.setLevel(logging.CRITICAL)
 
 VIEW_CUTOFF = 1024*50
 
@@ -318,7 +326,23 @@ class ViewJavaScript:
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
         res = jsbeautifier.beautify(content[:limit], opts)
-        return "JavaScript", _view_text(res, len(content), limit)
+        return "JavaScript", _view_text(res, len(res), limit)
+
+class ViewCSS:
+    name = "CSS"
+    prompt = ("CSS", "c")
+    content_types = [
+        "text/css"
+    ]
+
+    def __call__(self, hdrs, content, limit):
+        if cssutils:
+            sheet = cssutils.parseString(content)
+            beautified = sheet.cssText
+        else:
+            beautified = content
+
+        return "CSS", _view_text(beautified, len(beautified), limit)
 
 
 class ViewImage:
@@ -409,6 +433,7 @@ views = [
     ViewHTML(),
     ViewHTMLOutline(),
     ViewJavaScript(),
+    ViewCSS(),
     ViewURLEncoded(),
     ViewMultipart(),
     ViewImage(),
