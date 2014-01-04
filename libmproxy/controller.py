@@ -39,13 +39,13 @@ class Channel:
     def __init__(self, q):
         self.q = q
 
-    def ask(self, m):
+    def ask(self, mtype, m):
         """
             Decorate a message with a reply attribute, and send it to the
             master.  then wait for a response.
         """
         m.reply = Reply(m)
-        self.q.put(m)
+        self.q.put((mtype, m))
         while not should_exit:
             try:
                 # The timeout is here so we can handle a should_exit event.
@@ -54,13 +54,13 @@ class Channel:
                 continue
             return g
 
-    def tell(self, m):
+    def tell(self, mtype, m):
         """
             Decorate a message with a dummy reply attribute, send it to the
             master, then return immediately.
         """
         m.reply = DummyReply()
-        self.q.put(m)
+        self.q.put((mtype, m))
 
 
 class Slave(threading.Thread):
@@ -98,7 +98,7 @@ class Master:
             while True:
                 # Small timeout to prevent pegging the CPU
                 msg = q.get(timeout=0.01)
-                self.handle(msg)
+                self.handle(*msg)
                 changed = True
         except Queue.Empty:
             pass
@@ -112,13 +112,13 @@ class Master:
             self.tick(self.masterq)
         self.shutdown()
 
-    def handle(self, msg):
-        c = "handle_" + msg.__class__.__name__.lower()
+    def handle(self, mtype, obj):
+        c = "handle_" + mtype
         m = getattr(self, c, None)
         if m:
-            m(msg)
+            m(obj)
         else:
-            msg.reply()
+            obj.reply()
 
     def shutdown(self):
         global should_exit
