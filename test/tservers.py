@@ -23,10 +23,10 @@ def errapp(environ, start_response):
 class TestMaster(flow.FlowMaster):
     def __init__(self, testq, config):
         s = proxy.ProxyServer(config, 0)
-        s.apps.add(testapp, "testapp", 80)
-        s.apps.add(errapp, "errapp", 80)
         state = flow.State()
         flow.FlowMaster.__init__(self, s, state)
+        self.apps.add(testapp, "testapp", 80)
+        self.apps.add(errapp, "errapp", 80)
         self.testq = testq
         self.clear_log()
         self.start_app(APP_HOST, APP_PORT, False)
