@@ -331,6 +331,15 @@ class Request(HTTPMsg):
         self.stickycookie = False
         self.stickyauth = False
 
+        # Live attributes - not serialized
+        self.wfile, self.rfile = None, None
+
+    def set_live(self, rfile, wfile):
+        self.wfile, self.rfile = wfile, rfile
+
+    def is_live(self):
+        return bool(self.wfile)
+
     def anticache(self):
         """
             Modifies this request to remove headers that might produce a cached
@@ -1397,7 +1406,6 @@ class FlowMaster(controller.Master):
         self.setheaders = SetHeaders()
 
         self.stream = None
-        app.mapp.config["PMASTER"] = self
         self.apps = AppRegistry()
 
     def start_app(self, host, port, external):
@@ -1632,19 +1640,20 @@ class FlowMaster(controller.Master):
         return f
 
     def handle_request(self, r):
-        app = self.apps.get(r)
-        if app:
-            r.reply()
-            #err = app.serve(r, self.wfile)
-            #if err:
-            #    self.add_event("Error in wsgi app. %s"%err, "error")
-        else:
-            f = self.state.add_request(r)
-            self.replacehooks.run(f)
-            self.setheaders.run(f)
-            self.run_script_hook("request", f)
-            self.process_new_request(f)
-            return f
+        if r.is_live():
+            app = self.apps.get(r)
+            if app:
+                err = app.serve(r, r.wfile, **{"mitmproxy.master": self})
+                if err:
+                    self.add_event("Error in wsgi app. %s"%err, "error")
+                r.reply(proxy.KILL)
+                return
+        f = self.state.add_request(r)
+        self.replacehooks.run(f)
+        self.setheaders.run(f)
+        self.run_script_hook("request", f)
+        self.process_new_request(f)
+        return f
 
     def handle_response(self, r):
         f = self.state.add_response(r)

@@ -6,6 +6,8 @@ from netlib import odict, tcp, http, certutils, http_status, http_auth
 import utils, flow, version, platform, controller
 
 
+TRANSPARENT_SSL_PORTS = [443, 8443]
+
 KILL = 0
 
 
@@ -425,10 +427,12 @@ class ProxyHandler(tcp.BaseHandler):
         content = http.read_http_body_request(
             self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
         )
-        return flow.Request(
+        r = flow.Request(
             client_conn, httpversion, host, port, scheme, method, path, headers, content,
             self.rfile.first_byte_timestamp, utils.timestamp()
         )
+        r.set_live(self.rfile, self.wfile)
+        return r
 
     def _read_request_origin_form(self, client_conn, scheme, host, port):
         """
@@ -456,10 +460,12 @@ class ProxyHandler(tcp.BaseHandler):
         content = http.read_http_body_request(
             self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
         )
-        return flow.Request(
+        r = flow.Request(
             client_conn, httpversion, host, port, scheme, method, path, headers, content,
             self.rfile.first_byte_timestamp, utils.timestamp()
         )
+        r.set_live(self.rfile, self.wfile)
+        return r
 
     def read_headers(self, authenticate=False):
         headers = http.read_headers(self.rfile)
@@ -560,7 +566,6 @@ def certificate_option_group(parser):
     )
 
 
-TRANSPARENT_SSL_PORTS = [443, 8443]
 
 def process_proxy_options(parser, options):
     if options.cert:
@@ -603,7 +608,9 @@ def process_proxy_options(parser, options):
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
-            return parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
+            return parser.error(
+                    "Client certificate directory does not exist or is not a directory: %s"%options.clientcerts
+                )
 
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
