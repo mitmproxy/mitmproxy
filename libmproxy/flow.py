@@ -1463,7 +1463,7 @@ class FlowMaster(controller.Master):
     def run_script_hook(self, name, *args, **kwargs):
         for script in self.scripts:
             self.run_single_script_hook(script, name, *args, **kwargs)
-      
+
     def set_stickycookie(self, txt):
         if txt:
             flt = filt.parse(txt)
