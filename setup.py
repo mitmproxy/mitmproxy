@@ -97,7 +97,7 @@ setup(
             "urwid>=1.1",
             "pyasn1>0.1.2",
             "pyopenssl>=0.13",
-            "PIL",
+            "Pillow>=2.3.0,<2.4",
             "lxml",
             "flask"
         ],
