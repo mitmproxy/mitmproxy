@@ -95,14 +95,17 @@ def read_headers(fp):
     return odict.ODictCaseless(ret)
 
 
-def read_chunked(code, fp, limit):
+def read_chunked(fp, headers, limit, is_request):
     """
         Read a chunked HTTP body.
 
         May raise HttpError.
     """
+    # FIXME: Should check if chunked is the final encoding in the headers
+    # http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3 3.3 2.
     content = ""
     total = 0
+    code = 400 if is_request else 502
     while 1:
         line = fp.readline(128)
         if line == "":
@@ -149,35 +152,6 @@ def get_header_tokens(headers, key):
 
 def has_chunked_encoding(headers):
     return "chunked" in [i.lower() for i in get_header_tokens(headers, "transfer-encoding")]
-
-
-def read_http_body(code, rfile, headers, all, limit):
-    """
-        Read an HTTP body:
-
-            code: The HTTP error code to be used when raising HttpError
-            rfile: A file descriptor to read from
-            headers: An ODictCaseless object
-            all: Should we read all data?
-            limit: Size limit.
-    """
-    if has_chunked_encoding(headers):
-        content = read_chunked(code, rfile, limit)
-    elif "content-length" in headers:
-        try:
-            l = int(headers["content-length"][0])
-        except ValueError:
-            # FIXME: Not strictly correct - this could be from the server, in which
-            # case we should send a 502.
-            raise HttpError(code, "Invalid content-length header: %s"%headers["content-length"])
-        if limit is not None and l > limit:
-            raise HttpError(code, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
-        content = rfile.read(l)
-    elif all:
-        content = rfile.read(limit if limit else -1)
-    else:
-        content = ""
-    return content
 
 
 def parse_http_protocol(s):
@@ -304,28 +278,6 @@ def connection_close(httpversion, headers):
     return True
 
 
-
-def read_http_body_request(rfile, wfile, headers, httpversion, limit):
-    """
-        Read the HTTP body from a client request.
-    """
-    if "expect" in headers:
-        # FIXME: Should be forwarded upstream
-        if "100-continue" in headers['expect'] and httpversion >= (1, 1):
-            wfile.write('HTTP/1.1 100 Continue\r\n')
-            wfile.write('\r\n')
-            del headers['expect']
-    return read_http_body(400, rfile, headers, False, limit)
-
-
-def read_http_body_response(rfile, headers, limit):
-    """
-        Read the HTTP body from a server response.
-    """
-    all = "close" in get_header_tokens(headers, "connection")
-    return read_http_body(500, rfile, headers, all, limit)
-
-
 def parse_response_line(line):
     parts = line.strip().split(" ", 2)
     if len(parts) == 2: # handle missing message gracefully
@@ -359,10 +311,41 @@ def read_response(rfile, method, body_size_limit):
     headers = read_headers(rfile)
     if headers is None:
         raise HttpError(502, "Invalid headers.")
-    if code >= 100 and code <= 199:
-        return read_response(rfile, method, body_size_limit)
-    if method == "HEAD" or code == 204 or code == 304:
+
+    # Parse response body according to http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
+    if method == "HEAD" or (code in [204, 304]) or 100 <= code <= 199:
         content = ""
     else:
-        content = read_http_body_response(rfile, headers, body_size_limit)
+        content = read_http_body(rfile, headers, body_size_limit, False)
     return httpversion, code, msg, headers, content
+
+
+def read_http_body(rfile, headers, limit, is_request):
+    """
+        Read an HTTP message body:
+
+            rfile: A file descriptor to read from
+            headers: An ODictCaseless object
+            limit: Size limit.
+            is_request: True if the body to read belongs to a request, False otherwise
+    """
+    if has_chunked_encoding(headers):
+        content = read_chunked(rfile, headers, limit, is_request)
+    elif "content-length" in headers:
+        try:
+            l = int(headers["content-length"][0])
+            if l < 0:
+                raise ValueError()
+        except ValueError:
+            raise HttpError(400 if is_request else 502, "Invalid content-length header: %s"%headers["content-length"])
+        if limit is not None and l > limit:
+            raise HttpError(400 if is_request else 509, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
+        content = rfile.read(l)
+    elif is_request:
+        content = ""
+    else:
+        content = rfile.read(limit if limit else -1)
+        not_done = rfile.read(1)
+        if not_done:
+            raise HttpError(400 if is_request else 509, "HTTP Body too large. Limit is %s," % limit)
+    return content

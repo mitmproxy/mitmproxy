@@ -133,7 +133,6 @@ class TestFinishFail(test.ServerTestBase):
         c.wfile.flush()
         c.rfile.read(4)
 
-
 class TestDisconnect(test.ServerTestBase):
     handler = EchoHandler
     def test_echo(self):
