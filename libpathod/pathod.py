@@ -123,8 +123,8 @@ class PathodHandler(tcp.BaseHandler):
         )
 
         try:
-            content = http.read_http_body_request(
-                        self.rfile, self.wfile, headers, httpversion, None
+            content = http.read_http_body(
+                        self.rfile, headers, None, True
                     )
         except http.HttpError, s:
             s = str(s)
