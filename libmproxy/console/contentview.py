@@ -27,6 +27,11 @@ except ImportError: # pragma nocover
 else:
     cssutils.log.setLevel(logging.CRITICAL)
 
+    cssutils.ser.prefs.keepComments = True
+    cssutils.ser.prefs.omitLastSemicolon = False
+    cssutils.ser.prefs.indentClosingBrace = False
+    cssutils.ser.prefs.validOnly = False
+
 VIEW_CUTOFF = 1024*50
 
 
