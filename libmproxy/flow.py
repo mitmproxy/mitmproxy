@@ -821,7 +821,6 @@ class ClientConnect(StateObject):
         """
         self.address = address
         self.close = False
-        self.requestcount = 0
         self.error = None
 
     def __str__(self):

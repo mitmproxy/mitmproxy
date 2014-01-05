@@ -3,7 +3,7 @@ import shutil, tempfile, threading
 import SocketServer
 from OpenSSL import SSL
 from netlib import odict, tcp, http, wsgi, certutils, http_status, http_auth
-import utils, flow, version, platform, controller
+import utils, flow, version, platform, controller, protocol
 
 
 KILL = 0
@@ -37,31 +37,31 @@ class ProxyConfig:
 
 
 class ServerConnection(tcp.TCPClient):
-    def __init__(self, config, scheme, host, port, sni):
+    def __init__(self, config, host, port, sni):
         tcp.TCPClient.__init__(self, host, port)
         self.config = config
-        self.scheme, self.sni = scheme, sni
-        self.requestcount = 0
+        self.sni = sni
         self.tcp_setup_timestamp = None
         self.ssl_setup_timestamp = None
 
     def connect(self):
         tcp.TCPClient.connect(self)
         self.tcp_setup_timestamp = time.time()
-        if self.scheme == "https":
-            clientcert = None
-            if self.config.clientcerts:
-                path = os.path.join(self.config.clientcerts, self.host.encode("idna")) + ".pem"
-                if os.path.exists(path):
-                    clientcert = path
-            try:
-                self.convert_to_ssl(cert=clientcert, sni=self.sni)
-                self.ssl_setup_timestamp = time.time()
-            except tcp.NetLibError, v:
-                raise ProxyError(400, str(v))
+
+    def establish_ssl(self):
+        clientcert = None
+        if self.config.clientcerts:
+            path = os.path.join(self.config.clientcerts, self.host.encode("idna")) + ".pem"
+            if os.path.exists(path):
+                clientcert = path
+        try:
+            self.convert_to_ssl(cert=clientcert, sni=self.sni)
+            self.ssl_setup_timestamp = time.time()
+        except tcp.NetLibError, v:
+            raise ProxyError(400, str(v))
 
     def send(self, request):
-        self.requestcount += 1
+        print "deprecated"
         d = request._assemble()
         if not d:
             raise ProxyError(502, "Cannot transmit an incomplete request.")
@@ -104,80 +104,43 @@ class RequestReplayThread(threading.Thread):
 
 
 class HandleSNI:
-    def __init__(self, handler, client_conn, host, port, cert, key):
-        self.handler, self.client_conn, self.host, self.port = handler, client_conn, host, port
+    def __init__(self, handler, cert, key):
+        self.handler = handler
         self.cert, self.key = cert, key
 
     def __call__(self, connection):
         try:
             sn = connection.get_servername()
             if sn:
-                self.handler.get_server_connection(self.client_conn, "https", self.host, self.port, sn)
+                self.handler.sni = sn.decode("utf8").encode("idna")
+                self.handler.establish_server_connection()
+                self.handler.handle_ssl()
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.key)
                 new_context.use_certificate(self.cert.x509)
                 connection.set_context(new_context)
-                self.handler.sni = sn.decode("utf8").encode("idna")
+                # FIXME: How does that work?
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
         except Exception, e: # pragma: no cover
             pass
 
 
-class ProxyHandler(tcp.BaseHandler):
-    def __init__(self, config, connection, client_address, server, channel, server_version):
-        self.channel, self.server_version = channel, server_version
+class ConnectionHandler:
+    def __init__(self, config, client_connection, client_address, server, channel, server_version):
         self.config = config
-        self.proxy_connect_state = None
+        self.client_address, self.client_conn = client_address, tcp.BaseHandler(client_connection)
+        self.server_address, self.server_conn = None, None
+        self.channel, self.server_version = channel, server_version
+
+        self.conntype = None
         self.sni = None
-        self.server_conn = None
-        tcp.BaseHandler.__init__(self, connection, client_address, server)
 
-    def get_server_connection(self, cc, scheme, host, port, sni, request=None):
-        """
-            When SNI is in play, this means we have an SSL-encrypted
-            connection, which means that the entire handler is dedicated to a
-            single server connection - no multiplexing. If this assumption ever
-            breaks, we'll have to do something different with the SNI host
-            variable on the handler object.
-
-            `conn_info` holds the initial connection's parameters, as the
-            hook might change them. Also, the hook might require an initial
-            request to figure out connection settings; in this case it can
-            set require_request, which will cause the connection to be
-            re-opened after the client's request arrives.
-        """
-        sc = self.server_conn
-        if not sni:
-            sni = host
-        conn_info = (scheme, host, port, sni)
-        if sc and (conn_info != sc.conn_info or (request and sc.require_request)):
-            sc.terminate()
-            self.server_conn = None
-            self.log(
-                cc,
-                "switching connection", [
-                    "%s://%s:%s (sni=%s) -> %s://%s:%s (sni=%s)"%(
-                        scheme, host, port, sni,
-                        sc.scheme, sc.host, sc.port, sc.sni
-                    )
-                ]
-            )
-        if not self.server_conn:
-            try:
-                self.server_conn = ServerConnection(self.config, scheme, host, port, sni)
-
-                # Additional attributes, used if the server_connect hook
-                # needs to change parameters
-                self.server_conn.request = request
-                self.server_conn.require_request = False
-
-                self.server_conn.conn_info = conn_info
-                self.channel.ask(self.server_conn)
-                self.server_conn.connect()
-            except tcp.NetLibError, v:
-                raise ProxyError(502, v)
-        return self.server_conn
+        self.mode = "regular"
+        if self.config.reverse_proxy:
+            self.mode = "reverse"
+        if self.config.transparent_proxy:
+            self.mode = "transparent"
 
     def del_server_connection(self):
         if self.server_conn:
@@ -188,8 +151,28 @@ class ProxyHandler(tcp.BaseHandler):
         cc = flow.ClientConnect(self.client_address)
         self.log(cc, "connect")
         self.channel.ask(cc)
-        while self.handle_request(cc) and not cc.close:
-            pass
+
+        # Can we already identify the target server and connect to it?
+        if self.config.forward_proxy:
+            self.server_address = self.config.forward_proxy
+        else:
+            if self.config.reverse_proxy:
+                self.server_address = self.config.reverse_proxy
+            elif self.config.transparent_proxy:
+                self.server_address = self.config.transparent_proxy["resolver"].original_addr(self.connection)
+                if not self.server_address:
+                    raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
+                self.log(cc, "transparent to %s:%s"%self.server_address)
+
+        if self.server_address:
+            self.establish_server_connection()
+            self.handle_ssl()
+
+        self.determine_conntype(self.mode)
+
+        while not cc.close:
+            protocol.handle_messages(self.conntype, self)
+
         cc.close = True
         self.del_server_connection()
 
@@ -201,115 +184,41 @@ class ProxyHandler(tcp.BaseHandler):
         )
         self.channel.tell(cd)
 
-    def handle_request(self, cc):
-        try:
-            request, err = None, None
-            request = self.read_request(cc)
-            if request is None:
-                return
-            cc.requestcount += 1
+    def determine_conntype(self, mode):
+        #TODO: Add ruleset to select correct protocol depending on mode/target port etc.
+        self.conntype = "http"
 
-            app = self.server.apps.get(request)
-            if app:
-                err = app.serve(request, self.wfile)
-                if err:
-                    self.log(cc, "Error in wsgi app.", err.split("\n"))
-                    return
-            else:
-                request_reply = self.channel.ask(request)
-                if request_reply is None or request_reply == KILL:
-                    return
-                elif isinstance(request_reply, flow.Response):
-                    request = False
-                    response = request_reply
-                    response_reply = self.channel.ask(response)
-                else:
-                    request = request_reply
-                    if self.config.reverse_proxy:
-                        scheme, host, port = self.config.reverse_proxy
-                    elif self.config.forward_proxy:
-                        scheme, host, port = self.config.forward_proxy
-                    else:
-                        scheme, host, port = request.scheme, request.host, request.port
+    def establish_server_connection(self):
+        """
+        Establishes a new server connection to self.server_address.
+        If there is already an existing server connection, it will be killed.
+        """
+        self.del_server_connection()
+        self.server_conn = ServerConnection(self.config, *self.server_address, self.sni)
 
-                    # If we've already pumped a request over this connection,
-                    # it's possible that the server has timed out. If this is
-                    # the case, we want to reconnect without sending an error
-                    # to the client.
-                    while 1:
-                        sc = self.get_server_connection(cc, scheme, host, port, self.sni, request=request)
-                        sc.send(request)
-                        if sc.requestcount == 1: # add timestamps only for first request (others are not directly affected)
-                            request.tcp_setup_timestamp = sc.tcp_setup_timestamp
-                            request.ssl_setup_timestamp = sc.ssl_setup_timestamp
-                        sc.rfile.reset_timestamps()
-                        try:
-                            tsstart = utils.timestamp()
-                            peername = sc.connection.getpeername()
-                            if peername:
-                                request.ip = peername[0]
-                            httpversion, code, msg, headers, content = http.read_response(
-                                sc.rfile,
-                                request.method,
-                                self.config.body_size_limit
-                            )
-                        except http.HttpErrorConnClosed, v:
-                            self.del_server_connection()
-                            if sc.requestcount > 1:
-                                continue
-                            else:
-                                raise
-                        except http.HttpError, v:
-                            raise ProxyError(502, "Invalid server response.")
-                        else:
-                            break
-
-                    response = flow.Response(
-                        request, httpversion, code, msg, headers, content, sc.cert,
-                        sc.rfile.first_byte_timestamp
-                    )
-                    response_reply = self.channel.ask(response)
-                    # Not replying to the server invalidates the server
-                    # connection, so we terminate.
-                    if response_reply == KILL:
-                        sc.terminate()
-
-                if response_reply == KILL:
-                    return
-                else:
-                    response = response_reply
-                    self.send_response(response)
-                    if request and http.connection_close(request.httpversion, request.headers):
-                        return
-                    # We could keep the client connection when the server
-                    # connection needs to go away.  However, we want to mimic
-                    # behaviour as closely as possible to the client, so we
-                    # disconnect.
-                    if http.connection_close(response.httpversion, response.headers):
-                        return
-        except (IOError, ProxyError, http.HttpError, tcp.NetLibError), e:
-            if hasattr(e, "code"):
-                cc.error = "%s: %s"%(e.code, e.msg)
-            else:
-                cc.error = str(e)
-
-            if request:
-                err = flow.Error(request, cc.error)
-                self.channel.ask(err)
-                self.log(
-                    cc, cc.error,
-                    ["url: %s"%request.get_url()]
-                )
-            else:
-                self.log(cc, cc.error)
-            if isinstance(e, ProxyError):
-                self.send_error(e.code, e.msg, e.headers)
+    def handle_ssl(self):
+        if self.config.transparent_proxy:
+            client_ssl, server_ssl = (self.server_address[1] in self.config.transparent_proxy["sslports"])
+        elif self.config.reverse_proxy:
+            client_ssl, server_ssl = self.config.reverse_proxy[0] == "https"
+            # FIXME: Make protocol generic (as with transparent proxies)
+            # FIXME: Add SSL-terminating capatbility (SSL -> mitmproxy -> plain and vice versa)
         else:
-            return True
+            client_ssl, server_ssl = True  # In regular mode, this function will only be called on HTTP CONNECT
 
-    def log(self, cc, msg, subs=()):
+        # TODO: Implement SSL pass-through handling and change conntype
+
+        if server_ssl and not self.server_conn.ssl_established:
+            self.server_conn.establish_ssl()
+        if client_ssl and not self.client_conn.ssl_established:
+            dummycert = self.find_cert(self.client_conn, *self.server_address)
+            sni = HandleSNI(
+                self, dummycert, self.config.certfile or self.config.cacert
+            )
+
+    def log(self, msg, subs=()):
         msg = [
-            "%s:%s: "%cc.address + msg
+            "%s:%s: "%self.client_address + msg
         ]
         for i in subs:
             msg.append("  -> "+i)
@@ -317,7 +226,7 @@ class ProxyHandler(tcp.BaseHandler):
         l = Log(msg)
         self.channel.tell(l)
 
-    def find_cert(self, cc, host, port, sni):
+    def find_cert(self, cc, host, port, sni=None):
         if self.config.certfile:
             with open(self.config.certfile, "rb") as f:
                 return certutils.SSLCert.from_pem(f.read())
@@ -332,181 +241,6 @@ class ProxyHandler(tcp.BaseHandler):
             if not ret:
                 raise ProxyError(502, "Unable to generate dummy cert.")
             return ret
-
-    def establish_ssl(self, client_conn, host, port):
-        dummycert = self.find_cert(client_conn, host, port, host)
-        sni = HandleSNI(
-            self, client_conn, host, port,
-            dummycert, self.config.certfile or self.config.cacert
-        )
-        try:
-            self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
-        except tcp.NetLibError, v:
-            raise ProxyError(400, str(v))
-
-    def get_line(self, fp):
-        """
-            Get a line, possibly preceded by a blank.
-        """
-        line = fp.readline()
-        if line == "\r\n" or line == "\n": # Possible leftover from previous message
-            line = fp.readline()
-        return line
-
-    def read_request(self, client_conn):
-        self.rfile.reset_timestamps()
-        if self.config.transparent_proxy:
-            return self.read_request_transparent(client_conn)
-        elif self.config.reverse_proxy:
-            return self.read_request_reverse(client_conn)
-        else:
-            return self.read_request_proxy(client_conn)
-
-    def read_request_transparent(self, client_conn):
-        orig = self.config.transparent_proxy["resolver"].original_addr(self.connection)
-        if not orig:
-            raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
-        self.log(client_conn, "transparent to %s:%s"%orig)
-
-        host, port = orig
-        if port in self.config.transparent_proxy["sslports"]:
-            scheme = "https"
-        else:
-            scheme = "http"
-
-        return self._read_request_origin_form(client_conn, scheme, host, port)
-
-    def read_request_reverse(self, client_conn):
-        scheme, host, port = self.config.reverse_proxy
-        return self._read_request_origin_form(client_conn, scheme, host, port)
-
-    def read_request_proxy(self, client_conn):
-        # Check for a CONNECT command.
-        if not self.proxy_connect_state:
-            line = self.get_line(self.rfile)
-            if line == "":
-                return None
-            self.proxy_connect_state = self._read_request_authority_form(line)
-
-        # Check for an actual request
-        if self.proxy_connect_state:
-            host, port, _ = self.proxy_connect_state
-            return self._read_request_origin_form(client_conn, "https", host, port)
-        else:
-            # noinspection PyUnboundLocalVariable
-            return self._read_request_absolute_form(client_conn, line)
-
-    def _read_request_authority_form(self, line):
-        """
-        The authority-form of request-target is only used for CONNECT requests.
-        The CONNECT method is used to request a tunnel to the destination server.
-        This function sends a "200 Connection established" response to the client
-        and returns the host information that can be used to process further requests in origin-form.
-        An example authority-form request line would be:
-            CONNECT www.example.com:80 HTTP/1.1
-        """
-        connparts = http.parse_init_connect(line)
-        if connparts:
-            self.read_headers(authenticate=True)
-            # respond according to http://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01 section 3.2
-            self.wfile.write(
-                'HTTP/1.1 200 Connection established\r\n' +
-                ('Proxy-agent: %s\r\n'%self.server_version) +
-                '\r\n'
-            )
-            self.wfile.flush()
-        return connparts
-
-    def _read_request_absolute_form(self, client_conn, line):
-        """
-        When making a request to a proxy (other than CONNECT or OPTIONS),
-        a client must send the target uri in absolute-form.
-        An example absolute-form request line would be:
-            GET http://www.example.com/foo.html HTTP/1.1
-        """
-        r = http.parse_init_proxy(line)
-        if not r:
-            raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
-        method, scheme, host, port, path, httpversion = r
-        headers = self.read_headers(authenticate=True)
-        content = http.read_http_body_request(
-            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
-        )
-        return flow.Request(
-            client_conn, httpversion, host, port, scheme, method, path, headers, content,
-            self.rfile.first_byte_timestamp, utils.timestamp()
-        )
-
-    def _read_request_origin_form(self, client_conn, scheme, host, port):
-        """
-        Read a HTTP request with regular (origin-form) request line.
-        An example origin-form request line would be:
-            GET /foo.html HTTP/1.1
-
-        The request destination is already known from one of the following sources:
-        1) transparent proxy: destination provided by platform resolver
-        2) reverse proxy: fixed destination
-        3) regular proxy: known from CONNECT command.
-        """
-        if scheme.lower() == "https" and not self.ssl_established:
-            self.establish_ssl(client_conn, host, port)
-
-        line = self.get_line(self.rfile)
-        if line == "":
-            return None
-
-        r = http.parse_init_http(line)
-        if not r:
-            raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
-        method, path, httpversion = r
-        headers = self.read_headers(authenticate=False)
-        content = http.read_http_body_request(
-            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
-        )
-        return flow.Request(
-            client_conn, httpversion, host, port, scheme, method, path, headers, content,
-            self.rfile.first_byte_timestamp, utils.timestamp()
-        )
-
-    def read_headers(self, authenticate=False):
-        headers = http.read_headers(self.rfile)
-        if headers is None:
-            raise ProxyError(400, "Invalid headers")
-        if authenticate and self.config.authenticator:
-            if self.config.authenticator.authenticate(headers):
-                self.config.authenticator.clean(headers)
-            else:
-                raise ProxyError(
-                            407,
-                            "Proxy Authentication Required",
-                            self.config.authenticator.auth_challenge_headers()
-                       )
-        return headers
-
-    def send_response(self, response):
-        d = response._assemble()
-        if not d:
-            raise ProxyError(502, "Cannot transmit an incomplete response.")
-        self.wfile.write(d)
-        self.wfile.flush()
-
-    def send_error(self, code, body, headers):
-        try:
-            response = http_status.RESPONSES.get(code, "Unknown")
-            html_content = '<html><head>\n<title>%d %s</title>\n</head>\n<body>\n%s\n</body>\n</html>'%(code, response, body)
-            self.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-            self.wfile.write("Server: %s\r\n"%self.server_version)
-            self.wfile.write("Content-type: text/html\r\n")
-            self.wfile.write("Content-Length: %d\r\n"%len(html_content))
-            if headers:
-                for key, value in headers.items():
-                    self.wfile.write("%s: %s\r\n"%(key, value))
-            self.wfile.write("Connection: close\r\n")
-            self.wfile.write("\r\n")
-            self.wfile.write(html_content)
-            self.wfile.flush()
-        except:
-            pass
 
 
 class ProxyServerError(Exception): pass
@@ -535,8 +269,8 @@ class ProxyServer(tcp.TCPServer):
     def set_channel(self, channel):
         self.channel = channel
 
-    def handle_connection(self, request, client_address):
-        h = ProxyHandler(self.config, request, client_address, self, self.channel, self.server_version)
+    def handle_client_connection(self, conn, client_address):
+        h = ConnectionHandler(self.config, conn, client_address, self, self.channel, self.server_version)
         h.handle()
         h.finish()
 
