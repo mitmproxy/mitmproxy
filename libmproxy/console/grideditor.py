@@ -482,3 +482,12 @@ class PathEditor(GridEditor):
     columns = 1
     headings = ("Component",)
 
+
+class ScriptEditor(GridEditor):
+    title = "Editing scripts"
+    columns = 1
+    headings = ("Path",)
+    def is_error(self, col, val):
+        return False
+
+

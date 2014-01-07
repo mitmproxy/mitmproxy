@@ -176,10 +176,10 @@ class TestHTTPAuth(tservers.HTTPProxTest):
 class TestHTTPConnectSSLError(tservers.HTTPProxTest):
     certfile = True
     def test_go(self):
-        p = self.pathoc()
-        req = "connect:'localhost:%s'"%self.proxy.port
-        assert p.request(req).status_code == 200
-        assert p.request(req).status_code == 400
+        p = self.pathoc_raw()
+        dst = ("localhost", self.proxy.port)
+        p.connect(connect_to=dst)
+        tutils.raises("400 - Bad Request", p.http_connect, dst)
 
 
 class TestHTTPS(tservers.HTTPProxTest, CommonMixin):

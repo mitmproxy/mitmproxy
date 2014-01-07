@@ -1,7 +1,7 @@
 Flask>=0.9
 Jinja2>=2.7
 MarkupSafe>=0.18
-PIL>=1.1.7
+Pillow>=2.3.0,<2.4
 Werkzeug>=0.8.3
 lxml>=3.2.1
 netlib>=0.9.2
@@ -14,3 +14,4 @@ requests>=1.2.2
 urwid>=1.1.1
 wsgiref>=0.1.2
 jsbeautifier>=1.4.0
+cssutils>=1.0,<1.1

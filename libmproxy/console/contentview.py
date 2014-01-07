@@ -1,11 +1,9 @@
+import logging
 import re, cStringIO, traceback, json
 import urwid
 
-try: from PIL import Image
-except ImportError: import Image
-
-try: from PIL.ExifTags import TAGS
-except ImportError: from ExifTags import TAGS
+from PIL import Image
+from PIL.ExifTags import TAGS
 
 import lxml.html, lxml.etree
 import netlib.utils
@@ -18,6 +16,18 @@ try:
     from pyamf import remoting, flex
 except ImportError: # pragma nocover
     pyamf = None
+
+try:
+    import cssutils
+except ImportError: # pragma nocover
+    cssutils = None
+else:
+    cssutils.log.setLevel(logging.CRITICAL)
+
+    cssutils.ser.prefs.keepComments = True
+    cssutils.ser.prefs.omitLastSemicolon = False
+    cssutils.ser.prefs.indentClosingBrace = False
+    cssutils.ser.prefs.validOnly = False
 
 VIEW_CUTOFF = 1024*50
 
@@ -318,7 +328,23 @@ class ViewJavaScript:
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
         res = jsbeautifier.beautify(content[:limit], opts)
-        return "JavaScript", _view_text(res, len(content), limit)
+        return "JavaScript", _view_text(res, len(res), limit)
+
+class ViewCSS:
+    name = "CSS"
+    prompt = ("css", "c")
+    content_types = [
+        "text/css"
+    ]
+
+    def __call__(self, hdrs, content, limit):
+        if cssutils:
+            sheet = cssutils.parseString(content)
+            beautified = sheet.cssText
+        else:
+            beautified = content
+
+        return "CSS", _view_text(beautified, len(beautified), limit)
 
 
 class ViewImage:
@@ -409,6 +435,7 @@ views = [
     ViewHTML(),
     ViewHTMLOutline(),
     ViewJavaScript(),
+    ViewCSS(),
     ViewURLEncoded(),
     ViewMultipart(),
     ViewImage(),

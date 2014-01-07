@@ -114,7 +114,7 @@ class TestDumpMaster:
         o = dump.Options(app=True)
         s = mock.MagicMock()
         m = dump.DumpMaster(s, o, None)
-        assert s.apps.add.call_count == 1
+        assert len(m.apps.apps) == 1
 
     def test_replacements(self):
         o = dump.Options(replacements=[(".*", "content", "foo")])

@@ -271,7 +271,9 @@ def common_options(parser):
     group.add_argument(
         "--app-host",
         action="store", dest="app_host", default=APP_HOST, metavar="host",
-        help="Domain to serve the app from. For transparent mode, use an IP when a DNS entry for the app domain is not present."
+        help="Domain to serve the app from. For transparent mode, use an IP when\
+                a DNS entry for the app domain is not present. Default: %s"%APP_HOST
+
     )
     group.add_argument(
         "--app-port",

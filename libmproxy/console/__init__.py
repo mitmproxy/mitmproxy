@@ -174,8 +174,7 @@ class StatusBar(common.WWrap):
             r.append("[%s]"%(":".join(opts)))
 
         if self.master.scripts:
-            r.append("[script:%s]"%self.master.script.path)
-
+            r.append("[scripts:%s]"%len(self.master.scripts))
         if self.master.debug:
             r.append("[lt:%0.3f]"%self.master.looptime)
 
@@ -335,7 +334,7 @@ class Options(object):
         "no_server",
         "refresh_server_playback",
         "rfile",
-        "script",
+        "scripts",
         "showhost",
         "replacements",
         "rheaders",
@@ -410,11 +409,12 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.debug = options.debug
 
-        if options.script:
-            err = self.load_script(options.script)
-            if err:
-                print >> sys.stderr, "Script load error:", err
-                sys.exit(1)
+        if options.scripts:
+            for i in options.scripts:
+                err = self.load_script(i)
+                if err:
+                    print >> sys.stderr, "Script load error:", err
+                    sys.exit(1)
 
         if options.wfile:
             err = self.start_stream(options.wfile)
@@ -423,7 +423,7 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
         if options.app:
-            self.start_app(self.o.app_host, self.o.app_port, self.o.app_external)
+            self.start_app(self.options.app_host, self.options.app_port, self.options.app_external)
 
     def start_stream(self, path):
         path = os.path.expanduser(path)
@@ -433,7 +433,6 @@ class ConsoleMaster(flow.FlowMaster):
         except IOError, v:
             return str(v)
         self.stream_path = path
-
 
     def _run_script_method(self, method, s, f):
         status, val = s.run(method, f)
@@ -447,7 +446,7 @@ class ConsoleMaster(flow.FlowMaster):
         if not path:
             return
         self.add_event("Running script on flow: %s"%path)
-        ret = self.get_script(path)
+        ret = self.get_script(shlex.split(path, posix=(os.name != "nt")))
         if ret[0]:
             self.statusbar.message("Error loading script.")
             self.add_event("Error loading script:\n%s"%ret[0])
@@ -880,14 +879,21 @@ class ConsoleMaster(flow.FlowMaster):
                                     )
                                 )
                             elif k == "s":
-                                if self.scripts:
-                                    self.load_script(None)
-                                else:
-                                    self.path_prompt(
-                                        "Set script: ",
-                                        self.state.last_script,
-                                        self.set_script
+                                self.view_grideditor(
+                                    grideditor.ScriptEditor(
+                                        self,
+                                        [[i.argv[0]] for i in self.scripts],
+                                        None
                                     )
+                                )
+                                #if self.scripts:
+                                #    self.load_script(None)
+                                #else:
+                                #    self.path_prompt(
+                                #        "Set script: ",
+                                #        self.state.last_script,
+                                #        self.set_script
+                                #    )
                             elif k == "S":
                                 if not self.server_playback:
                                     self.path_prompt(

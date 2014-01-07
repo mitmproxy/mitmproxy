@@ -6,7 +6,7 @@ import hashlib, Cookie, cookielib, copy, re, urlparse, os, threading
 import time, urllib
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-from netlib import odict, http, certutils
+from netlib import odict, http, certutils, wsgi
 import controller, version
 import app
 
@@ -15,6 +15,28 @@ CONTENT_MISSING = 0
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless
+
+
+class AppRegistry:
+    def __init__(self):
+        self.apps = {}
+
+    def add(self, app, domain, port):
+        """
+            Add a WSGI app to the registry, to be served for requests to the
+            specified domain, on the specified port.
+        """
+        self.apps[(domain, port)] = wsgi.WSGIAdaptor(app, domain, port, version.NAMEVERSION)
+
+    def get(self, request):
+        """
+            Returns an WSGIAdaptor instance if request matches an app, or None.
+        """
+        if (request.host, request.port) in self.apps:
+            return self.apps[(request.host, request.port)]
+        if "host" in request.headers:
+            host = request.headers["host"][0]
+            return self.apps.get((host, request.port), None)
 
 
 class ReplaceHooks:
@@ -289,8 +311,10 @@ class Request(HTTPMsg):
 
     """
     def __init__(
-            self, client_conn, httpversion, host, port, scheme, method, path, headers, content, timestamp_start=None,
-            timestamp_end=None, tcp_setup_timestamp=None, ssl_setup_timestamp=None, ip=None):
+            self, client_conn, httpversion, host, port,
+            scheme, method, path, headers, content, timestamp_start=None,
+            timestamp_end=None, tcp_setup_timestamp=None,
+            ssl_setup_timestamp=None, ip=None):
         assert isinstance(headers, ODictCaseless)
         self.client_conn = client_conn
         self.httpversion = httpversion
@@ -306,6 +330,15 @@ class Request(HTTPMsg):
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
         self.stickyauth = False
+
+        # Live attributes - not serialized
+        self.wfile, self.rfile = None, None
+
+    def set_live(self, rfile, wfile):
+        self.wfile, self.rfile = wfile, rfile
+
+    def is_live(self):
+        return bool(self.wfile)
 
     def anticache(self):
         """
@@ -1372,17 +1405,16 @@ class FlowMaster(controller.Master):
         self.setheaders = SetHeaders()
 
         self.stream = None
-        app.mapp.config["PMASTER"] = self
+        self.apps = AppRegistry()
 
     def start_app(self, host, port, external):
         if not external:
-            self.server.apps.add(
+            self.apps.add(
                 app.mapp,
                 host,
                 port
             )
         else:
-            print host
             threading.Thread(target=app.mapp.run,kwargs={
                 "use_reloader": False,
                 "host": host,
@@ -1430,7 +1462,7 @@ class FlowMaster(controller.Master):
     def run_script_hook(self, name, *args, **kwargs):
         for script in self.scripts:
             self.run_single_script_hook(script, name, *args, **kwargs)
-      
+
     def set_stickycookie(self, txt):
         if txt:
             flt = filt.parse(txt)
@@ -1589,9 +1621,11 @@ class FlowMaster(controller.Master):
         r.reply()
 
     def handle_serverconnection(self, sc):
-        # To unify the mitmproxy script API, we call the script hook "serverconnect" rather than "serverconnection".
-        # As things are handled differently in libmproxy (ClientConnect + ClientDisconnect vs ServerConnection class),
-        # there is no "serverdisonnect" event at the moment.
+        # To unify the mitmproxy script API, we call the script hook
+        # "serverconnect" rather than "serverconnection".  As things are handled
+        # differently in libmproxy (ClientConnect + ClientDisconnect vs
+        # ServerConnection class), there is no "serverdisonnect" event at the
+        # moment.
         self.run_script_hook("serverconnect", sc)
         sc.reply()
 
@@ -1605,6 +1639,14 @@ class FlowMaster(controller.Master):
         return f
 
     def handle_request(self, r):
+        if r.is_live():
+            app = self.apps.get(r)
+            if app:
+                err = app.serve(r, r.wfile, **{"mitmproxy.master": self})
+                if err:
+                    self.add_event("Error in wsgi app. %s"%err, "error")
+                r.reply(proxy.KILL)
+                return
         f = self.state.add_request(r)
         self.replacehooks.run(f)
         self.setheaders.run(f)
