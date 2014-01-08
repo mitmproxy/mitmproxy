@@ -96,7 +96,7 @@ def dummy_cert(ca, commonname, sans):
     key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
 
     cert = OpenSSL.crypto.X509()
-    cert.gmtime_adj_notBefore(-3600)
+    cert.gmtime_adj_notBefore(-3600*48)
     cert.gmtime_adj_notAfter(60 * 60 * 24 * 30)
     cert.set_issuer(ca.get_subject())
     cert.get_subject().CN = commonname
