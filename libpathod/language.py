@@ -765,11 +765,12 @@ class _Message(object):
     def resolve(self, settings, request_host):
         tokens = self.tokens[:]
         if not self.raw:
-            if self.body and not utils.get_header("Content-Length", self.headers):
+            if not utils.get_header("Content-Length", self.headers):
+                length = 0 if not self.body else len(self.body.value.get_generator(settings))
                 tokens.append(
                     Header(
                         ValueLiteral("Content-Length"),
-                        ValueLiteral(str(len(self.body.value.get_generator(settings)))),
+                        ValueLiteral(str(length)),
                     )
                 )
             if request_host:

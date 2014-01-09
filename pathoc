@@ -60,7 +60,11 @@ if __name__ == "__main__":
         "-i", dest="sni", type=str, default=False,
         help="SSL Server Name Indication"
     )
-
+    group.add_argument(
+        "--sslversion", dest="sslversion", type=int, default=1,
+        choices=[1, 2, 3],
+        help="Use a specified protocol - TLSv1, SSLv2, SSLv3. Default to TLSv1." 
+    )
 
     group = parser.add_argument_group(
         'Controlling Output',
@@ -124,7 +128,14 @@ if __name__ == "__main__":
 
     try:
         for i in range(args.repeat):
-            p = pathoc.Pathoc(args.host, port, ssl=args.ssl, sni=args.sni, clientcert=args.clientcert)
+            p = pathoc.Pathoc(
+                args.host,
+                port,
+                ssl=args.ssl,
+                sni=args.sni,
+                sslversion=args.sslversion,
+                clientcert=args.clientcert
+            )
             try:
                 p.connect(connect_to)
             except (tcp.NetLibError, pathoc.PathocError), v:
