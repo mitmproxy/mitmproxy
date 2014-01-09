@@ -138,8 +138,8 @@ class Reader(_FileLike):
                     raise NetLibTimeout
             except socket.timeout:
                 raise NetLibTimeout
-            except socket.error, v:
-                raise NetLibDisconnect(v[1])
+            except socket.error:
+                raise NetLibDisconnect
             except SSL.SysCallError:
                 raise NetLibDisconnect
             except SSL.Error, v:
@@ -173,7 +173,40 @@ class Reader(_FileLike):
         return result
 
 
-class TCPClient:
+class SocketCloseMixin:
+    def finish(self):
+        self.finished = True
+        try:
+            if not getattr(self.wfile, "closed", False):
+                self.wfile.flush()
+            self.close()
+            self.wfile.close()
+            self.rfile.close()
+        except (socket.error, NetLibDisconnect):
+            # Remote has disconnected
+            pass
+
+    def close(self):
+        """
+            Does a hard close of the socket, i.e. a shutdown, followed by a close.
+        """
+        try:
+            if self.ssl_established:
+                self.connection.shutdown()
+                self.connection.sock_shutdown(socket.SHUT_WR)
+            else:
+                self.connection.shutdown(socket.SHUT_WR)
+            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
+            #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
+            while self.connection.recv(4096):
+                pass
+            self.connection.close()
+        except (socket.error, SSL.Error, IOError):
+            # Socket probably already closed
+            pass
+
+
+class TCPClient(SocketCloseMixin):
     rbufsize = -1
     wbufsize = -1
     def __init__(self, host, port, source_address=None, use_ipv6=False):
@@ -228,27 +261,8 @@ class TCPClient:
     def gettimeout(self):
         return self.connection.gettimeout()
 
-    def close(self):
-        """
-            Does a hard close of the socket, i.e. a shutdown, followed by a close.
-        """
-        try:
-            if self.ssl_established:
-                self.connection.shutdown()
-                self.connection.sock_shutdown(socket.SHUT_WR)
-            else:
-                self.connection.shutdown(socket.SHUT_WR)
-            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
-            #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
-            while self.connection.recv(4096):
-                pass
-            self.connection.close()
-        except (socket.error, SSL.Error, IOError):
-            # Socket probably already closed
-            pass
 
-
-class BaseHandler:
+class BaseHandler(SocketCloseMixin):
     """
         The instantiator is expected to call the handle() and finish() methods.
 
@@ -315,43 +329,12 @@ class BaseHandler:
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
-    def finish(self):
-        self.finished = True
-        try:
-            if not getattr(self.wfile, "closed", False):
-                self.wfile.flush()
-            self.close()
-            self.wfile.close()
-            self.rfile.close()
-        except (socket.error, NetLibDisconnect):
-            # Remote has disconnected
-            pass
-
     def handle(self): # pragma: no cover
         raise NotImplementedError
 
     def settimeout(self, n):
         self.connection.settimeout(n)
 
-    def close(self):
-        """
-            Does a hard close of the socket, i.e. a shutdown, followed by a close.
-        """
-        try:
-            if self.ssl_established:
-                self.connection.shutdown()
-                self.connection.sock_shutdown(socket.SHUT_WR)
-            else:
-                self.connection.shutdown(socket.SHUT_WR)
-            # Section 4.2.2.13 of RFC 1122 tells us that a close() with any
-            # pending readable data could lead to an immediate RST being sent.
-            # http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
-            while self.connection.recv(4096):
-                pass
-        except (socket.error, SSL.Error):
-            # Socket probably already closed
-            pass
-        self.connection.close()
 
 
 class TCPServer:
