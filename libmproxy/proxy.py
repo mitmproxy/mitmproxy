@@ -148,6 +148,7 @@ class ConnectionHandler:
     def del_server_connection(self):
         if self.server_conn:
             self.server_conn.finish()
+            self.log("serverdisconnect", ["%s:%s"%(self.server_conn.host, self.server_conn.port)])
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
         self.sni = None
@@ -170,11 +171,11 @@ class ConnectionHandler:
                         raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
                     self.log("transparent to %s:%s"%server_address)
 
+            self.determine_conntype()
+
             if server_address:
                 self.establish_server_connection(*server_address)
-                self.handle_ssl()
-
-            self.determine_conntype()
+                self._handle_ssl()
 
             while not self.close:
                 try:
@@ -190,6 +191,18 @@ class ConnectionHandler:
 
         self.log("disconnect")
         self.channel.tell("clientdisconnect", self)
+
+    def _handle_ssl(self):
+        """
+        Check if we can already identify SSL connections.
+        """
+        if self.config.transparent_proxy:
+            client_ssl = server_ssl = (self.server_conn.port in self.config.transparent_proxy["sslports"])
+        elif self.config.reverse_proxy:
+            client_ssl = server_ssl = (self.config.reverse_proxy[0] == "https")
+            # TODO: Make protocol generic (as with transparent proxies)
+            # TODO: Add SSL-terminating capatbility (SSL -> mitmproxy -> plain and vice versa)
+        self.establish_ssl(client=client_ssl, server=server_ssl)
 
     def finish(self):
         self.client_conn.finish()
@@ -209,21 +222,19 @@ class ConnectionHandler:
         self.log("serverconnect", ["%s:%s"%(host, port)])
         self.channel.tell("serverconnect", self)
 
-    def handle_ssl(self):
-        if self.config.transparent_proxy:
-            client_ssl = server_ssl = (self.server_conn.port in self.config.transparent_proxy["sslports"])
-        elif self.config.reverse_proxy:
-            client_ssl = server_ssl = (self.config.reverse_proxy[0] == "https")
-            # TODO: Make protocol generic (as with transparent proxies)
-            # TODO: Add SSL-terminating capatbility (SSL -> mitmproxy -> plain and vice versa)
-        else:
-            client_ssl = server_ssl = True  # In regular mode, this function will only be called on HTTP CONNECT
-
+    def establish_ssl(self, client, server):
         # TODO: Implement SSL pass-through handling and change conntype
 
-        if server_ssl and not self.server_conn.ssl_established:
+        if self.server_conn.host == "ycombinator.com":
+            self.conntype = "tcp"
+
+        if server:
+            if self.server_conn.ssl_established:
+                raise ProxyError(502, "SSL to Server already established.")
             self.server_conn.establish_ssl(self.config.clientcerts, self.sni)
-        if client_ssl and not self.client_conn.ssl_established:
+        if client:
+            if self.client_conn.ssl_established:
+                raise ProxyError(502, "SSL to Client already established.")
             dummycert = self.find_cert()
             self.client_conn.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert,
                                             handle_sni=self.handle_sni)
@@ -266,7 +277,7 @@ class ConnectionHandler:
             if sn and sn != self.sni:
                 self.sni = sn.decode("utf8").encode("idna")
                 self.establish_server_connection()  # reconnect to upstream server with SNI
-                self.handle_ssl() # establish SSL with upstream
+                self.establish_ssl(server=True)  # establish SSL with upstream
                 # Now, change client context to reflect changed certificate:
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.config.certfile or self.config.cacert)

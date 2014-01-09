@@ -120,6 +120,9 @@ class HTTPRequest(object):
         request_line = None
         if self.form_out == "asterisk" or self.form_out == "origin":
             request_line = '%s %s HTTP/%s.%s' % (self.method, self.path, self.http_version[0], self.http_version[1])
+        elif self.form_out == "authority":
+            request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
+                                                    self.http_version[0], self.http_version[1])
         else:
             raise NotImplementedError
         return '%s\r\n%s\r\n%s' % (request_line, str(self.headers), self.content)
@@ -219,30 +222,39 @@ class HTTPHandler(ProtocolHandler):
 
         if self.c.mode == "regular":
             self.authenticate(request)
-            if request.form_in == "authority":
-                if not self.c.config.forward_proxy:
-                    self.c.establish_server_connection(request.host, request.port)
-                    self.c.client_conn.wfile.write(
-                        'HTTP/1.1 200 Connection established\r\n' +
-                        ('Proxy-agent: %s\r\n'%self.c.server_version) +
-                        '\r\n'
-                    )
-                    self.c.client_conn.wfile.flush()
+        if request.form_in == "authority" and self.c.client_conn.ssl_established:
+            raise ProtocolError(502, "Must not CONNECT on SSL connection")
 
-                self.c.handle_ssl()
+        # If we have a CONNECT request, we might need to intercept
+        if request.form_in == "authority":
+            directly_addressed_at_mitmproxy = (self.c.mode == "regular") and not self.c.config.forward_proxy
+            if directly_addressed_at_mitmproxy:
+                self.c.establish_server_connection(request.host, request.port)
+                self.c.client_conn.wfile.write(
+                    'HTTP/1.1 200 Connection established\r\n' +
+                    ('Proxy-agent: %s\r\n'%self.c.server_version) +
+                    '\r\n'
+                )
+                self.c.client_conn.wfile.flush()
+
+                self.c.establish_ssl(server=True, client=True)
                 self.c.mode = "transparent"
                 self.c.determine_conntype()
-                # FIXME: We need to persist the CONNECT request
                 raise ConnectionTypeChange
+
+        if self.c.mode == "regular":
+            if request.form_in == "authority":
+                pass
             elif request.form_in == "absolute":
                 if not self.c.config.forward_proxy:
-                    request.form_out = "origin"
-                    if ((not self.c.server_conn) or
-                            (self.c.server_conn.address != (request.host, request.port))):
-                        self.c.establish_server_connection(request.host, request.port)
+                        request.form_out = "origin"
+                        if ((not self.c.server_conn) or
+                                (self.c.server_conn.address != (request.host, request.port))):
+                            self.c.establish_server_connection(request.host, request.port)
+            elif request.form_in == "asterisk":
+                raise ProtocolError(501, "Not Implemented")
             else:
                 raise ProtocolError(400, "Invalid Request")
-
         return request
 
     def read_response(self, flow):
