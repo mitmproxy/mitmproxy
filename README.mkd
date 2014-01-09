@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mitmproxy/pathod.png)](https://travis-ci.org/mitmproxy/pathod) [![Coverage Status](https://coveralls.io/repos/mitmproxy/pathod/badge.png)](https://coveralls.io/r/mitmproxy/pathod)
+[![Build Status](https://travis-ci.org/mitmproxy/pathod.png?branch=master)](https://travis-ci.org/mitmproxy/pathod) [![Coverage Status](https://coveralls.io/repos/mitmproxy/pathod/badge.png?branch=master)](https://coveralls.io/r/mitmproxy/pathod)
 
 __pathod__ is a collection of pathological tools for testing and torturing HTTP
 clients and servers. The project has three components:
