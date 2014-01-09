@@ -282,7 +282,7 @@ class Pathod(tcp.TCPServer):
             staticdir = self.staticdir
         )
 
-    def handle_connection(self, request, client_address):
+    def handle_client_connection(self, request, client_address):
         h = PathodHandler(request, client_address, self)
         try:
             h.handle()
