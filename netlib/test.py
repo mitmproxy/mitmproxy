@@ -50,7 +50,7 @@ class TServer(tcp.TCPServer):
         self.handler_klass = handler_klass
         self.last_handler = None
 
-    def handle_connection(self, request, client_address):
+    def handle_client_connection(self, request, client_address):
         h = self.handler_klass(request, client_address, self)
         self.last_handler = h
         if self.ssl:

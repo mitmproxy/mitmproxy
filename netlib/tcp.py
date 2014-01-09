@@ -138,8 +138,8 @@ class Reader(_FileLike):
                     raise NetLibTimeout
             except socket.timeout:
                 raise NetLibTimeout
-            except socket.error:
-                raise NetLibDisconnect
+            except socket.error, v:
+                raise NetLibDisconnect(v[1])
             except SSL.SysCallError:
                 raise NetLibDisconnect
             except SSL.Error, v:
@@ -255,16 +255,13 @@ class BaseHandler:
     """
     rbufsize = -1
     wbufsize = -1
-    def __init__(self, connection, client_address, server):
+    def __init__(self, connection):
         self.connection = connection
         self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
         self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
 
-        self.client_address = client_address
-        self.server = server
         self.finished = False
         self.ssl_established = False
-
         self.clientcert = None
 
     def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False, cipher_list=None):
@@ -371,13 +368,13 @@ class TCPServer:
         self.port = self.server_address[1]
         self.socket.listen(self.request_queue_size)
 
-    def request_thread(self, request, client_address):
+    def connection_thread(self, connection, client_address):
         try:
-            self.handle_connection(request, client_address)
-            request.close()
+            self.handle_client_connection(connection, client_address)
         except:
-            self.handle_error(request, client_address)
-            request.close()
+            self.handle_error(connection, client_address)
+        finally:
+            connection.close()
 
     def serve_forever(self, poll_interval=0.1):
         self.__is_shut_down.clear()
@@ -391,10 +388,10 @@ class TCPServer:
                         else:
                             raise  
                 if self.socket in r:
-                    request, client_address = self.socket.accept()
+                    connection, client_address = self.socket.accept()
                     t = threading.Thread(
-                            target = self.request_thread,
-                            args = (request, client_address)
+                            target = self.connection_thread,
+                            args = (connection, client_address)
                         )
                     t.setDaemon(1)
                     t.start()
@@ -410,7 +407,7 @@ class TCPServer:
 
     def handle_error(self, request, client_address, fp=sys.stderr):
         """
-            Called when handle_connection raises an exception.
+            Called when handle_client_connection raises an exception.
         """
         # If a thread has persisted after interpreter exit, the module might be
         # none.
@@ -421,7 +418,7 @@ class TCPServer:
             print >> fp, exc
             print >> fp, '-'*40
 
-    def handle_connection(self, request, client_address): # pragma: no cover
+    def handle_client_connection(self, conn, client_address): # pragma: no cover
         """
             Called after client connection.
         """
