@@ -184,9 +184,8 @@ class ConnectionHandler:
                     continue
 
             self.del_server_connection()
-        except (ProxyError, protocol.ProtocolError), e:
+        except ProxyError, e:
             self.log(str(e))
-            protocol.handle_error(self.conntype, self, e)
             # FIXME: We need to persist errors
 
         self.log("disconnect")
@@ -223,8 +222,13 @@ class ConnectionHandler:
         self.channel.tell("serverconnect", self)
 
     def establish_ssl(self, client, server):
+        """
+        Establishes SSL on the existing connection(s) to the server or the client,
+        as specified by the parameters. If the target server is on the pass-through list,
+        the conntype attribute will be changed and no the SSL connection won't be wrapped.
+        A protocol handler must raise a ConnTypeChanged exception if it detects that this is happening
+        """
         # TODO: Implement SSL pass-through handling and change conntype
-
         if self.server_conn.host == "ycombinator.com":
             self.conntype = "tcp"
 
