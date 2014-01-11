@@ -781,6 +781,9 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             self.view_flowlist()
 
+    def edit_scripts(self, *args, **kwargs):
+        pass
+
     def loop(self):
         changed = True
         try:
@@ -883,7 +886,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     grideditor.ScriptEditor(
                                         self,
                                         [[i.argv[0]] for i in self.scripts],
-                                        None
+                                        self.edit_scripts
                                     )
                                 )
                                 #if self.scripts:

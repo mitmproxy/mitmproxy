@@ -5,6 +5,39 @@ class ScriptError(Exception):
     pass
 
 
+class ScriptContext:
+    def __init__(self, master):
+        self._master = master
+
+    def log(self, *args, **kwargs):
+        """
+            Logs an event.
+
+            How this is handled depends on the front-end. mitmdump will display
+            events if the eventlog flag ("-e") was passed. mitmproxy sends
+            output to the eventlog for display ("v" keyboard shortcut).
+        """
+        self._master.add_event(*args, **kwargs)
+
+    def duplicate_flow(self, f):
+        """
+            Returns a duplicate of the specified flow. The flow is also
+            injected into the current state, and is ready for editing, replay,
+            etc.
+        """
+        self._master.pause_scripts = True
+        f = self._master.duplicate_flow(f)
+        self._master.pause_scripts = False
+        return f
+
+    def replay_request(self, f):
+        """
+            Replay the request on the current flow. The response will be added
+            to the flow object.
+        """
+        self._master.replay_request(f)
+
+
 class Script:
     """
         The instantiator should do something along this vein:
@@ -12,9 +45,9 @@ class Script:
             s = Script(argv, master)
             s.load()
     """
-    def __init__(self, argv, ctx):
+    def __init__(self, argv, master):
         self.argv = argv
-        self.ctx = ctx
+        self.ctx = ScriptContext(master)
         self.ns = None
 
     def load(self):

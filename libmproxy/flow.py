@@ -143,39 +143,6 @@ class SetHeaders:
                     f.request.headers.add(header, value)
 
 
-class ScriptContext:
-    def __init__(self, master):
-        self._master = master
-
-    def log(self, *args, **kwargs):
-        """
-            Logs an event.
-
-            How this is handled depends on the front-end. mitmdump will display
-            events if the eventlog flag ("-e") was passed. mitmproxy sends
-            output to the eventlog for display ("v" keyboard shortcut).
-        """
-        self._master.add_event(*args, **kwargs)
-
-    def duplicate_flow(self, f):
-        """
-            Returns a duplicate of the specified flow. The flow is also
-            injected into the current state, and is ready for editing, replay,
-            etc.
-        """
-        self._master.pause_scripts = True
-        f = self._master.duplicate_flow(f)
-        self._master.pause_scripts = False
-        return f
-
-    def replay_request(self, f):
-        """
-            Replay the request on the current flow. The response will be added
-            to the flow object.
-        """
-        self._master.replay_request(f)
-
-
 class decoded(object):
     """
 
@@ -1431,14 +1398,14 @@ class FlowMaster(controller.Master):
         """
             Returns an (error, script) tuple.
         """
-        s = script.Script(script_argv, ScriptContext(self))
+        s = script.Script(script_argv, self)
         try:
             s.load()
         except script.ScriptError, v:
             return (v.args[0], None)
         return (None, s)
 
-    def unload_script(self,script):
+    def unload_script(self, script):
         script.unload()
         self.scripts.remove(script)
 

@@ -110,15 +110,15 @@ class HandleSNI:
         self.handler, self.client_conn, self.host, self.port = handler, client_conn, host, port
         self.cert, self.key = cert, key
 
-    def __call__(self, connection):
+    def __call__(self, client_connection):
         try:
-            sn = connection.get_servername()
+            sn = client_connection.get_servername()
             if sn:
                 self.handler.get_server_connection(self.client_conn, "https", self.host, self.port, sn)
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.key)
                 new_context.use_certificate(self.cert.x509)
-                connection.set_context(new_context)
+                client_connection.set_context(new_context)
                 self.handler.sni = sn.decode("utf8").encode("idna")
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
