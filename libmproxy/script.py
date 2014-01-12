@@ -49,6 +49,7 @@ class Script:
         self.argv = argv
         self.ctx = ScriptContext(master)
         self.ns = None
+        self.load()
 
     def load(self):
         """

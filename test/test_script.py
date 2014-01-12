@@ -41,28 +41,24 @@ class TestScript:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
 
-        s = script.Script(["nonexistent"], fm)
         tutils.raises(
             "no such file",
-            s.load
+            script.Script, ["nonexistent"], fm
         )
 
-        s = script.Script([tutils.test_data.path("scripts")], fm)
         tutils.raises(
             "not a file",
-            s.load
+            script.Script, [tutils.test_data.path("scripts")], fm
         )
 
-        s = script.Script([tutils.test_data.path("scripts/syntaxerr.py")], fm)
         tutils.raises(
             script.ScriptError,
-            s.load
+            script.Script, [tutils.test_data.path("scripts/syntaxerr.py")], fm
         )
 
-        s = script.Script([tutils.test_data.path("scripts/loaderr.py")], fm)
         tutils.raises(
             script.ScriptError,
-            s.load
+            script.Script, [tutils.test_data.path("scripts/loaderr.py")], fm
         )
 
     def test_concurrent(self):
@@ -106,8 +102,7 @@ class TestScript:
     def test_concurrent_err(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        s = script.Script([tutils.test_data.path("scripts/concurrent_decorator_err.py")], fm)
         tutils.raises(
             "decorator not supported for this method",
-            s.load
+            script.Script, [tutils.test_data.path("scripts/concurrent_decorator_err.py")], fm
         )

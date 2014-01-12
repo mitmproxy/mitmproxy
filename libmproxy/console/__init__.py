@@ -446,12 +446,14 @@ class ConsoleMaster(flow.FlowMaster):
         if not path:
             return
         self.add_event("Running script on flow: %s"%path)
-        ret = self.get_script(shlex.split(path, posix=(os.name != "nt")))
-        if ret[0]:
+
+        try:
+            s = script.Script(shlex.split(path, posix=(os.name != "nt")), self)
+        except script.ScriptError, v:
             self.statusbar.message("Error loading script.")
-            self.add_event("Error loading script:\n%s"%ret[0])
+            self.add_event("Error loading script:\n%s"%v.args[0])
             return
-        s = ret[1]
+
         if f.request:
             self._run_script_method("request", s, f)
         if f.response:

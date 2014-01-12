@@ -1394,17 +1394,6 @@ class FlowMaster(controller.Master):
         """
         pass
 
-    def get_script(self, script_argv):
-        """
-            Returns an (error, script) tuple.
-        """
-        s = script.Script(script_argv, self)
-        try:
-            s.load()
-        except script.ScriptError, v:
-            return (v.args[0], None)
-        return (None, s)
-
     def unload_script(self, script):
         script.unload()
         self.scripts.remove(script)
@@ -1414,11 +1403,11 @@ class FlowMaster(controller.Master):
             Loads a script. Returns an error description if something went
             wrong.
         """
-        r = self.get_script(script_argv)
-        if r[0]:
-            return r[0]
-        else:
-            self.scripts.append(r[1])
+        try:
+            s = script.Script(script_argv, self)
+        except script.ScriptError, v:
+            return v.args[0]
+        self.scripts.append(s)
 
     def run_single_script_hook(self, script, name, *args, **kwargs):
         if script and not self.pause_scripts:
