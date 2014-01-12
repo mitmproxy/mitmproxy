@@ -209,7 +209,7 @@ def common_options(parser):
     )
     parser.add_argument(
         "-s",
-        action="append", type=lambda x: shlex.split(x,posix=(os.name != "nt")), dest="scripts", default=[],
+        action="append", type=str, dest="scripts", default=[],
         metavar='"script.py --bar"',
         help="Run a script. Surround with quotes to pass script arguments. Can be passed multiple times."
     )

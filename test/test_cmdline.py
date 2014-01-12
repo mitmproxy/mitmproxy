@@ -40,19 +40,6 @@ def test_parse_setheaders():
     x = cmdline.parse_setheader("/foo/bar/voing")
     assert x == ("foo", "bar", "voing")
 
-def test_shlex():
-    """
-    shlex.split assumes posix=True by default, we do manual detection for windows.
-    Test whether script paths are parsed correctly
-    """
-    absfilepath = os.path.normcase(os.path.abspath(__file__))
-
-    parser = argparse.ArgumentParser()
-    cmdline.common_options(parser)
-    opts = parser.parse_args(args=["-s",absfilepath])
-    
-    assert os.path.isfile(opts.scripts[0][0])
-
 def test_common():
     parser = argparse.ArgumentParser()
     cmdline.common_options(parser)

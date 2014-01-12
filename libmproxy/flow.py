@@ -1398,13 +1398,13 @@ class FlowMaster(controller.Master):
         script.unload()
         self.scripts.remove(script)
 
-    def load_script(self, script_argv):
+    def load_script(self, command):
         """
             Loads a script. Returns an error description if something went
             wrong.
         """
         try:
-            s = script.Script(script_argv, self)
+            s = script.Script(command, self)
         except script.ScriptError, v:
             return v.args[0]
         self.scripts.append(s)

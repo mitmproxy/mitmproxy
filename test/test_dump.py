@@ -153,7 +153,7 @@ class TestDumpMaster:
     def test_script(self):
         ret = self._dummy_cycle(
             1, None, "",
-            scripts=[[tutils.test_data.path("scripts/all.py")]], verbosity=0, eventlog=True
+            scripts=[tutils.test_data.path("scripts/all.py")], verbosity=0, eventlog=True
         )
         assert "XCLIENTCONNECT" in ret
         assert "XSERVERCONNECT" in ret
@@ -162,11 +162,11 @@ class TestDumpMaster:
         assert "XCLIENTDISCONNECT" in ret
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", scripts=[["nonexistent"]]
+            self._dummy_cycle, 1, None, "", scripts=["nonexistent"]
         )
         tutils.raises(
             dump.DumpError,
-            self._dummy_cycle, 1, None, "", scripts=[["starterr.py"]]
+            self._dummy_cycle, 1, None, "", scripts=["starterr.py"]
         )
 
     def test_stickycookie(self):

@@ -10,10 +10,8 @@ class TestScript:
     def test_simple(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        p = script.Script(
-            shlex.split(tutils.test_data.path("scripts/a.py")+" --var 40",posix=(os.name != "nt")), fm
-        )
-        p.load()
+        sp = tutils.test_data.path("scripts/a.py")
+        p = script.Script("%s --var 40"%sp, fm)
 
         assert "here" in p.ns
         assert p.run("here") == (True, 41)
@@ -30,7 +28,7 @@ class TestScript:
     def test_duplicate_flow(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        fm.load_script([tutils.test_data.path("scripts/duplicate_flow.py")])
+        fm.load_script(tutils.test_data.path("scripts/duplicate_flow.py"))
         r = tutils.treq()
         fm.handle_request(r)
         assert fm.state.flow_count() == 2
@@ -43,28 +41,28 @@ class TestScript:
 
         tutils.raises(
             "no such file",
-            script.Script, ["nonexistent"], fm
+            script.Script, "nonexistent", fm
         )
 
         tutils.raises(
             "not a file",
-            script.Script, [tutils.test_data.path("scripts")], fm
+            script.Script, tutils.test_data.path("scripts"), fm
         )
 
         tutils.raises(
             script.ScriptError,
-            script.Script, [tutils.test_data.path("scripts/syntaxerr.py")], fm
+            script.Script, tutils.test_data.path("scripts/syntaxerr.py"), fm
         )
 
         tutils.raises(
             script.ScriptError,
-            script.Script, [tutils.test_data.path("scripts/loaderr.py")], fm
+            script.Script, tutils.test_data.path("scripts/loaderr.py"), fm
         )
 
     def test_concurrent(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        fm.load_script([tutils.test_data.path("scripts/concurrent_decorator.py")])
+        fm.load_script(tutils.test_data.path("scripts/concurrent_decorator.py"))
 
         with mock.patch("libmproxy.controller.DummyReply.__call__") as m:
             r1, r2 = tutils.treq(), tutils.treq()
@@ -84,7 +82,7 @@ class TestScript:
     def test_concurrent2(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        s = script.Script([tutils.test_data.path("scripts/concurrent_decorator.py")], fm)
+        s = script.Script(tutils.test_data.path("scripts/concurrent_decorator.py"), fm)
         s.load()
         f = tutils.tflow_full()
         f.error = tutils.terr(f.request)
@@ -104,5 +102,15 @@ class TestScript:
         fm = flow.FlowMaster(None, s)
         tutils.raises(
             "decorator not supported for this method",
-            script.Script, [tutils.test_data.path("scripts/concurrent_decorator_err.py")], fm
+            script.Script, tutils.test_data.path("scripts/concurrent_decorator_err.py"), fm
         )
+
+
+def test_command_parsing():
+    s = flow.State()
+    fm = flow.FlowMaster(None, s)
+    absfilepath = os.path.normcase(tutils.test_data.path("scripts/a.py"))
+    s = script.Script(absfilepath, fm)
+    assert os.path.isfile(s.argv[0])
+
+

@@ -1,4 +1,4 @@
-import os, traceback, threading
+import os, traceback, threading, shlex
 import controller
 
 class ScriptError(Exception):
@@ -45,8 +45,9 @@ class Script:
             s = Script(argv, master)
             s.load()
     """
-    def __init__(self, argv, master):
-        self.argv = argv
+    def __init__(self, command, master):
+        self.command = command
+        self.argv = shlex.split(command, posix=(os.name != "nt"))
         self.ctx = ScriptContext(master)
         self.ns = None
         self.load()
@@ -99,7 +100,6 @@ class Script:
 def _handle_concurrent_reply(fn, o, args=[], kwargs={}):
     reply = o.reply
     o.reply = controller.DummyReply()
-
     def run():
         fn(*args, **kwargs)
         reply(o)

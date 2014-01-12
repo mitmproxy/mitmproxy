@@ -442,13 +442,13 @@ class ConsoleMaster(flow.FlowMaster):
             else:
                 self.add_event("Method %s error: %s"%(method, val[1]))
 
-    def run_script_once(self, path, f):
-        if not path:
+    def run_script_once(self, command, f):
+        if not command:
             return
-        self.add_event("Running script on flow: %s"%path)
+        self.add_event("Running script on flow: %s"%command)
 
         try:
-            s = script.Script(shlex.split(path, posix=(os.name != "nt")), self)
+            s = script.Script(command, self)
         except script.ScriptError, v:
             self.statusbar.message("Error loading script.")
             self.add_event("Error loading script:\n%s"%v.args[0])
@@ -462,15 +462,15 @@ class ConsoleMaster(flow.FlowMaster):
             self._run_script_method("error", s, f)
         s.unload()
         self.refresh_flow(f)
-        self.state.last_script = path
+        self.state.last_script = command
 
-    def set_script(self, path):
-        if not path:
+    def set_script(self, command):
+        if not command:
             return
-        ret = self.load_script(path)
+        ret = self.load_script(command)
         if ret:
             self.statusbar.message(ret)
-        self.state.last_script = path
+        self.state.last_script = command
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
