@@ -40,7 +40,7 @@ class TestScript:
         fm = flow.FlowMaster(None, s)
 
         tutils.raises(
-            "no such file",
+            "not found",
             script.Script, "nonexistent", fm
         )
 

@@ -47,10 +47,20 @@ class Script:
     """
     def __init__(self, command, master):
         self.command = command
-        self.argv = shlex.split(command, posix=(os.name != "nt"))
+        self.argv = self.parse_command(command)
         self.ctx = ScriptContext(master)
         self.ns = None
         self.load()
+
+    @classmethod
+    def parse_command(klass, command):
+        args = shlex.split(command, posix=(os.name != "nt"))
+        args[0] = os.path.expanduser(args[0])
+        if not os.path.exists(args[0]):
+            raise ScriptError("Command not found.")
+        elif not os.path.isfile(args[0]):
+            raise ScriptError("Not a file: %s" % args[0])
+        return args
 
     def load(self):
         """
@@ -59,14 +69,9 @@ class Script:
             Raises ScriptError on failure, with argument equal to an error
             message that may be a formatted traceback.
         """
-        path = os.path.expanduser(self.argv[0])
-        if not os.path.exists(path):
-            raise ScriptError("No such file: %s" % path)
-        if not os.path.isfile(path):
-            raise ScriptError("Not a file: %s" % path)
         ns = {}
         try:
-            execfile(path, ns, ns)
+            execfile(self.argv[0], ns, ns)
         except Exception, v:
             raise ScriptError(traceback.format_exc(v))
         self.ns = ns
