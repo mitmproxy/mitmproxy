@@ -1,19 +1,10 @@
-from libmproxy import flow
-import libmproxy.utils
-from netlib import http, tcp
+import libmproxy.utils, libmproxy.flow
+from netlib import http, http_status, tcp
 import netlib.utils
 from netlib.odict import ODictCaseless
 
 KILL = 0 # FIXME: Remove duplication with proxy module
 LEGACY = True
-
-class ProtocolError(Exception):
-    def __init__(self, code, msg, headers=None):
-        self.code, self.msg, self.headers = code, msg, headers
-
-    def __str__(self):
-        return "ProtocolError(%s, %s)"%(self.code, self.msg)
-
 
 def _handle(msg, conntype, connection_handler, *args, **kwargs):
     handler = None
@@ -39,17 +30,32 @@ class ProtocolHandler(object):
         self.c = c
 
 
+"""
+Minimalistic cleanroom reimplemementation of a couple of flow.* classes. Most functionality is missing,
+but they demonstrate what needs to be added/changed to/within the existing classes.
+"""
+
 class Flow(object):
-    def __init__(self, client_conn, server_conn, timestamp_start, timestamp_end):
+    def __init__(self, conntype, client_conn, server_conn, timestamp_start, timestamp_end, error):
+        self.conntype = conntype
         self.client_conn, self.server_conn = client_conn, server_conn
         self.timestamp_start, self.timestamp_end = timestamp_start, timestamp_end
+        self.error = error
 
 
 class HTTPFlow(Flow):
-    def __init__(self, client_conn, server_conn, timestamp_start, timestamp_end, request, response):
-        Flow.__init__(self, client_conn, server_conn,
-                      timestamp_start, timestamp_end)
+    def __init__(self, client_conn, server_conn, timestamp_start, timestamp_end, error, request, response):
+        Flow.__init__(self, "http", client_conn, server_conn,
+                      timestamp_start, timestamp_end, error)
         self.request, self.response = request, response
+
+
+class HttpAuthenticationError(Exception):
+    def __init__(self, auth_headers=None):
+        self.auth_headers = auth_headers
+
+    def __str__(self):
+        return "HttpAuthenticationError"
 
 
 class HTTPMessage(object):
@@ -65,9 +71,10 @@ class HTTPMessage(object):
 
         return str(headers)
 
+
 class HTTPResponse(HTTPMessage):
-    def __init__(self, http_version, code, msg, headers, content, timestamp_start, timestamp_end):
-        self.http_version = http_version
+    def __init__(self, httpversion, code, msg, headers, content, timestamp_start, timestamp_end):
+        self.httpversion = httpversion
         self.code = code
         self.msg = msg
         self.headers = headers
@@ -77,13 +84,13 @@ class HTTPResponse(HTTPMessage):
 
         assert isinstance(headers, ODictCaseless)
 
-    #FIXME: Legacy
+    #FIXME: Compatibility Fix
     @property
     def request(self):
         return False
 
     def _assemble(self):
-        response_line = 'HTTP/%s.%s %s %s'%(self.http_version[0], self.http_version[1], self.code, self.msg)
+        response_line = 'HTTP/%s.%s %s %s'%(self.httpversion[0], self.httpversion[1], self.code, self.msg)
         return '%s\r\n%s\r\n%s' % (response_line, self._assemble_headers(), self.content)
 
     @classmethod
@@ -95,16 +102,16 @@ class HTTPResponse(HTTPMessage):
             raise NotImplementedError
 
         timestamp_start = libmproxy.utils.timestamp()
-        http_version, code, msg, headers, content = http.read_response(
+        httpversion, code, msg, headers, content = http.read_response(
             rfile,
             request_method,
             body_size_limit)
         timestamp_end = libmproxy.utils.timestamp()
-        return HTTPResponse(http_version, code, msg, headers, content, timestamp_start, timestamp_end)
+        return HTTPResponse(httpversion, code, msg, headers, content, timestamp_start, timestamp_end)
 
 
 class HTTPRequest(HTTPMessage):
-    def __init__(self, form_in, method, scheme, host, port, path, http_version, headers, content,
+    def __init__(self, form_in, method, scheme, host, port, path, httpversion, headers, content,
                  timestamp_start, timestamp_end, form_out=None, ip=None):
         self.form_in = form_in
         self.method = method
@@ -112,7 +119,7 @@ class HTTPRequest(HTTPMessage):
         self.host = host
         self.port = port
         self.path = path
-        self.http_version = http_version
+        self.httpversion = httpversion
         self.headers = headers
         self.content = content
         self.timestamp_start = timestamp_start
@@ -122,21 +129,21 @@ class HTTPRequest(HTTPMessage):
         self.ip = ip  # resolved ip address
         assert isinstance(headers, ODictCaseless)
 
-    #FIXME: Remove, legacy
+    #FIXME: Compatibility Fix
     def is_live(self):
         return True
 
     def _assemble(self):
         request_line = None
         if self.form_out == "asterisk" or self.form_out == "origin":
-            request_line = '%s %s HTTP/%s.%s' % (self.method, self.path, self.http_version[0], self.http_version[1])
+            request_line = '%s %s HTTP/%s.%s' % (self.method, self.path, self.httpversion[0], self.httpversion[1])
         elif self.form_out == "authority":
             request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
-                                                    self.http_version[0], self.http_version[1])
+                                                    self.httpversion[0], self.httpversion[1])
         elif self.form_out == "absolute":
             request_line = '%s %s://%s:%s%s HTTP/%s.%s' % \
                            (self.method, self.scheme, self.host, self.port, self.path,
-                            self.http_version[0], self.http_version[1])
+                            self.httpversion[0], self.httpversion[1])
         else:
             raise http.HttpError(400, "Invalid request form")
 
@@ -147,7 +154,7 @@ class HTTPRequest(HTTPMessage):
         """
         Parse an HTTP request from a file stream
         """
-        http_version, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end \
+        httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end \
             = None, None, None, None, None, None, None, None, None, None
 
         timestamp_start = libmproxy.utils.timestamp()
@@ -155,56 +162,56 @@ class HTTPRequest(HTTPMessage):
 
         request_line_parts = http.parse_init(request_line)
         if not request_line_parts:
-            raise ProtocolError(400, "Bad HTTP request line: %s"%repr(request_line))
-        method, path, http_version = request_line_parts
+            raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
+        method, path, httpversion = request_line_parts
 
         if path == '*':
             form_in = "asterisk"
         elif path.startswith("/"):
             form_in = "origin"
             if not netlib.utils.isascii(path):
-                raise ProtocolError(400, "Bad HTTP request line: %s"%repr(request_line))
+                raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
         elif method.upper() == 'CONNECT':
             form_in = "authority"
             r = http.parse_init_connect(request_line)
             if not r:
-                raise ProtocolError(400, "Bad HTTP request line: %s"%repr(request_line))
+                raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
             host, port, _ = r
         else:
             form_in = "absolute"
             r = http.parse_init_proxy(request_line)
             if not r:
-                raise ProtocolError(400, "Bad HTTP request line: %s"%repr(request_line))
+                raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
             _, scheme, host, port, path, _ = r
 
         headers = http.read_headers(rfile)
         if headers is None:
-            raise ProtocolError(400, "Invalid headers")
+            raise http.HttpError(400, "Invalid headers")
 
         if include_content:
             content = http.read_http_body(rfile, headers, body_size_limit, True)
             timestamp_end = libmproxy.utils.timestamp()
 
-        return HTTPRequest(form_in, method, scheme, host, port, path, http_version, headers, content,
+        return HTTPRequest(form_in, method, scheme, host, port, path, httpversion, headers, content,
                            timestamp_start, timestamp_end)
 
 
 class HTTPHandler(ProtocolHandler):
 
     def handle_messages(self):
-        while self.handle_request():
+        while self.handle_flow():
             pass
         self.c.close = True
 
-    def handle_error(self, e):
-        raise e  # FIXME: Proper error handling
-
-    def handle_request(self):
+    def handle_flow(self):
         try:
-            flow = HTTPFlow(self.c.client_conn, self.c.server_conn, libmproxy.utils.timestamp(), None, None, None)
-            flow.request = self.read_request()
+            flow = HTTPFlow(self.c.client_conn, self.c.server_conn, libmproxy.utils.timestamp(), None, None, None, None)
+            flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
+                                                   body_size_limit=self.c.config.body_size_limit)
+            self.process_request(flow.request)
 
-            request_reply = self.c.channel.ask("request" if LEGACY else "httprequest", flow.request if LEGACY else flow)
+            request_reply = self.c.channel.ask("request" if LEGACY else "httprequest",
+                                               flow.request if LEGACY else flow)
             if request_reply is None or request_reply == KILL:
                 return False
 
@@ -214,7 +221,8 @@ class HTTPHandler(ProtocolHandler):
                 raw = flow.request._assemble()
                 self.c.server_conn.wfile.write(raw)
                 self.c.server_conn.wfile.flush()
-                flow.response = self.read_response(flow)
+                flow.response = HTTPResponse.from_stream(self.c.server_conn.rfile, flow.request.method,
+                                                         body_size_limit=self.c.config.body_size_limit)
 
             response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
                                                 flow.response if LEGACY else flow)
@@ -226,17 +234,48 @@ class HTTPHandler(ProtocolHandler):
             self.c.client_conn.wfile.flush()
             flow.timestamp_end = libmproxy.utils.timestamp()
 
-            if (http.connection_close(flow.request.http_version, flow.request.headers) or
-                    http.connection_close(flow.response.http_version, flow.response.headers)):
+            if (http.connection_close(flow.request.httpversion, flow.request.headers) or
+                    http.connection_close(flow.response.httpversion, flow.response.headers)):
                 return False
 
             if flow.request.form_in == "authority":
                 self.ssl_upgrade()
-            return flow
-        except ProtocolError, http.HttpError:
-            raise NotImplementedError
-            # FIXME: Implement error handling
-            return False
+            return True
+        except HttpAuthenticationError, e:
+            self.process_error(flow, code=407, message="Proxy Authentication Required", headers=e.auth_headers)
+        except http.HttpError, e:
+            self.process_error(flow, code=e.code, message=e.msg)
+        except tcp.NetLibError, e:
+            self.process_error(flow, message=e.message)
+        return False
+
+    def process_error(self, flow, code=None, message=None, headers=None):
+        try:
+            err = ("%s: %s" % (code, message)) if code else message
+            flow.error = libmproxy.flow.Error(False, err)
+            self.c.log("error: %s" % err)
+            self.c.channel.ask("error" if LEGACY else "httperror",
+                               flow.error if LEGACY else flow)
+            if code:
+                self.send_error(code, message, headers)
+        except:
+            pass
+
+    def send_error(self, code, message, headers):
+        response = http_status.RESPONSES.get(code, "Unknown")
+        html_content = '<html><head>\n<title>%d %s</title>\n</head>\n<body>\n%s\n</body>\n</html>' % \
+                       (code, response, message)
+        self.c.client_conn.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
+        self.c.client_conn.wfile.write("Server: %s\r\n"%self.c.server_version)
+        self.c.client_conn.wfile.write("Content-type: text/html\r\n")
+        self.c.client_conn.wfile.write("Content-Length: %d\r\n"%len(html_content))
+        if headers:
+            for key, value in headers.items():
+                self.c.client_conn.wfile.write("%s: %s\r\n"%(key, value))
+        self.c.client_conn.wfile.write("Connection: close\r\n")
+        self.c.client_conn.wfile.write("\r\n")
+        self.c.client_conn.wfile.write(html_content)
+        self.c.client_conn.wfile.flush()
 
     def ssl_upgrade(self):
         self.c.mode = "transparent"
@@ -244,13 +283,11 @@ class HTTPHandler(ProtocolHandler):
         self.c.establish_ssl(server=True, client=True)
         raise ConnectionTypeChange
 
-    def read_request(self):
-        request = HTTPRequest.from_stream(self.c.client_conn.rfile, body_size_limit=self.c.config.body_size_limit)
-
+    def process_request(self, request):
         if self.c.mode == "regular":
             self.authenticate(request)
         if request.form_in == "authority" and self.c.client_conn.ssl_established:
-            raise ProtocolError(502, "Must not CONNECT on already encrypted connection")
+            raise http.HttpError(502, "Must not CONNECT on already encrypted connection")
 
         # If we have a CONNECT request, we might need to intercept
         if request.form_in == "authority":
@@ -263,7 +300,7 @@ class HTTPHandler(ProtocolHandler):
                     '\r\n'
                 )
                 self.c.client_conn.wfile.flush()
-                self.ssl_upgrade()
+                self.ssl_upgrade()  # raises ConnectionTypeChange exception
 
         if self.c.mode == "regular":
             if request.form_in == "authority":
@@ -274,26 +311,15 @@ class HTTPHandler(ProtocolHandler):
                         if ((not self.c.server_conn) or
                                 (self.c.server_conn.address != (request.host, request.port))):
                             self.c.establish_server_connection(request.host, request.port)
-            elif request.form_in == "asterisk":
-                raise ProtocolError(501, "Not Implemented")
             else:
-                raise ProtocolError(400, "Invalid Request")
-        return request
-
-    def read_response(self, flow):
-        return HTTPResponse.from_stream(self.c.server_conn.rfile, flow.request.method,
-                                        body_size_limit=self.c.config.body_size_limit)
+                raise http.HttpError(400, "Invalid Request")
 
     def authenticate(self, request):
         if self.c.config.authenticator:
             if self.c.config.authenticator.authenticate(request.headers):
                 self.c.config.authenticator.clean(request.headers)
             else:
-                raise ProtocolError(
-                    407,
-                    "Proxy Authentication Required",
-                    self.c.config.authenticator.auth_challenge_headers()
-                )
+                raise HttpAuthenticationError(self.c.config.authenticator.auth_challenge_headers())
         return request.headers
 
     @staticmethod

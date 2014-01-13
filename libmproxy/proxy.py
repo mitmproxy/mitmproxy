@@ -88,14 +88,6 @@ class ServerConnection(tcp.TCPClient):
         except tcp.NetLibError, v:
             raise ProxyError(400, str(v))
 
-    def send(self, request):
-        print "deprecated"
-        d = request._assemble()
-        if not d:
-            raise ProxyError(502, "Cannot transmit an incomplete request.")
-        self.wfile.write(d)
-        self.wfile.flush()
-
     def finish(self):
         tcp.TCPClient.finish(self)
         self.timestamp_end = utils.timestamp()
@@ -154,7 +146,7 @@ class ConnectionHandler:
         self.sni = None
 
     def handle(self):
-        self.log("connect")
+        self.log("clientconnect")
         self.channel.ask("clientconnect", self)
 
         try:
@@ -188,7 +180,7 @@ class ConnectionHandler:
             self.log(str(e))
             # FIXME: We need to persist errors
 
-        self.log("disconnect")
+        self.log("clientdisconnect")
         self.channel.tell("clientdisconnect", self)
 
     def _handle_ssl(self):
