@@ -1394,9 +1394,10 @@ class FlowMaster(controller.Master):
         """
         pass
 
-    def unload_script(self, script):
-        script.unload()
-        self.scripts.remove(script)
+    def unload_scripts(self):
+        for script in self.scripts[:]:
+            script.unload()
+            self.scripts.remove(script)
 
     def load_script(self, command):
         """
@@ -1627,8 +1628,7 @@ class FlowMaster(controller.Master):
         return f
 
     def shutdown(self):
-        for script in self.scripts:
-            self.unload_script(script)
+        self.unload_scripts()
         controller.Master.shutdown(self)
         if self.stream:
             for i in self.state._flow_list:

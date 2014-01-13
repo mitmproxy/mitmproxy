@@ -565,8 +565,7 @@ class TestFlowMaster:
         fm = flow.FlowMaster(None, s)
         assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
         assert not fm.load_script(tutils.test_data.path("scripts/a.py"))
-        assert not fm.unload_script(fm.scripts[0])
-        assert not fm.unload_script(fm.scripts[0])
+        assert not fm.unload_scripts()
         assert fm.load_script("nonexistent")
         assert "ValueError" in fm.load_script(tutils.test_data.path("scripts/starterr.py"))
         assert len(fm.scripts) == 0
@@ -613,9 +612,13 @@ class TestFlowMaster:
         fm.handle_clientdisconnect(dc)
         assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
         assert fm.scripts[1].ns["log"][-1] == "clientdisconnect"
+
+
         #unload first script
-        fm.unload_script(fm.scripts[0])
-        assert len(fm.scripts) == 1
+        fm.unload_scripts()
+        assert len(fm.scripts) == 0
+
+        assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
         err = flow.Error(f.request, "msg")
         err.reply = controller.DummyReply()
         fm.handle_error(err)
