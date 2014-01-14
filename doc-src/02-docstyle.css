@@ -10,3 +10,7 @@ body {
 .nowrap {
      white-space: nowrap;
 }
+
+h1 {
+    line-height: 1.1;
+}
