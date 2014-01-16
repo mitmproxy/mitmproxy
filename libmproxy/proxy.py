@@ -106,18 +106,19 @@ class RequestReplayThread(threading.Thread):
 
 
 class HandleSNI:
-    def __init__(self, handler, client_conn, host, port, cert, key):
+    def __init__(self, handler, client_conn, host, port, key):
         self.handler, self.client_conn, self.host, self.port = handler, client_conn, host, port
-        self.cert, self.key = cert, key
+        self.key = key
 
     def __call__(self, client_connection):
         try:
             sn = client_connection.get_servername()
             if sn:
                 self.handler.get_server_connection(self.client_conn, "https", self.host, self.port, sn)
+                dummycert = self.handler.find_cert(self.client_conn, self.host, self.port, sn)
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.key)
-                new_context.use_certificate(self.cert.x509)
+                new_context.use_certificate(dummycert.x509)
                 client_connection.set_context(new_context)
                 self.handler.sni = sn.decode("utf8").encode("idna")
         # An unhandled exception in this method will core dump PyOpenSSL, so
@@ -331,8 +332,7 @@ class ProxyHandler(tcp.BaseHandler):
     def establish_ssl(self, client_conn, host, port):
         dummycert = self.find_cert(client_conn, host, port, host)
         sni = HandleSNI(
-            self, client_conn, host, port,
-            dummycert, self.config.certfile or self.config.cacert
+            self, client_conn, host, port, self.config.certfile or self.config.cacert
         )
         try:
             self.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert, handle_sni=sni)
