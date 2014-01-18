@@ -12,7 +12,6 @@ def _mkhelp():
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
         ("l", "set limit filter pattern"),
-        ("/", "same as above"),
         ("L", "load saved flows"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
@@ -245,7 +244,7 @@ class FlowListBox(urwid.ListBox):
             self.master.clear_flows()
         elif key == "e":
             self.master.toggle_eventlog()
-        elif key == "l" or key == "/":
+        elif key == "l":
             self.master.prompt("Limit: ", self.master.state.limit_txt, self.master.set_limit)
         elif key == "L":
             self.master.path_prompt(

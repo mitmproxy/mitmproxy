@@ -397,7 +397,10 @@ class ViewProtobuf:
 
     name = "Protocol Buffer"
     prompt = ("protobuf", "p")
-    content_types = ["application/x-protobuf"]
+    content_types = [
+        "application/x-protobuf",
+        "application/x-protobuffer",
+    ]
 
     @staticmethod
     def is_available():

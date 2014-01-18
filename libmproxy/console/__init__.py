@@ -442,16 +442,18 @@ class ConsoleMaster(flow.FlowMaster):
             else:
                 self.add_event("Method %s error: %s"%(method, val[1]))
 
-    def run_script_once(self, path, f):
-        if not path:
+    def run_script_once(self, command, f):
+        if not command:
             return
-        self.add_event("Running script on flow: %s"%path)
-        ret = self.get_script(shlex.split(path, posix=(os.name != "nt")))
-        if ret[0]:
+        self.add_event("Running script on flow: %s"%command)
+
+        try:
+            s = script.Script(command, self)
+        except script.ScriptError, v:
             self.statusbar.message("Error loading script.")
-            self.add_event("Error loading script:\n%s"%ret[0])
+            self.add_event("Error loading script:\n%s"%v.args[0])
             return
-        s = ret[1]
+
         if f.request:
             self._run_script_method("request", s, f)
         if f.response:
@@ -460,15 +462,15 @@ class ConsoleMaster(flow.FlowMaster):
             self._run_script_method("error", s, f)
         s.unload()
         self.refresh_flow(f)
-        self.state.last_script = path
+        self.state.last_script = command
 
-    def set_script(self, path):
-        if not path:
+    def set_script(self, command):
+        if not command:
             return
-        ret = self.load_script(path)
+        ret = self.load_script(command)
         if ret:
             self.statusbar.message(ret)
-        self.state.last_script = path
+        self.state.last_script = command
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
@@ -781,6 +783,9 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             self.view_flowlist()
 
+    def edit_scripts(self, *args, **kwargs):
+        pass
+
     def loop(self):
         changed = True
         try:
@@ -883,7 +888,7 @@ class ConsoleMaster(flow.FlowMaster):
                                     grideditor.ScriptEditor(
                                         self,
                                         [[i.argv[0]] for i in self.scripts],
-                                        None
+                                        self.edit_scripts
                                     )
                                 )
                                 #if self.scripts:

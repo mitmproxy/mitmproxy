@@ -1,7 +1,7 @@
 import copy, re, os
 import urwid
 import common
-from .. import utils, filt
+from .. import utils, filt, script
 from netlib import http_uastrings
 
 
@@ -486,8 +486,9 @@ class PathEditor(GridEditor):
 class ScriptEditor(GridEditor):
     title = "Editing scripts"
     columns = 1
-    headings = ("Path",)
+    headings = ("Command",)
     def is_error(self, col, val):
-        return False
-
-
+        try:
+            script.Script.parse_command(val)
+        except script.ScriptError, v:
+            return str(v)

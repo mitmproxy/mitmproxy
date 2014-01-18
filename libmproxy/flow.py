@@ -143,39 +143,6 @@ class SetHeaders:
                     f.request.headers.add(header, value)
 
 
-class ScriptContext:
-    def __init__(self, master):
-        self._master = master
-
-    def log(self, *args, **kwargs):
-        """
-            Logs an event.
-
-            How this is handled depends on the front-end. mitmdump will display
-            events if the eventlog flag ("-e") was passed. mitmproxy sends
-            output to the eventlog for display ("v" keyboard shortcut).
-        """
-        self._master.add_event(*args, **kwargs)
-
-    def duplicate_flow(self, f):
-        """
-            Returns a duplicate of the specified flow. The flow is also
-            injected into the current state, and is ready for editing, replay,
-            etc.
-        """
-        self._master.pause_scripts = True
-        f = self._master.duplicate_flow(f)
-        self._master.pause_scripts = False
-        return f
-
-    def replay_request(self, f):
-        """
-            Replay the request on the current flow. The response will be added
-            to the flow object.
-        """
-        self._master.replay_request(f)
-
-
 class decoded(object):
     """
 
@@ -1426,31 +1393,21 @@ class FlowMaster(controller.Master):
         """
         pass
 
-    def get_script(self, script_argv):
-        """
-            Returns an (error, script) tuple.
-        """
-        s = script.Script(script_argv, ScriptContext(self))
-        try:
-            s.load()
-        except script.ScriptError, v:
-            return (v.args[0], None)
-        return (None, s)
+    def unload_scripts(self):
+        for script in self.scripts[:]:
+            script.unload()
+            self.scripts.remove(script)
 
-    def unload_script(self,script):
-        script.unload()
-        self.scripts.remove(script)
-
-    def load_script(self, script_argv):
+    def load_script(self, command):
         """
             Loads a script. Returns an error description if something went
             wrong.
         """
-        r = self.get_script(script_argv)
-        if r[0]:
-            return r[0]
-        else:
-            self.scripts.append(r[1])
+        try:
+            s = script.Script(command, self)
+        except script.ScriptError, v:
+            return v.args[0]
+        self.scripts.append(s)
 
     def run_single_script_hook(self, script, name, *args, **kwargs):
         if script and not self.pause_scripts:
@@ -1670,8 +1627,7 @@ class FlowMaster(controller.Master):
         return f
 
     def shutdown(self):
-        for script in self.scripts:
-            self.unload_script(script)
+        self.unload_scripts()
         controller.Master.shutdown(self)
         if self.stream:
             for i in self.state._flow_list:

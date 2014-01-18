@@ -1,8 +1,9 @@
 import os, shutil, tempfile
 from contextlib import contextmanager
 from libmproxy import flow, utils, controller
-from libmproxy.console.flowview import FlowView
-from libmproxy.console import ConsoleState
+if os.name != "nt":
+    from libmproxy.console.flowview import FlowView
+    from libmproxy.console import ConsoleState
 from netlib import certutils
 from nose.plugins.skip import SkipTest
 from mock import Mock

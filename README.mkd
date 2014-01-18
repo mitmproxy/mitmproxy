@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mitmproxy/mitmproxy.png)](https://travis-ci.org/mitmproxy/mitmproxy) [![Coverage Status](https://coveralls.io/repos/mitmproxy/mitmproxy/badge.png)](https://coveralls.io/r/mitmproxy/mitmproxy)
+[![Build Status](https://travis-ci.org/mitmproxy/mitmproxy.png?branch=master)](https://travis-ci.org/mitmproxy/mitmproxy) [![Coverage Status](https://coveralls.io/repos/mitmproxy/mitmproxy/badge.png?branch=master)](https://coveralls.io/r/mitmproxy/mitmproxy)
 
 __mitmproxy__ is an interactive, SSL-capable man-in-the-middle proxy for HTTP
 with a console interface.

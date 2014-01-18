@@ -11,6 +11,17 @@ def index():
     return flask.render_template("index.html", section="home")
 
 
-@mapp.route("/certs")
-def certs():
+@mapp.route("/cert/pem")
+def certs_pem():
+    p = master().server.config.cacert
+    return flask.Response(open(p).read(), mimetype='application/x-x509-ca-cert')
+
+
+@mapp.route("/cert/p12")
+def certs_p12():
+    return flask.render_template("certs.html", section="certs")
+
+
+@mapp.route("/cert/cer")
+def certs_cer():
     return flask.render_template("certs.html", section="certs")
