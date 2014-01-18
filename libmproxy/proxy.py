@@ -13,7 +13,7 @@ class ProxyError(Exception):
         self.code, self.msg, self.headers = code, msg, headers
 
     def __str__(self):
-        return "ProxyError(%s, %s)"%(self.code, self.msg)
+        return "ProxyError(%s, %s)" % (self.code, self.msg)
 
 
 import protocol
@@ -25,7 +25,8 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, forward_proxy=None, transparent_proxy=None, authenticator=None):
+    def __init__(self, certfile=None, cacert=None, clientcerts=None, no_upstream_cert=False, body_size_limit=None,
+                 reverse_proxy=None, forward_proxy=None, transparent_proxy=None, authenticator=None):
         self.certfile = certfile
         self.cacert = cacert
         self.clientcerts = clientcerts
@@ -91,8 +92,7 @@ class ServerConnection(tcp.TCPClient):
             raise ProxyError(400, str(v))
 
     def finish(self):
-        if self.connection:  # Eventually, we had an error during .connect() and aren't even connected.
-            tcp.TCPClient.finish(self)
+        tcp.TCPClient.finish(self)
         self.timestamp_end = utils.timestamp()
 
 
@@ -141,9 +141,9 @@ class ConnectionHandler:
             self.mode = "transparent"
 
     def del_server_connection(self):
-        if self.server_conn:
+        if self.server_conn and self.server_conn.connection:  
             self.server_conn.finish()
-            self.log("serverdisconnect", ["%s:%s"%(self.server_conn.host, self.server_conn.port)])
+            self.log("serverdisconnect", ["%s:%s" % (self.server_conn.host, self.server_conn.port)])
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
         self.sni = None
@@ -161,10 +161,11 @@ class ConnectionHandler:
                 if self.config.reverse_proxy:
                     server_address = self.config.reverse_proxy[1:]
                 elif self.config.transparent_proxy:
-                    server_address = self.config.transparent_proxy["resolver"].original_addr(self.client_conn.connection)
+                    server_address = self.config.transparent_proxy["resolver"].original_addr(
+                        self.client_conn.connection)
                     if not server_address:
                         raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
-                    self.log("transparent to %s:%s"%server_address)
+                    self.log("transparent to %s:%s" % server_address)
 
             self.determine_conntype()
 
@@ -216,10 +217,10 @@ class ConnectionHandler:
             self.server_conn.connect()
         except tcp.NetLibError, v:
             raise ProxyError(502, v)
-        self.log("serverconnect", ["%s:%s"%(host, port)])
+        self.log("serverconnect", ["%s:%s" % (host, port)])
         self.channel.tell("serverconnect", self)
 
-    def establish_ssl(self, client, server):
+    def establish_ssl(self, client=False, server=False):
         """
         Establishes SSL on the existing connection(s) to the server or the client,
         as specified by the parameters. If the target server is on the pass-through list,
@@ -241,12 +242,20 @@ class ConnectionHandler:
             self.client_conn.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert,
                                             handle_sni=self.handle_sni)
 
+    def server_reconnect(self):
+        self.log("server reconnect")
+        had_ssl, sni = self.server_conn.ssl_established, self.sni
+        self.establish_server_connection(*self.server_conn.address)
+        if had_ssl:
+            self.sni = sni
+            self.establish_ssl(server=True)
+
     def log(self, msg, subs=()):
         msg = [
             "%s:%s: %s" % (self.client_conn.host, self.client_conn.port, msg)
         ]
         for i in subs:
-            msg.append("  -> "+i)
+            msg.append("  -> " + i)
         msg = "\n".join(msg)
         self.channel.tell("log", Log(msg))
 
@@ -291,12 +300,14 @@ class ConnectionHandler:
         except Exception, e: # pragma: no cover
             pass
 
+
 class ProxyServerError(Exception): pass
 
 
 class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
+
     def __init__(self, config, port, address='', server_version=version.NAMEVERSION):
         """
             Raises ProxyServerError if there's a startup problem.
@@ -324,6 +335,7 @@ class ProxyServer(tcp.TCPServer):
 
 class DummyServer:
     bound = False
+
     def __init__(self, config):
         self.config = config
 
@@ -339,22 +351,21 @@ def certificate_option_group(parser):
     group = parser.add_argument_group("SSL")
     group.add_argument(
         "--cert", action="store",
-        type = str, dest="cert", default=None,
-        help = "User-created SSL certificate file."
+        type=str, dest="cert", default=None,
+        help="User-created SSL certificate file."
     )
     group.add_argument(
         "--client-certs", action="store",
-        type = str, dest = "clientcerts", default=None,
-        help = "Client certificate directory."
+        type=str, dest="clientcerts", default=None,
+        help="Client certificate directory."
     )
-
 
 
 def process_proxy_options(parser, options):
     if options.cert:
         options.cert = os.path.expanduser(options.cert)
         if not os.path.exists(options.cert):
-            return parser.error("Manually created certificate does not exist: %s"%options.cert)
+            return parser.error("Manually created certificate does not exist: %s" % options.cert)
 
     cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
     cacert = os.path.expanduser(cacert)
@@ -368,8 +379,8 @@ def process_proxy_options(parser, options):
         if not platform.resolver:
             return parser.error("Transparent mode not supported on this platform.")
         trans = dict(
-            resolver = platform.resolver(),
-            sslports = TRANSPARENT_SSL_PORTS
+            resolver=platform.resolver(),
+            sslports=TRANSPARENT_SSL_PORTS
         )
     else:
         trans = None
@@ -377,14 +388,14 @@ def process_proxy_options(parser, options):
     if options.reverse_proxy:
         rp = utils.parse_proxy_spec(options.reverse_proxy)
         if not rp:
-            return parser.error("Invalid reverse proxy specification: %s"%options.reverse_proxy)
+            return parser.error("Invalid reverse proxy specification: %s" % options.reverse_proxy)
     else:
         rp = None
 
     if options.forward_proxy:
         fp = utils.parse_proxy_spec(options.forward_proxy)
         if not fp:
-            return parser.error("Invalid forward proxy specification: %s"%options.forward_proxy)
+            return parser.error("Invalid forward proxy specification: %s" % options.forward_proxy)
     else:
         fp = None
 
@@ -392,8 +403,8 @@ def process_proxy_options(parser, options):
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
             return parser.error(
-                    "Client certificate directory does not exist or is not a directory: %s"%options.clientcerts
-                )
+                "Client certificate directory does not exist or is not a directory: %s" % options.clientcerts
+            )
 
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
@@ -413,13 +424,13 @@ def process_proxy_options(parser, options):
         authenticator = http_auth.NullProxyAuth(None)
 
     return ProxyConfig(
-        certfile = options.cert,
-        cacert = cacert,
-        clientcerts = options.clientcerts,
-        body_size_limit = body_size_limit,
-        no_upstream_cert = options.no_upstream_cert,
-        reverse_proxy = rp,
-        forward_proxy = fp,
-        transparent_proxy = trans,
-        authenticator = authenticator
+        certfile=options.cert,
+        cacert=cacert,
+        clientcerts=options.clientcerts,
+        body_size_limit=body_size_limit,
+        no_upstream_cert=options.no_upstream_cert,
+        reverse_proxy=rp,
+        forward_proxy=fp,
+        transparent_proxy=trans,
+        authenticator=authenticator
     )

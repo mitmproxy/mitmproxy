@@ -3,11 +3,9 @@ from netlib import http, http_status, tcp
 import netlib.utils
 from netlib.odict import ODictCaseless
 import select
-from proxy import ProxyError
+from proxy import ProxyError, KILL
 
-KILL = 0 # FIXME: Remove duplication with proxy module
 LEGACY = True
-
 
 def _handle(msg, conntype, connection_handler, *args, **kwargs):
     handler = None
@@ -106,11 +104,11 @@ class HTTPResponse(HTTPMessage):
         if not include_content:
             raise NotImplementedError
 
-        timestamp_start = libmproxy.utils.timestamp()
         httpversion, code, msg, headers, content = http.read_response(
             rfile,
             request_method,
             body_size_limit)
+        timestamp_start = rfile.first_byte_timestamp
         timestamp_end = libmproxy.utils.timestamp()
         return HTTPResponse(httpversion, code, msg, headers, content, timestamp_start, timestamp_end)
 
@@ -165,8 +163,8 @@ class HTTPRequest(HTTPMessage):
         httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end \
             = None, None, None, None, None, None, None, None, None, None
 
-        timestamp_start = libmproxy.utils.timestamp()
         request_line = HTTPHandler.get_line(rfile)
+        timestamp_start = rfile.first_byte_timestamp
 
         request_line_parts = http.parse_init(request_line)
         if not request_line_parts:
@@ -210,33 +208,34 @@ class HTTPHandler(ProtocolHandler):
             pass
         self.c.close = True
 
-    """
-    def wait_for_message(self):
-        """
-        Check both the client connection and the server connection (if present) for readable data.
-        """
-        conns = [self.c.client_conn.rfile]
-        if self.c.server_conn:
-            conns.append(self.c.server_conn.rfile)
-        while True:
-            readable, _, _ = select.select(conns, [], [], 10)
-            if self.c.client_conn.rfile in readable:
-                return
-            if self.c.server_conn.rfile in readable:
-                data = self.c.server_conn.rfile.read(1)
-                if data == "":
-                    raise tcp.NetLibDisconnect
-                elif data == "\r" or data == "\n":
-                    self.c.log("Received an empty line from server")
-                    pass  # Possible leftover from previous message
+    def get_response_from_server(self, request):
+        request_raw = request._assemble()
+
+        for i in range(2):
+            try:
+                self.c.server_conn.wfile.write(request_raw)
+                self.c.server_conn.wfile.flush()
+                return HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
+                                                body_size_limit=self.c.config.body_size_limit)
+            except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
+                self.c.log("error in server communication: %s" % str(v))
+                if i < 1:
+                    # In any case, we try to reconnect at least once.
+                    # This is necessary because it might be possible that we already initiated an upstream connection
+                    # after clientconnect that has already been expired, e.g consider the following event log:
+                    # > clientconnect (transparent mode destination known)
+                    # > serverconnect
+                    # > read n% of large request
+                    # > server detects timeout, disconnects
+                    # > read (100-n)% of large request
+                    # > send large request upstream
+                    self.c.server_reconnect()
                 else:
-                    raise ProxyError(502, "Unexpected message from server")
-    """
-    
+                    raise v
+
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, None, None, None)
         try:
-            # self.wait_for_message()
             flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                                    body_size_limit=self.c.config.body_size_limit)
             self.c.log("request", [flow.request._assemble_request_line(flow.request.form_in)])
@@ -250,11 +249,7 @@ class HTTPHandler(ProtocolHandler):
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
             else:
-                raw = flow.request._assemble()
-                self.c.server_conn.wfile.write(raw)
-                self.c.server_conn.wfile.flush()
-                flow.response = HTTPResponse.from_stream(self.c.server_conn.rfile, flow.request.method,
-                                                         body_size_limit=self.c.config.body_size_limit)
+                flow.response = self.get_response_from_server(flow.request)
 
             self.c.log("response", [flow.response._assemble_response_line()])
             response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
