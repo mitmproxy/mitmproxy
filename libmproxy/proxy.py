@@ -242,11 +242,11 @@ class ConnectionHandler:
             self.client_conn.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert,
                                             handle_sni=self.handle_sni)
 
-    def server_reconnect(self):
+    def server_reconnect(self, no_ssl=False):
         self.log("server reconnect")
         had_ssl, sni = self.server_conn.ssl_established, self.sni
         self.establish_server_connection(*self.server_conn.address)
-        if had_ssl:
+        if had_ssl and not no_ssl:
             self.sni = sni
             self.establish_ssl(server=True)
 

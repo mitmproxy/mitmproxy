@@ -136,7 +136,8 @@ class HTTPRequest(HTTPMessage):
     def is_live(self):
         return True
 
-    def _assemble_request_line(self, form):
+    def _assemble_request_line(self, form=None):
+        form = form or self.form_out
         request_line = None
         if form == "asterisk" or form == "origin":
             request_line = '%s %s HTTP/%s.%s' % (self.method, self.path, self.httpversion[0], self.httpversion[1])
@@ -152,7 +153,7 @@ class HTTPRequest(HTTPMessage):
         return request_line
 
     def _assemble(self):
-        request_line = self._assemble_request_line(self.form_out)
+        request_line = self._assemble_request_line()
         return '%s\r\n%s\r\n%s' % (request_line, self._assemble_headers(), self.content)
 
     @classmethod
@@ -267,7 +268,7 @@ class HTTPHandler(ProtocolHandler):
                 return False
 
             if flow.request.form_in == "authority":
-                self.ssl_upgrade()
+                self.ssl_upgrade(flow.request)
             return True
         except HttpAuthenticationError, e:
             self.process_error(flow, code=407, message="Proxy Authentication Required", headers=e.auth_headers)
@@ -305,10 +306,40 @@ class HTTPHandler(ProtocolHandler):
         self.c.client_conn.wfile.write(html_content)
         self.c.client_conn.wfile.flush()
 
-    def ssl_upgrade(self):
+    def ssl_upgrade(self, upstream_request=None):
+        """
+        Upgrade the connection to SSL after an authority (CONNECT) request has been made.
+        If the authority request has been forwarded upstream (because we have another proxy server there),
+        money-patch the ConnectionHandler.server_reconnect function to resend the request on reconnect.
+
+        This isn't particular beautiful code, but it isolates this rare edge-case from the
+        protocol-agnostic ConnectionHandler
+        """
         self.c.mode = "transparent"
         self.c.determine_conntype()
         self.c.establish_ssl(server=True, client=True)
+
+        if upstream_request:
+            self.c.log("Hook reconnect function")
+            original_reconnect_func = self.c.server_reconnect
+
+            def reconnect_http_proxy():
+                self.c.log("Hooked reconnect function")
+                self.c.log("Hook: Run original redirect")
+                original_reconnect_func(no_ssl=True)
+                self.c.log("Hook: Write CONNECT request to upstream proxy", [upstream_request._assemble_request_line()])
+                self.c.server_conn.wfile.write(upstream_request._assemble())
+                self.c.server_conn.wfile.flush()
+                self.c.log("Hook: Read answer to CONNECT request from proxy")
+                resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
+                if resp.code != 200:
+                    raise ProxyError(resp.code, 
+                                     "Cannot reestablish SSL connection with upstream proxy: \r\n" + str(resp.headers))
+                self.c.log("Hook: Establish SSL with upstream proxy")
+                self.c.establish_ssl(server=True)
+
+            self.c.server_reconnect = reconnect_http_proxy
+
         raise ConnectionTypeChange
 
     def process_request(self, request):
