@@ -313,7 +313,7 @@ def read_response(rfile, method, body_size_limit):
         raise HttpError(502, "Invalid headers.")
 
     # Parse response body according to http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
-    if method == "HEAD" or (code in [204, 304]) or 100 <= code <= 199:
+    if method in ["HEAD", "CONNECT"] or (code in [204, 304]) or 100 <= code <= 199:
         content = ""
     else:
         content = read_http_body(rfile, headers, body_size_limit, False)
