@@ -1,11 +1,10 @@
 import os, socket, time, threading
 from OpenSSL import SSL
 from netlib import tcp, http, certutils, http_auth
-import utils, flow, version, platform, controller, protocol
+import utils, flow, version, platform, controller
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
-
 KILL = 0
 
 
@@ -15,6 +14,9 @@ class ProxyError(Exception):
 
     def __str__(self):
         return "ProxyError(%s, %s)"%(self.code, self.msg)
+
+
+import protocol
 
 
 class Log:
@@ -89,7 +91,8 @@ class ServerConnection(tcp.TCPClient):
             raise ProxyError(400, str(v))
 
     def finish(self):
-        tcp.TCPClient.finish(self)
+        if self.connection:  # Eventually, we had an error during .connect() and aren't even connected.
+            tcp.TCPClient.finish(self)
         self.timestamp_end = utils.timestamp()
 
 
@@ -209,7 +212,10 @@ class ConnectionHandler:
         """
         self.del_server_connection()
         self.server_conn = ServerConnection(host, port)
-        self.server_conn.connect()
+        try:
+            self.server_conn.connect()
+        except tcp.NetLibError, v:
+            raise ProxyError(502, v)
         self.log("serverconnect", ["%s:%s"%(host, port)])
         self.channel.tell("serverconnect", self)
 

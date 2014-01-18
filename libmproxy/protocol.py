@@ -2,9 +2,12 @@ import libmproxy.utils, libmproxy.flow
 from netlib import http, http_status, tcp
 import netlib.utils
 from netlib.odict import ODictCaseless
+import select
+from proxy import ProxyError
 
 KILL = 0 # FIXME: Remove duplication with proxy module
 LEGACY = True
+
 
 def _handle(msg, conntype, connection_handler, *args, **kwargs):
     handler = None
@@ -35,18 +38,17 @@ Minimalistic cleanroom reimplemementation of a couple of flow.* classes. Most fu
 but they demonstrate what needs to be added/changed to/within the existing classes.
 """
 
+
 class Flow(object):
-    def __init__(self, conntype, client_conn, server_conn, timestamp_start, timestamp_end, error):
+    def __init__(self, conntype, client_conn, server_conn, error):
         self.conntype = conntype
         self.client_conn, self.server_conn = client_conn, server_conn
-        self.timestamp_start, self.timestamp_end = timestamp_start, timestamp_end
         self.error = error
 
 
 class HTTPFlow(Flow):
-    def __init__(self, client_conn, server_conn, timestamp_start, timestamp_end, error, request, response):
-        Flow.__init__(self, "http", client_conn, server_conn,
-                      timestamp_start, timestamp_end, error)
+    def __init__(self, client_conn, server_conn, error, request, response):
+        Flow.__init__(self, "http", client_conn, server_conn, error)
         self.request, self.response = request, response
 
 
@@ -89,8 +91,11 @@ class HTTPResponse(HTTPMessage):
     def request(self):
         return False
 
+    def _assemble_response_line(self):
+        return 'HTTP/%s.%s %s %s' % (self.httpversion[0], self.httpversion[1], self.code, self.msg)
+
     def _assemble(self):
-        response_line = 'HTTP/%s.%s %s %s'%(self.httpversion[0], self.httpversion[1], self.code, self.msg)
+        response_line = self._assemble_response_line()
         return '%s\r\n%s\r\n%s' % (response_line, self._assemble_headers(), self.content)
 
     @classmethod
@@ -133,20 +138,23 @@ class HTTPRequest(HTTPMessage):
     def is_live(self):
         return True
 
-    def _assemble(self):
+    def _assemble_request_line(self, form):
         request_line = None
-        if self.form_out == "asterisk" or self.form_out == "origin":
+        if form == "asterisk" or form == "origin":
             request_line = '%s %s HTTP/%s.%s' % (self.method, self.path, self.httpversion[0], self.httpversion[1])
-        elif self.form_out == "authority":
+        elif form == "authority":
             request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
                                                     self.httpversion[0], self.httpversion[1])
-        elif self.form_out == "absolute":
+        elif form == "absolute":
             request_line = '%s %s://%s:%s%s HTTP/%s.%s' % \
                            (self.method, self.scheme, self.host, self.port, self.path,
                             self.httpversion[0], self.httpversion[1])
         else:
             raise http.HttpError(400, "Invalid request form")
+        return request_line
 
+    def _assemble(self):
+        request_line = self._assemble_request_line(self.form_out)
         return '%s\r\n%s\r\n%s' % (request_line, self._assemble_headers(), self.content)
 
     @classmethod
@@ -162,7 +170,7 @@ class HTTPRequest(HTTPMessage):
 
         request_line_parts = http.parse_init(request_line)
         if not request_line_parts:
-            raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
+            raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
         method, path, httpversion = request_line_parts
 
         if path == '*':
@@ -170,18 +178,18 @@ class HTTPRequest(HTTPMessage):
         elif path.startswith("/"):
             form_in = "origin"
             if not netlib.utils.isascii(path):
-                raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
+                raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
         elif method.upper() == 'CONNECT':
             form_in = "authority"
             r = http.parse_init_connect(request_line)
             if not r:
-                raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
+                raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
             host, port, _ = r
         else:
             form_in = "absolute"
             r = http.parse_init_proxy(request_line)
             if not r:
-                raise http.HttpError(400, "Bad HTTP request line: %s"%repr(request_line))
+                raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
             _, scheme, host, port, path, _ = r
 
         headers = http.read_headers(rfile)
@@ -197,17 +205,41 @@ class HTTPRequest(HTTPMessage):
 
 
 class HTTPHandler(ProtocolHandler):
-
     def handle_messages(self):
         while self.handle_flow():
             pass
         self.c.close = True
 
+    """
+    def wait_for_message(self):
+        """
+        Check both the client connection and the server connection (if present) for readable data.
+        """
+        conns = [self.c.client_conn.rfile]
+        if self.c.server_conn:
+            conns.append(self.c.server_conn.rfile)
+        while True:
+            readable, _, _ = select.select(conns, [], [], 10)
+            if self.c.client_conn.rfile in readable:
+                return
+            if self.c.server_conn.rfile in readable:
+                data = self.c.server_conn.rfile.read(1)
+                if data == "":
+                    raise tcp.NetLibDisconnect
+                elif data == "\r" or data == "\n":
+                    self.c.log("Received an empty line from server")
+                    pass  # Possible leftover from previous message
+                else:
+                    raise ProxyError(502, "Unexpected message from server")
+    """
+    
     def handle_flow(self):
+        flow = HTTPFlow(self.c.client_conn, self.c.server_conn, None, None, None)
         try:
-            flow = HTTPFlow(self.c.client_conn, self.c.server_conn, libmproxy.utils.timestamp(), None, None, None, None)
+            # self.wait_for_message()
             flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                                    body_size_limit=self.c.config.body_size_limit)
+            self.c.log("request", [flow.request._assemble_request_line(flow.request.form_in)])
             self.process_request(flow.request)
 
             request_reply = self.c.channel.ask("request" if LEGACY else "httprequest",
@@ -224,6 +256,7 @@ class HTTPHandler(ProtocolHandler):
                 flow.response = HTTPResponse.from_stream(self.c.server_conn.rfile, flow.request.method,
                                                          body_size_limit=self.c.config.body_size_limit)
 
+            self.c.log("response", [flow.response._assemble_response_line()])
             response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
                                                 flow.response if LEGACY else flow)
             if response_reply is None or response_reply == KILL:
@@ -243,10 +276,10 @@ class HTTPHandler(ProtocolHandler):
             return True
         except HttpAuthenticationError, e:
             self.process_error(flow, code=407, message="Proxy Authentication Required", headers=e.auth_headers)
-        except http.HttpError, e:
+        except (http.HttpError, ProxyError), e:
             self.process_error(flow, code=e.code, message=e.msg)
         except tcp.NetLibError, e:
-            self.process_error(flow, message=e.message)
+            self.process_error(flow, message=e.message or e.__class__)
         return False
 
     def process_error(self, flow, code=None, message=None, headers=None):
@@ -266,12 +299,12 @@ class HTTPHandler(ProtocolHandler):
         html_content = '<html><head>\n<title>%d %s</title>\n</head>\n<body>\n%s\n</body>\n</html>' % \
                        (code, response, message)
         self.c.client_conn.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-        self.c.client_conn.wfile.write("Server: %s\r\n"%self.c.server_version)
+        self.c.client_conn.wfile.write("Server: %s\r\n" % self.c.server_version)
         self.c.client_conn.wfile.write("Content-type: text/html\r\n")
-        self.c.client_conn.wfile.write("Content-Length: %d\r\n"%len(html_content))
+        self.c.client_conn.wfile.write("Content-Length: %d\r\n" % len(html_content))
         if headers:
             for key, value in headers.items():
-                self.c.client_conn.wfile.write("%s: %s\r\n"%(key, value))
+                self.c.client_conn.wfile.write("%s: %s\r\n" % (key, value))
         self.c.client_conn.wfile.write("Connection: close\r\n")
         self.c.client_conn.wfile.write("\r\n")
         self.c.client_conn.wfile.write(html_content)
@@ -296,7 +329,7 @@ class HTTPHandler(ProtocolHandler):
                 self.c.establish_server_connection(request.host, request.port)
                 self.c.client_conn.wfile.write(
                     'HTTP/1.1 200 Connection established\r\n' +
-                    ('Proxy-agent: %s\r\n'%self.c.server_version) +
+                    ('Proxy-agent: %s\r\n' % self.c.server_version) +
                     '\r\n'
                 )
                 self.c.client_conn.wfile.flush()
@@ -307,10 +340,10 @@ class HTTPHandler(ProtocolHandler):
                 pass
             elif request.form_in == "absolute":
                 if not self.c.config.forward_proxy:
-                        request.form_out = "origin"
-                        if ((not self.c.server_conn) or
-                                (self.c.server_conn.address != (request.host, request.port))):
-                            self.c.establish_server_connection(request.host, request.port)
+                    request.form_out = "origin"
+                    if ((not self.c.server_conn) or
+                            (self.c.server_conn.address != (request.host, request.port))):
+                        self.c.establish_server_connection(request.host, request.port)
             else:
                 raise http.HttpError(400, "Invalid Request")
 
