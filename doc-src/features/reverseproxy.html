@@ -1,9 +1,11 @@
 
-In reverse proxy mode, mitmproxy acts as a standard HTTP server and forwards
-all requests to the specified upstream server. Note that the displayed URL for
-flows in this mode will use the value of the __Host__ header field from the
-request, not the reverse proxy server.
+In reverse proxy mode, mitmproxy accepts standard HTTP requests and forwards
+them to the specified upstream server. This is in contrast to <a
+href="@!urlTo("forwardproxy.html")!@">forward proxy mode</a>, in which
+mitmproxy forwards HTTP proxy requests to an upstream server.
 
+Note that the displayed URL for flows in this mode will use the value of the
+__Host__ header field from the request, not the reverse proxy server. 
 
 <table class="table">
     <tbody>
