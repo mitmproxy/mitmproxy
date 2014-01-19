@@ -3,6 +3,10 @@ import urwid
 import common, grideditor, contentview
 from .. import utils, flow, controller
 
+
+class SearchError(Exception): pass
+
+
 def _mkhelp():
     text = []
     keys = [
@@ -296,7 +300,10 @@ class FlowView(common.WWrap):
 
         # generate the body, highlight the words and get focus
         headers, msg, body = self.conn_text_raw(text)
-        body, focus_position = self.search_highlight_text(body, search_string)
+        try:
+            body, focus_position = self.search_highlight_text(body, search_string)
+        except SearchError:
+            return "Search not supported in this view."
 
         if focus_position == None:
             # no results found.
@@ -347,8 +354,10 @@ class FlowView(common.WWrap):
             if i != start_line:
                 start_index = 0
 
-            text, style = text_object.get_text()
-
+            try:
+                text, style = text_object.get_text()
+            except AttributeError:
+                raise SearchError()
             find_index = text.find(search_string, start_index)
             if find_index != -1:
                 before = text[:find_index]
