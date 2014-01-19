@@ -1,4 +1,3 @@
-import binascii
 import contrib.md5crypt as md5crypt
 import http
 from argparse import Action, ArgumentTypeError
