@@ -1,5 +1,4 @@
 import sys, os
-import json
 from netlib import tcp, http
 import netlib.utils
 import language, utils
@@ -45,7 +44,7 @@ class Pathoc(tcp.TCPClient):
         parsed = http.parse_response_line(l)
         if not parsed[1] == 200:
             raise PathocError("Proxy CONNECT failed: %s - %s"%(parsed[1], parsed[2]))
-        headers = http.read_headers(self.rfile)
+        http.read_headers(self.rfile)
 
     def connect(self, connect_to=None):
         """
@@ -69,7 +68,7 @@ class Pathoc(tcp.TCPClient):
             language.FileAccessDenied.
         """
         r = language.parse_request(self.settings, spec)
-        ret = language.serve(r, self.wfile, self.settings, self.host)
+        language.serve(r, self.wfile, self.settings, self.host)
         self.wfile.flush()
         return Response(*http.read_response(self.rfile, r.method, None))
 

@@ -1,5 +1,5 @@
-import urllib, threading, re, logging, socket, sys, base64
-from netlib import tcp, http, odict, wsgi, certutils
+import urllib, threading, re, logging
+from netlib import tcp, http, wsgi, certutils
 import netlib.utils
 import version, app, language, utils
 
@@ -158,13 +158,13 @@ class PathodHandler(tcp.BaseHandler):
             cc = wsgi.ClientConn(self.client_address)
             req = wsgi.Request(cc, "http", method, path, headers, content)
             sn = self.connection.getsockname()
-            app = wsgi.WSGIAdaptor(
+            a = wsgi.WSGIAdaptor(
                 self.server.app,
                 sn[0],
                 self.server.port,
                 version.NAMEVERSION
             )
-            app.serve(req, self.wfile)
+            a.serve(req, self.wfile)
             return True, None
 
     def _log_bytes(self, header, data, hexdump):
@@ -257,7 +257,7 @@ class Pathod(tcp.TCPServer):
                 except re.error:
                     raise PathodError("Invalid regex in anchor: %s"%i[0])
                 try:
-                    aresp = language.parse_response(self.request_settings, i[1])
+                    language.parse_response(self.request_settings, i[1])
                 except language.ParseException, v:
                     raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
                 self.anchors.append((arex, i[1]))
@@ -268,7 +268,7 @@ class Pathod(tcp.TCPServer):
         """
         try:
             l = req.maximum_length(settings)
-        except language.FileAccessDenied, v:
+        except language.FileAccessDenied:
             return "File access denied."
         if self.sizelimit and l > self.sizelimit:
             return "Response too large."
