@@ -1,11 +1,12 @@
-import os, sys
+import os, sys, datetime
 import countershape
 from countershape import Page, Directory, PythonModule, markup, model
 import countershape.template
 sys.path.insert(0, "..")
-from libmproxy import filt
+from libmproxy import filt, version
 
-MITMPROXY_SRC = "~/mitmproxy/mitmproxy"
+MITMPROXY_SRC = os.path.abspath("..")
+ns.VERSION = version.VERSION
 
 if ns.options.website:
     ns.idxpath = "doc/index.html"
@@ -16,18 +17,20 @@ else:
 
 
 ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
-this.titlePrefix = "mitmproxy 0.10 - "
+this.titlePrefix = "%s - " % version.NAMEVERSION
 this.markup = markup.Markdown(extras=["footnotes"])
 
 ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
-ns.copyright = u"\u00a9 mitmproxy project, 2013"
+ns.copyright = u"\u00a9 mitmproxy project, %s" % datetime.date.today().year
 
 def mpath(p):
     p = os.path.join(MITMPROXY_SRC, p)
     return os.path.expanduser(p)
 
-ns.index_contents = file(mpath("README.mkd")).read()
+with open(mpath("README.mkd")) as f:
+        readme = f.read()
+        ns.index_contents = readme.split("\n", 1)[1] #remove first line (contains build status)
 
 def example(s):
     d = file(mpath(s)).read().rstrip()

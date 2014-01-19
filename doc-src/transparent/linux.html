@@ -3,7 +3,7 @@ achieve transparent mode.
 
 <ol class="tlist">
 
-    <li> <a href="@!urlTo("ssl.html")!@">Install the mitmproxy
+    <li> <a href="@!urlTo('ssl.html')!@">Install the mitmproxy
     certificates on the test device</a>. </li>
 
     <li> Enable IP forwarding:
@@ -38,3 +38,6 @@ iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8
     running as the default gateway.</li>
 
 </ol>
+
+
+For a detailed walkthrough, have a look at the <a href="@!urlTo('tutorials/transparent-dhcp.html')!@"><i>Transparently proxify virtual machines</i></a> tutorial.
