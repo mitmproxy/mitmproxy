@@ -5,7 +5,7 @@ import countershape.template
 sys.path.insert(0, "..")
 from libmproxy import filt, version
 
-MITMPROXY_SRC = os.path.abspath("..")
+MITMPROXY_SRC = os.environ.get("MITMPROXY_SRC", os.path.abspath(".."))
 ns.VERSION = version.VERSION
 
 if ns.options.website:
