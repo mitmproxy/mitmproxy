@@ -2,7 +2,7 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import hashlib, Cookie, cookielib, copy, re, urlparse, os, threading
+import hashlib, Cookie, cookielib, copy, re, urlparse, threading
 import time, urllib
 import tnetstring, filt, script, utils, encoding, proxy
 from email.utils import parsedate_tz, formatdate, mktime_tz
@@ -1395,9 +1395,9 @@ class FlowMaster(controller.Master):
         pass
 
     def unload_scripts(self):
-        for script in self.scripts[:]:
-            script.unload()
-            self.scripts.remove(script)
+        for s in self.scripts[:]:
+            s.unload()
+            self.scripts.remove(s)
 
     def load_script(self, command):
         """

@@ -1,8 +1,7 @@
-import sys, os, string, socket, time
-import shutil, tempfile, threading
-import SocketServer
+import os, socket, time
+import threading
 from OpenSSL import SSL
-from netlib import odict, tcp, http, certutils, http_status, http_auth
+from netlib import tcp, http, certutils, http_status, http_auth
 import utils, flow, version, platform, controller
 
 
@@ -91,7 +90,6 @@ class RequestReplayThread(threading.Thread):
             server = ServerConnection(self.config, r.scheme, r.host, r.port, r.host)
             server.connect()
             server.send(r)
-            tsstart = utils.timestamp()
             httpversion, code, msg, headers, content = http.read_response(
                 server.rfile, r.method, self.config.body_size_limit
             )
@@ -123,7 +121,7 @@ class HandleSNI:
                 self.handler.sni = sn.decode("utf8").encode("idna")
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
-        except Exception, e: # pragma: no cover
+        except Exception: # pragma: no cover
             pass
 
 
@@ -240,7 +238,6 @@ class ProxyHandler(tcp.BaseHandler):
                         request.ssl_setup_timestamp = sc.ssl_setup_timestamp
                     sc.rfile.reset_timestamps()
                     try:
-                        tsstart = utils.timestamp()
                         peername = sc.connection.getpeername()
                         if peername:
                             request.ip = peername[0]
@@ -249,13 +246,13 @@ class ProxyHandler(tcp.BaseHandler):
                             request.method,
                             self.config.body_size_limit
                         )
-                    except http.HttpErrorConnClosed, v:
+                    except http.HttpErrorConnClosed:
                         self.del_server_connection()
                         if sc.requestcount > 1:
                             continue
                         else:
                             raise
-                    except http.HttpError, v:
+                    except http.HttpError:
                         raise ProxyError(502, "Invalid server response.")
                     else:
                         break
