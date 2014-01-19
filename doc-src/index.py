@@ -15,7 +15,6 @@ else:
     ns.idxpath = "index.html"
     this.layout = countershape.Layout("_layout.html")
 
-
 ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
 this.titlePrefix = "%s - " % version.NAMEVERSION
 this.markup = markup.Markdown(extras=["footnotes"])
@@ -72,6 +71,7 @@ def nav(page, current, state):
     p = state.application.getPage(page)
     return pre + '<a href="%s">%s</a></li>'%(model.UrlTo(page), p.title)
 ns.nav = nav
+ns.navbar = countershape.template.File(None, "_nav.html")
 
 pages = [
     Page("index.html", "Introduction"),
