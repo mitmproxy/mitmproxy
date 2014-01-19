@@ -1,0 +1,37 @@
+#!/bin/bash
+
+MITMPROXY_DIR=~/mitmproxy/mitmproxy
+NETLIB_DIR=~/mitmproxy/netlib
+PATHOD_DIR=~/mitmproxy/pathod
+DST=/tmp/mitmproxy_release
+
+rm -rf $DST
+mkdir -p $DST
+
+cd $NETLIB_DIR
+echo "Creating netlib source distribution..."
+python ./setup.py -q sdist --dist-dir $DST
+
+echo "Creating mitmproxy source distribution..."
+cd $MITMPROXY_DIR
+python ./setup.py -q sdist --dist-dir $DST
+
+echo "Creating pathod source distribution..."
+cd $PATHOD_DIR
+python ./setup.py -q sdist --dist-dir $DST
+
+echo "Creating virtualenv for test install..."
+virtualenv -q $DST/venv
+
+echo "Installing netlib..."
+$DST/venv/bin/pip -q install --download-cache ~/.pipcache $DST/netlib*
+echo "Installing pathod..."
+$DST/venv/bin/pip -q install --download-cache ~/.pipcache $DST/pathod*
+echo "Installing mitmproxy..."
+$DST/venv/bin/pip -q install --download-cache ~/.pipcache $DST/mitmproxy*
+
+echo "Running binaries..."
+$DST/venv/bin/mitmproxy --version
+$DST/venv/bin/mitmdump --version
+$DST/venv/bin/pathod --version
+$DST/venv/bin/pathoc --version
