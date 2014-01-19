@@ -2,6 +2,12 @@ from distutils.core import setup
 import fnmatch, os.path
 from libmproxy import version
 
+
+def pdir():
+    dirname, _ = os.path.split(__file__)
+    return os.path.abspath(dirname)
+
+
 def _fnmatch(name, patternList):
     for i in patternList:
         if fnmatch.fnmatch(name, i):
@@ -65,7 +71,7 @@ def findPackages(path, dataExclude=[]):
     return packages, package_data
 
 
-long_description = file("README.txt").read()
+long_description = file(os.path.join(pdir(), "README.txt")).read()
 packages, package_data = findPackages("libmproxy")
 setup(
         name = "mitmproxy",

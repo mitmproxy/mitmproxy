@@ -5,7 +5,7 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage = "%(prog)s [options] [filter]")
-    parser.add_argument('--version', action='version', version=version.NAMEVERSION)
+    parser.add_argument('--version', action='version', version="mitmdump" + " " + version.VERSION)
     cmdline.common_options(parser)
     parser.add_argument(
         "--keepserving",
