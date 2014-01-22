@@ -334,7 +334,7 @@ bnf = _make()
 def parse(s):
     try:
         return bnf.parseString(s, parseAll=True)[0]
-    except pp.ParseException, v:
+    except pp.ParseException:
         return None
     except ValueError:
         return None

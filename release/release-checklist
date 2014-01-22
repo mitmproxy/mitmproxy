@@ -1,0 +1,25 @@
+
+- Bump the version number: 
+
+    mitmproxy/libmproxy/version.py
+    mitmproxy/requirements.txt
+    netlib/netlib/version.py
+    netlib/requirements.txt
+    pathod/netlib/version.py
+    pathod/requirements.txt
+
+
+- Render the docs:
+    cshape doc-src doc
+
+- Run the test release, make sure the output is sensible
+    ./release/test-release
+
+- Build sdist packages:
+    python ./setup.py sdist
+
+- Test the packages by installing in a virtualenv:
+    - cd dist
+    - tar -xzvf pkgfile.tgz
+    - virtualenv venv
+

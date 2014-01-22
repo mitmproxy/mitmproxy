@@ -490,7 +490,7 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc):
     try:
         ret = viewmode(hdrs, content, limit)
     # Third-party viewers can fail in unexpected ways...
-    except Exception, e:
+    except Exception:
         s = traceback.format_exc()
         s = "Content viewer failed: \n"  + s
         logfunc(s)

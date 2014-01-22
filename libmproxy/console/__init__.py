@@ -1,7 +1,7 @@
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex, stat
 import os.path, sys, weakref
 import urwid
-from .. import controller, utils, flow
+from .. import controller, utils, flow, script
 import flowlist, flowview, help, common, grideditor, palettes, contentview, flowdetailview
 
 EVENTLOG_SIZE = 500

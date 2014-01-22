@@ -1,7 +1,11 @@
-import os, sys
+import os, sys, copy
 import urwid
 import common, grideditor, contentview
 from .. import utils, flow, controller
+
+
+class SearchError(Exception): pass
+
 
 def _mkhelp():
     text = []
@@ -87,9 +91,7 @@ class FlowViewHeader(common.WWrap):
 
 
 class CallbackCache:
-    #commented decorator because it was breaking search functionality (caching after
-    # searches.) If it can be made to only cache the first time, it'd be great.
-    #@utils.LRUCache(200)
+    @utils.LRUCache(200)
     def _callback(self, method, *args, **kwargs):
         return getattr(self.obj, method)(*args, **kwargs)
 
@@ -137,7 +139,6 @@ class FlowView(common.WWrap):
             limit = sys.maxint
         else:
             limit = contentview.VIEW_CUTOFF
-
         description, text_objects = cache.callback(
                     self, "_cached_content_view",
                     viewmode,
@@ -145,7 +146,6 @@ class FlowView(common.WWrap):
                     conn.content,
                     limit
                 )
-
         return (description, text_objects)
 
     def cont_view_handle_missing(self, conn, viewmode):
@@ -173,14 +173,12 @@ class FlowView(common.WWrap):
                 key = "header",
                 val = "text"
             )
-
         if conn.content is not None:
             override = self.override_get()
             viewmode = self.viewmode_get(override)
             msg, body = self.cont_view_handle_missing(conn, viewmode)
         elif conn.content == flow.CONTENT_MISSING:
             pass
-
         return headers, msg, body
 
     def conn_text_merge(self, headers, msg, body):
@@ -188,7 +186,6 @@ class FlowView(common.WWrap):
             Grabs what is returned by conn_text_raw and merges them all
             toghether, mainly used by conn_text and search
         """
-
         override = self.override_get()
         viewmode = self.viewmode_get(override)
 
@@ -222,7 +219,6 @@ class FlowView(common.WWrap):
         """
         headers, msg, body = self.conn_text_raw(conn)
         merged = self.conn_text_merge(headers, msg, body)
-
         return urwid.ListBox(merged)
 
     def _tab(self, content, attr):
@@ -304,7 +300,10 @@ class FlowView(common.WWrap):
 
         # generate the body, highlight the words and get focus
         headers, msg, body = self.conn_text_raw(text)
-        body, focus_position = self.search_highlight_text(body, search_string)
+        try:
+            body, focus_position = self.search_highlight_text(body, search_string)
+        except SearchError:
+            return "Search not supported in this view."
 
         if focus_position == None:
             # no results found.
@@ -350,12 +349,15 @@ class FlowView(common.WWrap):
         i = start_line
 
         found = False
+        text_objects = copy.deepcopy(text_objects)
         for text_object in text_objects[start_line:]:
             if i != start_line:
                 start_index = 0
 
-            text, style = text_object.get_text()
-
+            try:
+                text, style = text_object.get_text()
+            except AttributeError:
+                raise SearchError()
             find_index = text.find(search_string, start_index)
             if find_index != -1:
                 before = text[:find_index]

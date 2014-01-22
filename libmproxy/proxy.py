@@ -108,7 +108,6 @@ class RequestReplayThread(threading.Thread):
             server = ServerConnection(self.config, r.scheme, r.host, r.port, r.host)
             server.connect()
             server.send(r)
-            tsstart = utils.timestamp()
             httpversion, code, msg, headers, content = http.read_response(
                 server.rfile, r.method, self.config.body_size_limit
             )

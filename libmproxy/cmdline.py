@@ -1,8 +1,6 @@
 import proxy
 import re, filt
 import argparse
-import shlex
-import os
 
 APP_HOST = "mitm"
 APP_PORT = 80
