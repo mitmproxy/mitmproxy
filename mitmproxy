@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 import sys, argparse, os
-from libmproxy import proxy, console, cmdline, version
+from libmproxy import proxy, console, cmdline
+import libmproxy.version, netlib.version
 from libmproxy.console import palettes
 
 
 if __name__ == '__main__':
+    # We don't introduce backward-incompatible changes in patch versions. Only consider major and minor version.
+    if netlib.version.IVERSION[:2] != libmproxy.version.IVERSION[:2]:
+        print >> sys.stderr, ("warning: You are using mitmproxy %s with netlib %s. "
+                              "Most likely, that doesn't work - please upgrade!") % (libmproxy.version.VERSION,
+                                                                                     netlib.version.VERSION)
     parser = argparse.ArgumentParser(usage = "%(prog)s [options]")
-    parser.add_argument('--version', action='version', version=version.NAMEVERSION)
+    parser.add_argument('--version', action='version', version=libmproxy.version.NAMEVERSION)
     cmdline.common_options(parser)
     parser.add_argument("--debug", dest="debug", default=False, action="store_true")
     parser.add_argument(
