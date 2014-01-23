@@ -1,4 +1,5 @@
 import flask
+import os.path
 
 mapp = flask.Flask(__name__)
 mapp.debug = True
@@ -13,15 +14,14 @@ def index():
 
 @mapp.route("/cert/pem")
 def certs_pem():
-    p = master().server.config.cacert
+    capath = master().server.config.cacert
+    p = os.path.splitext(capath)[0] + "-cert.pem"
     return flask.Response(open(p).read(), mimetype='application/x-x509-ca-cert')
 
 
 @mapp.route("/cert/p12")
 def certs_p12():
-    return flask.render_template("certs.html", section="certs")
+    capath = master().server.config.cacert
+    p = os.path.splitext(capath)[0] + "-cert.p12"
+    return flask.Response(open(p).read(), mimetype='application/x-pkcs12')
 
-
-@mapp.route("/cert/cer")
-def certs_cer():
-    return flask.render_template("certs.html", section="certs")
