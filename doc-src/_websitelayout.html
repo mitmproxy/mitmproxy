@@ -1,0 +1,42 @@
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </a>
+      <a class="brand" href="@!urlTo(idxpath)!@">mitmproxy</a>
+      <div class="nav">
+        <ul class="nav">
+          <li $!'class="active"' if this.match("/index.html", True) else ""!$> <a href="@!top!@/index.html">home</a> </li>
+          <li $!'class="active"' if this.under("/doc") else ""!$><a href="@!top!@/doc/index.html">docs</a></li>
+          <li $!'class="active"' if this.under("/about.html") else ""!$><a href="@!top!@/about.html">about</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+
+    <div class="span3">
+      <div class="well sidebar-nav">
+            $!navbar!$
+      </div>
+    </div>
+    <div class="span9">
+        <div class="page-header">
+        <h1>@!this.title!@</h1>
+        </div>
+        $!body!$
+    </div>
+  </div>
+
+  <hr>
+
+  <footer>
+    <p>@!copyright!@</p>
+  </footer>
+</div>

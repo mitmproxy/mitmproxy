@@ -1,0 +1,16 @@
+body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+}
+
+.tablenum {
+    font-weight: bold;
+} 
+
+.nowrap {
+     white-space: nowrap;
+}
+
+h1 {
+    line-height: 1.1;
+}

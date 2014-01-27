@@ -1,0 +1,26 @@
+
+Asks the user for authentication before they are permitted to use the proxy.
+Authentication headers are stripped from the flows, so they are not passed to
+upstream servers. For now, only HTTP Basic authentication is supported. The
+proxy auth options are ignored if the proxy is in transparent or reverse proxy
+mode.
+
+<table class="table">
+    <tbody>
+        <tr>
+            <th width="20%">command-line</th>
+            <td>
+                <ul>
+                    <li>--nonanonymous</li>
+
+                    <li>--singleuser USER</li>
+
+                    <li>--htpasswd PATH</li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+
+
