@@ -7,4 +7,5 @@ pages = [
     Page("ios.html", "IOS"),
     Page("ios-simulator.html", "IOS Simulator"),
     Page("android.html", "Android"),
+    Page("java.html", "Java"),
 ]
