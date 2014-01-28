@@ -1,0 +1,12 @@
+
+All of mitmproxy's basic functionality is exposed through the __libmproxy__
+library. The example below shows a simple implementation of the "sticky cookie"
+functionality included in the interactive mitmproxy program. Traffic is
+monitored for __cookie__ and __set-cookie__ headers, and requests are rewritten
+to include a previously seen cookie if they don't already have one. In effect,
+this lets you log in to a site using your browser, and then make subsequent
+requests using a tool like __curl__, which will then seem to be part of the
+authenticated session.
+
+$!example("examples/stickycookies")!$
+

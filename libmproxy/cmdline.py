@@ -2,7 +2,7 @@ import proxy
 import re, filt
 import argparse
 
-APP_HOST = "mitm"
+APP_HOST = "mitm.it"
 APP_PORT = 80
 
 class ParseException(Exception): pass
@@ -263,8 +263,8 @@ def common_options(parser):
     group = parser.add_argument_group("Web App")
     group.add_argument(
         "-a",
-        action="store_true", dest="app", default=False,
-        help="Enable the mitmproxy web app."
+        action="store_false", dest="app", default=True,
+        help="Disable the mitmproxy web app."
     )
     group.add_argument(
         "--app-host",

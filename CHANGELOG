@@ -1,3 +1,21 @@
+28 January 2014: mitmproxy 0.10:
+	
+    * Support for multiple scripts and multiple script arguments
+
+    * Easy certificate install through the in-proxy web app, which is now
+      enabled by default
+
+    * Forward proxy mode, that forwards proxy requests to an upstream HTTP server
+
+    * Reverse proxy now works with SSL
+
+    * Search within a request/response using the "/" and "n" shortcut keys
+
+    * A view that beatifies CSS files if cssutils is available
+
+    * Bug fix, documentation improvements, and more.
+
+
 25 August 2013: mitmproxy 0.9.2:
 
     * Improvements to the mitmproxywrapper.py helper script for OSX.

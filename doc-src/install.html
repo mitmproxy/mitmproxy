@@ -1,0 +1,52 @@
+
+The preferred way to install mitmproxy - whether you're installing the latest
+release or from source - is to use [pip](http://www.pip-installer.org/). If you
+don't already have pip on your system, you can find installation instructions
+[here](http://www.pip-installer.org/en/latest/installing.html).
+
+
+## Installing the latest release
+
+A single command will download and install the latest release of mitmproxy,
+along with all its dependencies:
+
+<pre class="terminal">
+pip install mitmproxy
+</pre>
+
+
+## Installing from source
+
+When installing from source, the easiest method is still to use pip. In this
+case run:
+    
+<pre class="terminal">
+pip install /path/to/source
+</pre>
+
+Note that if you're installing current git master, you will also have to
+install the current git master of [netlib](http://github.com/mitmproxy/netlib) by
+hand.
+
+## OSX
+
+- If you're running a Python interpreter installed with homebrew (or similar),
+you may have to install some dependencies by hand. 
+- Make sure that XCode is installed from the App Store, and that the
+command-line tools have been downloaded (XCode/Preferences/Downloads).
+- Now use __pip__ to do the installation, as above.
+
+There are a few bits of customization you might want to do to make mitmproxy
+comfortable to use on OSX. The default color scheme is optimized for a dark
+background terminal, but you can select a palette for a light terminal
+background with the --palette option. You can use the OSX <b>open</b> program
+to create a simple and effective <b>~/.mailcap</b> file to view request and
+response bodies:
+
+<pre class="terminal">
+application/*; /usr/bin/open -Wn %s
+audio/*; /usr/bin/open -Wn %s
+image/*; /usr/bin/open -Wn %s
+video/*; /usr/bin/open -Wn %s
+</pre>
+

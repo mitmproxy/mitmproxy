@@ -3,13 +3,19 @@ python:
   - "2.7"
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: 
-  - "pip install coveralls --use-mirrors"
-  - "pip install nose-cov --use-mirrors"
   - "pip install --upgrade git+https://github.com/mitmproxy/netlib.git@tcp_proxy"
-  - "pip install -r requirements.txt --use-mirrors"
   - "pip install --upgrade git+https://github.com/mitmproxy/pathod.git@tcp_proxy"
+  - "pip install -r requirements.txt --use-mirrors"
+  - "pip install -r test/requirements.txt --use-mirrors"
 # command to run tests, e.g. python setup.py test
 script: 
   - "nosetests --with-cov --cov-report term-missing"
 after_success: 
   - coveralls
+notifications:
+  irc:
+    channels:
+      - "irc.oftc.net#mitmproxy"
+    on_success: change
+    on_failure: always
+

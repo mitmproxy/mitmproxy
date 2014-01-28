@@ -1,0 +1,35 @@
+
+How to install the __mitmproxy__ certificate authority in Windows 7:
+
+<ol class="tlist">
+
+    <li> The easiest way to get the certificate to the device is to use <a
+        href="@!urlTo("webapp.html")!@">the web app</a>. If this fails for some
+    reason, simply copy the ~/.mitmproxy/mitmproxy-ca-cert.p12 file to the
+    target system and double-click it.  </li>
+
+    <li> 
+        You should see a certificate import wizard: 
+
+        <img src="@!urlTo('win7-wizard.png')!@"/>
+    </li>
+
+    <li> 
+        Click "Next" until you're prompted for the certificate store:
+
+        <img src="@!urlTo('win7-certstore.png')!@"/>
+
+    </li>
+
+
+    <li> 
+        <p>Select "Place all certificates in the following store", and select "Trusted Root Certification Authorities":</p>
+
+        <img src="@!urlTo('win7-certstore-trustedroot.png')!@"/>
+
+    </li>
+
+    <li> Click "Next" and "Finish". </li>
+
+</ol>
+

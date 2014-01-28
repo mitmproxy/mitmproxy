@@ -1,0 +1,67 @@
+
+The first time __mitmproxy__ or __mitmdump__ is run, a set of certificate files
+for the mitmproxy Certificate Authority are created in the config directory
+(~/.mitmproxy by default). This CA is used for on-the-fly generation of dummy
+certificates for SSL interception. Since your browser won't trust the
+__mitmproxy__ CA out of the box (and rightly so), you will see an SSL cert
+warning every time you visit a new SSL domain through __mitmproxy__. When
+you're testing a single site through a browser, just accepting the bogus SSL
+cert manually is not too much trouble, but there are a many circumstances where
+you will want to configure your testing system or browser to trust the
+__mitmproxy__ CA as a signing root authority.
+
+
+CA and cert files
+-----------------
+
+The files created by mitmproxy in the .mitmproxy directory are as follows: 
+
+<table class="table">
+    <tr>
+        <td class="nowrap">mitmproxy-ca.pem</td>
+        <td>The private key and certificate in PEM format.</td>
+    </tr>
+    <tr>
+        <td class="nowrap">mitmproxy-ca-cert.pem</td>
+        <td>The certificate in PEM format. Use this to distribute to most
+        non-Windows platforms.</td>
+    </tr>
+    <tr>
+        <td class="nowrap">mitmproxy-ca-cert.p12</td>
+        <td>The certificate in PKCS12 format. For use on Windows.</td>
+    </tr>
+    <tr>
+        <td class="nowrap">mitmproxy-ca-cert.cer</td>
+        <td>Same file as .pem, but with an extension expected by some Android
+        devices.</td>
+    </tr>
+</table>
+    
+
+Using a custom certificate
+--------------------------
+
+You can use your own certificate by passing the __--cert__ option to mitmproxy.
+
+The certificate file is expected to be in the PEM format. You can generate
+a certificate in this format using these instructions:
+
+<pre class="terminal">
+> openssl genrsa -out cert.key 8192
+> openssl req -new -x509 -key cert.key -out cert.crt
+    (Specify the mitm domain as Common Name, e.g. *.google.com)
+> cat cert.key cert.crt > cert.pem
+> mitmproxy --cert=cert.pem
+</pre>
+
+
+Installing the mitmproxy CA
+---------------------------
+
+* [Firefox](@!urlTo("certinstall/firefox.html")!@)
+* [OSX](@!urlTo("certinstall/osx.html")!@)
+* [Windows 7](@!urlTo("certinstall/windows7.html")!@)
+* [iPhone/iPad](@!urlTo("certinstall/ios.html")!@)
+* [IOS Simulator](@!urlTo("certinstall/ios-simulator.html")!@)
+* [Android](@!urlTo("certinstall/android.html")!@)
+
