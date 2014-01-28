@@ -27,8 +27,7 @@ class _TestDaemon:
 
     def test_info(self):
         c = pathoc.Pathoc(
-            "127.0.0.1",
-            self.d.port,
+            ("127.0.0.1", self.d.port),
             ssl = self.ssl
         )
         c.connect()
@@ -41,8 +40,7 @@ class TestDaemonSSL(_TestDaemon):
     ssloptions = pathod.SSLOptions(request_client_cert=True)
     def test_sni(self):
         c = pathoc.Pathoc(
-            "127.0.0.1",
-            self.d.port,
+            ("127.0.0.1", self.d.port),
             ssl = True,
             sni = "foobar.com"
         )
@@ -54,8 +52,7 @@ class TestDaemonSSL(_TestDaemon):
 
     def test_clientcert(self):
         c = pathoc.Pathoc(
-            "127.0.0.1",
-            self.d.port,
+            ("127.0.0.1", self.d.port),
             ssl = True,
             clientcert = tutils.test_data.path("data/clientcert/client.pem")
         )
@@ -69,7 +66,7 @@ class TestDaemonSSL(_TestDaemon):
 class TestDaemon(_TestDaemon):
     ssl = False
     def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False, timeout=None, ignorecodes=None, ignoretimeout=None):
-        c = pathoc.Pathoc("127.0.0.1", self.d.port)
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port))
         c.connect()
         if timeout:
             c.settimeout(timeout)
@@ -88,7 +85,7 @@ class TestDaemon(_TestDaemon):
         return s.getvalue()
 
     def test_ssl_error(self):
-        c = pathoc.Pathoc("127.0.0.1", self.d.port, ssl = True)
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl = True)
         tutils.raises("ssl handshake", c.connect)
 
     def test_ignorecodes(self):
@@ -135,7 +132,7 @@ class TestDaemon(_TestDaemon):
 
     def test_connect_fail(self):
         to = ("foobar", 80)
-        c = pathoc.Pathoc("127.0.0.1", self.d.port)
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port))
         c.rfile, c.wfile = cStringIO.StringIO(), cStringIO.StringIO()
         tutils.raises("connect failed", c.http_connect, to)
         c.rfile = cStringIO.StringIO(

@@ -21,7 +21,7 @@ class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
     def info(self, s):
-        logger.info("%s:%s: %s"%(self.client_address[0], self.client_address[1], str(s)))
+        logger.info("%s:%s: %s"%(self.address[0], self.address[1], str(s)))
 
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
@@ -118,7 +118,7 @@ class PathodHandler(tcp.BaseHandler):
             headers = headers.lst,
             httpversion = httpversion,
             sni = self.sni,
-            remote_address = self.client_address,
+            remote_address = self.address,
             clientcert = clientcert
         )
 
@@ -155,13 +155,13 @@ class PathodHandler(tcp.BaseHandler):
             return False, dict(type = "error", msg="Access denied: web interface disabled")
         else:
             self.info("app: %s %s"%(method, path))
-            cc = wsgi.ClientConn(self.client_address)
+            cc = wsgi.ClientConn(self.address)
             req = wsgi.Request(cc, "http", method, path, headers, content)
             sn = self.connection.getsockname()
             a = wsgi.WSGIAdaptor(
                 self.server.app,
                 sn[0],
-                self.server.port,
+                self.server.address.port,
                 version.NAMEVERSION
             )
             a.serve(req, self.wfile)

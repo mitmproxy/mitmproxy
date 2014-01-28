@@ -22,8 +22,8 @@ SSLVERSIONS = {
 }
 
 class Pathoc(tcp.TCPClient):
-    def __init__(self, host, port, ssl=None, sni=None, sslversion=1, clientcert=None):
-        tcp.TCPClient.__init__(self, host, port)
+    def __init__(self, address, ssl=None, sni=None, sslversion=1, clientcert=None):
+        tcp.TCPClient.__init__(self, address)
         self.settings = dict(
             staticdir = os.getcwd(),
             unconstrained_file_access = True,
@@ -68,7 +68,7 @@ class Pathoc(tcp.TCPClient):
             language.FileAccessDenied.
         """
         r = language.parse_request(self.settings, spec)
-        language.serve(r, self.wfile, self.settings, self.host)
+        language.serve(r, self.wfile, self.settings, self.address.host)
         self.wfile.flush()
         return Response(*http.read_response(self.rfile, r.method, None))
 
@@ -109,7 +109,7 @@ class Pathoc(tcp.TCPClient):
             return
 
         if explain:
-            r = r.freeze(self.settings, self.host)
+            r = r.freeze(self.settings, self.address.host)
 
         resp, req = None, None
         if showreq:
@@ -117,7 +117,7 @@ class Pathoc(tcp.TCPClient):
         if showresp:
             self.rfile.start_log()
         try:
-            req = language.serve(r, self.wfile, self.settings, self.host)
+            req = language.serve(r, self.wfile, self.settings, self.address.host)
             self.wfile.flush()
             resp = http.read_response(self.rfile, r.method, None)
         except http.HttpError, v:

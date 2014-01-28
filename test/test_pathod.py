@@ -120,7 +120,7 @@ class CommonTests(tutils.DaemonTests):
         assert rsp.status_code == 202
 
     def test_invalid_first_line(self):
-        c = tcp.TCPClient("localhost", self.d.port)
+        c = tcp.TCPClient(("localhost", self.d.port))
         c.connect()
         if self.ssl:
             c.convert_to_ssl()
@@ -169,7 +169,7 @@ class TestDaemon(CommonTests):
 class TestDaemonSSL(CommonTests):
     ssl = True
     def test_ssl_conn_failure(self):
-        c = tcp.TCPClient("localhost", self.d.port)
+        c = tcp.TCPClient(("localhost", self.d.port))
         c.rbufsize = 0
         c.wbufsize = 0
         c.connect()

@@ -50,7 +50,7 @@ class DaemonTests:
     def pathoc(self, spec, timeout=None, connect_to=None, ssl=None):
         if ssl is None:
             ssl = self.ssl
-        c = pathoc.Pathoc("localhost", self.d.port, ssl=ssl)
+        c = pathoc.Pathoc(("localhost", self.d.port), ssl=ssl)
         c.connect(connect_to)
         if timeout:
             c.settimeout(timeout)
