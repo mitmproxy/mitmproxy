@@ -17,19 +17,18 @@ class ServerTestBase:
     ssl = None
     handler = None
     addr = ("localhost", 0)
-    use_ipv6 = False
 
     @classmethod
     def setupAll(cls):
         cls.q = Queue.Queue()
         s = cls.makeserver()
-        cls.port = s.port
+        cls.port = s.address.port
         cls.server = ServerThread(s)
         cls.server.start()
 
     @classmethod
     def makeserver(cls):
-        return TServer(cls.ssl, cls.q, cls.handler, cls.addr, cls.use_ipv6)
+        return TServer(cls.ssl, cls.q, cls.handler, cls.addr)
 
     @classmethod
     def teardownAll(cls):
@@ -41,17 +40,17 @@ class ServerTestBase:
 
 
 class TServer(tcp.TCPServer):
-    def __init__(self, ssl, q, handler_klass, addr, use_ipv6):
+    def __init__(self, ssl, q, handler_klass, addr):
         """
             ssl: A {cert, key, v3_only} dict.
         """
-        tcp.TCPServer.__init__(self, addr, use_ipv6=use_ipv6)
+        tcp.TCPServer.__init__(self, addr)
         self.ssl, self.q = ssl, q
         self.handler_klass = handler_klass
         self.last_handler = None
 
     def handle_client_connection(self, request, client_address):
-        h = self.handler_klass(request)
+        h = self.handler_klass(request, client_address)
         self.last_handler = h
         if self.ssl:
             cert = certutils.SSLCert.from_pem(

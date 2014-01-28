@@ -173,6 +173,35 @@ class Reader(_FileLike):
         return result
 
 
+class Address(tuple):
+    """
+    This class wraps an IPv4/IPv6 tuple to provide named attributes and ipv6 information.
+    """
+    def __new__(cls, address, use_ipv6=False):
+        a = super(Address, cls).__new__(cls, tuple(address))
+        a.family = socket.AF_INET6 if use_ipv6 else socket.AF_INET
+        return a
+
+    @classmethod
+    def wrap(cls, t):
+        if isinstance(t, cls):
+            return t
+        else:
+            return cls(t)
+
+    @property
+    def host(self):
+        return self[0]
+
+    @property
+    def port(self):
+        return self[1]
+
+    @property
+    def is_ipv6(self):
+        return self.family == socket.AF_INET6
+
+
 class SocketCloseMixin:
     def finish(self):
         self.finished = True
@@ -209,10 +238,9 @@ class SocketCloseMixin:
 class TCPClient(SocketCloseMixin):
     rbufsize = -1
     wbufsize = -1
-    def __init__(self, host, port, source_address=None, use_ipv6=False):
-        self.host, self.port = host, port
+    def __init__(self, address, source_address=None):
+        self.address = Address.wrap(address)
         self.source_address = source_address
-        self.use_ipv6 = use_ipv6
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.ssl_established = False
@@ -245,14 +273,14 @@ class TCPClient(SocketCloseMixin):
 
     def connect(self):
         try:
-            connection = socket.socket(socket.AF_INET6 if self.use_ipv6 else socket.AF_INET, socket.SOCK_STREAM)
+            connection = socket.socket(self.address.family, socket.SOCK_STREAM)
             if self.source_address:
                 connection.bind(self.source_address)
-            connection.connect((self.host, self.port))
+            connection.connect(self.address)
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
         except (socket.error, IOError), err:
-            raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
+            raise NetLibError('Error connecting to "%s": %s' % (self.address[0], err))
         self.connection = connection
 
     def settimeout(self, n):
@@ -269,8 +297,9 @@ class BaseHandler(SocketCloseMixin):
     """
     rbufsize = -1
     wbufsize = -1
-    def __init__(self, connection):
+    def __init__(self, connection, address):
         self.connection = connection
+        self.address = Address.wrap(address)
         self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
         self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
 
@@ -339,19 +368,18 @@ class BaseHandler(SocketCloseMixin):
 
 class TCPServer:
     request_queue_size = 20
-    def __init__(self, server_address, use_ipv6=False):
-        self.server_address = server_address
-        self.use_ipv6 = use_ipv6
+    def __init__(self, address):
+        self.address = Address.wrap(address)
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
-        self.socket = socket.socket(socket.AF_INET6 if self.use_ipv6 else socket.AF_INET, socket.SOCK_STREAM)
+        self.socket = socket.socket(self.address.family, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
-        self.server_address = self.socket.getsockname()
-        self.port = self.server_address[1]
+        self.socket.bind(self.address)
+        self.address = Address.wrap(self.socket.getsockname())
         self.socket.listen(self.request_queue_size)
 
     def connection_thread(self, connection, client_address):
+        client_address = Address(client_address)
         try:
             self.handle_client_connection(connection, client_address)
         except:
