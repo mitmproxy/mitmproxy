@@ -46,7 +46,7 @@ class CommonMixin:
         assert l.response.code == 304
 
     def test_invalid_http(self):
-        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
+        t = tcp.TCPClient(("127.0.0.1", self.proxy.address.port))
         t.connect()
         t.wfile.write("invalid\r\n\r\n")
         t.wfile.flush()
@@ -70,7 +70,7 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         assert "ValueError" in ret.content
 
     def test_invalid_connect(self):
-        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
+        t = tcp.TCPClient(("127.0.0.1", self.proxy.address.port))
         t.connect()
         t.wfile.write("CONNECT invalid\n\n")
         t.wfile.flush()

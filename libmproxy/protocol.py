@@ -115,7 +115,7 @@ class HTTPResponse(HTTPMessage):
 
 class HTTPRequest(HTTPMessage):
     def __init__(self, form_in, method, scheme, host, port, path, httpversion, headers, content,
-                 timestamp_start, timestamp_end, form_out=None, ip=None):
+                 timestamp_start, timestamp_end, form_out=None):
         self.form_in = form_in
         self.method = method
         self.scheme = scheme
@@ -129,7 +129,6 @@ class HTTPRequest(HTTPMessage):
         self.timestamp_end = timestamp_end
 
         self.form_out = form_out or self.form_in
-        self.ip = ip  # resolved ip address
         assert isinstance(headers, ODictCaseless)
 
     #FIXME: Compatibility Fix
@@ -352,7 +351,7 @@ class HTTPHandler(ProtocolHandler):
         if request.form_in == "authority":
             directly_addressed_at_mitmproxy = (self.c.mode == "regular") and not self.c.config.forward_proxy
             if directly_addressed_at_mitmproxy:
-                self.c.establish_server_connection(request.host, request.port)
+                self.c.establish_server_connection((request.host, request.port))
                 self.c.client_conn.wfile.write(
                     'HTTP/1.1 200 Connection established\r\n' +
                     ('Proxy-agent: %s\r\n' % self.c.server_version) +
@@ -369,7 +368,7 @@ class HTTPHandler(ProtocolHandler):
                     request.form_out = "origin"
                     if ((not self.c.server_conn) or
                             (self.c.server_conn.address != (request.host, request.port))):
-                        self.c.establish_server_connection(request.host, request.port)
+                        self.c.establish_server_connection((request.host, request.port))
             else:
                 raise http.HttpError(400, "Invalid Request")
 
