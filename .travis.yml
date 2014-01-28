@@ -13,3 +13,10 @@ script:
   - "nosetests --with-cov --cov-report term-missing"
 after_success: 
   - coveralls
+notifications:
+  irc:
+    channels:
+      - "irc.oftc.net#mitmproxy"
+    on_success: change
+    on_failure: always
+
