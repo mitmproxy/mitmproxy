@@ -50,7 +50,7 @@ class TServer(tcp.TCPServer):
         self.last_handler = None
 
     def handle_client_connection(self, request, client_address):
-        h = self.handler_klass(request, client_address)
+        h = self.handler_klass(request, client_address, self)
         self.last_handler = h
         if self.ssl:
             cert = certutils.SSLCert.from_pem(

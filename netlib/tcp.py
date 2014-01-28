@@ -297,9 +297,11 @@ class BaseHandler(SocketCloseMixin):
     """
     rbufsize = -1
     wbufsize = -1
-    def __init__(self, connection, address):
+
+    def __init__(self, connection, address, server):
         self.connection = connection
         self.address = Address.wrap(address)
+        self.server = server
         self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
         self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
 
