@@ -1,4 +1,4 @@
-import os, re
+import os
 
 SIZE_UNITS = dict(
     b = 1024**0,

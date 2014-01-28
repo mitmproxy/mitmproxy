@@ -1,6 +1,6 @@
-import json, threading, Queue
+import threading, Queue
 import requests
-import pathod, utils
+import pathod
 
 
 class Daemon:
