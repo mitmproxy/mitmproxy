@@ -7,27 +7,26 @@ necessity, and many apps merrily ignore it even if it's there. This situation
 is improving, but in many circumstances using [transparent
 mode](@!urlTo("transparent.html")!@) is mandatory for testing Android apps.
 
-We used both an Asus Transformer Prime TF201 (Android 4.0.3) and a Nexus 4 
-(Android 4.4.4) in the examples below - your device may differ, 
-but the broad process should be similar.  
-On **emulated devices**, 
-there are some [additional quirks](https://github.com/mitmproxy/mitmproxy/issues/204#issuecomment-32837093) to consider.
+We used both an Asus Transformer Prime TF201 (Android 4.0.3) and a Nexus 4
+(Android 4.4.4) in the examples below - your device may differ, but the broad
+process should be similar.  On **emulated devices**, there are some [additional
+quirks](https://github.com/mitmproxy/mitmproxy/issues/204#issuecomment-32837093)
+to consider.
 
 
 ## Getting the certificate onto the device
 
-First we need to get the __mitmproxy-ca-cert.cer__ file into the
-__/sdcard__ folder on the device (/sdcard/Download on older devices). There are a number of ways to do
-this. If you have the Android Developer Tools installed, you can use [__adb
-push__](http://developer.android.com/tools/help/adb.html) to accomplish this.
-Depending on your device, you could also transfer the file using external media
-like an SD Card. In this example, we're using wget from within a terminal
-emulator to transfer the certificate from a local HTTP server: 
+The easiest way to get the certificate to the device is to use [the web
+app](@!urlTo("webapp.html")!@). In the rare cases where the web app doesn't
+work, you will need to get the __mitmproxy-ca-cert.cer__ file into the
+__/sdcard__ folder on the device (/sdcard/Download on older devices). This can
+be accomplished in a number of ways:
 
-<img src="android-shellwgetmitmproxyca.png"/>
-
-
-## Installing the certificate
+- If you have the Android Developer Tools installed, you can use [__adb
+push__](http://developer.android.com/tools/help/adb.html).
+- Using a file transfer program like wget (installed on the Android device) to
+copy the file over.
+- Transfer the file using external media like an SD Card. 
 
 Once we have the certificate on the local disk, we need to import it into the
 list of trusted CAs. Go to Settings -&gt; Security -&gt; Credential Storage,
@@ -37,12 +36,18 @@ and select "Install from storage":
 
 The certificate in /sdcard is automatically located and offered for
 installation. Installing the cert will delete the download file from the local
-disk:
+disk.
+
+
+## Installing the certificate
+
+You should now see something like this (you may have to explicitly name the
+certificate):
 
 <img src="android-settingssecurityinstallca.png"/>
 
-Afterwards, you should see the certificate listed in the Trusted Credentials
-store:
+Click OK, and you should then see the certificate listed in the Trusted
+Credentials store:
 
 <img src="android-settingssecurityuserinstalledca.png"/>
 

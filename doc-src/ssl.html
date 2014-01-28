@@ -1,7 +1,20 @@
 
 The first time __mitmproxy__ or __mitmdump__ is run, a set of certificate files
 for the mitmproxy Certificate Authority are created in the config directory
-(~/.mitmproxy by default). The files are as follows: 
+(~/.mitmproxy by default). This CA is used for on-the-fly generation of dummy
+certificates for SSL interception. Since your browser won't trust the
+__mitmproxy__ CA out of the box (and rightly so), you will see an SSL cert
+warning every time you visit a new SSL domain through __mitmproxy__. When
+you're testing a single site through a browser, just accepting the bogus SSL
+cert manually is not too much trouble, but there are a many circumstances where
+you will want to configure your testing system or browser to trust the
+__mitmproxy__ CA as a signing root authority.
+
+
+CA and cert files
+-----------------
+
+The files created by mitmproxy in the .mitmproxy directory are as follows: 
 
 <table class="table">
     <tr>
@@ -24,15 +37,6 @@ for the mitmproxy Certificate Authority are created in the config directory
     </tr>
 </table>
     
-This CA is used for on-the-fly generation of dummy certificates for SSL
-interception. Since your browser won't trust the __mitmproxy__ CA out of the
-box (and rightly so), you will see an SSL cert warning every time you visit a
-new SSL domain through __mitmproxy__. When you're testing a single site through
-a browser, just accepting the bogus SSL cert manually is not too much trouble,
-but there are a many circumstances where you will want to configure your
-testing system or browser to trust the __mitmproxy__ CA as a signing root
-authority.
-
 
 Using a custom certificate
 --------------------------
