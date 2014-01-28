@@ -3,10 +3,13 @@
 
     mitmproxy/libmproxy/version.py
     mitmproxy/requirements.txt
+    mitmproxy/test/requirements.txt
     netlib/netlib/version.py
     netlib/requirements.txt
+    netlib/test/requirements.txt
     pathod/netlib/version.py
     pathod/requirements.txt
+    pathod/test/requirements.txt
 
 
 - Render the docs:
