@@ -74,7 +74,7 @@ setup(
         long_description = long_description,
         author = "Aldo Cortesi",
         author_email = "aldo@corte.si",
-        url = "http://cortesi.github.com/netlib",
+        url = "http://github.com/mitmproxy/netlib",
         packages = packages,
         package_data = package_data,
         classifiers = [
