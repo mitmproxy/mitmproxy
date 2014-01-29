@@ -595,7 +595,7 @@ class TestFlowMaster:
         req = tutils.treq()
         fm.handle_clientconnect(req.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        sc = proxy.ServerConnection(None, req.scheme, req.host, req.port, None)
+        sc = proxy.ServerConnection((req.host, req.port))
         sc.reply = controller.DummyReply()
         fm.handle_serverconnection(sc)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"

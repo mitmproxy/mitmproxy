@@ -30,7 +30,7 @@ class TestDumpMaster:
         resp = tutils.tresp(req)
         resp.content = content
         m.handle_clientconnect(cc)
-        sc = proxy.ServerConnection(m.o, req.scheme, req.host, req.port, None)
+        sc = proxy.ServerConnection((req.host, req.port))
         sc.reply = mock.MagicMock()
         m.handle_serverconnection(sc)
         m.handle_request(req)

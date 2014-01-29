@@ -835,7 +835,7 @@ class ClientConnect(StateObject):
     def _get_state(self):
         return dict(
             address = list(self.address),
-            requestcount = self.requestcount,
+            requestcount = -1, # FIXME self.requestcount,
             error = self.error,
         )
 
@@ -1599,6 +1599,7 @@ class FlowMaster(controller.Master):
         if r.is_live():
             app = self.apps.get(r)
             if app:
+                # FIXME: for the tcp proxy, use flow.client_conn.wfile
                 err = app.serve(r, r.wfile, **{"mitmproxy.master": self})
                 if err:
                     self.add_event("Error in wsgi app. %s"%err, "error")

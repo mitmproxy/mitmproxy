@@ -40,8 +40,8 @@ class ProxyConfig:
 
 
 class ClientConnection(tcp.BaseHandler):
-    def __init__(self, client_connection, address):
-        tcp.BaseHandler.__init__(self, client_connection, address)
+    def __init__(self, client_connection, address, server):
+        tcp.BaseHandler.__init__(self, client_connection, address, server)
 
         self.timestamp_start = utils.timestamp()
         self.timestamp_end = None
@@ -72,10 +72,14 @@ class ServerConnection(tcp.TCPClient):
         self.peername = self.connection.getpeername()
         self.timestamp_tcp_setup = utils.timestamp()
 
+    def send(self, message):
+        self.wfile.write(message)
+        self.wfile.flush()
+
     def establish_ssl(self, clientcerts, sni):
         clientcert = None
         if clientcerts:
-            path = os.path.join(clientcerts, self.host.encode("idna")) + ".pem"
+            path = os.path.join(clientcerts, self.address.host.encode("idna")) + ".pem"
             if os.path.exists(path):
                 clientcert = path
         try:
@@ -118,7 +122,7 @@ class RequestReplayThread(threading.Thread):
 class ConnectionHandler:
     def __init__(self, config, client_connection, client_address, server, channel, server_version):
         self.config = config
-        self.client_conn = ClientConnection(client_connection, client_address)
+        self.client_conn = ClientConnection(client_connection, client_address, server)
         self.server_conn = None
         self.channel, self.server_version = channel, server_version
 
@@ -144,6 +148,8 @@ class ConnectionHandler:
         self.log("clientconnect")
         self.channel.ask("clientconnect", self)
 
+        self.determine_conntype()
+
         try:
             # Can we already identify the target server and connect to it?
             server_address = None
@@ -159,8 +165,6 @@ class ConnectionHandler:
                         raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
                     self.log("transparent to %s:%s" % server_address)
 
-            self.determine_conntype()
-
             if server_address:
                 self.establish_server_connection(server_address)
                 self._handle_ssl()
@@ -171,11 +175,14 @@ class ConnectionHandler:
                 except protocol.ConnectionTypeChange:
                     continue
 
-            self.del_server_connection()
-        except ProxyError, e:
+        # FIXME: Do we want to persist errors?
+        except (ProxyError, tcp.NetLibError), e:
+            protocol.handle_error(self.conntype, self, e)
+        except Exception, e:
+            self.log(e.__class__)
             self.log(str(e))
-            # FIXME: We need to persist errors
 
+        self.del_server_connection()
         self.log("clientdisconnect")
         self.channel.tell("clientdisconnect", self)
 
@@ -279,8 +286,7 @@ class ConnectionHandler:
             sn = connection.get_servername()
             if sn and sn != self.sni:
                 self.sni = sn.decode("utf8").encode("idna")
-                self.establish_server_connection()  # reconnect to upstream server with SNI
-                self.establish_ssl(server=True)  # establish SSL with upstream
+                self.server_reconnect()  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 new_context.use_privatekey_file(self.config.certfile or self.config.cacert)

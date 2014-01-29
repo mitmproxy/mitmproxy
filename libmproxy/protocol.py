@@ -22,6 +22,10 @@ def handle_messages(conntype, connection_handler):
     _handle("messages", conntype, connection_handler)
 
 
+def handle_error(conntype, connection_handler, error):
+    _handle("error", conntype, connection_handler, error)
+
+
 class ConnectionTypeChange(Exception):
     pass
 
@@ -29,6 +33,17 @@ class ConnectionTypeChange(Exception):
 class ProtocolHandler(object):
     def __init__(self, c):
         self.c = c
+    def handle_messages(self):
+        """
+        This method gets called if the connection has been established.
+        """
+        raise NotImplementedError
+    def handle_error(self, error):
+        """
+        This method gets called should there be an uncaught exception during the connection.
+        This might happen outside of handle_messages, e.g. if the initial SSL handshake fails in transparent mode.
+        """
+        raise NotImplementedError
 
 
 """
@@ -131,9 +146,13 @@ class HTTPRequest(HTTPMessage):
         self.form_out = form_out or self.form_in
         assert isinstance(headers, ODictCaseless)
 
-    #FIXME: Compatibility Fix
+    #FIXME: Compatibility Fixes
     def is_live(self):
         return True
+    @property
+    def wfile(self):
+        import mock
+        return mock.Mock(side_effect=tcp.NetLibDisconnect)
 
     def _assemble_request_line(self, form=None):
         form = form or self.form_out
@@ -239,19 +258,19 @@ class HTTPHandler(ProtocolHandler):
             flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                                    body_size_limit=self.c.config.body_size_limit)
             self.c.log("request", [flow.request._assemble_request_line(flow.request.form_in)])
-            self.process_request(flow.request)
 
             request_reply = self.c.channel.ask("request" if LEGACY else "httprequest",
                                                flow.request if LEGACY else flow)
             if request_reply is None or request_reply == KILL:
                 return False
 
-            if isinstance(request_reply, HTTPResponse):
+            if isinstance(request_reply, HTTPResponse) or (LEGACY and isinstance(request_reply, libmproxy.flow.Response)):
                 flow.response = request_reply
             else:
+                self.process_request(flow.request)
                 flow.response = self.get_response_from_server(flow.request)
 
-            self.c.log("response", [flow.response._assemble_response_line()])
+            self.c.log("response", [flow.response._assemble_response_line() if not LEGACY else flow.response._assemble().splitlines()[0]])
             response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
                                                 flow.response if LEGACY else flow)
             if response_reply is None or response_reply == KILL:
@@ -269,25 +288,39 @@ class HTTPHandler(ProtocolHandler):
             if flow.request.form_in == "authority":
                 self.ssl_upgrade(flow.request)
             return True
-        except HttpAuthenticationError, e:
-            self.process_error(flow, code=407, message="Proxy Authentication Required", headers=e.auth_headers)
-        except (http.HttpError, ProxyError), e:
-            self.process_error(flow, code=e.code, message=e.msg)
-        except tcp.NetLibError, e:
-            self.process_error(flow, message=e.message or e.__class__)
+        except (HttpAuthenticationError, http.HttpError, ProxyError, tcp.NetLibError), e:
+            self.handle_error(e, flow)
         return False
 
-    def process_error(self, flow, code=None, message=None, headers=None):
-        try:
-            err = ("%s: %s" % (code, message)) if code else message
+    def handle_error(self, error, flow=None):
+        code, message, headers = None, None, None
+        if isinstance(error, HttpAuthenticationError):
+            code, message, headers = 407, "Proxy Authentication Required", error.auth_headers
+        elif isinstance(error, (http.HttpError, ProxyError)):
+            code, message = error.code, error.msg
+        elif isinstance(error, tcp.NetLibError):
+            code = 502
+            message = error.message or error.__class__
+
+        if code:
+            err = "%s: %s" % (code, message)
+        else:
+            err = message
+
+        self.c.log("error: %s" %err)
+
+        if flow:
             flow.error = libmproxy.flow.Error(False, err)
-            self.c.log("error: %s" % err)
             self.c.channel.ask("error" if LEGACY else "httperror",
                                flow.error if LEGACY else flow)
-            if code:
+        else:
+            pass # FIXME: Is there any use case for persisting errors that occur outside of flows?
+
+        if code:
+            try:
                 self.send_error(code, message, headers)
-        except:
-            pass
+            except:
+                pass
 
     def send_error(self, code, message, headers):
         response = http_status.RESPONSES.get(code, "Unknown")
@@ -364,6 +397,8 @@ class HTTPHandler(ProtocolHandler):
             if request.form_in == "authority":
                 pass
             elif request.form_in == "absolute":
+                if request.scheme != "http":
+                    raise http.HttpError(400, "Invalid Request")
                 if not self.c.config.forward_proxy:
                     request.form_out = "origin"
                     if ((not self.c.server_conn) or
