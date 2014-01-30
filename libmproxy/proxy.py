@@ -5,7 +5,6 @@ import utils, flow, version, platform, controller
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
-KILL = 0
 
 
 class ProxyError(Exception):
@@ -14,10 +13,6 @@ class ProxyError(Exception):
 
     def __str__(self):
         return "ProxyError(%s, %s)" % (self.code, self.msg)
-
-
-import protocol
-
 
 class Log:
     def __init__(self, msg):
@@ -39,13 +34,20 @@ class ProxyConfig:
         self.certstore = certutils.CertStore()
 
 
-class ClientConnection(tcp.BaseHandler):
+class ClientConnection(tcp.BaseHandler, flow.SimpleStateObject):
     def __init__(self, client_connection, address, server):
         tcp.BaseHandler.__init__(self, client_connection, address, server)
 
         self.timestamp_start = utils.timestamp()
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
+
+    _stateobject_attributes = dict(
+        timestamp_start=float,
+        timestamp_end=float,
+        timestamp_ssl_setup=float,
+        # FIXME: Add missing attributes
+    )
 
     def convert_to_ssl(self, *args, **kwargs):
         tcp.BaseHandler.convert_to_ssl(self, *args, **kwargs)
@@ -56,7 +58,7 @@ class ClientConnection(tcp.BaseHandler):
         self.timestamp_end = utils.timestamp()
 
 
-class ServerConnection(tcp.TCPClient):
+class ServerConnection(tcp.TCPClient, flow.SimpleStateObject):
     def __init__(self, address):
         tcp.TCPClient.__init__(self, address)
 
@@ -65,6 +67,15 @@ class ServerConnection(tcp.TCPClient):
         self.timestamp_end = None
         self.timestamp_tcp_setup = None
         self.timestamp_ssl_setup = None
+
+    _stateobject_attributes = dict(
+        peername=tuple,
+        timestamp_start=float,
+        timestamp_end=float,
+        timestamp_tcp_setup=float,
+        timestamp_ssl_setup=float,
+        # FIXME: Add missing attributes
+    )
 
     def connect(self):
         self.timestamp_start = utils.timestamp()
@@ -118,6 +129,8 @@ class RequestReplayThread(threading.Thread):
             self.channel.ask("error", err)
 """
 
+
+import protocol
 
 class ConnectionHandler:
     def __init__(self, config, client_connection, client_address, server, channel, server_version):
@@ -180,6 +193,8 @@ class ConnectionHandler:
             protocol.handle_error(self.conntype, self, e)
         except Exception, e:
             self.log(e.__class__)
+            import traceback
+            self.log(traceback.format_exc())
             self.log(str(e))
 
         self.del_server_connection()

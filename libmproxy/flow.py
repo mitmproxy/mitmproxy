@@ -143,459 +143,68 @@ class SetHeaders:
                     f.request.headers.add(header, value)
 
 
-class decoded(object):
-    """
-
-        A context manager that decodes a request, response or error, and then
-        re-encodes it with the same encoding after execution of the block.
-
-        Example:
-
-        with decoded(request):
-            request.content = request.content.replace("foo", "bar")
-    """
-    def __init__(self, o):
-        self.o = o
-        ce = o.headers.get_first("content-encoding")
-        if ce in encoding.ENCODINGS:
-            self.ce = ce
-        else:
-            self.ce = None
-
-    def __enter__(self):
-        if self.ce:
-            self.o.decode()
-
-    def __exit__(self, type, value, tb):
-        if self.ce:
-            self.o.encode(self.ce)
-
-
 class StateObject:
+    def _get_state(self):
+        raise NotImplementedError
+
+    def _load_state(self, state):
+        raise NotImplementedError
+
+    @classmethod
+    def _from_state(cls, state):
+        raise NotImplementedError
+
     def __eq__(self, other):
         try:
             return self._get_state() == other._get_state()
-        except AttributeError:
+        except AttributeError:  # we may compare with something that's not a StateObject
             return False
 
 
-class HTTPMsg(StateObject):
-    def get_decoded_content(self):
-        """
-            Returns the decoded content based on the current Content-Encoding header.
-            Doesn't change the message iteself or its headers.
-        """
-        ce = self.headers.get_first("content-encoding")
-        if not self.content or ce not in encoding.ENCODINGS:
-            return self.content
-        return encoding.decode(ce, self.content)
-
-    def decode(self):
-        """
-            Decodes content based on the current Content-Encoding header, then
-            removes the header. If there is no Content-Encoding header, no
-            action is taken.
-
-            Returns True if decoding succeeded, False otherwise.
-        """
-        ce = self.headers.get_first("content-encoding")
-        if not self.content or ce not in encoding.ENCODINGS:
-            return False
-        data = encoding.decode(
-            ce,
-            self.content
-        )
-        if data is None:
-            return False
-        self.content = data
-        del self.headers["content-encoding"]
-        return True
-
-    def encode(self, e):
-        """
-            Encodes content with the encoding e, where e is "gzip", "deflate"
-            or "identity".
-        """
-        # FIXME: Error if there's an existing encoding header?
-        self.content = encoding.encode(e, self.content)
-        self.headers["content-encoding"] = [e]
-
-    def size(self, **kwargs):
-        """
-            Size in bytes of a fully rendered message, including headers and
-            HTTP lead-in.
-        """
-        hl = len(self._assemble_head(**kwargs))
-        if self.content:
-            return hl + len(self.content)
-        else:
-            return hl
-
-    def get_content_type(self):
-        return self.headers.get_first("content-type")
-
-    def get_transmitted_size(self):
-        # FIXME: this is inprecise in case chunking is used
-        # (we should count the chunking headers)
-        if not self.content:
-            return 0
-        return len(self.content)
-
-
-class Request(HTTPMsg):
+class SimpleStateObject(StateObject):
     """
-        An HTTP request.
-
-        Exposes the following attributes:
-
-            client_conn: ClientConnect object, or None if this is a replay.
-
-            headers: ODictCaseless object
-
-            content: Content of the request, None, or CONTENT_MISSING if there
-            is content associated, but not present. CONTENT_MISSING evaluates
-            to False to make checking for the presence of content natural.
-
-            scheme: URL scheme (http/https)
-
-            host: Host portion of the URL
-
-            port: Destination port
-
-            path: Path portion of the URL
-
-            timestamp_start: Seconds since the epoch signifying request transmission started
-
-            method: HTTP method
-
-            timestamp_end: Seconds since the epoch signifying request transmission ended
-
-            tcp_setup_timestamp: Seconds since the epoch signifying remote TCP connection setup completion time
-            (or None, if request didn't results TCP setup)
-
-            ssl_setup_timestamp: Seconds since the epoch signifying remote SSL encryption setup completion time
-            (or None, if request didn't results SSL setup)
-
+    A StateObject with opionated conventions that tries to keep everything DRY.y
     """
-    def __init__(
-            self, client_conn, httpversion, host, port,
-            scheme, method, path, headers, content, timestamp_start=None,
-            timestamp_end=None, tcp_setup_timestamp=None,
-            ssl_setup_timestamp=None, ip=None):
-        assert isinstance(headers, ODictCaseless)
-        self.client_conn = client_conn
-        self.httpversion = httpversion
-        self.host, self.port, self.scheme = host, port, scheme
-        self.method, self.path, self.headers, self.content = method, path, headers, content
-        self.timestamp_start = timestamp_start or utils.timestamp()
-        self.timestamp_end = max(timestamp_end or utils.timestamp(), timestamp_start)
-        self.close = False
-        self.tcp_setup_timestamp = tcp_setup_timestamp
-        self.ssl_setup_timestamp = ssl_setup_timestamp
-        self.ip = ip
 
-        # Have this request's cookies been modified by sticky cookies or auth?
-        self.stickycookie = False
-        self.stickyauth = False
-
-        # Live attributes - not serialized
-        self.wfile, self.rfile = None, None
-
-    def set_live(self, rfile, wfile):
-        self.wfile, self.rfile = wfile, rfile
-
-    def is_live(self):
-        return bool(self.wfile)
-
-    def anticache(self):
-        """
-            Modifies this request to remove headers that might produce a cached
-            response. That is, we remove ETags and If-Modified-Since headers.
-        """
-        delheaders = [
-            "if-modified-since",
-            "if-none-match",
-        ]
-        for i in delheaders:
-            del self.headers[i]
-
-    def anticomp(self):
-        """
-            Modifies this request to remove headers that will compress the
-            resource's data.
-        """
-        self.headers["accept-encoding"] = ["identity"]
-
-    def constrain_encoding(self):
-        """
-            Limits the permissible Accept-Encoding values, based on what we can
-            decode appropriately.
-        """
-        if self.headers["accept-encoding"]:
-            self.headers["accept-encoding"] = [', '.join(
-                e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
-            )]
-
-    def _set_replay(self):
-        self.client_conn = None
-
-    def is_replay(self):
-        """
-            Is this request a replay?
-        """
-        if self.client_conn:
-            return False
-        else:
-            return True
-
-    def _load_state(self, state):
-        if state["client_conn"]:
-            if self.client_conn:
-                self.client_conn._load_state(state["client_conn"])
-            else:
-                self.client_conn = ClientConnect._from_state(state["client_conn"])
-        else:
-            self.client_conn = None
-        self.host = state["host"]
-        self.port = state["port"]
-        self.scheme = state["scheme"]
-        self.method = state["method"]
-        self.path = state["path"]
-        self.headers = ODictCaseless._from_state(state["headers"])
-        self.content = state["content"]
-        self.timestamp_start = state["timestamp_start"]
-        self.timestamp_end = state["timestamp_end"]
-        self.tcp_setup_timestamp = state["tcp_setup_timestamp"]
-        self.ssl_setup_timestamp = state["ssl_setup_timestamp"]
-        self.ip = state["ip"]
+    _stateobject_attributes = None
+    """
+    A dict where the keys represent the attributes to be serialized.
+    The values represent the attribute class or type.
+    If the attribute is a class, this class must be a subclass of StateObject.
+    """
 
     def _get_state(self):
-        return dict(
-            client_conn = self.client_conn._get_state() if self.client_conn else None,
-            httpversion = self.httpversion,
-            host = self.host,
-            port = self.port,
-            scheme = self.scheme,
-            method = self.method,
-            path = self.path,
-            headers = self.headers._get_state(),
-            content = self.content,
-            timestamp_start = self.timestamp_start,
-            timestamp_end = self.timestamp_end,
-            tcp_setup_timestamp = self.tcp_setup_timestamp,
-            ssl_setup_timestamp = self.ssl_setup_timestamp,
-            ip = self.ip
-        )
+        return {attr: (getattr(self, attr)._get_state()
+                       if (type(cls) == 'classobj')
+                       else getattr(self, attr))
+                for attr, cls in self._stateobject_attributes.iteritems()}
+
+    def _load_state(self, state):
+        for attr, cls in self._stateobject_attributes.iteritems():
+            self._load_state_attr(attr, cls, state)
+
+    def _load_state_attr(self, attribute, cls, state):
+        if state[attribute] is not None:
+            if type(cls) == 'classobj':
+                assert issubclass(cls, StateObject)
+                curr = getattr(self, attribute)
+                if curr:
+                    curr._load_state(state[attribute])
+                else:
+                    setattr(self, attribute, cls._from_state(state[attribute]))
+            else:
+                setattr(self, attribute, cls(state[attribute]))
+        else:
+            setattr(self, attribute, None)
 
     @classmethod
-    def _from_state(klass, state):
-        return klass(
-            ClientConnect._from_state(state["client_conn"]),
-            tuple(state["httpversion"]),
-            str(state["host"]),
-            state["port"],
-            str(state["scheme"]),
-            str(state["method"]),
-            str(state["path"]),
-            ODictCaseless._from_state(state["headers"]),
-            state["content"],
-            state["timestamp_start"],
-            state["timestamp_end"],
-            state["tcp_setup_timestamp"],
-            state["ssl_setup_timestamp"],
-            state["ip"]
-        )
-
-    def __hash__(self):
-        return id(self)
-
-    def copy(self):
-        c = copy.copy(self)
-        c.headers = self.headers.copy()
-        return c
-
-    def get_form_urlencoded(self):
-        """
-            Retrieves the URL-encoded form data, returning an ODict object.
-            Returns an empty ODict if there is no data or the content-type
-            indicates non-form data.
-        """
-        if self.content and self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
-            return ODict(utils.urldecode(self.content))
-        return ODict([])
-
-    def set_form_urlencoded(self, odict):
-        """
-            Sets the body to the URL-encoded form data, and adds the
-            appropriate content-type header. Note that this will destory the
-            existing body if there is one.
-        """
-        # FIXME: If there's an existing content-type header indicating a
-        # url-encoded form, leave it alone.
-        self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
-        self.content = utils.urlencode(odict.lst)
-
-    def get_path_components(self):
-        """
-            Returns the path components of the URL as a list of strings.
-
-            Components are unquoted.
-        """
-        _, _, path, _, _, _ = urlparse.urlparse(self.get_url())
-        return [urllib.unquote(i) for i in path.split("/") if i]
-
-    def set_path_components(self, lst):
-        """
-            Takes a list of strings, and sets the path component of the URL.
-
-            Components are quoted.
-        """
-        lst = [urllib.quote(i, safe="") for i in lst]
-        path = "/" + "/".join(lst)
-        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.get_url())
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
-
-    def get_query(self):
-        """
-            Gets the request query string. Returns an ODict object.
-        """
-        _, _, _, _, query, _ = urlparse.urlparse(self.get_url())
-        if query:
-            return ODict(utils.urldecode(query))
-        return ODict([])
-
-    def set_query(self, odict):
-        """
-            Takes an ODict object, and sets the request query string.
-        """
-        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url())
-        query = utils.urlencode(odict.lst)
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
-
-    def get_url(self, hostheader=False):
-        """
-            Returns a URL string, constructed from the Request's URL compnents.
-
-            If hostheader is True, we use the value specified in the request
-            Host header to construct the URL.
-        """
-        if hostheader:
-            host = self.headers.get_first("host") or self.host
-        else:
-            host = self.host
-        host = host.encode("idna")
-        return utils.unparse_url(self.scheme, host, self.port, self.path).encode('ascii')
-
-    def set_url(self, url):
-        """
-            Parses a URL specification, and updates the Request's information
-            accordingly.
-
-            Returns False if the URL was invalid, True if the request succeeded.
-        """
-        parts = http.parse_url(url)
-        if not parts:
-            return False
-        self.scheme, self.host, self.port, self.path = parts
-        return True
-
-    def get_cookies(self):
-        cookie_headers = self.headers.get("cookie")
-        if not cookie_headers:
-            return None
-
-        cookies = []
-        for header in cookie_headers:
-            pairs = [pair.partition("=") for pair in header.split(';')]
-            cookies.extend((pair[0],(pair[2],{})) for pair in pairs)
-        return dict(cookies)
-
-    def get_header_size(self):
-        FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
-        assembled_header = FMT % (
-                self.method,
-                self.path,
-                self.httpversion[0],
-                self.httpversion[1],
-                str(self.headers)
-            )
-        return len(assembled_header)
-
-    def _assemble_head(self, proxy=False):
-        FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
-        FMT_PROXY = '%s %s://%s:%s%s HTTP/%s.%s\r\n%s\r\n'
-
-        headers = self.headers.copy()
-        utils.del_all(
-            headers,
-            [
-                'proxy-connection',
-                'keep-alive',
-                'connection',
-                'transfer-encoding'
-            ]
-        )
-        if not 'host' in headers:
-            headers["host"] = [utils.hostport(self.scheme, self.host, self.port)]
-        content = self.content
-        if content:
-            headers["Content-Length"] = [str(len(content))]
-        else:
-            content = ""
-        if self.close:
-            headers["connection"] = ["close"]
-        if not proxy:
-            return FMT % (
-                self.method,
-                self.path,
-                self.httpversion[0],
-                self.httpversion[1],
-                str(headers)
-            )
-        else:
-            return FMT_PROXY % (
-                self.method,
-                self.scheme,
-                self.host,
-                self.port,
-                self.path,
-                self.httpversion[0],
-                self.httpversion[1],
-                str(headers)
-            )
-
-    def _assemble(self, _proxy = False):
-        """
-            Assembles the request for transmission to the server. We make some
-            modifications to make sure interception works properly.
-
-            Returns None if the request cannot be assembled.
-        """
-        if self.content == CONTENT_MISSING:
-            return None
-        head = self._assemble_head(_proxy)
-        if self.content:
-            return head + self.content
-        else:
-            return head
-
-    def replace(self, pattern, repl, *args, **kwargs):
-        """
-            Replaces a regular expression pattern with repl in both the headers
-            and the body of the request. Encoded content will be decoded before
-            replacement, and re-encoded afterwards.
-
-            Returns the number of replacements made.
-        """
-        with decoded(self):
-            self.content, c = utils.safe_subn(pattern, repl, self.content, *args, **kwargs)
-        self.path, pc = utils.safe_subn(pattern, repl, self.path, *args, **kwargs)
-        c += pc
-        c += self.headers.replace(pattern, repl, *args, **kwargs)
-        return c
+    def _from_state(cls, state):
+        f = cls()
+        f._load_state(state)
+        return f
 
 
-class Response(HTTPMsg):
+class Response(object):
     """
         An HTTP response.
 
@@ -1269,7 +878,7 @@ class State(object):
         """
             Add a response to the state. Returns the matching flow.
         """
-        f = self._flow_map.get(resp.request)
+        f = self._flow_map.get(resp.flow)
         if not f:
             return False
         f.response = resp
@@ -1596,7 +1205,7 @@ class FlowMaster(controller.Master):
         return f
 
     def handle_request(self, r):
-        if r.is_live():
+        if False and r.is_live(): # FIXME
             app = self.apps.get(r)
             if app:
                 # FIXME: for the tcp proxy, use flow.client_conn.wfile

@@ -7,44 +7,6 @@ from proxy import ProxyError, KILL
 
 LEGACY = True
 
-def _handle(msg, conntype, connection_handler, *args, **kwargs):
-    handler = None
-    if conntype == "http":
-        handler = HTTPHandler(connection_handler)
-    else:
-        raise NotImplementedError
-
-    f = getattr(handler, "handle_" + msg)
-    return f(*args, **kwargs)
-
-
-def handle_messages(conntype, connection_handler):
-    _handle("messages", conntype, connection_handler)
-
-
-def handle_error(conntype, connection_handler, error):
-    _handle("error", conntype, connection_handler, error)
-
-
-class ConnectionTypeChange(Exception):
-    pass
-
-
-class ProtocolHandler(object):
-    def __init__(self, c):
-        self.c = c
-    def handle_messages(self):
-        """
-        This method gets called if the connection has been established.
-        """
-        raise NotImplementedError
-    def handle_error(self, error):
-        """
-        This method gets called should there be an uncaught exception during the connection.
-        This might happen outside of handle_messages, e.g. if the initial SSL handshake fails in transparent mode.
-        """
-        raise NotImplementedError
-
 
 """
 Minimalistic cleanroom reimplemementation of a couple of flow.* classes. Most functionality is missing,
@@ -202,6 +164,7 @@ class HTTPRequest(HTTPMessage):
             if not r:
                 raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
             host, port, _ = r
+            path = None
         else:
             form_in = "absolute"
             r = http.parse_init_proxy(request_line)
