@@ -1,7 +1,7 @@
 import os, socket, time, threading
 from OpenSSL import SSL
-from netlib import tcp, http, certutils, http_auth
-import utils, flow, version, platform, controller
+from netlib import tcp, http, certutils, http_auth, stateobject
+import utils, version, platform, controller
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
@@ -34,7 +34,7 @@ class ProxyConfig:
         self.certstore = certutils.CertStore()
 
 
-class ClientConnection(tcp.BaseHandler, flow.SimpleStateObject):
+class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
     def __init__(self, client_connection, address, server):
         tcp.BaseHandler.__init__(self, client_connection, address, server)
 
@@ -46,7 +46,8 @@ class ClientConnection(tcp.BaseHandler, flow.SimpleStateObject):
         timestamp_start=float,
         timestamp_end=float,
         timestamp_ssl_setup=float,
-        # FIXME: Add missing attributes
+        address=tcp.Address,
+        clientcert=certutils.SSLCert
     )
 
     @classmethod
@@ -62,7 +63,7 @@ class ClientConnection(tcp.BaseHandler, flow.SimpleStateObject):
         self.timestamp_end = utils.timestamp()
 
 
-class ServerConnection(tcp.TCPClient, flow.SimpleStateObject):
+class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
     def __init__(self, address):
         tcp.TCPClient.__init__(self, address)
 
@@ -78,12 +79,14 @@ class ServerConnection(tcp.TCPClient, flow.SimpleStateObject):
         timestamp_end=float,
         timestamp_tcp_setup=float,
         timestamp_ssl_setup=float,
-        # FIXME: Add missing attributes
+        address=tcp.Address,
+        source_address=tcp.Address,
+        cert=certutils.SSLCert
     )
 
     @classmethod
     def _from_state(cls, state):
-        raise NotImplementedError # FIXME
+        raise NotImplementedError  # FIXME
 
     def connect(self):
         self.timestamp_start = utils.timestamp()
@@ -172,33 +175,34 @@ class ConnectionHandler:
         self.determine_conntype()
 
         try:
-            # Can we already identify the target server and connect to it?
-            server_address = None
-            if self.config.forward_proxy:
-                server_address = self.config.forward_proxy[1:]
-            else:
-                if self.config.reverse_proxy:
-                    server_address = self.config.reverse_proxy[1:]
-                elif self.config.transparent_proxy:
-                    server_address = self.config.transparent_proxy["resolver"].original_addr(
-                        self.client_conn.connection)
-                    if not server_address:
-                        raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
-                    self.log("transparent to %s:%s" % server_address)
+            try:
+                # Can we already identify the target server and connect to it?
+                server_address = None
+                if self.config.forward_proxy:
+                    server_address = self.config.forward_proxy[1:]
+                else:
+                    if self.config.reverse_proxy:
+                        server_address = self.config.reverse_proxy[1:]
+                    elif self.config.transparent_proxy:
+                        server_address = self.config.transparent_proxy["resolver"].original_addr(
+                            self.client_conn.connection)
+                        if not server_address:
+                            raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
+                        self.log("transparent to %s:%s" % server_address)
 
-            if server_address:
-                self.establish_server_connection(server_address)
-                self._handle_ssl()
+                if server_address:
+                    self.establish_server_connection(server_address)
+                    self._handle_ssl()
 
-            while not self.close:
-                try:
-                    protocol.handle_messages(self.conntype, self)
-                except protocol.ConnectionTypeChange:
-                    continue
+                while not self.close:
+                    try:
+                        protocol.handle_messages(self.conntype, self)
+                    except protocol.ConnectionTypeChange:
+                        continue
 
-        # FIXME: Do we want to persist errors?
-        except (ProxyError, tcp.NetLibError), e:
-            protocol.handle_error(self.conntype, self, e)
+            # FIXME: Do we want to persist errors?
+            except (ProxyError, tcp.NetLibError), e:
+                protocol.handle_error(self.conntype, self, e)
         except Exception, e:
             self.log(e.__class__)
             import traceback
@@ -250,7 +254,7 @@ class ConnectionHandler:
         A protocol handler must raise a ConnTypeChanged exception if it detects that this is happening
         """
         # TODO: Implement SSL pass-through handling and change conntype
-        if self.server_conn.address.host == "ycombinator.com":
+        if self.server_conn.address.host == "news.ycombinator.com":
             self.conntype = "tcp"
 
         if server:
@@ -265,8 +269,8 @@ class ConnectionHandler:
                                             handle_sni=self.handle_sni)
 
     def server_reconnect(self, no_ssl=False):
-        self.log("server reconnect")
         had_ssl, sni = self.server_conn.ssl_established, self.sni
+        self.log("server reconnect (ssl: %s, sni: %s)" % (had_ssl, sni))
         self.establish_server_connection(self.server_conn.address)
         if had_ssl and not no_ssl:
             self.sni = sni

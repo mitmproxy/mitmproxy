@@ -1,17 +1,11 @@
-import Cookie
+import Cookie, urllib, urlparse, time, copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-import urllib
-import urlparse
-import time
-import copy
-from ..flow import SimpleStateObject
-from netlib import http, tcp, http_status
-from netlib.odict import ODict, ODictCaseless
 import netlib.utils
-from .. import encoding, utils, version, filt, controller
-from ..proxy import ProxyError, ServerConnection, ClientConnection
+from netlib import http, tcp, http_status, stateobject, odict
+from netlib.odict import ODict, ODictCaseless
 from . import ProtocolHandler, ConnectionTypeChange, KILL
-import libmproxy.flow
+from .. import encoding, utils, version, filt, controller
+from ..proxy import ProxyError, ClientConnection, ServerConnection
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
@@ -57,7 +51,7 @@ class decoded(object):
         if self.ce:
             self.o.encode(self.ce)
 
-
+# FIXME: Move out of http
 class BackreferenceMixin(object):
     """
     If an attribute from the _backrefattr tuple is set,
@@ -73,12 +67,10 @@ class BackreferenceMixin(object):
     def __setattr__(self, key, value):
         super(BackreferenceMixin, self).__setattr__(key, value)
         if key in self._backrefattr and value is not None:
-            # check if there is already a different object set as backref
-            assert (getattr(value, self._backrefname, self) or self) is self
             setattr(value, self._backrefname, self)
 
 # FIXME: Move out of http
-class Error(SimpleStateObject):
+class Error(stateobject.SimpleStateObject):
     """
         An Error.
 
@@ -107,7 +99,7 @@ class Error(SimpleStateObject):
         return c
 
 # FIXME: Move out of http
-class Flow(SimpleStateObject, BackreferenceMixin):
+class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
     def __init__(self, conntype, client_conn, server_conn, error):
         self.conntype = conntype
         self.client_conn = client_conn
@@ -167,7 +159,7 @@ class Flow(SimpleStateObject, BackreferenceMixin):
             self._backup = None
 
 
-class HTTPMessage(SimpleStateObject):
+class HTTPMessage(stateobject.SimpleStateObject):
     def __init__(self):
         self.flow = None # Will usually set by backref mixin
 

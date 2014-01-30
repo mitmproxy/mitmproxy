@@ -12,6 +12,7 @@ class ConnectionTypeChange(Exception):
 class ProtocolHandler(object):
     def __init__(self, c):
         self.c = c
+        """@type : libmproxy.proxy.ConnectionHandler"""
 
     def handle_messages(self):
         """
@@ -27,13 +28,17 @@ class ProtocolHandler(object):
         """
         raise NotImplementedError
 
+from . import http, tcp
 
-from .http import HTTPHandler
+protocols = dict(
+    http = dict(handler=http.HTTPHandler, flow=http.HTTPFlow),
+    tcp = dict(handler=tcp.TCPHandler),
+)
 
 
 def _handler(conntype, connection_handler):
-    if conntype == "http":
-        return HTTPHandler(connection_handler)
+    if conntype in protocols:
+        return protocols[conntype]["handler"](connection_handler)
 
     raise NotImplementedError
 
