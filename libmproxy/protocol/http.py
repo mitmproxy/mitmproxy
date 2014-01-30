@@ -58,7 +58,6 @@ class decoded(object):
             self.o.encode(self.ce)
 
 
-
 class BackreferenceMixin(object):
     """
     If an attribute from the _backrefattr tuple is set,
@@ -78,7 +77,7 @@ class BackreferenceMixin(object):
             assert (getattr(value, self._backrefname, self) or self) is self
             setattr(value, self._backrefname, self)
 
-
+# FIXME: Move out of http
 class Error(SimpleStateObject):
     """
         An Error.
@@ -107,7 +106,7 @@ class Error(SimpleStateObject):
         c = copy.copy(self)
         return c
 
-
+# FIXME: Move out of http
 class Flow(SimpleStateObject, BackreferenceMixin):
     def __init__(self, conntype, client_conn, server_conn, error):
         self.conntype = conntype
@@ -166,6 +165,7 @@ class Flow(SimpleStateObject, BackreferenceMixin):
         if self._backup:
             self._load_state(self._backup)
             self._backup = None
+
 
 class HTTPMessage(SimpleStateObject):
     def __init__(self):
