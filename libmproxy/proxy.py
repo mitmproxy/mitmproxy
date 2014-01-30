@@ -36,7 +36,11 @@ class ProxyConfig:
 
 class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
     def __init__(self, client_connection, address, server):
-        tcp.BaseHandler.__init__(self, client_connection, address, server)
+        if client_connection:  # Eventually, this object is restored from state
+            tcp.BaseHandler.__init__(self, client_connection, address, server)
+        else:
+            self.address = None
+            self.clientcert = None
 
         self.timestamp_start = utils.timestamp()
         self.timestamp_end = None
@@ -52,7 +56,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        raise NotImplementedError # FIXME
+        f = cls(None, None, None)
+        f._load_state(state)
+        return f
 
     def convert_to_ssl(self, *args, **kwargs):
         tcp.BaseHandler.convert_to_ssl(self, *args, **kwargs)
@@ -86,7 +92,9 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        raise NotImplementedError  # FIXME
+        f = cls(None)
+        f._load_state(state)
+        return f
 
     def connect(self):
         self.timestamp_start = utils.timestamp()
@@ -163,7 +171,7 @@ class ConnectionHandler:
     def del_server_connection(self):
         if self.server_conn and self.server_conn.connection:
             self.server_conn.finish()
-            self.log("serverdisconnect", ["%s:%s" % self.server_conn.address])
+            self.log("serverdisconnect", ["%s:%s" % (self.server_conn.address.host, self.server_conn.address.port)])
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
         self.sni = None

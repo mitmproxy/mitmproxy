@@ -617,7 +617,7 @@ class HTTPResponse(HTTPMessage):
         timestamp_end: Timestamp indicating when request transmission ended
     """
     def __init__(self, httpversion, code, msg, headers, content, timestamp_start, timestamp_end):
-        assert isinstance(headers, ODictCaseless)
+        assert isinstance(headers, ODictCaseless) or headers is None
         HTTPMessage.__init__(self)
 
         self.httpversion = httpversion
@@ -643,7 +643,7 @@ class HTTPResponse(HTTPMessage):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(None, None, None, None, None, None, None, None)
+        f = cls(None, None, None, None, None, None, None)
         f._load_state(state)
         return f
 
@@ -948,6 +948,19 @@ class HTTPHandler(ProtocolHandler):
 
             if flow.request.form_in == "authority":
                 self.ssl_upgrade(flow.request)
+
+            flow.server_conn = self.c.server_conn
+
+            """
+            FIXME: Remove state test
+            d = flow._get_state()
+            print d
+            flow._load_state(d)
+            print flow._get_state()
+            copy = HTTPFlow._from_state(d)
+            print copy._get_state()
+            """
+
             return True
         except (HttpAuthenticationError, http.HttpError, ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
