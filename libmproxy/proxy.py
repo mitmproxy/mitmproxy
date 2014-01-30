@@ -49,6 +49,10 @@ class ClientConnection(tcp.BaseHandler, flow.SimpleStateObject):
         # FIXME: Add missing attributes
     )
 
+    @classmethod
+    def _from_state(cls, state):
+        raise NotImplementedError # FIXME
+
     def convert_to_ssl(self, *args, **kwargs):
         tcp.BaseHandler.convert_to_ssl(self, *args, **kwargs)
         self.timestamp_ssl_setup = utils.timestamp()
@@ -76,6 +80,10 @@ class ServerConnection(tcp.TCPClient, flow.SimpleStateObject):
         timestamp_ssl_setup=float,
         # FIXME: Add missing attributes
     )
+
+    @classmethod
+    def _from_state(cls, state):
+        raise NotImplementedError # FIXME
 
     def connect(self):
         self.timestamp_start = utils.timestamp()

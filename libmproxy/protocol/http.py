@@ -8,7 +8,7 @@ from ..flow import SimpleStateObject
 from netlib import http, tcp, http_status
 from netlib.odict import ODict, ODictCaseless
 import netlib.utils
-from .. import encoding, utils, version
+from .. import encoding, utils, version, filt, controller
 from ..proxy import ProxyError, ServerConnection, ClientConnection
 from . import ProtocolHandler, ConnectionTypeChange, KILL
 import libmproxy.flow
@@ -109,20 +109,21 @@ class Error(SimpleStateObject):
 
 
 class Flow(SimpleStateObject, BackreferenceMixin):
+    def __init__(self, conntype, client_conn, server_conn, error):
+        self.conntype = conntype
+        self.client_conn = client_conn
+        self.server_conn = server_conn
+        self.error = error
+
     _backrefattr = ("error",)
     _backrefname = "flow"
+
     _stateobject_attributes = dict(
         error=Error,
         client_conn=ClientConnection,
         server_conn=ServerConnection,
         conntype=str
     )
-
-    def __init__(self, conntype, client_conn, server_conn, error):
-        self.conntype = conntype
-        self.client_conn = client_conn
-        self.server_conn = server_conn
-        self.error = error
 
     def _get_state(self):
         d = super(Flow, self)._get_state()
@@ -141,6 +142,30 @@ class Flow(SimpleStateObject, BackreferenceMixin):
             f.error = self.error.copy()
         return f
 
+    def modified(self):
+        """
+            Has this Flow been modified?
+        """
+        if self._backup:
+            return self._backup != self._get_state()
+        else:
+            return False
+
+    def backup(self, force=False):
+        """
+            Save a backup of this Flow, which can be reverted to using a
+            call to .revert().
+        """
+        if not self._backup:
+            self._backup = self._get_state()
+
+    def revert(self):
+        """
+            Revert to the last backed up state.
+        """
+        if self._backup:
+            self._load_state(self._backup)
+            self._backup = None
 
 class HTTPMessage(SimpleStateObject):
     def __init__(self):
@@ -300,8 +325,6 @@ class HTTPRequest(HTTPMessage):
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
         self.form_out = form_out or form_in
-
-        ## (Attributes below don't get serialized)
 
         # Have this request's cookies been modified by sticky cookies or auth?
         self.stickycookie = False
@@ -613,8 +636,6 @@ class HTTPResponse(HTTPMessage):
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 
-        ## (Attributes below don't get serialized)
-
         # Is this request replayed?
         self.is_replay = False
 
@@ -770,16 +791,21 @@ class HTTPFlow(Flow):
 
         intercepting: Is this flow currently being intercepted?
     """
+    def __init__(self, client_conn, server_conn, error, request, response):
+        Flow.__init__(self, "http", client_conn, server_conn, error)
+        self.request = request
+        self.response = response
+
+        self.intercepting = False # FIXME: Should that rather be an attribute of Flow?
+        self._backup = None
+
     _backrefattr = Flow._backrefattr + ("request", "response")
+
     _stateobject_attributes = Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(
         request=HTTPRequest,
         response=HTTPResponse
     )
-
-    def __init__(self, client_conn, server_conn, error, request, response):
-        Flow.__init__(self, "http", client_conn, server_conn, error)
-        self.request, self.response = request, response
 
     @classmethod
     def _from_state(cls, state):
@@ -795,6 +821,66 @@ class HTTPFlow(Flow):
             f.response = self.request.copy()
         return f
 
+    def match(self, f):
+        """
+            Match this flow against a compiled filter expression. Returns True
+            if matched, False if not.
+
+            If f is a string, it will be compiled as a filter expression. If
+            the expression is invalid, ValueError is raised.
+        """
+        if isinstance(f, basestring):
+            f = filt.parse(f)
+            if not f:
+                raise ValueError("Invalid filter expression.")
+        if f:
+            return f(self)
+        return True
+
+    def kill(self, master):
+        """
+            Kill this request.
+        """
+        self.error = Error("Connection killed")
+        self.error.reply = controller.DummyReply()
+        if self.request and not self.request.reply.acked:
+            self.request.reply(KILL)
+        elif self.response and not self.response.reply.acked:
+            self.response.reply(KILL)
+        master.handle_error(self)
+        self.intercepting = False
+
+    def intercept(self):
+        """
+            Intercept this Flow. Processing will stop until accept_intercept is
+            called.
+        """
+        self.intercepting = True
+
+    def accept_intercept(self):
+        """
+            Continue with the flow - called after an intercept().
+        """
+        assert self.intercepting
+        if self.request:
+            if not self.request.reply.acked:
+                self.request.reply()
+            elif self.response and not self.response.reply.acked:
+                self.response.reply()
+            self.intercepting = False
+
+    def replace(self, pattern, repl, *args, **kwargs):
+        """
+            Replaces a regular expression pattern with repl in both request and response of the
+            flow. Encoded content will be decoded before replacement, and
+            re-encoded afterwards.
+
+            Returns the number of replacements made.
+        """
+        c = self.request.replace(pattern, repl, *args, **kwargs)
+        if self.response:
+            c += self.response.replace(pattern, repl, *args, **kwargs)
+        return c
 
 class HttpAuthenticationError(Exception):
     def __init__(self, auth_headers=None):
@@ -847,7 +933,7 @@ class HTTPHandler(ProtocolHandler):
             if request_reply is None or request_reply == KILL:
                 return False
 
-            if isinstance(request_reply, HTTPResponse) or (LEGACY and isinstance(request_reply, libmproxy.flow.Response)):
+            if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
             else:
                 self.process_request(flow.request)
