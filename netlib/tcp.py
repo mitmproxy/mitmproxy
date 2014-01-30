@@ -1,6 +1,7 @@
 import select, socket, threading, sys, time, traceback
 from OpenSSL import SSL
 import certutils
+from netlib.stateobject import StateObject
 
 SSLv2_METHOD = SSL.SSLv2_METHOD
 SSLv3_METHOD = SSL.SSLv3_METHOD
@@ -173,14 +174,13 @@ class Reader(_FileLike):
         return result
 
 
-class Address(tuple):
+class Address(StateObject):
     """
     This class wraps an IPv4/IPv6 tuple to provide named attributes and ipv6 information.
     """
-    def __new__(cls, address, use_ipv6=False):
-        a = super(Address, cls).__new__(cls, tuple(address))
-        a.family = socket.AF_INET6 if use_ipv6 else socket.AF_INET
-        return a
+    def __init__(self, address, use_ipv6=False):
+        self.address = address
+        self.family = socket.AF_INET6 if use_ipv6 else socket.AF_INET
 
     @classmethod
     def wrap(cls, t):
@@ -189,17 +189,34 @@ class Address(tuple):
         else:
             return cls(t)
 
+    def __call__(self):
+        return self.address
+
     @property
     def host(self):
-        return self[0]
+        return self.address[0]
 
     @property
     def port(self):
-        return self[1]
+        return self.address[1]
 
     @property
-    def is_ipv6(self):
+    def use_ipv6(self):
         return self.family == socket.AF_INET6
+
+    def _load_state(self, state):
+        self.address = state["address"]
+        self.family = socket.AF_INET6 if state["use_ipv6"] else socket.AF_INET
+
+    def _get_state(self):
+        return dict(
+            address=self.address,
+            use_ipv6=self.use_ipv6
+        )
+
+    @classmethod
+    def _from_state(cls, state):
+        return cls(**state)
 
 
 class SocketCloseMixin:
@@ -240,7 +257,7 @@ class TCPClient(SocketCloseMixin):
     wbufsize = -1
     def __init__(self, address, source_address=None):
         self.address = Address.wrap(address)
-        self.source_address = source_address
+        self.source_address = Address.wrap(source_address) if source_address else None
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.ssl_established = False
@@ -275,12 +292,12 @@ class TCPClient(SocketCloseMixin):
         try:
             connection = socket.socket(self.address.family, socket.SOCK_STREAM)
             if self.source_address:
-                connection.bind(self.source_address)
-            connection.connect(self.address)
+                connection.bind(self.source_address())
+            connection.connect(self.address())
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
         except (socket.error, IOError), err:
-            raise NetLibError('Error connecting to "%s": %s' % (self.address[0], err))
+            raise NetLibError('Error connecting to "%s": %s' % (self.address.host, err))
         self.connection = connection
 
     def settimeout(self, n):
@@ -376,7 +393,7 @@ class TCPServer:
         self.__shutdown_request = False
         self.socket = socket.socket(self.address.family, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.address)
+        self.socket.bind(self.address())
         self.address = Address.wrap(self.socket.getsockname())
         self.socket.listen(self.request_queue_size)
 
@@ -427,7 +444,7 @@ class TCPServer:
         if traceback:
             exc = traceback.format_exc()
             print >> fp, '-'*40
-            print >> fp, "Error in processing of request from %s:%s"%client_address
+            print >> fp, "Error in processing of request from %s:%s" % (client_address.host, client_address.port)
             print >> fp, exc
             print >> fp, '-'*40
 

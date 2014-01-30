@@ -1,4 +1,6 @@
 import re, copy
+from netlib.stateobject import StateObject
+
 
 def safe_subn(pattern, repl, target, *args, **kwargs):
     """
@@ -9,7 +11,7 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
 
 
-class ODict:
+class ODict(StateObject):
     """
         A dictionary-like object for managing ordered (key, value) data.
     """
@@ -97,6 +99,9 @@ class ODict:
 
     def _get_state(self):
         return [tuple(i) for i in self.lst]
+
+    def _load_state(self, state):
+        self.list = [list(i) for i in state]
 
     @classmethod
     def _from_state(klass, state):
