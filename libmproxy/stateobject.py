@@ -1,4 +1,4 @@
-class StateObject:
+class StateObject(object):
     def _get_state(self):
         raise NotImplementedError
 
@@ -56,7 +56,7 @@ class SimpleStateObject(StateObject):
         helper for _load_state.
         loads the given attribute from the state.
         """
-        if state[attr] is None:
+        if state.get(attr, None) is None:
             setattr(self, attr, None)
             return
 

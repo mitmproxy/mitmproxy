@@ -172,7 +172,7 @@ class RequestReplayThread(threading.Thread):
             )
             self.channel.ask("response", response)
         except (ProxyError, http.HttpError, tcp.NetLibError), v:
-            err = flow.Error(self.flow.request, str(v))
+            err = flow.Error(str(v))
             self.channel.ask("error", err)
 """
 
@@ -291,9 +291,10 @@ class ConnectionHandler:
         A protocol handler must raise a ConnTypeChanged exception if it detects that this is happening
         """
         # TODO: Implement SSL pass-through handling and change conntype
-        passthrough = ["echo.websocket.org",
-                       "174.129.224.73" # echo.websocket.org, transparent mode
-                        ]
+        passthrough = [
+            "echo.websocket.org",
+            "174.129.224.73" # echo.websocket.org, transparent mode
+        ]
         if self.server_conn.address.host in passthrough or self.sni in passthrough:
             self.conntype = "tcp"
             return

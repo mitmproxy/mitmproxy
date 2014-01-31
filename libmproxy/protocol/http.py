@@ -5,7 +5,9 @@ from netlib import http, tcp, http_status, odict
 from netlib.odict import ODict, ODictCaseless
 from . import ProtocolHandler, ConnectionTypeChange, KILL
 from .. import encoding, utils, version, filt, controller, stateobject
-from ..proxy import ProxyError, ClientConnection, ServerConnection
+from ..proxy import ProxyError
+from ..flow import Flow, Error
+
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
@@ -51,117 +53,11 @@ class decoded(object):
         if self.ce:
             self.o.encode(self.ce)
 
-# FIXME: Move out of http
-class BackreferenceMixin(object):
-    """
-    If an attribute from the _backrefattr tuple is set,
-    this mixin sets a reference back on the attribute object.
-    Example:
-        e = Error()
-        f = Flow()
-        f.error = e
-        assert f is e.flow
-    """
-    _backrefattr = tuple()
-
-    def __setattr__(self, key, value):
-        super(BackreferenceMixin, self).__setattr__(key, value)
-        if key in self._backrefattr and value is not None:
-            setattr(value, self._backrefname, self)
-
-# FIXME: Move out of http
-class Error(stateobject.SimpleStateObject):
-    """
-        An Error.
-
-        This is distinct from an HTTP error response (say, a code 500), which
-        is represented by a normal Response object. This class is responsible
-        for indicating errors that fall outside of normal HTTP communications,
-        like interrupted connections, timeouts, protocol errors.
-
-        Exposes the following attributes:
-
-            flow: Flow object
-            msg: Message describing the error
-            timestamp: Seconds since the epoch
-    """
-    def __init__(self, msg, timestamp=None):
-        self.msg = msg
-        self.timestamp = timestamp or utils.timestamp()
-
-    _stateobject_attributes = dict(
-        msg=str,
-        timestamp=float
-    )
-
-    def copy(self):
-        c = copy.copy(self)
-        return c
-
-# FIXME: Move out of http
-class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
-    def __init__(self, conntype, client_conn, server_conn, error):
-        self.conntype = conntype
-        self.client_conn = client_conn
-        self.server_conn = server_conn
-        self.error = error
-
-    _backrefattr = ("error",)
-    _backrefname = "flow"
-
-    _stateobject_attributes = dict(
-        error=Error,
-        client_conn=ClientConnection,
-        server_conn=ServerConnection,
-        conntype=str
-    )
-
-    def _get_state(self):
-        d = super(Flow, self)._get_state()
-        d.update(version=version.IVERSION)
-        return d
-
-    @classmethod
-    def _from_state(cls, state):
-        f = cls(None, None, None, None)
-        f._load_state(state)
-        return f
-
-    def copy(self):
-        f = copy.copy(self)
-        if self.error:
-            f.error = self.error.copy()
-        return f
-
-    def modified(self):
-        """
-            Has this Flow been modified?
-        """
-        if self._backup:
-            return self._backup != self._get_state()
-        else:
-            return False
-
-    def backup(self, force=False):
-        """
-            Save a backup of this Flow, which can be reverted to using a
-            call to .revert().
-        """
-        if not self._backup:
-            self._backup = self._get_state()
-
-    def revert(self):
-        """
-            Revert to the last backed up state.
-        """
-        if self._backup:
-            self._load_state(self._backup)
-            self._backup = None
-
 
 class HTTPMessage(stateobject.SimpleStateObject):
     def __init__(self):
         self.flow = None # Will usually set by backref mixin
+        """@type: HTTPFlow"""
 
     def get_decoded_content(self):
         """
@@ -397,7 +293,7 @@ class HTTPRequest(HTTPMessage):
         form = form or self.form_out
 
         if form == "asterisk" or \
-                        form == "origin":
+           form == "origin":
             request_line = '%s %s HTTP/%s.%s' % (self.method, self.path, self.httpversion[0], self.httpversion[1])
         elif form == "authority":
             request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
@@ -422,7 +318,9 @@ class HTTPRequest(HTTPMessage):
             ]
         )
         if not 'host' in headers:
-            headers["Host"] = [utils.hostport(self.scheme, self.host, self.port)]
+            headers["Host"] = [utils.hostport(self.scheme,
+                                              self.host or self.flow.server_conn.address.host,
+                                              self.port or self.flow.server_conn.address.port)]
 
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]
@@ -442,7 +340,7 @@ class HTTPRequest(HTTPMessage):
             Raises an Exception if the request cannot be assembled.
         """
         if self.content == CONTENT_MISSING:
-            raise Exception("CONTENT_MISSING") # FIXME correct exception class
+            raise RuntimeError("Cannot assemble flow with CONTENT_MISSING")
         head = self._assemble_head(form)
         if self.content:
             return head + self.content
@@ -480,7 +378,6 @@ class HTTPRequest(HTTPMessage):
             self.headers["accept-encoding"] = [', '.join(
                 e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
             )]
-
 
     def get_form_urlencoded(self):
         """
@@ -542,15 +439,19 @@ class HTTPRequest(HTTPMessage):
 
     def get_url(self, hostheader=False):
         """
-            Returns a URL string, constructed from the Request's URL compnents.
+            Returns a URL string, constructed from the Request's URL components.
 
             If hostheader is True, we use the value specified in the request
             Host header to construct the URL.
         """
+        host = None
         if hostheader:
-            host = self.headers.get_first("host") or self.host
-        else:
-            host = self.host
+            host = self.headers.get_first("host")
+        if not host:
+            if self.host:
+                host = self.host
+            else:
+                host = self.flow.server_conn.address.host
         host = host.encode("idna")
         return utils.unparse_url(self.scheme, host, self.port, self.path).encode('ascii')
 
@@ -678,7 +579,7 @@ class HTTPResponse(HTTPMessage):
         )
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]
-        elif 'Transfer-Encoding' in self.headers: # add content-length for chuncked transfer-encoding with no content
+        elif 'Transfer-Encoding' in self.headers:  # add content-length for chuncked transfer-encoding with no content
             headers["Content-Length"] = ["0"]
 
         return str(headers)
@@ -694,7 +595,7 @@ class HTTPResponse(HTTPMessage):
             Raises an Exception if the request cannot be assembled.
         """
         if self.content == CONTENT_MISSING:
-            raise Exception("CONTENT_MISSING") # FIXME correct exception class
+            raise RuntimeError("Cannot assemble flow with CONTENT_MISSING")
         head = self._assemble_head()
         if self.content:
             return head + self.content
@@ -759,8 +660,8 @@ class HTTPResponse(HTTPMessage):
         cookies = []
         for header in cookie_headers:
             pairs = [pair.partition("=") for pair in header.split(';')]
-            cookie_name = pairs[0][0] # the key of the first key/value pairs
-            cookie_value = pairs[0][2] # the value of the first key/value pairs
+            cookie_name = pairs[0][0]  # the key of the first key/value pairs
+            cookie_value = pairs[0][2]  # the value of the first key/value pairs
             cookie_parameters = {key.strip().lower(): value.strip() for key, sep, value in pairs[1:]}
             cookies.append((cookie_name, (cookie_value, cookie_parameters)))
         return dict(cookies)
@@ -783,12 +684,12 @@ class HTTPFlow(Flow):
 
         intercepting: Is this flow currently being intercepted?
     """
-    def __init__(self, client_conn, server_conn, error, request, response):
-        Flow.__init__(self, "http", client_conn, server_conn, error)
-        self.request = request
-        self.response = response
+    def __init__(self, client_conn, server_conn):
+        Flow.__init__(self, "http", client_conn, server_conn)
+        self.request = None
+        self.response = None
 
-        self.intercepting = False # FIXME: Should that rather be an attribute of Flow?
+        self.intercepting = False  # FIXME: Should that rather be an attribute of Flow?
         self._backup = None
 
     _backrefattr = Flow._backrefattr + ("request", "response")
@@ -801,7 +702,7 @@ class HTTPFlow(Flow):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(None, None, None, None, None)
+        f = cls(None, None)
         f._load_state(state)
         return f
 
@@ -839,7 +740,7 @@ class HTTPFlow(Flow):
             self.request.reply(KILL)
         elif self.response and not self.response.reply.acked:
             self.response.reply(KILL)
-        master.handle_error(self)
+        master.handle_error(self.error)
         self.intercepting = False
 
     def intercept(self):
@@ -932,7 +833,7 @@ class HTTPHandler(ProtocolHandler):
                 self.process_request(flow.request)
                 flow.response = self.get_response_from_server(flow.request)
 
-            self.c.log("response", [flow.response._assemble_response_line() if not LEGACY else flow.response._assemble().splitlines()[0]])
+            self.c.log("response", [flow.response._assemble_response_line()])
             response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
                                                 flow.response if LEGACY else flow)
             if response_reply is None or response_reply == KILL:
@@ -982,7 +883,7 @@ class HTTPHandler(ProtocolHandler):
         else:
             err = message
 
-        self.c.log("error: %s" %err)
+        self.c.log("error: %s" % err)
 
         if flow:
             flow.error = Error(err)

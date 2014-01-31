@@ -1,6 +1,7 @@
 import os, shutil, tempfile
 from contextlib import contextmanager
-from libmproxy import flow, utils, controller
+from libmproxy import flow, utils, controller, proxy
+from libmproxy.protocol import http
 if os.name != "nt":
     from libmproxy.console.flowview import FlowView
     from libmproxy.console import ConsoleState
@@ -16,40 +17,65 @@ def SkipWindows(fn):
     else:
         return fn
 
+
+def tclient_conn():
+    return proxy.ClientConnection._from_state(dict(
+        address=dict(address=("address", 22), use_ipv6=True),
+        clientcert=None
+    ))
+
+def tserver_conn():
+    return proxy.ServerConnection._from_state(dict(
+        address=dict(address=("address", 22), use_ipv6=True),
+        source_address=dict(address=("address", 22), use_ipv6=True),
+        cert=None
+    ))
+
+
 def treq(conn=None, content="content"):
     if not conn:
-        conn = flow.ClientConnect(("address", 22))
-    conn.reply = controller.DummyReply()
+        conn = tclient_conn()
+    server_conn = tserver_conn()
     headers = flow.ODictCaseless()
     headers["header"] = ["qvalue"]
-    r = flow.Request(conn, (1, 1), "host", 80, "http", "GET", "/path", headers,
-            content)
-    r.reply = controller.DummyReply()
-    return r
+
+    f = http.HTTPFlow(conn, server_conn)
+    f.request = http.HTTPRequest("origin", "GET", None, None, None, "/path", (1, 1), headers, content,
+                                 None, None, None)
+    f.request.reply = controller.DummyReply()
+    return f.request
 
 
-def tresp(req=None):
+def tresp(req=None, content="message"):
     if not req:
         req = treq()
+    f = req.flow
+
     headers = flow.ODictCaseless()
     headers["header_response"] = ["svalue"]
-    cert = certutils.SSLCert.from_der(file(test_data.path("data/dercert"),"rb").read())
-    resp = flow.Response(req, (1, 1), 200, "message", headers, "content_response", cert)
-    resp.reply = controller.DummyReply()
-    return resp
+    cert = certutils.SSLCert.from_der(file(test_data.path("data/dercert"), "rb").read())
+    f.server_conn = proxy.ServerConnection._from_state(dict(
+        address=dict(address=("address", 22), use_ipv6=True),
+        source_address=None,
+        cert=cert.to_pem()))
+    f.response = http.HTTPResponse((1, 1), 200, "OK", headers, content, None, None)
+    f.response.reply = controller.DummyReply()
+    return f.response
+
 
 def terr(req=None):
     if not req:
         req = treq()
-    err = flow.Error(req, "error")
-    err.reply = controller.DummyReply()
-    return err
+    f = req.flow
+    f.error = flow.Error("error")
+    f.error.reply = controller.DummyReply()
+    return f.error
 
 
-def tflow(r=None):
-    if r == None:
-        r = treq()
-    return flow.Flow(r)
+def tflow(req=None):
+    if not req:
+        req = treq()
+    return req.flow
 
 
 def tflow_full():
