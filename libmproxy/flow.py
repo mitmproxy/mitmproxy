@@ -236,7 +236,6 @@ class ServerPlaybackState:
             return l.pop(0)
 
 
-
 class StickyCookieState:
     def __init__(self, flt):
         """
@@ -306,7 +305,6 @@ class StickyAuthState:
 
 class State(object):
     def __init__(self):
-        self._flow_map = {}
         self._flow_list = []
         self.view = []
 
@@ -320,7 +318,7 @@ class State(object):
         return self._limit_txt
 
     def flow_count(self):
-        return len(self._flow_map)
+        return len(self._flow_list)
 
     def index(self, f):
         return self._flow_list.index(f)
@@ -338,8 +336,6 @@ class State(object):
         """
         f = req.flow
         self._flow_list.append(f)
-        self._flow_map[req] = f
-        assert len(self._flow_list) == len(self._flow_map)
         if f.match(self._limit):
             self.view.append(f)
         return f
@@ -348,10 +344,9 @@ class State(object):
         """
             Add a response to the state. Returns the matching flow.
         """
-        f = self._flow_map.get(resp.flow)
+        f = resp.flow
         if not f:
             return False
-        f.response = resp
         if f.match(self._limit) and not f in self.view:
             self.view.append(f)
         return f
@@ -361,18 +356,15 @@ class State(object):
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        f = self._flow_map.get(err.flow)
+        f = err.flow
         if not f:
             return None
-        f.error = err
         if f.match(self._limit) and not f in self.view:
             self.view.append(f)
         return f
 
     def load_flows(self, flows):
         self._flow_list.extend(flows)
-        for i in flows:
-            self._flow_map[i.request] = i
         self.recalculate_view()
 
     def set_limit(self, txt):
@@ -405,8 +397,6 @@ class State(object):
             self.view = self._flow_list[:]
 
     def delete_flow(self, f):
-        if f.request in self._flow_map:
-            del self._flow_map[f.request]
         self._flow_list.remove(f)
         if f in self.view:
             self.view.remove(f)

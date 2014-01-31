@@ -355,23 +355,19 @@ class TestState:
         f = c.add_request(req)
         assert f
         assert c.flow_count() == 1
-        assert c._flow_map.get(req)
         assert c.active_flow_count() == 1
 
         newreq = tutils.treq()
         assert c.add_request(newreq)
-        assert c._flow_map.get(newreq)
         assert c.active_flow_count() == 2
 
         resp = tutils.tresp(req)
         assert c.add_response(resp)
         assert c.flow_count() == 2
-        assert c._flow_map.get(resp.request)
         assert c.active_flow_count() == 1
 
         unseen_resp = tutils.tresp()
         assert not c.add_response(unseen_resp)
-        assert not c._flow_map.get(unseen_resp.request)
         assert c.active_flow_count() == 1
 
         resp = tutils.tresp(newreq)

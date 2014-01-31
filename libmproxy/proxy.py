@@ -291,8 +291,20 @@ class ConnectionHandler:
         A protocol handler must raise a ConnTypeChanged exception if it detects that this is happening
         """
         # TODO: Implement SSL pass-through handling and change conntype
-        if self.server_conn.address.host == "news.ycombinator.com":
+        passthrough = ["echo.websocket.org",
+                       "174.129.224.73" # echo.websocket.org, transparent mode
+                        ]
+        if self.server_conn.address.host in passthrough or self.sni in passthrough:
             self.conntype = "tcp"
+            return
+
+        if client or server:
+            subs = []
+            if client:
+                subs.append("with client")
+            if server:
+                subs.append("with server (sni: %s)" % self.sni)
+            self.log("Establish SSL", subs)
 
         if server:
             if self.server_conn.ssl_established:
@@ -307,7 +319,7 @@ class ConnectionHandler:
 
     def server_reconnect(self, no_ssl=False):
         had_ssl, sni = self.server_conn.ssl_established, self.sni
-        self.log("server reconnect (ssl: %s, sni: %s)" % (had_ssl, sni))
+        self.log("(server reconnect follows)")
         self.establish_server_connection(self.server_conn.address())
         if had_ssl and not no_ssl:
             self.sni = sni

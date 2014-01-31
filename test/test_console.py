@@ -16,7 +16,7 @@ class TestConsoleState:
         """
         c = console.ConsoleState()
         f = self._add_request(c)
-        assert f.request in c._flow_map
+        assert f in c._flow_list
         assert c.get_focus() == (f, 0)
 
     def test_focus(self):

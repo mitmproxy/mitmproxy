@@ -54,6 +54,6 @@ class TCPHandler(ProtocolHandler):
                         self.c.close = True
                     break
 
-                self.c.log("%s %s" % (direction, dst_str), ["\r\n" + data])
+                self.c.log("%s %s\r\n%s" % (direction, dst_str,data))
                 dst.wfile.write(data)
                 dst.wfile.flush()
