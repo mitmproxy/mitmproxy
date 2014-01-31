@@ -26,7 +26,7 @@ class ProtocolHandler(object):
         This method gets called should there be an uncaught exception during the connection.
         This might happen outside of handle_messages, e.g. if the initial SSL handshake fails in transparent mode.
         """
-        raise NotImplementedError
+        raise error
 
 from . import http, tcp
 

@@ -1,10 +1,10 @@
 import Cookie, urllib, urlparse, time, copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import netlib.utils
-from netlib import http, tcp, http_status, stateobject, odict
+from netlib import http, tcp, http_status, odict
 from netlib.odict import ODict, ODictCaseless
 from . import ProtocolHandler, ConnectionTypeChange, KILL
-from .. import encoding, utils, version, filt, controller
+from .. import encoding, utils, version, filt, controller, stateobject
 from ..proxy import ProxyError, ClientConnection, ServerConnection
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"

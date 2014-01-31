@@ -1,7 +1,7 @@
 import os, socket, time, threading
 from OpenSSL import SSL
-from netlib import tcp, http, certutils, http_auth, stateobject
-import utils, version, platform, controller
+from netlib import tcp, http, certutils, http_auth
+import utils, version, platform, controller, stateobject
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
@@ -36,7 +36,7 @@ class ProxyConfig:
 
 class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
     def __init__(self, client_connection, address, server):
-        if client_connection:  # Eventually, this object is restored from state
+        if client_connection:  # Eventually, this object is restored from state. We don't have a connection then.
             tcp.BaseHandler.__init__(self, client_connection, address, server)
         else:
             self.address = None
@@ -49,10 +49,21 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
     _stateobject_attributes = dict(
         timestamp_start=float,
         timestamp_end=float,
-        timestamp_ssl_setup=float,
-        address=tcp.Address,
-        clientcert=certutils.SSLCert
+        timestamp_ssl_setup=float
     )
+
+    def _get_state(self):
+        d = super(ClientConnection, self)._get_state()
+        d.update(
+            address={"address": self.address(), "use_ipv6": self.address.use_ipv6},
+            clientcert=self.cert.to_pem() if self.clientcert else None
+        )
+        return d
+
+    def _load_state(self, state):
+        super(ClientConnection, self)._load_state(state)
+        self.address = tcp.Address(**state["address"]) if state["address"] else None
+        self.clientcert = certutils.SSLCert.from_pem(state["clientcert"]) if state["clientcert"] else None
 
     @classmethod
     def _from_state(cls, state):
@@ -89,6 +100,23 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         source_address=tcp.Address,
         cert=certutils.SSLCert
     )
+
+    def _get_state(self):
+        d = super(ServerConnection, self)._get_state()
+        d.update(
+            address={"address": self.address(), "use_ipv6": self.address.use_ipv6},
+            source_address= {"address": self.source_address(),
+                             "use_ipv6": self.source_address.use_ipv6} if self.source_address else None,
+            cert=self.cert.to_pem() if self.cert else None
+        )
+        return d
+
+    def _load_state(self, state):
+        super(ServerConnection, self)._load_state(state)
+
+        self.address = tcp.Address(**state["address"]) if state["address"] else None
+        self.source_address = tcp.Address(**state["source_address"]) if state["source_address"] else None
+        self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     @classmethod
     def _from_state(cls, state):
