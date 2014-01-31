@@ -1,7 +1,6 @@
 import select, socket, threading, sys, time, traceback
 from OpenSSL import SSL
 import certutils
-from netlib.stateobject import StateObject
 
 SSLv2_METHOD = SSL.SSLv2_METHOD
 SSLv3_METHOD = SSL.SSLv3_METHOD
@@ -174,13 +173,13 @@ class Reader(_FileLike):
         return result
 
 
-class Address(StateObject):
+class Address(object):
     """
     This class wraps an IPv4/IPv6 tuple to provide named attributes and ipv6 information.
     """
     def __init__(self, address, use_ipv6=False):
         self.address = address
-        self.family = socket.AF_INET6 if use_ipv6 else socket.AF_INET
+        self.use_ipv6 = use_ipv6
 
     @classmethod
     def wrap(cls, t):
@@ -204,19 +203,9 @@ class Address(StateObject):
     def use_ipv6(self):
         return self.family == socket.AF_INET6
 
-    def _load_state(self, state):
-        self.address = state["address"]
-        self.family = socket.AF_INET6 if state["use_ipv6"] else socket.AF_INET
-
-    def _get_state(self):
-        return dict(
-            address=self.address,
-            use_ipv6=self.use_ipv6
-        )
-
-    @classmethod
-    def _from_state(cls, state):
-        return cls(**state)
+    @use_ipv6.setter
+    def use_ipv6(self, b):
+        self.family = socket.AF_INET6 if b else socket.AF_INET
 
 
 class SocketCloseMixin:

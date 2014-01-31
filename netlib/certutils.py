@@ -3,7 +3,6 @@ from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
-from netlib.stateobject import StateObject
 import tcp
 
 default_exp = 62208000 # =24 * 60 * 60 * 720
@@ -153,21 +152,12 @@ class _GeneralNames(univ.SequenceOf):
     sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
 
 
-class SSLCert(StateObject):
+class SSLCert:
     def __init__(self, cert):
         """
             Returns a (common name, [subject alternative names]) tuple.
         """
         self.x509 = cert
-
-    def _get_state(self):
-        return self.to_pem()
-
-    def _load_state(self, state):
-        self.x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, state)
-
-    def _from_state(cls, state):
-        return cls.from_pem(state)
 
     @classmethod
     def from_pem(klass, txt):
