@@ -234,6 +234,7 @@ class ConnectionHandler:
                     try:
                         protocol.handle_messages(self.conntype, self)
                     except protocol.ConnectionTypeChange:
+                        self.log("Connection Type Changed: %s" % self.conntype)
                         continue
 
             # FIXME: Do we want to persist errors?
@@ -279,7 +280,7 @@ class ConnectionHandler:
             self.server_conn.connect()
         except tcp.NetLibError, v:
             raise ProxyError(502, v)
-        self.log("serverconnect", ["%s:%s" % address])
+        self.log("serverconnect", ["%s:%s" % address[:2]])
         self.channel.tell("serverconnect", self)
 
     def establish_ssl(self, client=False, server=False):
@@ -307,7 +308,7 @@ class ConnectionHandler:
     def server_reconnect(self, no_ssl=False):
         had_ssl, sni = self.server_conn.ssl_established, self.sni
         self.log("server reconnect (ssl: %s, sni: %s)" % (had_ssl, sni))
-        self.establish_server_connection(self.server_conn.address)
+        self.establish_server_connection(self.server_conn.address())
         if had_ssl and not no_ssl:
             self.sni = sni
             self.establish_ssl(server=True)

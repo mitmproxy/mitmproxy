@@ -15,10 +15,12 @@ class TCPHandler(ProtocolHandler):
             for rfile in r:
                 if self.c.client_conn.rfile == rfile:
                     src, dst = self.c.client_conn, self.c.server_conn
-                    src_str, dst_str = "client", "server"
+                    direction = "-> tcp ->"
+                    dst_str = "%s:%s" % self.c.server_conn.address()[:2]
                 else:
                     dst, src = self.c.client_conn, self.c.server_conn
-                    dst_str, src_str = "client", "server"
+                    direction = "<- tcp <-"
+                    dst_str = "client"
 
                 data = StringIO()
                 while range(4096):
@@ -52,6 +54,6 @@ class TCPHandler(ProtocolHandler):
                         self.c.close = True
                     break
 
-                self.c.log("%s -> %s" % (src_str, dst_str), ["\r\n" + data])
+                self.c.log("%s %s" % (direction, dst_str), ["\r\n" + data])
                 dst.wfile.write(data)
                 dst.wfile.flush()

@@ -988,7 +988,7 @@ class HTTPHandler(ProtocolHandler):
             self.c.channel.ask("error" if LEGACY else "httperror",
                                flow.error if LEGACY else flow)
         else:
-            pass # FIXME: Is there any use case for persisting errors that occur outside of flows?
+            pass  # FIXME: Is there any use case for persisting errors that occur outside of flows?
 
         if code:
             try:
