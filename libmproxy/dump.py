@@ -223,8 +223,7 @@ class DumpMaster(flow.FlowMaster):
 
     def run(self):  # pragma: no cover
         if self.o.rfile and not self.o.keepserving:
-            for script in self.scripts:
-                self.unload_script(script)
+            self.unload_scripts()
             return
         try:
             return flow.FlowMaster.run(self)
