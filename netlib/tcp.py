@@ -207,8 +207,12 @@ class Address(object):
     def use_ipv6(self, b):
         self.family = socket.AF_INET6 if b else socket.AF_INET
 
+    def __eq__(self, other):
+        other = Address.wrap(other)
+        return (self.address, self.family) == (other.address, other.family)
 
-class SocketCloseMixin:
+
+class SocketCloseMixin(object):
     def finish(self):
         self.finished = True
         try:
@@ -250,6 +254,7 @@ class TCPClient(SocketCloseMixin):
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.ssl_established = False
+        self.sni = None
 
     def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
         """
@@ -267,6 +272,7 @@ class TCPClient(SocketCloseMixin):
         self.connection = SSL.Connection(context, self.connection)
         self.ssl_established = True
         if sni:
+            self.sni = sni
             self.connection.set_tlsext_host_name(sni)
         self.connection.set_connect_state()
         try:
