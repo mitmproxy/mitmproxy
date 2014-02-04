@@ -1,8 +1,7 @@
-import os, socket, time, threading
+import os, socket, time, threading, copy
 from OpenSSL import SSL
 from netlib import tcp, http, certutils, http_auth
 import utils, version, platform, controller, stateobject
-
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 
@@ -82,6 +81,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
         self.address = tcp.Address(**state["address"]) if state["address"] else None
         self.clientcert = certutils.SSLCert.from_pem(state["clientcert"]) if state["clientcert"] else None
 
+    def copy(self):
+        return copy.copy(self)
+
     @classmethod
     def _from_state(cls, state):
         f = cls(None, None, None)
@@ -115,7 +117,9 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         timestamp_ssl_setup=float,
         address=tcp.Address,
         source_address=tcp.Address,
-        cert=certutils.SSLCert
+        cert=certutils.SSLCert,
+        ssl_established=bool,
+        sni=str
     )
 
     def _get_state(self):
@@ -140,6 +144,9 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         f = cls(None)
         f._load_state(state)
         return f
+
+    def copy(self):
+        return copy.copy(self)
 
     def connect(self):
         self.timestamp_start = utils.timestamp()
@@ -167,8 +174,10 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         tcp.TCPClient.finish(self)
         self.timestamp_end = utils.timestamp()
 
+from . import protocol
+from .protocol.http import HTTPResponse
 
-"""
+
 class RequestReplayThread(threading.Thread):
     def __init__(self, config, flow, masterq):
         self.config, self.flow, self.channel = config, flow, controller.Channel(masterq)
@@ -177,24 +186,17 @@ class RequestReplayThread(threading.Thread):
     def run(self):
         try:
             r = self.flow.request
-            server = ServerConnection(self.config, r.scheme, r.host, r.port, r.host)
+            server = ServerConnection(self.flow.server_conn.address())
             server.connect()
-            server.send(r)
-            httpversion, code, msg, headers, content = http.read_response(
-                server.rfile, r.method, self.config.body_size_limit
-            )
-            response = flow.Response(
-                self.flow.request, httpversion, code, msg, headers, content, server.cert, 
-                server.rfile.first_byte_timestamp
-            )
-            self.channel.ask("response", response)
+            if self.flow.server_conn.ssl_established:
+                server.establish_ssl(self.config.clientcerts,
+                                     self.flow.server_conn.sni)
+            server.send(r._assemble())
+            self.flow.response = HTTPResponse.from_stream(server.rfile, r.method, body_size_limit=self.config.body_size_limit)
+            self.channel.ask("response", self.flow.response)
         except (ProxyError, http.HttpError, tcp.NetLibError), v:
-            err = flow.Error(str(v))
-            self.channel.ask("error", err)
-"""
-
-
-import protocol
+            self.flow.error = protocol.primitives.Error(str(v))
+            self.channel.ask("error", self.flow.error)
 
 class ConnectionHandler:
     def __init__(self, config, client_connection, client_address, server, channel, server_version):

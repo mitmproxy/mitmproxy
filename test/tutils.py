@@ -8,6 +8,7 @@ if os.name != "nt":
 from netlib import certutils
 from nose.plugins.skip import SkipTest
 from mock import Mock
+from time import time
 
 def _SkipWindows():
     raise SkipTest("Skipped on Windows.")
@@ -19,17 +20,20 @@ def SkipWindows(fn):
 
 
 def tclient_conn():
-    return proxy.ClientConnection._from_state(dict(
+    c = proxy.ClientConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         clientcert=None
     ))
+    c.reply = controller.DummyReply()
+    return c
 
 def tserver_conn():
-    return proxy.ServerConnection._from_state(dict(
+    c = proxy.ServerConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=dict(address=("address", 22), use_ipv6=True),
         cert=None
     ))
+    c.reply = controller.DummyReply()
 
 
 def treq(conn=None, content="content"):
@@ -58,7 +62,7 @@ def tresp(req=None, content="message"):
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=None,
         cert=cert.to_pem()))
-    f.response = http.HTTPResponse((1, 1), 200, "OK", headers, content, None, None)
+    f.response = http.HTTPResponse((1, 1), 200, "OK", headers, content, time(), time())
     f.response.reply = controller.DummyReply()
     return f.response
 

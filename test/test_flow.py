@@ -1,7 +1,8 @@
 import Queue, time, os.path
 from cStringIO import StringIO
 import email.utils
-from libmproxy import filt, flow, controller, utils, tnetstring, proxy
+from libmproxy import filt, protocol, controller, utils, tnetstring, proxy, flow
+from libmproxy.protocol.primitives import Error
 import tutils
 
 
@@ -171,7 +172,10 @@ class TestServerPlaybackState:
 class TestFlow:
     def test_copy(self):
         f = tutils.tflow_full()
+        a0 = f._get_state()
         f2 = f.copy()
+        a = f._get_state()
+        b = f2._get_state()
         assert f == f2
         assert not f is f2
         assert f.request == f2.request
@@ -204,7 +208,6 @@ class TestFlow:
     def test_backup(self):
         f = tutils.tflow()
         f.response = tutils.tresp()
-        f.request = f.response.request
         f.request.content = "foo"
         assert not f.modified()
         f.backup()
@@ -221,18 +224,18 @@ class TestFlow:
         f.revert()
 
     def test_getset_state(self):
-        f = tutils.tflow()
-        f.response = tutils.tresp(f.request)
+        f = tutils.tflow_full()
         state = f._get_state()
-        assert f._get_state() == flow.Flow._from_state(state)._get_state()
+        assert f._get_state() == protocol.http.HTTPFlow._from_state(state)._get_state()
 
         f.response = None
-        f.error = flow.Error("error")
+        f.error = Error("error")
         state = f._get_state()
-        assert f._get_state() == flow.Flow._from_state(state)._get_state()
+        assert f._get_state() == protocol.http.HTTPFlow._from_state(state)._get_state()
 
-        f2 = tutils.tflow()
-        f2.error = flow.Error("e2")
+        f2 = f.copy()
+        assert f == f2
+        f2.error = Error("e2")
         assert not f == f2
         f._load_state(f2._get_state())
         assert f._get_state() == f2._get_state()
@@ -248,7 +251,6 @@ class TestFlow:
         assert f.request.reply.acked
         f.intercept()
         f.response = tutils.tresp()
-        f.request = f.response.request
         f.request.reply()
         assert not f.response.reply.acked
         f.kill(fm)
@@ -278,7 +280,6 @@ class TestFlow:
         f.accept_intercept()
         assert f.request.reply.acked
         f.response = tutils.tresp()
-        f.request = f.response.request
         f.intercept()
         f.request.reply()
         assert not f.response.reply.acked
@@ -369,16 +370,16 @@ class TestState:
         c = flow.State()
         req = tutils.treq()
         f = c.add_request(req)
-        e = flow.Error("message")
+        e = Error("message")
         assert c.add_error(e)
 
-        e = flow.Error("message")
+        e = Error("message")
         assert not c.add_error(e)
 
         c = flow.State()
         req = tutils.treq()
         f = c.add_request(req)
-        e = flow.Error("message")
+        e = Error("message")
         c.set_limit("~e")
         assert not c.view
         assert not c.view
@@ -435,7 +436,7 @@ class TestState:
     def _add_error(self, state):
         req = tutils.treq()
         f = state.add_request(req)
-        f.error = flow.Error("msg")
+        f.error = Error("msg")
 
     def test_clear(self):
         c = flow.State()
@@ -572,7 +573,7 @@ class TestFlowMaster:
         fm = flow.FlowMaster(None, s)
         assert not fm.load_script(tutils.test_data.path("scripts/reqerr.py"))
         req = tutils.treq()
-        fm.handle_clientconnect(req.client_conn)
+        fm.handle_clientconnect(req.flow.client_conn)
         assert fm.handle_request(req)
 
     def test_script(self):
@@ -580,7 +581,7 @@ class TestFlowMaster:
         fm = flow.FlowMaster(None, s)
         assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
         req = tutils.treq()
-        fm.handle_clientconnect(req.client_conn)
+        fm.handle_clientconnect(req.flow.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
         sc = proxy.ServerConnection((req.host, req.port))
         sc.reply = controller.DummyReply()
@@ -594,7 +595,7 @@ class TestFlowMaster:
         #load second script
         assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
         assert len(fm.scripts) == 2
-        dc = flow.ClientDisconnect(req.client_conn)
+        dc = flow.ClientDisconnect(req.flow.client_conn)
         dc.reply = controller.DummyReply()
         fm.handle_clientdisconnect(dc)
         assert fm.scripts[0].ns["log"][-1] == "clientdisconnect"
@@ -606,7 +607,7 @@ class TestFlowMaster:
         assert len(fm.scripts) == 0
 
         assert not fm.load_script(tutils.test_data.path("scripts/all.py"))
-        err = flow.Error("msg")
+        err = Error("msg")
         err.reply = controller.DummyReply()
         fm.handle_error(err)
         assert fm.scripts[0].ns["log"][-1] == "error"
@@ -642,10 +643,9 @@ class TestFlowMaster:
 
         dc = flow.ClientDisconnect(req.flow.client_conn)
         dc.reply = controller.DummyReply()
-        req.client_conn.requestcount = 1
         fm.handle_clientdisconnect(dc)
 
-        err = flow.Error("msg")
+        err = Error("msg")
         err.reply = controller.DummyReply()
         fm.handle_error(err)
 
@@ -666,7 +666,7 @@ class TestFlowMaster:
         fm.tick(q)
         assert fm.state.flow_count()
 
-        err = flow.Error("error")
+        err = Error("error")
         err.reply = controller.DummyReply()
         fm.handle_error(err)
 
@@ -885,28 +885,6 @@ class TestRequest:
         assert not "if-modified-since" in r.headers
         assert not "if-none-match" in r.headers
 
-    def test_getset_state(self):
-        h = flow.ODictCaseless()
-        h["test"] = ["test"]
-        r = tutils.treq()
-        r.headers = h
-        state = r._get_state()
-        assert flow.Request._from_state(state) == r
-
-        r.client_conn = None
-        state = r._get_state()
-        assert flow.Request._from_state(state) == r
-
-        r2 = tutils.treq()
-        r2.headers = h
-        assert not r == r2
-        r._load_state(r2._get_state())
-        assert r == r2
-
-        r2.client_conn = None
-        r._load_state(r2._get_state())
-        assert not r.client_conn
-
     def test_replace(self):
         r = tutils.treq()
         r.path = "path/foo"
@@ -1072,21 +1050,6 @@ class TestResponse:
         c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
         assert "00:21:38" in r._refresh_cookie(c, 60)
 
-    def test_getset_state(self):
-        h = flow.ODictCaseless()
-        h["test"] = ["test"]
-        c = flow.ClientConnect(("addr", 2222))
-        req = flow.Request(c, (1, 1), "host", 22, "https", "GET", "/", h, "content")
-        resp = flow.Response(req, (1, 1), 200, "msg", h.copy(), "content", None)
-
-        state = resp._get_state()
-        assert flow.Response._from_state(req, state) == resp
-
-        resp2 = flow.Response(req, (1, 1), 220, "foo", h.copy(), "test", None)
-        assert not resp == resp2
-        resp._load_state(resp2._get_state())
-        assert resp == resp2
-
     def test_replace(self):
         r = tutils.tresp()
         r.headers["Foo"] = ["fOo"]
@@ -1184,18 +1147,18 @@ class TestResponse:
         h["Content-Type"] = ["text/plain"]
         resp = tutils.tresp()
         resp.headers = h
-        assert resp.get_content_type()=="text/plain"
+        assert resp.headers.get_first("content-type")=="text/plain"
 
 
 class TestError:
     def test_getset_state(self):
-        e = flow.Error("Error")
+        e = Error("Error")
         state = e._get_state()
-        assert flow.Error._from_state(state) == e
+        assert Error._from_state(state) == e
 
         assert e.copy()
 
-        e2 = flow.Error("bar")
+        e2 = Error("bar")
         assert not e == e2
         e._load_state(e2._get_state())
         assert e == e2
@@ -1205,17 +1168,19 @@ class TestError:
         assert e3 == e
 
 
-class TestClientConnect:
+class TestClientConnection:
     def test_state(self):
-        c = flow.ClientConnect(("a", 22))
-        assert flow.ClientConnect._from_state(c._get_state()) == c
 
-        c2 = flow.ClientConnect(("a", 25))
+        c = tutils.tclient_conn()
+        assert proxy.ClientConnection._from_state(c._get_state()) == c
+
+        c2 = tutils.tclient_conn()
+        c2.address.address = (c2.address.host, 4242)
         assert not c == c2
 
-        c2.requestcount = 99
+        c2.timestamp_start = 42
         c._load_state(c2._get_state())
-        assert c.requestcount == 99
+        assert c.timestamp_start == 42
 
         c3 = c.copy()
         assert c3 == c

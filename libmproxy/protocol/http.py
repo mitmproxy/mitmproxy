@@ -6,7 +6,7 @@ from netlib.odict import ODict, ODictCaseless
 from . import ProtocolHandler, ConnectionTypeChange, KILL
 from .. import encoding, utils, version, filt, controller, stateobject
 from ..proxy import ProxyError, AddressPriority
-from ..flow import Flow, Error
+from .primitives import Flow, Error
 
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
@@ -340,7 +340,7 @@ class HTTPRequest(HTTPMessage):
             Raises an Exception if the request cannot be assembled.
         """
         if self.content == CONTENT_MISSING:
-            raise RuntimeError("Cannot assemble flow with CONTENT_MISSING")
+            raise ProxyError(502, "Cannot assemble flow with CONTENT_MISSING")
         head = self._assemble_head(form)
         if self.content:
             return head + self.content
@@ -444,6 +444,8 @@ class HTTPRequest(HTTPMessage):
             If hostheader is True, we use the value specified in the request
             Host header to construct the URL.
         """
+        raise NotImplementedError
+        # FIXME: Take server_conn into account.
         host = None
         if hostheader:
             host = self.headers.get_first("host")
@@ -462,6 +464,8 @@ class HTTPRequest(HTTPMessage):
 
             Returns False if the URL was invalid, True if the request succeeded.
         """
+        raise NotImplementedError
+        # FIXME: Needs to update server_conn as well.
         parts = http.parse_url(url)
         if not parts:
             return False
@@ -595,7 +599,7 @@ class HTTPResponse(HTTPMessage):
             Raises an Exception if the request cannot be assembled.
         """
         if self.content == CONTENT_MISSING:
-            raise RuntimeError("Cannot assemble flow with CONTENT_MISSING")
+            raise ProxyError(502, "Cannot assemble flow with CONTENT_MISSING")
         head = self._assemble_head()
         if self.content:
             return head + self.content
@@ -711,7 +715,7 @@ class HTTPFlow(Flow):
         if self.request:
             f.request = self.request.copy()
         if self.response:
-            f.response = self.request.copy()
+            f.response = self.response.copy()
         return f
 
     def match(self, f):
@@ -795,8 +799,7 @@ class HTTPHandler(ProtocolHandler):
 
         for i in range(2):
             try:
-                self.c.server_conn.wfile.write(request_raw)
-                self.c.server_conn.wfile.flush()
+                self.c.server_conn.send(request_raw)
                 return HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
                                                 body_size_limit=self.c.config.body_size_limit)
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
@@ -821,6 +824,7 @@ class HTTPHandler(ProtocolHandler):
             flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                                    body_size_limit=self.c.config.body_size_limit)
             self.c.log("request", [flow.request._assemble_first_line(flow.request.form_in)])
+            self.process_request(flow.request)
 
             request_reply = self.c.channel.ask("request" if LEGACY else "httprequest",
                                                flow.request if LEGACY else flow)
@@ -830,7 +834,6 @@ class HTTPHandler(ProtocolHandler):
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
             else:
-                self.process_request(flow.request)
                 self.c.establish_server_connection()
                 flow.response = self.get_response_from_server(flow.request)
 

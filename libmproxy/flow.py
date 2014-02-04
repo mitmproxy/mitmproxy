@@ -5,136 +5,19 @@
 import hashlib, Cookie, cookielib, copy, re, urlparse, threading
 import time, urllib
 import types
-import tnetstring, filt, script, utils, encoding, proxy
+import tnetstring, filt, script, utils, encoding
 from email.utils import parsedate_tz, formatdate, mktime_tz
 from netlib import odict, http, certutils, wsgi
 from .proxy import ClientConnection, ServerConnection
 import controller, version, protocol, stateobject
 import app
-
-
-HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
-CONTENT_MISSING = 0
+from .protocol import KILL
+from .protocol.http import HTTPResponse, CONTENT_MISSING
+from .proxy import RequestReplayThread
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless
 
-
-class BackreferenceMixin(object):
-    """
-    If an attribute from the _backrefattr tuple is set,
-    this mixin sets a reference back on the attribute object.
-    Example:
-        e = Error()
-        f = Flow()
-        f.error = e
-        assert f is e.flow
-    """
-    _backrefattr = tuple()
-
-    def __setattr__(self, key, value):
-        super(BackreferenceMixin, self).__setattr__(key, value)
-        if key in self._backrefattr and value is not None:
-            setattr(value, self._backrefname, self)
-
-
-class Error(stateobject.SimpleStateObject):
-    """
-        An Error.
-
-        This is distinct from an HTTP error response (say, a code 500), which
-        is represented by a normal Response object. This class is responsible
-        for indicating errors that fall outside of normal HTTP communications,
-        like interrupted connections, timeouts, protocol errors.
-
-        Exposes the following attributes:
-
-            flow: Flow object
-            msg: Message describing the error
-            timestamp: Seconds since the epoch
-    """
-    def __init__(self, msg, timestamp=None):
-        """
-        @type msg: str
-        @type timestamp: float
-        """
-        self.msg = msg
-        self.timestamp = timestamp or utils.timestamp()
-
-    _stateobject_attributes = dict(
-        msg=str,
-        timestamp=float
-    )
-
-    @classmethod
-    def _from_state(cls, state):
-        f = cls(None)  # the default implementation assumes an empty constructor. Override accordingly.
-        f._load_state(state)
-        return f
-
-    def copy(self):
-        c = copy.copy(self)
-        return c
-
-
-class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
-    def __init__(self, conntype, client_conn, server_conn):
-        self.conntype = conntype
-        self.client_conn = client_conn
-        self.server_conn = server_conn
-        self.error = None
-
-    _backrefattr = ("error",)
-    _backrefname = "flow"
-
-    _stateobject_attributes = dict(
-        error=Error,
-        client_conn=ClientConnection,
-        server_conn=ServerConnection,
-        conntype=str
-    )
-
-    def _get_state(self):
-        d = super(Flow, self)._get_state()
-        d.update(version=version.IVERSION)
-        return d
-
-    @classmethod
-    def _from_state(cls, state):
-        f = cls(None, None, None)
-        f._load_state(state)
-        return f
-
-    def copy(self):
-        f = copy.copy(self)
-        if self.error:
-            f.error = self.error.copy()
-        return f
-
-    def modified(self):
-        """
-            Has this Flow been modified?
-        """
-        if self._backup:
-            return self._backup != self._get_state()
-        else:
-            return False
-
-    def backup(self, force=False):
-        """
-            Save a backup of this Flow, which can be reverted to using a
-            call to .revert().
-        """
-        if not self._backup:
-            self._backup = self._get_state()
-
-    def revert(self):
-        """
-            Revert to the last backed up state.
-        """
-        if self._backup:
-            self._load_state(self._backup)
-            self._backup = None
 
 
 class AppRegistry:
@@ -660,10 +543,8 @@ class FlowMaster(controller.Master):
             rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
-            # FIXME
-            response = Response._from_state(flow.request, rflow.response._get_state())
-            response._set_replay()
-            flow.response = response
+            response = HTTPResponse._from_state(rflow.response._get_state())
+            response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
             flow.request.reply(response)
@@ -742,13 +623,13 @@ class FlowMaster(controller.Master):
         if f.request.content == CONTENT_MISSING:
             return "Can't replay request with missing content..."
         if f.request:
-            f.request._set_replay()
+            f.request.is_replay = True
             if f.request.content:
                 f.request.headers["Content-Length"] = [str(len(f.request.content))]
             f.response = None
             f.error = None
             self.process_new_request(f)
-            rt = proxy.RequestReplayThread(
+            rt = RequestReplayThread(
                     self.server.config,
                     f,
                     self.masterq,
@@ -791,7 +672,7 @@ class FlowMaster(controller.Master):
                 err = app.serve(r, r.wfile, **{"mitmproxy.master": self})
                 if err:
                     self.add_event("Error in wsgi app. %s"%err, "error")
-                r.reply(proxy.KILL)
+                r.reply(KILL)
                 return
         f = self.state.add_request(r)
         self.replacehooks.run(f)

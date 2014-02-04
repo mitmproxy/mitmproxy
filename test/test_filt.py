@@ -1,6 +1,7 @@
 import cStringIO
 from libmproxy import filt, flow
 from libmproxy.protocol import http
+from libmproxy.protocol.primitives import Error
 import tutils
 
 class TestParsing:
@@ -103,7 +104,7 @@ class TestMatching:
 
     def err(self):
         f = self.req()
-        f.error = flow.Error("msg")
+        f.error = Error("msg")
         return f
 
     def q(self, q, o):
