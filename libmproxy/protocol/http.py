@@ -5,7 +5,7 @@ from netlib import http, tcp, http_status, odict
 from netlib.odict import ODict, ODictCaseless
 from . import ProtocolHandler, ConnectionTypeChange, KILL
 from .. import encoding, utils, version, filt, controller, stateobject
-from ..proxy import ProxyError
+from ..proxy import ProxyError, AddressPriority
 from ..flow import Flow, Error
 
 
@@ -816,7 +816,7 @@ class HTTPHandler(ProtocolHandler):
                     raise v
 
     def handle_flow(self):
-        flow = HTTPFlow(self.c.client_conn, self.c.server_conn, None, None, None)
+        flow = HTTPFlow(self.c.client_conn, self.c.server_conn)
         try:
             flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                                    body_size_limit=self.c.config.body_size_limit)
@@ -831,9 +831,10 @@ class HTTPHandler(ProtocolHandler):
                 flow.response = request_reply
             else:
                 self.process_request(flow.request)
+                self.c.establish_server_connection()
                 flow.response = self.get_response_from_server(flow.request)
 
-            self.c.log("response", [flow.response._assemble_response_line()])
+            self.c.log("response", [flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
                                                 flow.response if LEGACY else flow)
             if response_reply is None or response_reply == KILL:
@@ -852,16 +853,6 @@ class HTTPHandler(ProtocolHandler):
                 self.ssl_upgrade(flow.request)
 
             flow.server_conn = self.c.server_conn
-
-            """
-            FIXME: Remove state test
-            d = flow._get_state()
-            print d
-            flow._load_state(d)
-            print flow._get_state()
-            copy = HTTPFlow._from_state(d)
-            print copy._get_state()
-            """
 
             return True
         except (HttpAuthenticationError, http.HttpError, ProxyError, tcp.NetLibError), e:
@@ -887,8 +878,10 @@ class HTTPHandler(ProtocolHandler):
 
         if flow:
             flow.error = Error(err)
-            self.c.channel.ask("error" if LEGACY else "httperror",
-                               flow.error if LEGACY else flow)
+            if not (LEGACY and not flow.request) and not (LEGACY and flow.request and flow.response):
+                # no flows without request or with both request and response in legacy mode
+                self.c.channel.ask("error" if LEGACY else "httperror",
+                                   flow.error if LEGACY else flow)
         else:
             pass  # FIXME: Is there any use case for persisting errors that occur outside of flows?
 
@@ -923,6 +916,7 @@ class HTTPHandler(ProtocolHandler):
         This isn't particular beautiful code, but it isolates this rare edge-case from the
         protocol-agnostic ConnectionHandler
         """
+        self.c.log("Received CONNECT request. Upgrading to SSL...")
         self.c.mode = "transparent"
         self.c.determine_conntype()
         self.c.establish_ssl(server=True, client=True)
@@ -933,7 +927,7 @@ class HTTPHandler(ProtocolHandler):
 
             def reconnect_http_proxy():
                 self.c.log("Hooked reconnect function")
-                self.c.log("Hook: Run original redirect")
+                self.c.log("Hook: Run original reconnect")
                 original_reconnect_func(no_ssl=True)
                 self.c.log("Hook: Write CONNECT request to upstream proxy", [upstream_request._assemble_first_line()])
                 self.c.server_conn.wfile.write(upstream_request._assemble())
@@ -948,6 +942,7 @@ class HTTPHandler(ProtocolHandler):
 
             self.c.server_reconnect = reconnect_http_proxy
 
+        self.c.log("Upgrade to SSL completed.")
         raise ConnectionTypeChange
 
     def process_request(self, request):
@@ -958,9 +953,10 @@ class HTTPHandler(ProtocolHandler):
 
         # If we have a CONNECT request, we might need to intercept
         if request.form_in == "authority":
-            directly_addressed_at_mitmproxy = (self.c.mode == "regular") and not self.c.config.forward_proxy
+            directly_addressed_at_mitmproxy = (self.c.mode == "regular" and not self.c.config.forward_proxy)
             if directly_addressed_at_mitmproxy:
-                self.c.establish_server_connection((request.host, request.port))
+                self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
+                self.c.establish_server_connection()
                 self.c.client_conn.wfile.write(
                     'HTTP/1.1 200 Connection established\r\n' +
                     ('Proxy-agent: %s\r\n' % self.c.server_version) +
@@ -977,9 +973,7 @@ class HTTPHandler(ProtocolHandler):
                     raise http.HttpError(400, "Invalid Request")
                 if not self.c.config.forward_proxy:
                     request.form_out = "origin"
-                    if ((not self.c.server_conn) or
-                            (self.c.server_conn.address != (request.host, request.port))):
-                        self.c.establish_server_connection((request.host, request.port))
+                    self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
             else:
                 raise http.HttpError(400, "Invalid Request")
 
