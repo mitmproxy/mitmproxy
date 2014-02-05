@@ -27,7 +27,7 @@ class TestDumpMaster:
         cc = req.flow.client_conn
         cc.reply = mock.MagicMock()
         m.handle_clientconnect(cc)
-        sc = proxy.ServerConnection((req.host, req.port), None)
+        sc = proxy.ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = mock.MagicMock()
         m.handle_serverconnection(sc)
         m.handle_request(req)

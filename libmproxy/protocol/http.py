@@ -735,7 +735,7 @@ class HTTPFlow(Flow):
         """@type: HTTPRequest"""
         self.response = None
         """@type: HTTPResponse"""
-        self.change_server = None  # Used by flow.request.set_url to change the server address
+        self.change_server = change_server  # Used by flow.request.set_url to change the server address
 
         self.intercepting = False  # FIXME: Should that rather be an attribute of Flow?
 
@@ -880,6 +880,9 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             else:
                 flow.response = self.get_response_from_server(flow.request)
 
+            flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point.
+                                                   # we can safely set it as the final attribute valueh here.
+
             self.c.log("response", [flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
                                                 flow.response if LEGACY else flow)
@@ -898,7 +901,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if flow.request.form_in == "authority":
                 self.ssl_upgrade(flow.request)
 
-            flow.server_conn = self.c.server_conn
             self.restore_server()  # If the user has changed the target server on this connection,
                                    # restore the original target server
             return True

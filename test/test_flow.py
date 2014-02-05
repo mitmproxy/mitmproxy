@@ -13,8 +13,7 @@ def test_app_registry():
     ar.add("foo", "domain", 80)
 
     r = tutils.treq()
-    r.host = "domain"
-    r.port = 80
+    r.set_url("http://domain:80/")
     assert ar.get(r)
 
     r.port = 81
@@ -587,7 +586,7 @@ class TestFlowMaster:
         req = tutils.treq()
         fm.handle_clientconnect(req.flow.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        sc = proxy.ServerConnection((req.host, req.port), None)
+        sc = proxy.ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = controller.DummyReply()
         fm.handle_serverconnection(sc)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"

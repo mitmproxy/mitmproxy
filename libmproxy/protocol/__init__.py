@@ -35,9 +35,9 @@ class TemporaryServerChangeMixin(object):
     without any need to expose the ConnectionHandler to the Flow.
     """
 
-    def change_server(self):
+    def change_server(self, address, ssl):
         self._backup_server = True
-        raise NotImplementedError
+        raise NotImplementedError("You must not change host port port.")
 
     def restore_server(self):
         if not hasattr(self,"_backup_server"):

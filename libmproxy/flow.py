@@ -35,11 +35,11 @@ class AppRegistry:
         """
             Returns an WSGIAdaptor instance if request matches an app, or None.
         """
-        if (request.host, request.port) in self.apps:
-            return self.apps[(request.host, request.port)]
+        if (request.get_host(), request.get_port()) in self.apps:
+            return self.apps[(request.get_host(), request.get_port())]
         if "host" in request.headers:
             host = request.headers["host"][0]
-            return self.apps.get((host, request.port), None)
+            return self.apps.get((host, request.get_port()), None)
 
 
 class ReplaceHooks:
