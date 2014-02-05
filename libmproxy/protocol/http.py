@@ -56,7 +56,7 @@ class decoded(object):
 
 class HTTPMessage(stateobject.SimpleStateObject):
     def __init__(self):
-        self.flow = None # Will usually set by backref mixin
+        self.flow = None  # will usually be set by the flow backref mixin
         """@type: HTTPFlow"""
 
     def get_decoded_content(self):
@@ -197,7 +197,7 @@ class HTTPRequest(HTTPMessage):
         timestamp_end: Timestamp indicating when request transmission ended
     """
     def __init__(self, form_in, method, scheme, host, port, path, httpversion, headers, content,
-                 timestamp_start, timestamp_end, form_out=None):
+                 timestamp_start=None, timestamp_end=None, form_out=None):
         assert isinstance(headers, ODictCaseless) or not headers
         HTTPMessage.__init__(self)
 
@@ -758,7 +758,6 @@ class HTTPFlow(Flow):
         """
             Continue with the flow - called after an intercept().
         """
-        assert self.intercepting
         if self.request:
             if not self.request.reply.acked:
                 self.request.reply()

@@ -372,7 +372,6 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
 
 class MasterIncomplete(tservers.TestMaster):
     def handle_request(self, m):
-        # FIXME: fails because of a ._assemble().splitlines() log statement.
         resp = tutils.tresp()
         resp.content = flow.CONTENT_MISSING
         m.reply(resp)

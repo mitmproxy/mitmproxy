@@ -55,6 +55,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
         if client_connection:  # Eventually, this object is restored from state. We don't have a connection then.
             tcp.BaseHandler.__init__(self, client_connection, address, server)
         else:
+            self.connection = None
+            self.server = None
+            self.wfile = None
+            self.rfile = None
             self.address = None
             self.clientcert = None
 
@@ -86,7 +90,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(None, None, None)
+        f = cls(None, tuple(), None)
         f._load_state(state)
         return f
 
@@ -141,7 +145,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(None)
+        f = cls(tuple())
         f._load_state(state)
         return f
 

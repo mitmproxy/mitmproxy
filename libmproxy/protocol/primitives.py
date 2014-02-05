@@ -41,6 +41,7 @@ class Error(stateobject.SimpleStateObject):
         @type msg: str
         @type timestamp: float
         """
+        self.flow = None  # will usually be set by the flow backref mixin
         self.msg = msg
         self.timestamp = timestamp or utils.timestamp()
 
@@ -87,6 +88,9 @@ class Flow(stateobject.SimpleStateObject, _BackreferenceMixin):
         f = cls(None, None, None)
         f._load_state(state)
         return f
+
+    def __eq__(self, other):
+        return self is other
 
     def copy(self):
         f = copy.copy(self)

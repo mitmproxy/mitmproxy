@@ -22,13 +22,11 @@ class TestServerConnection:
         sc = proxy.ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         r = tutils.treq()
+        r.flow.server_conn = sc
         r.path = "/p/200:da"
         sc.send(r._assemble())
         assert http.read_response(sc.rfile, r.method, 1000)
         assert self.d.last_log()
-
-        r.content = flow.CONTENT_MISSING
-        tutils.raises("incomplete request", sc.send, r._assemble())
 
         sc.finish()
 

@@ -1008,7 +1008,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.statusbar.refresh_flow(c)
 
     def process_flow(self, f, r):
-        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay():
+        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
             f.intercept()
         else:
             r.reply()

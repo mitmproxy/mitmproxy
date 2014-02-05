@@ -5,6 +5,7 @@ from libmproxy.protocol import http
 if os.name != "nt":
     from libmproxy.console.flowview import FlowView
     from libmproxy.console import ConsoleState
+from libmproxy.protocol.primitives import Error
 from netlib import certutils
 from nose.plugins.skip import SkipTest
 from mock import Mock
@@ -27,6 +28,7 @@ def tclient_conn():
     c.reply = controller.DummyReply()
     return c
 
+
 def tserver_conn():
     c = proxy.ServerConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
@@ -34,6 +36,7 @@ def tserver_conn():
         cert=None
     ))
     c.reply = controller.DummyReply()
+    return c
 
 
 def treq(conn=None, content="content"):
@@ -71,7 +74,7 @@ def terr(req=None):
     if not req:
         req = treq()
     f = req.flow
-    f.error = flow.Error("error")
+    f.error = Error("error")
     f.error.reply = controller.DummyReply()
     return f.error
 

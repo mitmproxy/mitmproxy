@@ -174,7 +174,7 @@ class ClientPlaybackState:
         if self.flows and not self.current:
             n = self.flows.pop(0)
             n.request.reply = controller.DummyReply()
-            n.request.client_conn = None
+            n.client_conn = None
             self.current = master.handle_request(n.request)
             if not testing and not self.current.response:
                 master.replay_request(self.current) # pragma: no cover
@@ -249,9 +249,10 @@ class StickyCookieState:
         """
             Returns a (domain, port, path) tuple.
         """
+        raise NotImplementedError
         return (
             m["domain"] or f.request.host,
-            f.request.port,
+            f.server_conn.address.port,
             m["path"] or "/"
         )
 
@@ -297,6 +298,7 @@ class StickyAuthState:
         self.hosts = {}
 
     def handle_request(self, f):
+        raise NotImplementedError
         if "authorization" in f.request.headers:
             self.hosts[f.request.host] = f.request.headers["authorization"]
         elif f.match(self.flt):
@@ -665,11 +667,10 @@ class FlowMaster(controller.Master):
         return f
 
     def handle_request(self, r):
-        if False and r.is_live(): # FIXME
+        if r.flow.client_conn and r.flow.client_conn.wfile:
             app = self.apps.get(r)
             if app:
-                # FIXME: for the tcp proxy, use flow.client_conn.wfile
-                err = app.serve(r, r.wfile, **{"mitmproxy.master": self})
+                err = app.serve(r, r.flow.client_conn.wfile, **{"mitmproxy.master": self})
                 if err:
                     self.add_event("Error in wsgi app. %s"%err, "error")
                 r.reply(KILL)

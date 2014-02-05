@@ -172,7 +172,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
         intercepting = f.intercepting,
 
         req_timestamp = f.request.timestamp_start,
-        req_is_replay = f.request.is_replay(),
+        req_is_replay = f.request.is_replay,
         req_method = f.request.method,
         req_acked = f.request.reply.acked,
         req_url = f.request.get_url(hostheader=hostheader),
@@ -194,7 +194,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
 
         d.update(dict(
             resp_code = f.response.code,
-            resp_is_replay = f.response.is_replay(),
+            resp_is_replay = f.response.is_replay,
             resp_acked = f.response.reply.acked,
             resp_clen = contentdesc,
             resp_rate = "{0}/s".format(rate),

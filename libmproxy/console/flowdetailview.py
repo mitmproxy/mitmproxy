@@ -74,9 +74,9 @@ class FlowDetailsView(urwid.ListBox):
                     )
                 text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
-        if self.flow.request.client_conn:
+        if self.flow.client_conn:
             text.append(urwid.Text([("head", "Client Connection:")]))
-            cc = self.flow.request.client_conn
+            cc = self.flow.client_conn
             parts = [
                 ["Address", "%s:%s"%tuple(cc.address)],
                 ["Requests", "%s"%cc.requestcount],
