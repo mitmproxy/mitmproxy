@@ -28,6 +28,22 @@ class ProtocolHandler(object):
         """
         raise error
 
+
+class TemporaryServerChangeMixin(object):
+    """
+    This mixin allows safe modification of the target server,
+    without any need to expose the ConnectionHandler to the Flow.
+    """
+
+    def change_server(self):
+        self._backup_server = True
+        raise NotImplementedError
+
+    def restore_server(self):
+        if not hasattr(self,"_backup_server"):
+            return
+        raise NotImplementedError
+
 from . import http, tcp
 
 protocols = {

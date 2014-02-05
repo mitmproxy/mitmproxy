@@ -249,10 +249,9 @@ class StickyCookieState:
         """
             Returns a (domain, port, path) tuple.
         """
-        raise NotImplementedError
         return (
-            m["domain"] or f.request.host,
-            f.server_conn.address.port,
+            m["domain"] or f.request.get_host(),
+            f.request.get_port(),
             m["path"] or "/"
         )
 
@@ -270,7 +269,7 @@ class StickyCookieState:
             c = Cookie.SimpleCookie(str(i))
             m = c.values()[0]
             k = self.ckey(m, f)
-            if self.domain_match(f.request.host, k[0]):
+            if self.domain_match(f.request.get_host(), k[0]):
                 self.jar[self.ckey(m, f)] = m
 
     def handle_request(self, f):
@@ -278,8 +277,8 @@ class StickyCookieState:
         if f.match(self.flt):
             for i in self.jar.keys():
                 match = [
-                    self.domain_match(f.request.host, i[0]),
-                    f.request.port == i[1],
+                    self.domain_match(f.request.get_host(), i[0]),
+                    f.request.get_port() == i[1],
                     f.request.path.startswith(i[2])
                 ]
                 if all(match):
@@ -298,12 +297,12 @@ class StickyAuthState:
         self.hosts = {}
 
     def handle_request(self, f):
-        raise NotImplementedError
+        host = f.request.get_host()
         if "authorization" in f.request.headers:
-            self.hosts[f.request.host] = f.request.headers["authorization"]
+            self.hosts[host] = f.request.headers["authorization"]
         elif f.match(self.flt):
-            if f.request.host in self.hosts:
-                f.request.headers["authorization"] = self.hosts[f.request.host]
+            if host in self.hosts:
+                f.request.headers["authorization"] = self.hosts[host]
 
 
 class State(object):

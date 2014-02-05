@@ -3,9 +3,9 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 import netlib.utils
 from netlib import http, tcp, http_status, odict
 from netlib.odict import ODict, ODictCaseless
-from . import ProtocolHandler, ConnectionTypeChange, KILL
+from . import ProtocolHandler, ConnectionTypeChange, KILL, TemporaryServerChangeMixin
 from .. import encoding, utils, version, filt, controller, stateobject
-from ..proxy import ProxyError, AddressPriority
+from ..proxy import ProxyError, AddressPriority, ServerConnection
 from .primitives import Flow, Error
 
 
@@ -55,9 +55,23 @@ class decoded(object):
 
 
 class HTTPMessage(stateobject.SimpleStateObject):
-    def __init__(self):
+    def __init__(self, httpversion, headers, content, timestamp_start=None, timestamp_end=None):
+        self.httpversion = httpversion
+        self.headers = headers
+        self.content = content
+        self.timestamp_start = timestamp_start
+        self.timestamp_end = timestamp_end
+
         self.flow = None  # will usually be set by the flow backref mixin
         """@type: HTTPFlow"""
+
+    _stateobject_attributes = dict(
+        httpversion=tuple,
+        headers=ODictCaseless,
+        content=str,
+        timestamp_start=float,
+        timestamp_end=float
+    )
 
     def get_decoded_content(self):
         """
@@ -199,7 +213,7 @@ class HTTPRequest(HTTPMessage):
     def __init__(self, form_in, method, scheme, host, port, path, httpversion, headers, content,
                  timestamp_start=None, timestamp_end=None, form_out=None):
         assert isinstance(headers, ODictCaseless) or not headers
-        HTTPMessage.__init__(self)
+        HTTPMessage.__init__(self, httpversion, headers, content, timestamp_start, timestamp_end)
 
         self.form_in = form_in
         self.method = method
@@ -208,10 +222,6 @@ class HTTPRequest(HTTPMessage):
         self.port = port
         self.path = path
         self.httpversion = httpversion
-        self.headers = headers
-        self.content = content
-        self.timestamp_start = timestamp_start
-        self.timestamp_end = timestamp_end
         self.form_out = form_out or form_in
 
         # Have this request's cookies been modified by sticky cookies or auth?
@@ -220,18 +230,14 @@ class HTTPRequest(HTTPMessage):
         # Is this request replayed?
         self.is_replay = False
 
-    _stateobject_attributes = dict(
+    _stateobject_attributes = HTTPMessage._stateobject_attributes.copy()
+    _stateobject_attributes.update(
         form_in=str,
         method=str,
         scheme=str,
         host=str,
         port=int,
         path=str,
-        httpversion=tuple,
-        headers=ODictCaseless,
-        content=str,
-        timestamp_start=float,
-        timestamp_end=float,
         form_out=str
     )
 
@@ -437,15 +443,13 @@ class HTTPRequest(HTTPMessage):
         query = utils.urlencode(odict.lst)
         self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
 
-    def get_url(self, hostheader=False):
+    def get_host(self, hostheader=False):
         """
-            Returns a URL string, constructed from the Request's URL components.
-
-            If hostheader is True, we use the value specified in the request
-            Host header to construct the URL.
+            Heuristic to get the host of the request.
+            The host is not necessarily equal to the TCP destination of the request,
+            for example on a transparently proxified absolute-form request to an upstream HTTP proxy.
+            If hostheader is set to True, the Host: header will be used as additional (and preferred) data source.
         """
-        raise NotImplementedError
-        # FIXME: Take server_conn into account.
         host = None
         if hostheader:
             host = self.headers.get_first("host")
@@ -455,7 +459,35 @@ class HTTPRequest(HTTPMessage):
             else:
                 host = self.flow.server_conn.address.host
         host = host.encode("idna")
-        return utils.unparse_url(self.scheme, host, self.port, self.path).encode('ascii')
+        return host
+
+    def get_scheme(self):
+        """
+        Returns the request port, either from the request itself or from the flow's server connection
+        """
+        if self.scheme:
+            return self.scheme
+        return "https" if self.flow.server_conn.ssl_established else "http"
+
+    def get_port(self):
+        """
+        Returns the request port, either from the request itself or from the flow's server connection
+        """
+        if self.port:
+            return self.port
+        return self.flow.server_conn.address.port
+
+    def get_url(self, hostheader=False):
+        """
+            Returns a URL string, constructed from the Request's URL components.
+
+            If hostheader is True, we use the value specified in the request
+            Host header to construct the URL.
+        """
+        return utils.unparse_url(self.get_scheme(),
+                                 self.get_host(hostheader),
+                                 self.get_port(),
+                                 self.path).encode('ascii')
 
     def set_url(self, url):
         """
@@ -464,12 +496,30 @@ class HTTPRequest(HTTPMessage):
 
             Returns False if the URL was invalid, True if the request succeeded.
         """
-        raise NotImplementedError
-        # FIXME: Needs to update server_conn as well.
         parts = http.parse_url(url)
         if not parts:
             return False
-        self.scheme, self.host, self.port, self.path = parts
+        scheme, host, port, path = parts
+        is_ssl = (True if scheme == "https" else False)
+
+        self.path = path
+
+        if host != self.get_host() or port != self.get_port():
+            if self.flow.change_server:
+                self.flow.change_server((host, port), ssl=is_ssl)
+            else:
+                # There's not live server connection, we're just changing the attributes here.
+                self.flow.server_conn = ServerConnection((host, port), AddressPriority.MANUALLY_CHANGED)
+                self.flow.server_conn.ssl_established = is_ssl
+
+        # If this is an absolute request, replace the attributes on the request object as well.
+        if self.host:
+            self.host = host
+        if self.port:
+            self.port = port
+        if self.scheme:
+            self.scheme = scheme
+
         return True
 
     def get_cookies(self):
@@ -521,34 +571,25 @@ class HTTPResponse(HTTPMessage):
 
         timestamp_end: Timestamp indicating when request transmission ended
     """
-    def __init__(self, httpversion, code, msg, headers, content, timestamp_start, timestamp_end):
+    def __init__(self, httpversion, code, msg, headers, content, timestamp_start=None, timestamp_end=None):
         assert isinstance(headers, ODictCaseless) or headers is None
-        HTTPMessage.__init__(self)
+        HTTPMessage.__init__(self, httpversion, headers, content, timestamp_start, timestamp_end)
 
-        self.httpversion = httpversion
         self.code = code
         self.msg = msg
-        self.headers = headers
-        self.content = content
-        self.timestamp_start = timestamp_start
-        self.timestamp_end = timestamp_end
 
         # Is this request replayed?
         self.is_replay = False
 
-    _stateobject_attributes = dict(
-        httpversion=tuple,
+    _stateobject_attributes = HTTPMessage._stateobject_attributes.copy()
+    _stateobject_attributes.update(
         code=int,
-        msg=str,
-        headers=ODictCaseless,
-        content=str,
-        timestamp_start=float,
-        timestamp_end=float
+        msg=str
     )
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(None, None, None, None, None, None, None)
+        f = cls(None, None, None, None, None)
         f._load_state(state)
         return f
 
@@ -688,13 +729,15 @@ class HTTPFlow(Flow):
 
         intercepting: Is this flow currently being intercepted?
     """
-    def __init__(self, client_conn, server_conn):
+    def __init__(self, client_conn, server_conn, change_server=None):
         Flow.__init__(self, "http", client_conn, server_conn)
         self.request = None
+        """@type: HTTPRequest"""
         self.response = None
+        """@type: HTTPResponse"""
+        self.change_server = None  # Used by flow.request.set_url to change the server address
 
         self.intercepting = False  # FIXME: Should that rather be an attribute of Flow?
-        self._backup = None
 
     _backrefattr = Flow._backrefattr + ("request", "response")
 
@@ -787,13 +830,15 @@ class HttpAuthenticationError(Exception):
         return "HttpAuthenticationError"
 
 
-class HTTPHandler(ProtocolHandler):
+class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
+
     def handle_messages(self):
         while self.handle_flow():
             pass
         self.c.close = True
 
     def get_response_from_server(self, request):
+        self.c.establish_server_connection()
         request_raw = request._assemble()
 
         for i in range(2):
@@ -818,7 +863,7 @@ class HTTPHandler(ProtocolHandler):
                     raise v
 
     def handle_flow(self):
-        flow = HTTPFlow(self.c.client_conn, self.c.server_conn)
+        flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.change_server)
         try:
             flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                                    body_size_limit=self.c.config.body_size_limit)
@@ -833,7 +878,6 @@ class HTTPHandler(ProtocolHandler):
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
             else:
-                self.c.establish_server_connection()
                 flow.response = self.get_response_from_server(flow.request)
 
             self.c.log("response", [flow.response._assemble_first_line()])
@@ -855,7 +899,8 @@ class HTTPHandler(ProtocolHandler):
                 self.ssl_upgrade(flow.request)
 
             flow.server_conn = self.c.server_conn
-
+            self.restore_server()  # If the user has changed the target server on this connection,
+                                   # restore the original target server
             return True
         except (HttpAuthenticationError, http.HttpError, ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)

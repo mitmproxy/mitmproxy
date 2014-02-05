@@ -26,12 +26,12 @@ class TestDumpMaster:
         m.handle_log(l)
         cc = req.flow.client_conn
         cc.reply = mock.MagicMock()
-        resp = tutils.tresp(req, content=content)
         m.handle_clientconnect(cc)
-        sc = proxy.ServerConnection((req.host, req.port))
+        sc = proxy.ServerConnection((req.host, req.port), None)
         sc.reply = mock.MagicMock()
         m.handle_serverconnection(sc)
         m.handle_request(req)
+        resp = tutils.tresp(req, content=content)
         f = m.handle_response(resp)
         m.handle_clientdisconnect(cc)
         return f

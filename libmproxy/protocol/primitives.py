@@ -3,7 +3,7 @@ from ..proxy import ServerConnection, ClientConnection
 import copy
 
 
-class _BackreferenceMixin(object):
+class BackreferenceMixin(object):
     """
     If an attribute from the _backrefattr tuple is set,
     this mixin sets a reference back on the attribute object.
@@ -16,7 +16,7 @@ class _BackreferenceMixin(object):
     _backrefattr = tuple()
 
     def __setattr__(self, key, value):
-        super(_BackreferenceMixin, self).__setattr__(key, value)
+        super(BackreferenceMixin, self).__setattr__(key, value)
         if key in self._backrefattr and value is not None:
             setattr(value, self._backrefname, self)
 
@@ -61,12 +61,17 @@ class Error(stateobject.SimpleStateObject):
         return c
 
 
-class Flow(stateobject.SimpleStateObject, _BackreferenceMixin):
+class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
     def __init__(self, conntype, client_conn, server_conn):
         self.conntype = conntype
         self.client_conn = client_conn
+        """@type: ClientConnection"""
         self.server_conn = server_conn
+        """@type: ServerConnection"""
+
         self.error = None
+        """@type: Error"""
+        self._backup = None
 
     _backrefattr = ("error",)
     _backrefname = "flow"

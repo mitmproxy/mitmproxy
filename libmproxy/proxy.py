@@ -30,6 +30,7 @@ class ProxyError(Exception):
     def __str__(self):
         return "ProxyError(%s, %s)" % (self.code, self.msg)
 
+
 class Log:
     def __init__(self, msg):
         self.msg = msg
@@ -104,8 +105,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
-    def __init__(self, address):
+    def __init__(self, address, priority):
         tcp.TCPClient.__init__(self, address)
+        self.priority = priority
 
         self.peername = None
         self.timestamp_start = None
@@ -145,7 +147,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(tuple())
+        f = cls(tuple(), None)
         f._load_state(state)
         return f
 
@@ -190,7 +192,7 @@ class RequestReplayThread(threading.Thread):
     def run(self):
         try:
             r = self.flow.request
-            server = ServerConnection(self.flow.server_conn.address())
+            server = ServerConnection(self.flow.server_conn.address(), None)
             server.connect()
             if self.flow.server_conn.ssl_established:
                 server.establish_ssl(self.config.clientcerts,
@@ -201,6 +203,7 @@ class RequestReplayThread(threading.Thread):
         except (ProxyError, http.HttpError, tcp.NetLibError), v:
             self.flow.error = protocol.primitives.Error(str(v))
             self.channel.ask("error", self.flow.error)
+
 
 class ConnectionHandler:
     def __init__(self, config, client_connection, client_address, server, channel, server_version):
@@ -310,18 +313,17 @@ class ConnectionHandler:
         @type priority: AddressPriority
         """
         address = tcp.Address.wrap(address)
-        self.log("Set server address: %s:%s" % (address.host, address.port))
-        if self.server_conn and (self.server_address_priority > priority):
+        self.log("Try to set server address: %s:%s" % (address.host, address.port))
+        if self.server_conn and (self.server_conn.priority > priority):
             self.log("Server address priority too low (is: %s, got: %s)" % (self.server_address_priority, priority))
             return
 
-        self.address_priority = priority
-
         if self.server_conn and (self.server_conn.address == address):
+            self.server_conn.priority = priority  # Possibly increase priority
             self.log("Addresses match, skip.")
             return
 
-        server_conn = ServerConnection(address)
+        server_conn = ServerConnection(address, priority)
         if self.server_conn and self.server_conn.connection:
             self.del_server_connection()
             self.server_conn = server_conn

@@ -19,7 +19,7 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = proxy.ServerConnection((self.d.IFACE, self.d.port))
+        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         r = tutils.treq()
         r.flow.server_conn = sc
@@ -31,7 +31,7 @@ class TestServerConnection:
         sc.finish()
 
     def test_terminate_error(self):
-        sc = proxy.ServerConnection((self.d.IFACE, self.d.port))
+        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)

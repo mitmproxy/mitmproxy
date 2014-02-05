@@ -4,6 +4,7 @@ import email.utils
 from libmproxy import filt, protocol, controller, utils, tnetstring, proxy, flow
 from libmproxy.protocol.primitives import Error, Flow
 from libmproxy.protocol.http import decoded
+from netlib import tcp
 import tutils
 
 
@@ -32,7 +33,7 @@ class TestStickyCookieState:
     def _response(self, cookie, host):
         s = flow.StickyCookieState(filt.parse(".*"))
         f = tutils.tflow_full()
-        f.request.host = host
+        f.server_conn.address = tcp.Address((host, 80))
         f.response.headers["Set-Cookie"] = [cookie]
         s.handle_response(f)
         return s, f
@@ -68,7 +69,7 @@ class TestStickyAuthState:
         f = tutils.tflow_full()
         f.request.headers["authorization"] = ["foo"]
         s.handle_request(f)
-        assert "host" in s.hosts
+        assert "address" in s.hosts
 
         f = tutils.tflow_full()
         s.handle_request(f)
@@ -586,7 +587,7 @@ class TestFlowMaster:
         req = tutils.treq()
         fm.handle_clientconnect(req.flow.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        sc = proxy.ServerConnection((req.host, req.port))
+        sc = proxy.ServerConnection((req.host, req.port), None)
         sc.reply = controller.DummyReply()
         fm.handle_serverconnection(sc)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"
@@ -800,11 +801,23 @@ class TestRequest:
 
     def test_get_url(self):
         r = tutils.tflow().request
-        assert r.get_url() == "https://host:22/"
-        assert r.get_url(hostheader=True) == "https://host:22/"
+
+        assert r.get_url() == "http://address:22/path"
+
+        r.flow.server_conn.ssl_established = True
+        assert r.get_url() == "https://address:22/path"
+
+        r.flow.server_conn.address = tcp.Address(("host", 42))
+        assert r.get_url() == "https://host:42/path"
+
+        r.host = "address"
+        r.port = 22
+        assert r.get_url() == "https://address:22/path"
+
+        assert r.get_url(hostheader=True) == "https://address:22/path"
         r.headers["Host"] = ["foo.com"]
-        assert r.get_url() == "https://host:22/"
-        assert r.get_url(hostheader=True) == "https://foo.com:22/"
+        assert r.get_url() == "https://address:22/path"
+        assert r.get_url(hostheader=True) == "https://foo.com:22/path"
 
     def test_path_components(self):
         r = tutils.treq()
