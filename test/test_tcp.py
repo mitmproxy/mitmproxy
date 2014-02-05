@@ -215,6 +215,7 @@ class TestSNI(test.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl(sni="foo.com")
+        assert c.sni == "foo.com"
         assert c.rfile.readline() == "foo.com"
 
 

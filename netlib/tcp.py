@@ -178,7 +178,7 @@ class Address(object):
     This class wraps an IPv4/IPv6 tuple to provide named attributes and ipv6 information.
     """
     def __init__(self, address, use_ipv6=False):
-        self.address = address
+        self.address = tuple(address)
         self.use_ipv6 = use_ipv6
 
     @classmethod
