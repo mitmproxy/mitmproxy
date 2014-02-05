@@ -2,9 +2,9 @@ import os, shutil, tempfile
 from contextlib import contextmanager
 from libmproxy import flow, utils, controller, proxy
 from libmproxy.protocol import http
-if os.name != "nt":
-    from libmproxy.console.flowview import FlowView
-    from libmproxy.console import ConsoleState
+import mock_urwid
+from libmproxy.console.flowview import FlowView
+from libmproxy.console import ConsoleState
 from libmproxy.protocol.primitives import Error
 from netlib import certutils
 from nose.plugins.skip import SkipTest
