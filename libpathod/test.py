@@ -75,5 +75,5 @@ class _PaThread(threading.Thread):
             ssl = self.ssl,
             **self.daemonargs
         )
-        self.q.put(self.server.port)
+        self.q.put(self.server.address.port)
         self.server.serve_forever()

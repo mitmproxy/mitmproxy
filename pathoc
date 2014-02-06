@@ -129,8 +129,7 @@ if __name__ == "__main__":
     try:
         for i in range(args.repeat):
             p = pathoc.Pathoc(
-                args.host,
-                port,
+                (args.host, port),
                 ssl=args.ssl,
                 sni=args.sni,
                 sslversion=args.sslversion,
