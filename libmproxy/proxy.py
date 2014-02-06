@@ -350,8 +350,8 @@ class ConnectionHandler:
         """
         # TODO: Implement SSL pass-through handling and change conntype
         passthrough = [
-            "echo.websocket.org",
-            "174.129.224.73"  # echo.websocket.org, transparent mode
+            # "echo.websocket.org",
+            # "174.129.224.73"  # echo.websocket.org, transparent mode
         ]
         if self.server_conn.address.host in passthrough or self.sni in passthrough:
             self.conntype = "tcp"

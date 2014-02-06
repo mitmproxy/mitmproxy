@@ -3,8 +3,8 @@ python:
   - "2.7"
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install: 
-  - "pip install --upgrade git+https://github.com/mitmproxy/netlib.git@tcp_proxy"
-  - "pip install --upgrade git+https://github.com/mitmproxy/pathod.git@tcp_proxy"
+  - "pip install --upgrade git+https://github.com/mitmproxy/netlib.git"
+  - "pip install --upgrade git+https://github.com/mitmproxy/pathod.git"
   - "pip install -r requirements.txt --use-mirrors"
   - "pip install -r test/requirements.txt --use-mirrors"
 # command to run tests, e.g. python setup.py test
