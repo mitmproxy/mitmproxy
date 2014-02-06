@@ -12,8 +12,6 @@ from .primitives import Flow, Error
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
 
-LEGACY = True
-
 
 def get_line(fp):
     """
@@ -870,8 +868,10 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             self.c.log("request", [flow.request._assemble_first_line(flow.request.form_in)])
             self.process_request(flow.request)
 
-            request_reply = self.c.channel.ask("request" if LEGACY else "httprequest",
-                                               flow.request if LEGACY else flow)
+            request_reply = self.c.channel.ask("request", flow.request)
+            flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point.
+                                       # we can safely set it as the final attribute valueh here.
+
             if request_reply is None or request_reply == KILL:
                 return False
 
@@ -880,12 +880,8 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             else:
                 flow.response = self.get_response_from_server(flow.request)
 
-            flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point.
-                                                   # we can safely set it as the final attribute valueh here.
-
             self.c.log("response", [flow.response._assemble_first_line()])
-            response_reply = self.c.channel.ask("response" if LEGACY else "httpresponse",
-                                                flow.response if LEGACY else flow)
+            response_reply = self.c.channel.ask("response", flow.response)
             if response_reply is None or response_reply == KILL:
                 return False
 
@@ -927,10 +923,9 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
         if flow:
             flow.error = Error(err)
-            if not (LEGACY and not flow.request) and not (LEGACY and flow.request and flow.response):
-                # no flows without request or with both request and response in legacy mode
-                self.c.channel.ask("error" if LEGACY else "httperror",
-                                   flow.error if LEGACY else flow)
+            if flow.request and not flow.response:
+                # FIXME: no flows without request or with both request and response at the moement.
+                self.c.channel.ask("error", flow.error)
         else:
             pass  # FIXME: Is there any use case for persisting errors that occur outside of flows?
 
@@ -1005,6 +1000,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             directly_addressed_at_mitmproxy = (self.c.mode == "regular" and not self.c.config.forward_proxy)
             if directly_addressed_at_mitmproxy:
                 self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
+                request.flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                 self.c.establish_server_connection()
                 self.c.client_conn.wfile.write(
                     'HTTP/1.1 200 Connection established\r\n' +
@@ -1023,6 +1019,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 if not self.c.config.forward_proxy:
                     request.form_out = "origin"
                     self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
+                    request.flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
             else:
                 raise http.HttpError(400, "Invalid Request")
 
