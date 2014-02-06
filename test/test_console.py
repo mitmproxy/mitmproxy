@@ -1,10 +1,9 @@
-import os
-from nose.plugins.skip import SkipTest
-if os.name == "nt":
-    raise SkipTest("Skipped on Windows.")
-
+import os, sys, mock, gc
+from os.path import normpath
+import mock_urwid
 from libmproxy import console
 from libmproxy.console import common
+
 import tutils
 
 class TestConsoleState:
@@ -16,7 +15,7 @@ class TestConsoleState:
         """
         c = console.ConsoleState()
         f = self._add_request(c)
-        assert f.request in c._flow_map
+        assert f in c._flow_list
         assert c.get_focus() == (f, 0)
 
     def test_focus(self):
@@ -89,6 +88,7 @@ class TestConsoleState:
         assert len(c.flowsettings) == 1
         c.delete_flow(f)
         del f
+        gc.collect()
         assert len(c.flowsettings) == 0
 
 
@@ -107,19 +107,17 @@ def test_format_keyvals():
 class TestPathCompleter:
     def test_lookup_construction(self):
         c = console._PathCompleter()
-        assert c.complete("/tm") == "/tmp/"
-        c.reset()
 
         cd = tutils.test_data.path("completion")
         ca = os.path.join(cd, "a")
-        assert c.complete(ca).endswith("/completion/aaa")
-        assert c.complete(ca).endswith("/completion/aab")
+        assert c.complete(ca).endswith(normpath("/completion/aaa"))
+        assert c.complete(ca).endswith(normpath("/completion/aab"))
         c.reset()
         ca = os.path.join(cd, "aaa")
-        assert c.complete(ca).endswith("/completion/aaa")
-        assert c.complete(ca).endswith("/completion/aaa")
+        assert c.complete(ca).endswith(normpath("/completion/aaa"))
+        assert c.complete(ca).endswith(normpath("/completion/aaa"))
         c.reset()
-        assert c.complete(cd).endswith("/completion/aaa")
+        assert c.complete(cd).endswith(normpath("/completion/aaa"))
 
     def test_completion(self):
         c = console._PathCompleter(True)

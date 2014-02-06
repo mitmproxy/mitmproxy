@@ -1,6 +1,8 @@
 import cStringIO
 from libmproxy import filt, flow
-
+from libmproxy.protocol import http
+from libmproxy.protocol.primitives import Error
+import tutils
 
 class TestParsing:
     def _dump(self, x):
@@ -72,41 +74,37 @@ class TestParsing:
 
 class TestMatching:
     def req(self):
-        conn = flow.ClientConnect(("one", 2222))
         headers = flow.ODictCaseless()
         headers["header"] = ["qvalue"]
-        req = flow.Request(
-                    conn,
-                    (1, 1),
-                    "host",
-                    80,
-                    "http",
-                    "GET",
-                    "/path",
-                    headers,
-                    "content_request"
+        req = http.HTTPRequest(
+            "absolute",
+            "GET",
+            "http",
+            "host",
+            80,
+            "/path",
+            (1, 1),
+            headers,
+            "content_request",
+            None,
+            None
         )
-        return flow.Flow(req)
+        f = http.HTTPFlow(tutils.tclient_conn(), None)
+        f.request = req
+        return f
 
     def resp(self):
         f = self.req()
 
         headers = flow.ODictCaseless()
         headers["header_response"] = ["svalue"]
-        f.response = flow.Response(
-                    f.request,
-                    (1, 1),
-                    200,
-                    "message",
-                    headers,
-                    "content_response",
-                    None
-                )
+        f.response = http.HTTPResponse((1, 1), 200, "OK", headers, "content_response", None, None)
+
         return f
 
     def err(self):
         f = self.req()
-        f.error = flow.Error(f.request, "msg")
+        f.error = Error("msg")
         return f
 
     def q(self, q, o):

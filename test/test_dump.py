@@ -6,11 +6,11 @@ import mock
 
 def test_strfuncs():
     t = tutils.tresp()
-    t._set_replay()
+    t.is_replay = True
     dump.str_response(t)
 
     t = tutils.treq()
-    t.client_conn = None
+    t.flow.client_conn = None
     t.stickycookie = True
     assert "stickycookie" in dump.str_request(t, False)
     assert "stickycookie" in dump.str_request(t, True)
@@ -20,24 +20,20 @@ def test_strfuncs():
 
 class TestDumpMaster:
     def _cycle(self, m, content):
-        req = tutils.treq()
-        req.content = content
+        req = tutils.treq(content=content)
         l = proxy.Log("connect")
         l.reply = mock.MagicMock()
         m.handle_log(l)
-        cc = req.client_conn
-        cc.connection_error = "error"
-        resp = tutils.tresp(req)
-        resp.content = content
+        cc = req.flow.client_conn
+        cc.reply = mock.MagicMock()
         m.handle_clientconnect(cc)
-        sc = proxy.ServerConnection(m.o, req.scheme, req.host, req.port, None)
+        sc = proxy.ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = mock.MagicMock()
         m.handle_serverconnection(sc)
         m.handle_request(req)
+        resp = tutils.tresp(req, content=content)
         f = m.handle_response(resp)
-        cd = flow.ClientDisconnect(cc)
-        cd.reply = mock.MagicMock()
-        m.handle_clientdisconnect(cd)
+        m.handle_clientdisconnect(cc)
         return f
 
     def _dummy_cycle(self, n, filt, content, **options):

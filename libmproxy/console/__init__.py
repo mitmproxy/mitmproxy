@@ -197,7 +197,7 @@ class StatusBar(common.WWrap):
         ]
 
         if self.master.server.bound:
-            boundaddr = "[%s:%s]"%(self.master.server.address or "*", self.master.server.port)
+            boundaddr = "[%s:%s]"%(self.master.server.address.host or "*", self.master.server.address.port)
         else:
             boundaddr = ""
         t.extend(self.get_status())
@@ -1008,7 +1008,7 @@ class ConsoleMaster(flow.FlowMaster):
             self.statusbar.refresh_flow(c)
 
     def process_flow(self, f, r):
-        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay():
+        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
             f.intercept()
         else:
             r.reply()

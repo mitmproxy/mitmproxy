@@ -19,25 +19,24 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = proxy.ServerConnection(proxy.ProxyConfig(), "http", self.d.IFACE, self.d.port, "host.com")
+        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         r = tutils.treq()
+        r.flow.server_conn = sc
         r.path = "/p/200:da"
-        sc.send(r)
+        sc.send(r._assemble())
         assert http.read_response(sc.rfile, r.method, 1000)
         assert self.d.last_log()
 
-        r.content = flow.CONTENT_MISSING
-        tutils.raises("incomplete request", sc.send, r)
-
-        sc.terminate()
+        sc.finish()
 
     def test_terminate_error(self):
-        sc = proxy.ServerConnection(proxy.ProxyConfig(), "http", self.d.IFACE, self.d.port, "host.com")
+        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         sc.connection = mock.Mock()
+        sc.connection.recv = mock.Mock(return_value=False)
         sc.connection.flush = mock.Mock(side_effect=tcp.NetLibDisconnect)
-        sc.terminate()
+        sc.finish()
 
 
 class MockParser:

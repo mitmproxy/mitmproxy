@@ -198,7 +198,7 @@ class FDomain(_Rex):
     code = "d"
     help = "Domain"
     def __call__(self, f):
-        return bool(re.search(self.expr, f.request.host, re.IGNORECASE))
+        return bool(re.search(self.expr, f.request.get_host(), re.IGNORECASE))
 
 
 class FUrl(_Rex):

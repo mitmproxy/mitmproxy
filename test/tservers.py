@@ -55,7 +55,7 @@ class ProxyThread(threading.Thread):
 
     @property
     def port(self):
-        return self.tmaster.server.port
+        return self.tmaster.server.address.port
 
     @property
     def log(self):
@@ -134,13 +134,13 @@ class ProxTestBase:
 
 class HTTPProxTest(ProxTestBase):
     def pathoc_raw(self):
-        return libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port)
+        return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port))
 
     def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
         if self.ssl:
             p.connect(("127.0.0.1", self.server.port))
         else:
@@ -161,7 +161,7 @@ class HTTPProxTest(ProxTestBase):
 
     def app(self, page):
         if self.ssl:
-            p = libpathod.pathoc.Pathoc("127.0.0.1", self.proxy.port, True)
+            p = libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), True)
             print "PRE"
             p.connect((APP_HOST, APP_PORT))
             print "POST"
@@ -211,7 +211,7 @@ class TransparentProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
         p.connect()
         return p
 
@@ -232,7 +232,7 @@ class ReverseProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc("localhost", self.proxy.port, ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
         p.connect()
         return p
 

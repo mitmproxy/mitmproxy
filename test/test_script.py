@@ -32,8 +32,8 @@ class TestScript:
         r = tutils.treq()
         fm.handle_request(r)
         assert fm.state.flow_count() == 2
-        assert not fm.state.view[0].request.is_replay()
-        assert fm.state.view[1].request.is_replay()
+        assert not fm.state.view[0].request.is_replay
+        assert fm.state.view[1].request.is_replay
 
     def test_err(self):
         s = flow.State()
@@ -75,7 +75,7 @@ class TestScript:
             # Two instantiations
             assert m.call_count == 2
             assert (time.time() - t_start) < 0.09
-            time.sleep(0.2)
+            time.sleep(0.3 - (time.time() - t_start))
             # Plus two invocations
             assert m.call_count == 4
 

@@ -4,6 +4,7 @@ from netlib import tcp, http_auth, http
 from libpathod import pathoc, pathod
 import tutils, tservers
 from libmproxy import flow, proxy
+from libmproxy.protocol import KILL
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -41,16 +42,17 @@ class CommonMixin:
         assert f.status_code == 304
 
         l = self.master.state.view[0]
-        assert l.request.client_conn.address
+        assert l.client_conn.address
         assert "host" in l.request.headers
         assert l.response.code == 304
 
     def test_invalid_http(self):
-        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
+        t = tcp.TCPClient(("127.0.0.1", self.proxy.port))
         t.connect()
         t.wfile.write("invalid\r\n\r\n")
         t.wfile.flush()
-        assert "Bad Request" in t.rfile.readline()
+        line = t.rfile.readline()
+        assert ("Bad Request" in line) or ("Bad Gateway" in line)
 
 
 
@@ -70,7 +72,7 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         assert "ValueError" in ret.content
 
     def test_invalid_connect(self):
-        t = tcp.TCPClient("127.0.0.1", self.proxy.port)
+        t = tcp.TCPClient(("127.0.0.1", self.proxy.port))
         t.connect()
         t.wfile.write("CONNECT invalid\n\n")
         t.wfile.flush()
@@ -105,22 +107,17 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         assert p.request(req)
         assert p.request(req)
 
-        # However, if the server disconnects on our first try, it's an error.
-        req = "get:'%s/p/200:b@1:d0'"%self.server.urlbase
-        p = self.pathoc()
-        tutils.raises("server disconnect", p.request, req)
-
     def test_proxy_ioerror(self):
         # Tests a difficult-to-trigger condition, where an IOError is raised
         # within our read loop.
-        with mock.patch("libmproxy.proxy.ProxyHandler.read_request") as m:
+        with mock.patch("libmproxy.protocol.http.HTTPRequest.from_stream") as m:
             m.side_effect = IOError("error!")
             tutils.raises("server disconnect", self.pathod, "304")
 
     def test_get_connection_switching(self):
         def switched(l):
             for i in l:
-                if "switching" in i:
+                if "serverdisconnect" in i:
                     return True
         req = "get:'%s/p/200:b@1'"
         p = self.pathoc()
@@ -230,12 +227,13 @@ class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin):
         f = self.pathod("304", sni="testserver.com")
         assert f.status_code == 304
         l = self.server.last_log()
-        assert self.server.last_log()["request"]["sni"] == "testserver.com"
+        assert l["request"]["sni"] == "testserver.com"
 
     def test_sslerr(self):
-        p = pathoc.Pathoc("localhost", self.proxy.port)
+        p = pathoc.Pathoc(("localhost", self.proxy.port))
         p.connect()
-        assert p.request("get:/").status_code == 400
+        r = p.request("get:/")
+        assert r.status_code == 502
 
 
 class TestProxy(tservers.HTTPProxTest):
@@ -243,10 +241,10 @@ class TestProxy(tservers.HTTPProxTest):
         f = self.pathod("304")
         assert f.status_code == 304
 
-        l = self.master.state.view[0]
-        assert l.request.client_conn.address
-        assert "host" in l.request.headers
-        assert l.response.code == 304
+        f = self.master.state.view[0]
+        assert f.client_conn.address
+        assert "host" in f.request.headers
+        assert f.response.code == 304
 
     def test_response_timestamps(self):
         # test that we notice at least 2 sec delay between timestamps
@@ -288,8 +286,7 @@ class TestProxy(tservers.HTTPProxTest):
         assert request.timestamp_end - request.timestamp_start <= 0.1
 
     def test_request_tcp_setup_timestamp_presence(self):
-        # tests that the first request in a tcp connection has a tcp_setup_timestamp
-        # while others do not
+        # tests that the client_conn a tcp connection has a tcp_setup_timestamp
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("localhost", self.proxy.port))
         connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
@@ -300,18 +297,18 @@ class TestProxy(tservers.HTTPProxTest):
         connection.recv(5000)
         connection.close()
 
-        first_request = self.master.state.view[0].request
-        second_request = self.master.state.view[1].request
-        assert first_request.tcp_setup_timestamp
-        assert first_request.ssl_setup_timestamp == None
-        assert second_request.tcp_setup_timestamp == None
-        assert second_request.ssl_setup_timestamp == None
+        first_flow = self.master.state.view[0]
+        second_flow = self.master.state.view[1]
+        assert first_flow.server_conn.timestamp_tcp_setup
+        assert first_flow.server_conn.timestamp_ssl_setup is None
+        assert second_flow.server_conn.timestamp_tcp_setup
+        assert first_flow.server_conn.timestamp_tcp_setup == second_flow.server_conn.timestamp_tcp_setup
 
     def test_request_ip(self):
         f = self.pathod("200:b@100")
         assert f.status_code == 200
-        request = self.master.state.view[0].request
-        assert request.ip == "127.0.0.1"
+        f = self.master.state.view[0]
+        assert f.server_conn.peername == ("127.0.0.1", self.server.port)
 
 class TestProxySSL(tservers.HTTPProxTest):
     ssl=True
@@ -320,7 +317,7 @@ class TestProxySSL(tservers.HTTPProxTest):
         f = self.pathod("304:b@10k")
         assert f.status_code == 304
         first_request = self.master.state.view[0].request
-        assert first_request.ssl_setup_timestamp
+        assert first_request.flow.server_conn.timestamp_ssl_setup
 
 class MasterFakeResponse(tservers.TestMaster):
     def handle_request(self, m):
@@ -335,10 +332,9 @@ class TestFakeResponse(tservers.HTTPProxTest):
         assert "header_response" in f.headers.keys()
 
 
-
 class MasterKillRequest(tservers.TestMaster):
     def handle_request(self, m):
-        m.reply(proxy.KILL)
+        m.reply(KILL)
 
 
 class TestKillRequest(tservers.HTTPProxTest):
@@ -351,7 +347,7 @@ class TestKillRequest(tservers.HTTPProxTest):
 
 class MasterKillResponse(tservers.TestMaster):
     def handle_response(self, m):
-        m.reply(proxy.KILL)
+        m.reply(KILL)
 
 
 class TestKillResponse(tservers.HTTPProxTest):

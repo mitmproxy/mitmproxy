@@ -42,14 +42,14 @@ class Options(object):
 
 def str_response(resp):
     r = "%s %s"%(resp.code, resp.msg)
-    if resp.is_replay():
+    if resp.is_replay:
         r = "[replay] " + r
     return r
 
 
 def str_request(req, showhost):
-    if req.client_conn:
-        c = req.client_conn.address[0]
+    if req.flow.client_conn:
+        c = req.flow.client_conn.address.host
     else:
         c = "[replay]"
     r = "%s %s %s"%(c, req.method, req.get_url(showhost))

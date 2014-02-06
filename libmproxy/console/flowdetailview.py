@@ -1,5 +1,6 @@
 import urwid
 import common
+from .. import utils
 
 footer = [
     ('heading_key', "q"), ":back ",
@@ -33,8 +34,17 @@ class FlowDetailsView(urwid.ListBox):
         title = urwid.AttrWrap(title, "heading")
         text.append(title)
 
-        if self.flow.response:
-            c = self.flow.response.cert
+        if self.flow.server_conn:
+            text.append(urwid.Text([("head", "Server Connection:")]))
+            sc = self.flow.server_conn
+            parts = [
+                ["Address", "%s:%s" % sc.peername],
+                ["Start time", utils.format_timestamp(sc.timestamp_start)],
+                ["End time", utils.format_timestamp(sc.timestamp_end) if sc.timestamp_end else "active"],
+            ]
+            text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
+
+            c = self.flow.server_conn.cert
             if c:
                 text.append(urwid.Text([("head", "Server Certificate:")]))
                 parts = [
@@ -43,19 +53,13 @@ class FlowDetailsView(urwid.ListBox):
                     ["Valid to", str(c.notafter)],
                     ["Valid from", str(c.notbefore)],
                     ["Serial", str(c.serial)],
-                ]
-
-                parts.append(
                     [
                         "Subject",
                         urwid.BoxAdapter(
                             urwid.ListBox(common.format_keyvals(c.subject, key="highlight", val="text")),
                             len(c.subject)
                         )
-                    ]
-                )
-
-                parts.append(
+                    ],
                     [
                         "Issuer",
                         urwid.BoxAdapter(
@@ -63,7 +67,7 @@ class FlowDetailsView(urwid.ListBox):
                             len(c.issuer)
                         )
                     ]
-                )
+                ]
 
                 if c.altnames:
                     parts.append(
@@ -74,13 +78,14 @@ class FlowDetailsView(urwid.ListBox):
                     )
                 text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
-        if self.flow.request.client_conn:
+        if self.flow.client_conn:
             text.append(urwid.Text([("head", "Client Connection:")]))
-            cc = self.flow.request.client_conn
+            cc = self.flow.client_conn
             parts = [
-                ["Address", "%s:%s"%tuple(cc.address)],
-                ["Requests", "%s"%cc.requestcount],
-                ["Closed", "%s"%cc.close],
+                ["Address", "%s:%s" % cc.address()],
+                ["Start time", utils.format_timestamp(cc.timestamp_start)],
+                # ["Requests", "%s"%cc.requestcount],
+                ["End time", utils.format_timestamp(cc.timestamp_end) if cc.timestamp_end else "active"],
             ]
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
