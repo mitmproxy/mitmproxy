@@ -1001,7 +1001,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if directly_addressed_at_mitmproxy:
                 self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
                 request.flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
-                self.c.establish_server_connection()
                 self.c.client_conn.wfile.write(
                     'HTTP/1.1 200 Connection established\r\n' +
                     ('Proxy-agent: %s\r\n' % self.c.server_version) +
