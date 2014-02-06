@@ -237,7 +237,7 @@ class SSLCert:
 
 
 def get_remote_cert(host, port, sni):
-    c = tcp.TCPClient(host, port)
+    c = tcp.TCPClient((host, port))
     c.connect()
     c.convert_to_ssl(sni=sni)
     return c.cert

@@ -73,7 +73,7 @@ class TestServer(test.ServerTestBase):
     handler = EchoHandler
     def test_echo(self):
         testval = "echo!\n"
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.wfile.write(testval)
         c.wfile.flush()
@@ -88,7 +88,7 @@ class TestServerBind(test.ServerTestBase):
         for i in range(20):
             random_port = random.randrange(1024, 65535)
             try:
-                c = tcp.TCPClient("127.0.0.1", self.port, source_address=("127.0.0.1", random_port))
+                c = tcp.TCPClient(("127.0.0.1", self.port), source_address=("127.0.0.1", random_port))
                 c.connect()
                 assert c.rfile.readline() == str(("127.0.0.1", random_port))
                 return
@@ -98,11 +98,11 @@ class TestServerBind(test.ServerTestBase):
 
 class TestServerIPv6(test.ServerTestBase):
     handler = EchoHandler
-    use_ipv6 = True
+    addr = tcp.Address(("localhost", 0), use_ipv6=True)
 
     def test_echo(self):
         testval = "echo!\n"
-        c = tcp.TCPClient("::1", self.port, use_ipv6=True)
+        c = tcp.TCPClient(tcp.Address(("::1", self.port), use_ipv6=True))
         c.connect()
         c.wfile.write(testval)
         c.wfile.flush()
@@ -127,7 +127,7 @@ class TestFinishFail(test.ServerTestBase):
     handler = FinishFailHandler
     def test_disconnect_in_finish(self):
         testval = "echo!\n"
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.wfile.write("foo\n")
         c.wfile.flush()
@@ -137,7 +137,7 @@ class TestDisconnect(test.ServerTestBase):
     handler = EchoHandler
     def test_echo(self):
         testval = "echo!\n"
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.wfile.write(testval)
         c.wfile.flush()
@@ -153,7 +153,7 @@ class TestServerSSL(test.ServerTestBase):
                 v3_only = False
             )
     def test_echo(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl(sni="foo.com", options=tcp.OP_ALL)
         testval = "echo!\n"
@@ -174,7 +174,7 @@ class TestSSLv3Only(test.ServerTestBase):
         v3_only = True
     )
     def test_failure(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com", method=tcp.TLSv1_METHOD)
 
@@ -188,13 +188,13 @@ class TestSSLClientCert(test.ServerTestBase):
         v3_only = False
     )
     def test_clientcert(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl(cert=tutils.test_data.path("data/clientcert/client.pem"))
         assert c.rfile.readline().strip() == "1"
 
     def test_clientcert_err(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         tutils.raises(
             tcp.NetLibError,
@@ -212,9 +212,10 @@ class TestSNI(test.ServerTestBase):
         v3_only = False
     )
     def test_echo(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl(sni="foo.com")
+        assert c.sni == "foo.com"
         assert c.rfile.readline() == "foo.com"
 
 
@@ -228,7 +229,7 @@ class TestClientCipherList(test.ServerTestBase):
         cipher_list = 'RC4-SHA'
     )
     def test_echo(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl(sni="foo.com")
         assert c.rfile.readline() == "['RC4-SHA']"
@@ -243,7 +244,7 @@ class TestSSLDisconnect(test.ServerTestBase):
         v3_only = False
     )
     def test_echo(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl()
         # Excercise SSL.ZeroReturnError
@@ -255,7 +256,7 @@ class TestSSLDisconnect(test.ServerTestBase):
 
 class TestDisconnect(test.ServerTestBase):
     def test_echo(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.rfile.read(10)
         c.wfile.write("foo")
@@ -266,7 +267,7 @@ class TestDisconnect(test.ServerTestBase):
 class TestServerTimeOut(test.ServerTestBase):
     handler = TimeoutHandler
     def test_timeout(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         time.sleep(0.3)
         assert self.last_handler.timeout
@@ -275,7 +276,7 @@ class TestServerTimeOut(test.ServerTestBase):
 class TestTimeOut(test.ServerTestBase):
     handler = HangHandler
     def test_timeout(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.settimeout(0.1)
         assert c.gettimeout() == 0.1
@@ -291,7 +292,7 @@ class TestSSLTimeOut(test.ServerTestBase):
         v3_only = False
     )
     def test_timeout_client(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         c.convert_to_ssl()
         c.settimeout(0.1)
@@ -300,7 +301,7 @@ class TestSSLTimeOut(test.ServerTestBase):
 
 class TestTCPClient:
     def test_conerr(self):
-        c = tcp.TCPClient("127.0.0.1", 0)
+        c = tcp.TCPClient(("127.0.0.1", 0))
         tutils.raises(tcp.NetLibError, c.connect)
 
 

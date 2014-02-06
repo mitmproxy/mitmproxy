@@ -1,17 +1,22 @@
 import cStringIO, urllib, time, traceback
-import odict
+import odict, tcp
 
 
 class ClientConn:
     def __init__(self, address):
-        self.address = address
+        self.address = tcp.Address.wrap(address)
+
+
+class Flow:
+    def __init__(self, client_conn):
+        self.client_conn = client_conn
 
 
 class Request:
     def __init__(self, client_conn, scheme, method, path, headers, content):
         self.scheme, self.method, self.path = scheme, method, path
         self.headers, self.content = headers, content
-        self.client_conn = client_conn
+        self.flow = Flow(client_conn)
 
 
 def date_time_string():
@@ -60,8 +65,8 @@ class WSGIAdaptor:
             'SERVER_PROTOCOL':      "HTTP/1.1",
         }
         environ.update(extra)
-        if request.client_conn.address:
-            environ["REMOTE_ADDR"], environ["REMOTE_PORT"] = request.client_conn.address
+        if request.flow.client_conn.address:
+            environ["REMOTE_ADDR"], environ["REMOTE_PORT"] = request.flow.client_conn.address()
 
         for key, value in request.headers.items():
             key = 'HTTP_' + key.upper().replace('-', '_')

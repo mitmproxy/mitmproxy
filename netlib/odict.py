@@ -1,5 +1,6 @@
 import re, copy
 
+
 def safe_subn(pattern, repl, target, *args, **kwargs):
     """
         There are Unicode conversion problems with re.subn. We try to smooth
@@ -97,6 +98,9 @@ class ODict:
 
     def _get_state(self):
         return [tuple(i) for i in self.lst]
+
+    def _load_state(self, state):
+        self.list = [list(i) for i in state]
 
     @classmethod
     def _from_state(klass, state):

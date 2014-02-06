@@ -173,60 +173,57 @@ class Reader(_FileLike):
         return result
 
 
-class TCPClient:
-    rbufsize = -1
-    wbufsize = -1
-    def __init__(self, host, port, source_address=None, use_ipv6=False):
-        self.host, self.port = host, port
-        self.source_address = source_address
+class Address(object):
+    """
+    This class wraps an IPv4/IPv6 tuple to provide named attributes and ipv6 information.
+    """
+    def __init__(self, address, use_ipv6=False):
+        self.address = tuple(address)
         self.use_ipv6 = use_ipv6
-        self.connection, self.rfile, self.wfile = None, None, None
-        self.cert = None
-        self.ssl_established = False
 
-    def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
-        """
-            cert: Path to a file containing both client cert and private key.
-        """
-        context = SSL.Context(method)
-        if options is not None:
-            context.set_options(options)
-        if cert:
-            try:
-                context.use_privatekey_file(cert)
-                context.use_certificate_file(cert)
-            except SSL.Error, v:
-                raise NetLibError("SSL client certificate error: %s"%str(v))
-        self.connection = SSL.Connection(context, self.connection)
-        self.ssl_established = True
-        if sni:
-            self.connection.set_tlsext_host_name(sni)
-        self.connection.set_connect_state()
+    @classmethod
+    def wrap(cls, t):
+        if isinstance(t, cls):
+            return t
+        else:
+            return cls(t)
+
+    def __call__(self):
+        return self.address
+
+    @property
+    def host(self):
+        return self.address[0]
+
+    @property
+    def port(self):
+        return self.address[1]
+
+    @property
+    def use_ipv6(self):
+        return self.family == socket.AF_INET6
+
+    @use_ipv6.setter
+    def use_ipv6(self, b):
+        self.family = socket.AF_INET6 if b else socket.AF_INET
+
+    def __eq__(self, other):
+        other = Address.wrap(other)
+        return (self.address, self.family) == (other.address, other.family)
+
+
+class SocketCloseMixin(object):
+    def finish(self):
+        self.finished = True
         try:
-            self.connection.do_handshake()
-        except SSL.Error, v:
-            raise NetLibError("SSL handshake error: %s"%str(v))
-        self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
-        self.rfile.set_descriptor(self.connection)
-        self.wfile.set_descriptor(self.connection)
-
-    def connect(self):
-        try:
-            connection = socket.socket(socket.AF_INET6 if self.use_ipv6 else socket.AF_INET, socket.SOCK_STREAM)
-            if self.source_address:
-                connection.bind(self.source_address)
-            connection.connect((self.host, self.port))
-            self.rfile = Reader(connection.makefile('rb', self.rbufsize))
-            self.wfile = Writer(connection.makefile('wb', self.wbufsize))
-        except (socket.error, IOError), err:
-            raise NetLibError('Error connecting to "%s": %s' % (self.host, err))
-        self.connection = connection
-
-    def settimeout(self, n):
-        self.connection.settimeout(n)
-
-    def gettimeout(self):
-        return self.connection.gettimeout()
+            if not getattr(self.wfile, "closed", False):
+                self.wfile.flush()
+            self.close()
+            self.wfile.close()
+            self.rfile.close()
+        except (socket.error, NetLibDisconnect):
+            # Remote has disconnected
+            pass
 
     def close(self):
         """
@@ -248,23 +245,80 @@ class TCPClient:
             pass
 
 
-class BaseHandler:
+class TCPClient(SocketCloseMixin):
+    rbufsize = -1
+    wbufsize = -1
+    def __init__(self, address, source_address=None):
+        self.address = Address.wrap(address)
+        self.source_address = Address.wrap(source_address) if source_address else None
+        self.connection, self.rfile, self.wfile = None, None, None
+        self.cert = None
+        self.ssl_established = False
+        self.sni = None
+
+    def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
+        """
+            cert: Path to a file containing both client cert and private key.
+        """
+        context = SSL.Context(method)
+        if options is not None:
+            context.set_options(options)
+        if cert:
+            try:
+                context.use_privatekey_file(cert)
+                context.use_certificate_file(cert)
+            except SSL.Error, v:
+                raise NetLibError("SSL client certificate error: %s"%str(v))
+        self.connection = SSL.Connection(context, self.connection)
+        self.ssl_established = True
+        if sni:
+            self.sni = sni
+            self.connection.set_tlsext_host_name(sni)
+        self.connection.set_connect_state()
+        try:
+            self.connection.do_handshake()
+        except SSL.Error, v:
+            raise NetLibError("SSL handshake error: %s"%str(v))
+        self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
+        self.rfile.set_descriptor(self.connection)
+        self.wfile.set_descriptor(self.connection)
+
+    def connect(self):
+        try:
+            connection = socket.socket(self.address.family, socket.SOCK_STREAM)
+            if self.source_address:
+                connection.bind(self.source_address())
+            connection.connect(self.address())
+            self.rfile = Reader(connection.makefile('rb', self.rbufsize))
+            self.wfile = Writer(connection.makefile('wb', self.wbufsize))
+        except (socket.error, IOError), err:
+            raise NetLibError('Error connecting to "%s": %s' % (self.address.host, err))
+        self.connection = connection
+
+    def settimeout(self, n):
+        self.connection.settimeout(n)
+
+    def gettimeout(self):
+        return self.connection.gettimeout()
+
+
+class BaseHandler(SocketCloseMixin):
     """
         The instantiator is expected to call the handle() and finish() methods.
 
     """
     rbufsize = -1
     wbufsize = -1
-    def __init__(self, connection, client_address, server):
+
+    def __init__(self, connection, address, server):
         self.connection = connection
+        self.address = Address.wrap(address)
+        self.server = server
         self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
         self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
 
-        self.client_address = client_address
-        self.server = server
         self.finished = False
         self.ssl_established = False
-
         self.clientcert = None
 
     def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False, cipher_list=None):
@@ -318,66 +372,34 @@ class BaseHandler:
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
-    def finish(self):
-        self.finished = True
-        try:
-            if not getattr(self.wfile, "closed", False):
-                self.wfile.flush()
-            self.close()
-            self.wfile.close()
-            self.rfile.close()
-        except (socket.error, NetLibDisconnect):
-            # Remote has disconnected
-            pass
-
     def handle(self): # pragma: no cover
         raise NotImplementedError
 
     def settimeout(self, n):
         self.connection.settimeout(n)
 
-    def close(self):
-        """
-            Does a hard close of the socket, i.e. a shutdown, followed by a close.
-        """
-        try:
-            if self.ssl_established:
-                self.connection.shutdown()
-                self.connection.sock_shutdown(socket.SHUT_WR)
-            else:
-                self.connection.shutdown(socket.SHUT_WR)
-            # Section 4.2.2.13 of RFC 1122 tells us that a close() with any
-            # pending readable data could lead to an immediate RST being sent.
-            # http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
-            while self.connection.recv(4096):
-                pass
-        except (socket.error, SSL.Error):
-            # Socket probably already closed
-            pass
-        self.connection.close()
 
 
 class TCPServer:
     request_queue_size = 20
-    def __init__(self, server_address, use_ipv6=False):
-        self.server_address = server_address
-        self.use_ipv6 = use_ipv6
+    def __init__(self, address):
+        self.address = Address.wrap(address)
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
-        self.socket = socket.socket(socket.AF_INET6 if self.use_ipv6 else socket.AF_INET, socket.SOCK_STREAM)
+        self.socket = socket.socket(self.address.family, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
-        self.server_address = self.socket.getsockname()
-        self.port = self.server_address[1]
+        self.socket.bind(self.address())
+        self.address = Address.wrap(self.socket.getsockname())
         self.socket.listen(self.request_queue_size)
 
-    def request_thread(self, request, client_address):
+    def connection_thread(self, connection, client_address):
+        client_address = Address(client_address)
         try:
-            self.handle_connection(request, client_address)
-            request.close()
+            self.handle_client_connection(connection, client_address)
         except:
-            self.handle_error(request, client_address)
-            request.close()
+            self.handle_error(connection, client_address)
+        finally:
+            connection.close()
 
     def serve_forever(self, poll_interval=0.1):
         self.__is_shut_down.clear()
@@ -391,10 +413,10 @@ class TCPServer:
                         else:
                             raise  
                 if self.socket in r:
-                    request, client_address = self.socket.accept()
+                    connection, client_address = self.socket.accept()
                     t = threading.Thread(
-                            target = self.request_thread,
-                            args = (request, client_address)
+                            target = self.connection_thread,
+                            args = (connection, client_address)
                         )
                     t.setDaemon(1)
                     t.start()
@@ -410,18 +432,18 @@ class TCPServer:
 
     def handle_error(self, request, client_address, fp=sys.stderr):
         """
-            Called when handle_connection raises an exception.
+            Called when handle_client_connection raises an exception.
         """
         # If a thread has persisted after interpreter exit, the module might be
         # none.
         if traceback:
             exc = traceback.format_exc()
             print >> fp, '-'*40
-            print >> fp, "Error in processing of request from %s:%s"%client_address
+            print >> fp, "Error in processing of request from %s:%s" % (client_address.host, client_address.port)
             print >> fp, exc
             print >> fp, '-'*40
 
-    def handle_connection(self, request, client_address): # pragma: no cover
+    def handle_client_connection(self, conn, client_address): # pragma: no cover
         """
             Called after client connection.
         """

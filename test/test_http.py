@@ -223,7 +223,7 @@ class TestReadResponseNoContentLength(test.ServerTestBase):
     handler = NoContentLengthHTTPHandler
 
     def test_no_content_length(self):
-        c = tcp.TCPClient("127.0.0.1", self.port)
+        c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         httpversion, code, msg, headers, content = http.read_response(c.rfile, "GET", None)
         assert content == "bar\r\n\r\n"
