@@ -132,6 +132,9 @@ class TestProxyChainingSSL(tservers.HTTPChainProxyTest):
                                                               # request from chain[1] to proxy
         assert self.proxy.tmaster.state.flow_count() == 1  # request from chain[0] (regular proxy doesn't store CONNECTs)
 
+class TestProxyChainingSSLReconnect(tservers.HTTPChainProxyTest):
+    ssl = True
+
     def test_reconnect(self):
         """
         Tests proper functionality of ConnectionHandler.server_reconnect mock.
