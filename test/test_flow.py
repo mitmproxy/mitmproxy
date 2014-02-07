@@ -980,8 +980,6 @@ class TestRequest:
         r = tutils.treq()
         r.headers = h
         result = len(r._assemble_headers())
-        print result
-        print r._assemble_headers()
         assert result == 62
 
     def test_get_content_type(self):

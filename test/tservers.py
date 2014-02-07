@@ -51,7 +51,6 @@ class ProxyThread(threading.Thread):
         threading.Thread.__init__(self)
         self.tmaster = tmaster
         self.name = "ProxyThread (%s:%s)" % (tmaster.server.address.host, tmaster.server.address.port)
-
         controller.should_exit = False
 
     @property
@@ -85,7 +84,7 @@ class ProxTestBase(object):
         pconf = cls.get_proxy_config()
         config = proxy.ProxyConfig(
             no_upstream_cert = cls.no_upstream_cert,
-            cacert = tutils.test_data.path("data/serverkey.pem"),
+            cacert = tutils.test_data.path("data/confdir/mitmproxy-ca.pem"),
             authenticator = cls.authenticator,
             **pconf
         )
@@ -162,9 +161,7 @@ class HTTPProxTest(ProxTestBase):
     def app(self, page):
         if self.ssl:
             p = libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), True)
-            print "PRE"
             p.connect((APP_HOST, APP_PORT))
-            print "POST"
             return p.request("get:'/%s'"%page)
         else:
             p = self.pathoc()
@@ -255,9 +252,8 @@ class ChainProxTest(ProxTestBase):
     """
     n = 2
     chain_config = [lambda: proxy.ProxyConfig(
-        cacert = tutils.test_data.path("data/serverkey.pem")
+        cacert = tutils.test_data.path("data/confdir/mitmproxy-ca.pem"),
     )] * n
-
     @classmethod
     def setupAll(cls):
         super(ChainProxTest, cls).setupAll()

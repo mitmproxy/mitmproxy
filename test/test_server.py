@@ -153,6 +153,7 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         connection.close()
         assert "content-length" in resp.lower()
 
+
 class TestHTTPAuth(tservers.HTTPProxTest):
     authenticator = http_auth.BasicProxyAuth(http_auth.PassManSingleUser("test", "test"), "realm")
     def test_auth(self):
