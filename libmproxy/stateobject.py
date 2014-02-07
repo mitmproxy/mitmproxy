@@ -1,13 +1,17 @@
 class StateObject(object):
-    def _get_state(self):
+    def _get_state(self):  # pragma: nocover
         raise NotImplementedError
 
-    def _load_state(self, state):
+    def _load_state(self, state):  # pragma: nocover
         raise NotImplementedError
 
     @classmethod
-    def _from_state(cls, state):
+    def _from_state(cls, state):  # pragma: nocover
         raise NotImplementedError
+        # Usually, this function roughly equals to the following code:
+        # f = cls()
+        # f._load_state(state)
+        # return f
 
     def __eq__(self, other):
         try:
@@ -67,9 +71,3 @@ class SimpleStateObject(StateObject):
             setattr(self, attr, cls._from_state(state[attr]))
         else:
             setattr(self, attr, cls(state[attr]))
-
-    @classmethod
-    def _from_state(cls, state):
-        f = cls()  # the default implementation assumes an empty constructor. Override accordingly.
-        f._load_state(state)
-        return f

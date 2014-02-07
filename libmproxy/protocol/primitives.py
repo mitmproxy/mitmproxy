@@ -88,12 +88,6 @@ class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
         d.update(version=version.IVERSION)
         return d
 
-    @classmethod
-    def _from_state(cls, state):
-        f = cls(None, None, None)
-        f._load_state(state)
-        return f
-
     def __eq__(self, other):
         return self is other
 

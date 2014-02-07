@@ -2,14 +2,15 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import hashlib, Cookie, cookielib, copy, re, urlparse, threading
-import time, urllib
-import types
-import tnetstring, filt, script, utils, encoding
-from email.utils import parsedate_tz, formatdate, mktime_tz
-from netlib import odict, http, certutils, wsgi
-from .proxy import ClientConnection, ServerConnection
-import controller, version, protocol, stateobject
+import base64
+import hashlib, Cookie, cookielib, re, threading
+import os
+from flask import request
+import requests
+import tnetstring, filt, script
+from netlib import odict, wsgi
+from .proxy import ClientConnection, ServerConnection  # FIXME: remove circular dependency
+import controller, version, protocol
 import app
 from .protocol import KILL
 from .protocol.http import HTTPResponse, CONTENT_MISSING
@@ -17,7 +18,6 @@ from .proxy import RequestReplayThread
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless
-
 
 
 class AppRegistry:
@@ -453,7 +453,28 @@ class FlowMaster(controller.Master):
                 port
             )
         else:
-            threading.Thread(target=app.mapp.run,kwargs={
+            @app.mapp.before_request
+            def patch_environ(*args, **kwargs):
+                request.environ["mitmproxy.master"] = self
+
+            # the only absurd way to shut down a flask/werkzeug server.
+            # http://flask.pocoo.org/snippets/67/
+            shutdown_secret = base64.b32encode(os.urandom(30))
+
+            @app.mapp.route('/shutdown/<secret>')
+            def shutdown(secret):
+                if secret == shutdown_secret:
+                    request.environ.get('werkzeug.server.shutdown')()
+
+            # Workaround: Monkey-patch shutdown function to stop the app.
+            # Improve this when we switch flask werkzeug for something useful.
+            _shutdown = self.shutdown
+            def _shutdownwrap():
+                _shutdown()
+                requests.get("http://%s:%s/shutdown/%s" % (host, port, shutdown_secret))
+            self.shutdown = _shutdownwrap
+
+            threading.Thread(target=app.mapp.run, kwargs={
                 "use_reloader": False,
                 "host": host,
                 "port": port}).start()

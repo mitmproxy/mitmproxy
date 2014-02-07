@@ -15,14 +15,14 @@ class ProtocolHandler(object):
         self.c = c
         """@type: libmproxy.proxy.ConnectionHandler"""
 
-    def handle_messages(self):
+    def handle_messages(self):  # pragma: nocover
         """
         This method gets called if a client connection has been made. Depending on the proxy settings,
         a server connection might already exist as well.
         """
         raise NotImplementedError
 
-    def handle_error(self, error):
+    def handle_error(self, error):  # pragma: nocover
         """
         This method gets called should there be an uncaught exception during the connection.
         This might happen outside of handle_messages, e.g. if the initial SSL handshake fails in transparent mode.
@@ -90,7 +90,7 @@ def _handler(conntype, connection_handler):
     if conntype in protocols:
         return protocols[conntype]["handler"](connection_handler)
 
-    raise NotImplementedError
+    raise NotImplementedError   # pragma: nocover
 
 
 def handle_messages(conntype, connection_handler):
