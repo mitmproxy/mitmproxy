@@ -883,8 +883,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             self.process_request(flow.request)
 
             request_reply = self.c.channel.ask("request", flow.request)
-            flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point.
-                                       # we can safely set it as the final attribute valueh here.
+            flow.server_conn = self.c.server_conn
 
             if request_reply is None or request_reply == KILL:
                 return False
@@ -894,14 +893,15 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             else:
                 flow.response = self.get_response_from_server(flow.request)
 
+            flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point
+            # we can safely set it as the final attribute value here.
+
             self.c.log("response", [flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response", flow.response)
             if response_reply is None or response_reply == KILL:
                 return False
 
-            raw = flow.response._assemble()
-            self.c.client_conn.wfile.write(raw)
-            self.c.client_conn.wfile.flush()
+            self.c.client_conn.send(flow.response._assemble())
             flow.timestamp_end = utils.timestamp()
 
             if (http.connection_close(flow.request.httpversion, flow.request.headers) or
@@ -909,7 +909,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 return False
 
             if flow.request.form_in == "authority":
-                self.ssl_upgrade(flow.request)
+                self.ssl_upgrade()
 
             self.restore_server()  # If the user has changed the target server on this connection,
                                    # restore the original target server
@@ -968,7 +968,27 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         self.c.client_conn.wfile.write(html_content)
         self.c.client_conn.wfile.flush()
 
-    def ssl_upgrade(self, upstream_request=None):
+    def hook_reconnect(self, upstream_request):
+        self.c.log("Hook reconnect function")
+        original_reconnect_func = self.c.server_reconnect
+
+        def reconnect_http_proxy():
+            self.c.log("Hooked reconnect function")
+            self.c.log("Hook: Run original reconnect")
+            original_reconnect_func(no_ssl=True)
+            self.c.log("Hook: Write CONNECT request to upstream proxy", [upstream_request._assemble_first_line()])
+            self.c.server_conn.send(upstream_request._assemble())
+            self.c.log("Hook: Read answer to CONNECT request from proxy")
+            resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
+            if resp.code != 200:
+                raise ProxyError(resp.code,
+                                 "Cannot reestablish SSL connection with upstream proxy: \r\n" + str(resp.headers))
+            self.c.log("Hook: Establish SSL with upstream proxy")
+            self.c.establish_ssl(server=True)
+
+        self.c.server_reconnect = reconnect_http_proxy
+
+    def ssl_upgrade(self):
         """
         Upgrade the connection to SSL after an authority (CONNECT) request has been made.
         If the authority request has been forwarded upstream (because we have another proxy server there),
@@ -981,28 +1001,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         self.c.mode = "transparent"
         self.c.determine_conntype()
         self.c.establish_ssl(server=True, client=True)
-
-        if upstream_request:
-            self.c.log("Hook reconnect function")
-            original_reconnect_func = self.c.server_reconnect
-
-            def reconnect_http_proxy():
-                self.c.log("Hooked reconnect function")
-                self.c.log("Hook: Run original reconnect")
-                original_reconnect_func(no_ssl=True)
-                self.c.log("Hook: Write CONNECT request to upstream proxy", [upstream_request._assemble_first_line()])
-                self.c.server_conn.wfile.write(upstream_request._assemble())
-                self.c.server_conn.wfile.flush()
-                self.c.log("Hook: Read answer to CONNECT request from proxy")
-                resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
-                if resp.code != 200:
-                    raise ProxyError(resp.code,
-                                     "Cannot reestablish SSL connection with upstream proxy: \r\n" + str(resp.headers))
-                self.c.log("Hook: Establish SSL with upstream proxy")
-                self.c.establish_ssl(server=True)
-
-            self.c.server_reconnect = reconnect_http_proxy
-
         self.c.log("Upgrade to SSL completed.")
         raise ConnectionTypeChange
 
@@ -1028,7 +1026,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
         if self.c.mode == "regular":
             if request.form_in == "authority":  # forward mode
-                pass
+                self.hook_reconnect(request)
             elif request.form_in == "absolute":
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid Request")
@@ -1037,7 +1035,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                     self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
                     request.flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
             else:
-                raise http.HttpError(400, "Invalid Request")
+                raise http.HttpError(400, "Invalid request form (absolute-form or authority-form required)")
 
     def authenticate(self, request):
         if self.c.config.authenticator:

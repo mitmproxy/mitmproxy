@@ -50,6 +50,9 @@ class Error(stateobject.SimpleStateObject):
         timestamp=float
     )
 
+    def __str__(self):
+        return self.msg
+
     @classmethod
     def _from_state(cls, state):
         f = cls(None)  # the default implementation assumes an empty constructor. Override accordingly.

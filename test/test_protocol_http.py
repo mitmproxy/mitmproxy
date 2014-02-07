@@ -1,5 +1,6 @@
 from libmproxy import proxy  # FIXME: Remove
 from libmproxy.protocol.http import *
+from libmproxy.protocol import KILL
 from cStringIO import StringIO
 import tutils, tservers
 
@@ -86,6 +87,23 @@ class TestHTTPResponse:
         tutils.raises("Invalid server response: 'content", HTTPResponse.from_stream, s, "GET")
 
 
+class TestInvalidRequests(tservers.HTTPProxTest):
+    ssl = True
+
+    def test_double_connect(self):
+        p = self.pathoc()
+        r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
+        assert r.status_code == 502
+        assert "Must not CONNECT on already encrypted connection" in r.content
+
+    def test_origin_request(self):
+        p = self.pathoc_raw()
+        p.connect()
+        r = p.request("get:/p/200")
+        assert r.status_code == 400
+        assert "Invalid request form" in r.content
+
+
 class TestProxyChaining(tservers.HTTPChainProxyTest):
     def test_all(self):
         self.chain[1].tmaster.replacehooks.add("~q", "foo", "bar") # replace in request
@@ -98,16 +116,83 @@ class TestProxyChaining(tservers.HTTPChainProxyTest):
         assert req.content == "ORLY"
         assert req.status_code == 418
 
-        self.chain[0].tmaster.replacehooks.clear()
-        self.chain[1].tmaster.replacehooks.clear()
-        self.proxy.tmaster.replacehooks.clear()
-
-
 class TestProxyChainingSSL(tservers.HTTPChainProxyTest):
     ssl = True
 
-    def test_full(self):
+    def test_simple(self):
+
         p = self.pathoc()
-        req = p.request("get:'/p/418:b@100'")
-        assert len(req.content) == 100
+        req = p.request("get:'/p/418:b\"content\"'")
+        assert req.content == "content"
         assert req.status_code == 418
+
+        assert self.chain[1].tmaster.state.flow_count() == 2  # CONNECT from pathoc to chain[0],
+                                                              # request from pathoc to chain[0]
+        assert self.chain[0].tmaster.state.flow_count() == 2  # CONNECT from chain[1] to proxy,
+                                                              # request from chain[1] to proxy
+        assert self.proxy.tmaster.state.flow_count() == 1  # request from chain[0] (regular proxy doesn't store CONNECTs)
+
+    def test_reconnect(self):
+        """
+        Tests proper functionality of ConnectionHandler.server_reconnect mock.
+        If we have a disconnect on a secure connection that's transparently proxified to
+        an upstream http proxy, we need to send the CONNECT request again.
+        """
+        def kill_requests(master, attr, exclude):
+            k = [0]  # variable scope workaround: put into array
+            _func = getattr(master, attr)
+            def handler(r):
+                k[0] += 1
+                if not (k[0] in exclude):
+                    r.flow.client_conn.finish()
+                    r.flow.error = Error("terminated")
+                    r.reply(KILL)
+                return _func(r)
+            setattr(master, attr, handler)
+
+        kill_requests(self.proxy.tmaster, "handle_request",
+                      exclude=[
+                              # fail first request
+                          2,  # allow second request
+                      ])
+
+        kill_requests(self.chain[0].tmaster, "handle_request",
+                      exclude=[
+                          1,  # CONNECT
+                              # fail first request
+                          3,  # reCONNECT
+                          4,  # request
+                      ])
+
+        p = self.pathoc()
+        req = p.request("get:'/p/418:b\"content\"'")
+        assert self.chain[1].tmaster.state.flow_count() == 2  # CONNECT and request
+        assert self.chain[0].tmaster.state.flow_count() == 4  # CONNECT, failing request,
+                                                              # reCONNECT, request
+        assert self.proxy.tmaster.state.flow_count() == 2  # failing request, request
+                                                           # (doesn't store (repeated) CONNECTs from chain[0]
+                                                           #  as it is a regular proxy)
+        assert req.content == "content"
+        assert req.status_code == 418
+
+        assert not self.proxy.tmaster.state._flow_list[0].response  # killed
+        assert self.proxy.tmaster.state._flow_list[1].response
+
+        assert self.chain[1].tmaster.state._flow_list[0].request.form_in == "authority"
+        assert self.chain[1].tmaster.state._flow_list[1].request.form_in == "origin"
+
+        assert self.chain[0].tmaster.state._flow_list[0].request.form_in == "authority"
+        assert self.chain[0].tmaster.state._flow_list[1].request.form_in == "origin"
+        assert self.chain[0].tmaster.state._flow_list[2].request.form_in == "authority"
+        assert self.chain[0].tmaster.state._flow_list[3].request.form_in == "origin"
+
+        assert self.proxy.tmaster.state._flow_list[0].request.form_in == "origin"
+        assert self.proxy.tmaster.state._flow_list[1].request.form_in == "origin"
+
+        req = p.request("get:'/p/418:b\"content2\"'")
+
+        assert req.status_code == 502
+        assert self.chain[1].tmaster.state.flow_count() == 3  # + new request
+        assert self.chain[0].tmaster.state.flow_count() == 6  # + new request, repeated CONNECT from chain[1]
+                                                              # (both terminated)
+        assert self.proxy.tmaster.state.flow_count() == 2  # nothing happened here

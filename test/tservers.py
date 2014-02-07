@@ -254,7 +254,6 @@ class ChainProxTest(ProxTestBase):
     Chain n instances of mitmproxy in a row - because we can.
     """
     n = 2
-    chain = []
     chain_config = [lambda: proxy.ProxyConfig(
         cacert = tutils.test_data.path("data/serverkey.pem")
     )] * n
@@ -262,6 +261,7 @@ class ChainProxTest(ProxTestBase):
     @classmethod
     def setupAll(cls):
         super(ChainProxTest, cls).setupAll()
+        cls.chain = []
         for i in range(cls.n):
             config = cls.chain_config[i]()
             config.forward_proxy = ("http", "127.0.0.1",
@@ -277,6 +277,12 @@ class ChainProxTest(ProxTestBase):
         super(ChainProxTest, cls).teardownAll()
         for p in cls.chain:
             p.tmaster.server.shutdown()
+
+    def setUp(self):
+        super(ChainProxTest, self).setUp()
+        for p in self.chain:
+            p.tmaster.clear_log()
+            p.tmaster.state.clear()
 
 
 class HTTPChainProxyTest(ChainProxTest):

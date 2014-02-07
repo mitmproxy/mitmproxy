@@ -89,6 +89,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
     def copy(self):
         return copy.copy(self)
 
+    def send(self, message):
+        self.wfile.write(message)
+        self.wfile.flush()
+
     @classmethod
     def _from_state(cls, state):
         f = cls(None, tuple(), None)
