@@ -21,13 +21,12 @@ def errapp(environ, start_response):
 
 
 class TestMaster(flow.FlowMaster):
-    def __init__(self, testq, config):
+    def __init__(self, config):
         s = proxy.ProxyServer(config, 0)
         state = flow.State()
         flow.FlowMaster.__init__(self, s, state)
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
-        self.testq = testq
         self.clear_log()
         self.start_app(APP_HOST, APP_PORT, False)
 
@@ -51,6 +50,8 @@ class ProxyThread(threading.Thread):
     def __init__(self, tmaster):
         threading.Thread.__init__(self)
         self.tmaster = tmaster
+        self.name = "ProxyThread (%s:%s)" % (tmaster.server.address.host, tmaster.server.address.port)
+
         controller.should_exit = False
 
     @property
@@ -68,7 +69,7 @@ class ProxyThread(threading.Thread):
         self.tmaster.shutdown()
 
 
-class ProxTestBase:
+class ProxTestBase(object):
     # Test Configuration
     ssl = None
     ssloptions = False
@@ -79,7 +80,6 @@ class ProxTestBase:
     masterclass = TestMaster
     @classmethod
     def setupAll(cls):
-        cls.tqueue = Queue.Queue()
         cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         pconf = cls.get_proxy_config()
@@ -89,7 +89,7 @@ class ProxTestBase:
             authenticator = cls.authenticator,
             **pconf
         )
-        tmaster = cls.masterclass(cls.tqueue, config)
+        tmaster = cls.masterclass(config)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -249,5 +249,44 @@ class ReverseProxTest(ProxTestBase):
         return p.request(q)
 
 
+class ChainProxTest(ProxTestBase):
+    """
+    Chain n instances of mitmproxy in a row - because we can.
+    """
+    n = 2
+    chain = []
+    chain_config = [lambda: proxy.ProxyConfig(
+        cacert = tutils.test_data.path("data/serverkey.pem")
+    )] * n
+
+    @classmethod
+    def setupAll(cls):
+        super(ChainProxTest, cls).setupAll()
+        for i in range(cls.n):
+            config = cls.chain_config[i]()
+            config.forward_proxy = ("http", "127.0.0.1",
+                                    cls.proxy.port if i == 0 else
+                                    cls.chain[-1].port
+            )
+            tmaster = cls.masterclass(config)
+            cls.chain.append(ProxyThread(tmaster))
+            cls.chain[-1].start()
+
+    @classmethod
+    def teardownAll(cls):
+        super(ChainProxTest, cls).teardownAll()
+        for p in cls.chain:
+            p.tmaster.server.shutdown()
 
 
+class HTTPChainProxyTest(ChainProxTest):
+    def pathoc(self, sni=None):
+        """
+            Returns a connected Pathoc instance.
+        """
+        p = libpathod.pathoc.Pathoc(("localhost", self.chain[-1].port), ssl=self.ssl, sni=sni)
+        if self.ssl:
+            p.connect(("127.0.0.1", self.server.port))
+        else:
+            p.connect()
+        return p

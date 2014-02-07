@@ -32,8 +32,8 @@ class TestFuzzy(tservers.HTTPProxTest):
         assert p.request(req%self.server.port).status_code == 502
 
     def test_upstream_disconnect(self):
-        req = r'200:d0:h"Date"="Sun, 03 Mar 2013 04:00:00 GMT"'
+        req = r'200:d0'
         p = self.pathod(req)
-        assert p.status_code == 400
+        assert p.status_code == 502
 
 

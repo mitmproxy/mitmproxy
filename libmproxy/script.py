@@ -108,7 +108,7 @@ def _handle_concurrent_reply(fn, o, args=[], kwargs={}):
     def run():
         fn(*args, **kwargs)
         reply(o)
-    threading.Thread(target=run).start()
+    threading.Thread(target=run, name="ScriptThread").start()
 
 
 def concurrent(fn):

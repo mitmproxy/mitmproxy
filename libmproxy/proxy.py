@@ -185,6 +185,8 @@ from .protocol.http import HTTPResponse
 
 
 class RequestReplayThread(threading.Thread):
+    name="RequestReplayThread"
+
     def __init__(self, config, flow, masterq):
         self.config, self.flow, self.channel = config, flow, controller.Channel(masterq)
         threading.Thread.__init__(self)

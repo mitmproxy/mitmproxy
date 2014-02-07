@@ -1,7 +1,7 @@
 from libmproxy import proxy  # FIXME: Remove
 from libmproxy.protocol.http import *
 from cStringIO import StringIO
-import tutils
+import tutils, tservers
 
 
 def test_HttpAuthenticationError():
@@ -84,3 +84,30 @@ class TestHTTPResponse:
         assert r.code == 200
         assert r.content == ""
         tutils.raises("Invalid server response: 'content", HTTPResponse.from_stream, s, "GET")
+
+
+class TestProxyChaining(tservers.HTTPChainProxyTest):
+    def test_all(self):
+        self.chain[1].tmaster.replacehooks.add("~q", "foo", "bar") # replace in request
+        self.chain[0].tmaster.replacehooks.add("~q", "foo", "oh noes!")
+        self.proxy.tmaster.replacehooks.add("~q", "bar", "baz")
+        self.chain[0].tmaster.replacehooks.add("~s", "baz", "ORLY")  # replace in response
+
+        p = self.pathoc()
+        req = p.request("get:'%s/p/418:b\"foo\"'" % self.server.urlbase)
+        assert req.content == "ORLY"
+        assert req.status_code == 418
+
+        self.chain[0].tmaster.replacehooks.clear()
+        self.chain[1].tmaster.replacehooks.clear()
+        self.proxy.tmaster.replacehooks.clear()
+
+
+class TestProxyChainingSSL(tservers.HTTPChainProxyTest):
+    ssl = True
+
+    def test_full(self):
+        p = self.pathoc()
+        req = p.request("get:'/p/418:b@100'")
+        assert len(req.content) == 100
+        assert req.status_code == 418

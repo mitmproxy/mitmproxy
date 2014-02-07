@@ -72,6 +72,7 @@ class Slave(threading.Thread):
         self.channel, self.server = channel, server
         self.server.set_channel(channel)
         threading.Thread.__init__(self)
+        self.name = "SlaveThread (%s:%s)" % (self.server.address.host, self.server.address.port)
 
     def run(self):
         self.server.serve_forever()
