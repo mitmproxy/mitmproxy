@@ -75,9 +75,6 @@ class TestScript:
             # Two instantiations
             assert m.call_count == 2
             assert (time.time() - t_start) < 0.09
-            time.sleep(0.3 - (time.time() - t_start))
-            # Plus two invocations
-            assert m.call_count == 4
 
     def test_concurrent2(self):
         s = flow.State()

@@ -1,13 +1,13 @@
 class StateObject(object):
-    def _get_state(self):  # pragma: nocover
-        raise NotImplementedError
+    def _get_state(self):
+        raise NotImplementedError  # pragma: nocover
 
-    def _load_state(self, state):  # pragma: nocover
-        raise NotImplementedError
+    def _load_state(self, state):
+        raise NotImplementedError  # pragma: nocover
 
     @classmethod
-    def _from_state(cls, state):  # pragma: nocover
-        raise NotImplementedError
+    def _from_state(cls, state):
+        raise NotImplementedError  # pragma: nocover
         # Usually, this function roughly equals to the following code:
         # f = cls()
         # f._load_state(state)

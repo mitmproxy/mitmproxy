@@ -1047,7 +1047,7 @@ class TestResponse:
         r = tutils.tresp()
         r.headers["content-encoding"] = ["identity"]
         r.content = "falafel"
-        r.decode()
+        assert r.decode()
         assert not r.headers["content-encoding"]
         assert r.content == "falafel"
 
@@ -1064,8 +1064,12 @@ class TestResponse:
         r.encode("gzip")
         assert r.headers["content-encoding"] == ["gzip"]
         assert r.content != "falafel"
-        r.decode()
+        assert r.decode()
         assert not r.headers["content-encoding"]
+        assert r.content == "falafel"
+
+        r.headers["content-encoding"] = ["gzip"]
+        assert not r.decode()
         assert r.content == "falafel"
 
     def test_header_size(self):

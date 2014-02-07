@@ -39,6 +39,14 @@ def tserver_conn():
     return c
 
 
+def treq_absolute(conn=None, content="content"):
+    r = treq(conn, content)
+    r.form_in = r.form_out = "absolute"
+    r.host = "address"
+    r.port = 22
+    r.scheme = "http"
+    return r
+
 def treq(conn=None, content="content"):
     if not conn:
         conn = tclient_conn()
@@ -78,6 +86,10 @@ def terr(req=None):
     f.error.reply = controller.DummyReply()
     return f.error
 
+def tflow_noreq():
+    f = tflow()
+    f.request = None
+    return f
 
 def tflow(req=None):
     if not req:

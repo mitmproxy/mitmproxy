@@ -15,19 +15,19 @@ class ProtocolHandler(object):
         self.c = c
         """@type: libmproxy.proxy.ConnectionHandler"""
 
-    def handle_messages(self):  # pragma: nocover
+    def handle_messages(self):
         """
         This method gets called if a client connection has been made. Depending on the proxy settings,
         a server connection might already exist as well.
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
-    def handle_error(self, error):  # pragma: nocover
+    def handle_error(self, error):
         """
         This method gets called should there be an uncaught exception during the connection.
         This might happen outside of handle_messages, e.g. if the initial SSL handshake fails in transparent mode.
         """
-        raise error
+        raise error  # pragma: nocover
 
 
 class TemporaryServerChangeMixin(object):

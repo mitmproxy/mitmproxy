@@ -56,6 +56,7 @@ class HTTPMessage(stateobject.SimpleStateObject):
     def __init__(self, httpversion, headers, content, timestamp_start=None, timestamp_end=None):
         self.httpversion = httpversion
         self.headers = headers
+        """@type: ODictCaseless"""
         self.content = content
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
@@ -142,31 +143,31 @@ class HTTPMessage(stateobject.SimpleStateObject):
         """
         Parse an HTTP message from a file stream
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
     def _assemble_first_line(self):
         """
         Returns the assembled request/response line
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
     def _assemble_headers(self):
         """
         Returns the assembled headers
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
     def _assemble_head(self):
         """
         Returns the assembled request/response line plus headers
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
     def _assemble(self):
         """
         Returns the assembled request/response
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
 
 class HTTPRequest(HTTPMessage):
@@ -253,9 +254,15 @@ class HTTPRequest(HTTPMessage):
         httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end \
             = None, None, None, None, None, None, None, None, None, None
 
-        rfile.reset_timestamps()
+        if hasattr(rfile, "reset_timestamps"):
+            rfile.reset_timestamps()
+
         request_line = get_line(rfile)
-        timestamp_start = rfile.first_byte_timestamp
+
+        if hasattr(rfile, "first_byte_timestamp"):
+            timestamp_start = rfile.first_byte_timestamp
+        else:
+            timestamp_start = utils.timestamp()
 
         request_line_parts = http.parse_init(request_line)
         if not request_line_parts:
@@ -597,14 +604,21 @@ class HTTPResponse(HTTPMessage):
         Parse an HTTP response from a file stream
         """
         if not include_content:
-            raise NotImplementedError
+            raise NotImplementedError  # pragma: nocover
 
-        rfile.reset_timestamps()
+        if hasattr(rfile, "reset_timestamps"):
+            rfile.reset_timestamps()
+
         httpversion, code, msg, headers, content = http.read_response(
             rfile,
             request_method,
             body_size_limit)
-        timestamp_start = rfile.first_byte_timestamp
+
+        if hasattr(rfile, "first_byte_timestamp"):
+            timestamp_start = rfile.first_byte_timestamp
+        else:
+            timestamp_start = utils.timestamp()
+
         timestamp_end = utils.timestamp()
         return HTTPResponse(httpversion, code, msg, headers, content, timestamp_start, timestamp_end)
 
@@ -661,7 +675,7 @@ class HTTPResponse(HTTPMessage):
                     # This can happen when the expires tag is invalid.
                     # reddit.com sends a an expires tag like this: "Thu, 31 Dec
                     # 2037 23:59:59 GMT", which is valid RFC 1123, but not
-                    # strictly correct according tot he cookie spec. Browsers
+                    # strictly correct according to the cookie spec. Browsers
                     # appear to parse this tolerantly - maybe we should too.
                     # For now, we just ignore this.
                     del i["expires"]
@@ -824,7 +838,7 @@ class HttpAuthenticationError(Exception):
     def __init__(self, auth_headers=None):
         self.auth_headers = auth_headers
 
-    def __str__(self):  # pragma: nocover
+    def __str__(self):
         return "HttpAuthenticationError"
 
 
@@ -907,9 +921,12 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
     def handle_error(self, error, flow=None):
         code, message, headers = None, None, None
         if isinstance(error, HttpAuthenticationError):
-            code, message, headers = 407, "Proxy Authentication Required", error.auth_headers
+            code = 407
+            message = "Proxy Authentication Required"
+            headers = error.auth_headers
         elif isinstance(error, (http.HttpError, ProxyError)):
-            code, message = error.code, error.msg
+            code = error.code
+            message = error.msg
         elif isinstance(error, tcp.NetLibError):
             code = 502
             message = error.message or error.__class__
@@ -917,7 +934,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         if code:
             err = "%s: %s" % (code, message)
         else:
-            err = message
+            err = error.__class__
 
         self.c.log("error: %s" % err)
 
@@ -1010,7 +1027,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 self.ssl_upgrade()  # raises ConnectionTypeChange exception
 
         if self.c.mode == "regular":
-            if request.form_in == "authority":
+            if request.form_in == "authority":  # forward mode
                 pass
             elif request.form_in == "absolute":
                 if request.scheme != "http":
