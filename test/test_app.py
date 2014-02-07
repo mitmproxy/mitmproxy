@@ -1,6 +1,6 @@
-import mock, socket, os, sys
+import mock, socket, os, time
 from libmproxy import dump
-from netlib import certutils
+from netlib import certutils, tcp
 from libpathod.pathoc import Pathoc
 import tutils
 
@@ -14,9 +14,16 @@ def get_free_port():
 
 class AppTestMixin(object):
     def request(self, spec):
-        p = Pathoc(("127.0.0.1", self.port))
-        p.connect()
-        return p.request(spec)
+        t_start = time.time()
+        while (time.time() - t_start) < 5:
+            try:
+                p = Pathoc(("127.0.0.1", self.port))
+                p.connect()  # might fail as the server might not be online yet.
+                return p.request(spec)
+            except tcp.NetLibError:
+                time.sleep(0.01)
+        assert False
+
 
     def test_basic(self):
         assert self.request("get:/").status_code == 200

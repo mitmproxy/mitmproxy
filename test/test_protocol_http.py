@@ -80,7 +80,7 @@ class TestHTTPResponse:
         assert HTTPResponse.from_stream(s, "GET").code == 204
 
         s = StringIO(_s)
-        r = HTTPResponse.from_stream(s, "HEAD")
+        r = HTTPResponse.from_stream(s, "HEAD")  # HEAD must not have content by spec. We should leave it on the pipe.
         assert r.code == 200
         assert r.content == ""
         tutils.raises("Invalid server response: 'content", HTTPResponse.from_stream, s, "GET")

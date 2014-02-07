@@ -86,13 +86,17 @@ class TestScript:
         f.reply = f.request.reply
 
         with mock.patch("libmproxy.controller.DummyReply.__call__") as m:
+            t_start = time.time()
             s.run("clientconnect", f)
             s.run("serverconnect", f)
             s.run("response", f)
             s.run("error", f)
             s.run("clientdisconnect", f)
-            time.sleep(0.1)
-            assert m.call_count == 5
+            while (time.time() - t_start) < 1 and m.call_count <= 5:
+                if m.call_count == 5:
+                    return
+                time.sleep(0.001)
+            assert False
 
     def test_concurrent_err(self):
         s = flow.State()
