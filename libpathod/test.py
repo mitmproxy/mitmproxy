@@ -66,6 +66,7 @@ class Daemon:
 class _PaThread(threading.Thread):
     def __init__(self, iface, q, ssl, daemonargs):
         threading.Thread.__init__(self)
+        self.name = "PathodThread"
         self.iface, self.q, self.ssl = iface, q, ssl
         self.daemonargs = daemonargs
 
@@ -75,5 +76,6 @@ class _PaThread(threading.Thread):
             ssl = self.ssl,
             **self.daemonargs
         )
+        self.name = "PathodThread (%s:%s)" % (self.server.address.host, self.server.address.port)
         self.q.put(self.server.address.port)
         self.server.serve_forever()

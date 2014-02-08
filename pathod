@@ -100,7 +100,7 @@ def main(parser, args):
         parser.error("%s You probably want to a -d argument."%str(v))
 
     try:
-        print "%s listening on %s:%s"%(version.NAMEVERSION, args.address, pd.port)
+        print "%s listening on %s:%s"%(version.NAMEVERSION, args.address, pd.address.port)
         pd.serve_forever()
     except KeyboardInterrupt:
         pass
