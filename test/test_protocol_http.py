@@ -44,7 +44,6 @@ class TestHTTPRequest:
         r = HTTPRequest.from_stream(s)
         assert r._assemble() == "CONNECT address:22 HTTP/1.1\r\nHost: address:22\r\n\r\n"
 
-
     def test_absolute_form(self):
         s = StringIO("GET oops-no-protocol.com HTTP/1.1")
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)

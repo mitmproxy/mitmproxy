@@ -568,13 +568,11 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui.set_terminal_properties(256)
         self.ui.register_palette(self.palette)
         self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
-
         self.view = None
         self.statusbar = None
         self.header = None
         self.body = None
         self.help_context = None
-
         self.prompting = False
         self.onekey = False
 
@@ -597,7 +595,6 @@ class ConsoleMaster(flow.FlowMaster):
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
             print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
-        # If True, quit just pops out to flow list view.
         print >> sys.stderr, "Shutting down..."
         sys.stderr.flush()
         self.shutdown()
@@ -1028,7 +1025,6 @@ class ConsoleMaster(flow.FlowMaster):
             e = urwid.Text(str(e))
         elif level == "error":
             e = urwid.Text(("error", str(e)))
-
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:
             self.eventlist.pop(0)

@@ -5,7 +5,7 @@
 import base64
 import hashlib, Cookie, cookielib, re, threading
 import os
-from flask import request
+import flask
 import requests
 import tnetstring, filt, script
 from netlib import odict, wsgi
@@ -455,7 +455,7 @@ class FlowMaster(controller.Master):
         else:
             @app.mapp.before_request
             def patch_environ(*args, **kwargs):
-                request.environ["mitmproxy.master"] = self
+                flask.request.environ["mitmproxy.master"] = self
 
             # the only absurd way to shut down a flask/werkzeug server.
             # http://flask.pocoo.org/snippets/67/
@@ -464,7 +464,7 @@ class FlowMaster(controller.Master):
             @app.mapp.route('/shutdown/<secret>')
             def shutdown(secret):
                 if secret == shutdown_secret:
-                    request.environ.get('werkzeug.server.shutdown')()
+                    flask.request.environ.get('werkzeug.server.shutdown')()
 
             # Workaround: Monkey-patch shutdown function to stop the app.
             # Improve this when we switch flask werkzeug for something useful.

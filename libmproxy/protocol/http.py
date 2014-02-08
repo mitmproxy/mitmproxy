@@ -877,11 +877,17 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.change_server)
         try:
-            flow.request = HTTPRequest.from_stream(self.c.client_conn.rfile,
+            req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                                    body_size_limit=self.c.config.body_size_limit)
-            self.c.log("request", [flow.request._assemble_first_line(flow.request.form_in)])
-            self.process_request(flow.request)
+            self.c.log("request", [req._assemble_first_line(req.form_in)])
+            self.process_request(flow, req)
 
+            # Be careful NOT to assign the request to the flow before
+            # process_request completes. This is because the call can raise an
+            # exception. If the requets object is already attached, this results
+            # in an Error object that has an attached request that has not been
+            # sent through to the Master.
+            flow.request = req
             request_reply = self.c.channel.ask("request", flow.request)
             flow.server_conn = self.c.server_conn
 
@@ -1004,7 +1010,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         self.c.log("Upgrade to SSL completed.")
         raise ConnectionTypeChange
 
-    def process_request(self, request):
+    def process_request(self, flow, request):
         if self.c.mode == "regular":
             self.authenticate(request)
         if request.form_in == "authority" and self.c.client_conn.ssl_established:
@@ -1015,7 +1021,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             directly_addressed_at_mitmproxy = (self.c.mode == "regular" and not self.c.config.forward_proxy)
             if directly_addressed_at_mitmproxy:
                 self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
-                request.flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+                flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                 self.c.client_conn.wfile.write(
                     'HTTP/1.1 200 Connection established\r\n' +
                     ('Proxy-agent: %s\r\n' % self.c.server_version) +
@@ -1033,7 +1039,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 if not self.c.config.forward_proxy:
                     request.form_out = "origin"
                     self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
-                    request.flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+                    flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
             else:
                 raise http.HttpError(400, "Invalid request form (absolute-form or authority-form required)")
 
