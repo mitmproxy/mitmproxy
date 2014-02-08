@@ -1,5 +1,5 @@
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex, stat
-import os.path, sys, weakref
+import os.path, sys, weakref, traceback
 import urwid
 from .. import controller, utils, flow, script
 import flowlist, flowview, help, common, grideditor, palettes, contentview, flowdetailview
@@ -591,7 +591,12 @@ class ConsoleMaster(flow.FlowMaster):
                 print >> sys.stderr, "Could not load file:", ret
                 sys.exit(1)
 
-        self.ui.run_wrapper(self.loop)
+        try:
+            self.ui.run_wrapper(self.loop)
+        except Exception:
+            print >> sys.stderr, traceback.format_exc()
+            print >> sys.stderr, "mitmproxy has crashed!"
+            print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
         # If True, quit just pops out to flow list view.
         print >> sys.stderr, "Shutting down..."
         sys.stderr.flush()
