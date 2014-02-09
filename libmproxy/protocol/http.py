@@ -975,6 +975,12 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         self.c.client_conn.wfile.flush()
 
     def hook_reconnect(self, upstream_request):
+        """
+        If the authority request has been forwarded upstream (because we have another proxy server there),
+        money-patch the ConnectionHandler.server_reconnect function to resend the CONNECT request on reconnect.
+        Hooking code isn't particulary beautiful, but it isolates this edge-case from
+        the protocol-agnostic ConnectionHandler
+        """
         self.c.log("Hook reconnect function")
         original_reconnect_func = self.c.server_reconnect
 
@@ -997,11 +1003,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
     def ssl_upgrade(self):
         """
         Upgrade the connection to SSL after an authority (CONNECT) request has been made.
-        If the authority request has been forwarded upstream (because we have another proxy server there),
-        money-patch the ConnectionHandler.server_reconnect function to resend the request on reconnect.
-
-        This isn't particular beautiful code, but it isolates this rare edge-case from the
-        protocol-agnostic ConnectionHandler
         """
         self.c.log("Received CONNECT request. Upgrading to SSL...")
         self.c.mode = "transparent"

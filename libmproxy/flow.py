@@ -467,7 +467,7 @@ class FlowMaster(controller.Master):
                     flask.request.environ.get('werkzeug.server.shutdown')()
 
             # Workaround: Monkey-patch shutdown function to stop the app.
-            # Improve this when we switch flask werkzeug for something useful.
+            # Improve this when we switch werkzeugs http server for something useful.
             _shutdown = self.shutdown
             def _shutdownwrap():
                 _shutdown()
