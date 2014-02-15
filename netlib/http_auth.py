@@ -1,4 +1,4 @@
-import contrib.md5crypt as md5crypt
+from .contrib import md5crypt
 import http
 from argparse import Action, ArgumentTypeError
 
