@@ -9,6 +9,7 @@ class TCPHandler(ProtocolHandler):
     Data will be .log()ed, but not stored any further.
     """
     def handle_messages(self):
+        self.c.establish_server_connection()
         conns = [self.c.client_conn.rfile, self.c.server_conn.rfile]
         while not self.c.close:
             r, _, _ = select.select(conns, [], [], 10)
