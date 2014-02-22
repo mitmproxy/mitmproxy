@@ -153,6 +153,24 @@ def test_search_back_multi_multi_line():
     # first line now
     f.search_again(backwards=True)
     text_object = tutils.get_body_line(f.last_displayed_body, 0)
-    print(text_object.get_text(), ('this is string', [(None, 8), (f.highlight_color, 6)]))
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+
+def test_search_backwards_wraps():
+    """
+        when searching past line 0, it should loop.
+    """
+    f = tutils.tflowview(request_contents="this is string\nthis is string\nthis is string")
+
+    # should be on second line
+    f.search("string")
+    f.search_again()
+    text_object = tutils.get_body_line(f.last_displayed_body, 1)
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+
+    # should be on third now.
+    f.search_again(backwards=True)
+    message = f.search_again(backwards=True)
+
+    text_object = tutils.get_body_line(f.last_displayed_body, 2)
     assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
 

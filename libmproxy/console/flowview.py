@@ -365,23 +365,7 @@ class FlowView(common.WWrap):
 
         return loop_range
 
-    def search_highlight_text(self, text_objects, search_string, looping = False, backwards = False):
-        start_line, start_index = self.search_get_start(search_string)
-        i = start_line
-
-        found = False
-        text_objects = copy.deepcopy(text_objects)
-        loop_range = self.search_get_range(len(text_objects), start_line, backwards)
-        for i in loop_range:
-            text_object = text_objects[i]
-            if i != start_line:
-                start_index = 0
-
-            try:
-                text, style = text_object.get_text()
-            except AttributeError:
-                raise SearchError()
-
+    def search_find(self, text, search_string, start_index, backwards):
             if backwards == False:
                 find_index = text.find(search_string, start_index)
             else:
@@ -392,27 +376,54 @@ class FlowView(common.WWrap):
 
                 find_index = text.rfind(search_string, 0, start_index)
 
+            return find_index
+
+    def search_highlight_text(self, text_objects, search_string, looping = False, backwards = False):
+        start_line, start_index = self.search_get_start(search_string)
+        i = start_line
+
+        found = False
+        text_objects = copy.deepcopy(text_objects)
+        loop_range = self.search_get_range(len(text_objects), start_line, backwards)
+        for i in loop_range:
+            text_object = text_objects[i]
+
+            try:
+                text, style = text_object.get_text()
+            except AttributeError:
+                raise SearchError()
+
+            if i != start_line:
+                start_index = 0
+
+            find_index = self.search_find(text, search_string, start_index, backwards)
+
             if find_index != -1:
                 new_text = self.search_highlight_object(text, find_index, search_string)
                 text_objects[i] = new_text
 
+                found = True
                 self.state.add_flow_setting(self.flow, "last_search_index",
                         find_index)
-
                 self.state.add_flow_setting(self.flow, "last_find_line", i)
 
-                found = True
                 break
+
 
         # handle search WRAP
         if found:
             focus_pos = i
         else :
-            if (start_line == 0 and start_index == 0) or looping:
+            if looping:
                 focus_pos = None
             else:
-                self.state.add_flow_setting(self.flow, "last_search_index", 0)
-                self.state.add_flow_setting(self.flow, "last_find_line", 0)
+                if not backwards:
+                    self.state.add_flow_setting(self.flow, "last_search_index", 0)
+                    self.state.add_flow_setting(self.flow, "last_find_line", 0)
+                else:
+                    self.state.add_flow_setting(self.flow, "last_search_index", None)
+                    self.state.add_flow_setting(self.flow, "last_find_line", len(text_objects) - 1)
+
                 text_objects, focus_pos = self.search_highlight_text(text_objects,
                         search_string, looping=True, backwards=backwards)
 
