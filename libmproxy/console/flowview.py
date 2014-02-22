@@ -330,7 +330,7 @@ class FlowView(common.WWrap):
 
         self.last_displayed_body = list_box
 
-        if self.search_wrapped_around(last_find_line, last_search_index):
+        if not backwards and self.search_wrapped_around(last_find_line, last_search_index):
             return "search hit BOTTOM, continuing at TOP"
 
     def search_get_start(self, search_string):
@@ -358,9 +358,9 @@ class FlowView(common.WWrap):
 
     def search_get_range(self, len_text_objects, start_line, backwards):
         if not backwards:
-            loop_range = range(start_line, len_text_objects)
+            loop_range = xrange(start_line, len_text_objects)
         else:
-            loop_range = range(start_line, 0, -1)
+            loop_range = xrange(start_line, -1, -1)
 
         return loop_range
 
@@ -370,10 +370,11 @@ class FlowView(common.WWrap):
 
         found = False
         text_objects = copy.deepcopy(text_objects)
-        for i in self.search_get_range(len(text_objects), start_line, backwards):
+        loop_range = self.search_get_range(len(text_objects), start_line, backwards)
+        for i in loop_range:
             text_object = text_objects[i]
             if i != start_line:
-                start_index = None
+                start_index = 0
 
             try:
                 text, style = text_object.get_text()
@@ -385,16 +386,18 @@ class FlowView(common.WWrap):
             else:
                 if start_index != 0:
                     start_index -= len(search_string)
+                else:
+                    start_index = None
 
                 find_index = text.rfind(search_string, 0, start_index)
 
-            # Found text in line, do the highlight highlight.
             if find_index != -1:
                 new_text = self.search_highlight_object(text, find_index, search_string)
                 text_objects[i] = new_text
 
                 self.state.add_flow_setting(self.flow, "last_search_index",
                         find_index)
+
                 self.state.add_flow_setting(self.flow, "last_find_line", i)
 
                 found = True
@@ -409,7 +412,8 @@ class FlowView(common.WWrap):
             else:
                 self.state.add_flow_setting(self.flow, "last_search_index", 0)
                 self.state.add_flow_setting(self.flow, "last_find_line", 0)
-                text_objects, focus_pos = self.search_highlight_text(text_objects, search_string, True)
+                text_objects, focus_pos = self.search_highlight_text(text_objects,
+                        search_string, looping=True, backwards=backwards)
 
         return text_objects, focus_pos
 

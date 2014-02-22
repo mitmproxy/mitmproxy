@@ -38,8 +38,8 @@ def test_search_highlights_clears_prev():
     text_object = tutils.get_body_line(f.last_displayed_body, 0)
     assert text_object.get_text() != ('this is string', [(None, 8), (f.highlight_color, 6)])
 
-def test_search_highlights_multi_line():
-    f = tutils.tflowview(request_contents="this is string\nstring is string")
+def test_search_highlights_multi_line(flow=None):
+    f = flow if flow else tutils.tflowview(request_contents="this is string\nstring is string")
 
     # should highlight the first line.
     f.search("string")
@@ -54,7 +54,6 @@ def test_search_highlights_multi_line():
     # should highlight third line, second appearance of string.
     f.search("string")
     text_object = tutils.get_body_line(f.last_displayed_body, 1)
-    print(text_object.get_text(), ('string is string', [(None, 10), (f.highlight_color, 6)]))
     assert text_object.get_text() == ('string is string', [(None, 10), (f.highlight_color, 6)])
 
 def test_search_loops():
@@ -122,15 +121,38 @@ def test_search_backwards():
 def test_search_back_multiline():
     f = tutils.tflowview(request_contents="this is string\nstring is string")
 
-    f.search("string")
-    text_object = tutils.get_body_line(f.last_displayed_body, 0)
-    first_match = ('this is string', [(None, 8), (f.highlight_color, 6)])
-    assert text_object.get_text() == first_match
+    # shared assertions. highlight and pointers should now be on the third
+    # 'string' appearance
+    test_search_highlights_multi_line(f)
 
-    f.search_again()
+    # should highlight second line, first appearance of string.
+    f.search_again(backwards=True)
     text_object = tutils.get_body_line(f.last_displayed_body, 1)
     assert text_object.get_text() == ('string is string', [(None, 0), (f.highlight_color, 6)])
 
+    # should highlight the first line again.
     f.search_again(backwards=True)
     text_object = tutils.get_body_line(f.last_displayed_body, 0)
-    assert text_object.get_text() == first_match
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+
+def test_search_back_multi_multi_line():
+    """
+        same as above for some bugs the above won't catch.
+    """
+    f = tutils.tflowview(request_contents="this is string\nthis is string\nthis is string")
+
+    f.search("string")
+    f.search_again()
+    f.search_again()
+
+    # should be on second line
+    f.search_again(backwards=True)
+    text_object = tutils.get_body_line(f.last_displayed_body, 1)
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+
+    # first line now
+    f.search_again(backwards=True)
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    print(text_object.get_text(), ('this is string', [(None, 8), (f.highlight_color, 6)]))
+    assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+
