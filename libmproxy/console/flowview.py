@@ -273,7 +273,19 @@ class FlowView(common.WWrap):
 
         return False
 
-    def search(self, search_string):
+    def search_again(self, backwards=False):
+        """
+            runs the previous search again, forwards or backwards.
+        """
+        last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
+        if last_search_string:
+            message = self.search(last_search_string, backwards)
+            if message:
+                self.master.statusbar.message(message)
+        else:
+            self.master.statusbar.message("no previous searches have been made")
+
+    def search(self, search_string, backwards=False):
         """
             similar to view_response or view_request, but instead of just
             displaying the conn, it highlights a word that the user is
@@ -301,7 +313,7 @@ class FlowView(common.WWrap):
         # generate the body, highlight the words and get focus
         headers, msg, body = self.conn_text_raw(text)
         try:
-            body, focus_position = self.search_highlight_text(body, search_string)
+            body, focus_position = self.search_highlight_text(body, search_string, backwards=backwards)
         except SearchError:
             return "Search not supported in this view."
 
@@ -344,7 +356,7 @@ class FlowView(common.WWrap):
 
         return (start_line, start_index)
 
-    def search_highlight_text(self, text_objects, search_string, looping = False):
+    def search_highlight_text(self, text_objects, search_string, looping = False, backwards = False):
         start_line, start_index = self.search_get_start(search_string)
         i = start_line
 
@@ -352,40 +364,39 @@ class FlowView(common.WWrap):
         text_objects = copy.deepcopy(text_objects)
         for text_object in text_objects[start_line:]:
             if i != start_line:
-                start_index = 0
+                start_index = None
 
             try:
                 text, style = text_object.get_text()
             except AttributeError:
                 raise SearchError()
-            find_index = text.find(search_string, start_index)
+
+            if backwards == False:
+                find_index = text.find(search_string, start_index)
+            else:
+                if start_index != 0:
+                    start_index -= len(search_string)
+
+                find_index = text.rfind(search_string, 0, start_index)
+
+            # Found text in line, do the highlight highlight.
             if find_index != -1:
-                before = text[:find_index]
-                after = text[find_index+len(search_string):]
-                new_text = urwid.Text(
-                    [
-                        before,
-                        (self.highlight_color, search_string),
-                        after,
-                    ]
-                )
+                new_text = self.search_highlight_object(text, find_index, search_string)
+                text_objects[i] = new_text
 
                 self.state.add_flow_setting(self.flow, "last_search_index",
                         find_index)
                 self.state.add_flow_setting(self.flow, "last_find_line", i)
 
-                text_objects[i] = new_text
-
                 found = True
-
                 break
 
             i += 1
 
+        # handle search WRAP
         if found:
             focus_pos = i
         else :
-            # loop from the beginning, but not forever.
             if (start_line == 0 and start_index == 0) or looping:
                 focus_pos = None
             else:
@@ -394,6 +405,23 @@ class FlowView(common.WWrap):
                 text_objects, focus_pos = self.search_highlight_text(text_objects, search_string, True)
 
         return text_objects, focus_pos
+
+    def search_highlight_object(self, text_object, find_index, search_string):
+        """
+            just a little abstraction
+        """
+        before = text_object[:find_index]
+        after = text_object[find_index+len(search_string):]
+
+        new_text = urwid.Text(
+            [
+                before,
+                (self.highlight_color, search_string),
+                after,
+            ]
+        )
+
+        return new_text
 
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
@@ -761,13 +789,9 @@ class FlowView(common.WWrap):
                     None,
                     self.search)
         elif key == "n":
-            last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
-            if last_search_string:
-                message = self.search(last_search_string)
-                if message:
-                    self.master.statusbar.message(message)
-            else:
-                self.master.statusbar.message("no previous searches have been made")
+            self.search_again(backwards=False)
+        elif key == "N":
+            self.search_again(backwards=True)
         else:
             return key
 
