@@ -256,7 +256,7 @@ class FlowView(common.WWrap):
                 )
         return f
 
-    def search_wrapped_around(self, last_find_line, last_search_index):
+    def search_wrapped_around(self, last_find_line, last_search_index, backwards):
         """
             returns true if search wrapped around the bottom.
         """
@@ -266,13 +266,22 @@ class FlowView(common.WWrap):
         current_search_index = self.state.get_flow_setting(self.flow,
                 "last_search_index")
 
-        if current_find_line <= last_find_line:
-            return True
-        elif current_find_line == last_find_line:
-            if current_search_index <= last_search_index:
-                return True
+        if not backwards:
+            message = "search hit BOTTOM, continuing at TOP"
+            if current_find_line <= last_find_line:
+                return True, message
+            elif current_find_line == last_find_line:
+                if current_search_index <= last_search_index:
+                    return True, message
+        else:
+            message = "search hit TOP, continuing at BOTTOM"
+            if current_find_line >= last_find_line:
+                return True, message
+            elif current_find_line == last_find_line:
+                if current_search_index >= last_search_index:
+                    return True, message
 
-        return False
+        return False, ""
 
     def search_again(self, backwards=False):
         """
@@ -284,7 +293,10 @@ class FlowView(common.WWrap):
             if message:
                 self.master.statusbar.message(message)
         else:
-            self.master.statusbar.message("no previous searches have been made")
+            message = "no previous searches have been made"
+            self.master.statusbar.message(message)
+
+        return message
 
     def search(self, search_string, backwards=False):
         """
@@ -331,8 +343,11 @@ class FlowView(common.WWrap):
 
         self.last_displayed_body = list_box
 
-        if not backwards and self.search_wrapped_around(last_find_line, last_search_index):
-            return "search hit BOTTOM, continuing at TOP"
+        wrapped, wrapped_message = self.search_wrapped_around(last_find_line, last_search_index, backwards)
+
+        if wrapped:
+            print(wrapped, wrapped_message)
+            return wrapped_message
 
     def search_get_start(self, search_string):
         start_line = 0
@@ -408,7 +423,6 @@ class FlowView(common.WWrap):
                 self.state.add_flow_setting(self.flow, "last_find_line", i)
 
                 break
-
 
         # handle search WRAP
         if found:

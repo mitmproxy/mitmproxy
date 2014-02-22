@@ -170,7 +170,7 @@ def test_search_backwards_wraps():
     # should be on third now.
     f.search_again(backwards=True)
     message = f.search_again(backwards=True)
-
     text_object = tutils.get_body_line(f.last_displayed_body, 2)
     assert text_object.get_text() == ('this is string', [(None, 8), (f.highlight_color, 6)])
+    assert message == "search hit TOP, continuing at BOTTOM"
 
