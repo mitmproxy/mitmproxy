@@ -119,3 +119,18 @@ def test_search_backwards():
     text_object = tutils.get_body_line(f.last_displayed_body, 0)
     assert text_object.get_text() == first_match
 
+def test_search_back_multiline():
+    f = tutils.tflowview(request_contents="this is string\nstring is string")
+
+    f.search("string")
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    first_match = ('this is string', [(None, 8), (f.highlight_color, 6)])
+    assert text_object.get_text() == first_match
+
+    f.search_again()
+    text_object = tutils.get_body_line(f.last_displayed_body, 1)
+    assert text_object.get_text() == ('string is string', [(None, 0), (f.highlight_color, 6)])
+
+    f.search_again(backwards=True)
+    text_object = tutils.get_body_line(f.last_displayed_body, 0)
+    assert text_object.get_text() == first_match

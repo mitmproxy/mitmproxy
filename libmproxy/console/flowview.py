@@ -356,13 +356,22 @@ class FlowView(common.WWrap):
 
         return (start_line, start_index)
 
+    def search_get_range(self, len_text_objects, start_line, backwards):
+        if not backwards:
+            loop_range = range(start_line, len_text_objects)
+        else:
+            loop_range = range(start_line, 0, -1)
+
+        return loop_range
+
     def search_highlight_text(self, text_objects, search_string, looping = False, backwards = False):
         start_line, start_index = self.search_get_start(search_string)
         i = start_line
 
         found = False
         text_objects = copy.deepcopy(text_objects)
-        for text_object in text_objects[start_line:]:
+        for i in self.search_get_range(len(text_objects), start_line, backwards):
+            text_object = text_objects[i]
             if i != start_line:
                 start_index = None
 
@@ -390,8 +399,6 @@ class FlowView(common.WWrap):
 
                 found = True
                 break
-
-            i += 1
 
         # handle search WRAP
         if found:
