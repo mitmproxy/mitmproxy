@@ -68,7 +68,8 @@ def _mkhelp():
         ("space", "next flow"),
         ("|", "run script on this flow"),
         ("/", "search in response body (case sensitive)"),
-        ("n", "repeat previous search"),
+        ("n", "repeat search forward"),
+        ("N", "repeat search backwards"),
     ]
     text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
     return text
