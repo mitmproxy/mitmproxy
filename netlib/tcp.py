@@ -380,7 +380,7 @@ class BaseHandler(SocketCloseMixin):
 
 
 
-class TCPServer:
+class TCPServer(object):
     request_queue_size = 20
     def __init__(self, address):
         self.address = Address.wrap(address)
@@ -416,7 +416,10 @@ class TCPServer:
                     connection, client_address = self.socket.accept()
                     t = threading.Thread(
                             target = self.connection_thread,
-                            args = (connection, client_address)
+                            args = (connection, client_address),
+                            name = "ConnectionThread (%s:%s -> %s:%s)" %
+                                   (client_address[0], client_address[1],
+                                    self.address.host, self.address.port)
                         )
                     t.setDaemon(1)
                     t.start()
@@ -443,7 +446,7 @@ class TCPServer:
             print >> fp, exc
             print >> fp, '-'*40
 
-    def handle_client_connection(self, conn, client_address): # pragma: no cover
+    def handle_client_connection(self, conn, client_address):  # pragma: no cover
         """
             Called after client connection.
         """
