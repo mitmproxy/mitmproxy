@@ -99,7 +99,7 @@ setup(
             "Topic :: Software Development :: Testing"
         ],
         install_requires=[
-            "netlib>=%s"%version.VERSION,
+            "netlib>=%s"%version.MINORVERSION,
             "urwid>=1.1",
             "pyasn1>0.1.2",
             "pyopenssl>=0.13",
