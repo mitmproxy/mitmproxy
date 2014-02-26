@@ -1,3 +1,8 @@
+26 Februrary 2014: mitmproxy 0.10.1:
+
+    * Fix compatibility with pyOpenSSL 0.14
+
+
 28 January 2014: mitmproxy 0.10:
 	
     * Support for multiple scripts and multiple script arguments
