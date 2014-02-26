@@ -108,6 +108,10 @@ class HandleSNI:
         self.handler, self.client_conn, self.host, self.port = handler, client_conn, host, port
         self.key = key
 
+        # Fix pyOpenSSL 0.14 compatibility
+        # https://github.com/mitmproxy/mitmproxy/issues/226
+        self.__name__ = "HandleSNI"
+
     def __call__(self, client_connection):
         try:
             sn = client_connection.get_servername()
