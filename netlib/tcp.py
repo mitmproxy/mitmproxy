@@ -235,7 +235,8 @@ class SocketCloseMixin(object):
                 self.connection.sock_shutdown(socket.SHUT_WR)
             else:
                 self.connection.shutdown(socket.SHUT_WR)
-            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending readable data could lead to an immediate RST being sent.
+            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any
+            # pending readable data could lead to an immediate RST being sent.
             #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
             while self.connection.recv(4096):
                 pass
@@ -256,11 +257,16 @@ class TCPClient(SocketCloseMixin):
         self.ssl_established = False
         self.sni = None
 
-    def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None):
+    def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None, cipher_list=None):
         """
             cert: Path to a file containing both client cert and private key.
         """
         context = SSL.Context(method)
+        if cipher_list:
+            try:
+                context.set_cipher_list(cipher_list)
+            except SSL.Error, v:
+                raise NetLibError("SSL cipher specification error: %s"%str(v))
         if options is not None:
             context.set_options(options)
         if cert:
@@ -350,7 +356,10 @@ class BaseHandler(SocketCloseMixin):
         if not options is None:
             ctx.set_options(options)
         if cipher_list:
-            ctx.set_cipher_list(cipher_list)
+            try:
+                ctx.set_cipher_list(cipher_list)
+            except SSL.Error, v:
+                raise NetLibError("SSL cipher specification error: %s"%str(v))
         if handle_sni:
             # SNI callback happens during do_handshake()
             ctx.set_tlsext_servername_callback(handle_sni)
@@ -399,6 +408,10 @@ class TCPServer(object):
         except:
             self.handle_error(connection, client_address)
         finally:
+            try:
+                connection.shutdown(socket.SHUT_RDWR)
+            except:
+                pass
             connection.close()
 
     def serve_forever(self, poll_interval=0.1):

@@ -219,7 +219,7 @@ class TestSNI(test.ServerTestBase):
         assert c.rfile.readline() == "foo.com"
 
 
-class TestClientCipherList(test.ServerTestBase):
+class TestServerCipherList(test.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
         cert = tutils.test_data.path("data/server.crt"),
@@ -233,6 +233,36 @@ class TestClientCipherList(test.ServerTestBase):
         c.connect()
         c.convert_to_ssl(sni="foo.com")
         assert c.rfile.readline() == "['RC4-SHA']"
+
+
+class TestServerCipherListError(test.ServerTestBase):
+    handler = ClientCipherListHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
+        v3_only = False,
+        cipher_list = 'bogus'
+    )
+    def test_echo(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        tutils.raises("handshake error", c.convert_to_ssl, sni="foo.com")
+
+
+class TestClientCipherListError(test.ServerTestBase):
+    handler = ClientCipherListHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
+        v3_only = False,
+        cipher_list = 'RC4-SHA'
+    )
+    def test_echo(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        tutils.raises("cipher specification", c.convert_to_ssl, sni="foo.com", cipher_list="bogus")
 
 
 class TestSSLDisconnect(test.ServerTestBase):
