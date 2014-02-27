@@ -38,7 +38,9 @@ def main(parser, args):
     ssloptions = pathod.SSLOptions(
          keyfile = args.ssl_keyfile,
          certfile = args.ssl_certfile,
-         not_after_connect = args.ssl_not_after_connect
+         not_after_connect = args.ssl_not_after_connect,
+         ciphers = args.ciphers,
+         sslversion = utils.SSLVERSIONS[args.sslversion]
     )
 
     alst = []
@@ -100,7 +102,7 @@ def main(parser, args):
         parser.error("%s You probably want to a -d argument."%str(v))
 
     try:
-        print "%s listening on %s:%s"%(version.NAMEVERSION, args.address, pd.address.port)
+        print "%s listening on %s:%s"%(version.NAMEVERSION, pd.address.host, pd.address.port)
         pd.serve_forever()
     except KeyboardInterrupt:
         pass
@@ -172,7 +174,15 @@ if __name__ == "__main__":
         "--certfile", dest='ssl_certfile', default=None, type=str,
         help='SSL cert file. If not specified, a default cert is used.'
     )
-
+    group.add_argument(
+        "--ciphers", dest="ciphers", type=str, default=False,
+        help="SSL cipher specification"
+    )
+    group.add_argument(
+        "--sslversion", dest="sslversion", type=int, default=4,
+        choices=[1, 2, 3, 4],
+        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to SSLv23." 
+    )
 
     group = parser.add_argument_group(
         'Controlling Logging',

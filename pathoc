@@ -61,9 +61,13 @@ if __name__ == "__main__":
         help="SSL Server Name Indication"
     )
     group.add_argument(
+        "--ciphers", dest="ciphers", type=str, default=False,
+        help="SSL cipher specification"
+    )
+    group.add_argument(
         "--sslversion", dest="sslversion", type=int, default=1,
-        choices=[1, 2, 3],
-        help="Use a specified protocol - TLSv1, SSLv2, SSLv3. Default to TLSv1." 
+        choices=[1, 2, 3, 4],
+        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to TLSv1." 
     )
 
     group = parser.add_argument_group(
@@ -133,7 +137,8 @@ if __name__ == "__main__":
                 ssl=args.ssl,
                 sni=args.sni,
                 sslversion=args.sslversion,
-                clientcert=args.clientcert
+                clientcert=args.clientcert,
+                ciphers=args.ciphers
             )
             try:
                 p.connect(connect_to)

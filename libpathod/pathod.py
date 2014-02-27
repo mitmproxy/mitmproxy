@@ -9,12 +9,14 @@ class PathodError(Exception): pass
 
 
 class SSLOptions:
-    def __init__(self, certfile=None, keyfile=None, not_after_connect=None, request_client_cert=False):
+    def __init__(self, certfile=None, keyfile=None, not_after_connect=None, request_client_cert=False, sslversion=tcp.SSLv23_METHOD, ciphers=None):
         self.keyfile = keyfile or utils.data.path("resources/server.key")
         self.certfile = certfile or utils.data.path("resources/server.crt")
         self.cert = certutils.SSLCert.from_pem(file(self.certfile, "rb").read())
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
+        self.ciphers = ciphers
+        self.sslversion = sslversion
 
 
 class PathodHandler(tcp.BaseHandler):
@@ -79,7 +81,9 @@ class PathodHandler(tcp.BaseHandler):
                         self.server.ssloptions.cert,
                         self.server.ssloptions.keyfile,
                         handle_sni = self.handle_sni,
-                        request_client_cert = self.server.ssloptions.request_client_cert
+                        request_client_cert = self.server.ssloptions.request_client_cert,
+                        cipher_list = self.server.ssloptions.ciphers,
+                        method = self.server.ssloptions.sslversion,
                     )
                 except tcp.NetLibError, v:
                     s = str(v)
@@ -185,7 +189,9 @@ class PathodHandler(tcp.BaseHandler):
                     self.server.ssloptions.cert,
                     self.server.ssloptions.keyfile,
                     handle_sni = self.handle_sni,
-                    request_client_cert = self.server.ssloptions.request_client_cert
+                    request_client_cert = self.server.ssloptions.request_client_cert,
+                    cipher_list = self.server.ssloptions.ciphers,
+                    method = self.server.ssloptions.sslversion,
                 )
             except tcp.NetLibError, v:
                 s = str(v)

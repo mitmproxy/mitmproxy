@@ -1,4 +1,12 @@
 import os
+from netlib import tcp
+
+SSLVERSIONS = {
+    1: tcp.TLSv1_METHOD,
+    2: tcp.SSLv2_METHOD,
+    3: tcp.SSLv3_METHOD,
+    4: tcp.SSLv23_METHOD,
+}
 
 SIZE_UNITS = dict(
     b = 1024**0,
