@@ -214,7 +214,7 @@ class TestHTTPSNoCommonName(tservers.HTTPProxTest):
     ssl = True
     ssloptions=pathod.SSLOptions(
             certfile = tutils.test_data.path("data/no_common_name.pem"),
-            cacert = tutils.test_data.path("data/no_common_name.pem"),
+            keyfile = tutils.test_data.path("data/no_common_name.pem"),
         )
     def test_http(self):
         f = self.pathod("202")
