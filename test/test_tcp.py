@@ -49,6 +49,13 @@ class ClientCipherListHandler(tcp.BaseHandler):
         self.wfile.flush()
 
 
+class CurrentCipherHandler(tcp.BaseHandler):
+    sni = None
+    def handle(self):
+        self.wfile.write("%s"%str(self.get_current_cipher()))
+        self.wfile.flush()
+
+
 class DisconnectHandler(tcp.BaseHandler):
     def handle(self):
         self.close()
@@ -151,7 +158,8 @@ class TestServerSSL(test.ServerTestBase):
                 cert = tutils.test_data.path("data/server.crt"),
                 key = tutils.test_data.path("data/server.key"),
                 request_client_cert = False,
-                v3_only = False
+                v3_only = False,
+                cipher_list = "AES256-SHA"
             )
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -164,6 +172,15 @@ class TestServerSSL(test.ServerTestBase):
 
     def test_get_remote_cert(self):
         assert certutils.get_remote_cert("127.0.0.1", self.port, None).digest("sha1")
+
+    def test_get_current_cipher(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        assert not c.get_current_cipher()
+        c.convert_to_ssl(sni="foo.com")
+        ret = c.get_current_cipher()
+        assert ret
+        assert "AES" in ret[0]
 
 
 class TestSSLv3Only(test.ServerTestBase):
@@ -234,6 +251,22 @@ class TestServerCipherList(test.ServerTestBase):
         c.connect()
         c.convert_to_ssl(sni="foo.com")
         assert c.rfile.readline() == "['RC4-SHA']"
+
+
+class TestServerCurrentCipher(test.ServerTestBase):
+    handler = CurrentCipherHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
+        v3_only = False,
+        cipher_list = 'RC4-SHA'
+    )
+    def test_echo(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        c.convert_to_ssl(sni="foo.com")
+        assert "RC4-SHA" in c.rfile.readline()
 
 
 class TestServerCipherListError(test.ServerTestBase):

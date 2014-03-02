@@ -2,6 +2,7 @@ import select, socket, threading, sys, time, traceback
 from OpenSSL import SSL
 import certutils
 
+
 EINTR = 4
 
 SSLv2_METHOD = SSL.SSLv2_METHOD
@@ -214,7 +215,16 @@ class Address(object):
         return (self.address, self.family) == (other.address, other.family)
 
 
-class SocketCloseMixin(object):
+class _Connection(object):
+    def get_current_cipher(self):
+        if not self.ssl_established:
+            return None
+        c = SSL._lib.SSL_get_current_cipher(self.connection._ssl)
+        name = SSL._native(SSL._ffi.string(SSL._lib.SSL_CIPHER_get_name(c)))
+        bits = SSL._lib.SSL_CIPHER_get_bits(c, SSL._ffi.NULL)
+        version = SSL._native(SSL._ffi.string(SSL._lib.SSL_CIPHER_get_version(c)))
+        return name, bits, version
+
     def finish(self):
         self.finished = True
         try:
@@ -248,7 +258,7 @@ class SocketCloseMixin(object):
             pass
 
 
-class TCPClient(SocketCloseMixin):
+class TCPClient(_Connection):
     rbufsize = -1
     wbufsize = -1
     def __init__(self, address, source_address=None):
@@ -310,7 +320,7 @@ class TCPClient(SocketCloseMixin):
         return self.connection.gettimeout()
 
 
-class BaseHandler(SocketCloseMixin):
+class BaseHandler(_Connection):
     """
         The instantiator is expected to call the handle() and finish() methods.
 
