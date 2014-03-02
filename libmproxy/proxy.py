@@ -387,7 +387,6 @@ class ConnectionHandler:
             if self.client_conn.ssl_established:
                 raise ProxyError(502, "SSL to Client already established.")
             dummycert = self.find_cert()
-            print self.config.ciphers
             self.client_conn.convert_to_ssl(
                 dummycert, 
                 self.config.keyfile or self.config.cacert,
@@ -469,7 +468,6 @@ class ProxyServerError(Exception):
 class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
-
     def __init__(self, config, port, host='', server_version=version.NAMEVERSION):
         """
             Raises ProxyServerError if there's a startup problem.

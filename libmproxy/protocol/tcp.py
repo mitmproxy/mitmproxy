@@ -32,12 +32,11 @@ class TCPHandler(ProtocolHandler):
                         if d == "":  # connection closed
                             break
                         data.write(d)
-
-                        """
-                        OpenSSL Connections have an internal buffer that might contain data altough everything is read
-                        from the socket. Thankfully, connection.pending() returns the amount of bytes in this buffer,
-                        so we can read it completely at once.
-                        """
+                        # OpenSSL Connections have an internal buffer that might
+                        # contain data altough everything is read from the socket.
+                        # Thankfully, connection.pending() returns the amount of
+                        # bytes in this buffer, so we can read it completely at
+                        # once.
                         if src.ssl_established:
                             data.write(rfile.read(src.connection.pending()))
                     else:  # no data left, but not closed yet

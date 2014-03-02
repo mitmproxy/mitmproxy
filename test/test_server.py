@@ -377,7 +377,6 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
         assert self.pathod("304").status_code == 502
 
 
-
 class MasterIncomplete(tservers.TestMaster):
     def handle_request(self, m):
         resp = tutils.tresp()
@@ -389,6 +388,4 @@ class TestIncompleteResponse(tservers.HTTPProxTest):
     masterclass = MasterIncomplete
     def test_incomplete(self):
         assert self.pathod("200").status_code == 502
-
-
 

@@ -28,7 +28,6 @@ class TestMaster(flow.FlowMaster):
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()
-        self.start_app(APP_HOST, APP_PORT, False)
 
     def handle_request(self, m):
         flow.FlowMaster.handle_request(self, m)
@@ -77,6 +76,7 @@ class ProxTestBase(object):
     no_upstream_cert = False
     authenticator = None
     masterclass = TestMaster
+    externalapp = False
     @classmethod
     def setupAll(cls):
         cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
@@ -89,6 +89,7 @@ class ProxTestBase(object):
             **pconf
         )
         tmaster = cls.masterclass(config)
+        tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -266,6 +267,7 @@ class ChainProxTest(ProxTestBase):
                                     cls.chain[-1].port
             )
             tmaster = cls.masterclass(config)
+            tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
             cls.chain.append(ProxyThread(tmaster))
             cls.chain[-1].start()
 

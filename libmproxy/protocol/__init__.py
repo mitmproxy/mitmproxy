@@ -35,7 +35,6 @@ class TemporaryServerChangeMixin(object):
     This mixin allows safe modification of the target server,
     without any need to expose the ConnectionHandler to the Flow.
     """
-
     def change_server(self, address, ssl):
         if address == self.c.server_conn.address():
             return
@@ -99,3 +98,5 @@ def handle_messages(conntype, connection_handler):
 
 def handle_error(conntype, connection_handler, error):
     return _handler(conntype, connection_handler).handle_error(error)
+
+
