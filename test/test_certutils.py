@@ -21,16 +21,16 @@ class TestCertStore:
         with tutils.tmpdir() as d:
             ca = os.path.join(d, "ca")
             assert certutils.dummy_ca(ca)
-            c = certutils.CertStore()
+            c = certutils.CertStore(ca)
 
     def test_create_tmp(self):
         with tutils.tmpdir() as d:
             ca = os.path.join(d, "ca")
             assert certutils.dummy_ca(ca)
-            c = certutils.CertStore()
-            assert c.get_cert("foo.com", [], ca)
-            assert c.get_cert("foo.com", [], ca)
-            assert c.get_cert("*.foo.com", [], ca)
+            c = certutils.CertStore(ca)
+            assert c.get_cert("foo.com", [])
+            assert c.get_cert("foo.com", [])
+            assert c.get_cert("*.foo.com", [])
 
 
 class TestDummyCert:

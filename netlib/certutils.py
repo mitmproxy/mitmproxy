@@ -113,10 +113,11 @@ class CertStore:
     """
         Implements an in-memory certificate store.
     """
-    def __init__(self):
+    def __init__(self, cacert):
         self.certs = {}
+        self.cacert = cacert
 
-    def get_cert(self, commonname, sans, cacert):
+    def get_cert(self, commonname, sans):
         """
             Returns an SSLCert object.
 
@@ -125,13 +126,11 @@ class CertStore:
 
             sans: A list of Subject Alternate Names.
 
-            cacert: The path to a CA certificate.
-
             Return None if the certificate could not be found or generated.
         """
         if commonname in self.certs:
             return self.certs[commonname]
-        c = dummy_cert(cacert, commonname, sans)
+        c = dummy_cert(self.cacert, commonname, sans)
         self.certs[commonname] = c
         return c
 
