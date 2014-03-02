@@ -346,7 +346,6 @@ class FlowView(common.WWrap):
         wrapped, wrapped_message = self.search_wrapped_around(last_find_line, last_search_index, backwards)
 
         if wrapped:
-            print(wrapped, wrapped_message)
             return wrapped_message
 
     def search_get_start(self, search_string):

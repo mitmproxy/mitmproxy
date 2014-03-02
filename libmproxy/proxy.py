@@ -48,7 +48,7 @@ class ProxyConfig:
         self.forward_proxy = forward_proxy
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
-        self.certstore = certutils.CertStore()
+        self.certstore = certutils.CertStore(cacert)
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
@@ -422,7 +422,7 @@ class ConnectionHandler:
                     host = upstream_cert.cn.decode("utf8").encode("idna")
                 sans = upstream_cert.altnames
 
-            ret = self.config.certstore.get_cert(host, sans, self.config.cacert)
+            ret = self.config.certstore.get_cert(host, sans)
             if not ret:
                 raise ProxyError(502, "Unable to generate dummy cert.")
             return ret

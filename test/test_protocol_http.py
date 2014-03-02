@@ -88,7 +88,6 @@ class TestHTTPResponse:
 
 class TestInvalidRequests(tservers.HTTPProxTest):
     ssl = True
-
     def test_double_connect(self):
         p = self.pathoc()
         r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
@@ -117,9 +116,7 @@ class TestProxyChaining(tservers.HTTPChainProxyTest):
 
 class TestProxyChainingSSL(tservers.HTTPChainProxyTest):
     ssl = True
-
     def test_simple(self):
-
         p = self.pathoc()
         req = p.request("get:'/p/418:b\"content\"'")
         assert req.content == "content"
