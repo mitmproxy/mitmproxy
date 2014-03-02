@@ -53,7 +53,7 @@ class PathodHandler(tcp.BaseHandler):
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
-    def serve_crafted(self, crafted, request_log):
+    def serve_crafted(self, crafted):
         c = self.server.check_policy(crafted, self.server.request_settings)
         if c:
             err = language.make_error_response(c)
@@ -68,14 +68,9 @@ class PathodHandler(tcp.BaseHandler):
             crafted = crafted.freeze(self.server.request_settings, None)
             self.info(">> Spec: %s"%crafted.spec())
         response_log = language.serve(crafted, self.wfile, self.server.request_settings, None)
-        log = dict(
-                type = "crafted",
-                request=request_log,
-                response=response_log
-            )
         if response_log["disconnect"]:
-            return False, log
-        return True, log
+            return False, response_log
+        return True, response_log
 
     def handle_request(self):
         """
@@ -141,15 +136,21 @@ class PathodHandler(tcp.BaseHandler):
                 keyinfo = self.clientcert.keyinfo,
             )
 
-        request_log = dict(
-            path = path,
-            method = method,
-            headers = headers.lst,
-            httpversion = httpversion,
-            sni = self.sni,
-            remote_address = self.address(),
-            clientcert = clientcert
+        retlog = dict(
+            type = "crafted",
+            request = dict(
+                path = path,
+                method = method,
+                headers = headers.lst,
+                httpversion = httpversion,
+                sni = self.sni,
+                remote_address = self.address(),
+                clientcert = clientcert,
+            ),
+            cipher = None,
         )
+        if self.ssl_established:
+            retlog["cipher"] = self.get_current_cipher()
 
         try:
             content = http.read_http_body(
@@ -164,7 +165,8 @@ class PathodHandler(tcp.BaseHandler):
             if i[0].match(path):
                 self.info("crafting anchor: %s"%path)
                 aresp = language.parse_response(self.server.request_settings, i[1])
-                return self.serve_crafted(aresp, request_log)
+                again, retlog["response"] = self.serve_crafted(aresp)
+                return again, retlog
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
@@ -177,7 +179,8 @@ class PathodHandler(tcp.BaseHandler):
                         "Parse Error",
                         "Error parsing response spec: %s\n"%v.msg + v.marked()
                     )
-            return self.serve_crafted(crafted, request_log)
+            again, retlog["response"] = self.serve_crafted(crafted)
+            return again, retlog
         elif self.server.noweb:
             crafted = language.make_error_response("Access Denied")
             language.serve(crafted, self.wfile, self.server.request_settings)
