@@ -14,21 +14,33 @@ class PathodError(Exception): pass
 
 
 class SSLOptions:
-    def __init__(self, confdir=CONFDIR, cn=None, certfile=None, 
+    def __init__(self, confdir=CONFDIR, cn=None, certfile=None, cacert=None,
                        not_after_connect=None, request_client_cert=False, 
                        sslversion=tcp.SSLv23_METHOD, ciphers=None):
         self.confdir = confdir
         self.cn = cn
-        cacert = os.path.join(confdir, CA_CERT_NAME)
-        self.cacert = os.path.expanduser(cacert)
-        if not os.path.exists(self.cacert):
-            certutils.dummy_ca(self.cacert)
+        if cacert:
+            self.cacert = os.path.expanduser(cacert)
+        else:
+            cacert = os.path.join(confdir, CA_CERT_NAME)
+            self.cacert = os.path.expanduser(cacert)
+            if not os.path.exists(self.cacert):
+                certutils.dummy_ca(self.cacert)
         self.certstore = certutils.CertStore(self.cacert)
         self.certfile = certfile 
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
         self.ciphers = ciphers
         self.sslversion = sslversion
+
+    def get_cert(self, name):
+        if self.certfile:
+            return certutils.SSLCert.from_pem(file(self.certfile, "rb").read())
+        if self.cn:
+            name = self.cn
+        elif not name:
+            name = DEFAULT_CERT_DOMAIN
+        return self.certstore.get_cert(name, [])
 
 
 
@@ -91,7 +103,7 @@ class PathodHandler(tcp.BaseHandler):
             if not self.server.ssloptions.not_after_connect:
                 try:
                     self.convert_to_ssl(
-                        self.server.ssloptions.certstore.get_cert(DEFAULT_CERT_DOMAIN, []),
+                        self.server.ssloptions.get_cert(None),
                         self.server.ssloptions.cacert,
                         handle_sni = self.handle_sni,
                         request_client_cert = self.server.ssloptions.request_client_cert,
@@ -199,10 +211,7 @@ class PathodHandler(tcp.BaseHandler):
         if self.server.ssl:
             try:
                 self.convert_to_ssl(
-                    self.server.ssloptions.certstore.get_cert(
-                        self.server.ssloptions.cn or DEFAULT_CERT_DOMAIN,   
-                        []
-                    ),
+                    self.server.ssloptions.get_cert(None),
                     self.server.ssloptions.cacert,
                     handle_sni = self.handle_sni,
                     request_client_cert = self.server.ssloptions.request_client_cert,

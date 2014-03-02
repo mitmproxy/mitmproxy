@@ -22,7 +22,7 @@ class Response:
 
 
 class Pathoc(tcp.TCPClient):
-    def __init__(self, address, ssl=None, sni=None, sslversion=1, clientcert=None, ciphers=None):
+    def __init__(self, address, ssl=None, sni=None, sslversion=4, clientcert=None, ciphers=None):
         tcp.TCPClient.__init__(self, address)
         self.settings = dict(
             staticdir = os.getcwd(),

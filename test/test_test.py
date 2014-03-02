@@ -23,9 +23,9 @@ class TestDaemonManual:
 
     def test_startstop_ssl_explicit(self):
         ssloptions = dict(
-             keyfile = utils.data.path("resources/server.key"),
-             certfile = utils.data.path("resources/server.crt"),
-             ssl_after_connect = False
+            certfile = tutils.test_data.path("data/testkey.pem"),
+            cacert = tutils.test_data.path("data/testkey.pem"),
+            ssl_after_connect = False
         )
         d = test.Daemon(ssl=ssloptions)
         rsp = requests.get("https://localhost:%s/p/202:da"%d.port, verify=False)

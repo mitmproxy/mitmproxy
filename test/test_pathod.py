@@ -63,6 +63,19 @@ class TestNotAfterConnect(tutils.DaemonTests):
         assert r.status_code == 202
 
 
+class TestCustomCert(tutils.DaemonTests):
+    ssl = True
+    ssloptions = dict(
+        certfile = tutils.test_data.path("data/testkey.pem"),
+        cacert = tutils.test_data.path("data/testkey.pem"),
+    )
+    def test_connect(self):
+        r = self.pathoc(r"get:/p/202")
+        assert r.status_code == 202
+        assert r.sslinfo
+
+
+
 class TestSSLCN(tutils.DaemonTests):
     ssl = True
     ssloptions = dict(
