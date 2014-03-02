@@ -10,10 +10,13 @@ class DaemonTests:
     ssl = False
     timeout = None
     hexdump = False
-    not_after_connect = False
+    ssloptions = None
     @classmethod
     def setUpAll(self):
-        so = pathod.SSLOptions(not_after_connect = self.not_after_connect)
+        opts = self.ssloptions or {}
+        self.confdir = tempfile.mkdtemp()
+        opts["confdir"] = self.confdir
+        so = pathod.SSLOptions(**opts)
         self.d = test.Daemon(
             staticdir=test_data.path("data"),
             anchors=[("/anchor/.*", "202:da")],
@@ -33,6 +36,7 @@ class DaemonTests:
     @classmethod
     def tearDownAll(self):
         self.d.shutdown()
+        shutil.rmtree(self.confdir)
 
     def setUp(self):
         if not (self.noweb or self.noapi):

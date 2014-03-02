@@ -3,7 +3,7 @@ from libpathod import pathoc, test, version, pathod
 import tutils
 
 def test_response():
-    r = pathoc.Response("1.1", 200, "Message", {}, None)
+    r = pathoc.Response("1.1", 200, "Message", {}, None, None)
     assert repr(r)
 
 

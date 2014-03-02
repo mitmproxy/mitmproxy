@@ -65,9 +65,9 @@ if __name__ == "__main__":
         help="SSL cipher specification"
     )
     group.add_argument(
-        "--sslversion", dest="sslversion", type=int, default=1,
+        "--sslversion", dest="sslversion", type=int, default=4,
         choices=[1, 2, 3, 4],
-        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to TLSv1." 
+        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to SSLv23." 
     )
 
     group = parser.add_argument_group(

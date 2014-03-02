@@ -1,3 +1,4 @@
+import pprint
 from libpathod import pathod, version
 from netlib import tcp, http
 import requests
@@ -54,10 +55,24 @@ class TestNoApi(tutils.DaemonTests):
 
 class TestNotAfterConnect(tutils.DaemonTests):
     ssl = False
-    not_after_connect = True
+    ssloptions = dict(
+        not_after_connect = True
+    )
     def test_connect(self):
         r = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port))
         assert r.status_code == 202
+
+
+class TestSSLCN(tutils.DaemonTests):
+    ssl = True
+    ssloptions = dict(
+        cn = "foo.com"
+    )
+    def test_connect(self):
+        r = self.pathoc(r"get:/p/202")
+        assert r.status_code == 202
+        assert r.sslinfo
+        assert r.sslinfo.certchain[0].get_subject().CN == "foo.com"
 
 
 class TestNohang(tutils.DaemonTests):
@@ -159,11 +174,20 @@ class CommonTests(tutils.DaemonTests):
 class TestDaemon(CommonTests):
     ssl = False
     def test_connect(self):
-        r = self.pathoc(r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port), ssl=True)
+        r = self.pathoc(
+            r"get:'http://foo.com/p/202':da",
+            connect_to=("localhost", self.d.port),
+            ssl=True
+        )
         assert r.status_code == 202
 
     def test_connect_err(self):
-        tutils.raises(http.HttpError, self.pathoc, r"get:'http://foo.com/p/202':da", connect_to=("localhost", self.d.port))
+        tutils.raises(
+            http.HttpError,
+            self.pathoc,
+            r"get:'http://foo.com/p/202':da",
+            connect_to=("localhost", self.d.port)
+        )
 
 
 class TestDaemonSSL(CommonTests):
@@ -181,6 +205,4 @@ class TestDaemonSSL(CommonTests):
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "SSL" in l["msg"]
-
-
 

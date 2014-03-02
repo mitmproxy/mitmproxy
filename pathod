@@ -31,16 +31,13 @@ def daemonize (stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
 
 
 def main(parser, args):
-    sl = [args.ssl_keyfile, args.ssl_certfile]
-    if any(sl) and not all(sl):
-        parser.error("Both --certfile and --keyfile must be specified.")
-
     ssloptions = pathod.SSLOptions(
-         keyfile = args.ssl_keyfile,
-         certfile = args.ssl_certfile,
-         not_after_connect = args.ssl_not_after_connect,
-         ciphers = args.ciphers,
-         sslversion = utils.SSLVERSIONS[args.sslversion]
+        cn = args.cn,
+        confdir = args.confdir,
+        certfile = args.ssl_certfile,
+        not_after_connect = args.ssl_not_after_connect,
+        ciphers = args.ciphers,
+        sslversion = utils.SSLVERSIONS[args.sslversion]
     )
 
     alst = []
@@ -122,6 +119,11 @@ if __name__ == "__main__":
         help='Anchorpoint for URL crafting commands.'
     )
     parser.add_argument(
+        "--confdir",
+        action="store", type = str, dest="confdir", default='~/.mitmproxy',
+        help = "Configuration directory. (~/.mitmproxy)"
+    )
+    parser.add_argument(
         "-d", dest='staticdir', default=None, type=str,
         help='Directory for static files.'
     )
@@ -159,16 +161,16 @@ if __name__ == "__main__":
         'SSL',
     )
     group.add_argument(
-        "-C", dest='ssl_not_after_connect', default=False, action="store_true",
-        help="Don't expect SSL after a CONNECT request."
-    )
-    group.add_argument(
         "-s", dest='ssl', default=False, action="store_true",
         help='Run in HTTPS mode.'
     )
     group.add_argument(
-        "--keyfile", dest='ssl_keyfile', default=None, type=str,
-        help='SSL key file. If not specified, a default key is used.'
+        "--cn", dest="cn", type=str, default=None,
+        help="CN for generated SSL certs. Default: %s"%pathod.DEFAULT_CERT_DOMAIN
+    )
+    group.add_argument(
+        "-C", dest='ssl_not_after_connect', default=False, action="store_true",
+        help="Don't expect SSL after a CONNECT request."
     )
     group.add_argument(
         "--certfile", dest='ssl_certfile', default=None, type=str,
@@ -181,7 +183,7 @@ if __name__ == "__main__":
     group.add_argument(
         "--sslversion", dest="sslversion", type=int, default=4,
         choices=[1, 2, 3, 4],
-        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to SSLv23." 
+        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to SSLv23."
     )
 
     group = parser.add_argument_group(

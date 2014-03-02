@@ -6,13 +6,20 @@ import language, utils
 class PathocError(Exception): pass
 
 
+class SSLInfo:
+    def __init__(self, certchain):
+        self.certchain = certchain
+
+
 class Response:
-    def __init__(self, httpversion, status_code, msg, headers, content):
+    def __init__(self, httpversion, status_code, msg, headers, content, sslinfo):
         self.httpversion, self.status_code, self.msg = httpversion, status_code, msg
         self.headers, self.content = headers, content
+        self.sslinfo = sslinfo
 
     def __repr__(self):
         return "Response(%s - %s)"%(self.status_code, self.msg)
+
 
 class Pathoc(tcp.TCPClient):
     def __init__(self, address, ssl=None, sni=None, sslversion=1, clientcert=None, ciphers=None):
@@ -48,6 +55,7 @@ class Pathoc(tcp.TCPClient):
         tcp.TCPClient.connect(self)
         if connect_to:
             self.http_connect(connect_to)
+        self.sslinfo = None
         if self.ssl:
             try:
                 self.convert_to_ssl(
@@ -58,6 +66,10 @@ class Pathoc(tcp.TCPClient):
                     )
             except tcp.NetLibError, v:
                 raise PathocError(str(v))
+            self.sslinfo = SSLInfo(
+                        self.connection.get_peer_cert_chain()
+                    )
+
 
     def request(self, spec):
         """
@@ -69,7 +81,9 @@ class Pathoc(tcp.TCPClient):
         r = language.parse_request(self.settings, spec)
         language.serve(r, self.wfile, self.settings, self.address.host)
         self.wfile.flush()
-        return Response(*http.read_response(self.rfile, r.method, None))
+        ret = list(http.read_response(self.rfile, r.method, None))
+        ret.append(self.sslinfo)
+        return Response(*ret)
 
     def _show_summary(self, fp, httpversion, code, msg, headers, content):
         print >> fp, "<< %s %s: %s bytes"%(code, utils.xrepr(msg), len(content))
