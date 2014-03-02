@@ -82,6 +82,10 @@ if __name__ == "__main__":
         help="Comma-separated list of response codes to ignore"
     )
     group.add_argument(
+        "-S", dest="showssl", action="store_true", default=False,
+        help="Show info on SSL connection"
+    )
+    group.add_argument(
         "-e", dest="explain", action="store_true", default=False,
         help="Explain requests"
     )
@@ -153,6 +157,7 @@ if __name__ == "__main__":
                     showreq=args.showreq,
                     showresp=args.showresp,
                     explain=args.explain,
+                    showssl=args.showssl,
                     hexdump=args.hexdump,
                     ignorecodes=codes,
                     ignoretimeout=args.ignoretimeout

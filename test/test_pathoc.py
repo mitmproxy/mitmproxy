@@ -34,6 +34,28 @@ class _TestDaemon:
         r = c.request("get:/api/info")
         assert tuple(json.loads(r.content)["version"]) == version.IVERSION
 
+    def tval(self, requests, showreq=False, showresp=False, explain=False, 
+                   showssl=False, hexdump=False, timeout=None, ignorecodes=None, 
+                   ignoretimeout=None):
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl=self.ssl)
+        c.connect()
+        if timeout:
+            c.settimeout(timeout)
+        s = cStringIO.StringIO()
+        for i in requests:
+            c.print_request(
+                i,
+                showreq = showreq,
+                showresp = showresp,
+                explain = explain,
+                showssl = showssl,
+                hexdump = hexdump,
+                ignorecodes = ignorecodes,
+                ignoretimeout = ignoretimeout,
+                fp = s
+            )
+        return s.getvalue()
+
 
 class TestDaemonSSL(_TestDaemon):
     ssl = True
@@ -50,6 +72,9 @@ class TestDaemonSSL(_TestDaemon):
         d = json.loads(r.content)
         assert d["log"][0]["request"]["sni"] == "foobar.com"
 
+    def test_showssl(self):
+        assert "certificate chain" in  self.tval(["get:/p/200"], showssl=True)
+
     def test_clientcert(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
@@ -65,28 +90,12 @@ class TestDaemonSSL(_TestDaemon):
 
 class TestDaemon(_TestDaemon):
     ssl = False
-    def tval(self, requests, showreq=False, showresp=False, explain=False, hexdump=False, timeout=None, ignorecodes=None, ignoretimeout=None):
-        c = pathoc.Pathoc(("127.0.0.1", self.d.port))
-        c.connect()
-        if timeout:
-            c.settimeout(timeout)
-        s = cStringIO.StringIO()
-        for i in requests:
-            c.print_request(
-                i,
-                showreq = showreq,
-                showresp = showresp,
-                explain = explain,
-                hexdump = hexdump,
-                ignorecodes = ignorecodes,
-                ignoretimeout = ignoretimeout,
-                fp = s
-            )
-        return s.getvalue()
-
     def test_ssl_error(self):
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl = True)
         tutils.raises("ssl handshake", c.connect)
+
+    def test_showssl(self):
+        assert not "certificate chain" in  self.tval(["get:/p/200"], showssl=True)
 
     def test_ignorecodes(self):
         assert "200" in self.tval(["get:'/p/200:b@1'"])

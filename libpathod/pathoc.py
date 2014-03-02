@@ -2,6 +2,7 @@ import sys, os
 from netlib import tcp, http
 import netlib.utils
 import language, utils
+import OpenSSL.crypto
 
 class PathocError(Exception): pass
 
@@ -70,7 +71,6 @@ class Pathoc(tcp.TCPClient):
                         self.connection.get_peer_cert_chain()
                     )
 
-
     def request(self, spec):
         """
             Return an (httpversion, code, msg, headers, content) tuple.
@@ -97,7 +97,7 @@ class Pathoc(tcp.TCPClient):
             print >> fp, "%s (unprintables escaped):"%header
             print >> fp, netlib.utils.cleanBin(data)
 
-    def print_request(self, spec, showreq, showresp, explain, hexdump, ignorecodes, ignoretimeout, fp=sys.stdout):
+    def print_request(self, spec, showreq, showresp, explain, showssl, hexdump, ignorecodes, ignoretimeout, fp=sys.stdout):
         """
             Performs a series of requests, and prints results to the specified
             file descriptor.
@@ -106,6 +106,7 @@ class Pathoc(tcp.TCPClient):
             showreq: Print requests
             showresp: Print responses
             explain: Print request explanation
+            showssl: Print info on SSL connection
             hexdump: When printing requests or responses, use hex dump output
             ignorecodes: Sequence of return codes to ignore
 
@@ -145,6 +146,7 @@ class Pathoc(tcp.TCPClient):
         if req:
             if ignorecodes and resp and resp[1] in ignorecodes:
                 return
+
             if explain:
                 print >> fp, ">> Spec:", r.spec()
 
@@ -156,4 +158,30 @@ class Pathoc(tcp.TCPClient):
             else:
                 if resp:
                     self._show_summary(fp, *resp)
+
+            if self.sslinfo:
+                print >> fp, "SSL certificate chain:\n"
+                for i in self.sslinfo.certchain:
+                    print >> fp, "\tSubject: ",
+                    for cn in i.get_subject().get_components():
+                        print >> fp, "%s=%s"%cn,
+                    print >> fp
+                    print >> fp, "\tIssuer: ",
+                    for cn in i.get_issuer().get_components():
+                        print >> fp, "%s=%s"%cn,
+                    print >> fp
+                    print >> fp, "\tVersion: %s"%i.get_version()
+                    print >> fp, "\tValidity: %s - %s"%(i.get_notBefore(),i.get_notAfter()) 
+                    print >> fp, "\tSerial: %s"%i.get_serial_number()
+                    print >> fp, "\tAlgorithm: %s"%i.get_signature_algorithm()
+                    pk = i.get_pubkey()
+                    types = {
+                            OpenSSL.crypto.TYPE_RSA: "RSA",
+                            OpenSSL.crypto.TYPE_DSA: "DSA"
+                    }
+                    t = types.get(pk.type(), "Uknown")
+                    print >> fp, "\tPubkey: %s bit %s"%(pk.bits(), t)
+                    print >> fp
             return True
+
+
