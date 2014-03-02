@@ -2,6 +2,8 @@ import select, socket, threading, sys, time, traceback
 from OpenSSL import SSL
 import certutils
 
+EINTR = 4
+
 SSLv2_METHOD = SSL.SSLv2_METHOD
 SSLv3_METHOD = SSL.SSLv3_METHOD
 SSLv23_METHOD = SSL.SSLv23_METHOD
@@ -238,7 +240,7 @@ class SocketCloseMixin(object):
             #Section 4.2.2.13 of RFC 1122 tells us that a close() with any
             # pending readable data could lead to an immediate RST being sent.
             #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
-            while self.connection.recv(4096):
+            while self.connection.recv(4096): # pragma: no cover
                 pass
             self.connection.close()
         except (socket.error, SSL.Error, IOError):
@@ -420,8 +422,8 @@ class TCPServer(object):
             while not self.__shutdown_request:
                 try:
                     r, w, e = select.select([self.socket], [], [], poll_interval)
-                except select.error, ex:
-                        if ex[0] == 4:
+                except select.error, ex: # pragma: no cover
+                        if ex[0] == EINTR:
                             continue
                         else:
                             raise  

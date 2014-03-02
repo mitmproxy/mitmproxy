@@ -41,14 +41,6 @@ class TestODict:
         assert h.match_re("two: due")
         assert not h.match_re("nonono")
 
-    def test_getset_state(self):
-        self.od.add("foo", 1)
-        self.od.add("foo", 2)
-        self.od.add("bar", 3)
-        state = self.od._get_state()
-        nd = odict.ODict._from_state(state)
-        assert nd == self.od
-
     def test_in_any(self):
         self.od["one"] = ["atwoa", "athreea"]
         assert self.od.in_any("one", "two")

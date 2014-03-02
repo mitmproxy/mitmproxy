@@ -2,6 +2,7 @@ import cStringIO, Queue, time, socket, random
 from netlib import tcp, certutils, test
 import mock
 import tutils
+from OpenSSL import SSL
 
 class SNIHandler(tcp.BaseHandler):
     sni = None
@@ -434,4 +435,23 @@ class TestFileLike:
         expected = s.first_byte_timestamp
         s.readline()
         assert s.first_byte_timestamp == expected
+
+    def test_read_ssl_error(self):
+        s = cStringIO.StringIO("foobar\nfoobar")
+        s = mock.MagicMock()
+        s.read = mock.MagicMock(side_effect=SSL.Error())
+        s = tcp.Reader(s)
+        tutils.raises(tcp.NetLibSSLError, s.read, 1)
+
+
+
+class TestAddress:
+    def test_simple(self):
+        a = tcp.Address("localhost", True)
+        assert a.use_ipv6
+        b = tcp.Address("foo.com", True)
+        assert not a == b
+        c = tcp.Address("localhost", True)
+        assert a == c
+
 
