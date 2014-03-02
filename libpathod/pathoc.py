@@ -8,8 +8,8 @@ class PathocError(Exception): pass
 
 
 class SSLInfo:
-    def __init__(self, certchain):
-        self.certchain = certchain
+    def __init__(self, certchain, cipher):
+        self.certchain, self.cipher = certchain, cipher
 
 
 class Response:
@@ -68,7 +68,8 @@ class Pathoc(tcp.TCPClient):
             except tcp.NetLibError, v:
                 raise PathocError(str(v))
             self.sslinfo = SSLInfo(
-                        self.connection.get_peer_cert_chain()
+                        self.connection.get_peer_cert_chain(),
+                        self.get_current_cipher()
                     )
 
     def request(self, spec):
@@ -160,6 +161,7 @@ class Pathoc(tcp.TCPClient):
                     self._show_summary(fp, *resp)
 
             if self.sslinfo:
+                print >> fp, "Cipher: %s, %s bit, %s"%self.sslinfo.cipher
                 print >> fp, "SSL certificate chain:\n"
                 for i in self.sslinfo.certchain:
                     print >> fp, "\tSubject: ",
