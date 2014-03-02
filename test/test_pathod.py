@@ -67,7 +67,7 @@ class TestCustomCert(tutils.DaemonTests):
     ssl = True
     ssloptions = dict(
         certfile = tutils.test_data.path("data/testkey.pem"),
-        cacert = tutils.test_data.path("data/testkey.pem"),
+        keyfile = tutils.test_data.path("data/testkey.pem"),
     )
     def test_connect(self):
         r = self.pathoc(r"get:/p/202")

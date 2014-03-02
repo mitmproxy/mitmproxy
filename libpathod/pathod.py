@@ -14,19 +14,19 @@ class PathodError(Exception): pass
 
 
 class SSLOptions:
-    def __init__(self, confdir=CONFDIR, cn=None, certfile=None, cacert=None,
+    def __init__(self, confdir=CONFDIR, cn=None, certfile=None, keyfile=None,
                        not_after_connect=None, request_client_cert=False, 
                        sslversion=tcp.SSLv23_METHOD, ciphers=None):
         self.confdir = confdir
         self.cn = cn
-        if cacert:
-            self.cacert = os.path.expanduser(cacert)
+        if keyfile:
+            self.keyfile = os.path.expanduser(keyfile)
         else:
-            cacert = os.path.join(confdir, CA_CERT_NAME)
-            self.cacert = os.path.expanduser(cacert)
-            if not os.path.exists(self.cacert):
-                certutils.dummy_ca(self.cacert)
-        self.certstore = certutils.CertStore(self.cacert)
+            keyfile = os.path.join(confdir, CA_CERT_NAME)
+            self.keyfile = os.path.expanduser(keyfile)
+            if not os.path.exists(self.keyfile):
+                certutils.dummy_ca(self.keyfile)
+        self.certstore = certutils.CertStore(self.keyfile)
         self.certfile = certfile 
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
@@ -104,7 +104,7 @@ class PathodHandler(tcp.BaseHandler):
                 try:
                     self.convert_to_ssl(
                         self.server.ssloptions.get_cert(None),
-                        self.server.ssloptions.cacert,
+                        self.server.ssloptions.keyfile,
                         handle_sni = self.handle_sni,
                         request_client_cert = self.server.ssloptions.request_client_cert,
                         cipher_list = self.server.ssloptions.ciphers,
@@ -212,7 +212,7 @@ class PathodHandler(tcp.BaseHandler):
             try:
                 self.convert_to_ssl(
                     self.server.ssloptions.get_cert(None),
-                    self.server.ssloptions.cacert,
+                    self.server.ssloptions.keyfile,
                     handle_sni = self.handle_sni,
                     request_client_cert = self.server.ssloptions.request_client_cert,
                     cipher_list = self.server.ssloptions.ciphers,

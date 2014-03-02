@@ -35,6 +35,7 @@ def main(parser, args):
         cn = args.cn,
         confdir = args.confdir,
         certfile = args.ssl_certfile,
+        keyfile = args.ssl_keyfile or args.ssl_certfile,
         not_after_connect = args.ssl_not_after_connect,
         ciphers = args.ciphers,
         sslversion = utils.SSLVERSIONS[args.sslversion]
@@ -174,7 +175,11 @@ if __name__ == "__main__":
     )
     group.add_argument(
         "--certfile", dest='ssl_certfile', default=None, type=str,
-        help='SSL cert file. If not specified, a default cert is used.'
+        help='SSL certificate in PEM format, optionally with the key in the same file.'
+    )
+    group.add_argument(
+        "--keyfile", dest='ssl_keyfile', default=None, type=str,
+        help='Key matching certfile.'
     )
     group.add_argument(
         "--ciphers", dest="ciphers", type=str, default=False,
