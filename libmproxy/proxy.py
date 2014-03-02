@@ -4,6 +4,7 @@ from netlib import tcp, http, certutils, http_auth
 import utils, version, platform, controller, stateobject
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
+CA_CERT_NAME = "mitmproxy-ca.pem"
 
 
 class AddressPriority(object):
@@ -37,9 +38,10 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, certfile=None, cacert=None, clientcerts=None, no_upstream_cert=False, body_size_limit=None,
+    def __init__(self, certfile=None, keyfile=None, cacert=None, clientcerts=None, no_upstream_cert=False, body_size_limit=None,
                  reverse_proxy=None, forward_proxy=None, transparent_proxy=None, authenticator=None):
         self.certfile = certfile
+        self.keyfile = keyfile
         self.cacert = cacert
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
@@ -381,7 +383,7 @@ class ConnectionHandler:
             if self.client_conn.ssl_established:
                 raise ProxyError(502, "SSL to Client already established.")
             dummycert = self.find_cert()
-            self.client_conn.convert_to_ssl(dummycert, self.config.certfile or self.config.cacert,
+            self.client_conn.convert_to_ssl(dummycert, self.config.keyfile or self.config.cacert,
                                             handle_sni=self.handle_sni)
 
     def server_reconnect(self, no_ssl=False):
@@ -498,12 +500,17 @@ class DummyServer:
 
 
 # Command-line utils
-def certificate_option_group(parser):
+def ssl_option_group(parser):
     group = parser.add_argument_group("SSL")
     group.add_argument(
-        "--cert", action="store",
-        type=str, dest="cert", default=None,
-        help="User-created SSL certificate file."
+        "--certfile", action="store",
+        type=str, dest="certfile", default=None,
+        help="SSL certificate in PEM format, optionally with the key in the same file."
+    )
+    group.add_argument(
+        "--keyfile", action="store",
+        type=str, dest="keyfile", default=None,
+        help="Key matching certfile."
     )
     group.add_argument(
         "--client-certs", action="store",
@@ -513,12 +520,20 @@ def certificate_option_group(parser):
 
 
 def process_proxy_options(parser, options):
-    if options.cert:
-        options.cert = os.path.expanduser(options.cert)
-        if not os.path.exists(options.cert):
-            return parser.error("Manually created certificate does not exist: %s" % options.cert)
+    if options.certfile:
+        options.certfile = os.path.expanduser(options.certfile)
+        if not os.path.exists(options.certfile):
+            return parser.error("Certificate file does not exist: %s" % options.certfile)
 
-    cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
+    if options.keyfile:
+        options.keyfile = os.path.expanduser(options.keyfile)
+        if not os.path.exists(options.keyfile):
+            return parser.error("Key file does not exist: %s" % options.keyfile)
+
+    if options.certfile and not options.keyfile:
+        options.keyfile = options.certfile
+
+    cacert = os.path.join(options.confdir, CA_CERT_NAME)
     cacert = os.path.expanduser(cacert)
     if not os.path.exists(cacert):
         certutils.dummy_ca(cacert)
@@ -575,7 +590,8 @@ def process_proxy_options(parser, options):
         authenticator = http_auth.NullProxyAuth(None)
 
     return ProxyConfig(
-        certfile=options.cert,
+        certfile=options.certfile,
+        keyfile=options.keyfile,
         cacert=cacert,
         clientcerts=options.clientcerts,
         body_size_limit=body_size_limit,

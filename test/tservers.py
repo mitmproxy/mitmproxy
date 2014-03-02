@@ -128,6 +128,7 @@ class ProxTestBase(object):
             d["clientcerts"] = tutils.test_data.path("data/clientcert")
         if cls.certfile:
             d["certfile"]  =tutils.test_data.path("data/testkey.pem")
+            d["keyfile"]  =tutils.test_data.path("data/testkey.pem")
         return d
 
 

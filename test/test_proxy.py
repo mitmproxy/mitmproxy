@@ -70,9 +70,12 @@ class TestProcessProxyOptions:
     def test_simple(self):
         assert self.p()
 
-    def test_cert(self):
-        self.assert_noerr("--cert", tutils.test_data.path("data/testkey.pem"))
-        self.assert_err("does not exist", "--cert", "nonexistent")
+    def test_certfile_keyfile(self):
+        self.assert_noerr("--certfile", tutils.test_data.path("data/testkey.pem"))
+        self.assert_err("does not exist", "--certfile", "nonexistent")
+
+        self.assert_noerr("--keyfile", tutils.test_data.path("data/testkey.pem"))
+        self.assert_err("does not exist", "--keyfile", "nonexistent")
 
     def test_confdir(self):
         with tutils.tmpdir() as confdir:
