@@ -477,7 +477,6 @@ class TestFileLike:
         tutils.raises(tcp.NetLibSSLError, s.read, 1)
 
 
-
 class TestAddress:
     def test_simple(self):
         a = tcp.Address("localhost", True)
@@ -486,5 +485,3 @@ class TestAddress:
         assert not a == b
         c = tcp.Address("localhost", True)
         assert a == c
-
-
