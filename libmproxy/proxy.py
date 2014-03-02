@@ -38,8 +38,12 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, certfile=None, keyfile=None, cacert=None, clientcerts=None, no_upstream_cert=False, body_size_limit=None,
-                 reverse_proxy=None, forward_proxy=None, transparent_proxy=None, authenticator=None):
+    def __init__(self, certfile=None, keyfile=None, cacert=None, clientcerts=None, 
+                       no_upstream_cert=False, body_size_limit=None, reverse_proxy=None, 
+                       forward_proxy=None, transparent_proxy=None, authenticator=None,
+                       ciphers=None
+                ):
+        self.ciphers = ciphers
         self.certfile = certfile
         self.keyfile = keyfile
         self.cacert = cacert
@@ -383,8 +387,13 @@ class ConnectionHandler:
             if self.client_conn.ssl_established:
                 raise ProxyError(502, "SSL to Client already established.")
             dummycert = self.find_cert()
-            self.client_conn.convert_to_ssl(dummycert, self.config.keyfile or self.config.cacert,
-                                            handle_sni=self.handle_sni)
+            print self.config.ciphers
+            self.client_conn.convert_to_ssl(
+                dummycert, 
+                self.config.keyfile or self.config.cacert,
+                handle_sni = self.handle_sni,
+                cipher_list = self.config.ciphers
+            )
 
     def server_reconnect(self, no_ssl=False):
         address = self.server_conn.address
@@ -517,6 +526,11 @@ def ssl_option_group(parser):
         type=str, dest="clientcerts", default=None,
         help="Client certificate directory."
     )
+    group.add_argument(
+        "--ciphers", action="store",
+        type=str, dest="ciphers", default=None,
+        help="SSL cipher specification."
+    )
 
 
 def process_proxy_options(parser, options):
@@ -599,5 +613,6 @@ def process_proxy_options(parser, options):
         reverse_proxy=rp,
         forward_proxy=fp,
         transparent_proxy=trans,
-        authenticator=authenticator
+        authenticator=authenticator,
+        ciphers=options.ciphers,
     )
