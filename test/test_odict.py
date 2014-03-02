@@ -24,6 +24,15 @@ class TestODict:
         for i in expected:
             assert out.find(i) >= 0
 
+    def test_getset_state(self):
+        self.od.add("foo", 1)
+        self.od.add("foo", 2)
+        self.od.add("bar", 3)
+        state = self.od._get_state()
+        nd = odict.ODict._from_state(state)
+        assert nd == self.od
+        nd._load_state(state)
+
     def test_dictToHeader2(self):
         self.od["one"] = ["uno"]
         expected1 = "one: uno\r\n"
