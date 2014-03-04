@@ -3,43 +3,32 @@ from netlib import certutils
 import tutils
 
 
-def test_dummy_ca():
-    with tutils.tmpdir() as d:
-        path = os.path.join(d, "foo/cert.cnf")
-        assert certutils.dummy_ca(path)
-        assert os.path.exists(path)
-
-        path = os.path.join(d, "foo/cert2.pem")
-        assert certutils.dummy_ca(path)
-        assert os.path.exists(path)
-        assert os.path.exists(os.path.join(d, "foo/cert2-cert.pem"))
-        assert os.path.exists(os.path.join(d, "foo/cert2-cert.p12"))
-
-
 class TestCertStore:
     def test_create_explicit(self):
         with tutils.tmpdir() as d:
-            ca = os.path.join(d, "ca")
-            assert certutils.dummy_ca(ca)
-            c = certutils.CertStore(ca)
+            ca = certutils.CertStore.from_store(d, "test")
+            assert ca.get_cert("foo", [])
+
+            ca2 = certutils.CertStore.from_store(d, "test")
+            assert ca2.get_cert("foo", [])
+
+            assert ca.cert.get_serial_number() == ca2.cert.get_serial_number()
 
     def test_create_tmp(self):
         with tutils.tmpdir() as d:
-            ca = os.path.join(d, "ca")
-            assert certutils.dummy_ca(ca)
-            c = certutils.CertStore(ca)
-            assert c.get_cert("foo.com", [])
-            assert c.get_cert("foo.com", [])
-            assert c.get_cert("*.foo.com", [])
+            ca = certutils.CertStore.from_store(d, "test")
+            assert ca.get_cert("foo.com", [])
+            assert ca.get_cert("foo.com", [])
+            assert ca.get_cert("*.foo.com", [])
 
 
 class TestDummyCert:
     def test_with_ca(self):
         with tutils.tmpdir() as d:
-            cacert = os.path.join(d, "cacert")
-            assert certutils.dummy_ca(cacert)
+            ca = certutils.CertStore.from_store(d, "test")
             r = certutils.dummy_cert(
-                cacert,
+                ca.pkey,
+                ca.cert,
                 "foo.com",
                 ["one.com", "two.com", "*.three.com"]
             )
