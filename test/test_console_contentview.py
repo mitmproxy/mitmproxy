@@ -120,7 +120,7 @@ class TestContentView:
     def test_view_css(self):
         v = cv.ViewCSS()
 
-        with open('./test/data/1.css', 'r') as fp:
+        with open(tutils.test_data.path('data/1.css'), 'r') as fp:
             fixture_1 = fp.read()
 
         result = v([], 'a', 100)

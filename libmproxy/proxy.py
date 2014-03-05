@@ -4,7 +4,10 @@ from netlib import tcp, http, certutils, http_auth
 import utils, version, platform, controller, stateobject
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
+CONF_BASENAME = "mitmproxy"
+CONF_DIR = "~/.mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
+
 
 
 class AddressPriority(object):
@@ -38,15 +41,12 @@ class Log:
 
 
 class ProxyConfig:
-    def __init__(self, certfile=None, keyfile=None, cacert=None, clientcerts=None, 
+    def __init__(self, confdir=CONF_DIR, clientcerts=None, 
                        no_upstream_cert=False, body_size_limit=None, reverse_proxy=None, 
                        forward_proxy=None, transparent_proxy=None, authenticator=None,
-                       ciphers=None
+                       ciphers=None, certs=None
                 ):
         self.ciphers = ciphers
-        self.certfile = certfile
-        self.keyfile = keyfile
-        self.cacert = cacert
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
@@ -54,7 +54,9 @@ class ProxyConfig:
         self.forward_proxy = forward_proxy
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
-        self.certstore = certutils.CertStore(cacert)
+        self.confdir = os.path.expanduser(confdir)
+        self.certstore = certutils.CertStore.from_store(confdir, CONF_BASENAME)
+
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
@@ -386,10 +388,9 @@ class ConnectionHandler:
         if client:
             if self.client_conn.ssl_established:
                 raise ProxyError(502, "SSL to Client already established.")
-            dummycert = self.find_cert()
+            cert, key = self.find_cert()
             self.client_conn.convert_to_ssl(
-                dummycert, 
-                self.config.keyfile or self.config.cacert,
+                cert, key, 
                 handle_sni = self.handle_sni,
                 cipher_list = self.config.ciphers
             )
@@ -420,22 +421,18 @@ class ConnectionHandler:
         self.channel.tell("log", Log(msg))
 
     def find_cert(self):
-        if self.config.certfile:
-            with open(self.config.certfile, "rb") as f:
-                return certutils.SSLCert.from_pem(f.read())
-        else:
-            host = self.server_conn.address.host
-            sans = []
-            if not self.config.no_upstream_cert or not self.server_conn.ssl_established:
-                upstream_cert = self.server_conn.cert
-                if upstream_cert.cn:
-                    host = upstream_cert.cn.decode("utf8").encode("idna")
-                sans = upstream_cert.altnames
+        host = self.server_conn.address.host
+        sans = []
+        if not self.config.no_upstream_cert or not self.server_conn.ssl_established:
+            upstream_cert = self.server_conn.cert
+            if upstream_cert.cn:
+                host = upstream_cert.cn.decode("utf8").encode("idna")
+            sans = upstream_cert.altnames
 
-            ret = self.config.certstore.get_cert(host, sans)
-            if not ret:
-                raise ProxyError(502, "Unable to generate dummy cert.")
-            return ret
+        ret = self.config.certstore.get_cert(host, sans)
+        if not ret:
+            raise ProxyError(502, "Unable to generate dummy cert.")
+        return ret
 
     def handle_sni(self, connection):
         """
@@ -451,9 +448,9 @@ class ConnectionHandler:
                 self.server_reconnect()  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
-                new_context.use_privatekey_file(self.config.certfile or self.config.cacert)
-                dummycert = self.find_cert()
-                new_context.use_certificate(dummycert.x509)
+                cert, key = self.find_cert()
+                new_context.use_privatekey_file(key)
+                new_context.use_certificate(cert.X509)
                 connection.set_context(new_context)
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
@@ -510,14 +507,12 @@ class DummyServer:
 def ssl_option_group(parser):
     group = parser.add_argument_group("SSL")
     group.add_argument(
-        "--certfile", action="store",
-        type=str, dest="certfile", default=None,
-        help="SSL certificate in PEM format, optionally with the key in the same file."
-    )
-    group.add_argument(
-        "--keyfile", action="store",
-        type=str, dest="keyfile", default=None,
-        help="Key matching certfile."
+        "--cert", dest='certs', default=[], type=str,
+        metavar = "SPEC", action="append", 
+        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '\
+             'The domain may include a wildcard, and is equal to "*" if not specified. '\
+             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '\
+             'it is used, else the default key in the conf dir is used. Can be passed multiple times.'
     )
     group.add_argument(
         "--client-certs", action="store",
@@ -532,23 +527,6 @@ def ssl_option_group(parser):
 
 
 def process_proxy_options(parser, options):
-    if options.certfile:
-        options.certfile = os.path.expanduser(options.certfile)
-        if not os.path.exists(options.certfile):
-            return parser.error("Certificate file does not exist: %s" % options.certfile)
-
-    if options.keyfile:
-        options.keyfile = os.path.expanduser(options.keyfile)
-        if not os.path.exists(options.keyfile):
-            return parser.error("Key file does not exist: %s" % options.keyfile)
-
-    if options.certfile and not options.keyfile:
-        options.keyfile = options.certfile
-
-    cacert = os.path.join(options.confdir, CA_CERT_NAME)
-    cacert = os.path.expanduser(cacert)
-    if not os.path.exists(cacert):
-        certutils.dummy_ca(cacert)
     body_size_limit = utils.parse_size(options.body_size_limit)
     if options.reverse_proxy and options.transparent_proxy:
         return parser.error("Can't set both reverse proxy and transparent proxy.")
@@ -601,10 +579,17 @@ def process_proxy_options(parser, options):
     else:
         authenticator = http_auth.NullProxyAuth(None)
 
+    certs = []
+    for i in options.certs:
+        parts = i.split("=", 1)
+        if len(parts) == 1:
+            parts = ["*", parts[0]]
+        parts[1] = os.path.expanduser(parts[1])
+        if not os.path.exists(parts[1]):
+            parser.error("Certificate file does not exist: %s"%parts[1])
+        certs.append(parts)
+
     return ProxyConfig(
-        certfile=options.certfile,
-        keyfile=options.keyfile,
-        cacert=cacert,
         clientcerts=options.clientcerts,
         body_size_limit=body_size_limit,
         no_upstream_cert=options.no_upstream_cert,
@@ -613,4 +598,5 @@ def process_proxy_options(parser, options):
         transparent_proxy=trans,
         authenticator=authenticator,
         ciphers=options.ciphers,
+        certs = certs,
     )

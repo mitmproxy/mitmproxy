@@ -70,13 +70,6 @@ class TestProcessProxyOptions:
     def test_simple(self):
         assert self.p()
 
-    def test_certfile_keyfile(self):
-        self.assert_noerr("--certfile", tutils.test_data.path("data/testkey.pem"))
-        self.assert_err("does not exist", "--certfile", "nonexistent")
-
-        self.assert_noerr("--keyfile", tutils.test_data.path("data/testkey.pem"))
-        self.assert_err("does not exist", "--keyfile", "nonexistent")
-
     def test_confdir(self):
         with tutils.tmpdir() as confdir:
             self.assert_noerr("--confdir", confdir)
@@ -93,10 +86,15 @@ class TestProcessProxyOptions:
         self.assert_err("invalid reverse proxy", "-P", "reverse")
         self.assert_noerr("-P", "http://localhost")
 
-    def test_certs(self):
+    def test_client_certs(self):
         with tutils.tmpdir() as confdir:
             self.assert_noerr("--client-certs", confdir)
             self.assert_err("directory does not exist", "--client-certs", "nonexistent")
+
+    def test_certs(self):
+        with tutils.tmpdir() as confdir:
+            self.assert_noerr("--cert", tutils.test_data.path("data/testkey.pem"))
+            self.assert_err("does not exist", "--cert", "nonexistent")
 
     def test_auth(self):
         p = self.assert_noerr("--nonanonymous")
