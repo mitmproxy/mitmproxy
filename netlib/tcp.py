@@ -375,7 +375,7 @@ class BaseHandler(_Connection):
         if handle_sni:
             # SNI callback happens during do_handshake()
             ctx.set_tlsext_servername_callback(handle_sni)
-        ctx.use_privatekey_file(key)
+        ctx.use_privatekey(key)
         ctx.use_certificate(cert.x509)
         if request_client_cert:
             def ver(*args):

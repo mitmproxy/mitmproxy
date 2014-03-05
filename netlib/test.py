@@ -1,5 +1,6 @@
 import threading, Queue, cStringIO
 import tcp, certutils
+import OpenSSL
 
 class ServerThread(threading.Thread):
     def __init__(self, server):
@@ -49,6 +50,8 @@ class TServer(tcp.TCPServer):
         self.handler_klass = handler_klass
         self.last_handler = None
 
+
+
     def handle_client_connection(self, request, client_address):
         h = self.handler_klass(request, client_address, self)
         self.last_handler = h
@@ -56,6 +59,8 @@ class TServer(tcp.TCPServer):
             cert = certutils.SSLCert.from_pem(
                 file(self.ssl["cert"], "rb").read()
             )
+            raw = file(self.ssl["key"], "rb").read()
+            key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
             if self.ssl["v3_only"]:
                 method = tcp.SSLv3_METHOD
                 options = tcp.OP_NO_SSLv2|tcp.OP_NO_TLSv1
@@ -63,8 +68,7 @@ class TServer(tcp.TCPServer):
                 method = tcp.SSLv23_METHOD
                 options = None
             h.convert_to_ssl(
-                cert,
-                self.ssl["key"],
+                cert, key,
                 method = method,
                 options = options,
                 handle_sni = getattr(h, "handle_sni", None),
