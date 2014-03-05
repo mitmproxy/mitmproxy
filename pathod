@@ -31,14 +31,23 @@ def daemonize (stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
 
 
 def main(parser, args):
+    certs = []
+    for i in args.ssl_certs:
+        parts = i.split("=", 1)
+        if len(parts) == 1:
+            parts = ["*", parts[0]]
+        parts[1] = os.path.expanduser(parts[1])
+        if not os.path.exists(parts[1]):
+            parser.error("Certificate file does not exist: %s"%parts[1])
+        certs.append(parts)
+
     ssloptions = pathod.SSLOptions(
         cn = args.cn,
         confdir = args.confdir,
-        certfile = args.ssl_certfile,
-        keyfile = args.ssl_keyfile or args.ssl_certfile,
         not_after_connect = args.ssl_not_after_connect,
         ciphers = args.ciphers,
-        sslversion = utils.SSLVERSIONS[args.sslversion]
+        sslversion = utils.SSLVERSIONS[args.sslversion],
+        certs = certs
     )
 
     alst = []
@@ -174,12 +183,12 @@ if __name__ == "__main__":
         help="Don't expect SSL after a CONNECT request."
     )
     group.add_argument(
-        "--certfile", dest='ssl_certfile', default=None, type=str,
-        help='SSL certificate in PEM format, optionally with the key in the same file.'
-    )
-    group.add_argument(
-        "--keyfile", dest='ssl_keyfile', default=None, type=str,
-        help='Key matching certfile.'
+        "--cert", dest='ssl_certs', default=[], type=str,
+        metavar = "SPEC", action="append", 
+        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '\
+             'The domain may include a wildcard, and is equal to "*" if not specified. '\
+             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '\
+             'it is used, else the default key in the conf dir is used. Can be passed multiple times.'
     )
     group.add_argument(
         "--ciphers", dest="ciphers", type=str, default=False,
@@ -218,7 +227,6 @@ if __name__ == "__main__":
         "-x", dest="hexdump", action="store_true", default=False,
         help="Log request/response in hexdump format"
     )
-
     args = parser.parse_args()
     if args.daemonize:
         daemonize()

@@ -6,6 +6,7 @@ import version, app, language, utils
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
 CONFDIR = "~/.mitmproxy"
+CERTSTORE_BASENAME = "mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
 
 logger = logging.getLogger('pathod')
@@ -14,28 +15,23 @@ class PathodError(Exception): pass
 
 
 class SSLOptions:
-    def __init__(self, confdir=CONFDIR, cn=None, certfile=None, keyfile=None,
-                       not_after_connect=None, request_client_cert=False, 
-                       sslversion=tcp.SSLv23_METHOD, ciphers=None):
+    def __init__(self, confdir=CONFDIR, cn=None, not_after_connect=None, 
+                       request_client_cert=False, sslversion=tcp.SSLv23_METHOD, 
+                       ciphers=None, certs=None):
         self.confdir = confdir
         self.cn = cn
-        if keyfile:
-            self.keyfile = os.path.expanduser(keyfile)
-        else:
-            keyfile = os.path.join(confdir, CA_CERT_NAME)
-            self.keyfile = os.path.expanduser(keyfile)
-            if not os.path.exists(self.keyfile):
-                certutils.dummy_ca(self.keyfile)
-        self.certstore = certutils.CertStore(self.keyfile)
-        self.certfile = certfile 
+        self.certstore = certutils.CertStore.from_store(
+            os.path.expanduser(confdir),
+            CERTSTORE_BASENAME
+        )
+        for i in certs or []:
+            self.certstore.add_cert_file(*i)
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
         self.ciphers = ciphers
         self.sslversion = sslversion
 
     def get_cert(self, name):
-        if self.certfile:
-            return certutils.SSLCert.from_pem(file(self.certfile, "rb").read())
         if self.cn:
             name = self.cn
         elif not name:
@@ -97,9 +93,9 @@ class PathodHandler(tcp.BaseHandler):
             self.wfile.flush()
             if not self.server.ssloptions.not_after_connect:
                 try:
+                    cert, key = self.server.ssloptions.get_cert(m.v[0])
                     self.convert_to_ssl(
-                        self.server.ssloptions.get_cert(None),
-                        self.server.ssloptions.keyfile,
+                        cert, key,
                         handle_sni = self.handle_sni,
                         request_client_cert = self.server.ssloptions.request_client_cert,
                         cipher_list = self.server.ssloptions.ciphers,
@@ -213,9 +209,9 @@ class PathodHandler(tcp.BaseHandler):
     def handle(self):
         if self.server.ssl:
             try:
+                cert, key = self.server.ssloptions.get_cert(None)
                 self.convert_to_ssl(
-                    self.server.ssloptions.get_cert(None),
-                    self.server.ssloptions.keyfile,
+                    cert, key,
                     handle_sni = self.handle_sni,
                     request_client_cert = self.server.ssloptions.request_client_cert,
                     cipher_list = self.server.ssloptions.ciphers,

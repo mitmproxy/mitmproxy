@@ -1,6 +1,6 @@
 import pprint
 from libpathod import pathod, version
-from netlib import tcp, http
+from netlib import tcp, http, certutils
 import requests
 import tutils
 
@@ -66,14 +66,13 @@ class TestNotAfterConnect(tutils.DaemonTests):
 class TestCustomCert(tutils.DaemonTests):
     ssl = True
     ssloptions = dict(
-        certfile = tutils.test_data.path("data/testkey.pem"),
-        keyfile = tutils.test_data.path("data/testkey.pem"),
+        certs = [("*", tutils.test_data.path("data/testkey.pem"))],
     )
     def test_connect(self):
         r = self.pathoc(r"get:/p/202")
         assert r.status_code == 202
         assert r.sslinfo
-
+        assert "Widgits" in str(r.sslinfo.certchain[0].get_subject())
 
 
 class TestSSLCN(tutils.DaemonTests):
@@ -223,6 +222,4 @@ class TestDaemonSSL(CommonTests):
         r = self.pathoc(r"get:/p/202")
         assert r.status_code == 202
         assert self.d.last_log()["cipher"][1] > 0
-
-
 
