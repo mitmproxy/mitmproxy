@@ -169,21 +169,22 @@ class CertStore:
         f.close()
         return key, ca
 
-    def add_cert_file(self, commonname, path):
+    def add_cert_file(self, spec, path):
         raw = file(path, "rb").read()
         cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
         try:
             privkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
         except Exception:
             privkey = None
-        self.add_cert(SSLCert(cert), privkey, commonname)
+        self.add_cert(SSLCert(cert), privkey, spec)
 
     def add_cert(self, cert, privkey, *names):
         """
             Adds a cert to the certstore. We register the CN in the cert plus
             any SANs, and also the list of names provided as an argument.
         """
-        self.certs.add(cert.cn, (cert, privkey))
+        if cert.cn:
+            self.certs.add(cert.cn, (cert, privkey))
         for i in cert.altnames:
             self.certs.add(i, (cert, privkey))
         for i in names:
