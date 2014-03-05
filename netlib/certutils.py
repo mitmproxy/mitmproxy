@@ -4,6 +4,7 @@ from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
 import tcp
+import UserDict
 
 DEFAULT_EXP = 62208000 # =24 * 60 * 60 * 720
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
@@ -42,11 +43,11 @@ def create_ca(o, cn, exp):
     return key, cert
 
 
-def dummy_cert(pkey, cacert, commonname, sans):
+def dummy_cert(privkey, cacert, commonname, sans):
     """
         Generates a dummy certificate.
 
-        pkey: CA private key
+        privkey: CA private key
         cacert: CA certificate
         commonname: Common name for the generated certificate.
         sans: A list of Subject Alternate Names.
@@ -68,17 +69,55 @@ def dummy_cert(pkey, cacert, commonname, sans):
         cert.set_version(2)
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
     cert.set_pubkey(cacert.get_pubkey())
-    cert.sign(pkey, "sha1")
+    cert.sign(privkey, "sha1")
     return SSLCert(cert)
+
+
+class _Node(UserDict.UserDict):
+    def __init__(self):
+        UserDict.UserDict.__init__(self)
+        self.value = None
+
+
+class DNTree:
+    """
+        Domain store that knows about wildcards. DNS wildcards are very
+        restricted - the only valid variety is an asterisk on the left-most
+        domain component, i.e.:
+
+            *.foo.com
+    """
+    def __init__(self):
+        self.d = _Node()
+
+    def add(self, dn, cert):
+        parts = dn.split(".")
+        parts.reverse()
+        current = self.d
+        for i in parts:
+            current = current.setdefault(i, _Node())
+        current.value = cert
+
+    def get(self, dn):
+        parts = dn.split(".")
+        current = self.d
+        for i in reversed(parts):
+            if i in current:
+                current = current[i]
+            elif "*" in current:
+                return current["*"].value
+            else:
+                return None
+        return current.value
 
 
 class CertStore:
     """
         Implements an in-memory certificate store.
     """
-    def __init__(self, pkey, cert):
-        self.pkey, self.cert = pkey, cert
-        self.certs = {}
+    def __init__(self, privkey, cacert):
+        self.privkey, self.cacert = privkey, cacert
+        self.certs = DNTree()
 
     @classmethod
     def from_store(klass, path, basename):
@@ -130,9 +169,29 @@ class CertStore:
         f.close()
         return key, ca
 
+    def add_cert_file(self, commonname, path):
+        raw = file(path, "rb").read()
+        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
+        try:
+            privkey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
+        except Exception:
+            privkey = None
+        self.add_cert(SSLCert(cert), privkey, commonname)
+
+    def add_cert(self, cert, privkey, *names):
+        """
+            Adds a cert to the certstore. We register the CN in the cert plus
+            any SANs, and also the list of names provided as an argument.
+        """
+        self.certs.add(cert.cn, (cert, privkey))
+        for i in cert.altnames:
+            self.certs.add(i, (cert, privkey))
+        for i in names:
+            self.certs.add(i, (cert, privkey))
+
     def get_cert(self, commonname, sans):
         """
-            Returns an SSLCert object.
+            Returns an (cert, privkey) tuple.
 
             commonname: Common name for the generated certificate. Must be a
             valid, plain-ASCII, IDNA-encoded domain name.
@@ -141,11 +200,12 @@ class CertStore:
 
             Return None if the certificate could not be found or generated.
         """
-        if commonname in self.certs:
-            return self.certs[commonname]
-        c = dummy_cert(self.pkey, self.cert, commonname, sans)
-        self.certs[commonname] = c
-        return c
+        c = self.certs.get(commonname)
+        if not c:
+            c = dummy_cert(self.privkey, self.cacert, commonname, sans)
+            self.add_cert(c, None)
+            c = (c, None)
+        return (c[0], c[1] or self.privkey)
 
 
 class _GeneralName(univ.Choice):
@@ -170,6 +230,9 @@ class SSLCert:
             Returns a (common name, [subject alternative names]) tuple.
         """
         self.x509 = cert
+
+    def __eq__(self, other):
+        return self.digest("sha1") == other.digest("sha1")
 
     @classmethod
     def from_pem(klass, txt):
