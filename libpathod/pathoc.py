@@ -1,5 +1,5 @@
 import sys, os
-from netlib import tcp, http
+from netlib import tcp, http, certutils
 import netlib.utils
 import language, utils
 import OpenSSL.crypto
@@ -183,7 +183,11 @@ class Pathoc(tcp.TCPClient):
                     }
                     t = types.get(pk.type(), "Uknown")
                     print >> fp, "\tPubkey: %s bit %s"%(pk.bits(), t)
+                    s = certutils.SSLCert(i)
+                    if s.altnames:
+                        print >> fp, "\tSANs:", " ".join(s.altnames)
                     print >> fp
             return True
+
 
 
