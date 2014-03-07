@@ -55,7 +55,7 @@ class ProxyConfig:
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
-        self.certstore = certutils.CertStore.from_store(confdir, CONF_BASENAME)
+        self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
 
 
 
