@@ -339,7 +339,10 @@ class BaseHandler(_Connection):
         self.ssl_established = False
         self.clientcert = None
 
-    def convert_to_ssl(self, cert, key, method=SSLv23_METHOD, options=None, handle_sni=None, request_client_cert=False, cipher_list=None):
+    def convert_to_ssl(self, cert, key, 
+                        method=SSLv23_METHOD, options=None, handle_sni=None, 
+                        request_client_cert=False, cipher_list=None, dhparams=None
+                    ):
         """
             cert: A certutils.SSLCert object.
             method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
@@ -377,6 +380,8 @@ class BaseHandler(_Connection):
             ctx.set_tlsext_servername_callback(handle_sni)
         ctx.use_privatekey(key)
         ctx.use_certificate(cert.x509)
+        if dhparams:
+            SSL._lib.SSL_CTX_set_tmp_dh(ctx._context, dhparams)
         if request_client_cert:
             def ver(*args):
                 self.clientcert = certutils.SSLCert(args[1])

@@ -115,10 +115,22 @@ class CertStore:
     """
         Implements an in-memory certificate store.
     """
-    def __init__(self, privkey, cacert):
+    def __init__(self, privkey, cacert, dhparams=None):
         self.privkey, self.cacert = privkey, cacert
+        self.dhparams = dhparams
         self.certs = DNTree()
 
+    @classmethod
+    def load_dhparam(klass, path):
+        bio = OpenSSL.SSL._lib.BIO_new_file(path, b"r")
+        if bio != OpenSSL.SSL._ffi.NULL:
+            bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)
+            dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(
+                    bio, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL
+                )
+            dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)
+            return dh
+    
     @classmethod
     def from_store(klass, path, basename):
         p = os.path.join(path, basename + "-ca.pem")
@@ -129,7 +141,9 @@ class CertStore:
             raw = file(p, "rb").read()
             ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
             key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
-        return klass(key, ca)
+        dhp = os.path.join(path, basename + "-dhparam.pem")
+        dh = klass.load_dhparam(dhp)
+        return klass(key, ca, dh)
 
     @classmethod
     def create_store(klass, path, basename, o=None, cn=None, expiry=DEFAULT_EXP):
@@ -147,17 +161,17 @@ class CertStore:
         f.close()
 
         # Dump the certificate in PEM format
-        f = open(os.path.join(path, basename + "-cert.pem"), "wb")
+        f = open(os.path.join(path, basename + "-ca-cert.pem"), "wb")
         f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
         f.close()
 
         # Create a .cer file with the same contents for Android
-        f = open(os.path.join(path, basename + "-cert.cer"), "wb")
+        f = open(os.path.join(path, basename + "-ca-cert.cer"), "wb")
         f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
         f.close()
 
         # Dump the certificate in PKCS12 format for Windows devices
-        f = open(os.path.join(path, basename + "-cert.p12"), "wb")
+        f = open(os.path.join(path, basename + "-ca-cert.p12"), "wb")
         p12 = OpenSSL.crypto.PKCS12()
         p12.set_certificate(ca)
         p12.set_privatekey(key)

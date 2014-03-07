@@ -18,7 +18,6 @@ class ServerTestBase:
     ssl = None
     handler = None
     addr = ("localhost", 0)
-
     @classmethod
     def setupAll(cls):
         cls.q = Queue.Queue()
@@ -43,14 +42,15 @@ class ServerTestBase:
 class TServer(tcp.TCPServer):
     def __init__(self, ssl, q, handler_klass, addr):
         """
-            ssl: A {cert, key, v3_only} dict.
+            ssl: A dictionary of SSL parameters:
+                
+                    cert, key, request_client_cert, cipher_list,
+                    dhparams, v3_only
         """
         tcp.TCPServer.__init__(self, addr)
         self.ssl, self.q = ssl, q
         self.handler_klass = handler_klass
         self.last_handler = None
-
-
 
     def handle_client_connection(self, request, client_address):
         h = self.handler_klass(request, client_address, self)
@@ -73,7 +73,8 @@ class TServer(tcp.TCPServer):
                 options = options,
                 handle_sni = getattr(h, "handle_sni", None),
                 request_client_cert = self.ssl["request_client_cert"],
-                cipher_list = self.ssl.get("cipher_list", None)
+                cipher_list = self.ssl.get("cipher_list", None),
+                dhparams = self.ssl.get("dhparams", None)
             )
         h.handle()
         h.finish()

@@ -363,6 +363,26 @@ class TestSSLTimeOut(test.ServerTestBase):
         tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
 
 
+class TestDHParams(test.ServerTestBase):
+    handler = HangHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
+        v3_only = False,
+        dhparams = certutils.CertStore.load_dhparam(
+            tutils.test_data.path("data/dhparam.pem"),
+        ),
+        cipher_list = "DHE-RSA-AES256-SHA"
+    )
+    def test_dhparams(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        c.convert_to_ssl()
+        ret = c.get_current_cipher()
+        assert ret[0] == "DHE-RSA-AES256-SHA"
+
+
 class TestTCPClient:
     def test_conerr(self):
         c = tcp.TCPClient(("127.0.0.1", 0))
