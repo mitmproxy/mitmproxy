@@ -77,7 +77,6 @@ class PathEdit(urwid.Edit, _PathCompleter):
 class ActionBar(common.WWrap):
     def __init__(self):
         self.message("")
-        self.expire = None
 
     def selectable(self):
         return True
