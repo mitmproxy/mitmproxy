@@ -1,3 +1,4 @@
+import os.path
 import threading, Queue
 import shutil, tempfile
 import flask
@@ -82,7 +83,7 @@ class ProxTestBase(object):
         cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         pconf = cls.get_proxy_config()
-        cls.confdir = tempfile.gettempdir()
+        cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         config = proxy.ProxyConfig(
             no_upstream_cert = cls.no_upstream_cert,
             confdir = cls.confdir,

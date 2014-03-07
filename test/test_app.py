@@ -14,4 +14,3 @@ class TestApp(tservers.HTTPProxTest):
                 resp = self.app("/cert/%s" % ext)
                 assert resp.status_code == 200
                 assert resp.content
-
