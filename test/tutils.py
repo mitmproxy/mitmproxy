@@ -55,7 +55,7 @@ def treq(conn=None, content="content"):
     headers["header"] = ["qvalue"]
 
     f = http.HTTPFlow(conn, server_conn)
-    f.request = http.HTTPRequest("origin", "GET", None, None, None, "/path", (1, 1), headers, content,
+    f.request = http.HTTPRequest("relative", "GET", None, None, None, "/path", (1, 1), headers, content,
                                  None, None, None)
     f.request.reply = controller.DummyReply()
     return f.request

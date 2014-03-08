@@ -185,10 +185,9 @@ class HTTPRequest(HTTPMessage):
         to False to make checking for the presence of content natural.
 
         form_in: The request form which mitmproxy has received. The following values are possible:
-                 - origin (GET /index.html)
+                 - relative (GET /index.html, OPTIONS *) (covers origin form and asterisk form)
                  - absolute (GET http://example.com:80/index.html)
                  - authority-form (CONNECT example.com:443)
-                 - asterisk-form (OPTIONS *)
                  Details: http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-25#section-5.3
 
         form_out: The request form which mitmproxy has send out to the destination
@@ -269,10 +268,8 @@ class HTTPRequest(HTTPMessage):
             raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
         method, path, httpversion = request_line_parts
 
-        if path == '*':
-            form_in = "asterisk"
-        elif path.startswith("/"):
-            form_in = "origin"
+        if path == '*' or path.startswith("/"):
+            form_in = "relative"
             if not netlib.utils.isascii(path):
                 raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
         elif method.upper() == 'CONNECT':
@@ -303,9 +300,9 @@ class HTTPRequest(HTTPMessage):
     def _assemble_first_line(self, form=None):
         form = form or self.form_out
 
-        if form == "asterisk" or \
-           form == "origin":
-            request_line = '%s %s HTTP/%s.%s' % (self.method, self.path, self.httpversion[0], self.httpversion[1])
+        if form == "relative":
+            path = self.path if self.method != "OPTIONS" else "*"
+            request_line = '%s %s HTTP/%s.%s' % (self.method, path, self.httpversion[0], self.httpversion[1])
         elif form == "authority":
             request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
                                                     self.httpversion[0], self.httpversion[1])
@@ -1038,7 +1035,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid Request")
                 if not self.c.config.forward_proxy:
-                    request.form_out = "origin"
+                    request.form_out = "relative"
                     self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
             else:

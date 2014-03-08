@@ -29,7 +29,7 @@ class TestHTTPRequest:
         s = StringIO("OPTIONS * HTTP/1.1")
         f = tutils.tflow_noreq()
         f.request = HTTPRequest.from_stream(s)
-        assert f.request.form_in == "asterisk"
+        assert f.request.form_in == "relative"
         x = f.request._assemble()
         assert f.request._assemble() == "OPTIONS * HTTP/1.1\r\nHost: address:22\r\n\r\n"
 
@@ -95,7 +95,7 @@ class TestInvalidRequests(tservers.HTTPProxTest):
         assert r.status_code == 502
         assert "Must not CONNECT on already encrypted connection" in r.content
 
-    def test_origin_request(self):
+    def test_relative_request(self):
         p = self.pathoc_raw()
         p.connect()
         r = p.request("get:/p/200")
@@ -181,15 +181,15 @@ class TestProxyChainingSSLReconnect(tservers.HTTPChainProxyTest):
         assert self.proxy.tmaster.state._flow_list[1].response
 
         assert self.chain[1].tmaster.state._flow_list[0].request.form_in == "authority"
-        assert self.chain[1].tmaster.state._flow_list[1].request.form_in == "origin"
+        assert self.chain[1].tmaster.state._flow_list[1].request.form_in == "relative"
 
         assert self.chain[0].tmaster.state._flow_list[0].request.form_in == "authority"
-        assert self.chain[0].tmaster.state._flow_list[1].request.form_in == "origin"
+        assert self.chain[0].tmaster.state._flow_list[1].request.form_in == "relative"
         assert self.chain[0].tmaster.state._flow_list[2].request.form_in == "authority"
-        assert self.chain[0].tmaster.state._flow_list[3].request.form_in == "origin"
+        assert self.chain[0].tmaster.state._flow_list[3].request.form_in == "relative"
 
-        assert self.proxy.tmaster.state._flow_list[0].request.form_in == "origin"
-        assert self.proxy.tmaster.state._flow_list[1].request.form_in == "origin"
+        assert self.proxy.tmaster.state._flow_list[0].request.form_in == "relative"
+        assert self.proxy.tmaster.state._flow_list[1].request.form_in == "relative"
 
         req = p.request("get:'/p/418:b\"content2\"'")
 
