@@ -1,4 +1,6 @@
+import os.path
 import threading, Queue
+import shutil, tempfile
 import flask
 import libpathod.test, libpathod.pathoc
 from libmproxy import proxy, flow, controller
@@ -28,7 +30,6 @@ class TestMaster(flow.FlowMaster):
         self.apps.add(testapp, "testapp", 80)
         self.apps.add(errapp, "errapp", 80)
         self.clear_log()
-        self.start_app(APP_HOST, APP_PORT, False)
 
     def handle_request(self, m):
         flow.FlowMaster.handle_request(self, m)
@@ -73,24 +74,30 @@ class ProxTestBase(object):
     ssl = None
     ssloptions = False
     clientcerts = False
-    certfile = None
     no_upstream_cert = False
     authenticator = None
     masterclass = TestMaster
+    externalapp = False
     @classmethod
     def setupAll(cls):
         cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         pconf = cls.get_proxy_config()
+        cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         config = proxy.ProxyConfig(
             no_upstream_cert = cls.no_upstream_cert,
-            cacert = tutils.test_data.path("data/confdir/mitmproxy-ca.pem"),
+            confdir = cls.confdir,
             authenticator = cls.authenticator,
             **pconf
         )
         tmaster = cls.masterclass(config)
+        tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
+
+    @classmethod
+    def tearDownAll(cls):
+        shutil.rmtree(cls.confdir)
 
     @property
     def master(cls):
@@ -126,8 +133,6 @@ class ProxTestBase(object):
         d = dict()
         if cls.clientcerts:
             d["clientcerts"] = tutils.test_data.path("data/clientcert")
-        if cls.certfile:
-            d["certfile"]  =tutils.test_data.path("data/testkey.pem")
         return d
 
 
@@ -252,7 +257,6 @@ class ChainProxTest(ProxTestBase):
     """
     n = 2
     chain_config = [lambda: proxy.ProxyConfig(
-        cacert = tutils.test_data.path("data/confdir/mitmproxy-ca.pem"),
     )] * n
     @classmethod
     def setupAll(cls):
@@ -265,6 +269,7 @@ class ChainProxTest(ProxTestBase):
                                     cls.chain[-1].port
             )
             tmaster = cls.masterclass(config)
+            tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
             cls.chain.append(ProxyThread(tmaster))
             cls.chain[-1].start()
 

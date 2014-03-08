@@ -387,4 +387,4 @@ def common_options(parser):
         help="Allow access to users specified in an Apache htpasswd file."
     )
 
-    proxy.certificate_option_group(parser)
+    proxy.ssl_option_group(parser)

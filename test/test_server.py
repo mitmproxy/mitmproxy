@@ -206,13 +206,21 @@ class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
     def test_certfile(self):
         assert self.pathod("304")
 
-class TestHTTPSNoCommonName(tservers.HTTPProxTest, CommonMixin):
+
+class TestHTTPSNoCommonName(tservers.HTTPProxTest):
     """
     Test what happens if we get a cert without common name back.
     """
     ssl = True
-    ssloptions=pathod.SSLOptions(certfile=tutils.test_data.path("data/no_common_name.pem"),
-                                 keyfile=tutils.test_data.path("data/no_common_name.pem"))
+    ssloptions=pathod.SSLOptions(
+            certs = [
+                ("*", tutils.test_data.path("data/no_common_name.pem"))
+            ]
+        )
+    def test_http(self):
+        f = self.pathod("202")
+        assert f.sslinfo.certchain[0].get_subject().CN == "127.0.0.1"
+
 
 class TestReverse(tservers.ReverseProxTest, CommonMixin):
     reverse = True
@@ -370,7 +378,6 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
         assert self.pathod("304").status_code == 502
 
 
-
 class MasterIncomplete(tservers.TestMaster):
     def handle_request(self, m):
         resp = tutils.tresp()
@@ -382,6 +389,4 @@ class TestIncompleteResponse(tservers.HTTPProxTest):
     masterclass = MasterIncomplete
     def test_incomplete(self):
         assert self.pathod("200").status_code == 502
-
-
 
