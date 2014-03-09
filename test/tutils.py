@@ -2,6 +2,7 @@ import os, shutil, tempfile
 from contextlib import contextmanager
 from libmproxy import flow, utils, controller, proxy
 from libmproxy.protocol import http
+from libmproxy.prxy.connection import ClientConnection, ServerConnection
 import mock_urwid
 from libmproxy.console.flowview import FlowView
 from libmproxy.console import ConsoleState
@@ -21,7 +22,7 @@ def SkipWindows(fn):
 
 
 def tclient_conn():
-    c = proxy.ClientConnection._from_state(dict(
+    c = ClientConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         clientcert=None
     ))
@@ -30,7 +31,7 @@ def tclient_conn():
 
 
 def tserver_conn():
-    c = proxy.ServerConnection._from_state(dict(
+    c = ServerConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=dict(address=("address", 22), use_ipv6=True),
         cert=None
@@ -69,7 +70,7 @@ def tresp(req=None, content="message"):
     headers = flow.ODictCaseless()
     headers["header_response"] = ["svalue"]
     cert = certutils.SSLCert.from_der(file(test_data.path("data/dercert"), "rb").read())
-    f.server_conn = proxy.ServerConnection._from_state(dict(
+    f.server_conn = ServerConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         source_address=None,
         cert=cert.to_pem()))

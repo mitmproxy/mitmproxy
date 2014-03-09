@@ -1,11 +1,13 @@
 import Cookie, urllib, urlparse, time, copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
+from ..prxy.connection import ServerConnection
+from ..prxy.exception import ProxyError, ConnectionTypeChange
+from ..prxy.server import AddressPriority
 import netlib.utils
-from netlib import http, tcp, http_status, odict
+from netlib import http, tcp, http_status
 from netlib.odict import ODict, ODictCaseless
-from . import ProtocolHandler, ConnectionTypeChange, KILL, TemporaryServerChangeMixin
-from .. import encoding, utils, version, filt, controller, stateobject
-from ..proxy import ProxyError, AddressPriority, ServerConnection
+from . import ProtocolHandler, KILL, TemporaryServerChangeMixin
+from .. import encoding, utils, filt, controller, stateobject
 from .primitives import Flow, Error
 
 

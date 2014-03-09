@@ -1,5 +1,7 @@
 import argparse
 from libmproxy import proxy, flow, cmdline
+from libmproxy.prxy.connection import ServerConnection
+from libmproxy.prxy.exception import ProxyError
 import tutils
 from libpathod import test
 from netlib import http, tcp
@@ -7,7 +9,7 @@ import mock
 
 
 def test_proxy_error():
-    p = proxy.ProxyError(111, "msg")
+    p = ProxyError(111, "msg")
     assert str(p)
 
 
@@ -19,7 +21,7 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         r = tutils.treq()
         r.flow.server_conn = sc
@@ -31,7 +33,7 @@ class TestServerConnection:
         sc.finish()
 
     def test_terminate_error(self):
-        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)

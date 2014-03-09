@@ -9,7 +9,6 @@ import flask
 import requests
 import tnetstring, filt, script
 from netlib import odict, wsgi
-from .proxy import ClientConnection, ServerConnection  # FIXME: remove circular dependency
 import controller, version, protocol
 import app
 from .protocol import KILL

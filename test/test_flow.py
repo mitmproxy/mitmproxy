@@ -4,6 +4,7 @@ import email.utils
 from libmproxy import filt, protocol, controller, utils, tnetstring, proxy, flow
 from libmproxy.protocol.primitives import Error, Flow
 from libmproxy.protocol.http import decoded
+from libmproxy.prxy.connection import ClientConnection, ServerConnection
 from netlib import tcp
 import tutils
 
@@ -586,7 +587,7 @@ class TestFlowMaster:
         req = tutils.treq()
         fm.handle_clientconnect(req.flow.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        sc = proxy.ServerConnection((req.get_host(), req.get_port()), None)
+        sc = ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = controller.DummyReply()
         fm.handle_serverconnection(sc)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"
@@ -1159,7 +1160,7 @@ class TestClientConnection:
     def test_state(self):
 
         c = tutils.tclient_conn()
-        assert proxy.ClientConnection._from_state(c._get_state()) == c
+        assert ClientConnection._from_state(c._get_state()) == c
 
         c2 = tutils.tclient_conn()
         c2.address.address = (c2.address.host, 4242)

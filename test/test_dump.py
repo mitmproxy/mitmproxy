@@ -1,6 +1,6 @@
 import os
 from cStringIO import StringIO
-from libmproxy import dump, flow, proxy
+from libmproxy import dump, flow, proxy, prxy
 import tutils
 import mock
 
@@ -27,7 +27,7 @@ class TestDumpMaster:
         cc = req.flow.client_conn
         cc.reply = mock.MagicMock()
         m.handle_clientconnect(cc)
-        sc = proxy.ServerConnection((req.get_host(), req.get_port()), None)
+        sc = prxy.connection.ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = mock.MagicMock()
         m.handle_serverconnection(sc)
         m.handle_request(req)
