@@ -1,6 +1,7 @@
 import urwid
 import urwid.util
-from .. import utils, flow
+from .. import utils
+from ..protocol.http import CONTENT_MISSING
 
 
 VIEW_LIST = 0
@@ -183,7 +184,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
     if f.response:
         if f.response.content:
             contentdesc = utils.pretty_size(len(f.response.content))
-        elif f.response.content == flow.CONTENT_MISSING:
+        elif f.response.content == CONTENT_MISSING:
             contentdesc = "[content missing]"
         else:
             contentdesc = "[no content]"

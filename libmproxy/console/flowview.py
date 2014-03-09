@@ -2,6 +2,7 @@ import os, sys, copy
 import urwid
 import common, grideditor, contentview
 from .. import utils, flow, controller
+from ..protocol.http import CONTENT_MISSING
 
 
 class SearchError(Exception): pass
@@ -150,7 +151,7 @@ class FlowView(common.WWrap):
         return (description, text_objects)
 
     def cont_view_handle_missing(self, conn, viewmode):
-            if conn.content == flow.CONTENT_MISSING:
+            if conn.content == CONTENT_MISSING:
                 msg, body = "", [urwid.Text([("error", "[content missing]")])], 0
             else:
                 msg, body = self.content_view(viewmode, conn)
@@ -178,7 +179,7 @@ class FlowView(common.WWrap):
             override = self.override_get()
             viewmode = self.viewmode_get(override)
             msg, body = self.cont_view_handle_missing(conn, viewmode)
-        elif conn.content == flow.CONTENT_MISSING:
+        elif conn.content == CONTENT_MISSING:
             pass
         return headers, msg, body
 
@@ -643,7 +644,7 @@ class FlowView(common.WWrap):
 
     def delete_body(self, t):
         if t == "m":
-            val = flow.CONTENT_MISSING
+            val = CONTENT_MISSING
         else:
             val = None
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
