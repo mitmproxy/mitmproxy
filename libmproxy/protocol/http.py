@@ -1,8 +1,8 @@
 import Cookie, urllib, urlparse, time, copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-from ..prxy.connection import ServerConnection
-from ..prxy.exception import ProxyError, ConnectionTypeChange
-from ..prxy.server import AddressPriority
+from libmproxy.proxy.primitives import AddressPriority
+from ..proxy.connection import ServerConnection
+from ..proxy.primitives import ProxyError, ConnectionTypeChange
 import netlib.utils
 from netlib import http, tcp, http_status
 from netlib.odict import ODict, ODictCaseless

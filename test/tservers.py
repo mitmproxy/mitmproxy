@@ -2,8 +2,10 @@ import os.path
 import threading, Queue
 import shutil, tempfile
 import flask
+from libmproxy.proxy.config import ProxyConfig
+from libmproxy.proxy.server import ProxyServer
 import libpathod.test, libpathod.pathoc
-from libmproxy import proxy, flow, controller
+from libmproxy import flow, controller
 from libmproxy.cmdline import APP_HOST, APP_PORT
 import tutils
 
@@ -24,7 +26,7 @@ def errapp(environ, start_response):
 
 class TestMaster(flow.FlowMaster):
     def __init__(self, config):
-        s = proxy.ProxyServer(config, 0)
+        s = ProxyServer(config, 0)
         state = flow.State()
         flow.FlowMaster.__init__(self, s, state)
         self.apps.add(testapp, "testapp", 80)
@@ -84,7 +86,7 @@ class ProxTestBase(object):
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         pconf = cls.get_proxy_config()
         cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        config = proxy.ProxyConfig(
+        config = ProxyConfig(
             no_upstream_cert = cls.no_upstream_cert,
             confdir = cls.confdir,
             authenticator = cls.authenticator,
@@ -256,7 +258,7 @@ class ChainProxTest(ProxTestBase):
     Chain n instances of mitmproxy in a row - because we can.
     """
     n = 2
-    chain_config = [lambda: proxy.ProxyConfig(
+    chain_config = [lambda: ProxyConfig(
     )] * n
     @classmethod
     def setupAll(cls):

@@ -1,4 +1,4 @@
-from ..prxy.server import AddressPriority
+from libmproxy.proxy.primitives import AddressPriority
 
 KILL = 0  # const for killed requests
 

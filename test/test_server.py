@@ -3,8 +3,8 @@ import mock
 from netlib import tcp, http_auth, http
 from libpathod import pathoc, pathod
 import tutils, tservers
-from libmproxy import flow, proxy
 from libmproxy.protocol import KILL
+from libmproxy.protocol.http import CONTENT_MISSING
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -381,7 +381,7 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
 class MasterIncomplete(tservers.TestMaster):
     def handle_request(self, m):
         resp = tutils.tresp()
-        resp.content = flow.CONTENT_MISSING
+        resp.content = CONTENT_MISSING
         m.reply(resp)
 
 

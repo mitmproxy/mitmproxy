@@ -1,8 +1,8 @@
 import os, shutil, tempfile
 from contextlib import contextmanager
-from libmproxy import flow, utils, controller, proxy
+from libmproxy import flow, utils, controller
 from libmproxy.protocol import http
-from libmproxy.prxy.connection import ClientConnection, ServerConnection
+from libmproxy.proxy.connection import ClientConnection, ServerConnection
 import mock_urwid
 from libmproxy.console.flowview import FlowView
 from libmproxy.console import ConsoleState

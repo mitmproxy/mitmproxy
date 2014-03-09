@@ -7,13 +7,15 @@ import hashlib, Cookie, cookielib, re, threading
 import os
 import flask
 import requests
+from . import controller, protocol
+from .protocol import http
+from .proxy.connection import ServerConnection
+from .proxy.primitives import ProxyError
 import tnetstring, filt, script
-from netlib import odict, wsgi
-import controller, version, protocol
+from netlib import odict, wsgi, tcp
+import netlib.http
+import version
 import app
-from .protocol import KILL
-from .protocol.http import HTTPResponse, CONTENT_MISSING
-from .proxy import RequestReplayThread
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless
@@ -564,7 +566,7 @@ class FlowMaster(controller.Master):
             rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
-            response = HTTPResponse._from_state(rflow.response._get_state())
+            response = http.HTTPResponse._from_state(rflow.response._get_state())
             response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
@@ -641,7 +643,7 @@ class FlowMaster(controller.Master):
         """
         if f.intercepting:
             return "Can't replay while intercepting..."
-        if f.request.content == CONTENT_MISSING:
+        if f.request.content == http.CONTENT_MISSING:
             return "Can't replay request with missing content..."
         if f.request:
             f.request.is_replay = True
@@ -692,7 +694,7 @@ class FlowMaster(controller.Master):
                 err = app.serve(r, r.flow.client_conn.wfile, **{"mitmproxy.master": self})
                 if err:
                     self.add_event("Error in wsgi app. %s"%err, "error")
-                r.reply(KILL)
+                r.reply(protocol.KILL)
                 return
         f = self.state.add_request(r)
         self.replacehooks.run(f)
@@ -784,3 +786,25 @@ class FilteredFlowWriter:
         d = f._get_state()
         tnetstring.dump(d, self.fo)
 
+
+class RequestReplayThread(threading.Thread):
+    name="RequestReplayThread"
+
+    def __init__(self, config, flow, masterq):
+        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq)
+        threading.Thread.__init__(self)
+
+    def run(self):
+        try:
+            r = self.flow.request
+            server = ServerConnection(self.flow.server_conn.address(), None)
+            server.connect()
+            if self.flow.server_conn.ssl_established:
+                server.establish_ssl(self.config.clientcerts,
+                                     self.flow.server_conn.sni)
+            server.send(r._assemble())
+            self.flow.response = http.HTTPResponse.from_stream(server.rfile, r.method, body_size_limit=self.config.body_size_limit)
+            self.channel.ask("response", self.flow.response)
+        except (ProxyError, netlib.http.HttpError, tcp.NetLibError), v:
+            self.flow.error = protocol.primitives.Error(str(v))
+            self.channel.ask("error", self.flow.error)

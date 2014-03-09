@@ -1,4 +1,4 @@
-import proxy
+from . import proxy
 import re, filt
 import argparse
 
@@ -387,4 +387,4 @@ def common_options(parser):
         help="Allow access to users specified in an Apache htpasswd file."
     )
 
-    proxy.ssl_option_group(parser)
+    proxy.config.ssl_option_group(parser)

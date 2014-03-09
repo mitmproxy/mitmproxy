@@ -1,10 +1,10 @@
 import Queue, time, os.path
 from cStringIO import StringIO
 import email.utils
-from libmproxy import filt, protocol, controller, utils, tnetstring, proxy, flow
+from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
-from libmproxy.protocol.http import decoded
-from libmproxy.prxy.connection import ClientConnection, ServerConnection
+from libmproxy.protocol.http import decoded, CONTENT_MISSING
+from libmproxy.proxy.connection import ClientConnection, ServerConnection
 from netlib import tcp
 import tutils
 
@@ -566,7 +566,7 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow_full()
-        f.request.content = flow.CONTENT_MISSING
+        f.request.content = CONTENT_MISSING
         assert "missing" in fm.replay_request(f)
 
         f.intercepting = True
@@ -796,7 +796,7 @@ class TestRequest:
         assert r._assemble()
         assert r.size() == len(r._assemble())
 
-        r.content = flow.CONTENT_MISSING
+        r.content = CONTENT_MISSING
         tutils.raises("Cannot assemble flow with CONTENT_MISSING", r._assemble)
 
     def test_get_url(self):
@@ -1004,7 +1004,7 @@ class TestResponse:
         assert resp._assemble()
         assert resp.size() == len(resp._assemble())
 
-        resp.content = flow.CONTENT_MISSING
+        resp.content = CONTENT_MISSING
         tutils.raises("Cannot assemble flow with CONTENT_MISSING", resp._assemble)
 
     def test_refresh(self):

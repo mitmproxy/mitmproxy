@@ -1,73 +1,51 @@
-import os
 import socket
-import threading
-
-from OpenSSL import SSL
-
-from .prxy.connection import ClientConnection, ServerConnection
-from .prxy.exception import ProxyError, ConnectionTypeChange
-from .prxy.server import AddressPriority
-from netlib import tcp, http, certutils, http_auth
-import utils
-import version
-import platform
-import controller
+from .. import version, protocol
+from libmproxy.proxy.primitives import Log
+from .primitives import ProxyServerError
+from .connection import ClientConnection, ServerConnection
+from .primitives import ProxyError, ConnectionTypeChange, AddressPriority
+from netlib import tcp
 
 
-TRANSPARENT_SSL_PORTS = [443, 8443]
-CONF_BASENAME = "mitmproxy"
-CONF_DIR = "~/.mitmproxy"
-CA_CERT_NAME = "mitmproxy-ca.pem"
+class DummyServer:
+    bound = False
+
+    def __init__(self, config):
+        self.config = config
+
+    def start_slave(self, *args):
+        pass
+
+    def shutdown(self):
+        pass
 
 
-class Log:
-    def __init__(self, msg):
-        self.msg = msg
-
-
-class ProxyConfig:
-    def __init__(self, confdir=CONF_DIR, clientcerts=None, 
-                       no_upstream_cert=False, body_size_limit=None, reverse_proxy=None, 
-                       forward_proxy=None, transparent_proxy=None, authenticator=None,
-                       ciphers=None, certs=None
-                ):
-        self.ciphers = ciphers
-        self.clientcerts = clientcerts
-        self.no_upstream_cert = no_upstream_cert
-        self.body_size_limit = body_size_limit
-        self.reverse_proxy = reverse_proxy
-        self.forward_proxy = forward_proxy
-        self.transparent_proxy = transparent_proxy
-        self.authenticator = authenticator
-        self.confdir = os.path.expanduser(confdir)
-        self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
-
-
-from . import protocol
-from .protocol.http import HTTPResponse
-
-
-class RequestReplayThread(threading.Thread):
-    name="RequestReplayThread"
-
-    def __init__(self, config, flow, masterq):
-        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq)
-        threading.Thread.__init__(self)
-
-    def run(self):
+class ProxyServer(tcp.TCPServer):
+    allow_reuse_address = True
+    bound = True
+    def __init__(self, config, port, host='', server_version=version.NAMEVERSION):
+        """
+            Raises ProxyServerError if there's a startup problem.
+        """
+        self.config = config
+        self.server_version = server_version
         try:
-            r = self.flow.request
-            server = ServerConnection(self.flow.server_conn.address(), None)
-            server.connect()
-            if self.flow.server_conn.ssl_established:
-                server.establish_ssl(self.config.clientcerts,
-                                     self.flow.server_conn.sni)
-            server.send(r._assemble())
-            self.flow.response = HTTPResponse.from_stream(server.rfile, r.method, body_size_limit=self.config.body_size_limit)
-            self.channel.ask("response", self.flow.response)
-        except (ProxyError, http.HttpError, tcp.NetLibError), v:
-            self.flow.error = protocol.primitives.Error(str(v))
-            self.channel.ask("error", self.flow.error)
+            tcp.TCPServer.__init__(self, (host, port))
+        except socket.error, v:
+            raise ProxyServerError('Error starting proxy server: ' + v.strerror)
+        self.channel = None
+
+    def start_slave(self, klass, channel):
+        slave = klass(channel, self)
+        slave.start()
+
+    def set_channel(self, channel):
+        self.channel = channel
+
+    def handle_client_connection(self, conn, client_address):
+        h = ConnectionHandler(self.config, conn, client_address, self, self.channel, self.server_version)
+        h.handle()
+        h.finish()
 
 
 class ConnectionHandler:
@@ -174,7 +152,7 @@ class ConnectionHandler:
         """
         Sets a new server address with the given priority.
         Does not re-establish either connection or SSL handshake.
-        @type priority: libmproxy.prxy.server.AddressPriority
+        @type priority: libmproxy.proxy.primitives.AddressPriority
         """
         address = tcp.Address.wrap(address)
 
@@ -241,7 +219,7 @@ class ConnectionHandler:
                 raise ProxyError(502, "SSL to Client already established.")
             cert, key = self.find_cert()
             self.client_conn.convert_to_ssl(
-                cert, key, 
+                cert, key,
                 handle_sni = self.handle_sni,
                 cipher_list = self.config.ciphers
             )
@@ -307,147 +285,3 @@ class ConnectionHandler:
         # make dang sure it doesn't happen.
         except Exception, e:  # pragma: no cover
             pass
-
-
-class ProxyServerError(Exception):
-    pass
-
-
-class ProxyServer(tcp.TCPServer):
-    allow_reuse_address = True
-    bound = True
-    def __init__(self, config, port, host='', server_version=version.NAMEVERSION):
-        """
-            Raises ProxyServerError if there's a startup problem.
-        """
-        self.config = config
-        self.server_version = server_version
-        try:
-            tcp.TCPServer.__init__(self, (host, port))
-        except socket.error, v:
-            raise ProxyServerError('Error starting proxy server: ' + v.strerror)
-        self.channel = None
-
-    def start_slave(self, klass, channel):
-        slave = klass(channel, self)
-        slave.start()
-
-    def set_channel(self, channel):
-        self.channel = channel
-
-    def handle_client_connection(self, conn, client_address):
-        h = ConnectionHandler(self.config, conn, client_address, self, self.channel, self.server_version)
-        h.handle()
-        h.finish()
-
-
-class DummyServer:
-    bound = False
-
-    def __init__(self, config):
-        self.config = config
-
-    def start_slave(self, *args):
-        pass
-
-    def shutdown(self):
-        pass
-
-
-# Command-line utils
-def ssl_option_group(parser):
-    group = parser.add_argument_group("SSL")
-    group.add_argument(
-        "--cert", dest='certs', default=[], type=str,
-        metavar = "SPEC", action="append", 
-        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '\
-             'The domain may include a wildcard, and is equal to "*" if not specified. '\
-             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '\
-             'it is used, else the default key in the conf dir is used. Can be passed multiple times.'
-    )
-    group.add_argument(
-        "--client-certs", action="store",
-        type=str, dest="clientcerts", default=None,
-        help="Client certificate directory."
-    )
-    group.add_argument(
-        "--ciphers", action="store",
-        type=str, dest="ciphers", default=None,
-        help="SSL cipher specification."
-    )
-
-
-def process_proxy_options(parser, options):
-    body_size_limit = utils.parse_size(options.body_size_limit)
-    if options.reverse_proxy and options.transparent_proxy:
-        return parser.error("Can't set both reverse proxy and transparent proxy.")
-
-    if options.transparent_proxy:
-        if not platform.resolver:
-            return parser.error("Transparent mode not supported on this platform.")
-        trans = dict(
-            resolver=platform.resolver(),
-            sslports=TRANSPARENT_SSL_PORTS
-        )
-    else:
-        trans = None
-
-    if options.reverse_proxy:
-        rp = utils.parse_proxy_spec(options.reverse_proxy)
-        if not rp:
-            return parser.error("Invalid reverse proxy specification: %s" % options.reverse_proxy)
-    else:
-        rp = None
-
-    if options.forward_proxy:
-        fp = utils.parse_proxy_spec(options.forward_proxy)
-        if not fp:
-            return parser.error("Invalid forward proxy specification: %s" % options.forward_proxy)
-    else:
-        fp = None
-
-    if options.clientcerts:
-        options.clientcerts = os.path.expanduser(options.clientcerts)
-        if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
-            return parser.error(
-                "Client certificate directory does not exist or is not a directory: %s" % options.clientcerts
-            )
-
-    if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
-        if options.auth_singleuser:
-            if len(options.auth_singleuser.split(':')) != 2:
-                return parser.error("Invalid single-user specification. Please use the format username:password")
-            username, password = options.auth_singleuser.split(':')
-            password_manager = http_auth.PassManSingleUser(username, password)
-        elif options.auth_nonanonymous:
-            password_manager = http_auth.PassManNonAnon()
-        elif options.auth_htpasswd:
-            try:
-                password_manager = http_auth.PassManHtpasswd(options.auth_htpasswd)
-            except ValueError, v:
-                return parser.error(v.message)
-        authenticator = http_auth.BasicProxyAuth(password_manager, "mitmproxy")
-    else:
-        authenticator = http_auth.NullProxyAuth(None)
-
-    certs = []
-    for i in options.certs:
-        parts = i.split("=", 1)
-        if len(parts) == 1:
-            parts = ["*", parts[0]]
-        parts[1] = os.path.expanduser(parts[1])
-        if not os.path.exists(parts[1]):
-            parser.error("Certificate file does not exist: %s"%parts[1])
-        certs.append(parts)
-
-    return ProxyConfig(
-        clientcerts=options.clientcerts,
-        body_size_limit=body_size_limit,
-        no_upstream_cert=options.no_upstream_cert,
-        reverse_proxy=rp,
-        forward_proxy=fp,
-        transparent_proxy=trans,
-        authenticator=authenticator,
-        ciphers=options.ciphers,
-        certs = certs,
-    )

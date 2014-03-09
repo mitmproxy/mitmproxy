@@ -1,7 +1,9 @@
 import argparse
-from libmproxy import proxy, flow, cmdline
-from libmproxy.prxy.connection import ServerConnection
-from libmproxy.prxy.exception import ProxyError
+from libmproxy import cmdline
+from libmproxy.proxy.config import process_proxy_options
+from libmproxy.proxy.connection import ServerConnection
+from libmproxy.proxy.primitives import ProxyError
+from libmproxy.proxy.server import DummyServer, ProxyServer
 import tutils
 from libpathod import test
 from netlib import http, tcp
@@ -58,7 +60,7 @@ class TestProcessProxyOptions:
         cmdline.common_options(parser)
         opts = parser.parse_args(args=args)
         m = MockParser()
-        return m, proxy.process_proxy_options(m, opts)
+        return m, process_proxy_options(m, opts)
 
     def assert_err(self, err, *args):
         m, p = self.p(*args)
@@ -117,12 +119,12 @@ class TestProxyServer:
         parser = argparse.ArgumentParser()
         cmdline.common_options(parser)
         opts = parser.parse_args(args=[])
-        tutils.raises("error starting proxy server", proxy.ProxyServer, opts, 1)
+        tutils.raises("error starting proxy server", ProxyServer, opts, 1)
 
 
 class TestDummyServer:
     def test_simple(self):
-        d = proxy.DummyServer(None)
+        d = DummyServer(None)
         d.start_slave()
         d.shutdown()
 
