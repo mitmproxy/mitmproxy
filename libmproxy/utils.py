@@ -1,7 +1,6 @@
 import os, datetime, urllib, re
 import time, functools, cgi
 import json
-from netlib import http
 
 def timestamp():
     """
@@ -142,14 +141,6 @@ class LRUCache:
                     cache.pop(d)
                 return ret
         return wrap
-
-
-def parse_proxy_spec(url):
-    p = http.parse_url(url)
-    if not p or not p[1]:
-        return None
-    return p[:3]
-
 
 def parse_content_type(c):
     """

@@ -1,12 +1,16 @@
 from . import proxy
 import re, filt
 import argparse
+from argparse import ArgumentTypeError
+from netlib import http
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
 
-class ParseException(Exception): pass
-class OptionException(Exception): pass
+
+class ParseException(Exception):
+    pass
+
 
 def _parse_hook(s):
     sep, rem = s[0], s[1:]
@@ -91,6 +95,26 @@ def parse_setheader(s):
     return _parse_hook(s)
 
 
+def parse_server_spec(url):
+
+    normalized_url = re.sub("^https?2", "", url)
+
+    p = http.parse_url(normalized_url)
+    if not p or not p[1]:
+        raise ArgumentTypeError("Invalid server specification: %s" % url)
+
+    if url.lower().startswith("https2http"):
+        ssl = [True, False]
+    elif url.lower().startswith("http2https"):
+        ssl = [False, True]
+    elif url.lower().startswith("https"):
+        ssl = [True, True]
+    else:
+        ssl = [False, False]
+
+    return ssl + list(p[1:3])
+
+
 def get_common_options(options):
     stickycookie, stickyauth = None, None
     if options.stickycookie_filt:
@@ -104,17 +128,17 @@ def get_common_options(options):
         try:
             p = parse_replace_hook(i)
         except ParseException, e:
-            raise OptionException(e.message)
+            raise ArgumentTypeError(e.message)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException, e:
-            raise OptionException(e.message)
+            raise ArgumentTypeError(e.message)
         try:
             v = open(path, "rb").read()
         except IOError, e:
-            raise OptionException("Could not read replace file: %s"%path)
+            raise ArgumentTypeError("Could not read replace file: %s"%path)
         reps.append((patt, rex, v))
 
 
@@ -123,7 +147,7 @@ def get_common_options(options):
         try:
             p = parse_setheader(i)
         except ParseException, e:
-            raise OptionException(e.message)
+            raise ArgumentTypeError(e.message)
         setheaders.append(p)
 
     return dict(
@@ -185,16 +209,48 @@ def common_options(parser):
         action="store", type = int, dest="port", default=8080,
         help = "Proxy service port."
     )
+    # We could make a mutually exclusive group out of -R, -F, -T, but we don't do because
+    #  - --upstream-server should be in that group as well, but it's already in a different group.
+    #  - our own error messages are more helpful
     parser.add_argument(
-        "-P",
-        action="store", dest="reverse_proxy", default=None,
+        "-R",
+        action="store", type=parse_server_spec, dest="reverse_proxy", default=None,
         help="Reverse proxy to upstream server: http[s]://host[:port]"
     )
     parser.add_argument(
         "-F",
-        action="store", dest="forward_proxy", default=None,
+        action="store", type=parse_server_spec, dest="forward_proxy", default=None,
         help="Proxy to unconditionally forward to: http[s]://host[:port]"
     )
+    parser.add_argument(
+        "-T",
+        action="store_true", dest="transparent_proxy", default=False,
+        help="Set transparent proxy mode."
+    )
+
+    group = parser.add_argument_group(
+        "Advanced Proxy Options",
+        """
+            The following options allow a custom adjustment of the proxy behavior.
+            Normally, you don't want to use these options directly and use the provided wrappers instead (-R, -F, -T).
+        """.strip()
+    )
+    group.add_argument(
+        "--http-form-in", dest="http_form_in", default=None,
+        action="store", choices=("relative", "absolute"),
+        help="Override the HTTP request form accepted by the proxy"
+    )
+    group.add_argument(
+        "--http-form-out", dest="http_form_out", default=None,
+        action="store", choices=("relative", "absolute"),
+        help="Override the HTTP request form sent upstream by the proxy"
+    )
+    group.add_argument(
+        "--upstream-server", dest="manual_upstream_server", default=None,
+        action="store", type=parse_server_spec,
+        help="Override the destination server all requests are sent to."
+    )
+
     parser.add_argument(
         "-q",
         action="store_true", dest="quiet",
@@ -215,11 +271,6 @@ def common_options(parser):
         "-t",
         action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
-    )
-    parser.add_argument(
-        "-T",
-        action="store_true", dest="transparent_proxy", default=False,
-        help="Set transparent proxy mode."
     )
     parser.add_argument(
         "-u",

@@ -36,6 +36,17 @@ def test_parse_replace_hook():
     )
 
 
+def test_parse_server_spec():
+    tutils.raises("Invalid server specification", cmdline.parse_server_spec, "")
+    assert cmdline.parse_server_spec("http://foo.com:88") == [False, False, "foo.com", 88]
+    assert cmdline.parse_server_spec("http://foo.com") == [False, False, "foo.com", 80]
+    assert cmdline.parse_server_spec("https://foo.com") == [True, True, "foo.com", 443]
+    assert cmdline.parse_server_spec("https2http://foo.com") == [True, False, "foo.com", 80]
+    assert cmdline.parse_server_spec("http2https://foo.com") == [False, True, "foo.com", 443]
+    tutils.raises("Invalid server specification", cmdline.parse_server_spec, "foo.com")
+    tutils.raises("Invalid server specification", cmdline.parse_server_spec, "http://")
+
+
 def test_parse_setheaders():
     x = cmdline.parse_setheader("/foo/bar/voing")
     assert x == ("foo", "bar", "voing")

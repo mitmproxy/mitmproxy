@@ -1,4 +1,4 @@
-import os, shutil, tempfile
+import os, shutil, tempfile, argparse
 from contextlib import contextmanager
 from libmproxy import flow, utils, controller
 from libmproxy.protocol import http
@@ -134,6 +134,15 @@ def tmpdir(*args, **kwargs):
 
     os.chdir(orig_workdir)
     shutil.rmtree(temp_workdir)
+
+
+class MockParser(argparse.ArgumentParser):
+    """
+    argparse.ArgumentParser sys.exits() by default.
+    Make it more testable by throwing an exception instead.
+    """
+    def error(self, message):
+        raise Exception(message)
 
 
 def raises(exc, obj, *args, **kwargs):

@@ -1027,7 +1027,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 raise http.HttpError(400, "Must not CONNECT on already encrypted connection")
 
             if self.expected_form_in == "absolute":
-                if not self.c.config.upstream_server:
+                if not self.c.config.get_upstream_server:
                     self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                     self.c.client_conn.send(

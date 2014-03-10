@@ -144,10 +144,6 @@ class StatusBar(common.WWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]"%self.master.stickyauth_txt)
-        if self.master.server.config.reverse_proxy:
-            r.append("[")
-            r.append(("heading_key", "P"))
-            r.append(":%s]"%utils.unparse_url(*self.master.server.config.reverse_proxy))
         if self.master.state.default_body_view.name != "Auto":
             r.append("[")
             r.append(("heading_key", "M"))
@@ -172,6 +168,8 @@ class StatusBar(common.WWrap):
         if opts:
             r.append("[%s]"%(":".join(opts)))
 
+        if self.master.server.config.upstream_server:
+            r.append("[dest:%s]"%utils.unparse_url(*self.master.server.config.upstream_server))
         if self.master.scripts:
             r.append("[scripts:%s]"%len(self.master.scripts))
         if self.master.debug:
@@ -763,15 +761,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.default_body_view = v
         self.refresh_focus()
 
-    def set_reverse_proxy(self, txt):
-        if not txt:
-            self.server.config.reverse_proxy = None
-        else:
-            s = utils.parse_proxy_spec(txt)
-            if not s:
-                return "Invalid reverse proxy specification"
-            self.server.config.reverse_proxy = s
-
     def drawscreen(self):
         size = self.ui.get_cols_rows()
         canvas = self.view.render(size, focus=1)
@@ -865,16 +854,6 @@ class ConsoleMaster(flow.FlowMaster):
                                     "Global default display mode",
                                     contentview.view_prompts,
                                     self.change_default_display_mode
-                                )
-                            elif k == "P":
-                                if self.server.config.reverse_proxy:
-                                    p = utils.unparse_url(*self.server.config.reverse_proxy)
-                                else:
-                                    p = ""
-                                self.prompt(
-                                    "Reverse proxy: ",
-                                    p,
-                                    self.set_reverse_proxy
                                 )
                             elif k == "R":
                                 self.view_grideditor(
