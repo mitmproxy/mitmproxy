@@ -36,7 +36,7 @@ class TestNoWeb(tutils.DaemonTests):
 
 
 class TestTimeout(tutils.DaemonTests):
-    timeout = 0.00001
+    timeout = 0.01
     def test_noweb(self):
         # FIXME: Add float values to spec language, reduce test timeout to
         # increase test performance
