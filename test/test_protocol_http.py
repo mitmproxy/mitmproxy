@@ -1,4 +1,3 @@
-from libmproxy import proxy  # FIXME: Remove
 from libmproxy.protocol.http import *
 from libmproxy.protocol import KILL
 from cStringIO import StringIO

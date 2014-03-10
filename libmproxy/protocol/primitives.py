@@ -1,5 +1,5 @@
 from .. import stateobject, utils, version
-from ..proxy import ServerConnection, ClientConnection
+from ..proxy.connection import ClientConnection, ServerConnection
 import copy
 
 

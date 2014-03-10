@@ -1,9 +1,10 @@
 import Queue, time, os.path
 from cStringIO import StringIO
 import email.utils
-from libmproxy import filt, protocol, controller, utils, tnetstring, proxy, flow
+from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
-from libmproxy.protocol.http import decoded
+from libmproxy.protocol.http import decoded, CONTENT_MISSING
+from libmproxy.proxy.connection import ClientConnection, ServerConnection
 from netlib import tcp
 import tutils
 
@@ -565,7 +566,7 @@ class TestFlowMaster:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow_full()
-        f.request.content = flow.CONTENT_MISSING
+        f.request.content = CONTENT_MISSING
         assert "missing" in fm.replay_request(f)
 
         f.intercepting = True
@@ -586,7 +587,7 @@ class TestFlowMaster:
         req = tutils.treq()
         fm.handle_clientconnect(req.flow.client_conn)
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
-        sc = proxy.ServerConnection((req.get_host(), req.get_port()), None)
+        sc = ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = controller.DummyReply()
         fm.handle_serverconnection(sc)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"
@@ -795,7 +796,7 @@ class TestRequest:
         assert r._assemble()
         assert r.size() == len(r._assemble())
 
-        r.content = flow.CONTENT_MISSING
+        r.content = CONTENT_MISSING
         tutils.raises("Cannot assemble flow with CONTENT_MISSING", r._assemble)
 
     def test_get_url(self):
@@ -1003,7 +1004,7 @@ class TestResponse:
         assert resp._assemble()
         assert resp.size() == len(resp._assemble())
 
-        resp.content = flow.CONTENT_MISSING
+        resp.content = CONTENT_MISSING
         tutils.raises("Cannot assemble flow with CONTENT_MISSING", resp._assemble)
 
     def test_refresh(self):
@@ -1159,7 +1160,7 @@ class TestClientConnection:
     def test_state(self):
 
         c = tutils.tclient_conn()
-        assert proxy.ClientConnection._from_state(c._get_state()) == c
+        assert ClientConnection._from_state(c._get_state()) == c
 
         c2 = tutils.tclient_conn()
         c2.address.address = (c2.address.host, 4242)

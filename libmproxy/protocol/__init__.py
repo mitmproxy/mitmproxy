@@ -1,13 +1,6 @@
-from ..proxy import ServerConnection, AddressPriority
+from libmproxy.proxy.primitives import AddressPriority
 
 KILL = 0  # const for killed requests
-
-class ConnectionTypeChange(Exception):
-    """
-    Gets raised if the connetion type has been changed (e.g. after HTTP/1.1 101 Switching Protocols).
-    It's up to the raising ProtocolHandler to specify the new conntype before raising the exception.
-    """
-    pass
 
 
 class ProtocolHandler(object):

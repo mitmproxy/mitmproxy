@@ -1,6 +1,7 @@
 import os
 from cStringIO import StringIO
 from libmproxy import dump, flow, proxy
+from libmproxy.proxy.primitives import Log
 import tutils
 import mock
 
@@ -21,13 +22,13 @@ def test_strfuncs():
 class TestDumpMaster:
     def _cycle(self, m, content):
         req = tutils.treq(content=content)
-        l = proxy.Log("connect")
+        l = Log("connect")
         l.reply = mock.MagicMock()
         m.handle_log(l)
         cc = req.flow.client_conn
         cc.reply = mock.MagicMock()
         m.handle_clientconnect(cc)
-        sc = proxy.ServerConnection((req.get_host(), req.get_port()), None)
+        sc = proxy.connection.ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = mock.MagicMock()
         m.handle_serverconnection(sc)
         m.handle_request(req)

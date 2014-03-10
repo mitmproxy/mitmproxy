@@ -1,5 +1,9 @@
 import argparse
-from libmproxy import proxy, flow, cmdline
+from libmproxy import cmdline
+from libmproxy.proxy.config import process_proxy_options
+from libmproxy.proxy.connection import ServerConnection
+from libmproxy.proxy.primitives import ProxyError
+from libmproxy.proxy.server import DummyServer, ProxyServer
 import tutils
 from libpathod import test
 from netlib import http, tcp
@@ -7,7 +11,7 @@ import mock
 
 
 def test_proxy_error():
-    p = proxy.ProxyError(111, "msg")
+    p = ProxyError(111, "msg")
     assert str(p)
 
 
@@ -19,7 +23,7 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         r = tutils.treq()
         r.flow.server_conn = sc
@@ -31,7 +35,7 @@ class TestServerConnection:
         sc.finish()
 
     def test_terminate_error(self):
-        sc = proxy.ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)
@@ -56,7 +60,7 @@ class TestProcessProxyOptions:
         cmdline.common_options(parser)
         opts = parser.parse_args(args=args)
         m = MockParser()
-        return m, proxy.process_proxy_options(m, opts)
+        return m, process_proxy_options(m, opts)
 
     def assert_err(self, err, *args):
         m, p = self.p(*args)
@@ -115,12 +119,12 @@ class TestProxyServer:
         parser = argparse.ArgumentParser()
         cmdline.common_options(parser)
         opts = parser.parse_args(args=[])
-        tutils.raises("error starting proxy server", proxy.ProxyServer, opts, 1)
+        tutils.raises("error starting proxy server", ProxyServer, opts, 1)
 
 
 class TestDummyServer:
     def test_simple(self):
-        d = proxy.DummyServer(None)
+        d = DummyServer(None)
         d.start_slave()
         d.shutdown()
 
