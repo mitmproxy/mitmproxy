@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 class StateObject(object):
     def _get_state(self):
         raise NotImplementedError  # pragma: nocover

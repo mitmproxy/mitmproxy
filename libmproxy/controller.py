@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import Queue, threading
 
 should_exit = False

@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import sys, os
 import netlib.utils
-import flow, filt, utils
+from . import flow, filt, utils
 
 class DumpError(Exception): pass
 

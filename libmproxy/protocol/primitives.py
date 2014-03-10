@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from .. import stateobject, utils, version
 from ..proxy.primitives import AddressPriority
 from ..proxy.connection import ClientConnection, ServerConnection

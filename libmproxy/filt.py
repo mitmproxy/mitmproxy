@@ -31,8 +31,9 @@
         ~c CODE     Response code.
         rex         Equivalent to ~u rex
 """
+from __future__ import absolute_import
 import re, sys
-import contrib.pyparsing as pp
+from .contrib import pyparsing as pp
 
 
 class _Token:

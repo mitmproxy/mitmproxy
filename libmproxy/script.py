@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import os, traceback, threading, shlex
-import controller
+from . import controller
 
 class ScriptError(Exception):
     pass

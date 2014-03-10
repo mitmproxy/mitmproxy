@@ -1,6 +1,7 @@
 """
     Utility functions for decoding response bodies.
 """
+from __future__ import absolute_import
 import cStringIO
 import gzip, zlib
 

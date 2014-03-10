@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import select, socket
 from cStringIO import StringIO
 from .primitives import ProtocolHandler

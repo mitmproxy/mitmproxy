@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 from .. import utils, platform
 from netlib import http_auth, certutils

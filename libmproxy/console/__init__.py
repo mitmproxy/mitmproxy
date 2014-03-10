@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex, stat
 import os.path, sys, weakref, traceback
 import urwid
-from .. import controller, utils, flow, script
-import flowlist, flowview, help, common, grideditor, palettes, contentview, flowdetailview
+from .. import controller, utils, flow, script, proxy
+from . import flowlist, flowview, help, common, grideditor, palettes, contentview, flowdetailview
 
 EVENTLOG_SIZE = 500
 
@@ -168,8 +169,9 @@ class StatusBar(common.WWrap):
         if opts:
             r.append("[%s]"%(":".join(opts)))
 
-        if self.master.server.config.upstream_server:
-            r.append("[dest:%s]"%utils.unparse_url(*self.master.server.config.upstream_server))
+        if self.master.server.config.get_upstream_server and \
+                isinstance(self.master.server.config.get_upstream_server, proxy.ConstUpstreamServerResolver):
+            r.append("[dest:%s]"%utils.unparse_url(*self.master.server.config.get_upstream_server.dst))
         if self.master.scripts:
             r.append("[scripts:%s]"%len(self.master.scripts))
         if self.master.debug:

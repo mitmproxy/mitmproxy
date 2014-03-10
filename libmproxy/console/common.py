@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import urwid
 import urwid.util
 from .. import utils

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 class ProxyError(Exception):
     def __init__(self, code, msg, headers=None):
         self.code, self.msg, self.headers = code, msg, headers

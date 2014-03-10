@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os, datetime, urllib, re
 import time, functools, cgi
 import json

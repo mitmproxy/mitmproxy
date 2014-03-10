@@ -2,20 +2,18 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
+from __future__ import absolute_import
 import base64
 import hashlib, Cookie, cookielib, re, threading
 import os
 import flask
 import requests
-from . import controller, protocol
+from netlib import odict, wsgi, tcp
+import netlib.http
+from . import controller, protocol, tnetstring, filt, script, version, app
 from .protocol import http
 from .proxy.connection import ServerConnection
 from .proxy.primitives import ProxyError
-import tnetstring, filt, script
-from netlib import odict, wsgi, tcp
-import netlib.http
-import version
-import app
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless

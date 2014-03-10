@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import copy, re, os
 import urwid
-import common
+from . import common
 from .. import utils, filt, script
 from netlib import http_uastrings
 

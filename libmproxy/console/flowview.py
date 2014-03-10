@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import os, sys, copy
 import urwid
-import common, grideditor, contentview
+from . import common, grideditor, contentview
 from .. import utils, flow, controller
 from ..protocol.http import HTTPResponse, CONTENT_MISSING
 

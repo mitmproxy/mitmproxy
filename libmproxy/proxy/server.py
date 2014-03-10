@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import socket
 from OpenSSL import SSL
 from netlib import tcp

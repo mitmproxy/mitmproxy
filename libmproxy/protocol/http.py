@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import Cookie, urllib, urlparse, time, copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-import netlib.utils
 from netlib import http, tcp, http_status
+import netlib.utils
 from netlib.odict import ODict, ODictCaseless
 from .primitives import KILL, ProtocolHandler, TemporaryServerChangeMixin, Flow, Error
 from ..proxy.connection import ServerConnection

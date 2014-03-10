@@ -1,16 +1,13 @@
-import logging
-import re, cStringIO, traceback, json
-import urwid
-
+from __future__ import absolute_import
+import logging, subprocess, re, cStringIO, traceback, json, urwid
 from PIL import Image
 from PIL.ExifTags import TAGS
 
 import lxml.html, lxml.etree
 import netlib.utils
-import common
+from . import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier, html2text
-import subprocess
 try:
     import pyamf
     from pyamf import remoting, flex

@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import flask
 import os.path, os
-import proxy
+from . import proxy
 
 mapp = flask.Flask(__name__)
 mapp.debug = True

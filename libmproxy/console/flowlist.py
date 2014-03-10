@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import urwid
-import common
+from . import common
 
 def _mkhelp():
     text = []

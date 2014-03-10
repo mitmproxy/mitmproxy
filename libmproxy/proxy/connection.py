@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import copy
 import os
+from netlib import tcp, certutils
 from .. import stateobject, utils
 from .primitives import ProxyError
-from netlib import tcp, certutils
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):

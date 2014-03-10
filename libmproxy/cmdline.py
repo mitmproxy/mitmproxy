@@ -1,8 +1,10 @@
-from . import proxy
-import re, filt
+from __future__ import absolute_import
+import re
 import argparse
 from argparse import ArgumentTypeError
 from netlib import http
+from . import proxy, filt
+
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
