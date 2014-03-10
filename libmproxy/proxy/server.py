@@ -1,10 +1,9 @@
 import socket
-from .. import version, protocol
-from libmproxy.proxy.primitives import Log
-from .primitives import ProxyServerError
-from .connection import ClientConnection, ServerConnection
-from .primitives import ProxyError, ConnectionTypeChange, AddressPriority
+from OpenSSL import SSL
 from netlib import tcp
+from .primitives import ProxyServerError, Log, ProxyError, ConnectionTypeChange, AddressPriority
+from .connection import ClientConnection, ServerConnection
+from .. import version, protocol
 
 
 class DummyServer:
@@ -23,6 +22,7 @@ class DummyServer:
 class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
+
     def __init__(self, config, port, host='', server_version=version.NAMEVERSION):
         """
             Raises ProxyServerError if there's a startup problem.
@@ -51,8 +51,11 @@ class ProxyServer(tcp.TCPServer):
 class ConnectionHandler:
     def __init__(self, config, client_connection, client_address, server, channel, server_version):
         self.config = config
+        """@type: libmproxy.proxy.config.ProxyConfig"""
         self.client_conn = ClientConnection(client_connection, client_address, server)
+        """@type: libmproxy.proxy.connection.ClientConnection"""
         self.server_conn = None
+        """@type: libmproxy.proxy.connection.ServerConnection"""
         self.channel, self.server_version = channel, server_version
 
         self.close = False
@@ -98,7 +101,7 @@ class ConnectionHandler:
 
     def del_server_connection(self):
         """
-        Deletes an existing server connection.
+        Deletes (and closes) an existing server connection.
         """
         if self.server_conn and self.server_conn.connection:
             self.server_conn.finish()
@@ -150,8 +153,7 @@ class ConnectionHandler:
         """
         Establishes SSL on the existing connection(s) to the server or the client,
         as specified by the parameters. If the target server is on the pass-through list,
-        the conntype attribute will be changed and the SSL connection won't be wrapped.
-        A protocol handler must raise a ConnTypeChanged exception if it detects that this is happening
+        the conntype attribute will be changed and a ConnTypeChanged exception will be raised.
         """
         # TODO: Implement SSL pass-through handling and change conntype
         passthrough = [
@@ -160,7 +162,7 @@ class ConnectionHandler:
         ]
         if self.server_conn.address.host in passthrough or self.sni in passthrough:
             self.conntype = "tcp"
-            return
+            raise ConnectionTypeChange
 
         # Logging
         if client or server:

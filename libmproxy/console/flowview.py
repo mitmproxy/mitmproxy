@@ -2,7 +2,7 @@ import os, sys, copy
 import urwid
 import common, grideditor, contentview
 from .. import utils, flow, controller
-from ..protocol.http import CONTENT_MISSING
+from ..protocol.http import HTTPResponse, CONTENT_MISSING
 
 
 class SearchError(Exception): pass
@@ -571,7 +571,7 @@ class FlowView(common.WWrap):
             conn = self.flow.request
         else:
             if not self.flow.response:
-                self.flow.response = flow.Response(
+                self.flow.response = HTTPResponse(
                     self.flow.request,
                     self.flow.request.httpversion,
                     200, "OK", flow.ODictCaseless(), "", None

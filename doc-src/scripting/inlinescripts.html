@@ -76,24 +76,24 @@ The main classes you will deal with in writing mitmproxy scripts are:
 
 <table class="table">
     <tr>
-        <th>libmproxy.flow.ClientConnection</th>
+        <th>libmproxy.proxy.server.ConnectionHandler</th>
+        <td>Describes a proxy client connection session. Always has a client_conn attribute, might have a server_conn attribute.</td>
+    </tr>
+    <tr>
+        <th>libmproxy.proxy.connection.ClientConnection</th>
         <td>Describes a client connection.</td>
     </tr>
-    <tr>
-        <th>libmproxy.flow.ClientDisconnection</th>
-        <td>Describes a client disconnection.</td>
+       <tr>
+        <th>libmproxy.proxy.connection.ServerConnection</th>
+        <td>Describes a server connection.</td>
     </tr>
     <tr>
-        <th>libmproxy.flow.Error</th>
+        <th>libmproxy.protocol.primitives.Error</th>
         <td>A communications error.</td>
     </tr>
     <tr>
-        <th>libmproxy.flow.Flow</th>
+        <th>libmproxy.protocol.http.HTTPFlow</th>
         <td>A collection of objects representing a single HTTP transaction.</td>
-    </tr>
-    <tr>
-        <th>libmproxy.flow.Headers</th>
-        <td>HTTP headers for a request or response.</td>
     </tr>
     <tr>
         <th>libmproxy.flow.ODict</th>
@@ -103,15 +103,15 @@ The main classes you will deal with in writing mitmproxy scripts are:
         calls (used mainly for headers).</td>
     </tr>
     <tr>
-        <th>libmproxy.flow.Response</th>
+        <th>libmproxy.protocol.http.HTTPResponse</th>
         <td>An HTTP response.</td>
     </tr>
     <tr>
-        <th>libmproxy.flow.Request</th>
+        <th>libmproxy.protocol.http.HTTPRequest</th>
         <td>An HTTP request.</td>
     </tr>
     <tr>
-        <th>libmproxy.flow.ScriptContext</th>
+        <th>libmproxy.script.ScriptContext</th>
         <td> A handle for interacting with mitmproxy's from within scripts.  </td>
     </tr>
     <tr>
@@ -124,7 +124,7 @@ The canonical API documentation is the code. You can view the API documentation
 using pydoc (which is installed with Python by default), like this:
 
 <pre class="terminal">
-> pydoc libmproxy.flow.Request
+> pydoc libmproxy.protocol.http.HTTPRequest
 </pre>
 
 

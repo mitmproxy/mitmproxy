@@ -209,7 +209,7 @@ def common_options(parser):
         action="store", type = int, dest="port", default=8080,
         help = "Proxy service port."
     )
-    # We could make a mutually exclusive group out of -R, -F, -T, but we don't do because
+    # We could make a mutually exclusive group out of -R, -F, -T, but we don't do that because
     #  - --upstream-server should be in that group as well, but it's already in a different group.
     #  - our own error messages are more helpful
     parser.add_argument(
