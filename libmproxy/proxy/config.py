@@ -1,7 +1,7 @@
 import os
 from .. import utils, platform
 from netlib import http_auth, certutils
-
+from .primitives import ConstUpstreamServerResolver, TransparentUpstreamServerResolver
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
@@ -10,17 +10,17 @@ CONF_DIR = "~/.mitmproxy"
 
 class ProxyConfig:
     def __init__(self, confdir=CONF_DIR, clientcerts=None,
-                       no_upstream_cert=False, body_size_limit=None, reverse_proxy=None,
-                       forward_proxy=None, transparent_proxy=None, authenticator=None,
+                       no_upstream_cert=False, body_size_limit=None, get_upstream_server=None,
+                       http_form_in="absolute", http_form_out="relative", authenticator=None,
                        ciphers=None, certs=None
                 ):
         self.ciphers = ciphers
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
-        self.reverse_proxy = reverse_proxy
-        self.forward_proxy = forward_proxy
-        self.transparent_proxy = transparent_proxy
+        self.get_upstream_server = get_upstream_server
+        self.http_form_in = http_form_in
+        self.http_form_out = http_form_out
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
@@ -28,32 +28,34 @@ class ProxyConfig:
 
 def process_proxy_options(parser, options):
     body_size_limit = utils.parse_size(options.body_size_limit)
-    if options.reverse_proxy and options.transparent_proxy:
-        return parser.error("Can't set both reverse proxy and transparent proxy.")
 
+    c = 0
+    http_form_in, http_form_out = "absolute", "relative"
+    get_upstream_server = None
     if options.transparent_proxy:
+        c += 1
         if not platform.resolver:
             return parser.error("Transparent mode not supported on this platform.")
-        trans = dict(
-            resolver=platform.resolver(),
-            sslports=TRANSPARENT_SSL_PORTS
-        )
-    else:
-        trans = None
-
+        get_upstream_server = TransparentUpstreamServerResolver(platform.resolver(), TRANSPARENT_SSL_PORTS)
+        http_form_in, http_form_out = "relative", "relative"
     if options.reverse_proxy:
-        rp = utils.parse_proxy_spec(options.reverse_proxy)
-        if not rp:
-            return parser.error("Invalid reverse proxy specification: %s" % options.reverse_proxy)
-    else:
-        rp = None
-
+        c += 1
+        get_upstream_server = ConstUpstreamServerResolver(options.reverse_proxy)
+        http_form_in, http_form_out = "relative", "relative"
     if options.forward_proxy:
-        fp = utils.parse_proxy_spec(options.forward_proxy)
-        if not fp:
-            return parser.error("Invalid forward proxy specification: %s" % options.forward_proxy)
-    else:
-        fp = None
+        c += 1
+        get_upstream_server = ConstUpstreamServerResolver(options.forward_proxy)
+        http_form_in, http_form_out = "absolute", "absolute"
+    if options.manual_upstream_server:
+        c += 1
+        get_upstream_server = ConstUpstreamServerResolver(options.manual_upstream_server)
+    if c > 1:
+        return parser.error("Transparent mode, reverse mode, forward mode and "
+                            "specification of an upstream server are mutually exclusive.")
+    if options.http_form_in:
+        http_form_in = options.http_form_in
+    if options.http_form_out:
+        http_form_out = options.http_form_out
 
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
@@ -93,9 +95,9 @@ def process_proxy_options(parser, options):
         clientcerts=options.clientcerts,
         body_size_limit=body_size_limit,
         no_upstream_cert=options.no_upstream_cert,
-        reverse_proxy=rp,
-        forward_proxy=fp,
-        transparent_proxy=trans,
+        get_upstream_server=get_upstream_server,
+        http_form_in=http_form_in,
+        http_form_out=http_form_out,
         authenticator=authenticator,
         ciphers=options.ciphers,
         certs = certs,

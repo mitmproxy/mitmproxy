@@ -90,7 +90,7 @@ class TestInvalidRequests(tservers.HTTPProxTest):
     def test_double_connect(self):
         p = self.pathoc()
         r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
-        assert r.status_code == 502
+        assert r.status_code == 400
         assert "Must not CONNECT on already encrypted connection" in r.content
 
     def test_relative_request(self):
@@ -98,7 +98,7 @@ class TestInvalidRequests(tservers.HTTPProxTest):
         p.connect()
         r = p.request("get:/p/200")
         assert r.status_code == 400
-        assert "Invalid request form" in r.content
+        assert "Invalid HTTP request form" in r.content
 
 
 class TestProxyChaining(tservers.HTTPChainProxyTest):

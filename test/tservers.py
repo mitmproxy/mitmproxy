@@ -4,6 +4,7 @@ import shutil, tempfile
 import flask
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
+from libmproxy.proxy.primitives import TransparentUpstreamServerResolver
 import libpathod.test, libpathod.pathoc
 from libmproxy import flow, controller
 from libmproxy.cmdline import APP_HOST, APP_PORT
@@ -193,10 +194,9 @@ class TransparentProxTest(ProxTestBase):
             ports = [cls.server.port, cls.server2.port]
         else:
             ports = []
-        d["transparent_proxy"] = dict(
-            resolver = cls.resolver(cls.server.port),
-            sslports = ports
-        )
+        d["get_upstream_server"] = TransparentUpstreamServerResolver(cls.resolver(cls.server.port), ports)
+        d["http_form_in"] = "relative"
+        d["http_form_out"] = "relative"
         return d
 
     def pathod(self, spec, sni=None):
@@ -225,11 +225,14 @@ class ReverseProxTest(ProxTestBase):
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
-        d["reverse_proxy"] = (
-                "https" if cls.ssl else "http",
-                "127.0.0.1",
-                cls.server.port
-            )
+        d["get_upstream_server"] = lambda c: (
+            True if cls.ssl else False,
+            True if cls.ssl else False,
+            "127.0.0.1",
+            cls.server.port
+        )
+        d["http_form_in"] = "relative"
+        d["http_form_out"] = "relative"
         return d
 
     def pathoc(self, sni=None):
@@ -258,18 +261,17 @@ class ChainProxTest(ProxTestBase):
     Chain n instances of mitmproxy in a row - because we can.
     """
     n = 2
-    chain_config = [lambda: ProxyConfig(
+    chain_config = [lambda port: ProxyConfig(
+        get_upstream_server = lambda c: (False, False, "127.0.0.1", port),
+        http_form_in = "absolute",
+        http_form_out = "absolute"
     )] * n
     @classmethod
     def setupAll(cls):
         super(ChainProxTest, cls).setupAll()
         cls.chain = []
         for i in range(cls.n):
-            config = cls.chain_config[i]()
-            config.forward_proxy = ("http", "127.0.0.1",
-                                    cls.proxy.port if i == 0 else
-                                    cls.chain[-1].port
-            )
+            config = cls.chain_config[i](cls.proxy.port if i == 0 else cls.chain[-1].port)
             tmaster = cls.masterclass(config)
             tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
             cls.chain.append(ProxyThread(tmaster))

@@ -43,28 +43,15 @@ class TestServerConnection:
         sc.finish()
 
 
-class MockParser:
-    def __init__(self):
-        self.err = None
-
-    def error(self, e):
-        self.err = e
-
-    def __repr__(self):
-        return "ParseError(%s)"%self.err
-
-
 class TestProcessProxyOptions:
     def p(self, *args):
-        parser = argparse.ArgumentParser()
+        parser = tutils.MockParser()
         cmdline.common_options(parser)
         opts = parser.parse_args(args=args)
-        m = MockParser()
-        return m, process_proxy_options(m, opts)
+        return parser, process_proxy_options(parser, opts)
 
     def assert_err(self, err, *args):
-        m, p = self.p(*args)
-        assert err.lower() in m.err.lower()
+        tutils.raises(err, self.p, *args)
 
     def assert_noerr(self, *args):
         m, p = self.p(*args)
@@ -84,11 +71,10 @@ class TestProcessProxyOptions:
 
     @mock.patch("libmproxy.platform.resolver")
     def test_transparent_reverse(self, o):
-        self.assert_err("can't set both", "-P", "reverse", "-T")
+        self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
         self.assert_noerr("-T")
-        assert o.call_count == 1
-        self.assert_err("invalid reverse proxy", "-P", "reverse")
-        self.assert_noerr("-P", "http://localhost")
+        self.assert_err("Invalid server specification", "-R", "reverse")
+        self.assert_noerr("-R", "http://localhost")
 
     def test_client_certs(self):
         with tutils.tmpdir() as confdir:

@@ -87,14 +87,6 @@ def test_LRUCache():
     assert len(f._cachelist_one) == 2
 
 
-def test_parse_proxy_spec():
-    assert not utils.parse_proxy_spec("")
-    assert utils.parse_proxy_spec("http://foo.com:88") == ("http", "foo.com", 88)
-    assert utils.parse_proxy_spec("http://foo.com") == ("http", "foo.com", 80)
-    assert not utils.parse_proxy_spec("foo.com")
-    assert not utils.parse_proxy_spec("http://")
-
-
 def test_unparse_url():
     assert utils.unparse_url("http", "foo.com", 99, "") == "http://foo.com:99"
     assert utils.unparse_url("http", "foo.com", 80, "") == "http://foo.com"

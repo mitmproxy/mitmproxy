@@ -1,10 +1,9 @@
 import socket
-from .. import version, protocol
-from libmproxy.proxy.primitives import Log
-from .primitives import ProxyServerError
-from .connection import ClientConnection, ServerConnection
-from .primitives import ProxyError, ConnectionTypeChange, AddressPriority
+from OpenSSL import SSL
 from netlib import tcp
+from .primitives import ProxyServerError, Log, ProxyError, ConnectionTypeChange, AddressPriority
+from .connection import ClientConnection, ServerConnection
+from .. import version, protocol
 
 
 class DummyServer:
@@ -23,6 +22,7 @@ class DummyServer:
 class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
+
     def __init__(self, config, port, host='', server_version=version.NAMEVERSION):
         """
             Raises ProxyServerError if there's a startup problem.
@@ -51,19 +51,16 @@ class ProxyServer(tcp.TCPServer):
 class ConnectionHandler:
     def __init__(self, config, client_connection, client_address, server, channel, server_version):
         self.config = config
+        """@type: libmproxy.proxy.config.ProxyConfig"""
         self.client_conn = ClientConnection(client_connection, client_address, server)
+        """@type: libmproxy.proxy.connection.ClientConnection"""
         self.server_conn = None
+        """@type: libmproxy.proxy.connection.ServerConnection"""
         self.channel, self.server_version = channel, server_version
 
         self.close = False
         self.conntype = None
         self.sni = None
-
-        self.mode = "regular"
-        if self.config.reverse_proxy:
-            self.mode = "reverse"
-        if self.config.transparent_proxy:
-            self.mode = "transparent"
 
     def handle(self):
         self.log("clientconnect")
@@ -74,25 +71,13 @@ class ConnectionHandler:
         try:
             try:
                 # Can we already identify the target server and connect to it?
-                server_address = None
-                address_priority = None
-                if self.config.forward_proxy:
-                    server_address = self.config.forward_proxy[1:]
-                    address_priority = AddressPriority.FORCE
-                elif self.config.reverse_proxy:
-                    server_address = self.config.reverse_proxy[1:]
-                    address_priority = AddressPriority.FROM_SETTINGS
-                elif self.config.transparent_proxy:
-                    server_address = self.config.transparent_proxy["resolver"].original_addr(
-                        self.client_conn.connection)
-                    if not server_address:
-                        raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
-                    address_priority = AddressPriority.FROM_CONNECTION
-                    self.log("transparent to %s:%s" % server_address)
-
-                if server_address:
-                    self.set_server_address(server_address, address_priority)
-                    self._handle_ssl()
+                if self.config.get_upstream_server:
+                    upstream_info = self.config.get_upstream_server(self.client_conn.connection)
+                    self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
+                    client_ssl, server_ssl = upstream_info[:2]
+                    if client_ssl or server_ssl:
+                        self.establish_server_connection()
+                        self.establish_ssl(client=client_ssl, server=server_ssl)
 
                 while not self.close:
                     try:
@@ -114,28 +99,9 @@ class ConnectionHandler:
         self.log("clientdisconnect")
         self.channel.tell("clientdisconnect", self)
 
-    def _handle_ssl(self):
-        """
-        Helper function of .handle()
-        Check if we can already identify SSL connections.
-        If so, connect to the server and establish an SSL connection
-        """
-        client_ssl = False
-        server_ssl = False
-
-        if self.config.transparent_proxy:
-            client_ssl = server_ssl = (self.server_conn.address.port in self.config.transparent_proxy["sslports"])
-        elif self.config.reverse_proxy:
-            client_ssl = server_ssl = (self.config.reverse_proxy[0] == "https")
-            # TODO: Make protocol generic (as with transparent proxies)
-            # TODO: Add SSL-terminating capatbility (SSL -> mitmproxy -> plain and vice versa)
-        if client_ssl or server_ssl:
-            self.establish_server_connection()
-            self.establish_ssl(client=client_ssl, server=server_ssl)
-
     def del_server_connection(self):
         """
-        Deletes an existing server connection.
+        Deletes (and closes) an existing server connection.
         """
         if self.server_conn and self.server_conn.connection:
             self.server_conn.finish()
@@ -152,7 +118,6 @@ class ConnectionHandler:
         """
         Sets a new server address with the given priority.
         Does not re-establish either connection or SSL handshake.
-        @type priority: libmproxy.proxy.primitives.AddressPriority
         """
         address = tcp.Address.wrap(address)
 
@@ -188,8 +153,7 @@ class ConnectionHandler:
         """
         Establishes SSL on the existing connection(s) to the server or the client,
         as specified by the parameters. If the target server is on the pass-through list,
-        the conntype attribute will be changed and the SSL connection won't be wrapped.
-        A protocol handler must raise a ConnTypeChanged exception if it detects that this is happening
+        the conntype attribute will be changed and a ConnTypeChanged exception will be raised.
         """
         # TODO: Implement SSL pass-through handling and change conntype
         passthrough = [
@@ -198,7 +162,7 @@ class ConnectionHandler:
         ]
         if self.server_conn.address.host in passthrough or self.sni in passthrough:
             self.conntype = "tcp"
-            return
+            raise ConnectionTypeChange
 
         # Logging
         if client or server:
