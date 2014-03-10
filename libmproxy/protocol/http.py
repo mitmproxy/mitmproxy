@@ -1,15 +1,11 @@
 import Cookie, urllib, urlparse, time, copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-from libmproxy.proxy.primitives import AddressPriority
-from ..proxy.connection import ServerConnection
-from ..proxy.primitives import ProxyError, ConnectionTypeChange
 import netlib.utils
 from netlib import http, tcp, http_status
 from netlib.odict import ODict, ODictCaseless
-from . import ProtocolHandler, KILL, TemporaryServerChangeMixin
-from .. import encoding, utils, filt, controller, stateobject
-from .primitives import Flow, Error
-
+from .primitives import KILL, ProtocolHandler, TemporaryServerChangeMixin, Flow, Error
+from ..proxy.connection import ServerConnection
+from .. import encoding, utils, filt, controller, stateobject, proxy
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
@@ -350,7 +346,7 @@ class HTTPRequest(HTTPMessage):
             Raises an Exception if the request cannot be assembled.
         """
         if self.content == CONTENT_MISSING:
-            raise ProxyError(502, "Cannot assemble flow with CONTENT_MISSING")
+            raise proxy.ProxyError(502, "Cannot assemble flow with CONTENT_MISSING")
         head = self._assemble_head(form)
         if self.content:
             return head + self.content
@@ -513,7 +509,7 @@ class HTTPRequest(HTTPMessage):
                 self.flow.change_server((host, port), ssl=is_ssl)
             else:
                 # There's not live server connection, we're just changing the attributes here.
-                self.flow.server_conn = ServerConnection((host, port), AddressPriority.MANUALLY_CHANGED)
+                self.flow.server_conn = ServerConnection((host, port), proxy.AddressPriority.MANUALLY_CHANGED)
                 self.flow.server_conn.ssl_established = is_ssl
 
         # If this is an absolute request, replace the attributes on the request object as well.
@@ -651,7 +647,7 @@ class HTTPResponse(HTTPMessage):
             Raises an Exception if the request cannot be assembled.
         """
         if self.content == CONTENT_MISSING:
-            raise ProxyError(502, "Cannot assemble flow with CONTENT_MISSING")
+            raise proxy.ProxyError(502, "Cannot assemble flow with CONTENT_MISSING")
         head = self._assemble_head()
         if self.content:
             return head + self.content
@@ -927,7 +923,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             self.restore_server()  # If the user has changed the target server on this connection,
                                    # restore the original target server
             return True
-        except (HttpAuthenticationError, http.HttpError, ProxyError, tcp.NetLibError), e:
+        except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
         return False
 
@@ -937,7 +933,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             code = 407
             message = "Proxy Authentication Required"
             headers = error.auth_headers
-        elif isinstance(error, (http.HttpError, ProxyError)):
+        elif isinstance(error, (http.HttpError, proxy.ProxyError)):
             code = error.code
             message = error.msg
         elif isinstance(error, tcp.NetLibError):
@@ -1000,7 +996,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             self.c.log("Hook: Read answer to CONNECT request from proxy")
             resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
             if resp.code != 200:
-                raise ProxyError(resp.code,
+                raise proxy.ProxyError(resp.code,
                                  "Cannot reestablish SSL connection with upstream proxy: \r\n" + str(resp.headers))
             self.c.log("Hook: Establish SSL with upstream proxy")
             self.c.establish_ssl(server=True)
@@ -1028,7 +1024,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
             if self.expected_form_in == "absolute":
                 if not self.c.config.get_upstream_server:
-                    self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
+                    self.c.set_server_address((request.host, request.port), proxy.AddressPriority.FROM_PROTOCOL)
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                     self.c.client_conn.send(
                         'HTTP/1.1 200 Connection established\r\n' +
@@ -1046,7 +1042,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
 
-                self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
+                self.c.set_server_address((request.host, request.port), proxy.AddressPriority.FROM_PROTOCOL)
                 flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
             request.form_out = self.expected_form_out

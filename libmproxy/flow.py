@@ -767,7 +767,7 @@ class FlowReader:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
-                yield protocol.protocols[data["conntype"]]["flow"]._from_state(data)
+                yield protocol.handle.protocols[data["conntype"]]["flow"]._from_state(data)
         except ValueError, v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':

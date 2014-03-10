@@ -1,6 +1,6 @@
-from . import ProtocolHandler
 import select, socket
 from cStringIO import StringIO
+from .primitives import ProtocolHandler
 
 
 class TCPHandler(ProtocolHandler):

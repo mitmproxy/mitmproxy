@@ -3,7 +3,8 @@ from OpenSSL import SSL
 from netlib import tcp
 from .primitives import ProxyServerError, Log, ProxyError, ConnectionTypeChange, AddressPriority
 from .connection import ClientConnection, ServerConnection
-from .. import version, protocol
+from ..protocol.handle import handle_messages, handle_error
+from .. import version
 
 
 class DummyServer:
@@ -81,14 +82,14 @@ class ConnectionHandler:
 
                 while not self.close:
                     try:
-                        protocol.handle_messages(self.conntype, self)
+                        handle_messages(self.conntype, self)
                     except ConnectionTypeChange:
                         self.log("Connection Type Changed: %s" % self.conntype)
                         continue
 
             # FIXME: Do we want to persist errors?
             except (ProxyError, tcp.NetLibError), e:
-                protocol.handle_error(self.conntype, self, e)
+                handle_error(self.conntype, self, e)
         except Exception, e:
             self.log(e.__class__)
             import traceback
