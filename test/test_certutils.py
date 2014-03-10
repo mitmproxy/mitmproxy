@@ -1,5 +1,5 @@
 import os
-from netlib import certutils
+from netlib import certutils, certffi
 import OpenSSL
 import tutils
 
@@ -83,6 +83,16 @@ class TestCertStore:
             ret = ca1.get_cert("foo.com", [])
             assert ret[0].serial == dc[0].serial
 
+    def test_gen_pkey(self):
+        try:
+            with tutils.tmpdir() as d:
+                ca1 = certutils.CertStore.from_store(os.path.join(d, "ca1"), "test")
+                ca2 = certutils.CertStore.from_store(os.path.join(d, "ca2"), "test")
+                cert = ca1.get_cert("foo.com", [])
+                assert certffi.get_flags(ca2.gen_pkey(cert[0])) == 1
+        finally:
+            certffi.set_flags(ca2.privkey, 0)
+
 
 class TestDummyCert:
     def test_with_ca(self):
@@ -125,3 +135,5 @@ class TestSSLCert:
         d = file(tutils.test_data.path("data/dercert"),"rb").read()
         s = certutils.SSLCert.from_der(d)
         assert s.cn
+
+

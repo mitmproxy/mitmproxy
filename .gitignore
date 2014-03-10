@@ -8,3 +8,4 @@ MANIFEST
 *.swo
 .coverage
 .idea
+__pycache__

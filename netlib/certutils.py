@@ -111,6 +111,7 @@ class DNTree:
         return current.value
 
 
+
 class CertStore:
     """
         Implements an in-memory certificate store.
@@ -222,6 +223,11 @@ class CertStore:
             c = (c, None)
         return (c[0], c[1] or self.privkey)
 
+    def gen_pkey(self, cert):
+        import certffi
+        certffi.set_flags(self.privkey, 1)
+        return self.privkey
+
 
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
@@ -324,6 +330,7 @@ class SSLCert:
                 for i in dec[0]:
                     altnames.append(i[0].asOctets())
         return altnames
+
 
 
 def get_remote_cert(host, port, sni):
