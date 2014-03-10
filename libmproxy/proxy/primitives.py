@@ -23,12 +23,10 @@ class AddressPriority(object):
     Enum that signifies the priority of the given address when choosing the destination host.
     Higher is better (None < i)
     """
-    FORCE = 5
-    """forward mode"""
     MANUALLY_CHANGED = 4
     """user changed the target address in the ui"""
     FROM_SETTINGS = 3
-    """reverse proxy mode"""
+    """upstream proxy from arguments (reverse proxy or forward proxy)"""
     FROM_CONNECTION = 2
     """derived from transparent resolver"""
     FROM_PROTOCOL = 1

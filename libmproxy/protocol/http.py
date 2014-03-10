@@ -843,6 +843,12 @@ class HttpAuthenticationError(Exception):
 
 class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
+    def __init__(self, c):
+        super(HTTPHandler, self).__init__(c)
+        self.expected_form_in = c.config.http_form_in
+        self.expected_form_out = c.config.http_form_out
+        self.skip_authentication = False
+
     def handle_messages(self):
         while self.handle_flow():
             pass
@@ -877,13 +883,15 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.change_server)
         try:
             req = HTTPRequest.from_stream(self.c.client_conn.rfile,
-                                                   body_size_limit=self.c.config.body_size_limit)
+                                          body_size_limit=self.c.config.body_size_limit)
             self.c.log("request", [req._assemble_first_line(req.form_in)])
-            self.process_request(flow, req)
+            send_upstream = self.process_request(flow, req)
+            if not send_upstream:
+                return True
 
             # Be careful NOT to assign the request to the flow before
             # process_request completes. This is because the call can raise an
-            # exception. If the requets object is already attached, this results
+            # exception. If the request object is already attached, this results
             # in an Error object that has an attached request that has not been
             # sent through to the Master.
             flow.request = req
@@ -1004,44 +1012,48 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         Upgrade the connection to SSL after an authority (CONNECT) request has been made.
         """
         self.c.log("Received CONNECT request. Upgrading to SSL...")
-        self.c.mode = "transparent"
-        self.c.determine_conntype()
+        self.expected_form_in = "relative"
+        self.expected_form_out = "relative"
         self.c.establish_ssl(server=True, client=True)
         self.c.log("Upgrade to SSL completed.")
-        raise ConnectionTypeChange
 
     def process_request(self, flow, request):
-        if self.c.mode == "regular":
+
+        if not self.skip_authentication:
             self.authenticate(request)
-        if request.form_in == "authority" and self.c.client_conn.ssl_established:
-            raise http.HttpError(502, "Must not CONNECT on already encrypted connection")
 
-        # If we have a CONNECT request, we might need to intercept
         if request.form_in == "authority":
-            directly_addressed_at_mitmproxy = (self.c.mode == "regular" and not self.c.config.forward_proxy)
-            if directly_addressed_at_mitmproxy:
-                self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
-                flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
-                self.c.client_conn.wfile.write(
-                    'HTTP/1.1 200 Connection established\r\n' +
-                    ('Proxy-agent: %s\r\n' % self.c.server_version) +
-                    '\r\n'
-                )
-                self.c.client_conn.wfile.flush()
-                self.ssl_upgrade()  # raises ConnectionTypeChange exception
+            if self.c.client_conn.ssl_established:
+                raise http.HttpError(400, "Must not CONNECT on already encrypted connection")
 
-        if self.c.mode == "regular":
-            if request.form_in == "authority":  # forward mode
-                self.hook_reconnect(request)
-            elif request.form_in == "absolute":
-                if request.scheme != "http":
-                    raise http.HttpError(400, "Invalid Request")
-                if not self.c.config.forward_proxy:
-                    request.form_out = "relative"
+            if self.expected_form_in == "absolute":
+                if not self.c.config.upstream_server:
                     self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
-            else:
-                raise http.HttpError(400, "Invalid request form (absolute-form or authority-form required)")
+                    self.c.client_conn.send(
+                        'HTTP/1.1 200 Connection established\r\n' +
+                        ('Proxy-agent: %s\r\n' % self.c.server_version) +
+                        '\r\n'
+                    )
+                    self.ssl_upgrade()
+                    self.skip_authentication = True
+                    return False
+                else:
+                    self.hook_reconnect(request)
+                    return True
+        elif request.form_in == self.expected_form_in:
+            if request.form_in == "absolute":
+                if request.scheme != "http":
+                    raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
+
+                self.c.set_server_address((request.host, request.port), AddressPriority.FROM_PROTOCOL)
+                flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+
+            request.form_out = self.expected_form_out
+            return True
+
+        raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" % (self.expected_form_in,
+                                                                                         request.form_in))
 
     def authenticate(self, request):
         if self.c.config.authenticator:

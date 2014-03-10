@@ -197,6 +197,8 @@ class TransparentProxTest(ProxTestBase):
             resolver = cls.resolver(cls.server.port),
             sslports = ports
         )
+        d["http_form_in"] = "relative"
+        d["http_form_out"] = "relative"
         return d
 
     def pathod(self, spec, sni=None):
@@ -225,11 +227,13 @@ class ReverseProxTest(ProxTestBase):
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
-        d["reverse_proxy"] = (
+        d["upstream_server"] = (
                 "https" if cls.ssl else "http",
                 "127.0.0.1",
                 cls.server.port
             )
+        d["http_form_in"] = "relative"
+        d["http_form_out"] = "relative"
         return d
 
     def pathoc(self, sni=None):
@@ -258,18 +262,19 @@ class ChainProxTest(ProxTestBase):
     Chain n instances of mitmproxy in a row - because we can.
     """
     n = 2
-    chain_config = [lambda: ProxyConfig(
-    )] * n
+    chain_config = [lambda: ProxyConfig()] * n
     @classmethod
     def setupAll(cls):
         super(ChainProxTest, cls).setupAll()
         cls.chain = []
         for i in range(cls.n):
             config = cls.chain_config[i]()
-            config.forward_proxy = ("http", "127.0.0.1",
+            config.upstream_server = ("http", "127.0.0.1",
                                     cls.proxy.port if i == 0 else
                                     cls.chain[-1].port
             )
+            config.http_form_in = "absolute"
+            config.http_form_out = "absolute"
             tmaster = cls.masterclass(config)
             tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
             cls.chain.append(ProxyThread(tmaster))

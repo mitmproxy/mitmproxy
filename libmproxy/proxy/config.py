@@ -10,16 +10,17 @@ CONF_DIR = "~/.mitmproxy"
 
 class ProxyConfig:
     def __init__(self, confdir=CONF_DIR, clientcerts=None,
-                       no_upstream_cert=False, body_size_limit=None, reverse_proxy=None,
-                       forward_proxy=None, transparent_proxy=None, authenticator=None,
+                       no_upstream_cert=False, body_size_limit=None, upstream_server=None,
+                       http_form_in="absolute", http_form_out="relative", transparent_proxy=None, authenticator=None,
                        ciphers=None, certs=None
                 ):
         self.ciphers = ciphers
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
-        self.reverse_proxy = reverse_proxy
-        self.forward_proxy = forward_proxy
+        self.upstream_server = upstream_server
+        self.http_form_in = http_form_in
+        self.http_form_out = http_form_out
         self.transparent_proxy = transparent_proxy
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
@@ -93,8 +94,9 @@ def process_proxy_options(parser, options):
         clientcerts=options.clientcerts,
         body_size_limit=body_size_limit,
         no_upstream_cert=options.no_upstream_cert,
-        reverse_proxy=rp,
-        forward_proxy=fp,
+        upstream_server=(rp or fp),
+        http_form_in=("relative" if (rp or trans) else "absolute"),
+        http_form_out=("absolute" if fp else "relative"),
         transparent_proxy=trans,
         authenticator=authenticator,
         ciphers=options.ciphers,
