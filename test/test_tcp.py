@@ -106,6 +106,11 @@ class TestDisconnect(test.ServerTestBase):
         assert c.rfile.readline() == testval
 
 
+class HardDisconnectHandler(tcp.BaseHandler):
+    def handle(self):
+        self.connection.close()
+
+
 class TestServerSSL(test.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
@@ -291,6 +296,24 @@ class TestSSLDisconnect(test.ServerTestBase):
         c.close()
         tutils.raises(tcp.NetLibDisconnect, c.wfile.write, "foo")
         tutils.raises(Queue.Empty, self.q.get_nowait)
+
+
+class TestSSLHardDisconnect(test.ServerTestBase):
+    handler = HardDisconnectHandler
+    ssl = dict(
+        cert = tutils.test_data.path("data/server.crt"),
+        key = tutils.test_data.path("data/server.key"),
+        request_client_cert = False,
+        v3_only = False
+    )
+    def test_echo(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        c.convert_to_ssl()
+        # Exercise SSL.SysCallError
+        c.rfile.read(10)
+        c.close()
+        tutils.raises(tcp.NetLibDisconnect, c.wfile.write, "foo")
 
 
 class TestDisconnect(test.ServerTestBase):

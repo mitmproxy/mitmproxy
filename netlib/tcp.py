@@ -143,7 +143,9 @@ class Reader(_FileLike):
                 raise NetLibTimeout
             except socket.error:
                 raise NetLibDisconnect
-            except SSL.SysCallError:
+            except SSL.SysCallError as e:
+                if e.args == (-1, 'Unexpected EOF'):
+                    break
                 raise NetLibDisconnect
             except SSL.Error, v:
                 raise NetLibSSLError(v.message)
