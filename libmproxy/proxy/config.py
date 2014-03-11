@@ -13,7 +13,7 @@ class ProxyConfig:
     def __init__(self, confdir=CONF_DIR, clientcerts=None,
                        no_upstream_cert=False, body_size_limit=None, get_upstream_server=None,
                        http_form_in="absolute", http_form_out="relative", authenticator=None,
-                       ciphers=None, certs=None
+                       ciphers=None, certs=None, certforward = False
                 ):
         self.ciphers = ciphers
         self.clientcerts = clientcerts
@@ -25,6 +25,7 @@ class ProxyConfig:
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
+        self.certforward = certforward
 
 
 def process_proxy_options(parser, options):
@@ -93,15 +94,17 @@ def process_proxy_options(parser, options):
         certs.append(parts)
 
     return ProxyConfig(
-        clientcerts=options.clientcerts,
-        body_size_limit=body_size_limit,
-        no_upstream_cert=options.no_upstream_cert,
-        get_upstream_server=get_upstream_server,
-        http_form_in=http_form_in,
-        http_form_out=http_form_out,
-        authenticator=authenticator,
-        ciphers=options.ciphers,
+        clientcerts = options.clientcerts,
+        body_size_limit = body_size_limit,
+        no_upstream_cert = options.no_upstream_cert,
+        get_upstream_server = get_upstream_server,
+        confdir = options.confdir,
+        http_form_in = http_form_in,
+        http_form_out = http_form_out,
+        authenticator = authenticator,
+        ciphers = options.ciphers,
         certs = certs,
+        certforward = options.certforward,
     )
 
 
@@ -124,4 +127,9 @@ def ssl_option_group(parser):
         "--ciphers", action="store",
         type=str, dest="ciphers", default=None,
         help="SSL cipher specification."
+    )
+    group.add_argument(
+        "--cert-forward", action="store_true",
+        dest="certforward", default=False,
+        help="Simply forward SSL certificates from upstream."
     )

@@ -81,6 +81,7 @@ class ProxTestBase(object):
     authenticator = None
     masterclass = TestMaster
     externalapp = False
+    certforward = False
     @classmethod
     def setupAll(cls):
         cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
@@ -91,6 +92,7 @@ class ProxTestBase(object):
             no_upstream_cert = cls.no_upstream_cert,
             confdir = cls.confdir,
             authenticator = cls.authenticator,
+            certforward = cls.certforward,
             **pconf
         )
         tmaster = cls.masterclass(config)

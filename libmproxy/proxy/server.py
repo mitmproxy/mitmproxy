@@ -188,7 +188,8 @@ class ConnectionHandler:
             self.client_conn.convert_to_ssl(
                 cert, key,
                 handle_sni = self.handle_sni,
-                cipher_list = self.config.ciphers
+                cipher_list = self.config.ciphers,
+                dhparams = self.config.certstore.dhparams
             )
 
     def server_reconnect(self, no_ssl=False):
@@ -217,18 +218,21 @@ class ConnectionHandler:
         self.channel.tell("log", Log(msg))
 
     def find_cert(self):
-        host = self.server_conn.address.host
-        sans = []
-        if not self.config.no_upstream_cert or not self.server_conn.ssl_established:
-            upstream_cert = self.server_conn.cert
-            if upstream_cert.cn:
-                host = upstream_cert.cn.decode("utf8").encode("idna")
-            sans = upstream_cert.altnames
+        if self.config.certforward and self.server_conn.ssl_established:
+            return self.server_conn.cert, self.config.certstore.gen_pkey(self.server_conn.cert)
+        else:
+            host = self.server_conn.address.host
+            sans = []
+            if not self.config.no_upstream_cert or not self.server_conn.ssl_established:
+                upstream_cert = self.server_conn.cert
+                if upstream_cert.cn:
+                    host = upstream_cert.cn.decode("utf8").encode("idna")
+                sans = upstream_cert.altnames
 
-        ret = self.config.certstore.get_cert(host, sans)
-        if not ret:
-            raise ProxyError(502, "Unable to generate dummy cert.")
-        return ret
+            ret = self.config.certstore.get_cert(host, sans)
+            if not ret:
+                raise ProxyError(502, "Unable to generate dummy cert.")
+            return ret
 
     def handle_sni(self, connection):
         """
