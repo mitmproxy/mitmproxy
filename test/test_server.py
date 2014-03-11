@@ -446,3 +446,10 @@ class TestIncompleteResponse(tservers.HTTPProxTest):
     def test_incomplete(self):
         assert self.pathod("200").status_code == 502
 
+
+class TestCertForward(tservers.HTTPProxTest):
+    certforward = True
+    ssl = True
+    def test_app_err(self):
+        tutils.raises("handshake error", self.pathod, "200:b@100")
+
