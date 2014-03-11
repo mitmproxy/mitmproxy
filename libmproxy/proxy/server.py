@@ -90,13 +90,15 @@ class ConnectionHandler:
                         continue
 
             # FIXME: Do we want to persist errors?
-            except (ProxyError, tcp.NetLibError), e:
+            except (ProxyError, tcp.NetLibError, IOError), e:
                 handle_error(self.conntype, self, e)
         except Exception, e:
-            self.log(e.__class__)
-            import traceback
+            import traceback, sys
             self.log(traceback.format_exc())
-            self.log(str(e))
+            print >> sys.stderr, traceback.format_exc()
+            print >> sys.stderr, "mitmproxy has crashed!"
+            print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
+            raise e
 
         self.del_server_connection()
         self.log("clientdisconnect")

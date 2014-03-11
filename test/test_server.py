@@ -3,6 +3,7 @@ import mock
 from netlib import tcp, http_auth, http
 from libpathod import pathoc, pathod
 import tutils, tservers
+from libmproxy import flow
 from libmproxy.protocol import KILL
 from libmproxy.protocol.http import CONTENT_MISSING
 
@@ -327,6 +328,61 @@ class TestProxySSL(tservers.HTTPProxTest):
         assert f.status_code == 304
         first_request = self.master.state.view[0].request
         assert first_request.flow.server_conn.timestamp_ssl_setup
+
+
+class MasterRedirectRequest(tservers.TestMaster):
+    def handle_request(self, request):
+        if request.path == "/p/201":
+            url = request.get_url()
+            new = "http://127.0.0.1:%s/p/201" % self.redirect_port
+
+            request.set_url(new)
+            request.set_url(new)
+            request.flow.change_server(("127.0.0.1", self.redirect_port), False)
+            request.set_url(url)
+            tutils.raises("SSL handshake error", request.flow.change_server, ("127.0.0.1", self.redirect_port), True)
+            request.set_url(new)
+            request.set_url(url)
+            request.set_url(new)
+        tservers.TestMaster.handle_request(self, request)
+
+    def handle_response(self, response):
+        response.content = str(response.flow.client_conn.address.port)
+        tservers.TestMaster.handle_response(self, response)
+
+
+class TestRedirectRequest(tservers.HTTPProxTest):
+    masterclass = MasterRedirectRequest
+
+    def test_redirect(self):
+        self.master.redirect_port = self.server2.port
+
+        p = self.pathoc()
+
+        self.server.clear_log()
+        self.server2.clear_log()
+        r1 = p.request("get:'%s/p/200'"%self.server.urlbase)
+        assert r1.status_code == 200
+        assert self.server.last_log()
+        assert not self.server2.last_log()
+
+        self.server.clear_log()
+        self.server2.clear_log()
+        r2 = p.request("get:'%s/p/201'"%self.server.urlbase)
+        assert r2.status_code == 201
+        assert not self.server.last_log()
+        assert self.server2.last_log()
+
+        self.server.clear_log()
+        self.server2.clear_log()
+        r3 = p.request("get:'%s/p/202'"%self.server.urlbase)
+        assert r3.status_code == 202
+        assert self.server.last_log()
+        assert not self.server2.last_log()
+
+        assert r3.content == r2.content == r1.content
+        # Make sure that we actually use the same connection in this test case
+
 
 class MasterFakeResponse(tservers.TestMaster):
     def handle_request(self, m):

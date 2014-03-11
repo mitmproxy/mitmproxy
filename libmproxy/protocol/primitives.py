@@ -1,8 +1,9 @@
 from __future__ import absolute_import
+import copy
+import netlib.tcp
 from .. import stateobject, utils, version
 from ..proxy.primitives import AddressPriority
 from ..proxy.connection import ClientConnection, ServerConnection
-import copy
 
 
 KILL = 0  # const for killed requests
@@ -161,16 +162,12 @@ class TemporaryServerChangeMixin(object):
     without any need to expose the ConnectionHandler to the Flow.
     """
     def change_server(self, address, ssl):
+        address = netlib.tcp.Address.wrap(address)
         if address == self.c.server_conn.address():
             return
         priority = AddressPriority.MANUALLY_CHANGED
 
-        if self.c.server_conn.priority > priority:
-            self.log("Attempt to change server address, "
-                     "but priority is too low (is: %s, got: %s)" % (self.server_conn.priority, priority))
-            return
-
-        self.log("Temporarily change server connection: %s:%s -> %s:%s" % (
+        self.c.log("Temporarily change server connection: %s:%s -> %s:%s" % (
             self.c.server_conn.address.host,
             self.c.server_conn.address.port,
             address.host,
@@ -191,11 +188,11 @@ class TemporaryServerChangeMixin(object):
         if not hasattr(self, "_backup_server_conn"):
             return
 
-        self.log("Restore original server connection: %s:%s -> %s:%s" % (
+        self.c.log("Restore original server connection: %s:%s -> %s:%s" % (
             self.c.server_conn.address.host,
             self.c.server_conn.address.port,
-            self._backup_server_conn.host,
-            self._backup_server_conn.port
+            self._backup_server_conn.address.host,
+            self._backup_server_conn.address.port
         ))
 
         self.c.del_server_connection()

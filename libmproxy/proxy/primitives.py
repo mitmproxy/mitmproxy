@@ -25,7 +25,7 @@ class UpstreamServerResolver(object):
         """
         Returns the address of the server to connect to.
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
 
 class ConstUpstreamServerResolver(UpstreamServerResolver):
