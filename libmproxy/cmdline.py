@@ -161,6 +161,7 @@ def get_common_options(options):
         anticache = options.anticache,
         anticomp = options.anticomp,
         client_replay = options.client_replay,
+        flow_detail = options.flow_detail,
         kill = options.kill,
         no_server = options.no_server,
         refresh_server_playback = not options.norefresh,

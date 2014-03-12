@@ -21,12 +21,18 @@ if __name__ == '__main__':
         action="store_true", dest="keepserving", default=False,
         help="Continue serving after client playback or file read. We exit by default."
     )
+    parser.add_argument(
+        "-d",
+        action="count", dest="flow_detail", default=1,
+        help="Increase flow detail display level. Can be passed multiple times."
+    )
     parser.add_argument('args', nargs=argparse.REMAINDER)
 
     options = parser.parse_args()
 
     if options.quiet:
         options.verbose = 0
+        options.flow_detail = 0
 
     proxyconfig = process_proxy_options(parser, options)
     if options.no_server:

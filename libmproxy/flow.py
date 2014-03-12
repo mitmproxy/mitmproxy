@@ -478,9 +478,9 @@ class FlowMaster(controller.Master):
                 "host": host,
                 "port": port}).start()
 
-    def add_event(self, e, level="info"):
+    def add_event(self, e, level="error"):
         """
-            level: info, error
+            level: debug, info, error
         """
         pass
 
