@@ -161,7 +161,6 @@ def get_common_options(options):
         anticache = options.anticache,
         anticomp = options.anticomp,
         client_replay = options.client_replay,
-        eventlog = options.eventlog,
         kill = options.kill,
         no_server = options.no_server,
         refresh_server_playback = not options.norefresh,
@@ -195,11 +194,6 @@ def common_options(parser):
         "--confdir",
         action="store", type = str, dest="confdir", default='~/.mitmproxy',
         help = "Configuration directory. (~/.mitmproxy)"
-    )
-    parser.add_argument(
-        "-e",
-        action="store_true", dest="eventlog",
-        help="Show event log."
     )
     parser.add_argument(
         "-n",

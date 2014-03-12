@@ -15,7 +15,6 @@ class Options(object):
         "anticache",
         "anticomp",
         "client_replay",
-        "eventlog",
         "keepserving",
         "kill",
         "no_server",
@@ -66,7 +65,6 @@ class DumpMaster(flow.FlowMaster):
         self.o = options
         self.anticache = options.anticache
         self.anticomp = options.anticomp
-        self.eventlog = options.eventlog
         self.showhost = options.showhost
         self.refresh_server_playback = options.refresh_server_playback
 
@@ -142,9 +140,9 @@ class DumpMaster(flow.FlowMaster):
         return flows
 
     def add_event(self, e, level="info"):
-        if self.eventlog:
-            print >> self.outfile, e
-            self.outfile.flush()
+        #FIXME refactor_loglevel
+        print >> self.outfile, e
+        self.outfile.flush()
 
     def indent(self, n, t):
         l = str(t).strip().split("\n")

@@ -15,9 +15,10 @@ class ScriptContext:
             Logs an event.
 
             How this is handled depends on the front-end. mitmdump will display
-            events if the eventlog flag ("-e") was passed. mitmproxy sends
-            output to the eventlog for display ("v" keyboard shortcut).
+            events if the v flag ("-e") was passed. mitmproxy sends
+            output to the eventlog for display ("e" keyboard shortcut).
         """
+        #FIXME refactor_loglevel
         self._master.add_event(*args, **kwargs)
 
     def duplicate_flow(self, f):

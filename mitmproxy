@@ -23,6 +23,11 @@ if __name__ == '__main__':
         action="store", dest="palette",
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
+    parser.add_argument(
+        "-e",
+        action="store_true", dest="eventlog",
+        help="Show event log."
+    )
 
 
     group = parser.add_argument_group(

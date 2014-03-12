@@ -127,7 +127,7 @@ class TestDumpMaster:
 
     def test_basic(self):
         for i in (1, 2, 3):
-            assert "GET" in self._dummy_cycle(1, "~s", "", verbosity=i, eventlog=True)
+            assert "GET" in self._dummy_cycle(1, "~s", "", verbosity=i)
             assert "GET" in self._dummy_cycle(1, "~s", "\x00\x00\x00", verbosity=i)
             assert "GET" in self._dummy_cycle(1, "~s", "ascii", verbosity=i)
 
@@ -150,7 +150,7 @@ class TestDumpMaster:
     def test_script(self):
         ret = self._dummy_cycle(
             1, None, "",
-            scripts=[tutils.test_data.path("scripts/all.py")], verbosity=0, eventlog=True
+            scripts=[tutils.test_data.path("scripts/all.py")], verbosity=0
         )
         assert "XCLIENTCONNECT" in ret
         assert "XSERVERCONNECT" in ret
