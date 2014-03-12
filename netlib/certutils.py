@@ -123,6 +123,13 @@ class CertStore:
 
     @classmethod
     def load_dhparam(klass, path):
+
+        # netlib<=0.10 doesn't generate a dhparam file.
+        # Create it now if neccessary.
+        if not os.path.exists(path):
+            with open(path, "wb") as f:
+                f.write(DEFAULT_DHPARAM)
+
         bio = OpenSSL.SSL._lib.BIO_new_file(path, b"r")
         if bio != OpenSSL.SSL._ffi.NULL:
             bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)
