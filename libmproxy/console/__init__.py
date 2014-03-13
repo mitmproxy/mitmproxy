@@ -1002,7 +1002,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def add_event(self, e, level="info"):
         needed = dict(error=1, info=1, debug=2).get(level, 1)
-        if self.o.verbosity < needed:
+        if self.options.verbosity < needed:
             return
 
         if level == "error":

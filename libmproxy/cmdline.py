@@ -275,8 +275,8 @@ def common_options(parser):
     )
     parser.add_argument(
         "-v",
-        action="count", dest="verbose", default=1,
-        help="Increase verbosity. Can be passed multiple times."
+        action="store_const", dest="verbose", default=1, const=2,
+        help="Increase event log verbosity."
     )
     parser.add_argument(
         "-w",

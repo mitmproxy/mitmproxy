@@ -45,7 +45,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
     dumpopts = dump.Options(**cmdline.get_common_options(options))
-    dumpopts.flow_detail = options.flow_detail,
+    dumpopts.flow_detail = options.flow_detail
     dumpopts.keepserving = options.keepserving
 
     if options.args:
