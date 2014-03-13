@@ -181,11 +181,6 @@ def get_common_options(options):
 
 def common_options(parser):
     parser.add_argument(
-        "-b",
-        action="store", type = str, dest="addr", default='',
-        help = "Address to bind proxy to (defaults to all interfaces)"
-    )
-    parser.add_argument(
         "--anticache",
         action="store_true", dest="anticache", default=False,
         help="Strip out request headers that might cause the server to return 304-not-modified."
@@ -196,57 +191,10 @@ def common_options(parser):
         help = "Configuration directory. (~/.mitmproxy)"
     )
     parser.add_argument(
-        "-n",
-        action="store_true", dest="no_server",
-        help="Don't start a proxy server."
+        "--host",
+        action="store_true", dest="showhost", default=False,
+        help="Use the Host header to construct URLs for display."
     )
-    parser.add_argument(
-        "-p",
-        action="store", type = int, dest="port", default=8080,
-        help = "Proxy service port."
-    )
-    # We could make a mutually exclusive group out of -R, -F, -T, but we don't do that because
-    #  - --upstream-server should be in that group as well, but it's already in a different group.
-    #  - our own error messages are more helpful
-    parser.add_argument(
-        "-R",
-        action="store", type=parse_server_spec, dest="reverse_proxy", default=None,
-        help="Reverse proxy to upstream server: http[s]://host[:port]"
-    )
-    parser.add_argument(
-        "-F",
-        action="store", type=parse_server_spec, dest="forward_proxy", default=None,
-        help="Proxy to unconditionally forward to: http[s]://host[:port]"
-    )
-    parser.add_argument(
-        "-T",
-        action="store_true", dest="transparent_proxy", default=False,
-        help="Set transparent proxy mode."
-    )
-
-    group = parser.add_argument_group(
-        "Advanced Proxy Options",
-        """
-            The following options allow a custom adjustment of the proxy behavior.
-            Normally, you don't want to use these options directly and use the provided wrappers instead (-R, -F, -T).
-        """.strip()
-    )
-    group.add_argument(
-        "--http-form-in", dest="http_form_in", default=None,
-        action="store", choices=("relative", "absolute"),
-        help="Override the HTTP request form accepted by the proxy"
-    )
-    group.add_argument(
-        "--http-form-out", dest="http_form_out", default=None,
-        action="store", choices=("relative", "absolute"),
-        help="Override the HTTP request form sent upstream by the proxy"
-    )
-    group.add_argument(
-        "--upstream-server", dest="manual_upstream_server", default=None,
-        action="store", type=parse_server_spec,
-        help="Override the destination server all requests are sent to."
-    )
-
     parser.add_argument(
         "-q",
         action="store_true", dest="quiet",
@@ -295,17 +243,67 @@ def common_options(parser):
         help="Byte size limit of HTTP request and response bodies."\
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
-    parser.add_argument(
-        "--host",
-        action="store_true", dest="showhost", default=False,
-        help="Use the Host header to construct URLs for display."
+
+
+    group = parser.add_argument_group("Proxy Options")
+    # We could make a mutually exclusive group out of -R, -F, -T, but we don't do that because
+    #  - --upstream-server should be in that group as well, but it's already in a different group.
+    #  - our own error messages are more helpful
+    group.add_argument(
+        "-b",
+        action="store", type = str, dest="addr", default='',
+        help = "Address to bind proxy to (defaults to all interfaces)"
+    )
+    group.add_argument(
+        "-F",
+        action="store", type=parse_server_spec, dest="forward_proxy", default=None,
+        help="Proxy to unconditionally forward to: http[s]://host[:port]"
+    )
+    group.add_argument(
+        "-n",
+        action="store_true", dest="no_server",
+        help="Don't start a proxy server."
+    )
+    group.add_argument(
+        "-p",
+        action="store", type = int, dest="port", default=8080,
+        help = "Proxy service port."
+    )
+    group.add_argument(
+        "-R",
+        action="store", type=parse_server_spec, dest="reverse_proxy", default=None,
+        help="Reverse proxy to upstream server: http[s]://host[:port]"
+    )
+    group.add_argument(
+        "-T",
+        action="store_true", dest="transparent_proxy", default=False,
+        help="Set transparent proxy mode."
     )
 
-    parser.add_argument(
-        "--no-upstream-cert", default=False,
-        action="store_true", dest="no_upstream_cert",
-        help="Don't connect to upstream server to look up certificate details."
+
+    group = parser.add_argument_group(
+        "Advanced Proxy Options",
+        """
+            The following options allow a custom adjustment of the proxy behavior.
+            Normally, you don't want to use these options directly and use the provided wrappers instead (-R, -F, -T).
+        """.strip()
     )
+    group.add_argument(
+        "--http-form-in", dest="http_form_in", default=None,
+        action="store", choices=("relative", "absolute"),
+        help="Override the HTTP request form accepted by the proxy"
+    )
+    group.add_argument(
+        "--http-form-out", dest="http_form_out", default=None,
+        action="store", choices=("relative", "absolute"),
+        help="Override the HTTP request form sent upstream by the proxy"
+    )
+    group.add_argument(
+        "--upstream-server", dest="manual_upstream_server", default=None,
+        action="store", type=parse_server_spec,
+        help="Override the destination server all requests are sent to."
+    )
+
 
     group = parser.add_argument_group("Web App")
     group.add_argument(
@@ -330,6 +328,7 @@ def common_options(parser):
         action="store_true", dest="app_external",
         help="Serve the app outside of the proxy."
     )
+
 
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
@@ -367,6 +366,7 @@ def common_options(parser):
         help="Disable response pop from response flow. "
         "This makes it possible to replay same response multiple times."
     )
+
 
     group = parser.add_argument_group(
         "Replacements",
@@ -433,5 +433,6 @@ def common_options(parser):
         metavar="PATH",
         help="Allow access to users specified in an Apache htpasswd file."
     )
+
 
     proxy.config.ssl_option_group(parser)

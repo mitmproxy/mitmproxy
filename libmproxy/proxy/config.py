@@ -133,3 +133,8 @@ def ssl_option_group(parser):
         dest="certforward", default=False,
         help="Simply forward SSL certificates from upstream."
     )
+    group.add_argument(
+        "--no-upstream-cert", default=False,
+        action="store_true", dest="no_upstream_cert",
+        help="Don't connect to upstream server to look up certificate details."
+    )
