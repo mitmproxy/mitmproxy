@@ -255,9 +255,9 @@ def common_options(parser):
         help = "Address to bind proxy to (defaults to all interfaces)"
     )
     group.add_argument(
-        "-F",
-        action="store", type=parse_server_spec, dest="forward_proxy", default=None,
-        help="Proxy to unconditionally forward to: http[s]://host[:port]"
+        "-U",
+        action="store", type=parse_server_spec, dest="upstream_proxy", default=None,
+        help="Forward all requests to upstream proxy server: http[s]://host[:port]"
     )
     group.add_argument(
         "-n",
@@ -272,7 +272,7 @@ def common_options(parser):
     group.add_argument(
         "-R",
         action="store", type=parse_server_spec, dest="reverse_proxy", default=None,
-        help="Reverse proxy to upstream server: http[s]://host[:port]"
+        help="Forward all requests to upstream HTTP server: http[s][2http[s]]://host[:port]"
     )
     group.add_argument(
         "-T",
@@ -299,9 +299,9 @@ def common_options(parser):
         help="Override the HTTP request form sent upstream by the proxy"
     )
     group.add_argument(
-        "--upstream-server", dest="manual_upstream_server", default=None,
+        "--destination-server", dest="manual_destination_server", default=None,
         action="store", type=parse_server_spec,
-        help="Override the destination server all requests are sent to."
+        help="Override the destination server all requests are sent to: http[s][2http[s]]://host[:port]"
     )
 
 

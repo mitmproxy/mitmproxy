@@ -44,15 +44,15 @@ def process_proxy_options(parser, options):
         c += 1
         get_upstream_server = ConstUpstreamServerResolver(options.reverse_proxy)
         http_form_in, http_form_out = "relative", "relative"
-    if options.forward_proxy:
+    if options.upstream_proxy:
         c += 1
-        get_upstream_server = ConstUpstreamServerResolver(options.forward_proxy)
+        get_upstream_server = ConstUpstreamServerResolver(options.upstream_proxy)
         http_form_in, http_form_out = "absolute", "absolute"
-    if options.manual_upstream_server:
+    if options.manual_destination_server:
         c += 1
-        get_upstream_server = ConstUpstreamServerResolver(options.manual_upstream_server)
+        get_upstream_server = ConstUpstreamServerResolver(options.manual_destination_server)
     if c > 1:
-        return parser.error("Transparent mode, reverse mode, forward mode and "
+        return parser.error("Transparent mode, reverse mode, upstream proxy mode and "
                             "specification of an upstream server are mutually exclusive.")
     if options.http_form_in:
         http_form_in = options.http_form_in
