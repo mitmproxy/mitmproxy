@@ -861,7 +861,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 return HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
                                                 body_size_limit=self.c.config.body_size_limit)
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
-                self.c.log("error in server communication: %s" % str(v))
+                self.c.log("error in server communication: %s" % str(v), level="debug")
                 if i < 1:
                     # In any case, we try to reconnect at least once.
                     # This is necessary because it might be possible that we already initiated an upstream connection
@@ -881,7 +881,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         try:
             req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                           body_size_limit=self.c.config.body_size_limit)
-            self.c.log("request", [req._assemble_first_line(req.form_in)])
+            self.c.log("request", "debug", [req._assemble_first_line(req.form_in)])
             send_upstream = self.process_request(flow, req)
             if not send_upstream:
                 return True
@@ -906,7 +906,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point
             # we can safely set it as the final attribute value here.
 
-            self.c.log("response", [flow.response._assemble_first_line()])
+            self.c.log("response", "debug", [flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response", flow.response)
             if response_reply is None or response_reply == KILL:
                 return False
@@ -946,7 +946,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         else:
             err = error.__class__
 
-        self.c.log("error: %s" % err)
+        self.c.log("error: %s" % err, level="info")
 
         if flow:
             flow.error = Error(err)
@@ -985,21 +985,23 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         Hooking code isn't particulary beautiful, but it isolates this edge-case from
         the protocol-agnostic ConnectionHandler
         """
-        self.c.log("Hook reconnect function")
+        self.c.log("Hook reconnect function", level="debug")
         original_reconnect_func = self.c.server_reconnect
 
         def reconnect_http_proxy():
-            self.c.log("Hooked reconnect function")
-            self.c.log("Hook: Run original reconnect")
+            self.c.log("Hooked reconnect function", "debug")
+            self.c.log("Hook: Run original reconnect", "debug")
             original_reconnect_func(no_ssl=True)
-            self.c.log("Hook: Write CONNECT request to upstream proxy", [upstream_request._assemble_first_line()])
+            self.c.log("Hook: Write CONNECT request to upstream proxy", "debug",
+                       [upstream_request._assemble_first_line()])
             self.c.server_conn.send(upstream_request._assemble())
-            self.c.log("Hook: Read answer to CONNECT request from proxy")
+            self.c.log("Hook: Read answer to CONNECT request from proxy", "debug")
             resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
             if resp.code != 200:
                 raise proxy.ProxyError(resp.code,
-                                 "Cannot reestablish SSL connection with upstream proxy: \r\n" + str(resp.headers))
-            self.c.log("Hook: Establish SSL with upstream proxy")
+                                       "Cannot reestablish SSL "
+                                       "connection with upstream proxy: \r\n" + str(resp.headers))
+            self.c.log("Hook: Establish SSL with upstream proxy", "debug")
             self.c.establish_ssl(server=True)
 
         self.c.server_reconnect = reconnect_http_proxy
@@ -1008,11 +1010,11 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         """
         Upgrade the connection to SSL after an authority (CONNECT) request has been made.
         """
-        self.c.log("Received CONNECT request. Upgrading to SSL...")
+        self.c.log("Received CONNECT request. Upgrading to SSL...", "debug")
         self.expected_form_in = "relative"
         self.expected_form_out = "relative"
         self.c.establish_ssl(server=True, client=True)
-        self.c.log("Upgrade to SSL completed.")
+        self.c.log("Upgrade to SSL completed.", "debug")
 
     def process_request(self, flow, request):
 

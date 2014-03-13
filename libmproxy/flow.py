@@ -478,7 +478,7 @@ class FlowMaster(controller.Master):
                 "host": host,
                 "port": port}).start()
 
-    def add_event(self, e, level="error"):
+    def add_event(self, e, level="info"):
         """
             level: debug, info, error
         """
@@ -658,6 +658,10 @@ class FlowMaster(controller.Master):
             rt.start() # pragma: no cover
             if block:
                 rt.join()
+
+    def handle_log(self, l):
+        self.add_event(l.msg, l.level)
+        l.reply()
 
     def handle_clientconnect(self, cc):
         self.run_script_hook("clientconnect", cc)

@@ -140,8 +140,8 @@ class DumpMaster(flow.FlowMaster):
             raise DumpError(v.strerror)
         return flows
 
-    def add_event(self, e, level="error"):
-        needed = dict(error=1, info=2, debug=3)[level]
+    def add_event(self, e, level="info"):
+        needed = dict(error=1, info=1, debug=2).get(level, 1)
         if self.o.verbosity >= needed:
             print >> self.outfile, e
             self.outfile.flush()
@@ -195,10 +195,6 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile, "\n"
         if self.o.flow_detail:
             self.outfile.flush()
-
-    def handle_log(self, l):
-        self.add_event(l.msg)
-        l.reply()
 
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)
