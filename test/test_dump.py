@@ -56,7 +56,7 @@ class TestDumpMaster:
 
     def test_error(self):
         cs = StringIO()
-        o = dump.Options(verbosity=1)
+        o = dump.Options(flow_detail=1)
         m = dump.DumpMaster(None, o, None, outfile=cs)
         f = tutils.tflow_err()
         m.handle_request(f.request)
@@ -90,7 +90,7 @@ class TestDumpMaster:
         with tutils.tmpdir() as t:
             p = os.path.join(t, "read")
             self._flowfile(p)
-            assert "GET" in self._dummy_cycle(0, None, "", verbosity=1, rfile=p)
+            assert "GET" in self._dummy_cycle(0, None, "", flow_detail=1, rfile=p)
 
             tutils.raises(
                 dump.DumpError, self._dummy_cycle,
@@ -127,9 +127,9 @@ class TestDumpMaster:
 
     def test_basic(self):
         for i in (1, 2, 3):
-            assert "GET" in self._dummy_cycle(1, "~s", "", verbosity=i)
-            assert "GET" in self._dummy_cycle(1, "~s", "\x00\x00\x00", verbosity=i)
-            assert "GET" in self._dummy_cycle(1, "~s", "ascii", verbosity=i)
+            assert "GET" in self._dummy_cycle(1, "~s", "", flow_detail=i)
+            assert "GET" in self._dummy_cycle(1, "~s", "\x00\x00\x00", flow_detail=i)
+            assert "GET" in self._dummy_cycle(1, "~s", "ascii", flow_detail=i)
 
     def test_write(self):
         with tutils.tmpdir() as d:
@@ -150,7 +150,7 @@ class TestDumpMaster:
     def test_script(self):
         ret = self._dummy_cycle(
             1, None, "",
-            scripts=[tutils.test_data.path("scripts/all.py")], verbosity=0
+            scripts=[tutils.test_data.path("scripts/all.py")], verbosity=1
         )
         assert "XCLIENTCONNECT" in ret
         assert "XSERVERCONNECT" in ret

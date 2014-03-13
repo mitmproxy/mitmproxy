@@ -67,6 +67,6 @@ class AddressPriority(object):
 
 
 class Log:
-    def __init__(self, msg, level):
+    def __init__(self, msg, level="info"):
         self.msg = msg
         self.level = level
