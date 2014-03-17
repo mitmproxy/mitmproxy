@@ -50,7 +50,7 @@ Hacking
 The following components are needed if you plan to hack on mitmproxy:
 
 * The test suite uses the [nose](http://readthedocs.org/docs/nose/en/latest/) unit testing
-  framework and requires [pathod](http://pathod.org) and [flask](http://flask.pocoo.org/).
+  framework and requires [pathod](http://pathod.net) and [flask](http://flask.pocoo.org/).
 * Rendering the documentation requires [countershape](http://github.com/cortesi/countershape).
 
 For convenience, all dependencies save countershape can be installed from pypi
