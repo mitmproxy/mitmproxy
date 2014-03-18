@@ -17,7 +17,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage = "%(prog)s [options]")
     parser.add_argument('--version', action='version', version=libmproxy.version.NAMEVERSION)
     cmdline.common_options(parser)
-    parser.add_argument("--debug", dest="debug", default=False, action="store_true")
     parser.add_argument(
         "--palette", type=str, default="dark",
         action="store", dest="palette",
@@ -55,7 +54,6 @@ if __name__ == '__main__':
     opts = console.Options(**cmdline.get_common_options(options))
     opts.eventlog = options.eventlog
     opts.intercept = options.intercept
-    opts.debug = options.debug
     opts.palette = options.palette
 
     spec = ""

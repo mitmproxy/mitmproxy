@@ -174,8 +174,7 @@ class StatusBar(common.WWrap):
             r.append("[dest:%s]"%utils.unparse_url(*self.master.server.config.get_upstream_server.dst))
         if self.master.scripts:
             r.append("[scripts:%s]"%len(self.master.scripts))
-        if self.master.debug:
-            r.append("[lt:%0.3f]"%self.master.looptime)
+        # r.append("[lt:%0.3f]"%self.master.looptime)
 
         if self.master.stream:
             r.append("[W:%s]"%self.master.stream_path)
@@ -325,7 +324,6 @@ class Options(object):
         "anticache",
         "anticomp",
         "client_replay",
-        "debug",
         "eventlog",
         "keepserving",
         "kill",
@@ -405,8 +403,6 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.server_replay:
             self.server_playback_path(options.server_replay)
-
-        self.debug = options.debug
 
         if options.scripts:
             for i in options.scripts:

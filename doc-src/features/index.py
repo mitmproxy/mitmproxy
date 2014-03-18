@@ -4,7 +4,7 @@ pages = [
     Page("anticache.html", "Anticache"),
     Page("clientreplay.html", "Client-side replay"),
     Page("filters.html", "Filter expressions"),
-    Page("forwardproxy.html", "Forward proxy mode"),
+    Page("upstreamproxy.html", "Upstream proxy mode"),
     Page("setheaders.html", "Set Headers"),
     Page("serverreplay.html", "Server-side replay"),
     Page("sticky.html", "Sticky cookies and auth"),

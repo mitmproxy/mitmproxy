@@ -61,7 +61,7 @@ class AddressPriority(object):
     MANUALLY_CHANGED = 3
     """user changed the target address in the ui"""
     FROM_SETTINGS = 2
-    """upstream server from arguments (reverse proxy, forward proxy or from transparent resolver)"""
+    """upstream server from arguments (reverse proxy, upstream proxy or from transparent resolver)"""
     FROM_PROTOCOL = 1
     """derived from protocol (e.g. absolute-form http requests)"""
 
