@@ -485,6 +485,8 @@ class HTTPRequest(HTTPMessage):
             If hostheader is True, we use the value specified in the request
             Host header to construct the URL.
         """
+        if self.form_out == "authority":  # upstream proxy mode
+            return "%s:%s" % (self.get_host(hostheader), self.get_port())
         return utils.unparse_url(self.get_scheme(),
                                  self.get_host(hostheader),
                                  self.get_port(),

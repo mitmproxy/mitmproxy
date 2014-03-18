@@ -171,7 +171,11 @@ class StatusBar(common.WWrap):
 
         if self.master.server.config.get_upstream_server and \
                 isinstance(self.master.server.config.get_upstream_server, proxy.ConstUpstreamServerResolver):
-            r.append("[dest:%s]"%utils.unparse_url(*self.master.server.config.get_upstream_server.dst))
+            dst = self.master.server.config.get_upstream_server.dst
+            scheme = "https" if dst[0] else "http"
+            if dst[1] != dst[0]:
+                scheme += "2https" if dst[1] else "http"
+            r.append("[dest:%s]"%utils.unparse_url(scheme, *self.master.server.config.get_upstream_server.dst[2:]))
         if self.master.scripts:
             r.append("[scripts:%s]"%len(self.master.scripts))
         # r.append("[lt:%0.3f]"%self.master.looptime)
@@ -646,7 +650,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.statusbar = StatusBar(self, flowview.footer)
         self.state.set_focus_flow(flow)
         self.state.view_mode = common.VIEW_FLOW
-
         self.make_view()
         self.help_context = flowview.help_context
 
