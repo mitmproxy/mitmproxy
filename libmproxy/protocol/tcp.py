@@ -45,7 +45,7 @@ class TCPHandler(ProtocolHandler):
                 data = data.getvalue()
 
                 if data == "":  # no data received, rfile is closed
-                    self.c.log("Close writing connection to %s" % dst_str)
+                    self.c.log("Close writing connection to %s" % dst_str, "debug")
                     conns.remove(rfile)
                     if dst.ssl_established:
                         dst.connection.shutdown()
@@ -55,6 +55,6 @@ class TCPHandler(ProtocolHandler):
                         self.c.close = True
                     break
 
-                self.c.log("%s %s\r\n%s" % (direction, dst_str,data))
+                self.c.log("%s %s\r\n%s" % (direction, dst_str, data), "debug")
                 dst.wfile.write(data)
                 dst.wfile.flush()

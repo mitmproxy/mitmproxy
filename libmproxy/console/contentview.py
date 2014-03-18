@@ -490,7 +490,7 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc):
     except Exception:
         s = traceback.format_exc()
         s = "Content viewer failed: \n"  + s
-        logfunc(s)
+        logfunc(s, "error")
         ret = None
     if not ret:
         ret = get("Raw")(hdrs, content, limit)

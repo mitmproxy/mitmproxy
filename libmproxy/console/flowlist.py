@@ -69,7 +69,7 @@ class BodyPile(urwid.Pile):
             else:
                 self.widget_list[1].header = self.inactive_header
             key = None
-        elif key == "v":
+        elif key == "e":
             self.master.toggle_eventlog()
             key = None
 

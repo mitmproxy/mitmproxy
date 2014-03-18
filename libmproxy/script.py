@@ -10,15 +10,15 @@ class ScriptContext:
     def __init__(self, master):
         self._master = master
 
-    def log(self, *args, **kwargs):
+    def log(self, message, level="info"):
         """
             Logs an event.
 
-            How this is handled depends on the front-end. mitmdump will display
-            events if the eventlog flag ("-e") was passed. mitmproxy sends
-            output to the eventlog for display ("v" keyboard shortcut).
+            By default, only events with level "error" get displayed. This can be controlled with the "-v" switch.
+            How log messages are handled depends on the front-end. mitmdump will print them to stdout,
+            mitmproxy sends output to the eventlog for display ("e" keyboard shortcut).
         """
-        self._master.add_event(*args, **kwargs)
+        self._master.add_event(message, level)
 
     def duplicate_flow(self, f):
         """

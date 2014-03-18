@@ -15,7 +15,7 @@ class Options(object):
         "anticache",
         "anticomp",
         "client_replay",
-        "eventlog",
+        "flow_detail",
         "keepserving",
         "kill",
         "no_server",
@@ -66,7 +66,6 @@ class DumpMaster(flow.FlowMaster):
         self.o = options
         self.anticache = options.anticache
         self.anticomp = options.anticomp
-        self.eventlog = options.eventlog
         self.showhost = options.showhost
         self.refresh_server_playback = options.refresh_server_playback
 
@@ -127,7 +126,7 @@ class DumpMaster(flow.FlowMaster):
             try:
                 self.load_flows(freader)
             except flow.FlowReadError, v:
-                self.add_event("Flow file corrupted. Stopped loading.")
+                self.add_event("Flow file corrupted. Stopped loading.", "error")
 
         if self.o.app:
             self.start_app(self.o.app_host, self.o.app_port, self.o.app_external)
@@ -142,7 +141,8 @@ class DumpMaster(flow.FlowMaster):
         return flows
 
     def add_event(self, e, level="info"):
-        if self.eventlog:
+        needed = dict(error=1, info=1, debug=2).get(level, 1)
+        if self.o.verbosity >= needed:
             print >> self.outfile, e
             self.outfile.flush()
 
@@ -156,12 +156,12 @@ class DumpMaster(flow.FlowMaster):
             return
 
         if f.response:
-            sz = utils.pretty_size(len(f.response.content))
-            if self.o.verbosity > 0:
+            if self.o.flow_detail > 0:
+                sz = utils.pretty_size(len(f.response.content))
                 result = " << %s %s"%(str_response(f.response), sz)
-            if self.o.verbosity > 1:
+            if self.o.flow_detail > 1:
                 result = result + "\n\n" + self.indent(4, f.response.headers)
-            if self.o.verbosity > 2:
+            if self.o.flow_detail > 2:
                 if utils.isBin(f.response.content):
                     d = netlib.utils.hexdump(f.response.content)
                     d = "\n".join("%s\t%s %s"%i for i in d)
@@ -174,16 +174,16 @@ class DumpMaster(flow.FlowMaster):
         elif f.error:
             result = " << %s"%f.error.msg
 
-        if self.o.verbosity == 1:
+        if self.o.flow_detail == 1:
             print >> self.outfile, str_request(f.request, self.showhost)
             print >> self.outfile, result
-        elif self.o.verbosity == 2:
+        elif self.o.flow_detail == 2:
             print >> self.outfile, str_request(f.request, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
             print >> self.outfile
             print >> self.outfile, result
             print >> self.outfile, "\n"
-        elif self.o.verbosity >= 3:
+        elif self.o.flow_detail >= 3:
             print >> self.outfile, str_request(f.request, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
             if utils.isBin(f.request.content):
@@ -193,12 +193,8 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile
             print >> self.outfile, result
             print >> self.outfile, "\n"
-        if self.o.verbosity:
+        if self.o.flow_detail:
             self.outfile.flush()
-
-    def handle_log(self, l):
-        self.add_event(l.msg)
-        l.reply()
 
     def handle_request(self, r):
         f = flow.FlowMaster.handle_request(self, r)

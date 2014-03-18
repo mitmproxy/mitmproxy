@@ -172,7 +172,7 @@ class TemporaryServerChangeMixin(object):
             self.c.server_conn.address.port,
             address.host,
             address.port
-        ))
+        ), "debug")
 
         if not hasattr(self, "_backup_server_conn"):
             self._backup_server_conn = self.c.server_conn
@@ -193,7 +193,7 @@ class TemporaryServerChangeMixin(object):
             self.c.server_conn.address.port,
             self._backup_server_conn.address.host,
             self._backup_server_conn.address.port
-        ))
+        ), "debug")
 
         self.c.del_server_connection()
         self.c.server_conn = self._backup_server_conn

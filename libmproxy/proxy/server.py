@@ -66,7 +66,7 @@ class ConnectionHandler:
         self.sni = None
 
     def handle(self):
-        self.log("clientconnect")
+        self.log("clientconnect", "info")
         self.channel.ask("clientconnect", self)
 
         self.determine_conntype()
@@ -86,7 +86,7 @@ class ConnectionHandler:
                     try:
                         handle_messages(self.conntype, self)
                     except ConnectionTypeChange:
-                        self.log("Connection Type Changed: %s" % self.conntype)
+                        self.log("Connection Type Changed: %s" % self.conntype, "info")
                         continue
 
             # FIXME: Do we want to persist errors?
@@ -94,14 +94,14 @@ class ConnectionHandler:
                 handle_error(self.conntype, self, e)
         except Exception, e:
             import traceback, sys
-            self.log(traceback.format_exc())
+            self.log(traceback.format_exc(), "error")
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
             print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
             raise e
 
         self.del_server_connection()
-        self.log("clientdisconnect")
+        self.log("clientdisconnect", "info")
         self.channel.tell("clientdisconnect", self)
 
     def del_server_connection(self):
@@ -110,7 +110,8 @@ class ConnectionHandler:
         """
         if self.server_conn and self.server_conn.connection:
             self.server_conn.finish()
-            self.log("serverdisconnect", ["%s:%s" % (self.server_conn.address.host, self.server_conn.address.port)])
+            self.log("serverdisconnect", "debug", ["%s:%s" % (self.server_conn.address.host,
+                                                              self.server_conn.address.port)])
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
         self.sni = None
@@ -129,7 +130,7 @@ class ConnectionHandler:
         if self.server_conn:
             if self.server_conn.priority > priority:
                 self.log("Attempt to change server address, "
-                         "but priority is too low (is: %s, got: %s)" % (self.server_conn.priority, priority))
+                         "but priority is too low (is: %s, got: %s)" % (self.server_conn.priority, priority), "info")
                 return
             if self.server_conn.address == address:
                 self.server_conn.priority = priority  # Possibly increase priority
@@ -137,7 +138,7 @@ class ConnectionHandler:
 
             self.del_server_connection()
 
-        self.log("Set new server address: %s:%s" % (address.host, address.port))
+        self.log("Set new server address: %s:%s" % (address.host, address.port), "debug")
         self.server_conn = ServerConnection(address, priority)
 
     def establish_server_connection(self):
@@ -147,7 +148,7 @@ class ConnectionHandler:
         """
         if self.server_conn.connection:
             return
-        self.log("serverconnect", ["%s:%s" % self.server_conn.address()[:2]])
+        self.log("serverconnect", "debug", ["%s:%s" % self.server_conn.address()[:2]])
         self.channel.tell("serverconnect", self)
         try:
             self.server_conn.connect()
@@ -176,7 +177,7 @@ class ConnectionHandler:
                 subs.append("with client")
             if server:
                 subs.append("with server (sni: %s)" % self.sni)
-            self.log("Establish SSL", subs)
+            self.log("Establish SSL", "debug", subs)
 
         if server:
             if self.server_conn.ssl_established:
@@ -199,7 +200,7 @@ class ConnectionHandler:
         had_ssl = self.server_conn.ssl_established
         priority = self.server_conn.priority
         sni = self.sni
-        self.log("(server reconnect follows)")
+        self.log("(server reconnect follows)", "debug")
         self.del_server_connection()
         self.set_server_address(address, priority)
         self.establish_server_connection()
@@ -210,14 +211,14 @@ class ConnectionHandler:
     def finish(self):
         self.client_conn.finish()
 
-    def log(self, msg, subs=()):
+    def log(self, msg, level, subs=()):
         msg = [
             "%s:%s: %s" % (self.client_conn.address.host, self.client_conn.address.port, msg)
         ]
         for i in subs:
             msg.append("  -> " + i)
         msg = "\n".join(msg)
-        self.channel.tell("log", Log(msg))
+        self.channel.tell("log", Log(msg, level))
 
     def find_cert(self):
         if self.config.certforward and self.server_conn.ssl_established:
@@ -246,15 +247,17 @@ class ConnectionHandler:
             sn = connection.get_servername()
             if sn and sn != self.sni:
                 self.sni = sn.decode("utf8").encode("idna")
-                self.log("SNI received: %s" % self.sni)
+                self.log("SNI received: %s" % self.sni, "debug")
                 self.server_reconnect()  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 new_context = SSL.Context(SSL.TLSv1_METHOD)
                 cert, key = self.find_cert()
-                new_context.use_privatekey_file(key)
-                new_context.use_certificate(cert.X509)
+                new_context.use_privatekey(key)
+                new_context.use_certificate(cert.x509)
                 connection.set_context(new_context)
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
         except Exception, e:  # pragma: no cover
+            import traceback
+            self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
             pass

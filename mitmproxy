@@ -23,6 +23,11 @@ if __name__ == '__main__':
         action="store", dest="palette",
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
+    parser.add_argument(
+        "-e",
+        action="store_true", dest="eventlog",
+        help="Show event log."
+    )
 
 
     group = parser.add_argument_group(
@@ -47,10 +52,8 @@ if __name__ == '__main__':
             print >> sys.stderr, "mitmproxy:", v.args[0]
             sys.exit(1)
 
-    try:
-        opts = console.Options(**cmdline.get_common_options(options))
-    except cmdline.OptionException, v:
-        parser.error(v.message)
+    opts = console.Options(**cmdline.get_common_options(options))
+    opts.eventlog = options.eventlog
     opts.intercept = options.intercept
     opts.debug = options.debug
     opts.palette = options.palette

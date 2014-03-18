@@ -437,20 +437,20 @@ class ConsoleMaster(flow.FlowMaster):
         status, val = s.run(method, f)
         if val:
             if status:
-                self.add_event("Method %s return: %s"%(method, val))
+                self.add_event("Method %s return: %s"%(method, val), "debug")
             else:
-                self.add_event("Method %s error: %s"%(method, val[1]))
+                self.add_event("Method %s error: %s"%(method, val[1]), "error")
 
     def run_script_once(self, command, f):
         if not command:
             return
-        self.add_event("Running script on flow: %s"%command)
+        self.add_event("Running script on flow: %s"%command, "debug")
 
         try:
             s = script.Script(command, self)
         except script.ScriptError, v:
             self.statusbar.message("Error loading script.")
-            self.add_event("Error loading script:\n%s"%v.args[0])
+            self.add_event("Error loading script:\n%s"%v.args[0], "error")
             return
 
         if f.request:
@@ -582,7 +582,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.options.rfile:
             ret = self.load_flows(self.options.rfile)
             if ret and self.state.flow_count():
-                self.add_event("File truncated or corrupted. Loaded as many flows as possible.")
+                self.add_event("File truncated or corrupted. Loaded as many flows as possible.","error")
             elif not self.state.flow_count():
                 self.shutdown()
                 print >> sys.stderr, "Could not load file:", ret
@@ -1001,20 +1001,20 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlist[:] = []
 
     def add_event(self, e, level="info"):
-        if level == "info":
-            e = urwid.Text(str(e))
-        elif level == "error":
+        needed = dict(error=1, info=1, debug=2).get(level, 1)
+        if self.options.verbosity < needed:
+            return
+
+        if level == "error":
             e = urwid.Text(("error", str(e)))
+        else:
+            e = urwid.Text(str(e))
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:
             self.eventlist.pop(0)
         self.eventlist.set_focus(len(self.eventlist)-1)
 
     # Handlers
-    def handle_log(self, l):
-        self.add_event(l.msg)
-        l.reply()
-
     def handle_error(self, r):
         f = flow.FlowMaster.handle_error(self, r)
         if f:

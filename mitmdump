@@ -21,12 +21,18 @@ if __name__ == '__main__':
         action="store_true", dest="keepserving", default=False,
         help="Continue serving after client playback or file read. We exit by default."
     )
+    parser.add_argument(
+        "-d",
+        action="count", dest="flow_detail", default=1,
+        help="Increase flow detail display level. Can be passed multiple times."
+    )
     parser.add_argument('args', nargs=argparse.REMAINDER)
 
     options = parser.parse_args()
 
     if options.quiet:
         options.verbose = 0
+        options.flow_detail = 0
 
     proxyconfig = process_proxy_options(parser, options)
     if options.no_server:
@@ -38,11 +44,8 @@ if __name__ == '__main__':
             print >> sys.stderr, "mitmdump:", v.args[0]
             sys.exit(1)
 
-
-    try:
-        dumpopts = dump.Options(**cmdline.get_common_options(options))
-    except cmdline.OptionException, v:
-        parser.error(v.message)
+    dumpopts = dump.Options(**cmdline.get_common_options(options))
+    dumpopts.flow_detail = options.flow_detail
     dumpopts.keepserving = options.keepserving
 
     if options.args:
