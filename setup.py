@@ -102,6 +102,7 @@ setup(
             "netlib>=%s"%version.MINORVERSION,
             "urwid>=1.1",
             "pyasn1>0.1.2",
+            "requests>=1.2.2",
             "pyopenssl>=0.14",
             "Pillow>=2.3.0",
             "lxml",

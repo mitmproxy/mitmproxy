@@ -946,7 +946,10 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         if code:
             err = "%s: %s" % (code, message)
         else:
-            err = error.__class__
+            try:
+                err = str(error)
+            except:
+                err = error.__class__
 
         self.c.log("error: %s" % err, level="info")
 
