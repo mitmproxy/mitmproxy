@@ -947,7 +947,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             err = "%s: %s" % (code, message)
         else:
             try:
-                err = str(error)
+                err = "%s: %s" % (error.__class__, str(error))
             except:
                 err = error.__class__
 
