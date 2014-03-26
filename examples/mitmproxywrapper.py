@@ -86,7 +86,6 @@ class Wrapper(object):
             cmd = ['mitmproxy', '-p', str(self.port)]
             if self.extra_arguments:
                 cmd.extend(self.extra_arguments)
-            cmd.extend(['--palette', 'light'])
             subprocess.check_call(cmd)
 
     def wrap_honeyproxy(self):
