@@ -60,7 +60,9 @@ class ODict:
             key, they are cleared.
         """
         if isinstance(valuelist, basestring):
-            raise ValueError("ODict valuelist should be lists.")
+            # convert the string into a single element list.
+            valuelist = [valuelist]
+            
         new = self._filter_lst(k, self.lst)
         for i in valuelist:
             new.append([k, i])
