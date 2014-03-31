@@ -60,7 +60,7 @@ class ODict:
             key, they are cleared.
         """
         if isinstance(valuelist, basestring):
-            raise ValueError("Expected list instead of string. E.g. odict['elem'] = ['string1', 'string2']")
+            raise ValueError("Expected list of values instead of string. Example: odict['Host'] = ['www.example.com']")
 
         new = self._filter_lst(k, self.lst)
         for i in valuelist:
