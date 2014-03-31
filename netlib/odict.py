@@ -60,9 +60,8 @@ class ODict:
             key, they are cleared.
         """
         if isinstance(valuelist, basestring):
-            # convert the string into a single element list.
-            valuelist = [valuelist]
-            
+            raise ValueError("Expected list instead of string. E.g. odict['elem'] = ['string1', 'string2']")
+
         new = self._filter_lst(k, self.lst)
         for i in valuelist:
             new.append([k, i])
