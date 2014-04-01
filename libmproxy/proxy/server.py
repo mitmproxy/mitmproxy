@@ -149,7 +149,7 @@ class ConnectionHandler:
         if self.server_conn.connection:
             return
         self.log("serverconnect", "debug", ["%s:%s" % self.server_conn.address()[:2]])
-        self.channel.tell("serverconnect", self)
+        self.channel.ask("serverconnect", self)
         try:
             self.server_conn.connect()
         except tcp.NetLibError, v:
