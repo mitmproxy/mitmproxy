@@ -307,9 +307,11 @@ class FlowView(common.WWrap):
             searching for and handles all the logic surrounding that.
         """
 
-        if search_string == "":
+        if not search_string:
             search_string = self.state.get_flow_setting(self.flow,
                     "last_search_string")
+            if not search_string:
+                return
 
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             text = self.flow.request
