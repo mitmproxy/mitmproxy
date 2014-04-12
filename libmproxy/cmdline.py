@@ -4,7 +4,7 @@ import argparse
 from argparse import ArgumentTypeError
 from netlib import http
 from . import proxy, filt
-
+from .proxy import config
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -435,4 +435,4 @@ def common_options(parser):
     )
 
 
-    proxy.config.ssl_option_group(parser)
+    config.ssl_option_group(parser)
