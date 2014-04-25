@@ -22,7 +22,7 @@ def create_ca(o, cn, exp):
     cert.set_version(2)
     cert.get_subject().CN = cn
     cert.get_subject().O = o
-    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notBefore(-3600*48)
     cert.gmtime_adj_notAfter(exp)
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(key)
