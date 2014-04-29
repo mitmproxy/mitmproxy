@@ -13,7 +13,7 @@ class ProxyConfig:
     def __init__(self, confdir=CONF_DIR, clientcerts=None,
                        no_upstream_cert=False, body_size_limit=None, get_upstream_server=None,
                        http_form_in="absolute", http_form_out="relative", authenticator=None,
-                       ciphers=None, certs=None, certforward = False
+                       ciphers=None, certs=[], certforward = False
                 ):
         self.ciphers = ciphers
         self.clientcerts = clientcerts
@@ -25,6 +25,8 @@ class ProxyConfig:
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
+        for spec, cert in certs:
+            self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
 
 
