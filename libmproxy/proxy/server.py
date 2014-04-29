@@ -226,7 +226,7 @@ class ConnectionHandler:
         else:
             host = self.server_conn.address.host
             sans = []
-            if not self.config.no_upstream_cert or not self.server_conn.ssl_established:
+            if not self.config.no_upstream_cert and self.server_conn.ssl_established:
                 upstream_cert = self.server_conn.cert
                 if upstream_cert.cn:
                     host = upstream_cert.cn.decode("utf8").encode("idna")
