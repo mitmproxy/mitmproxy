@@ -25,6 +25,8 @@ class ProxyConfig:
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
+        for spec, cert in certs:
+            self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
 
 
