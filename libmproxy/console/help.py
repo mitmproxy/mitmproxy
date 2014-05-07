@@ -79,6 +79,10 @@ class HelpView(urwid.ListBox):
                     [("text", ": XML")]
                 ),
                 (None,
+                    common.highlight_key("wbxml", "w") +
+                    [("text", ": WBXML")]
+                ),
+                (None,
                     common.highlight_key("amf", "f") +
                     [("text", ": AMF (requires PyAMF)")]
                 ),
