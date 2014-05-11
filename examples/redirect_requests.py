@@ -6,7 +6,7 @@ This example shows two ways to redirect flows to other destinations.
 """
 
 def request(context, flow):
-    if flow.request.host.endswith("example.com"):
+    if any(host.endswith("example.com") for host in flow.request.headers["Host"]):
         resp = Response(flow.request,
                         [1,1],
                         200, "OK",
@@ -14,6 +14,6 @@ def request(context, flow):
                         "helloworld",
                         None)
         flow.request.reply(resp)
-    if flow.request.host.endswith("example.org"):
+    if any(host.endswith("example.com") for host in flow.request.headers["Host"]):
         flow.request.host = "mitmproxy.org"
         flow.request.headers["Host"] = ["mitmproxy.org"]
