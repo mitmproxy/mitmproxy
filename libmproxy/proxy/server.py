@@ -2,8 +2,10 @@ from __future__ import absolute_import
 
 import socket
 from OpenSSL import SSL
+
 from netlib import tcp
-from .primitives import ProxyServerError, Log, ProxyError, ConnectionTypeChange, AddressPriority
+from .primitives import ProxyServerError, Log, ProxyError, ConnectionTypeChange, \
+    AddressPriority
 from .connection import ClientConnection, ServerConnection
 from ..protocol.handle import handle_messages, handle_error
 from .. import version
@@ -46,13 +48,15 @@ class ProxyServer(tcp.TCPServer):
         self.channel = channel
 
     def handle_client_connection(self, conn, client_address):
-        h = ConnectionHandler(self.config, conn, client_address, self, self.channel, self.server_version)
+        h = ConnectionHandler(self.config, conn, client_address, self, self.channel,
+                              self.server_version)
         h.handle()
         h.finish()
 
 
 class ConnectionHandler:
-    def __init__(self, config, client_connection, client_address, server, channel, server_version):
+    def __init__(self, config, client_connection, client_address, server, channel,
+                 server_version):
         self.config = config
         """@type: libmproxy.proxy.config.ProxyConfig"""
         self.client_conn = ClientConnection(client_connection, client_address, server)
@@ -75,7 +79,8 @@ class ConnectionHandler:
             try:
                 # Can we already identify the target server and connect to it?
                 if self.config.get_upstream_server:
-                    upstream_info = self.config.get_upstream_server(self.client_conn.connection)
+                    upstream_info = self.config.get_upstream_server(
+                        self.client_conn.connection)
                     self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
                     client_ssl, server_ssl = upstream_info[:2]
                     if client_ssl or server_ssl:
@@ -94,6 +99,7 @@ class ConnectionHandler:
                 handle_error(self.conntype, self, e)
         except Exception, e:
             import traceback, sys
+
             self.log(traceback.format_exc(), "error")
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
@@ -130,7 +136,8 @@ class ConnectionHandler:
         if self.server_conn:
             if self.server_conn.priority > priority:
                 self.log("Attempt to change server address, "
-                         "but priority is too low (is: %s, got: %s)" % (self.server_conn.priority, priority), "info")
+                         "but priority is too low (is: %s, got: %s)" % (
+                             self.server_conn.priority, priority), "info")
                 return
             if self.server_conn.address == address:
                 self.server_conn.priority = priority  # Possibly increase priority
@@ -190,9 +197,9 @@ class ConnectionHandler:
             cert, key = self.find_cert()
             self.client_conn.convert_to_ssl(
                 cert, key,
-                handle_sni = self.handle_sni,
-                cipher_list = self.config.ciphers,
-                dhparams = self.config.certstore.dhparams
+                handle_sni=self.handle_sni,
+                cipher_list=self.config.ciphers,
+                dhparams=self.config.certstore.dhparams
             )
 
     def server_reconnect(self, no_ssl=False):
@@ -250,14 +257,16 @@ class ConnectionHandler:
                 self.log("SNI received: %s" % self.sni, "debug")
                 self.server_reconnect()  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
-                new_context = SSL.Context(SSL.TLSv1_METHOD)
                 cert, key = self.find_cert()
-                new_context.use_privatekey(key)
-                new_context.use_certificate(cert.x509)
+                new_context = self.client_conn._create_ssl_context(
+                    cert, key,
+                    method=SSL.TLSv1_METHOD,
+                    cipher_list=self.config.ciphers,
+                    dhparams=self.config.certstore.dhparams
+                )
                 connection.set_context(new_context)
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
         except Exception, e:  # pragma: no cover
             import traceback
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
-            pass
