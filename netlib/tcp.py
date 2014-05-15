@@ -341,10 +341,9 @@ class BaseHandler(_Connection):
         self.ssl_established = False
         self.clientcert = None
 
-    def convert_to_ssl(self, cert, key, 
-                        method=SSLv23_METHOD, options=None, handle_sni=None, 
-                        request_client_cert=False, cipher_list=None, dhparams=None
-                    ):
+    def _create_ssl_context(self, cert, key, method=SSLv23_METHOD, options=None,
+                           handle_sni=None, request_client_cert=None, cipher_list=None,
+                           dhparams=None ):
         """
             cert: A certutils.SSLCert object.
             method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
@@ -390,6 +389,14 @@ class BaseHandler(_Connection):
                 # Return true to prevent cert verification error
                 return True
             ctx.set_verify(SSL.VERIFY_PEER, ver)
+        return ctx
+
+    def convert_to_ssl(self, **kwargs):
+        """
+        Convert connection to SSL.
+        For a list of parameters, see BaseHandler._create_ssl_context(...)
+        """
+        ctx = self._create_ssl_context(**kwargs)
         self.connection = SSL.Connection(ctx, self.connection)
         self.ssl_established = True
         self.connection.set_accept_state()
