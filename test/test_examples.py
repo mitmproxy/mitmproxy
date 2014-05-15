@@ -3,8 +3,8 @@ import glob
 from libmproxy.proxy import config
 import tservers
 
-example_dir = utils.Data("libmproxy").path("../examples/")
-scripts = glob.glob("%s*.py" % example_dir)
+example_dir = utils.Data("libmproxy").path("../examples")
+scripts = glob.glob("%s/*.py" % example_dir)
 
 tmaster = tservers.TestMaster(config.ProxyConfig())
 

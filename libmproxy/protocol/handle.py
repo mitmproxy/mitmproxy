@@ -4,7 +4,7 @@ from . import http, tcp
 protocols = {
     'http': dict(handler=http.HTTPHandler, flow=http.HTTPFlow),
     'tcp': dict(handler=tcp.TCPHandler)
-}  # PyCharm type hinting behaves bad if this is a dict constructor...
+}
 
 
 def _handler(conntype, connection_handler):

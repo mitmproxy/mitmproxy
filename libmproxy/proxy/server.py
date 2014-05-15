@@ -76,27 +76,25 @@ class ConnectionHandler:
         self.determine_conntype()
 
         try:
-            try:
-                # Can we already identify the target server and connect to it?
-                if self.config.get_upstream_server:
-                    upstream_info = self.config.get_upstream_server(
-                        self.client_conn.connection)
-                    self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
-                    client_ssl, server_ssl = upstream_info[:2]
-                    if client_ssl or server_ssl:
-                        self.establish_server_connection()
-                        self.establish_ssl(client=client_ssl, server=server_ssl)
+            # Can we already identify the target server and connect to it?
+            if self.config.get_upstream_server:
+                upstream_info = self.config.get_upstream_server(
+                    self.client_conn.connection)
+                self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
+                client_ssl, server_ssl = upstream_info[:2]
+                if client_ssl or server_ssl:
+                    self.establish_server_connection()
+                    self.establish_ssl(client=client_ssl, server=server_ssl)
 
-                while not self.close:
-                    try:
-                        handle_messages(self.conntype, self)
-                    except ConnectionTypeChange:
-                        self.log("Connection Type Changed: %s" % self.conntype, "info")
-                        continue
+            while not self.close:
+                try:
+                    handle_messages(self.conntype, self)
+                except ConnectionTypeChange:
+                    self.log("Connection Type Changed: %s" % self.conntype, "info")
+                    continue
 
-            # FIXME: Do we want to persist errors?
-            except (ProxyError, tcp.NetLibError, IOError), e:
-                handle_error(self.conntype, self, e)
+        except (ProxyError, tcp.NetLibError), e:
+            handle_error(self.conntype, self, e)
         except Exception, e:
             import traceback, sys
 

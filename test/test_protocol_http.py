@@ -7,7 +7,7 @@ import tutils, tservers
 def test_HttpAuthenticationError():
     x = HttpAuthenticationError({"foo": "bar"})
     assert str(x)
-    assert "foo" in x.auth_headers
+    assert "foo" in x.headers
 
 
 def test_stripped_chunked_encoding_no_content():

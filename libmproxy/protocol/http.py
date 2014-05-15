@@ -52,7 +52,8 @@ class decoded(object):
 
 
 class HTTPMessage(stateobject.SimpleStateObject):
-    def __init__(self, httpversion, headers, content, timestamp_start=None, timestamp_end=None):
+    def __init__(self, httpversion, headers, content, timestamp_start=None,
+                 timestamp_end=None):
         self.httpversion = httpversion
         self.headers = headers
         """@type: ODictCaseless"""
@@ -207,10 +208,12 @@ class HTTPRequest(HTTPMessage):
 
         timestamp_end: Timestamp indicating when request transmission ended
     """
-    def __init__(self, form_in, method, scheme, host, port, path, httpversion, headers, content,
-                 timestamp_start=None, timestamp_end=None, form_out=None):
+
+    def __init__(self, form_in, method, scheme, host, port, path, httpversion, headers,
+                 content, timestamp_start=None, timestamp_end=None, form_out=None):
         assert isinstance(headers, ODictCaseless) or not headers
-        HTTPMessage.__init__(self, httpversion, headers, content, timestamp_start, timestamp_end)
+        HTTPMessage.__init__(self, httpversion, headers, content, timestamp_start,
+                             timestamp_end)
 
         self.form_in = form_in
         self.method = method
@@ -293,15 +296,16 @@ class HTTPRequest(HTTPMessage):
             content = http.read_http_body(rfile, headers, body_size_limit, True)
             timestamp_end = utils.timestamp()
 
-        return HTTPRequest(form_in, method, scheme, host, port, path, httpversion, headers, content,
-                           timestamp_start, timestamp_end)
+        return HTTPRequest(form_in, method, scheme, host, port, path, httpversion, headers,
+                           content, timestamp_start, timestamp_end)
 
     def _assemble_first_line(self, form=None):
         form = form or self.form_out
 
         if form == "relative":
             path = self.path if self.method != "OPTIONS" else "*"
-            request_line = '%s %s HTTP/%s.%s' % (self.method, path, self.httpversion[0], self.httpversion[1])
+            request_line = '%s %s HTTP/%s.%s' % \
+                (self.method, path, self.httpversion[0], self.httpversion[1])
         elif form == "authority":
             request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
                                                     self.httpversion[0], self.httpversion[1])
@@ -512,7 +516,8 @@ class HTTPRequest(HTTPMessage):
                 self.flow.change_server((host, port), ssl=is_ssl)
             else:
                 # There's not live server connection, we're just changing the attributes here.
-                self.flow.server_conn = ServerConnection((host, port), proxy.AddressPriority.MANUALLY_CHANGED)
+                self.flow.server_conn = ServerConnection((host, port),
+                                                         proxy.AddressPriority.MANUALLY_CHANGED)
                 self.flow.server_conn.ssl_established = is_ssl
 
         # If this is an absolute request, replace the attributes on the request object as well.
@@ -574,9 +579,12 @@ class HTTPResponse(HTTPMessage):
 
         timestamp_end: Timestamp indicating when request transmission ended
     """
-    def __init__(self, httpversion, code, msg, headers, content, timestamp_start=None, timestamp_end=None):
+
+    def __init__(self, httpversion, code, msg, headers, content, timestamp_start=None,
+                 timestamp_end=None):
         assert isinstance(headers, ODictCaseless) or headers is None
-        HTTPMessage.__init__(self, httpversion, headers, content, timestamp_start, timestamp_end)
+        HTTPMessage.__init__(self, httpversion, headers, content, timestamp_start,
+                             timestamp_end)
 
         self.code = code
         self.msg = msg
@@ -618,10 +626,12 @@ class HTTPResponse(HTTPMessage):
             timestamp_start = utils.timestamp()
 
         timestamp_end = utils.timestamp()
-        return HTTPResponse(httpversion, code, msg, headers, content, timestamp_start, timestamp_end)
+        return HTTPResponse(httpversion, code, msg, headers, content, timestamp_start,
+                            timestamp_end)
 
     def _assemble_first_line(self):
-        return 'HTTP/%s.%s %s %s' % (self.httpversion[0], self.httpversion[1], self.code, self.msg)
+        return 'HTTP/%s.%s %s %s' % \
+               (self.httpversion[0], self.httpversion[1], self.code, self.msg)
 
     def _assemble_headers(self):
         headers = self.headers.copy()
@@ -717,7 +727,8 @@ class HTTPResponse(HTTPMessage):
             pairs = [pair.partition("=") for pair in header.split(';')]
             cookie_name = pairs[0][0]  # the key of the first key/value pairs
             cookie_value = pairs[0][2]  # the value of the first key/value pairs
-            cookie_parameters = {key.strip().lower(): value.strip() for key, sep, value in pairs[1:]}
+            cookie_parameters = {key.strip().lower(): value.strip() for key, sep, value in
+                                 pairs[1:]}
             cookies.append((cookie_name, (cookie_value, cookie_parameters)))
         return dict(cookies)
 
@@ -739,6 +750,7 @@ class HTTPFlow(Flow):
 
         intercepting: Is this flow currently being intercepted?
     """
+
     def __init__(self, client_conn, server_conn, change_server=None):
         Flow.__init__(self, "http", client_conn, server_conn)
         self.request = None
@@ -834,14 +846,15 @@ class HTTPFlow(Flow):
 
 class HttpAuthenticationError(Exception):
     def __init__(self, auth_headers=None):
-        self.auth_headers = auth_headers
+        super(HttpAuthenticationError, self).__init__("Proxy Authentication Required")
+        self.headers = auth_headers
+        self.code = 407
 
-    def __str__(self):
-        return "HttpAuthenticationError"
+    def __repr__(self):
+        return "Proxy Authentication Required"
 
 
 class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
-
     def __init__(self, c):
         super(HTTPHandler, self).__init__(c)
         self.expected_form_in = c.config.http_form_in
@@ -923,49 +936,37 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if flow.request.form_in == "authority":
                 self.ssl_upgrade()
 
-            self.restore_server()  # If the user has changed the target server on this connection,
-                                   # restore the original target server
+            # If the user has changed the target server on this connection,
+            # restore the original target server
+            self.restore_server()
             return True
         except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
         return False
 
     def handle_error(self, error, flow=None):
-        code, message, headers = None, None, None
-        if isinstance(error, HttpAuthenticationError):
-            code = 407
-            message = "Proxy Authentication Required"
-            headers = error.auth_headers
-        elif isinstance(error, (http.HttpError, proxy.ProxyError)):
-            code = error.code
-            message = error.msg
-        elif isinstance(error, tcp.NetLibError):
-            code = 502
-            message = error.message or error.__class__
 
-        if code:
-            err = "%s: %s" % (code, message)
-        else:
-            try:
-                err = "%s: %s" % (error.__class__, str(error))
-            except:
-                err = error.__class__
+        message = repr(error)
+        code = getattr(error, "code", 502)
+        headers = getattr(error, "headers", None)
 
-        self.c.log("error: %s" % err, level="info")
+        if "tlsv1 alert unknown ca" in message:
+            message = message + " \nThe client does not trust the proxy's certificate."
+
+        self.c.log("error: %s" % message, level="info")
 
         if flow:
-            flow.error = Error(err)
+            flow.error = Error(message)
+            # FIXME: no flows without request or with both request and response at the moement.
             if flow.request and not flow.response:
-                # FIXME: no flows without request or with both request and response at the moement.
                 self.c.channel.ask("error", flow.error)
         else:
-            pass  # FIXME: Is there any use case for persisting errors that occur outside of flows?
+            pass  #  FIXME: Do we want to persist errors without flows?
 
-        if code:
-            try:
-                self.send_error(code, message, headers)
-            except:
-                pass
+        try:
+            self.send_error(code, message, headers)
+        except:
+            pass
 
     def send_error(self, code, message, headers):
         response = http_status.RESPONSES.get(code, "Unknown")
@@ -1004,8 +1005,9 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
             if resp.code != 200:
                 raise proxy.ProxyError(resp.code,
-                                       "Cannot reestablish SSL "
-                                       "connection with upstream proxy: \r\n" + str(resp.headers))
+                                       "Cannot reestablish SSL " +
+                                       "connection with upstream proxy: \r\n" +
+                                       str(resp.headers))
             self.c.log("Hook: Establish SSL with upstream proxy", "debug")
             self.c.establish_ssl(server=True)
 
@@ -1032,7 +1034,8 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
             if self.expected_form_in == "absolute":
                 if not self.c.config.get_upstream_server:
-                    self.c.set_server_address((request.host, request.port), proxy.AddressPriority.FROM_PROTOCOL)
+                    self.c.set_server_address((request.host, request.port),
+                                              proxy.AddressPriority.FROM_PROTOCOL)
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                     self.c.client_conn.send(
                         'HTTP/1.1 200 Connection established\r\n' +
@@ -1050,19 +1053,21 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
 
-                self.c.set_server_address((request.host, request.port), proxy.AddressPriority.FROM_PROTOCOL)
+                self.c.set_server_address((request.host, request.port),
+                                          proxy.AddressPriority.FROM_PROTOCOL)
                 flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
             request.form_out = self.expected_form_out
             return True
 
-        raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" % (self.expected_form_in,
-                                                                                         request.form_in))
+        raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" %
+                                  (self.expected_form_in, request.form_in))
 
     def authenticate(self, request):
         if self.c.config.authenticator:
             if self.c.config.authenticator.authenticate(request.headers):
                 self.c.config.authenticator.clean(request.headers)
             else:
-                raise HttpAuthenticationError(self.c.config.authenticator.auth_challenge_headers())
+                raise HttpAuthenticationError(
+                    self.c.config.authenticator.auth_challenge_headers())
         return request.headers
