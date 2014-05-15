@@ -391,12 +391,12 @@ class BaseHandler(_Connection):
             ctx.set_verify(SSL.VERIFY_PEER, ver)
         return ctx
 
-    def convert_to_ssl(self, **kwargs):
+    def convert_to_ssl(self, cert, key, **sslctx_kwargs):
         """
         Convert connection to SSL.
         For a list of parameters, see BaseHandler._create_ssl_context(...)
         """
-        ctx = self._create_ssl_context(**kwargs)
+        ctx = self._create_ssl_context(cert, key, **sslctx_kwargs)
         self.connection = SSL.Connection(ctx, self.connection)
         self.ssl_established = True
         self.connection.set_accept_state()
