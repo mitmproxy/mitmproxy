@@ -106,9 +106,11 @@ class Script:
 def _handle_concurrent_reply(fn, o, args=[], kwargs={}):
     reply = o.reply
     o.reply = controller.DummyReply()
+    if hasattr(reply, "q"):
+        o.reply.q = reply.q
     def run():
         fn(*args, **kwargs)
-        reply(o)
+        reply()
     threading.Thread(target=run, name="ScriptThread").start()
 
 
