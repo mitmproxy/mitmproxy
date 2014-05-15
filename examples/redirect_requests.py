@@ -1,18 +1,17 @@
-from libmproxy.flow import Response
+from libmproxy.protocol.http import HTTPResponse
 from netlib.odict import ODictCaseless
 
 """
 This example shows two ways to redirect flows to other destinations.
 """
 
+
 def request(context, flow):
     if flow.request.host.endswith("example.com"):
-        resp = Response(flow.request,
-                        [1,1],
-                        200, "OK",
-                        ODictCaseless([["Content-Type","text/html"]]),
-                        "helloworld",
-                        None)
+        resp = HTTPResponse(
+            [1, 1], 200, "OK",
+            ODictCaseless([["Content-Type", "text/html"]]),
+            "helloworld")
         flow.request.reply(resp)
     if flow.request.host.endswith("example.org"):
         flow.request.host = "mitmproxy.org"
