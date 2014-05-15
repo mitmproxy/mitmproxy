@@ -1,15 +1,15 @@
 import string, urlparse, binascii
 import odict, utils
 
+
 class HttpError(Exception):
-    def __init__(self, code, msg):
-        self.code, self.msg = code, msg
-
-    def __str__(self):
-        return "HttpError(%s, %s)"%(self.code, self.msg)
+    def __init__(self, code, message):
+        super(HttpError, self).__init__(message)
+        self.code = code
 
 
-class HttpErrorConnClosed(HttpError): pass
+class HttpErrorConnClosed(HttpError):
+    pass
 
 
 def _is_valid_port(port):
