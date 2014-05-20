@@ -197,7 +197,8 @@ class ConnectionHandler:
                 cert, key,
                 handle_sni=self.handle_sni,
                 cipher_list=self.config.ciphers,
-                dhparams=self.config.certstore.dhparams
+                dhparams=self.config.certstore.dhparams,
+                ca_file=self.config.ca_file
             )
 
     def server_reconnect(self, no_ssl=False):
@@ -260,11 +261,12 @@ class ConnectionHandler:
                     cert, key,
                     method=SSL.TLSv1_METHOD,
                     cipher_list=self.config.ciphers,
-                    dhparams=self.config.certstore.dhparams
+                    dhparams=self.config.certstore.dhparams,
+                    ca_file=self.config.ca_file
                 )
                 connection.set_context(new_context)
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
-        except Exception, e:  # pragma: no cover
+        except Exception:  # pragma: no cover
             import traceback
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")

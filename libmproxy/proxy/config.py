@@ -24,6 +24,7 @@ class ProxyConfig:
         self.http_form_out = http_form_out
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
+        self.ca_file = os.path.join(self.confdir, CONF_BASENAME + "-ca.pem")
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
