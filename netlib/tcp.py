@@ -343,7 +343,7 @@ class BaseHandler(_Connection):
 
     def _create_ssl_context(self, cert, key, method=SSLv23_METHOD, options=None,
                            handle_sni=None, request_client_cert=None, cipher_list=None,
-                           dhparams=None ):
+                           dhparams=None, ca_file=None):
         """
             cert: A certutils.SSLCert object.
             method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD
@@ -371,6 +371,8 @@ class BaseHandler(_Connection):
         ctx = SSL.Context(method)
         if not options is None:
             ctx.set_options(options)
+        if ca_file:
+            ctx.load_verify_locations(ca_file)
         if cipher_list:
             try:
                 ctx.set_cipher_list(cipher_list)
@@ -450,7 +452,7 @@ class TCPServer(object):
                         if ex[0] == EINTR:
                             continue
                         else:
-                            raise  
+                            raise
                 if self.socket in r:
                     connection, client_address = self.socket.accept()
                     t = threading.Thread(
