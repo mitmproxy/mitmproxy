@@ -1,0 +1,233 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "MITMPROXY" "1" "June 2014" "" ""
+.
+.SH "NAME"
+\fBmitmproxy\fR \- a man\-in\-the\-middle proxy
+.
+.SH "SYNOPSIS"
+\fBmitmproxy\fR [\fIoptions\fR]
+.
+.SH "DESCRIPTION"
+\fBmitmproxy\fR is a console tool that allows interactive examination and modification of HTTP traffic\. It differs from mitmdump in that all flows are kept in memory, which means that it\'s intended for taking and manipulating small\-ish samples\. Use the ? shortcut key to view, context\-sensitive documentation from any mitmproxy screen\.
+.
+.SH "OPTIONS"
+Optional Arguments
+.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.
+.TP
+\fB\-\-version\fR
+show program\'s version number and exit
+.
+.TP
+\fB\-b ADDR\fR
+Address to bind proxy to (defaults to all interfaces)
+.
+.TP
+\fB\-\-anticache\fR
+Strip out request headers that might cause the server to return 304\-not\-modified\.
+.
+.TP
+\fB\-\-confdir CONFDIR\fR
+Configuration directory\. (~/\.mitmproxy)
+.
+.TP
+\fB\-e\fR
+Show event log\.
+.
+.TP
+\fB\-n\fR
+Don\'t start a proxy server\.
+.
+.TP
+\fB\-p PORT\fR
+Proxy service port\.
+.
+.TP
+\fB\-P REVERSE_PROXY\fR
+Reverse proxy to upstream server: http[s]://host[:port]
+.
+.TP
+\fB\-F FORWARD_PROXY\fR
+Proxy to unconditionally forward to: http[s]://host[:port]
+.
+.TP
+\fB\-q\fR
+Quiet\.
+.
+.TP
+\fB\-r RFILE\fR
+Read flows from file\.
+.
+.TP
+\fB\-s "script\.py \-\-bar"\fR
+Run a script\. Surround with quotes to pass script arguments\. Can be passed multiple times\.
+.
+.TP
+\fB\-t FILTER\fR
+Set sticky cookie filter\. Matched against requests\.
+.
+.TP
+\fB\-T\fR
+Set transparent proxy mode\.
+.
+.TP
+\fB\-u FILTER\fR
+Set sticky auth filter\. Matched against requests\.
+.
+.TP
+\fB\-v\fR
+Increase verbosity\. Can be passed multiple times\.
+.
+.TP
+\fB\-w WFILE\fR
+Write flows to file\.
+.
+.TP
+\fB\-z\fR
+Try to convince servers to send us un\-compressed data\.
+.
+.TP
+\fB\-Z SIZE\fR
+Byte size limit of HTTP request and response bodies\. Understands k/m/g suffixes, i\.e\. 3m for 3 megabytes\.
+.
+.TP
+\fB\-\-host\fR
+Use the Host header to construct URLs for display\.
+.
+.TP
+\fB\-\-no\-upstream\-cert\fR
+Don\'t connect to upstream server to look up certificate details\.
+.
+.TP
+\fB\-\-debug\fR
+Enable debug information\.
+.
+.TP
+\fB\-\-palette PALETTE\fR
+Select color palette: dark, light, solarized_dark, solarized_light
+.
+.P
+Web App
+.
+.TP
+\fB\-a\fR
+Disable the mitmproxy web app\.
+.
+.TP
+\fB\-\-app\-host host\fR
+Domain to serve the app from\. For transparent mode, use an IP when a DNS entry for the app domain is not present\. Default: mitm\.it
+.
+.TP
+\fB\-\-app\-port 80\fR
+Port to serve the app from\.
+.
+.TP
+\fB\-\-app\-external\fR
+Serve the app outside of the proxy\.
+.
+.P
+Client Replay
+.
+.TP
+\fB\-c PATH\fR
+Replay client requests from a saved file\.
+.
+.P
+Server Replay
+.
+.TP
+\fB\-S PATH\fR
+Replay server responses from a saved file\.
+.
+.TP
+\fB\-k\fR
+Kill extra requests during replay\.
+.
+.TP
+\fB\-\-rheader RHEADERS\fR
+Request headers to be considered during replay\. Can be passed multiple times\.
+.
+.TP
+\fB\-\-norefresh\fR
+Disable response refresh, which updates times in cookies and headers for replayed responses\.
+.
+.TP
+\fB\-\-no\-pop\fR
+Disable response pop from response flow\. This makes it possible to replay same response multiple times\.
+.
+.P
+Replacements
+.
+.P
+Replacements are of the form "/pattern/regex/replacement", where the separator can be any character\. Please see the documentation for more information\.
+.
+.TP
+\fB\-\-replace PATTERN\fR
+Replacement pattern\.
+.
+.TP
+\fB\-\-replace\-from\-file PATH\fR
+Replacement pattern, where the replacement clause is a path to a file\.
+.
+.P
+Set Headers
+.
+.P
+Header specifications are of the form "/pattern/header/value", where the separator can be any character\. Please see the documentation for more information\.
+.
+.TP
+\fB\-\-setheader PATTERN\fR
+Header set pattern\.
+.
+.P
+Proxy Authentication
+.
+.P
+Specify which users are allowed to access the proxy and the method used for authenticating them\. These options are ignored if the proxy is in transparent or reverse proxy mode\.
+.
+.TP
+\fB\-\-nonanonymous\fR
+Allow access to any user long as a credentials are specified\.
+.
+.TP
+\fB\-\-singleuser USER\fR
+Allows access to a a single user, specified in the form username:password\.
+.
+.TP
+\fB\-\-htpasswd PATH\fR
+Allow access to users specified in an Apache htpasswd file\.
+.
+.P
+SSL
+.
+.TP
+\fB\-\-cert\fR
+CERT User\-created SSL certificate file\.
+.
+.TP
+\fB\-\-client\-certs CLIENTCERTS\fR
+Client certificate directory\.
+.
+.P
+Filters
+.
+.P
+See help in mitmproxy for filter expression syntax\.
+.
+.TP
+\fB\-i INTERCEPT\fR, \fB\-\-intercept INTERCEPT\fR
+Intercept filter expression\.
+.
+.SH "AUTHORS"
+\fBmitmproxy\fR was written by Aldo Cortesi\.
+.
+.P
+This manual page was written by Alex Chernyakhovsky \fIachernya@mit\.edu\fR for the \fBDebian GNU/Linux\fR system, but its use elsewhere is encouraged\.
+.
+.SH "SEE ALSO"
+\fBmitmproxy\fR documentation and examples are available online at \fIhttp://mitmproxy\.org/doc/mitmproxy\.html\fR\.
