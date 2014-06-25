@@ -69,6 +69,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         self.priority = priority
 
         self.peername = None
+        self.sockname = None
         self.timestamp_start = None
         self.timestamp_end = None
         self.timestamp_tcp_setup = None
@@ -76,6 +77,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
 
     _stateobject_attributes = dict(
         peername=tuple,
+        sockname=tuple,
         timestamp_start=float,
         timestamp_end=float,
         timestamp_tcp_setup=float,
@@ -117,6 +119,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         self.timestamp_start = utils.timestamp()
         tcp.TCPClient.connect(self)
         self.peername = self.connection.getpeername()
+        self.sockname = self.connection.getsockname()
         self.timestamp_tcp_setup = utils.timestamp()
 
     def send(self, message):

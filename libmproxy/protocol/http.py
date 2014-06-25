@@ -897,8 +897,8 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                           body_size_limit=self.c.config.body_size_limit)
             self.c.log("request", "debug", [req._assemble_first_line(req.form_in)])
-            send_upstream = self.process_request(flow, req)
-            if not send_upstream:
+            send_request_upstream = self.process_request(flow, req)
+            if not send_request_upstream:
                 return True
 
             # Be careful NOT to assign the request to the flow before
