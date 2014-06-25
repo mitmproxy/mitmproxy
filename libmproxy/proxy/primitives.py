@@ -1,12 +1,10 @@
 from __future__ import absolute_import
 
+
 class ProxyError(Exception):
-    def __init__(self, code, msg, headers=None):
-        self.code, self.msg, self.headers = code, msg, headers
-
-    def __str__(self):
-        return "ProxyError(%s, %s)" % (self.code, self.msg)
-
+    def __init__(self, code, message, headers=None):
+        super(ProxyError, self).__init__(self, message)
+        self.code, self.headers = code, headers
 
 class ConnectionTypeChange(Exception):
     """
