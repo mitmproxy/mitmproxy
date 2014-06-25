@@ -96,10 +96,10 @@ class Message(object):
                              "Socks Request: Invalid reserved byte: %s" % rsv)
 
         if atyp == ATYP.IPV4_ADDRESS:
-            host = utils.inet_ntop(socket.AF_INET, f.read(4))  # We use tnoa here as ntop is not commonly available on Windows.
+            host = socket.inet_ntoa(f.read(4))  # We use tnoa here as ntop is not commonly available on Windows.
             use_ipv6 = False
         elif atyp == ATYP.IPV6_ADDRESS:
-            host = utils.inet_ntop(socket.AF_INET6, f.read(16))
+            host = socket.inet_ntop(socket.AF_INET6, f.read(16))
             use_ipv6 = True
         elif atyp == ATYP.DOMAINNAME:
             length, = struct.unpack("!B", f.read(1))
@@ -116,9 +116,9 @@ class Message(object):
     def to_file(self, f):
         f.write(struct.pack("!BBBB", self.ver, self.msg, 0x00, self.atyp))
         if self.atyp == ATYP.IPV4_ADDRESS:
-            f.write(utils.inet_pton(socket.AF_INET, self.addr.host))
+            f.write(socket.inet_aton(self.addr.host))
         elif self.atyp == ATYP.IPV6_ADDRESS:
-            f.write(utils.inet_pton(socket.AF_INET6, self.addr.host))
+            f.write(socket.inet_pton(socket.AF_INET6, self.addr.host))
         elif self.atyp == ATYP.DOMAINNAME:
             f.write(struct.pack("!B", len(self.addr.host)))
             f.write(self.addr.host)

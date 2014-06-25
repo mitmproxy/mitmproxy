@@ -1,5 +1,6 @@
 from cStringIO import StringIO
 import socket
+from nose.plugins.skip import SkipTest
 from netlib import socks, utils
 import tutils
 
@@ -47,9 +48,13 @@ def test_message():
     assert raw.read(2) == "\xBE\xEF"
     assert msg.addr == ("127.0.0.1", 0xDEAD)
 
+
+def test_message_ipv6():
+    if not hasattr(socket, "inet_ntop"):
+        raise SkipTest("Skipped because inet_ntop is not available")
     # Test ATYP=0x04 (IPV6)
     ipv6_addr = "2001:0db8:85a3:08d3:1319:8a2e:0370:7344"
-    raw = StringIO("\x05\x01\x00\x04" + utils.inet_pton(socket.AF_INET6, ipv6_addr) + "\xDE\xAD\xBE\xEF")
+    raw = StringIO("\x05\x01\x00\x04" + socket.inet_pton(socket.AF_INET6, ipv6_addr) + "\xDE\xAD\xBE\xEF")
     msg = socks.Message.from_file(raw)
     assert raw.read(2) == "\xBE\xEF"
     assert msg.addr.host == ipv6_addr
