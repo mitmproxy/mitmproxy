@@ -79,7 +79,7 @@ class ConnectionHandler:
             # Can we already identify the target server and connect to it?
             if self.config.get_upstream_server:
                 upstream_info = self.config.get_upstream_server(
-                    self.client_conn.connection)
+                    self)
                 self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
                 client_ssl, server_ssl = upstream_info[:2]
                 if client_ssl or server_ssl:

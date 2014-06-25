@@ -279,6 +279,11 @@ def common_options(parser):
         action="store_true", dest="transparent_proxy", default=False,
         help="Set transparent proxy mode."
     )
+    group.add_argument(
+        "--socks",
+        action="store_true", dest="socks_proxy", default=False,
+        help="Set SOCKS 5 proxy mode."
+    )
 
 
     group = parser.add_argument_group(

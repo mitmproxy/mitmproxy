@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import os
 from .. import utils, platform
 from netlib import http_auth, certutils
-from .primitives import ConstUpstreamServerResolver, TransparentUpstreamServerResolver
+from .primitives import ConstUpstreamServerResolver, TransparentUpstreamServerResolver, SocksUpstreamServerResolver
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
@@ -37,6 +37,10 @@ def process_proxy_options(parser, options):
     c = 0
     http_form_in, http_form_out = "absolute", "relative"
     get_upstream_server = None
+    if options.socks_proxy:
+        c += 1
+        get_upstream_server = SocksUpstreamServerResolver(TRANSPARENT_SSL_PORTS)
+        http_form_in, http_form_out = "relative", "relative"
     if options.transparent_proxy:
         c += 1
         if not platform.resolver:
@@ -55,7 +59,7 @@ def process_proxy_options(parser, options):
         c += 1
         get_upstream_server = ConstUpstreamServerResolver(options.manual_destination_server)
     if c > 1:
-        return parser.error("Transparent mode, reverse mode, upstream proxy mode and "
+        return parser.error("Transparent mode, reverse mode, upstream proxy mode, SOCKS mode and "
                             "specification of an upstream server are mutually exclusive.")
     if options.http_form_in:
         http_form_in = options.http_form_in
