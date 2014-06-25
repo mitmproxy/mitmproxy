@@ -53,7 +53,7 @@ def test_message_ipv6():
     if not hasattr(socket, "inet_ntop"):
         raise SkipTest("Skipped because inet_ntop is not available")
     # Test ATYP=0x04 (IPV6)
-    ipv6_addr = "2001:0db8:85a3:08d3:1319:8a2e:0370:7344"
+    ipv6_addr = "2001:db8:85a3:8d3:1319:8a2e:370:7344"
     raw = StringIO("\x05\x01\x00\x04" + socket.inet_pton(socket.AF_INET6, ipv6_addr) + "\xDE\xAD\xBE\xEF")
     msg = socks.Message.from_file(raw)
     assert raw.read(2) == "\xBE\xEF"
