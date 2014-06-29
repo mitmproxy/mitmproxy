@@ -29,7 +29,7 @@ def create_ca(o, cn, exp):
     cert.add_extensions([
       OpenSSL.crypto.X509Extension("basicConstraints", True,
                                    "CA:TRUE"),
-      OpenSSL.crypto.X509Extension("nsCertType", True,
+      OpenSSL.crypto.X509Extension("nsCertType", False,
                                    "sslCA"),
       OpenSSL.crypto.X509Extension("extendedKeyUsage", True,
                                     "serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
