@@ -7,6 +7,10 @@ import pf
     structures returned, and compiling userspace tools to test and work with
     this turns out to be a pain in the ass. Parsing pfctl output is short,
     simple, and works.
+
+    Note: Also Tested with FreeBSD 10 pkgng Python 2.7.x.
+    Should work almost exactly as on Mac OS X and except with some changes to
+    the output processing of pfctl (see pf.py).
 """
 
 class Resolver:

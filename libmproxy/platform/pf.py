@@ -1,3 +1,4 @@
+import sys
 
 def lookup(address, port, s):
     """
@@ -11,6 +12,11 @@ def lookup(address, port, s):
         if "ESTABLISHED:ESTABLISHED" in i and spec in i:
             s = i.split()
             if len(s) > 4:
-                s = s[4].split(":")
+                if "freebsd" in sys.platform:
+                    # strip parentheses for FreeBSD pfctl
+                    s = s[3][1:-1].split(":")
+                else:
+                    s = s[4].split(":")
+
                 if len(s) == 2:
                     return s[0], int(s[1])
