@@ -7,6 +7,6 @@ if sys.platform == "linux2":
 elif sys.platform == "darwin":
     import osx
     resolver = osx.Resolver
-elif "freebsd" in sys.platform:
+elif sys.platform == "freebsd10":
     import osx
     resolver = osx.Resolver
