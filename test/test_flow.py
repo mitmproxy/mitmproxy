@@ -672,7 +672,6 @@ class TestFlowMaster:
         fm.handle_error(f.error)
 
     def test_server_playback(self):
-        controller.should_exit = False
         s = flow.State()
 
         f = tutils.tflow()
@@ -695,7 +694,7 @@ class TestFlowMaster:
         fm.start_server_playback(pb, False, [], True, False)
         q = Queue.Queue()
         fm.tick(q)
-        assert controller.should_exit
+        assert fm.should_exit.is_set()
 
         fm.stop_server_playback()
         assert not fm.server_playback

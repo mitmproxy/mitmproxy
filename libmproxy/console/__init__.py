@@ -577,7 +577,7 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.view_flowlist()
 
-        self.server.start_slave(controller.Slave, controller.Channel(self.masterq))
+        self.server.start_slave(controller.Slave, controller.Channel(self.masterq, self.should_exit))
 
         if self.options.rfile:
             ret = self.load_flows(self.options.rfile)
@@ -780,7 +780,7 @@ class ConsoleMaster(flow.FlowMaster):
     def loop(self):
         changed = True
         try:
-            while not controller.should_exit:
+            while not self.should_exit.is_set():
                 startloop = time.time()
                 if changed:
                     self.statusbar.redraw()

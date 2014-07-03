@@ -654,6 +654,7 @@ class FlowMaster(controller.Master):
                     self.server.config,
                     f,
                     self.masterq,
+                    self.should_exit
                 )
             rt.start() # pragma: no cover
             if block:
@@ -792,8 +793,8 @@ class FilteredFlowWriter:
 class RequestReplayThread(threading.Thread):
     name="RequestReplayThread"
 
-    def __init__(self, config, flow, masterq):
-        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq)
+    def __init__(self, config, flow, masterq, should_exit):
+        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq, should_exit)
         threading.Thread.__init__(self)
 
     def run(self):

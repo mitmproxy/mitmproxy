@@ -283,7 +283,7 @@ class ChainProxTest(ProxTestBase):
     def teardownAll(cls):
         super(ChainProxTest, cls).teardownAll()
         for p in cls.chain:
-            p.tmaster.server.shutdown()
+            p.tmaster.shutdown()
 
     def setUp(self):
         super(ChainProxTest, self).setUp()

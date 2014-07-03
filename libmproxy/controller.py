@@ -1,9 +1,6 @@
 from __future__ import absolute_import
 import Queue, threading
 
-should_exit = False
-
-
 class DummyReply:
     """
         A reply object that does nothing. Useful when we need an object to seem
@@ -37,8 +34,9 @@ class Reply:
 
 
 class Channel:
-    def __init__(self, q):
+    def __init__(self, q, should_exit):
         self.q = q
+        self.should_exit = should_exit
 
     def ask(self, mtype, m):
         """
@@ -47,7 +45,7 @@ class Channel:
         """
         m.reply = Reply(m)
         self.q.put((mtype, m))
-        while not should_exit:
+        while not self.should_exit.is_set():
             try:
                 # The timeout is here so we can handle a should_exit event.
                 g = m.reply.q.get(timeout=0.5)
@@ -89,6 +87,7 @@ class Master:
         """
         self.server = server
         self.masterq = Queue.Queue()
+        self.should_exit = threading.Event()
 
     def tick(self, q):
         changed = False
@@ -107,10 +106,9 @@ class Master:
         return changed
 
     def run(self):
-        global should_exit
-        should_exit = False
-        self.server.start_slave(Slave, Channel(self.masterq))
-        while not should_exit:
+        self.should_exit.clear()
+        self.server.start_slave(Slave, Channel(self.masterq, self.should_exit))
+        while not self.should_exit.is_set():
             self.tick(self.masterq)
         self.shutdown()
 
@@ -123,8 +121,7 @@ class Master:
             obj.reply()
 
     def shutdown(self):
-        global should_exit
-        if not should_exit:
-            should_exit = True
+        if not self.should_exit.is_set():
+            self.should_exit.set()
             if self.server:
                 self.server.shutdown()
