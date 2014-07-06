@@ -246,7 +246,7 @@ def common_options(parser):
 
 
     group = parser.add_argument_group("Proxy Options")
-    # We could make a mutually exclusive group out of -R, -F, -T, but we don't do that because
+    # We could make a mutually exclusive group out of -R, -U, -T, but we don't do that because
     #  - --upstream-server should be in that group as well, but it's already in a different group.
     #  - our own error messages are more helpful
     group.add_argument(
@@ -285,7 +285,7 @@ def common_options(parser):
         "Advanced Proxy Options",
         """
             The following options allow a custom adjustment of the proxy behavior.
-            Normally, you don't want to use these options directly and use the provided wrappers instead (-R, -F, -T).
+            Normally, you don't want to use these options directly and use the provided wrappers instead (-R, -U, -T).
         """.strip()
     )
     group.add_argument(
