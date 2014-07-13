@@ -609,8 +609,6 @@ class HTTPResponse(HTTPMessage):
         """
         Parse an HTTP response from a file stream
         """
-        if not include_content:
-            raise NotImplementedError  # pragma: nocover
 
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
@@ -618,7 +616,8 @@ class HTTPResponse(HTTPMessage):
         httpversion, code, msg, headers, content = http.read_response(
             rfile,
             request_method,
-            body_size_limit)
+            body_size_limit,
+            include_body=include_content)
 
         if hasattr(rfile, "first_byte_timestamp"):
             timestamp_start = rfile.first_byte_timestamp
