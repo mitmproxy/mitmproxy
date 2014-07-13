@@ -229,10 +229,10 @@ class TestReadResponseNoContentLength(test.ServerTestBase):
         assert content == "bar\r\n\r\n"
 
 def test_read_response():
-    def tst(data, method, limit):
+    def tst(data, method, limit, include_body=True):
         data = textwrap.dedent(data)
         r = cStringIO.StringIO(data)
-        return  http.read_response(r, method, limit)
+        return  http.read_response(r, method, limit, include_body=include_body)
 
     tutils.raises("server disconnect", tst, "", "GET", None)
     tutils.raises("invalid server response", tst, "foo", "GET", None)
@@ -276,6 +276,14 @@ def test_read_response():
         foo
     """
     tutils.raises("invalid headers", tst, data, "GET", None)
+
+    data = """
+        HTTP/1.1 200 OK
+        Content-Length: 3
+
+        foo
+    """
+    assert tst(data, "GET", None, include_body=False)[4] == None
 
 
 def test_parse_url():
