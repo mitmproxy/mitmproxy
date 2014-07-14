@@ -292,7 +292,7 @@ def parse_response_line(line):
     return (proto, code, msg)
 
 
-def read_response(rfile, method, body_size_limit):
+def read_response(rfile, method, body_size_limit, include_body=True):
     """
         Return an (httpversion, code, msg, headers, content) tuple.
     """
@@ -315,8 +315,10 @@ def read_response(rfile, method, body_size_limit):
     # Parse response body according to http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
     if method in ["HEAD", "CONNECT"] or (code in [204, 304]) or 100 <= code <= 199:
         content = ""
-    else:
+    elif include_body:
         content = read_http_body(rfile, headers, body_size_limit, False)
+    else:
+        content = None # if include_body==False then a None content means the body should be read separately
     return httpversion, code, msg, headers, content
 
 
