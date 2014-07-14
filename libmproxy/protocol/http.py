@@ -139,7 +139,7 @@ class HTTPMessage(stateobject.SimpleStateObject):
         return c
 
     @classmethod
-    def from_stream(cls, rfile, include_content=True, body_size_limit=None):
+    def from_stream(cls, rfile, include_body=True, body_size_limit=None):
         """
         Parse an HTTP message from a file stream
         """
@@ -248,7 +248,7 @@ class HTTPRequest(HTTPMessage):
         return f
 
     @classmethod
-    def from_stream(cls, rfile, include_content=True, body_size_limit=None):
+    def from_stream(cls, rfile, include_body=True, body_size_limit=None):
         """
         Parse an HTTP request from a file stream
         """
@@ -292,7 +292,7 @@ class HTTPRequest(HTTPMessage):
         if headers is None:
             raise http.HttpError(400, "Invalid headers")
 
-        if include_content:
+        if include_body:
             content = http.read_http_body(rfile, headers, body_size_limit, True)
             timestamp_end = utils.timestamp()
 
@@ -605,7 +605,7 @@ class HTTPResponse(HTTPMessage):
         return f
 
     @classmethod
-    def from_stream(cls, rfile, request_method, include_content=True, body_size_limit=None):
+    def from_stream(cls, rfile, request_method, include_body=True, body_size_limit=None):
         """
         Parse an HTTP response from a file stream
         """
@@ -617,7 +617,7 @@ class HTTPResponse(HTTPMessage):
             rfile,
             request_method,
             body_size_limit,
-            include_body=include_content)
+            include_body=include_body)
 
         if hasattr(rfile, "first_byte_timestamp"):
             timestamp_start = rfile.first_byte_timestamp
