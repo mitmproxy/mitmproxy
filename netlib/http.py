@@ -292,12 +292,17 @@ def parse_response_line(line):
     return (proto, code, msg)
 
 
-def read_response(rfile, method, body_size_limit, include_body=True):
+def read_response(rfile, request_method, body_size_limit, include_body=True):
     """
         Return an (httpversion, code, msg, headers, content) tuple.
+
+        By default, both response header and body are read.
+        If include_body=False is specified, content may be one of the following:
+        - None, if the response is technically allowed to have a response body
+        - "", if the response must not have a response body (e.g. it's a response to a HEAD request)
     """
     line = rfile.readline()
-    if line == "\r\n" or line == "\n": # Possible leftover from previous message
+    if line == "\r\n" or line == "\n":  # Possible leftover from previous message
         line = rfile.readline()
     if not line:
         raise HttpErrorConnClosed(502, "Server disconnect.")
@@ -312,13 +317,13 @@ def read_response(rfile, method, body_size_limit, include_body=True):
     if headers is None:
         raise HttpError(502, "Invalid headers.")
 
-    # Parse response body according to http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
-    if method in ["HEAD", "CONNECT"] or (code in [204, 304]) or 100 <= code <= 199:
+    # Parse response body according to http://tools.ietf.org/html/rfc7230#section-3.3
+    if request_method in ["HEAD", "CONNECT"] or (code in [204, 304]) or 100 <= code <= 199:
         content = ""
     elif include_body:
         content = read_http_body(rfile, headers, body_size_limit, False)
     else:
-        content = None # if include_body==False then a None content means the body should be read separately
+        content = None  # if include_body==False then a None content means the body should be read separately
     return httpversion, code, msg, headers, content
 
 
