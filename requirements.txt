@@ -13,3 +13,4 @@ urwid>=1.1.1
 wsgiref>=0.1.2
 jsbeautifier>=1.4.0
 cssutils>=1.0,<1.1
+pydivert>=0.0.2

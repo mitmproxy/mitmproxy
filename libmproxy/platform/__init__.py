@@ -1,12 +1,18 @@
 import sys
 
 resolver = None
+setup = None
+
 if sys.platform == "linux2":
-    import linux
+    from . import linux
     resolver = linux.Resolver
 elif sys.platform == "darwin":
-    import osx
+    from . import osx
     resolver = osx.Resolver
 elif sys.platform == "freebsd10":
-    import osx
+    from . import osx
     resolver = osx.Resolver
+elif sys.platform == "win32":
+    from . import windows
+    resolver = windows.Resolver
+    setup = windows.TransparentProxy.setup
