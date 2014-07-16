@@ -1,5 +1,5 @@
 import cStringIO, Queue, time, socket, random
-from netlib import tcp, certutils, test
+from netlib import tcp, certutils, test, certffi
 import mock
 import tutils
 from OpenSSL import SSL

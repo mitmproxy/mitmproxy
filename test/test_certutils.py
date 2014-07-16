@@ -67,6 +67,13 @@ class TestCertStore:
             c3 = ca.get_cert("bar.com", [])
             assert not c1 == c3
 
+    def test_sans_change(self):
+        with tutils.tmpdir() as d:
+            ca = certutils.CertStore.from_store(d, "test")
+            _ = ca.get_cert("foo.com", ["*.bar.com"])
+            cert, key = ca.get_cert("foo.bar.com", ["*.baz.com"])
+            assert "*.baz.com" in cert.altnames
+
     def test_overrides(self):
         with tutils.tmpdir() as d:
             ca1 = certutils.CertStore.from_store(os.path.join(d, "ca1"), "test")
