@@ -865,15 +865,16 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             pass
         self.c.close = True
 
-    def get_response_from_server(self, request):
+    def get_response_from_server(self, request, stream=False):
         self.c.establish_server_connection()
         request_raw = request._assemble()
 
         for i in range(2):
             try:
                 self.c.server_conn.send(request_raw)
-                return HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
-                                                body_size_limit=self.c.config.body_size_limit)
+                res = HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
+                                                body_size_limit=self.c.config.body_size_limit, include_content=(not stream))
+                return res
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
                 self.c.log("error in server communication: %s" % str(v), level="debug")
                 if i < 1:
@@ -892,6 +893,8 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.change_server)
+        flow.stream_expecting_body = False
+        flow.stream = False
         try:
             req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                           body_size_limit=self.c.config.body_size_limit)
@@ -915,7 +918,23 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
             else:
-                flow.response = self.get_response_from_server(flow.request)
+
+                # read initially in "stream" mode, so we can get the headers separately
+                flow.response = self.get_response_from_server(flow.request,stream=True)
+                
+                if flow.response.content == None:
+                    flow.stream_expecting_body = True
+                    flow.response.content = "" # set this to empty string or other things get really confused,
+                    # flow.stream_expecting_body now contains the state info of whether or not 
+                    # body still remains to be read
+
+                # call the appropriate script hook - this is an opportunity for 
+                responseheaders_reply = self.c.channel.ask("responseheaders", flow.response)
+                # hm - do we need to do something with responseheaders_reply??
+
+                # now get the rest of the request body, if body still needs to be read but not streaming this response
+                if flow.stream_expecting_body and not flow.stream:
+                    flow.response.content = http.read_http_body(self.c.server_conn.rfile, flow.response.headers, self.c.config.body_size_limit, False)
 
             flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point
             # we can safely set it as the final attribute value here.
@@ -925,7 +944,39 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if response_reply is None or response_reply == KILL:
                 return False
 
-            self.c.client_conn.send(flow.response._assemble())
+            if not flow.stream or not flow.stream_expecting_body:
+                # if not streaming or there is no body to be read, we'll already have the body, just send it
+                self.c.client_conn.send(flow.response._assemble())
+            else:
+
+                # if streaming, we still need to read the body and stream its bits back to the client
+
+                # start with head
+                h = flow.response._assemble_head()
+                self.c.client_conn.send(h)
+
+                # if chunked then we send back each chunk
+                if http.has_chunked_encoding(flow.response.headers):
+                    while 1:
+                        content = http.read_next_chunk(self.c.server_conn.rfile, flow.response.headers, False)
+                        if not http.write_chunk(self.c.client_conn.rfile, content):
+                            break
+
+                else: # not chunked, we send back 4k at a time
+                    clen = http.expected_http_body_size(flow.response.headers, False)
+                    clen = clen if clen >= 0 else (64 * 1024 * 1024 * 1024) # arbitrary max of 64G if no length set
+                    rcount = 0
+                    blocksize = 4096
+                    while 1:
+                        bytes_to_read = min(blocksize, clen - rcount)
+                        content = self.c.server_conn.rfile.read(bytes_to_read)
+                        if content == "": # check for EOF
+                            break
+                        rcount += len(content)
+                        self.c.client_conn.rfile.write(content)
+                        if rcount >= clen: # check for having read up to clen
+                            break
+
             flow.timestamp_end = utils.timestamp()
 
             if (http.connection_close(flow.request.httpversion, flow.request.headers) or

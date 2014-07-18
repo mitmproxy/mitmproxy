@@ -706,6 +706,13 @@ class FlowMaster(controller.Master):
         self.process_new_request(f)
         return f
 
+    def handle_responseheaders(self, r):
+        f = self.state.add_response(r)
+        if f:
+            self.run_script_hook("responseheaders", f)
+        r.reply()
+        return f        
+
     def handle_response(self, r):
         f = self.state.add_response(r)
         if f:
