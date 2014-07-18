@@ -215,6 +215,19 @@ class CertStore:
         for i in names:
             self.certs[i] = (cert, privkey)
 
+    @staticmethod
+    def asterisk_forms(dn):
+        parts = dn.split(".")
+        parts.reverse()
+        curr_dn = ""
+        dn_forms = ["*"]
+        for part in parts[:-1]:
+            curr_dn = "." + part + curr_dn  # .example.com
+            dn_forms.append("*" + curr_dn)   # *.example.com
+        if parts[-1] != "*":
+            dn_forms.append(parts[-1] + curr_dn)
+        return dn_forms
+
     def get_cert(self, commonname, sans):
         """
             Returns an (cert, privkey) tuple.
@@ -227,7 +240,11 @@ class CertStore:
             Return None if the certificate could not be found or generated.
         """
 
-        potential_keys = [commonname] + sans + [(commonname, tuple(sans))]
+        potential_keys = self.asterisk_forms(commonname)
+        for s in sans:
+            potential_keys.extend(self.asterisk_forms(s))
+        potential_keys.append((commonname, tuple(sans)))
+
         name = next(itertools.ifilter(lambda key: key in self.certs, potential_keys), None)
         if name:
             c = self.certs[name]
