@@ -237,6 +237,8 @@ class ConnectionHandler:
                 if upstream_cert.cn:
                     host = upstream_cert.cn.decode("utf8").encode("idna")
                 sans = upstream_cert.altnames
+            elif self.config.no_upstream_cert and self.sni:
+                sans = [self.sni]
 
             ret = self.config.certstore.get_cert(host, sans)
             if not ret:
