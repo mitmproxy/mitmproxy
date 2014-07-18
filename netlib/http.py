@@ -136,6 +136,49 @@ def read_chunked(fp, headers, limit, is_request):
             break
     return content
 
+def read_next_chunk(fp, headers, is_request):
+    """
+        Read next piece of a chunked HTTP body.  Returns next piece of
+        content as a string or None if we hit the end.
+    """
+    # TODO: see and understand the FIXME in read_chunked and
+    # see if we need to apply here?
+    content = ""
+    code = 400 if is_request else 502
+    line = fp.readline(128)
+    if line == "":
+        raise HttpErrorConnClosed(code, "Connection closed prematurely")
+    try:
+        length = int(line, 16)
+    except ValueError:
+        # TODO: see note in this part of read_chunked()
+        raise HttpError(code, "Invalid chunked encoding length: %s"%line)
+    if length > 0:
+        content += fp.read(length)
+    print "read content: '%s'" % content
+    line = fp.readline(5)
+    if line == '':
+        raise HttpErrorConnClosed(code, "Connection closed prematurely")
+    if line != '\r\n':
+        raise HttpError(code, "Malformed chunked body: '%s' (len=%d)" % (line, length))
+    if content == "":
+        content = None # normalize zero length to None, meaning end of chunked stream
+    return content # return this chunk
+
+def write_chunk(fp, content):
+    """
+        Write a chunk with chunked encoding format, returns True
+        if there should be more chunks or False if you passed
+        None, meaning this was the last chunk.
+    """
+    if content == None or content == "":
+        fp.write("0\r\n\r\n")
+        return False
+    fp.write("%x\r\n" % len(content))
+    fp.write(content)
+    fp.write("\r\n")
+    return True
+
 
 def get_header_tokens(headers, key):
     """
@@ -351,3 +394,21 @@ def read_http_body(rfile, headers, limit, is_request):
         if not_done:
             raise HttpError(400 if is_request else 509, "HTTP Body too large. Limit is %s," % limit)
     return content
+
+def expected_http_body_size(headers, is_request):
+    """
+        Returns length of body expected or -1 if not
+        known and we should just read until end of
+        stream.
+    """
+    if "content-length" in headers:
+        try:
+            l = int(headers["content-length"][0])
+            if l < 0:
+                raise ValueError()
+            return l
+        except ValueError:
+            raise HttpError(400 if is_request else 502, "Invalid content-length header: %s"%headers["content-length"])
+    elif is_request:
+        return 0
+    return -1

@@ -38,6 +38,57 @@ def test_read_chunked():
     tutils.raises("too large", http.read_chunked, s, None, 2, True)
 
 
+def test_read_next_chunk():
+    s = cStringIO.StringIO(
+        "4\r\n" +
+        "mitm\r\n" +
+        "5\r\n" +
+        "proxy\r\n" +
+        "e\r\n" + 
+        " in\r\n\r\nchunks.\r\n" +
+        "0\r\n" +
+        "\r\n")
+    assert http.read_next_chunk(s, None, False) == "mitm"
+    assert http.read_next_chunk(s, None, False) == "proxy"
+    assert http.read_next_chunk(s, None, False) == " in\r\n\r\nchunks."
+    assert http.read_next_chunk(s, None, False) == None
+
+    s = cStringIO.StringIO("")
+    tutils.raises("closed prematurely", http.read_next_chunk, s, None, False)
+
+    s = cStringIO.StringIO("1\r\na\r\n0\r\n")
+    http.read_next_chunk(s, None, False)
+    tutils.raises("closed prematurely", http.read_next_chunk, s, None, False)
+
+    s = cStringIO.StringIO("1\r\nfoo")
+    tutils.raises("malformed chunked body", http.read_next_chunk, s, None, False)
+
+    s = cStringIO.StringIO("foo\r\nfoo")
+    tutils.raises(http.HttpError, http.read_next_chunk, s, None, False)
+
+def test_write_chunk():
+
+    expected = ("" +
+        "4\r\n" +
+        "mitm\r\n" +
+        "5\r\n" +
+        "proxy\r\n" +
+        "e\r\n" + 
+        " in\r\n\r\nchunks.\r\n" +
+        "0\r\n" +
+        "\r\n")
+
+    s = cStringIO.StringIO()
+    http.write_chunk(s, "mitm")
+    http.write_chunk(s, "proxy")
+    http.write_chunk(s, " in\r\n\r\nchunks.")
+    http.write_chunk(s, None)
+
+    print len(s.getvalue())
+    print len(expected)
+
+    assert s.getvalue() == expected
+
 def test_connection_close():
     h = odict.ODictCaseless()
     assert http.connection_close((1, 0), h)
@@ -111,6 +162,25 @@ def test_read_http_body():
     s = cStringIO.StringIO("5\r\naaaaa\r\n0\r\n\r\n")
     assert http.read_http_body(s, h, 100, False) == "aaaaa"
 
+def test_expected_http_body_size():
+    # gibber in the content-length field
+    h = odict.ODictCaseless()
+    h["content-length"] = ["foo"]
+    tutils.raises(http.HttpError, http.expected_http_body_size, h, False)
+    # negative number in the content-length field
+    h = odict.ODictCaseless()
+    h["content-length"] = ["-7"]
+    tutils.raises(http.HttpError, http.expected_http_body_size, h, False)
+    # explicit length
+    h = odict.ODictCaseless()
+    h["content-length"] = ["5"]
+    assert http.expected_http_body_size(h, False) == 5
+    # no length
+    h = odict.ODictCaseless()
+    assert http.expected_http_body_size(h, False) == -1
+    # no length request
+    h = odict.ODictCaseless()
+    assert http.expected_http_body_size(h, True) == 0
 
 def test_parse_http_protocol():
     assert http.parse_http_protocol("HTTP/1.1") == (1, 1)
