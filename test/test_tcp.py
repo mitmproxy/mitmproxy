@@ -419,7 +419,7 @@ class TestPrivkeyGenNoFlags(test.ServerTestBase):
     def test_privkey(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
-        tutils.raises("unexpected eof", c.convert_to_ssl)
+        tutils.raises("sslv3 alert handshake failure", c.convert_to_ssl)
 
 
 
