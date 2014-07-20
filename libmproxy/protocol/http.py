@@ -870,7 +870,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             try:
                 self.c.server_conn.send(request_raw)
                 res = HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
-                                                body_size_limit=self.c.config.body_size_limit, include_content=(not stream))
+                                                body_size_limit=self.c.config.body_size_limit, include_body=(not stream))
                 return res
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
                 self.c.log("error in server communication: %s" % str(v), level="debug")
@@ -890,8 +890,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.change_server)
-        flow.stream_expecting_body = False
-        flow.stream = False
         try:
             req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                           body_size_limit=self.c.config.body_size_limit)
@@ -917,20 +915,14 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             else:
 
                 # read initially in "stream" mode, so we can get the headers separately
-                flow.response = self.get_response_from_server(flow.request,stream=True)
-                
-                if flow.response.content == None:
-                    flow.stream_expecting_body = True
-                    flow.response.content = "" # set this to empty string or other things get really confused,
-                    # flow.stream_expecting_body now contains the state info of whether or not 
-                    # body still remains to be read
+                flow.response = self.get_response_from_server(flow.request, stream=True)
+                flow.response.stream = False
 
                 # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
-                responseheaders_reply = self.c.channel.ask("responseheaders", flow.response)
-                # hm - do we need to do something with responseheaders_reply??
+                self.c.channel.ask("responseheaders", flow)
 
                 # now get the rest of the request body, if body still needs to be read but not streaming this response
-                if flow.stream_expecting_body and not flow.stream:
+                if not flow.response.stream and flow.response.content is None:
                     flow.response.content = http.read_http_body(self.c.server_conn.rfile, flow.response.headers, self.c.config.body_size_limit, False)
 
             flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point
@@ -943,7 +935,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
             disconnected_while_streaming = False
 
-            if not flow.stream or not flow.stream_expecting_body:
+            if flow.response.content is not None:
                 # if not streaming or there is no body to be read, we'll already have the body, just send it
                 self.c.client_conn.send(flow.response._assemble())
             else:
