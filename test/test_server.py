@@ -383,6 +383,64 @@ class TestRedirectRequest(tservers.HTTPProxTest):
         assert r3.content == r2.content == r1.content
         # Make sure that we actually use the same connection in this test case
 
+class MasterStreamRequest(tservers.TestMaster):
+    """
+        Enables the stream flag on the flow for all requests
+    """
+    def handle_responseheaders(self, r):
+        f = self.state.add_response(r)
+        f.stream = True
+        r.reply()
+        return f
+
+class TestStreamRequest(tservers.HTTPProxTest):
+    masterclass = MasterStreamRequest
+
+    def test_stream_simple(self):
+        p = self.pathoc()
+
+        # a request with 100k of data but without content-length
+        self.server.clear_log()
+        r1 = p.request("get:'%s/p/200:r:b@100k:d102400'"%self.server.urlbase)
+        assert r1.status_code == 200
+        assert len(r1.content) > 100000
+        assert self.server.last_log()
+
+    def test_stream_multiple(self):
+        p = self.pathoc()
+
+        # simple request with streaming turned on
+        self.server.clear_log()
+        r1 = p.request("get:'%s/p/200'"%self.server.urlbase)
+        assert r1.status_code == 200
+        assert self.server.last_log()
+
+        # now send back 100k of data, streamed but not chunked
+        self.server.clear_log()
+        r1 = p.request("get:'%s/p/200:b@100k'"%self.server.urlbase)
+        assert r1.status_code == 200
+        assert self.server.last_log()
+
+    def test_stream_chunked(self):
+
+        connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        connection.connect(("127.0.0.1", self.proxy.port))
+        fconn = connection.makefile()
+        spec = '200:h"Transfer-Encoding"="chunked":r:b"4\\r\\nthis\\r\\n7\\r\\nisatest\\r\\n0\\r\\n\\r\\n"'
+        connection.send("GET %s/p/%s HTTP/1.1\r\n"%(self.server.urlbase, spec))
+        connection.send("\r\n");
+
+        httpversion, code, msg, headers, content = http.read_response(fconn, "GET", 100000, include_body=False)
+
+        assert headers["Transfer-Encoding"][0] == 'chunked'
+        assert code == 200
+
+        assert http.read_next_chunk(fconn, headers, False) == "this"
+        assert http.read_next_chunk(fconn, headers, False) == "isatest"
+        assert http.read_next_chunk(fconn, headers, False) == None
+
+        connection.close()
+
 
 class MasterFakeResponse(tservers.TestMaster):
     def handle_request(self, m):

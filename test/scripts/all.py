@@ -15,6 +15,10 @@ def response(ctx, r):
     ctx.log("XRESPONSE")
     log.append("response")
 
+def responseheaders(ctx, r):
+    ctx.log("XRESPONSEHEADERS")
+    log.append("responseheaders")
+
 def clientdisconnect(ctx, cc):
     ctx.log("XCLIENTDISCONNECT")
     log.append("clientdisconnect")
