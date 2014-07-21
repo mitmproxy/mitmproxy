@@ -82,7 +82,7 @@ class Pathoc(tcp.TCPClient):
         r = language.parse_request(self.settings, spec)
         language.serve(r, self.wfile, self.settings, self.address.host)
         self.wfile.flush()
-        ret = list(http.read_response(self.rfile, r.method, None))
+        ret = list(http.read_response(self.rfile, r.method.string(), None))
         ret.append(self.sslinfo)
         return Response(*ret)
 
@@ -134,9 +134,9 @@ class Pathoc(tcp.TCPClient):
         try:
             req = language.serve(r, self.wfile, self.settings, self.address.host)
             self.wfile.flush()
-            resp = http.read_response(self.rfile, r.method, None)
+            resp = http.read_response(self.rfile, r.method.string(), None)
         except http.HttpError, v:
-            print >> fp, "<< HTTP Error:", v.msg
+            print >> fp, "<< HTTP Error:", v.message
         except tcp.NetLibTimeout:
             if ignoretimeout:
                 return
