@@ -427,16 +427,15 @@ class TestStreamRequest(tservers.HTTPProxTest):
         fconn = connection.makefile()
         spec = '200:h"Transfer-Encoding"="chunked":r:b"4\\r\\nthis\\r\\n7\\r\\nisatest\\r\\n0\\r\\n\\r\\n"'
         connection.send("GET %s/p/%s HTTP/1.1\r\n"%(self.server.urlbase, spec))
-        connection.send("\r\n");
+        connection.send("\r\n")
 
-        httpversion, code, msg, headers, content = http.read_response(fconn, "GET", 100000, include_body=False)
+        httpversion, code, msg, headers, content = http.read_response(fconn, "GET", None, include_body=False)
 
         assert headers["Transfer-Encoding"][0] == 'chunked'
         assert code == 200
 
-        assert http.read_next_chunk(fconn, headers, False) == "this"
-        assert http.read_next_chunk(fconn, headers, False) == "isatest"
-        assert http.read_next_chunk(fconn, headers, False) == None
+        chunks = list(content for _, content, _ in http.read_http_body_chunked(fconn, headers, None, "GET", 200, False))
+        assert chunks == ["this", "isatest", ""]
 
         connection.close()
 
