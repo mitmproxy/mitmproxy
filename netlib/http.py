@@ -288,6 +288,11 @@ def parse_response_line(line):
 def read_response(rfile, request_method, body_size_limit, include_body=True):
     """
         Return an (httpversion, code, msg, headers, content) tuple.
+
+        By default, both response header and body are read.
+        If include_body=False is specified, content may be one of the following:
+        - None, if the response is technically allowed to have a response body
+        - "", if the response must not have a response body (e.g. it's a response to a HEAD request)
     """
     line = rfile.readline()
     if line == "\r\n" or line == "\n":  # Possible leftover from previous message
@@ -368,7 +373,7 @@ def expected_http_body_size(headers, is_request, request_method, response_code):
          - -1, if all data should be read until end of stream.
     """
 
-    # Determine response size according to http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
+    # Determine response size according to http://tools.ietf.org/html/rfc7230#section-3.3
     if request_method:
         request_method = request_method.upper()
 
