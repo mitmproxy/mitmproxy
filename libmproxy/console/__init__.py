@@ -343,6 +343,7 @@ class Options(object):
         "server_replay",
         "stickycookie",
         "stickyauth",
+        "stream_large_bodies",
         "verbosity",
         "wfile",
         "nopop",
@@ -390,6 +391,8 @@ class ConsoleMaster(flow.FlowMaster):
         if r:
             print >> sys.stderr, "Sticky auth error:", r
             sys.exit(1)
+
+        self.set_stream_large_bodies(options.stream_large_bodies)
 
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache

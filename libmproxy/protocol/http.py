@@ -924,7 +924,9 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 self.c.channel.ask("responseheaders", flow)
 
                 # now get the rest of the request body, if body still needs to be read but not streaming this response
-                if not flow.response.stream and flow.response.content is None:
+                if flow.response.stream:
+                    flow.response.content = CONTENT_MISSING
+                else:
                     flow.response.content = http.read_http_body(self.c.server_conn.rfile, flow.response.headers,
                                                                 self.c.config.body_size_limit,
                                                                 flow.request.method, flow.response.code, False)
@@ -937,20 +939,19 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if response_reply is None or response_reply == KILL:
                 return False
 
-            if flow.response.content is not None:
-                # if not streaming or there is no body to be read, we'll already have the body, just send it
+            if not flow.response.stream:
+                # no streaming:
+                # we already received the full response from the server and can send it to the client straight away.
                 self.c.client_conn.send(flow.response._assemble())
             else:
-
-                # if streaming, we still need to read the body and stream its bits back to the client
-
-                # start with head
+                # streaming:
+                # First send the body and then transfer the response incrementally:
                 h = flow.response._assemble_head(preserve_transfer_encoding=True)
                 self.c.client_conn.send(h)
-
                 for chunk in http.read_http_body_chunked(self.c.server_conn.rfile,
                                                          flow.response.headers,
-                                                         self.c.config.body_size_limit, "GET", 200, False, 4096):
+                                                         self.c.config.body_size_limit, flow.request.method,
+                                                         flow.response.code, False, 4096):
                     for part in chunk:
                         self.c.client_conn.wfile.write(part)
                     self.c.client_conn.wfile.flush()

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import sys, os
 import netlib.utils
 from . import flow, filt, utils
+from .protocol import http
 
 class DumpError(Exception): pass
 
@@ -30,6 +31,7 @@ class Options(object):
         "showhost",
         "stickycookie",
         "stickyauth",
+        "stream_large_bodies",
         "verbosity",
         "wfile",
     ]
@@ -69,6 +71,8 @@ class DumpMaster(flow.FlowMaster):
         self.showhost = options.showhost
         self.refresh_server_playback = options.refresh_server_playback
 
+        self.set_stream_large_bodies(options.stream_large_bodies)
+
         if filtstr:
             self.filt = filt.parse(filtstr)
         else:
@@ -79,6 +83,7 @@ class DumpMaster(flow.FlowMaster):
 
         if options.stickyauth:
             self.set_stickyauth(options.stickyauth)
+
 
         if options.wfile:
             path = os.path.expanduser(options.wfile)
@@ -157,12 +162,17 @@ class DumpMaster(flow.FlowMaster):
 
         if f.response:
             if self.o.flow_detail > 0:
-                sz = utils.pretty_size(len(f.response.content))
+                if f.response.content == http.CONTENT_MISSING:
+                    sz = "(content missing)"
+                else:
+                    sz = utils.pretty_size(len(f.response.content))
                 result = " << %s %s"%(str_response(f.response), sz)
             if self.o.flow_detail > 1:
                 result = result + "\n\n" + self.indent(4, f.response.headers)
             if self.o.flow_detail > 2:
-                if utils.isBin(f.response.content):
+                if f.response.content == http.CONTENT_MISSING:
+                    cont = self.indent(4, "(content missing)")
+                elif utils.isBin(f.response.content):
                     d = netlib.utils.hexdump(f.response.content)
                     d = "\n".join("%s\t%s %s"%i for i in d)
                     cont = self.indent(4, d)

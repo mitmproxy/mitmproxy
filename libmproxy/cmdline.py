@@ -3,7 +3,7 @@ import re
 import argparse
 from argparse import ArgumentTypeError
 from netlib import http
-from . import proxy, filt
+from . import filt, utils
 from .proxy import config
 
 APP_HOST = "mitm.it"
@@ -23,13 +23,13 @@ def _parse_hook(s):
     elif len(parts) == 3:
         patt, a, b = parts
     else:
-        raise ParseException("Malformed hook specifier - too few clauses: %s"%s)
+        raise ParseException("Malformed hook specifier - too few clauses: %s" % s)
 
     if not a:
-        raise ParseException("Empty clause: %s"%str(patt))
+        raise ParseException("Empty clause: %s" % str(patt))
 
     if not filt.parse(patt):
-        raise ParseException("Malformed filter pattern: %s"%patt)
+        raise ParseException("Malformed filter pattern: %s" % patt)
 
     return patt, a, b
 
@@ -64,7 +64,7 @@ def parse_replace_hook(s):
     try:
         re.compile(regex)
     except re.error, e:
-        raise ParseException("Malformed replacement regex: %s"%str(e.message))
+        raise ParseException("Malformed replacement regex: %s" % str(e.message))
     return patt, regex, replacement
 
 
@@ -98,7 +98,6 @@ def parse_setheader(s):
 
 
 def parse_server_spec(url):
-
     normalized_url = re.sub("^https?2", "", url)
 
     p = http.parse_url(normalized_url)
@@ -125,6 +124,8 @@ def get_common_options(options):
     if options.stickyauth_filt:
         stickyauth = options.stickyauth_filt
 
+    stream_large_bodies = utils.parse_size(options.stream_large_bodies)
+
     reps = []
     for i in options.replace:
         try:
@@ -140,9 +141,8 @@ def get_common_options(options):
         try:
             v = open(path, "rb").read()
         except IOError, e:
-            raise ArgumentTypeError("Could not read replace file: %s"%path)
+            raise ArgumentTypeError("Could not read replace file: %s" % path)
         reps.append((patt, rex, v))
-
 
     setheaders = []
     for i in options.setheader:
@@ -153,29 +153,30 @@ def get_common_options(options):
         setheaders.append(p)
 
     return dict(
-        app = options.app,
-        app_host = options.app_host,
-        app_port = options.app_port,
-        app_external = options.app_external,
+        app=options.app,
+        app_host=options.app_host,
+        app_port=options.app_port,
+        app_external=options.app_external,
 
-        anticache = options.anticache,
-        anticomp = options.anticomp,
-        client_replay = options.client_replay,
-        kill = options.kill,
-        no_server = options.no_server,
-        refresh_server_playback = not options.norefresh,
-        rheaders = options.rheaders,
-        rfile = options.rfile,
-        replacements = reps,
-        setheaders = setheaders,
-        server_replay = options.server_replay,
-        scripts = options.scripts,
-        stickycookie = stickycookie,
-        stickyauth = stickyauth,
-        showhost = options.showhost,
-        wfile = options.wfile,
-        verbosity = options.verbose,
-        nopop = options.nopop,
+        anticache=options.anticache,
+        anticomp=options.anticomp,
+        client_replay=options.client_replay,
+        kill=options.kill,
+        no_server=options.no_server,
+        refresh_server_playback=not options.norefresh,
+        rheaders=options.rheaders,
+        rfile=options.rfile,
+        replacements=reps,
+        setheaders=setheaders,
+        server_replay=options.server_replay,
+        scripts=options.scripts,
+        stickycookie=stickycookie,
+        stickyauth=stickyauth,
+        stream_large_bodies=stream_large_bodies,
+        showhost=options.showhost,
+        wfile=options.wfile,
+        verbosity=options.verbose,
+        nopop=options.nopop,
     )
 
 
@@ -187,8 +188,8 @@ def common_options(parser):
     )
     parser.add_argument(
         "--confdir",
-        action="store", type = str, dest="confdir", default='~/.mitmproxy',
-        help = "Configuration directory. (~/.mitmproxy)"
+        action="store", type=str, dest="confdir", default='~/.mitmproxy',
+        help="Configuration directory. (~/.mitmproxy)"
     )
     parser.add_argument(
         "--host",
@@ -240,10 +241,16 @@ def common_options(parser):
         "-Z",
         action="store", dest="body_size_limit", default=None,
         metavar="SIZE",
-        help="Byte size limit of HTTP request and response bodies."\
+        help="Byte size limit of HTTP request and response bodies." \
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
-
+    parser.add_argument(
+        "--stream",
+        action="store", dest="stream_large_bodies", default=None,
+        metavar="SIZE",
+        help="Stream data to the client if response body exceeds the given threshold. "
+             "If streamed, the body will not be stored in any way. Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
+    )
 
     group = parser.add_argument_group("Proxy Options")
     # We could make a mutually exclusive group out of -R, -U, -T, but we don't do that because
@@ -251,8 +258,8 @@ def common_options(parser):
     #  - our own error messages are more helpful
     group.add_argument(
         "-b",
-        action="store", type = str, dest="addr", default='',
-        help = "Address to bind proxy to (defaults to all interfaces)"
+        action="store", type=str, dest="addr", default='',
+        help="Address to bind proxy to (defaults to all interfaces)"
     )
     group.add_argument(
         "-U",
@@ -266,8 +273,8 @@ def common_options(parser):
     )
     group.add_argument(
         "-p",
-        action="store", type = int, dest="port", default=8080,
-        help = "Proxy service port."
+        action="store", type=int, dest="port", default=8080,
+        help="Proxy service port."
     )
     group.add_argument(
         "-R",
@@ -279,7 +286,6 @@ def common_options(parser):
         action="store_true", dest="transparent_proxy", default=False,
         help="Set transparent proxy mode."
     )
-
 
     group = parser.add_argument_group(
         "Advanced Proxy Options",
@@ -304,7 +310,6 @@ def common_options(parser):
         help="Override the destination server all requests are sent to: http[s][2http[s]]://host[:port]"
     )
 
-
     group = parser.add_argument_group("Web App")
     group.add_argument(
         "-a",
@@ -315,7 +320,7 @@ def common_options(parser):
         "--app-host",
         action="store", dest="app_host", default=APP_HOST, metavar="host",
         help="Domain to serve the app from. For transparent mode, use an IP when\
-                a DNS entry for the app domain is not present. Default: %s"%APP_HOST
+                a DNS entry for the app domain is not present. Default: %s" % APP_HOST
 
     )
     group.add_argument(
@@ -328,7 +333,6 @@ def common_options(parser):
         action="store_true", dest="app_external",
         help="Serve the app outside of the proxy."
     )
-
 
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
@@ -352,21 +356,20 @@ def common_options(parser):
         "--rheader",
         action="append", dest="rheaders", type=str,
         help="Request headers to be considered during replay. "
-           "Can be passed multiple times."
+             "Can be passed multiple times."
     )
     group.add_argument(
         "--norefresh",
         action="store_true", dest="norefresh", default=False,
-        help= "Disable response refresh, "
-        "which updates times in cookies and headers for replayed responses."
+        help="Disable response refresh, "
+             "which updates times in cookies and headers for replayed responses."
     )
     group.add_argument(
         "--no-pop",
         action="store_true", dest="nopop", default=False,
         help="Disable response pop from response flow. "
-        "This makes it possible to replay same response multiple times."
+             "This makes it possible to replay same response multiple times."
     )
-
 
     group = parser.add_argument_group(
         "Replacements",
@@ -389,7 +392,6 @@ def common_options(parser):
         help="Replacement pattern, where the replacement clause is a path to a file."
     )
 
-
     group = parser.add_argument_group(
         "Set Headers",
         """
@@ -404,7 +406,6 @@ def common_options(parser):
         metavar="PATTERN",
         help="Header set pattern."
     )
-
 
     group = parser.add_argument_group(
         "Proxy Authentication",
@@ -433,6 +434,5 @@ def common_options(parser):
         metavar="PATH",
         help="Allow access to users specified in an Apache htpasswd file."
     )
-
 
     config.ssl_option_group(parser)

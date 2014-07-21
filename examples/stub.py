@@ -27,6 +27,15 @@ def request(ctx, flow):
     """
     ctx.log("request")
 
+
+def responseheaders(ctx, flow):
+    """
+        Called when the response headers for a server response have been received,
+        but the response body has not been processed yet. Can be used to tell mitmproxy
+        to stream the response.
+    """
+    ctx.log("responseheaders")
+
 def response(ctx, flow):
     """
        Called when a server response has been received.

@@ -145,6 +145,17 @@ class SetHeaders:
                     f.request.headers.add(header, value)
 
 
+class StreamLargeBodies(object):
+    def __init__(self, max_size):
+        self.max_size = max_size
+
+    def run(self, flow, is_request):
+        r = flow.request if is_request else flow.response
+        code = flow.response.code if flow.response else None
+        expected_size = netlib.http.expected_http_body_size(r.headers, is_request, flow.request.method, code)
+        if not (0 <= expected_size <= self.max_size):
+            r.stream = True
+
 class ClientPlaybackState:
     def __init__(self, flows, exit):
         self.flows, self.exit = flows, exit
@@ -437,6 +448,7 @@ class FlowMaster(controller.Master):
 
         self.anticache = False
         self.anticomp = False
+        self.stream_large_bodies = False
         self.refresh_server_playback = False
         self.replacehooks = ReplaceHooks()
         self.setheaders = SetHeaders()
@@ -521,6 +533,12 @@ class FlowMaster(controller.Master):
         else:
             self.stickycookie_state = None
             self.stickycookie_txt = None
+
+    def set_stream_large_bodies(self, max_size):
+        if max_size is not None:
+            self.stream_large_bodies = StreamLargeBodies(max_size)
+        else:
+            self.stream_large_bodies = False
 
     def set_stickyauth(self, txt):
         if txt:
@@ -708,6 +726,10 @@ class FlowMaster(controller.Master):
 
     def handle_responseheaders(self, f):
         self.run_script_hook("responseheaders", f)
+
+        if self.stream_large_bodies:
+            self.stream_large_bodies.run(f, False)
+
         f.reply()
         return f        
 
