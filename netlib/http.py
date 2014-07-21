@@ -1,4 +1,5 @@
 import string, urlparse, binascii
+import sys
 import odict, utils
 
 
@@ -88,14 +89,14 @@ def read_headers(fp):
             # We're being liberal in what we accept, here.
             if i > 0:
                 name = line[:i]
-                value = line[i+1:].strip()
+                value = line[i + 1:].strip()
                 ret.append([name, value])
             else:
                 return None
     return odict.ODictCaseless(ret)
 
 
-def read_chunked(fp, headers, limit, is_request):
+def read_chunked(fp, limit, is_request):
     """
         Read a chunked HTTP body.
 
@@ -103,10 +104,9 @@ def read_chunked(fp, headers, limit, is_request):
     """
     # FIXME: Should check if chunked is the final encoding in the headers
     # http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3 3.3 2.
-    content = ""
     total = 0
     code = 400 if is_request else 502
-    while 1:
+    while True:
         line = fp.readline(128)
         if line == "":
             raise HttpErrorConnClosed(code, "Connection closed prematurely")
@@ -114,70 +114,19 @@ def read_chunked(fp, headers, limit, is_request):
             try:
                 length = int(line, 16)
             except ValueError:
-                # FIXME: Not strictly correct - this could be from the server, in which
-                # case we should send a 502.
-                raise HttpError(code, "Invalid chunked encoding length: %s"%line)
-            if not length:
-                break
+                raise HttpError(code, "Invalid chunked encoding length: %s" % line)
             total += length
             if limit is not None and total > limit:
-                msg = "HTTP Body too large."\
-                      " Limit is %s, chunked content length was at least %s"%(limit, total)
+                msg = "HTTP Body too large." \
+                      " Limit is %s, chunked content length was at least %s" % (limit, total)
                 raise HttpError(code, msg)
-            content += fp.read(length)
-            line = fp.readline(5)
-            if line != '\r\n':
+            chunk = fp.read(length)
+            suffix = fp.readline(5)
+            if suffix != '\r\n':
                 raise HttpError(code, "Malformed chunked body")
-    while 1:
-        line = fp.readline()
-        if line == "":
-            raise HttpErrorConnClosed(code, "Connection closed prematurely")
-        if line == '\r\n' or line == '\n':
-            break
-    return content
-
-def read_next_chunk(fp, headers, is_request):
-    """
-        Read next piece of a chunked HTTP body.  Returns next piece of
-        content as a string or None if we hit the end.
-    """
-    # TODO: see and understand the FIXME in read_chunked and
-    # see if we need to apply here?
-    content = ""
-    code = 400 if is_request else 502
-    line = fp.readline(128)
-    if line == "":
-        raise HttpErrorConnClosed(code, "Connection closed prematurely")
-    try:
-        length = int(line, 16)
-    except ValueError:
-        # TODO: see note in this part of read_chunked()
-        raise HttpError(code, "Invalid chunked encoding length: %s"%line)
-    if length > 0:
-        content += fp.read(length)
-    print "read content: '%s'" % content
-    line = fp.readline(5)
-    if line == '':
-        raise HttpErrorConnClosed(code, "Connection closed prematurely")
-    if line != '\r\n':
-        raise HttpError(code, "Malformed chunked body: '%s' (len=%d)" % (line, length))
-    if content == "":
-        content = None # normalize zero length to None, meaning end of chunked stream
-    return content # return this chunk
-
-def write_chunk(fp, content):
-    """
-        Write a chunk with chunked encoding format, returns True
-        if there should be more chunks or False if you passed
-        None, meaning this was the last chunk.
-    """
-    if content == None or content == "":
-        fp.write("0\r\n\r\n")
-        return False
-    fp.write("%x\r\n" % len(content))
-    fp.write(content)
-    fp.write("\r\n")
-    return True
+            yield line, chunk, '\r\n'
+            if length == 0:
+                return
 
 
 def get_header_tokens(headers, key):
@@ -307,6 +256,7 @@ def parse_init_http(line):
 def connection_close(httpversion, headers):
     """
         Checks the message to see if the client connection should be closed according to RFC 2616 Section 8.1
+        Note that a connection should be closed as well if the response has been read until end of the stream.
     """
     # At first, check if we have an explicit Connection header.
     if "connection" in headers:
@@ -323,7 +273,7 @@ def connection_close(httpversion, headers):
 
 def parse_response_line(line):
     parts = line.strip().split(" ", 2)
-    if len(parts) == 2: # handle missing message gracefully
+    if len(parts) == 2:  # handle missing message gracefully
         parts.append("")
     if len(parts) != 3:
         return None
@@ -335,37 +285,38 @@ def parse_response_line(line):
     return (proto, code, msg)
 
 
-def read_response(rfile, method, body_size_limit, include_body=True):
+def read_response(rfile, request_method, body_size_limit, include_body=True):
     """
         Return an (httpversion, code, msg, headers, content) tuple.
     """
     line = rfile.readline()
-    if line == "\r\n" or line == "\n": # Possible leftover from previous message
+    if line == "\r\n" or line == "\n":  # Possible leftover from previous message
         line = rfile.readline()
     if not line:
         raise HttpErrorConnClosed(502, "Server disconnect.")
     parts = parse_response_line(line)
     if not parts:
-        raise HttpError(502, "Invalid server response: %s"%repr(line))
+        raise HttpError(502, "Invalid server response: %s" % repr(line))
     proto, code, msg = parts
     httpversion = parse_http_protocol(proto)
     if httpversion is None:
-        raise HttpError(502, "Invalid HTTP version in line: %s"%repr(proto))
+        raise HttpError(502, "Invalid HTTP version in line: %s" % repr(proto))
     headers = read_headers(rfile)
     if headers is None:
         raise HttpError(502, "Invalid headers.")
 
-    # Parse response body according to http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
-    if method in ["HEAD", "CONNECT"] or (code in [204, 304]) or 100 <= code <= 199:
-        content = ""
-    elif include_body:
-        content = read_http_body(rfile, headers, body_size_limit, False)
+    if include_body:
+        content = read_http_body(rfile, headers, body_size_limit, request_method, code, False)
     else:
-        content = None # if include_body==False then a None content means the body should be read separately
+        content = None  # if include_body==False then a None content means the body should be read separately
     return httpversion, code, msg, headers, content
 
 
-def read_http_body(rfile, headers, limit, is_request):
+def read_http_body(*args, **kwargs):
+    return "".join(content for _, content, _ in read_http_body_chunked(*args, **kwargs))
+
+
+def read_http_body_chunked(rfile, headers, limit, request_method, response_code, is_request, max_chunk_size=None):
     """
         Read an HTTP message body:
 
@@ -374,41 +325,69 @@ def read_http_body(rfile, headers, limit, is_request):
             limit: Size limit.
             is_request: True if the body to read belongs to a request, False otherwise
     """
-    if has_chunked_encoding(headers):
-        content = read_chunked(rfile, headers, limit, is_request)
-    elif "content-length" in headers:
-        try:
-            l = int(headers["content-length"][0])
-            if l < 0:
-                raise ValueError()
-        except ValueError:
-            raise HttpError(400 if is_request else 502, "Invalid content-length header: %s"%headers["content-length"])
-        if limit is not None and l > limit:
-            raise HttpError(400 if is_request else 509, "HTTP Body too large. Limit is %s, content-length was %s"%(limit, l))
-        content = rfile.read(l)
-    elif is_request:
-        content = ""
+    if max_chunk_size is None:
+        max_chunk_size = limit or sys.maxint
+
+    expected_size = expected_http_body_size(headers, is_request, request_method, response_code)
+
+    if expected_size is None:
+        if has_chunked_encoding(headers):
+            # Python 3: yield from
+            for x in read_chunked(rfile, limit, is_request):
+                yield x
+        else:  # pragma: nocover
+            raise HttpError(400 if is_request else 502, "Content-Length unknown but no chunked encoding")
+    elif expected_size >= 0:
+        if limit is not None and expected_size > limit:
+            raise HttpError(400 if is_request else 509,
+                            "HTTP Body too large. Limit is %s, content-length was %s" % (limit, expected_size))
+        bytes_left = expected_size
+        while bytes_left:
+            chunk_size = min(bytes_left, max_chunk_size)
+            yield "", rfile.read(chunk_size), ""
+            bytes_left -= chunk_size
     else:
-        content = rfile.read(limit if limit else -1)
+        bytes_left = limit or -1
+        while bytes_left:
+            chunk_size = min(bytes_left, max_chunk_size)
+            content = rfile.read(chunk_size)
+            if not content:
+                return
+            yield "", content, ""
+            bytes_left -= chunk_size
         not_done = rfile.read(1)
         if not_done:
             raise HttpError(400 if is_request else 509, "HTTP Body too large. Limit is %s," % limit)
-    return content
 
-def expected_http_body_size(headers, is_request):
+
+def expected_http_body_size(headers, is_request, request_method, response_code):
     """
-        Returns length of body expected or -1 if not
-        known and we should just read until end of
-        stream.
+        Returns the expected body length:
+         - a positive integer, if the size is known in advance
+         - None, if the size in unknown in advance (chunked encoding)
+         - -1, if all data should be read until end of stream.
     """
+
+    # Determine response size according to http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
+    if request_method:
+        request_method = request_method.upper()
+
+    if (not is_request and (
+                            request_method == "HEAD" or
+                        (request_method == "CONNECT" and response_code == 200) or
+                        response_code in [204, 304] or
+                        100 <= response_code <= 199)):
+        return 0
+    if has_chunked_encoding(headers):
+        return None
     if "content-length" in headers:
         try:
-            l = int(headers["content-length"][0])
-            if l < 0:
+            size = int(headers["content-length"][0])
+            if size < 0:
                 raise ValueError()
-            return l
+            return size
         except ValueError:
-            raise HttpError(400 if is_request else 502, "Invalid content-length header: %s"%headers["content-length"])
-    elif is_request:
+            raise HttpError(400 if is_request else 502, "Invalid content-length header: %s" % headers["content-length"])
+    if is_request:
         return 0
     return -1

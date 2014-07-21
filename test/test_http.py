@@ -16,78 +16,31 @@ def test_has_chunked_encoding():
 
 
 def test_read_chunked():
+
+    h = odict.ODictCaseless()
+    h["transfer-encoding"] = ["chunked"]
     s = cStringIO.StringIO("1\r\na\r\n0\r\n")
-    tutils.raises("closed prematurely", http.read_chunked, s, None, None, True)
+
+    tutils.raises("malformed chunked body", http.read_http_body, s, h, None, "GET", None, True)
 
     s = cStringIO.StringIO("1\r\na\r\n0\r\n\r\n")
-    assert http.read_chunked(s, None, None, True) == "a"
+    assert http.read_http_body(s, h, None, "GET", None, True) == "a"
 
     s = cStringIO.StringIO("\r\n\r\n1\r\na\r\n0\r\n\r\n")
-    assert http.read_chunked(s, None, None, True) == "a"
+    assert http.read_http_body(s, h, None, "GET", None, True) == "a"
 
     s = cStringIO.StringIO("\r\n")
-    tutils.raises("closed prematurely", http.read_chunked, s, None, None, True)
+    tutils.raises("closed prematurely", http.read_http_body, s, h, None, "GET", None, True)
 
     s = cStringIO.StringIO("1\r\nfoo")
-    tutils.raises("malformed chunked body", http.read_chunked, s, None, None, True)
+    tutils.raises("malformed chunked body", http.read_http_body, s, h, None, "GET", None, True)
 
     s = cStringIO.StringIO("foo\r\nfoo")
-    tutils.raises(http.HttpError, http.read_chunked, s, None, None, True)
+    tutils.raises(http.HttpError, http.read_http_body, s, h, None, "GET", None, True)
 
     s = cStringIO.StringIO("5\r\naaaaa\r\n0\r\n\r\n")
-    tutils.raises("too large", http.read_chunked, s, None, 2, True)
+    tutils.raises("too large", http.read_http_body, s, h, 2, "GET", None, True)
 
-
-def test_read_next_chunk():
-    s = cStringIO.StringIO(
-        "4\r\n" +
-        "mitm\r\n" +
-        "5\r\n" +
-        "proxy\r\n" +
-        "e\r\n" + 
-        " in\r\n\r\nchunks.\r\n" +
-        "0\r\n" +
-        "\r\n")
-    assert http.read_next_chunk(s, None, False) == "mitm"
-    assert http.read_next_chunk(s, None, False) == "proxy"
-    assert http.read_next_chunk(s, None, False) == " in\r\n\r\nchunks."
-    assert http.read_next_chunk(s, None, False) == None
-
-    s = cStringIO.StringIO("")
-    tutils.raises("closed prematurely", http.read_next_chunk, s, None, False)
-
-    s = cStringIO.StringIO("1\r\na\r\n0\r\n")
-    http.read_next_chunk(s, None, False)
-    tutils.raises("closed prematurely", http.read_next_chunk, s, None, False)
-
-    s = cStringIO.StringIO("1\r\nfoo")
-    tutils.raises("malformed chunked body", http.read_next_chunk, s, None, False)
-
-    s = cStringIO.StringIO("foo\r\nfoo")
-    tutils.raises(http.HttpError, http.read_next_chunk, s, None, False)
-
-def test_write_chunk():
-
-    expected = ("" +
-        "4\r\n" +
-        "mitm\r\n" +
-        "5\r\n" +
-        "proxy\r\n" +
-        "e\r\n" + 
-        " in\r\n\r\nchunks.\r\n" +
-        "0\r\n" +
-        "\r\n")
-
-    s = cStringIO.StringIO()
-    http.write_chunk(s, "mitm")
-    http.write_chunk(s, "proxy")
-    http.write_chunk(s, " in\r\n\r\nchunks.")
-    http.write_chunk(s, None)
-
-    print len(s.getvalue())
-    print len(expected)
-
-    assert s.getvalue() == expected
 
 def test_connection_close():
     h = odict.ODictCaseless()
@@ -114,73 +67,73 @@ def test_get_header_tokens():
 def test_read_http_body_request():
     h = odict.ODictCaseless()
     r = cStringIO.StringIO("testing")
-    assert http.read_http_body(r, h, None, True) == ""
+    assert http.read_http_body(r, h, None, "GET", None, True) == ""
 
 def test_read_http_body_response():
     h = odict.ODictCaseless()
     s = cStringIO.StringIO("testing")
-    assert http.read_http_body(s, h, None, False) == "testing"
+    assert http.read_http_body(s, h, None, "GET", 200, False) == "testing"
 
 def test_read_http_body():
     # test default case
     h = odict.ODictCaseless()
     h["content-length"] = [7]
     s = cStringIO.StringIO("testing")
-    assert http.read_http_body(s, h, None, False) == "testing"
+    assert http.read_http_body(s, h, None, "GET", 200, False) == "testing"
 
     # test content length: invalid header
     h["content-length"] = ["foo"]
     s = cStringIO.StringIO("testing")
-    tutils.raises(http.HttpError, http.read_http_body, s, h, None, False)
+    tutils.raises(http.HttpError, http.read_http_body, s, h, None, "GET", 200, False)
 
     # test content length: invalid header #2
     h["content-length"] = [-1]
     s = cStringIO.StringIO("testing")
-    tutils.raises(http.HttpError, http.read_http_body, s, h, None, False)
+    tutils.raises(http.HttpError, http.read_http_body, s, h, None, "GET", 200, False)
 
     # test content length: content length > actual content
     h["content-length"] = [5]
     s = cStringIO.StringIO("testing")
-    tutils.raises(http.HttpError, http.read_http_body, s, h, 4, False)
+    tutils.raises(http.HttpError, http.read_http_body, s, h, 4, "GET", 200, False)
 
     # test content length: content length < actual content
     s = cStringIO.StringIO("testing")
-    assert len(http.read_http_body(s, h, None, False)) == 5
+    assert len(http.read_http_body(s, h, None, "GET", 200, False)) == 5
 
     # test no content length: limit > actual content
     h = odict.ODictCaseless()
     s = cStringIO.StringIO("testing")
-    assert len(http.read_http_body(s, h, 100, False)) == 7
+    assert len(http.read_http_body(s, h, 100, "GET", 200, False)) == 7
 
     # test no content length: limit < actual content
     s = cStringIO.StringIO("testing")
-    tutils.raises(http.HttpError, http.read_http_body, s, h, 4, False)
+    tutils.raises(http.HttpError, http.read_http_body, s, h, 4, "GET", 200, False)
 
     # test chunked
     h = odict.ODictCaseless()
     h["transfer-encoding"] = ["chunked"]
     s = cStringIO.StringIO("5\r\naaaaa\r\n0\r\n\r\n")
-    assert http.read_http_body(s, h, 100, False) == "aaaaa"
+    assert http.read_http_body(s, h, 100, "GET", 200, False) == "aaaaa"
 
 def test_expected_http_body_size():
     # gibber in the content-length field
     h = odict.ODictCaseless()
     h["content-length"] = ["foo"]
-    tutils.raises(http.HttpError, http.expected_http_body_size, h, False)
+    tutils.raises(http.HttpError, http.expected_http_body_size, h, False, "GET", 200)
     # negative number in the content-length field
     h = odict.ODictCaseless()
     h["content-length"] = ["-7"]
-    tutils.raises(http.HttpError, http.expected_http_body_size, h, False)
+    tutils.raises(http.HttpError, http.expected_http_body_size, h, False, "GET", 200)
     # explicit length
     h = odict.ODictCaseless()
     h["content-length"] = ["5"]
-    assert http.expected_http_body_size(h, False) == 5
+    assert http.expected_http_body_size(h, False, "GET", 200) == 5
     # no length
     h = odict.ODictCaseless()
-    assert http.expected_http_body_size(h, False) == -1
+    assert http.expected_http_body_size(h, False, "GET", 200) == -1
     # no length request
     h = odict.ODictCaseless()
-    assert http.expected_http_body_size(h, True) == 0
+    assert http.expected_http_body_size(h, True, "GET", None) == 0
 
 def test_parse_http_protocol():
     assert http.parse_http_protocol("HTTP/1.1") == (1, 1)
