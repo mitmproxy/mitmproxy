@@ -592,6 +592,7 @@ class HTTPResponse(HTTPMessage):
 
         # Is this request replayed?
         self.is_replay = False
+        self.stream = False
 
     _stateobject_attributes = HTTPMessage._stateobject_attributes.copy()
     _stateobject_attributes.update(
@@ -918,7 +919,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
                 # read initially in "stream" mode, so we can get the headers separately
                 flow.response = self.get_response_from_server(flow.request, include_body=False)
-                flow.response.stream = False
 
                 # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
                 self.c.channel.ask("responseheaders", flow)
