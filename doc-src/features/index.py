@@ -12,4 +12,5 @@ pages = [
     Page("replacements.html", "Replacements"),
     Page("reverseproxy.html", "Reverse proxy mode"),
     Page("upstreamcerts.html", "Upstream Certs"),
+    Page("responsestreaming.html", "Response Streaming"),
 ]

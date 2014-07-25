@@ -1,0 +1,52 @@
+
+By default, mitmproxy will read the entire response, perform any indicated
+manipulations on it and then send the (possibly modified) response back to
+the client.  In some cases this is undesirable and you may wish to "stream"
+the reponse back to the client.  When streaming is enabled, the response is
+not buffered but is instead sent directly back to the client.  (If HTTP
+chunked transfer encoding is enabled, the response will be streamed
+back one chunk at a time.) This is especially useful for large binary files,
+which are often not what you are trying to inspect, and while buffering
+cause browser slows.
+
+Streaming can be enabled on the command line for all responses which are
+greater than a certain size.  Note that the SIZE argument below can accept
+the usual prefixes (m, k, etc.)
+
+<table class="table">
+    <tbody>
+        <tr>
+            <th width="20%">command-line</th>
+            <td>
+                <ul>
+                    <li>--stream SIZE</li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="page-header">
+    <h1>Customizing Response Streaming</h1>
+</div>
+
+You can also use an inline script hook to write code to customize exactly
+which responses are streamed.
+
+The basic concept is simple:
+
+$!example("examples/stream.py")!$
+
+See [inline scripts](@!urlTo("scripting/inlinescripts.html")!@) for more
+info on how to make and use inline scripts in general.
+
+<div class="page-header">
+    <h1>Things to Know</h1>
+</div>
+
+When response streaming is enabled, streamed response content will not be
+recorded with the -w parameter.
+
+Portions of the code which would have otherwise performed changes
+on the response body will instead see an empty response body
+and any attempts to modify it will be ignored.

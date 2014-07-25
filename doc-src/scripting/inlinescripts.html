@@ -46,12 +46,20 @@ a connection can correspond to multiple HTTP requests.
 Called when a client request has been received. The __Flow__ object is
 guaranteed to have a non-None __request__ attribute.
 
+### responseheaders(ScriptContext, Flow)
+
+Called when the headers of a server response have been received.
+This will always be called before the response hook.
+The __Flow__ object is guaranteed to have non-None __request__ and
+__response__ attributes.  __response.content__ will not be valid,
+as the response body has not been read yet.
 
 ### response(ScriptContext, Flow)
 
 Called when a server response has been received. The __Flow__ object is
 guaranteed to have non-None __request__ and __response__ attributes.
-
+Note that if response streaming is enabled for this response,
+__response.content__ will not contain the response body.
 
 ### error(ScriptContext, Flow)
 
