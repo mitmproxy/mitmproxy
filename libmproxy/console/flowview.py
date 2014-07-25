@@ -153,7 +153,7 @@ class FlowView(common.WWrap):
 
     def cont_view_handle_missing(self, conn, viewmode):
             if conn.content == CONTENT_MISSING:
-                msg, body = "", [urwid.Text([("error", "[content missing]")])], 0
+                msg, body = "", [urwid.Text([("error", "[content missing]")])]
             else:
                 msg, body = self.content_view(viewmode, conn)
 

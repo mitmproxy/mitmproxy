@@ -921,7 +921,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 flow.response = self.get_response_from_server(flow.request, include_body=False)
 
                 # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
-                self.c.channel.ask("responseheaders", flow)
+                self.c.channel.ask("responseheaders", flow.response)
 
                 # now get the rest of the request body, if body still needs to be read but not streaming this response
                 if flow.response.stream:
@@ -931,8 +931,9 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                                                                 self.c.config.body_size_limit,
                                                                 flow.request.method, flow.response.code, False)
 
-            flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point
+            # no further manipulation of self.c.server_conn beyond this point
             # we can safely set it as the final attribute value here.
+            flow.server_conn = self.c.server_conn
 
             self.c.log("response", "debug", [flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response", flow.response)

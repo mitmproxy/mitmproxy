@@ -724,13 +724,14 @@ class FlowMaster(controller.Master):
         self.process_new_request(f)
         return f
 
-    def handle_responseheaders(self, f):
+    def handle_responseheaders(self, resp):
+        f = resp.flow
         self.run_script_hook("responseheaders", f)
 
         if self.stream_large_bodies:
             self.stream_large_bodies.run(f, False)
 
-        f.reply()
+        resp.reply()
         return f        
 
     def handle_response(self, r):
