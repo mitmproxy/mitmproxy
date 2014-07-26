@@ -589,7 +589,7 @@ class TestFlowMaster:
         assert fm.scripts[0].ns["log"][-1] == "clientconnect"
         sc = ServerConnection((req.get_host(), req.get_port()), None)
         sc.reply = controller.DummyReply()
-        fm.handle_serverconnection(sc)
+        fm.handle_serverconnect(sc)
         assert fm.scripts[0].ns["log"][-1] == "serverconnect"
         f = fm.handle_request(req)
         assert fm.scripts[0].ns["log"][-1] == "request"

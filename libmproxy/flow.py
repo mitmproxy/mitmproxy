@@ -672,12 +672,7 @@ class FlowMaster(controller.Master):
         self.run_script_hook("clientdisconnect", r)
         r.reply()
 
-    def handle_serverconnection(self, sc):
-        # To unify the mitmproxy script API, we call the script hook
-        # "serverconnect" rather than "serverconnection".  As things are handled
-        # differently in libmproxy (ClientConnect + ClientDisconnect vs
-        # ServerConnection class), there is no "serverdisonnect" event at the
-        # moment.
+    def handle_serverconnect(self, sc):
         self.run_script_hook("serverconnect", sc)
         sc.reply()
 
@@ -791,7 +786,7 @@ class FilteredFlowWriter:
 
 
 class RequestReplayThread(threading.Thread):
-    name="RequestReplayThread"
+    name = "RequestReplayThread"
 
     def __init__(self, config, flow, masterq, should_exit):
         self.config, self.flow, self.channel = config, flow, controller.Channel(masterq, should_exit)

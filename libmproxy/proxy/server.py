@@ -146,15 +146,20 @@ class ConnectionHandler:
         self.log("Set new server address: %s:%s" % (address.host, address.port), "debug")
         self.server_conn = ServerConnection(address, priority)
 
-    def establish_server_connection(self):
+    def establish_server_connection(self, ask=True):
         """
         Establishes a new server connection.
         If there is already an existing server connection, the function returns immediately.
+
+        By default, this function ".ask"s the proxy master. This is deadly if this function is already called from the
+        master (e.g. via change_server), because this navigates us in a simple deadlock (the master is single-threaded).
+        In these scenarios, ask=False can be passed to suppress the call to the master.
         """
         if self.server_conn.connection:
             return
         self.log("serverconnect", "debug", ["%s:%s" % self.server_conn.address()[:2]])
-        self.channel.tell("serverconnect", self)
+        if ask:
+            self.channel.ask("serverconnect", self)
         try:
             self.server_conn.connect()
         except tcp.NetLibError, v:
@@ -185,9 +190,10 @@ class ConnectionHandler:
             self.log("Establish SSL", "debug", subs)
 
         if server:
+            if not self.server_conn or not self.server_conn.connection:
+                raise ProxyError(502, "No server connection.")
             if self.server_conn.ssl_established:
                 raise ProxyError(502, "SSL to Server already established.")
-            self.establish_server_connection()  # make sure there is a server connection.
             self.server_conn.establish_ssl(self.config.clientcerts, self.sni)
         if client:
             if self.client_conn.ssl_established:

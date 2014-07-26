@@ -1035,12 +1035,14 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 if not self.c.config.get_upstream_server:
                     self.c.set_server_address((request.host, request.port),
                                               proxy.AddressPriority.FROM_PROTOCOL)
+                    self.c.establish_server_connection()
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                     self.c.client_conn.send(
                         'HTTP/1.1 200 Connection established\r\n' +
                         ('Proxy-agent: %s\r\n' % self.c.server_version) +
                         '\r\n'
                     )
+
                     self.ssl_upgrade()
                     self.skip_authentication = True
                     return False

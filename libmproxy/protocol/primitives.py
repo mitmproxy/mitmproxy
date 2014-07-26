@@ -181,6 +181,7 @@ class TemporaryServerChangeMixin(object):
             self.c.del_server_connection()
 
         self.c.set_server_address(address, priority)
+        self.c.establish_server_connection(ask=False)
         if ssl:
             self.c.establish_ssl(server=True)
 
