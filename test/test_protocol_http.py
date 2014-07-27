@@ -54,7 +54,6 @@ class TestHTTPRequest:
         r = tutils.treq()
         tutils.raises("Invalid request form", r._assemble, "antiauthority")
 
-
     def test_set_url(self):
         r = tutils.treq_absolute()
         r.set_url("https://otheraddress:42/ORLY")
@@ -126,6 +125,21 @@ class TestProxyChainingSSL(tservers.HTTPChainProxyTest):
         assert self.chain[0].tmaster.state.flow_count() == 2  # CONNECT from chain[1] to proxy,
                                                               # request from chain[1] to proxy
         assert self.proxy.tmaster.state.flow_count() == 1  # request from chain[0] (regular proxy doesn't store CONNECTs)
+
+    def test_closing_connect_response(self):
+        """
+        https://github.com/mitmproxy/mitmproxy/issues/313
+        """
+        def handle_request(r):
+            r.httpversion = (1,0)
+            del r.headers["Content-Length"]
+            r.reply()
+        _handle_request = self.chain[0].tmaster.handle_request
+        self.chain[0].tmaster.handle_request = handle_request
+        try:
+            assert self.pathoc().request("get:/p/418").status_code == 418
+        finally:
+            self.chain[0].tmaster.handle_request = _handle_request
 
 class TestProxyChainingSSLReconnect(tservers.HTTPChainProxyTest):
     ssl = True

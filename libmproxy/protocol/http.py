@@ -930,9 +930,14 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
             if (http.connection_close(flow.request.httpversion, flow.request.headers) or
                     http.connection_close(flow.response.httpversion, flow.response.headers)):
-                return False
+                if flow.request.form_in == "authority" and flow.response.code == 200:
+                    # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
+                    # Some proxies (e.g. Charles) send a CONNECT response with HTTP/1.0 and no Content-Length header
+                    pass
+                else:
+                    return False
 
-            if flow.request.form_in == "authority":
+            if flow.request.form_in == "authority" and flow.response.code == 200:
                 self.ssl_upgrade()
 
             # If the user has changed the target server on this connection,
@@ -1039,6 +1044,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                     self.c.client_conn.send(
                         'HTTP/1.1 200 Connection established\r\n' +
+                        'Content-Length: 0\r\n' +
                         ('Proxy-agent: %s\r\n' % self.c.server_version) +
                         '\r\n'
                     )
