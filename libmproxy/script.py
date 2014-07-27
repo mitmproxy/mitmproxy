@@ -96,7 +96,7 @@ class Script:
         f = self.ns.get(name)
         if f:
             try:
-                return (True, f(self.ctx, *args, **kwargs))
+                return (True, f(self, *args, **kwargs))
             except Exception, v:
                 return (False, (v, traceback.format_exc(v)))
         else:
