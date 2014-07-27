@@ -11,7 +11,7 @@ import requests
 from netlib import odict, wsgi, tcp
 import netlib.http
 from . import controller, protocol, tnetstring, filt, script, version, app
-from .protocol import http
+from .protocol import http, handle
 from .proxy.connection import ServerConnection
 from .proxy.primitives import ProxyError
 
@@ -765,7 +765,7 @@ class FlowReader:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
-                yield protocol.handle.protocols[data["conntype"]]["flow"]._from_state(data)
+                yield handle.protocols[data["conntype"]]["flow"]._from_state(data)
         except ValueError, v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':

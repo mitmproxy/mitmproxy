@@ -139,7 +139,7 @@ class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
 class ProtocolHandler(object):
     def __init__(self, c):
         self.c = c
-        """@type: libmproxy.proxy.ConnectionHandler"""
+        """@type: libmproxy.proxy.server.ConnectionHandler"""
 
     def handle_messages(self):
         """

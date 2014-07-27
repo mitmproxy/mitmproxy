@@ -751,7 +751,7 @@ class HTTPFlow(Flow):
     """
 
     def __init__(self, client_conn, server_conn, change_server=None):
-        Flow.__init__(self, "http", client_conn, server_conn)
+        super(HTTPFlow, self).__init__("http", client_conn, server_conn)
         self.request = None
         """@type: HTTPRequest"""
         self.response = None
