@@ -387,10 +387,9 @@ class MasterStreamRequest(tservers.TestMaster):
     """
         Enables the stream flag on the flow for all requests
     """
-    def handle_responseheaders(self, f):
-        f.response.stream = True
-        f.reply()
-        return f
+    def handle_responseheaders(self, r):
+        r.stream = True
+        r.reply()
 
 class TestStreamRequest(tservers.HTTPProxTest):
     masterclass = MasterStreamRequest
