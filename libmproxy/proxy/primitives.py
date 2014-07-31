@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from netlib import socks, tcp
 
 
 class ProxyError(Exception):
@@ -19,18 +20,73 @@ class ProxyServerError(Exception):
 
 
 class UpstreamServerResolver(object):
-    def __call__(self, conn):
+    def __call__(self, conn_handler):
         """
         Returns the address of the server to connect to.
         """
         raise NotImplementedError  # pragma: nocover
 
 
+class SocksUpstreamServerResolver(UpstreamServerResolver):
+
+    def __init__(self, sslports):
+        self.sslports = sslports
+
+    def _assert_socks5(self, msg):
+        if msg.ver != 0x05:
+            raise socks.SocksError(
+                socks.REP.GENERAL_SOCKS_SERVER_FAILURE,
+                "Invalid SOCKS version. Expected 0x05, got %x" % msg.ver)
+
+    def __call__(self, conn_handler):
+        try:
+            client_greet = socks.ClientGreeting.from_file(conn_handler.client_conn.rfile)
+            self._assert_socks5(client_greet)
+            if 0x00 not in client_greet.methods:
+                raise socks.SocksError(
+                    socks.METHOD.NO_ACCEPTABLE_METHODS,
+                    "mitmproxy only supports SOCKS without authentication"
+                )
+            server_greet = socks.ServerGreeting(0x05, socks.METHOD.NO_AUTHENTICATION_REQUIRED)
+            server_greet.to_file(conn_handler.client_conn.wfile)
+            conn_handler.client_conn.wfile.flush()
+
+            connect_request = socks.Message.from_file(conn_handler.client_conn.rfile)
+            self._assert_socks5(connect_request)
+            if connect_request.msg != 0x01:
+                raise socks.SocksError(
+                    socks.REP.COMMAND_NOT_SUPPORTED,
+                    "mitmproxy only supports SOCKS5 CONNECT."
+                )
+
+            try:
+                conn_handler.set_server_address(connect_request.addr, AddressPriority.FROM_SETTINGS)
+                conn_handler.establish_server_connection()
+            except ProxyError, e:
+                raise socks.SocksError(socks.REP.GENERAL_SOCKS_SERVER_FAILURE, e.message)
+
+            connect_reply = socks.Message(0x05,
+                                          socks.REP.SUCCEEDED,
+                                          connect_request.atyp,
+                                          tcp.Address.wrap(conn_handler.server_conn.sockname[:2]))
+            connect_reply.to_file(conn_handler.client_conn.wfile)
+            conn_handler.client_conn.wfile.flush()
+            ssl = (connect_request.addr.port in self.sslports)
+            return (ssl, ssl, connect_request.addr.host, connect_request.addr.port)
+        except socks.SocksError, e:
+            msg = socks.Message(5, e.code, socks.ATYP.DOMAINNAME, repr(e))
+            try:
+                msg.to_file(conn_handler.client_conn.wfile)
+            except:
+                pass
+            raise e
+
+
 class ConstUpstreamServerResolver(UpstreamServerResolver):
     def __init__(self, dst):
         self.dst = dst
 
-    def __call__(self, conn):
+    def __call__(self, conn_handler):
         return self.dst
 
 
@@ -39,8 +95,8 @@ class TransparentUpstreamServerResolver(UpstreamServerResolver):
         self.resolver = resolver
         self.sslports = sslports
 
-    def __call__(self, conn):
-        dst = self.resolver.original_addr(conn)
+    def __call__(self, conn_handler):
+        dst = self.resolver.original_addr(conn_handler.client_conn.connection)
         if not dst:
             raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
 
