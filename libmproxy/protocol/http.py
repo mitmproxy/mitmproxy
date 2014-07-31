@@ -293,7 +293,8 @@ class HTTPRequest(HTTPMessage):
             raise http.HttpError(400, "Invalid headers")
 
         if include_body:
-            content = http.read_http_body(rfile, headers, body_size_limit, True)
+            content = http.read_http_body(rfile, headers, body_size_limit,
+                                          method, None, True)
             timestamp_end = utils.timestamp()
 
         return HTTPRequest(form_in, method, scheme, host, port, path, httpversion, headers,
@@ -305,7 +306,7 @@ class HTTPRequest(HTTPMessage):
         if form == "relative":
             path = self.path if self.method != "OPTIONS" else "*"
             request_line = '%s %s HTTP/%s.%s' % \
-                (self.method, path, self.httpversion[0], self.httpversion[1])
+                           (self.method, path, self.httpversion[0], self.httpversion[1])
         elif form == "authority":
             request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
                                                     self.httpversion[0], self.httpversion[1])
@@ -591,6 +592,7 @@ class HTTPResponse(HTTPMessage):
 
         # Is this request replayed?
         self.is_replay = False
+        self.stream = False
 
     _stateobject_attributes = HTTPMessage._stateobject_attributes.copy()
     _stateobject_attributes.update(
@@ -632,24 +634,22 @@ class HTTPResponse(HTTPMessage):
         return 'HTTP/%s.%s %s %s' % \
                (self.httpversion[0], self.httpversion[1], self.code, self.msg)
 
-    def _assemble_headers(self):
+    def _assemble_headers(self, preserve_transfer_encoding=False):
         headers = self.headers.copy()
-        utils.del_all(
-            headers,
-            [
-                'Proxy-Connection',
-                'Transfer-Encoding'
-            ]
-        )
+        utils.del_all(headers, ['Proxy-Connection'])
+        if not preserve_transfer_encoding:
+            utils.del_all(headers, ['Transfer-Encoding'])
+
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]
-        elif 'Transfer-Encoding' in self.headers:  # add content-length for chuncked transfer-encoding with no content
+        elif not preserve_transfer_encoding and 'Transfer-Encoding' in self.headers:  # add content-length for chuncked transfer-encoding with no content
             headers["Content-Length"] = ["0"]
 
         return str(headers)
 
-    def _assemble_head(self):
-        return '%s\r\n%s\r\n' % (self._assemble_first_line(), self._assemble_headers())
+    def _assemble_head(self, preserve_transfer_encoding=False):
+        return '%s\r\n%s\r\n' % (
+            self._assemble_first_line(), self._assemble_headers(preserve_transfer_encoding=preserve_transfer_encoding))
 
     def _assemble(self):
         """
@@ -865,15 +865,16 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             pass
         self.c.close = True
 
-    def get_response_from_server(self, request):
+    def get_response_from_server(self, request, include_body=True):
         self.c.establish_server_connection()
         request_raw = request._assemble()
 
         for i in range(2):
             try:
                 self.c.server_conn.send(request_raw)
-                return HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
-                                                body_size_limit=self.c.config.body_size_limit)
+                res = HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
+                                               body_size_limit=self.c.config.body_size_limit, include_body=include_body)
+                return res
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
                 self.c.log("error in server communication: %s" % str(v), level="debug")
                 if i < 1:
@@ -915,21 +916,53 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
             else:
-                flow.response = self.get_response_from_server(flow.request)
 
-            flow.server_conn = self.c.server_conn  # no further manipulation of self.c.server_conn beyond this point
+                # read initially in "stream" mode, so we can get the headers separately
+                flow.response = self.get_response_from_server(flow.request, include_body=False)
+
+                # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
+                self.c.channel.ask("responseheaders", flow.response)
+
+                # now get the rest of the request body, if body still needs to be read but not streaming this response
+                if flow.response.stream:
+                    flow.response.content = CONTENT_MISSING
+                else:
+                    flow.response.content = http.read_http_body(self.c.server_conn.rfile, flow.response.headers,
+                                                                self.c.config.body_size_limit,
+                                                                flow.request.method, flow.response.code, False)
+
+            # no further manipulation of self.c.server_conn beyond this point
             # we can safely set it as the final attribute value here.
+            flow.server_conn = self.c.server_conn
 
             self.c.log("response", "debug", [flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response", flow.response)
             if response_reply is None or response_reply == KILL:
                 return False
 
-            self.c.client_conn.send(flow.response._assemble())
+            if not flow.response.stream:
+                # no streaming:
+                # we already received the full response from the server and can send it to the client straight away.
+                self.c.client_conn.send(flow.response._assemble())
+            else:
+                # streaming:
+                # First send the body and then transfer the response incrementally:
+                h = flow.response._assemble_head(preserve_transfer_encoding=True)
+                self.c.client_conn.send(h)
+                for chunk in http.read_http_body_chunked(self.c.server_conn.rfile,
+                                                         flow.response.headers,
+                                                         self.c.config.body_size_limit, flow.request.method,
+                                                         flow.response.code, False, 4096):
+                    for part in chunk:
+                        self.c.client_conn.wfile.write(part)
+                    self.c.client_conn.wfile.flush()
+
             flow.timestamp_end = utils.timestamp()
 
             if (http.connection_close(flow.request.httpversion, flow.request.headers) or
-                    http.connection_close(flow.response.httpversion, flow.response.headers)):
+                    http.connection_close(flow.response.httpversion, flow.response.headers) or
+                        http.expected_http_body_size(flow.response.headers, False, flow.request.method,
+                                                     flow.response.code) == -1):
                 if flow.request.form_in == "authority" and flow.response.code == 200:
                     # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
                     # Some proxies (e.g. Charles) send a CONNECT response with HTTP/1.0 and no Content-Length header
@@ -943,6 +976,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             # If the user has changed the target server on this connection,
             # restore the original target server
             self.restore_server()
+
             return True
         except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
@@ -965,7 +999,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             if flow.request and not flow.response:
                 self.c.channel.ask("error", flow.error)
         else:
-            pass  #  FIXME: Do we want to persist errors without flows?
+            pass  # FIXME: Do we want to persist errors without flows?
 
         try:
             self.send_error(code, message, headers)
@@ -1068,7 +1102,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             return True
 
         raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" %
-                                  (self.expected_form_in, request.form_in))
+                             (self.expected_form_in, request.form_in))
 
     def authenticate(self, request):
         if self.c.config.authenticator:

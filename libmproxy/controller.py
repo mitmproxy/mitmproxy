@@ -49,7 +49,7 @@ class Channel:
             try:
                 # The timeout is here so we can handle a should_exit event.
                 g = m.reply.q.get(timeout=0.5)
-            except Queue.Empty: # pragma: nocover
+            except Queue.Empty:  # pragma: nocover
                 continue
             return g
 

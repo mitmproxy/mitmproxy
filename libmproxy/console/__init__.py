@@ -165,6 +165,8 @@ class StatusBar(common.WWrap):
             opts.append("no-upstream-cert")
         if self.master.state.follow_focus:
             opts.append("following")
+        if self.master.stream_large_bodies:
+            opts.append("stream:%s" % utils.pretty_size(self.master.stream_large_bodies.max_size))
 
         if opts:
             r.append("[%s]"%(":".join(opts)))
@@ -343,6 +345,7 @@ class Options(object):
         "server_replay",
         "stickycookie",
         "stickyauth",
+        "stream_large_bodies",
         "verbosity",
         "wfile",
         "nopop",
@@ -390,6 +393,8 @@ class ConsoleMaster(flow.FlowMaster):
         if r:
             print >> sys.stderr, "Sticky auth error:", r
             sys.exit(1)
+
+        self.set_stream_large_bodies(options.stream_large_bodies)
 
         self.refresh_server_playback = options.refresh_server_playback
         self.anticache = options.anticache
