@@ -11,13 +11,14 @@ CA_CERT_NAME = "mitmproxy-ca.pem"
 
 logger = logging.getLogger('pathod')
 
+
 class PathodError(Exception): pass
 
 
 class SSLOptions:
-    def __init__(self, confdir=CONFDIR, cn=None, not_after_connect=None, 
-                       request_client_cert=False, sslversion=tcp.SSLv23_METHOD, 
-                       ciphers=None, certs=None):
+    def __init__(self, confdir=CONFDIR, cn=None, not_after_connect=None,
+                 request_client_cert=False, sslversion=tcp.SSLv23_METHOD,
+                 ciphers=None, certs=None):
         self.confdir = confdir
         self.cn = cn
         self.certstore = certutils.CertStore.from_store(
@@ -39,12 +40,12 @@ class SSLOptions:
         return self.certstore.get_cert(name, [])
 
 
-
 class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
+
     def info(self, s):
-        logger.info("%s:%s: %s"%(self.address.host, self.address.port, str(s)))
+        logger.info("%s:%s: %s" % (self.address.host, self.address.port, str(s)))
 
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
@@ -55,14 +56,14 @@ class PathodHandler(tcp.BaseHandler):
             err = language.make_error_response(c)
             language.serve(err, self.wfile, self.server.request_settings)
             log = dict(
-                type = "error",
-                msg = c
+                type="error",
+                msg=c
             )
             return False, log
 
         if self.server.explain and not isinstance(crafted, language.PathodErrorResponse):
             crafted = crafted.freeze(self.server.request_settings, None)
-            self.info(">> Spec: %s"%crafted.spec())
+            self.info(">> Spec: %s" % crafted.spec())
         response_log = language.serve(crafted, self.wfile, self.server.request_settings, None)
         if response_log["disconnect"]:
             return False, response_log
@@ -76,7 +77,7 @@ class PathodHandler(tcp.BaseHandler):
             log: A dictionary, or None
         """
         line = self.rfile.readline()
-        if line == "\r\n" or line == "\n": # Possible leftover from previous message
+        if line == "\r\n" or line == "\n":  # Possible leftover from previous message
             line = self.rfile.readline()
         if line == "":
             # Normal termination
@@ -86,103 +87,104 @@ class PathodHandler(tcp.BaseHandler):
         if m(http.parse_init_connect(line)):
             headers = http.read_headers(self.rfile)
             self.wfile.write(
-                        'HTTP/1.1 200 Connection established\r\n' +
-                        ('Proxy-agent: %s\r\n'%version.NAMEVERSION) +
-                        '\r\n'
-                        )
+                'HTTP/1.1 200 Connection established\r\n' +
+                ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
+                '\r\n'
+            )
             self.wfile.flush()
             if not self.server.ssloptions.not_after_connect:
                 try:
                     cert, key = self.server.ssloptions.get_cert(m.v[0])
                     self.convert_to_ssl(
                         cert, key,
-                        handle_sni = self.handle_sni,
-                        request_client_cert = self.server.ssloptions.request_client_cert,
-                        cipher_list = self.server.ssloptions.ciphers,
-                        method = self.server.ssloptions.sslversion,
+                        handle_sni=self.handle_sni,
+                        request_client_cert=self.server.ssloptions.request_client_cert,
+                        cipher_list=self.server.ssloptions.ciphers,
+                        method=self.server.ssloptions.sslversion,
                     )
                 except tcp.NetLibError, v:
                     s = str(v)
                     self.info(s)
-                    return False, dict(type = "error", msg = s)
+                    return False, dict(type="error", msg=s)
             return True, None
         elif m(http.parse_init_proxy(line)):
             method, _, _, _, path, httpversion = m.v
         elif m(http.parse_init_http(line)):
             method, path, httpversion = m.v
         else:
-            s = "Invalid first line: %s"%repr(line)
+            s = "Invalid first line: %s" % repr(line)
             self.info(s)
-            return False, dict(type = "error", msg = s)
+            return False, dict(type="error", msg=s)
 
         headers = http.read_headers(self.rfile)
         if headers is None:
             s = "Invalid headers"
             self.info(s)
-            return False, dict(type = "error", msg = s)
+            return False, dict(type="error", msg=s)
 
         clientcert = None
         if self.clientcert:
             clientcert = dict(
-                cn = self.clientcert.cn,
-                subject = self.clientcert.subject,
-                serial = self.clientcert.serial,
-                notbefore = self.clientcert.notbefore.isoformat(),
-                notafter = self.clientcert.notafter.isoformat(),
-                keyinfo = self.clientcert.keyinfo,
+                cn=self.clientcert.cn,
+                subject=self.clientcert.subject,
+                serial=self.clientcert.serial,
+                notbefore=self.clientcert.notbefore.isoformat(),
+                notafter=self.clientcert.notafter.isoformat(),
+                keyinfo=self.clientcert.keyinfo,
             )
 
         retlog = dict(
-            type = "crafted",
-            request = dict(
-                path = path,
-                method = method,
-                headers = headers.lst,
-                httpversion = httpversion,
-                sni = self.sni,
-                remote_address = self.address(),
-                clientcert = clientcert,
+            type="crafted",
+            request=dict(
+                path=path,
+                method=method,
+                headers=headers.lst,
+                httpversion=httpversion,
+                sni=self.sni,
+                remote_address=self.address(),
+                clientcert=clientcert,
             ),
-            cipher = None,
+            cipher=None,
         )
         if self.ssl_established:
             retlog["cipher"] = self.get_current_cipher()
 
         try:
             content = http.read_http_body(
-                        self.rfile, headers, None, True
-                    )
+                self.rfile, headers, None,
+                method, None, True
+            )
         except http.HttpError, s:
             s = str(s)
             self.info(s)
-            return False, dict(type = "error", msg = s)
+            return False, dict(type="error", msg=s)
 
         for i in self.server.anchors:
             if i[0].match(path):
-                self.info("crafting anchor: %s"%path)
+                self.info("crafting anchor: %s" % path)
                 aresp = language.parse_response(self.server.request_settings, i[1])
                 again, retlog["response"] = self.serve_crafted(aresp)
                 return again, retlog
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
-            self.info("crafting spec: %s"%spec)
+            self.info("crafting spec: %s" % spec)
             try:
                 crafted = language.parse_response(self.server.request_settings, spec)
             except language.ParseException, v:
-                self.info("Parse error: %s"%v.msg)
+                self.info("Parse error: %s" % v.msg)
                 crafted = language.make_error_response(
-                        "Parse Error",
-                        "Error parsing response spec: %s\n"%v.msg + v.marked()
-                    )
+                    "Parse Error",
+                    "Error parsing response spec: %s\n" % v.msg + v.marked()
+                )
             again, retlog["response"] = self.serve_crafted(crafted)
             return again, retlog
         elif self.server.noweb:
             crafted = language.make_error_response("Access Denied")
             language.serve(crafted, self.wfile, self.server.request_settings)
-            return False, dict(type = "error", msg="Access denied: web interface disabled")
+            return False, dict(type="error", msg="Access denied: web interface disabled")
         else:
-            self.info("app: %s %s"%(method, path))
+            self.info("app: %s %s" % (method, path))
             cc = wsgi.ClientConn(self.address())
             req = wsgi.Request(cc, "http", method, path, headers, content)
             sn = self.connection.getsockname()
@@ -198,11 +200,11 @@ class PathodHandler(tcp.BaseHandler):
     def _log_bytes(self, header, data, hexdump):
         s = []
         if hexdump:
-            s.append("%s (hex dump):"%header)
+            s.append("%s (hex dump):" % header)
             for line in netlib.utils.hexdump(data):
-                s.append("\t%s %s %s"%line)
+                s.append("\t%s %s %s" % line)
         else:
-            s.append("%s (unprintables escaped):"%header)
+            s.append("%s (unprintables escaped):" % header)
             s.append(netlib.utils.cleanBin(data))
         self.info("\n".join(s))
 
@@ -212,17 +214,17 @@ class PathodHandler(tcp.BaseHandler):
                 cert, key = self.server.ssloptions.get_cert(None)
                 self.convert_to_ssl(
                     cert, key,
-                    handle_sni = self.handle_sni,
-                    request_client_cert = self.server.ssloptions.request_client_cert,
-                    cipher_list = self.server.ssloptions.ciphers,
-                    method = self.server.ssloptions.sslversion,
+                    handle_sni=self.handle_sni,
+                    request_client_cert=self.server.ssloptions.request_client_cert,
+                    cipher_list=self.server.ssloptions.ciphers,
+                    method=self.server.ssloptions.sslversion,
                 )
             except tcp.NetLibError, v:
                 s = str(v)
                 self.server.add_log(
                     dict(
-                        type = "error",
-                        msg = s
+                        type="error",
+                        msg=s
                     )
                 )
                 self.info(s)
@@ -248,13 +250,14 @@ class PathodHandler(tcp.BaseHandler):
 
 class Pathod(tcp.TCPServer):
     LOGBUF = 500
-    def __init__(   
-                    self, addr, confdir=CONFDIR, ssl=False, ssloptions=None,
-                    craftanchor="/p/", staticdir=None, anchors=None,
-                    sizelimit=None, noweb=False, nocraft=False, noapi=False,
-                    nohang=False, timeout=None, logreq=False, logresp=False,
-                    explain=False, hexdump=False
-                ):
+
+    def __init__(
+            self, addr, confdir=CONFDIR, ssl=False, ssloptions=None,
+            craftanchor="/p/", staticdir=None, anchors=None,
+            sizelimit=None, noweb=False, nocraft=False, noapi=False,
+            nohang=False, timeout=None, logreq=False, logresp=False,
+            explain=False, hexdump=False
+    ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
@@ -287,11 +290,11 @@ class Pathod(tcp.TCPServer):
                 try:
                     arex = re.compile(i[0])
                 except re.error:
-                    raise PathodError("Invalid regex in anchor: %s"%i[0])
+                    raise PathodError("Invalid regex in anchor: %s" % i[0])
                 try:
                     language.parse_response(self.request_settings, i[1])
                 except language.ParseException, v:
-                    raise PathodError("Invalid page spec in anchor: '%s', %s"%(i[1], str(v)))
+                    raise PathodError("Invalid page spec in anchor: '%s', %s" % (i[1], str(v)))
                 self.anchors.append((arex, i[1]))
 
     def check_policy(self, req, settings):
@@ -311,7 +314,7 @@ class Pathod(tcp.TCPServer):
     @property
     def request_settings(self):
         return dict(
-            staticdir = self.staticdir
+            staticdir=self.staticdir
         )
 
     def handle_client_connection(self, request, client_address):
@@ -319,12 +322,12 @@ class Pathod(tcp.TCPServer):
         try:
             h.handle()
             h.finish()
-        except tcp.NetLibDisconnect: # pragma: no cover
+        except tcp.NetLibDisconnect:  # pragma: no cover
             h.info("Disconnect")
             self.add_log(
                 dict(
-                    type = "error",
-                    msg = "Disconnect"
+                    type="error",
+                    msg="Disconnect"
                 )
             )
             return
@@ -332,7 +335,7 @@ class Pathod(tcp.TCPServer):
             h.info("Timeout")
             self.add_log(
                 dict(
-                    type = "timeout",
+                    type="timeout",
                 )
             )
             return
