@@ -238,12 +238,12 @@ class ConnectionHandler:
         else:
             host = self.server_conn.address.host
             sans = []
-            if not self.config.no_upstream_cert and self.server_conn.ssl_established:
+            if self.server_conn.ssl_established and (not self.config.no_upstream_cert):
                 upstream_cert = self.server_conn.cert
                 if upstream_cert.cn:
                     host = upstream_cert.cn.decode("utf8").encode("idna")
                 sans = upstream_cert.altnames
-            elif self.config.no_upstream_cert and self.sni:
+            elif self.sni:
                 sans = [self.sni]
 
             ret = self.config.certstore.get_cert(host, sans)
