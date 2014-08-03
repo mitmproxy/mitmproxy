@@ -34,6 +34,7 @@
 from __future__ import absolute_import
 import re, sys
 from .contrib import pyparsing as pp
+from .protocol.http import decoded
 
 
 class _Token:
@@ -165,10 +166,14 @@ class FBod(_Rex):
     code = "b"
     help = "Body"
     def __call__(self, f):
-        if f.request.content and re.search(self.expr, f.request.content):
-            return True
-        elif f.response and f.response.content and re.search(self.expr, f.response.content):
-            return True
+        if f.request and f.request.content:
+            with decoded(f.request):
+                if re.search(self.expr, f.request.content):
+                    return True
+        if f.response and f.response.content:
+            with decoded(f.response):
+                if re.search(self.expr, f.response.content):
+                    return True
         return False
 
 
@@ -176,16 +181,20 @@ class FBodRequest(_Rex):
     code = "bq"
     help = "Request body"
     def __call__(self, f):
-        if f.request.content and re.search(self.expr, f.request.content):
-            return True
+        if f.request and f.request.content:
+            with decoded(f.request):
+                if re.search(self.expr, f.request.content):
+                    return True
 
 
 class FBodResponse(_Rex):
     code = "bs"
     help = "Response body"
     def __call__(self, f):
-        if f.response and f.response.content and re.search(self.expr, f.response.content):
-            return True
+        if f.response and f.response.content:
+            with decoded(f.response):
+                if re.search(self.expr, f.response.content):
+                    return True
 
 
 class FMethod(_Rex):

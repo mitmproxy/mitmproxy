@@ -6,7 +6,7 @@ import netlib.utils
 from netlib.odict import ODict, ODictCaseless
 from .primitives import KILL, ProtocolHandler, TemporaryServerChangeMixin, Flow, Error
 from ..proxy.connection import ServerConnection
-from .. import encoding, utils, filt, controller, stateobject, proxy
+from .. import encoding, utils, controller, stateobject, proxy
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
@@ -791,6 +791,7 @@ class HTTPFlow(Flow):
             the expression is invalid, ValueError is raised.
         """
         if isinstance(f, basestring):
+            from .. import filt
             f = filt.parse(f)
             if not f:
                 raise ValueError("Invalid filter expression.")

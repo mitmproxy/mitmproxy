@@ -171,9 +171,7 @@ class TestMatching:
         assert self.q("~hs 'header_response: svalue'", s)
         assert not self.q("~hs 'header: qvalue'", q)
 
-    def test_body(self):
-        q = self.req()
-        s = self.resp()
+    def match_body(self, q, s):
         assert not self.q("~b nonexistent", q)
         assert self.q("~b content", q)
         assert self.q("~b response", s)
@@ -189,6 +187,16 @@ class TestMatching:
         assert not self.q("~bs nomatch", s)
         assert not self.q("~bs response", q)
         assert self.q("~bs response", s)
+
+    def test_body(self):
+        q = self.req()
+        s = self.resp()
+        self.match_body(q, s)
+
+        q.request.encode("gzip")
+        s.request.encode("gzip")
+        s.response.encode("gzip")
+        self.match_body(q, s)
 
     def test_method(self):
         q = self.req()
