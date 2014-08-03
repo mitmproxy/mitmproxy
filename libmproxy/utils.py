@@ -64,12 +64,6 @@ def urlencode(s):
     return urllib.urlencode(s, False)
 
 
-def del_all(dict, keys):
-    for key in keys:
-        if key in dict:
-            del dict[key]
-
-
 def pretty_size(size):
     suffixes = [
         ("B",   2**10),

@@ -320,15 +320,13 @@ class HTTPRequest(HTTPMessage):
 
     def _assemble_headers(self):
         headers = self.headers.copy()
-        utils.del_all(
-            headers,
-            [
-                'Proxy-Connection',
-                'Keep-Alive',
-                'Connection',
-                'Transfer-Encoding'
-            ]
-        )
+        for k in ['Proxy-Connection',
+                  'Keep-Alive',
+                  'Connection',
+                  'Transfer-Encoding']:
+            del headers[k]
+        if headers["Upgrade"] == ["h2c"]:  # Suppress HTTP2 https://http2.github.io/http2-spec/index.html#discover-http
+            del headers["Upgrade"]
         if not 'host' in headers:
             headers["Host"] = [utils.hostport(self.scheme,
                                               self.host or self.flow.server_conn.address.host,
@@ -636,9 +634,12 @@ class HTTPResponse(HTTPMessage):
 
     def _assemble_headers(self, preserve_transfer_encoding=False):
         headers = self.headers.copy()
-        utils.del_all(headers, ['Proxy-Connection'])
+        for k in ['Proxy-Connection',
+                  'Alternate-Protocol',
+                  'Alt-Svc']:
+            del headers[k]
         if not preserve_transfer_encoding:
-            utils.del_all(headers, ['Transfer-Encoding'])
+            del headers['Transfer-Encoding']
 
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]

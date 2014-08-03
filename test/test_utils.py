@@ -22,12 +22,6 @@ def test_isXml():
     assert utils.isXML("  \n<foo")
 
 
-def test_del_all():
-    d = dict(a=1, b=2, c=3)
-    utils.del_all(d, ["a", "x", "b"])
-    assert d.keys() == ["c"]
-
-
 def test_clean_hanging_newline():
     s = "foo\n"
     assert utils.clean_hanging_newline(s) == "foo"
