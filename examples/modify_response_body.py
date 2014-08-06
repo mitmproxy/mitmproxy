@@ -1,13 +1,12 @@
 # Usage: mitmdump -s "modify_response_body.py mitmproxy bananas"
-# (works best with --anticache)
-
-import sys
+# (this script works best with --anticache)
 from libmproxy.protocol.http import decoded
 
 
 def start(ctx, argv):
     if len(argv) != 3:
-        sys.exit('Usage: -s "modify-response-body.py old new"')
+        raise ValueError('Usage: -s "modify-response-body.py old new"')
+    # You may want to use Python's argparse for more sophisticated argument parsing.
     ctx.old, ctx.new = argv[1], argv[2]
 
 

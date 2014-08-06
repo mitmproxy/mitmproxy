@@ -1,5 +1,5 @@
 __mitmproxy__ has a powerful scripting API that allows you to modify flows
-on-the-fly or rewrite previously saved flows locally. 
+on-the-fly or rewrite previously saved flows locally.
 
 The mitmproxy scripting API is event driven - a script is simply a Python
 module that exposes a set of event methods. Here's a complete mitmproxy script
@@ -20,7 +20,6 @@ We can now run this script using mitmdump or mitmproxy as follows:
 </pre>
 
 The new header will be added to all responses passing through the proxy.
-
 
 
 ## Events
@@ -85,13 +84,15 @@ The main classes you will deal with in writing mitmproxy scripts are:
 <table class="table">
     <tr>
         <th>libmproxy.proxy.server.ConnectionHandler</th>
-        <td>Describes a proxy client connection session. Always has a client_conn attribute, might have a server_conn attribute.</td>
+        <td>Describes a proxy client connection session. Always has a client_conn attribute, might have a server_conn
+            attribute.
+        </td>
     </tr>
     <tr>
         <th>libmproxy.proxy.connection.ClientConnection</th>
         <td>Describes a client connection.</td>
     </tr>
-       <tr>
+    <tr>
         <th>libmproxy.proxy.connection.ServerConnection</th>
         <td>Describes a server connection.</td>
     </tr>
@@ -107,8 +108,9 @@ The main classes you will deal with in writing mitmproxy scripts are:
         <th>libmproxy.flow.ODict</th>
 
         <td>A dictionary-like object for managing sets of key/value data. There
-        is also a variant called CaselessODict that ignores key case for some
-        calls (used mainly for headers).</td>
+            is also a variant called CaselessODict that ignores key case for some
+            calls (used mainly for headers).
+        </td>
     </tr>
     <tr>
         <th>libmproxy.protocol.http.HTTPResponse</th>
@@ -120,7 +122,7 @@ The main classes you will deal with in writing mitmproxy scripts are:
     </tr>
     <tr>
         <th>libmproxy.script.ScriptContext</th>
-        <td> A handle for interacting with mitmproxy's from within scripts.  </td>
+        <td> A handle for interacting with mitmproxy's from within scripts.</td>
     </tr>
     <tr>
         <th>libmproxy.certutils.SSLCert</th>
@@ -143,6 +145,13 @@ While that's a very desirable behaviour under some circumstances, scripts can be
 
 $!example("examples/nonblocking.py")!$
 
+## Make scripts configurable with arguments
+
+Sometimes, you want to pass runtime arguments to the inline script. This can be simply done by surrounding the script call with quotes, e.g.
+<code>mitmdump -s "script.py --foo 42"</code>. The arguments are then exposed in the start event:
+
+$!example("examples/modify_response_body.py")!$
+
 ## Running scripts on saved flows
 
 Sometimes, we want to run a script on __Flow__ objects that are already
@@ -154,4 +163,9 @@ one-shot script on a single flow through the _|_ (pipe) shortcut in mitmproxy.
 In this case, there are no client connections, and the events are run in the
 following order: __start__, __request__, __response__, __error__, __done__.  If
 the flow doesn't have a __response__ or __error__ associated with it, the
-matching event will be skipped. 
+matching event will be skipped.
+
+## Spaces in the script path
+By default, spaces are interpreted as separator between the inline script and its arguments (e.g. <code>-s "foo.py
+    42"</code>). Consequently, the script path needs to be wrapped in a separate pair of quotes if it contains spaces:
+<code>-s "'./foo bar/baz.py' 42"</code>.

@@ -55,10 +55,12 @@ class Script:
 
     @classmethod
     def parse_command(klass, command):
-        args = shlex.split(command, posix=(os.name != "nt"))
+        args = shlex.split(command)
         args[0] = os.path.expanduser(args[0])
         if not os.path.exists(args[0]):
-            raise ScriptError("Command not found.")
+            raise ScriptError(("Script file not found: %s.\r\n"
+                               "If you script path contains spaces, "
+                               "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") % args[0])
         elif not os.path.isfile(args[0]):
             raise ScriptError("Not a file: %s" % args[0])
         return args
