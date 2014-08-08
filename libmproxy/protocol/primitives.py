@@ -148,6 +148,14 @@ class ProtocolHandler(object):
         """
         raise NotImplementedError  # pragma: nocover
 
+    def handle_server_reconnect(self, state):
+        """
+        This method gets called if a server connection needs to reconnect and there's a state associated
+        with the server connection (e.g. a previously-sent CONNECT request or a SOCKS proxy request).
+        This method gets called after the connection has been restablished but before SSL is established.
+        """
+        raise NotImplementedError  # pragma: nocover
+
     def handle_error(self, error):
         """
         This method gets called should there be an uncaught exception during the connection.

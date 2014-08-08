@@ -68,6 +68,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         tcp.TCPClient.__init__(self, address)
         self.priority = priority
 
+        self.state = []  # a list containing (conntype, state) tuples
         self.peername = None
         self.sockname = None
         self.timestamp_start = None
@@ -76,6 +77,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         self.timestamp_ssl_setup = None
 
     _stateobject_attributes = dict(
+        state=list,
         peername=tuple,
         sockname=tuple,
         timestamp_start=float,

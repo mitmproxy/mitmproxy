@@ -7,7 +7,7 @@ from netlib import tcp
 from .primitives import ProxyServerError, Log, ProxyError, ConnectionTypeChange, \
     AddressPriority
 from .connection import ClientConnection, ServerConnection
-from ..protocol.handle import handle_messages, handle_error
+from ..protocol.handle import handle_messages, handle_error, handle_server_reconnect
 from .. import version
 
 
@@ -207,16 +207,22 @@ class ConnectionHandler:
                 ca_file=self.config.ca_file
             )
 
-    def server_reconnect(self, no_ssl=False):
+    def server_reconnect(self):
         address = self.server_conn.address
         had_ssl = self.server_conn.ssl_established
         priority = self.server_conn.priority
+        state = self.server_conn.state
         sni = self.sni
         self.log("(server reconnect follows)", "debug")
         self.del_server_connection()
         self.set_server_address(address, priority)
         self.establish_server_connection()
-        if had_ssl and not no_ssl:
+
+        for s in state:
+            handle_server_reconnect(s[0], self, s[1])
+        self.server_conn.state = state
+
+        if had_ssl:
             self.sni = sni
             self.establish_ssl(server=True)
 

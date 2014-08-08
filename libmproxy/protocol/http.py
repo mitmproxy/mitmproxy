@@ -793,6 +793,7 @@ class HTTPFlow(Flow):
         """
         if isinstance(f, basestring):
             from .. import filt
+
             f = filt.parse(f)
             if not f:
                 raise ValueError("Invalid filter expression.")
@@ -974,6 +975,10 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
             if flow.request.form_in == "authority" and flow.response.code == 200:
                 self.ssl_upgrade()
+                # TODO: Eventually add headers (space/usefulness tradeoff)
+                self.c.server_conn.state.append(("http", {"state": "connect",
+                                                          "host": flow.request.host,
+                                                          "port": flow.request.port}))
 
             # If the user has changed the target server on this connection,
             # restore the original target server
@@ -983,6 +988,21 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
         return False
+
+    def handle_server_reconnect(self, state):
+        if state["state"] == "connect":
+            upstream_request = HTTPRequest("authority", "CONNECT", None, state["host"], state["port"], None,
+                                           (1, 1), ODictCaseless(), "")
+            self.c.server_conn.send(upstream_request._assemble())
+            resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
+            if resp.code != 200:
+                raise proxy.ProxyError(resp.code,
+                                       "Cannot reestablish SSL " +
+                                       "connection with upstream proxy: \r\n" +
+                                       str(resp._assemble()))
+            return
+        else:  # pragma: nocover
+            raise RuntimeError("Unknown State: %s" % state["state"])
 
     def handle_error(self, error, flow=None):
 
@@ -1024,35 +1044,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
         self.c.client_conn.wfile.write(html_content)
         self.c.client_conn.wfile.flush()
 
-    def hook_reconnect(self, upstream_request):
-        """
-        If the authority request has been forwarded upstream (because we have another proxy server there),
-        money-patch the ConnectionHandler.server_reconnect function to resend the CONNECT request on reconnect.
-        Hooking code isn't particulary beautiful, but it isolates this edge-case from
-        the protocol-agnostic ConnectionHandler
-        """
-        self.c.log("Hook reconnect function", level="debug")
-        original_reconnect_func = self.c.server_reconnect
-
-        def reconnect_http_proxy():
-            self.c.log("Hooked reconnect function", "debug")
-            self.c.log("Hook: Run original reconnect", "debug")
-            original_reconnect_func(no_ssl=True)
-            self.c.log("Hook: Write CONNECT request to upstream proxy", "debug",
-                       [upstream_request._assemble_first_line()])
-            self.c.server_conn.send(upstream_request._assemble())
-            self.c.log("Hook: Read answer to CONNECT request from proxy", "debug")
-            resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
-            if resp.code != 200:
-                raise proxy.ProxyError(resp.code,
-                                       "Cannot reestablish SSL " +
-                                       "connection with upstream proxy: \r\n" +
-                                       str(resp.headers))
-            self.c.log("Hook: Establish SSL with upstream proxy", "debug")
-            self.c.establish_ssl(server=True)
-
-        self.c.server_reconnect = reconnect_http_proxy
-
     def ssl_upgrade(self):
         """
         Upgrade the connection to SSL after an authority (CONNECT) request has been made.
@@ -1089,7 +1080,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                     self.skip_authentication = True
                     return False
                 else:
-                    self.hook_reconnect(request)
                     return True
         elif request.form_in == self.expected_form_in:
             if request.form_in == "absolute":

@@ -20,3 +20,7 @@ def handle_messages(conntype, connection_handler):
 
 def handle_error(conntype, connection_handler, error):
     return _handler(conntype, connection_handler).handle_error(error)
+
+
+def handle_server_reconnect(conntype, connection_handler, state):
+    return _handler(conntype, connection_handler).handle_server_reconnect(state)
