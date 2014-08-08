@@ -464,9 +464,13 @@ class HTTPRequest(HTTPMessage):
     def get_host(self, hostheader=False):
         """
             Heuristic to get the host of the request.
-            The host is not necessarily equal to the TCP destination of the request,
-            for example on a transparently proxified absolute-form request to an upstream HTTP proxy.
+
+            Note that get_host() does not always return the TCP destination of the request,
+            e.g. on a transparently intercepted request to an unrelated HTTP proxy.
+
             If hostheader is set to True, the Host: header will be used as additional (and preferred) data source.
+            This is handy in transparent mode, where only the ip of the destination is known, but not the
+            resolved name. This is disabled by default, as an attacker may spoof the host header to confuse an analyst.
         """
         host = None
         if hostheader:
