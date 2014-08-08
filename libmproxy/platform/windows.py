@@ -18,6 +18,8 @@ PROXY_API_PORT = 8085
 class Resolver(object):
 
     def __init__(self):
+        TransparentProxy.setup()
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("127.0.0.1", PROXY_API_PORT))
 
@@ -140,13 +142,13 @@ class TransparentProxy(object):
         self.handle_icmp = self.driver.open_handle(filter="icmp", layer=Layer.NETWORK, flags=Flag.DROP)
 
     @classmethod
-    def setup(cls, options):
+    def setup(cls):
         # TODO: Make sure that server can be killed cleanly. That's a bit difficult as we don't have access to
         # controller.should_exit when this is called.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_unavailable = s.connect_ex(("127.0.0.1", PROXY_API_PORT))
         if server_unavailable:
-            proxifier = TransparentProxy(proxy_addr=options.addr, proxy_port=options.port)
+            proxifier = TransparentProxy()
             proxifier.start()
 
     def start(self):

@@ -1,7 +1,6 @@
 import sys
 
 resolver = None
-setup = None
 
 if sys.platform == "linux2":
     from . import linux
@@ -15,4 +14,3 @@ elif sys.platform == "freebsd10":
 elif sys.platform == "win32":
     from . import windows
     resolver = windows.Resolver
-    setup = windows.TransparentProxy.setup

@@ -70,8 +70,7 @@ class TestProcessProxyOptions:
         self.assert_err("transparent mode not supported", "-T")
 
     @mock.patch("libmproxy.platform.resolver")
-    @mock.patch("libmproxy.platform.setup")
-    def test_transparent_reverse(self, _, __):
+    def test_transparent_reverse(self, _):
         self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
         self.assert_noerr("-T")
         self.assert_err("Invalid server specification", "-R", "reverse")

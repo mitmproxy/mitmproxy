@@ -41,8 +41,6 @@ def process_proxy_options(parser, options):
         c += 1
         if not platform.resolver:
             return parser.error("Transparent mode not supported on this platform.")
-        if platform.setup:
-            platform.setup(options)
         get_upstream_server = TransparentUpstreamServerResolver(platform.resolver(), TRANSPARENT_SSL_PORTS)
         http_form_in, http_form_out = "relative", "relative"
     if options.reverse_proxy:
