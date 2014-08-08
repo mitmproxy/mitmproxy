@@ -1135,7 +1135,9 @@ class RequestReplayThread(threading.Thread):
     def run(self):
         try:
             r = self.flow.request
+            form_out_backup = r.form_out
 
+            r.form_out = self.config.http_form_out
             server_address, server_ssl = False, False
             if self.config.get_upstream_server:
                 try:
@@ -1145,7 +1147,7 @@ class RequestReplayThread(threading.Thread):
                 except proxy.ProxyError:  # this will fail in transparent mode
                     pass
             if not server_address:
-                server_address = self.flow.server_conn.address()
+                server_address = (r.get_host(), r.get_port())
 
             server = ServerConnection(server_address, None)
             server.connect()
@@ -1153,6 +1155,7 @@ class RequestReplayThread(threading.Thread):
             if server_ssl or r.get_scheme() == "https":
                 if self.config.http_form_out == "absolute":
                     send_connect_request(server, r.get_host(), r.get_port())
+                    r.form_out = "relative"
                 server.establish_ssl(self.config.clientcerts,
                                      self.flow.server_conn.sni)
             server.send(r._assemble())
@@ -1162,3 +1165,5 @@ class RequestReplayThread(threading.Thread):
         except (proxy.ProxyError, http.HttpError, tcp.NetLibError), v:
             self.flow.error = Error(repr(v))
             self.channel.ask("error", self.flow.error)
+        finally:
+            r.form_out = form_out_backup
