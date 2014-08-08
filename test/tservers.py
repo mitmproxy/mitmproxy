@@ -2,6 +2,8 @@ import os.path
 import threading, Queue
 import shutil, tempfile
 import flask
+import mock
+
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
 from libmproxy.proxy.primitives import TransparentUpstreamServerResolver
@@ -88,21 +90,17 @@ class ProxTestBase(object):
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         pconf = cls.get_proxy_config()
         cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        config = ProxyConfig(
+        cls.config = ProxyConfig(
             no_upstream_cert = cls.no_upstream_cert,
             confdir = cls.confdir,
             authenticator = cls.authenticator,
             certforward = cls.certforward,
             **pconf
         )
-        tmaster = cls.masterclass(config)
+        tmaster = cls.masterclass(cls.config)
         tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
-
-    @classmethod
-    def tearDownAll(cls):
-        shutil.rmtree(cls.confdir)
 
     @property
     def master(cls):
@@ -110,6 +108,7 @@ class ProxTestBase(object):
 
     @classmethod
     def teardownAll(cls):
+        shutil.rmtree(cls.confdir)
         cls.proxy.shutdown()
         cls.server.shutdown()
         cls.server2.shutdown()
@@ -189,16 +188,21 @@ class TResolver:
 class TransparentProxTest(ProxTestBase):
     ssl = None
     resolver = TResolver
+
     @classmethod
-    def get_proxy_config(cls):
-        d = ProxTestBase.get_proxy_config()
+    @mock.patch("libmproxy.platform.resolver")
+    def setupAll(cls, _):
+        super(TransparentProxTest, cls).setupAll()
         if cls.ssl:
             ports = [cls.server.port, cls.server2.port]
         else:
             ports = []
-        d["get_upstream_server"] = TransparentUpstreamServerResolver(cls.resolver(cls.server.port), ports)
-        d["http_form_in"] = "relative"
-        d["http_form_out"] = "relative"
+        cls.config.get_upstream_server = TransparentUpstreamServerResolver(cls.resolver(cls.server.port), ports)
+
+    @classmethod
+    def get_proxy_config(cls):
+        d = ProxTestBase.get_proxy_config()
+        d["mode"] = "transparent"
         return d
 
     def pathod(self, spec, sni=None):
@@ -227,7 +231,7 @@ class ReverseProxTest(ProxTestBase):
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
-        d["get_upstream_server"] = lambda c: (
+        d["upstream_server"] = (
             True if cls.ssl else False,
             True if cls.ssl else False,
             "127.0.0.1",
@@ -264,7 +268,7 @@ class ChainProxTest(ProxTestBase):
     """
     n = 2
     chain_config = [lambda port: ProxyConfig(
-        get_upstream_server = lambda c: (False, False, "127.0.0.1", port),
+        upstream_server= (False, False, "127.0.0.1", port),
         http_form_in = "absolute",
         http_form_out = "absolute"
     )] * n
