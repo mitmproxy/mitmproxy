@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import Cookie, urllib, urlparse, time, copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
+import threading
 from netlib import http, tcp, http_status
 import netlib.utils
 from netlib.odict import ODict, ODictCaseless
@@ -22,6 +23,19 @@ def get_line(fp):
     if line == "":
         raise tcp.NetLibDisconnect
     return line
+
+
+def send_connect_request(conn, host, port):
+    upstream_request = HTTPRequest("authority", "CONNECT", None, host, port, None,
+                                   (1, 1), ODictCaseless(), "")
+    conn.send(upstream_request._assemble())
+    resp = HTTPResponse.from_stream(conn.rfile, upstream_request.method)
+    if resp.code != 200:
+        raise proxy.ProxyError(resp.code,
+                               "Cannot establish SSL " +
+                               "connection with upstream proxy: \r\n" +
+                               str(resp._assemble()))
+    return resp
 
 
 class decoded(object):
@@ -462,7 +476,7 @@ class HTTPRequest(HTTPMessage):
                 host = self.host
             else:
                 for s in self.flow.server_conn.state:
-                    if s[0] == "http" and s[1].get("state") == "connect":
+                    if s[0] == "http" and s[1]["state"] == "connect":
                         host = s[1]["host"]
                         break
                 if not host:
@@ -476,6 +490,8 @@ class HTTPRequest(HTTPMessage):
         """
         if self.scheme:
             return self.scheme
+        if self.form_out == "authority":  # On SSLed connections, the original CONNECT request is still unencrypted.
+            return "http"
         return "https" if self.flow.server_conn.ssl_established else "http"
 
     def get_port(self):
@@ -992,7 +1008,6 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                                                           "port": flow.request.port}))
                 self.ssl_upgrade()
 
-
             # If the user has changed the target server on this connection,
             # restore the original target server
             self.restore_server()
@@ -1004,16 +1019,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
     def handle_server_reconnect(self, state):
         if state["state"] == "connect":
-            upstream_request = HTTPRequest("authority", "CONNECT", None, state["host"], state["port"], None,
-                                           (1, 1), ODictCaseless(), "")
-            self.c.server_conn.send(upstream_request._assemble())
-            resp = HTTPResponse.from_stream(self.c.server_conn.rfile, upstream_request.method)
-            if resp.code != 200:
-                raise proxy.ProxyError(resp.code,
-                                       "Cannot reestablish SSL " +
-                                       "connection with upstream proxy: \r\n" +
-                                       str(resp._assemble()))
-            return
+            send_connect_request(self.c.server_conn, state["host"], state["port"])
         else:  # pragma: nocover
             raise RuntimeError("Unknown State: %s" % state["state"])
 
@@ -1117,3 +1123,42 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 raise HttpAuthenticationError(
                     self.c.config.authenticator.auth_challenge_headers())
         return request.headers
+
+
+class RequestReplayThread(threading.Thread):
+    name = "RequestReplayThread"
+
+    def __init__(self, config, flow, masterq, should_exit):
+        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq, should_exit)
+        threading.Thread.__init__(self)
+
+    def run(self):
+        try:
+            r = self.flow.request
+
+            server_address, server_ssl = False, False
+            if self.config.get_upstream_server:
+                try:
+                    upstream_info = self.config.get_upstream_server(self.flow.client_conn)
+                    server_ssl = upstream_info[1]
+                    server_address = upstream_info[2:]
+                except proxy.ProxyError:  # this will fail in transparent mode
+                    pass
+            if not server_address:
+                server_address = self.flow.server_conn.address()
+
+            server = ServerConnection(server_address, None)
+            server.connect()
+
+            if server_ssl or r.get_scheme() == "https":
+                if self.config.http_form_out == "absolute":
+                    send_connect_request(server, r.get_host(), r.get_port())
+                server.establish_ssl(self.config.clientcerts,
+                                     self.flow.server_conn.sni)
+            server.send(r._assemble())
+            self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
+                                                          body_size_limit=self.config.body_size_limit)
+            self.channel.ask("response", self.flow.response)
+        except (proxy.ProxyError, http.HttpError, tcp.NetLibError), v:
+            self.flow.error = Error(repr(v))
+            self.channel.ask("error", self.flow.error)

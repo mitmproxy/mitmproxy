@@ -37,7 +37,7 @@ class ProxyServer(tcp.TCPServer):
         try:
             tcp.TCPServer.__init__(self, (host, port))
         except socket.error, v:
-            raise ProxyServerError('Error starting proxy server: ' + v.strerror)
+            raise ProxyServerError('Error starting proxy server: ' + repr(v))
         self.channel = None
 
     def start_slave(self, klass, channel):

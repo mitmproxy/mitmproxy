@@ -668,7 +668,7 @@ class FlowMaster(controller.Master):
             f.response = None
             f.error = None
             self.process_new_request(f)
-            rt = RequestReplayThread(
+            rt = http.RequestReplayThread(
                     self.server.config,
                     f,
                     self.masterq,
@@ -811,26 +811,3 @@ class FilteredFlowWriter:
             return
         d = f._get_state()
         tnetstring.dump(d, self.fo)
-
-
-class RequestReplayThread(threading.Thread):
-    name = "RequestReplayThread"
-
-    def __init__(self, config, flow, masterq, should_exit):
-        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq, should_exit)
-        threading.Thread.__init__(self)
-
-    def run(self):
-        try:
-            r = self.flow.request
-            server = ServerConnection(self.flow.server_conn.address(), None)
-            server.connect()
-            if self.flow.server_conn.ssl_established:
-                server.establish_ssl(self.config.clientcerts,
-                                     self.flow.server_conn.sni)
-            server.send(r._assemble())
-            self.flow.response = http.HTTPResponse.from_stream(server.rfile, r.method, body_size_limit=self.config.body_size_limit)
-            self.channel.ask("response", self.flow.response)
-        except (ProxyError, netlib.http.HttpError, tcp.NetLibError), v:
-            self.flow.error = protocol.primitives.Error(str(v))
-            self.channel.ask("error", self.flow.error)
