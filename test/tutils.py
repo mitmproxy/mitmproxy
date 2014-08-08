@@ -33,6 +33,7 @@ def tclient_conn():
 def tserver_conn():
     c = ServerConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
+        state=[],
         source_address=dict(address=("address", 22), use_ipv6=True),
         cert=None
     ))
@@ -72,6 +73,7 @@ def tresp(req=None, content="message"):
     cert = certutils.SSLCert.from_der(file(test_data.path("data/dercert"), "rb").read())
     f.server_conn = ServerConnection._from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
+        state=[],
         source_address=None,
         cert=cert.to_pem()))
     f.response = http.HTTPResponse((1, 1), 200, "OK", headers, content, time(), time())

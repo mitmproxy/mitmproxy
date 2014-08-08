@@ -141,6 +141,12 @@ class TestProxyChainingSSL(tservers.HTTPChainProxyTest):
         finally:
             self.chain[0].tmaster.handle_request = _handle_request
 
+    def test_sni(self):
+        p = self.pathoc(sni="foo.com")
+        req = p.request("get:'/p/418:b\"content\"'")
+        assert req.content == "content"
+        assert req.status_code == 418
+
 class TestProxyChainingSSLReconnect(tservers.HTTPChainProxyTest):
     ssl = True
 

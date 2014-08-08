@@ -138,7 +138,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
             self.convert_to_ssl(cert=clientcert, sni=sni)
             self.timestamp_ssl_setup = utils.timestamp()
         except tcp.NetLibError, v:
-            raise ProxyError(400, str(v))
+            raise ProxyError(400, repr(v))
 
     def finish(self):
         tcp.TCPClient.finish(self)

@@ -461,7 +461,12 @@ class HTTPRequest(HTTPMessage):
             if self.host:
                 host = self.host
             else:
-                host = self.flow.server_conn.address.host
+                for s in self.flow.server_conn.state:
+                    if s[0] == "http" and s[1].get("state") == "connect":
+                        host = s[1]["host"]
+                        break
+                if not host:
+                    host = self.flow.server_conn.address.host
         host = host.encode("idna")
         return host
 
@@ -479,6 +484,9 @@ class HTTPRequest(HTTPMessage):
         """
         if self.port:
             return self.port
+        for s in self.flow.server_conn.state:
+            if s[0] == "http" and s[1].get("state") == "connect":
+                return s[1]["port"]
         return self.flow.server_conn.address.port
 
     def get_url(self, hostheader=False):
@@ -974,11 +982,16 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                     return False
 
             if flow.request.form_in == "authority" and flow.response.code == 200:
-                self.ssl_upgrade()
                 # TODO: Eventually add headers (space/usefulness tradeoff)
+                # Make sure to add state info before the actual upgrade happens.
+                # During the upgrade, we may receive an SNI indication from the client,
+                # which resets the upstream connection. If this is the case, we must
+                # already re-issue the CONNECT request at this point.
                 self.c.server_conn.state.append(("http", {"state": "connect",
                                                           "host": flow.request.host,
                                                           "port": flow.request.port}))
+                self.ssl_upgrade()
+
 
             # If the user has changed the target server on this connection,
             # restore the original target server
