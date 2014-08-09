@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 from .. import utils, platform
+import re
 from netlib import http_auth, certutils
 from .primitives import ConstUpstreamServerResolver, TransparentUpstreamServerResolver
 
@@ -13,7 +14,7 @@ class ProxyConfig:
     def __init__(self, confdir=CONF_DIR, clientcerts=None,
                  no_upstream_cert=False, body_size_limit=None,
                  mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
-                 authenticator=None,
+                 authenticator=None, ignore=[],
                  ciphers=None, certs=[], certforward=False):
         self.ciphers = ciphers
         self.clientcerts = clientcerts
@@ -40,6 +41,7 @@ class ProxyConfig:
         self.get_upstream_server = get_upstream_server
         self.http_form_in = http_form_in
         self.http_form_out = http_form_out
+        self.ignore = [re.compile(i, re.IGNORECASE) for i in ignore]
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
         self.ca_file = os.path.join(self.confdir, CONF_BASENAME + "-ca.pem")
@@ -118,6 +120,7 @@ def process_proxy_options(parser, options):
         upstream_server=upstream_server,
         http_form_in=options.http_form_in,
         http_form_out=options.http_form_out,
+        ignore=options.ignore,
         authenticator=authenticator,
         ciphers=options.ciphers,
         certs=certs,

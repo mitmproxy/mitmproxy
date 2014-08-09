@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import select, socket
 from .primitives import ProtocolHandler
+from netlib.utils import cleanBin
 
 class TCPHandler(ProtocolHandler):
     """
@@ -57,9 +58,9 @@ class TCPHandler(ProtocolHandler):
                     # if one of the peers is over SSL, we need to send bytes/strings
                     if not src.ssl_established:  # only ssl to dst, i.e. we revc'd into buf but need bytes/string now.
                         contents = buf[:size].tobytes()
-                    self.c.log("%s %s\r\n%s" % (direction, dst_str, contents[:100]), "debug")
+                    self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(contents)), "debug")
                     dst.connection.send(contents)
                 else:
                     # socket.socket.send supports raw bytearrays/memoryviews
-                    self.c.log("%s %s\r\n%s" % (direction, dst_str, buf[:100]), "debug")
+                    self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(buf.tobytes())), "debug")
                     dst.connection.send(buf[:size])

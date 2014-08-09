@@ -262,9 +262,14 @@ def common_options(parser):
         help="Address to bind proxy to (defaults to all interfaces)"
     )
     group.add_argument(
-        "-U",
-        action="store", type=parse_server_spec, dest="upstream_proxy", default=None,
-        help="Forward all requests to upstream proxy server: http[s]://host[:port]"
+        "-I", "--ignore",
+        action="append", type=str, dest="ignore", default=[],
+        metavar="HOST",
+        help="Ignore host and forward all traffic without processing it. "
+             "In transparent mode, it is recommended to use an IP address (range), not the hostname. "
+             "In regular mode, only SSL traffic is ignored and the hostname should be used. "
+             "The supplied value is interpreted as a regular expression and matched on the ip or the hostname. "
+             "Can be passed multiple times. "
     )
     group.add_argument(
         "-n",
@@ -285,6 +290,11 @@ def common_options(parser):
         "-T",
         action="store_true", dest="transparent_proxy", default=False,
         help="Set transparent proxy mode."
+    )
+    group.add_argument(
+        "-U",
+        action="store", type=parse_server_spec, dest="upstream_proxy", default=None,
+        help="Forward all requests to upstream proxy server: http://host[:port]"
     )
 
     group = parser.add_argument_group(

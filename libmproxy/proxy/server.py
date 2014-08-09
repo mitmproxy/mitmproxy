@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import re
 
 import socket
 from OpenSSL import SSL
@@ -66,31 +67,34 @@ class ConnectionHandler:
         self.channel, self.server_version = channel, server_version
 
         self.close = False
-        self.conntype = None
+        self.conntype = "http"
         self.sni = None
 
     def handle(self):
         self.log("clientconnect", "info")
-        self.channel.ask("clientconnect", self)
-
-        self.determine_conntype()
 
         try:
             # Can we already identify the target server and connect to it?
+            client_ssl, server_ssl = False, False
             if self.config.get_upstream_server:
                 upstream_info = self.config.get_upstream_server(
                     self.client_conn.connection)
                 self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
                 client_ssl, server_ssl = upstream_info[:2]
+
+            self.determine_conntype()
+            self.channel.ask("clientconnect", self)
+
+            if self.server_conn:
+                self.establish_server_connection()
                 if client_ssl or server_ssl:
-                    self.establish_server_connection()
                     self.establish_ssl(client=client_ssl, server=server_ssl)
 
             while not self.close:
                 try:
                     handle_messages(self.conntype, self)
                 except ConnectionTypeChange:
-                    self.log("Connection Type Changed: %s" % self.conntype, "info")
+                    self.log("Connection type changed: %s" % self.conntype, "info")
                     continue
 
         except (ProxyError, tcp.NetLibError), e:
@@ -121,8 +125,11 @@ class ConnectionHandler:
         self.sni = None
 
     def determine_conntype(self):
-        #TODO: Add ruleset to select correct protocol depending on mode/target port etc.
-        self.conntype = "http"
+        if self.server_conn and any(rex.search(self.server_conn.address.host) for rex in self.config.ignore):
+            self.log("Ignore host: %s" % self.server_conn.address.host, "info")
+            self.conntype = "tcp"
+        else:
+            self.conntype = "http"
 
     def set_server_address(self, address, priority):
         """
@@ -135,7 +142,7 @@ class ConnectionHandler:
             if self.server_conn.priority > priority:
                 self.log("Attempt to change server address, "
                          "but priority is too low (is: %s, got: %s)" % (
-                             self.server_conn.priority, priority), "info")
+                             self.server_conn.priority, priority), "debug")
                 return
             if self.server_conn.address == address:
                 self.server_conn.priority = priority  # Possibly increase priority
@@ -171,14 +178,12 @@ class ConnectionHandler:
         as specified by the parameters. If the target server is on the pass-through list,
         the conntype attribute will be changed and a ConnTypeChanged exception will be raised.
         """
-        # TODO: Implement SSL pass-through handling and change conntype
-        passthrough = [
-            # "echo.websocket.org",
-            # "174.129.224.73"  # echo.websocket.org, transparent mode
-        ]
-        if self.server_conn.address.host in passthrough or self.sni in passthrough:
-            self.conntype = "tcp"
-            raise ConnectionTypeChange
+        # If the host is on our ignore list, change to passthrough/ignore mode.
+        for host in (self.server_conn.address.host, self.sni):
+            if host and any(rex.search(host) for rex in self.config.ignore):
+                self.log("Ignore host: %s" % host, "info")
+                self.conntype = "tcp"
+                raise ConnectionTypeChange()
 
         # Logging
         if client or server:
