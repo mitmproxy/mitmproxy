@@ -480,7 +480,7 @@ class TestKillResponse(tservers.HTTPProxTest):
 
 class EResolver(tservers.TResolver):
     def original_addr(self, sock):
-        return None
+        raise RuntimeError("Could not resolve original destination.")
 
 
 class TestTransparentResolveError(tservers.TransparentProxTest):

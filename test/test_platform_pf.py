@@ -11,5 +11,5 @@ class TestLookup:
             p = tutils.test_data.path("data/pf01")
             d = open(p,"rb").read()
         assert pf.lookup("192.168.1.111", 40000, d) == ("5.5.5.5", 80)
-        assert not pf.lookup("192.168.1.112", 40000, d)
-        assert not pf.lookup("192.168.1.111", 40001, d)
+        tutils.raises("Could not resolve original destination", pf.lookup, "192.168.1.112", 40000, d)
+        tutils.raises("Could not resolve original destination", pf.lookup, "192.168.1.111", 40001, d)
