@@ -16,7 +16,6 @@ PROXY_API_PORT = 8085
 
 
 class Resolver(object):
-
     def __init__(self):
         TransparentProxy.setup()
 
@@ -40,6 +39,7 @@ class APIRequestHandler(SocketServer.StreamRequestHandler):
     TransparentProxy API: Returns the pickled server address, port tuple
     for each received pickled client address, port tuple.
     """
+
     def handle(self):
         proxifier = self.server.proxifier
         while True:
@@ -174,7 +174,7 @@ class TransparentProxy(object):
             if e.winerror == 995:
                 return None, None
             else:
-                raise e
+                raise
 
     def redirect(self):
         """

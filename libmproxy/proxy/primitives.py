@@ -40,9 +40,10 @@ class TransparentUpstreamServerResolver(UpstreamServerResolver):
         self.sslports = sslports
 
     def __call__(self, conn):
-        dst = self.resolver.original_addr(conn)
-        if not dst:
-            raise ProxyError(502, "Transparent mode failure: could not resolve original destination.")
+        try:
+            dst = self.resolver.original_addr(conn)
+        except Exception, e:
+            raise ProxyError(502, "Transparent mode failure: %s" % str(e))
 
         if dst[1] in self.sslports:
             ssl = True

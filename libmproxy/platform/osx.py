@@ -13,15 +13,14 @@ import pf
     the output processing of pfctl (see pf.py).
 """
 
-class Resolver:
+
+class Resolver(object):
     STATECMD = ("sudo", "-n", "/sbin/pfctl", "-s", "state")
-    def __init__(self):
-        pass
 
     def original_addr(self, csock):
         peer = csock.getpeername()
-        try:
-            stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError:
-            return None
+        stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
+        if "sudo: a password is required" in stxt:
+            raise RuntimeError("Insufficient privileges to access pfctl. "
+                               "See http://mitmproxy.org/doc/transparent/osx.html for details.")
         return pf.lookup(peer[0], peer[1], stxt)

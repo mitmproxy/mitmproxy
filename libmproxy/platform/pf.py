@@ -1,5 +1,6 @@
 import sys
 
+
 def lookup(address, port, s):
     """
         Parse the pfctl state output s, to look up the destination host
@@ -7,7 +8,7 @@ def lookup(address, port, s):
 
         Returns an (address, port) tuple, or None.
     """
-    spec = "%s:%s"%(address, port)
+    spec = "%s:%s" % (address, port)
     for i in s.split("\n"):
         if "ESTABLISHED:ESTABLISHED" in i and spec in i:
             s = i.split()
@@ -20,3 +21,4 @@ def lookup(address, port, s):
 
                 if len(s) == 2:
                     return s[0], int(s[1])
+    raise RuntimeError("Could not resolve original destination.")
