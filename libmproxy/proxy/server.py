@@ -85,7 +85,7 @@ class ConnectionHandler:
             self.determine_conntype()
             self.channel.ask("clientconnect", self)
 
-            if self.server_conn:
+            if self.server_conn and not self.server_conn.connection:
                 self.establish_server_connection()
                 if client_ssl or server_ssl:
                     self.establish_ssl(client=client_ssl, server=server_ssl)
