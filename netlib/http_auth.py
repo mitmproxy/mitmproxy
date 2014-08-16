@@ -1,4 +1,4 @@
-from .contrib import md5crypt
+from passlib.apache import HtpasswdFile
 import http
 from argparse import Action, ArgumentTypeError
 
@@ -78,32 +78,14 @@ class PassManHtpasswd:
     """
         Read usernames and passwords from an htpasswd file
     """
-    def __init__(self, fp):
+    def __init__(self, path):
         """
             Raises ValueError if htpasswd file is invalid.
         """
-        self.usernames = {}
-        for l in fp:
-            l = l.strip().split(':')
-            if len(l) != 2:
-                raise ValueError("Invalid htpasswd file.")
-            parts = l[1].split('$')
-            if len(parts) != 4:
-                raise ValueError("Invalid htpasswd file.")
-            self.usernames[l[0]] = dict(
-                token = l[1],
-                dummy = parts[0],
-                magic = parts[1],
-                salt = parts[2],
-                hashed_password = parts[3]
-            )
+        self.htpasswd = HtpasswdFile(path)
 
     def test(self, username, password_token):
-        ui = self.usernames.get(username)
-        if not ui:
-            return False
-        expected = md5crypt.md5crypt(password_token, ui["salt"], '$'+ui["magic"]+'$')
-        return expected==ui["token"]
+        return bool(self.htpasswd.check_password(username, password_token))
 
 
 class PassManSingleUser:
@@ -149,6 +131,5 @@ class NonanonymousAuthAction(AuthAction):
 
 class HtpasswdAuthAction(AuthAction):
     def getPasswordManager(self, s):
-        with open(s, "r") as f:
-            return PassManHtpasswd(f)
+        return PassManHtpasswd(s)
 

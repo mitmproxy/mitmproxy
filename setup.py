@@ -88,5 +88,5 @@ setup(
             "Topic :: Software Development :: Testing :: Traffic Generation",
             "Topic :: Internet :: WWW/HTTP",
         ],
-        install_requires=["pyasn1>0.1.2", "pyopenssl>=0.14"],
+        install_requires=["pyasn1>0.1.2", "pyopenssl>=0.14", "passlib>=1.6.2"],
 )

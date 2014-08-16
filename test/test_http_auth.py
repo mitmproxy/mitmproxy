@@ -12,14 +12,10 @@ class TestPassManNonAnon:
 
 class TestPassManHtpasswd:
     def test_file_errors(self):
-        s = cStringIO.StringIO("foo")
-        tutils.raises("invalid htpasswd", http_auth.PassManHtpasswd, s)
-        s = cStringIO.StringIO("foo:bar$foo")
-        tutils.raises("invalid htpasswd", http_auth.PassManHtpasswd, s)
+        tutils.raises("malformed htpasswd file", http_auth.PassManHtpasswd, tutils.test_data.path("data/server.crt"))
 
     def test_simple(self):
-        f = open(tutils.test_data.path("data/htpasswd"),"rb")
-        pm = http_auth.PassManHtpasswd(f)
+        pm = http_auth.PassManHtpasswd(tutils.test_data.path("data/htpasswd"))
 
         vals = ("basic", "test", "test")
         p = http.assemble_http_basic_auth(*vals)
