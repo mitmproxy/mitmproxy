@@ -1,4 +1,4 @@
-import socket
+from __future__ import (absolute_import, print_function, division)
 
 
 def isascii(s):

@@ -1,11 +1,10 @@
+from __future__ import (absolute_import, print_function, division)
 import os, ssl, time, datetime
 import itertools
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
-import tcp
-import UserDict
 
 DEFAULT_EXP = 62208000 # =24 * 60 * 60 * 720
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
@@ -255,7 +254,7 @@ class CertStore:
         return c[0], (c[1] or self.privkey)
 
     def gen_pkey(self, cert):
-        import certffi
+        from . import certffi
         certffi.set_flags(self.privkey, 1)
         return self.privkey
 
@@ -361,11 +360,3 @@ class SSLCert:
                 for i in dec[0]:
                     altnames.append(i[0].asOctets())
         return altnames
-
-
-
-def get_remote_cert(host, port, sni):
-    c = tcp.TCPClient((host, port))
-    c.connect()
-    c.convert_to_ssl(sni=sni)
-    return c.cert

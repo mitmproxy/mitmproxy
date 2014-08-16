@@ -1,6 +1,7 @@
+from __future__ import (absolute_import, print_function, division)
 import select, socket, threading, sys, time, traceback
 from OpenSSL import SSL
-import certutils
+from . import certutils
 
 
 EINTR = 4

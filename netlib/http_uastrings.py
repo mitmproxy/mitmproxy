@@ -1,3 +1,5 @@
+from __future__ import (absolute_import, print_function, division)
+
 """
     A small collection of useful user-agent header strings. These should be
     kept reasonably current to reflect common usage.

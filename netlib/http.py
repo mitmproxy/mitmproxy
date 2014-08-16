@@ -1,6 +1,7 @@
+from __future__ import (absolute_import, print_function, division)
 import string, urlparse, binascii
 import sys
-import odict, utils
+from . import odict, utils
 
 
 class HttpError(Exception):

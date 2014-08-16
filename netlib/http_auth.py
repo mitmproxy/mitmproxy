@@ -1,6 +1,7 @@
+from __future__ import (absolute_import, print_function, division)
 from passlib.apache import HtpasswdFile
-import http
 from argparse import Action, ArgumentTypeError
+from . import http
 
 
 class NullProxyAuth():

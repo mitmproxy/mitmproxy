@@ -1,7 +1,9 @@
+from __future__ import (absolute_import, print_function, division)
 import cffi
 import OpenSSL
+
 xffi = cffi.FFI()
-xffi.cdef ("""
+xffi.cdef("""
     struct rsa_meth_st {
             int flags;
             ...;
@@ -18,6 +20,7 @@ xffi.verify(
     extra_compile_args=['-w']
 )
 
+
 def handle(privkey):
     new = xffi.new("struct rsa_st*")
     newbuf = xffi.buffer(new)
@@ -26,10 +29,12 @@ def handle(privkey):
     newbuf[:] = oldbuf[:]
     return new
 
+
 def set_flags(privkey, val):
     hdl = handle(privkey)
-    hdl.meth.flags = val 
+    hdl.meth.flags = val
     return privkey
+
 
 def get_flags(privkey):
     hdl = handle(privkey)

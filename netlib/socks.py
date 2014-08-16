@@ -1,7 +1,8 @@
+from __future__ import (absolute_import, print_function, division)
 import socket
 import struct
-from array import array
-from . import tcp, utils
+import array
+from . import tcp
 
 
 class SocksError(Exception):
@@ -10,24 +11,24 @@ class SocksError(Exception):
         self.code = code
 
 
-class VERSION:
+class VERSION(object):
     SOCKS4 = 0x04
     SOCKS5 = 0x05
 
 
-class CMD:
+class CMD(object):
     CONNECT = 0x01
     BIND = 0x02
     UDP_ASSOCIATE = 0x03
 
 
-class ATYP:
+class ATYP(object):
     IPV4_ADDRESS = 0x01
     DOMAINNAME = 0x03
     IPV6_ADDRESS = 0x04
 
 
-class REP:
+class REP(object):
     SUCCEEDED = 0x00
     GENERAL_SOCKS_SERVER_FAILURE = 0x01
     CONNECTION_NOT_ALLOWED_BY_RULESET = 0x02
@@ -39,7 +40,7 @@ class REP:
     ADDRESS_TYPE_NOT_SUPPORTED = 0x08
 
 
-class METHOD:
+class METHOD(object):
     NO_AUTHENTICATION_REQUIRED = 0x00
     GSSAPI = 0x01
     USERNAME_PASSWORD = 0x02
@@ -56,7 +57,7 @@ class ClientGreeting(object):
     @classmethod
     def from_file(cls, f):
         ver, nmethods = struct.unpack("!BB", f.read(2))
-        methods = array("B")
+        methods = array.array("B")
         methods.fromstring(f.read(nmethods))
         return cls(ver, methods)
 

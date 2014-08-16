@@ -1,5 +1,6 @@
+from __future__ import (absolute_import, print_function, division)
 import cStringIO, urllib, time, traceback
-import odict, tcp
+from . import odict, tcp
 
 
 class ClientConn:

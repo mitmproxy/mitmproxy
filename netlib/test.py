@@ -1,6 +1,7 @@
+from __future__ import (absolute_import, print_function, division)
 import threading, Queue, cStringIO
-import tcp, certutils
 import OpenSSL
+from . import tcp, certutils
 
 class ServerThread(threading.Thread):
     def __init__(self, server):

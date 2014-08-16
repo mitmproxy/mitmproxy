@@ -129,9 +129,6 @@ class TestServerSSL(test.ServerTestBase):
         c.wfile.flush()
         assert c.rfile.readline() == testval
 
-    def test_get_remote_cert(self):
-        assert certutils.get_remote_cert("127.0.0.1", self.port, None).digest("sha1")
-
     def test_get_current_cipher(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
