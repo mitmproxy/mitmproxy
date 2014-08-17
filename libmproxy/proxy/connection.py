@@ -22,6 +22,13 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
 
+    def __repr__(self):
+        return "<ClientConnection: {ssl}{host}:{port}>".format(
+            ssl="[ssl] " if self.ssl_established else "",
+            host=self.address.host,
+            port=self.address.port
+        )
+
     _stateobject_attributes = dict(
         timestamp_start=float,
         timestamp_end=float,
@@ -75,6 +82,19 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         self.timestamp_end = None
         self.timestamp_tcp_setup = None
         self.timestamp_ssl_setup = None
+
+    def __repr__(self):
+        if self.ssl_established and self.sni:
+            ssl = "[ssl: {0}] ".format(self.sni)
+        elif self.ssl_established:
+            ssl = "[ssl] "
+        else:
+            ssl = ""
+        return "<ServerConnection: {ssl}{host}:{port}>".format(
+            ssl=ssl,
+            host=self.address.host,
+            port=self.address.port
+        )
 
     _stateobject_attributes = dict(
         state=list,

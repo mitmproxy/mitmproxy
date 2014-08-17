@@ -261,6 +261,9 @@ class HTTPRequest(HTTPMessage):
         f._load_state(state)
         return f
 
+    def __repr__(self):
+        return "<HTTPRequest: {0}>".format(self._assemble_first_line(self.form_in)[:-9])
+
     @classmethod
     def from_stream(cls, rfile, include_body=True, body_size_limit=None):
         """
@@ -632,6 +635,14 @@ class HTTPResponse(HTTPMessage):
         f._load_state(state)
         return f
 
+    def __repr__(self):
+        return "<HTTPResponse: {code} {msg} ({contenttype}, {size})>".format(
+            code=self.code,
+            msg=self.msg,
+            contenttype=self.headers.get_first("content-type", "?"),
+            size=utils.pretty_size(len(self.content))
+        )
+
     @classmethod
     def from_stream(cls, rfile, request_method, include_body=True, body_size_limit=None):
         """
@@ -802,6 +813,14 @@ class HTTPFlow(Flow):
         f = cls(None, None)
         f._load_state(state)
         return f
+
+    def __repr__(self):
+        s = "<HTTPFlow"
+        for a in ("request", "response", "error", "client_conn", "server_conn"):
+            if getattr(self, a, False):
+                s += "\r\n  %s = {flow.%s}" % (a,a)
+        s += ">"
+        return s.format(flow=self)
 
     def copy(self):
         f = super(HTTPFlow, self).copy()
