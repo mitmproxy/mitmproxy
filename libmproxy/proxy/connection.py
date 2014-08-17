@@ -17,6 +17,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
             self.rfile = None
             self.address = None
             self.clientcert = None
+            self.ssl_established = None
 
         self.timestamp_start = utils.timestamp()
         self.timestamp_end = None
@@ -30,6 +31,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
         )
 
     _stateobject_attributes = dict(
+        ssl_established=bool,
         timestamp_start=float,
         timestamp_end=float,
         timestamp_ssl_setup=float

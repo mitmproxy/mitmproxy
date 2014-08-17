@@ -120,7 +120,7 @@ def _handle_concurrent_reply(fn, o, *args, **kwargs):
 
     def run():
         fn(*args, **kwargs)
-        o.reply()
+        o.reply()  # If the script did not call .reply(), we have to do it now.
     threading.Thread(target=run, name="ScriptThread").start()
 
 

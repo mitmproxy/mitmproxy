@@ -73,7 +73,7 @@ class TestScript:
             r2.reply()
 
             # Two instantiations
-            assert m.call_count == 2
+            assert m.call_count == 0  # No calls yet.
             assert (time.time() - t_start) < 0.09
 
     def test_concurrent2(self):
@@ -81,22 +81,29 @@ class TestScript:
         fm = flow.FlowMaster(None, s)
         s = script.Script(tutils.test_data.path("scripts/concurrent_decorator.py"), fm)
         s.load()
-        f = tutils.tflow_full()
-        f.error = tutils.terr(f.request)
-        f.reply = f.request.reply
+        m = mock.Mock()
 
-        with mock.patch("libmproxy.controller.DummyReply.__call__") as m:
-            t_start = time.time()
-            s.run("clientconnect", f)
-            s.run("serverconnect", f)
-            s.run("response", f)
-            s.run("error", f)
-            s.run("clientdisconnect", f)
-            while (time.time() - t_start) < 1 and m.call_count <= 5:
-                if m.call_count == 5:
-                    return
-                time.sleep(0.001)
-            assert False
+        class Dummy:
+            def __init__(self):
+                self.response = self
+                self.error = self
+                self.reply = m
+
+        t_start = time.time()
+
+        for hook in ("clientconnect",
+                     "serverconnect",
+                     "response",
+                     "error",
+                     "clientconnect"):
+            d = Dummy()
+            assert s.run(hook, d)[0]
+            d.reply()
+        while (time.time() - t_start) < 5 and m.call_count <= 5:
+            if m.call_count == 5:
+                return
+            time.sleep(0.001)
+        assert False
 
     def test_concurrent_err(self):
         s = flow.State()
