@@ -92,7 +92,7 @@ class TestProcessProxyOptions:
 
         p = self.assert_noerr("--htpasswd", tutils.test_data.path("data/htpasswd"))
         assert p.authenticator
-        self.assert_err("invalid htpasswd file", "--htpasswd", tutils.test_data.path("data/htpasswd.invalid"))
+        self.assert_err("malformed htpasswd file", "--htpasswd", tutils.test_data.path("data/htpasswd.invalid"))
 
         p = self.assert_noerr("--singleuser", "test:test")
         assert p.authenticator

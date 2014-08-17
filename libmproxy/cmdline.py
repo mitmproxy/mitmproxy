@@ -440,7 +440,7 @@ def common_options(parser):
     )
     user_specification_group.add_argument(
         "--htpasswd",
-        action="store", dest="auth_htpasswd", type=argparse.FileType('r'),
+        action="store", dest="auth_htpasswd", type=str,
         metavar="PATH",
         help="Allow access to users specified in an Apache htpasswd file."
     )
