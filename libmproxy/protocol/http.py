@@ -958,7 +958,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             # sent through to the Master.
             flow.request = req
             request_reply = self.c.channel.ask("request", flow.request)
-            self.determine_server_address(flow)
+            self.determine_server_address(flow, flow.request)
             flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
             if request_reply is None or request_reply == KILL:
@@ -1127,18 +1127,19 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 else:
                     return True
         elif request.form_in == self.expected_form_in:
+            if request.form_in == "absolute":
+                if request.scheme != "http":
+                    raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
+                self.determine_server_address(flow, request)
             request.form_out = self.expected_form_out
             return True
 
         raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" %
                              (self.expected_form_in, request.form_in))
 
-    def determine_server_address(self, flow):
-        if flow.request.form_in == "absolute":
-            if flow.request.scheme != "http":
-                raise http.HttpError(400, "Invalid request scheme: %s" % flow.request.scheme)
-
-            self.c.set_server_address((flow.request.host, flow.request.port),
+    def determine_server_address(self, flow, request):
+        if request.form_in == "absolute":
+            self.c.set_server_address((request.host, request.port),
                                       proxy.AddressPriority.FROM_PROTOCOL)
             flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
