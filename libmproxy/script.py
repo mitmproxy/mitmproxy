@@ -108,14 +108,19 @@ class Script:
             return (False, None)
 
 
-def _handle_concurrent_reply(fn, o, args=[], kwargs={}):
-    reply = o.reply
-    o.reply = controller.DummyReply()
-    if hasattr(reply, "q"):
-        o.reply.q = reply.q
+def _handle_concurrent_reply(fn, o, *args, **kwargs):
+    # Make first call to o.reply a no op
+    original_reply = o.reply
+
+    def restore_original_reply():
+        o.reply = original_reply
+    if hasattr(original_reply, "q"):
+        restore_original_reply.q = original_reply.q
+    o.reply = restore_original_reply
+
     def run():
         fn(*args, **kwargs)
-        reply()
+        o.reply()
     threading.Thread(target=run, name="ScriptThread").start()
 
 
@@ -123,10 +128,10 @@ def concurrent(fn):
     if fn.func_name in ["request", "response", "error"]:
         def _concurrent(ctx, flow):
             r = getattr(flow, fn.func_name)
-            _handle_concurrent_reply(fn, r, [ctx, flow])
+            _handle_concurrent_reply(fn, r, ctx, flow)
         return _concurrent
     elif fn.func_name in ["clientconnect", "serverconnect", "clientdisconnect"]:
         def _concurrent(ctx, conn):
-            _handle_concurrent_reply(fn, conn, [ctx, conn])
+            _handle_concurrent_reply(fn, conn, ctx, conn)
         return _concurrent
     raise NotImplementedError("Concurrent decorator not supported for this method.")
