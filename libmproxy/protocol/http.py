@@ -939,7 +939,8 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
             # sent through to the Master.
             flow.request = req
             request_reply = self.c.channel.ask("request", flow.request)
-            flow.server_conn = self.c.server_conn
+            self.determine_server_address(flow)
+            flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
             if request_reply is None or request_reply == KILL:
                 return False
@@ -990,10 +991,12 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
             flow.timestamp_end = utils.timestamp()
 
-            if (http.connection_close(flow.request.httpversion, flow.request.headers) or
-                    http.connection_close(flow.response.httpversion, flow.response.headers) or
-                        http.expected_http_body_size(flow.response.headers, False, flow.request.method,
-                                                     flow.response.code) == -1):
+            close_connection = (
+                http.connection_close(flow.request.httpversion, flow.request.headers) or
+                http.connection_close(flow.response.httpversion, flow.response.headers) or
+                http.expected_http_body_size(flow.response.headers, False, flow.request.method,
+                                             flow.response.code) == -1)
+            if close_connection:
                 if flow.request.form_in == "authority" and flow.response.code == 200:
                     # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
                     # Some proxies (e.g. Charles) send a CONNECT response with HTTP/1.0 and no Content-Length header
@@ -1105,19 +1108,20 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                 else:
                     return True
         elif request.form_in == self.expected_form_in:
-            if request.form_in == "absolute":
-                if request.scheme != "http":
-                    raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
-
-                self.c.set_server_address((request.host, request.port),
-                                          proxy.AddressPriority.FROM_PROTOCOL)
-                flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
-
             request.form_out = self.expected_form_out
             return True
 
         raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" %
                              (self.expected_form_in, request.form_in))
+
+    def determine_server_address(self, flow):
+        if flow.request.form_in == "absolute":
+            if flow.request.scheme != "http":
+                raise http.HttpError(400, "Invalid request scheme: %s" % flow.request.scheme)
+
+            self.c.set_server_address((flow.request.host, flow.request.port),
+                                      proxy.AddressPriority.FROM_PROTOCOL)
+            flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
     def authenticate(self, request):
         if self.c.config.authenticator:
