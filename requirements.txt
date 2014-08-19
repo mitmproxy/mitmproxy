@@ -1,9 +1,2 @@
-Flask>=0.10.1
-Jinja2>=2.7.1
-MarkupSafe>=0.18
-Werkzeug>=0.9.4
-itsdangerous>=0.23
-pyOpenSSL>=0.13.1
-pyasn1>=0.1.7
-requests>=2.1.0
-netlib>=0.10
+-e --src .. git+https://github.com/mitmproxy/netlib.git#egg=netlib
+-e .
