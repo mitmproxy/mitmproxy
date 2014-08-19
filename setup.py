@@ -92,6 +92,7 @@ setup(
             "Operating System :: MacOS :: MacOS X",
             "Operating System :: POSIX",
             "Programming Language :: Python",
+            "Programming Language :: Python :: 2",
             "Topic :: Security",
             "Topic :: Internet",
             "Topic :: Internet :: WWW/HTTP",
