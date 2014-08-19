@@ -83,11 +83,12 @@ setup(
             "Development Status :: 5 - Production/Stable",
             "Operating System :: POSIX",
             "Programming Language :: Python",
+            "Programming Language :: Python :: 2",
             "Topic :: Internet",
             "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
             "Topic :: Software Development :: Testing",
             "Topic :: Software Development :: Testing :: Traffic Generation",
             "Topic :: Internet :: WWW/HTTP",
         ],
-        install_requires=['netlib>=%s'%version.VERSION, "requests>=1.1.0", "flask"],
+        install_requires=['netlib>=%s'%version.MINORVERSION, "requests>=1.1.0", "Flask>=0.10.1"]
 )
