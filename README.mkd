@@ -6,3 +6,9 @@ respects, because both pathod and mitmproxy often need to violate standards.
 This means that protocols are implemented as small, well-contained and flexible
 functions, and are designed to allow misbehaviour when needed.
 
+
+Requirements
+------------
+
+* [Python](http://www.python.org) 2.7.x.
+* Third-party packages listed in [setup.py](https://github.com/mitmproxy/netlib/blob/master/setup.py)

@@ -82,6 +82,7 @@ setup(
             "Development Status :: 3 - Alpha",
             "Operating System :: POSIX",
             "Programming Language :: Python",
+            "Programming Language :: Python :: 2",
             "Topic :: Internet",
             "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
             "Topic :: Software Development :: Testing",
