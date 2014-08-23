@@ -72,8 +72,9 @@ class HTTPMessage(stateobject.SimpleStateObject):
         self.headers = headers
         """@type: ODictCaseless"""
         self.content = content
-        self.timestamp_start = timestamp_start
-        self.timestamp_end = timestamp_end
+
+        self.timestamp_start = timestamp_start if timestamp_start is not None else utils.timestamp()
+        self.timestamp_end = timestamp_end if timestamp_end is not None else utils.timestamp()
 
         self.flow = None  # will usually be set by the flow backref mixin
         """@type: HTTPFlow"""
@@ -269,18 +270,18 @@ class HTTPRequest(HTTPMessage):
         """
         Parse an HTTP request from a file stream
         """
-        httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end \
-            = None, None, None, None, None, None, None, None, None, None
+        httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end = (
+            None, None, None, None, None, None, None, None, None, None)
+
+        timestamp_start = utils.timestamp()
 
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
         request_line = get_line(rfile)
 
-        if hasattr(rfile, "first_byte_timestamp"):
+        if hasattr(rfile, "first_byte_timestamp"):  # more accurate timestamp_start
             timestamp_start = rfile.first_byte_timestamp
-        else:
-            timestamp_start = utils.timestamp()
 
         request_line_parts = http.parse_init(request_line)
         if not request_line_parts:
@@ -649,6 +650,8 @@ class HTTPResponse(HTTPMessage):
         Parse an HTTP response from a file stream
         """
 
+        timestamp_start = utils.timestamp()
+
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
@@ -658,10 +661,8 @@ class HTTPResponse(HTTPMessage):
             body_size_limit,
             include_body=include_body)
 
-        if hasattr(rfile, "first_byte_timestamp"):
+        if hasattr(rfile, "first_byte_timestamp"):  # more accurate timestamp_start
             timestamp_start = rfile.first_byte_timestamp
-        else:
-            timestamp_start = utils.timestamp()
 
         timestamp_end = utils.timestamp()
         return HTTPResponse(httpversion, code, msg, headers, content, timestamp_start,
@@ -1007,6 +1008,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                     for part in chunk:
                         self.c.client_conn.wfile.write(part)
                     self.c.client_conn.wfile.flush()
+                flow.response.timestamp_end = utils.timestamp()
 
             flow.timestamp_end = utils.timestamp()
 
