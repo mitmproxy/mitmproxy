@@ -5,7 +5,7 @@ import threading
 from netlib import http, tcp, http_status
 import netlib.utils
 from netlib.odict import ODict, ODictCaseless
-from .primitives import KILL, ProtocolHandler, TemporaryServerChangeMixin, Flow, Error
+from .primitives import KILL, ProtocolHandler, LiveConnection, Flow, Error
 from ..proxy.connection import ServerConnection
 from .. import encoding, utils, controller, stateobject, proxy
 
@@ -543,8 +543,8 @@ class HTTPRequest(HTTPMessage):
         self.path = path
 
         if host != self.get_host() or port != self.get_port():
-            if self.flow.change_server:
-                self.flow.change_server((host, port), ssl=is_ssl)
+            if self.flow.live:
+                self.flow.live.change_server((host, port), ssl=is_ssl)
             else:
                 # There's not live server connection, we're just changing the attributes here.
                 self.flow.server_conn = ServerConnection((host, port),
@@ -789,15 +789,15 @@ class HTTPFlow(Flow):
     The following additional attributes are exposed:
 
         intercepting: Is this flow currently being intercepted?
+        live: Does this flow have a live client connection?
     """
 
-    def __init__(self, client_conn, server_conn, change_server=None):
-        super(HTTPFlow, self).__init__("http", client_conn, server_conn)
+    def __init__(self, client_conn, server_conn, live=None):
+        super(HTTPFlow, self).__init__("http", client_conn, server_conn, live)
         self.request = None
         """@type: HTTPRequest"""
         self.response = None
         """@type: HTTPResponse"""
-        self.change_server = change_server  # Used by flow.request.set_url to change the server address
 
         self.intercepting = False  # FIXME: Should that rather be an attribute of Flow?
 
@@ -904,7 +904,7 @@ class HttpAuthenticationError(Exception):
         return "Proxy Authentication Required"
 
 
-class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
+class HTTPHandler(ProtocolHandler):
     def __init__(self, c):
         super(HTTPHandler, self).__init__(c)
         self.expected_form_in = c.config.http_form_in
@@ -943,7 +943,7 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
                     raise v
 
     def handle_flow(self):
-        flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.change_server)
+        flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
         try:
             req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                           body_size_limit=self.c.config.body_size_limit)
@@ -1038,7 +1038,8 @@ class HTTPHandler(ProtocolHandler, TemporaryServerChangeMixin):
 
             # If the user has changed the target server on this connection,
             # restore the original target server
-            self.restore_server()
+            flow.live.restore_server()
+            flow.live = None
 
             return True
         except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:

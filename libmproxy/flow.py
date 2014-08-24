@@ -704,7 +704,7 @@ class FlowMaster(controller.Master):
         return f
 
     def handle_request(self, r):
-        if r.flow.client_conn and r.flow.client_conn.wfile:
+        if r.flow.live:
             app = self.apps.get(r)
             if app:
                 err = app.serve(r, r.flow.client_conn.wfile, **{"mitmproxy.master": self})

@@ -71,12 +71,14 @@ class Error(stateobject.SimpleStateObject):
 
 
 class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
-    def __init__(self, conntype, client_conn, server_conn):
+    def __init__(self, conntype, client_conn, server_conn, live=None):
         self.conntype = conntype
         self.client_conn = client_conn
         """@type: ClientConnection"""
         self.server_conn = server_conn
         """@type: ServerConnection"""
+        self.live = live  # Used by flow.request.set_url to change the server address
+        """@type: LiveConnection"""
 
         self.error = None
         """@type: Error"""
@@ -140,6 +142,8 @@ class ProtocolHandler(object):
     def __init__(self, c):
         self.c = c
         """@type: libmproxy.proxy.server.ConnectionHandler"""
+        self.live = LiveConnection(c)
+        """@type: LiveConnection"""
 
     def handle_messages(self):
         """
@@ -164,46 +168,50 @@ class ProtocolHandler(object):
         raise error  # pragma: nocover
 
 
-class TemporaryServerChangeMixin(object):
+class LiveConnection(object):
     """
-    This mixin allows safe modification of the target server,
-    without any need to expose the ConnectionHandler to the Flow.
+    This facade allows protocol handlers to interface with a live connection,
+    without requiring the expose the ConnectionHandler.
     """
-    def change_server(self, address, ssl):
+    def __init__(self, c):
+        self._c = c
+        """@type: libmproxy.proxy.server.ConnectionHandler"""
+
+    def change_server(self, address, ssl, persistent_change=False):
         address = netlib.tcp.Address.wrap(address)
-        if address == self.c.server_conn.address():
-            return
-        priority = AddressPriority.MANUALLY_CHANGED
+        if address != self._c.server_conn.address:
 
-        self.c.log("Temporarily change server connection: %s:%s -> %s:%s" % (
-            self.c.server_conn.address.host,
-            self.c.server_conn.address.port,
-            address.host,
-            address.port
-        ), "debug")
+            self._c.log("Change server connection: %s:%s -> %s:%s" % (
+                self._c.server_conn.address.host,
+                self._c.server_conn.address.port,
+                address.host,
+                address.port
+            ), "debug")
 
-        if not hasattr(self, "_backup_server_conn"):
-            self._backup_server_conn = self.c.server_conn
-            self.c.server_conn = None
-        else:  # This is at least the second temporary change. We can kill the current connection.
-            self.c.del_server_connection()
+            if not hasattr(self, "_backup_server_conn"):
+                self._backup_server_conn = self._c.server_conn
+                self._c.server_conn = None
+            else:  # This is at least the second temporary change. We can kill the current connection.
+                self._c.del_server_connection()
 
-        self.c.set_server_address(address, priority)
-        self.c.establish_server_connection(ask=False)
-        if ssl:
-            self.c.establish_ssl(server=True)
+            self._c.set_server_address(address, AddressPriority.MANUALLY_CHANGED)
+            self._c.establish_server_connection(ask=False)
+            if ssl:
+                self._c.establish_ssl(server=True)
+        if hasattr(self, "_backup_server_conn") and persistent_change:
+            del self._backup_server_conn
 
     def restore_server(self):
         if not hasattr(self, "_backup_server_conn"):
             return
 
-        self.c.log("Restore original server connection: %s:%s -> %s:%s" % (
-            self.c.server_conn.address.host,
-            self.c.server_conn.address.port,
+        self._c.log("Restore original server connection: %s:%s -> %s:%s" % (
+            self._c.server_conn.address.host,
+            self._c.server_conn.address.port,
             self._backup_server_conn.address.host,
             self._backup_server_conn.address.port
         ), "debug")
 
-        self.c.del_server_connection()
-        self.c.server_conn = self._backup_server_conn
+        self._c.del_server_connection()
+        self._c.server_conn = self._backup_server_conn
         del self._backup_server_conn

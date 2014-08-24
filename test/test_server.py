@@ -338,9 +338,9 @@ class MasterRedirectRequest(tservers.TestMaster):
 
             request.set_url(new)
             request.set_url(new)
-            request.flow.change_server(("127.0.0.1", self.redirect_port), False)
+            request.flow.live.change_server(("127.0.0.1", self.redirect_port), False)
             request.set_url(url)
-            tutils.raises("SSL handshake error", request.flow.change_server, ("127.0.0.1", self.redirect_port), True)
+            tutils.raises("SSL handshake error", request.flow.live.change_server, ("127.0.0.1", self.redirect_port), True)
             request.set_url(new)
             request.set_url(url)
             request.set_url(new)
