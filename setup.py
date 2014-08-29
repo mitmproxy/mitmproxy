@@ -70,8 +70,8 @@ def findPackages(path, dataExclude=[]):
             package_data[module] = acc
     return packages, package_data
 
-
-long_description = file(os.path.join(pdir(), "README.txt")).read()
+with open(os.path.join(pdir(), "README.txt")) as f:
+    long_description = f.read()
 packages, package_data = findPackages("libmproxy")
 setup(
         name = "mitmproxy",
