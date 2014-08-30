@@ -65,8 +65,9 @@ def findPackages(path, dataExclude=[]):
             package_data[module] = acc
     return packages, package_data
 
+with open("README.txt", "rb") as f:
+    long_description = f.read()
 
-long_description = file("README.txt", "rb").read()
 packages, package_data = findPackages("libpathod")
 setup(
     name="pathod",
@@ -93,7 +94,7 @@ setup(
     ],
     install_requires=[
         'netlib>=%s' % version.MINORVERSION,
-        "requests>=1.1.0",
+        "requests>=2.4.0",
         "Flask>=0.10.1"
     ],
     extras_require={
