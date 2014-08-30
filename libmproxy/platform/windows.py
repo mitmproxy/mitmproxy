@@ -1,9 +1,11 @@
 import argparse
 import cPickle as pickle
+from ctypes import byref, windll, Structure
+from ctypes.wintypes import DWORD
 import os
-import platform
 import socket
 import SocketServer
+import struct
 import threading
 import time
 from collections import OrderedDict
@@ -18,20 +20,33 @@ PROXY_API_PORT = 8085
 class Resolver(object):
     def __init__(self):
         TransparentProxy.setup()
+        self.socket = None
+        self.lock = threading.RLock()
+        self._connect()
 
+    def _connect(self):
+        if self.socket:
+            self.socket.close()
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("127.0.0.1", PROXY_API_PORT))
 
         self.wfile = self.socket.makefile('wb')
         self.rfile = self.socket.makefile('rb')
-        self.lock = threading.Lock()
+        pickle.dump(os.getpid(), self.wfile)
 
     def original_addr(self, csock):
         client = csock.getpeername()[:2]
         with self.lock:
-            pickle.dump(client, self.wfile)
-            self.wfile.flush()
-            return pickle.load(self.rfile)
+            try:
+                pickle.dump(client, self.wfile)
+                self.wfile.flush()
+                addr = pickle.load(self.rfile)
+                if addr is None:
+                    raise RuntimeError("Cannot resolve original destination.")
+                return addr
+            except (EOFError, socket.error):
+                self._connect()
+                return self.original_addr(csock)
 
 
 class APIRequestHandler(SocketServer.StreamRequestHandler):
@@ -42,18 +57,52 @@ class APIRequestHandler(SocketServer.StreamRequestHandler):
 
     def handle(self):
         proxifier = self.server.proxifier
-        while True:
-            # print("API connection")
-            client = pickle.load(self.rfile)
-            # print("Received API Request: %s" % str(client))
-            server = proxifier.client_server_map[client]
-            pickle.dump(server, self.wfile)
-            self.wfile.flush()
-            # print("API request handled")
+        pid = None
+        try:
+            pid = pickle.load(self.rfile)
+            if pid is not None:
+                proxifier.trusted_pids.add(pid)
+
+            while True:
+                client = pickle.load(self.rfile)
+                server = proxifier.client_server_map.get(client, None)
+                pickle.dump(server, self.wfile)
+                self.wfile.flush()
+
+        except (EOFError, socket.error):
+            proxifier.trusted_pids.discard(pid)
 
 
 class APIServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
-    pass
+    def __init__(self, proxifier, *args, **kwargs):
+        SocketServer.TCPServer.__init__(self, *args, **kwargs)
+        self.proxifier = proxifier
+        self.daemon_threads = True
+
+
+# Windows error.h
+ERROR_INSUFFICIENT_BUFFER = 0x7A
+
+
+# http://msdn.microsoft.com/en-us/library/windows/desktop/bb485761(v=vs.85).aspx
+class MIB_TCPROW2(Structure):
+    _fields_ = [
+        ('dwState', DWORD),
+        ('dwLocalAddr', DWORD),
+        ('dwLocalPort', DWORD),
+        ('dwRemoteAddr', DWORD),
+        ('dwRemotePort', DWORD),
+        ('dwOwningPid', DWORD),
+        ('dwOffloadState', DWORD)
+    ]
+
+# http://msdn.microsoft.com/en-us/library/windows/desktop/bb485772(v=vs.85).aspx
+def MIB_TCPTABLE2(size):
+    class _MIB_TCPTABLE2(Structure):
+        _fields_ = [('dwNumEntries', DWORD),
+                    ('table', MIB_TCPROW2 * size)]
+
+    return _MIB_TCPTABLE2()
 
 
 class TransparentProxy(object):
@@ -62,16 +111,17 @@ class TransparentProxy(object):
 
     Requires elevated (admin) privileges. Can be started separately by manually running the file.
 
-    This module can be used to intercept and redirect all traffic that is forwarded by the user's machine.
-    This does NOT include traffic sent from the machine itself, which cannot be accomplished by this approach for
-    technical reasons (we cannot distinguish between requests made by the proxy or by regular applications. Altering the
-    destination the proxy is seeing to some meta address does not work with TLS as the address doesn't match the
-    signature.)
+    This module can be used to intercept and redirect all traffic that is forwarded by the user's machine and
+    traffic sent from the machine itself.
 
     How it works:
 
-    (1) First, we intercept all packages that are forwarded by the OS (WinDivert's NETWORK_FORWARD layer) and whose
-    destination port matches our filter (80 and 443 by default).
+    (1) First, we intercept all packages that match our filter (destination port 80 and 443 by default).
+    We both consider traffic that is forwarded by the OS (WinDivert's NETWORK_FORWARD layer) as well as traffic
+    sent from the local machine (WinDivert's NETWORK layer). In the case of traffic from the local machine, we need to
+    distinguish between traffc sent from applications and traffic sent from the proxy. To accomplish this, we use
+    Windows' GetTcpTable2 syscall to determine the source application's PID.
+
     For each intercepted package, we
         1. Store the source -> destination mapping (address and port)
         2. Remove the package from the network (by not reinjecting it).
@@ -88,14 +138,26 @@ class TransparentProxy(object):
     (4) Finally, the proxy sends the response back to the client. To make it work, we need to change the packet's source
     address back to the original destination (using the mapping from (1.3)), to which the client believes he is talking
     to.
+
+    Limitations:
+
+    - No IPv6 support. (Pull Requests welcome)
+    - TCP ports do not get re-used simulateously on the client, i.e. the proxy will fail if application X
+      connects to example.com and example.org from 192.168.0.42:4242 simultaneously. This could be mitigated by
+      introducing unique "meta-addresses" which mitmproxy sees, but this would remove the correct client info from
+      mitmproxy.
+
     """
 
     def __init__(self,
+                 mode="both",
                  redirect_ports=(80, 443),
                  proxy_addr=False, proxy_port=8080,
                  api_host="localhost", api_port=PROXY_API_PORT,
                  cache_size=65536):
         """
+        :param mode: Redirection operation mode: "forward" to only redirect forwarded packets, "local" to only redirect
+        packets originating from the local machine, "both" to redirect both.
         :param redirect_ports: if the destination port is in this tuple, the requests are redirected to the proxy.
         :param proxy_addr: IP address of the proxy (IP within a network, 127.0.0.1 does not work). By default,
         this is detected automatically.
@@ -106,6 +168,9 @@ class TransparentProxy(object):
         load scenarios.
         """
 
+        if proxy_port in redirect_ports:
+            raise ValueError("The proxy port must not be a redirect port.")
+
         if not proxy_addr:
             # Auto-Detect local IP.
             # https://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
@@ -114,32 +179,40 @@ class TransparentProxy(object):
             proxy_addr = s.getsockname()[0]
             s.close()
 
-        self.client_server_map = OrderedDict()
+        self.mode = mode
         self.proxy_addr, self.proxy_port = proxy_addr, proxy_port
         self.connection_cache_size = cache_size
 
-        self.api_server = APIServer((api_host, api_port), APIRequestHandler)
-        self.api_server.proxifier = self
-        self.api_server_thread = threading.Thread(target=self.api_server.serve_forever)
-        self.api_server_thread.daemon = True
+        self.client_server_map = OrderedDict()
 
-        arch = "amd64" if platform.architecture()[0] == "64bit" else "x86"
-        self.driver = WinDivert(os.path.join(os.path.dirname(__file__), "..", "contrib",
-                                             "windivert", arch, "WinDivert.dll"))
+        self.api = APIServer(self, (api_host, api_port), APIRequestHandler)
+        self.api_thread = threading.Thread(target=self.api.serve_forever)
+        self.api_thread.daemon = True
+
+        self.driver = WinDivert()
         self.driver.register()
 
-        filter_forward = " or ".join(
-            ("tcp.DstPort == %d" % p) for p in redirect_ports)
-        self.handle_forward = self.driver.open_handle(filter=filter_forward, layer=Layer.NETWORK_FORWARD)
-        self.forward_thread = threading.Thread(target=self.redirect)
-        self.forward_thread.daemon = True
+        self.request_filter = " or ".join(("tcp.DstPort == %d" % p) for p in redirect_ports)
+        self.request_forward_handle = None
+        self.request_forward_thread = threading.Thread(target=self.request_forward)
+        self.request_forward_thread.daemon = True
 
-        filter_local = "outbound and tcp.SrcPort == %d" % proxy_port
-        self.handle_local = self.driver.open_handle(filter=filter_local, layer=Layer.NETWORK)
-        self.local_thread = threading.Thread(target=self.adjust_source)
-        self.local_thread.daemon = True
+        self.addr_pid_map = dict()
+        self.trusted_pids = set()
+        self.tcptable2 = MIB_TCPTABLE2(0)
+        self.tcptable2_size = DWORD(0)
+        self.request_local_handle = None
+        self.request_local_thread = threading.Thread(target=self.request_local)
+        self.request_local_thread.daemon = True
 
-        self.handle_icmp = self.driver.open_handle(filter="icmp", layer=Layer.NETWORK, flags=Flag.DROP)
+        # The proxy server responds to the client. To the client,
+        # this response should look like it has been sent by the real target
+        self.response_filter = "outbound and tcp.SrcPort == %d" % proxy_port
+        self.response_handle = None
+        self.response_thread = threading.Thread(target=self.response)
+        self.response_thread.daemon = True
+
+        self.icmp_handle = None
 
     @classmethod
     def setup(cls):
@@ -152,15 +225,32 @@ class TransparentProxy(object):
             proxifier.start()
 
     def start(self):
-        self.api_server_thread.start()
-        self.local_thread.start()
-        self.forward_thread.start()
+        self.api_thread.start()
+
+        # Block all ICMP requests (which are sent on Windows by default).
+        # In layman's terms: If we don't do this, our proxy machine tells the client that it can directly connect to the
+        # real gateway if they are on the same network.
+        self.icmp_handle = self.driver.open_handle(filter="icmp", layer=Layer.NETWORK, flags=Flag.DROP)
+
+        self.response_handle = self.driver.open_handle(filter=self.response_filter, layer=Layer.NETWORK)
+        self.response_thread.start()
+
+        if self.mode == "forward" or self.mode == "both":
+            self.request_forward_handle = self.driver.open_handle(filter=self.request_filter, layer=Layer.NETWORK_FORWARD)
+            self.request_forward_thread.start()
+        if self.mode == "local" or self.mode == "both":
+            self.request_local_handle = self.driver.open_handle(filter=self.request_filter, layer=Layer.NETWORK)
+            self.request_local_thread.start()
 
     def shutdown(self):
-        self.handle_forward.close()
-        self.handle_local.close()
-        self.handle_icmp.close()
-        self.api_server.shutdown()
+        if self.mode == "local" or self.mode == "both":
+            self.request_local_handle.close()
+        if self.mode == "forward" or self.mode == "both":
+            self.request_forward_handle.close()
+
+        self.response_handle.close()
+        self.icmp_handle.close()
+        self.api.shutdown()
 
     def recv(self, handle):
         """
@@ -176,66 +266,99 @@ class TransparentProxy(object):
             else:
                 raise
 
-    def redirect(self):
+    def fetch_pids(self):
+        ret = windll.iphlpapi.GetTcpTable2(byref(self.tcptable2), byref(self.tcptable2_size), 0)
+        if ret == ERROR_INSUFFICIENT_BUFFER:
+            self.tcptable2 = MIB_TCPTABLE2(self.tcptable2_size.value)
+            self.fetch_pids()
+        elif ret == 0:
+            for row in self.tcptable2.table[:self.tcptable2.dwNumEntries]:
+                local = (
+                    socket.inet_ntoa(struct.pack('L', row.dwLocalAddr)),
+                    socket.htons(row.dwLocalPort)
+                )
+                self.addr_pid_map[local] = row.dwOwningPid
+        else:
+            raise RuntimeError("Unknown GetTcpTable2 return code: %s" % ret)
+
+    def request_local(self):
+        while True:
+            packet, metadata = self.recv(self.request_local_handle)
+            if not packet:
+                return
+
+            client = (packet.src_addr, packet.src_port)
+
+            if client not in self.addr_pid_map:
+                self.fetch_pids()
+
+            # If this fails, we most likely have a connection from an external client to
+            # a local server on 80/443. In this, case we always want to proxy the request.
+            pid = self.addr_pid_map.get(client, None)
+
+            if pid not in self.trusted_pids:
+                self._request(packet, metadata)
+            else:
+                self.request_local_handle.send((packet.raw, metadata))
+
+    def request_forward(self):
         """
         Redirect packages to the proxy
         """
         while True:
-            packet, metadata = self.recv(self.handle_forward)
+            packet, metadata = self.recv(self.request_forward_handle)
             if not packet:
                 return
 
-            # print(" * Redirect client -> server to proxy")
-            # print("%s:%s -> %s:%s" % (packet.src_addr, packet.src_port, packet.dst_addr, packet.dst_port))
-            client = (packet.src_addr, packet.src_port)
-            server = (packet.dst_addr, packet.dst_port)
+            self._request(packet, metadata)
 
-            if client in self.client_server_map:
-                del self.client_server_map[client]
-            while len(self.client_server_map) > self.connection_cache_size:
-                self.client_server_map.popitem(False)
+    def _request(self, packet, metadata):
+        # print(" * Redirect client -> server to proxy")
+        # print("%s:%s -> %s:%s" % (packet.src_addr, packet.src_port, packet.dst_addr, packet.dst_port))
+        client = (packet.src_addr, packet.src_port)
+        server = (packet.dst_addr, packet.dst_port)
 
-            self.client_server_map[client] = server
+        if client in self.client_server_map:
+            del self.client_server_map[client]  # Force re-add to mark as "newest" entry in the dict.
+        while len(self.client_server_map) > self.connection_cache_size:
+            self.client_server_map.popitem(False)
 
-            packet.dst_addr, packet.dst_port = self.proxy_addr, self.proxy_port
-            metadata.direction = Direction.INBOUND
+        self.client_server_map[client] = server
 
-            packet = self.driver.update_packet_checksums(packet)
-            self.handle_local.send((packet.raw, metadata))
+        packet.dst_addr, packet.dst_port = self.proxy_addr, self.proxy_port
+        metadata.direction = Direction.INBOUND
 
-    def adjust_source(self):
+        packet = self.driver.update_packet_checksums(packet)
+          # Use any handle thats on the NETWORK layer - request_local may be unavailable.
+        self.response_handle.send((packet.raw, metadata))
+
+    def response(self):
         """
         Spoof source address of packets send from the proxy to the client
         """
         while True:
-            packet, metadata = self.recv(self.handle_local)
+            packet, metadata = self.recv(self.response_handle)
             if not packet:
                 return
 
             # If the proxy responds to the client, let the client believe the target server sent the packets.
             # print(" * Adjust proxy -> client")
             client = (packet.dst_addr, packet.dst_port)
-            server = self.client_server_map[client]
-            packet.src_addr, packet.src_port = server
+            server = self.client_server_map.get(client, None)
+            if server:
+                packet.src_addr, packet.src_port = server
+            else:
+                print "Warning: Previously unseen connection from proxy to %s:%s." % client
 
             packet = self.driver.update_packet_checksums(packet)
-            self.handle_local.send((packet.raw, metadata))
-
-    def icmp_block(self):
-        """
-        Block all ICMP requests (which are sent on Windows by default).
-        In layman's terms: If we don't do this, our proxy machine tells the client that it can directly connect to the
-        real gateway if they are on the same network.
-        """
-        while True:
-            packet, metadata = self.recv(self.handle_icmp)
-            if not packet:
-                return
-                # no nothing with the received packet, do not reinject it.
+            self.response_handle.send((packet.raw, metadata))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Windows Transparent Proxy")
+    parser.add_argument('--mode', choices=['forward', 'local', 'both'], default="both",
+                        help='Redirection operation mode: "forward" to only redirect forwarded packets, '
+                             '"local" to only redirect packets originating from the local machine')
     parser.add_argument("--redirect-ports", nargs="+", type=int, default=[80, 443], metavar="80",
                         help="ports that should be forwarded to the proxy")
     parser.add_argument("--proxy-addr", default=False,
@@ -249,13 +372,13 @@ if __name__ == "__main__":
     parser.add_argument("--cache-size", type=int, default=65536,
                         help="maximum connection cache size")
     options = parser.parse_args()
-    proxifier = TransparentProxy(**vars(options))
-    proxifier.start()
+    proxy = TransparentProxy(**vars(options))
+    proxy.start()
     print(" * Transparent proxy active.")
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
         print(" * Shutting down...")
-        proxifier.shutdown()
+        proxy.shutdown()
         print(" * Shut down.")
