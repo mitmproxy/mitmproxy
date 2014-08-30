@@ -6,13 +6,6 @@ class ProxyError(Exception):
         super(ProxyError, self).__init__(self, message)
         self.code, self.headers = code, headers
 
-class ConnectionTypeChange(Exception):
-    """
-    Gets raised if the connection type has been changed (e.g. after HTTP/1.1 101 Switching Protocols).
-    It's up to the raising ProtocolHandler to specify the new conntype before raising the exception.
-    """
-    pass
-
 
 class ProxyServerError(Exception):
     pass

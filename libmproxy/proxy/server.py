@@ -5,10 +5,9 @@ import socket
 from OpenSSL import SSL
 
 from netlib import tcp
-from .primitives import ProxyServerError, Log, ProxyError, ConnectionTypeChange, \
-    AddressPriority
+from .primitives import ProxyServerError, Log, ProxyError, AddressPriority
 from .connection import ClientConnection, ServerConnection
-from ..protocol.handle import handle_messages, handle_error, handle_server_reconnect
+from ..protocol.handle import protocol_handler
 from .. import version
 
 
@@ -66,7 +65,6 @@ class ConnectionHandler:
         """@type: libmproxy.proxy.connection.ServerConnection"""
         self.channel, self.server_version = channel, server_version
 
-        self.close = False
         self.conntype = "http"
         self.sni = None
 
@@ -77,28 +75,28 @@ class ConnectionHandler:
             # Can we already identify the target server and connect to it?
             client_ssl, server_ssl = False, False
             if self.config.get_upstream_server:
-                upstream_info = self.config.get_upstream_server(
-                    self.client_conn.connection)
+                upstream_info = self.config.get_upstream_server(self.client_conn.connection)
                 self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
                 client_ssl, server_ssl = upstream_info[:2]
+                if self.check_ignore_address(self.server_conn.address):
+                    self.log("Ignore host: %s:%s" % self.server_conn.address(), "info")
+                    self.conntype = "tcp"
+                    client_ssl, server_ssl = False, False
 
-            self.determine_conntype()
             self.channel.ask("clientconnect", self)
 
+            # Check for existing connection: If an inline script already established a
+            # connection, do not apply client_ssl or server_ssl.
             if self.server_conn and not self.server_conn.connection:
                 self.establish_server_connection()
                 if client_ssl or server_ssl:
                     self.establish_ssl(client=client_ssl, server=server_ssl)
 
-            while not self.close:
-                try:
-                    handle_messages(self.conntype, self)
-                except ConnectionTypeChange:
-                    self.log("Connection type changed: %s" % self.conntype, "info")
-                    continue
+            # Delegate handling to the protocol handler
+            protocol_handler(self.conntype)(self).handle_messages()
 
         except (ProxyError, tcp.NetLibError), e:
-            handle_error(self.conntype, self, e)
+            protocol_handler(self.conntype)(self).handle_error(e)
         except Exception:
             import traceback, sys
 
@@ -106,7 +104,6 @@ class ConnectionHandler:
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
             print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
-            raise
 
         self.del_server_connection()
         self.log("clientdisconnect", "info")
@@ -124,12 +121,13 @@ class ConnectionHandler:
         self.server_conn = None
         self.sni = None
 
-    def determine_conntype(self):
-        if self.server_conn and any(rex.search(self.server_conn.address.host) for rex in self.config.ignore):
-            self.log("Ignore host: %s" % self.server_conn.address.host, "info")
-            self.conntype = "tcp"
+    def check_ignore_address(self, address):
+        address = tcp.Address.wrap(address)
+        host = "%s:%s" % (address.host, address.port)
+        if host and any(rex.search(host) for rex in self.config.ignore):
+            return True
         else:
-            self.conntype = "http"
+            return False
 
     def set_server_address(self, address, priority):
         """
@@ -175,15 +173,8 @@ class ConnectionHandler:
     def establish_ssl(self, client=False, server=False):
         """
         Establishes SSL on the existing connection(s) to the server or the client,
-        as specified by the parameters. If the target server is on the pass-through list,
-        the conntype attribute will be changed and a ConnTypeChanged exception will be raised.
+        as specified by the parameters.
         """
-        # If the host is on our ignore list, change to passthrough/ignore mode.
-        for host in (self.server_conn.address.host, self.sni):
-            if host and any(rex.search(host) for rex in self.config.ignore):
-                self.log("Ignore host: %s" % host, "info")
-                self.conntype = "tcp"
-                raise ConnectionTypeChange()
 
         # Logging
         if client or server:
@@ -224,7 +215,7 @@ class ConnectionHandler:
         self.establish_server_connection()
 
         for s in state:
-            handle_server_reconnect(s[0], self, s[1])
+            protocol_handler(s[0])(self).handle_server_reconnect(s[1])
         self.server_conn.state = state
 
         if had_ssl:
@@ -288,4 +279,5 @@ class ConnectionHandler:
         # make dang sure it doesn't happen.
         except Exception:  # pragma: no cover
             import traceback
+
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")

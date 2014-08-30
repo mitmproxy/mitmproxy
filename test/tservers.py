@@ -95,6 +95,7 @@ class ProxTestBase(object):
             confdir = cls.confdir,
             authenticator = cls.authenticator,
             certforward = cls.certforward,
+            ssl_ports=([cls.server.port, cls.server2.port] if cls.ssl else []),
             **pconf
         )
         tmaster = cls.masterclass(cls.config)
@@ -267,17 +268,20 @@ class ChainProxTest(ProxTestBase):
     Chain n instances of mitmproxy in a row - because we can.
     """
     n = 2
-    chain_config = [lambda port: ProxyConfig(
+    chain_config = [lambda port, sslports: ProxyConfig(
         upstream_server= (False, False, "127.0.0.1", port),
         http_form_in = "absolute",
-        http_form_out = "absolute"
+        http_form_out = "absolute",
+        ssl_ports=sslports
     )] * n
     @classmethod
     def setupAll(cls):
         super(ChainProxTest, cls).setupAll()
         cls.chain = []
         for i in range(cls.n):
-            config = cls.chain_config[i](cls.proxy.port if i == 0 else cls.chain[-1].port)
+            sslports = [cls.server.port, cls.server2.port]
+            config = cls.chain_config[i](cls.proxy.port if i == 0 else cls.chain[-1].port,
+                                         sslports)
             tmaster = cls.masterclass(config)
             tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
             cls.chain.append(ProxyThread(tmaster))

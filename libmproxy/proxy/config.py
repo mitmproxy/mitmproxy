@@ -15,7 +15,7 @@ class ProxyConfig:
                  no_upstream_cert=False, body_size_limit=None,
                  mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
                  authenticator=None, ignore=[],
-                 ciphers=None, certs=[], certforward=False):
+                 ciphers=None, certs=[], certforward=False, ssl_ports=TRANSPARENT_SSL_PORTS):
         self.ciphers = ciphers
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
@@ -49,6 +49,7 @@ class ProxyConfig:
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
+        self.ssl_ports = ssl_ports
 
 
 def process_proxy_options(parser, options):
@@ -157,4 +158,10 @@ def ssl_option_group(parser):
         "--no-upstream-cert", default=False,
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
+    )
+    group.add_argument(
+        "--ssl-port", action="append", type=int, dest="ssl_ports", default=TRANSPARENT_SSL_PORTS,
+        metavar="PORT",
+        help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
+             "Defaults to %s." % str(TRANSPARENT_SSL_PORTS)
     )

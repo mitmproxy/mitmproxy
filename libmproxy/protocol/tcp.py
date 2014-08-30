@@ -18,7 +18,7 @@ class TCPHandler(ProtocolHandler):
         buf = memoryview(bytearray(self.chunk_size))
 
         conns = [self.c.client_conn.rfile, self.c.server_conn.rfile]
-        while not self.c.close:
+        while True:
             r, _, _ = select.select(conns, [], [], 10)
             for rfile in r:
                 if self.c.client_conn.rfile == rfile:
@@ -51,7 +51,7 @@ class TCPHandler(ProtocolHandler):
                         dst.connection.shutdown(socket.SHUT_WR)
 
                     if len(conns) == 0:
-                        self.c.close = True
+                        return
                     continue
 
                 if src.ssl_established or dst.ssl_established:

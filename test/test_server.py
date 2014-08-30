@@ -175,6 +175,7 @@ class TestHTTPAuth(tservers.HTTPProxTest):
 class TestHTTPConnectSSLError(tservers.HTTPProxTest):
     certfile = True
     def test_go(self):
+        self.config.ssl_ports.append(self.proxy.port)
         p = self.pathoc_raw()
         dst = ("localhost", self.proxy.port)
         p.connect(connect_to=dst)

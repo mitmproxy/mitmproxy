@@ -5,7 +5,8 @@ import threading
 from netlib import http, tcp, http_status
 import netlib.utils
 from netlib.odict import ODict, ODictCaseless
-from .primitives import KILL, ProtocolHandler, LiveConnection, Flow, Error
+from .tcp import TCPHandler
+from .primitives import KILL, ProtocolHandler, Flow, Error
 from ..proxy.connection import ServerConnection
 from .. import encoding, utils, controller, stateobject, proxy
 
@@ -914,7 +915,6 @@ class HTTPHandler(ProtocolHandler):
     def handle_messages(self):
         while self.handle_flow():
             pass
-        self.c.close = True
 
     def get_response_from_server(self, request, include_body=True):
         self.c.establish_server_connection()
@@ -948,9 +948,9 @@ class HTTPHandler(ProtocolHandler):
             req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                           body_size_limit=self.c.config.body_size_limit)
             self.c.log("request", "debug", [req._assemble_first_line(req.form_in)])
-            send_request_upstream = self.process_request(flow, req)
-            if not send_request_upstream:
-                return True
+            ret = self.process_request(flow, req)
+            if ret is not None:
+                return ret
 
             # Be careful NOT to assign the request to the flow before
             # process_request completes. This is because the call can raise an
@@ -959,7 +959,7 @@ class HTTPHandler(ProtocolHandler):
             # sent through to the Master.
             flow.request = req
             request_reply = self.c.channel.ask("request", flow.request)
-            self.determine_server_address(flow, flow.request)
+            self.determine_server_address(flow, flow.request)  # The inline script may have changed request.host
             flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
             if request_reply is None or request_reply == KILL:
@@ -1025,6 +1025,7 @@ class HTTPHandler(ProtocolHandler):
                 else:
                     return False
 
+            # We sent a CONNECT request to an upstream proxy.
             if flow.request.form_in == "authority" and flow.response.code == 200:
                 # TODO: Eventually add headers (space/usefulness tradeoff)
                 # Make sure to add state info before the actual upgrade happens.
@@ -1034,7 +1035,15 @@ class HTTPHandler(ProtocolHandler):
                 self.c.server_conn.state.append(("http", {"state": "connect",
                                                           "host": flow.request.host,
                                                           "port": flow.request.port}))
-                self.ssl_upgrade()
+
+                if self.c.check_ignore_address((flow.request.host, flow.request.port)):
+                    self.c.log("Ignore host: %s:%s" % self.c.server_conn.address(), "info")
+                    TCPHandler(self.c).handle_messages()
+                    return False
+                else:
+                    if flow.request.port in self.c.config.ssl_ports:
+                        self.ssl_upgrade()
+                    self.skip_authentication = True
 
             # If the user has changed the target server on this connection,
             # restore the original target server
@@ -1065,7 +1074,7 @@ class HTTPHandler(ProtocolHandler):
 
         if flow:
             flow.error = Error(message)
-            # FIXME: no flows without request or with both request and response at the moement.
+            # FIXME: no flows without request or with both request and response at the moment.
             if flow.request and not flow.response:
                 self.c.channel.ask("error", flow.error)
         else:
@@ -1103,6 +1112,13 @@ class HTTPHandler(ProtocolHandler):
         self.c.log("Upgrade to SSL completed.", "debug")
 
     def process_request(self, flow, request):
+        """
+        @returns:
+        True, if the request should not be sent upstream
+        False, if the connection should be aborted
+        None, if the request should be sent upstream
+        (a status code != None should be returned directly by handle_flow)
+        """
 
         if not self.skip_authentication:
             self.authenticate(request)
@@ -1115,8 +1131,8 @@ class HTTPHandler(ProtocolHandler):
                 if not self.c.config.get_upstream_server:
                     self.c.set_server_address((request.host, request.port),
                                               proxy.AddressPriority.FROM_PROTOCOL)
-                    self.c.establish_server_connection()
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+                    self.c.establish_server_connection()
                     self.c.client_conn.send(
                         'HTTP/1.1 200 Connection established\r\n' +
                         'Content-Length: 0\r\n' +
@@ -1124,18 +1140,24 @@ class HTTPHandler(ProtocolHandler):
                         '\r\n'
                     )
 
-                    self.ssl_upgrade()
-                    self.skip_authentication = True
-                    return False
+                    if self.c.check_ignore_address(self.c.server_conn.address):
+                        self.c.log("Ignore host: %s:%s" % self.c.server_conn.address(), "info")
+                        TCPHandler(self.c).handle_messages()
+                        return False
+                    else:
+                        if self.c.server_conn.address.port in self.c.config.ssl_ports:
+                            self.ssl_upgrade()
+                        self.skip_authentication = True
+                        return True
                 else:
-                    return True
+                    return None
         elif request.form_in == self.expected_form_in:
             if request.form_in == "absolute":
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
                 self.determine_server_address(flow, request)
             request.form_out = self.expected_form_out
-            return True
+            return None
 
         raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" %
                              (self.expected_form_in, request.form_in))
@@ -1172,10 +1194,11 @@ class RequestReplayThread(threading.Thread):
             server_address, server_ssl = False, False
             if self.config.get_upstream_server:
                 try:
+                    # this will fail in transparent mode
                     upstream_info = self.config.get_upstream_server(self.flow.client_conn)
                     server_ssl = upstream_info[1]
                     server_address = upstream_info[2:]
-                except proxy.ProxyError:  # this will fail in transparent mode
+                except proxy.ProxyError:
                     pass
             if not server_address:
                 server_address = (r.get_host(), r.get_port())
@@ -1184,7 +1207,7 @@ class RequestReplayThread(threading.Thread):
             server.connect()
 
             if server_ssl or r.get_scheme() == "https":
-                if self.config.http_form_out == "absolute":
+                if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode -> send CONNECT
                     send_connect_request(server, r.get_host(), r.get_port())
                     r.form_out = "relative"
                 server.establish_ssl(self.config.clientcerts,
