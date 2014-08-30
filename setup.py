@@ -96,7 +96,7 @@ setup(
         "requests>=1.1.0",
         "Flask>=0.10.1"
     ],
-    extra_require={
+    extras_require={
         'dev': [
             "mock>=1.0.1",
             "nose>=1.3.0",
