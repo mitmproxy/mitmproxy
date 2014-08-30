@@ -90,5 +90,5 @@ setup(
             "Topic :: Software Development :: Testing :: Traffic Generation",
             "Topic :: Internet :: WWW/HTTP",
         ],
-        install_requires=['netlib>=%s'%version.MINORVERSION, "requests>=1.1.0", "Flask>=0.10.1"]
+        install_requires=['netlib>=%s'%version.MINORVERSION, "requests>=2.4.0", "Flask>=0.10.1"]
 )
