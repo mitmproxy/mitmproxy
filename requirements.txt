@@ -1,2 +1,2 @@
--e --src .. git+https://github.com/mitmproxy/netlib.git#egg=netlib
+--src .. -e git+https://github.com/mitmproxy/netlib.git#egg=netlib
 -e .
