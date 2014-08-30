@@ -96,6 +96,7 @@ class MIB_TCPROW2(Structure):
         ('dwOffloadState', DWORD)
     ]
 
+
 # http://msdn.microsoft.com/en-us/library/windows/desktop/bb485772(v=vs.85).aspx
 def MIB_TCPTABLE2(size):
     class _MIB_TCPTABLE2(Structure):
@@ -151,7 +152,7 @@ class TransparentProxy(object):
 
     def __init__(self,
                  mode="both",
-                 redirect_ports=(80, 443),
+                 redirect_ports=(80, 443), custom_filter=None,
                  proxy_addr=False, proxy_port=8080,
                  api_host="localhost", api_port=PROXY_API_PORT,
                  cache_size=65536):
@@ -159,6 +160,8 @@ class TransparentProxy(object):
         :param mode: Redirection operation mode: "forward" to only redirect forwarded packets, "local" to only redirect
         packets originating from the local machine, "both" to redirect both.
         :param redirect_ports: if the destination port is in this tuple, the requests are redirected to the proxy.
+        :param custom_filter: specify a custom WinDivert filter to select packets that should be intercepted. Overrides
+        redirect_ports setting.
         :param proxy_addr: IP address of the proxy (IP within a network, 127.0.0.1 does not work). By default,
         this is detected automatically.
         :param proxy_port: Port the proxy is listenting on.
@@ -167,7 +170,6 @@ class TransparentProxy(object):
         :param cache_size: Maximum number of connection tuples that are stored. Only relevant in very high
         load scenarios.
         """
-
         if proxy_port in redirect_ports:
             raise ValueError("The proxy port must not be a redirect port.")
 
@@ -192,7 +194,7 @@ class TransparentProxy(object):
         self.driver = WinDivert()
         self.driver.register()
 
-        self.request_filter = " or ".join(("tcp.DstPort == %d" % p) for p in redirect_ports)
+        self.request_filter = custom_filter or " or ".join(("tcp.DstPort == %d" % p) for p in redirect_ports)
         self.request_forward_handle = None
         self.request_forward_thread = threading.Thread(target=self.request_forward)
         self.request_forward_thread.daemon = True
@@ -236,7 +238,8 @@ class TransparentProxy(object):
         self.response_thread.start()
 
         if self.mode == "forward" or self.mode == "both":
-            self.request_forward_handle = self.driver.open_handle(filter=self.request_filter, layer=Layer.NETWORK_FORWARD)
+            self.request_forward_handle = self.driver.open_handle(filter=self.request_filter,
+                                                                  layer=Layer.NETWORK_FORWARD)
             self.request_forward_thread.start()
         if self.mode == "local" or self.mode == "both":
             self.request_local_handle = self.driver.open_handle(filter=self.request_filter, layer=Layer.NETWORK)
@@ -329,7 +332,7 @@ class TransparentProxy(object):
         metadata.direction = Direction.INBOUND
 
         packet = self.driver.update_packet_checksums(packet)
-          # Use any handle thats on the NETWORK layer - request_local may be unavailable.
+        # Use any handle thats on the NETWORK layer - request_local may be unavailable.
         self.response_handle.send((packet.raw, metadata))
 
     def response(self):
@@ -357,24 +360,28 @@ class TransparentProxy(object):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Windows Transparent Proxy")
     parser.add_argument('--mode', choices=['forward', 'local', 'both'], default="both",
-                        help='Redirection operation mode: "forward" to only redirect forwarded packets, '
+                        help='redirection operation mode: "forward" to only redirect forwarded packets, '
                              '"local" to only redirect packets originating from the local machine')
-    parser.add_argument("--redirect-ports", nargs="+", type=int, default=[80, 443], metavar="80",
-                        help="ports that should be forwarded to the proxy")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--redirect-ports", nargs="+", type=int, default=[80, 443], metavar="80",
+                       help="ports that should be forwarded to the proxy")
+    group.add_argument("--custom-filter", default=None, metavar="WINDIVERT_FILTER",
+                       help="Custom WinDivert interception rule.")
     parser.add_argument("--proxy-addr", default=False,
-                        help="proxy server address")
+                        help="Proxy Server Address")
     parser.add_argument("--proxy-port", type=int, default=8080,
-                        help="proxy server port")
+                        help="Proxy Server Port")
     parser.add_argument("--api-host", default="localhost",
                         help="API hostname to bind to")
     parser.add_argument("--api-port", type=int, default=PROXY_API_PORT,
                         help="API port")
     parser.add_argument("--cache-size", type=int, default=65536,
-                        help="maximum connection cache size")
+                        help="Maximum connection cache size")
     options = parser.parse_args()
     proxy = TransparentProxy(**vars(options))
     proxy.start()
     print(" * Transparent proxy active.")
+    print("   Filter: {0}".format(proxy.request_filter))
     try:
         while True:
             time.sleep(1)
