@@ -79,7 +79,12 @@ setup(
     url="http://pathod.net",
     packages=packages,
     package_data=package_data,
-    scripts=["pathod", "pathoc"],
+    entry_points={
+        'console_scripts': [
+            "pathod = libpathod.main:pathod",
+            "pathoc = libpathod.main:pathoc"
+        ]
+    },
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Development Status :: 5 - Production/Stable",
