@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 class ProxyError(Exception):
     def __init__(self, code, message, headers=None):
-        super(ProxyError, self).__init__(self, message)
+        super(ProxyError, self).__init__(message)
         self.code, self.headers = code, headers
 
 

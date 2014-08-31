@@ -940,7 +940,7 @@ class HTTPHandler(ProtocolHandler):
                     # > send large request upstream
                     self.c.server_reconnect()
                 else:
-                    raise v
+                    raise
 
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
@@ -1078,7 +1078,7 @@ class HTTPHandler(ProtocolHandler):
             if flow.request and not flow.response:
                 self.c.channel.ask("error", flow.error)
         else:
-            pass  # FIXME: Do we want to persist errors without flows?
+            pass
 
         try:
             self.send_error(code, message, headers)

@@ -279,5 +279,4 @@ class ConnectionHandler:
         # make dang sure it doesn't happen.
         except Exception:  # pragma: no cover
             import traceback
-
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
