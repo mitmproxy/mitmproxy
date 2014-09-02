@@ -22,7 +22,7 @@ def get_line(fp):
     if line == "\r\n" or line == "\n":  # Possible leftover from previous message
         line = fp.readline()
     if line == "":
-        raise tcp.NetLibDisconnect
+        raise tcp.NetLibDisconnect()
     return line
 
 
@@ -927,7 +927,7 @@ class HTTPHandler(ProtocolHandler):
                                                body_size_limit=self.c.config.body_size_limit, include_body=include_body)
                 return res
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
-                self.c.log("error in server communication: %s" % str(v), level="debug")
+                self.c.log("error in server communication: %s" % repr(v), level="debug")
                 if i < 1:
                     # In any case, we try to reconnect at least once.
                     # This is necessary because it might be possible that we already initiated an upstream connection
@@ -1064,23 +1064,23 @@ class HTTPHandler(ProtocolHandler):
     def handle_error(self, error, flow=None):
 
         message = repr(error)
-        code = getattr(error, "code", 502)
-        headers = getattr(error, "headers", None)
-
         if "tlsv1 alert unknown ca" in message:
-            message = message + " \nThe client does not trust the proxy's certificate."
+            message += " The client does not trust the proxy's certificate."
 
-        self.c.log("error: %s" % message, level="info")
+        if isinstance(error, tcp.NetLibDisconnect):
+            self.c.log("TCP connection closed unexpectedly.", "debug", [repr(error)])
+        else:
+            self.c.log("error: %s" % message, level="info")
 
         if flow:
-            flow.error = Error(message)
-            # FIXME: no flows without request or with both request and response at the moment.
+            # TODO: no flows without request or with both request and response at the moment.
             if flow.request and not flow.response:
+                flow.error = Error(message)
                 self.c.channel.ask("error", flow.error)
-        else:
-            pass
 
         try:
+            code = getattr(error, "code", 502)
+            headers = getattr(error, "headers", None)
             self.send_error(code, message, headers)
         except:
             pass

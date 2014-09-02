@@ -179,7 +179,7 @@ class TestHTTPConnectSSLError(tservers.HTTPProxTest):
         p = self.pathoc_raw()
         dst = ("localhost", self.proxy.port)
         p.connect(connect_to=dst)
-        tutils.raises("400 - Bad Request", p.http_connect, dst)
+        tutils.raises("502 - Bad Gateway", p.http_connect, dst)
 
 
 class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
@@ -244,7 +244,7 @@ class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin):
         p = pathoc.Pathoc(("localhost", self.proxy.port))
         p.connect()
         r = p.request("get:/")
-        assert r.status_code == 502
+        assert r.status_code == 400
 
 
 class TestProxy(tservers.HTTPProxTest):

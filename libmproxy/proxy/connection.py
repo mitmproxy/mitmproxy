@@ -3,7 +3,6 @@ import copy
 import os
 from netlib import tcp, certutils
 from .. import stateobject, utils
-from .primitives import ProxyError
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
@@ -156,11 +155,8 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
             path = os.path.join(clientcerts, self.address.host.encode("idna")) + ".pem"
             if os.path.exists(path):
                 clientcert = path
-        try:
-            self.convert_to_ssl(cert=clientcert, sni=sni)
-            self.timestamp_ssl_setup = utils.timestamp()
-        except tcp.NetLibError, v:
-            raise ProxyError(400, repr(v))
+        self.convert_to_ssl(cert=clientcert, sni=sni)
+        self.timestamp_ssl_setup = utils.timestamp()
 
     def finish(self):
         tcp.TCPClient.finish(self)

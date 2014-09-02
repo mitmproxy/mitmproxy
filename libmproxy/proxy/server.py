@@ -95,7 +95,7 @@ class ConnectionHandler:
             # Delegate handling to the protocol handler
             protocol_handler(self.conntype)(self).handle_messages()
 
-        except (ProxyError, tcp.NetLibError), e:
+        except ProxyError as e:
             protocol_handler(self.conntype)(self).handle_error(e)
         except Exception:
             import traceback, sys
@@ -190,18 +190,24 @@ class ConnectionHandler:
                 raise ProxyError(502, "No server connection.")
             if self.server_conn.ssl_established:
                 raise ProxyError(502, "SSL to Server already established.")
-            self.server_conn.establish_ssl(self.config.clientcerts, self.sni)
+            try:
+                self.server_conn.establish_ssl(self.config.clientcerts, self.sni)
+            except tcp.NetLibError as v:
+                raise ProxyError(502, repr(v))
         if client:
             if self.client_conn.ssl_established:
                 raise ProxyError(502, "SSL to Client already established.")
             cert, key = self.find_cert()
-            self.client_conn.convert_to_ssl(
-                cert, key,
-                handle_sni=self.handle_sni,
-                cipher_list=self.config.ciphers,
-                dhparams=self.config.certstore.dhparams,
-                ca_file=self.config.ca_file
-            )
+            try:
+                self.client_conn.convert_to_ssl(
+                    cert, key,
+                    handle_sni=self.handle_sni,
+                    cipher_list=self.config.ciphers,
+                    dhparams=self.config.certstore.dhparams,
+                    ca_file=self.config.ca_file
+                )
+            except tcp.NetLibError as v:
+                raise ProxyError(400, repr(v))
 
     def server_reconnect(self):
         address = self.server_conn.address

@@ -16,51 +16,55 @@ class TCPHandler(ProtocolHandler):
 
         server = "%s:%s" % self.c.server_conn.address()[:2]
         buf = memoryview(bytearray(self.chunk_size))
-
         conns = [self.c.client_conn.rfile, self.c.server_conn.rfile]
-        while True:
-            r, _, _ = select.select(conns, [], [], 10)
-            for rfile in r:
-                if self.c.client_conn.rfile == rfile:
-                    src, dst = self.c.client_conn, self.c.server_conn
-                    direction = "-> tcp ->"
-                    src_str, dst_str = "client", server
-                else:
-                    dst, src = self.c.client_conn, self.c.server_conn
-                    direction = "<- tcp <-"
-                    dst_str, src_str = "client", server
 
-                closed = False
-                if src.ssl_established:
-                    # Unfortunately, pyOpenSSL lacks a recv_into function.
-                    contents = src.rfile.read(1)  # We need to read a single byte before .pending() becomes usable
-                    contents += src.rfile.read(src.connection.pending())
-                    if not contents:
-                        closed = True
-                else:
-                    size = src.connection.recv_into(buf)
-                    if not size:
-                        closed = True
-
-                if closed:
-                    conns.remove(src.rfile)
-                    # Shutdown connection to the other peer
-                    if dst.ssl_established:
-                        dst.connection.shutdown()
+        try:
+            while True:
+                r, _, _ = select.select(conns, [], [], 10)
+                for rfile in r:
+                    if self.c.client_conn.rfile == rfile:
+                        src, dst = self.c.client_conn, self.c.server_conn
+                        direction = "-> tcp ->"
+                        src_str, dst_str = "client", server
                     else:
-                        dst.connection.shutdown(socket.SHUT_WR)
+                        dst, src = self.c.client_conn, self.c.server_conn
+                        direction = "<- tcp <-"
+                        dst_str, src_str = "client", server
 
-                    if len(conns) == 0:
-                        return
-                    continue
+                    closed = False
+                    if src.ssl_established:
+                        # Unfortunately, pyOpenSSL lacks a recv_into function.
+                        contents = src.rfile.read(1)  # We need to read a single byte before .pending() becomes usable
+                        contents += src.rfile.read(src.connection.pending())
+                        if not contents:
+                            closed = True
+                    else:
+                        size = src.connection.recv_into(buf)
+                        if not size:
+                            closed = True
 
-                if src.ssl_established or dst.ssl_established:
-                    # if one of the peers is over SSL, we need to send bytes/strings
-                    if not src.ssl_established:  # only ssl to dst, i.e. we revc'd into buf but need bytes/string now.
-                        contents = buf[:size].tobytes()
-                    self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(contents)), "debug")
-                    dst.connection.send(contents)
-                else:
-                    # socket.socket.send supports raw bytearrays/memoryviews
-                    self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(buf.tobytes())), "debug")
-                    dst.connection.send(buf[:size])
+                    if closed:
+                        conns.remove(src.rfile)
+                        # Shutdown connection to the other peer
+                        if dst.ssl_established:
+                            dst.connection.shutdown()
+                        else:
+                            dst.connection.shutdown(socket.SHUT_WR)
+
+                        if len(conns) == 0:
+                            return
+                        continue
+
+                    if src.ssl_established or dst.ssl_established:
+                        # if one of the peers is over SSL, we need to send bytes/strings
+                        if not src.ssl_established:  # only ssl to dst, i.e. we revc'd into buf but need bytes/string now.
+                            contents = buf[:size].tobytes()
+                        # self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(contents)), "debug")
+                        dst.connection.send(contents)
+                    else:
+                        # socket.socket.send supports raw bytearrays/memoryviews
+                        # self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(buf.tobytes())), "debug")
+                        dst.connection.send(buf[:size])
+        except socket.error as e:
+            self.c.log("TCP connection closed unexpectedly.", "debug", [repr(e)])
+            return
