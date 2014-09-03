@@ -183,8 +183,7 @@ class ClientPlaybackState:
         """
         if self.flows and not self.current:
             n = self.flows.pop(0)
-            n.request.reply = controller.DummyReply()
-            n.client_conn = None
+            n.reply = controller.DummyReply()
             self.current = master.handle_request(n)
             if not testing and not self.current.response:
                 master.replay_request(self.current)  # pragma: no cover
