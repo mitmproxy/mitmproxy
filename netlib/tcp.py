@@ -216,9 +216,15 @@ class Address(object):
     def use_ipv6(self, b):
         self.family = socket.AF_INET6 if b else socket.AF_INET
 
+    def __repr__(self):
+        return repr(self.address)
+
     def __eq__(self, other):
         other = Address.wrap(other)
         return (self.address, self.family) == (other.address, other.family)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class _Connection(object):
