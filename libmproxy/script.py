@@ -125,13 +125,8 @@ def _handle_concurrent_reply(fn, o, *args, **kwargs):
 
 
 def concurrent(fn):
-    if fn.func_name in ["request", "response", "error"]:
-        def _concurrent(ctx, flow):
-            r = getattr(flow, fn.func_name)
-            _handle_concurrent_reply(fn, r, ctx, flow)
-        return _concurrent
-    elif fn.func_name in ["clientconnect", "serverconnect", "clientdisconnect"]:
-        def _concurrent(ctx, conn):
-            _handle_concurrent_reply(fn, conn, ctx, conn)
+    if fn.func_name in ("request", "response", "error", "clientconnect", "serverconnect", "clientdisconnect"):
+        def _concurrent(ctx, obj):
+            _handle_concurrent_reply(fn, obj, ctx, obj)
         return _concurrent
     raise NotImplementedError("Concurrent decorator not supported for this method.")

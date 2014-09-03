@@ -50,13 +50,13 @@ def str_response(resp):
     return r
 
 
-def str_request(req, showhost):
-    if req.flow.client_conn:
-        c = req.flow.client_conn.address.host
+def str_request(f, showhost):
+    if f.client_conn:
+        c = f.client_conn.address.host
     else:
         c = "[replay]"
-    r = "%s %s %s"%(c, req.method, req.get_url(showhost))
-    if req.stickycookie:
+    r = "%s %s %s"%(c, f.request.method, f.request.get_url(showhost, f))
+    if f.request.stickycookie:
         r = "[stickycookie] " + r
     return r
 
@@ -185,16 +185,16 @@ class DumpMaster(flow.FlowMaster):
             result = " << %s"%f.error.msg
 
         if self.o.flow_detail == 1:
-            print >> self.outfile, str_request(f.request, self.showhost)
+            print >> self.outfile, str_request(f, self.showhost)
             print >> self.outfile, result
         elif self.o.flow_detail == 2:
-            print >> self.outfile, str_request(f.request, self.showhost)
+            print >> self.outfile, str_request(f, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
             print >> self.outfile
             print >> self.outfile, result
             print >> self.outfile, "\n"
         elif self.o.flow_detail >= 3:
-            print >> self.outfile, str_request(f.request, self.showhost)
+            print >> self.outfile, str_request(f, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
             if utils.isBin(f.request.content):
                 print >> self.outfile, self.indent(4, netlib.utils.hexdump(f.request.content))
@@ -206,21 +206,21 @@ class DumpMaster(flow.FlowMaster):
         if self.o.flow_detail:
             self.outfile.flush()
 
-    def handle_request(self, r):
-        f = flow.FlowMaster.handle_request(self, r)
+    def handle_request(self, f):
+        flow.FlowMaster.handle_request(self, f)
         if f:
-            r.reply()
+            f.reply()
         return f
 
-    def handle_response(self, msg):
-        f = flow.FlowMaster.handle_response(self, msg)
+    def handle_response(self, f):
+        flow.FlowMaster.handle_response(self, f)
         if f:
-            msg.reply()
+            f.reply()
             self._process_flow(f)
         return f
 
-    def handle_error(self, msg):
-        f = flow.FlowMaster.handle_error(self, msg)
+    def handle_error(self, f):
+        flow.FlowMaster.handle_error(self, f)
         if f:
             self._process_flow(f)
         return f

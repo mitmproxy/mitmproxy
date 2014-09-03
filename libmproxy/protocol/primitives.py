@@ -9,24 +9,6 @@ from ..proxy.connection import ClientConnection, ServerConnection
 KILL = 0  # const for killed requests
 
 
-class BackreferenceMixin(object):
-    """
-    If an attribute from the _backrefattr tuple is set,
-    this mixin sets a reference back on the attribute object.
-    Example:
-        e = Error()
-        f = Flow()
-        f.error = e
-        assert f is e.flow
-    """
-    _backrefattr = tuple()
-
-    def __setattr__(self, key, value):
-        super(BackreferenceMixin, self).__setattr__(key, value)
-        if key in self._backrefattr and value is not None:
-            setattr(value, self._backrefname, self)
-
-
 class Error(stateobject.SimpleStateObject):
     """
         An Error.
@@ -70,7 +52,7 @@ class Error(stateobject.SimpleStateObject):
         return c
 
 
-class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
+class Flow(stateobject.SimpleStateObject):
     def __init__(self, conntype, client_conn, server_conn, live=None):
         self.conntype = conntype
         self.client_conn = client_conn
@@ -83,9 +65,6 @@ class Flow(stateobject.SimpleStateObject, BackreferenceMixin):
         self.error = None
         """@type: Error"""
         self._backup = None
-
-    _backrefattr = ("error",)
-    _backrefname = "flow"
 
     _stateobject_attributes = dict(
         error=Error,

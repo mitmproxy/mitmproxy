@@ -327,29 +327,32 @@ class TestProxySSL(tservers.HTTPProxTest):
         # tests that the ssl timestamp is present when ssl is used
         f = self.pathod("304:b@10k")
         assert f.status_code == 304
-        first_request = self.master.state.view[0].request
-        assert first_request.flow.server_conn.timestamp_ssl_setup
+        first_flow = self.master.state.view[0]
+        assert first_flow.server_conn.timestamp_ssl_setup
 
 
 class MasterRedirectRequest(tservers.TestMaster):
-    def handle_request(self, request):
+    redirect_port = None  # Set by TestRedirectRequest
+
+    def handle_request(self, f):
+        request = f.request
         if request.path == "/p/201":
-            url = request.get_url()
+            url = request.get_url(False, f)
             new = "http://127.0.0.1:%s/p/201" % self.redirect_port
 
-            request.set_url(new)
-            request.set_url(new)
-            request.flow.live.change_server(("127.0.0.1", self.redirect_port), False)
-            request.set_url(url)
-            tutils.raises("SSL handshake error", request.flow.live.change_server, ("127.0.0.1", self.redirect_port), True)
-            request.set_url(new)
-            request.set_url(url)
-            request.set_url(new)
-        tservers.TestMaster.handle_request(self, request)
+            request.set_url(new, f)
+            request.set_url(new, f)
+            f.live.change_server(("127.0.0.1", self.redirect_port), False)
+            request.set_url(url, f)
+            tutils.raises("SSL handshake error", f.live.change_server, ("127.0.0.1", self.redirect_port), True)
+            request.set_url(new, f)
+            request.set_url(url, f)
+            request.set_url(new, f)
+        tservers.TestMaster.handle_request(self, f)
 
-    def handle_response(self, response):
-        response.content = str(response.flow.client_conn.address.port)
-        tservers.TestMaster.handle_response(self, response)
+    def handle_response(self, f):
+        f.response.content = str(f.client_conn.address.port)
+        tservers.TestMaster.handle_response(self, f)
 
 
 class TestRedirectRequest(tservers.HTTPProxTest):
@@ -388,9 +391,9 @@ class MasterStreamRequest(tservers.TestMaster):
     """
         Enables the stream flag on the flow for all requests
     """
-    def handle_responseheaders(self, r):
-        r.stream = True
-        r.reply()
+    def handle_responseheaders(self, f):
+        f.response.stream = True
+        f.reply()
 
 class TestStreamRequest(tservers.HTTPProxTest):
     masterclass = MasterStreamRequest
@@ -441,9 +444,9 @@ class TestStreamRequest(tservers.HTTPProxTest):
 
 
 class MasterFakeResponse(tservers.TestMaster):
-    def handle_request(self, m):
+    def handle_request(self, f):
         resp = tutils.tresp()
-        m.reply(resp)
+        f.reply(resp)
 
 
 class TestFakeResponse(tservers.HTTPProxTest):
@@ -454,8 +457,8 @@ class TestFakeResponse(tservers.HTTPProxTest):
 
 
 class MasterKillRequest(tservers.TestMaster):
-    def handle_request(self, m):
-        m.reply(KILL)
+    def handle_request(self, f):
+        f.reply(KILL)
 
 
 class TestKillRequest(tservers.HTTPProxTest):
@@ -467,8 +470,8 @@ class TestKillRequest(tservers.HTTPProxTest):
 
 
 class MasterKillResponse(tservers.TestMaster):
-    def handle_response(self, m):
-        m.reply(KILL)
+    def handle_response(self, f):
+        f.reply(KILL)
 
 
 class TestKillResponse(tservers.HTTPProxTest):
@@ -491,10 +494,10 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
 
 
 class MasterIncomplete(tservers.TestMaster):
-    def handle_request(self, m):
+    def handle_request(self, f):
         resp = tutils.tresp()
         resp.content = CONTENT_MISSING
-        m.reply(resp)
+        f.reply(resp)
 
 
 class TestIncompleteResponse(tservers.HTTPProxTest):

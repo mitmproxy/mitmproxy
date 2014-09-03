@@ -77,9 +77,6 @@ class HTTPMessage(stateobject.SimpleStateObject):
         self.timestamp_start = timestamp_start if timestamp_start is not None else utils.timestamp()
         self.timestamp_end = timestamp_end if timestamp_end is not None else utils.timestamp()
 
-        self.flow = None  # will usually be set by the flow backref mixin
-        """@type: HTTPFlow"""
-
     _stateobject_attributes = dict(
         httpversion=tuple,
         headers=ODictCaseless,
@@ -346,10 +343,10 @@ class HTTPRequest(HTTPMessage):
             del headers[k]
         if headers["Upgrade"] == ["h2c"]:  # Suppress HTTP2 https://http2.github.io/http2-spec/index.html#discover-http
             del headers["Upgrade"]
-        if not 'host' in headers:
+        if not 'host' in headers and self.scheme and self.host and self.port:
             headers["Host"] = [utils.hostport(self.scheme,
-                                              self.host or self.flow.server_conn.address.host,
-                                              self.port or self.flow.server_conn.address.port)]
+                                              self.host,
+                                              self.port)]
 
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]
@@ -429,16 +426,16 @@ class HTTPRequest(HTTPMessage):
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(odict.lst)
 
-    def get_path_components(self):
+    def get_path_components(self, f):
         """
             Returns the path components of the URL as a list of strings.
 
             Components are unquoted.
         """
-        _, _, path, _, _, _ = urlparse.urlparse(self.get_url())
+        _, _, path, _, _, _ = urlparse.urlparse(self.get_url(False, f))
         return [urllib.unquote(i) for i in path.split("/") if i]
 
-    def set_path_components(self, lst):
+    def set_path_components(self, lst, f):
         """
             Takes a list of strings, and sets the path component of the URL.
 
@@ -446,27 +443,27 @@ class HTTPRequest(HTTPMessage):
         """
         lst = [urllib.quote(i, safe="") for i in lst]
         path = "/" + "/".join(lst)
-        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.get_url())
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
+        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.get_url(False, f))
+        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]), f)
 
-    def get_query(self):
+    def get_query(self, f):
         """
             Gets the request query string. Returns an ODict object.
         """
-        _, _, _, _, query, _ = urlparse.urlparse(self.get_url())
+        _, _, _, _, query, _ = urlparse.urlparse(self.get_url(False, f))
         if query:
             return ODict(utils.urldecode(query))
         return ODict([])
 
-    def set_query(self, odict):
+    def set_query(self, odict, f):
         """
             Takes an ODict object, and sets the request query string.
         """
-        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url())
+        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url(False, f))
         query = utils.urlencode(odict.lst)
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]))
+        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]), f)
 
-    def get_host(self, hostheader=False):
+    def get_host(self, hostheader, flow):
         """
             Heuristic to get the host of the request.
 
@@ -484,16 +481,16 @@ class HTTPRequest(HTTPMessage):
             if self.host:
                 host = self.host
             else:
-                for s in self.flow.server_conn.state:
+                for s in flow.server_conn.state:
                     if s[0] == "http" and s[1]["state"] == "connect":
                         host = s[1]["host"]
                         break
                 if not host:
-                    host = self.flow.server_conn.address.host
+                    host = flow.server_conn.address.host
         host = host.encode("idna")
         return host
 
-    def get_scheme(self):
+    def get_scheme(self, flow):
         """
         Returns the request port, either from the request itself or from the flow's server connection
         """
@@ -501,20 +498,20 @@ class HTTPRequest(HTTPMessage):
             return self.scheme
         if self.form_out == "authority":  # On SSLed connections, the original CONNECT request is still unencrypted.
             return "http"
-        return "https" if self.flow.server_conn.ssl_established else "http"
+        return "https" if flow.server_conn.ssl_established else "http"
 
-    def get_port(self):
+    def get_port(self, flow):
         """
         Returns the request port, either from the request itself or from the flow's server connection
         """
         if self.port:
             return self.port
-        for s in self.flow.server_conn.state:
+        for s in flow.server_conn.state:
             if s[0] == "http" and s[1].get("state") == "connect":
                 return s[1]["port"]
-        return self.flow.server_conn.address.port
+        return flow.server_conn.address.port
 
-    def get_url(self, hostheader=False):
+    def get_url(self, hostheader, flow):
         """
             Returns a URL string, constructed from the Request's URL components.
 
@@ -522,13 +519,13 @@ class HTTPRequest(HTTPMessage):
             Host header to construct the URL.
         """
         if self.form_out == "authority":  # upstream proxy mode
-            return "%s:%s" % (self.get_host(hostheader), self.get_port())
-        return utils.unparse_url(self.get_scheme(),
-                                 self.get_host(hostheader),
-                                 self.get_port(),
+            return "%s:%s" % (self.get_host(hostheader, flow), self.get_port(flow))
+        return utils.unparse_url(self.get_scheme(flow),
+                                 self.get_host(hostheader, flow),
+                                 self.get_port(flow),
                                  self.path).encode('ascii')
 
-    def set_url(self, url):
+    def set_url(self, url, flow):
         """
             Parses a URL specification, and updates the Request's information
             accordingly.
@@ -543,14 +540,14 @@ class HTTPRequest(HTTPMessage):
 
         self.path = path
 
-        if host != self.get_host() or port != self.get_port():
-            if self.flow.live:
-                self.flow.live.change_server((host, port), ssl=is_ssl)
+        if host != self.get_host(False, flow) or port != self.get_port(flow):
+            if flow.live:
+                flow.live.change_server((host, port), ssl=is_ssl)
             else:
                 # There's not live server connection, we're just changing the attributes here.
-                self.flow.server_conn = ServerConnection((host, port),
+                flow.server_conn = ServerConnection((host, port),
                                                          proxy.AddressPriority.MANUALLY_CHANGED)
-                self.flow.server_conn.ssl_established = is_ssl
+                flow.server_conn.ssl_established = is_ssl
 
         # If this is an absolute request, replace the attributes on the request object as well.
         if self.host:
@@ -802,8 +799,6 @@ class HTTPFlow(Flow):
 
         self.intercepting = False  # FIXME: Should that rather be an attribute of Flow?
 
-    _backrefattr = Flow._backrefattr + ("request", "response")
-
     _stateobject_attributes = Flow._stateobject_attributes.copy()
     _stateobject_attributes.update(
         request=HTTPRequest,
@@ -855,13 +850,10 @@ class HTTPFlow(Flow):
             Kill this request.
         """
         self.error = Error("Connection killed")
-        self.error.reply = controller.DummyReply()
-        if self.request and not self.request.reply.acked:
-            self.request.reply(KILL)
-        elif self.response and not self.response.reply.acked:
-            self.response.reply(KILL)
-        master.handle_error(self.error)
         self.intercepting = False
+        self.reply(KILL)
+        self.reply = controller.DummyReply()
+        master.handle_error(self)
 
     def intercept(self):
         """
@@ -874,12 +866,8 @@ class HTTPFlow(Flow):
         """
             Continue with the flow - called after an intercept().
         """
-        if self.request:
-            if not self.request.reply.acked:
-                self.request.reply()
-            elif self.response and not self.response.reply.acked:
-                self.response.reply()
-            self.intercepting = False
+        self.intercepting = False
+        self.reply()
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
@@ -961,7 +949,7 @@ class HTTPHandler(ProtocolHandler):
             # in an Error object that has an attached request that has not been
             # sent through to the Master.
             flow.request = req
-            request_reply = self.c.channel.ask("request", flow.request)
+            request_reply = self.c.channel.ask("request", flow)
             self.determine_server_address(flow, flow.request)  # The inline script may have changed request.host
             flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
 
@@ -976,7 +964,7 @@ class HTTPHandler(ProtocolHandler):
                 flow.response = self.get_response_from_server(flow.request, include_body=False)
 
                 # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
-                self.c.channel.ask("responseheaders", flow.response)
+                self.c.channel.ask("responseheaders", flow)
 
                 # now get the rest of the request body, if body still needs to be read but not streaming this response
                 if flow.response.stream:
@@ -991,7 +979,7 @@ class HTTPHandler(ProtocolHandler):
             flow.server_conn = self.c.server_conn
 
             self.c.log("response", "debug", [flow.response._assemble_first_line()])
-            response_reply = self.c.channel.ask("response", flow.response)
+            response_reply = self.c.channel.ask("response", flow)
             if response_reply is None or response_reply == KILL:
                 return False
 
@@ -1079,7 +1067,7 @@ class HTTPHandler(ProtocolHandler):
             # TODO: no flows without request or with both request and response at the moment.
             if flow.request and not flow.response:
                 flow.error = Error(message)
-                self.c.channel.ask("error", flow.error)
+                self.c.channel.ask("error", flow)
 
         try:
             code = getattr(error, "code", 502)
@@ -1204,12 +1192,12 @@ class RequestReplayThread(threading.Thread):
                 except proxy.ProxyError:
                     pass
             if not server_address:
-                server_address = (r.get_host(), r.get_port())
+                server_address = (r.get_host(False, self.flow), r.get_port(self.flow))
 
             server = ServerConnection(server_address, None)
             server.connect()
 
-            if server_ssl or r.get_scheme() == "https":
+            if server_ssl or r.get_scheme(self.flow) == "https":
                 if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode -> send CONNECT
                     send_connect_request(server, r.get_host(), r.get_port())
                     r.form_out = "relative"
@@ -1218,9 +1206,9 @@ class RequestReplayThread(threading.Thread):
             server.send(r._assemble())
             self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
                                                           body_size_limit=self.config.body_size_limit)
-            self.channel.ask("response", self.flow.response)
+            self.channel.ask("response", self.flow)
         except (proxy.ProxyError, http.HttpError, tcp.NetLibError), v:
             self.flow.error = Error(repr(v))
-            self.channel.ask("error", self.flow.error)
+            self.channel.ask("error", self.flow)
         finally:
             r.form_out = form_out_backup

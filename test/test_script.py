@@ -29,8 +29,8 @@ class TestScript:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         fm.load_script(tutils.test_data.path("scripts/duplicate_flow.py"))
-        r = tutils.treq()
-        fm.handle_request(r)
+        f = tutils.tflow()
+        fm.handle_request(f)
         assert fm.state.flow_count() == 2
         assert not fm.state.view[0].request.is_replay
         assert fm.state.view[1].request.is_replay
@@ -65,12 +65,12 @@ class TestScript:
         fm.load_script(tutils.test_data.path("scripts/concurrent_decorator.py"))
 
         with mock.patch("libmproxy.controller.DummyReply.__call__") as m:
-            r1, r2 = tutils.treq(), tutils.treq()
+            f1, f2 = tutils.tflow(), tutils.tflow()
             t_start = time.time()
-            fm.handle_request(r1)
-            r1.reply()
-            fm.handle_request(r2)
-            r2.reply()
+            fm.handle_request(f1)
+            f1.reply()
+            fm.handle_request(f2)
+            f2.reply()
 
             # Two instantiations
             assert m.call_count == 0  # No calls yet.

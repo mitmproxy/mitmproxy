@@ -26,10 +26,12 @@ def test_stripped_chunked_encoding_no_content():
 class TestHTTPRequest:
     def test_asterisk_form(self):
         s = StringIO("OPTIONS * HTTP/1.1")
-        f = tutils.tflow_noreq()
+        f = tutils.tflow(req=None)
         f.request = HTTPRequest.from_stream(s)
         assert f.request.form_in == "relative"
-        x = f.request._assemble()
+        f.request.host = f.server_conn.address.host
+        f.request.port = f.server_conn.address.port
+        f.request.scheme = "http"
         assert f.request._assemble() == "OPTIONS * HTTP/1.1\r\nHost: address:22\r\n\r\n"
 
     def test_origin_form(self):
@@ -41,6 +43,7 @@ class TestHTTPRequest:
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
         s = StringIO("CONNECT address:22 HTTP/1.1")
         r = HTTPRequest.from_stream(s)
+        r.scheme, r.host, r.port = "http", "address", 22
         assert r._assemble() == "CONNECT address:22 HTTP/1.1\r\nHost: address:22\r\n\r\n"
 
     def test_absolute_form(self):
@@ -55,12 +58,12 @@ class TestHTTPRequest:
         tutils.raises("Invalid request form", r._assemble, "antiauthority")
 
     def test_set_url(self):
-        r = tutils.treq_absolute()
-        r.set_url("https://otheraddress:42/ORLY")
-        assert r.scheme == "https"
-        assert r.host == "otheraddress"
-        assert r.port == 42
-        assert r.path == "/ORLY"
+        f = tutils.tflow(req=tutils.treq_absolute())
+        f.request.set_url("https://otheraddress:42/ORLY", f)
+        assert f.request.scheme == "https"
+        assert f.request.host == "otheraddress"
+        assert f.request.port == 42
+        assert f.request.path == "/ORLY"
 
 
 class TestHTTPResponse:
@@ -130,10 +133,10 @@ class TestProxyChainingSSL(tservers.HTTPChainProxyTest):
         """
         https://github.com/mitmproxy/mitmproxy/issues/313
         """
-        def handle_request(r):
-            r.httpversion = (1,0)
-            del r.headers["Content-Length"]
-            r.reply()
+        def handle_request(f):
+            f.request.httpversion = (1, 0)
+            del f.request.headers["Content-Length"]
+            f.reply()
         _handle_request = self.chain[0].tmaster.handle_request
         self.chain[0].tmaster.handle_request = handle_request
         try:
@@ -159,13 +162,13 @@ class TestProxyChainingSSLReconnect(tservers.HTTPChainProxyTest):
         def kill_requests(master, attr, exclude):
             k = [0]  # variable scope workaround: put into array
             _func = getattr(master, attr)
-            def handler(r):
+            def handler(f):
                 k[0] += 1
                 if not (k[0] in exclude):
-                    r.flow.client_conn.finish()
-                    r.flow.error = Error("terminated")
-                    r.reply(KILL)
-                return _func(r)
+                    f.client_conn.finish()
+                    f.error = Error("terminated")
+                    f.reply(KILL)
+                return _func(f)
             setattr(master, attr, handler)
 
         kill_requests(self.proxy.tmaster, "handle_request",

@@ -25,11 +25,11 @@ class TestServerConnection:
     def test_simple(self):
         sc = ServerConnection((self.d.IFACE, self.d.port), None)
         sc.connect()
-        r = tutils.treq()
-        r.flow.server_conn = sc
-        r.path = "/p/200:da"
-        sc.send(r._assemble())
-        assert http.read_response(sc.rfile, r.method, 1000)
+        f = tutils.tflow()
+        f.server_conn = sc
+        f.request.path = "/p/200:da"
+        sc.send(f.request._assemble())
+        assert http.read_response(sc.rfile, f.request.method, 1000)
         assert self.d.last_log()
 
         sc.finish()

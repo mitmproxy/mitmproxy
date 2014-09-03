@@ -16,16 +16,16 @@ class MyMaster(flow.FlowMaster):
         except KeyboardInterrupt:
             self.shutdown()
 
-    def handle_request(self, r):
-        f = flow.FlowMaster.handle_request(self, r)
+    def handle_request(self, f):
+        f = flow.FlowMaster.handle_request(self, f)
         if f:
-            r.reply()
+            f.reply()
         return f
 
-    def handle_response(self, r):
-        f = flow.FlowMaster.handle_response(self, r)
+    def handle_response(self, f):
+        f = flow.FlowMaster.handle_response(self, f)
         if f:
-            r.reply()
+            f.reply()
         print f
         return f
 

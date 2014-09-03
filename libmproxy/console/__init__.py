@@ -268,8 +268,8 @@ class ConsoleState(flow.State):
         d = self.flowsettings.get(flow, {})
         return d.get(key, default)
 
-    def add_request(self, req):
-        f = flow.State.add_request(self, req)
+    def add_request(self, f):
+        flow.State.add_request(self, f)
         if self.focus is None:
             self.set_focus(0)
         elif self.follow_focus:
@@ -996,11 +996,11 @@ class ConsoleMaster(flow.FlowMaster):
         if hasattr(self.statusbar, "refresh_flow"):
             self.statusbar.refresh_flow(c)
 
-    def process_flow(self, f, r):
+    def process_flow(self, f):
         if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
             f.intercept()
         else:
-            r.reply()
+            f.reply()
         self.sync_list_view()
         self.refresh_flow(f)
 
@@ -1022,20 +1022,20 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlist.set_focus(len(self.eventlist)-1)
 
     # Handlers
-    def handle_error(self, r):
-        f = flow.FlowMaster.handle_error(self, r)
+    def handle_error(self, f):
+        f = flow.FlowMaster.handle_error(self, f)
         if f:
-            self.process_flow(f, r)
+            self.process_flow(f)
         return f
 
-    def handle_request(self, r):
-        f = flow.FlowMaster.handle_request(self, r)
+    def handle_request(self, f):
+        f = flow.FlowMaster.handle_request(self, f)
         if f:
-            self.process_flow(f, r)
+            self.process_flow(f)
         return f
 
-    def handle_response(self, r):
-        f = flow.FlowMaster.handle_response(self, r)
+    def handle_response(self, f):
+        f = flow.FlowMaster.handle_response(self, f)
         if f:
-            self.process_flow(f, r)
+            self.process_flow(f)
         return f

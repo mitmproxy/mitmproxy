@@ -10,31 +10,27 @@ def test_strfuncs():
     t.is_replay = True
     dump.str_response(t)
 
-    t = tutils.treq()
-    t.flow.client_conn = None
-    t.stickycookie = True
-    assert "stickycookie" in dump.str_request(t, False)
-    assert "stickycookie" in dump.str_request(t, True)
-    assert "replay" in dump.str_request(t, False)
-    assert "replay" in dump.str_request(t, True)
+    f = tutils.tflow()
+    f.client_conn = None
+    f.request.stickycookie = True
+    assert "stickycookie" in dump.str_request(f, False)
+    assert "stickycookie" in dump.str_request(f, True)
+    assert "replay" in dump.str_request(f, False)
+    assert "replay" in dump.str_request(f, True)
 
 
 class TestDumpMaster:
     def _cycle(self, m, content):
-        req = tutils.treq(content=content)
+        f = tutils.tflow(req=tutils.treq(content))
         l = Log("connect")
         l.reply = mock.MagicMock()
         m.handle_log(l)
-        cc = req.flow.client_conn
-        cc.reply = mock.MagicMock()
-        m.handle_clientconnect(cc)
-        sc = proxy.connection.ServerConnection((req.get_host(), req.get_port()), None)
-        sc.reply = mock.MagicMock()
-        m.handle_serverconnect(sc)
-        m.handle_request(req)
-        resp = tutils.tresp(req, content=content)
-        f = m.handle_response(resp)
-        m.handle_clientdisconnect(cc)
+        m.handle_clientconnect(f.client_conn)
+        m.handle_serverconnect(f.server_conn)
+        m.handle_request(f)
+        f.response = tutils.tresp(content)
+        f = m.handle_response(f)
+        m.handle_clientdisconnect(f.client_conn)
         return f
 
     def _dummy_cycle(self, n, filt, content, **options):
@@ -49,8 +45,7 @@ class TestDumpMaster:
     def _flowfile(self, path):
         f = open(path, "wb")
         fw = flow.FlowWriter(f)
-        t = tutils.tflow_full()
-        t.response = tutils.tresp(t.request)
+        t = tutils.tflow(resp=True)
         fw.add(t)
         f.close()
 
@@ -58,9 +53,9 @@ class TestDumpMaster:
         cs = StringIO()
         o = dump.Options(flow_detail=1)
         m = dump.DumpMaster(None, o, None, outfile=cs)
-        f = tutils.tflow_err()
-        m.handle_request(f.request)
-        assert m.handle_error(f.error)
+        f = tutils.tflow(err=True)
+        m.handle_request(f)
+        assert m.handle_error(f)
         assert "error" in cs.getvalue()
 
     def test_replay(self):
