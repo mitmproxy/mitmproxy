@@ -201,7 +201,10 @@ class StatusBar(common.WWrap):
         ]
 
         if self.master.server.bound:
-            boundaddr = "[%s:%s]"%(self.master.server.address.host or "*", self.master.server.address.port)
+            host = self.master.server.address.host
+            if host == "0.0.0.0":
+                host = "*"
+            boundaddr = "[%s:%s]"%(host, self.master.server.address.port)
         else:
             boundaddr = ""
         t.extend(self.get_status())

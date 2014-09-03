@@ -1068,7 +1068,7 @@ class HTTPHandler(ProtocolHandler):
             message += " The client does not trust the proxy's certificate."
 
         if isinstance(error, tcp.NetLibDisconnect):
-            self.c.log("TCP connection closed unexpectedly.", "debug", [repr(error)])
+            self.c.log("TCP connection closed unexpectedly.", "debug")
         else:
             self.c.log("error: %s" % message, level="info")
 

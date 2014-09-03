@@ -66,5 +66,5 @@ class TCPHandler(ProtocolHandler):
                         # self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(buf.tobytes())), "debug")
                         dst.connection.send(buf[:size])
         except socket.error as e:
-            self.c.log("TCP connection closed unexpectedly.", "debug", [repr(e)])
+            self.c.log("TCP connection closed unexpectedly.", "debug")
             return
