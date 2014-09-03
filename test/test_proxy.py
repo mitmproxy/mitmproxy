@@ -23,7 +23,7 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         f = tutils.tflow()
         f.server_conn = sc
@@ -35,7 +35,7 @@ class TestServerConnection:
         sc.finish()
 
     def test_terminate_error(self):
-        sc = ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)

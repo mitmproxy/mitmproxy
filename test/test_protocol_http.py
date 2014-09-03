@@ -58,12 +58,12 @@ class TestHTTPRequest:
         tutils.raises("Invalid request form", r._assemble, "antiauthority")
 
     def test_set_url(self):
-        f = tutils.tflow(req=tutils.treq_absolute())
-        f.request.set_url("https://otheraddress:42/ORLY", f)
-        assert f.request.scheme == "https"
-        assert f.request.host == "otheraddress"
-        assert f.request.port == 42
-        assert f.request.path == "/ORLY"
+        r = tutils.treq_absolute()
+        r.url = "https://otheraddress:42/ORLY"
+        assert r.scheme == "https"
+        assert r.host == "otheraddress"
+        assert r.port == 42
+        assert r.path == "/ORLY"
 
 
 class TestHTTPResponse:

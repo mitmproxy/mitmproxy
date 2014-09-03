@@ -528,7 +528,9 @@ class FlowView(common.WWrap):
 
     def set_url(self, url):
         request = self.flow.request
-        if not request.set_url(str(url)):
+        try:
+            request.url = str(url)
+        except ValueError:
             return "Invalid URL."
         self.master.refresh_flow(self.flow)
 
@@ -552,17 +554,17 @@ class FlowView(common.WWrap):
         conn.headers = flow.ODictCaseless(lst)
 
     def set_query(self, lst, conn):
-        conn.set_query(flow.ODict(lst))
+        conn.query = flow.ODict(lst)
 
     def set_path_components(self, lst, conn):
-        conn.set_path_components([i[0] for i in lst])
+        conn.path_components = [i[0] for i in lst]
 
     def set_form(self, lst, conn):
-        conn.set_form_urlencoded(flow.ODict(lst))
+        conn.form_urlencoded = flow.ODict(lst)
 
     def edit_form(self, conn):
         self.master.view_grideditor(
-            grideditor.URLEncodedFormEditor(self.master, conn.get_form_urlencoded().lst, self.set_form, conn)
+            grideditor.URLEncodedFormEditor(self.master, conn.form_urlencoded.lst, self.set_form, conn)
         )
 
     def edit_form_confirm(self, key, conn):
@@ -587,7 +589,7 @@ class FlowView(common.WWrap):
             c = self.master.spawn_editor(conn.content or "")
             conn.content = c.rstrip("\n") # what?
         elif part == "f":
-            if not conn.get_form_urlencoded() and conn.content:
+            if not conn.form_urlencoded and conn.content:
                 self.master.prompt_onekey(
                     "Existing body is not a URL-encoded form. Clear and edit?",
                     [
@@ -602,13 +604,13 @@ class FlowView(common.WWrap):
         elif part == "h":
             self.master.view_grideditor(grideditor.HeaderEditor(self.master, conn.headers.lst, self.set_headers, conn))
         elif part == "p":
-            p = conn.get_path_components()
+            p = conn.path_components
             p = [[i] for i in p]
             self.master.view_grideditor(grideditor.PathEditor(self.master, p, self.set_path_components, conn))
         elif part == "q":
-            self.master.view_grideditor(grideditor.QueryEditor(self.master, conn.get_query().lst, self.set_query, conn))
+            self.master.view_grideditor(grideditor.QueryEditor(self.master, conn.query.lst, self.set_query, conn))
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_edit("URL", conn.get_url(), self.set_url)
+            self.master.prompt_edit("URL", conn.url, self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_onekey("Method", self.method_options, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:

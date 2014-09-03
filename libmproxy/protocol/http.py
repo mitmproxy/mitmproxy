@@ -411,7 +411,14 @@ class HTTPRequest(HTTPMessage):
                 e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
             )]
 
-    def get_form_urlencoded(self):
+    def update_host_header(self):
+        """
+            Update the host header to reflect the current target.
+        """
+        self.headers["Host"] = [self.host]
+
+    @property
+    def form_urlencoded(self):
         """
             Retrieves the URL-encoded form data, returning an ODict object.
             Returns an empty ODict if there is no data or the content-type
@@ -421,7 +428,8 @@ class HTTPRequest(HTTPMessage):
             return ODict(utils.urldecode(self.content))
         return ODict([])
 
-    def set_form_urlencoded(self, odict):
+    @form_urlencoded.setter
+    def form_urlencoded(self, odict):
         """
             Sets the body to the URL-encoded form data, and adds the
             appropriate content-type header. Note that this will destory the
@@ -432,16 +440,18 @@ class HTTPRequest(HTTPMessage):
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(odict.lst)
 
-    def get_path_components(self, f):
+    @property
+    def path_components(self):
         """
             Returns the path components of the URL as a list of strings.
 
             Components are unquoted.
         """
-        _, _, path, _, _, _ = urlparse.urlparse(self.get_url(False, f))
+        _, _, path, _, _, _ = urlparse.urlparse(self.url)
         return [urllib.unquote(i) for i in path.split("/") if i]
 
-    def set_path_components(self, lst, f):
+    @path_components.setter
+    def path_components(self, lst):
         """
             Takes a list of strings, and sets the path component of the URL.
 
@@ -449,32 +459,34 @@ class HTTPRequest(HTTPMessage):
         """
         lst = [urllib.quote(i, safe="") for i in lst]
         path = "/" + "/".join(lst)
-        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.get_url(False, f))
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]), f)
+        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.url)
+        self.url = urlparse.urlunparse([scheme, netloc, path, params, query, fragment])
 
-    def get_query(self, f):
+    @property
+    def query(self):
         """
             Gets the request query string. Returns an ODict object.
         """
-        _, _, _, _, query, _ = urlparse.urlparse(self.get_url(False, f))
+        _, _, _, _, query, _ = urlparse.urlparse(self.url)
         if query:
             return ODict(utils.urldecode(query))
         return ODict([])
 
-    def set_query(self, odict, f):
+    @query.setter
+    def query(self, odict):
         """
             Takes an ODict object, and sets the request query string.
         """
-        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url(False, f))
+        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.url)
         query = utils.urlencode(odict.lst)
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]), f)
+        self.url = urlparse.urlunparse([scheme, netloc, path, params, query, fragment])
 
-    def get_host(self, hostheader, flow):
+    def pretty_host(self, hostheader):
         """
             Heuristic to get the host of the request.
 
-            Note that get_host() does not always return the TCP destination of the request,
-            e.g. on a transparently intercepted request to an unrelated HTTP proxy.
+            Note that pretty_host() does not always return the TCP destination of the request,
+            e.g. if an upstream proxy is in place
 
             If hostheader is set to True, the Host: header will be used as additional (and preferred) data source.
             This is handy in transparent mode, where only the ip of the destination is known, but not the
@@ -484,54 +496,27 @@ class HTTPRequest(HTTPMessage):
         if hostheader:
             host = self.headers.get_first("host")
         if not host:
-            if self.host:
-                host = self.host
-            else:
-                for s in flow.server_conn.state:
-                    if s[0] == "http" and s[1]["state"] == "connect":
-                        host = s[1]["host"]
-                        break
-                if not host:
-                    host = flow.server_conn.address.host
+            host = self.host
         host = host.encode("idna")
         return host
 
-    def get_scheme(self, flow):
-        """
-        Returns the request port, either from the request itself or from the flow's server connection
-        """
-        if self.scheme:
-            return self.scheme
-        if self.form_out == "authority":  # On SSLed connections, the original CONNECT request is still unencrypted.
-            return "http"
-        return "https" if flow.server_conn.ssl_established else "http"
-
-    def get_port(self, flow):
-        """
-        Returns the request port, either from the request itself or from the flow's server connection
-        """
-        if self.port:
-            return self.port
-        for s in flow.server_conn.state:
-            if s[0] == "http" and s[1].get("state") == "connect":
-                return s[1]["port"]
-        return flow.server_conn.address.port
-
-    def get_url(self, hostheader, flow):
-        """
-            Returns a URL string, constructed from the Request's URL components.
-
-            If hostheader is True, we use the value specified in the request
-            Host header to construct the URL.
-        """
+    def pretty_url(self, hostheader):
         if self.form_out == "authority":  # upstream proxy mode
-            return "%s:%s" % (self.get_host(hostheader, flow), self.get_port(flow))
-        return utils.unparse_url(self.get_scheme(flow),
-                                 self.get_host(hostheader, flow),
-                                 self.get_port(flow),
+            return "%s:%s" % (self.pretty_host(hostheader), self.port)
+        return utils.unparse_url(self.scheme,
+                                 self.pretty_host(hostheader),
+                                 self.port,
                                  self.path).encode('ascii')
 
-    def set_url(self, url, flow):
+    @property
+    def url(self):
+        """
+            Returns a URL string, constructed from the Request's URL components.
+        """
+        return self.pretty_url(False)
+
+    @url.setter
+    def url(self, url):
         """
             Parses a URL specification, and updates the Request's information
             accordingly.
@@ -540,31 +525,11 @@ class HTTPRequest(HTTPMessage):
         """
         parts = http.parse_url(url)
         if not parts:
-            return False
-        scheme, host, port, path = parts
-        is_ssl = (True if scheme == "https" else False)
+            raise ValueError("Invalid URL: %s" % url)
+        self.scheme, self.host, self.port, self.path = parts
 
-        self.path = path
-
-        if host != self.get_host(False, flow) or port != self.get_port(flow):
-            if flow.live:
-                flow.live.change_server((host, port), ssl=is_ssl)
-            else:
-                # There's not live server connection, we're just changing the attributes here.
-                flow.server_conn = ServerConnection((host, port))
-                flow.server_conn.ssl_established = is_ssl
-
-        # If this is an absolute request, replace the attributes on the request object as well.
-        if self.host:
-            self.host = host
-        if self.port:
-            self.port = port
-        if self.scheme:
-            self.scheme = scheme
-
-        return True
-
-    def get_cookies(self):
+    @property
+    def cookies(self):
         cookie_headers = self.headers.get("cookie")
         if not cookie_headers:
             return None
@@ -760,7 +725,8 @@ class HTTPResponse(HTTPMessage):
         if c:
             self.headers["set-cookie"] = c
 
-    def get_cookies(self):
+    @property
+    def cookies(self):
         cookie_headers = self.headers.get("set-cookie")
         if not cookie_headers:
             return None
@@ -1127,12 +1093,12 @@ class HTTPHandler(ProtocolHandler):
         if not request.host:
             # Host/Port Complication: In upstream mode, use the server we CONNECTed to,
             # not the upstream proxy.
-            for s in flow.server_conn.state:
-                if s[0] == "http" and s[1]["state"] == "connect":
-                    request.host, request.port = s[1]["host"], s[1]["port"]
-            if not request.host:
-                request.host = flow.server_conn.address.host
-                request.port = flow.server_conn.address.port
+            if flow.server_conn:
+                for s in flow.server_conn.state:
+                    if s[0] == "http" and s[1]["state"] == "connect":
+                        request.host, request.port = s[1]["host"], s[1]["port"]
+            if not request.host and flow.server_conn:
+                request.host, request.port = flow.server_conn.address.host, flow.server_conn.address.port
 
         # Now we can process the request.
         if request.form_in == "authority":
@@ -1242,7 +1208,9 @@ class RequestReplayThread(threading.Thread):
 
             r.form_out = self.config.http_form_out
             server_address, server_ssl = False, False
-            if self.config.get_upstream_server:
+            # If the flow is live, r.host is already the correct upstream server unless modified by a script.
+            # If modified by a script, we probably want to keep the modified destination.
+            if self.config.get_upstream_server and not self.flow.live:
                 try:
                     # this will fail in transparent mode
                     upstream_info = self.config.get_upstream_server(self.flow.client_conn)
@@ -1251,17 +1219,16 @@ class RequestReplayThread(threading.Thread):
                 except proxy.ProxyError:
                     pass
             if not server_address:
-                server_address = (r.get_host(False, self.flow), r.get_port(self.flow))
+                server_address = (r.host, r.port)
 
-            server = ServerConnection(server_address, None)
+            server = ServerConnection(server_address)
             server.connect()
 
-            if server_ssl or r.get_scheme(self.flow) == "https":
+            if server_ssl or r.scheme == "https":
                 if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode -> send CONNECT
-                    send_connect_request(server, r.get_host(), r.get_port())
+                    send_connect_request(server, r.host, r.port)
                     r.form_out = "relative"
-                server.establish_ssl(self.config.clientcerts,
-                                     self.flow.server_conn.sni)
+                server.establish_ssl(self.config.clientcerts, sni=r.host)
             server.send(r._assemble())
             self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
                                                           body_size_limit=self.config.body_size_limit)

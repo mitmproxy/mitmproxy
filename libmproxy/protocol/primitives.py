@@ -58,7 +58,7 @@ class Flow(stateobject.SimpleStateObject):
         """@type: ClientConnection"""
         self.server_conn = server_conn
         """@type: ServerConnection"""
-        self.live = live  # Used by flow.request.set_url to change the server address
+        self.live = live
         """@type: LiveConnection"""
 
         self.error = None
