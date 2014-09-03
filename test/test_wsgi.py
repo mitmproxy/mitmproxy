@@ -2,11 +2,11 @@ import cStringIO, sys
 from netlib import wsgi, odict
 
 
-def treq():
-    cc = wsgi.ClientConn(("127.0.0.1", 8888))
+def tflow():
     h = odict.ODictCaseless()
     h["test"] = ["value"]
-    return wsgi.Request(cc, "http", "GET", "/", h, "")
+    req = wsgi.Request("http", "GET", "/", h, "")
+    return wsgi.Flow(("127.0.0.1", 8888), req)
 
 
 class TestApp:
@@ -24,22 +24,22 @@ class TestApp:
 class TestWSGI:
     def test_make_environ(self):
         w = wsgi.WSGIAdaptor(None, "foo", 80, "version")
-        tr = treq()
-        assert w.make_environ(tr, None)
+        tf = tflow()
+        assert w.make_environ(tf, None)
 
-        tr.path = "/foo?bar=voing"
-        r = w.make_environ(tr, None)
+        tf.request.path = "/foo?bar=voing"
+        r = w.make_environ(tf, None)
         assert r["QUERY_STRING"] == "bar=voing"
 
     def test_serve(self):
         ta = TestApp()
         w = wsgi.WSGIAdaptor(ta, "foo", 80, "version")
-        r = treq()
-        r.host = "foo"
-        r.port = 80
+        f = tflow()
+        f.request.host = "foo"
+        f.request.port = 80
 
         wfile = cStringIO.StringIO()
-        err = w.serve(r, wfile)
+        err = w.serve(f, wfile)
         assert ta.called
         assert not err
 
@@ -49,11 +49,11 @@ class TestWSGI:
 
     def _serve(self, app):
         w = wsgi.WSGIAdaptor(app, "foo", 80, "version")
-        r = treq()
-        r.host = "foo"
-        r.port = 80
+        f = tflow()
+        f.request.host = "foo"
+        f.request.port = 80
         wfile = cStringIO.StringIO()
-        err = w.serve(r, wfile)
+        err = w.serve(f, wfile)
         return wfile.getvalue()
 
     def test_serve_empty_body(self):
