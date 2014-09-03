@@ -12,7 +12,7 @@ def request(context, flow):
             [1, 1], 200, "OK",
             ODictCaseless([["Content-Type", "text/html"]]),
             "helloworld")
-        flow.request.reply(resp)
+        flow.reply(resp)
     if flow.request.get_host(hostheader=True).endswith("example.org"):
         flow.request.host = "mitmproxy.org"
         flow.request.headers["Host"] = ["mitmproxy.org"]

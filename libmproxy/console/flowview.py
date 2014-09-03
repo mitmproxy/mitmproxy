@@ -233,7 +233,7 @@ class FlowView(common.WWrap):
     def wrap_body(self, active, body):
         parts = []
 
-        if self.flow.intercepting and not self.flow.request.reply.acked:
+        if self.flow.intercepting and not self.flow.reply.acked and not self.flow.response:
             qt = "Request intercepted"
         else:
             qt = "Request"
@@ -242,7 +242,7 @@ class FlowView(common.WWrap):
         else:
             parts.append(self._tab(qt, "heading_inactive"))
 
-        if self.flow.intercepting and self.flow.response and not self.flow.response.reply.acked:
+        if self.flow.intercepting and not self.flow.reply.acked and self.flow.response:
             st = "Response intercepted"
         else:
             st = "Response"
