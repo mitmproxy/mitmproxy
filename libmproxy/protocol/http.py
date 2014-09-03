@@ -26,7 +26,7 @@ def get_line(fp):
     return line
 
 
-def send_connect_request(conn, host, port):
+def send_connect_request(conn, host, port, update_state=True):
     upstream_request = HTTPRequest("authority", "CONNECT", None, host, port, None,
                                    (1, 1), ODictCaseless(), "")
     conn.send(upstream_request._assemble())
@@ -36,6 +36,12 @@ def send_connect_request(conn, host, port):
                                "Cannot establish SSL " +
                                "connection with upstream proxy: \r\n" +
                                str(resp._assemble()))
+    if update_state:
+        conn.state.append(("http", {
+            "state": "connect",
+            "host": host,
+            "port": port}
+        ))
     return resp
 
 
@@ -545,8 +551,7 @@ class HTTPRequest(HTTPMessage):
                 flow.live.change_server((host, port), ssl=is_ssl)
             else:
                 # There's not live server connection, we're just changing the attributes here.
-                flow.server_conn = ServerConnection((host, port),
-                                                         proxy.AddressPriority.MANUALLY_CHANGED)
+                flow.server_conn = ServerConnection((host, port))
                 flow.server_conn.ssl_established = is_ssl
 
         # If this is an absolute request, replace the attributes on the request object as well.
@@ -815,7 +820,7 @@ class HTTPFlow(Flow):
         s = "<HTTPFlow"
         for a in ("request", "response", "error", "client_conn", "server_conn"):
             if getattr(self, a, False):
-                s += "\r\n  %s = {flow.%s}" % (a,a)
+                s += "\r\n  %s = {flow.%s}" % (a, a)
         s += ">"
         return s.format(flow=self)
 
@@ -950,8 +955,7 @@ class HTTPHandler(ProtocolHandler):
             # sent through to the Master.
             flow.request = req
             request_reply = self.c.channel.ask("request", flow)
-            self.determine_server_address(flow, flow.request)  # The inline script may have changed request.host
-            flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+            self.process_server_address(flow)  # The inline script may have changed request.host
 
             if request_reply is None or request_reply == KILL:
                 return False
@@ -1048,7 +1052,7 @@ class HTTPHandler(ProtocolHandler):
 
     def handle_server_reconnect(self, state):
         if state["state"] == "connect":
-            send_connect_request(self.c.server_conn, state["host"], state["port"])
+            send_connect_request(self.c.server_conn, state["host"], state["port"], update_state=False)
         else:  # pragma: nocover
             raise RuntimeError("Unknown State: %s" % state["state"])
 
@@ -1114,14 +1118,30 @@ class HTTPHandler(ProtocolHandler):
         if not self.skip_authentication:
             self.authenticate(request)
 
+        # Determine .scheme, .host and .port attributes
+        # For absolute-form requests, they are directly given in the request.
+        # For authority-form requests, we only need to determine the request scheme.
+        # For relative-form requests, we need to determine host and port as well.
+        if not request.scheme:
+            request.scheme = "https" if flow.server_conn and flow.server_conn.ssl_established else "http"
+        if not request.host:
+            # Host/Port Complication: In upstream mode, use the server we CONNECTed to,
+            # not the upstream proxy.
+            for s in flow.server_conn.state:
+                if s[0] == "http" and s[1]["state"] == "connect":
+                    request.host, request.port = s[1]["host"], s[1]["port"]
+            if not request.host:
+                request.host = flow.server_conn.address.host
+                request.port = flow.server_conn.address.port
+
+        # Now we can process the request.
         if request.form_in == "authority":
             if self.c.client_conn.ssl_established:
                 raise http.HttpError(400, "Must not CONNECT on already encrypted connection")
 
             if self.expected_form_in == "absolute":
-                if not self.c.config.get_upstream_server:
-                    self.c.set_server_address((request.host, request.port),
-                                              proxy.AddressPriority.FROM_PROTOCOL)
+                if not self.c.config.get_upstream_server:  # Regular mode
+                    self.c.set_server_address((request.host, request.port))
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                     self.c.establish_server_connection()
                     self.c.client_conn.send(
@@ -1140,24 +1160,63 @@ class HTTPHandler(ProtocolHandler):
                             self.ssl_upgrade()
                         self.skip_authentication = True
                         return True
-                else:
+                else:  # upstream proxy mode
                     return None
+            else:
+                pass  # CONNECT should never occur if we don't expect absolute-form requests
+
         elif request.form_in == self.expected_form_in:
+
+            request.form_out = self.expected_form_out
+
             if request.form_in == "absolute":
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
-                self.determine_server_address(flow, request)
-            request.form_out = self.expected_form_out
+                if request.form_out == "relative":
+                    self.c.set_server_address((request.host, request.port))
+                    flow.server_conn = self.c.server_conn
+
+
             return None
 
         raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" %
                              (self.expected_form_in, request.form_in))
 
-    def determine_server_address(self, flow, request):
-        if request.form_in == "absolute":
-            self.c.set_server_address((request.host, request.port),
-                                      proxy.AddressPriority.FROM_PROTOCOL)
-            flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+    def process_server_address(self, flow):
+        # Depending on the proxy mode, server handling is entirely different
+        # We provide a mostly unified API to the user, which needs to be unfiddled here
+        # ( See also: https://github.com/mitmproxy/mitmproxy/issues/337 )
+        address = netlib.tcp.Address((flow.request.host, flow.request.port))
+
+        ssl = (flow.request.scheme == "https")
+
+        if self.c.config.http_form_in == self.c.config.http_form_out == "absolute":  # Upstream Proxy mode
+
+            # The connection to the upstream proxy may have a state we may need to take into account.
+            connected_to = None
+            for s in flow.server_conn.state:
+                if s[0] == "http" and s[1]["state"] == "connect":
+                    connected_to = tcp.Address((s[1]["host"], s[1]["port"]))
+
+            # We need to reconnect if the current flow either requires a (possibly impossible)
+            # change to the connection state, e.g. the host has changed but we already CONNECTed somewhere else.
+            needs_server_change = (
+                ssl != self.c.server_conn.ssl_established
+                or
+                (connected_to and address != connected_to)  # HTTP proxying is "stateless", CONNECT isn't.
+            )
+
+            if needs_server_change:
+                # force create new connection to the proxy server to reset state
+                self.live.change_server(self.c.server_conn.address, force=True)
+                if ssl:
+                    send_connect_request(self.c.server_conn, address.host, address.port)
+                    self.c.establish_ssl(server=True)
+        else:
+            # If we're not in upstream mode, we just want to update the host and possibly establish TLS.
+            self.live.change_server(address, ssl=ssl)  # this is a no op if the addresses match.
+
+        flow.server_conn = self.c.server_conn
 
     def authenticate(self, request):
         if self.c.config.authenticator:

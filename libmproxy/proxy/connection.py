@@ -72,9 +72,8 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
-    def __init__(self, address, priority):
+    def __init__(self, address):
         tcp.TCPClient.__init__(self, address)
-        self.priority = priority
 
         self.state = []  # a list containing (conntype, state) tuples
         self.peername = None
@@ -131,7 +130,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(tuple(), None)
+        f = cls(tuple())
         f._load_state(state)
         return f
 

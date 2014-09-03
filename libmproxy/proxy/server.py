@@ -5,7 +5,7 @@ import socket
 from OpenSSL import SSL
 
 from netlib import tcp
-from .primitives import ProxyServerError, Log, ProxyError, AddressPriority
+from .primitives import ProxyServerError, Log, ProxyError
 from .connection import ClientConnection, ServerConnection
 from ..protocol.handle import protocol_handler
 from .. import version
@@ -76,7 +76,7 @@ class ConnectionHandler:
             client_ssl, server_ssl = False, False
             if self.config.get_upstream_server:
                 upstream_info = self.config.get_upstream_server(self.client_conn.connection)
-                self.set_server_address(upstream_info[2:], AddressPriority.FROM_SETTINGS)
+                self.set_server_address(upstream_info[2:])
                 client_ssl, server_ssl = upstream_info[:2]
                 if self.check_ignore_address(self.server_conn.address):
                     self.log("Ignore host: %s:%s" % self.server_conn.address(), "info")
@@ -129,27 +129,22 @@ class ConnectionHandler:
         else:
             return False
 
-    def set_server_address(self, address, priority):
+    def set_server_address(self, address):
         """
         Sets a new server address with the given priority.
         Does not re-establish either connection or SSL handshake.
         """
         address = tcp.Address.wrap(address)
 
-        if self.server_conn:
-            if self.server_conn.priority > priority:
-                self.log("Attempt to change server address, "
-                         "but priority is too low (is: %s, got: %s)" % (
-                             self.server_conn.priority, priority), "debug")
-                return
-            if self.server_conn.address == address:
-                self.server_conn.priority = priority  # Possibly increase priority
-                return
+        # Don't reconnect to the same destination.
+        if self.server_conn and self.server_conn.address == address:
+            return
 
+        if self.server_conn:
             self.del_server_connection()
 
         self.log("Set new server address: %s:%s" % (address.host, address.port), "debug")
-        self.server_conn = ServerConnection(address, priority)
+        self.server_conn = ServerConnection(address)
 
     def establish_server_connection(self, ask=True):
         """
@@ -212,12 +207,11 @@ class ConnectionHandler:
     def server_reconnect(self):
         address = self.server_conn.address
         had_ssl = self.server_conn.ssl_established
-        priority = self.server_conn.priority
         state = self.server_conn.state
         sni = self.sni
         self.log("(server reconnect follows)", "debug")
         self.del_server_connection()
-        self.set_server_address(address, priority)
+        self.set_server_address(address)
         self.establish_server_connection()
 
         for s in state:
