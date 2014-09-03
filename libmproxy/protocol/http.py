@@ -945,8 +945,11 @@ class HTTPHandler(ProtocolHandler):
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
         try:
-            req = HTTPRequest.from_stream(self.c.client_conn.rfile,
-                                          body_size_limit=self.c.config.body_size_limit)
+            try:
+                req = HTTPRequest.from_stream(self.c.client_conn.rfile,
+                                              body_size_limit=self.c.config.body_size_limit)
+            except tcp.NetLibDisconnect:  # specifically ignore disconnects that happen before/between requests.
+                return False
             self.c.log("request", "debug", [req._assemble_first_line(req.form_in)])
             ret = self.process_request(flow, req)
             if ret is not None:
