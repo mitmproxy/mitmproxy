@@ -108,13 +108,6 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         assert p.request(req)
         assert p.request(req)
 
-    def test_proxy_ioerror(self):
-        # Tests a difficult-to-trigger condition, where an IOError is raised
-        # within our read loop.
-        with mock.patch("libmproxy.protocol.http.HTTPRequest.from_stream") as m:
-            m.side_effect = IOError("error!")
-            tutils.raises("server disconnect", self.pathod, "304")
-
     def test_get_connection_switching(self):
         def switched(l):
             for i in l:

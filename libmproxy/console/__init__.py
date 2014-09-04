@@ -599,6 +599,8 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             self.ui.run_wrapper(self.loop)
         except Exception:
+            self.ui.stop()
+            sys.stdout.flush()
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
             print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
