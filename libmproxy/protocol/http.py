@@ -638,11 +638,12 @@ class HTTPResponse(HTTPMessage):
         return f
 
     def __repr__(self):
+        size = utils.pretty_size(len(self.content)) if self.content else "content missing"
         return "<HTTPResponse: {code} {msg} ({contenttype}, {size})>".format(
             code=self.code,
             msg=self.msg,
-            contenttype=self.headers.get_first("content-type", "?"),
-            size=utils.pretty_size(len(self.content))
+            contenttype=self.headers.get_first("content-type", "unknown content type"),
+            size=size
         )
 
     @classmethod
