@@ -1203,33 +1203,28 @@ class RequestReplayThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
+        r = self.flow.request
+        form_out_backup = r.form_out
         try:
-            r = self.flow.request
-            form_out_backup = r.form_out
-
-            r.form_out = self.config.http_form_out
-            server_address, server_ssl = False, False
-            # If the flow is live, r.host is already the correct upstream server unless modified by a script.
-            # If modified by a script, we probably want to keep the modified destination.
-            if self.config.get_upstream_server and not self.flow.live:
-                try:
-                    # this will fail in transparent mode
-                    upstream_info = self.config.get_upstream_server(self.flow.client_conn)
-                    server_ssl = upstream_info[1]
-                    server_address = upstream_info[2:]
-                except proxy.ProxyError:
-                    pass
-            if not server_address:
-                server_address = (r.host, r.port)
-
-            server = ServerConnection(server_address)
-            server.connect()
-
-            if server_ssl or r.scheme == "https":
-                if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode -> send CONNECT
+            # In all modes, we directly connect to the server displayed
+            if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode
+                server_address = self.config.get_upstream_server(self.flow.client_conn)[2:]
+                server = ServerConnection(server_address)
+                server.connect()
+                if r.scheme == "https":
                     send_connect_request(server, r.host, r.port)
+                    server.establish_ssl(self.config.clientcerts, sni=r.host)
                     r.form_out = "relative"
-                server.establish_ssl(self.config.clientcerts, sni=r.host)
+                else:
+                    r.form_out = "absolute"
+            else:
+                server_address = (r.host, r.port)
+                server = ServerConnection(server_address)
+                server.connect()
+                if r.scheme == "https":
+                    server.establish_ssl(self.config.clientcerts, sni=r.host)
+                r.form_out = "relative"
+
             server.send(r._assemble())
             self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
                                                           body_size_limit=self.config.body_size_limit)
