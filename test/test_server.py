@@ -1,7 +1,9 @@
 import socket, time
 import mock
+from libmproxy.proxy.config import ProxyConfig
 from netlib import tcp, http_auth, http
 from libpathod import pathoc, pathod
+from netlib.certutils import SSLCert
 import tutils, tservers
 from libmproxy import flow
 from libmproxy.protocol import KILL
@@ -55,6 +57,42 @@ class CommonMixin:
         line = t.rfile.readline()
         assert ("Bad Request" in line) or ("Bad Gateway" in line)
 
+class TcpMixin:
+    def _ignore_on(self):
+        conf = ProxyConfig(ignore=[".+:%s" % self.server.port])
+        self.config.ignore.append(conf.ignore[0])
+
+    def _ignore_off(self):
+        self.config.ignore.pop()
+
+    def test_ignore(self):
+        spec = '304:h"Alternate-Protocol"="mitmproxy-will-remove-this"'
+        n = self.pathod(spec)
+        self._ignore_on()
+        i = self.pathod(spec)
+        i2 = self.pathod(spec)
+        self._ignore_off()
+
+        assert i.status_code == i2.status_code == n.status_code == 304
+        assert "Alternate-Protocol" in i.headers
+        assert "Alternate-Protocol" in i2.headers
+        assert "Alternate-Protocol" not in n.headers
+
+        # Test that we get the original SSL cert
+        if self.ssl:
+            i_cert = SSLCert(i.sslinfo.certchain[0])
+            i2_cert = SSLCert(i2.sslinfo.certchain[0])
+            n_cert = SSLCert(n.sslinfo.certchain[0])
+
+            assert i_cert == i2_cert
+            assert i_cert != n_cert
+
+        # Test Non-HTTP traffic
+        spec = "200:i0,@100:d0"  # this results in just 100 random bytes
+        assert self.pathod(spec).status_code == 502  # mitmproxy responds with bad gateway
+        self._ignore_on()
+        tutils.raises("invalid server response", self.pathod, spec)  # pathoc tries to parse answer as HTTP
+        self._ignore_off()
 
 
 class AppMixin:
@@ -62,7 +100,6 @@ class AppMixin:
         ret = self.app("/")
         assert ret.status_code == 200
         assert "mitmproxy" in ret.content
-
 
 
 class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
@@ -175,7 +212,7 @@ class TestHTTPConnectSSLError(tservers.HTTPProxTest):
         tutils.raises("502 - Bad Gateway", p.http_connect, dst)
 
 
-class TestHTTPS(tservers.HTTPProxTest, CommonMixin):
+class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
     clientcerts = True
@@ -217,15 +254,15 @@ class TestHTTPSNoCommonName(tservers.HTTPProxTest):
         assert f.sslinfo.certchain[0].get_subject().CN == "127.0.0.1"
 
 
-class TestReverse(tservers.ReverseProxTest, CommonMixin):
+class TestReverse(tservers.ReverseProxTest, CommonMixin, TcpMixin):
     reverse = True
 
 
-class TestTransparent(tservers.TransparentProxTest, CommonMixin):
+class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):
     ssl = False
 
 
-class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin):
+class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin, TcpMixin):
     ssl = True
     def test_sni(self):
         f = self.pathod("304", sni="testserver.com")

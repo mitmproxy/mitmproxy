@@ -42,6 +42,15 @@ class TestServerConnection:
         sc.connection.flush = mock.Mock(side_effect=tcp.NetLibDisconnect)
         sc.finish()
 
+    def test_repr(self):
+        sc = tutils.tserver_conn()
+        assert "address:22" in repr(sc)
+        assert "ssl" not in repr(sc)
+        sc.ssl_established = True
+        assert "ssl" in repr(sc)
+        sc.sni = "foo"
+        assert "foo" in repr(sc)
+
 
 class TestProcessProxyOptions:
     def p(self, *args):

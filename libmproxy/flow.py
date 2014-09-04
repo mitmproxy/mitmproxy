@@ -612,6 +612,7 @@ class FlowMaster(controller.Master):
         if f.request:
             self.handle_request(f)
         if f.response:
+            self.handle_responseheaders(f)
             self.handle_response(f)
         if f.error:
             self.handle_error(f)
@@ -668,7 +669,7 @@ class FlowMaster(controller.Master):
                     self.masterq,
                     self.should_exit
                 )
-            rt.start() # pragma: no cover
+            rt.start()  # pragma: no cover
             if block:
                 rt.join()
 

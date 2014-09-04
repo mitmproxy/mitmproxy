@@ -49,6 +49,9 @@ class TestHTTPRequest:
 
         raw = r._assemble_headers()
         assert "Host" in raw
+        assert not "Host" in r.headers
+        r.update_host_header()
+        assert "Host" in r.headers
 
 
     def test_authority_form(self):
