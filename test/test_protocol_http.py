@@ -37,6 +37,19 @@ class TestHTTPRequest:
     def test_origin_form(self):
         s = StringIO("GET /foo\xff HTTP/1.1")
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
+        s = StringIO("GET /foo HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: h2c")
+        r = HTTPRequest.from_stream(s)
+        assert r.headers["Upgrade"] == ["h2c"]
+
+        raw = r._assemble_headers()
+        assert "Upgrade" not in raw
+        assert "Host" not in raw
+
+        r.url = "http://example.com/foo"
+
+        raw = r._assemble_headers()
+        assert "Host" in raw
+
 
     def test_authority_form(self):
         s = StringIO("CONNECT oops-no-port.com HTTP/1.1")
@@ -45,6 +58,7 @@ class TestHTTPRequest:
         r = HTTPRequest.from_stream(s)
         r.scheme, r.host, r.port = "http", "address", 22
         assert r._assemble() == "CONNECT address:22 HTTP/1.1\r\nHost: address:22\r\n\r\n"
+        assert r.pretty_url(False) == "address:22"
 
     def test_absolute_form(self):
         s = StringIO("GET oops-no-protocol.com HTTP/1.1")
@@ -64,6 +78,10 @@ class TestHTTPRequest:
         assert r.host == "otheraddress"
         assert r.port == 42
         assert r.path == "/ORLY"
+
+    def test_repr(self):
+        r = tutils.treq()
+        assert repr(r)
 
 
 class TestHTTPResponse:
@@ -85,6 +103,19 @@ class TestHTTPResponse:
         assert r.code == 200
         assert r.content == ""
         tutils.raises("Invalid server response: 'content", HTTPResponse.from_stream, s, "GET")
+
+    def test_repr(self):
+        r = tutils.tresp()
+        assert "unknown content type" in repr(r)
+        r.headers["content-type"] = ["foo"]
+        assert "foo" in repr(r)
+        assert repr(tutils.tresp(content=CONTENT_MISSING))
+
+
+class TestHTTPFlow(object):
+    def test_repr(self):
+        f = tutils.tflow(resp=True, err=True)
+        assert repr(f)
 
 
 class TestInvalidRequests(tservers.HTTPProxTest):
