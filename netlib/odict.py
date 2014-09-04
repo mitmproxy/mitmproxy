@@ -24,6 +24,9 @@ class ODict:
     def __eq__(self, other):
         return self.lst == other.lst
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __iter__(self):
         return self.lst.__iter__()
 
