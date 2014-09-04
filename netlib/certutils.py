@@ -285,6 +285,9 @@ class SSLCert:
     def __eq__(self, other):
         return self.digest("sha1") == other.digest("sha1")
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @classmethod
     def from_pem(klass, txt):
         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, txt)
