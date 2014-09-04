@@ -319,6 +319,8 @@ class TCPClient(_Connection):
             if self.source_address:
                 connection.bind(self.source_address())
             connection.connect(self.address())
+            if not self.source_address:
+                self.source_address = Address(connection.getsockname())
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
         except (socket.error, IOError), err:
