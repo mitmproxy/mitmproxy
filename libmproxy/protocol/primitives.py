@@ -168,7 +168,7 @@ class LiveConnection(object):
                 persistent_change
             ), "debug")
 
-            if self._backup_server_conn:
+            if not self._backup_server_conn:
                 self._backup_server_conn = self.c.server_conn
                 self.c.server_conn = None
             else:  # This is at least the second temporary change. We can kill the current connection.

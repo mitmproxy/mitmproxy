@@ -312,7 +312,7 @@ class TestProxy(tservers.HTTPProxTest):
         f = self.pathod("200:b@100")
         assert f.status_code == 200
         f = self.master.state.view[0]
-        assert f.server_conn.peername == ("127.0.0.1", self.server.port)
+        assert f.server_conn.address == ("127.0.0.1", self.server.port)
 
 class TestProxySSL(tservers.HTTPProxTest):
     ssl=True
@@ -342,6 +342,7 @@ class MasterRedirectRequest(tservers.TestMaster):
 
     def handle_response(self, f):
         f.response.content = str(f.client_conn.address.port)
+        f.response.headers["server-conn-id"] = [str(f.server_conn.source_address.port)]
         tservers.TestMaster.handle_response(self, f)
 
 
@@ -374,7 +375,8 @@ class TestRedirectRequest(tservers.HTTPProxTest):
         assert self.server.last_log()
         assert not self.server2.last_log()
 
-        assert r3.content == r2.content == r1.content
+        assert r1.content == r2.content == r3.content
+        assert r1.headers.get_first("server-conn-id") == r3.headers.get_first("server-conn-id")
         # Make sure that we actually use the same connection in this test case
 
 class MasterStreamRequest(tservers.TestMaster):

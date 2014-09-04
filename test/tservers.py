@@ -263,6 +263,29 @@ class ReverseProxTest(ProxTestBase):
         return p.request(q)
 
 
+class IgnoreProxTest(ProxTestBase):
+    ssl = True
+
+    @classmethod
+    def get_proxy_config(cls):
+        d = super(IgnoreProxTest, cls).get_proxy_config()
+        d["ignore"] = [".+:%s" % cls.server.port]  # ignore by port
+        return d
+
+    def pathoc_raw(self):
+        return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), ssl=self.ssl)
+
+    def pathocs(self):
+        """
+            Returns a (pathod_ignore, pathoc_normal) tuple.
+        """
+        p_ignore = self.pathoc_raw()
+        p_ignore.connect(("127.0.0.1", self.server.port))
+        p_normal = self.pathoc_raw()
+        p_normal.connect(("127.0.0.1", self.server2.port))
+        return p_ignore, p_normal
+
+
 class ChainProxTest(ProxTestBase):
     """
     Chain n instances of mitmproxy in a row - because we can.
