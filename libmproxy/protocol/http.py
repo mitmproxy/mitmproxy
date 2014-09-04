@@ -1055,7 +1055,7 @@ class HTTPHandler(ProtocolHandler):
             flow.live = None
 
             return True
-        except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError, IOError), e:
+        except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
         return False
 
