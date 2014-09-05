@@ -12,6 +12,8 @@ def test_load_scripts():
     tmaster = tservers.TestMaster(config.ProxyConfig())
 
     for f in scripts:
+        if "iframe_injector" in f:
+            f += " foo"  # one argument required
         if "modify_response_body" in f:
             f += " foo bar"  # two arguments required
         script.Script(f, tmaster)  # Loads the script file.
