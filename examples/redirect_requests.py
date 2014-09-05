@@ -6,7 +6,9 @@ This example shows two ways to redirect flows to other destinations.
 """
 
 
-def request(context, flow):
+def request(ctx, flow):
+    # pretty_host(hostheader=True) takes the Host: header of the request into account,
+    # which is useful in transparent mode where we usually only have the IP otherwise.
     if flow.request.pretty_host(hostheader=True).endswith("example.com"):
         resp = HTTPResponse(
             [1, 1], 200, "OK",

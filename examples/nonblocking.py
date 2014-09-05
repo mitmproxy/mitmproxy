@@ -1,6 +1,7 @@
 import time
 from libmproxy.script import concurrent
 
+
 @concurrent
 def request(context, flow):
     print "handle request: %s%s" % (flow.request.host, flow.request.path)

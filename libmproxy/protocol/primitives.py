@@ -12,9 +12,9 @@ class Error(stateobject.SimpleStateObject):
     """
         An Error.
 
-        This is distinct from an HTTP error response (say, a code 500), which
-        is represented by a normal Response object. This class is responsible
-        for indicating errors that fall outside of normal HTTP communications,
+        This is distinct from an protocol error response (say, a HTTP code 500), which
+        is represented by a normal HTTPResponse object. This class is responsible
+        for indicating errors that fall outside of normal protocol communications,
         like interrupted connections, timeouts, protocol errors.
 
         Exposes the following attributes:
@@ -52,6 +52,10 @@ class Error(stateobject.SimpleStateObject):
 
 
 class Flow(stateobject.SimpleStateObject):
+    """
+    A Flow is a collection of objects representing a single transaction.
+    This class is usually subclassed for each protocol, e.g. HTTPFlow.
+    """
     def __init__(self, conntype, client_conn, server_conn, live=None):
         self.conntype = conntype
         self.client_conn = client_conn
@@ -117,6 +121,10 @@ class Flow(stateobject.SimpleStateObject):
 
 
 class ProtocolHandler(object):
+    """
+    A ProtocolHandler implements an application-layer protocol, e.g. HTTP.
+    See: libmproxy.protocol.http.HTTPHandler
+    """
     def __init__(self, c):
         self.c = c
         """@type: libmproxy.proxy.server.ConnectionHandler"""
@@ -148,13 +156,14 @@ class ProtocolHandler(object):
 
 class LiveConnection(object):
     """
-    This facade allows protocol handlers to interface with a live connection,
-    without requiring the expose the ConnectionHandler.
+    This facade allows interested parties (FlowMaster, inline scripts) to interface with a live connection,
+    without requiring to expose the internals of the ConnectionHandler.
     """
     def __init__(self, c):
         self.c = c
-        self._backup_server_conn = None
         """@type: libmproxy.proxy.server.ConnectionHandler"""
+        self._backup_server_conn = None
+        """@type: libmproxy.proxy.connection.ServerConnection"""
 
     def change_server(self, address, ssl=False, force=False, persistent_change=False):
         address = netlib.tcp.Address.wrap(address)

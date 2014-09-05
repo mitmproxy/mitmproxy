@@ -481,7 +481,7 @@ class TestSerialize:
 
         f2 = l[0]
         assert f2._get_state() == f._get_state()
-        assert f2.request._assemble() == f.request._assemble()
+        assert f2.request.assemble() == f.request.assemble()
 
     def test_load_flows(self):
         r = self._treader()
@@ -757,18 +757,18 @@ class TestRequest:
         r.url = u
         tutils.raises(ValueError, setattr, r, "url", "")
         assert r.url == u
-        assert r._assemble()
-        assert r.size() == len(r._assemble())
+        assert r.assemble()
+        assert r.size() == len(r.assemble())
 
         r2 = r.copy()
         assert r == r2
 
         r.content = None
-        assert r._assemble()
-        assert r.size() == len(r._assemble())
+        assert r.assemble()
+        assert r.size() == len(r.assemble())
 
         r.content = CONTENT_MISSING
-        tutils.raises("Cannot assemble flow with CONTENT_MISSING", r._assemble)
+        tutils.raises("Cannot assemble flow with CONTENT_MISSING", r.assemble)
 
     def test_get_url(self):
         r = tutils.treq()
@@ -794,58 +794,58 @@ class TestRequest:
     def test_path_components(self):
         r = tutils.treq()
         r.path = "/"
-        assert r.path_components == []
+        assert r.get_path_components() == []
         r.path = "/foo/bar"
-        assert r.path_components == ["foo", "bar"]
+        assert r.get_path_components() == ["foo", "bar"]
         q = flow.ODict()
         q["test"] = ["123"]
-        r.query = q
-        assert r.path_components == ["foo", "bar"]
+        r.set_query(q)
+        assert r.get_path_components() == ["foo", "bar"]
 
-        r.path_components = []
-        assert r.path_components == []
-        r.path_components = ["foo"]
-        assert r.path_components == ["foo"]
-        r.path_components = ["/oo"]
-        assert r.path_components == ["/oo"]
+        r.set_path_components([])
+        assert r.get_path_components() == []
+        r.set_path_components(["foo"])
+        assert r.get_path_components() == ["foo"]
+        r.set_path_components(["/oo"])
+        assert r.get_path_components() == ["/oo"]
         assert "%2F" in r.path
 
     def test_getset_form_urlencoded(self):
         d = flow.ODict([("one", "two"), ("three", "four")])
         r = tutils.treq(content=utils.urlencode(d.lst))
         r.headers["content-type"] = [protocol.http.HDR_FORM_URLENCODED]
-        assert r.form_urlencoded == d
+        assert r.get_form_urlencoded() == d
 
         d = flow.ODict([("x", "y")])
-        r.form_urlencoded = d
-        assert r.form_urlencoded == d
+        r.set_form_urlencoded(d)
+        assert r.get_form_urlencoded() == d
 
         r.headers["content-type"] = ["foo"]
-        assert not r.form_urlencoded
+        assert not r.get_form_urlencoded()
 
     def test_getset_query(self):
         h = flow.ODictCaseless()
 
         r = tutils.treq()
         r.path = "/foo?x=y&a=b"
-        q = r.query
+        q = r.get_query()
         assert q.lst == [("x", "y"), ("a", "b")]
 
         r.path = "/"
-        q = r.query
+        q = r.get_query()
         assert not q
 
         r.path = "/?adsfa"
-        q = r.query
+        q = r.get_query()
         assert q.lst == [("adsfa", "")]
 
         r.path = "/foo?x=y&a=b"
-        assert r.query
-        r.query = flow.ODict([])
-        assert not r.query
+        assert r.get_query()
+        r.set_query(flow.ODict([]))
+        assert not r.get_query()
         qv = flow.ODict([("a", "b"), ("c", "d")])
-        r.query = qv
-        assert r.query == qv
+        r.set_query(qv)
+        assert r.get_query() == qv
 
     def test_anticache(self):
         h = flow.ODictCaseless()
@@ -916,14 +916,14 @@ class TestRequest:
         h = flow.ODictCaseless()
         r = tutils.treq()
         r.headers = h
-        assert r.cookies is None
+        assert r.get_cookies() is None
 
     def test_get_cookies_single(self):
         h = flow.ODictCaseless()
         h["Cookie"] = ["cookiename=cookievalue"]
         r = tutils.treq()
         r.headers = h
-        result = r.cookies
+        result = r.get_cookies()
         assert len(result)==1
         assert result['cookiename']==('cookievalue',{})
 
@@ -932,7 +932,7 @@ class TestRequest:
         h["Cookie"] = ["cookiename=cookievalue;othercookiename=othercookievalue"]
         r = tutils.treq()
         r.headers = h
-        result = r.cookies
+        result = r.get_cookies()
         assert len(result)==2
         assert result['cookiename']==('cookievalue',{})
         assert result['othercookiename']==('othercookievalue',{})
@@ -942,7 +942,7 @@ class TestRequest:
         h["Cookie"] = ["cookiename=coo=kievalue;othercookiename=othercookievalue"]
         r = tutils.treq()
         r.headers = h
-        result = r.cookies
+        result = r.get_cookies()
         assert len(result)==2
         assert result['cookiename']==('coo=kievalue',{})
         assert result['othercookiename']==('othercookievalue',{})
@@ -966,18 +966,18 @@ class TestResponse:
     def test_simple(self):
         f = tutils.tflow(resp=True)
         resp = f.response
-        assert resp._assemble()
-        assert resp.size() == len(resp._assemble())
+        assert resp.assemble()
+        assert resp.size() == len(resp.assemble())
 
         resp2 = resp.copy()
         assert resp2 == resp
 
         resp.content = None
-        assert resp._assemble()
-        assert resp.size() == len(resp._assemble())
+        assert resp.assemble()
+        assert resp.size() == len(resp.assemble())
 
         resp.content = CONTENT_MISSING
-        tutils.raises("Cannot assemble flow with CONTENT_MISSING", resp._assemble)
+        tutils.raises("Cannot assemble flow with CONTENT_MISSING", resp.assemble)
 
     def test_refresh(self):
         r = tutils.tresp()
@@ -1052,14 +1052,14 @@ class TestResponse:
         h = flow.ODictCaseless()
         resp = tutils.tresp()
         resp.headers = h
-        assert not resp.cookies
+        assert not resp.get_cookies()
 
     def test_get_cookies_simple(self):
         h = flow.ODictCaseless()
         h["Set-Cookie"] = ["cookiename=cookievalue"]
         resp = tutils.tresp()
         resp.headers = h
-        result = resp.cookies
+        result = resp.get_cookies()
         assert len(result)==1
         assert "cookiename" in result
         assert result["cookiename"] == ("cookievalue", {})
@@ -1069,7 +1069,7 @@ class TestResponse:
         h["Set-Cookie"] = ["cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly"]
         resp = tutils.tresp()
         resp.headers = h
-        result = resp.cookies
+        result = resp.get_cookies()
         assert len(result)==1
         assert "cookiename" in result
         assert result["cookiename"][0] == "cookievalue"
@@ -1084,7 +1084,7 @@ class TestResponse:
         h["Set-Cookie"] = ["cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"]
         resp = tutils.tresp()
         resp.headers = h
-        result = resp.cookies
+        result = resp.get_cookies()
         assert len(result)==1
         assert "cookiename" in result
         assert result["cookiename"][0] == ""
@@ -1095,7 +1095,7 @@ class TestResponse:
         h["Set-Cookie"] = ["cookiename=cookievalue","othercookie=othervalue"]
         resp = tutils.tresp()
         resp.headers = h
-        result = resp.cookies
+        result = resp.get_cookies()
         assert len(result)==2
         assert "cookiename" in result
         assert result["cookiename"] == ("cookievalue", {})

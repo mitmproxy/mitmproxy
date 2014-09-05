@@ -1,8 +1,6 @@
 
-def request(context, flow):
+def request(ctx, flow):
     if "application/x-www-form-urlencoded" in flow.request.headers["content-type"]:
-        frm = flow.request.form_urlencoded
-        frm["mitmproxy"] = ["rocks"]
-        flow.request.form_urlencoded = frm
-
-
+        form = flow.request.get_form_urlencoded()
+        form["mitmproxy"] = ["rocks"]
+        flow.request.set_form_urlencoded(form)

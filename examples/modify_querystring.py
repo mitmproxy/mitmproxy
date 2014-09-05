@@ -1,7 +1,6 @@
 
-def request(context, flow):
-    q = flow.request.query
+def request(ctx, flow):
+    q = flow.request.get_query()
     if q:
         q["mitmproxy"] = ["rocks"]
-        flow.request.query = q
-
+        flow.request.set_query(q)

@@ -31,7 +31,7 @@ class TestHTTPRequest:
         f.request.host = f.server_conn.address.host
         f.request.port = f.server_conn.address.port
         f.request.scheme = "http"
-        assert f.request._assemble() == "OPTIONS * HTTP/1.1\r\nHost: address:22\r\n\r\n"
+        assert f.request.assemble() == "OPTIONS * HTTP/1.1\r\nHost: address:22\r\n\r\n"
 
     def test_origin_form(self):
         s = StringIO("GET /foo\xff HTTP/1.1")
@@ -59,7 +59,7 @@ class TestHTTPRequest:
         s = StringIO("CONNECT address:22 HTTP/1.1")
         r = HTTPRequest.from_stream(s)
         r.scheme, r.host, r.port = "http", "address", 22
-        assert r._assemble() == "CONNECT address:22 HTTP/1.1\r\nHost: address:22\r\n\r\n"
+        assert r.assemble() == "CONNECT address:22 HTTP/1.1\r\nHost: address:22\r\n\r\n"
         assert r.pretty_url(False) == "address:22"
 
     def test_absolute_form(self):
@@ -67,11 +67,11 @@ class TestHTTPRequest:
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
         s = StringIO("GET http://address:22/ HTTP/1.1")
         r = HTTPRequest.from_stream(s)
-        assert r._assemble() == "GET http://address:22/ HTTP/1.1\r\nHost: address:22\r\n\r\n"
+        assert r.assemble() == "GET http://address:22/ HTTP/1.1\r\nHost: address:22\r\n\r\n"
 
     def test_assemble_unknown_form(self):
         r = tutils.treq()
-        tutils.raises("Invalid request form", r._assemble, "antiauthority")
+        tutils.raises("Invalid request form", r.assemble, "antiauthority")
 
     def test_set_url(self):
         r = tutils.treq_absolute()

@@ -29,13 +29,13 @@ def get_line(fp):
 def send_connect_request(conn, host, port, update_state=True):
     upstream_request = HTTPRequest("authority", "CONNECT", None, host, port, None,
                                    (1, 1), ODictCaseless(), "")
-    conn.send(upstream_request._assemble())
+    conn.send(upstream_request.assemble())
     resp = HTTPResponse.from_stream(conn.rfile, upstream_request.method)
     if resp.code != 200:
         raise proxy.ProxyError(resp.code,
                                "Cannot establish SSL " +
                                "connection with upstream proxy: \r\n" +
-                               str(resp._assemble()))
+                               str(resp.assemble()))
     if update_state:
         conn.state.append(("http", {
             "state": "connect",
@@ -73,6 +73,9 @@ class decoded(object):
 
 
 class HTTPMessage(stateobject.SimpleStateObject):
+    """
+    Base class for HTTPRequest and HTTPResponse
+    """
     def __init__(self, httpversion, headers, content, timestamp_start=None,
                  timestamp_end=None):
         self.httpversion = httpversion
@@ -162,31 +165,31 @@ class HTTPMessage(stateobject.SimpleStateObject):
         """
         Parse an HTTP message from a file stream
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
     def _assemble_first_line(self):
         """
         Returns the assembled request/response line
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
     def _assemble_headers(self):
         """
         Returns the assembled headers
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
     def _assemble_head(self):
         """
         Returns the assembled request/response line plus headers
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
-    def _assemble(self):
+    def assemble(self):
         """
         Returns the assembled request/response
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
 
 class HTTPRequest(HTTPMessage):
@@ -195,7 +198,17 @@ class HTTPRequest(HTTPMessage):
 
     Exposes the following attributes:
 
-        flow: Flow object the request belongs to
+        method: HTTP method
+
+        scheme: URL scheme (http/https) (absolute-form only)
+
+        host: Host portion of the URL (absolute-form and authority-form only)
+
+        port: Destination port (absolute-form and authority-form only)
+
+        path: Path portion of the URL (not present in authority-form)
+
+        httpversion: HTTP version tuple, e.g. (1,1)
 
         headers: ODictCaseless object
 
@@ -210,18 +223,6 @@ class HTTPRequest(HTTPMessage):
                  Details: http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-25#section-5.3
 
         form_out: The request form which mitmproxy has send out to the destination
-
-        method: HTTP method
-
-        scheme: URL scheme (http/https) (absolute-form only)
-
-        host: Host portion of the URL (absolute-form and authority-form only)
-
-        port: Destination port (absolute-form and authority-form only)
-
-        path: Path portion of the URL (not present in authority-form)
-
-        httpversion: HTTP version tuple
 
         timestamp_start: Timestamp indicating when request transmission started
 
@@ -364,7 +365,7 @@ class HTTPRequest(HTTPMessage):
     def _assemble_head(self, form=None):
         return "%s\r\n%s\r\n" % (self._assemble_first_line(form), self._assemble_headers())
 
-    def _assemble(self, form=None):
+    def assemble(self, form=None):
         """
             Assembles the request for transmission to the server. We make some
             modifications to make sure interception works properly.
@@ -417,8 +418,7 @@ class HTTPRequest(HTTPMessage):
         """
         self.headers["Host"] = [self.host]
 
-    @property
-    def form_urlencoded(self):
+    def get_form_urlencoded(self):
         """
             Retrieves the URL-encoded form data, returning an ODict object.
             Returns an empty ODict if there is no data or the content-type
@@ -428,8 +428,7 @@ class HTTPRequest(HTTPMessage):
             return ODict(utils.urldecode(self.content))
         return ODict([])
 
-    @form_urlencoded.setter
-    def form_urlencoded(self, odict):
+    def set_form_urlencoded(self, odict):
         """
             Sets the body to the URL-encoded form data, and adds the
             appropriate content-type header. Note that this will destory the
@@ -440,8 +439,7 @@ class HTTPRequest(HTTPMessage):
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(odict.lst)
 
-    @property
-    def path_components(self):
+    def get_path_components(self):
         """
             Returns the path components of the URL as a list of strings.
 
@@ -450,8 +448,7 @@ class HTTPRequest(HTTPMessage):
         _, _, path, _, _, _ = urlparse.urlparse(self.url)
         return [urllib.unquote(i) for i in path.split("/") if i]
 
-    @path_components.setter
-    def path_components(self, lst):
+    def set_path_components(self, lst):
         """
             Takes a list of strings, and sets the path component of the URL.
 
@@ -462,8 +459,7 @@ class HTTPRequest(HTTPMessage):
         scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.url)
         self.url = urlparse.urlunparse([scheme, netloc, path, params, query, fragment])
 
-    @property
-    def query(self):
+    def get_query(self):
         """
             Gets the request query string. Returns an ODict object.
         """
@@ -472,8 +468,7 @@ class HTTPRequest(HTTPMessage):
             return ODict(utils.urldecode(query))
         return ODict([])
 
-    @query.setter
-    def query(self, odict):
+    def set_query(self, odict):
         """
             Takes an ODict object, and sets the request query string.
         """
@@ -528,8 +523,7 @@ class HTTPRequest(HTTPMessage):
             raise ValueError("Invalid URL: %s" % url)
         self.scheme, self.host, self.port, self.path = parts
 
-    @property
-    def cookies(self):
+    def get_cookies(self):
         cookie_headers = self.headers.get("cookie")
         if not cookie_headers:
             return None
@@ -560,7 +554,7 @@ class HTTPResponse(HTTPMessage):
 
     Exposes the following attributes:
 
-        flow: Flow object the request belongs to
+        httpversion: HTTP version tuple, e.g. (1,1)
 
         code: HTTP response code
 
@@ -571,8 +565,6 @@ class HTTPResponse(HTTPMessage):
         content: Content of the request, None, or CONTENT_MISSING if there
         is content associated, but not present. CONTENT_MISSING evaluates
         to False to make checking for the presence of content natural.
-
-        httpversion: HTTP version tuple
 
         timestamp_start: Timestamp indicating when request transmission started
 
@@ -661,7 +653,7 @@ class HTTPResponse(HTTPMessage):
         return '%s\r\n%s\r\n' % (
             self._assemble_first_line(), self._assemble_headers(preserve_transfer_encoding=preserve_transfer_encoding))
 
-    def _assemble(self):
+    def assemble(self):
         """
             Assembles the response for transmission to the client. We make some
             modifications to make sure interception works properly.
@@ -726,8 +718,7 @@ class HTTPResponse(HTTPMessage):
         if c:
             self.headers["set-cookie"] = c
 
-    @property
-    def cookies(self):
+    def get_cookies(self):
         cookie_headers = self.headers.get("set-cookie")
         if not cookie_headers:
             return None
@@ -745,12 +736,14 @@ class HTTPResponse(HTTPMessage):
 
 class HTTPFlow(Flow):
     """
-    A Flow is a collection of objects representing a single HTTP
+    A HTTPFlow is a collection of objects representing a single HTTP
     transaction. The main attributes are:
 
         request: HTTPRequest object
         response: HTTPResponse object
         error: Error object
+        server_conn: ServerConnection object
+        client_conn: ClientConnection object
 
     Note that it's possible for a Flow to have both a response and an error
     object. This might happen, for instance, when a response was received
@@ -866,6 +859,10 @@ class HttpAuthenticationError(Exception):
 
 
 class HTTPHandler(ProtocolHandler):
+    """
+    HTTPHandler implements mitmproxys understanding of the HTTP protocol.
+
+    """
     def __init__(self, c):
         super(HTTPHandler, self).__init__(c)
         self.expected_form_in = c.config.http_form_in
@@ -878,7 +875,7 @@ class HTTPHandler(ProtocolHandler):
 
     def get_response_from_server(self, request, include_body=True):
         self.c.establish_server_connection()
-        request_raw = request._assemble()
+        request_raw = request.assemble()
 
         for i in range(2):
             try:
@@ -957,7 +954,7 @@ class HTTPHandler(ProtocolHandler):
             if not flow.response.stream:
                 # no streaming:
                 # we already received the full response from the server and can send it to the client straight away.
-                self.c.client_conn.send(flow.response._assemble())
+                self.c.client_conn.send(flow.response.assemble())
             else:
                 # streaming:
                 # First send the body and then transfer the response incrementally:
@@ -1225,7 +1222,7 @@ class RequestReplayThread(threading.Thread):
                     server.establish_ssl(self.config.clientcerts, sni=r.host)
                 r.form_out = "relative"
 
-            server.send(r._assemble())
+            server.send(r.assemble())
             self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
                                                           body_size_limit=self.config.body_size_limit)
             self.channel.ask("response", self.flow)

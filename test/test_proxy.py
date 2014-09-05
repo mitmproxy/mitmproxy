@@ -28,7 +28,7 @@ class TestServerConnection:
         f = tutils.tflow()
         f.server_conn = sc
         f.request.path = "/p/200:da"
-        sc.send(f.request._assemble())
+        sc.send(f.request.assemble())
         assert http.read_response(sc.rfile, f.request.method, 1000)
         assert self.d.last_log()
 

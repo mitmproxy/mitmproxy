@@ -7,14 +7,14 @@ def start(ctx, argv):
     """
     ctx.log("start")
 
-def clientconnect(ctx, client_connect):
+def clientconnect(ctx, conn_handler):
     """
         Called when a client initiates a connection to the proxy. Note that a
         connection can correspond to multiple HTTP requests
     """
     ctx.log("clientconnect")
 
-def serverconnect(ctx, server_connection):
+def serverconnect(ctx, conn_handler):
     """
         Called when the proxy initiates a connection to the target server. Note that a
         connection can correspond to multiple HTTP requests
@@ -50,7 +50,7 @@ def error(ctx, flow):
     """
     ctx.log("error")
 
-def clientdisconnect(ctx, client_disconnect):
+def clientdisconnect(ctx, conn_handler):
     """
         Called when a client disconnects from the proxy.
     """

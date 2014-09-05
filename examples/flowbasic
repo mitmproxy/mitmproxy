@@ -3,11 +3,14 @@
     This example shows how to build a proxy based on mitmproxy's Flow
     primitives.
 
+    Heads Up: In the majority of cases, you want to use inline scripts.
+
     Note that request and response messages are not automatically replied to,
     so we need to implement handlers to do this.
 """
 import os
-from libmproxy import proxy, flow
+from libmproxy import flow, proxy
+from libmproxy.proxy.server import ProxyServer
 
 class MyMaster(flow.FlowMaster):
     def run(self):
@@ -31,9 +34,9 @@ class MyMaster(flow.FlowMaster):
 
 
 config = proxy.ProxyConfig(
-    cacert = os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
+    ca_file = os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
 )
 state = flow.State()
-server = proxy.ProxyServer(config, 8080)
+server = ProxyServer(config, 8080)
 m = MyMaster(server, state)
 m.run()
