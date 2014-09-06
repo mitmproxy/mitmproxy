@@ -1,0 +1,24 @@
+# Adapted from http://tldp.org/HOWTO/TransparentProxy-6.html (6.2 Second method)
+# Note that the choice of firewall mark (3) and routing table (2) was fairly arbitrary.
+# If you are already using policy routing or firewall marking for some other purpose,
+# make sure you choose unique numbers here. Otherwise, don't worry about it.
+
+
+
+# On the router, run
+
+PROXY_IP=192.168.1.100
+TARGET_IP=192.168.1.110
+
+iptables -t mangle -A PREROUTING -j ACCEPT -p tcp -m multiport --dports 80,443 -s ! $TARGET_IP
+# Alternative to MITM the whole network:
+# iptables -t mangle -A PREROUTING -j ACCEPT -p tcp -m multiport --dports 80,443 -s  $PROXY_IP
+iptables -t mangle -A PREROUTING -j MARK --set-mark 3 -p tcp -m multiport --dports 80,443
+ip rule add fwmark 3 table 2
+ip route add default via $PROXY_IP dev br0 table 2
+
+
+
+# On the proxy machine, run
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp -m multiport --dports 80,443 -j REDIRECT --to-port 8080

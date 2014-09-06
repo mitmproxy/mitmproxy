@@ -79,6 +79,7 @@ pages = [
     Page("mitmproxy.html", "mitmproxy"),
     Page("mitmdump.html", "mitmdump"),
     Page("howmitmproxy.html", "How mitmproxy works"),
+    Page("modes.html", "Modes of Operation"),
 
     Page("ssl.html", "Overview"),
     Directory("certinstall"),
