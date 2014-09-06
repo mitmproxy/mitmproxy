@@ -78,12 +78,24 @@ class TestProcessProxyOptions:
     def test_no_transparent(self):
         self.assert_err("transparent mode not supported", "-T")
 
+
     @mock.patch("libmproxy.platform.resolver")
-    def test_transparent_reverse(self, _):
-        self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
-        self.assert_noerr("-T")
-        self.assert_err("Invalid server specification", "-R", "reverse")
+    def test_modes(self, _):
         self.assert_noerr("-R", "http://localhost")
+        self.assert_err("expected one argument", "-R")
+        self.assert_err("Invalid server specification", "-R", "reverse")
+
+        self.assert_noerr("-T")
+
+        self.assert_noerr("-U", "http://localhost")
+        self.assert_err("expected one argument", "-U")
+        self.assert_err("Invalid server specification", "-U", "upstream")
+
+        self.assert_noerr("--destination-server", "http://localhost")
+        self.assert_err("expected one argument", "--destination-server")
+        self.assert_err("Invalid server specification", "--destination-server", "manual")
+
+        self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
 
     def test_client_certs(self):
         with tutils.tmpdir() as confdir:
