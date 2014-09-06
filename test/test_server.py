@@ -142,11 +142,22 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         connection.connect(("127.0.0.1", self.proxy.port))
         spec = '301:h"Transfer-Encoding"="chunked":r:b"0\\r\\n\\r\\n"'
         connection.send("GET http://localhost:%d/p/%s HTTP/1.1\r\n"%(self.server.port, spec))
-        connection.send("\r\n");
+        connection.send("\r\n")
         resp = connection.recv(50000)
         connection.close()
         assert "content-length" in resp.lower()
 
+    def test_stream(self):
+        self.master.set_stream_large_bodies(1024 * 2)
+
+        self.pathod("200:b@1k")
+        assert not self.master.state.view[-1].response.stream
+        assert len(self.master.state.view[-1].response.content) == 1024 * 1
+
+        self.pathod("200:b@3k")
+        assert self.master.state.view[-1].response.stream
+        assert self.master.state.view[-1].response.content == CONTENT_MISSING
+        self.master.set_stream_large_bodies(None)
 
 class TestHTTPAuth(tservers.HTTPProxTest):
     authenticator = http_auth.BasicProxyAuth(http_auth.PassManSingleUser("test", "test"), "realm")
@@ -267,7 +278,7 @@ class TestProxy(tservers.HTTPProxTest):
         # call pathod server, wait a second to complete the request
         connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
         time.sleep(1)
-        connection.send("\r\n");
+        connection.send("\r\n")
         connection.recv(50000)
         connection.close()
 
@@ -294,10 +305,10 @@ class TestProxy(tservers.HTTPProxTest):
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("localhost", self.proxy.port))
         connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
-        connection.send("\r\n");
+        connection.send("\r\n")
         connection.recv(5000)
         connection.send("GET http://localhost:%d/p/304:b@1k HTTP/1.1\r\n"%self.server.port)
-        connection.send("\r\n");
+        connection.send("\r\n")
         connection.recv(5000)
         connection.close()
 
