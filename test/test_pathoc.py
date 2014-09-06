@@ -1,6 +1,8 @@
-import json, cStringIO
+import json
+import cStringIO
 from libpathod import pathoc, test, version, pathod
 import tutils
+
 
 def test_response():
     r = pathoc.Response("1.1", 200, "Message", {}, None, None)
@@ -9,6 +11,7 @@ def test_response():
 
 class _TestDaemon:
     ssloptions = pathod.SSLOptions()
+
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
@@ -34,8 +37,8 @@ class _TestDaemon:
         r = c.request("get:/api/info")
         assert tuple(json.loads(r.content)["version"]) == version.IVERSION
 
-    def tval(self, requests, showreq=False, showresp=False, explain=False, 
-                   showssl=False, hexdump=False, timeout=None, ignorecodes=None, 
+    def tval(self, requests, showreq=False, showresp=False, explain=False,
+                   showssl=False, hexdump=False, timeout=None, ignorecodes=None,
                    ignoretimeout=None):
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl=self.ssl)
         c.connect()
@@ -60,6 +63,7 @@ class _TestDaemon:
 class TestDaemonSSL(_TestDaemon):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
+
     def test_sni(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
@@ -73,7 +77,7 @@ class TestDaemonSSL(_TestDaemon):
         assert d["log"][0]["request"]["sni"] == "foobar.com"
 
     def test_showssl(self):
-        assert "certificate chain" in  self.tval(["get:/p/200"], showssl=True)
+        assert "certificate chain" in self.tval(["get:/p/200"], showssl=True)
 
     def test_clientcert(self):
         c = pathoc.Pathoc(
@@ -90,12 +94,13 @@ class TestDaemonSSL(_TestDaemon):
 
 class TestDaemon(_TestDaemon):
     ssl = False
+
     def test_ssl_error(self):
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl = True)
         tutils.raises("ssl handshake", c.connect)
 
     def test_showssl(self):
-        assert not "certificate chain" in  self.tval(["get:/p/200"], showssl=True)
+        assert not "certificate chain" in self.tval(["get:/p/200"], showssl=True)
 
     def test_ignorecodes(self):
         assert "200" in self.tval(["get:'/p/200:b@1'"])
@@ -109,7 +114,7 @@ class TestDaemon(_TestDaemon):
         assert not "HTTP" in self.tval(["get:'/p/200:p5,10'"], showresp=True, timeout=0.01, ignoretimeout=True)
 
     def test_showresp(self):
-        reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
+        reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
         assert self.tval(reqs).count("200") == 2
         assert self.tval(reqs, showresp=True).count("unprintables escaped") == 2
         assert self.tval(reqs, showresp=True, hexdump=True).count("hex dump") == 2

@@ -1,6 +1,10 @@
 import threading, Queue
 import requests
+import requests.packages.urllib3
 import pathod
+
+requests.packages.urllib3.disable_warnings()
+
 
 
 class Daemon:
