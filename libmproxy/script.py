@@ -108,15 +108,28 @@ class Script:
             return (False, None)
 
 
+class ReplyProxy(object):
+    def __init__(self, original_reply):
+        self._ignore_calls = 1
+        self.lock = threading.Lock()
+        self.original_reply = original_reply
+
+    def __call__(self, *args, **kwargs):
+        with self.lock:
+            if self._ignore_calls > 0:
+                self._ignore_calls -= 1
+                return
+        self.original_reply(*args, **kwargs)
+
+    def __getattr__ (self, k):
+        return getattr(self.original_reply, k)
+
+
 def _handle_concurrent_reply(fn, o, *args, **kwargs):
     # Make first call to o.reply a no op
-    original_reply = o.reply
 
-    def restore_original_reply():
-        o.reply = original_reply
-    if hasattr(original_reply, "q"):
-        restore_original_reply.q = original_reply.q
-    o.reply = restore_original_reply
+    reply_proxy = ReplyProxy(o.reply)
+    o.reply = reply_proxy
 
     def run():
         fn(*args, **kwargs)
