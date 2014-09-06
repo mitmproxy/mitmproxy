@@ -69,9 +69,9 @@ class ConnectionHandler:
         self.sni = None
 
     def handle(self):
-        self.log("clientconnect", "info")
-
         try:
+            self.log("clientconnect", "info")
+
             # Can we already identify the target server and connect to it?
             client_ssl, server_ssl = False, False
             if self.config.get_upstream_server:
@@ -95,6 +95,10 @@ class ConnectionHandler:
             # Delegate handling to the protocol handler
             protocol_handler(self.conntype)(self).handle_messages()
 
+            self.del_server_connection()
+            self.log("clientdisconnect", "info")
+            self.channel.tell("clientdisconnect", self)
+
         except ProxyError as e:
             protocol_handler(self.conntype)(self).handle_error(e)
         except Exception:
@@ -104,10 +108,6 @@ class ConnectionHandler:
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
             print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
-
-        self.del_server_connection()
-        self.log("clientdisconnect", "info")
-        self.channel.tell("clientdisconnect", self)
 
     def del_server_connection(self):
         """

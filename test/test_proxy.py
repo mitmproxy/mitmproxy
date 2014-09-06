@@ -3,7 +3,7 @@ from libmproxy import cmdline
 from libmproxy.proxy.config import process_proxy_options
 from libmproxy.proxy.connection import ServerConnection
 from libmproxy.proxy.primitives import ProxyError
-from libmproxy.proxy.server import DummyServer, ProxyServer
+from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 import tutils
 from libpathod import test
 from netlib import http, tcp
@@ -119,6 +119,12 @@ class TestProxyServer:
         opts = parser.parse_args(args=[])
         tutils.raises("error starting proxy server", ProxyServer, opts, 1)
 
+    def test_err_2(self):
+        parser = argparse.ArgumentParser()
+        cmdline.common_options(parser)
+        opts = parser.parse_args(args=[])
+        tutils.raises("error starting proxy server", ProxyServer, opts, 8080, "invalidhost")
+
 
 class TestDummyServer:
     def test_simple(self):
@@ -126,3 +132,10 @@ class TestDummyServer:
         d.start_slave()
         d.shutdown()
 
+
+class TestConnectionHandler:
+    def test_fatal_error(self):
+        config = dict(get_upstream_server=mock.Mock(side_effect=RuntimeError))
+        c = ConnectionHandler(config, mock.MagicMock(), ("127.0.0.1", 8080), None, mock.MagicMock(), None)
+        with tutils.capture_stderr(c.handle) as output:
+            assert "mitmproxy has crashed" in output

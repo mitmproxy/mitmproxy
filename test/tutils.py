@@ -1,5 +1,7 @@
+from cStringIO import StringIO
 import os, shutil, tempfile, argparse
 from contextlib import contextmanager
+import sys
 from libmproxy import flow, utils, controller
 from libmproxy.protocol import http
 from libmproxy.proxy.connection import ClientConnection, ServerConnection
@@ -184,5 +186,13 @@ def raises(exc, obj, *args, **kwargs):
                     )
                 )
     raise AssertionError("No exception raised.")
+
+
+@contextmanager
+def capture_stderr(command, *args, **kwargs):
+    out, sys.stderr = sys.stderr, StringIO()
+    command(*args, **kwargs)
+    yield sys.stderr.getvalue()
+    sys.stderr = out
 
 test_data = utils.Data(__name__)
