@@ -421,8 +421,7 @@ def common_options(parser):
         "Proxy Authentication",
         """
             Specify which users are allowed to access the proxy and the method
-            used for authenticating them. These options are ignored if the
-            proxy is in transparent or reverse proxy mode.
+            used for authenticating them.
         """
     )
     user_specification_group = group.add_mutually_exclusive_group()
