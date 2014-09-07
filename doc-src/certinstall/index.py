@@ -9,4 +9,5 @@ pages = [
     Page("ios-simulator.html", "IOS Simulator"),
     Page("android.html", "Android"),
     Page("java.html", "Java"),
+    Page("mitm.it-error.html", "Error: No proxy configured"),
 ]
