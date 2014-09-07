@@ -208,7 +208,7 @@ class FDomain(_Rex):
     code = "d"
     help = "Domain"
     def __call__(self, f):
-        return bool(re.search(self.expr, f.request.get_host(False, f), re.IGNORECASE))
+        return bool(re.search(self.expr, f.request.host, re.IGNORECASE))
 
 
 class FUrl(_Rex):
@@ -222,7 +222,7 @@ class FUrl(_Rex):
         return klass(*toks)
 
     def __call__(self, f):
-        return re.search(self.expr, f.request.get_url(False, f))
+        return re.search(self.expr, f.request.url)
 
 
 class _Int(_Action):

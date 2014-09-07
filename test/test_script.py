@@ -99,7 +99,7 @@ class TestScript:
             d = Dummy()
             assert s.run(hook, d)[0]
             d.reply()
-        while (time.time() - t_start) < 5 and m.call_count <= 5:
+        while (time.time() - t_start) < 20 and m.call_count <= 5:
             if m.call_count == 5:
                 return
             time.sleep(0.001)

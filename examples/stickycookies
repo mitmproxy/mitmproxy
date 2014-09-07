@@ -5,8 +5,10 @@ implement functionality similar to the "sticky cookies" option. This is at
 a lower level than the Flow mechanism, so we're dealing directly with
 request and response objects.
 """
-from libmproxy import controller, proxy
 import os
+from libmproxy import controller, proxy
+from libmproxy.proxy.server import ProxyServer
+
 
 class StickyMaster(controller.Master):
     def __init__(self, server):
@@ -35,8 +37,8 @@ class StickyMaster(controller.Master):
 
 
 config = proxy.ProxyConfig(
-    cacert = os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
+    ca_file = os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
 )
-server = proxy.ProxyServer(config, 8080)
+server = ProxyServer(config, 8080)
 m = StickyMaster(server)
 m.run()

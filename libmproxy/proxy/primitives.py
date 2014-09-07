@@ -45,19 +45,6 @@ class TransparentUpstreamServerResolver(UpstreamServerResolver):
         return [ssl, ssl] + list(dst)
 
 
-class AddressPriority(object):
-    """
-    Enum that signifies the priority of the given address when choosing the destination host.
-    Higher is better (None < i)
-    """
-    MANUALLY_CHANGED = 3
-    """user changed the target address in the ui"""
-    FROM_SETTINGS = 2
-    """upstream server from arguments (reverse proxy, upstream proxy or from transparent resolver)"""
-    FROM_PROTOCOL = 1
-    """derived from protocol (e.g. absolute-form http requests)"""
-
-
 class Log:
     def __init__(self, msg, level="info"):
         self.msg = msg

@@ -72,13 +72,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
-    def __init__(self, address, priority):
+    def __init__(self, address):
         tcp.TCPClient.__init__(self, address)
-        self.priority = priority
 
         self.state = []  # a list containing (conntype, state) tuples
-        self.peername = None
-        self.sockname = None
         self.timestamp_start = None
         self.timestamp_end = None
         self.timestamp_tcp_setup = None
@@ -99,8 +96,6 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
 
     _stateobject_attributes = dict(
         state=list,
-        peername=tuple,
-        sockname=tuple,
         timestamp_start=float,
         timestamp_end=float,
         timestamp_tcp_setup=float,
@@ -115,9 +110,10 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
     def _get_state(self):
         d = super(ServerConnection, self)._get_state()
         d.update(
-            address={"address": self.address(), "use_ipv6": self.address.use_ipv6},
-            source_address= {"address": self.source_address(),
-                             "use_ipv6": self.source_address.use_ipv6} if self.source_address else None,
+            address={"address": self.address(),
+                     "use_ipv6": self.address.use_ipv6},
+            source_address= ({"address": self.source_address(),
+                             "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
             cert=self.cert.to_pem() if self.cert else None
         )
         return d
@@ -131,7 +127,7 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(tuple(), None)
+        f = cls(tuple())
         f._load_state(state)
         return f
 
@@ -141,8 +137,6 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
     def connect(self):
         self.timestamp_start = utils.timestamp()
         tcp.TCPClient.connect(self)
-        self.peername = self.connection.getpeername()
-        self.sockname = self.connection.getsockname()
         self.timestamp_tcp_setup = utils.timestamp()
 
     def send(self, message):

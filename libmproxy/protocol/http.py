@@ -26,16 +26,22 @@ def get_line(fp):
     return line
 
 
-def send_connect_request(conn, host, port):
+def send_connect_request(conn, host, port, update_state=True):
     upstream_request = HTTPRequest("authority", "CONNECT", None, host, port, None,
                                    (1, 1), ODictCaseless(), "")
-    conn.send(upstream_request._assemble())
+    conn.send(upstream_request.assemble())
     resp = HTTPResponse.from_stream(conn.rfile, upstream_request.method)
     if resp.code != 200:
         raise proxy.ProxyError(resp.code,
                                "Cannot establish SSL " +
                                "connection with upstream proxy: \r\n" +
-                               str(resp._assemble()))
+                               str(resp.assemble()))
+    if update_state:
+        conn.state.append(("http", {
+            "state": "connect",
+            "host": host,
+            "port": port}
+        ))
     return resp
 
 
@@ -67,6 +73,9 @@ class decoded(object):
 
 
 class HTTPMessage(stateobject.SimpleStateObject):
+    """
+    Base class for HTTPRequest and HTTPResponse
+    """
     def __init__(self, httpversion, headers, content, timestamp_start=None,
                  timestamp_end=None):
         self.httpversion = httpversion
@@ -151,36 +160,29 @@ class HTTPMessage(stateobject.SimpleStateObject):
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
-    @classmethod
-    def from_stream(cls, rfile, include_body=True, body_size_limit=None):
-        """
-        Parse an HTTP message from a file stream
-        """
-        raise NotImplementedError  # pragma: nocover
-
     def _assemble_first_line(self):
         """
         Returns the assembled request/response line
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
     def _assemble_headers(self):
         """
         Returns the assembled headers
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
     def _assemble_head(self):
         """
         Returns the assembled request/response line plus headers
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
-    def _assemble(self):
+    def assemble(self):
         """
         Returns the assembled request/response
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
 
 
 class HTTPRequest(HTTPMessage):
@@ -189,7 +191,17 @@ class HTTPRequest(HTTPMessage):
 
     Exposes the following attributes:
 
-        flow: Flow object the request belongs to
+        method: HTTP method
+
+        scheme: URL scheme (http/https) (absolute-form only)
+
+        host: Host portion of the URL (absolute-form and authority-form only)
+
+        port: Destination port (absolute-form and authority-form only)
+
+        path: Path portion of the URL (not present in authority-form)
+
+        httpversion: HTTP version tuple, e.g. (1,1)
 
         headers: ODictCaseless object
 
@@ -204,18 +216,6 @@ class HTTPRequest(HTTPMessage):
                  Details: http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-25#section-5.3
 
         form_out: The request form which mitmproxy has send out to the destination
-
-        method: HTTP method
-
-        scheme: URL scheme (http/https) (absolute-form only)
-
-        host: Host portion of the URL (absolute-form and authority-form only)
-
-        port: Destination port (absolute-form and authority-form only)
-
-        path: Path portion of the URL (not present in authority-form)
-
-        httpversion: HTTP version tuple
 
         timestamp_start: Timestamp indicating when request transmission started
 
@@ -358,7 +358,7 @@ class HTTPRequest(HTTPMessage):
     def _assemble_head(self, form=None):
         return "%s\r\n%s\r\n" % (self._assemble_first_line(form), self._assemble_headers())
 
-    def _assemble(self, form=None):
+    def assemble(self, form=None):
         """
             Assembles the request for transmission to the server. We make some
             modifications to make sure interception works properly.
@@ -405,6 +405,12 @@ class HTTPRequest(HTTPMessage):
                 e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
             )]
 
+    def update_host_header(self):
+        """
+            Update the host header to reflect the current target.
+        """
+        self.headers["Host"] = [self.host]
+
     def get_form_urlencoded(self):
         """
             Retrieves the URL-encoded form data, returning an ODict object.
@@ -426,16 +432,16 @@ class HTTPRequest(HTTPMessage):
         self.headers["Content-Type"] = [HDR_FORM_URLENCODED]
         self.content = utils.urlencode(odict.lst)
 
-    def get_path_components(self, f):
+    def get_path_components(self):
         """
             Returns the path components of the URL as a list of strings.
 
             Components are unquoted.
         """
-        _, _, path, _, _, _ = urlparse.urlparse(self.get_url(False, f))
+        _, _, path, _, _, _ = urlparse.urlparse(self.url)
         return [urllib.unquote(i) for i in path.split("/") if i]
 
-    def set_path_components(self, lst, f):
+    def set_path_components(self, lst):
         """
             Takes a list of strings, and sets the path component of the URL.
 
@@ -443,32 +449,32 @@ class HTTPRequest(HTTPMessage):
         """
         lst = [urllib.quote(i, safe="") for i in lst]
         path = "/" + "/".join(lst)
-        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.get_url(False, f))
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]), f)
+        scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.url)
+        self.url = urlparse.urlunparse([scheme, netloc, path, params, query, fragment])
 
-    def get_query(self, f):
+    def get_query(self):
         """
             Gets the request query string. Returns an ODict object.
         """
-        _, _, _, _, query, _ = urlparse.urlparse(self.get_url(False, f))
+        _, _, _, _, query, _ = urlparse.urlparse(self.url)
         if query:
             return ODict(utils.urldecode(query))
         return ODict([])
 
-    def set_query(self, odict, f):
+    def set_query(self, odict):
         """
             Takes an ODict object, and sets the request query string.
         """
-        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.get_url(False, f))
+        scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.url)
         query = utils.urlencode(odict.lst)
-        self.set_url(urlparse.urlunparse([scheme, netloc, path, params, query, fragment]), f)
+        self.url = urlparse.urlunparse([scheme, netloc, path, params, query, fragment])
 
-    def get_host(self, hostheader, flow):
+    def pretty_host(self, hostheader):
         """
             Heuristic to get the host of the request.
 
-            Note that get_host() does not always return the TCP destination of the request,
-            e.g. on a transparently intercepted request to an unrelated HTTP proxy.
+            Note that pretty_host() does not always return the TCP destination of the request,
+            e.g. if an upstream proxy is in place
 
             If hostheader is set to True, the Host: header will be used as additional (and preferred) data source.
             This is handy in transparent mode, where only the ip of the destination is known, but not the
@@ -478,54 +484,27 @@ class HTTPRequest(HTTPMessage):
         if hostheader:
             host = self.headers.get_first("host")
         if not host:
-            if self.host:
-                host = self.host
-            else:
-                for s in flow.server_conn.state:
-                    if s[0] == "http" and s[1]["state"] == "connect":
-                        host = s[1]["host"]
-                        break
-                if not host:
-                    host = flow.server_conn.address.host
+            host = self.host
         host = host.encode("idna")
         return host
 
-    def get_scheme(self, flow):
-        """
-        Returns the request port, either from the request itself or from the flow's server connection
-        """
-        if self.scheme:
-            return self.scheme
-        if self.form_out == "authority":  # On SSLed connections, the original CONNECT request is still unencrypted.
-            return "http"
-        return "https" if flow.server_conn.ssl_established else "http"
-
-    def get_port(self, flow):
-        """
-        Returns the request port, either from the request itself or from the flow's server connection
-        """
-        if self.port:
-            return self.port
-        for s in flow.server_conn.state:
-            if s[0] == "http" and s[1].get("state") == "connect":
-                return s[1]["port"]
-        return flow.server_conn.address.port
-
-    def get_url(self, hostheader, flow):
-        """
-            Returns a URL string, constructed from the Request's URL components.
-
-            If hostheader is True, we use the value specified in the request
-            Host header to construct the URL.
-        """
+    def pretty_url(self, hostheader):
         if self.form_out == "authority":  # upstream proxy mode
-            return "%s:%s" % (self.get_host(hostheader, flow), self.get_port(flow))
-        return utils.unparse_url(self.get_scheme(flow),
-                                 self.get_host(hostheader, flow),
-                                 self.get_port(flow),
+            return "%s:%s" % (self.pretty_host(hostheader), self.port)
+        return utils.unparse_url(self.scheme,
+                                 self.pretty_host(hostheader),
+                                 self.port,
                                  self.path).encode('ascii')
 
-    def set_url(self, url, flow):
+    @property
+    def url(self):
+        """
+            Returns a URL string, constructed from the Request's URL components.
+        """
+        return self.pretty_url(False)
+
+    @url.setter
+    def url(self, url):
         """
             Parses a URL specification, and updates the Request's information
             accordingly.
@@ -534,30 +513,8 @@ class HTTPRequest(HTTPMessage):
         """
         parts = http.parse_url(url)
         if not parts:
-            return False
-        scheme, host, port, path = parts
-        is_ssl = (True if scheme == "https" else False)
-
-        self.path = path
-
-        if host != self.get_host(False, flow) or port != self.get_port(flow):
-            if flow.live:
-                flow.live.change_server((host, port), ssl=is_ssl)
-            else:
-                # There's not live server connection, we're just changing the attributes here.
-                flow.server_conn = ServerConnection((host, port),
-                                                         proxy.AddressPriority.MANUALLY_CHANGED)
-                flow.server_conn.ssl_established = is_ssl
-
-        # If this is an absolute request, replace the attributes on the request object as well.
-        if self.host:
-            self.host = host
-        if self.port:
-            self.port = port
-        if self.scheme:
-            self.scheme = scheme
-
-        return True
+            raise ValueError("Invalid URL: %s" % url)
+        self.scheme, self.host, self.port, self.path = parts
 
     def get_cookies(self):
         cookie_headers = self.headers.get("cookie")
@@ -590,7 +547,7 @@ class HTTPResponse(HTTPMessage):
 
     Exposes the following attributes:
 
-        flow: Flow object the request belongs to
+        httpversion: HTTP version tuple, e.g. (1,1)
 
         code: HTTP response code
 
@@ -601,8 +558,6 @@ class HTTPResponse(HTTPMessage):
         content: Content of the request, None, or CONTENT_MISSING if there
         is content associated, but not present. CONTENT_MISSING evaluates
         to False to make checking for the presence of content natural.
-
-        httpversion: HTTP version tuple
 
         timestamp_start: Timestamp indicating when request transmission started
 
@@ -682,7 +637,8 @@ class HTTPResponse(HTTPMessage):
 
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]
-        elif not preserve_transfer_encoding and 'Transfer-Encoding' in self.headers:  # add content-length for chuncked transfer-encoding with no content
+        # add content-length for chuncked transfer-encoding with no content
+        elif not preserve_transfer_encoding and 'Transfer-Encoding' in self.headers:
             headers["Content-Length"] = ["0"]
 
         return str(headers)
@@ -691,7 +647,7 @@ class HTTPResponse(HTTPMessage):
         return '%s\r\n%s\r\n' % (
             self._assemble_first_line(), self._assemble_headers(preserve_transfer_encoding=preserve_transfer_encoding))
 
-    def _assemble(self):
+    def assemble(self):
         """
             Assembles the response for transmission to the client. We make some
             modifications to make sure interception works properly.
@@ -774,12 +730,14 @@ class HTTPResponse(HTTPMessage):
 
 class HTTPFlow(Flow):
     """
-    A Flow is a collection of objects representing a single HTTP
+    A HTTPFlow is a collection of objects representing a single HTTP
     transaction. The main attributes are:
 
         request: HTTPRequest object
         response: HTTPResponse object
         error: Error object
+        server_conn: ServerConnection object
+        client_conn: ClientConnection object
 
     Note that it's possible for a Flow to have both a response and an error
     object. This might happen, for instance, when a response was received
@@ -816,7 +774,7 @@ class HTTPFlow(Flow):
         s = "<HTTPFlow"
         for a in ("request", "response", "error", "client_conn", "server_conn"):
             if getattr(self, a, False):
-                s += "\r\n  %s = {flow.%s}" % (a,a)
+                s += "\r\n  %s = {flow.%s}" % (a, a)
         s += ">"
         return s.format(flow=self)
 
@@ -895,6 +853,10 @@ class HttpAuthenticationError(Exception):
 
 
 class HTTPHandler(ProtocolHandler):
+    """
+    HTTPHandler implements mitmproxys understanding of the HTTP protocol.
+
+    """
     def __init__(self, c):
         super(HTTPHandler, self).__init__(c)
         self.expected_form_in = c.config.http_form_in
@@ -905,19 +867,21 @@ class HTTPHandler(ProtocolHandler):
         while self.handle_flow():
             pass
 
-    def get_response_from_server(self, request, include_body=True):
+    def get_response_from_server(self, flow):
         self.c.establish_server_connection()
-        request_raw = request._assemble()
+        request_raw = flow.request.assemble()
 
-        for i in range(2):
+        for attempt in (0, 1):
             try:
                 self.c.server_conn.send(request_raw)
-                res = HTTPResponse.from_stream(self.c.server_conn.rfile, request.method,
-                                               body_size_limit=self.c.config.body_size_limit, include_body=include_body)
-                return res
+                # Only get the headers at first...
+                flow.response = HTTPResponse.from_stream(self.c.server_conn.rfile, flow.request.method,
+                                                         body_size_limit=self.c.config.body_size_limit,
+                                                         include_body=False)
+                break
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
                 self.c.log("error in server communication: %s" % repr(v), level="debug")
-                if i < 1:
+                if attempt == 0:
                     # In any case, we try to reconnect at least once.
                     # This is necessary because it might be possible that we already initiated an upstream connection
                     # after clientconnect that has already been expired, e.g consider the following event log:
@@ -931,13 +895,24 @@ class HTTPHandler(ProtocolHandler):
                 else:
                     raise
 
+        # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
+        self.c.channel.ask("responseheaders", flow)
+
+        # now get the rest of the request body, if body still needs to be read but not streaming this response
+        if flow.response.stream:
+            flow.response.content = CONTENT_MISSING
+        else:
+            flow.response.content = http.read_http_body(self.c.server_conn.rfile, flow.response.headers,
+                                                        self.c.config.body_size_limit,
+                                                        flow.request.method, flow.response.code, False)
+
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
         try:
             try:
                 req = HTTPRequest.from_stream(self.c.client_conn.rfile,
                                               body_size_limit=self.c.config.body_size_limit)
-            except tcp.NetLibDisconnect:  # specifically ignore disconnects that happen before/between requests.
+            except tcp.NetLibDisconnect:  # don't throw an error for disconnects that happen before/between requests.
                 return False
             self.c.log("request", "debug", [req._assemble_first_line(req.form_in)])
             ret = self.process_request(flow, req)
@@ -951,8 +926,7 @@ class HTTPHandler(ProtocolHandler):
             # sent through to the Master.
             flow.request = req
             request_reply = self.c.channel.ask("request", flow)
-            self.determine_server_address(flow, flow.request)  # The inline script may have changed request.host
-            flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+            self.process_server_address(flow)  # The inline script may have changed request.host
 
             if request_reply is None or request_reply == KILL:
                 return False
@@ -960,20 +934,7 @@ class HTTPHandler(ProtocolHandler):
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
             else:
-
-                # read initially in "stream" mode, so we can get the headers separately
-                flow.response = self.get_response_from_server(flow.request, include_body=False)
-
-                # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
-                self.c.channel.ask("responseheaders", flow)
-
-                # now get the rest of the request body, if body still needs to be read but not streaming this response
-                if flow.response.stream:
-                    flow.response.content = CONTENT_MISSING
-                else:
-                    flow.response.content = http.read_http_body(self.c.server_conn.rfile, flow.response.headers,
-                                                                self.c.config.body_size_limit,
-                                                                flow.request.method, flow.response.code, False)
+                self.get_response_from_server(flow)
 
             # no further manipulation of self.c.server_conn beyond this point
             # we can safely set it as the final attribute value here.
@@ -984,72 +945,39 @@ class HTTPHandler(ProtocolHandler):
             if response_reply is None or response_reply == KILL:
                 return False
 
-            if not flow.response.stream:
-                # no streaming:
-                # we already received the full response from the server and can send it to the client straight away.
-                self.c.client_conn.send(flow.response._assemble())
-            else:
-                # streaming:
-                # First send the body and then transfer the response incrementally:
-                h = flow.response._assemble_head(preserve_transfer_encoding=True)
-                self.c.client_conn.send(h)
-                for chunk in http.read_http_body_chunked(self.c.server_conn.rfile,
-                                                         flow.response.headers,
-                                                         self.c.config.body_size_limit, flow.request.method,
-                                                         flow.response.code, False, 4096):
-                    for part in chunk:
-                        self.c.client_conn.wfile.write(part)
-                    self.c.client_conn.wfile.flush()
-                flow.response.timestamp_end = utils.timestamp()
+            self.send_response_to_client(flow)
 
-            flow.timestamp_end = utils.timestamp()
-
-            close_connection = (
-                http.connection_close(flow.request.httpversion, flow.request.headers) or
-                http.connection_close(flow.response.httpversion, flow.response.headers) or
-                http.expected_http_body_size(flow.response.headers, False, flow.request.method,
-                                             flow.response.code) == -1)
-            if close_connection:
-                if flow.request.form_in == "authority" and flow.response.code == 200:
-                    # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
-                    # Some proxies (e.g. Charles) send a CONNECT response with HTTP/1.0 and no Content-Length header
-                    pass
-                else:
-                    return False
+            if self.check_close_connection(flow):
+                return False
 
             # We sent a CONNECT request to an upstream proxy.
             if flow.request.form_in == "authority" and flow.response.code == 200:
-                # TODO: Eventually add headers (space/usefulness tradeoff)
-                # Make sure to add state info before the actual upgrade happens.
-                # During the upgrade, we may receive an SNI indication from the client,
+                # TODO: Possibly add headers (memory consumption/usefulness tradeoff)
+                # Make sure to add state info before the actual processing of the CONNECT request happens.
+                # During an SSL upgrade, we may receive an SNI indication from the client,
                 # which resets the upstream connection. If this is the case, we must
                 # already re-issue the CONNECT request at this point.
                 self.c.server_conn.state.append(("http", {"state": "connect",
                                                           "host": flow.request.host,
                                                           "port": flow.request.port}))
-
-                if self.c.check_ignore_address((flow.request.host, flow.request.port)):
-                    self.c.log("Ignore host: %s:%s" % self.c.server_conn.address(), "info")
-                    TCPHandler(self.c).handle_messages()
+                if not self.process_connect_request((flow.request.host, flow.request.port)):
                     return False
-                else:
-                    if flow.request.port in self.c.config.ssl_ports:
-                        self.ssl_upgrade()
-                    self.skip_authentication = True
 
             # If the user has changed the target server on this connection,
             # restore the original target server
             flow.live.restore_server()
-            flow.live = None
 
-            return True
+            return True  # Next flow please.
         except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
+        finally:
+            flow.timestamp_end = utils.timestamp()
+            flow.live = None  # Connection is not live anymore.
         return False
 
     def handle_server_reconnect(self, state):
         if state["state"] == "connect":
-            send_connect_request(self.c.server_conn, state["host"], state["port"])
+            send_connect_request(self.c.server_conn, state["host"], state["port"], update_state=False)
         else:  # pragma: nocover
             raise RuntimeError("Unknown State: %s" % state["state"])
 
@@ -1093,16 +1021,6 @@ class HTTPHandler(ProtocolHandler):
         self.c.client_conn.wfile.write(html_content)
         self.c.client_conn.wfile.flush()
 
-    def ssl_upgrade(self):
-        """
-        Upgrade the connection to SSL after an authority (CONNECT) request has been made.
-        """
-        self.c.log("Received CONNECT request. Upgrading to SSL...", "debug")
-        self.expected_form_in = "relative"
-        self.expected_form_out = "relative"
-        self.c.establish_ssl(server=True, client=True)
-        self.c.log("Upgrade to SSL completed.", "debug")
-
     def process_request(self, flow, request):
         """
         @returns:
@@ -1115,14 +1033,30 @@ class HTTPHandler(ProtocolHandler):
         if not self.skip_authentication:
             self.authenticate(request)
 
+        # Determine .scheme, .host and .port attributes
+        # For absolute-form requests, they are directly given in the request.
+        # For authority-form requests, we only need to determine the request scheme.
+        # For relative-form requests, we need to determine host and port as well.
+        if not request.scheme:
+            request.scheme = "https" if flow.server_conn and flow.server_conn.ssl_established else "http"
+        if not request.host:
+            # Host/Port Complication: In upstream mode, use the server we CONNECTed to,
+            # not the upstream proxy.
+            if flow.server_conn:
+                for s in flow.server_conn.state:
+                    if s[0] == "http" and s[1]["state"] == "connect":
+                        request.host, request.port = s[1]["host"], s[1]["port"]
+            if not request.host and flow.server_conn:
+                request.host, request.port = flow.server_conn.address.host, flow.server_conn.address.port
+
+        # Now we can process the request.
         if request.form_in == "authority":
             if self.c.client_conn.ssl_established:
                 raise http.HttpError(400, "Must not CONNECT on already encrypted connection")
 
             if self.expected_form_in == "absolute":
-                if not self.c.config.get_upstream_server:
-                    self.c.set_server_address((request.host, request.port),
-                                              proxy.AddressPriority.FROM_PROTOCOL)
+                if not self.c.config.get_upstream_server:  # Regular mode
+                    self.c.set_server_address((request.host, request.port))
                     flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
                     self.c.establish_server_connection()
                     self.c.client_conn.send(
@@ -1131,34 +1065,123 @@ class HTTPHandler(ProtocolHandler):
                         ('Proxy-agent: %s\r\n' % self.c.server_version) +
                         '\r\n'
                     )
-
-                    if self.c.check_ignore_address(self.c.server_conn.address):
-                        self.c.log("Ignore host: %s:%s" % self.c.server_conn.address(), "info")
-                        TCPHandler(self.c).handle_messages()
-                        return False
-                    else:
-                        if self.c.server_conn.address.port in self.c.config.ssl_ports:
-                            self.ssl_upgrade()
-                        self.skip_authentication = True
-                        return True
-                else:
+                    return self.process_connect_request(self.c.server_conn.address)
+                else:  # upstream proxy mode
                     return None
+            else:
+                pass  # CONNECT should never occur if we don't expect absolute-form requests
+
         elif request.form_in == self.expected_form_in:
+
+            request.form_out = self.expected_form_out
+
             if request.form_in == "absolute":
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
-                self.determine_server_address(flow, request)
-            request.form_out = self.expected_form_out
+                if request.form_out == "relative":
+                    self.c.set_server_address((request.host, request.port))
+                    flow.server_conn = self.c.server_conn
+
             return None
 
         raise http.HttpError(400, "Invalid HTTP request form (expected: %s, got: %s)" %
                              (self.expected_form_in, request.form_in))
 
-    def determine_server_address(self, flow, request):
-        if request.form_in == "absolute":
-            self.c.set_server_address((request.host, request.port),
-                                      proxy.AddressPriority.FROM_PROTOCOL)
-            flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+    def process_server_address(self, flow):
+        # Depending on the proxy mode, server handling is entirely different
+        # We provide a mostly unified API to the user, which needs to be unfiddled here
+        # ( See also: https://github.com/mitmproxy/mitmproxy/issues/337 )
+        address = netlib.tcp.Address((flow.request.host, flow.request.port))
+
+        ssl = (flow.request.scheme == "https")
+
+        if self.c.config.http_form_in == self.c.config.http_form_out == "absolute":  # Upstream Proxy mode
+
+            # The connection to the upstream proxy may have a state we may need to take into account.
+            connected_to = None
+            for s in flow.server_conn.state:
+                if s[0] == "http" and s[1]["state"] == "connect":
+                    connected_to = tcp.Address((s[1]["host"], s[1]["port"]))
+
+            # We need to reconnect if the current flow either requires a (possibly impossible)
+            # change to the connection state, e.g. the host has changed but we already CONNECTed somewhere else.
+            needs_server_change = (
+                ssl != self.c.server_conn.ssl_established
+                or
+                (connected_to and address != connected_to)  # HTTP proxying is "stateless", CONNECT isn't.
+            )
+
+            if needs_server_change:
+                # force create new connection to the proxy server to reset state
+                self.live.change_server(self.c.server_conn.address, force=True)
+                if ssl:
+                    send_connect_request(self.c.server_conn, address.host, address.port)
+                    self.c.establish_ssl(server=True)
+        else:
+            # If we're not in upstream mode, we just want to update the host and possibly establish TLS.
+            self.live.change_server(address, ssl=ssl)  # this is a no op if the addresses match.
+
+        flow.server_conn = self.c.server_conn
+
+    def send_response_to_client(self, flow):
+        if not flow.response.stream:
+            # no streaming:
+            # we already received the full response from the server and can send it to the client straight away.
+            self.c.client_conn.send(flow.response.assemble())
+        else:
+            # streaming:
+            # First send the body and then transfer the response incrementally:
+            h = flow.response._assemble_head(preserve_transfer_encoding=True)
+            self.c.client_conn.send(h)
+            for chunk in http.read_http_body_chunked(self.c.server_conn.rfile,
+                                                     flow.response.headers,
+                                                     self.c.config.body_size_limit, flow.request.method,
+                                                     flow.response.code, False, 4096):
+                for part in chunk:
+                    self.c.client_conn.wfile.write(part)
+                self.c.client_conn.wfile.flush()
+        flow.response.timestamp_end = utils.timestamp()
+
+    def check_close_connection(self, flow):
+        """
+        Checks if the connection should be closed depending on the HTTP semantics. Returns True, if so.
+        """
+        close_connection = (
+            http.connection_close(flow.request.httpversion, flow.request.headers) or
+            http.connection_close(flow.response.httpversion, flow.response.headers) or
+            http.expected_http_body_size(flow.response.headers, False, flow.request.method,
+                                         flow.response.code) == -1)
+        if close_connection:
+            if flow.request.form_in == "authority" and flow.response.code == 200:
+                # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
+                # Some proxies (e.g. Charles) send a CONNECT response with HTTP/1.0 and no Content-Length header
+                pass
+            else:
+                return True
+        return False
+
+    def process_connect_request(self, address):
+        """
+        Process a CONNECT request.
+        Returns True if the CONNECT request has been processed successfully.
+        Returns False, if the connection should be closed immediately.
+        """
+        address = tcp.Address.wrap(address)
+        if self.c.check_ignore_address(address):
+            self.c.log("Ignore host: %s:%s" % address(), "info")
+            TCPHandler(self.c).handle_messages()
+            return False
+        else:
+            self.expected_form_in = "relative"
+            self.expected_form_out = "relative"
+            self.skip_authentication = True
+
+            if address.port in self.c.config.ssl_ports:
+                self.c.log("Received CONNECT request to SSL port. Upgrading to SSL...", "debug")
+                self.c.establish_ssl(server=True, client=True)
+                self.c.log("Upgrade to SSL completed.", "debug")
+
+            return True
 
     def authenticate(self, request):
         if self.c.config.authenticator:
@@ -1178,33 +1201,29 @@ class RequestReplayThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
+        r = self.flow.request
+        form_out_backup = r.form_out
         try:
-            r = self.flow.request
-            form_out_backup = r.form_out
-
-            r.form_out = self.config.http_form_out
-            server_address, server_ssl = False, False
-            if self.config.get_upstream_server:
-                try:
-                    # this will fail in transparent mode
-                    upstream_info = self.config.get_upstream_server(self.flow.client_conn)
-                    server_ssl = upstream_info[1]
-                    server_address = upstream_info[2:]
-                except proxy.ProxyError:
-                    pass
-            if not server_address:
-                server_address = (r.get_host(False, self.flow), r.get_port(self.flow))
-
-            server = ServerConnection(server_address, None)
-            server.connect()
-
-            if server_ssl or r.get_scheme(self.flow) == "https":
-                if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode -> send CONNECT
-                    send_connect_request(server, r.get_host(), r.get_port())
+            # In all modes, we directly connect to the server displayed
+            if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode
+                server_address = self.config.get_upstream_server(self.flow.client_conn)[2:]
+                server = ServerConnection(server_address)
+                server.connect()
+                if r.scheme == "https":
+                    send_connect_request(server, r.host, r.port)
+                    server.establish_ssl(self.config.clientcerts, sni=r.host)
                     r.form_out = "relative"
-                server.establish_ssl(self.config.clientcerts,
-                                     self.flow.server_conn.sni)
-            server.send(r._assemble())
+                else:
+                    r.form_out = "absolute"
+            else:
+                server_address = (r.host, r.port)
+                server = ServerConnection(server_address)
+                server.connect()
+                if r.scheme == "https":
+                    server.establish_ssl(self.config.clientcerts, sni=r.host)
+                r.form_out = "relative"
+
+            server.send(r.assemble())
             self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
                                                           body_size_limit=self.config.body_size_limit)
             self.channel.ask("response", self.flow)

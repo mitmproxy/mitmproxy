@@ -21,6 +21,9 @@ class StateObject(object):
         except AttributeError:  # we may compare with something that's not a StateObject
             return False
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class SimpleStateObject(StateObject):
     """

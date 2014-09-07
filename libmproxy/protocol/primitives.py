@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import copy
 import netlib.tcp
 from .. import stateobject, utils, version
-from ..proxy.primitives import AddressPriority
 from ..proxy.connection import ClientConnection, ServerConnection
 
 
@@ -13,9 +12,9 @@ class Error(stateobject.SimpleStateObject):
     """
         An Error.
 
-        This is distinct from an HTTP error response (say, a code 500), which
-        is represented by a normal Response object. This class is responsible
-        for indicating errors that fall outside of normal HTTP communications,
+        This is distinct from an protocol error response (say, a HTTP code 500), which
+        is represented by a normal HTTPResponse object. This class is responsible
+        for indicating errors that fall outside of normal protocol communications,
         like interrupted connections, timeouts, protocol errors.
 
         Exposes the following attributes:
@@ -53,13 +52,17 @@ class Error(stateobject.SimpleStateObject):
 
 
 class Flow(stateobject.SimpleStateObject):
+    """
+    A Flow is a collection of objects representing a single transaction.
+    This class is usually subclassed for each protocol, e.g. HTTPFlow.
+    """
     def __init__(self, conntype, client_conn, server_conn, live=None):
         self.conntype = conntype
         self.client_conn = client_conn
         """@type: ClientConnection"""
         self.server_conn = server_conn
         """@type: ServerConnection"""
-        self.live = live  # Used by flow.request.set_url to change the server address
+        self.live = live
         """@type: LiveConnection"""
 
         self.error = None
@@ -118,6 +121,10 @@ class Flow(stateobject.SimpleStateObject):
 
 
 class ProtocolHandler(object):
+    """
+    A ProtocolHandler implements an application-layer protocol, e.g. HTTP.
+    See: libmproxy.protocol.http.HTTPHandler
+    """
     def __init__(self, c):
         self.c = c
         """@type: libmproxy.proxy.server.ConnectionHandler"""
@@ -149,48 +156,53 @@ class ProtocolHandler(object):
 
 class LiveConnection(object):
     """
-    This facade allows protocol handlers to interface with a live connection,
-    without requiring the expose the ConnectionHandler.
+    This facade allows interested parties (FlowMaster, inline scripts) to interface with a live connection,
+    without requiring to expose the internals of the ConnectionHandler.
     """
     def __init__(self, c):
-        self._c = c
+        self.c = c
         """@type: libmproxy.proxy.server.ConnectionHandler"""
+        self._backup_server_conn = None
+        """@type: libmproxy.proxy.connection.ServerConnection"""
 
-    def change_server(self, address, ssl, persistent_change=False):
+    def change_server(self, address, ssl=False, force=False, persistent_change=False):
         address = netlib.tcp.Address.wrap(address)
-        if address != self._c.server_conn.address:
+        if force or address != self.c.server_conn.address or ssl != self.c.server_conn.ssl_established:
 
-            self._c.log("Change server connection: %s:%s -> %s:%s" % (
-                self._c.server_conn.address.host,
-                self._c.server_conn.address.port,
+            self.c.log("Change server connection: %s:%s -> %s:%s [persistent: %s]" % (
+                self.c.server_conn.address.host,
+                self.c.server_conn.address.port,
                 address.host,
-                address.port
+                address.port,
+                persistent_change
             ), "debug")
 
-            if not hasattr(self, "_backup_server_conn"):
-                self._backup_server_conn = self._c.server_conn
-                self._c.server_conn = None
+            if not self._backup_server_conn:
+                self._backup_server_conn = self.c.server_conn
+                self.c.server_conn = None
             else:  # This is at least the second temporary change. We can kill the current connection.
-                self._c.del_server_connection()
+                self.c.del_server_connection()
 
-            self._c.set_server_address(address, AddressPriority.MANUALLY_CHANGED)
-            self._c.establish_server_connection(ask=False)
+            self.c.set_server_address(address)
+            self.c.establish_server_connection(ask=False)
             if ssl:
-                self._c.establish_ssl(server=True)
-        if hasattr(self, "_backup_server_conn") and persistent_change:
-            del self._backup_server_conn
+                self.c.establish_ssl(server=True)
+        if persistent_change:
+            self._backup_server_conn = None
 
     def restore_server(self):
-        if not hasattr(self, "_backup_server_conn"):
+        # TODO: Similar to _backup_server_conn, introduce _cache_server_conn, which keeps the changed connection open
+        # This may be beneficial if a user is rewriting all requests from http to https or similar.
+        if not self._backup_server_conn:
             return
 
-        self._c.log("Restore original server connection: %s:%s -> %s:%s" % (
-            self._c.server_conn.address.host,
-            self._c.server_conn.address.port,
+        self.c.log("Restore original server connection: %s:%s -> %s:%s" % (
+            self.c.server_conn.address.host,
+            self.c.server_conn.address.port,
             self._backup_server_conn.address.host,
             self._backup_server_conn.address.port
         ), "debug")
 
-        self._c.del_server_connection()
-        self._c.server_conn = self._backup_server_conn
-        del self._backup_server_conn
+        self.c.del_server_connection()
+        self.c.server_conn = self._backup_server_conn
+        self._backup_server_conn = None

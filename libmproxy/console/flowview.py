@@ -528,7 +528,9 @@ class FlowView(common.WWrap):
 
     def set_url(self, url):
         request = self.flow.request
-        if not request.set_url(str(url)):
+        try:
+            request.url = str(url)
+        except ValueError:
             return "Invalid URL."
         self.master.refresh_flow(self.flow)
 
@@ -608,7 +610,7 @@ class FlowView(common.WWrap):
         elif part == "q":
             self.master.view_grideditor(grideditor.QueryEditor(self.master, conn.get_query().lst, self.set_query, conn))
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_edit("URL", conn.get_url(), self.set_url)
+            self.master.prompt_edit("URL", conn.url, self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_onekey("Method", self.method_options, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:

@@ -481,7 +481,7 @@ class TestSerialize:
 
         f2 = l[0]
         assert f2._get_state() == f._get_state()
-        assert f2.request._assemble() == f.request._assemble()
+        assert f2.request.assemble() == f.request.assemble()
 
     def test_load_flows(self):
         r = self._treader()
@@ -753,63 +753,61 @@ class TestRequest:
     def test_simple(self):
         f = tutils.tflow()
         r = f.request
-        u = r.get_url(False, f)
-        assert r.set_url(u, f)
-        assert not r.set_url("", f)
-        assert r.get_url(False, f) == u
-        assert r._assemble()
-        assert r.size() == len(r._assemble())
+        u = r.url
+        r.url = u
+        tutils.raises(ValueError, setattr, r, "url", "")
+        assert r.url == u
+        assert r.assemble()
+        assert r.size() == len(r.assemble())
 
         r2 = r.copy()
         assert r == r2
 
         r.content = None
-        assert r._assemble()
-        assert r.size() == len(r._assemble())
+        assert r.assemble()
+        assert r.size() == len(r.assemble())
 
         r.content = CONTENT_MISSING
-        tutils.raises("Cannot assemble flow with CONTENT_MISSING", r._assemble)
+        tutils.raises("Cannot assemble flow with CONTENT_MISSING", r.assemble)
 
     def test_get_url(self):
-        f = tutils.tflow()
-        r = f.request
+        r = tutils.treq()
 
-        assert r.get_url(False, f) == "http://address:22/path"
+        assert r.url == "http://address:22/path"
 
         r.scheme = "https"
-        assert r.get_url(False, f) == "https://address:22/path"
+        assert r.url == "https://address:22/path"
 
         r.host = "host"
         r.port = 42
-        assert r.get_url(False, f) == "https://host:42/path"
+        assert r.url == "https://host:42/path"
 
         r.host = "address"
         r.port = 22
-        assert r.get_url(False, f) == "https://address:22/path"
+        assert r.url== "https://address:22/path"
 
-        assert r.get_url(True, f) == "https://address:22/path"
+        assert r.pretty_url(True) == "https://address:22/path"
         r.headers["Host"] = ["foo.com"]
-        assert r.get_url(False, f) == "https://address:22/path"
-        assert r.get_url(True, f) == "https://foo.com:22/path"
+        assert r.pretty_url(False) == "https://address:22/path"
+        assert r.pretty_url(True) == "https://foo.com:22/path"
 
     def test_path_components(self):
-        f = tutils.tflow()
-        r = f.request
+        r = tutils.treq()
         r.path = "/"
-        assert r.get_path_components(f) == []
+        assert r.get_path_components() == []
         r.path = "/foo/bar"
-        assert r.get_path_components(f) == ["foo", "bar"]
+        assert r.get_path_components() == ["foo", "bar"]
         q = flow.ODict()
         q["test"] = ["123"]
-        r.set_query(q, f)
-        assert r.get_path_components(f) == ["foo", "bar"]
+        r.set_query(q)
+        assert r.get_path_components() == ["foo", "bar"]
 
-        r.set_path_components([], f)
-        assert r.get_path_components(f) == []
-        r.set_path_components(["foo"], f)
-        assert r.get_path_components(f) == ["foo"]
-        r.set_path_components(["/oo"], f)
-        assert r.get_path_components(f) == ["/oo"]
+        r.set_path_components([])
+        assert r.get_path_components() == []
+        r.set_path_components(["foo"])
+        assert r.get_path_components() == ["foo"]
+        r.set_path_components(["/oo"])
+        assert r.get_path_components() == ["/oo"]
         assert "%2F" in r.path
 
     def test_getset_form_urlencoded(self):
@@ -828,26 +826,26 @@ class TestRequest:
     def test_getset_query(self):
         h = flow.ODictCaseless()
 
-        f = tutils.tflow()
-        f.request.path = "/foo?x=y&a=b"
-        q = f.request.get_query(f)
+        r = tutils.treq()
+        r.path = "/foo?x=y&a=b"
+        q = r.get_query()
         assert q.lst == [("x", "y"), ("a", "b")]
 
-        f.request.path = "/"
-        q = f.request.get_query(f)
+        r.path = "/"
+        q = r.get_query()
         assert not q
 
-        f.request.path = "/?adsfa"
-        q = f.request.get_query(f)
+        r.path = "/?adsfa"
+        q = r.get_query()
         assert q.lst == [("adsfa", "")]
 
-        f.request.path = "/foo?x=y&a=b"
-        assert f.request.get_query(f)
-        f.request.set_query(flow.ODict([]), f)
-        assert not f.request.get_query(f)
+        r.path = "/foo?x=y&a=b"
+        assert r.get_query()
+        r.set_query(flow.ODict([]))
+        assert not r.get_query()
         qv = flow.ODict([("a", "b"), ("c", "d")])
-        f.request.set_query(qv, f)
-        assert f.request.get_query(f) == qv
+        r.set_query(qv)
+        assert r.get_query() == qv
 
     def test_anticache(self):
         h = flow.ODictCaseless()
@@ -968,18 +966,18 @@ class TestResponse:
     def test_simple(self):
         f = tutils.tflow(resp=True)
         resp = f.response
-        assert resp._assemble()
-        assert resp.size() == len(resp._assemble())
+        assert resp.assemble()
+        assert resp.size() == len(resp.assemble())
 
         resp2 = resp.copy()
         assert resp2 == resp
 
         resp.content = None
-        assert resp._assemble()
-        assert resp.size() == len(resp._assemble())
+        assert resp.assemble()
+        assert resp.size() == len(resp.assemble())
 
         resp.content = CONTENT_MISSING
-        tutils.raises("Cannot assemble flow with CONTENT_MISSING", resp._assemble)
+        tutils.raises("Cannot assemble flow with CONTENT_MISSING", resp.assemble)
 
     def test_refresh(self):
         r = tutils.tresp()

@@ -84,28 +84,18 @@ class ProxTestBase(object):
     masterclass = TestMaster
     externalapp = False
     certforward = False
+
     @classmethod
     def setupAll(cls):
         cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
         cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
-        pconf = cls.get_proxy_config()
-        cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
-        cls.config = ProxyConfig(
-            no_upstream_cert = cls.no_upstream_cert,
-            confdir = cls.confdir,
-            authenticator = cls.authenticator,
-            certforward = cls.certforward,
-            ssl_ports=([cls.server.port, cls.server2.port] if cls.ssl else []),
-            **pconf
-        )
+
+        cls.config = ProxyConfig(**cls.get_proxy_config())
+
         tmaster = cls.masterclass(cls.config)
         tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
-
-    @property
-    def master(cls):
-        return cls.proxy.tmaster
 
     @classmethod
     def teardownAll(cls):
@@ -121,24 +111,20 @@ class ProxTestBase(object):
         self.server2.clear_log()
 
     @property
-    def scheme(self):
-        return "https" if self.ssl else "http"
-
-    @property
-    def proxies(self):
-        """
-            The URL base for the server instance.
-        """
-        return (
-            (self.scheme, ("127.0.0.1", self.proxy.port))
-        )
+    def master(self):
+        return self.proxy.tmaster
 
     @classmethod
     def get_proxy_config(cls):
-        d = dict()
-        if cls.clientcerts:
-            d["clientcerts"] = tutils.test_data.path("data/clientcert")
-        return d
+        cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        return dict(
+            no_upstream_cert = cls.no_upstream_cert,
+            confdir = cls.confdir,
+            authenticator = cls.authenticator,
+            certforward = cls.certforward,
+            ssl_ports=([cls.server.port, cls.server2.port] if cls.ssl else []),
+            clientcerts = tutils.test_data.path("data/clientcert") if cls.clientcerts else None
+        )
 
 
 class HTTPProxTest(ProxTestBase):
@@ -265,49 +251,50 @@ class ReverseProxTest(ProxTestBase):
 
 class ChainProxTest(ProxTestBase):
     """
-    Chain n instances of mitmproxy in a row - because we can.
+    Chain three instances of mitmproxy in a row to test upstream mode.
+    Proxy order is cls.proxy -> cls.chain[0] -> cls.chain[1]
+    cls.proxy and cls.chain[0] are in upstream mode,
+    cls.chain[1] is in regular mode.
     """
+    chain = None
     n = 2
-    chain_config = [lambda port, sslports: ProxyConfig(
-        upstream_server= (False, False, "127.0.0.1", port),
-        http_form_in = "absolute",
-        http_form_out = "absolute",
-        ssl_ports=sslports
-    )] * n
+
     @classmethod
     def setupAll(cls):
-        super(ChainProxTest, cls).setupAll()
         cls.chain = []
-        for i in range(cls.n):
-            sslports = [cls.server.port, cls.server2.port]
-            config = cls.chain_config[i](cls.proxy.port if i == 0 else cls.chain[-1].port,
-                                         sslports)
+        super(ChainProxTest, cls).setupAll()
+        for _ in range(cls.n):
+            config = ProxyConfig(**cls.get_proxy_config())
             tmaster = cls.masterclass(config)
-            tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
-            cls.chain.append(ProxyThread(tmaster))
-            cls.chain[-1].start()
+            proxy = ProxyThread(tmaster)
+            proxy.start()
+            cls.chain.insert(0, proxy)
+
+        # Patch the orginal proxy to upstream mode
+        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(**cls.get_proxy_config())
+
 
     @classmethod
     def teardownAll(cls):
         super(ChainProxTest, cls).teardownAll()
-        for p in cls.chain:
-            p.tmaster.shutdown()
+        for proxy in cls.chain:
+            proxy.shutdown()
 
     def setUp(self):
         super(ChainProxTest, self).setUp()
-        for p in self.chain:
-            p.tmaster.clear_log()
-            p.tmaster.state.clear()
+        for proxy in self.chain:
+            proxy.tmaster.clear_log()
+            proxy.tmaster.state.clear()
 
+    @classmethod
+    def get_proxy_config(cls):
+        d = super(ChainProxTest, cls).get_proxy_config()
+        if cls.chain:  # First proxy is in normal mode.
+            d.update(
+                mode="upstream",
+                upstream_server=(False, False, "127.0.0.1", cls.chain[0].port)
+            )
+        return d
 
-class HTTPChainProxyTest(ChainProxTest):
-    def pathoc(self, sni=None):
-        """
-            Returns a connected Pathoc instance.
-        """
-        p = libpathod.pathoc.Pathoc(("localhost", self.chain[-1].port), ssl=self.ssl, sni=sni)
-        if self.ssl:
-            p.connect(("127.0.0.1", self.server.port))
-        else:
-            p.connect()
-        return p
+class HTTPUpstreamProxTest(ChainProxTest, HTTPProxTest):
+    pass

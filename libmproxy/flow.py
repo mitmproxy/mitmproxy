@@ -259,8 +259,8 @@ class StickyCookieState:
             Returns a (domain, port, path) tuple.
         """
         return (
-            m["domain"] or f.request.get_host(False, f),
-            f.request.get_port(f),
+            m["domain"] or f.request.host,
+            f.request.port,
             m["path"] or "/"
         )
 
@@ -278,7 +278,7 @@ class StickyCookieState:
             c = Cookie.SimpleCookie(str(i))
             m = c.values()[0]
             k = self.ckey(m, f)
-            if self.domain_match(f.request.get_host(False, f), k[0]):
+            if self.domain_match(f.request.host, k[0]):
                 self.jar[self.ckey(m, f)] = m
 
     def handle_request(self, f):
@@ -286,8 +286,8 @@ class StickyCookieState:
         if f.match(self.flt):
             for i in self.jar.keys():
                 match = [
-                    self.domain_match(f.request.get_host(False, f), i[0]),
-                    f.request.get_port(f) == i[1],
+                    self.domain_match(f.request.host, i[0]),
+                    f.request.port == i[1],
                     f.request.path.startswith(i[2])
                 ]
                 if all(match):
@@ -306,7 +306,7 @@ class StickyAuthState:
         self.hosts = {}
 
     def handle_request(self, f):
-        host = f.request.get_host(False, f)
+        host = f.request.host
         if "authorization" in f.request.headers:
             self.hosts[host] = f.request.headers["authorization"]
         elif f.match(self.flt):
@@ -612,6 +612,7 @@ class FlowMaster(controller.Master):
         if f.request:
             self.handle_request(f)
         if f.response:
+            self.handle_responseheaders(f)
             self.handle_response(f)
         if f.error:
             self.handle_error(f)
@@ -668,7 +669,7 @@ class FlowMaster(controller.Master):
                     self.masterq,
                     self.should_exit
                 )
-            rt.start() # pragma: no cover
+            rt.start()  # pragma: no cover
             if block:
                 rt.join()
 

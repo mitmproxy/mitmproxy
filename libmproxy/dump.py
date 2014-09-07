@@ -55,7 +55,7 @@ def str_request(f, showhost):
         c = f.client_conn.address.host
     else:
         c = "[replay]"
-    r = "%s %s %s"%(c, f.request.method, f.request.get_url(showhost, f))
+    r = "%s %s %s"%(c, f.request.method, f.request.pretty_url(showhost))
     if f.request.stickycookie:
         r = "[stickycookie] " + r
     return r
