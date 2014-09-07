@@ -387,14 +387,12 @@ class MasterRedirectRequest(tservers.TestMaster):
     def handle_request(self, f):
         request = f.request
         if request.path == "/p/201":
-            url = request.url
-            new = "http://127.0.0.1:%s/p/201" % self.redirect_port
-
-            request.url = new
-            f.live.change_server(("127.0.0.1", self.redirect_port), False)
-            request.url = url
-            tutils.raises("SSL handshake error", f.live.change_server, ("127.0.0.1", self.redirect_port), True)
-            request.url = new
+            addr = f.live.c.server_conn.address
+            assert f.live.change_server(("127.0.0.1", self.redirect_port), ssl=False)
+            assert not f.live.change_server(("127.0.0.1", self.redirect_port), ssl=False)
+            tutils.raises("SSL handshake error", f.live.change_server, ("127.0.0.1", self.redirect_port), ssl=True)
+            assert f.live.change_server(addr, ssl=False)
+            request.url = "http://127.0.0.1:%s/p/201" % self.redirect_port
         tservers.TestMaster.handle_request(self, f)
 
     def handle_response(self, f):

@@ -165,9 +165,22 @@ class LiveConnection(object):
         self._backup_server_conn = None
         """@type: libmproxy.proxy.connection.ServerConnection"""
 
-    def change_server(self, address, ssl=False, force=False, persistent_change=False):
+    def change_server(self, address, ssl=None, force=False, persistent_change=False):
+        """
+        Change the server connection to the specified address.
+        @returns:
+        True, if a new connection has been established,
+        False, if an existing connection has been used
+        """
         address = netlib.tcp.Address.wrap(address)
-        if force or address != self.c.server_conn.address or ssl != self.c.server_conn.ssl_established:
+
+        ssl_mismatch = (ssl is not None and ssl != self.c.server_conn.ssl_established)
+        address_mismatch = (address != self.c.server_conn.address)
+
+        if persistent_change:
+            self._backup_server_conn = None
+
+        if ssl_mismatch or address_mismatch or force:
 
             self.c.log("Change server connection: %s:%s -> %s:%s [persistent: %s]" % (
                 self.c.server_conn.address.host,
@@ -177,7 +190,7 @@ class LiveConnection(object):
                 persistent_change
             ), "debug")
 
-            if not self._backup_server_conn:
+            if not self._backup_server_conn and not persistent_change:
                 self._backup_server_conn = self.c.server_conn
                 self.c.server_conn = None
             else:  # This is at least the second temporary change. We can kill the current connection.
@@ -187,8 +200,8 @@ class LiveConnection(object):
             self.c.establish_server_connection(ask=False)
             if ssl:
                 self.c.establish_ssl(server=True)
-        if persistent_change:
-            self._backup_server_conn = None
+            return True
+        return False
 
     def restore_server(self):
         # TODO: Similar to _backup_server_conn, introduce _cache_server_conn, which keeps the changed connection open
