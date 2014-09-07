@@ -23,24 +23,33 @@ class TestServerConnection:
         self.d.shutdown()
 
     def test_simple(self):
-        sc = ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
-        r = tutils.treq()
-        r.flow.server_conn = sc
-        r.path = "/p/200:da"
-        sc.send(r._assemble())
-        assert http.read_response(sc.rfile, r.method, 1000)
+        f = tutils.tflow()
+        f.server_conn = sc
+        f.request.path = "/p/200:da"
+        sc.send(f.request.assemble())
+        assert http.read_response(sc.rfile, f.request.method, 1000)
         assert self.d.last_log()
 
         sc.finish()
 
     def test_terminate_error(self):
-        sc = ServerConnection((self.d.IFACE, self.d.port), None)
+        sc = ServerConnection((self.d.IFACE, self.d.port))
         sc.connect()
         sc.connection = mock.Mock()
         sc.connection.recv = mock.Mock(return_value=False)
         sc.connection.flush = mock.Mock(side_effect=tcp.NetLibDisconnect)
         sc.finish()
+
+    def test_repr(self):
+        sc = tutils.tserver_conn()
+        assert "address:22" in repr(sc)
+        assert "ssl" not in repr(sc)
+        sc.ssl_established = True
+        assert "ssl" in repr(sc)
+        sc.sni = "foo"
+        assert "foo" in repr(sc)
 
 
 class TestProcessProxyOptions:
@@ -112,7 +121,7 @@ class TestProcessProxyOptions:
 
 
 class TestProxyServer:
-    @tutils.SkipWindows # binding to 0.0.0.0:1 works without special permissions on Windows
+    @tutils.SkipWindows  # binding to 0.0.0.0:1 works without special permissions on Windows
     def test_err(self):
         parser = argparse.ArgumentParser()
         cmdline.common_options(parser)

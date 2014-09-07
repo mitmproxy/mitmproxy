@@ -1,7 +1,7 @@
 import cStringIO
 from PIL import Image
 
-def response(context, flow):
+def response(ctx, flow):
     if flow.response.headers["content-type"] == ["image/png"]:
         s = cStringIO.StringIO(flow.response.content)
         img = Image.open(s).rotate(180)

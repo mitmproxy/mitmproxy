@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import os
-from .. import utils, platform
 import re
 from netlib import http_auth, certutils
+from .. import utils, platform
 from .primitives import ConstUpstreamServerResolver, TransparentUpstreamServerResolver
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
@@ -11,7 +11,7 @@ CONF_DIR = "~/.mitmproxy"
 
 
 class ProxyConfig:
-    def __init__(self, confdir=CONF_DIR, clientcerts=None,
+    def __init__(self, confdir=CONF_DIR, ca_file=None, clientcerts=None,
                  no_upstream_cert=False, body_size_limit=None,
                  mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
                  authenticator=None, ignore=[],
@@ -44,7 +44,7 @@ class ProxyConfig:
         self.ignore = [re.compile(i, re.IGNORECASE) for i in ignore]
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
-        self.ca_file = os.path.join(self.confdir, CONF_BASENAME + "-ca.pem")
+        self.ca_file = ca_file or os.path.join(self.confdir, CONF_BASENAME + "-ca.pem")
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)

@@ -34,11 +34,11 @@ class AppRegistry:
         """
             Returns an WSGIAdaptor instance if request matches an app, or None.
         """
-        if (request.get_host(), request.get_port()) in self.apps:
-            return self.apps[(request.get_host(), request.get_port())]
+        if (request.host, request.port) in self.apps:
+            return self.apps[(request.host, request.port)]
         if "host" in request.headers:
             host = request.headers["host"][0]
-            return self.apps.get((host, request.get_port()), None)
+            return self.apps.get((host, request.port), None)
 
 
 class ReplaceHooks:
@@ -183,13 +183,12 @@ class ClientPlaybackState:
         """
         if self.flows and not self.current:
             n = self.flows.pop(0)
-            n.request.reply = controller.DummyReply()
-            n.client_conn = None
-            self.current = master.handle_request(n.request)
+            n.reply = controller.DummyReply()
+            self.current = master.handle_request(n)
             if not testing and not self.current.response:
-                master.replay_request(self.current) # pragma: no cover
+                master.replay_request(self.current)  # pragma: no cover
             elif self.current.response:
-                master.handle_response(self.current.response)
+                master.handle_response(self.current)
 
 
 class ServerPlaybackState:
@@ -260,8 +259,8 @@ class StickyCookieState:
             Returns a (domain, port, path) tuple.
         """
         return (
-            m["domain"] or f.request.get_host(),
-            f.request.get_port(),
+            m["domain"] or f.request.host,
+            f.request.port,
             m["path"] or "/"
         )
 
@@ -279,7 +278,7 @@ class StickyCookieState:
             c = Cookie.SimpleCookie(str(i))
             m = c.values()[0]
             k = self.ckey(m, f)
-            if self.domain_match(f.request.get_host(), k[0]):
+            if self.domain_match(f.request.host, k[0]):
                 self.jar[self.ckey(m, f)] = m
 
     def handle_request(self, f):
@@ -287,8 +286,8 @@ class StickyCookieState:
         if f.match(self.flt):
             for i in self.jar.keys():
                 match = [
-                    self.domain_match(f.request.get_host(), i[0]),
-                    f.request.get_port() == i[1],
+                    self.domain_match(f.request.host, i[0]),
+                    f.request.port == i[1],
                     f.request.path.startswith(i[2])
                 ]
                 if all(match):
@@ -307,7 +306,7 @@ class StickyAuthState:
         self.hosts = {}
 
     def handle_request(self, f):
-        host = f.request.get_host()
+        host = f.request.host
         if "authorization" in f.request.headers:
             self.hosts[host] = f.request.headers["authorization"]
         elif f.match(self.flt):
@@ -342,33 +341,30 @@ class State(object):
                 c += 1
         return c
 
-    def add_request(self, req):
+    def add_request(self, flow):
         """
             Add a request to the state. Returns the matching flow.
         """
-        f = req.flow
-        self._flow_list.append(f)
-        if f.match(self._limit):
-            self.view.append(f)
-        return f
+        self._flow_list.append(flow)
+        if flow.match(self._limit):
+            self.view.append(flow)
+        return flow
 
-    def add_response(self, resp):
+    def add_response(self, f):
         """
             Add a response to the state. Returns the matching flow.
         """
-        f = resp.flow
         if not f:
             return False
         if f.match(self._limit) and not f in self.view:
             self.view.append(f)
         return f
 
-    def add_error(self, err):
+    def add_error(self, f):
         """
             Add an error response to the state. Returns the matching flow, or
             None if there isn't one.
         """
-        f = err.flow
         if not f:
             return None
         if f.match(self._limit) and not f in self.view:
@@ -586,7 +582,7 @@ class FlowMaster(controller.Master):
             response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
-            flow.request.reply(response)
+            flow.reply(response)
             if self.server_playback.count() == 0:
                 self.stop_server_playback()
             return True
@@ -612,16 +608,15 @@ class FlowMaster(controller.Master):
         """
             Loads a flow, and returns a new flow object.
         """
+        f.reply = controller.DummyReply()
         if f.request:
-            f.request.reply = controller.DummyReply()
-            fr = self.handle_request(f.request)
+            self.handle_request(f)
         if f.response:
-            f.response.reply = controller.DummyReply()
-            self.handle_response(f.response)
+            self.handle_responseheaders(f)
+            self.handle_response(f)
         if f.error:
-            f.error.reply = controller.DummyReply()
-            self.handle_error(f.error)
-        return fr
+            self.handle_error(f)
+        return f
 
     def load_flows(self, fr):
         """
@@ -647,7 +642,7 @@ class FlowMaster(controller.Master):
                 if self.kill_nonreplay:
                     f.kill(self)
                 else:
-                    f.request.reply()
+                    f.reply()
 
     def process_new_response(self, f):
         if self.stickycookie_state:
@@ -674,7 +669,7 @@ class FlowMaster(controller.Master):
                     self.masterq,
                     self.should_exit
                 )
-            rt.start() # pragma: no cover
+            rt.start()  # pragma: no cover
             if block:
                 rt.join()
 
@@ -694,54 +689,49 @@ class FlowMaster(controller.Master):
         self.run_script_hook("serverconnect", sc)
         sc.reply()
 
-    def handle_error(self, r):
-        f = self.state.add_error(r)
-        if f:
-            self.run_script_hook("error", f)
+    def handle_error(self, f):
+        self.state.add_error(f)
+        self.run_script_hook("error", f)
         if self.client_playback:
             self.client_playback.clear(f)
-        r.reply()
+        f.reply()
         return f
 
-    def handle_request(self, r):
-        if r.flow.live:
-            app = self.apps.get(r)
+    def handle_request(self, f):
+        if f.live:
+            app = self.apps.get(f.request)
             if app:
-                err = app.serve(r, r.flow.client_conn.wfile, **{"mitmproxy.master": self})
+                err = app.serve(f, f.client_conn.wfile, **{"mitmproxy.master": self})
                 if err:
                     self.add_event("Error in wsgi app. %s"%err, "error")
-                r.reply(protocol.KILL)
+                f.reply(protocol.KILL)
                 return
-        f = self.state.add_request(r)
+        self.state.add_request(f)
         self.replacehooks.run(f)
         self.setheaders.run(f)
         self.run_script_hook("request", f)
         self.process_new_request(f)
         return f
 
-    def handle_responseheaders(self, resp):
-        f = resp.flow
+    def handle_responseheaders(self, f):
         self.run_script_hook("responseheaders", f)
 
         if self.stream_large_bodies:
             self.stream_large_bodies.run(f, False)
 
-        resp.reply()
+        f.reply()
         return f        
 
-    def handle_response(self, r):
-        f = self.state.add_response(r)
-        if f:
-            self.replacehooks.run(f)
-            self.setheaders.run(f)
-            self.run_script_hook("response", f)
-            if self.client_playback:
-                self.client_playback.clear(f)
-            self.process_new_response(f)
-            if self.stream:
-                self.stream.add(f)
-        else:
-            r.reply()
+    def handle_response(self, f):
+        self.state.add_response(f)
+        self.replacehooks.run(f)
+        self.setheaders.run(f)
+        self.run_script_hook("response", f)
+        if self.client_playback:
+            self.client_playback.clear(f)
+        self.process_new_response(f)
+        if self.stream:
+            self.stream.add(f)
         return f
 
     def shutdown(self):

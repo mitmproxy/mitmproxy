@@ -1,2 +1,2 @@
-def response(context, flow):
+def response(ctx, flow):
     flow.response.headers["newheader"] = ["foo"]
