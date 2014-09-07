@@ -31,10 +31,10 @@ def create_ca(o, cn, exp):
                                    "CA:TRUE"),
       OpenSSL.crypto.X509Extension("nsCertType", False,
                                    "sslCA"),
-      OpenSSL.crypto.X509Extension("extendedKeyUsage", True,
+      OpenSSL.crypto.X509Extension("extendedKeyUsage", False,
                                     "serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
                                     ),
-      OpenSSL.crypto.X509Extension("keyUsage", False,
+      OpenSSL.crypto.X509Extension("keyUsage", True,
                                    "keyCertSign, cRLSign"),
       OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
                                    subject=cert),
@@ -67,7 +67,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
     cert.set_serial_number(int(time.time()*10000))
     if ss:
         cert.set_version(2)
-        cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", True, ss)])
+        cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", False, ss)])
     cert.set_pubkey(cacert.get_pubkey())
     cert.sign(privkey, "sha1")
     return SSLCert(cert)
