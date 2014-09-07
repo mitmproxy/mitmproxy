@@ -45,6 +45,8 @@ def parse_url(url):
         return None
     if not scheme:
         return None
+    if '@' in netloc:
+        _, netloc = string.rsplit(netloc, '@', maxsplit=1)
     if ':' in netloc:
         host, port = string.rsplit(netloc, ':', maxsplit=1)
         try:
