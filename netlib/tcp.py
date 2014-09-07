@@ -494,10 +494,13 @@ class TCPServer(object):
         # none.
         if traceback:
             exc = traceback.format_exc()
-            print('-' * 40, file=fp)
-            print("Error in processing of request from %s:%s" % (client_address.host, client_address.port), file=fp)
+            print('-'*40, file=fp)
+            print(
+                "Error in processing of request from %s:%s" % (
+                    client_address.host, client_address.port
+                ), file=fp)
             print(exc, file=fp)
-            print('-' * 40, file=fp)
+            print('-'*40, file=fp)
 
     def handle_client_connection(self, conn, client_address):  # pragma: no cover
         """
