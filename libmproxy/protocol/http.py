@@ -193,11 +193,14 @@ class HTTPRequest(HTTPMessage):
 
         method: HTTP method
 
-        scheme: URL scheme (http/https) (absolute-form only)
+        scheme: URL scheme (http/https)
 
-        host: Host portion of the URL (absolute-form and authority-form only)
+        host: Target hostname of the request. This is not neccessarily the directy upstream server (which could be
+        another proxy), but it's always the target server we want to reach at the end. This attribute is either
+        inferred from the request itself (absolute-form, authority-form) or from the connection metadata (e.g. the
+        host in reverse proxy mode).
 
-        port: Destination port (absolute-form and authority-form only)
+        port: Destination port
 
         path: Path portion of the URL (not present in authority-form)
 
@@ -501,7 +504,10 @@ class HTTPRequest(HTTPMessage):
         """
             Returns a URL string, constructed from the Request's URL components.
         """
-        return self.pretty_url(False)
+        return utils.unparse_url(self.scheme,
+                                 self.host,
+                                 self.port,
+                                 self.path).encode('ascii')
 
     @url.setter
     def url(self, url):
