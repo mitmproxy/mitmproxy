@@ -9,15 +9,15 @@ class ClientConn:
 
 
 class Flow:
-    def __init__(self, client_conn):
-        self.client_conn = client_conn
+    def __init__(self, address, request):
+        self.client_conn = ClientConn(address)
+        self.request = request
 
 
 class Request:
-    def __init__(self, client_conn, scheme, method, path, headers, content):
+    def __init__(self, scheme, method, path, headers, content):
         self.scheme, self.method, self.path = scheme, method, path
         self.headers, self.content = headers, content
-        self.flow = Flow(client_conn)
 
 
 def date_time_string():
@@ -39,37 +39,37 @@ class WSGIAdaptor:
     def __init__(self, app, domain, port, sversion):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion
 
-    def make_environ(self, request, errsoc, **extra):
-        if '?' in request.path:
-            path_info, query = request.path.split('?', 1)
+    def make_environ(self, flow, errsoc, **extra):
+        if '?' in flow.request.path:
+            path_info, query = flow.request.path.split('?', 1)
         else:
-            path_info = request.path
+            path_info = flow.request.path
             query = ''
         environ = {
             'wsgi.version':         (1, 0),
-            'wsgi.url_scheme':      request.scheme,
-            'wsgi.input':           cStringIO.StringIO(request.content),
+            'wsgi.url_scheme':      flow.request.scheme,
+            'wsgi.input':           cStringIO.StringIO(flow.request.content),
             'wsgi.errors':          errsoc,
             'wsgi.multithread':     True,
             'wsgi.multiprocess':    False,
             'wsgi.run_once':        False,
             'SERVER_SOFTWARE':      self.sversion,
-            'REQUEST_METHOD':       request.method,
+            'REQUEST_METHOD':       flow.request.method,
             'SCRIPT_NAME':          '',
             'PATH_INFO':            urllib.unquote(path_info),
             'QUERY_STRING':         query,
-            'CONTENT_TYPE':         request.headers.get('Content-Type', [''])[0],
-            'CONTENT_LENGTH':       request.headers.get('Content-Length', [''])[0],
+            'CONTENT_TYPE':         flow.request.headers.get('Content-Type', [''])[0],
+            'CONTENT_LENGTH':       flow.request.headers.get('Content-Length', [''])[0],
             'SERVER_NAME':          self.domain,
             'SERVER_PORT':          str(self.port),
             # FIXME: We need to pick up the protocol read from the request.
             'SERVER_PROTOCOL':      "HTTP/1.1",
         }
         environ.update(extra)
-        if request.flow.client_conn.address:
-            environ["REMOTE_ADDR"], environ["REMOTE_PORT"] = request.flow.client_conn.address()
+        if flow.client_conn.address:
+            environ["REMOTE_ADDR"], environ["REMOTE_PORT"] = flow.client_conn.address()
 
-        for key, value in request.headers.items():
+        for key, value in flow.request.headers.items():
             key = 'HTTP_' + key.upper().replace('-', '_')
             if key not in ('HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH'):
                 environ[key] = value
