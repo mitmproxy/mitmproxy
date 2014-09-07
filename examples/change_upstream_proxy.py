@@ -11,6 +11,9 @@ alternative_upstream_proxy = ("localhost",8082)
 def request(ctx, flow):
 	if flow.live and should_redirect(flow):
 
+		# If you want to change the target server, you should modify flow.request.host and flow.request.port
+		# flow.live.change_server should only be used by inline scripts to change the upstream proxy,
+		# unless you are sure that you know what you are doing.
 		server_changed = flow.live.change_server(alternative_upstream_proxy, persistent_change=True)
 		if flow.request.scheme == "https" and server_changed:
 			send_connect_request(flow.live.c.server_conn, flow.request.host, flow.request.port)
