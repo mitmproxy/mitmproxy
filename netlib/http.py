@@ -46,6 +46,9 @@ def parse_url(url):
     if not scheme:
         return None
     if '@' in netloc:
+        # FIXME: Consider what to do with the discarded credentials here Most
+        # probably we should extend the signature to return these as a separate
+        # value.
         _, netloc = string.rsplit(netloc, '@', maxsplit=1)
     if ':' in netloc:
         host, port = string.rsplit(netloc, ':', maxsplit=1)
