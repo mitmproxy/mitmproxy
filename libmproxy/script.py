@@ -55,6 +55,8 @@ class Script:
 
     @classmethod
     def parse_command(klass, command):
+        if not command or not command.strip():
+            raise ScriptError("Empty script command.")
         if os.name == "nt":  # Windows: escape all backslashes in the path.
             backslashes = shlex.split(command, posix=False)[0].count("\\")
             command = command.replace("\\", "\\\\", backslashes)

@@ -494,8 +494,11 @@ class FlowMaster(controller.Master):
 
     def unload_scripts(self):
         for s in self.scripts[:]:
-            s.unload()
-            self.scripts.remove(s)
+            self.unload_script(s)
+
+    def unload_script(self, script):
+        script.unload()
+        self.scripts.remove(script)
 
     def load_script(self, command):
         """

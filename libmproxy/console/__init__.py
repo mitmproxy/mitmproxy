@@ -179,7 +179,9 @@ class StatusBar(common.WWrap):
                 scheme += "2https" if dst[1] else "http"
             r.append("[dest:%s]"%utils.unparse_url(scheme, *self.master.server.config.get_upstream_server.dst[2:]))
         if self.master.scripts:
-            r.append("[scripts:%s]"%len(self.master.scripts))
+            r.append("[")
+            r.append(("heading_key", "s"))
+            r.append("cripts:%s]"%len(self.master.scripts))
         # r.append("[lt:%0.3f]"%self.master.looptime)
 
         if self.master.stream:
@@ -784,8 +786,14 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             self.view_flowlist()
 
-    def edit_scripts(self, *args, **kwargs):
-        pass
+    def edit_scripts(self, scripts):
+        commands = [x[0] for x in scripts]  # remove outer array
+        if commands == [s.command for s in self.scripts]:
+            return
+
+        self.unload_scripts()
+        for command in commands:
+            self.load_script(command)
 
     def loop(self):
         changed = True
@@ -878,7 +886,7 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.view_grideditor(
                                     grideditor.ScriptEditor(
                                         self,
-                                        [[i.argv[0]] for i in self.scripts],
+                                        [[i.command] for i in self.scripts],
                                         self.edit_scripts
                                     )
                                 )
