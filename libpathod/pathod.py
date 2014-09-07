@@ -185,8 +185,8 @@ class PathodHandler(tcp.BaseHandler):
             return False, dict(type="error", msg="Access denied: web interface disabled")
         else:
             self.info("app: %s %s" % (method, path))
-            cc = wsgi.ClientConn(self.address())
-            req = wsgi.Request(cc, "http", method, path, headers, content)
+            req = wsgi.Request("http", method, path, headers, content)
+            flow = wsgi.Flow(self.address, req)
             sn = self.connection.getsockname()
             a = wsgi.WSGIAdaptor(
                 self.server.app,
@@ -194,7 +194,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.server.address.port,
                 version.NAMEVERSION
             )
-            a.serve(req, self.wfile)
+            a.serve(flow, self.wfile)
             return True, None
 
     def _log_bytes(self, header, data, hexdump):
