@@ -2,6 +2,7 @@ from distutils.core import setup
 import fnmatch, os.path
 from libpathod import version
 
+
 def _fnmatch(name, patternList):
     for i in patternList:
         if fnmatch.fnmatch(name, i):
@@ -64,31 +65,49 @@ def findPackages(path, dataExclude=[]):
             package_data[module] = acc
     return packages, package_data
 
+with open("README.txt", "rb") as f:
+    long_description = f.read()
 
-long_description = file("README.txt","rb").read()
 packages, package_data = findPackages("libpathod")
 setup(
-        name = "pathod",
-        version = version.VERSION,
-        description = "A pathological HTTP/S daemon for testing and stressing clients.",
-        long_description = long_description,
-        author = "Aldo Cortesi",
-        author_email = "aldo@corte.si",
-        url = "http://pathod.net",
-        packages = packages,
-        package_data = package_data,
-        scripts = ["pathod", "pathoc"],
-        classifiers = [
-            "License :: OSI Approved :: MIT License",
-            "Development Status :: 5 - Production/Stable",
-            "Operating System :: POSIX",
-            "Programming Language :: Python",
-            "Programming Language :: Python :: 2",
-            "Topic :: Internet",
-            "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
-            "Topic :: Software Development :: Testing",
-            "Topic :: Software Development :: Testing :: Traffic Generation",
-            "Topic :: Internet :: WWW/HTTP",
-        ],
-        install_requires=['netlib>=%s'%version.MINORVERSION, "requests>=2.4.0", "Flask>=0.10.1"]
+    name="pathod",
+    version=version.VERSION,
+    description="A pathological HTTP/S daemon for testing and stressing clients.",
+    long_description=long_description,
+    author="Aldo Cortesi",
+    author_email="aldo@corte.si",
+    url="http://pathod.net",
+    packages=packages,
+    package_data=package_data,
+    entry_points={
+        'console_scripts': [
+            "pathod = libpathod.main:pathod",
+            "pathoc = libpathod.main:pathoc"
+        ]
+    },
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Development Status :: 5 - Production/Stable",
+        "Operating System :: POSIX",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Topic :: Internet",
+        "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+        "Topic :: Software Development :: Testing",
+        "Topic :: Software Development :: Testing :: Traffic Generation",
+        "Topic :: Internet :: WWW/HTTP",
+    ],
+    install_requires=[
+        'netlib>=%s' % version.MINORVERSION,
+        "requests>=2.4.0",
+        "Flask>=0.10.1"
+    ],
+    extras_require={
+        'dev': [
+            "mock>=1.0.1",
+            "nose>=1.3.0",
+            "nose-cov>=1.6",
+            "coveralls>=0.4.1"
+        ]
+    }
 )
