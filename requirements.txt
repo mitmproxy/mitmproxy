@@ -1,2 +1,2 @@
-pyasn1>=0.1.7
-pyOpenSSL>=0.14
+-e git+https://github.com/mitmproxy/pathod.git#egg=pathod
+-e .[dev]

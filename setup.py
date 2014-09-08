@@ -2,6 +2,7 @@ from distutils.core import setup
 import fnmatch, os.path
 from netlib import version
 
+
 def _fnmatch(name, patternList):
     for i in patternList:
         if fnmatch.fnmatch(name, i):
@@ -65,29 +66,44 @@ def findPackages(path, dataExclude=[]):
     return packages, package_data
 
 
-long_description = file("README.mkd", "rb").read()
+with open("README.mkd", "rb") as f:
+    long_description = f.read()
+
 packages, package_data = findPackages("netlib")
 setup(
-        name = "netlib",
-        version = version.VERSION,
-        description = "A collection of network utilities used by pathod and mitmproxy.",
-        long_description = long_description,
-        author = "Aldo Cortesi",
-        author_email = "aldo@corte.si",
-        url = "http://github.com/mitmproxy/netlib",
-        packages = packages,
-        package_data = package_data,
-        classifiers = [
-            "License :: OSI Approved :: MIT License",
-            "Development Status :: 3 - Alpha",
-            "Operating System :: POSIX",
-            "Programming Language :: Python",
-            "Programming Language :: Python :: 2",
-            "Topic :: Internet",
-            "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
-            "Topic :: Software Development :: Testing",
-            "Topic :: Software Development :: Testing :: Traffic Generation",
-            "Topic :: Internet :: WWW/HTTP",
-        ],
-        install_requires=["pyasn1>0.1.2", "pyopenssl>=0.14", "passlib>=1.6.2"],
+    name="netlib",
+    version=version.VERSION,
+    description="A collection of network utilities used by pathod and mitmproxy.",
+    long_description=long_description,
+    author="Aldo Cortesi",
+    author_email="aldo@corte.si",
+    url="http://github.com/mitmproxy/netlib",
+    packages=packages,
+    package_data=package_data,
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Development Status :: 3 - Alpha",
+        "Operating System :: POSIX",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Topic :: Internet",
+        "Topic :: Internet :: WWW/HTTP",
+        "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+        "Topic :: Software Development :: Testing",
+        "Topic :: Software Development :: Testing :: Traffic Generation",
+    ],
+    install_requires=[
+        "pyasn1>=0.1.7",
+        "pyOpenSSL>=0.14",
+        "passlib>=1.6.2"
+    ],
+    extras_require={
+        'dev': [
+            "mock>=1.0.1",
+            "nose>=1.3.0",
+            "nose-cov>=1.6",
+            "coveralls>=0.4.1",
+            "pathod>=0.10"
+        ]
+    }
 )
