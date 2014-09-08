@@ -1,4 +1,5 @@
 include README.mkd
 recursive-include test *
 recursive-include netlib *
-recursive-exclude test *.swo *.swp *.pyc
+recursive-exclude * *.pyc *.pyo
+prune */__pycache__
