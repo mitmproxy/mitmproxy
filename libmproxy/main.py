@@ -22,7 +22,7 @@ def check_versions():
             file=sys.stderr)
     import OpenSSL, inspect
 
-    v = [int(x) for x in OpenSSL.__version__.split(".")][:2]
+    v = tuple([int(x) for x in OpenSSL.__version__.split(".")][:2])
     if v < (0, 14):
         print("You are using an outdated version of pyOpenSSL: mitmproxy requires pyOpenSSL 0.14 or greater.",
               file=sys.stderr)
