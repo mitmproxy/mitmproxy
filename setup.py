@@ -70,43 +70,80 @@ def findPackages(path, dataExclude=[]):
             package_data[module] = acc
     return packages, package_data
 
+
 with open(os.path.join(pdir(), "README.txt")) as f:
     long_description = f.read()
 packages, package_data = findPackages("libmproxy")
+
+
+scripts = ["mitmdump"]
+if os.name != "nt":
+    scripts.append("mitmproxy")
+
+deps = {
+    "netlib>=%s" % version.MINORVERSION,
+    "pyasn1>0.1.2",
+    "requests>=2.4.0",
+    "pyOpenSSL>=0.14",
+    "Flask>=0.10.1"
+}
+script_deps = {
+    "mitmproxy": {
+        "urwid>=1.1",
+        "lxml>=3.3.6",
+        "Pillow>=2.3.0",
+    },
+    "mitmdump": set()
+}
+for script in scripts:
+    deps.update(script_deps[script])
+if os.name == "nt":
+    deps.add("pydivert>=0.0.4")  # Transparent proxying on Windows
+console_scripts = ["%s = libmproxy.main:%s" % (s, s) for s in scripts]
+
+
+
 setup(
-        name = "mitmproxy",
-        version = version.VERSION,
-        description = "An interactive, SSL-capable, man-in-the-middle HTTP proxy for penetration testers and software developers.",
-        long_description = long_description,
-        author = "Aldo Cortesi",
-        author_email = "aldo@corte.si",
-        url = "http://mitmproxy.org",
-        packages = packages,
-        package_data = package_data,
-        scripts = ["mitmproxy", "mitmdump"],
-        classifiers = [
-            "License :: OSI Approved :: MIT License",
-            "Development Status :: 5 - Production/Stable",
-            "Environment :: Console",
-            "Environment :: Console :: Curses",
-            "Operating System :: MacOS :: MacOS X",
-            "Operating System :: POSIX",
-            "Programming Language :: Python",
-            "Programming Language :: Python :: 2",
-            "Topic :: Security",
-            "Topic :: Internet",
-            "Topic :: Internet :: WWW/HTTP",
-            "Topic :: Internet :: Proxy Servers",
-            "Topic :: Software Development :: Testing"
+    name="mitmproxy",
+    version=version.VERSION,
+    description="An interactive, SSL-capable, man-in-the-middle HTTP proxy for penetration testers and software developers.",
+    long_description=long_description,
+    author="Aldo Cortesi",
+    author_email="aldo@corte.si",
+    url="http://mitmproxy.org",
+    packages=packages,
+    package_data=package_data,
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Environment :: Console :: Curses",
+        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: POSIX",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Topic :: Security",
+        "Topic :: Internet",
+        "Topic :: Internet :: WWW/HTTP",
+        "Topic :: Internet :: Proxy Servers",
+        "Topic :: Software Development :: Testing"
+    ],
+    entry_points={
+        'console_scripts': console_scripts
+    },
+    install_requires=list(deps),
+    extras_require={
+        'dev': [
+            "mock>=1.0.1",
+            "nose>=1.3.0",
+            "nose-cov>=1.6",
+            "coveralls>=0.4.1",
+            "pathod>=%s" % version.MINORVERSION
         ],
-        install_requires=[
-            "netlib>=%s"%version.MINORVERSION,
-            "urwid>=1.1",
-            "pyasn1>0.1.2",
-            "requests>=1.2.2",
-            "pyopenssl>=0.14",
-            "Pillow>=2.3.0",
-            "lxml",
-            "flask"
-        ],
+        'contentviews': [
+            "pyamf>=0.6.1",
+            "protobuf>=2.5.0",
+            "cssutils>=1.0"
+        ]
+    }
 )
