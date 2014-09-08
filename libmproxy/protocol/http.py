@@ -990,24 +990,36 @@ class HTTPHandler(ProtocolHandler):
     def handle_error(self, error, flow=None):
 
         message = repr(error)
-        if "tlsv1 alert unknown ca" in message:
-            message += " The client does not trust the proxy's certificate."
+        message_debug = None
 
         if isinstance(error, tcp.NetLibDisconnect):
-            self.c.log("TCP connection closed unexpectedly.", "debug")
-        else:
-            self.c.log("error: %s" % message, level="info")
+            message = None
+            message_debug = "TCP connection closed unexpectedly."
+        elif "tlsv1 alert unknown ca" in message:
+            message = "TLSv1 Alert Unknown CA: The client does not trust the proxy's certificate."
+        elif "handshake error" in message:
+            message_debug = message
+            message = "SSL handshake error: The client may not trust the proxy's certificate."
+
+        if message:
+            self.c.log(message, level="info")
+        if message_debug:
+            self.c.log(message, level="debug")
 
         if flow:
             # TODO: no flows without request or with both request and response at the moment.
             if flow.request and not flow.response:
-                flow.error = Error(message)
+                flow.error = Error(message or message_debug)
                 self.c.channel.ask("error", flow)
 
         try:
             code = getattr(error, "code", 502)
             headers = getattr(error, "headers", None)
-            self.send_error(code, message, headers)
+
+            html_message = message or ""
+            if message_debug:
+                html_message += "<pre>%s</pre>" % message_debug
+            self.send_error(code, html_message, headers)
         except:
             pass
 
