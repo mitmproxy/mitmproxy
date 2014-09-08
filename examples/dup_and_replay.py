@@ -1,4 +1,4 @@
-def request(ctx, flow):
-    f = ctx.duplicate_flow(flow)
+def request(context, flow):
+    f = context.duplicate_flow(flow)
     f.request.path = "/changed"
-    ctx.replay_request(f)
+    context.replay_request(f)

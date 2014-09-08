@@ -38,6 +38,10 @@ class ScriptContext:
         """
         self._master.replay_request(f)
 
+    @property
+    def app_registry(self):
+        return self._master.apps
+
 
 class Script:
     """

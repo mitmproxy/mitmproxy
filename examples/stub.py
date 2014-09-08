@@ -1,63 +1,63 @@
 """
     This is a script stub, with definitions for all events.
 """
-def start(ctx, argv):
+def start(context, argv):
     """
         Called once on script startup, before any other events.
     """
-    ctx.log("start")
+    context.log("start")
 
-def clientconnect(ctx, conn_handler):
+def clientconnect(context, conn_handler):
     """
         Called when a client initiates a connection to the proxy. Note that a
         connection can correspond to multiple HTTP requests
     """
-    ctx.log("clientconnect")
+    context.log("clientconnect")
 
-def serverconnect(ctx, conn_handler):
+def serverconnect(context, conn_handler):
     """
         Called when the proxy initiates a connection to the target server. Note that a
         connection can correspond to multiple HTTP requests
     """
-    ctx.log("serverconnect")
+    context.log("serverconnect")
 
-def request(ctx, flow):
+def request(context, flow):
     """
         Called when a client request has been received.
     """
-    ctx.log("request")
+    context.log("request")
 
 
-def responseheaders(ctx, flow):
+def responseheaders(context, flow):
     """
         Called when the response headers for a server response have been received,
         but the response body has not been processed yet. Can be used to tell mitmproxy
         to stream the response.
     """
-    ctx.log("responseheaders")
+    context.log("responseheaders")
 
-def response(ctx, flow):
+def response(context, flow):
     """
        Called when a server response has been received.
     """
-    ctx.log("response")
+    context.log("response")
 
-def error(ctx, flow):
+def error(context, flow):
     """
         Called when a flow error has occured, e.g. invalid server responses, or
         interrupted connections. This is distinct from a valid server HTTP error
         response, which is simply a response with an HTTP error code.
     """
-    ctx.log("error")
+    context.log("error")
 
-def clientdisconnect(ctx, conn_handler):
+def clientdisconnect(context, conn_handler):
     """
         Called when a client disconnects from the proxy.
     """
-    ctx.log("clientdisconnect")
+    context.log("clientdisconnect")
 
-def done(ctx):
+def done(context):
     """
         Called once on script shutdown, after any other events.
     """
-    ctx.log("done")
+    context.log("done")

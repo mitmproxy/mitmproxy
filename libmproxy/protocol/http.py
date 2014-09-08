@@ -1095,7 +1095,8 @@ class HTTPHandler(ProtocolHandler):
             if request.form_in == "absolute":
                 if request.scheme != "http":
                     raise http.HttpError(400, "Invalid request scheme: %s" % request.scheme)
-                if request.form_out == "relative":
+                if self.c.config.mode == "regular":
+                    # Update info so that an inline script sees the correct value at flow.server_conn
                     self.c.set_server_address((request.host, request.port))
                     flow.server_conn = self.c.server_conn
 

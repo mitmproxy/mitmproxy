@@ -6,12 +6,13 @@
 from libmproxy import flow
 import json, sys
 
-with open("logfile", "rb") as f:
-    freader = flow.FlowReader(f)
+with open("logfile", "rb") as logfile:
+    freader = flow.FlowReader(logfile)
     try:
-       for i in freader.stream():
-            print i.request.host
-            json.dump(i._get_state(), sys.stdout, indent=4)
+        for f in freader.stream():
+            print(f)
+            print(f.request.host)
+            json.dump(f._get_state(), sys.stdout, indent=4)
             print ""
     except flow.FlowReadError, v:
         print "Flow file corrupted. Stopped loading."

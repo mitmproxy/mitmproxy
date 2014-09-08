@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
 This example builds on mitmproxy's base proxying infrastructure to
-implement functionality similar to the "sticky cookies" option. This is at
-a lower level than the Flow mechanism, so we're dealing directly with
-request and response objects.
+implement functionality similar to the "sticky cookies" option.
+
+Heads Up: In the majority of cases, you want to use inline scripts.
 """
 import os
 from libmproxy import controller, proxy
@@ -21,19 +21,19 @@ class StickyMaster(controller.Master):
         except KeyboardInterrupt:
             self.shutdown()
 
-    def handle_request(self, msg):
-        hid = (msg.host, msg.port)
-        if msg.headers["cookie"]:
-            self.stickyhosts[hid] = msg.headers["cookie"]
+    def handle_request(self, flow):
+        hid = (flow.request.host, flow.request.port)
+        if flow.request.headers["cookie"]:
+            self.stickyhosts[hid] = flow.request.headers["cookie"]
         elif hid in self.stickyhosts:
-            msg.headers["cookie"] = self.stickyhosts[hid]
-        msg.reply()
+            flow.request.headers["cookie"] = self.stickyhosts[hid]
+        flow.reply()
 
-    def handle_response(self, msg):
-        hid = (msg.request.host, msg.request.port)
-        if msg.headers["set-cookie"]:
-            self.stickyhosts[hid] = msg.headers["set-cookie"]
-        msg.reply()
+    def handle_response(self, flow):
+        hid = (flow.request.host, flow.request.port)
+        if flow.response.headers["set-cookie"]:
+            self.stickyhosts[hid] = flow.response.headers["set-cookie"]
+        flow.reply()
 
 
 config = proxy.ProxyConfig(
