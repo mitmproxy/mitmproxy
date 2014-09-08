@@ -493,3 +493,15 @@ class ScriptEditor(GridEditor):
             script.Script.parse_command(val)
         except script.ScriptError, v:
             return str(v)
+
+
+class IgnoreEditor(GridEditor):
+    title = "Editing ignore patterns"
+    columns = 1
+    headings = ("Regex (matched on hostname:port / ip:port)",)
+
+    def is_error(self, col, val):
+        try:
+            re.compile(val, re.IGNORECASE)
+        except re.error as e:
+            return "Invalid regex: %s" % str(e)

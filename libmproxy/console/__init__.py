@@ -129,6 +129,10 @@ class StatusBar(common.WWrap):
                 r.append(":%s in file]"%self.master.server_playback.count())
             else:
                 r.append(":%s to go]"%self.master.server_playback.count())
+        if self.master.get_ignore():
+            r.append("[")
+            r.append(("heading_key", "I"))
+            r.append("gnore:%d]"%len(self.master.get_ignore()))
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("heading_key", "i"))
@@ -795,6 +799,10 @@ class ConsoleMaster(flow.FlowMaster):
         for command in commands:
             self.load_script(command)
 
+    def edit_ignore(self, ignore):
+        patterns = (x[0] for x in ignore)
+        self.set_ignore(patterns)
+
     def loop(self):
         changed = True
         try:
@@ -849,6 +857,14 @@ class ConsoleMaster(flow.FlowMaster):
                                         self,
                                         self.setheaders.get_specs(),
                                         self.setheaders.set
+                                    )
+                                )
+                            elif k == "I":
+                                self.view_grideditor(
+                                    grideditor.IgnoreEditor(
+                                        self,
+                                        [[x] for x in self.get_ignore()],
+                                        self.edit_ignore
                                     )
                                 )
                             elif k == "i":

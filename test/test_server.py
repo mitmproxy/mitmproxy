@@ -1,5 +1,5 @@
 import socket, time
-from libmproxy.proxy.config import ProxyConfig
+from libmproxy.proxy.config import parse_host_pattern
 from netlib import tcp, http_auth, http
 from libpathod import pathoc, pathod
 from netlib.certutils import SSLCert
@@ -79,8 +79,8 @@ class CommonMixin:
 
 class TcpMixin:
     def _ignore_on(self):
-        conf = ProxyConfig(ignore=[".+:%s" % self.server.port])
-        self.config.ignore.append(conf.ignore[0])
+        ignore = parse_host_pattern([".+:%s" % self.server.port])[0]
+        self.config.ignore.append(ignore)
 
     def _ignore_off(self):
         self.config.ignore.pop()
@@ -581,9 +581,9 @@ class TestUpstreamProxySSL(tservers.HTTPUpstreamProxTest, CommonMixin, TcpMixin)
 
     def _ignore_on(self):
         super(TestUpstreamProxySSL, self)._ignore_on()
-        conf = ProxyConfig(ignore=[".+:%s" % self.server.port])
+        ignore = parse_host_pattern([".+:%s" % self.server.port])[0]
         for proxy in self.chain:
-            proxy.tmaster.server.config.ignore.append(conf.ignore[0])
+            proxy.tmaster.server.config.ignore.append(ignore)
 
     def _ignore_off(self):
         super(TestUpstreamProxySSL, self)._ignore_off()

@@ -1,6 +1,7 @@
 import Queue, time, os.path
 from cStringIO import StringIO
 import email.utils
+import mock
 from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
 from libmproxy.protocol.http import decoded, CONTENT_MISSING
@@ -540,6 +541,14 @@ class TestFlowMaster:
         assert fm.load_script("nonexistent")
         assert "ValueError" in fm.load_script(tutils.test_data.path("scripts/starterr.py"))
         assert len(fm.scripts) == 0
+
+    def test_getset_ignore(self):
+        p = mock.Mock()
+        p.config.ignore = []
+        fm = flow.FlowMaster(p, flow.State())
+        assert not fm.get_ignore()
+        fm.set_ignore(["^apple\.com:", ":443$"])
+        assert fm.get_ignore()
 
     def test_replay(self):
         s = flow.State()

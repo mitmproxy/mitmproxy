@@ -1,6 +1,5 @@
 """
-    This module provides more sophisticated flow tracking. These match requests
-    with their responses, and provide filtering and interception facilities.
+    This module provides more sophisticated flow tracking and provides filtering and interception facilities.
 """
 from __future__ import absolute_import
 import base64
@@ -8,12 +7,11 @@ import hashlib, Cookie, cookielib, re, threading
 import os
 import flask
 import requests
-from netlib import odict, wsgi, tcp
+from netlib import odict, wsgi
 import netlib.http
 from . import controller, protocol, tnetstring, filt, script, version, app
 from .protocol import http, handle
-from .proxy.connection import ServerConnection
-from .proxy.primitives import ProxyError
+from .proxy.config import parse_host_pattern
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless
@@ -521,6 +519,12 @@ class FlowMaster(controller.Master):
     def run_script_hook(self, name, *args, **kwargs):
         for script in self.scripts:
             self.run_single_script_hook(script, name, *args, **kwargs)
+
+    def get_ignore(self):
+        return [i.pattern for i in self.server.config.ignore]
+
+    def set_ignore(self, ignore):
+        self.server.config.ignore = parse_host_pattern(ignore)
 
     def set_stickycookie(self, txt):
         if txt:
