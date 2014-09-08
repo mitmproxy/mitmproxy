@@ -308,7 +308,7 @@ class TCPClient(_Connection):
         try:
             self.connection.do_handshake()
         except SSL.Error, v:
-            raise NetLibError("SSL handshake error: %s"%str(v))
+            raise NetLibError("SSL handshake error: %s"%repr(v))
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
@@ -417,7 +417,7 @@ class BaseHandler(_Connection):
         try:
             self.connection.do_handshake()
         except SSL.Error, v:
-            raise NetLibError("SSL handshake error: %s"%str(v))
+            raise NetLibError("SSL handshake error: %s"%repr(v))
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
