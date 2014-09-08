@@ -15,6 +15,16 @@ achieve transparent mode.
 
     </li>
 
+    <li> If your target machine is on the same physical network and you configured it to use a custom gateway,
+    disable ICMP redirects:
+
+    <pre class="terminal">echo 0 | sudo tee /proc/sys/net/ipv4/conf/*/send_redirects</pre>
+
+    You may also want to consider enabling this permanently in
+    <b>/etc/sysctl.conf</b> as demonstrated <a href="http://unix.stackexchange.com/a/58081">here</a>.
+
+    </li>
+
     <li> Create an iptables ruleset that redirects the desired traffic to the
     mitmproxy port. Details will differ according to your setup, but the
     ruleset should look something like this:
