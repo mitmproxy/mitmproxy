@@ -36,6 +36,7 @@ class HelpView(urwid.ListBox):
         keys = [
             ("c", "client replay"),
             ("H", "edit global header set patterns"),
+            ("I", "set ignore pattern"),
             ("i", "set interception pattern"),
             ("M", "change global default display mode"),
                 (None,
@@ -115,7 +116,7 @@ class HelpView(urwid.ListBox):
             ("q", "quit / return to flow list"),
             ("Q", "quit without confirm prompt"),
             ("R", "edit replacement patterns"),
-            ("s", "set/unset script"),
+            ("s", "add/remove scripts"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),
             ("u", "set sticky auth expression"),
