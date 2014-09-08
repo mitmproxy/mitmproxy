@@ -35,8 +35,8 @@ class TestDumpMaster:
 
     def _dummy_cycle(self, n, filt, content, **options):
         cs = StringIO()
-        o = dump.Options(**options)
-        m = dump.DumpMaster(None, o, filt, outfile=cs)
+        o = dump.Options(filtstr=filt, **options)
+        m = dump.DumpMaster(None, o, outfile=cs)
         for i in range(n):
             self._cycle(m, content)
         m.shutdown()
@@ -52,7 +52,7 @@ class TestDumpMaster:
     def test_error(self):
         cs = StringIO()
         o = dump.Options(flow_detail=1)
-        m = dump.DumpMaster(None, o, None, outfile=cs)
+        m = dump.DumpMaster(None, o, outfile=cs)
         f = tutils.tflow(err=True)
         m.handle_request(f)
         assert m.handle_error(f)
@@ -62,24 +62,24 @@ class TestDumpMaster:
         cs = StringIO()
 
         o = dump.Options(server_replay="nonexistent", kill=True)
-        tutils.raises(dump.DumpError, dump.DumpMaster, None, o, None, outfile=cs)
+        tutils.raises(dump.DumpError, dump.DumpMaster, None, o, outfile=cs)
 
         with tutils.tmpdir() as t:
             p = os.path.join(t, "rep")
             self._flowfile(p)
 
             o = dump.Options(server_replay=p, kill=True)
-            m = dump.DumpMaster(None, o, None, outfile=cs)
+            m = dump.DumpMaster(None, o, outfile=cs)
 
             self._cycle(m, "content")
             self._cycle(m, "content")
 
             o = dump.Options(server_replay=p, kill=False)
-            m = dump.DumpMaster(None, o, None, outfile=cs)
+            m = dump.DumpMaster(None, o, outfile=cs)
             self._cycle(m, "nonexistent")
 
             o = dump.Options(client_replay=p, kill=False)
-            m = dump.DumpMaster(None, o, None, outfile=cs)
+            m = dump.DumpMaster(None, o, outfile=cs)
 
     def test_read(self):
         with tutils.tmpdir() as t:
@@ -105,18 +105,18 @@ class TestDumpMaster:
     def test_app(self):
         o = dump.Options(app=True)
         s = mock.MagicMock()
-        m = dump.DumpMaster(s, o, None)
+        m = dump.DumpMaster(s, o)
         assert len(m.apps.apps) == 1
 
     def test_replacements(self):
         o = dump.Options(replacements=[(".*", "content", "foo")])
-        m = dump.DumpMaster(None, o, None)
+        m = dump.DumpMaster(None, o)
         f = self._cycle(m, "content")
         assert f.request.content == "foo"
 
     def test_setheader(self):
         o = dump.Options(setheaders=[(".*", "one", "two")])
-        m = dump.DumpMaster(None, o, None)
+        m = dump.DumpMaster(None, o)
         f = self._cycle(m, "content")
         assert f.request.headers["one"] == ["two"]
 

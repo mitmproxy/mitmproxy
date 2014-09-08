@@ -35,9 +35,10 @@ class MyMaster(flow.FlowMaster):
 
 
 config = proxy.ProxyConfig(
+    port=8080,
     ca_file=os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
 )
 state = flow.State()
-server = ProxyServer(config, 8080)
+server = ProxyServer(config)
 m = MyMaster(server, state)
 m.run()

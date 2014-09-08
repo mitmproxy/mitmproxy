@@ -1028,7 +1028,7 @@ class HTTPHandler(ProtocolHandler):
         html_content = '<html><head>\n<title>%d %s</title>\n</head>\n<body>\n%s\n</body>\n</html>' % \
                        (code, response, message)
         self.c.client_conn.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-        self.c.client_conn.wfile.write("Server: %s\r\n" % self.c.server_version)
+        self.c.client_conn.wfile.write("Server: %s\r\n" % self.c.config.server_version)
         self.c.client_conn.wfile.write("Content-type: text/html\r\n")
         self.c.client_conn.wfile.write("Content-Length: %d\r\n" % len(html_content))
         if headers:
@@ -1079,7 +1079,7 @@ class HTTPHandler(ProtocolHandler):
                 self.c.client_conn.send(
                     'HTTP/1.1 200 Connection established\r\n' +
                     'Content-Length: 0\r\n' +
-                    ('Proxy-agent: %s\r\n' % self.c.server_version) +
+                    ('Proxy-agent: %s\r\n' % self.c.config.server_version) +
                     '\r\n'
                 )
                 return self.process_connect_request(self.c.server_conn.address)

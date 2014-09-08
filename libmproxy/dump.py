@@ -16,6 +16,7 @@ class Options(object):
         "anticache",
         "anticomp",
         "client_replay",
+        "filtstr",
         "flow_detail",
         "keepserving",
         "kill",
@@ -62,7 +63,7 @@ def str_request(f, showhost):
 
 
 class DumpMaster(flow.FlowMaster):
-    def __init__(self, server, options, filtstr, outfile=sys.stdout):
+    def __init__(self, server, options, outfile=sys.stdout):
         flow.FlowMaster.__init__(self, server, flow.State())
         self.outfile = outfile
         self.o = options
@@ -73,8 +74,8 @@ class DumpMaster(flow.FlowMaster):
 
         self.set_stream_large_bodies(options.stream_large_bodies)
 
-        if filtstr:
-            self.filt = filt.parse(filtstr)
+        if options.filtstr:
+            self.filt = filt.parse(options.filtstr)
         else:
             self.filt = None
 

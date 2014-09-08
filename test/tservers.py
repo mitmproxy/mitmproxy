@@ -29,7 +29,8 @@ def errapp(environ, start_response):
 
 class TestMaster(flow.FlowMaster):
     def __init__(self, config):
-        s = ProxyServer(config, 0)
+        config.port = 0
+        s = ProxyServer(config)
         state = flow.State()
         flow.FlowMaster.__init__(self, s, state)
         self.apps.add(testapp, "testapp", 80)

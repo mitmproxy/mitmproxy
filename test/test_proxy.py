@@ -1,6 +1,6 @@
 import argparse
 from libmproxy import cmdline
-from libmproxy.proxy.config import process_proxy_options
+from libmproxy.proxy import ProxyConfig, process_proxy_options
 from libmproxy.proxy.connection import ServerConnection
 from libmproxy.proxy.primitives import ProxyError
 from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
@@ -119,16 +119,16 @@ class TestProcessProxyOptions:
 class TestProxyServer:
     @tutils.SkipWindows  # binding to 0.0.0.0:1 works without special permissions on Windows
     def test_err(self):
-        parser = argparse.ArgumentParser()
-        cmdline.common_options(parser)
-        opts = parser.parse_args(args=[])
-        tutils.raises("error starting proxy server", ProxyServer, opts, 1)
+        conf = ProxyConfig(
+            port=1
+        )
+        tutils.raises("error starting proxy server", ProxyServer, conf)
 
     def test_err_2(self):
-        parser = argparse.ArgumentParser()
-        cmdline.common_options(parser)
-        opts = parser.parse_args(args=[])
-        tutils.raises("error starting proxy server", ProxyServer, opts, 8080, "invalidhost")
+        conf = ProxyConfig(
+            host="invalidhost"
+        )
+        tutils.raises("error starting proxy server", ProxyServer, conf)
 
 
 class TestDummyServer:
@@ -142,6 +142,6 @@ class TestConnectionHandler:
     def test_fatal_error(self):
         config = mock.Mock()
         config.mode.get_upstream_server.side_effect = RuntimeError
-        c = ConnectionHandler(config, mock.MagicMock(), ("127.0.0.1", 8080), None, mock.MagicMock(), None)
+        c = ConnectionHandler(config, mock.MagicMock(), ("127.0.0.1", 8080), None, mock.MagicMock())
         with tutils.capture_stderr(c.handle) as output:
             assert "mitmproxy has crashed" in output

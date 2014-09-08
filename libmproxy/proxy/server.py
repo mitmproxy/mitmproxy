@@ -27,14 +27,13 @@ class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
 
-    def __init__(self, config, port, host='', server_version=version.NAMEVERSION):
+    def __init__(self, config):
         """
             Raises ProxyServerError if there's a startup problem.
         """
         self.config = config
-        self.server_version = server_version
         try:
-            tcp.TCPServer.__init__(self, (host, port))
+            tcp.TCPServer.__init__(self, (config.host, config.port))
         except socket.error, v:
             raise ProxyServerError('Error starting proxy server: ' + repr(v))
         self.channel = None
@@ -47,22 +46,20 @@ class ProxyServer(tcp.TCPServer):
         self.channel = channel
 
     def handle_client_connection(self, conn, client_address):
-        h = ConnectionHandler(self.config, conn, client_address, self, self.channel,
-                              self.server_version)
+        h = ConnectionHandler(self.config, conn, client_address, self, self.channel)
         h.handle()
         h.finish()
 
 
 class ConnectionHandler:
-    def __init__(self, config, client_connection, client_address, server, channel,
-                 server_version):
+    def __init__(self, config, client_connection, client_address, server, channel):
         self.config = config
         """@type: libmproxy.proxy.config.ProxyConfig"""
         self.client_conn = ClientConnection(client_connection, client_address, server)
         """@type: libmproxy.proxy.connection.ClientConnection"""
         self.server_conn = None
         """@type: libmproxy.proxy.connection.ServerConnection"""
-        self.channel, self.server_version = channel, server_version
+        self.channel = channel
 
         self.conntype = "http"
         self.sni = None

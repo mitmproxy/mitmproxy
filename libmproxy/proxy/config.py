@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import os
 import re
 from netlib import http_auth, certutils
-from .. import utils, platform
+from .. import utils, platform, version
 from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
@@ -15,11 +15,15 @@ def parse_host_pattern(patterns):
 
 
 class ProxyConfig:
-    def __init__(self, confdir=CONF_DIR, ca_file=None, clientcerts=None,
+    def __init__(self, host='', port=8080, server_version=version.NAMEVERSION,
+                 confdir=CONF_DIR, ca_file=None, clientcerts=None,
                  no_upstream_cert=False, body_size_limit=None,
                  mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
                  authenticator=None, ignore=[],
                  ciphers=None, certs=[], certforward=False, ssl_ports=TRANSPARENT_SSL_PORTS):
+        self.host = host
+        self.port = port
+        self.server_version = server_version
         self.ciphers = ciphers
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
@@ -34,6 +38,7 @@ class ProxyConfig:
         else:
             self.mode = RegularProxyMode()
 
+        # Handle manual overrides of the http forms
         self.mode.http_form_in = http_form_in or self.mode.http_form_in
         self.mode.http_form_out = http_form_out or self.mode.http_form_out
 
@@ -105,6 +110,8 @@ def process_proxy_options(parser, options):
         certs.append(parts)
 
     return ProxyConfig(
+        host=options.addr,
+        port=options.port,
         confdir=options.confdir,
         clientcerts=options.clientcerts,
         no_upstream_cert=options.no_upstream_cert,
