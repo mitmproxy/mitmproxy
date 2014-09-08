@@ -73,14 +73,16 @@ class ConnectionHandler:
 
             # Can we already identify the target server and connect to it?
             client_ssl, server_ssl = False, False
-            if self.config.get_upstream_server:
-                upstream_info = self.config.get_upstream_server(self.client_conn.connection)
+            upstream_info = self.config.mode.get_upstream_server(self.client_conn.connection)
+            if upstream_info:
                 self.set_server_address(upstream_info[2:])
                 client_ssl, server_ssl = upstream_info[:2]
                 if self.check_ignore_address(self.server_conn.address):
                     self.log("Ignore host: %s:%s" % self.server_conn.address(), "info")
                     self.conntype = "tcp"
                     client_ssl, server_ssl = False, False
+            else:
+                pass  # No upstream info from the metadata: upstream info in the protocol (e.g. HTTP absolute-form)
 
             self.channel.ask("clientconnect", self)
 

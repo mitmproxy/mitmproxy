@@ -11,28 +11,54 @@ class ProxyServerError(Exception):
     pass
 
 
-class UpstreamServerResolver(object):
-    def __call__(self, conn):
+class ProxyMode(object):
+    http_form_in = None
+    http_form_out = None
+
+    def get_upstream_server(self, conn):
         """
         Returns the address of the server to connect to.
+        Returns None if the address needs to be determined on the protocol level (regular proxy mode)
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError()  # pragma: nocover
+
+    @property
+    def name(self):
+        return self.__class__.__name__.replace("ProxyMode", "").lower()
+
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other):
+        """
+        Allow comparisions with "regular" etc.
+        """
+        if isinstance(other, ProxyMode):
+            return self is other
+        else:
+            return self.name == other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
-class ConstUpstreamServerResolver(UpstreamServerResolver):
-    def __init__(self, dst):
-        self.dst = dst
+class RegularProxyMode(ProxyMode):
+    http_form_in = "absolute"
+    http_form_out = "relative"
 
-    def __call__(self, conn):
-        return self.dst
+    def get_upstream_server(self, conn):
+        return None
 
 
-class TransparentUpstreamServerResolver(UpstreamServerResolver):
+class TransparentProxyMode(ProxyMode):
+    http_form_in = "relative"
+    http_form_out = "relative"
+
     def __init__(self, resolver, sslports):
         self.resolver = resolver
         self.sslports = sslports
 
-    def __call__(self, conn):
+    def get_upstream_server(self, conn):
         try:
             dst = self.resolver.original_addr(conn)
         except Exception, e:
@@ -43,6 +69,24 @@ class TransparentUpstreamServerResolver(UpstreamServerResolver):
         else:
             ssl = False
         return [ssl, ssl] + list(dst)
+
+
+class _ConstDestinationProxyMode(ProxyMode):
+    def __init__(self, dst):
+        self.dst = dst
+
+    def get_upstream_server(self, conn):
+        return self.dst
+
+
+class ReverseProxyMode(_ConstDestinationProxyMode):
+    http_form_in = "relative"
+    http_form_out = "relative"
+
+
+class UpstreamProxyMode(_ConstDestinationProxyMode):
+    http_form_in = "absolute"
+    http_form_out = "absolute"
 
 
 class Log:

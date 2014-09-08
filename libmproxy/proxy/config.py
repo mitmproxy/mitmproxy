@@ -3,7 +3,7 @@ import os
 import re
 from netlib import http_auth, certutils
 from .. import utils, platform
-from .primitives import ConstUpstreamServerResolver, TransparentUpstreamServerResolver
+from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
@@ -26,25 +26,17 @@ class ProxyConfig:
         self.body_size_limit = body_size_limit
 
         if mode == "transparent":
-            get_upstream_server = TransparentUpstreamServerResolver(platform.resolver(), TRANSPARENT_SSL_PORTS)
-            http_form_in_default, http_form_out_default = "relative", "relative"
+            self.mode = TransparentProxyMode(platform.resolver(), TRANSPARENT_SSL_PORTS)
         elif mode == "reverse":
-            get_upstream_server = ConstUpstreamServerResolver(upstream_server)
-            http_form_in_default, http_form_out_default = "relative", "relative"
+            self.mode = ReverseProxyMode(upstream_server)
         elif mode == "upstream":
-            get_upstream_server = ConstUpstreamServerResolver(upstream_server)
-            http_form_in_default, http_form_out_default = "absolute", "absolute"
-        elif upstream_server:
-            get_upstream_server = ConstUpstreamServerResolver(upstream_server)
-            http_form_in_default, http_form_out_default = "absolute", "relative"
+            self.mode = UpstreamProxyMode(upstream_server)
         else:
-            get_upstream_server, http_form_in_default, http_form_out_default = None, "absolute", "relative"
-        http_form_in = http_form_in or http_form_in_default
-        http_form_out = http_form_out or http_form_out_default
+            self.mode = RegularProxyMode()
 
-        self.get_upstream_server = get_upstream_server
-        self.http_form_in = http_form_in
-        self.http_form_out = http_form_out
+        self.mode.http_form_in = http_form_in or self.mode.http_form_in
+        self.mode.http_form_out = http_form_out or self.mode.http_form_out
+
         self.ignore = parse_host_pattern(ignore)
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
@@ -74,13 +66,9 @@ def process_proxy_options(parser, options):
         c += 1
         mode = "upstream"
         upstream_server = options.upstream_proxy
-    if options.manual_destination_server:
-        c += 1
-        mode = "manual"
-        upstream_server = options.manual_destination_server
     if c > 1:
-        return parser.error("Transparent mode, reverse mode, upstream proxy mode and "
-                            "specification of an upstream server are mutually exclusive.")
+        return parser.error("Transparent mode, reverse mode and upstream proxy mode "
+                            "are mutually exclusive.")
 
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)

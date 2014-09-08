@@ -175,13 +175,12 @@ class StatusBar(common.WWrap):
         if opts:
             r.append("[%s]"%(":".join(opts)))
 
-        if self.master.server.config.get_upstream_server and \
-                isinstance(self.master.server.config.get_upstream_server, proxy.ConstUpstreamServerResolver):
-            dst = self.master.server.config.get_upstream_server.dst
+        if self.master.server.config.mode in ["reverse", "upstream"]:
+            dst = self.master.server.config.mode.dst
             scheme = "https" if dst[0] else "http"
             if dst[1] != dst[0]:
                 scheme += "2https" if dst[1] else "http"
-            r.append("[dest:%s]"%utils.unparse_url(scheme, *self.master.server.config.get_upstream_server.dst[2:]))
+            r.append("[dest:%s]"%utils.unparse_url(scheme, *dst[2:]))
         if self.master.scripts:
             r.append("[")
             r.append(("heading_key", "s"))

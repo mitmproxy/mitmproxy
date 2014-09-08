@@ -6,7 +6,7 @@ import mock
 
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
-from libmproxy.proxy.primitives import TransparentUpstreamServerResolver
+from libmproxy.proxy.primitives import TransparentProxyMode
 import libpathod.test, libpathod.pathoc
 from libmproxy import flow, controller
 from libmproxy.cmdline import APP_HOST, APP_PORT
@@ -184,7 +184,7 @@ class TransparentProxTest(ProxTestBase):
             ports = [cls.server.port, cls.server2.port]
         else:
             ports = []
-        cls.config.get_upstream_server = TransparentUpstreamServerResolver(cls.resolver(cls.server.port), ports)
+        cls.config.mode = TransparentProxyMode(cls.resolver(cls.server.port), ports)
 
     @classmethod
     def get_proxy_config(cls):
@@ -224,8 +224,7 @@ class ReverseProxTest(ProxTestBase):
             "127.0.0.1",
             cls.server.port
         )
-        d["http_form_in"] = "relative"
-        d["http_form_out"] = "relative"
+        d["mode"] = "reverse"
         return d
 
     def pathoc(self, sni=None):

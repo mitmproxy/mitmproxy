@@ -865,8 +865,8 @@ class HTTPHandler(ProtocolHandler):
     """
     def __init__(self, c):
         super(HTTPHandler, self).__init__(c)
-        self.expected_form_in = c.config.http_form_in
-        self.expected_form_out = c.config.http_form_out
+        self.expected_form_in = c.config.mode.http_form_in
+        self.expected_form_out = c.config.mode.http_form_out
         self.skip_authentication = False
 
     def handle_messages(self):
@@ -1072,20 +1072,19 @@ class HTTPHandler(ProtocolHandler):
             if self.c.client_conn.ssl_established:
                 raise http.HttpError(400, "Must not CONNECT on already encrypted connection")
 
-            if self.expected_form_in == "absolute":
-                if not self.c.config.get_upstream_server:  # Regular mode
-                    self.c.set_server_address((request.host, request.port))
-                    flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
-                    self.c.establish_server_connection()
-                    self.c.client_conn.send(
-                        'HTTP/1.1 200 Connection established\r\n' +
-                        'Content-Length: 0\r\n' +
-                        ('Proxy-agent: %s\r\n' % self.c.server_version) +
-                        '\r\n'
-                    )
-                    return self.process_connect_request(self.c.server_conn.address)
-                else:  # upstream proxy mode
-                    return None
+            if self.c.config.mode == "regular":
+                self.c.set_server_address((request.host, request.port))
+                flow.server_conn = self.c.server_conn  # Update server_conn attribute on the flow
+                self.c.establish_server_connection()
+                self.c.client_conn.send(
+                    'HTTP/1.1 200 Connection established\r\n' +
+                    'Content-Length: 0\r\n' +
+                    ('Proxy-agent: %s\r\n' % self.c.server_version) +
+                    '\r\n'
+                )
+                return self.process_connect_request(self.c.server_conn.address)
+            elif self.c.config.mode == "upstream":
+                return None
             else:
                 pass  # CONNECT should never occur if we don't expect absolute-form requests
 
@@ -1113,7 +1112,7 @@ class HTTPHandler(ProtocolHandler):
 
         ssl = (flow.request.scheme == "https")
 
-        if self.c.config.http_form_in == self.c.config.http_form_out == "absolute":  # Upstream Proxy mode
+        if self.c.config.mode == "upstream":
 
             # The connection to the upstream proxy may have a state we may need to take into account.
             connected_to = None
@@ -1223,8 +1222,8 @@ class RequestReplayThread(threading.Thread):
         form_out_backup = r.form_out
         try:
             # In all modes, we directly connect to the server displayed
-            if self.config.http_form_out == "absolute":  # form_out == absolute -> forward mode
-                server_address = self.config.get_upstream_server(self.flow.client_conn)[2:]
+            if self.config.mode == "upstream":
+                server_address = self.config.mode.get_upstream_server(self.flow.client_conn)[2:]
                 server = ServerConnection(server_address)
                 server.connect()
                 if r.scheme == "https":

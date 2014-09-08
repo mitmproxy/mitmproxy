@@ -91,10 +91,6 @@ class TestProcessProxyOptions:
         self.assert_err("expected one argument", "-U")
         self.assert_err("Invalid server specification", "-U", "upstream")
 
-        self.assert_noerr("--destination-server", "http://localhost")
-        self.assert_err("expected one argument", "--destination-server")
-        self.assert_err("Invalid server specification", "--destination-server", "manual")
-
         self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
 
     def test_client_certs(self):
@@ -144,7 +140,8 @@ class TestDummyServer:
 
 class TestConnectionHandler:
     def test_fatal_error(self):
-        config = dict(get_upstream_server=mock.Mock(side_effect=RuntimeError))
+        config = mock.Mock()
+        config.mode.get_upstream_server.side_effect = RuntimeError
         c = ConnectionHandler(config, mock.MagicMock(), ("127.0.0.1", 8080), None, mock.MagicMock(), None)
         with tutils.capture_stderr(c.handle) as output:
             assert "mitmproxy has crashed" in output

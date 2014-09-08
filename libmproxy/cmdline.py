@@ -314,11 +314,6 @@ def common_options(parser):
         action="store", choices=("relative", "absolute"),
         help="Override the HTTP request form sent upstream by the proxy"
     )
-    group.add_argument(
-        "--destination-server", dest="manual_destination_server", default=None,
-        action="store", type=parse_server_spec,
-        help="Override the destination server all requests are sent to: http[s][2http[s]]://host[:port]"
-    )
 
     group = parser.add_argument_group("Web App")
     group.add_argument(
