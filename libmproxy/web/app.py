@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import flask
 import os
-from .proxy import config
+from ..proxy import config
 
 mapp = flask.Flask(__name__)
 mapp.debug = True

@@ -9,7 +9,8 @@ import flask
 import requests
 from netlib import odict, wsgi
 import netlib.http
-from . import controller, protocol, tnetstring, filt, script, version, app
+from . import controller, protocol, tnetstring, filt, script, version
+from .web import app
 from .protocol import http, handle
 from .proxy.config import parse_host_pattern
 
@@ -727,7 +728,7 @@ class FlowMaster(controller.Master):
             self.stream_large_bodies.run(f, False)
 
         f.reply()
-        return f        
+        return f
 
     def handle_response(self, f):
         self.state.add_response(f)
