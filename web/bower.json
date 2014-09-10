@@ -1,0 +1,14 @@
+{
+    "name": "mitmproxy",
+    "version": "0.1.0",
+    "dependencies": {
+        "jquery": "components/jquery",
+        "lodash": "",
+        "react": "",
+        "react-router": "",
+        "fontawesome": "",
+        "qunit": "", 
+        "benchmark": "",
+        "benchmarkjs-runner": ""
+    }
+}

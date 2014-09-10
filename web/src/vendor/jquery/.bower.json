@@ -1,0 +1,21 @@
+{
+  "name": "jquery",
+  "version": "2.1.1",
+  "description": "jQuery component",
+  "keywords": [
+    "jquery",
+    "component"
+  ],
+  "main": "jquery.js",
+  "license": "MIT",
+  "homepage": "https://github.com/components/jquery",
+  "_release": "2.1.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "2.1.1",
+    "commit": "9e2c56ed9f17e6b55de97ae64a3ed0cf17cd30d4"
+  },
+  "_source": "git://github.com/components/jquery.git",
+  "_target": "*",
+  "_originalSource": "components/jquery"
+}

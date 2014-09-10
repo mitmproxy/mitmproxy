@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<application xmlns="http://ns.adobe.com/air/application/2.6">
+	<id>air</id>
+	<filename>air</filename>
+	<name>air</name>
+	<versionNumber>0.0.0</versionNumber>
+	<initialWindow>
+		<content>index.html</content>
+		<resizable>true</resizable>
+		<width>320</width>
+		<height>240</height>
+		<autoOrients>false</autoOrients>
+        <fullScreen>false</fullScreen>
+        <visible>true</visible>
+    </initialWindow>
+</application>

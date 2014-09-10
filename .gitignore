@@ -16,3 +16,8 @@ mitmdumpc
 netlib
 pathod
 libpathod
+
+# UI
+
+node_modules
+*.map

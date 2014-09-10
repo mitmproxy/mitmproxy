@@ -1,0 +1,30 @@
+{
+  "name": "benchmark-runner",
+  "version": "0.0.2",
+  "homepage": "https://github.com/rstacruz/benchmarkjs-runner",
+  "authors": [
+    "Rico Sta. Cruz <hi@ricostacruz.com>"
+  ],
+  "main": "runner.js",
+  "devDependencies": {
+    "jquery": "*",
+    "benchmark": "*"
+  },
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "_release": "0.0.2",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.0.2",
+    "commit": "b01c67643150bc4eb6f712a03c3b463023997b00"
+  },
+  "_source": "git://github.com/rstacruz/benchmarkjs-runner.git",
+  "_target": "*",
+  "_originalSource": "benchmarkjs-runner"
+}

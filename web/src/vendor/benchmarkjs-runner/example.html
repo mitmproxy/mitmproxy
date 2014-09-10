@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset='utf-8' />
+<title>Benchmarks</title>
+<script src='runner.js'></script>
+<script>
+suite("String matching", function() {
+  bench("String#match", function() {
+    !! "Hello world".match(/o/);
+  });
+
+  bench("String#indexOf", function() {
+    "Hello world".indexOf('o') > -1;
+  });
+
+  bench("RegExp#test", function() {
+    !! /o/.test("Hello world");
+  });
+
+  before(function() {
+    // Things to execute before all benchmarks in the suite.
+    // Does not count into a benchmark's elapsed time.
+  });
+
+  afterEach(function() {
+    // Things to execute after each benchmark cycle.
+    // Does not count into a benchmark's elapsed time.
+  });
+});
+
+/*
+// Advanced examples
+// ----------------------------------------------------------------------------
+
+// You can specify Benchmark.js options in suite() and bench().
+suite("My suite", { maxTime: 10 }, function() {
+
+  bench("My benchmark", function() {
+  }, {
+    onCycle: ...
+  });
+
+});
+*/
+</script>

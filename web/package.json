@@ -1,0 +1,22 @@
+{
+    "name": "mitmproxy",
+    "private": true,
+    "devDependencies": {
+        "react": "",
+        "bower": "",
+        "grunt": "",
+        "grunt-contrib-jshint": "",
+        "grunt-contrib-uglify": "",
+        "grunt-contrib-less": "",
+        "grunt-contrib-watch": "",
+        "grunt-contrib-copy": "",
+        "grunt-contrib-qunit": "",
+        "grunt-contrib-connect": "",
+        "grunt-notify": "",
+        "grunt-shell": "",
+        "grunt-react": "",
+        "clean-css": "",
+        "react": "",
+        "react-tools": ""
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "qunit",
+  "main": [
+    "qunit/qunit.js",
+    "qunit/qunit.css"
+  ],
+  "license": "https://github.com/jquery/qunit/blob/master/LICENSE.txt",
+  "ignore": [
+    "**/.*",
+    "!LICENSE.txt",
+    "package.json",
+    "bower.json",
+    "Gruntfile.js",
+    "node_modules",
+    "test"
+  ],
+  "version": "1.15.0"
+}
