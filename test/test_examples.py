@@ -1,11 +1,11 @@
 import glob
+import mock
 from libmproxy import utils, script
 from libmproxy.proxy import config
 import tservers
 
-
+@mock.patch.dict("sys.modules", {"bs4": mock.Mock()})
 def test_load_scripts():
-
     example_dir = utils.Data("libmproxy").path("../examples")
     scripts = glob.glob("%s/*.py" % example_dir)
 
