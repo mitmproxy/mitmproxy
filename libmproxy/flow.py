@@ -10,7 +10,7 @@ import requests
 from netlib import odict, wsgi
 import netlib.http
 from . import controller, protocol, tnetstring, filt, script, version
-from .web import app
+from .onboarding import app
 from .protocol import http, handle
 from .proxy.config import parse_host_pattern
 

@@ -1,0 +1,26 @@
+{% extends "frame.html" %}
+{% block body %}  
+
+<center>
+<h2> Click to install the mitmproxy certificate: </h2>
+</center>
+<div id="certbank" class="row">
+    <div class="col-md-3">
+        <a href="/cert/pem"><i class="fa fa-apple fa-5x"></i></a>
+        <p>Apple</p>
+    </div>
+    <div class="col-md-3">
+        <a href="/cert/p12"><i class="fa fa-windows fa-5x"></i></a>
+        <p>Windows</p>
+    </div>
+    <div class="col-md-3">
+        <a href="/cert/pem"><i class="fa fa-android fa-5x"></i></a>
+        <p>Android</p>
+    </div>
+    <div class="col-md-3">
+        <a href="/cert/pem"><i class="fa fa-asterisk fa-5x"></i></a>
+        <p>Other</p>
+    </div>
+</div>
+
+{% endblock %}  
