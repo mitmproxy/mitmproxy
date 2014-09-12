@@ -9,6 +9,7 @@ MANIFEST
 *.py[cdo]
 *.swp
 *.swo
+mitmproxy.egg-info/
 mitmproxyc
 mitmdumpc
 .coverage
