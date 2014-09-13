@@ -163,3 +163,45 @@ def mitmdump():  # pragma: nocover
     except KeyboardInterrupt:
         pass
 
+
+def mitmweb_cmdline():
+    from . import web
+    parser = argparse.ArgumentParser(usage="%(prog)s [options]")
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=version.NAMEVERSION
+    )
+    cmdline.common_options(parser)
+    group = parser.add_argument_group(
+        "Filters",
+        "See help in mitmproxy for filter expression syntax."
+    )
+    group.add_argument(
+        "-i", "--intercept", action="store",
+        type=str, dest="intercept", default=None,
+        help="Intercept filter expression."
+    )
+
+    options = parser.parse_args()
+    if options.quiet:
+        options.verbose = 0
+
+    proxy_config = process_proxy_options(parser, options)
+    web_options = web.Options(**cmdline.get_common_options(options))
+    return web_options, proxy_config
+
+
+def mitmweb():  # pragma: nocover
+    from . import web
+
+    check_versions()
+    assert_utf8_env()
+    web_options, proxy_config = mitmproxy_cmdline()
+    server = get_server(web_options.no_server, proxy_config)
+
+    m = web.WebMaster(server, web_options)
+    try:
+        m.run()
+    except KeyboardInterrupt:
+        pass

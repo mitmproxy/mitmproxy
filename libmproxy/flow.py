@@ -596,7 +596,7 @@ class FlowMaster(controller.Master):
             return True
         return None
 
-    def tick(self, q):
+    def tick(self, q, timeout):
         if self.client_playback:
             e = [
                 self.client_playback.done(),
@@ -605,9 +605,9 @@ class FlowMaster(controller.Master):
             ]
             if all(e):
                 self.shutdown()
-            self.client_playback.tick(self)
+            self.client_playback.tick(self, timeout)
 
-        return controller.Master.tick(self, q)
+        return controller.Master.tick(self, q, timeout)
 
     def duplicate_flow(self, f):
         return self.load_flow(f.copy())

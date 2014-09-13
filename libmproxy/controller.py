@@ -89,7 +89,7 @@ class Master:
         self.masterq = Queue.Queue()
         self.should_exit = threading.Event()
 
-    def tick(self, q):
+    def tick(self, q, timeout):
         changed = False
         try:
             # This endless loop runs until the 'Queue.Empty'
@@ -97,8 +97,7 @@ class Master:
             # the queue, this speeds up every request by 0.1 seconds,
             # because get_input(..) function is not blocking.
             while True:
-                # Small timeout to prevent pegging the CPU
-                msg = q.get(timeout=0.01)
+                msg = q.get(timeout=timeout)
                 self.handle(*msg)
                 changed = True
         except Queue.Empty:
