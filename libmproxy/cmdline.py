@@ -156,7 +156,6 @@ def get_common_options(options):
         app=options.app,
         app_host=options.app_host,
         app_port=options.app_port,
-        app_external=options.app_external,
 
         anticache=options.anticache,
         anticomp=options.anticomp,
@@ -332,11 +331,6 @@ def common_options(parser):
         "--app-port",
         action="store", dest="app_port", default=APP_PORT, type=int, metavar="80",
         help="Port to serve the app from."
-    )
-    group.add_argument(
-        "--app-external",
-        action="store_true", dest="app_external",
-        help="Serve the app outside of the proxy."
     )
 
     group = parser.add_argument_group("Client Replay")

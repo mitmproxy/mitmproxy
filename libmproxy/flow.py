@@ -451,39 +451,12 @@ class FlowMaster(controller.Master):
         self.stream = None
         self.apps = AppRegistry()
 
-    def start_app(self, host, port, external):
-        if not external:
-            self.apps.add(
-                app.mapp,
-                host,
-                port
-            )
-        else:
-            @app.mapp.before_request
-            def patch_environ(*args, **kwargs):
-                flask.request.environ["mitmproxy.master"] = self
-
-            # the only absurd way to shut down a flask/werkzeug server.
-            # http://flask.pocoo.org/snippets/67/
-            shutdown_secret = base64.b32encode(os.urandom(30))
-
-            @app.mapp.route('/shutdown/<secret>')
-            def shutdown(secret):
-                if secret == shutdown_secret:
-                    flask.request.environ.get('werkzeug.server.shutdown')()
-
-            # Workaround: Monkey-patch shutdown function to stop the app.
-            # Improve this when we switch werkzeugs http server for something useful.
-            _shutdown = self.shutdown
-            def _shutdownwrap():
-                _shutdown()
-                requests.get("http://%s:%s/shutdown/%s" % (host, port, shutdown_secret))
-            self.shutdown = _shutdownwrap
-
-            threading.Thread(target=app.mapp.run, kwargs={
-                "use_reloader": False,
-                "host": host,
-                "port": port}).start()
+    def start_app(self, host, port):
+        self.apps.add(
+            app.mapp,
+            host,
+            port
+        )
 
     def add_event(self, e, level="info"):
         """

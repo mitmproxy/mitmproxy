@@ -108,7 +108,7 @@ class Master:
         self.should_exit.clear()
         self.server.start_slave(Slave, Channel(self.masterq, self.should_exit))
         while not self.should_exit.is_set():
-            self.tick(self.masterq)
+            self.tick(self.masterq, 0.01)
         self.shutdown()
 
     def handle(self, mtype, obj):

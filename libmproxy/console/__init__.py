@@ -435,7 +435,7 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
         if options.app:
-            self.start_app(self.options.app_host, self.options.app_port, self.options.app_external)
+            self.start_app(self.options.app_host, self.options.app_port)
 
     def start_stream(self, path):
         path = os.path.expanduser(path)

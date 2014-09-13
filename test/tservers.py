@@ -83,7 +83,6 @@ class ProxTestBase(object):
     no_upstream_cert = False
     authenticator = None
     masterclass = TestMaster
-    externalapp = False
     certforward = False
 
     @classmethod
@@ -94,7 +93,7 @@ class ProxTestBase(object):
         cls.config = ProxyConfig(**cls.get_proxy_config())
 
         tmaster = cls.masterclass(cls.config)
-        tmaster.start_app(APP_HOST, APP_PORT, cls.externalapp)
+        tmaster.start_app(APP_HOST, APP_PORT)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
