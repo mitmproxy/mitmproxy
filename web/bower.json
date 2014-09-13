@@ -10,13 +10,15 @@
         "qunit": "", 
         "benchmark": "",
         "benchmarkjs-runner": "",
-        "bootstrap": ""
+        "bootstrap": "",
+        "react-bootstrap": ""
     },
     "install": {
         "path": "src/vendor",
         "sources": {
             "lodash": "bower_components/lodash/dist/lodash.js",
-            "react": "bower_components/react/react-with-addons.js"
+            "react": "bower_components/react/react-with-addons.js",
+            "react-bootstrap": "bower_components/react-bootstrap/react-bootstrap.js"
         }
     }
 }

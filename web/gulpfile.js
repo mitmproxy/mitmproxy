@@ -6,6 +6,7 @@ var jshint = require("gulp-jshint");
 var less = require("gulp-less");
 var livereload = require("gulp-livereload");
 var minifyCSS = require('gulp-minify-css');
+var plumber = require("gulp-plumber");
 var react = require("gulp-react");
 var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify');
@@ -19,11 +20,13 @@ var path = {
             'vendor/lodash/lodash.js',
             'vendor/react/react-with-addons.js',
             'vendor/react-router/react-router.js',
+            'vendor/react-bootstrap/react-bootstrap.js'
         ],
         app: [
-            'js/router.jsx',
-            'js/certinstall.jsx',
-            'js/mitmproxy.js',
+            'js/datastructures.js',
+            'js/footer.react.js',
+            'js/header.react.js',
+            'js/mitmproxy.react.js',
         ],
     },
     css: {
@@ -40,6 +43,7 @@ gulp.task("fonts", function () {
 
 function styles(files, dev) {
     return (gulp.src(files, {base: "src", cwd: "src"})
+        .pipe(plumber())
         .pipe(dev ? sourcemaps.init() : gutil.noop())
         .pipe(less())
         .pipe(dev ? sourcemaps.write(".", {sourceRoot: "/static"}) : gutil.noop())
@@ -58,8 +62,9 @@ gulp.task("styles-prod", ["styles-app-prod", "styles-vendor-prod"]);
 
 function scripts(files, filename, dev) {
     return gulp.src(files, {base: "src", cwd: "src"})
+        .pipe(plumber())
         .pipe(dev ? sourcemaps.init() : gutil.noop())
-        .pipe(react())
+        .pipe(react({harmony: true}))
         .pipe(concat(filename))
         .pipe(!dev ? uglify() : gutil.noop())
         .pipe(dev ? sourcemaps.write(".", {sourceRoot: "/static"}) : gutil.noop())
@@ -75,7 +80,8 @@ gulp.task("scripts-prod", ["scripts-app-prod", "scripts-vendor-prod"]);
 
 gulp.task("jshint", function () {
     return gulp.src(["src/js/**"])
-        .pipe(react())
+        .pipe(plumber())
+        .pipe(react({harmony: true}))
         .pipe(jshint())
         .pipe(jshint.reporter("jshint-stylish"))
 });
