@@ -64,7 +64,7 @@ class DummyFlowStore extends FlowStore {
 }
 
 
-SETTINGS_CHANGED = "settings.change";
+var SETTINGS_CHANGED = "settings.change";
 
 class Settings extends EventEmitter {
     constructor(){

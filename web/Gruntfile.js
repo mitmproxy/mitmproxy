@@ -1,16 +1,20 @@
 var cssfiles = {
-    "../libmproxy/web/static/mitmproxy.css": "src/css/mitmproxy.less",
+    "../libmproxy/web/static/css/app.css": "src/css/app.less",
+    "../libmproxy/web/static/css/vendor.css": "src/css/vendor.less",
 };
 var jsfiles = {
-    "../libmproxy/web/static/mitmproxy.js": [
+    "../libmproxy/web/static/js/vendor.js": [
         'src/vendor/jquery/jquery.js',
-        'src/vendor/lodash/dist/lodash.js',
+        'src/vendor/lodash/lodash.js',
         'src/vendor/react/react-with-addons.js',
-        'src/vendor/react-router/dist/react-router.js',
-        'src/vendor/bootstrap-customized.js',
-        'src/js/router_jsx.js',
-        'src/js/certinstall_jsx.js',
-        'src/js/mitmproxy.js',
+        'src/vendor/react-router/react-router.js',
+        'src/vendor/react-bootstrap/react-bootstrap.js',
+    ],
+    "../libmproxy/web/static/js/app.js": [
+        'src/js/datastructures.compiled.js',
+        'src/js/footer.compiled.js',
+        'src/js/header.compiled.js',
+        'src/js/mitmproxy.compiled.js',
     ],
 };
 
@@ -24,7 +28,7 @@ module.exports = function (grunt) {
                     {
                         expand: true,
                         flatten: true,
-                        src: ['src/vendor/fontawesome/fonts/*'],
+                        src: ['src/vendor/fontawesome/fontawesome-webfont.*'],
                         dest: '../libmproxy/web/static/fonts'
                     }
                 ],
@@ -52,10 +56,13 @@ module.exports = function (grunt) {
                 files: [{
                     expand: true,
                     cwd: 'src/js',
-                    src: ['*.jsx'],
+                    src: ['*.react.js','*.es6.js'],
                     dest: 'src/js',
-                    ext: '_jsx.js'
+                    ext: '.compiled.js'
                 }]
+            },
+            options: {
+                harmony: true
             }
         },
         uglify: {
@@ -63,6 +70,7 @@ module.exports = function (grunt) {
                 options: {
                     mangle: false,
                     compress: false,
+                    beautify: true,
                     sourceMap: true,
                     sourceMapIncludeSources: true,
                 },
@@ -78,9 +86,9 @@ module.exports = function (grunt) {
         },
         jshint: {
             options: {
-              loopfunc: true,
+                jshintrc: ".jshintrc",
             },
-            all: ['src/js/*.js'],
+            all: ['src/js/*.js','!src/js/*.react.js'],
             gruntfile: ['Gruntfile.js']
         },
         qunit: {
@@ -88,14 +96,14 @@ module.exports = function (grunt) {
         },
         watch: {
             less: {
-                files: ['src/css/*.less', 'src/css/*.css'],
+                files: ['src/css/**'],
                 tasks: ['less:dev'],
                 options: {
                     livereload: true,
                 }
             },
             jsx: {
-                files: ['src/js/*.jsx'],
+                files: ['src/js/*.react.js','src/js/*.es6.js'],
                 tasks: ['react:all'],
             },
             js: {

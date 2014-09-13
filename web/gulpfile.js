@@ -23,7 +23,7 @@ var path = {
             'vendor/react-bootstrap/react-bootstrap.js'
         ],
         app: [
-            'js/datastructures.js',
+            'js/datastructures.es6.js',
             'js/footer.react.js',
             'js/header.react.js',
             'js/mitmproxy.react.js',

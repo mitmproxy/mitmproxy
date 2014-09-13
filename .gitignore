@@ -22,4 +22,5 @@ libpathod
 
 node_modules
 bower_components
+*.compiled.js
 *.map
