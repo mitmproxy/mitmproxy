@@ -1,8 +1,8 @@
 {
     "name": "mitmproxy",
-    "version": "0.1.0",
+    "version": "0.12",
     "dependencies": {
-        "jquery": "components/jquery",
+        "jquery": "",
         "lodash": "",
         "react": "",
         "react-router": "",
@@ -10,5 +10,12 @@
         "qunit": "", 
         "benchmark": "",
         "benchmarkjs-runner": ""
+    },
+    "install": {
+        "path": "src/vendor",
+        "sources": {
+            "lodash": "bower_components/lodash/dist/lodash.js",
+            "react": "bower_components/react/react-with-addons.js"
+        }
     }
 }

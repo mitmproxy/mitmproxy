@@ -1,8 +1,0 @@
-.*
-nano.*
-example/
-plugin/
-vendor/
-doc/*.php
-test/*.air
-test/*.html

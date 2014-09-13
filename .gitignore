@@ -21,4 +21,5 @@ libpathod
 # UI
 
 node_modules
+bower_components
 *.map
