@@ -9,7 +9,8 @@
         "fontawesome": "",
         "qunit": "", 
         "benchmark": "",
-        "benchmarkjs-runner": ""
+        "benchmarkjs-runner": "",
+        "bootstrap": ""
     },
     "install": {
         "path": "src/vendor",

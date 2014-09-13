@@ -2,6 +2,7 @@
 Starting up
 
 - npm install
-- grunt watch
+- bower-installer
+- gulp
 
 
