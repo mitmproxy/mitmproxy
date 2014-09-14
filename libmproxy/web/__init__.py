@@ -82,20 +82,17 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def handle_request(self, f):
-        print "req"
         flow.FlowMaster.handle_request(self, f)
         if f:
             f.reply()
         return f
 
     def handle_response(self, f):
-        print "resp"
         flow.FlowMaster.handle_response(self, f)
         if f:
             f.reply()
         return f
 
     def handle_error(self, f):
-        print "err"
         flow.FlowMaster.handle_error(self, f)
         return f

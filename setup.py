@@ -85,7 +85,8 @@ deps = {
     "pyasn1>0.1.2",
     "requests>=2.4.0",
     "pyOpenSSL>=0.14",
-    "Flask>=0.10.1"
+    "Flask>=0.10.1",
+    "tornado>=4.0.2"
 }
 script_deps = {
     "mitmproxy": {
