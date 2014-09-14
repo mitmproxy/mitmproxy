@@ -1,0 +1,87 @@
+html {
+  box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+html,
+body,
+#container {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+header,
+footer {
+  display: block;
+}
+#container {
+  padding: 153px 0 25px;
+}
+header {
+  height: 153px;
+  margin-top: -153px;
+}
+#main {
+  height: 100%;
+  display: block;
+  overflow-y: auto;
+}
+footer {
+  height: 25px;
+  line-height: 25px;
+}
+header {
+  background-color: white;
+}
+header .title-bar {
+  line-height: 25px;
+  text-align: center;
+}
+header nav {
+  border-bottom: solid #a6a6a6 1px;
+}
+header nav a {
+  display: inline-block;
+  padding: 3px 14px;
+  margin: 0 2px -1px;
+  border: solid transparent 1px;
+}
+header nav a.active {
+  border-color: #a6a6a6;
+  border-bottom-color: white;
+}
+header nav a:hover {
+  /*
+        @preview: lightgrey;
+        border-top-color: @preview;
+        border-left-color: @preview;
+        border-right-color: @preview;
+        */
+  text-decoration: none;
+}
+header nav a.special {
+  color: white;
+  background-color: #396cad;
+  border-bottom-color: #396cad;
+}
+header nav a.special:hover {
+  background-color: #5386c6;
+}
+header nav:before {
+  content: " ";
+}
+header nav:after {
+  clear: both;
+}
+header .menu {
+  height: 100px;
+  border-bottom: solid #a6a6a6 1px;
+}
+footer {
+  padding: 0 10px;
+}
+
+/*# sourceMappingURL=../css/app.css.map */
