@@ -52,7 +52,7 @@ gulp.task("fonts", function () {
 
 function styles(files, dev) {
     return (gulp.src(files, {base: "src", cwd: "src"})
-        .pipe(dont_break_on_errors())
+        .pipe(dev ? dont_break_on_errors() : gutil.noop())
         .pipe(dev ? sourcemaps.init() : gutil.noop())
         .pipe(less())
         .pipe(dev ? sourcemaps.write(".", {sourceRoot: "/static"}) : gutil.noop())
@@ -71,7 +71,7 @@ gulp.task("styles-prod", ["styles-app-prod", "styles-vendor-prod"]);
 
 function scripts(files, filename, dev) {
     return gulp.src(files, {base: "src", cwd: "src"})
-        .pipe(dont_break_on_errors())
+        .pipe(dev ? dont_break_on_errors(): gutil.noop())
         .pipe(dev ? sourcemaps.init() : gutil.noop())
         .pipe(react({harmony: true}))
         .pipe(concat(filename))
