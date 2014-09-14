@@ -197,7 +197,9 @@ class DumpMaster(flow.FlowMaster):
             print >> self.outfile, str_request(f, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
             if utils.isBin(f.request.content):
-                print >> self.outfile, self.indent(4, netlib.utils.hexdump(f.request.content))
+                d = netlib.utils.hexdump(f.request.content)
+                d = "\n".join("%s\t%s %s"%i for i in d)
+                print >> self.outfile, self.indent(4, d)
             elif f.request.content:
                 print >> self.outfile, self.indent(4, f.request.content)
             print >> self.outfile
