@@ -2,6 +2,7 @@
 import tornado.ioloop
 import tornado.httpserver
 from .. import controller, utils, flow, script, proxy
+import app
 
 
 class Stop(Exception):
@@ -40,6 +41,10 @@ class Options(object):
         "verbosity",
         "wfile",
         "nopop",
+
+        "wdebug",
+        "wport",
+        "wiface",
     ]
 
     def __init__(self, **kwargs):
@@ -52,6 +57,7 @@ class Options(object):
 
 class WebMaster(flow.FlowMaster):
     def __init__(self, server, options):
+        self.options = options
         flow.FlowMaster.__init__(self, server, WebState())
 
     def tick(self):
@@ -63,6 +69,12 @@ class WebMaster(flow.FlowMaster):
             controller.Channel(self.masterq, self.should_exit)
         )
         iol = tornado.ioloop.IOLoop.instance()
+
+        http_server = tornado.httpserver.HTTPServer(
+            app.Application(self.options.wdebug)
+        )
+        http_server.listen(self.options.wport)
+
         tornado.ioloop.PeriodicCallback(self.tick, 5).start()
         try:
             iol.start()

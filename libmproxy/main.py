@@ -170,8 +170,28 @@ def mitmweb_cmdline():
     parser.add_argument(
         '--version',
         action='version',
-        version=version.NAMEVERSION
+        version="mitmweb" + " " + version.VERSION
     )
+
+    group = parser.add_argument_group("Mitmweb")
+    group.add_argument(
+        "--wport",
+        action="store", type=int, dest="wport", default=8081,
+        metavar="PORT",
+        help="Mitmweb port."
+    )
+    group.add_argument(
+        "--wiface",
+        action="store", dest="wiface", default="127.0.0.1",
+        metavar="IFACE",
+        help="Mitmweb interface."
+    )
+    group.add_argument(
+        "--wdebug",
+        action="store_true", dest="wdebug",
+        help="Turn on mitmweb debugging"
+    )
+
     cmdline.common_options(parser)
     group = parser.add_argument_group(
         "Filters",
@@ -189,6 +209,10 @@ def mitmweb_cmdline():
 
     proxy_config = process_proxy_options(parser, options)
     web_options = web.Options(**cmdline.get_common_options(options))
+    web_options.intercept = options.intercept
+    web_options.wdebug = options.wdebug
+    web_options.wiface = options.wiface
+    web_options.wport = options.wport
     return web_options, proxy_config
 
 
@@ -197,7 +221,7 @@ def mitmweb():  # pragma: nocover
 
     check_versions()
     assert_utf8_env()
-    web_options, proxy_config = mitmproxy_cmdline()
+    web_options, proxy_config = mitmweb_cmdline()
     server = get_server(web_options.no_server, proxy_config)
 
     m = web.WebMaster(server, web_options)

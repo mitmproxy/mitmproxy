@@ -314,23 +314,23 @@ def common_options(parser):
         help="Override the HTTP request form sent upstream by the proxy"
     )
 
-    group = parser.add_argument_group("Web App")
+    group = parser.add_argument_group("Onboarding App")
     group.add_argument(
         "-a",
         action="store_false", dest="app", default=True,
-        help="Disable the mitmproxy web app."
+        help="Disable the mitmproxy onboarding app."
     )
     group.add_argument(
         "--app-host",
         action="store", dest="app_host", default=APP_HOST, metavar="host",
-        help="Domain to serve the app from. For transparent mode, use an IP when\
+        help="Domain to serve the onboarding app from. For transparent mode, use an IP when\
                 a DNS entry for the app domain is not present. Default: %s" % APP_HOST
 
     )
     group.add_argument(
         "--app-port",
         action="store", dest="app_port", default=APP_PORT, type=int, metavar="80",
-        help="Port to serve the app from."
+        help="Port to serve the onboarding app from."
     )
 
     group = parser.add_argument_group("Client Replay")
