@@ -6,11 +6,20 @@ var jshint = require("gulp-jshint");
 var less = require("gulp-less");
 var livereload = require("gulp-livereload");
 var minifyCSS = require('gulp-minify-css');
+var notify = require("gulp-notify");
 var plumber = require("gulp-plumber");
+var qunit = require("gulp-qunit");
 var react = require("gulp-react");
 var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify');
 
+
+var dont_break_on_errors = function(){
+    return plumber(function(error){
+        notify.onError("Error: <%= error.message %>").apply(this, arguments);
+        this.emit('end');
+    });
+};
 
 var path = {
     dist: "../libmproxy/web/",
@@ -43,7 +52,7 @@ gulp.task("fonts", function () {
 
 function styles(files, dev) {
     return (gulp.src(files, {base: "src", cwd: "src"})
-        .pipe(plumber())
+        .pipe(dont_break_on_errors())
         .pipe(dev ? sourcemaps.init() : gutil.noop())
         .pipe(less())
         .pipe(dev ? sourcemaps.write(".", {sourceRoot: "/static"}) : gutil.noop())
@@ -62,7 +71,7 @@ gulp.task("styles-prod", ["styles-app-prod", "styles-vendor-prod"]);
 
 function scripts(files, filename, dev) {
     return gulp.src(files, {base: "src", cwd: "src"})
-        .pipe(plumber())
+        .pipe(dont_break_on_errors())
         .pipe(dev ? sourcemaps.init() : gutil.noop())
         .pipe(react({harmony: true}))
         .pipe(concat(filename))
@@ -80,7 +89,7 @@ gulp.task("scripts-prod", ["scripts-app-prod", "scripts-vendor-prod"]);
 
 gulp.task("jshint", function () {
     return gulp.src(["src/js/**"])
-        .pipe(plumber())
+        .pipe(dont_break_on_errors())
         .pipe(react({harmony: true}))
         .pipe(jshint())
         .pipe(jshint.reporter("jshint-stylish"))
@@ -90,6 +99,11 @@ gulp.task("html", function () {
     return gulp.src(path.html)
         .pipe(gulp.dest(path.dist + "static"))
         .pipe(livereload({ auto: false }));
+});
+
+gulp.task('test', function() {
+    return gulp.src('src/test.html')
+        .pipe(qunit({verbose: true}));
 });
 
 common = ["fonts", "html", "jshint"];

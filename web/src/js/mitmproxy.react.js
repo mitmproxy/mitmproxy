@@ -9,16 +9,13 @@ var App = React.createClass({
     },
     componentDidMount: function () {
         //TODO: Replace DummyStore with real settings over WS (https://facebook.github.io/react/tips/initial-ajax.html)
-        //TODO: Is there a sensible place where we can store this?
-        var settings = new DummySettings({
+        var settingsStore = new DummySettings({
             version: "0.12"
         });
-        settings.addChangeListener(this._onSettingsChange);
-
-        //This would be async in some way or another.
-        this._onSettingsChange(null, settings);
+        this.setState({settingsStore: settingsStore});
+        settingsStore.addChangeListener(this.onSettingsChange);
     },
-    _onSettingsChange: function(event, settings){
+    onSettingsChange: function(event, settings){
         this.setState({settings: settings.getAll()});
     },
     render: function () {
@@ -34,12 +31,39 @@ var App = React.createClass({
     }
 });
 
-var Traffic = React.createClass({
-   render: function(){
-       var json = JSON.stringify(this.props, null, 4);
-       var i = 5;
-       while(i--) json += json;
-       return (<pre>{json}</pre>);
+var TrafficTable = React.createClass({
+    getInitialState: function(){
+        return {
+            flows: []
+        };
+    },
+    componentDidMount: function () {
+        var flowStore = new DummyFlowStore([]);
+        this.setState({flowStore: flowStore});
+
+        flowStore.addChangeListener(this.onFlowsChange);
+
+        $.getJSON("/flows.json").success(function (flows) {
+
+            flows.forEach(function (flow, i) {
+                window.setTimeout(function () {
+                    flowStore.addFlow(flow);
+                }, _.random(i*400,i*400+1000));
+            });
+
+        }.bind(this));
+    },
+    componentWillUnmount: function(){
+        this.state.flowStore.close();
+    },
+    onFlowsChange: function(event, flows){
+       this.setState({flows: flows.getAll()});
+    },
+    render: function () {
+       var flows = this.state.flows.map(function(flow){
+           return <div>{flow.request.method} {flow.request.scheme}://{flow.request.host}{flow.request.path}</div>;
+       });
+       return <pre>{flows}</pre>;
    }
 });
 
@@ -52,7 +76,7 @@ var Reports = React.createClass({
 var routes = (
   <ReactRouter.Routes location="hash">
     <ReactRouter.Route name="app" path="/" handler={App}>
-        <ReactRouter.Route name="main" handler={Traffic}/>
+        <ReactRouter.Route name="main" handler={TrafficTable}/>
         <ReactRouter.Route name="reports" handler={Reports}/>
         <ReactRouter.Redirect to="main"/>
     </ReactRouter.Route>
