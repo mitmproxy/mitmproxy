@@ -1,26 +1,26 @@
 class EventEmitter {
     constructor(){
-        this._listeners = {};
+        this.listeners = {};
     }
     emit(event){
-        if(!(event in this._listeners)){
+        if(!(event in this.listeners)){
             return;
         }
-        this._listeners[event].forEach(function (listener) {
+        this.listeners[event].forEach(function (listener) {
             listener(event, this);
         }.bind(this));
     }
     addListener(event, f){
-        this._listeners[event] = this._listeners[event] || [];
-        this._listeners[event].push(f);
+        this.listeners[event] = this.listeners[event] || [];
+        this.listeners[event].push(f);
     }
     removeListener(event, f){
-        if(!(event in this._listeners)){
+        if(!(event in this.listeners)){
             return false;
         }
-        var index = this._listeners.indexOf(f);
+        var index = this.listeners.indexOf(f);
         if (index >= 0) {
-            this._listeners.splice(this._listeners.indexOf(f), 1);
+            this.listeners.splice(this.listeners.indexOf(f), 1);
         }
     }
 }
@@ -31,11 +31,15 @@ class FlowStore extends EventEmitter{
     constructor() {
         super();
         this.flows = [];
-        this._listeners = [];
     }
 
     getAll() {
         return this.flows;
+    }
+
+    close(){
+        console.log("FlowStore.close()");
+        this.listeners = [];
     }
 
     emitChange() {
@@ -57,14 +61,14 @@ class DummyFlowStore extends FlowStore {
         this.flows = flows;
     }
 
-    addFlow(f) {
-        this.flows.push(f);
+    addFlow(flow) {
+        this.flows.push(flow);
         this.emitChange();
     }
 }
 
 
-var SETTINGS_CHANGED = "settings.change";
+var SETTINGS_CHANGED = "settings.changed";
 
 class Settings extends EventEmitter {
     constructor(){
