@@ -43,6 +43,9 @@ class Resolver(object):
                 addr = pickle.load(self.rfile)
                 if addr is None:
                     raise RuntimeError("Cannot resolve original destination.")
+                addr = list(addr)
+                addr[0] = str(addr[0])
+                addr = tuple(addr)
                 return addr
             except (EOFError, socket.error):
                 self._connect()
