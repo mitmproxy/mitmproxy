@@ -1,36 +1,36 @@
 html, body, #container {
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
 }
 
 header, footer {
-  display: block;
+    display: block;
 }
 
 @headerheight: 153px;
 @footerheight: 25px;
 
 #container {
-  //Set padding on container so that #main can take 100% height
-  //If we don't do it, the scrollbars will be too large.
-  padding: @headerheight 0 @footerheight;
+    //Set padding on container so that #main can take 100% height
+    //If we don't do it, the scrollbars will be too large.
+    padding: @headerheight 0 @footerheight;
 }
 
 header {
-  height: @headerheight;
-  //Substract #container padding
-  margin-top: -@headerheight;
+    height: @headerheight;
+    //Substract #container padding
+    margin-top: -@headerheight;
 }
 
 #main {
-  height: 100%;
-  display: block;
-  overflow-y: auto;
+    height: 100%;
+    display: block;
+    overflow-y: auto;
 }
 
 footer {
-  //This starts at the beginning of the #container padding, all fine.
-  height: @footerheight;
-  line-height: @footerheight;
+    //This starts at the beginning of the #container padding, all fine.
+    height: @footerheight;
+    line-height: @footerheight;
 }

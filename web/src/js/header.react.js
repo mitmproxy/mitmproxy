@@ -1,17 +1,17 @@
 /** @jsx React.DOM */
 
 var MainMenu = React.createClass({
-    render : function(){
+    render: function(){
         return (<div>Main Menu</div>);
     }
 });
 var ToolsMenu = React.createClass({
-    render : function(){
+    render: function(){
         return (<div>Tools Menu</div>);
     }
 });
 var ReportsMenu = React.createClass({
-    render : function(){
+    render: function(){
         return (<div>Reports Menu</div>);
     }
 });
@@ -36,7 +36,7 @@ var _Header_Entries = {
 
 var Header = React.createClass({
     getInitialState: function(){
-      return {active: "main"};
+        return {active: "main"};
     },
     handleClick: function(active){
         this.setState({active: active});
@@ -47,7 +47,6 @@ var Header = React.createClass({
         console.log("File click");
     },
     render: function(){
-
         var header = [];
         for(var item in _Header_Entries){
             var classes = this.state.active == item ? "active" : "";
@@ -58,16 +57,16 @@ var Header = React.createClass({
         var menu = _Header_Entries[this.state.active].menu();
         return (
         <header>
-          <div className="title-bar">
-              mitmproxy { this.props.settings.version }
-          </div>
-          <nav>
-              <a href="#" className="special" onClick={this.handleFileClick}> File </a>
-            {header}
-          </nav>
-          <div className="menu">
-              { menu }
-          </div>
+            <div className="title-bar">
+                mitmproxy { this.props.settings.version }
+            </div>
+            <nav>
+            <a href="#" className="special" onClick={this.handleFileClick}> File </a>
+                {header}
+            </nav>
+            <div className="menu">
+                { menu }
+            </div>
         </header>);
     }
 });

@@ -206,15 +206,15 @@ var App = React.createClass({displayName: 'App',
         this.setState({settings: settings.getAll()});
     },
     render: function () {
-    return (
-      React.DOM.div({id: "container"}, 
-        Header({settings: this.state.settings}), 
-        React.DOM.div({id: "main"}, 
-            this.props.activeRouteHandler({settings: this.state.settings})
-        ), 
-        Footer(null)
-      )
-    );
+      return (
+        React.DOM.div({id: "container"}, 
+          Header({settings: this.state.settings}), 
+          React.DOM.div({id: "main"}, 
+              this.props.activeRouteHandler({settings: this.state.settings})
+          ), 
+          Footer(null)
+        )
+      );
     }
 });
 
@@ -231,20 +231,18 @@ var TrafficTable = React.createClass({displayName: 'TrafficTable',
         flowStore.addChangeListener(this.onFlowsChange);
 
         $.getJSON("/flows.json").success(function (flows) {
-
             flows.forEach(function (flow, i) {
                 window.setTimeout(function () {
                     flowStore.addFlow(flow);
                 }, _.random(i*400,i*400+1000));
             });
-
         }.bind(this));
     },
     componentWillUnmount: function(){
         this.state.flowStore.close();
     },
     onFlowsChange: function(event, flows){
-       this.setState({flows: flows.getAll()});
+        this.setState({flows: flows.getAll()});
     },
     render: function () {
        var flows = this.state.flows.map(function(flow){
