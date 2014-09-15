@@ -7,21 +7,23 @@ var MainMenu = React.createClass({
         });
     },
     render(){
-        return <div>
-            <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
+        return (
+            <div>
+                <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
                 <i className="fa fa-database"></i> Display Event Log
-            </button>
-            </div>;
+                </button>
+            </div>
+        );
     }
 });
 var ToolsMenu = React.createClass({
     render(){
-        return (<div>Tools Menu</div>);
+        return <div>Tools Menu</div>;
     }
 });
 var ReportsMenu = React.createClass({
     render(){
-        return (<div>Reports Menu</div>);
+        return <div>Reports Menu</div>;
     }
 });
 
@@ -58,7 +60,6 @@ var Header = React.createClass({
     handleFileClick(){
         console.log("File click");
     },
-
     render(){
         var header = [];
         for(var item in _Header_Entries){
@@ -82,6 +83,7 @@ var Header = React.createClass({
                 <div className="menu">
                     { menu }
                 </div>
-            </header>);
+            </header>
+        );
     }
 });

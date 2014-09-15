@@ -98,7 +98,7 @@ gulp.task("scripts-prod", ["scripts-app-prod", "scripts-vendor-prod"]);
 gulp.task("jshint", function () {
     return gulp.src(["src/js/**"])
         .pipe(dont_break_on_errors())
-        .pipe(react({harmony: true}))
+        .pipe(react({harmony: false /* Do not do Harmony transformation for JSHint */}))
         .pipe(jshint())
         .pipe(jshint.reporter("jshint-stylish"))
 });

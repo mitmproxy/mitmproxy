@@ -5,11 +5,9 @@ class _Connection {
         }
         this.root = root;
     }
-
     init() {
         this.openWebSocketConnection();
     }
-
     openWebSocketConnection() {
         this.ws = new WebSocket(this.root.replace("http", "ws") + "/ws");
         var ws = this.ws;
@@ -19,7 +17,6 @@ class _Connection {
         ws.onerror = this.onerror.bind(this);
         ws.onclose = this.onclose.bind(this);
     }
-
     onopen(open) {
         console.log("onopen", this, arguments);
     }
@@ -33,6 +30,5 @@ class _Connection {
     onclose(close) {
         console.log("onclose", this, arguments);
     }
-
 }
 var Connection = new _Connection();
