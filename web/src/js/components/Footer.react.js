@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 var Footer = React.createClass({
-    render : function(){
+    render(){
         return (
             <footer>
                 <span className="label label-success">transparent mode</span>

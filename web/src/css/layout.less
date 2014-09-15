@@ -4,33 +4,16 @@ html, body, #container {
     overflow: hidden;
 }
 
-header, footer {
-    display: block;
-}
-
-@headerheight: 153px;
-@footerheight: 25px;
-
 #container {
-    //Set padding on container so that #main can take 100% height
-    //If we don't do it, the scrollbars will be too large.
-    padding: @headerheight 0 @footerheight;
-}
+    display: flex;
+    flex-direction: column;
 
-header {
-    height: @headerheight;
-    //Substract #container padding
-    margin-top: -@headerheight;
+    > header, > footer, > .eventlog {
+        flex: 0 0 auto;
+    }
 }
 
 #main {
-    height: 100%;
-    display: block;
-    overflow-y: auto;
-}
-
-footer {
-    //This starts at the beginning of the #container padding, all fine.
-    height: @footerheight;
-    line-height: @footerheight;
+    flex: 1 1 auto;
+    overflow: auto;
 }

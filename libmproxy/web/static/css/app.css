@@ -13,25 +13,18 @@ body,
   margin: 0;
   overflow: hidden;
 }
-header,
-footer {
-  display: block;
-}
 #container {
-  padding: 153px 0 25px;
+  display: flex;
+  flex-direction: column;
 }
-header {
-  height: 153px;
-  margin-top: -153px;
+#container > header,
+#container > footer,
+#container > .eventlog {
+  flex: 0 0 auto;
 }
 #main {
-  height: 100%;
-  display: block;
-  overflow-y: auto;
-}
-footer {
-  height: 25px;
-  line-height: 25px;
+  flex: 1 1 auto;
+  overflow: auto;
 }
 header {
   background-color: white;
@@ -55,11 +48,11 @@ header nav a.active {
 }
 header nav a:hover {
   /*
-        @preview: lightgrey;
-        border-top-color: @preview;
-        border-left-color: @preview;
-        border-right-color: @preview;
-        */
+                @preview: lightgrey;
+                border-top-color: @preview;
+                border-left-color: @preview;
+                border-right-color: @preview;
+                */
   text-decoration: none;
 }
 header nav a.special {
@@ -70,18 +63,22 @@ header nav a.special {
 header nav a.special:hover {
   background-color: #5386c6;
 }
-header nav:before {
-  content: " ";
-}
-header nav:after {
-  clear: both;
-}
 header .menu {
   height: 100px;
   border-bottom: solid #a6a6a6 1px;
 }
+.eventlog {
+  flex: 0 0 auto;
+}
+.eventlog pre {
+  margin: 0;
+  border-radius: 0;
+  height: 200px;
+  overflow: auto;
+}
 footer {
-  padding: 0 10px;
+  box-shadow: 0 -1px 3px #d3d3d3;
+  padding: 0px 10px 3px;
 }
 
 /*# sourceMappingURL=../css/app.css.map */

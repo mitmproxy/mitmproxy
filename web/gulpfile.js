@@ -32,10 +32,19 @@ var path = {
             'vendor/react-bootstrap/react-bootstrap.js'
         ],
         app: [
-            'js/datastructures.es6.js',
-            'js/footer.react.js',
-            'js/header.react.js',
-            'js/mitmproxy.react.js',
+            'js/Dispatcher.es6.js',
+            'js/actions.es6.js',
+            'js/stores/base.es6.js',
+            'js/stores/SettingsStore.es6.js',
+            'js/stores/EventLogStore.es6.js',
+            'js/Connection.es6.js',
+            'js/connection.es6.js',
+            'js/components/Header.react.js',
+            'js/components/TrafficTable.react.js',
+            'js/components/EventLog.react.js',
+            'js/components/Footer.react.js',
+            'js/components/ProxyApp.react.js',
+            'js/app.js',
         ],
     },
     css: {

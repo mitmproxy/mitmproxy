@@ -1,134 +1,260 @@
+const PayloadSources = {
+  VIEW_ACTION: "VIEW_ACTION",
+  SERVER_ACTION: "SERVER_ACTION"
+};
 
-    function EventEmitter(){"use strict";
-        this.listeners = {};
+
+
+  function Dispatcher() {"use strict";
+    this.callbacks = [];
+  }
+
+  Dispatcher.prototype.register=function(callback){"use strict";
+    this.callbacks.push(callback);
+  };
+
+  Dispatcher.prototype.unregister=function(callback){"use strict";
+    var index = this.callbacks.indexOf(f);
+    if (index >= 0) {
+      this.callbacks.splice(this.callbacks.indexOf(f), 1);
     }
-    EventEmitter.prototype.emit=function(event){"use strict";
-        if(!(event in this.listeners)){
-            return;
+  };
+
+  Dispatcher.prototype.dispatch=function(payload){"use strict";
+    console.debug("dispatch", payload);
+    this.callbacks.forEach(function(callback)  {
+        callback(payload);
+    });
+  };
+
+
+
+AppDispatcher = new Dispatcher();
+AppDispatcher.dispatchViewAction = function(action){
+  action.actionSource = PayloadSources.VIEW_ACTION;
+  this.dispatch(action);
+};
+var ActionTypes = {
+  SETTINGS_UPDATE: "SETTINGS_UPDATE",
+  LOG_ADD: "LOG_ADD"
+};
+
+var SettingsActions = {
+  update:function(settings) {
+  	settings = _.merge({}, SettingsStore.getSettings(), settings);
+    AppDispatcher.dispatchViewAction({
+      actionType: ActionTypes.SETTINGS_UPDATE,
+      settings: settings
+    });
+  }
+};
+
+	function EventEmitter() {"use strict";
+		this.listeners = {};
+	}
+	EventEmitter.prototype.emit=function(event) {"use strict";
+		if (!(event in this.listeners)) {
+			return;
+		}
+		this.listeners[event].forEach(function(listener) {
+			listener(event, this);
+		}.bind(this));
+	};
+	EventEmitter.prototype.addListener=function(event, f) {"use strict";
+		this.listeners[event] = this.listeners[event] || [];
+		this.listeners[event].push(f);
+	};
+	EventEmitter.prototype.removeListener=function(event, f) {"use strict";
+		if (!(event in this.listeners)) {
+			return false;
+		}
+		var index = this.listeners[event].indexOf(f);
+		if (index >= 0) {
+			this.listeners[event].splice(index, 1);
+		}
+	};
+
+for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){_SettingsStore[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}var ____SuperProtoOfEventEmitter=EventEmitter===null?null:EventEmitter.prototype;_SettingsStore.prototype=Object.create(____SuperProtoOfEventEmitter);_SettingsStore.prototype.constructor=_SettingsStore;_SettingsStore.__superConstructor__=EventEmitter;
+	function _SettingsStore() {"use strict";
+		/*jshint validthis: true */
+		EventEmitter.call(this);
+		this.settings = { version: "0.12", showEventLog: true }; //FIXME: Need to get that from somewhere.
+	}
+	_SettingsStore.prototype.getSettings=function() {"use strict";
+		return this.settings;
+	};
+	_SettingsStore.prototype.handle=function(action) {"use strict";
+		switch (action.actionType) {
+			case ActionTypes.SETTINGS_UPDATE:
+				this.settings = action.settings;
+				this.emit("change");
+				break;
+			default:
+				return;
+		}
+	};
+
+var SettingsStore = new _SettingsStore();
+AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
+
+
+var SettingsMixin = {
+	getInitialState:function(){
+		return {
+			settings: SettingsStore.getSettings()
+		};
+	},
+    componentDidMount:function(){
+        SettingsStore.addListener("change", this._onSettingsChange);
+    },
+    componentWillUnmount:function(){
+        SettingsStore.removeListener("change", this._onSettingsChange);
+    },
+    _onSettingsChange:function(){
+    	this.setState({
+    		settings: SettingsStore.getSettings()
+    	});
+    }
+};
+for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){_EventLogStore[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}var ____SuperProtoOfEventEmitter=EventEmitter===null?null:EventEmitter.prototype;_EventLogStore.prototype=Object.create(____SuperProtoOfEventEmitter);_EventLogStore.prototype.constructor=_EventLogStore;_EventLogStore.__superConstructor__=EventEmitter;
+	function _EventLogStore() {"use strict";
+		/*jshint validthis: true */
+		EventEmitter.call(this);
+		this.log = [];
+	}
+	_EventLogStore.prototype.getAll=function() {"use strict";
+		return this.log;
+	};
+	_EventLogStore.prototype.handle=function(action) {"use strict";
+		switch (action.actionType) {
+			case ActionTypes.LOG_ADD:
+				this.log.push(action.message);
+				this.emit("change");
+				break;
+			default:
+				return;
+		}
+	};
+
+var EventLogStore = new _EventLogStore();
+AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
+
+
+var EventLogMixin = {
+	getInitialState:function(){
+		return {
+			log: EventLog.getAll()
+		};
+	},
+    componentDidMount:function(){
+        SettingsStore.addListener("change", this._onEventLogChange);
+    },
+    componentWillUnmount:function(){
+        SettingsStore.removeListener("change", this._onEventLogChange);
+    },
+    _onEventLogChange:function(){
+    	this.setState({
+    		log: EventLog.getAll()
+    	});
+    }
+};
+
+    function Connection(root){"use strict";
+        if(!root){
+            root = location.origin + "/api/v1";
         }
-        this.listeners[event].forEach(function (listener) {
-            listener(event, this);
-        }.bind(this));
+        this.root = root;
+        this.openWebSocketConnection();
+    }
+
+    Connection.prototype.openWebSocketConnection=function(){"use strict";
+        this.ws = new WebSocket(this.root.replace("http","ws") + "/ws");
+        var ws = this.ws;
+
+        ws.onopen = this.onopen.bind(this);
+        ws.onmessage = this.onmessage.bind(this);
+        ws.onerror = this.onerror.bind(this);
+        ws.onclose = this.onclose.bind(this);
     };
-    EventEmitter.prototype.addListener=function(event, f){"use strict";
-        this.listeners[event] = this.listeners[event] || [];
-        this.listeners[event].push(f);
+
+    Connection.prototype.onopen=function(open){"use strict";
+        console.log("onopen", this, arguments);
     };
-    EventEmitter.prototype.removeListener=function(event, f){"use strict";
-        if(!(event in this.listeners)){
-            return false;
+    Connection.prototype.onmessage=function(message){"use strict";
+        console.log("onmessage", this, arguments);
+    };
+    Connection.prototype.onerror=function(error){"use strict";
+        console.log("onerror", this, arguments);
+    };
+    Connection.prototype.onclose=function(close){"use strict";
+        console.log("onclose", this, arguments);
+    };
+
+
+
+
+    function Connection(root){"use strict";
+        if(!root){
+            root = location.origin + "/api/v1";
         }
-        var index = this.listeners.indexOf(f);
-        if (index >= 0) {
-            this.listeners.splice(this.listeners.indexOf(f), 1);
-        }
-    };
-
-
-var FLOW_CHANGED = "flow.changed";
-
-for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){FlowStore[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}var ____SuperProtoOfEventEmitter=EventEmitter===null?null:EventEmitter.prototype;FlowStore.prototype=Object.create(____SuperProtoOfEventEmitter);FlowStore.prototype.constructor=FlowStore;FlowStore.__superConstructor__=EventEmitter;
-    function FlowStore() {"use strict";
-        EventEmitter.call(this);
-        this.flows = [];
+        this.root = root;
+        this.openWebSocketConnection();
     }
 
-    FlowStore.prototype.getAll=function() {"use strict";
-        return this.flows;
+    Connection.prototype.openWebSocketConnection=function(){"use strict";
+        this.ws = new WebSocket(this.root.replace("http","ws") + "/ws");
+        var ws = this.ws;
+
+        ws.onopen = this.onopen.bind(this);
+        ws.onmessage = this.onmessage.bind(this);
+        ws.onerror = this.onerror.bind(this);
+        ws.onclose = this.onclose.bind(this);
     };
 
-    FlowStore.prototype.close=function(){"use strict";
-        console.log("FlowStore.close()");
-        this.listeners = [];
+    Connection.prototype.onopen=function(open){"use strict";
+        console.log("onopen", this, arguments);
     };
-
-    FlowStore.prototype.emitChange=function() {"use strict";
-        return this.emit(FLOW_CHANGED);
+    Connection.prototype.onmessage=function(message){"use strict";
+        console.log("onmessage", this, arguments);
     };
-
-    FlowStore.prototype.addChangeListener=function(f) {"use strict";
-        this.addListener(FLOW_CHANGED, f);
+    Connection.prototype.onerror=function(error){"use strict";
+        console.log("onerror", this, arguments);
     };
-
-    FlowStore.prototype.removeChangeListener=function(f) {"use strict";
-        this.removeListener(FLOW_CHANGED, f);
-    };
-
-
-for(var FlowStore____Key in FlowStore){if(FlowStore.hasOwnProperty(FlowStore____Key)){DummyFlowStore[FlowStore____Key]=FlowStore[FlowStore____Key];}}var ____SuperProtoOfFlowStore=FlowStore===null?null:FlowStore.prototype;DummyFlowStore.prototype=Object.create(____SuperProtoOfFlowStore);DummyFlowStore.prototype.constructor=DummyFlowStore;DummyFlowStore.__superConstructor__=FlowStore;
-    function DummyFlowStore(flows) {"use strict";
-        FlowStore.call(this);
-        this.flows = flows;
-    }
-
-    DummyFlowStore.prototype.addFlow=function(flow) {"use strict";
-        this.flows.push(flow);
-        this.emitChange();
+    Connection.prototype.onclose=function(close){"use strict";
+        console.log("onclose", this, arguments);
     };
 
 
 
-var SETTINGS_CHANGED = "settings.changed";
-
-for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){Settings[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}Settings.prototype=Object.create(____SuperProtoOfEventEmitter);Settings.prototype.constructor=Settings;Settings.__superConstructor__=EventEmitter;
-    function Settings(){"use strict";
-        EventEmitter.call(this);
-        this.settings = false;
-    }
-
-    Settings.prototype.getAll=function(){"use strict";
-        return this.settings;
-    };
-
-    Settings.prototype.emitChange=function() {"use strict";
-        return this.emit(SETTINGS_CHANGED);
-    };
-
-    Settings.prototype.addChangeListener=function(f) {"use strict";
-        this.addListener(SETTINGS_CHANGED, f);
-    };
-
-    Settings.prototype.removeChangeListener=function(f) {"use strict";
-        this.removeListener(SETTINGS_CHANGED, f);
-    };
-
-
-for(var Settings____Key in Settings){if(Settings.hasOwnProperty(Settings____Key)){DummySettings[Settings____Key]=Settings[Settings____Key];}}var ____SuperProtoOfSettings=Settings===null?null:Settings.prototype;DummySettings.prototype=Object.create(____SuperProtoOfSettings);DummySettings.prototype.constructor=DummySettings;DummySettings.__superConstructor__=Settings;
-    function DummySettings(settings){"use strict";
-        Settings.call(this);
-        this.settings = settings;
-    }
-    DummySettings.prototype.update=function(obj){"use strict";
-        _.merge(this.settings, obj);
-        this.emitChange();
-    };
-
-/** @jsx React.DOM */
-
-var Footer = React.createClass({displayName: 'Footer',
-    render : function(){
-        return (React.DOM.footer(null, 
-            React.DOM.span({className: "label label-success"}, "transparent mode")
-            ));
-    }
-});
 /** @jsx React.DOM */
 
 var MainMenu = React.createClass({displayName: 'MainMenu',
-    render : function(){
-        return (React.DOM.div(null, "Main Menu"));
+    mixins: [SettingsMixin],
+    handleSettingsChange:function() {
+        SettingsActions.update({
+            showEventLog: this.refs.showEventLogInput.getDOMNode().checked
+        });
+    },
+    render:function(){
+        return React.DOM.div(null, 
+            React.DOM.label(null, 
+                React.DOM.input({type: "checkbox", ref: "showEventLogInput", checked: this.state.settings.showEventLog, onChange: this.handleSettingsChange}), 
+                "Show Event Log"
+            )
+            );
     }
 });
 var ToolsMenu = React.createClass({displayName: 'ToolsMenu',
-    render : function(){
+    render:function(){
         return (React.DOM.div(null, "Tools Menu"));
     }
 });
 var ReportsMenu = React.createClass({displayName: 'ReportsMenu',
-    render : function(){
+    render:function(){
         return (React.DOM.div(null, "Reports Menu"));
     }
 });
+
 
 var _Header_Entries = {
     main: {
@@ -149,83 +275,55 @@ var _Header_Entries = {
 };
 
 var Header = React.createClass({displayName: 'Header',
-    getInitialState: function(){
-      return {active: "main"};
+    mixins: [SettingsMixin],
+    getInitialState:function(){
+        return {
+            active: "main"
+        };
     },
-    handleClick: function(active){
+    handleClick:function(active){
         this.setState({active: active});
         ReactRouter.transitionTo(_Header_Entries[active].route);
         return false;
     },
-    handleFileClick: function(){
+    handleFileClick:function(){
         console.log("File click");
     },
-    render: function(){
 
+    render:function(){
         var header = [];
         for(var item in _Header_Entries){
             var classes = this.state.active == item ? "active" : "";
             header.push(React.DOM.a({key: item, href: "#", className: classes, 
-            onClick: this.handleClick.bind(this, item)},  _Header_Entries[item].title));
+                onClick: this.handleClick.bind(this, item)},  _Header_Entries[item].title));
         }
 
         var menu = _Header_Entries[this.state.active].menu();
         return (
-        React.DOM.header(null, 
-          React.DOM.div({className: "title-bar"}, 
-              "mitmproxy ",  this.props.settings.version
-          ), 
-          React.DOM.nav(null, 
-              React.DOM.a({href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
-            header
-          ), 
-          React.DOM.div({className: "menu"}, 
-              menu 
-          )
-        ));
+            React.DOM.header(null, 
+                React.DOM.div({className: "title-bar"}, 
+                    "mitmproxy ",  this.state.settings.version
+                ), 
+                React.DOM.nav(null, 
+                    React.DOM.a({href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
+                    header
+                ), 
+                React.DOM.div({className: "menu"}, 
+                    menu 
+                )
+            ));
     }
 });
 /** @jsx React.DOM */
 
-var App = React.createClass({displayName: 'App',
-    getInitialState: function () {
-        return {
-            settings: {} //TODO: How explicit should we get here?
-                         //List all subattributes?
-        };
-    },
-    componentDidMount: function () {
-        //TODO: Replace DummyStore with real settings over WS (https://facebook.github.io/react/tips/initial-ajax.html)
-        var settingsStore = new DummySettings({
-            version: "0.12"
-        });
-        this.setState({settingsStore: settingsStore});
-        settingsStore.addChangeListener(this.onSettingsChange);
-    },
-    onSettingsChange: function(event, settings){
-        this.setState({settings: settings.getAll()});
-    },
-    render: function () {
-      return (
-        React.DOM.div({id: "container"}, 
-          Header({settings: this.state.settings}), 
-          React.DOM.div({id: "main"}, 
-              this.props.activeRouteHandler({settings: this.state.settings})
-          ), 
-          Footer(null)
-        )
-      );
-    }
-});
-
 var TrafficTable = React.createClass({displayName: 'TrafficTable',
-    getInitialState: function(){
+    /*getInitialState: function(){
         return {
             flows: []
         };
-    },
+    },*/
     componentDidMount: function () {
-        var flowStore = new DummyFlowStore([]);
+        /*var flowStore = new DummyFlowStore([]);
         this.setState({flowStore: flowStore});
 
         flowStore.addChangeListener(this.onFlowsChange);
@@ -236,35 +334,87 @@ var TrafficTable = React.createClass({displayName: 'TrafficTable',
                     flowStore.addFlow(flow);
                 }, _.random(i*400,i*400+1000));
             });
-        }.bind(this));
+        }.bind(this));*/
     },
     componentWillUnmount: function(){
-        this.state.flowStore.close();
+        //this.state.flowStore.close();
     },
     onFlowsChange: function(event, flows){
-        this.setState({flows: flows.getAll()});
+        //this.setState({flows: flows.getAll()});
     },
     render: function () {
-       var flows = this.state.flows.map(function(flow){
-           return React.DOM.div(null, flow.request.method, " ", flow.request.scheme, "://", flow.request.host, flow.request.path);
-       });
-       return React.DOM.pre(null, flows);
+       /*var flows = this.state.flows.map(function(flow){
+           return <div>{flow.request.method} {flow.request.scheme}://{flow.request.host}{flow.request.path}</div>;
+       }); *//**/
+       x = "WTF";
+       i = 12;
+       while(i--) x += x;
+       return React.DOM.div(null, React.DOM.pre(null, x));
    }
 });
+/** @jsx React.DOM */
 
+var EventLog = React.createClass({displayName: 'EventLog',
+    render:function(){
+        return (
+            React.DOM.div({className: "eventlog"}, 
+            React.DOM.pre(null, 
+            "much log."
+            )
+            )
+        );
+    }
+});
+/** @jsx React.DOM */
+
+var Footer = React.createClass({displayName: 'Footer',
+    render:function(){
+        return (
+            React.DOM.footer(null, 
+                React.DOM.span({className: "label label-success"}, "transparent mode")
+            )
+        );
+    }
+});
+/** @jsx React.DOM */
+
+//TODO: Move out of here, just a stub.
 var Reports = React.createClass({displayName: 'Reports',
-   render: function(){
+   render:function(){
        return (React.DOM.div(null, "Report Editor"));
    }
 });
 
-var routes = (
+
+
+var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
+    mixins: [SettingsMixin],
+    render:function() {
+      return (
+        React.DOM.div({id: "container"}, 
+          Header(null), 
+          React.DOM.div({id: "main"}, this.props.activeRouteHandler(null)), 
+          this.state.settings.showEventLog ? EventLog(null) : null, 
+          Footer(null)
+        )
+      );
+    }
+});
+
+
+var ProxyApp = (
   ReactRouter.Routes({location: "hash"}, 
-    ReactRouter.Route({name: "app", path: "/", handler: App}, 
+    ReactRouter.Route({name: "app", path: "/", handler: ProxyAppMain}, 
         ReactRouter.Route({name: "main", handler: TrafficTable}), 
         ReactRouter.Route({name: "reports", handler: Reports}), 
         ReactRouter.Redirect({to: "main"})
     )
   )
 );
+
+$(function(){
+
+  app = React.renderComponent(ProxyApp, document.body);
+
+});
 //# sourceMappingURL=app.js.map
