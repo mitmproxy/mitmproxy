@@ -1,15 +1,14 @@
 /** @jsx React.DOM */
 
 var MainMenu = React.createClass({
-    mixins: [SettingsMixin],
-    handleSettingsChange() {
+    toggleEventLog() {
         SettingsActions.update({
-            showEventLog: !this.state.settings.showEventLog
+            showEventLog: !this.props.settings.showEventLog
         });
     },
     render(){
         return <div>
-            <button className={"btn " + (this.state.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.handleSettingsChange}>
+            <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
                 <i className="fa fa-database"></i> Display Event Log
             </button>
             </div>;
@@ -46,7 +45,6 @@ var _Header_Entries = {
 };
 
 var Header = React.createClass({
-    mixins: [SettingsMixin],
     getInitialState(){
         return {
             active: "main"
@@ -69,11 +67,13 @@ var Header = React.createClass({
                 onClick={this.handleClick.bind(this, item)}>{ _Header_Entries[item].title }</a>);
         }
 
-        var menu = _Header_Entries[this.state.active].menu();
+        var menu = _Header_Entries[this.state.active].menu({
+            settings: this.props.settings
+        });
         return (
             <header>
                 <div className="title-bar">
-                    mitmproxy { this.state.settings.version }
+                    mitmproxy { this.props.settings.version }
                 </div>
                 <nav>
                     <a href="#" className="special" onClick={this.handleFileClick}> File </a>

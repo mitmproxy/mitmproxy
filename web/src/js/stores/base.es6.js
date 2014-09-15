@@ -7,7 +7,7 @@ class EventEmitter {
 			return;
 		}
 		this.listeners[event].forEach(function(listener) {
-			listener(event, this);
+			listener.apply(this, arguments);
 		}.bind(this));
 	}
 	addListener(event, f) {

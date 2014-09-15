@@ -34,3 +34,7 @@ AppDispatcher.dispatchViewAction = function(action){
   action.actionSource = PayloadSources.VIEW_ACTION;
   this.dispatch(action);
 };
+AppDispatcher.dispatchServerAction = function(action){
+  action.actionSource = PayloadSources.SERVER_ACTION;
+  this.dispatch(action);
+};

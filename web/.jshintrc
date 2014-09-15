@@ -1,4 +1,5 @@
 {
     "loopfunc": true,
-    "esnext": true
+    "esnext": true,
+    "validthis": true
 }

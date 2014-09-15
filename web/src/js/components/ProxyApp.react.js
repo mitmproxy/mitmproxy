@@ -10,11 +10,23 @@ var Reports = React.createClass({
 
 
 var ProxyAppMain = React.createClass({
-    mixins: [SettingsMixin],
+    getInitialState(){
+      return { settings: SettingsStore.getAll() };
+    },
+    componentDidMount(){
+      SettingsStore.addListener("change", this.onSettingsChange);
+    },
+    componentWillUnmount(){
+      SettingsStore.removeListener("change", this.onSettingsChange);
+    },
+    onSettingsChange(){
+      console.log("onSettingsChange");
+      this.setState({settings: SettingsStore.getAll()});
+    },
     render() {
       return (
         <div id="container">
-          <Header/>
+          <Header settings={this.state.settings}/>
           <div id="main"><this.props.activeRouteHandler/></div>
           {this.state.settings.showEventLog ? <EventLog/> : null}
           <Footer/>

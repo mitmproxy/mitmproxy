@@ -38,7 +38,6 @@ var path = {
             'js/stores/SettingsStore.es6.js',
             'js/stores/EventLogStore.es6.js',
             'js/Connection.es6.js',
-            'js/connection.es6.js',
             'js/components/Header.react.js',
             'js/components/TrafficTable.react.js',
             'js/components/EventLog.react.js',
