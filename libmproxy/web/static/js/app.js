@@ -83,7 +83,8 @@ for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(Even
         //FIXME: What do we do if we haven't requested anything from the server yet?
         this.settings = {
             version: "0.12",
-            showEventLog: true
+            showEventLog: true,
+            mode: "transparent",
         }; 
     }
     _SettingsStore.prototype.getAll=function() {"use strict";
@@ -385,9 +386,10 @@ var EventLog = React.createClass({displayName: 'EventLog',
 
 var Footer = React.createClass({displayName: 'Footer',
     render:function(){
+        var mode = this.props.settings.mode;
         return (
             React.DOM.footer(null, 
-                React.DOM.span({className: "label label-success"}, "transparent mode")
+                mode != "regular" ? React.DOM.span({className: "label label-success"}, mode, " mode") : null
             )
         );
     }
@@ -400,7 +402,6 @@ var Reports = React.createClass({displayName: 'Reports',
         return React.DOM.div(null, "Report Editor");
     }
 });
-
 
 
 var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
@@ -423,7 +424,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
             Header({settings: this.state.settings}), 
             React.DOM.div({id: "main"}, this.props.activeRouteHandler(null)), 
             this.state.settings.showEventLog ? EventLog(null) : null, 
-            Footer(null)
+            Footer({settings: this.state.settings})
             )
             );
     }

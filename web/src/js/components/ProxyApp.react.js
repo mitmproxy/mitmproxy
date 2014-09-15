@@ -8,7 +8,6 @@ var Reports = React.createClass({
 });
 
 
-
 var ProxyAppMain = React.createClass({
     getInitialState(){
         return { settings: SettingsStore.getAll() };
@@ -29,7 +28,7 @@ var ProxyAppMain = React.createClass({
             <Header settings={this.state.settings}/>
             <div id="main"><this.props.activeRouteHandler/></div>
             {this.state.settings.showEventLog ? <EventLog/> : null}
-            <Footer/>
+            <Footer settings={this.state.settings}/>
             </div>
             );
     }

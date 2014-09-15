@@ -2,9 +2,10 @@
 
 var Footer = React.createClass({
     render(){
+        var mode = this.props.settings.mode;
         return (
             <footer>
-                <span className="label label-success">transparent mode</span>
+                {mode != "regular" ? <span className="label label-success">{mode} mode</span> : null}
             </footer>
         );
     }

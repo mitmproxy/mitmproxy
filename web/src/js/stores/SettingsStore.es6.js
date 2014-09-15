@@ -5,7 +5,8 @@ class _SettingsStore extends EventEmitter {
         //FIXME: What do we do if we haven't requested anything from the server yet?
         this.settings = {
             version: "0.12",
-            showEventLog: true
+            showEventLog: true,
+            mode: "transparent",
         }; 
     }
     getAll() {
