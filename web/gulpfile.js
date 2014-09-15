@@ -106,7 +106,7 @@ gulp.task("jshint", function () {
 
 gulp.task("html", function () {
     return gulp.src(path.html)
-        .pipe(gulp.dest(path.dist + "static"))
+        .pipe(gulp.dest(path.dist + "templates"))
         .pipe(livereload({ auto: false }));
 });
 

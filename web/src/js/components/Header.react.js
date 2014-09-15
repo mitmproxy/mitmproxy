@@ -4,15 +4,14 @@ var MainMenu = React.createClass({
     mixins: [SettingsMixin],
     handleSettingsChange() {
         SettingsActions.update({
-            showEventLog: this.refs.showEventLogInput.getDOMNode().checked
+            showEventLog: !this.state.settings.showEventLog
         });
     },
     render(){
         return <div>
-            <label>
-                <input type="checkbox" ref="showEventLogInput" checked={this.state.settings.showEventLog} onChange={this.handleSettingsChange}/>
-                Show Event Log
-            </label>
+            <button className={"btn " + (this.state.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.handleSettingsChange}>
+                <i className="fa fa-database"></i> Display Event Log
+            </button>
             </div>;
     }
 });

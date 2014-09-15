@@ -232,14 +232,13 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
     mixins: [SettingsMixin],
     handleSettingsChange:function() {
         SettingsActions.update({
-            showEventLog: this.refs.showEventLogInput.getDOMNode().checked
+            showEventLog: !this.state.settings.showEventLog
         });
     },
     render:function(){
         return React.DOM.div(null, 
-            React.DOM.label(null, 
-                React.DOM.input({type: "checkbox", ref: "showEventLogInput", checked: this.state.settings.showEventLog, onChange: this.handleSettingsChange}), 
-                "Show Event Log"
+            React.DOM.button({className: "btn " + (this.state.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.handleSettingsChange}, 
+                React.DOM.i({className: "fa fa-database"}), " Display Event Log"
             )
             );
     }
@@ -355,10 +354,16 @@ var TrafficTable = React.createClass({displayName: 'TrafficTable',
 /** @jsx React.DOM */
 
 var EventLog = React.createClass({displayName: 'EventLog',
+	close:function(){
+		SettingsActions.update({
+			showEventLog: false
+		});
+	},
     render:function(){
         return (
             React.DOM.div({className: "eventlog"}, 
             React.DOM.pre(null, 
+            React.DOM.i({className: "fa fa-close close-button", onClick: this.close}), 
             "much log."
             )
             )

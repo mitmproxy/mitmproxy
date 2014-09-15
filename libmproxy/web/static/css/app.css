@@ -64,7 +64,7 @@ header nav a.special:hover {
   background-color: #5386c6;
 }
 header .menu {
-  height: 100px;
+  padding: 10px;
   border-bottom: solid #a6a6a6 1px;
 }
 .eventlog {
@@ -75,6 +75,16 @@ header .menu {
   border-radius: 0;
   height: 200px;
   overflow: auto;
+}
+.eventlog .close-button {
+  float: right;
+  margin: -9px;
+  padding: 4px;
+  cursor: pointer;
+  color: grey;
+}
+.eventlog .close-button:hover {
+  color: black;
 }
 footer {
   box-shadow: 0 -1px 3px #d3d3d3;
