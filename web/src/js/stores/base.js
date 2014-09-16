@@ -1,20 +1,19 @@
-class EventEmitter {
-    constructor() {
+function EventEmitter() {"use strict";
         this.listeners = {};
     }
-    emit(event) {
+    EventEmitter.prototype.emit=function(event) {"use strict";
         if (!(event in this.listeners)) {
             return;
         }
         this.listeners[event].forEach(function(listener) {
             listener.apply(this, arguments);
         }.bind(this));
-    }
-    addListener(event, f) {
+    };
+    EventEmitter.prototype.addListener=function(event, f) {"use strict";
         this.listeners[event] = this.listeners[event] || [];
         this.listeners[event].push(f);
-    }
-    removeListener(event, f) {
+    };
+    EventEmitter.prototype.removeListener=function(event, f) {"use strict";
         if (!(event in this.listeners)) {
             return false;
         }
@@ -22,5 +21,4 @@ class EventEmitter {
         if (index >= 0) {
             this.listeners[event].splice(index, 1);
         }
-    }
-}
+    };

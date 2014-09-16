@@ -1,12 +1,12 @@
 /** @jsx React.DOM */
 
 var MainMenu = React.createClass({
-    toggleEventLog() {
+    toggleEventLog: function() {
         SettingsActions.update({
             showEventLog: !this.props.settings.showEventLog
         });
     },
-    render(){
+    render: function(){
         return (
             <div>
                 <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
@@ -17,12 +17,12 @@ var MainMenu = React.createClass({
     }
 });
 var ToolsMenu = React.createClass({
-    render(){
+    render: function(){
         return <div>Tools Menu</div>;
     }
 });
 var ReportsMenu = React.createClass({
-    render(){
+    render: function(){
         return <div>Reports Menu</div>;
     }
 });
@@ -47,20 +47,20 @@ var _Header_Entries = {
 };
 
 var Header = React.createClass({
-    getInitialState(){
+    getInitialState: function(){
         return {
             active: "main"
         };
     },
-    handleClick(active){
+    handleClick: function(active){
         this.setState({active: active});
         ReactRouter.transitionTo(_Header_Entries[active].route);
         return false;
     },
-    handleFileClick(){
+    handleFileClick: function(){
         console.log("File click");
     },
-    render(){
+    render: function(){
         var header = [];
         for(var item in _Header_Entries){
             var classes = this.state.active == item ? "active" : "";

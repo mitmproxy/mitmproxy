@@ -1,31 +1,32 @@
 /** @jsx React.DOM */
 
 var EventLog = React.createClass({
-    getInitialState() {
+    getInitialState: function() {
         return {
             log: []
         };
     },
-    componentDidMount() {
+    componentDidMount: function() {
         this.log = EventLogStore.getView();
         this.log.addListener("change", this.onEventLogChange);
     },
-    componentWillUnmount() {
+    componentWillUnmount: function() {
         this.log.removeListener("change", this.onEventLogChange);
         this.log.close();
     },
-    onEventLogChange() {
+    onEventLogChange: function() {
         this.setState({
             log: this.log.getAll()
         });
     },
-    close() {
+    close: function() {
         SettingsActions.update({
             showEventLog: false
         });
     },
-    render() {
-        var messages = this.state.log.map(row => (<div key={row.id}>{row.message}</div>));
+    render: function() {
+        //var messages = this.state.log.map(row => (<div key={row.id}>{row.message}</div>));
+        var messages = [];
         return (
             <div className="eventlog">
                 <pre>

@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 var Footer = React.createClass({
-    render(){
+    render: function(){
         var mode = this.props.settings.mode;
         return (
             <footer>

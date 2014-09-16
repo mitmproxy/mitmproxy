@@ -1,14 +1,13 @@
-class _Connection {
-    constructor(root) {
+function _Connection(root) {"use strict";
         if (!root) {
             root = location.origin + "/api/v1";
         }
         this.root = root;
     }
-    init() {
+    _Connection.prototype.init=function() {"use strict";
         this.openWebSocketConnection();
-    }
-    openWebSocketConnection() {
+    };
+    _Connection.prototype.openWebSocketConnection=function() {"use strict";
         this.ws = new WebSocket(this.root.replace("http", "ws") + "/ws");
         var ws = this.ws;
 
@@ -16,19 +15,19 @@ class _Connection {
         ws.onmessage = this.onmessage.bind(this);
         ws.onerror = this.onerror.bind(this);
         ws.onclose = this.onclose.bind(this);
-    }
-    onopen(open) {
+    };
+    _Connection.prototype.onopen=function(open) {"use strict";
         console.log("onopen", this, arguments);
-    }
-    onmessage(message) {
+    };
+    _Connection.prototype.onmessage=function(message) {"use strict";
         //AppDispatcher.dispatchServerAction(...);
         console.log("onmessage", this, arguments);
-    }
-    onerror(error) {
+    };
+    _Connection.prototype.onerror=function(error) {"use strict";
         console.log("onerror", this, arguments);
-    }
-    onclose(close) {
+    };
+    _Connection.prototype.onclose=function(close) {"use strict";
         console.log("onclose", this, arguments);
-    }
-}
+    };
+
 var Connection = new _Connection();

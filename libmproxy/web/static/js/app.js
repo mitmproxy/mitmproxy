@@ -33,6 +33,7 @@ AppDispatcher.dispatchServerAction = function(action) {
     action.actionSource = PayloadSources.SERVER_ACTION;
     this.dispatch(action);
 };
+
 var ActionTypes = {
     SETTINGS_UPDATE: "SETTINGS_UPDATE",
     EVENTLOG_ADD: "EVENTLOG_ADD"
@@ -51,7 +52,7 @@ var SettingsActions = {
     }
 };
 
-    function EventEmitter() {"use strict";
+function EventEmitter() {"use strict";
         this.listeners = {};
     }
     EventEmitter.prototype.emit=function(event) {"use strict";
@@ -103,6 +104,7 @@ for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(Even
 
 var SettingsStore = new _SettingsStore();
 AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
+
 //
 // We have an EventLogView and an EventLogStore:
 // The basic architecture is that one can request views on the event log
@@ -188,7 +190,7 @@ for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmi
 var EventLogStore = new _EventLogStore();
 AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
 
-    function _Connection(root) {"use strict";
+function _Connection(root) {"use strict";
         if (!root) {
             root = location.origin + "/api/v1";
         }
@@ -221,15 +223,16 @@ AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
     };
 
 var Connection = new _Connection();
+
 /** @jsx React.DOM */
 
 var MainMenu = React.createClass({displayName: 'MainMenu',
-    toggleEventLog:function() {
+    toggleEventLog: function() {
         SettingsActions.update({
             showEventLog: !this.props.settings.showEventLog
         });
     },
-    render:function(){
+    render: function(){
         return (
             React.DOM.div(null, 
                 React.DOM.button({className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
@@ -240,12 +243,12 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
     }
 });
 var ToolsMenu = React.createClass({displayName: 'ToolsMenu',
-    render:function(){
+    render: function(){
         return React.DOM.div(null, "Tools Menu");
     }
 });
 var ReportsMenu = React.createClass({displayName: 'ReportsMenu',
-    render:function(){
+    render: function(){
         return React.DOM.div(null, "Reports Menu");
     }
 });
@@ -270,20 +273,20 @@ var _Header_Entries = {
 };
 
 var Header = React.createClass({displayName: 'Header',
-    getInitialState:function(){
+    getInitialState: function(){
         return {
             active: "main"
         };
     },
-    handleClick:function(active){
+    handleClick: function(active){
         this.setState({active: active});
         ReactRouter.transitionTo(_Header_Entries[active].route);
         return false;
     },
-    handleFileClick:function(){
+    handleFileClick: function(){
         console.log("File click");
     },
-    render:function(){
+    render: function(){
         var header = [];
         for(var item in _Header_Entries){
             var classes = this.state.active == item ? "active" : "";
@@ -310,28 +313,29 @@ var Header = React.createClass({displayName: 'Header',
         );
     }
 });
+
 /** @jsx React.DOM */
 
 var TrafficTable = React.createClass({displayName: 'TrafficTable',
-    getInitialState:function() {
+    getInitialState: function() {
         return {
             flows: []
         };
     },
-    componentDidMount:function() {
+    componentDidMount: function() {
         //this.flowStore = FlowStore.getView();
         //this.flowStore.addListener("change",this.onFlowChange);
     },
-    componentWillUnmount:function() {
+    componentWillUnmount: function() {
         //this.flowStore.removeListener("change",this.onFlowChange);
         //this.flowStore.close();
     },
-    onFlowChange:function() {
+    onFlowChange: function() {
         this.setState({
             //flows: this.flowStore.getAll()
         });
     },
-    render:function() {
+    render: function() {
         /*var flows = this.state.flows.map(function(flow){
         return <div>{flow.request.method} {flow.request.scheme}://{flow.request.host}{flow.request.path}</div>;
         }); */
@@ -344,34 +348,36 @@ var TrafficTable = React.createClass({displayName: 'TrafficTable',
         );
     }
 });
+
 /** @jsx React.DOM */
 
 var EventLog = React.createClass({displayName: 'EventLog',
-    getInitialState:function() {
+    getInitialState: function() {
         return {
             log: []
         };
     },
-    componentDidMount:function() {
+    componentDidMount: function() {
         this.log = EventLogStore.getView();
         this.log.addListener("change", this.onEventLogChange);
     },
-    componentWillUnmount:function() {
+    componentWillUnmount: function() {
         this.log.removeListener("change", this.onEventLogChange);
         this.log.close();
     },
-    onEventLogChange:function() {
+    onEventLogChange: function() {
         this.setState({
             log: this.log.getAll()
         });
     },
-    close:function() {
+    close: function() {
         SettingsActions.update({
             showEventLog: false
         });
     },
-    render:function() {
-        var messages = this.state.log.map(function(row)  {return React.DOM.div({key: row.id}, row.message);});
+    render: function() {
+        //var messages = this.state.log.map(row => (<div key={row.id}>{row.message}</div>));
+        var messages = [];
         return (
             React.DOM.div({className: "eventlog"}, 
                 React.DOM.pre(null, 
@@ -382,10 +388,11 @@ var EventLog = React.createClass({displayName: 'EventLog',
         );
     }
 });
+
 /** @jsx React.DOM */
 
 var Footer = React.createClass({displayName: 'Footer',
-    render:function(){
+    render: function(){
         var mode = this.props.settings.mode;
         return (
             React.DOM.footer(null, 
@@ -394,37 +401,38 @@ var Footer = React.createClass({displayName: 'Footer',
         );
     }
 });
+
 /** @jsx React.DOM */
 
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({displayName: 'Reports',
-    render:function(){
+    render: function(){
         return React.DOM.div(null, "Report Editor");
     }
 });
 
 
 var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
-    getInitialState:function(){
+    getInitialState: function(){
         return { settings: SettingsStore.getAll() };
     },
-    componentDidMount:function(){
+    componentDidMount: function(){
         SettingsStore.addListener("change", this.onSettingsChange);
     },
-    componentWillUnmount:function(){
+    componentWillUnmount: function(){
         SettingsStore.removeListener("change", this.onSettingsChange);
     },
-    onSettingsChange:function(){
+    onSettingsChange: function(){
         console.log("onSettingsChange");
         this.setState({settings: SettingsStore.getAll()});
     },
-    render:function() {
+    render: function() {
         return (
             React.DOM.div({id: "container"}, 
-            Header({settings: this.state.settings}), 
-            React.DOM.div({id: "main"}, this.props.activeRouteHandler(null)), 
-            this.state.settings.showEventLog ? EventLog(null) : null, 
-            Footer({settings: this.state.settings})
+                Header({settings: this.state.settings}), 
+                React.DOM.div({id: "main"}, this.props.activeRouteHandler(null)), 
+                    this.state.settings.showEventLog ? EventLog(null) : null, 
+                Footer({settings: this.state.settings})
             )
             );
     }

@@ -32,17 +32,17 @@ var path = {
             'vendor/react-bootstrap/react-bootstrap.js'
         ],
         app: [
-            'js/Dispatcher.es6.js',
-            'js/actions.es6.js',
-            'js/stores/base.es6.js',
-            'js/stores/SettingsStore.es6.js',
-            'js/stores/EventLogStore.es6.js',
-            'js/Connection.es6.js',
-            'js/components/Header.react.js',
-            'js/components/TrafficTable.react.js',
-            'js/components/EventLog.react.js',
-            'js/components/Footer.react.js',
-            'js/components/ProxyApp.react.js',
+            'js/dispatcher.js',
+            'js/actions.js',
+            'js/stores/base.js',
+            'js/stores/settingstore.js',
+            'js/stores/eventlogstore.js',
+            'js/connection.js',
+            'js/components/header.jsx',
+            'js/components/traffictable.jsx',
+            'js/components/eventlog.jsx',
+            'js/components/footer.jsx',
+            'js/components/proxyapp.jsx',
             'js/app.js',
         ],
     },
@@ -81,7 +81,7 @@ function scripts(files, filename, dev) {
     return gulp.src(files, {base: "src", cwd: "src"})
         .pipe(dev ? dont_break_on_errors(): gutil.noop())
         .pipe(dev ? sourcemaps.init() : gutil.noop())
-        .pipe(react({harmony: true}))
+        .pipe(react({harmony: false}))
         .pipe(concat(filename))
         .pipe(!dev ? uglify() : gutil.noop())
         .pipe(dev ? sourcemaps.write(".", {sourceRoot: "/static"}) : gutil.noop())

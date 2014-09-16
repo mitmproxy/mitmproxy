@@ -3,26 +3,26 @@ const PayloadSources = {
     SERVER_ACTION: "SERVER_ACTION"
 };
 
-class Dispatcher {
-    constructor() {
+
+    function Dispatcher() {"use strict";
         this.callbacks = [];
     }
-    register(callback) {
+    Dispatcher.prototype.register=function(callback) {"use strict";
         this.callbacks.push(callback);
-    }
-    unregister(callback) {
+    };
+    Dispatcher.prototype.unregister=function(callback) {"use strict";
         var index = this.callbacks.indexOf(f);
         if (index >= 0) {
             this.callbacks.splice(this.callbacks.indexOf(f), 1);
         }
-    }
-    dispatch(payload) {
+    };
+    Dispatcher.prototype.dispatch=function(payload) {"use strict";
         console.debug("dispatch", payload);
-        this.callbacks.forEach((callback) => {
+        this.callbacks.forEach(function(callback)  {
             callback(payload);
         });
-    }
-}
+    };
+
 
 AppDispatcher = new Dispatcher();
 AppDispatcher.dispatchViewAction = function(action) {
