@@ -101,16 +101,6 @@ class ODict:
     def items(self):
         return self.lst[:]
 
-    def _get_state(self):
-        return [tuple(i) for i in self.lst]
-
-    def _load_state(self, state):
-        self.list = [list(i) for i in state]
-
-    @classmethod
-    def _from_state(klass, state):
-        return klass([list(i) for i in state])
-
     def copy(self):
         """
             Returns a copy of this object.
@@ -170,6 +160,18 @@ class ODict:
             nlst.append([k, v])
         self.lst = nlst
         return count
+
+    # Implement the StateObject protocol from mitmproxy
+    def get_state(self):
+        return [tuple(i) for i in self.lst]
+
+    def load_state(self, state):
+        self.list = [list(i) for i in state]
+
+    @classmethod
+    def from_state(klass, state):
+        return klass([list(i) for i in state])
+
 
 
 class ODictCaseless(ODict):

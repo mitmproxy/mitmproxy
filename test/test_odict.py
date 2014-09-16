@@ -28,10 +28,10 @@ class TestODict:
         self.od.add("foo", 1)
         self.od.add("foo", 2)
         self.od.add("bar", 3)
-        state = self.od._get_state()
-        nd = odict.ODict._from_state(state)
+        state = self.od.get_state()
+        nd = odict.ODict.from_state(state)
         assert nd == self.od
-        nd._load_state(state)
+        nd.load_state(state)
 
     def test_dictToHeader2(self):
         self.od["one"] = ["uno"]
