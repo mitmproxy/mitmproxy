@@ -28,7 +28,7 @@ var TrafficTable = React.createClass({
         i = 12;
         while (i--) x += x;
         return ( 
-            <div><pre> { x } </pre></div> 
+            <div>Flow</div> 
         );
     }
 });

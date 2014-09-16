@@ -4,24 +4,24 @@ const PayloadSources = {
 };
 
 
-    function Dispatcher() {"use strict";
-        this.callbacks = [];
+function Dispatcher() {"use strict";
+    this.callbacks = [];
+}
+Dispatcher.prototype.register=function(callback) {"use strict";
+    this.callbacks.push(callback);
+};
+Dispatcher.prototype.unregister=function(callback) {"use strict";
+    var index = this.callbacks.indexOf(f);
+    if (index >= 0) {
+        this.callbacks.splice(this.callbacks.indexOf(f), 1);
     }
-    Dispatcher.prototype.register=function(callback) {"use strict";
-        this.callbacks.push(callback);
-    };
-    Dispatcher.prototype.unregister=function(callback) {"use strict";
-        var index = this.callbacks.indexOf(f);
-        if (index >= 0) {
-            this.callbacks.splice(this.callbacks.indexOf(f), 1);
-        }
-    };
-    Dispatcher.prototype.dispatch=function(payload) {"use strict";
-        console.debug("dispatch", payload);
-        this.callbacks.forEach(function(callback)  {
-            callback(payload);
-        });
-    };
+};
+Dispatcher.prototype.dispatch=function(payload) {"use strict";
+    console.debug("dispatch", payload);
+    this.callbacks.forEach(function(callback)  {
+        callback(payload);
+    });
+};
 
 
 AppDispatcher = new Dispatcher();

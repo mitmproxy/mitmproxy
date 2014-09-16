@@ -4,24 +4,24 @@ const PayloadSources = {
 };
 
 
-    function Dispatcher() {"use strict";
-        this.callbacks = [];
+function Dispatcher() {"use strict";
+    this.callbacks = [];
+}
+Dispatcher.prototype.register=function(callback) {"use strict";
+    this.callbacks.push(callback);
+};
+Dispatcher.prototype.unregister=function(callback) {"use strict";
+    var index = this.callbacks.indexOf(f);
+    if (index >= 0) {
+        this.callbacks.splice(this.callbacks.indexOf(f), 1);
     }
-    Dispatcher.prototype.register=function(callback) {"use strict";
-        this.callbacks.push(callback);
-    };
-    Dispatcher.prototype.unregister=function(callback) {"use strict";
-        var index = this.callbacks.indexOf(f);
-        if (index >= 0) {
-            this.callbacks.splice(this.callbacks.indexOf(f), 1);
-        }
-    };
-    Dispatcher.prototype.dispatch=function(payload) {"use strict";
-        console.debug("dispatch", payload);
-        this.callbacks.forEach(function(callback)  {
-            callback(payload);
-        });
-    };
+};
+Dispatcher.prototype.dispatch=function(payload) {"use strict";
+    console.debug("dispatch", payload);
+    this.callbacks.forEach(function(callback)  {
+        callback(payload);
+    });
+};
 
 
 AppDispatcher = new Dispatcher();
@@ -52,46 +52,50 @@ var SettingsActions = {
     }
 };
 
-function EventEmitter() {"use strict";
-        this.listeners = {};
-    }
-    EventEmitter.prototype.emit=function(event) {"use strict";
-        if (!(event in this.listeners)) {
-            return;
-        }
-        this.listeners[event].forEach(function(listener) {
-            listener.apply(this, arguments);
-        }.bind(this));
-    };
-    EventEmitter.prototype.addListener=function(event, f) {"use strict";
-        this.listeners[event] = this.listeners[event] || [];
-        this.listeners[event].push(f);
-    };
-    EventEmitter.prototype.removeListener=function(event, f) {"use strict";
-        if (!(event in this.listeners)) {
-            return false;
-        }
-        var index = this.listeners[event].indexOf(f);
-        if (index >= 0) {
-            this.listeners[event].splice(index, 1);
-        }
-    };
+"use strict";
 
-for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){_SettingsStore[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}var ____SuperProtoOfEventEmitter=EventEmitter===null?null:EventEmitter.prototype;_SettingsStore.prototype=Object.create(____SuperProtoOfEventEmitter);_SettingsStore.prototype.constructor=_SettingsStore;_SettingsStore.__superConstructor__=EventEmitter;
-    function _SettingsStore() {"use strict";
-        EventEmitter.call(this);
-
-        //FIXME: What do we do if we haven't requested anything from the server yet?
-        this.settings = {
-            version: "0.12",
-            showEventLog: true,
-            mode: "transparent",
-        }; 
+function EventEmitter() {
+    this.listeners = {};
+}
+EventEmitter.prototype.emit=function(event) {
+    if (!(event in this.listeners)) {
+        return;
     }
-    _SettingsStore.prototype.getAll=function() {"use strict";
+    this.listeners[event].forEach(function(listener) {
+        listener.apply(this, arguments);
+    }.bind(this));
+};
+EventEmitter.prototype.addListener=function(event, f) {
+    this.listeners[event] = this.listeners[event] || [];
+    this.listeners[event].push(f);
+};
+EventEmitter.prototype.removeListener=function(event, f) {
+    if (!(event in this.listeners)) {
+        return false;
+    }
+    var index = this.listeners[event].indexOf(f);
+    if (index >= 0) {
+        this.listeners[event].splice(index, 1);
+    }
+};
+
+"use strict";
+
+function _SettingsStore() {
+    EventEmitter.call(this);
+
+    //FIXME: What do we do if we haven't requested anything from the server yet?
+    this.settings = {
+        version: "0.12",
+        showEventLog: true,
+        mode: "transparent",
+    }; 
+}
+_.extend(_SettingsStore.prototype, EventEmitter.prototype, {
+    getAll: function() {
         return this.settings;
-    };
-    _SettingsStore.prototype.handle=function(action) {"use strict";
+    },
+    handle: function(action) {
         switch (action.actionType) {
             case ActionTypes.SETTINGS_UPDATE:
                 this.settings = action.settings;
@@ -100,11 +104,13 @@ for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(Even
             default:
                 return;
         }
-    };
+    }
+});
 
 var SettingsStore = new _SettingsStore();
 AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
 
+"use strict";
 //
 // We have an EventLogView and an EventLogStore:
 // The basic architecture is that one can request views on the event log
@@ -112,41 +118,44 @@ AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
 // The view object is accessed by React components and distributes updates etc.
 //
 // See also: components/EventLog.react.js
+function EventLogView(store, live) {
+    EventEmitter.call(this);
+    this.$EventLogView_store = store;
+    this.live = live;
+    this.log = [];
 
-for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){EventLogView[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}var ____SuperProtoOfEventEmitter=EventEmitter===null?null:EventEmitter.prototype;EventLogView.prototype=Object.create(____SuperProtoOfEventEmitter);EventLogView.prototype.constructor=EventLogView;EventLogView.__superConstructor__=EventEmitter;
-    function EventLogView(store, live) {"use strict";
-        EventEmitter.call(this);
-        this.$EventLogView_store = store;
-        this.live = live;
-        this.log = [];
+    this.add = this.add.bind(this);
 
-        this.add = this.add.bind(this);
-
-        if (live) {
-            this.$EventLogView_store.addListener("new_entry", this.add);
-        }
+    if (live) {
+        this.$EventLogView_store.addListener("new_entry", this.add);
     }
-    EventLogView.prototype.close=function() {"use strict";
+}
+_.extend(EventLogView.prototype, EventEmitter.prototype, {
+    close: function() {
         this.$EventLogView_store.removeListener("new_entry", this.add);
-    };
-    EventLogView.prototype.getAll=function() {"use strict";
+    },
+    getAll: function() {
         return this.log;
-    };
-    EventLogView.prototype.add=function(entry) {"use strict";
+    },
+    add: function(entry) {
         this.log.push(entry);
         this.emit("change");
-    };
-    EventLogView.prototype.add_bulk=function(messages) {"use strict";
+    },
+    add_bulk: function(messages) {
         var log = messages;
         var last_id = log[log.length - 1].id;
         var to_add = _.filter(this.log, function(entry)  {return entry.id > last_id;});
         this.log = log.concat(to_add);
         this.emit("change");
-    };
+    }
+});
 
 
-for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){_EventLogStore[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}_EventLogStore.prototype=Object.create(____SuperProtoOfEventEmitter);_EventLogStore.prototype.constructor=_EventLogStore;_EventLogStore.__superConstructor__=EventEmitter;function _EventLogStore(){"use strict";if(EventEmitter!==null){EventEmitter.apply(this,arguments);}}
-    _EventLogStore.prototype.getView=function(since) {"use strict";
+function _EventLogStore(){
+    EventEmitter.call(this);
+}
+_.extend(_EventLogStore.prototype, EventEmitter.prototype, {
+    getView: function(since) {
         var view = new EventLogView(this, !since);
 
         //TODO: Really do bulk retrieval of last messages.
@@ -176,8 +185,8 @@ for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmi
             });
         }, 1000);
         return view;
-    };
-    _EventLogStore.prototype.handle=function(action) {"use strict";
+    },
+    handle: function(action) {
         switch (action.actionType) {
             case ActionTypes.EVENTLOG_ADD:
                 this.emit("new_message", action.message);
@@ -185,7 +194,9 @@ for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmi
             default:
                 return;
         }
-    };
+    }
+});
+
 
 var EventLogStore = new _EventLogStore();
 AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
@@ -196,31 +207,31 @@ function _Connection(root) {"use strict";
         }
         this.root = root;
     }
-    _Connection.prototype.init=function() {"use strict";
-        this.openWebSocketConnection();
-    };
-    _Connection.prototype.openWebSocketConnection=function() {"use strict";
-        this.ws = new WebSocket(this.root.replace("http", "ws") + "/ws");
-        var ws = this.ws;
+_Connection.prototype.init=function() {"use strict";
+    this.openWebSocketConnection();
+};
+_Connection.prototype.openWebSocketConnection=function() {"use strict";
+    this.ws = new WebSocket(this.root.replace("http", "ws") + "/ws");
+    var ws = this.ws;
 
-        ws.onopen = this.onopen.bind(this);
-        ws.onmessage = this.onmessage.bind(this);
-        ws.onerror = this.onerror.bind(this);
-        ws.onclose = this.onclose.bind(this);
-    };
-    _Connection.prototype.onopen=function(open) {"use strict";
-        console.log("onopen", this, arguments);
-    };
-    _Connection.prototype.onmessage=function(message) {"use strict";
-        //AppDispatcher.dispatchServerAction(...);
-        console.log("onmessage", this, arguments);
-    };
-    _Connection.prototype.onerror=function(error) {"use strict";
-        console.log("onerror", this, arguments);
-    };
-    _Connection.prototype.onclose=function(close) {"use strict";
-        console.log("onclose", this, arguments);
-    };
+    ws.onopen = this.onopen.bind(this);
+    ws.onmessage = this.onmessage.bind(this);
+    ws.onerror = this.onerror.bind(this);
+    ws.onclose = this.onclose.bind(this);
+};
+_Connection.prototype.onopen=function(open) {"use strict";
+    console.log("onopen", this, arguments);
+};
+_Connection.prototype.onmessage=function(message) {"use strict";
+    //AppDispatcher.dispatchServerAction(...);
+    console.log("onmessage", this, arguments);
+};
+_Connection.prototype.onerror=function(error) {"use strict";
+    console.log("onerror", this, arguments);
+};
+_Connection.prototype.onclose=function(close) {"use strict";
+    console.log("onclose", this, arguments);
+};
 
 var Connection = new _Connection();
 
@@ -344,7 +355,7 @@ var TrafficTable = React.createClass({displayName: 'TrafficTable',
         i = 12;
         while (i--) x += x;
         return ( 
-            React.DOM.div(null, React.DOM.pre(null, " ", x, " ")) 
+            React.DOM.div(null, "Flow") 
         );
     }
 });
@@ -434,7 +445,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
                     this.state.settings.showEventLog ? EventLog(null) : null, 
                 Footer({settings: this.state.settings})
             )
-            );
+        );
     }
 });
 
@@ -450,9 +461,7 @@ var ProxyApp = (
 );
 
 $(function() {
-
     Connection.init();
     app = React.renderComponent(ProxyApp, document.body);
-
 });
 //# sourceMappingURL=app.js.map

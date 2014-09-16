@@ -30,7 +30,7 @@ var ProxyAppMain = React.createClass({
                     {this.state.settings.showEventLog ? <EventLog/> : null}
                 <Footer settings={this.state.settings}/>
             </div>
-            );
+        );
     }
 });
 

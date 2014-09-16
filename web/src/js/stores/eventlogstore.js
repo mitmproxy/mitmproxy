@@ -1,3 +1,4 @@
+"use strict";
 //
 // We have an EventLogView and an EventLogStore:
 // The basic architecture is that one can request views on the event log
@@ -5,41 +6,44 @@
 // The view object is accessed by React components and distributes updates etc.
 //
 // See also: components/EventLog.react.js
+function EventLogView(store, live) {
+    EventEmitter.call(this);
+    this.$EventLogView_store = store;
+    this.live = live;
+    this.log = [];
 
-for(var EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){EventLogView[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}var ____SuperProtoOfEventEmitter=EventEmitter===null?null:EventEmitter.prototype;EventLogView.prototype=Object.create(____SuperProtoOfEventEmitter);EventLogView.prototype.constructor=EventLogView;EventLogView.__superConstructor__=EventEmitter;
-    function EventLogView(store, live) {"use strict";
-        EventEmitter.call(this);
-        this.$EventLogView_store = store;
-        this.live = live;
-        this.log = [];
+    this.add = this.add.bind(this);
 
-        this.add = this.add.bind(this);
-
-        if (live) {
-            this.$EventLogView_store.addListener("new_entry", this.add);
-        }
+    if (live) {
+        this.$EventLogView_store.addListener("new_entry", this.add);
     }
-    EventLogView.prototype.close=function() {"use strict";
+}
+_.extend(EventLogView.prototype, EventEmitter.prototype, {
+    close: function() {
         this.$EventLogView_store.removeListener("new_entry", this.add);
-    };
-    EventLogView.prototype.getAll=function() {"use strict";
+    },
+    getAll: function() {
         return this.log;
-    };
-    EventLogView.prototype.add=function(entry) {"use strict";
+    },
+    add: function(entry) {
         this.log.push(entry);
         this.emit("change");
-    };
-    EventLogView.prototype.add_bulk=function(messages) {"use strict";
+    },
+    add_bulk: function(messages) {
         var log = messages;
         var last_id = log[log.length - 1].id;
         var to_add = _.filter(this.log, function(entry)  {return entry.id > last_id;});
         this.log = log.concat(to_add);
         this.emit("change");
-    };
+    }
+});
 
 
-for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmitter____Key)){_EventLogStore[EventEmitter____Key]=EventEmitter[EventEmitter____Key];}}_EventLogStore.prototype=Object.create(____SuperProtoOfEventEmitter);_EventLogStore.prototype.constructor=_EventLogStore;_EventLogStore.__superConstructor__=EventEmitter;function _EventLogStore(){"use strict";if(EventEmitter!==null){EventEmitter.apply(this,arguments);}}
-    _EventLogStore.prototype.getView=function(since) {"use strict";
+function _EventLogStore(){
+    EventEmitter.call(this);
+}
+_.extend(_EventLogStore.prototype, EventEmitter.prototype, {
+    getView: function(since) {
         var view = new EventLogView(this, !since);
 
         //TODO: Really do bulk retrieval of last messages.
@@ -69,8 +73,8 @@ for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmi
             });
         }, 1000);
         return view;
-    };
-    _EventLogStore.prototype.handle=function(action) {"use strict";
+    },
+    handle: function(action) {
         switch (action.actionType) {
             case ActionTypes.EVENTLOG_ADD:
                 this.emit("new_message", action.message);
@@ -78,7 +82,9 @@ for(EventEmitter____Key in EventEmitter){if(EventEmitter.hasOwnProperty(EventEmi
             default:
                 return;
         }
-    };
+    }
+});
+
 
 var EventLogStore = new _EventLogStore();
 AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
