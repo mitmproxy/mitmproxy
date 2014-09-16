@@ -1,6 +1,7 @@
-
 import os.path
 import tornado.web
+import tornado.websocket
+import logging
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -8,10 +9,29 @@ class IndexHandler(tornado.web.RequestHandler):
         self.render("index.html")
 
 
+class ClientConnection(tornado.websocket.WebSocketHandler):
+    connections = set()
+
+    def open(self):
+        ClientConnection.connections.add(self)
+
+    def on_close(self):
+        ClientConnection.connections.remove(self)
+
+    @classmethod
+    def broadcast(cls, type, data):
+        for conn in cls.connections:
+            try:
+                conn.write_message(type, data)
+            except:
+                logging.error("Error sending message", exc_info=True)
+
+
 class Application(tornado.web.Application):
     def __init__(self, debug):
         handlers = [
             (r"/", IndexHandler),
+            (r"/updates", ClientConnection),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

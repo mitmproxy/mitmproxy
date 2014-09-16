@@ -58,6 +58,7 @@ class Options(object):
 class WebMaster(flow.FlowMaster):
     def __init__(self, server, options):
         self.options = options
+        self.app = app.Application(self.options.wdebug)
         flow.FlowMaster.__init__(self, server, WebState())
 
     def tick(self):
@@ -70,9 +71,7 @@ class WebMaster(flow.FlowMaster):
         )
         iol = tornado.ioloop.IOLoop.instance()
 
-        http_server = tornado.httpserver.HTTPServer(
-            app.Application(self.options.wdebug)
-        )
+        http_server = tornado.httpserver.HTTPServer(self.app)
         http_server.listen(self.options.wport)
 
         tornado.ioloop.PeriodicCallback(self.tick, 5).start()
@@ -82,6 +81,7 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def handle_request(self, f):
+        print f
         flow.FlowMaster.handle_request(self, f)
         if f:
             f.reply()

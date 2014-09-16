@@ -2,11 +2,10 @@
     This module provides more sophisticated flow tracking and provides filtering and interception facilities.
 """
 from __future__ import absolute_import
-import base64
-import hashlib, Cookie, cookielib, re, threading
-import os
-import flask
-import requests
+import hashlib
+import Cookie
+import cookielib
+import re
 from netlib import odict, wsgi
 import netlib.http
 from . import controller, protocol, tnetstring, filt, script, version
@@ -151,9 +150,12 @@ class StreamLargeBodies(object):
     def run(self, flow, is_request):
         r = flow.request if is_request else flow.response
         code = flow.response.code if flow.response else None
-        expected_size = netlib.http.expected_http_body_size(r.headers, is_request, flow.request.method, code)
+        expected_size = netlib.http.expected_http_body_size(
+            r.headers, is_request, flow.request.method, code
+        )
         if not (0 <= expected_size <= self.max_size):
             r.stream = True
+
 
 class ClientPlaybackState:
     def __init__(self, flows, exit):
@@ -645,11 +647,11 @@ class FlowMaster(controller.Master):
             f.error = None
             self.process_new_request(f)
             rt = http.RequestReplayThread(
-                    self.server.config,
-                    f,
-                    self.masterq,
-                    self.should_exit
-                )
+                self.server.config,
+                f,
+                self.masterq,
+                self.should_exit
+            )
             rt.start()  # pragma: no cover
             if block:
                 rt.join()

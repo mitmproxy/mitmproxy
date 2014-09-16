@@ -12,10 +12,10 @@ class Error(stateobject.SimpleStateObject):
     """
         An Error.
 
-        This is distinct from an protocol error response (say, a HTTP code 500), which
-        is represented by a normal HTTPResponse object. This class is responsible
-        for indicating errors that fall outside of normal protocol communications,
-        like interrupted connections, timeouts, protocol errors.
+        This is distinct from an protocol error response (say, a HTTP code 500),
+        which is represented by a normal HTTPResponse object. This class is
+        responsible for indicating errors that fall outside of normal protocol
+        communications, like interrupted connections, timeouts, protocol errors.
 
         Exposes the following attributes:
 
@@ -42,7 +42,9 @@ class Error(stateobject.SimpleStateObject):
 
     @classmethod
     def _from_state(cls, state):
-        f = cls(None)  # the default implementation assumes an empty constructor. Override accordingly.
+        # the default implementation assumes an empty constructor. Override
+        # accordingly.
+        f = cls(None)
         f._load_state(state)
         return f
 
@@ -133,31 +135,35 @@ class ProtocolHandler(object):
 
     def handle_messages(self):
         """
-        This method gets called if a client connection has been made. Depending on the proxy settings,
-        a server connection might already exist as well.
+        This method gets called if a client connection has been made. Depending
+        on the proxy settings, a server connection might already exist as well.
         """
         raise NotImplementedError  # pragma: nocover
 
     def handle_server_reconnect(self, state):
         """
-        This method gets called if a server connection needs to reconnect and there's a state associated
-        with the server connection (e.g. a previously-sent CONNECT request or a SOCKS proxy request).
-        This method gets called after the connection has been restablished but before SSL is established.
+        This method gets called if a server connection needs to reconnect and
+        there's a state associated with the server connection (e.g. a
+        previously-sent CONNECT request or a SOCKS proxy request). This method
+        gets called after the connection has been restablished but before SSL is
+        established.
         """
         raise NotImplementedError  # pragma: nocover
 
     def handle_error(self, error):
         """
-        This method gets called should there be an uncaught exception during the connection.
-        This might happen outside of handle_messages, e.g. if the initial SSL handshake fails in transparent mode.
+        This method gets called should there be an uncaught exception during the
+        connection. This might happen outside of handle_messages, e.g. if the
+        initial SSL handshake fails in transparent mode.
         """
         raise error  # pragma: nocover
 
 
 class LiveConnection(object):
     """
-    This facade allows interested parties (FlowMaster, inline scripts) to interface with a live connection,
-    without requiring to expose the internals of the ConnectionHandler.
+    This facade allows interested parties (FlowMaster, inline scripts) to
+    interface with a live connection, without requiring to expose the internals
+    of the ConnectionHandler.
     """
     def __init__(self, c):
         self.c = c
@@ -193,7 +199,9 @@ class LiveConnection(object):
             if not self._backup_server_conn and not persistent_change:
                 self._backup_server_conn = self.c.server_conn
                 self.c.server_conn = None
-            else:  # This is at least the second temporary change. We can kill the current connection.
+            else:
+                # This is at least the second temporary change. We can kill the
+                # current connection.
                 self.c.del_server_connection()
 
             self.c.set_server_address(address)
@@ -204,8 +212,9 @@ class LiveConnection(object):
         return False
 
     def restore_server(self):
-        # TODO: Similar to _backup_server_conn, introduce _cache_server_conn, which keeps the changed connection open
-        # This may be beneficial if a user is rewriting all requests from http to https or similar.
+        # TODO: Similar to _backup_server_conn, introduce _cache_server_conn,
+        # which keeps the changed connection open This may be beneficial if a
+        # user is rewriting all requests from http to https or similar.
         if not self._backup_server_conn:
             return
 
