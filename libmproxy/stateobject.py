@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+
 class StateObject(object):
     def _get_state(self):
         raise NotImplementedError  # pragma: nocover
@@ -18,7 +19,8 @@ class StateObject(object):
     def __eq__(self, other):
         try:
             return self._get_state() == other._get_state()
-        except AttributeError:  # we may compare with something that's not a StateObject
+        except AttributeError:
+            # we may compare with something that's not a StateObject
             return False
 
     def __ne__(self, other):
@@ -29,16 +31,18 @@ class SimpleStateObject(StateObject):
     """
     A StateObject with opionated conventions that tries to keep everything DRY.
 
-    Simply put, you agree on a list of attributes and their type.
-    Attributes can either be primitive types(str, tuple, bool, ...) or StateObject instances themselves.
-    SimpleStateObject uses this information for the default _get_state(), _from_state(s) and _load_state(s) methods.
-    Overriding _get_state or _load_state to add custom adjustments is always possible.
+    Simply put, you agree on a list of attributes and their type. Attributes can
+    either be primitive types(str, tuple, bool, ...) or StateObject instances
+    themselves. SimpleStateObject uses this information for the default
+    _get_state(), _from_state(s) and _load_state(s) methods. Overriding
+    _get_state or _load_state to add custom adjustments is always possible.
     """
 
     _stateobject_attributes = None  # none by default to raise an exception if definition was forgotten
     """
-    An attribute-name -> class-or-type dict containing all attributes that should be serialized
-    If the attribute is a class, this class must be a subclass of StateObject.
+    An attribute-name -> class-or-type dict containing all attributes that
+    should be serialized If the attribute is a class, this class must be a
+    subclass of StateObject.
     """
 
     def _get_state(self):
@@ -76,3 +80,4 @@ class SimpleStateObject(StateObject):
             setattr(self, attr, cls._from_state(state[attr]))
         else:
             setattr(self, attr, cls(state[attr]))
+

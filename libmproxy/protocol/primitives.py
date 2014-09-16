@@ -162,7 +162,7 @@ class ProtocolHandler(object):
 class LiveConnection(object):
     """
     This facade allows interested parties (FlowMaster, inline scripts) to
-    interface with a live connection, without requiring to expose the internals
+    interface with a live connection, without exposing the internals
     of the ConnectionHandler.
     """
     def __init__(self, c):
@@ -188,13 +188,16 @@ class LiveConnection(object):
 
         if ssl_mismatch or address_mismatch or force:
 
-            self.c.log("Change server connection: %s:%s -> %s:%s [persistent: %s]" % (
-                self.c.server_conn.address.host,
-                self.c.server_conn.address.port,
-                address.host,
-                address.port,
-                persistent_change
-            ), "debug")
+            self.c.log(
+                "Change server connection: %s:%s -> %s:%s [persistent: %s]" % (
+                    self.c.server_conn.address.host,
+                    self.c.server_conn.address.port,
+                    address.host,
+                    address.port,
+                    persistent_change
+                ),
+                "debug"
+            )
 
             if not self._backup_server_conn and not persistent_change:
                 self._backup_server_conn = self.c.server_conn

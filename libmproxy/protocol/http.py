@@ -1,5 +1,9 @@
 from __future__ import absolute_import
-import Cookie, urllib, urlparse, time, copy
+import Cookie
+import urllib
+import urlparse
+import time
+import copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import threading
 from netlib import http, tcp, http_status
@@ -27,8 +31,17 @@ def get_line(fp):
 
 
 def send_connect_request(conn, host, port, update_state=True):
-    upstream_request = HTTPRequest("authority", "CONNECT", None, host, port, None,
-                                   (1, 1), ODictCaseless(), "")
+    upstream_request = HTTPRequest(
+        "authority",
+        "CONNECT",
+        None,
+        host,
+        port,
+        None,
+        (1, 1),
+        ODictCaseless(),
+        ""
+    )
     conn.send(upstream_request.assemble())
     resp = HTTPResponse.from_stream(conn.rfile, upstream_request.method)
     if resp.code != 200:
@@ -96,7 +109,8 @@ class HTTPMessage(stateobject.SimpleStateObject):
 
     def get_decoded_content(self):
         """
-            Returns the decoded content based on the current Content-Encoding header.
+            Returns the decoded content based on the current Content-Encoding
+            header.
             Doesn't change the message iteself or its headers.
         """
         ce = self.headers.get_first("content-encoding")
@@ -156,7 +170,9 @@ class HTTPMessage(stateobject.SimpleStateObject):
             Returns the number of replacements made.
         """
         with decoded(self):
-            self.content, c = utils.safe_subn(pattern, repl, self.content, *args, **kwargs)
+            self.content, c = utils.safe_subn(
+                pattern, repl, self.content, *args, **kwargs
+            )
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
 
@@ -195,10 +211,11 @@ class HTTPRequest(HTTPMessage):
 
         scheme: URL scheme (http/https)
 
-        host: Target hostname of the request. This is not neccessarily the directy upstream server (which could be
-        another proxy), but it's always the target server we want to reach at the end. This attribute is either
-        inferred from the request itself (absolute-form, authority-form) or from the connection metadata (e.g. the
-        host in reverse proxy mode).
+        host: Target hostname of the request. This is not neccessarily the
+        directy upstream server (which could be another proxy), but it's always
+        the target server we want to reach at the end. This attribute is either
+        inferred from the request itself (absolute-form, authority-form) or from
+        the connection metadata (e.g. the host in reverse proxy mode).
 
         port: Destination port
 
@@ -264,7 +281,9 @@ class HTTPRequest(HTTPMessage):
         return f
 
     def __repr__(self):
-        return "<HTTPRequest: {0}>".format(self._assemble_first_line(self.form_in)[:-9])
+        return "<HTTPRequest: {0}>".format(
+            self._assemble_first_line(self.form_in)[:-9]
+        )
 
     @classmethod
     def from_stream(cls, rfile, include_body=True, body_size_limit=None):
@@ -453,7 +472,9 @@ class HTTPRequest(HTTPMessage):
         lst = [urllib.quote(i, safe="") for i in lst]
         path = "/" + "/".join(lst)
         scheme, netloc, _, params, query, fragment = urlparse.urlparse(self.url)
-        self.url = urlparse.urlunparse([scheme, netloc, path, params, query, fragment])
+        self.url = urlparse.urlunparse(
+            [scheme, netloc, path, params, query, fragment]
+        )
 
     def get_query(self):
         """
@@ -470,18 +491,23 @@ class HTTPRequest(HTTPMessage):
         """
         scheme, netloc, path, params, _, fragment = urlparse.urlparse(self.url)
         query = utils.urlencode(odict.lst)
-        self.url = urlparse.urlunparse([scheme, netloc, path, params, query, fragment])
+        self.url = urlparse.urlunparse(
+            [scheme, netloc, path, params, query, fragment]
+        )
 
     def pretty_host(self, hostheader):
         """
             Heuristic to get the host of the request.
 
-            Note that pretty_host() does not always return the TCP destination of the request,
-            e.g. if an upstream proxy is in place
+            Note that pretty_host() does not always return the TCP destination
+            of the request, e.g. if an upstream proxy is in place
 
-            If hostheader is set to True, the Host: header will be used as additional (and preferred) data source.
-            This is handy in transparent mode, where only the ip of the destination is known, but not the
-            resolved name. This is disabled by default, as an attacker may spoof the host header to confuse an analyst.
+            If hostheader is set to True, the Host: header will be used as
+            additional (and preferred) data source. This is handy in transparent
+            mode, where only the ip of the destination is known, but not the
+            resolved name. This is disabled by default, as an attacker may spoof
+            the host header to confuse an analyst.
+
         """
         host = None
         if hostheader:
@@ -504,10 +530,12 @@ class HTTPRequest(HTTPMessage):
         """
             Returns a URL string, constructed from the Request's URL components.
         """
-        return utils.unparse_url(self.scheme,
-                                 self.host,
-                                 self.port,
-                                 self.path).encode('ascii')
+        return utils.unparse_url(
+            self.scheme,
+            self.host,
+            self.port,
+            self.path
+        ).encode('ascii')
 
     @url.setter
     def url(self, url):
@@ -535,14 +563,16 @@ class HTTPRequest(HTTPMessage):
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
-            Replaces a regular expression pattern with repl in the headers, the request path
-            and the body of the request. Encoded content will be decoded before
-            replacement, and re-encoded afterwards.
+            Replaces a regular expression pattern with repl in the headers, the
+            request path and the body of the request. Encoded content will be
+            decoded before replacement, and re-encoded afterwards.
 
             Returns the number of replacements made.
         """
         c = HTTPMessage.replace(self, pattern, repl, *args, **kwargs)
-        self.path, pc = utils.safe_subn(pattern, repl, self.path, *args, **kwargs)
+        self.path, pc = utils.safe_subn(
+            pattern, repl, self.path, *args, **kwargs
+        )
         c += pc
         return c
 
@@ -573,8 +603,14 @@ class HTTPResponse(HTTPMessage):
     def __init__(self, httpversion, code, msg, headers, content, timestamp_start=None,
                  timestamp_end=None):
         assert isinstance(headers, ODictCaseless) or headers is None
-        HTTPMessage.__init__(self, httpversion, headers, content, timestamp_start,
-                             timestamp_end)
+        HTTPMessage.__init__(
+            self,
+            httpversion,
+            headers,
+            content,
+            timestamp_start,
+            timestamp_end
+        )
 
         self.code = code
         self.msg = msg
@@ -625,8 +661,15 @@ class HTTPResponse(HTTPMessage):
             timestamp_start = rfile.first_byte_timestamp
 
         timestamp_end = utils.timestamp()
-        return HTTPResponse(httpversion, code, msg, headers, content, timestamp_start,
-                            timestamp_end)
+        return HTTPResponse(
+            httpversion,
+            code,
+            msg,
+            headers,
+            content,
+            timestamp_start,
+            timestamp_end
+        )
 
     def _assemble_first_line(self):
         return 'HTTP/%s.%s %s %s' % \
@@ -836,9 +879,9 @@ class HTTPFlow(Flow):
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
-            Replaces a regular expression pattern with repl in both request and response of the
-            flow. Encoded content will be decoded before replacement, and
-            re-encoded afterwards.
+            Replaces a regular expression pattern with repl in both request and
+            response of the flow. Encoded content will be decoded before
+            replacement, and re-encoded afterwards.
 
             Returns the number of replacements made.
         """
@@ -901,26 +944,38 @@ class HTTPHandler(ProtocolHandler):
                 else:
                     raise
 
-        # call the appropriate script hook - this is an opportunity for an inline script to set flow.stream = True
+        # call the appropriate script hook - this is an opportunity for an
+        # inline script to set flow.stream = True
         self.c.channel.ask("responseheaders", flow)
 
-        # now get the rest of the request body, if body still needs to be read but not streaming this response
+        # now get the rest of the request body, if body still needs to be read
+        # but not streaming this response
         if flow.response.stream:
             flow.response.content = CONTENT_MISSING
         else:
-            flow.response.content = http.read_http_body(self.c.server_conn.rfile, flow.response.headers,
-                                                        self.c.config.body_size_limit,
-                                                        flow.request.method, flow.response.code, False)
+            flow.response.content = http.read_http_body(
+                self.c.server_conn.rfile, flow.response.headers,
+                self.c.config.body_size_limit,
+                flow.request.method, flow.response.code, False
+            )
 
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
         try:
             try:
-                req = HTTPRequest.from_stream(self.c.client_conn.rfile,
-                                              body_size_limit=self.c.config.body_size_limit)
-            except tcp.NetLibDisconnect:  # don't throw an error for disconnects that happen before/between requests.
+                req = HTTPRequest.from_stream(
+                    self.c.client_conn.rfile,
+                    body_size_limit=self.c.config.body_size_limit
+                )
+            except tcp.NetLibDisconnect:
+                 # don't throw an error for disconnects that happen
+                 # before/between requests.
                 return False
-            self.c.log("request", "debug", [req._assemble_first_line(req.form_in)])
+            self.c.log(
+                "request",
+                "debug",
+                [req._assemble_first_line(req.form_in)]
+            )
             ret = self.process_request(flow, req)
             if ret is not None:
                 return ret
@@ -958,14 +1013,21 @@ class HTTPHandler(ProtocolHandler):
 
             # We sent a CONNECT request to an upstream proxy.
             if flow.request.form_in == "authority" and flow.response.code == 200:
-                # TODO: Possibly add headers (memory consumption/usefulness tradeoff)
-                # Make sure to add state info before the actual processing of the CONNECT request happens.
-                # During an SSL upgrade, we may receive an SNI indication from the client,
-                # which resets the upstream connection. If this is the case, we must
-                # already re-issue the CONNECT request at this point.
-                self.c.server_conn.state.append(("http", {"state": "connect",
-                                                          "host": flow.request.host,
-                                                          "port": flow.request.port}))
+                # TODO: Possibly add headers (memory consumption/usefulness
+                # tradeoff) Make sure to add state info before the actual
+                # processing of the CONNECT request happens. During an SSL
+                # upgrade, we may receive an SNI indication from the client,
+                # which resets the upstream connection. If this is the case, we
+                # must already re-issue the CONNECT request at this point.
+                self.c.server_conn.state.append(
+                    (
+                        "http", {
+                            "state": "connect",
+                            "host": flow.request.host,
+                            "port": flow.request.port
+                        }
+                    )
+                )
                 if not self.process_connect_request((flow.request.host, flow.request.port)):
                     return False
 
