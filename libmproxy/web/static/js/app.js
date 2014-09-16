@@ -52,7 +52,6 @@ var SettingsActions = {
     }
 };
 
-"use strict";
 
 function EventEmitter() {
     this.listeners = {};
@@ -79,7 +78,6 @@ EventEmitter.prototype.removeListener=function(event, f) {
     }
 };
 
-"use strict";
 
 function _SettingsStore() {
     EventEmitter.call(this);
@@ -110,7 +108,6 @@ _.extend(_SettingsStore.prototype, EventEmitter.prototype, {
 var SettingsStore = new _SettingsStore();
 AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
 
-"use strict";
 //
 // We have an EventLogView and an EventLogStore:
 // The basic architecture is that one can request views on the event log

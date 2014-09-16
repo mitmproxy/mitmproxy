@@ -53,55 +53,78 @@ var path = {
     fonts: ["src/vendor/fontawesome/fontawesome-webfont.*"],
     html: ["src/*.html", "!src/benchmark.html", "!src/test.html"]
 };
+
+
 gulp.task("fonts", function () {
     return gulp.src(path.fonts)
         .pipe(gulp.dest(path.dist + "static/fonts"));
 });
 
-function styles(files, dev) {
+
+function styles_dev(files) {
     return (gulp.src(files, {base: "src", cwd: "src"})
-        .pipe(dev ? dont_break_on_errors() : gutil.noop())
-        .pipe(dev ? sourcemaps.init() : gutil.noop())
+        .pipe(dont_break_on_errors())
+        .pipe(sourcemaps.init())
         .pipe(less())
-        .pipe(dev ? sourcemaps.write(".", {sourceRoot: "/static"}) : gutil.noop())
-        // No sourcemaps support yet :-/
-        // https://github.com/jonathanepollack/gulp-minify-css/issues/34
-        .pipe(!dev ? minifyCSS() : gutil.noop())
+        .pipe(sourcemaps.write(".", {sourceRoot: "/static"}))
         .pipe(gulp.dest(path.dist + "static"))
         .pipe(livereload({ auto: false })));
 }
-gulp.task("styles-app-dev", styles.bind(undefined, path.css.app, true));
-gulp.task("styles-app-prod", styles.bind(undefined, path.css.app, false));
-gulp.task("styles-vendor-dev", styles.bind(undefined, path.css.vendor, true));
-gulp.task("styles-vendor-prod", styles.bind(undefined, path.css.vendor, false));
+gulp.task("styles-app-dev", styles_dev.bind(undefined, path.css.app));
+gulp.task("styles-vendor-dev", styles_dev.bind(undefined, path.css.vendor));
 gulp.task("styles-dev", ["styles-app-dev", "styles-vendor-dev"]);
+
+
+function styles_prod(files) {
+    return (gulp.src(files, {base: "src", cwd: "src"})
+        .pipe(less())
+        // No sourcemaps support yet :-/
+        // https://github.com/jonathanepollack/gulp-minify-css/issues/34
+        .pipe(minifyCSS())
+        .pipe(gulp.dest(path.dist + "static"))
+        .pipe(livereload({ auto: false })));
+}
+gulp.task("styles-app-prod", styles_prod.bind(undefined, path.css.app));
+gulp.task("styles-vendor-prod", styles_prod.bind(undefined, path.css.vendor));
 gulp.task("styles-prod", ["styles-app-prod", "styles-vendor-prod"]);
 
-function scripts(files, filename, dev) {
+
+function scripts_dev(files, filename) {
     return gulp.src(files, {base: "src", cwd: "src"})
-        .pipe(dev ? dont_break_on_errors(): gutil.noop())
-        .pipe(dev ? sourcemaps.init() : gutil.noop())
-        .pipe(react({harmony: false}))
+        .pipe(dont_break_on_errors())
+        .pipe(sourcemaps.init())
+        .pipe(react())
         .pipe(concat(filename))
-        .pipe(!dev ? uglify() : gutil.noop())
-        .pipe(dev ? sourcemaps.write(".", {sourceRoot: "/static"}) : gutil.noop())
+        .pipe(sourcemaps.write(".", {sourceRoot: "/static"}))
         .pipe(gulp.dest(path.dist + "static/js"))
         .pipe(livereload({ auto: false }));
 }
-gulp.task("scripts-app-dev", scripts.bind(undefined, path.js.app, "app.js", true));
-gulp.task("scripts-app-prod", scripts.bind(undefined, path.js.app, "app.js", false));
-gulp.task("scripts-vendor-dev", scripts.bind(undefined, path.js.vendor, "vendor.js", true));
-gulp.task("scripts-vendor-prod", scripts.bind(undefined, path.js.vendor, "vendor.js", false));
+gulp.task("scripts-app-dev", scripts_dev.bind(undefined, path.js.app, "app.js"));
+gulp.task("scripts-vendor-dev", scripts_dev.bind(undefined, path.js.vendor, "vendor.js"));
 gulp.task("scripts-dev", ["scripts-app-dev", "scripts-vendor-dev"]);
+
+
+function scripts_prod(files, filename) {
+    return gulp.src(files, {base: "src", cwd: "src"})
+        .pipe(react())
+        .pipe(concat(filename))
+        .pipe(uglify())
+        .pipe(gulp.dest(path.dist + "static/js"))
+        .pipe(livereload({ auto: false }));
+}
+gulp.task("scripts-app-prod", scripts_prod.bind(undefined, path.js.app, "app.js"));
+gulp.task("scripts-vendor-prod", scripts_prod.bind(undefined, path.js.vendor, "vendor.js"));
 gulp.task("scripts-prod", ["scripts-app-prod", "scripts-vendor-prod"]);
+
 
 gulp.task("jshint", function () {
     return gulp.src(["src/js/**"])
         .pipe(dont_break_on_errors())
-        .pipe(react({harmony: false /* Do not do Harmony transformation for JSHint */}))
+        .pipe(react())
         .pipe(jshint())
         .pipe(jshint.reporter("jshint-stylish"))
 });
+
 
 gulp.task("html", function () {
     return gulp.src(path.html)
@@ -109,10 +132,12 @@ gulp.task("html", function () {
         .pipe(livereload({ auto: false }));
 });
 
+
 gulp.task('test', function() {
     return gulp.src('src/test.html')
         .pipe(qunit({verbose: true}));
 });
+
 
 common = ["fonts", "html", "jshint"];
 gulp.task("dev", common.concat(["styles-dev", "scripts-dev"]));

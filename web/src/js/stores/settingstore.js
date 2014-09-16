@@ -1,4 +1,3 @@
-"use strict";
 
 function _SettingsStore() {
     EventEmitter.call(this);

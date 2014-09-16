@@ -1,4 +1,3 @@
-"use strict";
 //
 // We have an EventLogView and an EventLogStore:
 // The basic architecture is that one can request views on the event log
