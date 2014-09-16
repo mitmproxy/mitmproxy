@@ -39,7 +39,7 @@ class FlowDetailsView(urwid.ListBox):
             text.append(urwid.Text([("head", "Server Connection:")]))
             sc = self.flow.server_conn
             parts = [
-                ["Address", "%s:%s" % sc.peername],
+                ["Address", "%s:%s" % sc.address()],
                 ["Start time", utils.format_timestamp(sc.timestamp_start)],
                 ["End time", utils.format_timestamp(sc.timestamp_end) if sc.timestamp_end else "active"],
             ]
