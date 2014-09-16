@@ -561,7 +561,7 @@ class FlowMaster(controller.Master):
             rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
-            response = http.HTTPResponse._from_state(rflow.response._get_state())
+            response = http.HTTPResponse.from_state(rflow.response.get_state())
             response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
@@ -740,7 +740,7 @@ class FlowWriter:
         self.fo = fo
 
     def add(self, flow):
-        d = flow._get_state()
+        d = flow.get_state()
         tnetstring.dump(d, self.fo)
 
 
@@ -766,7 +766,7 @@ class FlowReader:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
-                yield handle.protocols[data["conntype"]]["flow"]._from_state(data)
+                yield handle.protocols[data["conntype"]]["flow"].from_state(data)
         except ValueError, v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':
@@ -782,5 +782,5 @@ class FilteredFlowWriter:
     def add(self, f):
         if self.filt and not f.match(self.filt):
             return
-        d = f._get_state()
+        d = f.get_state()
         tnetstring.dump(d, self.fo)

@@ -5,7 +5,7 @@ from netlib import tcp, certutils
 from .. import stateobject, utils
 
 
-class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
+class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     def __init__(self, client_connection, address, server):
         if client_connection:  # Eventually, this object is restored from state. We don't have a connection then.
             tcp.BaseHandler.__init__(self, client_connection, address, server)
@@ -36,16 +36,16 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
         timestamp_ssl_setup=float
     )
 
-    def _get_state(self):
-        d = super(ClientConnection, self)._get_state()
+    def get_state(self):
+        d = super(ClientConnection, self).get_state()
         d.update(
             address={"address": self.address(), "use_ipv6": self.address.use_ipv6},
             clientcert=self.cert.to_pem() if self.clientcert else None
         )
         return d
 
-    def _load_state(self, state):
-        super(ClientConnection, self)._load_state(state)
+    def load_state(self, state):
+        super(ClientConnection, self).load_state(state)
         self.address = tcp.Address(**state["address"]) if state["address"] else None
         self.clientcert = certutils.SSLCert.from_pem(state["clientcert"]) if state["clientcert"] else None
 
@@ -57,9 +57,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
         self.wfile.flush()
 
     @classmethod
-    def _from_state(cls, state):
+    def from_state(cls, state):
         f = cls(None, tuple(), None)
-        f._load_state(state)
+        f.load_state(state)
         return f
 
     def convert_to_ssl(self, *args, **kwargs):
@@ -71,7 +71,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.SimpleStateObject):
         self.timestamp_end = utils.timestamp()
 
 
-class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
+class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def __init__(self, address):
         tcp.TCPClient.__init__(self, address)
 
@@ -107,8 +107,8 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         sni=str
     )
 
-    def _get_state(self):
-        d = super(ServerConnection, self)._get_state()
+    def get_state(self):
+        d = super(ServerConnection, self).get_state()
         d.update(
             address={"address": self.address(),
                      "use_ipv6": self.address.use_ipv6},
@@ -118,17 +118,17 @@ class ServerConnection(tcp.TCPClient, stateobject.SimpleStateObject):
         )
         return d
 
-    def _load_state(self, state):
-        super(ServerConnection, self)._load_state(state)
+    def load_state(self, state):
+        super(ServerConnection, self).load_state(state)
 
         self.address = tcp.Address(**state["address"]) if state["address"] else None
         self.source_address = tcp.Address(**state["source_address"]) if state["source_address"] else None
         self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     @classmethod
-    def _from_state(cls, state):
+    def from_state(cls, state):
         f = cls(tuple())
-        f._load_state(state)
+        f.load_state(state)
         return f
 
     def copy(self):

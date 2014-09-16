@@ -1,8 +1,8 @@
-
 import tornado.ioloop
 import tornado.httpserver
 from .. import controller, utils, flow, script, proxy
 import app
+import pprint
 
 
 class Stop(Exception):
@@ -81,7 +81,7 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def handle_request(self, f):
-        print f
+        pprint.pprint(f.get_state())
         flow.FlowMaster.handle_request(self, f)
         if f:
             f.reply()

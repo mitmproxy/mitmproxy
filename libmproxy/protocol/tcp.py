@@ -1,7 +1,9 @@
 from __future__ import absolute_import
-import select, socket
+import select
+import socket
 from .primitives import ProtocolHandler
 from netlib.utils import cleanBin
+
 
 class TCPHandler(ProtocolHandler):
     """
@@ -34,7 +36,9 @@ class TCPHandler(ProtocolHandler):
                     closed = False
                     if src.ssl_established:
                         # Unfortunately, pyOpenSSL lacks a recv_into function.
-                        contents = src.rfile.read(1)  # We need to read a single byte before .pending() becomes usable
+                        # We need to read a single byte before .pending()
+                        # becomes usable
+                        contents = src.rfile.read(1)
                         contents += src.rfile.read(src.connection.pending())
                         if not contents:
                             closed = True
@@ -56,14 +60,29 @@ class TCPHandler(ProtocolHandler):
                         continue
 
                     if src.ssl_established or dst.ssl_established:
-                        # if one of the peers is over SSL, we need to send bytes/strings
-                        if not src.ssl_established:  # only ssl to dst, i.e. we revc'd into buf but need bytes/string now.
+                        # if one of the peers is over SSL, we need to send
+                        # bytes/strings
+                        if not src.ssl_established:
+                            # only ssl to dst, i.e. we revc'd into buf but need
+                            # bytes/string now.
                             contents = buf[:size].tobytes()
-                        self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(contents)), "debug")
+                        self.c.log(
+                            "%s %s\r\n%s" % (
+                                direction, dst_str, cleanBin(contents)
+                            ),
+                            "debug"
+                        )
                         dst.connection.send(contents)
                     else:
                         # socket.socket.send supports raw bytearrays/memoryviews
-                        self.c.log("%s %s\r\n%s" % (direction, dst_str, cleanBin(buf.tobytes())), "debug")
+                        self.c.log(
+                            "%s %s\r\n%s" % (
+                                direction,
+                                dst_str,
+                                cleanBin(buf.tobytes())
+                            ),
+                            "debug"
+                        )
                         dst.connection.send(buf[:size])
         except socket.error as e:
             self.c.log("TCP connection closed unexpectedly.", "debug")

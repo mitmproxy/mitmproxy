@@ -85,7 +85,7 @@ class decoded(object):
             self.o.encode(self.ce)
 
 
-class HTTPMessage(stateobject.SimpleStateObject):
+class HTTPMessage(stateobject.StateObject):
     """
     Base class for HTTPRequest and HTTPResponse
     """
@@ -275,9 +275,9 @@ class HTTPRequest(HTTPMessage):
     )
 
     @classmethod
-    def _from_state(cls, state):
+    def from_state(cls, state):
         f = cls(None, None, None, None, None, None, None, None, None, None, None)
-        f._load_state(state)
+        f.load_state(state)
         return f
 
     def __repr__(self):
@@ -626,9 +626,9 @@ class HTTPResponse(HTTPMessage):
     )
 
     @classmethod
-    def _from_state(cls, state):
+    def from_state(cls, state):
         f = cls(None, None, None, None, None)
-        f._load_state(state)
+        f.load_state(state)
         return f
 
     def __repr__(self):
@@ -814,9 +814,9 @@ class HTTPFlow(Flow):
     )
 
     @classmethod
-    def _from_state(cls, state):
+    def from_state(cls, state):
         f = cls(None, None)
-        f._load_state(state)
+        f.load_state(state)
         return f
 
     def __repr__(self):

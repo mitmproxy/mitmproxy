@@ -12,7 +12,7 @@ with open("logfile", "rb") as logfile:
         for f in freader.stream():
             print(f)
             print(f.request.host)
-            json.dump(f._get_state(), sys.stdout, indent=4)
+            json.dump(f.get_state(), sys.stdout, indent=4)
             print ""
     except flow.FlowReadError, v:
         print "Flow file corrupted. Stopped loading."

@@ -175,18 +175,18 @@ class TestServerPlaybackState:
 class TestFlow:
     def test_copy(self):
         f = tutils.tflow(resp=True)
-        a0 = f._get_state()
+        a0 = f.get_state()
         f2 = f.copy()
-        a = f._get_state()
-        b = f2._get_state()
-        assert f._get_state() == f2._get_state()
+        a = f.get_state()
+        b = f2.get_state()
+        assert f.get_state() == f2.get_state()
         assert not f == f2
         assert not f is f2
-        assert f.request == f2.request
+        assert f.request.get_state() == f2.request.get_state()
         assert not f.request is f2.request
         assert f.request.headers == f2.request.headers
         assert not f.request.headers is f2.request.headers
-        assert f.response == f2.response
+        assert f.response.get_state() == f2.response.get_state()
         assert not f.response is f2.response
 
         f = tutils.tflow(err=True)
@@ -195,7 +195,7 @@ class TestFlow:
         assert not f.request is f2.request
         assert f.request.headers == f2.request.headers
         assert not f.request.headers is f2.request.headers
-        assert f.error == f2.error
+        assert f.error.get_state() == f2.error.get_state()
         assert not f.error is f2.error
 
     def test_match(self):
@@ -229,21 +229,21 @@ class TestFlow:
 
     def test_getset_state(self):
         f = tutils.tflow(resp=True)
-        state = f._get_state()
-        assert f._get_state() == protocol.http.HTTPFlow._from_state(state)._get_state()
+        state = f.get_state()
+        assert f.get_state() == protocol.http.HTTPFlow.from_state(state).get_state()
 
         f.response = None
         f.error = Error("error")
-        state = f._get_state()
-        assert f._get_state() == protocol.http.HTTPFlow._from_state(state)._get_state()
+        state = f.get_state()
+        assert f.get_state() == protocol.http.HTTPFlow.from_state(state).get_state()
 
         f2 = f.copy()
-        assert f._get_state() == f2._get_state()
+        assert f.get_state() == f2.get_state()
         assert not f == f2
         f2.error = Error("e2")
         assert not f == f2
-        f._load_state(f2._get_state())
-        assert f._get_state() == f2._get_state()
+        f.load_state(f2.get_state())
+        assert f.get_state() == f2.get_state()
 
     def test_kill(self):
         s = flow.State()
@@ -481,7 +481,7 @@ class TestSerialize:
         assert len(l) == 1
 
         f2 = l[0]
-        assert f2._get_state() == f._get_state()
+        assert f2.get_state() == f.get_state()
         assert f2.request.assemble() == f.request.assemble()
 
     def test_load_flows(self):
@@ -521,7 +521,7 @@ class TestSerialize:
 
     def test_versioncheck(self):
         f = tutils.tflow()
-        d = f._get_state()
+        d = f.get_state()
         d["version"] = (0, 0)
         sio = StringIO()
         tnetstring.dump(d, sio)
@@ -770,7 +770,7 @@ class TestRequest:
         assert r.size() == len(r.assemble())
 
         r2 = r.copy()
-        assert r == r2
+        assert r.get_state() == r2.get_state()
 
         r.content = None
         assert r.assemble()
@@ -979,7 +979,7 @@ class TestResponse:
         assert resp.size() == len(resp.assemble())
 
         resp2 = resp.copy()
-        assert resp2 == resp
+        assert resp2.get_state() == resp.get_state()
 
         resp.content = None
         assert resp.assemble()
@@ -1122,37 +1122,37 @@ class TestResponse:
 class TestError:
     def test_getset_state(self):
         e = Error("Error")
-        state = e._get_state()
-        assert Error._from_state(state) == e
+        state = e.get_state()
+        assert Error.from_state(state).get_state() == e.get_state()
 
         assert e.copy()
 
         e2 = Error("bar")
         assert not e == e2
-        e._load_state(e2._get_state())
-        assert e == e2
-
+        e.load_state(e2.get_state())
+        assert e.get_state() == e2.get_state()
 
         e3 = e.copy()
-        assert e3 == e
+        assert e3.get_state() == e.get_state()
 
 
 class TestClientConnection:
     def test_state(self):
 
         c = tutils.tclient_conn()
-        assert ClientConnection._from_state(c._get_state()) == c
+        assert ClientConnection.from_state(c.get_state()).get_state() ==\
+               c.get_state()
 
         c2 = tutils.tclient_conn()
         c2.address.address = (c2.address.host, 4242)
         assert not c == c2
 
         c2.timestamp_start = 42
-        c._load_state(c2._get_state())
+        c.load_state(c2.get_state())
         assert c.timestamp_start == 42
 
         c3 = c.copy()
-        assert c3 == c
+        assert c3.get_state() == c.get_state()
 
         assert str(c)
 

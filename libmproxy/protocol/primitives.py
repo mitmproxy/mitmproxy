@@ -8,7 +8,7 @@ from ..proxy.connection import ClientConnection, ServerConnection
 KILL = 0  # const for killed requests
 
 
-class Error(stateobject.SimpleStateObject):
+class Error(stateobject.StateObject):
     """
         An Error.
 
@@ -41,11 +41,11 @@ class Error(stateobject.SimpleStateObject):
         return self.msg
 
     @classmethod
-    def _from_state(cls, state):
+    def from_state(cls, state):
         # the default implementation assumes an empty constructor. Override
         # accordingly.
         f = cls(None)
-        f._load_state(state)
+        f.load_state(state)
         return f
 
     def copy(self):
@@ -53,7 +53,7 @@ class Error(stateobject.SimpleStateObject):
         return c
 
 
-class Flow(stateobject.SimpleStateObject):
+class Flow(stateobject.StateObject):
     """
     A Flow is a collection of objects representing a single transaction.
     This class is usually subclassed for each protocol, e.g. HTTPFlow.
@@ -78,8 +78,8 @@ class Flow(stateobject.SimpleStateObject):
         conntype=str
     )
 
-    def _get_state(self):
-        d = super(Flow, self)._get_state()
+    def get_state(self):
+        d = super(Flow, self).get_state()
         d.update(version=version.IVERSION)
         return d
 
@@ -101,7 +101,7 @@ class Flow(stateobject.SimpleStateObject):
             Has this Flow been modified?
         """
         if self._backup:
-            return self._backup != self._get_state()
+            return self._backup != self.get_state()
         else:
             return False
 
@@ -111,14 +111,14 @@ class Flow(stateobject.SimpleStateObject):
             call to .revert().
         """
         if not self._backup:
-            self._backup = self._get_state()
+            self._backup = self.get_state()
 
     def revert(self):
         """
             Revert to the last backed up state.
         """
         if self._backup:
-            self._load_state(self._backup)
+            self.load_state(self._backup)
             self._backup = None
 
 

@@ -55,7 +55,7 @@ def tclient_conn():
     """
     @return: libmproxy.proxy.connection.ClientConnection
     """
-    c = ClientConnection._from_state(dict(
+    c = ClientConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         clientcert=None
     ))
@@ -67,7 +67,7 @@ def tserver_conn():
     """
     @return: libmproxy.proxy.connection.ServerConnection
     """
-    c = ServerConnection._from_state(dict(
+    c = ServerConnection.from_state(dict(
         address=dict(address=("address", 22), use_ipv6=True),
         state=[],
         source_address=dict(address=("address", 22), use_ipv6=True),
