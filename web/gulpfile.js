@@ -12,7 +12,6 @@ var qunit = require("gulp-qunit");
 var react = require("gulp-react");
 var rename = require("gulp-rename");
 var sourcemaps = require('gulp-sourcemaps');
-var sprite = require('gulp-sprite-generator');
 var uglify = require('gulp-uglify');
 
 
@@ -52,8 +51,7 @@ var path = {
     },
     css: {
         vendor: ["css/vendor.less"],
-        app: ["css/app.less"],
-        spritefile: "css/sprites.less"
+        app: ["css/app.less"]
     },
     fonts: ["src/vendor/fontawesome/fontawesome-webfont.*"],
     html: ["src/*.html", "!src/benchmark.html", "!src/test.html"],
@@ -131,20 +129,10 @@ gulp.task("jshint", function () {
         .pipe(jshint.reporter("jshint-stylish"));
 });
 
-gulp.task("sprites", function () {
-    // Sprite generator is a gulp task, which accepts options object and
-    // returns two streams for style and image piping.
-    var spriteOutput = gulp.src([path.css.spritefile], {base: "src", cwd: "src"})
-        .pipe(sprite({
-            spriteSheetName: "sprite.png",
-            spriteSheetPath: "../images",
-        }));
-    var css = spriteOutput.css
-        .pipe(rename({extname:".compiled.less"}))
-        .pipe(gulp.dest("src/css"));
-    var img = spriteOutput.img.pipe(gulp.dest(path.dist + "static/images"));
-    // https://github.com/gulpjs/gulp/blob/master/docs/recipes/using-multiple-sources-in-one-task.md
-    return merge(css, img);
+gulp.task("images", function () {
+    //(spriting code in commit 4ca720b55680e40b3a4361141a2ad39f9de81111)
+    return gulp.src(["src/images/**"])
+        .pipe(gulp.dest(path.dist + "static/images"));
 });
 
 gulp.task("html", function () {
@@ -160,7 +148,7 @@ gulp.task('test', function() {
 });
 
 
-common = ["fonts", "html", "jshint", "sprites"];
+common = ["fonts", "html", "jshint", "images"];
 gulp.task("dev", common.concat(["styles-dev", "scripts-dev"]));
 gulp.task("prod", common.concat(["styles-prod", "scripts-prod"]));
 

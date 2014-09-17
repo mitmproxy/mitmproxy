@@ -6,11 +6,20 @@
 		background-color: #dadada;  
 	}
 
+	tr {
+		cursor: pointer;
+	}
+
 	td {
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
 	}
+
+	//tr:nth-child(odd) { background-color : white; }
+	tr:nth-child(even) { background-color : rgba(0,0,0,0.05); }
+	//tr:hover { background-color : hsla(209, 52%, 84%, 0.5); }
+​
 
 
 	.col-tls {
