@@ -9,7 +9,7 @@ var FlowRow = React.createClass({
                 flow: flow
             });
         }.bind(this));
-        return <tr>{columns}</tr>;
+        return <tr onClick={this.props.onClick} >{columns}</tr>;
     }
 });
 
@@ -26,7 +26,7 @@ var FlowTableBody = React.createClass({
     render: function(){
         var rows = this.props.flows.map(function(flow){
             //TODO: Add UUID
-            return <FlowRow flow={flow} columns={this.props.columns}/>;
+            return <FlowRow onClick={this.props.onClick} flow={flow} columns={this.props.columns}/>;
         }.bind(this));
         return <tbody>{rows}</tbody>;
     }
@@ -146,6 +146,9 @@ var FlowTable = React.createClass({
             flows: this.flowStore.getAll()
         });
     },
+    onClick: function(e){
+        console.log("rowclick", e);
+    },
     render: function () {
         var flows = this.state.flows.map(function(flow){
          return <div>{flow.request.method} {flow.request.scheme}://{flow.request.host}{flow.request.path}</div>;
@@ -153,7 +156,7 @@ var FlowTable = React.createClass({
         return (
             <table className="flow-table">
                 <FlowTableHead columns={this.state.columns}/>
-                <FlowTableBody columns={this.state.columns} flows={this.state.flows}/>
+                <FlowTableBody onClick={this.onClick} columns={this.state.columns} flows={this.state.flows}/>
             </table>
             );
     }

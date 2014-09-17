@@ -456,7 +456,7 @@ var FlowRow = React.createClass({displayName: 'FlowRow',
                 flow: flow
             });
         }.bind(this));
-        return React.DOM.tr(null, columns);
+        return React.DOM.tr({onClick: this.props.onClick}, columns);
     }
 });
 
@@ -473,7 +473,7 @@ var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
     render: function(){
         var rows = this.props.flows.map(function(flow){
             //TODO: Add UUID
-            return FlowRow({flow: flow, columns: this.props.columns});
+            return FlowRow({onClick: this.props.onClick, flow: flow, columns: this.props.columns});
         }.bind(this));
         return React.DOM.tbody(null, rows);
     }
@@ -593,6 +593,9 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             flows: this.flowStore.getAll()
         });
     },
+    onClick: function(e){
+        console.log("rowclick", e);
+    },
     render: function () {
         var flows = this.state.flows.map(function(flow){
          return React.DOM.div(null, flow.request.method, " ", flow.request.scheme, "://", flow.request.host, flow.request.path);
@@ -600,7 +603,7 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
         return (
             React.DOM.table({className: "flow-table"}, 
                 FlowTableHead({columns: this.state.columns}), 
-                FlowTableBody({columns: this.state.columns, flows: this.state.flows})
+                FlowTableBody({onClick: this.onClick, columns: this.state.columns, flows: this.state.flows})
             )
             );
     }
