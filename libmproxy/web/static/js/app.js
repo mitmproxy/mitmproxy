@@ -221,7 +221,15 @@ _Connection.prototype.onopen = function (open) {
 };
 _Connection.prototype.onmessage = function (message) {
     //AppDispatcher.dispatchServerAction(...);
-    console.log("onmessage", this, arguments);
+    var m = JSON.parse(message.data);
+    switch (m.type){
+        case "flow":
+            console.log("flow", m.data);
+            break;
+        case "event":
+            console.log("event", m.data.message)
+            break;
+    }
 };
 _Connection.prototype.onerror = function (error) {
     console.log("onerror", this, arguments);

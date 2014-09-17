@@ -78,8 +78,8 @@ class Flow(stateobject.StateObject):
         conntype=str
     )
 
-    def get_state(self):
-        d = super(Flow, self).get_state()
+    def get_state(self, short=False):
+        d = super(Flow, self).get_state(short)
         d.update(version=version.IVERSION)
         return d
 

@@ -2,6 +2,7 @@ import os.path
 import tornado.web
 import tornado.websocket
 import logging
+import json
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -22,7 +23,14 @@ class ClientConnection(tornado.websocket.WebSocketHandler):
     def broadcast(cls, type, data):
         for conn in cls.connections:
             try:
-                conn.write_message(type, data)
+                conn.write_message(
+                    json.dumps(
+                        {
+                            "type": type,
+                            "data": data
+                        }
+                    )
+                )
             except:
                 logging.error("Error sending message", exc_info=True)
 

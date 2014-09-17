@@ -9,27 +9,35 @@ class StateObject(object):
         or StateObject instances themselves.
     """
     # An attribute-name -> class-or-type dict containing all attributes that
-    # should be serialized. If the attribute is a class, it must be a subclass
-    # of StateObject.
+    # should be serialized. If the attribute is a class, it must implement the
+    # StateObject protocol.
     _stateobject_attributes = None
-
-    def _get_state_attr(self, attr, cls):
-        val = getattr(self, attr)
-        if hasattr(val, "get_state"):
-            return val.get_state()
-        else:
-            return val
+    # A set() of attributes that should be ignored for short state
+    _stateobject_long_attributes = frozenset([])
 
     def from_state(self):
         raise NotImplementedError
 
-    def get_state(self):
+    def get_state(self, short=False):
+        """
+            Retrieve object state. If short is true, return an abbreviated
+            format with long data elided.
+        """
         state = {}
         for attr, cls in self._stateobject_attributes.iteritems():
-            state[attr] = self._get_state_attr(attr, cls)
+            if short and attr in self._stateobject_long_attributes:
+                continue
+            val = getattr(self, attr)
+            if hasattr(val, "get_state"):
+                state[attr] = val.get_state(short)
+            else:
+                state[attr] = val
         return state
 
     def load_state(self, state):
+        """
+            Load object state from data returned by a get_state call.
+        """
         for attr, cls in self._stateobject_attributes.iteritems():
             if state.get(attr, None) is None:
                 setattr(self, attr, None)

@@ -106,6 +106,7 @@ class HTTPMessage(stateobject.StateObject):
         timestamp_start=float,
         timestamp_end=float
     )
+    _stateobject_long_attributes = set(["content"])
 
     def get_decoded_content(self):
         """

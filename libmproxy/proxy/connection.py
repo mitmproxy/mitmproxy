@@ -36,8 +36,8 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         timestamp_ssl_setup=float
     )
 
-    def get_state(self):
-        d = super(ClientConnection, self).get_state()
+    def get_state(self, short=False):
+        d = super(ClientConnection, self).get_state(short)
         d.update(
             address={"address": self.address(), "use_ipv6": self.address.use_ipv6},
             clientcert=self.cert.to_pem() if self.clientcert else None
@@ -107,8 +107,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         sni=str
     )
 
-    def get_state(self):
-        d = super(ServerConnection, self).get_state()
+    def get_state(self, short=False):
+        d = super(ServerConnection, self).get_state(short)
         d.update(
             address={"address": self.address(),
                      "use_ipv6": self.address.use_ipv6},

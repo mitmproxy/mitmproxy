@@ -81,18 +81,31 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def handle_request(self, f):
-        pprint.pprint(f.get_state())
+        app.ClientConnection.broadcast("flow", f.get_state(True))
         flow.FlowMaster.handle_request(self, f)
         if f:
             f.reply()
         return f
 
     def handle_response(self, f):
+        app.ClientConnection.broadcast("flow", f.get_state(True))
         flow.FlowMaster.handle_response(self, f)
         if f:
             f.reply()
         return f
 
     def handle_error(self, f):
+        app.ClientConnection.broadcast("flow", f.get_state(True))
         flow.FlowMaster.handle_error(self, f)
         return f
+
+    def handle_log(self, l):
+        app.ClientConnection.broadcast(
+            "event", {
+                "message": l.msg,
+                "level": l.level
+            }
+        )
+        self.add_event(l.msg, l.level)
+        l.reply()
+
