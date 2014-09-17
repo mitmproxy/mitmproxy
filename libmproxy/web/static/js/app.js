@@ -49,8 +49,15 @@ AppDispatcher.dispatchServerAction = function (action) {
 };
 
 var ActionTypes = {
+    //Settings
     UPDATE_SETTINGS: "update_settings",
-    ADD_EVENT: "add_event"
+
+    //EventLog
+    ADD_EVENT: "add_event",
+
+    //Flow
+    ADD_FLOW: "add_flow",
+    UPDATE_FLOW: "update_flow",
 };
 
 var SettingsActions = {
@@ -66,6 +73,18 @@ var SettingsActions = {
     }
 };
 
+var EventLogActions = {
+    add_event: function(message, level){
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.ADD_EVENT,
+            data: {
+                message: message,
+                level: level || "info",
+                source: "ui"
+            }
+        });
+    }
+};
 function EventEmitter() {
     this.listeners = {};
 }
@@ -218,6 +237,81 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
 var EventLogStore = new _EventLogStore();
 AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
 
+function FlowView(store, live) {
+    EventEmitter.call(this);
+    this._store = store;
+    this.live = live;
+    this.flows = [];
+
+    this.add = this.add.bind(this);
+    this.update = this.update.bind(this);
+
+    if (live) {
+        this._store.addListener(ActionTypes.ADD_FLOW, this.add);
+        this._store.addListener(ActionTypes.UPDATE_FLOW, this.update);
+    }
+}
+
+_.extend(FlowView.prototype, EventEmitter.prototype, {
+    close: function () {
+        this._store.removeListener(ActionTypes.ADD_FLOW, this.add);
+        this._store.removeListener(ActionTypes.UPDATE_FLOW, this.update);
+    },
+    getAll: function () {
+        return this.flows;
+    },
+    add: function (flow) {
+        return this.update(flow);
+    },
+    add_bulk: function (flows) {
+        //Treat all previously received updates as newer than the bulk update.
+        //If they weren't newer, we're about to receive an update for them very soon.
+        var updates = this.flows;
+        this.flows = flows;
+        updates.forEach(function(flow){
+            this.update(flow);
+        }.bind(this));
+    },
+    update: function(flow){
+        console.debug("FIXME: Use UUID");
+        var idx = _.findIndex(this.flows, function(f){
+            return flow.request.timestamp_start == f.request.timestamp_start
+        });
+
+        if(idx < 0){
+            this.flows.push(flow);
+        } else {
+            this.flows[idx] = flow;
+        }
+        this.emit("change");
+    },
+});
+
+
+function _FlowStore() {
+    EventEmitter.call(this);
+}
+_.extend(_FlowStore.prototype, EventEmitter.prototype, {
+    getView: function (since) {
+        var view = new FlowView(this, !since);
+        return view;
+    },
+    handle: function (action) {
+        switch (action.type) {
+            case ActionTypes.ADD_FLOW:
+            case ActionTypes.UPDATE_FLOW:
+                this.emit(action.type, action.data);
+                break;
+            default:
+                return;
+        }
+    }
+});
+
+
+var FlowStore = new _FlowStore();
+AppDispatcher.register(FlowStore.handle.bind(FlowStore));
+
 function _Connection(url) {
     this.url = url;
 }
@@ -242,9 +336,11 @@ _Connection.prototype.onmessage = function (message) {
     AppDispatcher.dispatchServerAction(m);
 };
 _Connection.prototype.onerror = function (error) {
+    EventLogActions.add_event("WebSocket Connection Error.");
     console.log("onerror", this, arguments);
 };
 _Connection.prototype.onclose = function (close) {
+    EventLogActions.add_event("WebSocket Connection closed.");
     console.log("onclose", this, arguments);
 };
 
@@ -342,35 +438,122 @@ var Header = React.createClass({displayName: 'Header',
 
 /** @jsx React.DOM */
 
-var TrafficTable = React.createClass({displayName: 'TrafficTable',
+var FlowRow = React.createClass({displayName: 'FlowRow',
+    render: function(){
+        var flow = this.props.flow;
+        var columns = this.props.columns.map(function(column){
+            return column({flow: flow});
+        }.bind(this));
+        return React.DOM.tr(null, columns);
+    }
+});
+
+var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
+    render: function(){
+        var columns = this.props.columns.map(function(column){
+            return column.renderTitle();
+        }.bind(this));
+        return React.DOM.thead(null, columns);
+    }
+});
+
+var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
+    render: function(){
+        var rows = this.props.flows.map(function(flow){
+            return FlowRow({flow: flow, columns: this.props.columns})
+        }.bind(this));
+        return React.DOM.tbody(null, rows);
+    }
+});
+
+var PathColumn = React.createClass({displayName: 'PathColumn',
+    statics: {
+        renderTitle: function(){
+            return React.DOM.th({key: "PathColumn"}, "Path");
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        return React.DOM.td({key: "PathColumn"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
+    }
+});
+var MethodColumn = React.createClass({displayName: 'MethodColumn',
+    statics: {
+        renderTitle: function(){
+            return React.DOM.th({key: "MethodColumn"}, "Method");
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        return React.DOM.td({key: "MethodColumn"}, flow.request.method);
+    }
+});
+var StatusColumn = React.createClass({displayName: 'StatusColumn',
+    statics: {
+        renderTitle: function(){
+            return React.DOM.th({key: "StatusColumn"}, "Status");
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        var status;
+        if(flow.response){
+            status = flow.response.code + " " + flow.response.msg;
+        } else {
+            status = null;
+        }
+        return React.DOM.td({key: "StatusColumn"}, status);
+    }
+});
+var TimeColumn = React.createClass({displayName: 'TimeColumn',
+    statics: {
+        renderTitle: function(){
+            return React.DOM.th({key: "TimeColumn"}, "Time");
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        var time;
+        if(flow.response){
+            time = Math.round(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))+"ms";
+        } else {
+            time = "...";
+        }
+        return React.DOM.td({key: "TimeColumn"}, time);
+    }
+});
+
+var all_columns = [PathColumn, MethodColumn, StatusColumn, TimeColumn];
+
+var FlowTable = React.createClass({displayName: 'FlowTable',
     getInitialState: function () {
         return {
-            flows: []
+            flows: [],
+            columns: all_columns
         };
     },
     componentDidMount: function () {
-        //this.flowStore = FlowStore.getView();
-        //this.flowStore.addListener("change",this.onFlowChange);
+        this.flowStore = FlowStore.getView();
+        this.flowStore.addListener("change",this.onFlowChange);
     },
     componentWillUnmount: function () {
-        //this.flowStore.removeListener("change",this.onFlowChange);
-        //this.flowStore.close();
+        this.flowStore.removeListener("change",this.onFlowChange);
+        this.flowStore.close();
     },
     onFlowChange: function () {
         this.setState({
-            //flows: this.flowStore.getAll()
+            flows: this.flowStore.getAll()
         });
     },
     render: function () {
-        /*var flows = this.state.flows.map(function(flow){
-         return <div>{flow.request.method} {flow.request.scheme}://{flow.request.host}{flow.request.path}</div>;
-         }); */
-        //Dummy Text for layout testing
-        x = "Flow";
-        i = 12;
-        while (i--) x += x;
+        var flows = this.state.flows.map(function(flow){
+         return React.DOM.div(null, flow.request.method, " ", flow.request.scheme, "://", flow.request.host, flow.request.path);
+        });
         return (
-            React.DOM.div(null, "Flow") 
+            React.DOM.table({className: "flow-table"}, 
+                FlowTableHead({columns: this.state.columns}), 
+                FlowTableBody({columns: this.state.columns, flows: this.state.flows})
+            )
             );
     }
 });
@@ -404,12 +587,18 @@ var EventLog = React.createClass({displayName: 'EventLog',
     },
     render: function () {
         var messages = this.state.log.map(function(row) {
-            return (React.DOM.div({key: row.id}, row.message));
+            var indicator = null;
+            if(row.source === "ui"){
+                indicator = React.DOM.i({className: "fa fa-html5"});
+            }
+            return (
+                React.DOM.div({key: row.id}, 
+                    indicator, " ", row.message
+                ));
         });
         return React.DOM.pre({className: "eventlog"}, messages);
     }
 });
-
 /** @jsx React.DOM */
 
 var Footer = React.createClass({displayName: 'Footer',
@@ -463,7 +652,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
 var ProxyApp = (
     ReactRouter.Routes({location: "hash"}, 
         ReactRouter.Route({name: "app", path: "/", handler: ProxyAppMain}, 
-            ReactRouter.Route({name: "main", handler: TrafficTable}), 
+            ReactRouter.Route({name: "main", handler: FlowTable}), 
             ReactRouter.Route({name: "reports", handler: Reports}), 
             ReactRouter.Redirect({to: "main"})
         )

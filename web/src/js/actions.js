@@ -1,6 +1,13 @@
 var ActionTypes = {
+    //Settings
     UPDATE_SETTINGS: "update_settings",
-    ADD_EVENT: "add_event"
+
+    //EventLog
+    ADD_EVENT: "add_event",
+
+    //Flow
+    ADD_FLOW: "add_flow",
+    UPDATE_FLOW: "update_flow",
 };
 
 var SettingsActions = {
@@ -12,6 +19,19 @@ var SettingsActions = {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.UPDATE_SETTINGS,
             settings: settings
+        });
+    }
+};
+
+var EventLogActions = {
+    add_event: function(message, level){
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.ADD_EVENT,
+            data: {
+                message: message,
+                level: level || "info",
+                source: "ui"
+            }
         });
     }
 };

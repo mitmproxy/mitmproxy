@@ -61,6 +61,8 @@ class WebMaster(flow.FlowMaster):
         self.app = app.Application(self.options.wdebug)
         flow.FlowMaster.__init__(self, server, WebState())
 
+        self.last_log_id = 0
+
     def tick(self):
         flow.FlowMaster.tick(self, self.masterq, timeout=0)
 
@@ -81,27 +83,30 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def handle_request(self, f):
-        app.ClientConnection.broadcast("flow", f.get_state(True))
+        app.ClientConnection.broadcast("add_flow", f.get_state(True))
         flow.FlowMaster.handle_request(self, f)
         if f:
             f.reply()
         return f
 
     def handle_response(self, f):
-        app.ClientConnection.broadcast("flow", f.get_state(True))
+        s = f.get_state(True)
+        app.ClientConnection.broadcast("update_flow", f.get_state(True))
         flow.FlowMaster.handle_response(self, f)
         if f:
             f.reply()
         return f
 
     def handle_error(self, f):
-        app.ClientConnection.broadcast("flow", f.get_state(True))
+        app.ClientConnection.broadcast("update_flow", f.get_state(True))
         flow.FlowMaster.handle_error(self, f)
         return f
 
     def handle_log(self, l):
+        self.last_log_id += 1
         app.ClientConnection.broadcast(
             "add_event", {
+                "id": self.last_log_id,
                 "message": l.msg,
                 "level": l.level
             }

@@ -106,6 +106,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         ssl_established=bool,
         sni=str
     )
+    _stateobject_long_attributes = {"cert"}
 
     def get_state(self, short=False):
         d = super(ServerConnection, self).get_state(short)

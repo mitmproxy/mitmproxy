@@ -67,6 +67,9 @@ header .menu {
   padding: 10px;
   border-bottom: solid #a6a6a6 1px;
 }
+.flow-table {
+  width: 100%;
+}
 .eventlog {
   flex: 0 0 auto;
   margin: 0;

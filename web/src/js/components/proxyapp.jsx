@@ -38,7 +38,7 @@ var ProxyAppMain = React.createClass({
 var ProxyApp = (
     <ReactRouter.Routes location="hash">
         <ReactRouter.Route name="app" path="/" handler={ProxyAppMain}>
-            <ReactRouter.Route name="main" handler={TrafficTable}/>
+            <ReactRouter.Route name="main" handler={FlowTable}/>
             <ReactRouter.Route name="reports" handler={Reports}/>
             <ReactRouter.Redirect to="main"/>
         </ReactRouter.Route>

@@ -27,7 +27,14 @@ var EventLog = React.createClass({
     },
     render: function () {
         var messages = this.state.log.map(function(row) {
-            return (<div key={row.id}>{row.message}</div>);
+            var indicator = null;
+            if(row.source === "ui"){
+                indicator = <i className="fa fa-html5"></i>;
+            }
+            return (
+                <div key={row.id}>
+                    { indicator } {row.message}
+                </div>);
         });
         return <pre className="eventlog">{messages}</pre>;
     }

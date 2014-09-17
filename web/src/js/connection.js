@@ -22,9 +22,11 @@ _Connection.prototype.onmessage = function (message) {
     AppDispatcher.dispatchServerAction(m);
 };
 _Connection.prototype.onerror = function (error) {
+    EventLogActions.add_event("WebSocket Connection Error.");
     console.log("onerror", this, arguments);
 };
 _Connection.prototype.onclose = function (close) {
+    EventLogActions.add_event("WebSocket Connection closed.");
     console.log("onclose", this, arguments);
 };
 
