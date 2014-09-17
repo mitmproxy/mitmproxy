@@ -1,10 +1,10 @@
 function _Connection(url) {
     this.url = url;
 }
-_Connection.prototype.init=function() {
+_Connection.prototype.init = function () {
     this.openWebSocketConnection();
 };
-_Connection.prototype.openWebSocketConnection=function() {
+_Connection.prototype.openWebSocketConnection = function () {
     this.ws = new WebSocket(this.url.replace("http", "ws"));
     var ws = this.ws;
 
@@ -13,17 +13,17 @@ _Connection.prototype.openWebSocketConnection=function() {
     ws.onerror = this.onerror.bind(this);
     ws.onclose = this.onclose.bind(this);
 };
-_Connection.prototype.onopen=function(open) {
+_Connection.prototype.onopen = function (open) {
     console.log("onopen", this, arguments);
 };
-_Connection.prototype.onmessage=function(message) {
+_Connection.prototype.onmessage = function (message) {
     //AppDispatcher.dispatchServerAction(...);
     console.log("onmessage", this, arguments);
 };
-_Connection.prototype.onerror=function(error) {
+_Connection.prototype.onerror = function (error) {
     console.log("onerror", this, arguments);
 };
-_Connection.prototype.onclose=function(close) {
+_Connection.prototype.onclose = function (close) {
     console.log("onclose", this, arguments);
 };
 

@@ -1,4 +1,3 @@
-
 function _SettingsStore() {
     EventEmitter.call(this);
 
@@ -7,13 +6,13 @@ function _SettingsStore() {
         version: "0.12",
         showEventLog: true,
         mode: "transparent",
-    }; 
+    };
 }
 _.extend(_SettingsStore.prototype, EventEmitter.prototype, {
-    getAll: function() {
+    getAll: function () {
         return this.settings;
     },
-    handle: function(action) {
+    handle: function (action) {
         switch (action.actionType) {
             case ActionTypes.SETTINGS_UPDATE:
                 this.settings = action.settings;

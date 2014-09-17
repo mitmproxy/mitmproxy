@@ -18,42 +18,47 @@ function EventLogView(store, live) {
     }
 }
 _.extend(EventLogView.prototype, EventEmitter.prototype, {
-    close: function() {
+    close: function () {
         this.$EventLogView_store.removeListener("new_entry", this.add);
     },
-    getAll: function() {
+    getAll: function () {
         return this.log;
     },
-    add: function(entry) {
+    add: function (entry) {
         this.log.push(entry);
         this.emit("change");
     },
-    add_bulk: function(messages) {
+    add_bulk: function (messages) {
         var log = messages;
         var last_id = log[log.length - 1].id;
-        var to_add = _.filter(this.log, function(entry)  {return entry.id > last_id;});
+        var to_add = _.filter(this.log, function (entry) {
+            return entry.id > last_id;
+        });
         this.log = log.concat(to_add);
         this.emit("change");
     }
 });
 
 
-function _EventLogStore(){
+function _EventLogStore() {
     EventEmitter.call(this);
 }
 _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
-    getView: function(since) {
+    getView: function (since) {
         var view = new EventLogView(this, !since);
 
         //TODO: Really do bulk retrieval of last messages.
-        window.setTimeout(function() {
-            view.add_bulk([{
-                id: 1,
-                message: "Hello World"
-            }, {
-                id: 2,
-                message: "I was already transmitted as an event."
-            }]);
+        window.setTimeout(function () {
+            view.add_bulk([
+                {
+                    id: 1,
+                    message: "Hello World"
+                },
+                {
+                    id: 2,
+                    message: "I was already transmitted as an event."
+                }
+            ]);
         }, 100);
 
         var id = 2;
@@ -65,7 +70,7 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
             id: id++,
             message: "I was only transmitted as an event before the bulk was added.."
         });
-        window.setInterval(function() {
+        window.setInterval(function () {
             view.add({
                 id: id++,
                 message: "."
@@ -73,7 +78,7 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
         }, 1000);
         return view;
     },
-    handle: function(action) {
+    handle: function (action) {
         switch (action.actionType) {
             case ActionTypes.EVENTLOG_ADD:
                 this.emit("new_message", action.message);

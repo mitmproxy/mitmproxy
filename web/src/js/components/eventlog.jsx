@@ -1,30 +1,30 @@
 /** @jsx React.DOM */
 
 var EventLog = React.createClass({
-    getInitialState: function() {
+    getInitialState: function () {
         return {
             log: []
         };
     },
-    componentDidMount: function() {
+    componentDidMount: function () {
         this.log = EventLogStore.getView();
         this.log.addListener("change", this.onEventLogChange);
     },
-    componentWillUnmount: function() {
+    componentWillUnmount: function () {
         this.log.removeListener("change", this.onEventLogChange);
         this.log.close();
     },
-    onEventLogChange: function() {
+    onEventLogChange: function () {
         this.setState({
             log: this.log.getAll()
         });
     },
-    close: function() {
+    close: function () {
         SettingsActions.update({
             showEventLog: false
         });
     },
-    render: function() {
+    render: function () {
         //var messages = this.state.log.map(row => (<div key={row.id}>{row.message}</div>));
         var messages = [];
         return (
@@ -34,6 +34,6 @@ var EventLog = React.createClass({
                     {messages}
                 </pre>
             </div>
-        );
+            );
     }
 });

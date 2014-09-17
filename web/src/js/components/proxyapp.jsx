@@ -2,27 +2,27 @@
 
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({
-    render: function(){
-        return <div>Report Editor</div>;
+    render: function () {
+        return <div>ReportEditor</div>;
     }
 });
 
 
 var ProxyAppMain = React.createClass({
-    getInitialState: function(){
+    getInitialState: function () {
         return { settings: SettingsStore.getAll() };
     },
-    componentDidMount: function(){
+    componentDidMount: function () {
         SettingsStore.addListener("change", this.onSettingsChange);
     },
-    componentWillUnmount: function(){
+    componentWillUnmount: function () {
         SettingsStore.removeListener("change", this.onSettingsChange);
     },
-    onSettingsChange: function(){
+    onSettingsChange: function () {
         console.log("onSettingsChange");
         this.setState({settings: SettingsStore.getAll()});
     },
-    render: function() {
+    render: function () {
         return (
             <div id="container">
                 <Header settings={this.state.settings}/>
@@ -30,7 +30,7 @@ var ProxyAppMain = React.createClass({
                     {this.state.settings.showEventLog ? <EventLog/> : null}
                 <Footer settings={this.state.settings}/>
             </div>
-        );
+            );
     }
 });
 
@@ -43,4 +43,4 @@ var ProxyApp = (
             <ReactRouter.Redirect to="main"/>
         </ReactRouter.Route>
     </ReactRouter.Routes>
-);
+    );

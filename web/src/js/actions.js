@@ -4,7 +4,7 @@ var ActionTypes = {
 };
 
 var SettingsActions = {
-    update:function(settings) {
+    update: function (settings) {
         settings = _.merge({}, SettingsStore.getAll(), settings);
         //TODO: Update server.
 
