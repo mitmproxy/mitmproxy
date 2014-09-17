@@ -77,7 +77,7 @@ class Slave(threading.Thread):
         self.server.serve_forever()
 
 
-class Master:
+class Master(object):
     """
         Masters get and respond to messages from slaves.
     """

@@ -1,7 +1,7 @@
 var gulp = require("gulp");
+var merge = require('merge-stream');
 
 var concat = require('gulp-concat');
-var gutil = require('gulp-util');
 var jshint = require("gulp-jshint");
 var less = require("gulp-less");
 var livereload = require("gulp-livereload");
@@ -10,7 +10,9 @@ var notify = require("gulp-notify");
 var plumber = require("gulp-plumber");
 var qunit = require("gulp-qunit");
 var react = require("gulp-react");
+var rename = require("gulp-rename");
 var sourcemaps = require('gulp-sourcemaps');
+var sprite = require('gulp-sprite-generator');
 var uglify = require('gulp-uglify');
 
 
@@ -50,10 +52,12 @@ var path = {
     },
     css: {
         vendor: ["css/vendor.less"],
-        app: ["css/app.less"]
+        app: ["css/app.less"],
+        spritefile: "css/sprites.less"
     },
     fonts: ["src/vendor/fontawesome/fontawesome-webfont.*"],
-    html: ["src/*.html", "!src/benchmark.html", "!src/test.html"]
+    html: ["src/*.html", "!src/benchmark.html", "!src/test.html"],
+    images: "src/images",
 };
 
 
@@ -124,9 +128,24 @@ gulp.task("jshint", function () {
         .pipe(dont_break_on_errors())
         .pipe(react())
         .pipe(jshint())
-        .pipe(jshint.reporter("jshint-stylish"))
+        .pipe(jshint.reporter("jshint-stylish"));
 });
 
+gulp.task("sprites", function () {
+    // Sprite generator is a gulp task, which accepts options object and
+    // returns two streams for style and image piping.
+    var spriteOutput = gulp.src([path.css.spritefile], {base: "src", cwd: "src"})
+        .pipe(sprite({
+            spriteSheetName: "sprite.png",
+            spriteSheetPath: "../images",
+        }));
+    var css = spriteOutput.css
+        .pipe(rename({extname:".compiled.less"}))
+        .pipe(gulp.dest("src/css"));
+    var img = spriteOutput.img.pipe(gulp.dest(path.dist + "static/images"));
+    // https://github.com/gulpjs/gulp/blob/master/docs/recipes/using-multiple-sources-in-one-task.md
+    return merge(css, img);
+});
 
 gulp.task("html", function () {
     return gulp.src(path.html)
@@ -141,7 +160,7 @@ gulp.task('test', function() {
 });
 
 
-common = ["fonts", "html", "jshint"];
+common = ["fonts", "html", "jshint", "sprites"];
 gulp.task("dev", common.concat(["styles-dev", "scripts-dev"]));
 gulp.task("prod", common.concat(["styles-prod", "scripts-prod"]));
 
@@ -150,5 +169,6 @@ gulp.task("default", ["dev"], function () {
     gulp.watch(["src/vendor/**"], ["scripts-vendor-dev", "styles-vendor-dev"]);
     gulp.watch(["src/js/**"], ["scripts-app-dev", "jshint"]);
     gulp.watch(["src/css/**"], ["styles-app-dev"]);
+    gulp.watch(["src/images/**", "src/css/sprites.less"], ["sprites"]);
     gulp.watch(["src/*.html"], ["html"]);
 });

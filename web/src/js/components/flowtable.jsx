@@ -4,7 +4,10 @@ var FlowRow = React.createClass({
     render: function(){
         var flow = this.props.flow;
         var columns = this.props.columns.map(function(column){
-            return column({flow: flow});
+            return column({
+                key: column.displayName,
+                flow: flow
+            });
         }.bind(this));
         return <tr>{columns}</tr>;
     }
@@ -22,55 +25,89 @@ var FlowTableHead = React.createClass({
 var FlowTableBody = React.createClass({
     render: function(){
         var rows = this.props.flows.map(function(flow){
-            return <FlowRow flow={flow} columns={this.props.columns}/>
+            //TODO: Add UUID
+            return <FlowRow flow={flow} columns={this.props.columns}/>;
         }.bind(this));
         return <tbody>{rows}</tbody>;
+    }
+});
+
+
+var TLSColumn = React.createClass({
+    statics: {
+        renderTitle: function(){
+            return <th key="tls" className="col-tls"></th>;
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        var ssl = (flow.request.scheme == "https");
+        return <td className={ssl ? "col-tls-https" : "col-tls-http"}></td>;
+    }
+});
+
+
+var IconColumn = React.createClass({
+    statics: {
+        renderTitle: function(){
+            return <th key="icon" className="col-icon"></th>;
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        return <td className="resource-icon resource-icon-plain"></td>;
     }
 });
 
 var PathColumn = React.createClass({
     statics: {
         renderTitle: function(){
-            return <th key="PathColumn">Path</th>;
+            return <th key="path" className="col-path">Path</th>;
         }
     },
     render: function(){
         var flow = this.props.flow;
-        return <td key="PathColumn">{flow.request.scheme + "://" + flow.request.host + flow.request.path}</td>;
+        return <td>{flow.request.scheme + "://" + flow.request.host + flow.request.path}</td>;
     }
 });
+
+
 var MethodColumn = React.createClass({
     statics: {
         renderTitle: function(){
-            return <th key="MethodColumn">Method</th>;
+            return <th key="method" className="col-method">Method</th>;
         }
     },
     render: function(){
         var flow = this.props.flow;
-        return <td key="MethodColumn">{flow.request.method}</td>;
+        return <td>{flow.request.method}</td>;
     }
 });
+
+
 var StatusColumn = React.createClass({
     statics: {
         renderTitle: function(){
-            return <th key="StatusColumn">Status</th>;
+            return <th key="status" className="col-status">Status</th>;
         }
     },
     render: function(){
         var flow = this.props.flow;
         var status;
         if(flow.response){
-            status = flow.response.code + " " + flow.response.msg;
+            status = flow.response.code;
         } else {
             status = null;
         }
-        return <td key="StatusColumn">{status}</td>;
+        return <td>{status}</td>;
     }
 });
+
+
 var TimeColumn = React.createClass({
     statics: {
         renderTitle: function(){
-            return <th key="TimeColumn">Time</th>;
+            return <th key="time" className="col-time">Time</th>;
         }
     },
     render: function(){
@@ -81,11 +118,13 @@ var TimeColumn = React.createClass({
         } else {
             time = "...";
         }
-        return <td key="TimeColumn">{time}</td>;
+        return <td>{time}</td>;
     }
 });
 
-var all_columns = [PathColumn, MethodColumn, StatusColumn, TimeColumn];
+
+var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, TimeColumn];
+
 
 var FlowTable = React.createClass({
     getInitialState: function () {

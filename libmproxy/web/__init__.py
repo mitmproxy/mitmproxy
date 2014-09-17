@@ -1,8 +1,8 @@
+from __future__ import absolute_import, print_function
 import tornado.ioloop
 import tornado.httpserver
-from .. import controller, utils, flow, script, proxy
-import app
-import pprint
+from .. import controller, flow
+from . import app
 
 
 class Stop(Exception):
@@ -59,7 +59,7 @@ class WebMaster(flow.FlowMaster):
     def __init__(self, server, options):
         self.options = options
         self.app = app.Application(self.options.wdebug)
-        flow.FlowMaster.__init__(self, server, WebState())
+        super(WebMaster, self).__init__(server, WebState())
 
         self.last_log_id = 0
 
@@ -90,7 +90,6 @@ class WebMaster(flow.FlowMaster):
         return f
 
     def handle_response(self, f):
-        s = f.get_state(True)
         app.ClientConnection.broadcast("update_flow", f.get_state(True))
         flow.FlowMaster.handle_response(self, f)
         if f:

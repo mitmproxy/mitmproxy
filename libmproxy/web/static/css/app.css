@@ -6,6 +6,60 @@ html {
 *:after {
   box-sizing: inherit;
 }
+.resource-icon {
+  width: 32px;
+  height: 32px;
+}
+.resource-icon-css {
+  background-image: url("../images/sprite.png");
+  background-position: 0px 0px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-document {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -32px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-js {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -64px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-plain {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -96px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-executable {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -128px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-flash {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -160px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-image {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -192px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-java {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -224px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-not-modified {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -256px;
+  background-size: 32px 320px!important;
+}
+.resource-icon-redirect {
+  background-image: url("../images/sprite.png");
+  background-position: 0px -288px;
+  background-size: 32px 320px!important;
+}
 html,
 body,
 #container {
@@ -69,6 +123,33 @@ header .menu {
 }
 .flow-table {
   width: 100%;
+  table-layout: fixed;
+}
+.flow-table thead {
+  background-color: #dadada;
+}
+.flow-table td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.flow-table .col-tls {
+  width: 10px;
+}
+.flow-table .col-tls-https {
+  background-color: rgba(0, 185, 0, 0.5);
+}
+.flow-table .col-icon {
+  width: 32px;
+}
+.flow-table .col-method {
+  width: 60px;
+}
+.flow-table .col-status {
+  width: 50px;
+}
+.flow-table .col-time {
+  width: 120px;
 }
 .eventlog {
   flex: 0 0 auto;

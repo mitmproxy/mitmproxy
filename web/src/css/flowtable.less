@@ -1,5 +1,34 @@
 .flow-table {
 	width: 100%;
+	table-layout: fixed;
+
+	thead {
+		background-color: #dadada;  
+	}
+
+	td {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
 
 
+	.col-tls {
+		width: 10px;
+	}
+	.col-tls-https {
+		background-color: rgba(0, 185, 0, 0.5);
+	}
+	.col-icon {
+		width: 32px;
+	}
+	.col-method {
+		width: 60px;
+	}
+	.col-status {
+		width: 50px;
+	}
+	.col-time {
+		width: 120px;
+	}
 }
