@@ -162,7 +162,7 @@ class ODict:
         return count
 
     # Implement the StateObject protocol from mitmproxy
-    def get_state(self):
+    def get_state(self, short=False):
         return [tuple(i) for i in self.lst]
 
     def load_state(self, state):
