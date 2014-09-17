@@ -32,6 +32,7 @@ var path = {
             'vendor/react-bootstrap/react-bootstrap.js'
         ],
         app: [
+            'js/utils.js',
             'js/dispatcher.js',
             'js/actions.js',
             'js/stores/base.js',

@@ -13,8 +13,8 @@ _.extend(_SettingsStore.prototype, EventEmitter.prototype, {
         return this.settings;
     },
     handle: function (action) {
-        switch (action.actionType) {
-            case ActionTypes.SETTINGS_UPDATE:
+        switch (action.type) {
+            case ActionTypes.UPDATE_SETTINGS:
                 this.settings = action.settings;
                 this.emit("change");
                 break;

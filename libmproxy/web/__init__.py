@@ -101,7 +101,7 @@ class WebMaster(flow.FlowMaster):
 
     def handle_log(self, l):
         app.ClientConnection.broadcast(
-            "event", {
+            "add_event", {
                 "message": l.msg,
                 "level": l.level
             }

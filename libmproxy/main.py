@@ -220,7 +220,6 @@ def mitmweb():  # pragma: nocover
     from . import web
 
     check_versions()
-    assert_utf8_env()
     web_options, proxy_config = mitmweb_cmdline()
     server = get_server(web_options.no_server, proxy_config)
 

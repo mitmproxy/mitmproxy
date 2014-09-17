@@ -1,6 +1,20 @@
+// http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
+var AutoScrollMixin = {
+    componentWillUpdate: function () {
+        var node = this.getDOMNode();
+        this._shouldScrollBottom = node.scrollTop + node.clientHeight === node.scrollHeight;
+    },
+    componentDidUpdate: function () {
+        if (this._shouldScrollBottom) {
+            var node = this.getDOMNode();
+            node.scrollTop = node.scrollHeight;
+        }
+    },
+};
+
 const PayloadSources = {
-    VIEW_ACTION: "VIEW_ACTION",
-    SERVER_ACTION: "SERVER_ACTION"
+    VIEW: "view",
+    SERVER: "server"
 };
 
 
@@ -26,17 +40,17 @@ Dispatcher.prototype.dispatch = function (payload) {
 
 AppDispatcher = new Dispatcher();
 AppDispatcher.dispatchViewAction = function (action) {
-    action.actionSource = PayloadSources.VIEW_ACTION;
+    action.source = PayloadSources.VIEW;
     this.dispatch(action);
 };
 AppDispatcher.dispatchServerAction = function (action) {
-    action.actionSource = PayloadSources.SERVER_ACTION;
+    action.source = PayloadSources.SERVER;
     this.dispatch(action);
 };
 
 var ActionTypes = {
-    SETTINGS_UPDATE: "SETTINGS_UPDATE",
-    EVENTLOG_ADD: "EVENTLOG_ADD"
+    UPDATE_SETTINGS: "update_settings",
+    ADD_EVENT: "add_event"
 };
 
 var SettingsActions = {
@@ -46,7 +60,7 @@ var SettingsActions = {
 
         //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
-            actionType: ActionTypes.SETTINGS_UPDATE,
+            type: ActionTypes.UPDATE_SETTINGS,
             settings: settings
         });
     }
@@ -59,8 +73,9 @@ EventEmitter.prototype.emit = function (event) {
     if (!(event in this.listeners)) {
         return;
     }
+    var args = Array.prototype.slice.call(arguments, 1);
     this.listeners[event].forEach(function (listener) {
-        listener.apply(this, arguments);
+        listener.apply(this, args);
     }.bind(this));
 };
 EventEmitter.prototype.addListener = function (event, f) {
@@ -92,8 +107,8 @@ _.extend(_SettingsStore.prototype, EventEmitter.prototype, {
         return this.settings;
     },
     handle: function (action) {
-        switch (action.actionType) {
-            case ActionTypes.SETTINGS_UPDATE:
+        switch (action.type) {
+            case ActionTypes.UPDATE_SETTINGS:
                 this.settings = action.settings;
                 this.emit("change");
                 break;
@@ -115,19 +130,19 @@ AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
 // See also: components/EventLog.react.js
 function EventLogView(store, live) {
     EventEmitter.call(this);
-    this.$EventLogView_store = store;
+    this._store = store;
     this.live = live;
     this.log = [];
 
     this.add = this.add.bind(this);
 
     if (live) {
-        this.$EventLogView_store.addListener("new_entry", this.add);
+        this._store.addListener(ActionTypes.ADD_EVENT, this.add);
     }
 }
 _.extend(EventLogView.prototype, EventEmitter.prototype, {
     close: function () {
-        this.$EventLogView_store.removeListener("new_entry", this.add);
+        this._store.removeListener(ActionTypes.ADD_EVENT, this.add);
     },
     getAll: function () {
         return this.log;
@@ -154,7 +169,8 @@ function _EventLogStore() {
 _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
     getView: function (since) {
         var view = new EventLogView(this, !since);
-
+        return view;
+        /*
         //TODO: Really do bulk retrieval of last messages.
         window.setTimeout(function () {
             view.add_bulk([
@@ -185,11 +201,12 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
             });
         }, 1000);
         return view;
+        */
     },
     handle: function (action) {
-        switch (action.actionType) {
-            case ActionTypes.EVENTLOG_ADD:
-                this.emit("new_message", action.message);
+        switch (action.type) {
+            case ActionTypes.ADD_EVENT:
+                this.emit(ActionTypes.ADD_EVENT, action.data);
                 break;
             default:
                 return;
@@ -222,14 +239,7 @@ _Connection.prototype.onopen = function (open) {
 _Connection.prototype.onmessage = function (message) {
     //AppDispatcher.dispatchServerAction(...);
     var m = JSON.parse(message.data);
-    switch (m.type){
-        case "flow":
-            console.log("flow", m.data);
-            break;
-        case "event":
-            console.log("event", m.data.message)
-            break;
-    }
+    AppDispatcher.dispatchServerAction(m);
 };
 _Connection.prototype.onerror = function (error) {
     console.log("onerror", this, arguments);
@@ -368,6 +378,7 @@ var TrafficTable = React.createClass({displayName: 'TrafficTable',
 /** @jsx React.DOM */
 
 var EventLog = React.createClass({displayName: 'EventLog',
+    mixins:[AutoScrollMixin],
     getInitialState: function () {
         return {
             log: []
@@ -392,16 +403,10 @@ var EventLog = React.createClass({displayName: 'EventLog',
         });
     },
     render: function () {
-        //var messages = this.state.log.map(row => (<div key={row.id}>{row.message}</div>));
-        var messages = [];
-        return (
-            React.DOM.div({className: "eventlog"}, 
-                React.DOM.pre(null, 
-                    React.DOM.i({className: "fa fa-close close-button", onClick: this.close}), 
-                    messages
-                )
-            )
-            );
+        var messages = this.state.log.map(function(row) {
+            return (React.DOM.div({key: row.id}, row.message));
+        });
+        return React.DOM.pre({className: "eventlog"}, messages);
     }
 });
 
@@ -447,7 +452,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
             React.DOM.div({id: "container"}, 
                 Header({settings: this.state.settings}), 
                 React.DOM.div({id: "main"}, this.props.activeRouteHandler(null)), 
-                    this.state.settings.showEventLog ? EventLog(null) : null, 
+                this.state.settings.showEventLog ? EventLog(null) : null, 
                 Footer({settings: this.state.settings})
             )
             );

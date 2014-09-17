@@ -1,6 +1,6 @@
 var ActionTypes = {
-    SETTINGS_UPDATE: "SETTINGS_UPDATE",
-    EVENTLOG_ADD: "EVENTLOG_ADD"
+    UPDATE_SETTINGS: "update_settings",
+    ADD_EVENT: "add_event"
 };
 
 var SettingsActions = {
@@ -10,7 +10,7 @@ var SettingsActions = {
 
         //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
-            actionType: ActionTypes.SETTINGS_UPDATE,
+            type: ActionTypes.UPDATE_SETTINGS,
             settings: settings
         });
     }

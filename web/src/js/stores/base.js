@@ -5,8 +5,9 @@ EventEmitter.prototype.emit = function (event) {
     if (!(event in this.listeners)) {
         return;
     }
+    var args = Array.prototype.slice.call(arguments, 1);
     this.listeners[event].forEach(function (listener) {
-        listener.apply(this, arguments);
+        listener.apply(this, args);
     }.bind(this));
 };
 EventEmitter.prototype.addListener = function (event, f) {

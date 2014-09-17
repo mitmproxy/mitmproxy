@@ -1,6 +1,7 @@
 /** @jsx React.DOM */
 
 var EventLog = React.createClass({
+    mixins:[AutoScrollMixin],
     getInitialState: function () {
         return {
             log: []
@@ -25,15 +26,9 @@ var EventLog = React.createClass({
         });
     },
     render: function () {
-        //var messages = this.state.log.map(row => (<div key={row.id}>{row.message}</div>));
-        var messages = [];
-        return (
-            <div className="eventlog">
-                <pre>
-                    <i className="fa fa-close close-button" onClick={this.close}></i>
-                    {messages}
-                </pre>
-            </div>
-            );
+        var messages = this.state.log.map(function(row) {
+            return (<div key={row.id}>{row.message}</div>);
+        });
+        return <pre className="eventlog">{messages}</pre>;
     }
 });

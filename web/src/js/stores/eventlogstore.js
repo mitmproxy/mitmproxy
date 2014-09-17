@@ -7,19 +7,19 @@
 // See also: components/EventLog.react.js
 function EventLogView(store, live) {
     EventEmitter.call(this);
-    this.$EventLogView_store = store;
+    this._store = store;
     this.live = live;
     this.log = [];
 
     this.add = this.add.bind(this);
 
     if (live) {
-        this.$EventLogView_store.addListener("new_entry", this.add);
+        this._store.addListener(ActionTypes.ADD_EVENT, this.add);
     }
 }
 _.extend(EventLogView.prototype, EventEmitter.prototype, {
     close: function () {
-        this.$EventLogView_store.removeListener("new_entry", this.add);
+        this._store.removeListener(ActionTypes.ADD_EVENT, this.add);
     },
     getAll: function () {
         return this.log;
@@ -46,7 +46,8 @@ function _EventLogStore() {
 _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
     getView: function (since) {
         var view = new EventLogView(this, !since);
-
+        return view;
+        /*
         //TODO: Really do bulk retrieval of last messages.
         window.setTimeout(function () {
             view.add_bulk([
@@ -77,11 +78,12 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
             });
         }, 1000);
         return view;
+        */
     },
     handle: function (action) {
-        switch (action.actionType) {
-            case ActionTypes.EVENTLOG_ADD:
-                this.emit("new_message", action.message);
+        switch (action.type) {
+            case ActionTypes.ADD_EVENT:
+                this.emit(ActionTypes.ADD_EVENT, action.data);
                 break;
             default:
                 return;
