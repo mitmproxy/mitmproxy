@@ -19,7 +19,6 @@ var ProxyAppMain = React.createClass({
         SettingsStore.removeListener("change", this.onSettingsChange);
     },
     onSettingsChange: function () {
-        console.log("onSettingsChange");
         this.setState({settings: SettingsStore.getAll()});
     },
     render: function () {
@@ -27,7 +26,7 @@ var ProxyAppMain = React.createClass({
             <div id="container">
                 <Header settings={this.state.settings}/>
                 <this.props.activeRouteHandler settings={this.state.settings}/>
-                <Splitter axis="y"/>
+                {this.state.settings.showEventLog ? <Splitter axis="y"/> : null}
                 {this.state.settings.showEventLog ? <EventLog/> : null}
                 <Footer settings={this.state.settings}/>
             </div>

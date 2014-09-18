@@ -403,15 +403,21 @@ var Splitter = React.createClass({displayName: 'Splitter',
         });
         window.addEventListener("mousemove",this.onMouseMove);
         window.addEventListener("mouseup",this.onMouseUp);
+        // Occasionally, only a dragEnd event is triggered, but no mouseUp.
+        window.addEventListener("dragend",this.onDragEnd);
     },
-    onMouseUp: function(e){
+    onDragEnd: function(){
+        this.getDOMNode().style.transform="";
+        window.removeEventListener("dragend",this.onDragEnd);
         window.removeEventListener("mouseup",this.onMouseUp);
         window.removeEventListener("mousemove",this.onMouseMove);
+    },
+    onMouseUp: function(e){
+        this.onDragEnd();
 
         var node = this.getDOMNode();
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
-        this.getDOMNode().style.transform="";
 
         var dX = e.pageX-this.state.startX;
         var dY = e.pageY-this.state.startY;
@@ -438,8 +444,8 @@ var Splitter = React.createClass({displayName: 'Splitter',
         }
         this.getDOMNode().style.transform = "translate("+dX+"px,"+dY+"px)";
     },
-    reset: function(){
-        if(!this.state.applied){
+    reset: function(willUnmount) {
+        if (!this.state.applied) {
             return;
         }
         var node = this.getDOMNode();
@@ -448,6 +454,16 @@ var Splitter = React.createClass({displayName: 'Splitter',
         
         prev.style.flex = "";
         next.style.flex = "";
+
+        if(!willUnmount){
+            this.setState({
+                applied: false
+            });
+        }
+
+    },
+    componentWillUnmount: function(){
+        this.reset(true);
     },
     render: function(){
         var className = "splitter";
@@ -456,7 +472,11 @@ var Splitter = React.createClass({displayName: 'Splitter',
         } else {
             className += " splitter-y";
         }
-        return React.DOM.div({className: className, onMouseDown: this.onMouseDown});
+        return (
+            React.DOM.div({className: className}, 
+                React.DOM.div({onMouseDown: this.onMouseDown, draggable: "true"})
+            )
+        );
     }
 });
 /** @jsx React.DOM */
@@ -991,7 +1011,6 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
         SettingsStore.removeListener("change", this.onSettingsChange);
     },
     onSettingsChange: function () {
-        console.log("onSettingsChange");
         this.setState({settings: SettingsStore.getAll()});
     },
     render: function () {
@@ -999,7 +1018,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
             React.DOM.div({id: "container"}, 
                 Header({settings: this.state.settings}), 
                 this.props.activeRouteHandler({settings: this.state.settings}), 
-                Splitter({axis: "y"}), 
+                this.state.settings.showEventLog ? Splitter({axis: "y"}) : null, 
                 this.state.settings.showEventLog ? EventLog(null) : null, 
                 Footer({settings: this.state.settings})
             )

@@ -22,15 +22,21 @@ var Splitter = React.createClass({
         });
         window.addEventListener("mousemove",this.onMouseMove);
         window.addEventListener("mouseup",this.onMouseUp);
+        // Occasionally, only a dragEnd event is triggered, but no mouseUp.
+        window.addEventListener("dragend",this.onDragEnd);
     },
-    onMouseUp: function(e){
+    onDragEnd: function(){
+        this.getDOMNode().style.transform="";
+        window.removeEventListener("dragend",this.onDragEnd);
         window.removeEventListener("mouseup",this.onMouseUp);
         window.removeEventListener("mousemove",this.onMouseMove);
+    },
+    onMouseUp: function(e){
+        this.onDragEnd();
 
         var node = this.getDOMNode();
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
-        this.getDOMNode().style.transform="";
 
         var dX = e.pageX-this.state.startX;
         var dY = e.pageY-this.state.startY;
@@ -57,8 +63,8 @@ var Splitter = React.createClass({
         }
         this.getDOMNode().style.transform = "translate("+dX+"px,"+dY+"px)";
     },
-    reset: function(){
-        if(!this.state.applied){
+    reset: function(willUnmount) {
+        if (!this.state.applied) {
             return;
         }
         var node = this.getDOMNode();
@@ -67,6 +73,16 @@ var Splitter = React.createClass({
         
         prev.style.flex = "";
         next.style.flex = "";
+
+        if(!willUnmount){
+            this.setState({
+                applied: false
+            });
+        }
+
+    },
+    componentWillUnmount: function(){
+        this.reset(true);
     },
     render: function(){
         var className = "splitter";
@@ -75,6 +91,10 @@ var Splitter = React.createClass({
         } else {
             className += " splitter-y";
         }
-        return <div className={className} onMouseDown={this.onMouseDown}></div>;
+        return (
+            <div className={className}>
+                <div onMouseDown={this.onMouseDown} draggable="true"></div>
+            </div>
+        );
     }
 });

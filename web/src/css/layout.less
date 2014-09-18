@@ -30,14 +30,29 @@ html, body, #container {
 }
 
 .splitter {
-    flex: 0 0 4px;
-    background-color: #ccc;
-    content: "X";
+    flex: 0 0 1px;
+    background-color: #aaa;
+    position: relative;
 
-}
-.splitter-x {
-    cursor: col-resize;
-}
-.splitter-y {
-    cursor: row-resize;
+    > div {
+        position: absolute;
+        //debug: background-color: orange;
+    }
+
+    &.splitter-x {
+        cursor: col-resize;
+        > div {
+            margin-left: -1px;
+            width: 4px;
+            height: 100%;
+        }
+    }
+    &.splitter-y {
+        cursor: row-resize;
+        > div {
+            margin-top: -1px;
+            height: 4px;
+            width: 100%;
+        }
+    }
 }

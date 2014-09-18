@@ -69,15 +69,28 @@ body,
   flex: 1 1 auto;
 }
 .splitter {
-  flex: 0 0 4px;
-  background-color: #ccc;
-  content: "X";
+  flex: 0 0 1px;
+  background-color: #aaa;
+  position: relative;
 }
-.splitter-x {
+.splitter > div {
+  position: absolute;
+}
+.splitter.splitter-x {
   cursor: col-resize;
 }
-.splitter-y {
+.splitter.splitter-x > div {
+  margin-left: -1px;
+  width: 4px;
+  height: 100%;
+}
+.splitter.splitter-y {
   cursor: row-resize;
+}
+.splitter.splitter-y > div {
+  margin-top: -1px;
+  height: 4px;
+  width: 100%;
 }
 .nav-tabs {
   border-bottom: solid #a6a6a6 1px;
