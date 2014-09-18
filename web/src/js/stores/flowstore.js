@@ -63,8 +63,8 @@ _.extend(_FlowStore.prototype, EventEmitter.prototype, {
            flows = flows.concat(_.cloneDeep(flows)).concat(_.cloneDeep(flows));
            var id = 1;
            flows.forEach(function(flow){
-               flow.id = "uuid-"+id++;
-           })
+               flow.id = "uuid-" + id++;
+           });
            view.add_bulk(flows); 
 
         });

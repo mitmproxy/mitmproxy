@@ -26,7 +26,7 @@ var ProxyAppMain = React.createClass({
         return (
             <div id="container">
                 <Header settings={this.state.settings}/>
-                <this.props.activeRouteHandler/>
+                <this.props.activeRouteHandler settings={this.state.settings}/>
                 {this.state.settings.showEventLog ? <EventLog/> : null}
                 <Footer settings={this.state.settings}/>
             </div>
@@ -35,12 +35,19 @@ var ProxyAppMain = React.createClass({
 });
 
 
+var Routes = ReactRouter.Routes;
+var Route = ReactRouter.Route;
+var Redirect = ReactRouter.Redirect;
+var DefaultRoute = ReactRouter.DefaultRoute;
+var NotFoundRoute = ReactRouter.NotFoundRoute;
+
+
 var ProxyApp = (
-    <ReactRouter.Routes location="hash">
-        <ReactRouter.Route name="app" path="/" handler={ProxyAppMain}>
-            <ReactRouter.Route name="main" handler={FlowTable}/>
-            <ReactRouter.Route name="reports" handler={Reports}/>
-            <ReactRouter.Redirect to="main"/>
-        </ReactRouter.Route>
-    </ReactRouter.Routes>
+    <Routes location="hash">
+        <Route path="/" handler={ProxyAppMain}>
+            <Route name="flows" path="flows" handler={MainView}/>
+            <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
+            <Route name="reports" handler={Reports}/>
+        </Route>
+    </Routes>
     );

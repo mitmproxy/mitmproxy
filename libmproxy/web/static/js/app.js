@@ -12,15 +12,25 @@ var AutoScrollMixin = {
     },
 };
 
+var StickyHeadMixin = {
+    adjustHead: function(){
+        // Abusing CSS transforms to set the element
+        // referenced as head into some kind of position:sticky.
+        var head = this.refs.head.getDOMNode();
+        head.style.transform = "translate(0,"+this.getDOMNode().scrollTop+"px)";
+    }
+};
 
 var Key = {
     UP: 38,
     DOWN: 40,
+    PAGE_UP: 33,
+    PAGE_DOWN: 34,
     LEFT: 37,
     RIGHT: 39,
     ENTER: 13,
     ESC: 27
-}
+};
 const PayloadSources = {
     VIEW: "view",
     SERVER: "server"
@@ -311,8 +321,8 @@ _.extend(_FlowStore.prototype, EventEmitter.prototype, {
            flows = flows.concat(_.cloneDeep(flows)).concat(_.cloneDeep(flows));
            var id = 1;
            flows.forEach(function(flow){
-               flow.id = "uuid-"+id++;
-           })
+               flow.id = "uuid-" + id++;
+           });
            view.add_bulk(flows); 
 
         });
@@ -372,6 +382,10 @@ var Connection = new _Connection(location.origin + "/updates");
 /** @jsx React.DOM */
 
 var MainMenu = React.createClass({displayName: 'MainMenu',
+    statics: {
+        title: "Traffic",
+        route: "flows"
+    },
     toggleEventLog: function () {
         SettingsActions.update({
             showEventLog: !this.props.settings.showEventLog
@@ -387,72 +401,74 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
             );
     }
 });
+
+
 var ToolsMenu = React.createClass({displayName: 'ToolsMenu',
+    statics: {
+        title: "Tools",
+        route: "flows"
+    },
     render: function () {
         return React.DOM.div(null, "Tools Menu");
     }
 });
+
+
 var ReportsMenu = React.createClass({displayName: 'ReportsMenu',
+    statics: {
+        title: "Visualization",
+        route: "reports"
+    },
     render: function () {
         return React.DOM.div(null, "Reports Menu");
     }
 });
 
 
-var _Header_Entries = {
-    main: {
-        title: "Traffic",
-        route: "main",
-        menu: MainMenu
-    },
-    tools: {
-        title: "Tools",
-        route: "main",
-        menu: ToolsMenu
-    },
-    reports: {
-        title: "Visualization",
-        route: "reports",
-        menu: ReportsMenu
-    }
-};
+var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
+
 
 var Header = React.createClass({displayName: 'Header',
     getInitialState: function () {
         return {
-            active: "main"
+            active: header_entries[0]
         };
     },
     handleClick: function (active) {
+        ReactRouter.transitionTo(active.route);
         this.setState({active: active});
-        ReactRouter.transitionTo(_Header_Entries[active].route);
         return false;
     },
     handleFileClick: function () {
         console.log("File click");
     },
     render: function () {
-        var header = [];
-        for (var item in _Header_Entries) {
-            var classes = this.state.active == item ? "active" : "";
-            header.push(React.DOM.a({key: item, href: "#", className: classes, 
-                onClick: this.handleClick.bind(this, item)},  _Header_Entries[item].title));
-        }
-
-        var menu = _Header_Entries[this.state.active].menu({
-            settings: this.props.settings
-        });
+        var header = header_entries.map(function(entry){
+            var classes = React.addons.classSet({
+                active: entry == this.state.active
+            });
+            return (
+                React.DOM.a({key: entry.title, 
+                   href: "#", 
+                   className: classes, 
+                   onClick: this.handleClick.bind(this, entry)
+                }, 
+                     entry.title
+                )
+                );
+        }.bind(this));
+        
         return (
             React.DOM.header(null, 
                 React.DOM.div({className: "title-bar"}, 
                     "mitmproxy ",  this.props.settings.version
                 ), 
-                React.DOM.nav(null, 
+                React.DOM.nav({className: "nav-tabs nav-tabs-lg"}, 
                     React.DOM.a({href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
                     header
                 ), 
                 React.DOM.div({className: "menu"}, 
-                    menu 
+                    this.state.active({settings: this.props.settings})
                 )
             )
             );
@@ -471,7 +487,12 @@ var TLSColumn = React.createClass({displayName: 'TLSColumn',
     render: function(){
         var flow = this.props.flow;
         var ssl = (flow.request.scheme == "https");
-        return React.DOM.td({className: ssl ? "col-tls-https" : "col-tls-http"});
+        var classes = React.addons.classSet({
+            "col-tls": true,
+            "col-tls-https": ssl,
+            "col-tls-http": !ssl
+        });
+        return React.DOM.td({className: classes});
     }
 });
 
@@ -484,7 +505,7 @@ var IconColumn = React.createClass({displayName: 'IconColumn',
     },
     render: function(){
         var flow = this.props.flow;
-        return React.DOM.td({className: "resource-icon resource-icon-plain"});
+        return React.DOM.td({className: "col-icon"}, React.DOM.div({className: "resource-icon resource-icon-plain"}));
     }
 });
 
@@ -496,7 +517,7 @@ var PathColumn = React.createClass({displayName: 'PathColumn',
     },
     render: function(){
         var flow = this.props.flow;
-        return React.DOM.td(null, flow.request.scheme + "://" + flow.request.host + flow.request.path);
+        return React.DOM.td({className: "col-path"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
     }
 });
 
@@ -509,7 +530,7 @@ var MethodColumn = React.createClass({displayName: 'MethodColumn',
     },
     render: function(){
         var flow = this.props.flow;
-        return React.DOM.td(null, flow.request.method);
+        return React.DOM.td({className: "col-method"}, flow.request.method);
     }
 });
 
@@ -528,7 +549,7 @@ var StatusColumn = React.createClass({displayName: 'StatusColumn',
         } else {
             status = null;
         }
-        return React.DOM.td(null, status);
+        return React.DOM.td({className: "col-status"}, status);
     }
 });
 
@@ -547,7 +568,7 @@ var TimeColumn = React.createClass({displayName: 'TimeColumn',
         } else {
             time = "...";
         }
-        return React.DOM.td(null, time);
+        return React.DOM.td({className: "col-time"}, time);
     }
 });
 
@@ -561,10 +582,7 @@ var FlowRow = React.createClass({displayName: 'FlowRow',
     render: function(){
         var flow = this.props.flow;
         var columns = this.props.columns.map(function(column){
-            return column({
-                key: column.displayName,
-                flow: flow
-            });
+            return column({key: column.displayName, flow: flow});
         }.bind(this));
         var className = "";
         if(this.props.selected){
@@ -604,30 +622,13 @@ var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
 
 
 var FlowTable = React.createClass({displayName: 'FlowTable',
+    mixins: [StickyHeadMixin, AutoScrollMixin],
     getInitialState: function () {
         return {
-            flows: [],
             columns: all_columns
         };
     },
-    componentDidMount: function () {
-        this.flowStore = FlowStore.getView();
-        this.flowStore.addListener("change",this.onFlowChange);
-    },
-    componentWillUnmount: function () {
-        this.flowStore.removeListener("change",this.onFlowChange);
-        this.flowStore.close();
-    },
-    onFlowChange: function () {
-        this.setState({
-            flows: this.flowStore.getAll()
-        });
-    },
-    selectFlow: function(flow){
-        this.setState({
-            selected: flow
-        });
-
+    scrollIntoView: function(flow){
         // Now comes the fun part: Scroll the flow into the view.
         var viewport = this.getDOMNode();
         var flowNode = this.refs.body.refs[flow.id].getDOMNode();
@@ -646,69 +647,194 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
         }
     },
-    selectRowRelative: function(i){
+    selectFlowRelative: function(i){
         var index;
-        if(!this.state.selected){
+        if(!this.props.selected){
             if(i > 0){
-                index = this.flows.length-1;
+                index = this.props.flows.length-1;
             } else {
                 index = 0;
             }
         } else {
-            index = _.findIndex(this.state.flows, function(f){
-                return f === this.state.selected;
+            index = _.findIndex(this.props.flows, function(f){
+                return f === this.props.selected;
             }.bind(this));
-            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+            index = Math.min(Math.max(0, index+i), this.props.flows.length-1);
         }
-        this.selectFlow(this.state.flows[index]);
+        this.props.selectFlow(this.props.flows[index]);
     },
     onKeyDown: function(e){
         switch(e.keyCode){
             case Key.DOWN:
-                this.selectRowRelative(+1);
-                return false;
+                this.selectFlowRelative(+1);
                 break;
             case Key.UP:
-                this.selectRowRelative(-1);
-                return false;
+                this.selectFlowRelative(-1);
                 break;
-            case Key.ENTER:
-                console.log("Open details pane...", this.state.selected);
+            case Key.PAGE_DOWN:
+                this.selectFlowRelative(+10);
+                break;
+            case Key.PAGE_UP:
+                this.selectFlowRelative(-10);
                 break;
             case Key.ESC:
-                console.log("")
+                this.props.selectFlow(null);
+                break;
             default:
                 console.debug("keydown", e.keyCode);
                 return;
         }
         return false;
     },
-    onScroll: function(e){
-        //Abusing CSS transforms to set thead into position:fixed.
-        var head = this.refs.head.getDOMNode();
-        head.style.transform = "translate(0,"+this.getDOMNode().scrollTop+"px)";
-    },
     render: function () {
-        var flows = this.state.flows.map(function(flow){
-         return React.DOM.div(null, flow.request.method, " ", flow.request.scheme, "://", flow.request.host, flow.request.path);
-        });
         return (
-        React.DOM.main({onScroll: this.onScroll}, 
-            React.DOM.table({className: "flow-table"}, 
-                FlowTableHead({ref: "head", 
-                               columns: this.state.columns}), 
-                FlowTableBody({ref: "body", 
-                               selectFlow: this.selectFlow, 
-                               onKeyDown: this.onKeyDown, 
-                               selected: this.state.selected, 
-                               columns: this.state.columns, 
-                               flows: this.state.flows})
+            React.DOM.div({className: "flow-table", onScroll: this.adjustHead}, 
+                React.DOM.table(null, 
+                    FlowTableHead({ref: "head", 
+                                   columns: this.state.columns}), 
+                    FlowTableBody({ref: "body", 
+                                   flows: this.props.flows, 
+                                   selected: this.props.selected, 
+                                   selectFlow: this.props.selectFlow, 
+                                   columns: this.state.columns, 
+                                   onKeyDown: this.onKeyDown})
+                )
             )
-        )
             );
     }
 });
 
+/** @jsx React.DOM */
+
+var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
+    render: function(){
+
+        var items = ["request", "response", "details"].map(function(e){
+            var str = e.charAt(0).toUpperCase() + e.slice(1);
+            var className = this.props.active === e ? "active" : "";
+            var onClick = function(){
+                this.props.selectTab(e);
+                return false;
+            }.bind(this);
+            return React.DOM.a({key: e, 
+                      href: "#", 
+                      className: className, 
+                      onClick: onClick}, str);
+        }.bind(this));
+        return (
+            React.DOM.nav({ref: "head", className: "nav-tabs nav-tabs-sm"}, 
+                items
+            )
+        );
+    } 
+});
+
+var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
+    render: function(){
+        return React.DOM.div(null, "request");
+    }
+});
+
+var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
+    render: function(){
+        return React.DOM.div(null, "response");
+    }
+});
+
+var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnectionInfo',
+    render: function(){
+        return React.DOM.div(null, "details");
+    }
+})
+
+var tabs = {
+    request: FlowDetailRequest,
+    response: FlowDetailResponse,
+    details: FlowDetailConnectionInfo
+}
+
+var FlowDetail = React.createClass({displayName: 'FlowDetail',
+    mixins: [StickyHeadMixin],
+    render: function(){
+        var flow = JSON.stringify(this.props.flow, null, 2);
+        var Tab = tabs[this.props.active];
+        return (
+            React.DOM.div({className: "flow-detail", onScroll: this.adjustHead}, 
+                FlowDetailNav({active: this.props.active, selectTab: this.props.selectTab}), 
+                Tab(null)
+            )
+            );
+    } 
+});
+/** @jsx React.DOM */
+
+var MainView = React.createClass({displayName: 'MainView',
+    getInitialState: function() {
+        return {
+            flows: [],
+        };
+    },
+    componentDidMount: function () {
+        console.log("get view");
+        this.flowStore = FlowStore.getView();
+        this.flowStore.addListener("change",this.onFlowChange);
+    },
+    componentWillUnmount: function () {
+        this.flowStore.removeListener("change",this.onFlowChange);
+        this.flowStore.close();
+    },
+    onFlowChange: function () {
+        this.setState({
+            flows: this.flowStore.getAll()
+        });
+    },
+    selectFlow: function(flow) {
+        if(flow){
+            ReactRouter.replaceWith(
+                "flow", 
+                {
+                    flowId: flow.id,
+                    detailTab: this.props.params.detailTab || "request"
+                }
+            );
+            this.refs.flowTable.scrollIntoView(flow);
+        } else {
+            ReactRouter.replaceWith("flows");
+        }
+    },
+    selectDetailTab: function(panel) {
+        ReactRouter.replaceWith(
+            "flow", 
+            {
+                flowId: this.props.params.flowId,
+                detailTab: panel
+            }
+        );
+    },
+    render: function() {
+        var selected = _.find(this.state.flows, { id: this.props.params.flowId });
+
+        var details = null;
+        if(selected){
+            details = (
+                FlowDetail({ref: "flowDetails", 
+                            flow: selected, 
+                            selectTab: this.selectDetailTab, 
+                            active: this.props.params.detailTab})
+            );
+        }
+
+        return (
+            React.DOM.div({className: "main-view"}, 
+                FlowTable({ref: "flowTable", 
+                           flows: this.state.flows, 
+                           selectFlow: this.selectFlow, 
+                           selected: selected}), 
+                details
+            )
+        );
+    }
+});
 /** @jsx React.DOM */
 
 var EventLog = React.createClass({displayName: 'EventLog',
@@ -791,7 +917,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
         return (
             React.DOM.div({id: "container"}, 
                 Header({settings: this.state.settings}), 
-                this.props.activeRouteHandler(null), 
+                this.props.activeRouteHandler({settings: this.state.settings}), 
                 this.state.settings.showEventLog ? EventLog(null) : null, 
                 Footer({settings: this.state.settings})
             )
@@ -800,16 +926,22 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
 });
 
 
+var Routes = ReactRouter.Routes;
+var Route = ReactRouter.Route;
+var Redirect = ReactRouter.Redirect;
+var DefaultRoute = ReactRouter.DefaultRoute;
+var NotFoundRoute = ReactRouter.NotFoundRoute;
+
+
 var ProxyApp = (
-    ReactRouter.Routes({location: "hash"}, 
-        ReactRouter.Route({name: "app", path: "/", handler: ProxyAppMain}, 
-            ReactRouter.Route({name: "main", handler: FlowTable}), 
-            ReactRouter.Route({name: "reports", handler: Reports}), 
-            ReactRouter.Redirect({to: "main"})
+    Routes({location: "hash"}, 
+        Route({path: "/", handler: ProxyAppMain}, 
+            Route({name: "flows", path: "flows", handler: MainView}), 
+            Route({name: "flow", path: "flows/:flowId/:detailTab", handler: MainView}), 
+            Route({name: "reports", handler: Reports})
         )
     )
     );
-
 $(function () {
     Connection.init();
     app = React.renderComponent(ProxyApp, document.body);

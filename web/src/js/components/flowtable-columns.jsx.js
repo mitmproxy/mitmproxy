@@ -10,7 +10,12 @@ var TLSColumn = React.createClass({
     render: function(){
         var flow = this.props.flow;
         var ssl = (flow.request.scheme == "https");
-        return <td className={ssl ? "col-tls-https" : "col-tls-http"}></td>;
+        var classes = React.addons.classSet({
+            "col-tls": true,
+            "col-tls-https": ssl,
+            "col-tls-http": !ssl
+        });
+        return <td className={classes}></td>;
     }
 });
 
@@ -23,7 +28,7 @@ var IconColumn = React.createClass({
     },
     render: function(){
         var flow = this.props.flow;
-        return <td className="resource-icon resource-icon-plain"></td>;
+        return <td className="col-icon"><div className="resource-icon resource-icon-plain"></div></td>;
     }
 });
 
@@ -35,7 +40,7 @@ var PathColumn = React.createClass({
     },
     render: function(){
         var flow = this.props.flow;
-        return <td>{flow.request.scheme + "://" + flow.request.host + flow.request.path}</td>;
+        return <td className="col-path">{flow.request.scheme + "://" + flow.request.host + flow.request.path}</td>;
     }
 });
 
@@ -48,7 +53,7 @@ var MethodColumn = React.createClass({
     },
     render: function(){
         var flow = this.props.flow;
-        return <td>{flow.request.method}</td>;
+        return <td className="col-method">{flow.request.method}</td>;
     }
 });
 
@@ -67,7 +72,7 @@ var StatusColumn = React.createClass({
         } else {
             status = null;
         }
-        return <td>{status}</td>;
+        return <td className="col-status">{status}</td>;
     }
 });
 
@@ -86,7 +91,7 @@ var TimeColumn = React.createClass({
         } else {
             time = "...";
         }
-        return <td>{time}</td>;
+        return <td className="col-time">{time}</td>;
     }
 });
 

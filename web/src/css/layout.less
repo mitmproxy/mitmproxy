@@ -13,7 +13,19 @@ html, body, #container {
     }
 }
 
-main {
+.main-view {
     flex: 1 1 auto;
-    overflow: auto;
+   
+    display: flex;
+    flex-direction: row;
+
+    &.vertical {
+        flex-direction: column;
+    }
+
+    .flow-detail, .flow-table {
+        flex: 1 1 auto;
+        flex-basis: 50%;
+    }
+
 }

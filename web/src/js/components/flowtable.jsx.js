@@ -4,10 +4,7 @@ var FlowRow = React.createClass({
     render: function(){
         var flow = this.props.flow;
         var columns = this.props.columns.map(function(column){
-            return column({
-                key: column.displayName,
-                flow: flow
-            });
+            return <column key={column.displayName} flow={flow}/>;
         }.bind(this));
         var className = "";
         if(this.props.selected){
@@ -47,30 +44,13 @@ var FlowTableBody = React.createClass({
 
 
 var FlowTable = React.createClass({
+    mixins: [StickyHeadMixin, AutoScrollMixin],
     getInitialState: function () {
         return {
-            flows: [],
             columns: all_columns
         };
     },
-    componentDidMount: function () {
-        this.flowStore = FlowStore.getView();
-        this.flowStore.addListener("change",this.onFlowChange);
-    },
-    componentWillUnmount: function () {
-        this.flowStore.removeListener("change",this.onFlowChange);
-        this.flowStore.close();
-    },
-    onFlowChange: function () {
-        this.setState({
-            flows: this.flowStore.getAll()
-        });
-    },
-    selectFlow: function(flow){
-        this.setState({
-            selected: flow
-        });
-
+    scrollIntoView: function(flow){
         // Now comes the fun part: Scroll the flow into the view.
         var viewport = this.getDOMNode();
         var flowNode = this.refs.body.refs[flow.id].getDOMNode();
@@ -89,65 +69,59 @@ var FlowTable = React.createClass({
             viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
         }
     },
-    selectRowRelative: function(i){
+    selectFlowRelative: function(i){
         var index;
-        if(!this.state.selected){
+        if(!this.props.selected){
             if(i > 0){
-                index = this.flows.length-1;
+                index = this.props.flows.length-1;
             } else {
                 index = 0;
             }
         } else {
-            index = _.findIndex(this.state.flows, function(f){
-                return f === this.state.selected;
+            index = _.findIndex(this.props.flows, function(f){
+                return f === this.props.selected;
             }.bind(this));
-            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+            index = Math.min(Math.max(0, index+i), this.props.flows.length-1);
         }
-        this.selectFlow(this.state.flows[index]);
+        this.props.selectFlow(this.props.flows[index]);
     },
     onKeyDown: function(e){
         switch(e.keyCode){
             case Key.DOWN:
-                this.selectRowRelative(+1);
-                return false;
+                this.selectFlowRelative(+1);
                 break;
             case Key.UP:
-                this.selectRowRelative(-1);
-                return false;
+                this.selectFlowRelative(-1);
                 break;
-            case Key.ENTER:
-                console.log("Open details pane...", this.state.selected);
+            case Key.PAGE_DOWN:
+                this.selectFlowRelative(+10);
+                break;
+            case Key.PAGE_UP:
+                this.selectFlowRelative(-10);
                 break;
             case Key.ESC:
-                console.log("")
+                this.props.selectFlow(null);
+                break;
             default:
                 console.debug("keydown", e.keyCode);
                 return;
         }
         return false;
     },
-    onScroll: function(e){
-        //Abusing CSS transforms to set thead into position:fixed.
-        var head = this.refs.head.getDOMNode();
-        head.style.transform = "translate(0,"+this.getDOMNode().scrollTop+"px)";
-    },
     render: function () {
-        var flows = this.state.flows.map(function(flow){
-         return <div>{flow.request.method} {flow.request.scheme}://{flow.request.host}{flow.request.path}</div>;
-        });
         return (
-        <main onScroll={this.onScroll}>
-            <table className="flow-table">
-                <FlowTableHead ref="head"
-                               columns={this.state.columns}/>
-                <FlowTableBody ref="body"
-                               selectFlow={this.selectFlow}
-                               onKeyDown={this.onKeyDown}
-                               selected={this.state.selected}
-                               columns={this.state.columns}
-                               flows={this.state.flows}/>
-            </table>
-        </main>
+            <div className="flow-table" onScroll={this.adjustHead}>
+                <table>
+                    <FlowTableHead ref="head"
+                                   columns={this.state.columns}/>
+                    <FlowTableBody ref="body"
+                                   flows={this.props.flows}
+                                   selected={this.props.selected}
+                                   selectFlow={this.props.selectFlow}
+                                   columns={this.state.columns}
+                                   onKeyDown={this.onKeyDown}/>
+                </table>
+            </div>
             );
     }
 });

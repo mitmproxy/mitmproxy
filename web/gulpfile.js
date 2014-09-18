@@ -44,6 +44,8 @@ var path = {
             'js/components/header.jsx.js',
             'js/components/flowtable-columns.jsx.js',
             'js/components/flowtable.jsx.js',
+            'js/components/flowdetail.jsx.js',
+            'js/components/mainview.jsx.js',
             'js/components/eventlog.jsx.js',
             'js/components/footer.jsx.js',
             'js/components/proxyapp.jsx.js',

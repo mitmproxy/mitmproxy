@@ -1,9 +1,24 @@
 .flow-table {
 	width: 100%;
-	table-layout: fixed;
+	overflow: auto;
+
+	table {
+		width: 100%;
+		table-layout: fixed;
+	}
 
 	thead {
-		background-color: #dadada;  
+		background-color: #F2F2F2;
+		line-height: 23px;
+	}
+
+	th {
+		font-weight: normal;
+		box-shadow: 0 1px 0 #a6a6a6;
+	}
+
+	tbody {
+		outline: 0;
 	}
 
 	tr {
@@ -19,9 +34,7 @@
 		text-overflow: ellipsis;
 	}
 
-	//tr:nth-child(odd) { background-color : white; }
 	tr:nth-child(even) { background-color : rgba(0,0,0,0.05); }
-	//tr:hover { background-color : hsla(209, 52%, 84%, 0.5); }
 
 	.col-tls {
 		width: 10px;
@@ -39,6 +52,9 @@
 		width: 50px;
 	}
 	.col-time {
-		width: 120px;
+		width: 50px;
+	}
+	td.col-time {
+		text-align: right;
 	}
 }

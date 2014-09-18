@@ -1,10 +1,12 @@
 html {
-  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+       box-sizing: border-box;
 }
 *,
 *:before,
 *:after {
-  box-sizing: inherit;
+  -moz-box-sizing: inherit;
+       box-sizing: inherit;
 }
 .resource-icon {
   width: 32px;
@@ -48,54 +50,111 @@ body,
   overflow: hidden;
 }
 #container {
+  display: -webkit-flex;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column;
 }
 #container > header,
 #container > footer,
 #container > .eventlog {
-  flex: 0 0 auto;
+  -webkit-flex: 0 0 auto;
+      -ms-flex: 0 0 auto;
+          flex: 0 0 auto;
 }
-main {
-  flex: 1 1 auto;
-  overflow: auto;
+.main-view {
+  -webkit-flex: 1 1 auto;
+      -ms-flex: 1 1 auto;
+          flex: 1 1 auto;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: row;
+      -ms-flex-direction: row;
+          flex-direction: row;
 }
-header {
-  background-color: white;
+.main-view.vertical {
+  -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+          flex-direction: column;
 }
-header .title-bar {
-  line-height: 25px;
-  text-align: center;
+.main-view .flow-detail,
+.main-view .flow-table {
+  -webkit-flex: 1 1 auto;
+      -ms-flex: 1 1 auto;
+          flex: 1 1 auto;
+  -webkit-flex-basis: 50%;
+      -ms-flex-preferred-size: 50%;
+          flex-basis: 50%;
 }
-header nav {
+.nav-tabs {
   border-bottom: solid #a6a6a6 1px;
 }
-header nav a {
+.nav-tabs a {
   display: inline-block;
-  padding: 3px 14px;
-  margin: 0 2px -1px;
   border: solid transparent 1px;
+  text-decoration: none;
 }
-header nav a.active {
+.nav-tabs a.active {
+  background-color: white;
   border-color: #a6a6a6;
   border-bottom-color: white;
 }
-header nav a:hover {
-  /*
-                @preview: lightgrey;
-                border-top-color: @preview;
-                border-left-color: @preview;
-                border-right-color: @preview;
-                */
-  text-decoration: none;
-}
-header nav a.special {
+.nav-tabs a.special {
   color: white;
   background-color: #396cad;
   border-bottom-color: #396cad;
 }
-header nav a.special:hover {
+.nav-tabs a.special:hover {
   background-color: #5386c6;
+}
+.nav-tabs-lg a {
+  padding: 3px 14px;
+  margin: 0 2px -1px;
+}
+.nav-tabs-sm a {
+  padding: 0px 7px;
+  margin: 2px 2px -1px;
+}
+header {
+  background-color: white;
+  /*
+    nav {
+        border-bottom: solid @separator-color 1px;
+
+        a {
+            display: inline-block;
+            padding: 3px 14px;
+            margin: 0 2px -1px;
+            border: solid transparent 1px;
+            //text-transform: uppercase;
+            //font-family: Lato;
+
+            &.active {
+                border-color: @separator-color;
+                border-bottom-color: white;
+            }
+            &.active, &:hover {
+                text-decoration: none;
+            }
+            &.special {
+                @special-color: #396cad;
+                color: white;
+                background-color: @special-color;
+                border-bottom-color: @special-color;
+                &:hover {
+                    background-color: lighten(@special-color, 10%);
+                }
+            }
+        }
+    }
+*/
+}
+header .title-bar {
+  line-height: 25px;
+  text-align: center;
 }
 header .menu {
   padding: 10px;
@@ -103,10 +162,22 @@ header .menu {
 }
 .flow-table {
   width: 100%;
+  overflow: auto;
+}
+.flow-table table {
+  width: 100%;
   table-layout: fixed;
 }
 .flow-table thead {
-  background-color: #dadada;
+  background-color: #F2F2F2;
+  line-height: 23px;
+}
+.flow-table th {
+  font-weight: normal;
+  box-shadow: 0 1px 0 #a6a6a6;
+}
+.flow-table tbody {
+  outline: 0;
 }
 .flow-table tr {
   cursor: pointer;
@@ -138,10 +209,21 @@ header .menu {
   width: 50px;
 }
 .flow-table .col-time {
-  width: 120px;
+  width: 50px;
+}
+.flow-table td.col-time {
+  text-align: right;
+}
+.flow-detail {
+  overflow: auto;
+}
+.flow-detail nav {
+  background-color: #F2F2F2;
 }
 .eventlog {
-  flex: 0 0 auto;
+  -webkit-flex: 0 0 auto;
+      -ms-flex: 0 0 auto;
+          flex: 0 0 auto;
   margin: 0;
   border-radius: 0;
   height: 200px;
@@ -152,5 +234,3 @@ footer {
   box-shadow: 0 -1px 3px #d3d3d3;
   padding: 0px 10px 3px;
 }
-
-/*# sourceMappingURL=../css/app.css.map */
