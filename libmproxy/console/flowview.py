@@ -176,12 +176,9 @@ class FlowView(common.WWrap):
                 key = "header",
                 val = "text"
             )
-        if conn.content is not None:
-            override = self.override_get()
-            viewmode = self.viewmode_get(override)
-            msg, body = self.cont_view_handle_missing(conn, viewmode)
-        elif conn.content == CONTENT_MISSING:
-            pass
+        override = self.override_get()
+        viewmode = self.viewmode_get(override)
+        msg, body = self.cont_view_handle_missing(conn, viewmode)
         return headers, msg, body
 
     def conn_text_merge(self, headers, msg, body):

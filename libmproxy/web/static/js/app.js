@@ -582,7 +582,7 @@ var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
         var columns = this.props.columns.map(function(column){
             return column.renderTitle();
         }.bind(this));
-        return React.DOM.thead(null, columns);
+        return React.DOM.thead(null, React.DOM.tr(null, columns));
     }
 });
 
