@@ -36,6 +36,7 @@ var path = {
             'js/utils.js',
             'js/dispatcher.js',
             'js/actions.js',
+            'js/flow/utils.js',
             'js/stores/base.js',
             'js/stores/settingstore.js',
             'js/stores/eventlogstore.js',

@@ -77,6 +77,22 @@ var StatusColumn = React.createClass({
 });
 
 
+var SizeColumn = React.createClass({
+    statics: {
+        renderTitle: function(){
+            return <th key="size" className="col-size">Size</th>;
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        var size = formatSize(
+                flow.request.contentLength +
+                (flow.response.contentLength || 0));
+        return <td className="col-size">{size}</td>;
+    }
+});
+
+
 var TimeColumn = React.createClass({
     statics: {
         renderTitle: function(){
@@ -96,5 +112,12 @@ var TimeColumn = React.createClass({
 });
 
 
-var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, TimeColumn];
+var all_columns = [
+    TLSColumn,
+    IconColumn,
+    PathColumn,
+    MethodColumn,
+    StatusColumn,
+    SizeColumn,
+    TimeColumn];
 

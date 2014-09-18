@@ -23,21 +23,59 @@ var FlowDetailNav = React.createClass({
     } 
 });
 
+var Headers = React.createClass({
+    render: function(){
+        var rows = this.props.message.headers.map(function(header){
+            return (
+                <tr>
+                    <td className="header-name">{header[0]}</td>
+                    <td className="header-value">{header[1]}</td>
+                </tr>
+            );
+        })
+        return (
+            <table className="header-table">
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        );
+    }
+})
+
 var FlowDetailRequest = React.createClass({
     render: function(){
-        return <div>request</div>;
+        var flow = this.props.flow;
+        var url = <code>{ RequestUtils.pretty_url(flow.request) }</code>;
+        var content = null;
+        if(flow.request.contentLength > 0){
+            content = "Request Content Size: "+ formatSize(flow.request.contentLength);
+        } else {
+            content = <div className="alert alert-info">No Content</div>;
+        }
+
+        //TODO: Styling
+
+        return (
+            <section>
+                {url}
+                <Headers message={flow.request}/>
+                <hr/>
+                {content}
+            </section>
+        );
     }
 });
 
 var FlowDetailResponse = React.createClass({
     render: function(){
-        return <div>response</div>;
+        return <section>response</section>;
     }
 });
 
 var FlowDetailConnectionInfo = React.createClass({
     render: function(){
-        return <div>details</div>;
+        return <section>details</section>;
     }
 });
 
@@ -54,8 +92,8 @@ var FlowDetail = React.createClass({
         var Tab = tabs[this.props.active];
         return (
             <div className="flow-detail" onScroll={this.adjustHead}>
-                <FlowDetailNav active={this.props.active} selectTab={this.props.selectTab}/>
-                <Tab/>
+                <FlowDetailNav ref="head" active={this.props.active} selectTab={this.props.selectTab}/>
+                <Tab flow={this.props.flow}/>
             </div>
             );
     } 

@@ -1,6 +1,7 @@
 [{
   "id": "b5e5483c-e124-45bb-aa2e-360706e03ef4",
   "request": {
+  	"contentLength": 0,
     "timestamp_end": 1410651311.107, 
     "timestamp_start": 1410651311.106, 
     "form_in": "relative",
@@ -54,6 +55,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651311.055, 
     "state": [], 
     "timestamp_ssl_setup": 1410651311.096,
@@ -77,6 +79,7 @@
     "ssl_established": true
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651310.36, 
     "address": {
       "use_ipv6": false, 
@@ -160,6 +163,7 @@
 {
   "id": "85e9781f-d81d-43ca-a694-2cd86c76d991",
   "request": {
+  	"contentLength": 42000,
     "timestamp_end": 1410651311.657, 
     "timestamp_start": 1410651311.653, 
     "form_in": "relative",
@@ -217,6 +221,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651311.055, 
     "state": [], 
     "timestamp_ssl_setup": 1410651311.096,
@@ -240,6 +245,7 @@
     "ssl_established": true
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651310.36, 
     "address": {
       "use_ipv6": false, 
@@ -323,6 +329,7 @@
 {
   "id": "1bf281fd-e02a-423c-a69c-aa65657bc3dd",
   "request": {
+  	"contentLength": 132121,
     "timestamp_end": 1410651312.362, 
     "timestamp_start": 1410651312.359, 
     "form_in": "relative",
@@ -380,6 +387,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651312.303, 
     "state": [], 
     "timestamp_ssl_setup": 1410651312.349,
@@ -403,6 +411,7 @@
     "ssl_established": true
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651312.193, 
     "address": {
       "use_ipv6": false, 
@@ -490,6 +499,7 @@
 {
   "id": "833253a0-f7dd-48c7-893c-1f13a38a71ce",
   "request": {
+  	"contentLength": 13233121,
     "timestamp_end": 1410651312.389, 
     "timestamp_start": 1410651312.368, 
     "form_in": "relative",
@@ -547,6 +557,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651312.307, 
     "state": [], 
     "timestamp_ssl_setup": 1410651312.355,
@@ -570,6 +581,7 @@
     "ssl_established": true
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651312.2, 
     "address": {
       "use_ipv6": false, 
@@ -657,6 +669,7 @@
 {
   "id": "152d8e71-2469-4034-8d6d-11099bbb4248",
   "request": {
+  	"contentLength": 132121231231,
     "timestamp_end": 1410651312.386, 
     "timestamp_start": 1410651312.368, 
     "form_in": "relative",
@@ -714,6 +727,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651312.303, 
     "state": [], 
     "timestamp_ssl_setup": 1410651312.355,
@@ -737,6 +751,7 @@
     "ssl_established": true
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651312.192, 
     "address": {
       "use_ipv6": false, 
@@ -824,6 +839,7 @@
 {
   "id": "b3758e4d-7bae-4771-b154-e100c0722d00",
   "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651373.965, 
     "timestamp_start": 1410651373.963, 
     "form_in": "absolute",
@@ -865,6 +881,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.189, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -888,6 +905,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651373.958, 
     "address": {
       "use_ipv6": false, 
@@ -955,6 +973,7 @@
 {
   "id": "ea9e47ab-fd7b-4463-bfea-cfd64cc5f78d",
   "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651374.391, 
     "timestamp_start": 1410651374.387, 
     "form_in": "absolute",
@@ -1000,6 +1019,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.189, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1023,6 +1043,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651373.958, 
     "address": {
       "use_ipv6": false, 
@@ -1090,6 +1111,7 @@
 {
   "id": "13ee4cd1-08e0-43ef-9bee-56fc0d9cbf3f",
   "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651374.396, 
     "timestamp_start": 1410651374.394, 
     "form_in": "absolute",
@@ -1135,6 +1157,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.567, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1158,6 +1181,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651374.389, 
     "address": {
       "use_ipv6": false, 
@@ -1221,6 +1245,7 @@
 {
  "id": "5c50e1fc-5ac4-4748-aed1-c969ede63e4e",
  "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651374.795, 
     "timestamp_start": 1410651374.793, 
     "form_in": "absolute",
@@ -1266,6 +1291,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.99, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1289,6 +1315,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651374.389, 
     "address": {
       "use_ipv6": false, 
@@ -1372,6 +1399,7 @@
 {
  "id": "0285a0b2-380e-43eb-a7a9-a18893950216",
  "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651375.084, 
     "timestamp_start": 1410651375.078, 
     "form_in": "absolute",
@@ -1417,6 +1445,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.99, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1440,6 +1469,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651374.389, 
     "address": {
       "use_ipv6": false, 
@@ -1519,6 +1549,7 @@
 {
  "id": "c9af9c71-dc68-462e-8446-f3a4b2782400",
  "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651374.778, 
     "timestamp_start": 1410651374.766, 
     "form_in": "absolute",
@@ -1564,6 +1595,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.952, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1587,6 +1619,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651374.39, 
     "address": {
       "use_ipv6": false, 
@@ -1650,6 +1683,7 @@
 {
  "id": "310386ab-3ae1-4129-9a2e-8dd2ce60ecdb",
  "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651374.778, 
     "timestamp_start": 1410651374.766, 
     "form_in": "absolute",
@@ -1695,6 +1729,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.189, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1718,6 +1753,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651373.958, 
     "address": {
       "use_ipv6": false, 
@@ -1781,6 +1817,7 @@
 {
  "id": "b92e5f6e-bb0f-4e47-a50c-ef4072ea40b3",
  "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651376.078, 
     "timestamp_start": 1410651376.075, 
     "form_in": "absolute",
@@ -1826,6 +1863,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.189, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1849,6 +1887,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651373.958, 
     "address": {
       "use_ipv6": false, 
@@ -1904,6 +1943,7 @@
 {
  "id": "597d086f-d836-49e3-85bb-77a983bed87f",
  "request": {
+    "contentLength" : 54321,
     "timestamp_end": 1410651376.282, 
     "timestamp_start": 1410651376.279, 
     "form_in": "absolute",
@@ -1949,6 +1989,7 @@
     ]
   }, 
   "server_conn": {
+    "contentLength" : 54321,
     "timestamp_tcp_setup": 1410651374.189, 
     "state": [], 
     "timestamp_ssl_setup": null,
@@ -1972,6 +2013,7 @@
     "ssl_established": false
   }, 
   "client_conn": {
+    "contentLength" : 54321,
     "timestamp_start": 1410651373.958, 
     "address": {
       "use_ipv6": false, 

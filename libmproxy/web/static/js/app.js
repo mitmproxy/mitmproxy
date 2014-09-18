@@ -13,11 +13,11 @@ var AutoScrollMixin = {
 };
 
 var StickyHeadMixin = {
-    adjustHead: function(){
+    adjustHead: function () {
         // Abusing CSS transforms to set the element
         // referenced as head into some kind of position:sticky.
         var head = this.refs.head.getDOMNode();
-        head.style.transform = "translate(0,"+this.getDOMNode().scrollTop+"px)";
+        head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
     }
 };
 
@@ -30,6 +30,15 @@ var Key = {
     RIGHT: 39,
     ENTER: 13,
     ESC: 27
+};
+
+var formatSize = function (size) {
+    var prefix = ["B", "KB", "MB", "GB", "TB"];
+    while (size >= 1024 && prefix.length > 1) {
+        prefix.shift();
+        size = size / 1024;
+    }
+    return (Math.floor(size * 100) / 100.0) + prefix.shift();
 };
 const PayloadSources = {
     VIEW: "view",
@@ -104,6 +113,53 @@ var EventLogActions = {
         });
     }
 };
+var _MessageUtils = {
+    getContentType: function (message) {
+        return MessageUtils.getHeader(message, /Content-Type/i);
+    },
+    get_first_header: function (message, regex) {
+        //FIXME: Cache Invalidation.
+        if (!message._headerLookups)
+            Object.defineProperty(message, "_headerLookups", {
+                value: {},
+                configurable: false,
+                enumerable: false,
+                writable: false
+            });
+        if (!(regex in message._headerLookups)) {
+            var header;
+            for (var i = 0; i < message.headers.length; i++) {
+                if (!!message.headers[i][0].match(regex)) {
+                    header = message.headers[i];
+                    break;
+                }
+            }
+            message._headerLookups[regex] = header ? header[1] : undefined;
+        }
+        return message._headerLookups[regex];
+    }
+};
+
+var defaultPorts = {
+    "http": 80,
+    "https": 443
+};
+
+var RequestUtils = _.extend(_MessageUtils, {
+    pretty_host: function (request) {
+        //FIXME: Add hostheader
+        return request.host;
+    },
+    pretty_url: function (request) {
+        var port = "";
+        if (defaultPorts[request.scheme] !== request.port) {
+            port = ":" + request.port;
+        }
+        return request.scheme + "://" + this.pretty_host(request) + port + request.path;
+    }
+});
+
+var ResponseUtils = _.extend(_MessageUtils, {});
 function EventEmitter() {
     this.listeners = {};
 }
@@ -654,6 +710,22 @@ var StatusColumn = React.createClass({displayName: 'StatusColumn',
 });
 
 
+var SizeColumn = React.createClass({displayName: 'SizeColumn',
+    statics: {
+        renderTitle: function(){
+            return React.DOM.th({key: "size", className: "col-size"}, "Size");
+        }
+    },
+    render: function(){
+        var flow = this.props.flow;
+        var size = formatSize(
+                flow.request.contentLength +
+                (flow.response.contentLength || 0));
+        return React.DOM.td({className: "col-size"}, size);
+    }
+});
+
+
 var TimeColumn = React.createClass({displayName: 'TimeColumn',
     statics: {
         renderTitle: function(){
@@ -673,7 +745,14 @@ var TimeColumn = React.createClass({displayName: 'TimeColumn',
 });
 
 
-var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, TimeColumn];
+var all_columns = [
+    TLSColumn,
+    IconColumn,
+    PathColumn,
+    MethodColumn,
+    StatusColumn,
+    SizeColumn,
+    TimeColumn];
 
 
 /** @jsx React.DOM */
@@ -829,21 +908,59 @@ var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
     } 
 });
 
+var Headers = React.createClass({displayName: 'Headers',
+    render: function(){
+        var rows = this.props.message.headers.map(function(header){
+            return (
+                React.DOM.tr(null, 
+                    React.DOM.td({className: "header-name"}, header[0]), 
+                    React.DOM.td({className: "header-value"}, header[1])
+                )
+            );
+        })
+        return (
+            React.DOM.table({className: "header-table"}, 
+                React.DOM.tbody(null, 
+                    rows
+                )
+            )
+        );
+    }
+})
+
 var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
     render: function(){
-        return React.DOM.div(null, "request");
+        var flow = this.props.flow;
+        var url = React.DOM.code(null,  RequestUtils.pretty_url(flow.request) );
+        var content = null;
+        if(flow.request.contentLength > 0){
+            content = "Request Content Size: "+ formatSize(flow.request.contentLength);
+        } else {
+            content = React.DOM.div({className: "alert alert-info"}, "No Content");
+        }
+
+        //TODO: Styling
+
+        return (
+            React.DOM.section(null, 
+                url, 
+                Headers({message: flow.request}), 
+                React.DOM.hr(null), 
+                content
+            )
+        );
     }
 });
 
 var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
     render: function(){
-        return React.DOM.div(null, "response");
+        return React.DOM.section(null, "response");
     }
 });
 
 var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnectionInfo',
     render: function(){
-        return React.DOM.div(null, "details");
+        return React.DOM.section(null, "details");
     }
 });
 
@@ -860,8 +977,8 @@ var FlowDetail = React.createClass({displayName: 'FlowDetail',
         var Tab = tabs[this.props.active];
         return (
             React.DOM.div({className: "flow-detail", onScroll: this.adjustHead}, 
-                FlowDetailNav({active: this.props.active, selectTab: this.props.selectTab}), 
-                Tab(null)
+                FlowDetailNav({ref: "head", active: this.props.active, selectTab: this.props.selectTab}), 
+                Tab({flow: this.props.flow})
             )
             );
     } 

@@ -5,4 +5,48 @@
     nav {
         background-color: #F2F2F2;
     }
+
+    section {
+        padding: 5px;
+    }
+
+    //FIXME: Style properly
+    code {
+        word-break: break-all;
+        padding-left: 0;
+    }
+}
+
+//TODO: Move into some utils
+.monospace(){
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+.header-table {
+    .monospace();
+    width: 100%;
+    table-layout: fixed;
+    word-break: break-all;
+
+    tr {
+        //&:not(:first-child){
+        border-top: 1px solid #f7f7f7;
+        //}
+    }
+
+    td {
+        vertical-align: top;
+        //alt:
+        //white-space: nowrap;
+        //overflow: hidden;
+        //text-overflow: ellipsis;
+    }
+
+    .header-name {
+        width: 33%;
+        padding-right: 1em;
+    }
+    .header-value {
+        
+    }
 }

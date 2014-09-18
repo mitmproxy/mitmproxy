@@ -13,11 +13,11 @@ var AutoScrollMixin = {
 };
 
 var StickyHeadMixin = {
-    adjustHead: function(){
+    adjustHead: function () {
         // Abusing CSS transforms to set the element
         // referenced as head into some kind of position:sticky.
         var head = this.refs.head.getDOMNode();
-        head.style.transform = "translate(0,"+this.getDOMNode().scrollTop+"px)";
+        head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
     }
 };
 
@@ -30,4 +30,13 @@ var Key = {
     RIGHT: 39,
     ENTER: 13,
     ESC: 27
+};
+
+var formatSize = function (size) {
+    var prefix = ["B", "KB", "MB", "GB", "TB"];
+    while (size >= 1024 && prefix.length > 1) {
+        prefix.shift();
+        size = size / 1024;
+    }
+    return (Math.floor(size * 100) / 100.0) + prefix.shift();
 };

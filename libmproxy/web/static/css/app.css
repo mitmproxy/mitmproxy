@@ -180,10 +180,14 @@ header .menu {
 .flow-table .col-status {
   width: 50px;
 }
+.flow-table .col-size {
+  width: 70px;
+}
 .flow-table .col-time {
   width: 50px;
 }
-.flow-table td.col-time {
+.flow-table td.col-time,
+.flow-table td.col-size {
   text-align: right;
 }
 .flow-detail {
@@ -192,6 +196,29 @@ header .menu {
 }
 .flow-detail nav {
   background-color: #F2F2F2;
+}
+.flow-detail section {
+  padding: 5px;
+}
+.flow-detail code {
+  word-break: break-all;
+  padding-left: 0;
+}
+.header-table {
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  width: 100%;
+  table-layout: fixed;
+  word-break: break-all;
+}
+.header-table tr {
+  border-top: 1px solid #f7f7f7;
+}
+.header-table td {
+  vertical-align: top;
+}
+.header-table .header-name {
+  width: 33%;
+  padding-right: 1em;
 }
 .eventlog {
   flex: 0 0 auto;
