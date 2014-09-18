@@ -1,12 +1,10 @@
 html {
-  -moz-box-sizing: border-box;
-       box-sizing: border-box;
+  box-sizing: border-box;
 }
 *,
 *:before,
 *:after {
-  -moz-box-sizing: inherit;
-       box-sizing: inherit;
+  box-sizing: inherit;
 }
 .resource-icon {
   width: 32px;
@@ -50,44 +48,36 @@ body,
   overflow: hidden;
 }
 #container {
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
-  -webkit-flex-direction: column;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  flex-direction: column;
 }
 #container > header,
 #container > footer,
 #container > .eventlog {
-  -webkit-flex: 0 0 auto;
-      -ms-flex: 0 0 auto;
-          flex: 0 0 auto;
+  flex: 0 0 auto;
 }
 .main-view {
-  -webkit-flex: 1 1 auto;
-      -ms-flex: 1 1 auto;
-          flex: 1 1 auto;
-  display: -webkit-flex;
-  display: -ms-flexbox;
+  flex: 1 1 auto;
   display: flex;
-  -webkit-flex-direction: row;
-      -ms-flex-direction: row;
-          flex-direction: row;
+  flex-direction: row;
 }
 .main-view.vertical {
-  -webkit-flex-direction: column;
-      -ms-flex-direction: column;
-          flex-direction: column;
+  flex-direction: column;
 }
 .main-view .flow-detail,
 .main-view .flow-table {
-  -webkit-flex: 1 1 auto;
-      -ms-flex: 1 1 auto;
-          flex: 1 1 auto;
-  -webkit-flex-basis: 50%;
-      -ms-flex-preferred-size: 50%;
-          flex-basis: 50%;
+  flex: 1 1 auto;
+}
+.splitter {
+  flex: 0 0 4px;
+  background-color: #ccc;
+  content: "X";
+}
+.splitter-x {
+  cursor: col-resize;
+}
+.splitter-y {
+  cursor: row-resize;
 }
 .nav-tabs {
   border-bottom: solid #a6a6a6 1px;
@@ -120,37 +110,6 @@ body,
 }
 header {
   background-color: white;
-  /*
-    nav {
-        border-bottom: solid @separator-color 1px;
-
-        a {
-            display: inline-block;
-            padding: 3px 14px;
-            margin: 0 2px -1px;
-            border: solid transparent 1px;
-            //text-transform: uppercase;
-            //font-family: Lato;
-
-            &.active {
-                border-color: @separator-color;
-                border-bottom-color: white;
-            }
-            &.active, &:hover {
-                text-decoration: none;
-            }
-            &.special {
-                @special-color: #396cad;
-                color: white;
-                background-color: @special-color;
-                border-bottom-color: @special-color;
-                &:hover {
-                    background-color: lighten(@special-color, 10%);
-                }
-            }
-        }
-    }
-*/
 }
 header .title-bar {
   line-height: 25px;
@@ -215,15 +174,14 @@ header .menu {
   text-align: right;
 }
 .flow-detail {
+  width: 100%;
   overflow: auto;
 }
 .flow-detail nav {
   background-color: #F2F2F2;
 }
 .eventlog {
-  -webkit-flex: 0 0 auto;
-      -ms-flex: 0 0 auto;
-          flex: 0 0 auto;
+  flex: 0 0 auto;
   margin: 0;
   border-radius: 0;
   height: 200px;
@@ -234,3 +192,5 @@ footer {
   box-shadow: 0 -1px 3px #d3d3d3;
   padding: 0px 10px 3px;
 }
+
+/*# sourceMappingURL=../css/app.css.map */

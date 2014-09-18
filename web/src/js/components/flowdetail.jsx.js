@@ -39,13 +39,13 @@ var FlowDetailConnectionInfo = React.createClass({
     render: function(){
         return <div>details</div>;
     }
-})
+});
 
 var tabs = {
     request: FlowDetailRequest,
     response: FlowDetailResponse,
     details: FlowDetailConnectionInfo
-}
+};
 
 var FlowDetail = React.createClass({
     mixins: [StickyHeadMixin],

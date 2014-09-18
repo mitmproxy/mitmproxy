@@ -62,6 +62,7 @@ var MainView = React.createClass({
                            flows={this.state.flows}
                            selectFlow={this.selectFlow}
                            selected={selected} />
+                <Splitter/>
                 {details}
             </div>
         );

@@ -381,6 +381,86 @@ var Connection = new _Connection(location.origin + "/updates");
 
 /** @jsx React.DOM */
 
+//React utils. For other utilities, see ../utils.js
+
+var Splitter = React.createClass({displayName: 'Splitter',
+    getDefaultProps: function () {
+    return {
+        axis: "x"
+        }
+    },
+    getInitialState: function(){
+        return {
+            applied: false,
+            startX: false,
+            startY: false
+        };
+    },
+    onMouseDown: function(e){
+        this.setState({
+            startX: e.pageX,
+            startY: e.pageY
+        });
+        window.addEventListener("mousemove",this.onMouseMove);
+        window.addEventListener("mouseup",this.onMouseUp);
+    },
+    onMouseUp: function(e){
+        window.removeEventListener("mouseup",this.onMouseUp);
+        window.removeEventListener("mousemove",this.onMouseMove);
+
+        var node = this.getDOMNode();
+        var prev = node.previousElementSibling;
+        var next = node.nextElementSibling;
+        this.getDOMNode().style.transform="";
+
+        var dX = e.pageX-this.state.startX;
+        var dY = e.pageY-this.state.startY;
+        var flexBasis;
+        if(this.props.axis === "x"){
+            flexBasis = prev.offsetWidth + dX;
+        } else {
+            flexBasis = prev.offsetHeight + dY;
+        }
+
+        prev.style.flex = "0 0 "+Math.max(0, flexBasis)+"px";   
+        next.style.flex = "1 1 auto";
+
+        this.setState({
+            applied: true
+        });
+    },
+    onMouseMove: function(e){
+        var dX = 0, dY = 0;
+        if(this.props.axis === "x"){
+            dX = e.pageX-this.state.startX;
+        } else {
+            dY = e.pageY-this.state.startY;
+        }
+        this.getDOMNode().style.transform = "translate("+dX+"px,"+dY+"px)";
+    },
+    reset: function(){
+        if(!this.state.applied){
+            return;
+        }
+        var node = this.getDOMNode();
+        var prev = node.previousElementSibling;
+        var next = node.nextElementSibling;
+        
+        prev.style.flex = "";
+        next.style.flex = "";
+    },
+    render: function(){
+        var className = "splitter";
+        if(this.props.axis === "x"){
+            className += " splitter-x";
+        } else {
+            className += " splitter-y";
+        }
+        return React.DOM.div({className: className, onMouseDown: this.onMouseDown});
+    }
+});
+/** @jsx React.DOM */
+
 var MainMenu = React.createClass({displayName: 'MainMenu',
     statics: {
         title: "Traffic",
@@ -745,13 +825,13 @@ var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnec
     render: function(){
         return React.DOM.div(null, "details");
     }
-})
+});
 
 var tabs = {
     request: FlowDetailRequest,
     response: FlowDetailResponse,
     details: FlowDetailConnectionInfo
-}
+};
 
 var FlowDetail = React.createClass({displayName: 'FlowDetail',
     mixins: [StickyHeadMixin],
@@ -830,6 +910,7 @@ var MainView = React.createClass({displayName: 'MainView',
                            flows: this.state.flows, 
                            selectFlow: this.selectFlow, 
                            selected: selected}), 
+                Splitter(null), 
                 details
             )
         );
@@ -918,6 +999,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
             React.DOM.div({id: "container"}, 
                 Header({settings: this.state.settings}), 
                 this.props.activeRouteHandler({settings: this.state.settings}), 
+                Splitter({axis: "y"}), 
                 this.state.settings.showEventLog ? EventLog(null) : null, 
                 Footer({settings: this.state.settings})
             )
@@ -938,7 +1020,8 @@ var ProxyApp = (
         Route({path: "/", handler: ProxyAppMain}, 
             Route({name: "flows", path: "flows", handler: MainView}), 
             Route({name: "flow", path: "flows/:flowId/:detailTab", handler: MainView}), 
-            Route({name: "reports", handler: Reports})
+            Route({name: "reports", handler: Reports}), 
+            Redirect({path: "/", to: "flows"})
         )
     )
     );

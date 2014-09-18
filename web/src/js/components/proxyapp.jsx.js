@@ -27,6 +27,7 @@ var ProxyAppMain = React.createClass({
             <div id="container">
                 <Header settings={this.state.settings}/>
                 <this.props.activeRouteHandler settings={this.state.settings}/>
+                <Splitter axis="y"/>
                 {this.state.settings.showEventLog ? <EventLog/> : null}
                 <Footer settings={this.state.settings}/>
             </div>
@@ -48,6 +49,7 @@ var ProxyApp = (
             <Route name="flows" path="flows" handler={MainView}/>
             <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
             <Route name="reports" handler={Reports}/>
+            <Redirect path="/" to="flows" />
         </Route>
     </Routes>
     );
