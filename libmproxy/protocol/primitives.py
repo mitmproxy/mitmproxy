@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import copy
+import uuid
 import netlib.tcp
 from .. import stateobject, utils, version
 from ..proxy.connection import ClientConnection, ServerConnection
@@ -60,6 +61,7 @@ class Flow(stateobject.StateObject):
     """
     def __init__(self, conntype, client_conn, server_conn, live=None):
         self.conntype = conntype
+        self.id = str(uuid.uuid4())
         self.client_conn = client_conn
         """@type: ClientConnection"""
         self.server_conn = server_conn
@@ -72,6 +74,7 @@ class Flow(stateobject.StateObject):
         self._backup = None
 
     _stateobject_attributes = dict(
+        id=str,
         error=Error,
         client_conn=ClientConnection,
         server_conn=ServerConnection,

@@ -35,9 +35,8 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
         this.emit("change");
     },
     _update: function(flow){
-        console.debug("FIXME: Use UUID");
         var idx = _.findIndex(this.flows, function(f){
-            return flow.request.timestamp_start == f.request.timestamp_start;
+            return flow.id === f.id;
         });
 
         if(idx < 0){
@@ -61,7 +60,13 @@ _.extend(_FlowStore.prototype, EventEmitter.prototype, {
         var view = new FlowView(this, !since);
 
         $.getJSON("/static/flows.json", function(flows){
+           flows = flows.concat(_.cloneDeep(flows)).concat(_.cloneDeep(flows));
+           var id = 1;
+           flows.forEach(function(flow){
+               flow.id = "uuid-"+id++;
+           })
            view.add_bulk(flows); 
+
         });
 
         return view;

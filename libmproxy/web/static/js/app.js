@@ -12,6 +12,15 @@ var AutoScrollMixin = {
     },
 };
 
+
+var Key = {
+    UP: 38,
+    DOWN: 40,
+    LEFT: 37,
+    RIGHT: 39,
+    ENTER: 13,
+    ESC: 27
+}
 const PayloadSources = {
     VIEW: "view",
     SERVER: "server"
@@ -274,9 +283,8 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
         this.emit("change");
     },
     _update: function(flow){
-        console.debug("FIXME: Use UUID");
         var idx = _.findIndex(this.flows, function(f){
-            return flow.request.timestamp_start == f.request.timestamp_start;
+            return flow.id === f.id;
         });
 
         if(idx < 0){
@@ -300,7 +308,13 @@ _.extend(_FlowStore.prototype, EventEmitter.prototype, {
         var view = new FlowView(this, !since);
 
         $.getJSON("/static/flows.json", function(flows){
+           flows = flows.concat(_.cloneDeep(flows)).concat(_.cloneDeep(flows));
+           var id = 1;
+           flows.forEach(function(flow){
+               flow.id = "uuid-"+id++;
+           })
            view.add_bulk(flows); 
+
         });
 
         return view;
@@ -447,38 +461,6 @@ var Header = React.createClass({displayName: 'Header',
 
 /** @jsx React.DOM */
 
-var FlowRow = React.createClass({displayName: 'FlowRow',
-    render: function(){
-        var flow = this.props.flow;
-        var columns = this.props.columns.map(function(column){
-            return column({
-                key: column.displayName,
-                flow: flow
-            });
-        }.bind(this));
-        return React.DOM.tr({onClick: this.props.onClick}, columns);
-    }
-});
-
-var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
-    render: function(){
-        var columns = this.props.columns.map(function(column){
-            return column.renderTitle();
-        }.bind(this));
-        return React.DOM.thead(null, columns);
-    }
-});
-
-var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
-    render: function(){
-        var rows = this.props.flows.map(function(flow){
-            //TODO: Add UUID
-            return FlowRow({onClick: this.props.onClick, flow: flow, columns: this.props.columns});
-        }.bind(this));
-        return React.DOM.tbody(null, rows);
-    }
-});
-
 
 var TLSColumn = React.createClass({displayName: 'TLSColumn',
     statics: {
@@ -573,6 +555,54 @@ var TimeColumn = React.createClass({displayName: 'TimeColumn',
 var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, TimeColumn];
 
 
+/** @jsx React.DOM */
+
+var FlowRow = React.createClass({displayName: 'FlowRow',
+    render: function(){
+        var flow = this.props.flow;
+        var columns = this.props.columns.map(function(column){
+            return column({
+                key: column.displayName,
+                flow: flow
+            });
+        }.bind(this));
+        var className = "";
+        if(this.props.selected){
+            className += "selected";
+        }
+        return (
+            React.DOM.tr({className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
+                columns
+            ));
+    }
+});
+
+var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
+    render: function(){
+        var columns = this.props.columns.map(function(column){
+            return column.renderTitle();
+        }.bind(this));
+        return React.DOM.thead(null, columns);
+    }
+});
+
+var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
+    render: function(){
+        var rows = this.props.flows.map(function(flow){
+            var selected = (flow == this.props.selected);
+            return FlowRow({key: flow.id, 
+                            ref: flow.id, 
+                            flow: flow, 
+                            columns: this.props.columns, 
+                            selected: selected, 
+                            selectFlow: this.props.selectFlow}
+                            );
+        }.bind(this));
+        return React.DOM.tbody({onKeyDown: this.props.onKeyDown, tabIndex: "0"}, rows);
+    }
+});
+
+
 var FlowTable = React.createClass({displayName: 'FlowTable',
     getInitialState: function () {
         return {
@@ -593,18 +623,88 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             flows: this.flowStore.getAll()
         });
     },
-    onClick: function(e){
-        console.log("rowclick", e);
+    selectFlow: function(flow){
+        this.setState({
+            selected: flow
+        });
+
+        // Now comes the fun part: Scroll the flow into the view.
+        var viewport = this.getDOMNode();
+        var flowNode = this.refs.body.refs[flow.id].getDOMNode();
+        var viewport_top = viewport.scrollTop;
+        var viewport_bottom = viewport_top + viewport.offsetHeight;
+        var flowNode_top = flowNode.offsetTop;
+        var flowNode_bottom = flowNode_top + flowNode.offsetHeight;
+
+        // Account for pinned thead by pretending that the flowNode starts
+        // -thead_height pixel earlier.
+        flowNode_top -= this.refs.body.getDOMNode().offsetTop;
+
+        if(flowNode_top < viewport_top){
+            viewport.scrollTop = flowNode_top;
+        } else if(flowNode_bottom > viewport_bottom) {
+            viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
+        }
+    },
+    selectRowRelative: function(i){
+        var index;
+        if(!this.state.selected){
+            if(i > 0){
+                index = this.flows.length-1;
+            } else {
+                index = 0;
+            }
+        } else {
+            index = _.findIndex(this.state.flows, function(f){
+                return f === this.state.selected;
+            }.bind(this));
+            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+        }
+        this.selectFlow(this.state.flows[index]);
+    },
+    onKeyDown: function(e){
+        switch(e.keyCode){
+            case Key.DOWN:
+                this.selectRowRelative(+1);
+                return false;
+                break;
+            case Key.UP:
+                this.selectRowRelative(-1);
+                return false;
+                break;
+            case Key.ENTER:
+                console.log("Open details pane...", this.state.selected);
+                break;
+            case Key.ESC:
+                console.log("")
+            default:
+                console.debug("keydown", e.keyCode);
+                return;
+        }
+        return false;
+    },
+    onScroll: function(e){
+        //Abusing CSS transforms to set thead into position:fixed.
+        var head = this.refs.head.getDOMNode();
+        head.style.transform = "translate(0,"+this.getDOMNode().scrollTop+"px)";
     },
     render: function () {
         var flows = this.state.flows.map(function(flow){
          return React.DOM.div(null, flow.request.method, " ", flow.request.scheme, "://", flow.request.host, flow.request.path);
         });
         return (
+        React.DOM.main({onScroll: this.onScroll}, 
             React.DOM.table({className: "flow-table"}, 
-                FlowTableHead({columns: this.state.columns}), 
-                FlowTableBody({onClick: this.onClick, columns: this.state.columns, flows: this.state.flows})
+                FlowTableHead({ref: "head", 
+                               columns: this.state.columns}), 
+                FlowTableBody({ref: "body", 
+                               selectFlow: this.selectFlow, 
+                               onKeyDown: this.onKeyDown, 
+                               selected: this.state.selected, 
+                               columns: this.state.columns, 
+                               flows: this.state.flows})
             )
+        )
             );
     }
 });
@@ -691,7 +791,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
         return (
             React.DOM.div({id: "container"}, 
                 Header({settings: this.state.settings}), 
-                React.DOM.div({id: "main"}, this.props.activeRouteHandler(null)), 
+                this.props.activeRouteHandler(null), 
                 this.state.settings.showEventLog ? EventLog(null) : null, 
                 Footer({settings: this.state.settings})
             )

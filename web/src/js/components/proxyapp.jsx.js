@@ -26,7 +26,7 @@ var ProxyAppMain = React.createClass({
         return (
             <div id="container">
                 <Header settings={this.state.settings}/>
-                <div id="main"><this.props.activeRouteHandler/></div>
+                <this.props.activeRouteHandler/>
                 {this.state.settings.showEventLog ? <EventLog/> : null}
                 <Footer settings={this.state.settings}/>
             </div>

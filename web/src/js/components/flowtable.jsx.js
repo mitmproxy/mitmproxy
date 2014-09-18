@@ -9,7 +9,14 @@ var FlowRow = React.createClass({
                 flow: flow
             });
         }.bind(this));
-        return <tr onClick={this.props.onClick} >{columns}</tr>;
+        var className = "";
+        if(this.props.selected){
+            className += "selected";
+        }
+        return (
+            <tr className={className} onClick={this.props.selectFlow.bind(null, flow)}>
+                {columns}
+            </tr>);
     }
 });
 
@@ -25,105 +32,18 @@ var FlowTableHead = React.createClass({
 var FlowTableBody = React.createClass({
     render: function(){
         var rows = this.props.flows.map(function(flow){
-            //TODO: Add UUID
-            return <FlowRow onClick={this.props.onClick} flow={flow} columns={this.props.columns}/>;
+            var selected = (flow == this.props.selected);
+            return <FlowRow key={flow.id}
+                            ref={flow.id}
+                            flow={flow}
+                            columns={this.props.columns}
+                            selected={selected}
+                            selectFlow={this.props.selectFlow}
+                            />;
         }.bind(this));
-        return <tbody>{rows}</tbody>;
+        return <tbody onKeyDown={this.props.onKeyDown} tabIndex="0">{rows}</tbody>;
     }
 });
-
-
-var TLSColumn = React.createClass({
-    statics: {
-        renderTitle: function(){
-            return <th key="tls" className="col-tls"></th>;
-        }
-    },
-    render: function(){
-        var flow = this.props.flow;
-        var ssl = (flow.request.scheme == "https");
-        return <td className={ssl ? "col-tls-https" : "col-tls-http"}></td>;
-    }
-});
-
-
-var IconColumn = React.createClass({
-    statics: {
-        renderTitle: function(){
-            return <th key="icon" className="col-icon"></th>;
-        }
-    },
-    render: function(){
-        var flow = this.props.flow;
-        return <td className="resource-icon resource-icon-plain"></td>;
-    }
-});
-
-var PathColumn = React.createClass({
-    statics: {
-        renderTitle: function(){
-            return <th key="path" className="col-path">Path</th>;
-        }
-    },
-    render: function(){
-        var flow = this.props.flow;
-        return <td>{flow.request.scheme + "://" + flow.request.host + flow.request.path}</td>;
-    }
-});
-
-
-var MethodColumn = React.createClass({
-    statics: {
-        renderTitle: function(){
-            return <th key="method" className="col-method">Method</th>;
-        }
-    },
-    render: function(){
-        var flow = this.props.flow;
-        return <td>{flow.request.method}</td>;
-    }
-});
-
-
-var StatusColumn = React.createClass({
-    statics: {
-        renderTitle: function(){
-            return <th key="status" className="col-status">Status</th>;
-        }
-    },
-    render: function(){
-        var flow = this.props.flow;
-        var status;
-        if(flow.response){
-            status = flow.response.code;
-        } else {
-            status = null;
-        }
-        return <td>{status}</td>;
-    }
-});
-
-
-var TimeColumn = React.createClass({
-    statics: {
-        renderTitle: function(){
-            return <th key="time" className="col-time">Time</th>;
-        }
-    },
-    render: function(){
-        var flow = this.props.flow;
-        var time;
-        if(flow.response){
-            time = Math.round(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))+"ms";
-        } else {
-            time = "...";
-        }
-        return <td>{time}</td>;
-    }
-});
-
-
-var all_columns = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, TimeColumn];
 
 
 var FlowTable = React.createClass({
@@ -146,18 +66,88 @@ var FlowTable = React.createClass({
             flows: this.flowStore.getAll()
         });
     },
-    onClick: function(e){
-        console.log("rowclick", e);
+    selectFlow: function(flow){
+        this.setState({
+            selected: flow
+        });
+
+        // Now comes the fun part: Scroll the flow into the view.
+        var viewport = this.getDOMNode();
+        var flowNode = this.refs.body.refs[flow.id].getDOMNode();
+        var viewport_top = viewport.scrollTop;
+        var viewport_bottom = viewport_top + viewport.offsetHeight;
+        var flowNode_top = flowNode.offsetTop;
+        var flowNode_bottom = flowNode_top + flowNode.offsetHeight;
+
+        // Account for pinned thead by pretending that the flowNode starts
+        // -thead_height pixel earlier.
+        flowNode_top -= this.refs.body.getDOMNode().offsetTop;
+
+        if(flowNode_top < viewport_top){
+            viewport.scrollTop = flowNode_top;
+        } else if(flowNode_bottom > viewport_bottom) {
+            viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
+        }
+    },
+    selectRowRelative: function(i){
+        var index;
+        if(!this.state.selected){
+            if(i > 0){
+                index = this.flows.length-1;
+            } else {
+                index = 0;
+            }
+        } else {
+            index = _.findIndex(this.state.flows, function(f){
+                return f === this.state.selected;
+            }.bind(this));
+            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+        }
+        this.selectFlow(this.state.flows[index]);
+    },
+    onKeyDown: function(e){
+        switch(e.keyCode){
+            case Key.DOWN:
+                this.selectRowRelative(+1);
+                return false;
+                break;
+            case Key.UP:
+                this.selectRowRelative(-1);
+                return false;
+                break;
+            case Key.ENTER:
+                console.log("Open details pane...", this.state.selected);
+                break;
+            case Key.ESC:
+                console.log("")
+            default:
+                console.debug("keydown", e.keyCode);
+                return;
+        }
+        return false;
+    },
+    onScroll: function(e){
+        //Abusing CSS transforms to set thead into position:fixed.
+        var head = this.refs.head.getDOMNode();
+        head.style.transform = "translate(0,"+this.getDOMNode().scrollTop+"px)";
     },
     render: function () {
         var flows = this.state.flows.map(function(flow){
          return <div>{flow.request.method} {flow.request.scheme}://{flow.request.host}{flow.request.path}</div>;
         });
         return (
+        <main onScroll={this.onScroll}>
             <table className="flow-table">
-                <FlowTableHead columns={this.state.columns}/>
-                <FlowTableBody onClick={this.onClick} columns={this.state.columns} flows={this.state.flows}/>
+                <FlowTableHead ref="head"
+                               columns={this.state.columns}/>
+                <FlowTableBody ref="body"
+                               selectFlow={this.selectFlow}
+                               onKeyDown={this.onKeyDown}
+                               selected={this.state.selected}
+                               columns={this.state.columns}
+                               flows={this.state.flows}/>
             </table>
+        </main>
             );
     }
 });

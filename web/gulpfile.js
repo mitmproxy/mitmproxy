@@ -42,6 +42,7 @@ var path = {
             'js/stores/flowstore.js',
             'js/connection.js',
             'js/components/header.jsx.js',
+            'js/components/flowtable-columns.jsx.js',
             'js/components/flowtable.jsx.js',
             'js/components/eventlog.jsx.js',
             'js/components/footer.jsx.js',
