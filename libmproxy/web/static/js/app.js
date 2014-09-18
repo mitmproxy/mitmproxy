@@ -115,7 +115,7 @@ var EventLogActions = {
 };
 var _MessageUtils = {
     getContentType: function (message) {
-        return MessageUtils.getHeader(message, /Content-Type/i);
+        return this.get_first_header(message, /^Content-Type$/i);
     },
     get_first_header: function (message, regex) {
         //FIXME: Cache Invalidation.
@@ -661,7 +661,27 @@ var IconColumn = React.createClass({displayName: 'IconColumn',
     },
     render: function(){
         var flow = this.props.flow;
-        return React.DOM.td({className: "col-icon"}, React.DOM.div({className: "resource-icon resource-icon-plain"}));
+        var contentType = ResponseUtils.getContentType(flow.response);
+
+        //TODO: We should assign a type to the flow somewhere else.
+        var icon;
+        if(flow.response.code == 304) {
+            icon = "resource-icon-not-modified"
+        } else if(300 <= flow.response.code && flow.response.code < 400) {
+            icon = "resource-icon-redirect";
+        } else if(contentType.indexOf("image") >= 0) {
+            icon = "resource-icon-image";
+        } else if (contentType.indexOf("javascript") >= 0) {
+            icon = "resource-icon-js";
+        } else if (contentType.indexOf("css") >= 0) {
+            icon = "resource-icon-css";
+        } else if (contentType.indexOf("html") >= 0) {
+            icon = "resource-icon-document";
+        } else {
+            icon = "resource-icon-plain";
+        }
+        icon += " resource-icon";
+        return React.DOM.td({className: "col-icon"}, React.DOM.div({className: icon}));
     }
 });
 
@@ -931,7 +951,11 @@ var Headers = React.createClass({displayName: 'Headers',
 var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
     render: function(){
         var flow = this.props.flow;
-        var url = React.DOM.code(null,  RequestUtils.pretty_url(flow.request) );
+        var first_line = [
+                flow.request.method,
+                RequestUtils.pretty_url(flow.request),
+                "HTTP/"+ flow.response.httpversion.join(".")
+            ].join(" ");
         var content = null;
         if(flow.request.contentLength > 0){
             content = "Request Content Size: "+ formatSize(flow.request.contentLength);
@@ -943,7 +967,7 @@ var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
 
         return (
             React.DOM.section(null, 
-                url, 
+                React.DOM.code(null, first_line ), 
                 Headers({message: flow.request}), 
                 React.DOM.hr(null), 
                 content
@@ -954,7 +978,29 @@ var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
 
 var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
     render: function(){
-        return React.DOM.section(null, "response");
+        var flow = this.props.flow;
+        var first_line = [
+                "HTTP/"+ flow.response.httpversion.join("."),
+                flow.response.code,
+                flow.response.msg
+            ].join(" ");
+        var content = null;
+        if(flow.response.contentLength > 0){
+            content = "Response Content Size: "+ formatSize(flow.response.contentLength);
+        } else {
+            content = React.DOM.div({className: "alert alert-info"}, "No Content");
+        }
+
+        //TODO: Styling
+
+        return (
+            React.DOM.section(null, 
+                React.DOM.code(null, first_line ), 
+                Headers({message: flow.response}), 
+                React.DOM.hr(null), 
+                content
+            )
+        );
     }
 });
 

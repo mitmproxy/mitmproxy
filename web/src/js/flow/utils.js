@@ -1,6 +1,6 @@
 var _MessageUtils = {
     getContentType: function (message) {
-        return MessageUtils.getHeader(message, /Content-Type/i);
+        return this.get_first_header(message, /^Content-Type$/i);
     },
     get_first_header: function (message, regex) {
         //FIXME: Cache Invalidation.

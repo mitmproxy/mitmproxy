@@ -28,7 +28,27 @@ var IconColumn = React.createClass({
     },
     render: function(){
         var flow = this.props.flow;
-        return <td className="col-icon"><div className="resource-icon resource-icon-plain"></div></td>;
+        var contentType = ResponseUtils.getContentType(flow.response);
+
+        //TODO: We should assign a type to the flow somewhere else.
+        var icon;
+        if(flow.response.code == 304) {
+            icon = "resource-icon-not-modified"
+        } else if(300 <= flow.response.code && flow.response.code < 400) {
+            icon = "resource-icon-redirect";
+        } else if(contentType.indexOf("image") >= 0) {
+            icon = "resource-icon-image";
+        } else if (contentType.indexOf("javascript") >= 0) {
+            icon = "resource-icon-js";
+        } else if (contentType.indexOf("css") >= 0) {
+            icon = "resource-icon-css";
+        } else if (contentType.indexOf("html") >= 0) {
+            icon = "resource-icon-document";
+        } else {
+            icon = "resource-icon-plain";
+        }
+        icon += " resource-icon";
+        return <td className="col-icon"><div className={icon}></div></td>;
     }
 });
 

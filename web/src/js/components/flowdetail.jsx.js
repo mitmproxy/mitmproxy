@@ -46,7 +46,11 @@ var Headers = React.createClass({
 var FlowDetailRequest = React.createClass({
     render: function(){
         var flow = this.props.flow;
-        var url = <code>{ RequestUtils.pretty_url(flow.request) }</code>;
+        var first_line = [
+                flow.request.method,
+                RequestUtils.pretty_url(flow.request),
+                "HTTP/"+ flow.response.httpversion.join(".")
+            ].join(" ");
         var content = null;
         if(flow.request.contentLength > 0){
             content = "Request Content Size: "+ formatSize(flow.request.contentLength);
@@ -58,7 +62,7 @@ var FlowDetailRequest = React.createClass({
 
         return (
             <section>
-                {url}
+                <code>{ first_line }</code>
                 <Headers message={flow.request}/>
                 <hr/>
                 {content}
@@ -69,7 +73,29 @@ var FlowDetailRequest = React.createClass({
 
 var FlowDetailResponse = React.createClass({
     render: function(){
-        return <section>response</section>;
+        var flow = this.props.flow;
+        var first_line = [
+                "HTTP/"+ flow.response.httpversion.join("."),
+                flow.response.code,
+                flow.response.msg
+            ].join(" ");
+        var content = null;
+        if(flow.response.contentLength > 0){
+            content = "Response Content Size: "+ formatSize(flow.response.contentLength);
+        } else {
+            content = <div className="alert alert-info">No Content</div>;
+        }
+
+        //TODO: Styling
+
+        return (
+            <section>
+                <code>{ first_line }</code>
+                <Headers message={flow.response}/>
+                <hr/>
+                {content}
+            </section>
+        );
     }
 });
 
