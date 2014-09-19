@@ -204,17 +204,21 @@ header .menu {
   word-break: break-all;
   padding-left: 0;
 }
-.header-table {
+.flow-detail table {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   width: 100%;
   table-layout: fixed;
   word-break: break-all;
 }
-.header-table tr {
+.flow-detail table tr {
   border-top: 1px solid #f7f7f7;
 }
-.header-table td {
+.flow-detail table td {
   vertical-align: top;
+}
+.connection-table td:first-child {
+  width: 33%;
+  padding-right: 1em;
 }
 .header-table .header-name {
   width: 33%;

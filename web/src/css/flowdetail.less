@@ -22,12 +22,12 @@
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-.header-table {
+.flow-detail table {
     .monospace();
     width: 100%;
     table-layout: fixed;
     word-break: break-all;
-
+    
     tr {
         //&:not(:first-child){
         border-top: 1px solid #f7f7f7;
@@ -41,7 +41,16 @@
         //overflow: hidden;
         //text-overflow: ellipsis;
     }
+}
 
+.connection-table {
+    td:first-child {
+        width: 33%;
+        padding-right: 1em;
+    }
+}
+
+.header-table {
     .header-name {
         width: 33%;
         padding-right: 1em;

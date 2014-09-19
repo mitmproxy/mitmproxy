@@ -38,7 +38,7 @@ var FlowTableBody = React.createClass({
                             selectFlow={this.props.selectFlow}
                             />;
         }.bind(this));
-        return <tbody onKeyDown={this.props.onKeyDown} tabIndex="0">{rows}</tbody>;
+        return <tbody>{rows}</tbody>;
     }
 });
 
@@ -69,45 +69,6 @@ var FlowTable = React.createClass({
             viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
         }
     },
-    selectFlowRelative: function(i){
-        var index;
-        if(!this.props.selected){
-            if(i > 0){
-                index = this.props.flows.length-1;
-            } else {
-                index = 0;
-            }
-        } else {
-            index = _.findIndex(this.props.flows, function(f){
-                return f === this.props.selected;
-            }.bind(this));
-            index = Math.min(Math.max(0, index+i), this.props.flows.length-1);
-        }
-        this.props.selectFlow(this.props.flows[index]);
-    },
-    onKeyDown: function(e){
-        switch(e.keyCode){
-            case Key.DOWN:
-                this.selectFlowRelative(+1);
-                break;
-            case Key.UP:
-                this.selectFlowRelative(-1);
-                break;
-            case Key.PAGE_DOWN:
-                this.selectFlowRelative(+10);
-                break;
-            case Key.PAGE_UP:
-                this.selectFlowRelative(-10);
-                break;
-            case Key.ESC:
-                this.props.selectFlow(null);
-                break;
-            default:
-                console.debug("keydown", e.keyCode);
-                return;
-        }
-        return false;
-    },
     render: function () {
         return (
             <div className="flow-table" onScroll={this.adjustHead}>
@@ -118,8 +79,7 @@ var FlowTable = React.createClass({
                                    flows={this.props.flows}
                                    selected={this.props.selected}
                                    selectFlow={this.props.selectFlow}
-                                   columns={this.state.columns}
-                                   onKeyDown={this.onKeyDown}/>
+                                   columns={this.state.columns}/>
                 </table>
             </div>
             );

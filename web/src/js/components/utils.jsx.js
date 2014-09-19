@@ -4,9 +4,9 @@
 
 var Splitter = React.createClass({
     getDefaultProps: function () {
-    return {
-        axis: "x"
-        }
+        return {
+            axis: "x"
+        };
     },
     getInitialState: function(){
         return {

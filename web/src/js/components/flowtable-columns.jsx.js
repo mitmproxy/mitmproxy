@@ -28,25 +28,32 @@ var IconColumn = React.createClass({
     },
     render: function(){
         var flow = this.props.flow;
-        var contentType = ResponseUtils.getContentType(flow.response);
 
-        //TODO: We should assign a type to the flow somewhere else.
         var icon;
-        if(flow.response.code == 304) {
-            icon = "resource-icon-not-modified"
-        } else if(300 <= flow.response.code && flow.response.code < 400) {
-            icon = "resource-icon-redirect";
-        } else if(contentType.indexOf("image") >= 0) {
-            icon = "resource-icon-image";
-        } else if (contentType.indexOf("javascript") >= 0) {
-            icon = "resource-icon-js";
-        } else if (contentType.indexOf("css") >= 0) {
-            icon = "resource-icon-css";
-        } else if (contentType.indexOf("html") >= 0) {
-            icon = "resource-icon-document";
-        } else {
+        if(flow.response){
+            var contentType = ResponseUtils.getContentType(flow.response);
+
+            //TODO: We should assign a type to the flow somewhere else.
+            var icon;
+            if(flow.response.code == 304) {
+                icon = "resource-icon-not-modified";
+            } else if(300 <= flow.response.code && flow.response.code < 400) {
+                icon = "resource-icon-redirect";
+            } else if(contentType.indexOf("image") >= 0) {
+                icon = "resource-icon-image";
+            } else if (contentType.indexOf("javascript") >= 0) {
+                icon = "resource-icon-js";
+            } else if (contentType.indexOf("css") >= 0) {
+                icon = "resource-icon-css";
+            } else if (contentType.indexOf("html") >= 0) {
+                icon = "resource-icon-document";
+            }
+        }
+        if(!icon){
             icon = "resource-icon-plain";
         }
+
+
         icon += " resource-icon";
         return <td className="col-icon"><div className={icon}></div></td>;
     }
@@ -123,7 +130,7 @@ var TimeColumn = React.createClass({
         var flow = this.props.flow;
         var time;
         if(flow.response){
-            time = Math.round(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))+"ms";
+            time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";
         }

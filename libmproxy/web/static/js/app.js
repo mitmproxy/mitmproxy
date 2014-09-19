@@ -29,16 +29,34 @@ var Key = {
     LEFT: 37,
     RIGHT: 39,
     ENTER: 13,
-    ESC: 27
+    ESC: 27,
+    TAB: 9,
+    SPACE: 32,
+    J: 74,
+    K: 75,
+    H: 72,
+    L: 76
 };
 
-var formatSize = function (size) {
+var formatSize = function (bytes) {
+    var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
     while (size >= 1024 && prefix.length > 1) {
         prefix.shift();
         size = size / 1024;
     }
-    return (Math.floor(size * 100) / 100.0) + prefix.shift();
+    return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix.shift();
+};
+
+var formatTimeDelta = function (milliseconds) {
+    var time = milliseconds;
+    var prefix = ["ms", "s", "m", "h"];
+    var div = [1000, 60, 60];
+    while (time >= div[0] && prefix.length > 1) {
+        prefix.shift();
+        time = time / div.shift();
+    }
+    return Math.round(time) + prefix.shift();
 };
 const PayloadSources = {
     VIEW: "view",
@@ -441,9 +459,9 @@ var Connection = new _Connection(location.origin + "/updates");
 
 var Splitter = React.createClass({displayName: 'Splitter',
     getDefaultProps: function () {
-    return {
-        axis: "x"
-        }
+        return {
+            axis: "x"
+        };
     },
     getInitialState: function(){
         return {
@@ -661,25 +679,32 @@ var IconColumn = React.createClass({displayName: 'IconColumn',
     },
     render: function(){
         var flow = this.props.flow;
-        var contentType = ResponseUtils.getContentType(flow.response);
 
-        //TODO: We should assign a type to the flow somewhere else.
         var icon;
-        if(flow.response.code == 304) {
-            icon = "resource-icon-not-modified"
-        } else if(300 <= flow.response.code && flow.response.code < 400) {
-            icon = "resource-icon-redirect";
-        } else if(contentType.indexOf("image") >= 0) {
-            icon = "resource-icon-image";
-        } else if (contentType.indexOf("javascript") >= 0) {
-            icon = "resource-icon-js";
-        } else if (contentType.indexOf("css") >= 0) {
-            icon = "resource-icon-css";
-        } else if (contentType.indexOf("html") >= 0) {
-            icon = "resource-icon-document";
-        } else {
+        if(flow.response){
+            var contentType = ResponseUtils.getContentType(flow.response);
+
+            //TODO: We should assign a type to the flow somewhere else.
+            var icon;
+            if(flow.response.code == 304) {
+                icon = "resource-icon-not-modified";
+            } else if(300 <= flow.response.code && flow.response.code < 400) {
+                icon = "resource-icon-redirect";
+            } else if(contentType.indexOf("image") >= 0) {
+                icon = "resource-icon-image";
+            } else if (contentType.indexOf("javascript") >= 0) {
+                icon = "resource-icon-js";
+            } else if (contentType.indexOf("css") >= 0) {
+                icon = "resource-icon-css";
+            } else if (contentType.indexOf("html") >= 0) {
+                icon = "resource-icon-document";
+            }
+        }
+        if(!icon){
             icon = "resource-icon-plain";
         }
+
+
         icon += " resource-icon";
         return React.DOM.td({className: "col-icon"}, React.DOM.div({className: icon}));
     }
@@ -756,7 +781,7 @@ var TimeColumn = React.createClass({displayName: 'TimeColumn',
         var flow = this.props.flow;
         var time;
         if(flow.response){
-            time = Math.round(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))+"ms";
+            time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";
         }
@@ -815,7 +840,7 @@ var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
                             selectFlow: this.props.selectFlow}
                             );
         }.bind(this));
-        return React.DOM.tbody({onKeyDown: this.props.onKeyDown, tabIndex: "0"}, rows);
+        return React.DOM.tbody(null, rows);
     }
 });
 
@@ -846,45 +871,6 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
         }
     },
-    selectFlowRelative: function(i){
-        var index;
-        if(!this.props.selected){
-            if(i > 0){
-                index = this.props.flows.length-1;
-            } else {
-                index = 0;
-            }
-        } else {
-            index = _.findIndex(this.props.flows, function(f){
-                return f === this.props.selected;
-            }.bind(this));
-            index = Math.min(Math.max(0, index+i), this.props.flows.length-1);
-        }
-        this.props.selectFlow(this.props.flows[index]);
-    },
-    onKeyDown: function(e){
-        switch(e.keyCode){
-            case Key.DOWN:
-                this.selectFlowRelative(+1);
-                break;
-            case Key.UP:
-                this.selectFlowRelative(-1);
-                break;
-            case Key.PAGE_DOWN:
-                this.selectFlowRelative(+10);
-                break;
-            case Key.PAGE_UP:
-                this.selectFlowRelative(-10);
-                break;
-            case Key.ESC:
-                this.props.selectFlow(null);
-                break;
-            default:
-                console.debug("keydown", e.keyCode);
-                return;
-        }
-        return false;
-    },
     render: function () {
         return (
             React.DOM.div({className: "flow-table", onScroll: this.adjustHead}, 
@@ -895,8 +881,7 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
                                    flows: this.props.flows, 
                                    selected: this.props.selected, 
                                    selectFlow: this.props.selectFlow, 
-                                   columns: this.state.columns, 
-                                   onKeyDown: this.onKeyDown})
+                                   columns: this.state.columns})
                 )
             )
             );
@@ -908,7 +893,7 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
 var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
     render: function(){
 
-        var items = ["request", "response", "details"].map(function(e){
+        var items = this.props.tabs.map(function(e){
             var str = e.charAt(0).toUpperCase() + e.slice(1);
             var className = this.props.active === e ? "active" : "";
             var onClick = function(){
@@ -933,11 +918,11 @@ var Headers = React.createClass({displayName: 'Headers',
         var rows = this.props.message.headers.map(function(header){
             return (
                 React.DOM.tr(null, 
-                    React.DOM.td({className: "header-name"}, header[0]), 
+                    React.DOM.td({className: "header-name"}, header[0]+":"), 
                     React.DOM.td({className: "header-value"}, header[1])
                 )
             );
-        })
+        });
         return (
             React.DOM.table({className: "header-table"}, 
                 React.DOM.tbody(null, 
@@ -946,7 +931,7 @@ var Headers = React.createClass({displayName: 'Headers',
             )
         );
     }
-})
+});
 
 var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
     render: function(){
@@ -1004,9 +989,106 @@ var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
     }
 });
 
+var TimeStamp = React.createClass({displayName: 'TimeStamp',
+    render: function() {
+        var ts, delta;
+
+        if(!this.props.t && this.props.optional){
+            //should be return null, but that triggers a React bug.
+            return React.DOM.tr(null);
+        } else if (!this.props.t){
+            ts = "active";
+        } else {
+            ts = (new Date(this.props.t * 1000)).toISOString();
+            ts = ts.replace("T", " ").replace("Z","");
+
+            if(this.props.deltaTo){
+                delta = Math.round((this.props.t-this.props.deltaTo)*1000) + "ms";
+                delta = React.DOM.span({className: "text-muted"}, "(" + delta + ")");
+            } else {
+                delta = null;
+            }
+        }
+
+        return React.DOM.tr(null, React.DOM.td(null, this.props.title + ":"), React.DOM.td(null, ts, " ", delta));
+    }
+});
+
+var ConnectionInfo = React.createClass({displayName: 'ConnectionInfo',
+
+    render: function() {
+        var conn = this.props.conn;
+        var address = conn.address.address.join(":");
+
+        var sni = React.DOM.tr({key: "sni"}); //should be null, but that triggers a React bug.
+        if(conn.sni){
+            sni = React.DOM.tr({key: "sni"}, React.DOM.td(null, React.DOM.abbr({title: "TLS Server Name Indication"}, "TLS SNI:")), React.DOM.td(null, conn.sni));
+        }
+        return (
+            React.DOM.table({className: "connection-table"}, 
+                React.DOM.tbody(null, 
+                    React.DOM.tr({key: "address"}, React.DOM.td(null, "Address:"), React.DOM.td(null, address)), 
+                    sni, 
+                    TimeStamp({title: "Start time", 
+                               key: "start", 
+                               t: conn.timestamp_start}), 
+                    TimeStamp({title: "TCP Setup", 
+                               key: "tcpsetup", 
+                               t: conn.timestamp_tcp_setup, 
+                               deltaTo: conn.timestamp_start, 
+                               optional: true}), 
+                    TimeStamp({title: "SSL handshake", 
+                               key: "sslsetup", 
+                               t: conn.timestamp_ssl_setup, 
+                               deltaTo: conn.timestamp_start, 
+                               optional: true}), 
+                    TimeStamp({title: "End time", 
+                               key: "end", 
+                               t: conn.timestamp_end, 
+                               deltaTo: conn.timestamp_start})
+                )
+            )
+        );
+    }
+});
+
+var CertificateInfo = React.createClass({displayName: 'CertificateInfo',
+    render: function(){
+        //TODO: We should fetch human-readable certificate representation
+        // from the server
+        var flow = this.props.flow;
+        var client_conn = flow.client_conn;
+        var server_conn = flow.server_conn;
+        return (
+            React.DOM.div(null, 
+            client_conn.cert ? React.DOM.h4(null, "Client Certificate") : null, 
+            client_conn.cert ? React.DOM.pre(null, client_conn.cert) : null, 
+
+            server_conn.cert ? React.DOM.h4(null, "Server Certificate") : null, 
+            server_conn.cert ? React.DOM.pre(null, server_conn.cert) : null
+            )
+        );
+    }
+});
+
 var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnectionInfo',
     render: function(){
-        return React.DOM.section(null, "details");
+        var flow = this.props.flow;
+        var client_conn = flow.client_conn;
+        var server_conn = flow.server_conn;
+        return (
+            React.DOM.section(null, 
+
+            React.DOM.h4(null, "Client Connection"), 
+            ConnectionInfo({conn: client_conn}), 
+
+            React.DOM.h4(null, "Server Connection"), 
+            ConnectionInfo({conn: server_conn}), 
+
+            CertificateInfo({flow: flow})
+
+            )
+        );
     }
 });
 
@@ -1017,13 +1099,27 @@ var tabs = {
 };
 
 var FlowDetail = React.createClass({displayName: 'FlowDetail',
+    getDefaultProps: function(){
+        return {
+            tabs: ["request","response", "details"]
+        };
+    },
     mixins: [StickyHeadMixin],
+    nextTab: function(i) {
+        var currentIndex = this.props.tabs.indexOf(this.props.active);
+        // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
+        var nextIndex = (currentIndex + i + this.props.tabs.length) % this.props.tabs.length;
+        this.props.selectTab(this.props.tabs[nextIndex]);
+    },
     render: function(){
         var flow = JSON.stringify(this.props.flow, null, 2);
         var Tab = tabs[this.props.active];
         return (
             React.DOM.div({className: "flow-detail", onScroll: this.adjustHead}, 
-                FlowDetailNav({ref: "head", active: this.props.active, selectTab: this.props.selectTab}), 
+                FlowDetailNav({ref: "head", 
+                               tabs: this.props.tabs, 
+                               active: this.props.active, 
+                               selectTab: this.props.selectTab}), 
                 Tab({flow: this.props.flow})
             )
             );
@@ -1051,6 +1147,15 @@ var MainView = React.createClass({displayName: 'MainView',
             flows: this.flowStore.getAll()
         });
     },
+    selectDetailTab: function(panel) {
+        ReactRouter.replaceWith(
+            "flow",
+            {
+                flowId: this.props.params.flowId,
+                detailTab: panel
+            }
+        );
+    },
     selectFlow: function(flow) {
         if(flow){
             ReactRouter.replaceWith(
@@ -1065,19 +1170,65 @@ var MainView = React.createClass({displayName: 'MainView',
             ReactRouter.replaceWith("flows");
         }
     },
-    selectDetailTab: function(panel) {
-        ReactRouter.replaceWith(
-            "flow", 
-            {
-                flowId: this.props.params.flowId,
-                detailTab: panel
+    selectFlowRelative: function(i){
+        var index;
+        if(!this.props.params.flowId){
+            if(i > 0){
+                index = this.state.flows.length-1;
+            } else {
+                index = 0;
             }
-        );
+        } else {
+            index = _.findIndex(this.state.flows, function(f){
+                return f.id === this.props.params.flowId;
+            }.bind(this));
+            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+        }
+        this.selectFlow(this.state.flows[index]);
+    },
+    onKeyDown: function(e){
+        switch(e.keyCode){
+            case Key.K:
+            case Key.UP:
+                this.selectFlowRelative(-1);
+                break;
+            case Key.J:
+            case Key.DOWN:
+                this.selectFlowRelative(+1);
+                break;
+            case Key.SPACE:
+            case Key.PAGE_DOWN:
+                this.selectFlowRelative(+10);
+                break;
+            case Key.PAGE_UP:
+                this.selectFlowRelative(-10);
+                break;
+            case Key.ESC:
+                this.selectFlow(null);
+                break;
+            case Key.H:
+            case Key.LEFT:
+                if(this.refs.flowDetails){
+                    this.refs.flowDetails.nextTab(-1);
+                }
+                break;
+            case Key.L:
+            case Key.TAB:
+            case Key.RIGHT:
+                if(this.refs.flowDetails){
+                    this.refs.flowDetails.nextTab(+1);
+                }
+                break;
+            default:
+                console.debug("keydown", e.keyCode);
+                return;
+        }
+        return false;
     },
     render: function() {
         var selected = _.find(this.state.flows, { id: this.props.params.flowId });
 
-        var details = null;
+        var details;
         if(selected){
             details = (
                 FlowDetail({ref: "flowDetails", 
@@ -1085,15 +1236,17 @@ var MainView = React.createClass({displayName: 'MainView',
                             selectTab: this.selectDetailTab, 
                             active: this.props.params.detailTab})
             );
+        } else {
+            details = null;
         }
 
         return (
-            React.DOM.div({className: "main-view"}, 
+            React.DOM.div({className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
                 FlowTable({ref: "flowTable", 
                            flows: this.state.flows, 
                            selectFlow: this.selectFlow, 
                            selected: selected}), 
-                Splitter(null), 
+                 details ? Splitter(null) : null, 
                 details
             )
         );

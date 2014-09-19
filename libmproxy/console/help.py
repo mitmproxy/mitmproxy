@@ -24,7 +24,7 @@ class HelpView(urwid.ListBox):
 
         text.append(urwid.Text([("head", "\n\nMovement:\n")]))
         keys = [
-            ("j, k", "up, down"),
+            ("j, k", "down, up"),
             ("h, l", "left, right (in some contexts)"),
             ("space", "page down"),
             ("pg up/down", "page up/down"),

@@ -20,6 +20,15 @@ var MainView = React.createClass({
             flows: this.flowStore.getAll()
         });
     },
+    selectDetailTab: function(panel) {
+        ReactRouter.replaceWith(
+            "flow",
+            {
+                flowId: this.props.params.flowId,
+                detailTab: panel
+            }
+        );
+    },
     selectFlow: function(flow) {
         if(flow){
             ReactRouter.replaceWith(
@@ -34,19 +43,65 @@ var MainView = React.createClass({
             ReactRouter.replaceWith("flows");
         }
     },
-    selectDetailTab: function(panel) {
-        ReactRouter.replaceWith(
-            "flow", 
-            {
-                flowId: this.props.params.flowId,
-                detailTab: panel
+    selectFlowRelative: function(i){
+        var index;
+        if(!this.props.params.flowId){
+            if(i > 0){
+                index = this.state.flows.length-1;
+            } else {
+                index = 0;
             }
-        );
+        } else {
+            index = _.findIndex(this.state.flows, function(f){
+                return f.id === this.props.params.flowId;
+            }.bind(this));
+            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+        }
+        this.selectFlow(this.state.flows[index]);
+    },
+    onKeyDown: function(e){
+        switch(e.keyCode){
+            case Key.K:
+            case Key.UP:
+                this.selectFlowRelative(-1);
+                break;
+            case Key.J:
+            case Key.DOWN:
+                this.selectFlowRelative(+1);
+                break;
+            case Key.SPACE:
+            case Key.PAGE_DOWN:
+                this.selectFlowRelative(+10);
+                break;
+            case Key.PAGE_UP:
+                this.selectFlowRelative(-10);
+                break;
+            case Key.ESC:
+                this.selectFlow(null);
+                break;
+            case Key.H:
+            case Key.LEFT:
+                if(this.refs.flowDetails){
+                    this.refs.flowDetails.nextTab(-1);
+                }
+                break;
+            case Key.L:
+            case Key.TAB:
+            case Key.RIGHT:
+                if(this.refs.flowDetails){
+                    this.refs.flowDetails.nextTab(+1);
+                }
+                break;
+            default:
+                console.debug("keydown", e.keyCode);
+                return;
+        }
+        return false;
     },
     render: function() {
         var selected = _.find(this.state.flows, { id: this.props.params.flowId });
 
-        var details = null;
+        var details;
         if(selected){
             details = (
                 <FlowDetail ref="flowDetails" 
@@ -54,15 +109,17 @@ var MainView = React.createClass({
                             selectTab={this.selectDetailTab}
                             active={this.props.params.detailTab}/>
             );
+        } else {
+            details = null;
         }
 
         return (
-            <div className="main-view">
+            <div className="main-view" onKeyDown={this.onKeyDown} tabIndex="0">
                 <FlowTable ref="flowTable"
                            flows={this.state.flows}
                            selectFlow={this.selectFlow}
                            selected={selected} />
-                <Splitter/>
+                { details ? <Splitter/> : null }
                 {details}
             </div>
         );
