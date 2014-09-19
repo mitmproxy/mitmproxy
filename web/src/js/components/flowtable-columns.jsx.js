@@ -39,13 +39,13 @@ var IconColumn = React.createClass({
                 icon = "resource-icon-not-modified";
             } else if(300 <= flow.response.code && flow.response.code < 400) {
                 icon = "resource-icon-redirect";
-            } else if(contentType.indexOf("image") >= 0) {
+            } else if(contentType && contentType.indexOf("image") >= 0) {
                 icon = "resource-icon-image";
-            } else if (contentType.indexOf("javascript") >= 0) {
+            } else if (contentType && contentType.indexOf("javascript") >= 0) {
                 icon = "resource-icon-js";
-            } else if (contentType.indexOf("css") >= 0) {
+            } else if (contentType && contentType.indexOf("css") >= 0) {
                 icon = "resource-icon-css";
-            } else if (contentType.indexOf("html") >= 0) {
+            } else if (contentType && contentType.indexOf("html") >= 0) {
                 icon = "resource-icon-document";
             }
         }
@@ -112,9 +112,11 @@ var SizeColumn = React.createClass({
     },
     render: function(){
         var flow = this.props.flow;
-        var size = formatSize(
-                flow.request.contentLength +
-                (flow.response.contentLength || 0));
+        var total = flow.request.contentLength;
+        if(flow.response){
+            total += flow.response.contentLength;
+        }
+        var size = formatSize(total);
         return <td className="col-size">{size}</td>;
     }
 });
