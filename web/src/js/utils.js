@@ -41,7 +41,7 @@ var Key = {
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    while (size >= 1024 && prefix.length > 1) {
+    while (Math.abs(size) >= 1024 && prefix.length > 1) {
         prefix.shift();
         size = size / 1024;
     }
@@ -50,9 +50,9 @@ var formatSize = function (bytes) {
 
 var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
-    var prefix = ["ms", "s", "m", "h"];
+    var prefix = ["ms", "s", "min", "h"];
     var div = [1000, 60, 60];
-    while (time >= div[0] && prefix.length > 1) {
+    while (Math.abs(time) >= div[0] && prefix.length > 1) {
         prefix.shift();
         time = time / div.shift();
     }

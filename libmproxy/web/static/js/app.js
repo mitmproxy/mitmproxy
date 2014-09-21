@@ -41,7 +41,7 @@ var Key = {
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    while (size >= 1024 && prefix.length > 1) {
+    while (Math.abs(size) >= 1024 && prefix.length > 1) {
         prefix.shift();
         size = size / 1024;
     }
@@ -50,9 +50,9 @@ var formatSize = function (bytes) {
 
 var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
-    var prefix = ["ms", "s", "m", "h"];
+    var prefix = ["ms", "s", "min", "h"];
     var div = [1000, 60, 60];
-    while (time >= div[0] && prefix.length > 1) {
+    while (Math.abs(time) >= div[0] && prefix.length > 1) {
         prefix.shift();
         time = time / div.shift();
     }
@@ -617,12 +617,12 @@ var Header = React.createClass({displayName: 'Header',
         console.log("File click");
     },
     render: function () {
-        var header = header_entries.map(function(entry){
+        var header = header_entries.map(function(entry, i){
             var classes = React.addons.classSet({
                 active: entry == this.state.active
             });
             return (
-                React.DOM.a({key: entry.title, 
+                React.DOM.a({key: i, 
                    href: "#", 
                    className: classes, 
                    onClick: this.handleClick.bind(this, entry)
@@ -685,7 +685,6 @@ var IconColumn = React.createClass({displayName: 'IconColumn',
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            var icon;
             if(flow.response.code == 304) {
                 icon = "resource-icon-not-modified";
             } else if(300 <= flow.response.code && flow.response.code < 400) {
@@ -763,9 +762,10 @@ var SizeColumn = React.createClass({displayName: 'SizeColumn',
     },
     render: function(){
         var flow = this.props.flow;
+
         var total = flow.request.contentLength;
         if(flow.response){
-            total += flow.response.contentLength;
+            total += flow.response.contentLength || 0;
         }
         var size = formatSize(total);
         return React.DOM.td({className: "col-size"}, size);
@@ -917,9 +917,9 @@ var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
 
 var Headers = React.createClass({displayName: 'Headers',
     render: function(){
-        var rows = this.props.message.headers.map(function(header){
+        var rows = this.props.message.headers.map(function(header, i){
             return (
-                React.DOM.tr(null, 
+                React.DOM.tr({key: i}, 
                     React.DOM.td({className: "header-name"}, header[0]+":"), 
                     React.DOM.td({className: "header-value"}, header[1])
                 )
@@ -954,7 +954,7 @@ var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
 
         return (
             React.DOM.section(null, 
-                React.DOM.code(null, first_line ), 
+                React.DOM.div({className: "first-line"}, first_line ), 
                 Headers({message: flow.request}), 
                 React.DOM.hr(null), 
                 content
@@ -982,7 +982,7 @@ var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
 
         return (
             React.DOM.section(null, 
-                React.DOM.code(null, first_line ), 
+                React.DOM.div({className: "first-line"}, first_line ), 
                 Headers({message: flow.response}), 
                 React.DOM.hr(null), 
                 content
@@ -993,23 +993,21 @@ var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
 
 var TimeStamp = React.createClass({displayName: 'TimeStamp',
     render: function() {
-        var ts, delta;
 
-        if(!this.props.t && this.props.optional){
+        if(!this.props.t){
             //should be return null, but that triggers a React bug.
             return React.DOM.tr(null);
-        } else if (!this.props.t){
-            ts = "active";
-        } else {
-            ts = (new Date(this.props.t * 1000)).toISOString();
-            ts = ts.replace("T", " ").replace("Z","");
+        }
 
-            if(this.props.deltaTo){
-                delta = Math.round((this.props.t-this.props.deltaTo)*1000) + "ms";
-                delta = React.DOM.span({className: "text-muted"}, "(" + delta + ")");
-            } else {
-                delta = null;
-            }
+        var ts = (new Date(this.props.t * 1000)).toISOString();
+        ts = ts.replace("T", " ").replace("Z","");
+
+        var delta;
+        if(this.props.deltaTo){
+            delta = formatTimeDelta(1000 * (this.props.t-this.props.deltaTo));
+            delta = React.DOM.span({className: "text-muted"}, "(" + delta + ")");
+        } else {
+            delta = null;
         }
 
         return React.DOM.tr(null, React.DOM.td(null, this.props.title + ":"), React.DOM.td(null, ts, " ", delta));
@@ -1030,24 +1028,7 @@ var ConnectionInfo = React.createClass({displayName: 'ConnectionInfo',
             React.DOM.table({className: "connection-table"}, 
                 React.DOM.tbody(null, 
                     React.DOM.tr({key: "address"}, React.DOM.td(null, "Address:"), React.DOM.td(null, address)), 
-                    sni, 
-                    TimeStamp({title: "Start time", 
-                               key: "start", 
-                               t: conn.timestamp_start}), 
-                    TimeStamp({title: "TCP Setup", 
-                               key: "tcpsetup", 
-                               t: conn.timestamp_tcp_setup, 
-                               deltaTo: conn.timestamp_start, 
-                               optional: true}), 
-                    TimeStamp({title: "SSL handshake", 
-                               key: "sslsetup", 
-                               t: conn.timestamp_ssl_setup, 
-                               deltaTo: conn.timestamp_start, 
-                               optional: true}), 
-                    TimeStamp({title: "End time", 
-                               key: "end", 
-                               t: conn.timestamp_end, 
-                               deltaTo: conn.timestamp_start})
+                    sni
                 )
             )
         );
@@ -1061,13 +1042,92 @@ var CertificateInfo = React.createClass({displayName: 'CertificateInfo',
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
         var server_conn = flow.server_conn;
+
+        var preStyle = {maxHeight: 100};
         return (
             React.DOM.div(null, 
             client_conn.cert ? React.DOM.h4(null, "Client Certificate") : null, 
-            client_conn.cert ? React.DOM.pre(null, client_conn.cert) : null, 
+            client_conn.cert ? React.DOM.pre({style: preStyle}, client_conn.cert) : null, 
 
             server_conn.cert ? React.DOM.h4(null, "Server Certificate") : null, 
-            server_conn.cert ? React.DOM.pre(null, server_conn.cert) : null
+            server_conn.cert ? React.DOM.pre({style: preStyle}, server_conn.cert) : null
+            )
+        );
+    }
+});
+
+var Timing = React.createClass({displayName: 'Timing',
+    render: function(){
+        var flow = this.props.flow;
+        var sc = flow.server_conn;
+        var cc = flow.client_conn;
+        var req = flow.request;
+        var resp = flow.response;
+
+        var timestamps = [
+            {
+                title: "Server conn. initiated",
+                t: sc.timestamp_start,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Server conn. TCP handshake",
+                t: sc.timestamp_tcp_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Server conn. SSL handshake",
+                t: sc.timestamp_ssl_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Client conn. established",
+                t: cc.timestamp_start,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Client conn. SSL handshake",
+                t: cc.timestamp_ssl_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "First request byte",
+                t: req.timestamp_start,
+            }, {
+                title: "Request complete",
+                t: req.timestamp_end,
+                deltaTo: req.timestamp_start
+            }
+        ];
+
+        if (flow.response) {
+            timestamps.push(
+                {
+                    title: "First response byte",
+                    t: resp.timestamp_start,
+                    deltaTo: req.timestamp_start
+                }, {
+                    title: "Response complete",
+                    t: resp.timestamp_end,
+                    deltaTo: req.timestamp_start
+                }
+            );
+        }
+
+        //Add unique key for each row.
+        timestamps.forEach(function(e){
+            e.key = e.title;
+        });
+
+        timestamps = _.sortBy(timestamps, 't');
+
+        var rows = timestamps.map(function(e){
+            return TimeStamp(e);
+        });
+
+        return (
+            React.DOM.div(null, 
+            React.DOM.h4(null, "Timing"), 
+            React.DOM.table(null, 
+                React.DOM.tbody(null, 
+                    rows
+                )
+            )
             )
         );
     }
@@ -1087,7 +1147,9 @@ var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnec
             React.DOM.h4(null, "Server Connection"), 
             ConnectionInfo({conn: server_conn}), 
 
-            CertificateInfo({flow: flow})
+            CertificateInfo({flow: flow}), 
+
+            Timing({flow: flow})
 
             )
         );

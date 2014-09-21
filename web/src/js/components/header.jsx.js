@@ -62,12 +62,12 @@ var Header = React.createClass({
         console.log("File click");
     },
     render: function () {
-        var header = header_entries.map(function(entry){
+        var header = header_entries.map(function(entry, i){
             var classes = React.addons.classSet({
                 active: entry == this.state.active
             });
             return (
-                <a key={entry.title} 
+                <a key={i} 
                    href="#"
                    className={classes}
                    onClick={this.handleClick.bind(this, entry)}

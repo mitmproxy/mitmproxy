@@ -25,9 +25,9 @@ var FlowDetailNav = React.createClass({
 
 var Headers = React.createClass({
     render: function(){
-        var rows = this.props.message.headers.map(function(header){
+        var rows = this.props.message.headers.map(function(header, i){
             return (
-                <tr>
+                <tr key={i}>
                     <td className="header-name">{header[0]+":"}</td>
                     <td className="header-value">{header[1]}</td>
                 </tr>
@@ -62,7 +62,7 @@ var FlowDetailRequest = React.createClass({
 
         return (
             <section>
-                <code>{ first_line }</code>
+                <div className="first-line">{ first_line }</div>
                 <Headers message={flow.request}/>
                 <hr/>
                 {content}
@@ -90,7 +90,7 @@ var FlowDetailResponse = React.createClass({
 
         return (
             <section>
-                <code>{ first_line }</code>
+                <div className="first-line">{ first_line }</div>
                 <Headers message={flow.response}/>
                 <hr/>
                 {content}
@@ -101,23 +101,21 @@ var FlowDetailResponse = React.createClass({
 
 var TimeStamp = React.createClass({
     render: function() {
-        var ts, delta;
 
-        if(!this.props.t && this.props.optional){
+        if(!this.props.t){
             //should be return null, but that triggers a React bug.
             return <tr></tr>;
-        } else if (!this.props.t){
-            ts = "active";
-        } else {
-            ts = (new Date(this.props.t * 1000)).toISOString();
-            ts = ts.replace("T", " ").replace("Z","");
+        }
 
-            if(this.props.deltaTo){
-                delta = Math.round((this.props.t-this.props.deltaTo)*1000) + "ms";
-                delta = <span className="text-muted">{"(" + delta + ")"}</span>;
-            } else {
-                delta = null;
-            }
+        var ts = (new Date(this.props.t * 1000)).toISOString();
+        ts = ts.replace("T", " ").replace("Z","");
+
+        var delta;
+        if(this.props.deltaTo){
+            delta = formatTimeDelta(1000 * (this.props.t-this.props.deltaTo));
+            delta = <span className="text-muted">{"(" + delta + ")"}</span>;
+        } else {
+            delta = null;
         }
 
         return <tr><td>{this.props.title + ":"}</td><td>{ts} {delta}</td></tr>;
@@ -139,23 +137,6 @@ var ConnectionInfo = React.createClass({
                 <tbody>
                     <tr key="address"><td>Address:</td><td>{address}</td></tr>
                     {sni}
-                    <TimeStamp title="Start time"
-                               key="start"
-                               t={conn.timestamp_start} />
-                    <TimeStamp title="TCP Setup"
-                               key="tcpsetup"
-                               t={conn.timestamp_tcp_setup}
-                               deltaTo={conn.timestamp_start}
-                               optional={true} />
-                    <TimeStamp title="SSL handshake"
-                               key="sslsetup"
-                               t={conn.timestamp_ssl_setup}
-                               deltaTo={conn.timestamp_start}
-                               optional={true} />
-                    <TimeStamp title="End time"
-                               key="end"
-                               t={conn.timestamp_end}
-                               deltaTo={conn.timestamp_start} />
                 </tbody>
             </table>
         );
@@ -169,13 +150,92 @@ var CertificateInfo = React.createClass({
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
         var server_conn = flow.server_conn;
+
+        var preStyle = {maxHeight: 100};
         return (
             <div>
             {client_conn.cert ? <h4>Client Certificate</h4> : null}
-            {client_conn.cert ? <pre>{client_conn.cert}</pre> : null}
+            {client_conn.cert ? <pre style={preStyle}>{client_conn.cert}</pre> : null}
 
             {server_conn.cert ? <h4>Server Certificate</h4> : null}
-            {server_conn.cert ? <pre>{server_conn.cert}</pre> : null}
+            {server_conn.cert ? <pre style={preStyle}>{server_conn.cert}</pre> : null}
+            </div>
+        );
+    }
+});
+
+var Timing = React.createClass({
+    render: function(){
+        var flow = this.props.flow;
+        var sc = flow.server_conn;
+        var cc = flow.client_conn;
+        var req = flow.request;
+        var resp = flow.response;
+
+        var timestamps = [
+            {
+                title: "Server conn. initiated",
+                t: sc.timestamp_start,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Server conn. TCP handshake",
+                t: sc.timestamp_tcp_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Server conn. SSL handshake",
+                t: sc.timestamp_ssl_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Client conn. established",
+                t: cc.timestamp_start,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Client conn. SSL handshake",
+                t: cc.timestamp_ssl_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "First request byte",
+                t: req.timestamp_start,
+            }, {
+                title: "Request complete",
+                t: req.timestamp_end,
+                deltaTo: req.timestamp_start
+            }
+        ];
+
+        if (flow.response) {
+            timestamps.push(
+                {
+                    title: "First response byte",
+                    t: resp.timestamp_start,
+                    deltaTo: req.timestamp_start
+                }, {
+                    title: "Response complete",
+                    t: resp.timestamp_end,
+                    deltaTo: req.timestamp_start
+                }
+            );
+        }
+
+        //Add unique key for each row.
+        timestamps.forEach(function(e){
+            e.key = e.title;
+        });
+
+        timestamps = _.sortBy(timestamps, 't');
+
+        var rows = timestamps.map(function(e){
+            return TimeStamp(e);
+        });
+
+        return (
+            <div>
+            <h4>Timing</h4>
+            <table>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
             </div>
         );
     }
@@ -196,6 +256,8 @@ var FlowDetailConnectionInfo = React.createClass({
             <ConnectionInfo conn={server_conn}/>
 
             <CertificateInfo flow={flow}/>
+
+            <Timing flow={flow}/>
 
             </section>
         );

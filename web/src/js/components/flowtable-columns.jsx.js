@@ -34,7 +34,6 @@ var IconColumn = React.createClass({
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            var icon;
             if(flow.response.code == 304) {
                 icon = "resource-icon-not-modified";
             } else if(300 <= flow.response.code && flow.response.code < 400) {
@@ -112,9 +111,10 @@ var SizeColumn = React.createClass({
     },
     render: function(){
         var flow = this.props.flow;
+
         var total = flow.request.contentLength;
         if(flow.response){
-            total += flow.response.contentLength;
+            total += flow.response.contentLength || 0;
         }
         var size = formatSize(total);
         return <td className="col-size">{size}</td>;

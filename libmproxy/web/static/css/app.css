@@ -148,9 +148,6 @@ header .menu {
   font-weight: normal;
   box-shadow: 0 1px 0 #a6a6a6;
 }
-.flow-table tbody {
-  outline: 0;
-}
 .flow-table tr {
   cursor: pointer;
 }
@@ -198,11 +195,16 @@ header .menu {
   background-color: #F2F2F2;
 }
 .flow-detail section {
-  padding: 5px;
+  padding: 5px 12px;
 }
-.flow-detail code {
+.flow-detail .first-line {
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  background-color: #428bca;
+  color: white;
+  margin: 0 -8px;
+  padding: 4px 8px;
+  border-radius: 5px;
   word-break: break-all;
-  padding-left: 0;
 }
 .flow-detail table {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;

@@ -1,3 +1,9 @@
+//TODO: Move into some utils
+.monospace(){
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+
 .flow-detail {
     width: 100%;
     overflow: auto;
@@ -7,20 +13,20 @@
     }
 
     section {
-        padding: 5px;
+        padding: 5px 12px;
     }
 
-    //FIXME: Style properly
-    code {
+    .first-line {
+        .monospace();
+        background-color: #428bca;
+        color: white;
+        margin: 0 -8px;
+        padding: 4px 8px;
+        border-radius: 5px;
         word-break: break-all;
-        padding-left: 0;
     }
 }
 
-//TODO: Move into some utils
-.monospace(){
-    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-}
 
 .flow-detail table {
     .monospace();
