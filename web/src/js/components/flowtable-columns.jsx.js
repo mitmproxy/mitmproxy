@@ -10,11 +10,12 @@ var TLSColumn = React.createClass({
     render: function(){
         var flow = this.props.flow;
         var ssl = (flow.request.scheme == "https");
-        var classes = React.addons.classSet({
-            "col-tls": true,
-            "col-tls-https": ssl,
-            "col-tls-http": !ssl
-        });
+        var classes;
+        if(ssl){
+            classes = "col-tls col-tls-https";
+        } else {
+            classes = "col-tls col-tls-http";
+        }
         return <td className={classes}></td>;
     }
 });

@@ -26,6 +26,9 @@ _.extend(EventLogView.prototype, EventEmitter.prototype, {
     },
     add: function (entry) {
         this.log.push(entry);
+        if(this.log.length > 50){
+            this.log.shift();
+        }
         this.emit("change");
     },
     add_bulk: function (messages) {

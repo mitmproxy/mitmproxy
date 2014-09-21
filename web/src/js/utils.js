@@ -41,20 +41,22 @@ var Key = {
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    while (Math.abs(size) >= 1024 && prefix.length > 1) {
-        prefix.shift();
+    var i=0;
+    while (Math.abs(size) >= 1024 && i < prefix.length-1) {
+        i++;
         size = size / 1024;
     }
-    return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix.shift();
+    return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix[i];
 };
 
 var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
     var prefix = ["ms", "s", "min", "h"];
     var div = [1000, 60, 60];
-    while (Math.abs(time) >= div[0] && prefix.length > 1) {
-        prefix.shift();
-        time = time / div.shift();
+    var i = 0;
+    while (Math.abs(time) >= div[i] && i < div.length) {
+        time = time / div[i];
+        i++;
     }
-    return Math.round(time) + prefix.shift();
+    return Math.round(time) + prefix[i];
 };

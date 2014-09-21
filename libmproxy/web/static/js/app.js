@@ -41,22 +41,24 @@ var Key = {
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    while (Math.abs(size) >= 1024 && prefix.length > 1) {
-        prefix.shift();
+    var i=0;
+    while (Math.abs(size) >= 1024 && i < prefix.length-1) {
+        i++;
         size = size / 1024;
     }
-    return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix.shift();
+    return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix[i];
 };
 
 var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
     var prefix = ["ms", "s", "min", "h"];
     var div = [1000, 60, 60];
-    while (Math.abs(time) >= div[0] && prefix.length > 1) {
-        prefix.shift();
-        time = time / div.shift();
+    var i = 0;
+    while (Math.abs(time) >= div[i] && i < div.length) {
+        time = time / div[i];
+        i++;
     }
-    return Math.round(time) + prefix.shift();
+    return Math.round(time) + prefix[i];
 };
 const PayloadSources = {
     VIEW: "view",
@@ -78,9 +80,9 @@ Dispatcher.prototype.unregister = function (callback) {
 };
 Dispatcher.prototype.dispatch = function (payload) {
     console.debug("dispatch", payload);
-    this.callbacks.forEach(function (callback) {
-        callback(payload);
-    });
+    for(var i = 0; i < this.callbacks.length; i++){
+        this.callbacks[i](payload);
+    }
 };
 
 
@@ -261,6 +263,9 @@ _.extend(EventLogView.prototype, EventEmitter.prototype, {
     },
     add: function (entry) {
         this.log.push(entry);
+        if(this.log.length > 50){
+            this.log.shift();
+        }
         this.emit("change");
     },
     add_bulk: function (messages) {
@@ -373,6 +378,9 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
 
         if(idx < 0){
             this.flows.push(flow);
+            //if(this.flows.length > 100){
+            //    this.flows.shift();
+            //}
         } else {
             this.flows[idx] = flow;
         }
@@ -661,11 +669,12 @@ var TLSColumn = React.createClass({displayName: 'TLSColumn',
     render: function(){
         var flow = this.props.flow;
         var ssl = (flow.request.scheme == "https");
-        var classes = React.addons.classSet({
-            "col-tls": true,
-            "col-tls-https": ssl,
-            "col-tls-http": !ssl
-        });
+        var classes;
+        if(ssl){
+            classes = "col-tls col-tls-https";
+        } else {
+            classes = "col-tls col-tls-http";
+        }
         return React.DOM.td({className: classes});
     }
 });
@@ -818,6 +827,13 @@ var FlowRow = React.createClass({displayName: 'FlowRow',
             React.DOM.tr({className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
                 columns
             ));
+    },
+    shouldComponentUpdate: function(nextProps){
+        var isEqual = (
+            this.props.columns.length === nextProps.columns.length && 
+            this.props.selected === nextProps.selected &&
+            this.props.flow.response === nextProps.flow.response);
+        return !isEqual;
     }
 });
 

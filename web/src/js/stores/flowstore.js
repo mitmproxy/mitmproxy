@@ -41,6 +41,9 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
 
         if(idx < 0){
             this.flows.push(flow);
+            //if(this.flows.length > 100){
+            //    this.flows.shift();
+            //}
         } else {
             this.flows[idx] = flow;
         }

@@ -14,6 +14,13 @@ var FlowRow = React.createClass({
             <tr className={className} onClick={this.props.selectFlow.bind(null, flow)}>
                 {columns}
             </tr>);
+    },
+    shouldComponentUpdate: function(nextProps){
+        var isEqual = (
+            this.props.columns.length === nextProps.columns.length && 
+            this.props.selected === nextProps.selected &&
+            this.props.flow.response === nextProps.flow.response);
+        return !isEqual;
     }
 });
 
