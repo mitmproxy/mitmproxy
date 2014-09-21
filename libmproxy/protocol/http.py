@@ -96,8 +96,8 @@ class HTTPMessage(stateobject.StateObject):
         """@type: ODictCaseless"""
         self.content = content
 
-        self.timestamp_start = timestamp_start if timestamp_start is not None else utils.timestamp()
-        self.timestamp_end = timestamp_end if timestamp_end is not None else utils.timestamp()
+        self.timestamp_start = timestamp_start
+        self.timestamp_end = timestamp_end
 
     _stateobject_attributes = dict(
         httpversion=tuple,
@@ -667,7 +667,11 @@ class HTTPResponse(HTTPMessage):
         if hasattr(rfile, "first_byte_timestamp"):  # more accurate timestamp_start
             timestamp_start = rfile.first_byte_timestamp
 
-        timestamp_end = utils.timestamp()
+        if include_body:
+            timestamp_end = utils.timestamp()
+        else:
+            timestamp_end = None
+
         return HTTPResponse(
             httpversion,
             code,
@@ -965,6 +969,7 @@ class HTTPHandler(ProtocolHandler):
                 self.c.config.body_size_limit,
                 flow.request.method, flow.response.code, False
             )
+            flow.response.timestamp_end = utils.timestamp()
 
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
@@ -1046,7 +1051,6 @@ class HTTPHandler(ProtocolHandler):
         except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
             self.handle_error(e, flow)
         finally:
-            flow.timestamp_end = utils.timestamp()
             flow.live = None  # Connection is not live anymore.
         return False
 
@@ -1217,7 +1221,7 @@ class HTTPHandler(ProtocolHandler):
             self.c.client_conn.send(flow.response.assemble())
         else:
             # streaming:
-            # First send the body and then transfer the response incrementally:
+            # First send the headers and then transfer the response incrementally:
             h = flow.response._assemble_head(preserve_transfer_encoding=True)
             self.c.client_conn.send(h)
             for chunk in http.read_http_body_chunked(self.c.server_conn.rfile,
@@ -1227,7 +1231,7 @@ class HTTPHandler(ProtocolHandler):
                 for part in chunk:
                     self.c.client_conn.wfile.write(part)
                 self.c.client_conn.wfile.flush()
-        flow.response.timestamp_end = utils.timestamp()
+            flow.response.timestamp_end = utils.timestamp()
 
     def check_close_connection(self, flow):
         """

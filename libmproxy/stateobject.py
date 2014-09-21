@@ -15,8 +15,8 @@ class StateObject(object):
     # A set() of attributes that should be ignored for short state
     _stateobject_long_attributes = frozenset([])
 
-    def from_state(self):
-        raise NotImplementedError
+    def from_state(self, state):
+        raise NotImplementedError()
 
     def get_state(self, short=False):
         """
