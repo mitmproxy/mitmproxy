@@ -35,9 +35,9 @@
     word-break: break-all;
     
     tr {
-        //&:not(:first-child){
+        &:not(:first-child){
         border-top: 1px solid #f7f7f7;
-        //}
+        }
     }
 
     td {
@@ -51,7 +51,7 @@
 
 .connection-table {
     td:first-child {
-        width: 33%;
+        width: 50%;
         padding-right: 1em;
     }
 }
@@ -63,5 +63,13 @@
     }
     .header-value {
         
+    }
+}
+
+.connection-table, .timing-table {
+    td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }

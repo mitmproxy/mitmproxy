@@ -121,14 +121,15 @@ var SettingsActions = {
     }
 };
 
+var event_id = 0;
 var EventLogActions = {
-    add_event: function(message, level){
+    add_event: function(message){
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.ADD_EVENT,
             data: {
                 message: message,
-                level: level || "info",
-                source: "ui"
+                level: "web",
+                id: "viewAction-"+event_id++
             }
         });
     }
@@ -263,7 +264,7 @@ _.extend(EventLogView.prototype, EventEmitter.prototype, {
     },
     add: function (entry) {
         this.log.push(entry);
-        if(this.log.length > 50){
+        if(this.log.length > 200){
             this.log.shift();
         }
         this.emit("change");
@@ -334,7 +335,6 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
 
 var EventLogStore = new _EventLogStore();
 AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
-
 function FlowView(store, live) {
     EventEmitter.call(this);
     this._store = store;
@@ -443,7 +443,7 @@ _Connection.prototype.openWebSocketConnection = function () {
     ws.onclose = this.onclose.bind(this);
 };
 _Connection.prototype.onopen = function (open) {
-    console.log("onopen", this, arguments);
+    console.debug("onopen", this, arguments);
 };
 _Connection.prototype.onmessage = function (message) {
     //AppDispatcher.dispatchServerAction(...);
@@ -452,11 +452,11 @@ _Connection.prototype.onmessage = function (message) {
 };
 _Connection.prototype.onerror = function (error) {
     EventLogActions.add_event("WebSocket Connection Error.");
-    console.log("onerror", this, arguments);
+    console.debug("onerror", this, arguments);
 };
 _Connection.prototype.onclose = function (close) {
     EventLogActions.add_event("WebSocket Connection closed.");
-    console.log("onclose", this, arguments);
+    console.debug("onclose", this, arguments);
 };
 
 var Connection = new _Connection(location.origin + "/updates");
@@ -1139,7 +1139,7 @@ var Timing = React.createClass({displayName: 'Timing',
         return (
             React.DOM.div(null, 
             React.DOM.h4(null, "Timing"), 
-            React.DOM.table(null, 
+            React.DOM.table({className: "timing-table"}, 
                 React.DOM.tbody(null, 
                     rows
                 )
@@ -1214,7 +1214,6 @@ var MainView = React.createClass({displayName: 'MainView',
         };
     },
     componentDidMount: function () {
-        console.log("get view");
         this.flowStore = FlowStore.getView();
         this.flowStore.addListener("change",this.onFlowChange);
     },
@@ -1334,7 +1333,32 @@ var MainView = React.createClass({displayName: 'MainView',
 });
 /** @jsx React.DOM */
 
-var EventLog = React.createClass({displayName: 'EventLog',
+var LogMessage = React.createClass({displayName: 'LogMessage',
+    render: function(){
+        var entry = this.props.entry;
+        var indicator;
+        switch(entry.level){
+            case "web":
+                indicator = React.DOM.i({className: "fa fa-fw fa-html5"});
+                break;
+            case "debug":
+                indicator = React.DOM.i({className: "fa fa-fw fa-bug"});
+                break;
+            default:
+                indicator = React.DOM.i({className: "fa fa-fw fa-info"});
+        }
+        return (
+            React.DOM.div(null, 
+                indicator, " ", entry.message
+            )
+        );
+    },
+    shouldComponentUpdate: function(){
+        return false; // log entries are immutable.
+    }
+});
+
+var EventLogContents = React.createClass({displayName: 'EventLogContents',
     mixins:[AutoScrollMixin],
     getInitialState: function () {
         return {
@@ -1354,23 +1378,76 @@ var EventLog = React.createClass({displayName: 'EventLog',
             log: this.log.getAll()
         });
     },
+    render: function () {
+        var messages = this.state.log.map(function(row) {
+            if(!this.props.filter[row.level]){
+                return null;
+            }
+            return LogMessage({key: row.id, entry: row});
+        }.bind(this));
+        return React.DOM.pre(null, messages);
+    }
+});
+
+var ToggleFilter = React.createClass({displayName: 'ToggleFilter',
+    toggle: function(){
+        return this.props.toggleLevel(this.props.name);
+    },
+    render: function(){
+        var className = "label ";
+        if (this.props.active) {
+            className += "label-primary";
+        } else {
+            className += "label-default";
+        }
+        return (
+            React.DOM.a({
+                href: "#", 
+                className: className, 
+                onClick: this.toggle}, 
+                this.props.name
+            )
+        );
+   } 
+});
+
+var EventLog = React.createClass({displayName: 'EventLog',
+    getInitialState: function(){
+        return {
+            filter: {
+                "debug": false,
+                "info": true,
+                "web": true
+            }
+        };
+    },
     close: function () {
         SettingsActions.update({
             showEventLog: false
         });
     },
+    toggleLevel: function(level){
+        var filter = this.state.filter;
+        filter[level] = !filter[level];
+        this.setState({filter: filter});
+        return false;
+    },
     render: function () {
-        var messages = this.state.log.map(function(row) {
-            var indicator = null;
-            if(row.source === "ui"){
-                indicator = React.DOM.i({className: "fa fa-html5"});
-            }
-            return (
-                React.DOM.div({key: row.id}, 
-                    indicator, " ", row.message
-                ));
-        });
-        return React.DOM.pre({className: "eventlog"}, messages);
+        return (
+            React.DOM.div({className: "eventlog"}, 
+                React.DOM.div(null, 
+                    "Eventlog", 
+                    React.DOM.div({className: "pull-right"}, 
+                        ToggleFilter({name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel}), 
+                        ToggleFilter({name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel}), 
+                        ToggleFilter({name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel}), 
+                        React.DOM.i({onClick: this.close, className: "fa fa-close"})
+                    )
+
+                ), 
+                EventLogContents({filter: this.state.filter})
+            )
+        );
     }
 });
 /** @jsx React.DOM */

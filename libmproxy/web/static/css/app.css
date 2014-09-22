@@ -60,6 +60,7 @@ body,
   flex: 1 1 auto;
   display: flex;
   flex-direction: row;
+  outline: 0;
 }
 .main-view.vertical {
   flex-direction: column;
@@ -212,27 +213,61 @@ header .menu {
   table-layout: fixed;
   word-break: break-all;
 }
-.flow-detail table tr {
+.flow-detail table tr:not(:first-child) {
   border-top: 1px solid #f7f7f7;
 }
 .flow-detail table td {
   vertical-align: top;
 }
 .connection-table td:first-child {
-  width: 33%;
+  width: 50%;
   padding-right: 1em;
 }
 .header-table .header-name {
   width: 33%;
   padding-right: 1em;
 }
+.connection-table td,
+.timing-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .eventlog {
+  height: 200px;
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+.eventlog > div {
+  background-color: #F2F2F2;
+  padding: 0 5px;
+  flex: 0 0 auto;
+}
+.eventlog > pre {
+  flex: 1 1 auto;
   margin: 0;
   border-radius: 0;
-  height: 200px;
-  overflow: auto;
+  overflow-x: auto;
   overflow-y: scroll;
+  background-color: #fcfcfc;
+}
+.eventlog .fa-close {
+  cursor: pointer;
+  float: right;
+  color: grey;
+  padding: 3px 0;
+  padding-left: 10px;
+}
+.eventlog .fa-close:hover {
+  color: black;
+}
+.eventlog .label {
+  cursor: pointer;
+  vertical-align: middle;
+  display: inline-block;
+  margin-top: -2px;
+  margin-left: 3px;
 }
 footer {
   box-shadow: 0 -1px 3px #d3d3d3;

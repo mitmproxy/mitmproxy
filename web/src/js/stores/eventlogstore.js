@@ -26,7 +26,7 @@ _.extend(EventLogView.prototype, EventEmitter.prototype, {
     },
     add: function (entry) {
         this.log.push(entry);
-        if(this.log.length > 50){
+        if(this.log.length > 200){
             this.log.shift();
         }
         this.emit("change");

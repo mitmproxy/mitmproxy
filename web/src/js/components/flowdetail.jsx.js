@@ -231,7 +231,7 @@ var Timing = React.createClass({
         return (
             <div>
             <h4>Timing</h4>
-            <table>
+            <table className="timing-table">
                 <tbody>
                     {rows}
                 </tbody>

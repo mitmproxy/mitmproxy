@@ -14,7 +14,7 @@ _Connection.prototype.openWebSocketConnection = function () {
     ws.onclose = this.onclose.bind(this);
 };
 _Connection.prototype.onopen = function (open) {
-    console.log("onopen", this, arguments);
+    console.debug("onopen", this, arguments);
 };
 _Connection.prototype.onmessage = function (message) {
     //AppDispatcher.dispatchServerAction(...);
@@ -23,11 +23,11 @@ _Connection.prototype.onmessage = function (message) {
 };
 _Connection.prototype.onerror = function (error) {
     EventLogActions.add_event("WebSocket Connection Error.");
-    console.log("onerror", this, arguments);
+    console.debug("onerror", this, arguments);
 };
 _Connection.prototype.onclose = function (close) {
     EventLogActions.add_event("WebSocket Connection closed.");
-    console.log("onclose", this, arguments);
+    console.debug("onclose", this, arguments);
 };
 
 var Connection = new _Connection(location.origin + "/updates");

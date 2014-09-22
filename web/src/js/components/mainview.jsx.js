@@ -7,7 +7,6 @@ var MainView = React.createClass({
         };
     },
     componentDidMount: function () {
-        console.log("get view");
         this.flowStore = FlowStore.getView();
         this.flowStore.addListener("change",this.onFlowChange);
     },
