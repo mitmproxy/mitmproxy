@@ -190,7 +190,10 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
         else:
             contentdesc = "[no content]"
 
-        delta = f.response.timestamp_end - f.response.timestamp_start
+        if f.response.timestamp_end:
+            delta = f.response.timestamp_end - f.response.timestamp_start
+        else:
+            delta = 0
         size = f.response.size()
         rate = utils.pretty_size(size / ( delta if delta > 0 else 1 ) )
 

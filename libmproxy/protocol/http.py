@@ -89,6 +89,7 @@ class HTTPMessage(stateobject.StateObject):
     """
     Base class for HTTPRequest and HTTPResponse
     """
+
     def __init__(self, httpversion, headers, content, timestamp_start=None,
                  timestamp_end=None):
         self.httpversion = httpversion
@@ -917,6 +918,7 @@ class HTTPHandler(ProtocolHandler):
     HTTPHandler implements mitmproxys understanding of the HTTP protocol.
 
     """
+
     def __init__(self, c):
         super(HTTPHandler, self).__init__(c)
         self.expected_form_in = c.config.mode.http_form_in
@@ -980,8 +982,8 @@ class HTTPHandler(ProtocolHandler):
                     body_size_limit=self.c.config.body_size_limit
                 )
             except tcp.NetLibDisconnect:
-                 # don't throw an error for disconnects that happen
-                 # before/between requests.
+                # don't throw an error for disconnects that happen
+                # before/between requests.
                 return False
             self.c.log(
                 "request",
