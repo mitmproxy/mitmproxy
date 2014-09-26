@@ -31,6 +31,9 @@ class Options(object):
         "stickyauth",
         "verbosity",
         "wfile",
+        "replay_ignore_content",
+        "replay_ignore_params",
+        "replay_not_found"
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -73,6 +76,11 @@ class DumpMaster(flow.FlowMaster):
             self.filt = filt.parse(filtstr)
         else:
             self.filt = None
+   
+        if options.replay_not_found: 
+            self.not_found_filt = filt.parse(options.replay_not_found)
+        else:
+            self.not_found_filt = None
 
         if options.stickycookie:
             self.set_stickycookie(options.stickycookie)
@@ -101,7 +109,9 @@ class DumpMaster(flow.FlowMaster):
                 self._readflow(options.server_replay),
                 options.kill, options.rheaders,
                 not options.keepserving,
-                options.nopop
+                options.nopop,
+                options.replay_ignore_params,
+                options.replay_ignore_content
             )
 
         if options.client_replay:

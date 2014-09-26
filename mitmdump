@@ -18,6 +18,24 @@ if __name__ == '__main__':
         action="store_true", dest="keepserving", default=False,
         help="Continue serving after client playback or file read. We exit by default."
     )
+    parser.add_argument(
+        "--replay-ignore-content",
+        action="store_true", dest="replay_ignore_content", default=False,
+        help="Ignore request's content while searching for a saved flow to replay"
+    )
+    parser.add_argument(
+        "--replay-ignore-param",
+        action="append", dest="replay_ignore_params", type=str,
+        help="Request's parameters to be ignored while searching for a saved flow to replay"
+           "Can be passed multiple times."
+    )
+    parser.add_argument(
+        "--replay-not-found",
+        action="append", dest="replay_not_found", type=str,
+        help="Make the proxy return 404 (not found) if a request matching filters is not found in saved flows"
+           "Can be passed multiple times."
+    )
+
     parser.add_argument('args', nargs=argparse.REMAINDER)
 
     options = parser.parse_args()
@@ -40,7 +58,14 @@ if __name__ == '__main__':
         dumpopts = dump.Options(**cmdline.get_common_options(options))
     except cmdline.OptionException, v:
         parser.error(v.message)
+
     dumpopts.keepserving = options.keepserving
+    dumpopts.replay_ignore_content = options.replay_ignore_content
+    dumpopts.replay_ignore_params = options.replay_ignore_params
+    if options.replay_not_found:
+        dumpopts.replay_not_found = " ".join(options.replay_not_found) 
+    else:
+        dumpopts.replay_not_found = None
 
     if options.args:
         filt = " ".join(options.args)
