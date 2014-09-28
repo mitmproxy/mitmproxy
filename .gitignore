@@ -10,4 +10,5 @@ MANIFEST
 .noseids
 netlib
 venv
-.idea
+.idea/
+pathod.egg-info/
