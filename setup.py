@@ -99,7 +99,7 @@ setup(
     ],
     install_requires=[
         'netlib>=%s' % version.MINORVERSION,
-        "requests>=2.4.0",
+        "requests>=2.4.1",
         "Flask>=0.10.1"
     ],
     extras_require={

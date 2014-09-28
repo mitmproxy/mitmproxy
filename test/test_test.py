@@ -2,7 +2,6 @@ import logging
 import requests
 from libpathod import test
 import tutils
-from requests.packages.urllib3.exceptions import ProtocolError
 logging.disable(logging.CRITICAL)
 
 class TestDaemonManual:
@@ -11,7 +10,7 @@ class TestDaemonManual:
             rsp = requests.get("http://localhost:%s/p/202:da"%d.port)
             assert rsp.ok
             assert rsp.status_code == 202
-        tutils.raises(ProtocolError, requests.get, "http://localhost:%s/p/202:da"%d.port)
+        tutils.raises(requests.ConnectionError, requests.get, "http://localhost:%s/p/202:da"%d.port)
 
     def test_startstop_ssl(self):
         d = test.Daemon(ssl=True)
@@ -19,7 +18,7 @@ class TestDaemonManual:
         assert rsp.ok
         assert rsp.status_code == 202
         d.shutdown()
-        tutils.raises(ProtocolError, requests.get, "http://localhost:%s/p/202:da"%d.port)
+        tutils.raises(requests.ConnectionError, requests.get, "http://localhost:%s/p/202:da"%d.port)
 
     def test_startstop_ssl_explicit(self):
         ssloptions = dict(
@@ -32,6 +31,6 @@ class TestDaemonManual:
         assert rsp.ok
         assert rsp.status_code == 202
         d.shutdown()
-        tutils.raises(ProtocolError, requests.get, "http://localhost:%s/p/202:da"%d.port)
+        tutils.raises(requests.ConnectionError, requests.get, "http://localhost:%s/p/202:da"%d.port)
 
 
