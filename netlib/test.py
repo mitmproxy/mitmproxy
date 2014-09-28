@@ -64,7 +64,7 @@ class TServer(tcp.TCPServer):
             key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
             if self.ssl["v3_only"]:
                 method = tcp.SSLv3_METHOD
-                options = tcp.OP_NO_SSLv2|tcp.OP_NO_TLSv1
+                options = OpenSSL.SSL.OP_NO_SSLv2 | OpenSSL.SSL.OP_NO_TLSv1
             else:
                 method = tcp.SSLv23_METHOD
                 options = None
@@ -80,7 +80,7 @@ class TServer(tcp.TCPServer):
         h.handle()
         h.finish()
 
-    def handle_error(self, request, client_address):
+    def handle_error(self, connection, client_address, fp=None):
         s = cStringIO.StringIO()
-        tcp.TCPServer.handle_error(self, request, client_address, s)
+        tcp.TCPServer.handle_error(self, connection, client_address, s)
         self.q.put(s.getvalue())

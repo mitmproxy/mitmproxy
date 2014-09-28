@@ -7,5 +7,6 @@ MANIFEST
 *.swp
 *.swo
 .coverage
-.idea
+.idea/
 __pycache__
+netlib.egg-info/
