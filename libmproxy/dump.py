@@ -79,8 +79,6 @@ class DumpMaster(flow.FlowMaster):
    
         if options.replay_not_found: 
             self.not_found_filt = filt.parse(options.replay_not_found)
-        else:
-            self.not_found_filt = None
 
         if options.stickycookie:
             self.set_stickycookie(options.stickycookie)

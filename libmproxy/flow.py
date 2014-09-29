@@ -1390,6 +1390,8 @@ class FlowMaster(controller.Master):
         self.stream = None
         self.apps = AppRegistry()
 
+        self.not_found_filt = None        
+
     def start_app(self, host, port, external):
         if not external:
             self.apps.add(
@@ -1572,7 +1574,6 @@ class FlowMaster(controller.Master):
             f.request.anticache()
         if self.anticomp:
             f.request.anticomp()
-
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb:
