@@ -1,5 +1,3 @@
-include README.mkd
+include LICENSE README.mkd
 recursive-include test *
-recursive-include netlib *
-recursive-exclude * *.pyc *.pyo
-prune */__pycache__
+recursive-exclude * *.pyc *.pyo *.swo *.swp
