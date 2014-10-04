@@ -34,6 +34,8 @@ class Options(object):
         "stream_large_bodies",
         "verbosity",
         "wfile",
+        "replay_ignore_content",
+        "replay_ignore_params",
     ]
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
@@ -69,6 +71,8 @@ class DumpMaster(flow.FlowMaster):
         self.anticache = options.anticache
         self.anticomp = options.anticomp
         self.showhost = options.showhost
+        self.replay_ignore_params = options.replay_ignore_params    
+        self.replay_ignore_content = options.replay_ignore_content
         self.refresh_server_playback = options.refresh_server_playback
 
         self.set_stream_large_bodies(options.stream_large_bodies)
@@ -106,7 +110,9 @@ class DumpMaster(flow.FlowMaster):
                 self._readflow(options.server_replay),
                 options.kill, options.rheaders,
                 not options.keepserving,
-                options.nopop
+                options.nopop,
+                options.replay_ignore_params,
+                options.replay_ignore_content
             )
 
         if options.client_replay:
