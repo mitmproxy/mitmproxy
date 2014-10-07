@@ -176,6 +176,8 @@ def get_common_options(options):
         wfile=options.wfile,
         verbosity=options.verbose,
         nopop=options.nopop,
+        replay_ignore_content = options.replay_ignore_content,
+        replay_ignore_params = options.replay_ignore_params
     )
 
 
@@ -369,6 +371,17 @@ def common_options(parser):
         help="Disable response pop from response flow. "
              "This makes it possible to replay same response multiple times."
     )
+    group.add_argument(
+        "--replay-ignore-content",
+        action="store_true", dest="replay_ignore_content", default=False,
+        help="Ignore request's content while searching for a saved flow to replay"
+    )
+    group.add_argument(
+        "--replay-ignore-param",
+        action="append", dest="replay_ignore_params", type=str,
+        help="Request's parameters to be ignored while searching for a saved flow to replay"
+           "Can be passed multiple times."
+    )    
 
     group = parser.add_argument_group(
         "Replacements",

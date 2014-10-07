@@ -12,6 +12,7 @@ from . import controller, protocol, tnetstring, filt, script, version
 from .onboarding import app
 from .protocol import http, handle
 from .proxy.config import parse_host_pattern
+import urlparse
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless
@@ -193,12 +194,12 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
-    def __init__(self, headers, flows, exit, nopop):
+    def __init__(self, headers, flows, exit, nopop, ignore_params, ignore_content):
         """
             headers: Case-insensitive list of request headers that should be
             included in request-response matching.
         """
-        self.headers, self.exit, self.nopop = headers, exit, nopop
+        self.headers, self.exit, self.nopop, self.ignore_params, self.ignore_content = headers, exit, nopop, ignore_params, ignore_content
         self.fmap = {}
         for i in flows:
             if i.response:
@@ -213,14 +214,29 @@ class ServerPlaybackState:
             Calculates a loose hash of the flow request.
         """
         r = flow.request
+
+        _, _, path, _, query, _ = urlparse.urlparse(r.url)
+        queriesArray = urlparse.parse_qsl(query)
+
+        filtered = []
+        for p in queriesArray:
+          if p[0] not in self.ignore_params:
+            filtered.append(p)
+
         key = [
             str(r.host),
             str(r.port),
             str(r.scheme),
             str(r.method),
-            str(r.path),
-            str(r.content),
-        ]
+            str(path),
+         ]
+        if not self.ignore_content:
+            key.append(str(r.content))
+
+        for p in filtered:
+            key.append(p[0])
+            key.append(p[1])
+
         if self.headers:
             hdrs = []
             for i in self.headers:
@@ -449,6 +465,9 @@ class FlowMaster(controller.Master):
         self.refresh_server_playback = False
         self.replacehooks = ReplaceHooks()
         self.setheaders = SetHeaders()
+        self.replay_ignore_params = False    
+        self.replay_ignore_content = None
+
 
         self.stream = None
         self.apps = AppRegistry()
@@ -539,12 +558,14 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(self, flows, kill, headers, exit, nopop):
+    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params, ignore_content):
         """
             flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
+            ignore_params: list of parameters to ignore in server replay
+            ignore_content: true if request content should be ignored in server replay
         """
-        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop)
+        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, ignore_params, ignore_content)
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
