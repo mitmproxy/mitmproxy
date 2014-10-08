@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import re
-import argparse
 from argparse import ArgumentTypeError
 from netlib import http
 from . import filt, utils
@@ -288,6 +287,11 @@ def common_options(parser):
         help="Forward all requests to upstream HTTP server: http[s][2http[s]]://host[:port]"
     )
     group.add_argument(
+        "--socks",
+        action="store_true", dest="socks_proxy", default=False,
+        help="Set SOCKS5 proxy mode."
+    )
+    group.add_argument(
         "-T",
         action="store_true", dest="transparent_proxy", default=False,
         help="Set transparent proxy mode."
@@ -381,7 +385,7 @@ def common_options(parser):
         action="append", dest="replay_ignore_params", type=str,
         help="Request's parameters to be ignored while searching for a saved flow to replay"
            "Can be passed multiple times."
-    )    
+    )
 
     group = parser.add_argument_group(
         "Replacements",

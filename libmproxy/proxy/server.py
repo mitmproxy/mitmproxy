@@ -70,7 +70,7 @@ class ConnectionHandler:
 
             # Can we already identify the target server and connect to it?
             client_ssl, server_ssl = False, False
-            upstream_info = self.config.mode.get_upstream_server(self.client_conn.connection)
+            upstream_info = self.config.mode.get_upstream_server(self.client_conn)
             if upstream_info:
                 self.set_server_address(upstream_info[2:])
                 client_ssl, server_ssl = upstream_info[:2]
