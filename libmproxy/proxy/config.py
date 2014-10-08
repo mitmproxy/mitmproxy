@@ -99,12 +99,15 @@ def process_proxy_options(parser, options):
     else:
         authenticator = http_auth.NullProxyAuth(None)
 
+    ca_file = None
     certs = []
     for i in options.certs:
         parts = i.split("=", 1)
         if len(parts) == 1:
             parts = ["*", parts[0]]
         parts[1] = os.path.expanduser(parts[1])
+        if parts[0] == "*":
+          ca_file = parts[1]
         if not os.path.exists(parts[1]):
             parser.error("Certificate file does not exist: %s" % parts[1])
         certs.append(parts)
@@ -124,6 +127,7 @@ def process_proxy_options(parser, options):
         authenticator=authenticator,
         ciphers=options.ciphers,
         certs=certs,
+        ca_file=ca_file,
         certforward=options.certforward,
     )
 
