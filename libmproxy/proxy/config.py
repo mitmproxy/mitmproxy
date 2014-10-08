@@ -133,10 +133,12 @@ def ssl_option_group(parser):
     group.add_argument(
         "--cert", dest='certs', default=[], type=str,
         metavar="SPEC", action="append",
-        help='Add an SSL certificate. SPEC is of the form "[domain=]path". ' \
-             'The domain may include a wildcard, and is equal to "*" if not specified. ' \
-             'The file at path is a certificate in PEM format. If a private key is included in the PEM, ' \
-             'it is used, else the default key in the conf dir is used. Can be passed multiple times.'
+        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '
+             'The domain may include a wildcard, and is equal to "*" if not specified. '
+             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '
+             'it is used, else the default key in the conf dir is used. '
+             'The PEM file should contain the full certificate chain, with the leaf certificate as the first entry. '
+             'Can be passed multiple times.'
     )
     group.add_argument(
         "--client-certs", action="store",
