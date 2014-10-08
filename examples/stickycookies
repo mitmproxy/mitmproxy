@@ -38,7 +38,7 @@ class StickyMaster(controller.Master):
 
 config = proxy.ProxyConfig(
     port=8080,
-    ca_file=os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
+    default_ca=os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
 )
 server = ProxyServer(config)
 m = StickyMaster(server)
