@@ -1079,7 +1079,7 @@ class HTTPHandler(ProtocolHandler):
         if message:
             self.c.log(message, level="info")
         if message_debug:
-            self.c.log(message, level="debug")
+            self.c.log(message_debug, level="debug")
 
         if flow:
             # TODO: no flows without request or with both request and response at the moment.
