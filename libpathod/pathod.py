@@ -94,13 +94,14 @@ class PathodHandler(tcp.BaseHandler):
             self.wfile.flush()
             if not self.server.ssloptions.not_after_connect:
                 try:
-                    cert, key = self.server.ssloptions.get_cert(m.v[0])
+                    cert, key, chain_file = self.server.ssloptions.get_cert(m.v[0])
                     self.convert_to_ssl(
                         cert, key,
                         handle_sni=self.handle_sni,
                         request_client_cert=self.server.ssloptions.request_client_cert,
                         cipher_list=self.server.ssloptions.ciphers,
                         method=self.server.ssloptions.sslversion,
+                        chain_file=chain_file
                     )
                 except tcp.NetLibError, v:
                     s = str(v)
@@ -211,13 +212,14 @@ class PathodHandler(tcp.BaseHandler):
     def handle(self):
         if self.server.ssl:
             try:
-                cert, key = self.server.ssloptions.get_cert(None)
+                cert, key, chain_file = self.server.ssloptions.get_cert(None)
                 self.convert_to_ssl(
                     cert, key,
                     handle_sni=self.handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.sslversion,
+                    chain_file=chain_file
                 )
             except tcp.NetLibError, v:
                 s = str(v)
