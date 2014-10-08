@@ -393,7 +393,7 @@ class TestPrivkeyGen(test.ServerTestBase):
             with tutils.tmpdir() as d:
                 ca1 = certutils.CertStore.from_store(d, "test2")
                 ca2 = certutils.CertStore.from_store(d, "test3")
-                cert, _ = ca1.get_cert("foo.com", [])
+                cert, _, _ = ca1.get_cert("foo.com", [])
                 key = ca2.gen_pkey(cert)
                 self.convert_to_ssl(cert, key)
 
@@ -409,9 +409,9 @@ class TestPrivkeyGenNoFlags(test.ServerTestBase):
             with tutils.tmpdir() as d:
                 ca1 = certutils.CertStore.from_store(d, "test2")
                 ca2 = certutils.CertStore.from_store(d, "test3")
-                cert, _ = ca1.get_cert("foo.com", [])
-                certffi.set_flags(ca2.privkey, 0)
-                self.convert_to_ssl(cert, ca2.privkey)
+                cert, _, _ = ca1.get_cert("foo.com", [])
+                certffi.set_flags(ca2.default_pkey, 0)
+                self.convert_to_ssl(cert, ca2.default_pkey)
 
     def test_privkey(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))

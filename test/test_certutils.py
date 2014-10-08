@@ -42,7 +42,7 @@ class TestCertStore:
             ca2 = certutils.CertStore.from_store(d, "test")
             assert ca2.get_cert("foo", [])
 
-            assert ca.cacert.get_serial_number() == ca2.cacert.get_serial_number()
+            assert ca.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
 
     def test_create_tmp(self):
         with tutils.tmpdir() as d:
@@ -52,7 +52,7 @@ class TestCertStore:
             assert ca.get_cert("*.foo.com", [])
 
             r = ca.get_cert("*.foo.com", [])
-            assert r[1] == ca.privkey
+            assert r[1] == ca.default_pkey
 
     def test_add_cert(self):
         with tutils.tmpdir() as d:
@@ -71,14 +71,14 @@ class TestCertStore:
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
             _ = ca.get_cert("foo.com", ["*.bar.com"])
-            cert, key = ca.get_cert("foo.bar.com", ["*.baz.com"])
+            cert, key, chain_file = ca.get_cert("foo.bar.com", ["*.baz.com"])
             assert "*.baz.com" in cert.altnames
 
     def test_overrides(self):
         with tutils.tmpdir() as d:
             ca1 = certutils.CertStore.from_store(os.path.join(d, "ca1"), "test")
             ca2 = certutils.CertStore.from_store(os.path.join(d, "ca2"), "test")
-            assert not ca1.cacert.get_serial_number() == ca2.cacert.get_serial_number()
+            assert not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
 
             dc = ca2.get_cert("foo.com", [])
             dcp = os.path.join(d, "dc")
@@ -98,7 +98,7 @@ class TestCertStore:
                 cert = ca1.get_cert("foo.com", [])
                 assert certffi.get_flags(ca2.gen_pkey(cert[0])) == 1
         finally:
-            certffi.set_flags(ca2.privkey, 0)
+            certffi.set_flags(ca2.default_pkey, 0)
 
 
 class TestDummyCert:
@@ -106,8 +106,8 @@ class TestDummyCert:
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
             r = certutils.dummy_cert(
-                ca.privkey,
-                ca.cacert,
+                ca.default_pkey,
+                ca.default_ca,
                 "foo.com",
                 ["one.com", "two.com", "*.three.com"]
             )

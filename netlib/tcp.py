@@ -345,7 +345,7 @@ class BaseHandler(_Connection):
 
     def _create_ssl_context(self, cert, key, method=SSLv23_METHOD, options=None,
                            handle_sni=None, request_client_cert=None, cipher_list=None,
-                           dhparams=None, ca_file=None):
+                           dhparams=None, chain_file=None):
         """
             cert: A certutils.SSLCert object.
 
@@ -377,8 +377,8 @@ class BaseHandler(_Connection):
         ctx = SSL.Context(method)
         if not options is None:
             ctx.set_options(options)
-        if ca_file:
-            ctx.load_verify_locations(ca_file)
+        if chain_file:
+            ctx.load_verify_locations(chain_file)
         if cipher_list:
             try:
                 ctx.set_cipher_list(cipher_list)
