@@ -47,6 +47,17 @@ class METHOD(object):
     NO_ACCEPTABLE_METHODS = 0xFF
 
 
+def _read(f, n):
+    try:
+        d = f.read(n)
+        if len(d) == n:
+            return d
+        else:
+            raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, "Incomplete Read")
+    except socket.error as e:
+        raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, str(e))
+
+
 class ClientGreeting(object):
     __slots__ = ("ver", "methods")
 
@@ -56,9 +67,9 @@ class ClientGreeting(object):
 
     @classmethod
     def from_file(cls, f):
-        ver, nmethods = struct.unpack("!BB", f.read(2))
+        ver, nmethods = struct.unpack("!BB", _read(f, 2))
         methods = array.array("B")
-        methods.fromstring(f.read(nmethods))
+        methods.fromstring(_read(f, nmethods))
         return cls(ver, methods)
 
     def to_file(self, f):
@@ -74,7 +85,7 @@ class ServerGreeting(object):
 
     @classmethod
     def from_file(cls, f):
-        ver, method = struct.unpack("!BB", f.read(2))
+        ver, method = struct.unpack("!BB", _read(f, 2))
         return cls(ver, method)
 
     def to_file(self, f):
@@ -91,26 +102,26 @@ class Message(object):
 
     @classmethod
     def from_file(cls, f):
-        ver, msg, rsv, atyp = struct.unpack("!BBBB", f.read(4))
+        ver, msg, rsv, atyp = struct.unpack("!BBBB", _read(f, 4))
         if rsv != 0x00:
             raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE,
                              "Socks Request: Invalid reserved byte: %s" % rsv)
 
         if atyp == ATYP.IPV4_ADDRESS:
-            host = socket.inet_ntoa(f.read(4))  # We use tnoa here as ntop is not commonly available on Windows.
+            host = socket.inet_ntoa(_read(f, 4))  # We use tnoa here as ntop is not commonly available on Windows.
             use_ipv6 = False
         elif atyp == ATYP.IPV6_ADDRESS:
-            host = socket.inet_ntop(socket.AF_INET6, f.read(16))
+            host = socket.inet_ntop(socket.AF_INET6, _read(f, 16))
             use_ipv6 = True
         elif atyp == ATYP.DOMAINNAME:
-            length, = struct.unpack("!B", f.read(1))
-            host = f.read(length)
+            length, = struct.unpack("!B", _read(f, 1))
+            host = _read(f, length)
             use_ipv6 = False
         else:
             raise SocksError(REP.ADDRESS_TYPE_NOT_SUPPORTED,
                              "Socks Request: Unknown ATYP: %s" % atyp)
 
-        port, = struct.unpack("!H", f.read(2))
+        port, = struct.unpack("!H", _read(f, 2))
         addr = tcp.Address((host, port), use_ipv6=use_ipv6)
         return cls(ver, msg, atyp, addr)
 
