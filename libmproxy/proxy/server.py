@@ -190,14 +190,14 @@ class ConnectionHandler:
         if client:
             if self.client_conn.ssl_established:
                 raise ProxyError(502, "SSL to Client already established.")
-            cert, key = self.find_cert()
+            cert, key, chain_file = self.find_cert()
             try:
                 self.client_conn.convert_to_ssl(
                     cert, key,
                     handle_sni=self.handle_sni,
                     cipher_list=self.config.ciphers,
                     dhparams=self.config.certstore.dhparams,
-                    ca_file=self.config.ca_file
+                    chain_file=chain_file
                 )
             except tcp.NetLibError as v:
                 raise ProxyError(400, repr(v))
@@ -264,17 +264,17 @@ class ConnectionHandler:
                 self.log("SNI received: %s" % self.sni, "debug")
                 self.server_reconnect()  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
-                cert, key = self.find_cert()
+                cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn._create_ssl_context(
                     cert, key,
                     method=SSL.TLSv1_METHOD,
                     cipher_list=self.config.ciphers,
                     dhparams=self.config.certstore.dhparams,
-                    ca_file=self.config.ca_file
+                    chain_file=chain_file
                 )
                 connection.set_context(new_context)
         # An unhandled exception in this method will core dump PyOpenSSL, so
         # make dang sure it doesn't happen.
-        except Exception:  # pragma: no cover
+        except:  # pragma: no cover
             import traceback
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")

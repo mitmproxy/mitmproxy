@@ -16,7 +16,7 @@ def parse_host_pattern(patterns):
 
 class ProxyConfig:
     def __init__(self, host='', port=8080, server_version=version.NAMEVERSION,
-                 confdir=CONF_DIR, ca_file=None, clientcerts=None,
+                 confdir=CONF_DIR, default_ca=None, clientcerts=None,
                  no_upstream_cert=False, body_size_limit=None,
                  mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
                  authenticator=None, ignore=[],
@@ -45,7 +45,7 @@ class ProxyConfig:
         self.ignore = parse_host_pattern(ignore)
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
-        self.ca_file = ca_file or os.path.join(self.confdir, CONF_BASENAME + "-ca.pem")
+        self.default_ca = default_ca or os.path.join(self.confdir, CONF_BASENAME + "-ca.pem")
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
@@ -133,10 +133,12 @@ def ssl_option_group(parser):
     group.add_argument(
         "--cert", dest='certs', default=[], type=str,
         metavar="SPEC", action="append",
-        help='Add an SSL certificate. SPEC is of the form "[domain=]path". ' \
-             'The domain may include a wildcard, and is equal to "*" if not specified. ' \
-             'The file at path is a certificate in PEM format. If a private key is included in the PEM, ' \
-             'it is used, else the default key in the conf dir is used. Can be passed multiple times.'
+        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '
+             'The domain may include a wildcard, and is equal to "*" if not specified. '
+             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '
+             'it is used, else the default key in the conf dir is used. '
+             'The PEM file should contain the full certificate chain, with the leaf certificate as the first entry. '
+             'Can be passed multiple times.'
     )
     group.add_argument(
         "--client-certs", action="store",
