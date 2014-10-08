@@ -410,8 +410,8 @@ class TestPrivkeyGenNoFlags(test.ServerTestBase):
                 ca1 = certutils.CertStore.from_store(d, "test2")
                 ca2 = certutils.CertStore.from_store(d, "test3")
                 cert, _, _ = ca1.get_cert("foo.com", [])
-                certffi.set_flags(ca2.default_pkey, 0)
-                self.convert_to_ssl(cert, ca2.default_pkey)
+                certffi.set_flags(ca2.default_privatekey, 0)
+                self.convert_to_ssl(cert, ca2.default_privatekey)
 
     def test_privkey(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))

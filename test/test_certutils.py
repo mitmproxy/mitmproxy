@@ -52,7 +52,7 @@ class TestCertStore:
             assert ca.get_cert("*.foo.com", [])
 
             r = ca.get_cert("*.foo.com", [])
-            assert r[1] == ca.default_pkey
+            assert r[1] == ca.default_privatekey
 
     def test_add_cert(self):
         with tutils.tmpdir() as d:
@@ -98,7 +98,7 @@ class TestCertStore:
                 cert = ca1.get_cert("foo.com", [])
                 assert certffi.get_flags(ca2.gen_pkey(cert[0])) == 1
         finally:
-            certffi.set_flags(ca2.default_pkey, 0)
+            certffi.set_flags(ca2.default_privatekey, 0)
 
 
 class TestDummyCert:
@@ -106,7 +106,7 @@ class TestDummyCert:
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
             r = certutils.dummy_cert(
-                ca.default_pkey,
+                ca.default_privatekey,
                 ca.default_ca,
                 "foo.com",
                 ["one.com", "two.com", "*.three.com"]
