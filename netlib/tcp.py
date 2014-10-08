@@ -232,16 +232,25 @@ class _Connection(object):
             close.
         """
         try:
-            if self.ssl_established:
+            if type(self.connection) == SSL.Connection:
                 self.connection.shutdown()
                 self.connection.sock_shutdown(socket.SHUT_WR)
             else:
                 self.connection.shutdown(socket.SHUT_WR)
-            #Section 4.2.2.13 of RFC 1122 tells us that a close() with any
-            # pending readable data could lead to an immediate RST being sent.
-            #http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
-            while self.connection.recv(4096): # pragma: no cover
-                pass
+
+                # Section 4.2.2.13 of RFC 1122 tells us that a close() with any
+                # pending readable data could lead to an immediate RST being sent (which is the case on Windows).
+                # http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
+                #
+                # Do not call this for an SSL.Connection:
+                # If the SSL handshake failed at the first place, OpenSSL's SSL_read tries to negotiate the connection
+                # again at this point, calls the SNI handler and segfaults.
+                # https://github.com/mitmproxy/mitmproxy/issues/373#issuecomment-58383499
+                # (if this turns out to be an issue for successful SSL connections,
+                # we should check for ssl_established or access the socket directly)
+
+                while self.connection.recv(4096):  # pragma: no cover
+                    pass
             self.connection.close()
         except (socket.error, SSL.Error, IOError):
             # Socket probably already closed
@@ -281,7 +290,6 @@ class TCPClient(_Connection):
             except SSL.Error, v:
                 raise NetLibError("SSL client certificate error: %s"%str(v))
         self.connection = SSL.Connection(context, self.connection)
-        self.ssl_established = True
         if sni:
             self.sni = sni
             self.connection.set_tlsext_host_name(sni)
@@ -290,6 +298,7 @@ class TCPClient(_Connection):
             self.connection.do_handshake()
         except SSL.Error, v:
             raise NetLibError("SSL handshake error: %s"%repr(v))
+        self.ssl_established = True
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
@@ -397,12 +406,12 @@ class BaseHandler(_Connection):
         """
         ctx = self._create_ssl_context(cert, key, **sslctx_kwargs)
         self.connection = SSL.Connection(ctx, self.connection)
-        self.ssl_established = True
         self.connection.set_accept_state()
         try:
             self.connection.do_handshake()
         except SSL.Error, v:
             raise NetLibError("SSL handshake error: %s"%repr(v))
+        self.ssl_established = True
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
