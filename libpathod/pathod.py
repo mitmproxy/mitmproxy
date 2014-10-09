@@ -101,7 +101,6 @@ class PathodHandler(tcp.BaseHandler):
                         request_client_cert=self.server.ssloptions.request_client_cert,
                         cipher_list=self.server.ssloptions.ciphers,
                         method=self.server.ssloptions.sslversion,
-                        chain_file=chain_file
                     )
                 except tcp.NetLibError, v:
                     s = str(v)
@@ -219,7 +218,6 @@ class PathodHandler(tcp.BaseHandler):
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.sslversion,
-                    chain_file=chain_file
                 )
             except tcp.NetLibError, v:
                 s = str(v)
