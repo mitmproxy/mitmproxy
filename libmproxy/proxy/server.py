@@ -234,7 +234,7 @@ class ConnectionHandler:
 
     def find_cert(self):
         if self.config.certforward and self.server_conn.ssl_established:
-            return self.server_conn.cert, self.config.certstore.gen_pkey(self.server_conn.cert)
+            return self.server_conn.cert, self.config.certstore.gen_pkey(self.server_conn.cert), None
         else:
             host = self.server_conn.address.host
             sans = []
