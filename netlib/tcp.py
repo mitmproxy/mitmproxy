@@ -243,12 +243,21 @@ class _Connection(object):
                 # pending readable data could lead to an immediate RST being sent (which is the case on Windows).
                 # http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
                 #
+                # However, we cannot rely on the shutdown()-followed-by-read()-eof technique proposed by the page above:
+                # Some remote machines just don't send a TCP FIN, which would leave us in the unfortunate situation that
+                # recv() would block infinitely.
+                # As a workaround, we set a timeout here even if we were in blocking mode.
+                # Please let us know if you have a better solution to this problem.
+                #
                 # Do not call this for every SSL.Connection:
                 # If the SSL handshake failed at the first place, OpenSSL's SSL_read tries to negotiate the connection
                 # again at this point, calls the SNI handler and segfaults.
                 # https://github.com/mitmproxy/mitmproxy/issues/373#issuecomment-58383499
+                timeout = self.connection.gettimeout()
+                self.connection.settimeout(timeout or 60)
                 while self.connection.recv(4096):  # pragma: no cover
                     pass
+                self.connection.settimeout(timeout)
 
             self.connection.close()
         except (socket.error, SSL.Error, IOError):
