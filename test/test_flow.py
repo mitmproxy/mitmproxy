@@ -600,6 +600,9 @@ class TestFlowMaster:
         f.intercepting = True
         assert "intercepting" in fm.replay_request(f)
 
+        f.live = True
+        assert "live" in fm.replay_request(f)
+
     def test_script_reqerr(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)

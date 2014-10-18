@@ -19,6 +19,17 @@ class CommonMixin:
     def test_large(self):
         assert len(self.pathod("200:b@50k").content) == 1024*50
 
+    @staticmethod
+    def wait_until_not_live(flow):
+        """
+        Race condition: We don't want to replay the flow while it is still live.
+        """
+        s = time.time()
+        while flow.live:
+            time.sleep(0.001)
+            if time.time() - s > 5:
+                raise RuntimeError("Flow is live for too long.")
+
     def test_replay(self):
         assert self.pathod("304").status_code == 304
         if isinstance(self, tservers.HTTPUpstreamProxTest) and self.ssl:
@@ -28,6 +39,7 @@ class CommonMixin:
         l = self.master.state.view[-1]
         assert l.response.code == 304
         l.request.path = "/p/305"
+        self.wait_until_not_live(l)
         rt = self.master.replay_request(l, block=True)
         assert l.response.code == 305
 
