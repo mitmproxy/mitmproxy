@@ -189,7 +189,7 @@ def common_options(parser):
     parser.add_argument(
         "--confdir",
         action="store", type=str, dest="confdir", default='~/.mitmproxy',
-        help="Configuration directory. (~/.mitmproxy)"
+        help="Configuration directory, contains default CA file. (~/.mitmproxy)"
     )
     parser.add_argument(
         "--host",

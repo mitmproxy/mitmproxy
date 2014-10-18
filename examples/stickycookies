@@ -36,10 +36,7 @@ class StickyMaster(controller.Master):
         flow.reply()
 
 
-config = proxy.ProxyConfig(
-    port=8080,
-    default_ca=os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem")
-)
+config = proxy.ProxyConfig(port=8080)
 server = ProxyServer(config)
 m = StickyMaster(server)
 m.run()
