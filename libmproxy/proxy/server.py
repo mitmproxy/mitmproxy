@@ -70,13 +70,15 @@ class ConnectionHandler:
 
             # Can we already identify the target server and connect to it?
             client_ssl, server_ssl = False, False
+            conn_kwargs = dict()
             upstream_info = self.config.mode.get_upstream_server(self.client_conn)
             if upstream_info:
                 self.set_server_address(upstream_info[2:])
                 client_ssl, server_ssl = upstream_info[:2]
-                if self.check_ignore_address(self.server_conn.address):
+                if self.config.check_ignore(self.server_conn.address):
                     self.log("Ignore host: %s:%s" % self.server_conn.address(), "info")
                     self.conntype = "tcp"
+                    conn_kwargs["log"] = False
                     client_ssl, server_ssl = False, False
             else:
                 pass  # No upstream info from the metadata: upstream info in the protocol (e.g. HTTP absolute-form)
@@ -90,15 +92,19 @@ class ConnectionHandler:
                 if client_ssl or server_ssl:
                     self.establish_ssl(client=client_ssl, server=server_ssl)
 
+                if self.config.check_tcp(self.server_conn.address):
+                    self.log("Generic TCP mode for host: %s:%s" % self.server_conn.address(), "info")
+                    self.conntype = "tcp"
+
             # Delegate handling to the protocol handler
-            protocol_handler(self.conntype)(self).handle_messages()
+            protocol_handler(self.conntype)(self, **conn_kwargs).handle_messages()
 
             self.del_server_connection()
             self.log("clientdisconnect", "info")
             self.channel.tell("clientdisconnect", self)
 
         except ProxyError as e:
-            protocol_handler(self.conntype)(self).handle_error(e)
+            protocol_handler(self.conntype)(self, **conn_kwargs).handle_error(e)
         except Exception:
             import traceback, sys
 
@@ -118,14 +124,6 @@ class ConnectionHandler:
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
         self.sni = None
-
-    def check_ignore_address(self, address):
-        address = tcp.Address.wrap(address)
-        host = "%s:%s" % (address.host, address.port)
-        if host and any(rex.search(host) for rex in self.config.ignore):
-            return True
-        else:
-            return False
 
     def set_server_address(self, address):
         """

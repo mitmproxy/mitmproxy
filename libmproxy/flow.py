@@ -11,7 +11,7 @@ import netlib.http
 from . import controller, protocol, tnetstring, filt, script, version
 from .onboarding import app
 from .protocol import http, handle
-from .proxy.config import parse_host_pattern
+from .proxy.config import HostMatcher
 import urlparse
 
 ODict = odict.ODict
@@ -515,11 +515,17 @@ class FlowMaster(controller.Master):
         for script in self.scripts:
             self.run_single_script_hook(script, name, *args, **kwargs)
 
-    def get_ignore(self):
-        return [i.pattern for i in self.server.config.ignore]
+    def get_ignore_filter(self):
+        return self.server.config.check_ignore.patterns
 
-    def set_ignore(self, ignore):
-        self.server.config.ignore = parse_host_pattern(ignore)
+    def set_ignore_filter(self, host_patterns):
+        self.server.config.check_ignore = HostMatcher(host_patterns)
+
+    def get_tcp_filter(self):
+        return self.server.config.check_tcp.patterns
+
+    def set_tcp_filter(self, host_patterns):
+        self.server.config.check_tcp = HostMatcher(host_patterns)
 
     def set_stickycookie(self, txt):
         if txt:
@@ -787,7 +793,7 @@ class FlowReader:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
-                yield handle.protocols[data["conntype"]]["flow"].from_state(data)
+                yield handle.protocols[data["type"]]["flow"].from_state(data)
         except ValueError, v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':

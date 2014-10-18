@@ -12,6 +12,7 @@ pages = [
     Page("setheaders.html", "Set Headers"),
     Page("serverreplay.html", "Server-side replay"),
     Page("sticky.html", "Sticky cookies and auth"),
+    Page("tcpproxy.html", "TCP Proxy"),
     Page("upstreamcerts.html", "Upstream Certs"),
     Page("upstreamproxy.html", "Upstream proxy mode"),
 ]

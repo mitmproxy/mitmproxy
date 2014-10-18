@@ -93,7 +93,7 @@
     "clientcert": null, 
     "ssl_established": true
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -259,7 +259,7 @@
     "clientcert": null, 
     "ssl_established": true
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -425,7 +425,7 @@
     "clientcert": null, 
     "ssl_established": true
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -595,7 +595,7 @@
     "clientcert": null, 
     "ssl_established": true
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -765,7 +765,7 @@
     "clientcert": null, 
     "ssl_established": true
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -919,7 +919,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -1057,7 +1057,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -1195,7 +1195,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -1329,7 +1329,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -1483,7 +1483,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -1633,7 +1633,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -1767,7 +1767,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -1901,7 +1901,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11
@@ -2027,7 +2027,7 @@
     "clientcert": null, 
     "ssl_established": false
   }, 
-  "conntype": "http", 
+  "type": "http", 
   "version": [
     0, 
     11

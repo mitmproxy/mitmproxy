@@ -129,10 +129,14 @@ class StatusBar(common.WWrap):
                 r.append(":%s in file]"%self.master.server_playback.count())
             else:
                 r.append(":%s to go]"%self.master.server_playback.count())
-        if self.master.get_ignore():
+        if self.master.get_ignore_filter():
             r.append("[")
             r.append(("heading_key", "I"))
-            r.append("gnore:%d]"%len(self.master.get_ignore()))
+            r.append("gnore:%d]" % len(self.master.get_ignore_filter()))
+        if self.master.get_tcp_filter():
+            r.append("[")
+            r.append(("heading_key", "T"))
+            r.append("CP:%d]" % len(self.master.get_tcp_filter()))
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("heading_key", "i"))
@@ -798,9 +802,13 @@ class ConsoleMaster(flow.FlowMaster):
         for command in commands:
             self.load_script(command)
 
-    def edit_ignore(self, ignore):
+    def edit_ignore_filter(self, ignore):
         patterns = (x[0] for x in ignore)
-        self.set_ignore(patterns)
+        self.set_ignore_filter(patterns)
+
+    def edit_tcp_filter(self, tcp):
+        patterns = (x[0] for x in tcp)
+        self.set_tcp_filter(patterns)
 
     def loop(self):
         changed = True
@@ -860,10 +868,18 @@ class ConsoleMaster(flow.FlowMaster):
                                 )
                             elif k == "I":
                                 self.view_grideditor(
-                                    grideditor.IgnoreEditor(
+                                    grideditor.HostPatternEditor(
                                         self,
-                                        [[x] for x in self.get_ignore()],
-                                        self.edit_ignore
+                                        [[x] for x in self.get_ignore_filter()],
+                                        self.edit_ignore_filter
+                                    )
+                                )
+                            elif k == "T":
+                                self.view_grideditor(
+                                    grideditor.HostPatternEditor(
+                                        self,
+                                        [[x] for x in self.get_tcp_filter()],
+                                        self.edit_tcp_filter
                                     )
                                 )
                             elif k == "i":

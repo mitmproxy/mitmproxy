@@ -1,13 +1,12 @@
-There are a couple of reasons why you may want to exempt some traffic from mitmproxy's interception mechanism:
+There are two main reasons why you may want to exempt some traffic from mitmproxy's interception mechanism:
 
 - **Certificate pinning:** Some traffic is is protected using
   [certificate pinning](https://security.stackexchange.com/questions/29988/what-is-certificate-pinning) and mitmproxy's
   interception leads to errors. For example, Windows Update or the Apple App Store fail to work if mitmproxy is active.
-- **Non-HTTP traffic:** WebSockets or other non-http protocols are not supported by mitmproxy yet. You can exempt the
-  domain from processing, which would otherwise fail.
 - **Convenience:** You really don't care about some parts of the traffic and just want them to go away.
 
-If you want to ignore traffic from mitmproxy's processing because of large response bodies, check out the
+If you want to peek into (SSL-protected) non-HTTP connections, check out the [tcp proxy](@!urlTo("tcpproxy.html")!@) feature.
+If you want to ignore traffic from mitmproxy's processing because of large response bodies, take a look at the
 [response streaming](@!urlTo("responsestreaming.html")!@) feature.
 
 ## How it works
@@ -73,5 +72,10 @@ Here are some other examples for ignore patterns:
 # IP address range:
 --ignore 17\.178\.\d+\.\d+:443
 </pre>
+
+### See Also
+
+- [TCP Proxy](@!urlTo("tcpproxy.html")!@)
+- [Response Streaming](@!urlTo("responsestreaming.html")!@)
 
 [^explicithttp]: This stems from an limitation of explicit HTTP proxying: A single connection can be re-used for multiple target domains - a <code>GET http://example.com/</code> request may be followed by a <code>GET http://evil.com/</code> request on the same connection. If we start to ignore the connection after the first request, we would miss the relevant second one.

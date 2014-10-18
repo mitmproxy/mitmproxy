@@ -1260,9 +1260,9 @@ class HTTPHandler(ProtocolHandler):
         Returns False, if the connection should be closed immediately.
         """
         address = tcp.Address.wrap(address)
-        if self.c.check_ignore_address(address):
+        if self.c.config.check_ignore(address):
             self.c.log("Ignore host: %s:%s" % address(), "info")
-            TCPHandler(self.c).handle_messages()
+            TCPHandler(self.c, log=False).handle_messages()
             return False
         else:
             self.expected_form_in = "relative"
@@ -1273,6 +1273,11 @@ class HTTPHandler(ProtocolHandler):
                 self.c.log("Received CONNECT request to SSL port. Upgrading to SSL...", "debug")
                 self.c.establish_ssl(server=True, client=True)
                 self.c.log("Upgrade to SSL completed.", "debug")
+
+            if self.c.config.check_tcp(address):
+                self.c.log("Generic TCP mode for host: %s:%s" % address(), "info")
+                TCPHandler(self.c).handle_messages()
+                return False
 
             return True
 

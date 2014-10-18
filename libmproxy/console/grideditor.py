@@ -495,8 +495,8 @@ class ScriptEditor(GridEditor):
             return str(v)
 
 
-class IgnoreEditor(GridEditor):
-    title = "Editing ignore patterns"
+class HostPatternEditor(GridEditor):
+    title = "Editing host patterns"
     columns = 1
     headings = ("Regex (matched on hostname:port / ip:port)",)
 

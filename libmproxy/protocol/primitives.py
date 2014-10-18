@@ -59,8 +59,8 @@ class Flow(stateobject.StateObject):
     A Flow is a collection of objects representing a single transaction.
     This class is usually subclassed for each protocol, e.g. HTTPFlow.
     """
-    def __init__(self, conntype, client_conn, server_conn, live=None):
-        self.conntype = conntype
+    def __init__(self, type, client_conn, server_conn, live=None):
+        self.type = type
         self.id = str(uuid.uuid4())
         self.client_conn = client_conn
         """@type: ClientConnection"""
@@ -78,7 +78,7 @@ class Flow(stateobject.StateObject):
         error=Error,
         client_conn=ClientConnection,
         server_conn=ServerConnection,
-        conntype=str
+        type=str
     )
 
     def get_state(self, short=False):

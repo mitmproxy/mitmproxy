@@ -119,6 +119,7 @@ class HelpView(urwid.ListBox):
             ("s", "add/remove scripts"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),
+            ("T", "set tcp proxying pattern"),
             ("u", "set sticky auth expression"),
         ]
         text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))

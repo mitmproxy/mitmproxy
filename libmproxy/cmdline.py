@@ -263,13 +263,20 @@ def common_options(parser):
     )
     group.add_argument(
         "-I", "--ignore",
-        action="append", type=str, dest="ignore", default=[],
+        action="append", type=str, dest="ignore_hosts", default=[],
         metavar="HOST",
         help="Ignore host and forward all traffic without processing it. "
              "In transparent mode, it is recommended to use an IP address (range), not the hostname. "
              "In regular mode, only SSL traffic is ignored and the hostname should be used. "
              "The supplied value is interpreted as a regular expression and matched on the ip or the hostname. "
              "Can be passed multiple times. "
+    )
+    group.add_argument(
+        "--tcp",
+        action="append", type=str, dest="tcp_hosts", default=[],
+        metavar="HOST",
+        help="Generic TCP SSL proxy mode for all hosts that match the pattern. Similar to --ignore,"
+             "but SSL connections are intercepted. The communication contents are printed to the event log in verbose mode."
     )
     group.add_argument(
         "-n",

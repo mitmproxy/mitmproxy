@@ -5,8 +5,8 @@ import mock
 from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
 from libmproxy.protocol.http import decoded, CONTENT_MISSING
-from libmproxy.proxy.connection import ClientConnection, ServerConnection
-from netlib import tcp
+from libmproxy.proxy.connection import ClientConnection
+from libmproxy.proxy.config import HostMatcher
 import tutils
 
 
@@ -584,11 +584,11 @@ class TestFlowMaster:
 
     def test_getset_ignore(self):
         p = mock.Mock()
-        p.config.ignore = []
+        p.config.check_ignore = HostMatcher()
         fm = flow.FlowMaster(p, flow.State())
-        assert not fm.get_ignore()
-        fm.set_ignore(["^apple\.com:", ":443$"])
-        assert fm.get_ignore()
+        assert not fm.get_ignore_filter()
+        fm.set_ignore_filter(["^apple\.com:", ":443$"])
+        assert fm.get_ignore_filter()
 
     def test_replay(self):
         s = flow.State()

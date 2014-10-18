@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import os
 import re
-from netlib import http_auth, certutils
+from netlib import http_auth, certutils, tcp
 from .. import utils, platform, version
 from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
 
@@ -10,8 +10,21 @@ CONF_BASENAME = "mitmproxy"
 CONF_DIR = "~/.mitmproxy"
 
 
-def parse_host_pattern(patterns):
-    return [re.compile(p, re.IGNORECASE) for p in patterns]
+class HostMatcher(object):
+    def __init__(self, patterns=[]):
+        self.patterns = list(patterns)
+        self.regexes = [re.compile(p, re.IGNORECASE) for p in self.patterns]
+
+    def __call__(self, address):
+        address = tcp.Address.wrap(address)
+        host = "%s:%s" % (address.host, address.port)
+        if any(rex.search(host) for rex in self.regexes):
+            return True
+        else:
+            return False
+
+    def __nonzero__(self):
+        return bool(self.patterns)
 
 
 class ProxyConfig:
@@ -19,7 +32,7 @@ class ProxyConfig:
                  confdir=CONF_DIR, clientcerts=None,
                  no_upstream_cert=False, body_size_limit=None,
                  mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
-                 authenticator=None, ignore=[],
+                 authenticator=None, ignore_hosts=[], tcp_hosts=[],
                  ciphers=None, certs=[], certforward=False, ssl_ports=TRANSPARENT_SSL_PORTS):
         self.host = host
         self.port = port
@@ -44,7 +57,8 @@ class ProxyConfig:
         self.mode.http_form_in = http_form_in or self.mode.http_form_in
         self.mode.http_form_out = http_form_out or self.mode.http_form_out
 
-        self.ignore = parse_host_pattern(ignore)
+        self.check_ignore = HostMatcher(ignore_hosts)
+        self.check_tcp = HostMatcher(tcp_hosts)
         self.authenticator = authenticator
         self.confdir = os.path.expanduser(confdir)
         self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
@@ -124,7 +138,8 @@ def process_proxy_options(parser, options):
         upstream_server=upstream_server,
         http_form_in=options.http_form_in,
         http_form_out=options.http_form_out,
-        ignore=options.ignore,
+        ignore_hosts=options.ignore_hosts,
+        tcp_hosts=options.tcp_hosts,
         authenticator=authenticator,
         ciphers=options.ciphers,
         certs=certs,
