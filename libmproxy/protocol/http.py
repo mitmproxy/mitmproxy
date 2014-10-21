@@ -1269,7 +1269,15 @@ class HTTPHandler(ProtocolHandler):
             self.expected_form_out = "relative"
             self.skip_authentication = True
 
-            if address.port in self.c.config.ssl_ports:
+            # In practice, nobody issues a CONNECT request to send unencrypted HTTP requests afterwards.
+            # If we don't delegate to TCP mode, we should always negotiate a SSL connection.
+            should_establish_ssl = (
+                address.port in self.c.config.ssl_ports
+                or
+                not self.c.config.check_tcp(address)
+            )
+
+            if should_establish_ssl:
                 self.c.log("Received CONNECT request to SSL port. Upgrading to SSL...", "debug")
                 self.c.establish_ssl(server=True, client=True)
                 self.c.log("Upgrade to SSL completed.", "debug")

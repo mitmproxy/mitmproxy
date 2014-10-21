@@ -127,6 +127,12 @@ def process_proxy_options(parser, options):
             parser.error("Certificate file does not exist: %s" % parts[1])
         certs.append(parts)
 
+    ssl_ports = options.ssl_ports
+    if options.ssl_ports != TRANSPARENT_SSL_PORTS:
+        # arparse appends to default value by default, strip that off.
+        # see http://bugs.python.org/issue16399
+        ssl_ports = ssl_ports[len(TRANSPARENT_SSL_PORTS):]
+
     return ProxyConfig(
         host=options.addr,
         port=options.port,
@@ -144,6 +150,7 @@ def process_proxy_options(parser, options):
         ciphers=options.ciphers,
         certs=certs,
         certforward=options.certforward,
+        ssl_ports=ssl_ports
     )
 
 
@@ -180,7 +187,7 @@ def ssl_option_group(parser):
         help="Don't connect to upstream server to look up certificate details."
     )
     group.add_argument(
-        "--ssl-port", action="append", type=int, dest="ssl_ports", default=TRANSPARENT_SSL_PORTS,
+        "--ssl-port", action="append", type=int, dest="ssl_ports", default=list(TRANSPARENT_SSL_PORTS),
         metavar="PORT",
         help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
              "Defaults to %s." % str(TRANSPARENT_SSL_PORTS)
