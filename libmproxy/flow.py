@@ -618,6 +618,11 @@ class FlowMaster(controller.Master):
         """
             Loads a flow, and returns a new flow object.
         """
+
+        if self.server and self.server.config.mode == "reverse":
+            f.request.host, f.request.port = self.server.config.mode.dst[2:]
+            f.request.scheme = "https" if self.server.config.mode.dst[1] else "http"
+
         f.reply = controller.DummyReply()
         if f.request:
             self.handle_request(f)

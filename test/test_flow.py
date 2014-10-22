@@ -5,8 +5,10 @@ import mock
 from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
 from libmproxy.protocol.http import decoded, CONTENT_MISSING
-from libmproxy.proxy.connection import ClientConnection
 from libmproxy.proxy.config import HostMatcher
+from libmproxy.proxy import ProxyConfig
+from libmproxy.proxy.server import DummyServer
+from libmproxy.proxy.connection import ClientConnection
 import tutils
 
 
@@ -530,6 +532,14 @@ class TestSerialize:
         fm = flow.FlowMaster(None, s)
         fm.load_flows(r)
         assert len(s._flow_list) == 6
+
+    def test_load_flows_reverse(self):
+        r = self._treader()
+        s = flow.State()
+        conf = ProxyConfig(mode="reverse", upstream_server=[True,True,"use-this-domain",80])
+        fm = flow.FlowMaster(DummyServer(conf), s)
+        fm.load_flows(r)
+        assert s._flow_list[0].request.host == "use-this-domain"
 
     def test_filter(self):
         sio = StringIO()
