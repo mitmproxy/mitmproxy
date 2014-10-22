@@ -943,12 +943,12 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
-    def __init__(self, headers, flows, exit, nopop):
+    def __init__(self, headers, flows, exit, nopop, ignore_params, ignore_content):
         """
             headers: Case-insensitive list of request headers that should be
             included in request-response matching.
         """
-        self.headers, self.exit, self.nopop = headers, exit, nopop
+        self.headers, self.exit, self.nopop, self.ignore_params, self.ignore_content = headers, exit, nopop, ignore_params, ignore_content 
         self.fmap = {}
         for i in flows:
             if i.response:
@@ -963,14 +963,29 @@ class ServerPlaybackState:
             Calculates a loose hash of the flow request.
         """
         r = flow.request
+
+        _, _, path, _, query, _ = urlparse.urlparse(r.get_url())
+        queriesArray = urlparse.parse_qsl(query)
+
+        filtered = []
+        for p in queriesArray:
+          if p[0] not in self.ignore_params:
+            filtered.append(p)
+
         key = [
             str(r.host),
             str(r.port),
             str(r.scheme),
             str(r.method),
-            str(r.path),
-            str(r.content),
+            str(path),
         ]
+        if not self.ignore_content:
+            key.append(str(r.content))
+
+        for p in filtered:
+            key.append(p[0])
+            key.append(p[1])
+
         if self.headers:
             hdrs = []
             for i in self.headers:
@@ -1375,6 +1390,8 @@ class FlowMaster(controller.Master):
         self.stream = None
         self.apps = AppRegistry()
 
+        self.not_found_filt = None        
+
     def start_app(self, host, port, external):
         if not external:
             self.apps.add(
@@ -1452,12 +1469,15 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(self, flows, kill, headers, exit, nopop):
+    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params, ignore_content):
         """
             flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
+            ignore_params: list of parameters to ignore in server replay
+            ignore_content: true if request content should be ignored in server replay
+            not_found: return 404 instead of go for the page for filtered traffic in server replay
         """
-        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop)
+        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, ignore_params, ignore_content)
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
@@ -1484,6 +1504,27 @@ class FlowMaster(controller.Master):
                 self.stop_server_playback()
             return True
         return None
+
+    def return_not_found(self, flow):
+        """
+            This method should be called by child classes in the handle_request
+            handler. Returns a hardcoded 404
+        """
+        if self.server_playback:
+            response = Response(flow.request,
+                        [1,1],
+                        404, "Not found",
+                        ODictCaseless([["Content-Type","text/html"]]),
+                        "Not Found",
+                        None)
+            response._set_replay()
+            flow.response = response
+            if self.refresh_server_playback:
+                response.refresh()
+            flow.request.reply(response)
+            return True
+        return None
+
 
     def tick(self, q):
         if self.client_playback:
@@ -1533,12 +1574,13 @@ class FlowMaster(controller.Master):
             f.request.anticache()
         if self.anticomp:
             f.request.anticomp()
-
         if self.server_playback:
             pb = self.do_server_playback(f)
             if not pb:
                 if self.kill_nonreplay:
                     f.kill(self)
+                elif self.not_found_filt and f.match(self.not_found_filt):
+                    self.return_not_found(f)
                 else:
                     f.request.reply()
 
