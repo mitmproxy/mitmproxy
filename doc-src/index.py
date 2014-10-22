@@ -1,6 +1,8 @@
-import os, sys, datetime
+import os
+import sys
+import datetime
 import countershape
-from countershape import Page, Directory, PythonModule, markup, model
+from countershape import Page, Directory, markup, model
 import countershape.template
 sys.path.insert(0, "..")
 from libmproxy import filt, version
@@ -23,18 +25,18 @@ ns.docMaintainer = "Aldo Cortesi"
 ns.docMaintainerEmail = "aldo@corte.si"
 ns.copyright = u"\u00a9 mitmproxy project, %s" % datetime.date.today().year
 
+
 def mpath(p):
     p = os.path.join(MITMPROXY_SRC, p)
     return os.path.expanduser(p)
 
-with open(mpath("README.mkd")) as f:
-        readme = f.read()
-        ns.index_contents = readme.split("\n", 1)[1] #remove first line (contains build status)
 
 def example(s):
     d = file(mpath(s)).read().rstrip()
     extemp = """<div class="example">%s<div class="example_legend">(%s)</div></div>"""
     return extemp%(countershape.template.Syntax("py")(d), s)
+
+
 ns.example = example
 
 
@@ -72,6 +74,7 @@ def nav(page, current, state):
     return pre + '<a href="%s">%s</a></li>'%(model.UrlTo(page), p.title)
 ns.nav = nav
 ns.navbar = countershape.template.File(None, "_nav.html")
+
 
 pages = [
     Page("index.html", "Introduction"),
