@@ -1,4 +1,8 @@
 
+
+
+## Installing from source
+
 The preferred way to install mitmproxy - whether you're installing the latest
 release or from source - is to use [pip](http://www.pip-installer.org/). If you
 don't already have pip on your system, you can find installation instructions
@@ -8,14 +12,24 @@ don't already have pip on your system, you can find installation instructions
 pip install mitmproxy
 </pre>
 
+If you also want to install the optional packages AMF, protobuf and CSS
+content views, do this:
+
+<pre class="terminal">
+pip install "mitmproxy[contentviews]"
+</pre>
+
 
 ## OSX
+
+The easiest way to get up and running on OSX is to download the pre-built
+binary packages from [mitmproxy.org](http://mitmproxy.org). If you still want
+to install using pip, there are a few things to keep in mind:
 
 - If you're running a Python interpreter installed with homebrew (or similar),
 you may have to install some dependencies by hand. 
 - Make sure that XCode is installed from the App Store, and that the
 command-line tools have been downloaded (XCode/Preferences/Downloads).
-- Now use __pip__ to do the installation, as above.
 
 There are a few bits of customization you might want to do to make mitmproxy
 comfortable to use on OSX. The default color scheme is optimized for a dark
