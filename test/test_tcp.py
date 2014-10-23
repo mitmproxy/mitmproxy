@@ -277,7 +277,7 @@ class TestClientCipherListError(test.ServerTestBase):
 class TestSSLDisconnect(test.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
-            self.close()
+            self.finish()
     ssl = dict(
         cert = tutils.test_data.path("data/server.crt"),
         key = tutils.test_data.path("data/server.key"),
