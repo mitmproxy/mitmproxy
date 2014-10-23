@@ -1,7 +1,7 @@
 
 23 October 2014: mitmproxy 0.11:
 
-    * SOCKS proxy mode
+    * SOCKS5 proxy mode allows mitmproxy to act as a SOCKS5 proxy server
 
     * Data streaming for response bodies exceeding a threshold
       (bradpeabody@gmail.com)
