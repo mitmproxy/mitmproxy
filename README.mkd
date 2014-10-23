@@ -13,6 +13,9 @@ mitmproxy.org website:
 [mitmproxy.org](http://mitmproxy.org).
 
 
+You can find complete directions for installing mitmproxy [here](http://mitmproxy.org/doc/install.html). 
+
+
 Features
 --------
 
@@ -26,17 +29,17 @@ Features
 - SSL certificates for interception are generated on the fly.
 - And much, much more.
 
-
-Installation
-------------
-
-
-The recommended way to install mitmproxy is running <code>pip install mitmproxy</code>.  
-For convenience, we provide binary packages on [mitmproxy.org](http://mitmproxy.org/).
+__mitmproxy__ is tested and developed on OSX, Linux and OpenBSD. On Windows,
+only mitmdump is supported, which does not have a graphical user interface.
 
 
-Requirements
-------------
+
+Hacking
+-------
+
+
+### Requirements
+
 
 * [Python](http://www.python.org) 2.7.x.
 * [netlib](http://pypi.python.org/pypi/netlib), version matching mitmproxy.
@@ -49,28 +52,41 @@ Optional packages for extended content decoding:
 * [cssutils](http://cthedot.de/cssutils/) version 1.0 or newer.
 
 For convenience, all optional dependencies can be installed with 
-`pip install mitmproxy[contenviews]`
 
-__mitmproxy__ is tested and developed on OSX, Linux and OpenBSD. On Windows,
-only mitmdump is supported, which does not have a graphical user interface.
+`pip install "mitmproxy[contentviews]"`
 
+### Setting up a dev environment
 
-Hacking
--------
+The following procedure is recommended to set up your dev environment:
 
-The following components are needed if you plan to hack on mitmproxy:
-
-* The test suite requires the `dev` extra requirements listed in [setup.py](https://github.com/mitmproxy/mitmproxy/blob/master/setup.py) and [pathod](http://pathod.net), version matching mitmproxy.
-* Rendering the documentation requires [countershape](http://github.com/cortesi/countershape).
-
-For convenience, the following procedure is recommended to set up your environment:
 ```
 $ git clone https://github.com/mitmproxy/mitmproxy.git
 $ cd mitmproxy
 $ pip install --src . -r requirements.txt
 ```
+
 This installs the latest GitHub versions of mitmproxy, netlib and pathod into `mitmproxy/`. All other development dependencies save countershape are installed into their usual locations. 
+
+
+### Testing
+
+The test suite requires the `dev` extra requirements listed in [setup.py](https://github.com/mitmproxy/mitmproxy/blob/master/setup.py) and [pathod](http://pathod.net), version matching mitmproxy. Install these with:
+
+`
+pip install "mitmproxy[dev]""`
+
 
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project maintains 100% test coverage.
+
+
+### Docs
+
+Rendering the documentation requires [countershape](http://github.com/cortesi/countershape). After installation, you can render the documentation to the doc like this:
+
+`cshape doc-src doc`
+
+
+
+
 

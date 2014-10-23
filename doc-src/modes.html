@@ -1,210 +1,222 @@
-Mitmproxy comes with several modes of operation, which allow you to use mitmproxy in a variety of scenarios.
-This documents briefly explains each mode and possible setups.
-<hr>
-Mitmproxy has four modes of operation:
-<ul>
-    <li>Regular Mode (this is what you get by default)</li>
-    <li>Transparent Mode</li>
-    <li>Reverse Proxy Mode</li>
-    <li>Upstream Proxy Mode</li>
-</ul>
 
-<p>Now, which one should you pick? Use this flow chart:
-</p>
+Mitmproxy has four modes of operation that allow you to use mitmproxy in a
+variety of scenarios:
 
-<img src="@!urlTo('schematics/proxy-modes-flowchart.png')!@"><br><br>
+- **Regular** (the default)
+- **Transparent**
+- **Reverse Proxy**
+- **Upstream Proxy**
+
+Now, which one should you pick? Use this flow chart:
+
+<img src="@!urlTo('schematics/proxy-modes-flowchart.png')!@"/>
 
 <div class="page-header">
     <h1>Regular Proxy</h1>
 </div>
 
-Mitmproxy's regular mode it the most simple one and the easiest to set up.
+Mitmproxy's regular mode is the simplest and the easiest to set up.
 
-<ol>
-    <li>Start mitmproxy.</li>
-    <li>Configure your client to use mitmproxy. This means that you either adjust the proxy setting of your local browser
-    or point an external device to your proxy (which should look like
-        <a href="@!urlTo('screenshots/ios-manual.png')!@">this</a>).</li>
-    <li>Quick Check: You can already visit an unencrypted HTTP site over the proxy.</li>
-    <li>Open the magic domain <strong>mitm.it</strong> and install the certificate for your device.</li>
-</ol>
+1. Start mitmproxy.
+2. Configure your client to use mitmproxy. For instance on IOS, the settings might look like <a href="@!urlTo('screenshots/ios-manual.png')!@">this</a>.
+3. Quick Check: You should already be able to visit an unencrypted HTTP site
+through the proxy.
+4. Open the magic domain <strong>mitm.it</strong> and install the certificate for your device.
 
 <div class="well">
-    <strong>Heads Up:</strong> Unfortunately, some applications prefer to bypass the HTTP proxy settings of the system -
-    Android applications are a common example. In these cases, you need to use mitmproxy's transparent mode.
+<strong>Heads Up:</strong> Unfortunately, some applications bypass the
+system HTTP proxy settings - Android applications are a common example. In
+these cases, you need to use mitmproxy's transparent mode.
 </div>
 
-<p>If you are proxying an external device, your network will probably look like this:</p>
+If you are proxying an external device, your network will probably look like this:
+
 <img src="@!urlTo('schematics/proxy-modes-regular.png')!@">
-<br><br>
-<p>The square brackets signify the source and destination IP addresses. Your client explicitly connects
-    to mitmproxy and mitmproxy explicitly connects to the target server.
-</p>
+
+The square brackets signify the source and destination IP addresses. Your
+client explicitly connects to mitmproxy and mitmproxy explicitly connects
+to the target server.
 
 <div class="page-header">
     <h1>Transparent Proxy</h1>
 </div>
 
-When a transparent proxy is used, traffic is redirected into a proxy at the network layer, without any client
-configuration being required. This makes transparent proxying ideal for those situations where you can't change client
-behaviour. The basic principle is that mitmproxy sits somewhere on the line from the client to the internet and
-transparently intercepts the request. In the graphic below, a machine running mitmproxy has been inserted between
-the router and the internet:
+In transparent mode, traffic is directed into a proxy at the network layer,
+without any client configuration required. This makes transparent proxying
+ideal for situations where you can't change client behaviour. In the graphic
+below, a machine running mitmproxy has been inserted between the router and
+the internet:
 
 <a href="@!urlTo('schematics/proxy-modes-transparent-1.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-transparent-1.png')!@"></a>
-<p>The square brackets signify the source and destination IP addresses. Round brackets mark the next
-    hop on the <strong>Ethernet</strong>/data link layer. This distinction is important to make: When the packet arrives
-    at the mitmproxy machine, it must still be addressed to the target server. In other words: A simple IP redirect on
-    the router does not work - this would remove the target information, leaving mitmproxy unable to
-    determine the real destination.
-</p>
+    <img src="@!urlTo('schematics/proxy-modes-transparent-1.png')!@">
+</a>
+
+The square brackets signify the source and destination IP addresses. Round
+brackets mark the next hop on the *Ethernet/data link* layer. This distinction
+is important: when the packet arrives at the mitmproxy machine, it must still
+be addressed to the target server. This means that Network Address Translation
+should not be applied before the traffic reaches mitmproxy, since this would
+remove the target information, leaving mitmproxy unable to determine the real
+destination.
+
 <a href="@!urlTo('schematics/proxy-modes-transparent-wrong.png')!@">
     <img src="@!urlTo('schematics/proxy-modes-transparent-wrong.png')!@"></a>
 
 <h2>Common Configurations</h2>
 
-The first graphic is a little bit idealistic: Usually, you'll have your local wireless lan network and no
-machines between your router and the internet. Fortunately, there are other ways to configure your network:
-(a) Configuring the client to use a custom gateway/router/"next hop", (b) Implementing custom routing on the router
-or (c) setting up a separate wireless network router which gets proxied.
-There are of course other options, but we'll look at these three. In most cases, setting (a) is recommended due to its
-ease of use.
+There are many ways to configure your network for transparent proxying. We'll
+look at three common scenarios:
+
+1. Configuring the client to use a custom gateway/router/"next hop"
+2. Implementing custom routing on the router
+
+In most cases, the first option is recommended due to its ease of use.
 
 <h3>(a) Custom Gateway</h3>
 
-<p>Looking at your local home network, it's clear what happens if you enter "example.com" into your address bar: After you
-press enter, your OS sends a packet to your router, which then sends this to your ISP, which then sends it to some
-Tier-1 carrier, which then sends it... I think you get the idea. The important part for us is the first step here:
-Your machine is configured to use your router as the next hop. Your router certainly doesn't host example.com, but your
-machine knows that your router will forward it upstream. On the technical level, your router probably provides a DHCP
-server, which instructs all clients to use his address as the <em>Default Gateway</em> for connections that leave the
-current subnet (your local network).</p>
-<p>
-How does this help us? Here comes our trick: By configuring the client to use our machine as its Gateway, all traffic
-will be sent to our machine, which then forwards it to the router. This provides us with the scenario we'd like to have,
-namely packets on our doorstep that are addressed for someone else:
-</p>
+One simple way to get traffic to the mitmproxy machine with the destination IP
+intact, is to simply configure the client with the mitmproxy box as the
+default gateway.
+
 <a href="@!urlTo('schematics/proxy-modes-transparent-2.png')!@">
     <img src="@!urlTo('schematics/proxy-modes-transparent-2.png')!@"></a>
 
-Given this concept, we can set up mitmproxy:
-<ol>
-    <li>Configure your proxy machine for transparent mode.<br>You can find instructions
-    in the <em>Transparent Proxying</em> section of the mitmproxy docs.</li>
-    <li>Configure your client to use your proxy machine's IP as the default gateway. This setting is usually called
-        <em>Standard Gateway, Router</em> or something along these lines
-        (<a href="@!urlTo('screenshots/ios-gateway.png')!@">iOS screenshot</a>).</li>
-    <li>Quick Check: You can already visit an unencrypted HTTP site over the proxy.</li>
-    <li>Open the magic domain <strong>mitm.it</strong> and install the certificate for your device.</li>
-</ol>
+In this scenario, we would:
+
+- Configure the proxy machine for transparent mode. You can find instructions
+in the <em>Transparent Proxying</em> section of the mitmproxy docs.
+
+- Configure the client to use the proxy machine's IP as the default gateway.
+<a href="@!urlTo('screenshots/ios-gateway.png')!@">Here</a> is what this would
+look like on IOS.
+
+- Quick Check: At this point, you should already be able to visit an
+unencrypted HTTP site over the proxy.
+
+- Open the magic domain <strong>mitm.it</strong> and install the certificate
+for your device.
+
+Setting the custom gateway on clients can be automated by serving the settings
+out to clients over DHCP. This lets set up an interception network where all
+clients are proxied automatically, which can save time and effort. 
+
 
 <div class="well">
     <strong style="text-align: center; display: block">Troubleshooting Transparent Mode</strong>
-    <p>Wrong transparent mode configurations are a frequent source of
+
+    <p>Incorrect transparent mode configurations are a frequent source of
     error. If it doesn't work for you, try the following things:</p>
+
     <ul>
-        <li>Open mitmproxy's event log (press `e`) - can you spot clientconnect messages?
-        If not, the packets are not arriving at the proxy. A common source is the occurence of ICMP redirects,
-            which means that your machine is telling the client that there's a faster way to the internet by contacting
-            your router directly (see the <em>Transparent Proxying</em> section on how to disable them). If in doubt,
-            <a href="https://wireshark.org/">Wireshark</a> may help you to see whether something arrives at your machine
-            or not.
+        <li>
+            Open mitmproxy's event log (press `e`) - do you see clientconnect
+            messages? If not, the packets are not arriving at the proxy. One common
+            cause is the occurrence of ICMP redirects, which means that your
+            machine is telling the client that there's a faster way to the
+            internet by contacting your router directly (see the
+            <em>Transparent Proxying</em> section on how to disable them). If in
+            doubt, <a href="https://wireshark.org/">Wireshark</a> may help you
+            to see whether something arrives at your machine or not.
         </li>
         <li>
-            Have you explicitly configured an HTTP proxy on your device? You do not need mitmproxy's transparent mode
-            then, just start mitmproxy normally. Explicitly setting a proxy and transparent mode contradict each other,
-            settle for one. Do not explicitly redirect traffic to mitmproxy anywhere except for the Gateway setting.
+            Make sure you have not explicitly configured an HTTP proxy on the
+            client. This is not needed in transparent mode.
         </li>
         <li>
             Re-check the instructions in the <em>Transparent Proxying</em> section. Anything you missed?
         </li>
     </ul>
+
     If you encounter any other pitfalls that should be listed here, please let us know!
+
 </div>
 
 <h3>(b) Custom Routing</h3>
 
-Custom routing is a fairly advanced setup which we'll only document briefly here.
-First and foremost, it usually requires root on your router. The basic idea is to teach your router a custom routing
-table that says "for requests from ip X, the proxy machine is the next gateway".
+In some cases, you may need more fine-grained control of which traffic reaches
+the mitmproxy instance, and which doesn't. You may, for instance, choose only
+to divert traffic to some hosts into the transparent proxy. There are a huge
+number of ways to accomplish this, and much will depend on the router or
+packet filter you're using. In most cases, the configuration will look like
+this:
 
 <a href="@!urlTo('schematics/proxy-modes-transparent-3.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-transparent-3.png')!@"></a>
-
-For this setup, we expect you to have a basic understanding of networking in general. In short, you should get started
-with <a href="@!urlTo('custom-routing.txt')!@">these routing commands</a>. The Troubleshooting part directly above this
-section might be helpful for you as well.
-
-<h3>(c) Separate Network</h3>
-
-Setting up a separate network using a cheap router might be a viable option, too. Such a configuration mostly resembles
-the idealistic graphic from the beginning (Variant 1). Take a look at the
-<a href="@!urlTo('tutorials/transparent-dhcp.html')!@">Transparently proxify virtual machines</a> tutorial to see how
-such a network could be implemented. The troubleshooting section for custom gateways may be helpful for you, too.
+    <img src="@!urlTo('schematics/proxy-modes-transparent-3.png')!@">
+</a>
 
 
 <div class="page-header">
     <h1>Reverse Proxy</h1>
 </div>
 
-Mitmproxy is usually used with a client that uses the proxy to access the Internet. Using reverse proxy mode, you can
-use mitmproxy to represent a server:
+Mitmproxy is usually used with a client that uses the proxy to access the
+Internet. Using reverse proxy mode, you can use mitmproxy to act like a normal
+HTTP server:
 
 <a href="@!urlTo('schematics/proxy-modes-reverse.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-reverse.png')!@"></a>
+    <img src="@!urlTo('schematics/proxy-modes-reverse.png')!@">
+</a>
 
 There are various use-cases:
-<ul>
-<li>
-    Say you have an internal API running at http://example.local/. You could now setup mitmproxy in
-    reverse proxy mode at http://debug.example.local/ and dynamically point clients to this new API endpoint,
-    which provides clients with the same data and you with debug information. Similarly, you could move your real server
-    to a different ip/port and setup mitmproxy at the original place to debug all sessions.
-</li>
-<li>
-    Say you're a web developer working on example.com (with a development version running on localhost:8000).
-    You can modify your hosts file so that example.com points to 127.0.0.1 and then run mitmproxy in reverse proxy
-    mode on port 80. You can test your app on the example.com domain and get all requests recorded in mitmproxy.
-</li>
-<li>
-    Say you have some toy project that should get SSL support. Simply setup mitmproxy with SSL termination and you're
-    done (<code>mitmdump -p 443 -R https2http://localhost:80/</code>). There are better tools for this specific task (we don't
-    have C performance obviously), but it's definitely a nice and very quick way to setup an SSL-speaking server.
-</li>
-<li>
-    Want to add a non-SSL-capable compression proxy in front of your server? You could even spawn a mitmproxy instance
-    that terminates SSL (https2http://...), point it to the compression proxy and let the compression proxy point
-    to a SSL-initiating mitmproxy (http2https://...), which then points to the real server. As you see, it's a fairly
-    flexible thing.
-</li>
-</ul>
 
-<p>
-Please note that cloning Google by using <code>mitmproxy -R http://google.com/</code> does <em>not</em> really work
-(as in <a href="@!urlTo('screenshots/ios-reverse.png')!@">this screenshot</a>).
-This may work for the first request, but the HTML remains unchanged: As soon as the user clicks on an non-relative URL
-(or downloads a non-relative image resource), they speak with Google directly again.
-</p>
-<p>
-    On another note, mitmproxy either supports an HTTP or an HTTPS upstream server, not both at the same time. You can
-    simply work around this by spawning a second mitmproxy instance. Each instance listens to one port and talks to one
-    port.
-</p>
+- Say you have an internal API running at http://example.local/. You could now
+set up mitmproxy in reverse proxy mode at http://debug.example.local/ and
+dynamically point clients to this new API endpoint, which provides clients
+with the same data and you with debug information. Similarly, you could move
+your real server to a different IP/port and set up mitmproxy at the original
+place to debug all sessions.
+
+- Say you're a web developer working on example.com (with a development
+version running on localhost:8000). You can modify your hosts file so that
+example.com points to 127.0.0.1 and then run mitmproxy in reverse proxy mode
+on port 80. You can test your app on the example.com domain and get all
+requests recorded in mitmproxy.
+
+- Say you have some toy project that should get SSL support. Simply set up
+mitmproxy with SSL termination and you're done (<code>mitmdump -p 443 -R
+https2http://localhost:80/</code>). There are better tools for this specific
+task, but mitmproxy is very quick and simple way to set up an SSL-speaking
+server.
+
+- Want to add a non-SSL-capable compression proxy in front of your server? You
+could even spawn a mitmproxy instance that terminates SSL (https2http://...),
+point it to the compression proxy and let the compression proxy point to a
+SSL-initiating mitmproxy (http2https://...), which then points to the real
+server. As you see, it's a fairly flexible thing.
+
+Note that mitmproxy supports either an HTTP or an HTTPS upstream server, not
+both at the same time. You can work around this by spawning a second mitmproxy
+instance.
+
+<div class="well">
+    <strong style="text-align: center; display: block">Caveat: Interactive Use</strong>
+
+
+One caveat is that reverse proxy mode is often not sufficient for interactive
+browsing. Consider trying to clone Google by using:
+
+<code>mitmproxy -R http://google.com/</code>
+
+This works for the initial request, but the HTML served to the client remains
+unchanged. As soon as the user clicks on an non-relative URL (or downloads a
+non-relative image resource), traffic no longer passes through mitmproxy, and
+the client connects to Google directly again.
+
+</div>
+
+
 
 <div class="page-header">
     <h1>Upstream Proxy</h1>
 </div>
 
-<p>
-If you want to add mitmproxy in front of a different proxy appliance, you can use mitmproxy's upstream mode.
-In upstream mode, all requests are unconditionally transferred to an upstream proxy of your choice.
-</p>
+If you want to chain proxies by adding mitmproxy in front of a different proxy
+appliance, you can use mitmproxy's upstream mode. In upstream mode, all
+requests are unconditionally transferred to an upstream proxy of your choice.
 
 <a href="@!urlTo('schematics/proxy-modes-upstream.png')!@">
     <img src="@!urlTo('schematics/proxy-modes-upstream.png')!@"></a>
 
-<p>
-mitmproxy supports both explicit HTTP and explicit HTTPS in upstream proxy mode. You could in theory chain multiple
-mitmproxy instances in a row, but that doesn't make any sense in practice (i.e. outside of our tests).
-</p>
+mitmproxy supports both explicit HTTP and explicit HTTPS in upstream proxy
+mode. You could in theory chain multiple mitmproxy instances in a row, but
+that doesn't make any sense in practice (i.e. outside of our tests). 
