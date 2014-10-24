@@ -2,7 +2,7 @@
 import argparse
 import sys
 import os
-from . import pathoc, pathod, version
+from . import pathoc, pathod, version, utils
 from netlib import http_uastrings
 
 
@@ -144,32 +144,6 @@ def go_pathoc():
     pathoc.main(args)
 
 
-def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-    try:
-        pid = os.fork()
-        if pid > 0:
-            sys.exit(0)
-    except OSError, e:
-        sys.stderr.write("fork #1 failed: (%d) %s\n" % (e.errno, e.strerror))
-        sys.exit(1)
-    os.chdir("/")
-    os.umask(0)
-    os.setsid()
-    try:
-        pid = os.fork()
-        if pid > 0:
-            sys.exit(0)
-    except OSError, e:
-        sys.stderr.write("fork #2 failed: (%d) %s\n" % (e.errno, e.strerror))
-        sys.exit(1)
-    si = open(stdin, 'rb')
-    so = open(stdout, 'a+b')
-    se = open(stderr, 'a+b', 0)
-    os.dup2(si.fileno(), sys.stdin.fileno())
-    os.dup2(so.fileno(), sys.stdout.fileno())
-    os.dup2(se.fileno(), sys.stderr.fileno())
-
-
 def go_pathod():
     parser = argparse.ArgumentParser(
         description='A pathological HTTP/S daemon.'
@@ -308,7 +282,33 @@ def go_pathod():
         help="Log request/response in hexdump format"
     )
     args = parser.parse_args()
-    if args.daemonize:
-        daemonize()
-    pathod.main(parser, args)
+
+    certs = []
+    for i in args.ssl_certs:
+        parts = i.split("=", 1)
+        if len(parts) == 1:
+            parts = ["*", parts[0]]
+        parts[1] = os.path.expanduser(parts[1])
+        if not os.path.exists(parts[1]):
+            parser.error("Certificate file does not exist: %s"%parts[1])
+        certs.append(parts)
+    args.ssl_certs = certs
+
+    alst = []
+    for i in args.anchors:
+        parts = utils.parse_anchor_spec(i)
+        if not parts:
+            parser.error("Invalid anchor specification: %s"%i)
+        alst.append(parts)
+    args.anchors = alst
+
+    sizelimit = None
+    if args.sizelimit:
+        try:
+            sizelimit = utils.parse_size(args.sizelimit)
+        except ValueError, v:
+            parser.error(v)
+    args.sizelimit = sizelimit
+
+    pathod.main(args)
 

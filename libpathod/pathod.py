@@ -3,6 +3,7 @@ import threading
 import re
 import logging
 import os
+import sys
 from netlib import tcp, http, wsgi, certutils
 import netlib.utils
 
@@ -371,32 +372,15 @@ class Pathod(tcp.TCPServer):
         return self.log
 
 
-def main(parser, args):
-    certs = []
-    for i in args.ssl_certs:
-        parts = i.split("=", 1)
-        if len(parts) == 1:
-            parts = ["*", parts[0]]
-        parts[1] = os.path.expanduser(parts[1])
-        if not os.path.exists(parts[1]):
-            parser.error("Certificate file does not exist: %s"%parts[1])
-        certs.append(parts)
-
+def main(args):
     ssloptions = SSLOptions(
         cn = args.cn,
         confdir = args.confdir,
         not_after_connect = args.ssl_not_after_connect,
         ciphers = args.ciphers,
         sslversion = utils.SSLVERSIONS[args.sslversion],
-        certs = certs
+        certs = args.ssl_certs
     )
-
-    alst = []
-    for i in args.anchors:
-        parts = utils.parse_anchor_spec(i)
-        if not parts:
-            parser.error("Invalid anchor specification: %s"%i)
-        alst.append(parts)
 
     root = logging.getLogger()
     if root.handlers:
@@ -418,13 +402,6 @@ def main(parser, args):
         sh.setFormatter(fmt)
         log.addHandler(sh)
 
-    sizelimit = None
-    if args.sizelimit:
-        try:
-            sizelimit = utils.parse_size(args.sizelimit)
-        except ValueError, v:
-            parser.error(v)
-
     try:
         pd = Pathod(
             (args.address, args.port),
@@ -432,8 +409,8 @@ def main(parser, args):
             ssl = args.ssl,
             ssloptions = ssloptions,
             staticdir = args.staticdir,
-            anchors = alst,
-            sizelimit = sizelimit,
+            anchors = args.anchors,
+            sizelimit = args.sizelimit,
             noweb = args.noweb,
             nocraft = args.nocraft,
             noapi = args.noapi,
@@ -445,9 +422,13 @@ def main(parser, args):
             explain = args.explain,
         )
     except PathodError, v:
-        parser.error(str(v))
+        print >> sys.stderr, "Error: %s"%v
+        sys.exit(1)
     except language.FileAccessDenied, v:
-        parser.error("%s You probably want to a -d argument."%str(v))
+        print >> sys.stderr, "Error: %s"%v
+
+    if args.daemonize:
+        utils.daemonize()
 
     try:
         print "%s listening on %s:%s"%(
