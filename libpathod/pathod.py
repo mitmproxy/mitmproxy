@@ -369,3 +369,92 @@ class Pathod(tcp.TCPServer):
 
     def get_log(self):
         return self.log
+
+
+def main(parser, args):
+    certs = []
+    for i in args.ssl_certs:
+        parts = i.split("=", 1)
+        if len(parts) == 1:
+            parts = ["*", parts[0]]
+        parts[1] = os.path.expanduser(parts[1])
+        if not os.path.exists(parts[1]):
+            parser.error("Certificate file does not exist: %s"%parts[1])
+        certs.append(parts)
+
+    ssloptions = SSLOptions(
+        cn = args.cn,
+        confdir = args.confdir,
+        not_after_connect = args.ssl_not_after_connect,
+        ciphers = args.ciphers,
+        sslversion = utils.SSLVERSIONS[args.sslversion],
+        certs = certs
+    )
+
+    alst = []
+    for i in args.anchors:
+        parts = utils.parse_anchor_spec(i)
+        if not parts:
+            parser.error("Invalid anchor specification: %s"%i)
+        alst.append(parts)
+
+    root = logging.getLogger()
+    if root.handlers:
+        for handler in root.handlers:
+            root.removeHandler(handler)
+
+    log = logging.getLogger('pathod')
+    log.setLevel(logging.DEBUG)
+    fmt = logging.Formatter(
+        '%(asctime)s: %(message)s',
+        datefmt='%d-%m-%y %H:%M:%S',
+    )
+    if args.logfile:
+        fh = logging.handlers.WatchedFileHandler(args.logfile)
+        fh.setFormatter(fmt)
+        log.addHandler(fh)
+    if not args.daemonize:
+        sh = logging.StreamHandler()
+        sh.setFormatter(fmt)
+        log.addHandler(sh)
+
+    sizelimit = None
+    if args.sizelimit:
+        try:
+            sizelimit = utils.parse_size(args.sizelimit)
+        except ValueError, v:
+            parser.error(v)
+
+    try:
+        pd = Pathod(
+            (args.address, args.port),
+            craftanchor = args.craftanchor,
+            ssl = args.ssl,
+            ssloptions = ssloptions,
+            staticdir = args.staticdir,
+            anchors = alst,
+            sizelimit = sizelimit,
+            noweb = args.noweb,
+            nocraft = args.nocraft,
+            noapi = args.noapi,
+            nohang = args.nohang,
+            timeout = args.timeout,
+            logreq = args.logreq,
+            logresp = args.logresp,
+            hexdump = args.hexdump,
+            explain = args.explain,
+        )
+    except PathodError, v:
+        parser.error(str(v))
+    except language.FileAccessDenied, v:
+        parser.error("%s You probably want to a -d argument."%str(v))
+
+    try:
+        print "%s listening on %s:%s"%(
+            version.NAMEVERSION,
+            pd.address.host,
+            pd.address.port
+        )
+        pd.serve_forever()
+    except KeyboardInterrupt:
+        pass

@@ -46,4 +46,3 @@ class TestDaemonManual:
             "http://localhost:%s/p/202:da"%d.port
         )
 
-

@@ -191,4 +191,37 @@ class Pathoc(tcp.TCPClient):
             return True
 
 
-
+def main(args):
+    try:
+        for i in range(args.repeat):
+            p = Pathoc(
+                (args.host, args.port),
+                ssl=args.ssl,
+                sni=args.sni,
+                sslversion=args.sslversion,
+                clientcert=args.clientcert,
+                ciphers=args.ciphers
+            )
+            try:
+                p.connect(args.connect_to)
+            except (tcp.NetLibError, PathocError), v:
+                print >> sys.stderr, str(v)
+                sys.exit(1)
+            if args.timeout:
+                p.settimeout(args.timeout)
+            for spec in args.request:
+                ret = p.print_request(
+                    spec,
+                    showreq=args.showreq,
+                    showresp=args.showresp,
+                    explain=args.explain,
+                    showssl=args.showssl,
+                    hexdump=args.hexdump,
+                    ignorecodes=args.ignorecodes,
+                    ignoretimeout=args.ignoretimeout
+                )
+                sys.stdout.flush()
+                if ret and args.oneshot:
+                    sys.exit(0)
+    except KeyboardInterrupt:
+        pass

@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-import argparse, sys, logging, logging.handlers, os
-from . import pathoc as _pathoc, pathod as _pathod, utils, version, language
-from netlib import tcp, http_uastrings
+import argparse
+import sys
+import os
+from . import pathoc, pathod, version
+from netlib import http_uastrings
 
 
-def pathoc():
+def go_pathoc():
     preparser = argparse.ArgumentParser(add_help=False)
     preparser.add_argument(
         "--show-uas", dest="showua", action="store_true", default=False,
@@ -119,12 +121,12 @@ def pathoc():
     args = parser.parse_args()
 
     if args.port is None:
-        port = 443 if args.ssl else 80
+        args.port = 443 if args.ssl else 80
     else:
-        port = args.port
+        args.port = args.port
 
     try:
-        codes = [int(i) for i in args.ignorecodes.split(",") if i]
+        args.ignorecodes = [int(i) for i in args.ignorecodes.split(",") if i]
     except ValueError:
         parser.error("Invalid return code specification: %s"%args.ignorecodes)
 
@@ -136,43 +138,10 @@ def pathoc():
             parts[1] = int(parts[1])
         except ValueError:
             parser.error("Invalid CONNECT specification: %s"%args.connect_to)
-        connect_to = parts
+        args.connect_to = parts
     else:
-        connect_to = None
-
-    try:
-        for i in range(args.repeat):
-            p = _pathoc.Pathoc(
-                (args.host, port),
-                ssl=args.ssl,
-                sni=args.sni,
-                sslversion=args.sslversion,
-                clientcert=args.clientcert,
-                ciphers=args.ciphers
-            )
-            try:
-                p.connect(connect_to)
-            except (tcp.NetLibError, _pathoc.PathocError), v:
-                print >> sys.stderr, str(v)
-                sys.exit(1)
-            if args.timeout:
-                p.settimeout(args.timeout)
-            for spec in args.request:
-                ret = p.print_request(
-                    spec,
-                    showreq=args.showreq,
-                    showresp=args.showresp,
-                    explain=args.explain,
-                    showssl=args.showssl,
-                    hexdump=args.hexdump,
-                    ignorecodes=codes,
-                    ignoretimeout=args.ignoretimeout
-                )
-                sys.stdout.flush()
-                if ret and args.oneshot:
-                    sys.exit(0)
-    except KeyboardInterrupt:
-        pass
+        args.connect_to = None
+    pathoc.main(args)
 
 
 def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
@@ -201,98 +170,36 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     os.dup2(se.fileno(), sys.stderr.fileno())
 
 
-def pathod_main(parser, args):
-    certs = []
-    for i in args.ssl_certs:
-        parts = i.split("=", 1)
-        if len(parts) == 1:
-            parts = ["*", parts[0]]
-        parts[1] = os.path.expanduser(parts[1])
-        if not os.path.exists(parts[1]):
-            parser.error("Certificate file does not exist: %s"%parts[1])
-        certs.append(parts)
-
-    ssloptions = _pathod.SSLOptions(
-        cn = args.cn,
-        confdir = args.confdir,
-        not_after_connect = args.ssl_not_after_connect,
-        ciphers = args.ciphers,
-        sslversion = utils.SSLVERSIONS[args.sslversion],
-        certs = certs
+def go_pathod():
+    parser = argparse.ArgumentParser(
+        description='A pathological HTTP/S daemon.'
     )
-
-    alst = []
-    for i in args.anchors:
-        parts = utils.parse_anchor_spec(i)
-        if not parts:
-            parser.error("Invalid anchor specification: %s"%i)
-        alst.append(parts)
-
-    root = logging.getLogger()
-    if root.handlers:
-        for handler in root.handlers:
-            root.removeHandler(handler)
-
-    log = logging.getLogger('pathod')
-    log.setLevel(logging.DEBUG)
-    fmt = logging.Formatter(
-        '%(asctime)s: %(message)s',
-        datefmt='%d-%m-%y %H:%M:%S',
-    )
-    if args.logfile:
-        fh = logging.handlers.WatchedFileHandler(args.logfile)
-        fh.setFormatter(fmt)
-        log.addHandler(fh)
-    if not args.daemonize:
-        sh = logging.StreamHandler()
-        sh.setFormatter(fmt)
-        log.addHandler(sh)
-
-    sizelimit = None
-    if args.sizelimit:
-        try:
-            sizelimit = utils.parse_size(args.sizelimit)
-        except ValueError, v:
-            parser.error(v)
-
-    try:
-        pd = _pathod.Pathod(
-            (args.address, args.port),
-            craftanchor = args.craftanchor,
-            ssl = args.ssl,
-            ssloptions = ssloptions,
-            staticdir = args.staticdir,
-            anchors = alst,
-            sizelimit = sizelimit,
-            noweb = args.noweb,
-            nocraft = args.nocraft,
-            noapi = args.noapi,
-            nohang = args.nohang,
-            timeout = args.timeout,
-            logreq = args.logreq,
-            logresp = args.logresp,
-            hexdump = args.hexdump,
-            explain = args.explain,
-        )
-    except _pathod.PathodError, v:
-        parser.error(str(v))
-    except language.FileAccessDenied, v:
-        parser.error("%s You probably want to a -d argument."%str(v))
-
-    try:
-        print "%s listening on %s:%s"%(version.NAMEVERSION, pd.address.host, pd.address.port)
-        pd.serve_forever()
-    except KeyboardInterrupt:
-        pass
-
-
-def pathod():
-    parser = argparse.ArgumentParser(description='A pathological HTTP/S daemon.')
-    parser.add_argument('--version', action='version', version="pathod " + version.VERSION)
-    parser.add_argument("-p", dest='port', default=9999, type=int, help='Port. Specify 0 to pick an arbitrary empty port.')
-    parser.add_argument("-l", dest='address', default="127.0.0.1", type=str, help='Listening address.')
     parser.add_argument(
-        "-a", dest='anchors', default=[], type=str, action="append", metavar="ANCHOR",
+        '--version',
+        action='version',
+        version="pathod " + version.VERSION
+    )
+    parser.add_argument(
+        "-p",
+        dest='port',
+        default=9999,
+        type=int,
+        help='Port. Specify 0 to pick an arbitrary empty port.'
+    )
+    parser.add_argument(
+        "-l",
+        dest='address',
+        default="127.0.0.1",
+        type=str,
+        help='Listening address.'
+    )
+    parser.add_argument(
+        "-a",
+        dest='anchors',
+        default=[],
+        type=str,
+        action="append",
+        metavar="ANCHOR",
         help='Add an anchor. Specified as a string with the form pattern=pagespec'
     )
     parser.add_argument(
@@ -346,7 +253,7 @@ def pathod():
     )
     group.add_argument(
         "--cn", dest="cn", type=str, default=None,
-        help="CN for generated SSL certs. Default: %s"%_pathod.DEFAULT_CERT_DOMAIN
+        help="CN for generated SSL certs. Default: %s"%pathod.DEFAULT_CERT_DOMAIN
     )
     group.add_argument(
         "-C", dest='ssl_not_after_connect', default=False, action="store_true",
@@ -355,10 +262,13 @@ def pathod():
     group.add_argument(
         "--cert", dest='ssl_certs', default=[], type=str,
         metavar = "SPEC", action="append",
-        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '\
-             'The domain may include a wildcard, and is equal to "*" if not specified. '\
-             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '\
-             'it is used, else the default key in the conf dir is used. Can be passed multiple times.'
+        help = """
+        Add an SSL certificate. SPEC is of the form "[domain=]path". The domain
+        may include a wildcard, and is equal to "*" if not specified. The file
+        at path is a certificate in PEM format. If a private key is included in
+        the PEM, it is used, else the default key in the conf dir is used. Can
+        be passed multiple times.'
+        """
     )
     group.add_argument(
         "--ciphers", dest="ciphers", type=str, default=False,
@@ -400,8 +310,5 @@ def pathod():
     args = parser.parse_args()
     if args.daemonize:
         daemonize()
-    pathod_main(parser, args)
+    pathod.main(parser, args)
 
-
-if __name__ == "__main__":
-    pathoc()
