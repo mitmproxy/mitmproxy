@@ -1,4 +1,6 @@
-import tempfile, os, shutil
+import tempfile
+import os
+import shutil
 from contextlib import contextmanager
 from libpathod import utils, test, pathoc, pathod
 import requests
@@ -11,6 +13,7 @@ class DaemonTests:
     timeout = None
     hexdump = False
     ssloptions = None
+
     @classmethod
     def setUpAll(self):
         opts = self.ssloptions or {}
@@ -45,7 +48,13 @@ class DaemonTests:
     def getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
         return requests.get(
-            "%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False, params=params
+            "%s://localhost:%s/%s"%(
+                scheme,
+                self.d.port,
+                path
+            ),
+            verify=False,
+            params=params
         )
 
     def get(self, spec):

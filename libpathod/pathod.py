@@ -1,6 +1,11 @@
-import urllib, threading, re, logging, os
+import urllib
+import threading
+import re
+import logging
+import os
 from netlib import tcp, http, wsgi, certutils
 import netlib.utils
+
 import version, app, language, utils
 
 
@@ -12,7 +17,8 @@ CA_CERT_NAME = "mitmproxy-ca.pem"
 logger = logging.getLogger('pathod')
 
 
-class PathodError(Exception): pass
+class PathodError(Exception):
+    pass
 
 
 class SSLOptions:

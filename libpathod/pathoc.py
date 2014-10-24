@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 from netlib import tcp, http, certutils
 import netlib.utils
 import language, utils
@@ -173,7 +174,7 @@ class Pathoc(tcp.TCPClient):
                         print >> fp, "%s=%s"%cn,
                     print >> fp
                     print >> fp, "\tVersion: %s"%i.get_version()
-                    print >> fp, "\tValidity: %s - %s"%(i.get_notBefore(),i.get_notAfter()) 
+                    print >> fp, "\tValidity: %s - %s"%(i.get_notBefore(),i.get_notAfter())
                     print >> fp, "\tSerial: %s"%i.get_serial_number()
                     print >> fp, "\tAlgorithm: %s"%i.get_signature_algorithm()
                     pk = i.get_pubkey()

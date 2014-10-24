@@ -17,8 +17,14 @@ def pathoc():
             print "  ", i[1], i[0]
         sys.exit(0)
 
-    parser = argparse.ArgumentParser(description='A perverse HTTP client.', parents=[preparser])
-    parser.add_argument('--version', action='version', version="pathoc " + version.VERSION)
+    parser = argparse.ArgumentParser(
+        description='A perverse HTTP client.', parents=[preparser]
+    )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version="pathoc " + version.VERSION
+    )
     parser.add_argument(
         "-c", dest="connect_to", type=str, default=False,
         metavar = "HOST:PORT",
