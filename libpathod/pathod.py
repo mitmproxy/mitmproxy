@@ -169,7 +169,7 @@ class PathodHandler(tcp.BaseHandler):
         for i in self.server.anchors:
             if i[0].match(path):
                 self.info("crafting anchor: %s" % path)
-                aresp = language.parse_response(self.server.request_settings, i[1])
+                aresp = language.parse_response(i[1])
                 again, retlog["response"] = self.serve_crafted(aresp)
                 return again, retlog
 
@@ -177,7 +177,7 @@ class PathodHandler(tcp.BaseHandler):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
             self.info("crafting spec: %s" % spec)
             try:
-                crafted = language.parse_response(self.server.request_settings, spec)
+                crafted = language.parse_response(spec)
             except language.ParseException, v:
                 self.info("Parse error: %s" % v.msg)
                 crafted = language.make_error_response(
@@ -299,7 +299,7 @@ class Pathod(tcp.TCPServer):
                 except re.error:
                     raise PathodError("Invalid regex in anchor: %s" % i[0])
                 try:
-                    language.parse_response(self.request_settings, i[1])
+                    language.parse_response(i[1])
                 except language.ParseException, v:
                     raise PathodError("Invalid page spec in anchor: '%s', %s" % (i[1], str(v)))
                 self.anchors.append((arex, i[1]))

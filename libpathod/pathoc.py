@@ -80,7 +80,7 @@ class Pathoc(tcp.TCPClient):
             May raise language.ParseException, netlib.http.HttpError or
             language.FileAccessDenied.
         """
-        r = language.parse_request(self.settings, spec)
+        r = language.parse_request(spec)
         language.serve(r, self.wfile, self.settings, self.address.host)
         self.wfile.flush()
         ret = list(http.read_response(self.rfile, r.method.string(), None))
@@ -115,7 +115,7 @@ class Pathoc(tcp.TCPClient):
             Returns True if we have a non-ignored response.
         """
         try:
-            r = language.parse_request(self.settings, spec)
+            r = language.parse_request(spec)
         except language.ParseException, v:
             print >> fp, "Error parsing request spec: %s"%v.msg
             print >> fp, v.marked()

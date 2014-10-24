@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import argparse
-import sys
 import os
+import os.path
+import sys
 from . import pathoc, pathod, version, utils
 from netlib import http_uastrings
 
@@ -50,9 +51,11 @@ def go_pathoc():
     )
     parser.add_argument(
         'request', type=str, nargs="+",
-        help='Request specification'
+        help="""
+        Request specification, or path to a file containing a request
+        specifcation
+        """
     )
-
     group = parser.add_argument_group(
         'SSL',
     )
@@ -141,6 +144,16 @@ def go_pathoc():
         args.connect_to = parts
     else:
         args.connect_to = None
+
+    reqs = []
+    for r in args.request:
+        if os.path.exists(r):
+            data = open(r).read()
+            reqs.append(data)
+        else:
+            reqs.append(r)
+    args.request = reqs
+
     pathoc.main(args)
 
 
@@ -174,7 +187,10 @@ def go_pathod():
         type=str,
         action="append",
         metavar="ANCHOR",
-        help='Add an anchor. Specified as a string with the form pattern=pagespec'
+        help="""
+        Add an anchor. Specified as a string with the form pattern=pagespec, or
+        pattern=filepath
+        """
     )
     parser.add_argument(
         "-c", dest='craftanchor', default="/p/", type=str,
@@ -309,6 +325,15 @@ def go_pathod():
         except ValueError, v:
             parser.error(v)
     args.sizelimit = sizelimit
+
+    anchors = []
+    for patt, spec in anchors:
+        if os.path.exists(spec):
+            data = open(spec).read()
+            anchors.append((patt, data))
+        else:
+            anchors.append((patt, spec))
+    args.anchors = anchors
 
     pathod.main(args)
 

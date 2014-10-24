@@ -139,11 +139,6 @@ class TestDaemon(_TestDaemon):
     def test_conn_err(self):
         assert "Invalid server response" in self.tval(["get:'/p/200:d2'"])
 
-    def test_fileread(self):
-        d = tutils.test_data.path("data/request")
-        assert "foo" in self.tval(["+%s"%d], showreq=True)
-        assert "File" in self.tval(["+/nonexistent"])
-
     def test_connect_fail(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port))

@@ -961,7 +961,7 @@ def read_file(settings, s):
     return file(s, "rb").read()
 
 
-def parse_response(settings, s):
+def parse_response(s):
     """
         May raise ParseException or FileAccessDenied
     """
@@ -969,15 +969,13 @@ def parse_response(settings, s):
         s = s.decode("ascii")
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
-    if s.startswith(FILESTART):
-        s = read_file(settings, s)
     try:
         return Response(Response.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)
 
 
-def parse_request(settings, s):
+def parse_request(s):
     """
         May raise ParseException or FileAccessDenied
     """
@@ -985,8 +983,6 @@ def parse_request(settings, s):
         s = s.decode("ascii")
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
-    if s.startswith(FILESTART):
-        s = read_file(settings, s)
     try:
         return Request(Request.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
