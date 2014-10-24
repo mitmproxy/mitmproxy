@@ -1,4 +1,5 @@
 import os
+import sys
 from netlib import tcp
 
 SSLVERSIONS = {
