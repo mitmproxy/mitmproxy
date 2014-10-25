@@ -35,6 +35,14 @@ def go_pathoc():
         help="Issue an HTTP CONNECT to connect to the specified host."
     )
     parser.add_argument(
+        "-m", dest='memo', action="store_true", default=False,
+        help="""
+            Remember specs, and never play the same one twice. Note that this
+            means requests have to be rendered in memory, which means that large
+            generated data can cause issues.
+        """
+    )
+    parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
         help='Repeat N times. If 0 repeat for ever.'
     )

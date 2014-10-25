@@ -819,20 +819,6 @@ class _Message(object):
                             ValueLiteral(request_host)
                         )
                     )
-            else:
-                if not utils.get_header("Date", self.headers):
-                    tokens.append(
-                        Header(
-                            ValueLiteral("Date"),
-                            ValueLiteral(
-                                formatdate(
-                                    timeval=None,
-                                    localtime=False,
-                                    usegmt=True
-                                )
-                            )
-                        )
-                    )
         intermediate = self.__class__(tokens)
         return self.__class__([i.resolve(intermediate, settings) for i in tokens])
 

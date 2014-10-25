@@ -1,5 +1,6 @@
 import sys
 import os
+import hashlib
 import random
 from netlib import tcp, http, certutils
 import netlib.utils
@@ -148,9 +149,6 @@ class Pathoc(tcp.TCPClient):
 
             Returns True if we have a non-ignored response.
         """
-        if explain:
-            r = r.freeze(self.settings, self.address.host)
-
         resp, req = None, None
         if showreq:
             self.wfile.start_log()
@@ -223,10 +221,15 @@ class Pathoc(tcp.TCPClient):
 
 
 def main(args):
+    memo = set([])
     try:
         cnt = 0
         while 1:
             cnt += 1
+            if args.random:
+                playlist = [random.choice(args.requests)]
+            else:
+                playlist = args.requests
             p = Pathoc(
                 (args.host, args.port),
                 ssl=args.ssl,
@@ -235,6 +238,21 @@ def main(args):
                 clientcert=args.clientcert,
                 ciphers=args.ciphers
             )
+            if args.explain or args.memo:
+                playlist = [
+                    i.freeze(p.settings, p.address.host) for i in playlist
+                ]
+            if args.memo:
+                newlist = []
+                for spec in playlist:
+                    h = hashlib.sha256(spec.spec()).digest()
+                    if h not in memo:
+                        memo.add(h)
+                        newlist.append(spec)
+                playlist = newlist
+            if not playlist:
+                continue
+
             try:
                 p.connect(args.connect_to)
             except (tcp.NetLibError, PathocError), v:
@@ -242,10 +260,6 @@ def main(args):
                 sys.exit(1)
             if args.timeout:
                 p.settimeout(args.timeout)
-            if args.random:
-                playlist = [random.choice(args.requests)]
-            else:
-                playlist = args.requests
             for spec in playlist:
                 ret = p.print_request(
                     spec,
