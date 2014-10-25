@@ -36,7 +36,14 @@ def go_pathoc():
     )
     parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
-        help='Repeat requests N times'
+        help='Repeat N times'
+    )
+    parser.add_argument(
+        "-r", dest="random", action="store_true", default=False,
+        help="""
+        Select a random request from those specified. If this is not specified,
+        requests are all played in sequence.
+        """
     )
     parser.add_argument(
         "-t", dest="timeout", type=int, default=None,
@@ -48,7 +55,7 @@ def go_pathoc():
         help='Host and port to connect to'
     )
     parser.add_argument(
-        'request', type=str, nargs="+",
+        'requests', type=str, nargs="+",
         help="""
         Request specification, or path to a file containing request
         specifcations
@@ -110,7 +117,7 @@ def go_pathoc():
         help="Print full request"
     )
     group.add_argument(
-        "-r", dest="showresp", action="store_true", default=False,
+        "-p", dest="showresp", action="store_true", default=False,
         help="Print full response"
     )
     group.add_argument(
@@ -155,7 +162,7 @@ def go_pathoc():
         args.connect_to = None
 
     reqs = []
-    for r in args.request:
+    for r in args.requests:
         if os.path.exists(r):
             data = open(r).read()
             r = data
@@ -165,7 +172,7 @@ def go_pathoc():
             print >> sys.stderr, "Error parsing request spec: %s"%v.msg
             print >> sys.stderr, v.marked()
             sys.exit(1)
-    args.request = reqs
+    args.requests = reqs
     pathoc.main(args)
 
 

@@ -1,5 +1,6 @@
 import sys
 import os
+import random
 from netlib import tcp, http, certutils
 import netlib.utils
 
@@ -189,7 +190,7 @@ class Pathoc(tcp.TCPClient):
                 if resp:
                     self._show_summary(fp, *resp)
 
-            if self.sslinfo:
+            if showssl and self.sslinfo:
                 print >> fp, "Cipher: %s, %s bit, %s"%self.sslinfo.cipher
                 print >> fp, "SSL certificate chain:\n"
                 for i in self.sslinfo.certchain:
@@ -239,7 +240,11 @@ def main(args):
                 sys.exit(1)
             if args.timeout:
                 p.settimeout(args.timeout)
-            for spec in args.request:
+            if args.random:
+                playlist = [random.choice(args.requests)]
+            else:
+                playlist = args.requests
+            for spec in playlist:
                 ret = p.print_request(
                     spec,
                     showreq=args.showreq,
