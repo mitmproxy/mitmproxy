@@ -1,4 +1,5 @@
-import os, cStringIO
+import os
+import cStringIO
 from libpathod import language, utils
 import tutils
 
@@ -475,7 +476,6 @@ class TestRequest:
         assert r.path.string() == "/foo"
         assert r.actions
 
-
         l = """
             GET
 
@@ -611,6 +611,11 @@ class TestResponse:
         r = language.parse_response("400:m'msg'")
         assert language.serve(r, s, {})
 
+        r = language.parse_response("400:p0,100:dr")
+        assert "p0" in r.spec()
+        s = r.preview_safe()
+        assert "p0" not in s.spec()
+
     def test_raw(self):
         s = cStringIO.StringIO()
         r = language.parse_response("400:b'foo'")
@@ -651,12 +656,6 @@ class TestResponse:
         r = language.parse_response("400:m'msg':b@100:d0:i0,'foo'")
         testlen(r)
 
-    def test_render(self):
-        r = language.parse_response("400:p0,100:dr")
-        assert "p0" in r.spec()
-        s = r.preview_safe()
-        assert not "p0" in s.spec()
-
     def test_parse_err(self):
         tutils.raises(language.ParseException, language.parse_response, "400:msg,b:")
         try:
@@ -685,9 +684,10 @@ class TestResponse:
         assert r.actions[0].spec() == "pr,10"
 
     def test_parse_stress(self):
-        # While larger values are known to work on linux,
-        # len() technically returns an int and a python 2.7 int on windows has 32bit precision.
-        # Therefore, we should keep the body length < 2147483647 bytes in our tests.
+        # While larger values are known to work on linux, len() technically
+        # returns an int and a python 2.7 int on windows has 32bit precision.
+        # Therefore, we should keep the body length < 2147483647 bytes in our
+        # tests.
         r = language.parse_response("400:b@1g")
         assert r.length({})
 
@@ -700,16 +700,29 @@ class TestResponse:
         rt("400:da")
 
 
-
 def test_read_file():
     tutils.raises(language.FileAccessDenied, language.read_file, {}, "=/foo")
     p = tutils.test_data.path("data")
     d = dict(staticdir=p)
     assert language.read_file(d, "+./file").strip() == "testfile"
     assert language.read_file(d, "+file").strip() == "testfile"
-    tutils.raises(language.FileAccessDenied, language.read_file, d, "+./nonexistent")
-    tutils.raises(language.FileAccessDenied, language.read_file, d, "+/nonexistent")
-
-    tutils.raises(language.FileAccessDenied, language.read_file, d, "+../test_language.py")
+    tutils.raises(
+        language.FileAccessDenied,
+        language.read_file,
+        d,
+        "+./nonexistent"
+    )
+    tutils.raises(
+        language.FileAccessDenied,
+        language.read_file,
+        d,
+        "+/nonexistent"
+    )
+    tutils.raises(
+        language.FileAccessDenied,
+        language.read_file,
+        d,
+        "+../test_language.py"
+    )
     d["unconstrained_file_access"] = True
     assert language.read_file(d, "+../test_language.py")
