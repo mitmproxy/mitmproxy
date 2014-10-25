@@ -696,7 +696,9 @@ class TestResponse:
         testlen(r)
 
     def test_parse_err(self):
-        tutils.raises(language.ParseException, language.parse_response, "400:msg,b:")
+        tutils.raises(
+            language.ParseException, language.parse_response, "400:msg,b:"
+        )
         try:
             language.parse_response("400'msg':b:")
         except language.ParseException, v:

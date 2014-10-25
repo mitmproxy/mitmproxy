@@ -224,7 +224,9 @@ class Pathoc(tcp.TCPClient):
 
 def main(args):
     try:
-        for i in range(args.repeat):
+        cnt = 0
+        while 1:
+            cnt += 1
             p = Pathoc(
                 (args.host, args.port),
                 ssl=args.ssl,
@@ -258,5 +260,7 @@ def main(args):
                 sys.stdout.flush()
                 if ret and args.oneshot:
                     sys.exit(0)
+            if cnt == args.repeat:
+                break
     except KeyboardInterrupt:
         pass

@@ -36,7 +36,7 @@ def go_pathoc():
     )
     parser.add_argument(
         "-n", dest='repeat', default=1, type=int, metavar="N",
-        help='Repeat N times'
+        help='Repeat N times. If 0 repeat for ever.'
     )
     parser.add_argument(
         "-r", dest="random", action="store_true", default=False,
