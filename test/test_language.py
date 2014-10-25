@@ -464,7 +464,7 @@ class TestRequest:
         r = parse_request('GET:@1k')
         assert len(r.path.string()) == 1024
 
-    def test_multi(self):
+    def test_multiple(self):
         r = language.parse_requests("GET:/ PUT:/")
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "PUT"
@@ -489,6 +489,15 @@ class TestRequest:
         assert len(r) == 2
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "PUT"
+
+        l = """
+            get:"http://localhost:9999/p/200":ir,@1
+            get:"http://localhost:9999/p/200":ir,@2
+        """
+        r = language.parse_requests(l)
+        assert len(r) == 2
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "GET"
 
     def test_render(self):
         s = cStringIO.StringIO()

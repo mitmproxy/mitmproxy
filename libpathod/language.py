@@ -137,7 +137,7 @@ DATATYPES = dict(
 )
 
 
-v_integer = pp.Regex(r"\d+")\
+v_integer = pp.Word(pp.nums)\
     .setName("integer")\
     .setParseAction(lambda toks: int(toks[0]))
 
@@ -308,7 +308,7 @@ class ValueGenerate(_Token):
         u = reduce(
             operator.or_,
             [pp.Literal(i) for i in utils.SIZE_UNITS.keys()]
-        )
+        ).leaveWhitespace()
         e = e + pp.Optional(u, default=None)
 
         s = pp.Literal(",").suppress()
