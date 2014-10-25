@@ -1,7 +1,9 @@
 import tutils
 
+
 class TestApp(tutils.DaemonTests):
     SSL = False
+
     def test_index(self):
         r = self.getpath("/")
         assert r.status_code == 200
@@ -78,4 +80,3 @@ class TestApp(tutils.DaemonTests):
         r = self.getpath("/request_preview", params=dict(spec=""))
         assert r.status_code == 200
         assert 'empty spec' in r.content
-
