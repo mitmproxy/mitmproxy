@@ -219,9 +219,10 @@ class ServerPlaybackState:
         queriesArray = urlparse.parse_qsl(query)
 
         filtered = []
+        ignore_params = self.ignore_params or []
         for p in queriesArray:
-          if p[0] not in self.ignore_params:
-            filtered.append(p)
+            if p[0] not in ignore_params:
+                filtered.append(p)
 
         key = [
             str(r.host),
