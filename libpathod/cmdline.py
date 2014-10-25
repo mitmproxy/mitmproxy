@@ -39,22 +39,19 @@ def go_pathoc():
         help='Repeat requests N times'
     )
     parser.add_argument(
-        "-p", dest="port", type=int, default=None,
-        help="Port. Defaults to 80, or 443 if SSL is active"
-    )
-    parser.add_argument(
         "-t", dest="timeout", type=int, default=None,
         help="Connection timeout"
     )
     parser.add_argument(
         'host', type=str,
-        help='Host to connect to'
+        metavar = "host[:port]",
+        help='Host and port to connect to'
     )
     parser.add_argument(
         'request', type=str, nargs="+",
         help="""
-        Request specification, or path to a file containing a request
-        specifcation
+        Request specification, or path to a file containing request
+        specifcations
         """
     )
     group = parser.add_argument_group(
@@ -127,10 +124,18 @@ def go_pathoc():
 
     args = parser.parse_args()
 
+    args.port = None
+    if ":" in args.host:
+        h, p = args.host.rsplit(":", 1)
+        try:
+            p = int(p)
+        except ValueError:
+            parser.error("Invalid port in host spec: %s" % args.host)
+        args.host = h
+        args.port = p
+
     if args.port is None:
         args.port = 443 if args.ssl else 80
-    else:
-        args.port = args.port
 
     try:
         args.ignorecodes = [int(i) for i in args.ignorecodes.split(",") if i]
