@@ -223,6 +223,29 @@ class TestMisc:
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
 
+    def test_pathodspec(self):
+        e = language.PathodSpec.expr()
+        v = e.parseString("s'200'")[0]
+        assert v.value.val == "200"
+        tutils.raises(
+            language.ParseException,
+            e.parseString,
+            "s'foo'"
+        )
+
+        v = e.parseString('s"200:b@1"')[0]
+        assert "@1" in v.spec()
+        f = v.freeze({})
+        assert "@1" not in f.spec()
+
+        r = parse_request('GET:"/foo":s"200"')
+        assert "200" in r.preamble({})
+
+        f = r.freeze({})
+        assert parse_request(f.spec())
+
+
+
     def test_code(self):
         e = language.Code.expr()
         v = e.parseString("200")[0]
@@ -661,14 +684,12 @@ class TestResponse:
         language.serve(r, s, {})
         v = s.getvalue()
         assert "Content-Length" in v
-        assert "Date" in v
 
         s = cStringIO.StringIO()
         r = language.parse_response("400:b'foo':r")
         language.serve(r, s, {})
         v = s.getvalue()
         assert not "Content-Length" in v
-        assert not "Date" in v
 
     def test_length(self):
         def testlen(x):

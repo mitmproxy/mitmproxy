@@ -1,3 +1,4 @@
+from __future__ import print_function
 import operator
 import string
 import random
@@ -6,7 +7,6 @@ import os
 import time
 import copy
 import abc
-from email.utils import formatdate
 import contrib.pyparsing as pp
 from netlib import http_status, tcp, http_uastrings
 
@@ -527,6 +527,43 @@ class Body(_Component):
         return Body(self.value.freeze(settings))
 
 
+class PathodSpec(_Token):
+    def __init__(self, value):
+        self.value = value
+        try:
+            self.parsed = Response(
+                Response.expr().parseString(
+                    value.val,
+                    parseAll=True
+                )
+            )
+        except pp.ParseException, v:
+            raise ParseException(v.msg, v.line, v.col)
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("s").suppress()
+        e = e + ValueLiteral.expr()
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings),
+        ]
+
+    def quote(self, s):
+        quotechar = s[0]
+        s = s[1:-1]
+        s = s.replace(quotechar, "\\" + quotechar)
+        return quotechar + s + quotechar
+
+    def spec(self):
+        return "s%s"%(self.quote(self.value.spec()))
+
+    def freeze(self, settings):
+        return PathodSpec(ValueLiteral(self.parsed.freeze(settings).spec()))
+
+
 class Path(_Component):
     def __init__(self, value):
         if isinstance(value, basestring):
@@ -934,7 +971,8 @@ class Request(_Message):
         InjectAt,
         ShortcutContentType,
         ShortcutUserAgent,
-        Raw
+        Raw,
+        PathodSpec,
     )
     logattrs = ["method", "path", "body"]
 
@@ -946,10 +984,16 @@ class Request(_Message):
     def path(self):
         return self._get_token(Path)
 
+    @property
+    def pathodspec(self):
+        return self._get_token(PathodSpec)
+
     def preamble(self, settings):
         v = self.method.values(settings)
         v.append(" ")
         v.extend(self.path.values(settings))
+        if self.pathodspec:
+            v.append(self.pathodspec.parsed.spec())
         v.append(" ")
         v.append(self.version)
         return v

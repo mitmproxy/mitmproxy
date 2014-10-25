@@ -59,8 +59,11 @@ class _TestDaemon:
             c.settimeout(timeout)
         s = cStringIO.StringIO()
         for i in requests:
+            r = language.parse_requests(i)[0]
+            if explain:
+                r = r.freeze({})
             c.print_request(
-                language.parse_requests(i)[0],
+                r,
                 showreq = showreq,
                 showresp = showresp,
                 explain = explain,
