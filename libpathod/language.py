@@ -1,4 +1,3 @@
-from __future__ import print_function
 import operator
 import string
 import random
@@ -14,6 +13,12 @@ import utils
 
 BLOCKSIZE = 1024
 TRUNCATE = 1024
+
+def quote(s):
+    quotechar = s[0]
+    s = s[1:-1]
+    s = s.replace(quotechar, "\\" + quotechar)
+    return quotechar + s + quotechar
 
 
 class FileAccessDenied(Exception):
@@ -272,7 +277,7 @@ class ValueLiteral(_ValueLiteral):
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
-        return '"%s"'%self.val.encode("string_escape")
+        return quote("'%s'"%self.val.encode("string_escape"))
 
 
 class ValueNakedLiteral(_ValueLiteral):
@@ -551,17 +556,13 @@ class PathodSpec(_Token):
             self.value.get_generator(settings),
         ]
 
-    def quote(self, s):
-        quotechar = s[0]
-        s = s[1:-1]
-        s = s.replace(quotechar, "\\" + quotechar)
-        return quotechar + s + quotechar
-
     def spec(self):
-        return "s%s"%(self.quote(self.value.spec()))
+        return "s%s"%(self.value.spec())
 
     def freeze(self, settings):
-        return PathodSpec(ValueLiteral(self.parsed.freeze(settings).spec()))
+        f = self.parsed.freeze(settings).spec()
+        print [f]
+        return PathodSpec(ValueLiteral(f))
 
 
 class Path(_Component):

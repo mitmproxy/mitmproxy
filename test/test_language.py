@@ -36,10 +36,13 @@ class TestValueLiteral:
 
     def test_spec(self):
         v = language.ValueLiteral("foo")
-        assert v.spec() == r'"foo"'
+        assert v.spec() == r"'foo'"
 
         v = language.ValueLiteral("f\x00oo")
-        assert v.spec() == repr(v) == r'"f\x00oo"'
+        assert v.spec() == repr(v) == r"'f\x00oo'"
+
+        v = language.ValueLiteral("\"")
+        assert v.spec() == repr(v) == '\'"\''
 
     def test_freeze(self):
         v = language.ValueLiteral("foo")
@@ -186,7 +189,7 @@ class TestMisc:
         assert e.parseString("'get'")[0].value.val == "get"
 
         assert e.parseString("get")[0].spec() == "get"
-        assert e.parseString("'foo'")[0].spec() == '"foo"'
+        assert e.parseString("'foo'")[0].spec() == "'foo'"
 
         s = e.parseString("get")[0].spec()
         assert s == e.parseString(s)[0].spec()
@@ -238,13 +241,14 @@ class TestMisc:
         f = v.freeze({})
         assert "@1" not in f.spec()
 
-        r = parse_request('GET:"/foo":s"200"')
-        assert "200" in r.preamble({})
+    def test_pathodspec_freeze(self):
+        spec = r'GET:"/foo":s"200:ir,\'\"\'"'
+        r = parse_request(spec)
+        assert r.freeze({})
 
-        f = r.freeze({})
-        assert parse_request(f.spec())
-
-
+        spec = r'GET:"/foo":s"200:ir,\"\'\""'
+        r = parse_request(spec)
+        assert r.freeze({})
 
     def test_code(self):
         e = language.Code.expr()
