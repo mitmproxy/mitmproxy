@@ -1,28 +1,9 @@
 from libpathod import pathod, version
-from netlib import tcp, http, certutils
+from netlib import tcp, http
 import tutils
 
 
 class TestPathod:
-    def test_instantiation(self):
-        p = pathod.Pathod(
-            ("127.0.0.1", 0),
-            anchors = [(".*", "200:da")]
-        )
-        assert p.anchors
-        tutils.raises(
-            "invalid regex",
-            pathod.Pathod,
-            ("127.0.0.1", 0),
-            anchors=[("*", "200:da")]
-        )
-        tutils.raises(
-            "invalid page spec",
-            pathod.Pathod,
-            ("127.0.0.1", 0),
-            anchors=[("foo", "bar")]
-        )
-
     def test_logging(self):
         p = pathod.Pathod(("127.0.0.1", 0))
         assert len(p.get_log()) == 0
@@ -39,6 +20,7 @@ class TestPathod:
 
 class TestNoWeb(tutils.DaemonTests):
     noweb = True
+
     def test_noweb(self):
         assert self.get("200:da").status_code == 200
         assert self.getpath("/").status_code == 800
@@ -46,6 +28,7 @@ class TestNoWeb(tutils.DaemonTests):
 
 class TestTimeout(tutils.DaemonTests):
     timeout = 0.01
+
     def test_noweb(self):
         # FIXME: Add float values to spec language, reduce test timeout to
         # increase test performance
@@ -55,6 +38,7 @@ class TestTimeout(tutils.DaemonTests):
 
 class TestNoApi(tutils.DaemonTests):
     noapi = True
+
     def test_noapi(self):
         assert self.getpath("/log").status_code == 404
         r = self.getpath("/")
@@ -238,4 +222,3 @@ class TestDaemonSSL(CommonTests):
         r = self.pathoc(r"get:/p/202")
         assert r.status_code == 202
         assert self.d.last_log()["cipher"][1] > 0
-

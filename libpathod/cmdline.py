@@ -3,7 +3,8 @@ import argparse
 import os
 import os.path
 import sys
-from . import pathoc, pathod, version, utils
+import re
+from . import pathoc, pathod, version, utils, language
 from netlib import http_uastrings
 
 
@@ -78,7 +79,10 @@ def go_pathoc():
     group.add_argument(
         "--sslversion", dest="sslversion", type=int, default=4,
         choices=[1, 2, 3, 4],
-        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to SSLv23."
+        help="""
+            Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default
+            to SSLv23.
+        """
     )
 
     group = parser.add_argument_group(
@@ -149,9 +153,14 @@ def go_pathoc():
     for r in args.request:
         if os.path.exists(r):
             data = open(r).read()
-            reqs.append(data)
-        else:
-            reqs.append(r)
+            r = data
+        try:
+            req = language.parse_request(r)
+        except language.ParseException, v:
+            print >> sys.stderr, "Error parsing request spec: %s"%v.msg
+            print >> sys.stderr, v.marked()
+            sys.exit(1)
+        reqs.append(req)
     args.request = reqs
 
     pathoc.main(args)
@@ -267,7 +276,8 @@ def go_pathod():
     group.add_argument(
         "--sslversion", dest="sslversion", type=int, default=4,
         choices=[1, 2, 3, 4],
-        help="Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default to SSLv23."
+        help=""""Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default
+        to SSLv23."""
     )
 
     group = parser.add_argument_group(
@@ -327,13 +337,23 @@ def go_pathod():
     args.sizelimit = sizelimit
 
     anchors = []
-    for patt, spec in anchors:
+    for patt, spec in args.anchors:
         if os.path.exists(spec):
             data = open(spec).read()
-            anchors.append((patt, data))
-        else:
-            anchors.append((patt, spec))
+            spec = data
+
+        try:
+            req = language.parse_response(spec)
+        except language.ParseException, v:
+            print >> sys.stderr, "Error parsing anchor spec: %s"%v.msg
+            print >> sys.stderr, v.marked()
+            sys.exit(1)
+        try:
+            arex = re.compile(patt)
+        except re.error:
+            print >> sys.stderr, "Invalid regex in anchor: %s" % patt
+            sys.exit(1)
+        anchors.append((arex, req))
     args.anchors = anchors
 
     pathod.main(args)
-

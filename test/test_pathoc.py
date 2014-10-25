@@ -1,6 +1,8 @@
 import json
 import cStringIO
-from libpathod import pathoc, test, version, pathod
+import re
+
+from libpathod import pathoc, test, version, pathod, language
 import tutils
 
 
@@ -18,7 +20,9 @@ class _TestDaemon:
             ssl=self.ssl,
             ssloptions=self.ssloptions,
             staticdir=tutils.test_data.path("data"),
-            anchors=[("/anchor/.*", "202")]
+            anchors=[
+                (re.compile("/anchor/.*"), language.parse_response("202"))
+            ]
         )
 
     @classmethod
@@ -37,9 +41,18 @@ class _TestDaemon:
         r = c.request("get:/api/info")
         assert tuple(json.loads(r.content)["version"]) == version.IVERSION
 
-    def tval(self, requests, showreq=False, showresp=False, explain=False,
-                   showssl=False, hexdump=False, timeout=None, ignorecodes=None,
-                   ignoretimeout=None):
+    def tval(
+        self,
+        requests,
+        showreq=False,
+        showresp=False,
+        explain=False,
+        showssl=False,
+        hexdump=False,
+        timeout=None,
+        ignorecodes=None,
+        ignoretimeout=None
+    ):
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl=self.ssl)
         c.connect()
         if timeout:
@@ -47,7 +60,7 @@ class _TestDaemon:
         s = cStringIO.StringIO()
         for i in requests:
             c.print_request(
-                i,
+                language.parse_request(i),
                 showreq = showreq,
                 showresp = showresp,
                 explain = explain,
@@ -125,16 +138,13 @@ class TestDaemon(_TestDaemon):
         assert "HTTP/" in v
 
     def test_explain(self):
-        reqs = [ "get:/p/200:b@100" ]
-        assert not "b@100" in self.tval(reqs, explain=True)
+        reqs = ["get:/p/200:b@100"]
+        assert "b@100" not in self.tval(reqs, explain=True)
 
     def test_showreq(self):
-        reqs = [ "get:/api/info:p0,0", "get:/api/info:p0,0" ]
+        reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
         assert self.tval(reqs, showreq=True).count("unprintables escaped") == 2
         assert self.tval(reqs, showreq=True, hexdump=True).count("hex dump") == 2
-
-    def test_parse_err(self):
-        assert "Error parsing" in self.tval(["foo"])
 
     def test_conn_err(self):
         assert "Invalid server response" in self.tval(["get:'/p/200:d2'"])
@@ -152,6 +162,3 @@ class TestDaemon(_TestDaemon):
             "HTTP/1.1 200 OK\r\n"
         )
         c.http_connect(to)
-
-
-

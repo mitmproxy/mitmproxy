@@ -1,13 +1,12 @@
 import urllib
 import threading
-import re
 import logging
 import os
 import sys
 from netlib import tcp, http, wsgi, certutils
 import netlib.utils
 
-import version, app, language, utils
+from . import version, app, language, utils
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
@@ -71,7 +70,12 @@ class PathodHandler(tcp.BaseHandler):
         if self.server.explain and not isinstance(crafted, language.PathodErrorResponse):
             crafted = crafted.freeze(self.server.request_settings, None)
             self.info(">> Spec: %s" % crafted.spec())
-        response_log = language.serve(crafted, self.wfile, self.server.request_settings, None)
+        response_log = language.serve(
+            crafted,
+            self.wfile,
+            self.server.request_settings,
+            None
+        )
         if response_log["disconnect"]:
             return False, response_log
         return True, response_log
@@ -169,8 +173,7 @@ class PathodHandler(tcp.BaseHandler):
         for i in self.server.anchors:
             if i[0].match(path):
                 self.info("crafting anchor: %s" % path)
-                aresp = language.parse_response(i[1])
-                again, retlog["response"] = self.serve_crafted(aresp)
+                again, retlog["response"] = self.serve_crafted(i[1])
                 return again, retlog
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
@@ -189,7 +192,10 @@ class PathodHandler(tcp.BaseHandler):
         elif self.server.noweb:
             crafted = language.make_error_response("Access Denied")
             language.serve(crafted, self.wfile, self.server.request_settings)
-            return False, dict(type="error", msg="Access denied: web interface disabled")
+            return False, dict(
+                type="error",
+                msg="Access denied: web interface disabled"
+            )
         else:
             self.info("app: %s %s" % (method, path))
             req = wsgi.Request("http", method, path, headers, content)
@@ -259,19 +265,34 @@ class Pathod(tcp.TCPServer):
     LOGBUF = 500
 
     def __init__(
-            self, addr, confdir=CONFDIR, ssl=False, ssloptions=None,
-            craftanchor="/p/", staticdir=None, anchors=None,
-            sizelimit=None, noweb=False, nocraft=False, noapi=False,
-            nohang=False, timeout=None, logreq=False, logresp=False,
-            explain=False, hexdump=False
+        self,
+        addr,
+        confdir=CONFDIR,
+        ssl=False,
+        ssloptions=None,
+        craftanchor="/p/",
+        staticdir=None,
+        anchors=(),
+        sizelimit=None,
+        noweb=False,
+        nocraft=False,
+        noapi=False,
+        nohang=False,
+        timeout=None,
+        logreq=False,
+        logresp=False,
+        explain=False,
+        hexdump=False
     ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
             ssloptions: an SSLOptions object.
-            craftanchor: string specifying the path under which to anchor response generation.
+            craftanchor: string specifying the path under which to anchor
+            response generation.
             staticdir: path to a directory of static resources, or None.
-            anchors: A list of (regex, spec) tuples, or None.
+            anchors: List of (regex object, language.Request object) tuples, or
+            None.
             sizelimit: Limit size of served data.
             nocraft: Disable response crafting.
             noapi: Disable the API.
@@ -283,26 +304,17 @@ class Pathod(tcp.TCPServer):
         self.staticdir = staticdir
         self.craftanchor = craftanchor
         self.sizelimit = sizelimit
-        self.noweb, self.nocraft, self.noapi, self.nohang = noweb, nocraft, noapi, nohang
-        self.timeout, self.logreq, self.logresp, self.hexdump = timeout, logreq, logresp, hexdump
+        self.noweb, self.nocraft = noweb, nocraft
+        self.noapi, self.nohang = noapi, nohang
+        self.timeout, self.logreq = timeout, logreq
+        self.logresp, self.hexdump = logresp, hexdump
         self.explain = explain
 
         self.app = app.make_app(noapi)
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0
-        self.anchors = []
-        if anchors:
-            for i in anchors:
-                try:
-                    arex = re.compile(i[0])
-                except re.error:
-                    raise PathodError("Invalid regex in anchor: %s" % i[0])
-                try:
-                    language.parse_response(i[1])
-                except language.ParseException, v:
-                    raise PathodError("Invalid page spec in anchor: '%s', %s" % (i[1], str(v)))
-                self.anchors.append((arex, i[1]))
+        self.anchors = anchors
 
     def check_policy(self, req, settings):
         """

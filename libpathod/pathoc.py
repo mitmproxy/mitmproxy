@@ -2,10 +2,14 @@ import sys
 import os
 from netlib import tcp, http, certutils
 import netlib.utils
-import language, utils
+
+import language
+import utils
 import OpenSSL.crypto
 
-class PathocError(Exception): pass
+
+class PathocError(Exception):
+    pass
 
 
 class SSLInfo:
@@ -24,7 +28,14 @@ class Response:
 
 
 class Pathoc(tcp.TCPClient):
-    def __init__(self, address, ssl=None, sni=None, sslversion=4, clientcert=None, ciphers=None):
+    def __init__(
+            self,
+            address,
+            ssl=None,
+            sni=None,
+            sslversion=4,
+            clientcert=None,
+            ciphers=None):
         tcp.TCPClient.__init__(self, address)
         self.settings = dict(
             staticdir = os.getcwd(),
@@ -37,9 +48,9 @@ class Pathoc(tcp.TCPClient):
 
     def http_connect(self, connect_to):
         self.wfile.write(
-                    'CONNECT %s:%s HTTP/1.1\r\n'%tuple(connect_to) +
-                    '\r\n'
-                    )
+            'CONNECT %s:%s HTTP/1.1\r\n'%tuple(connect_to) +
+            '\r\n'
+        )
         self.wfile.flush()
         l = self.rfile.readline()
         if not l:
@@ -61,17 +72,17 @@ class Pathoc(tcp.TCPClient):
         if self.ssl:
             try:
                 self.convert_to_ssl(
-                        sni=self.sni,
-                        cert=self.clientcert,
-                        method=self.sslversion,
-                        cipher_list = self.ciphers
-                    )
+                    sni=self.sni,
+                    cert=self.clientcert,
+                    method=self.sslversion,
+                    cipher_list = self.ciphers
+                )
             except tcp.NetLibError, v:
                 raise PathocError(str(v))
             self.sslinfo = SSLInfo(
-                        self.connection.get_peer_cert_chain(),
-                        self.get_current_cipher()
-                    )
+                self.connection.get_peer_cert_chain(),
+                self.get_current_cipher()
+            )
 
     def request(self, spec):
         """
@@ -88,7 +99,9 @@ class Pathoc(tcp.TCPClient):
         return Response(*ret)
 
     def _show_summary(self, fp, httpversion, code, msg, headers, content):
-        print >> fp, "<< %s %s: %s bytes"%(code, utils.xrepr(msg), len(content))
+        print >> fp, "<< %s %s: %s bytes"%(
+            code, utils.xrepr(msg), len(content)
+        )
 
     def _show(self, fp, header, data, hexdump):
         if hexdump:
@@ -99,7 +112,18 @@ class Pathoc(tcp.TCPClient):
             print >> fp, "%s (unprintables escaped):"%header
             print >> fp, netlib.utils.cleanBin(data)
 
-    def print_request(self, spec, showreq, showresp, explain, showssl, hexdump, ignorecodes, ignoretimeout, fp=sys.stdout):
+    def print_request(
+        self,
+        r,
+        showreq,
+        showresp,
+        explain,
+        showssl,
+        hexdump,
+        ignorecodes,
+        ignoretimeout,
+        fp=sys.stdout
+    ):
         """
             Performs a series of requests, and prints results to the specified
             file descriptor.
@@ -114,16 +138,6 @@ class Pathoc(tcp.TCPClient):
 
             Returns True if we have a non-ignored response.
         """
-        try:
-            r = language.parse_request(spec)
-        except language.ParseException, v:
-            print >> fp, "Error parsing request spec: %s"%v.msg
-            print >> fp, v.marked()
-            return
-        except language.FileAccessDenied, v:
-            print >> fp, "File access error: %s"%v
-            return
-
         if explain:
             r = r.freeze(self.settings, self.address.host)
 
@@ -133,7 +147,12 @@ class Pathoc(tcp.TCPClient):
         if showresp:
             self.rfile.start_log()
         try:
-            req = language.serve(r, self.wfile, self.settings, self.address.host)
+            req = language.serve(
+                r,
+                self.wfile,
+                self.settings,
+                self.address.host
+            )
             self.wfile.flush()
             resp = http.read_response(self.rfile, r.method.string(), None)
         except http.HttpError, v:
@@ -174,13 +193,15 @@ class Pathoc(tcp.TCPClient):
                         print >> fp, "%s=%s"%cn,
                     print >> fp
                     print >> fp, "\tVersion: %s"%i.get_version()
-                    print >> fp, "\tValidity: %s - %s"%(i.get_notBefore(),i.get_notAfter())
+                    print >> fp, "\tValidity: %s - %s"%(
+                        i.get_notBefore(), i.get_notAfter()
+                    )
                     print >> fp, "\tSerial: %s"%i.get_serial_number()
                     print >> fp, "\tAlgorithm: %s"%i.get_signature_algorithm()
                     pk = i.get_pubkey()
                     types = {
-                            OpenSSL.crypto.TYPE_RSA: "RSA",
-                            OpenSSL.crypto.TYPE_DSA: "DSA"
+                        OpenSSL.crypto.TYPE_RSA: "RSA",
+                        OpenSSL.crypto.TYPE_DSA: "DSA"
                     }
                     t = types.get(pk.type(), "Uknown")
                     print >> fp, "\tPubkey: %s bit %s"%(pk.bits(), t)

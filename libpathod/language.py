@@ -1018,7 +1018,7 @@ def read_file(settings, s):
 
 def parse_response(s):
     """
-        May raise ParseException or FileAccessDenied
+        May raise ParseException
     """
     try:
         s = s.decode("ascii")
@@ -1032,7 +1032,7 @@ def parse_response(s):
 
 def parse_request(s):
     """
-        May raise ParseException or FileAccessDenied
+        May raise ParseException
     """
     try:
         s = s.decode("ascii")
