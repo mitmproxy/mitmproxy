@@ -18,8 +18,17 @@ class SSLInfo:
 
 
 class Response:
-    def __init__(self, httpversion, status_code, msg, headers, content, sslinfo):
-        self.httpversion, self.status_code, self.msg = httpversion, status_code, msg
+    def __init__(
+        self,
+        httpversion,
+        status_code,
+        msg,
+        headers,
+        content,
+        sslinfo
+    ):
+        self.httpversion, self.status_code = httpversion, status_code
+        self.msg = msg
         self.headers, self.content = headers, content
         self.sslinfo = sslinfo
 
@@ -91,7 +100,7 @@ class Pathoc(tcp.TCPClient):
             May raise language.ParseException, netlib.http.HttpError or
             language.FileAccessDenied.
         """
-        r = language.parse_request(spec)
+        r = language.parse_requests(spec)[0]
         language.serve(r, self.wfile, self.settings, self.address.host)
         self.wfile.flush()
         ret = list(http.read_response(self.rfile, r.method.string(), None))

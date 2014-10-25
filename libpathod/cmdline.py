@@ -155,14 +155,12 @@ def go_pathoc():
             data = open(r).read()
             r = data
         try:
-            req = language.parse_request(r)
+            reqs.extend(language.parse_requests(r))
         except language.ParseException, v:
             print >> sys.stderr, "Error parsing request spec: %s"%v.msg
             print >> sys.stderr, v.marked()
             sys.exit(1)
-        reqs.append(req)
     args.request = reqs
-
     pathoc.main(args)
 
 

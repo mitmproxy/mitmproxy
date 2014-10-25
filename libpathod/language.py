@@ -1030,7 +1030,7 @@ def parse_response(s):
         raise ParseException(v.msg, v.line, v.col)
 
 
-def parse_request(s):
+def parse_requests(s):
     """
         May raise ParseException
     """
@@ -1039,6 +1039,11 @@ def parse_request(s):
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        return Request(Request.expr().parseString(s, parseAll=True))
+        parts = pp.OneOrMore(
+            pp.Group(
+                Request.expr()
+            )
+        ).parseString(s, parseAll=True)
+        return [Request(i) for i in parts]
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)

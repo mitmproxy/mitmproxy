@@ -60,7 +60,7 @@ class _TestDaemon:
         s = cStringIO.StringIO()
         for i in requests:
             c.print_request(
-                language.parse_request(i),
+                language.parse_requests(i)[0],
                 showreq = showreq,
                 showresp = showresp,
                 explain = explain,

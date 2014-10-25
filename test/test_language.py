@@ -6,6 +6,10 @@ import tutils
 language.TESTING = True
 
 
+def parse_request(s):
+    return language.parse_requests(s)[0]
+
+
 class TestValueNakedLiteral:
     def test_expr(self):
         v = language.ValueNakedLiteral("foo")
@@ -302,8 +306,8 @@ class TestHeaders:
         assert language.parse_response("400:c'foo'").headers[0].key.val == "Content-Type"
         assert language.parse_response("400:l'foo'").headers[0].key.val == "Location"
 
-        assert 'Android' in language.parse_request("get:/:ua").headers[0].value.val
-        assert language.parse_request("get:/:ua").headers[0].key.val == "User-Agent"
+        assert 'Android' in parse_request("get:/:ua").headers[0].value.val
+        assert parse_request("get:/:ua").headers[0].key.val == "User-Agent"
 
 
 class TestShortcutUserAgent:
@@ -337,7 +341,7 @@ class Test_Action:
         assert l[0].offset == 0
 
     def test_resolve(self):
-        r = language.parse_request('GET:"/foo"')
+        r = parse_request('GET:"/foo"')
         e = language.DisconnectAt("r")
         ret = e.resolve(r, {})
         assert isinstance(ret.offset, int)
@@ -446,23 +450,49 @@ class TestPauses:
 
 class TestRequest:
     def test_nonascii(self):
-        tutils.raises("ascii", language.parse_request, "get:\xf0")
+        tutils.raises("ascii", parse_request, "get:\xf0")
 
     def test_err(self):
-        tutils.raises(language.ParseException, language.parse_request, 'GET')
+        tutils.raises(language.ParseException, parse_request, 'GET')
 
     def test_simple(self):
-        r = language.parse_request('GET:"/foo"')
+        r = parse_request('GET:"/foo"')
         assert r.method.string() == "GET"
         assert r.path.string() == "/foo"
-        r = language.parse_request('GET:/foo')
+        r = parse_request('GET:/foo')
         assert r.path.string() == "/foo"
-        r = language.parse_request('GET:@1k')
+        r = parse_request('GET:@1k')
         assert len(r.path.string()) == 1024
+
+    def test_multi(self):
+        r = language.parse_requests("GET:/ PUT:/")
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "PUT"
+        assert len(r) == 2
+
+        l = """
+            GET
+            "/foo"
+            ir,@1
+
+            PUT
+
+            "/foo
+
+
+
+            bar"
+
+            ir,@1
+        """
+        r = language.parse_requests(l)
+        assert len(r) == 2
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "PUT"
 
     def test_render(self):
         s = cStringIO.StringIO()
-        r = language.parse_request("GET:'/foo'")
+        r = parse_request("GET:'/foo'")
         assert language.serve(r, s, {}, "foo.com")
 
     def test_multiline(self):
@@ -471,7 +501,7 @@ class TestRequest:
             "/foo"
             ir,@1
         """
-        r = language.parse_request(l)
+        r = parse_request(l)
         assert r.method.string() == "GET"
         assert r.path.string() == "/foo"
         assert r.actions
@@ -487,24 +517,24 @@ class TestRequest:
 
             ir,@1
         """
-        r = language.parse_request(l)
+        r = parse_request(l)
         assert r.method.string() == "GET"
         assert r.path.string().endswith("bar")
         assert r.actions
 
     def test_spec(self):
         def rt(s):
-            s = language.parse_request(s).spec()
-            assert language.parse_request(s).spec() == s
+            s = parse_request(s).spec()
+            assert parse_request(s).spec() == s
         rt("get:/foo")
         rt("get:/foo:da")
 
     def test_freeze(self):
-        r = language.parse_request("GET:/:b@100").freeze({})
+        r = parse_request("GET:/:b@100").freeze({})
         assert len(r.spec()) > 100
 
     def test_path_generator(self):
-        r = language.parse_request("GET:@100").freeze({})
+        r = parse_request("GET:@100").freeze({})
         assert len(r.spec()) > 100
 
 
