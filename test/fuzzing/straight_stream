@@ -1,6 +1,6 @@
 
 mitmdump: $MITMDUMP -q --stream 1 
 pathod: $PATHOD -q
-#pathoc: sleep 2 && $PATHOC $FUZZ_SETTINGS  localhost:8080  ./straight_stream_patterns
-pathoc: sleep 2 && $PATHOC $FUZZ_SETTINGS  localhost:8080  /tmp/err
+pathoc: sleep 2 && $PATHOC $FUZZ_SETTINGS  localhost:8080  ./straight_stream_patterns
+#pathoc: sleep 2 && $PATHOC $FUZZ_SETTINGS  localhost:8080  /tmp/err
 
