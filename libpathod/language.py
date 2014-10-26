@@ -14,6 +14,11 @@ import utils
 BLOCKSIZE = 1024
 TRUNCATE = 1024
 
+
+def escape_backslash(s):
+    return s.replace("\\", "\\\\")
+
+
 def quote(s):
     quotechar = s[0]
     s = s[1:-1]
@@ -186,7 +191,7 @@ class LiteralGenerator:
         return self.s.__getslice__(a, b)
 
     def __repr__(self):
-        return '"%s"'%self.s
+        return "'%s'"%self.s
 
 
 class RandomGenerator:
@@ -274,10 +279,16 @@ class ValueLiteral(_ValueLiteral):
     @classmethod
     def expr(klass):
         e = v_literal.copy()
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(klass.parseAction)
+
+    @classmethod
+    def parseAction(klass, x):
+        v = klass(*x)
+        return v
 
     def spec(self):
-        return quote("'%s'"%self.val.encode("string_escape"))
+        ret = "'%s'"%self.val.encode("string_escape")
+        return ret
 
 
 class ValueNakedLiteral(_ValueLiteral):
@@ -361,7 +372,7 @@ class ValueFile(_Token):
         return FileGenerator(s)
 
     def spec(self):
-        return '<"%s"'%self.path.encode("string_escape")
+        return "<'%s'"%self.path.encode("string_escape")
 
 
 Value = pp.MatchFirst(
@@ -561,8 +572,7 @@ class PathodSpec(_Token):
 
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()
-        print [f]
-        return PathodSpec(ValueLiteral(f))
+        return PathodSpec(ValueLiteral(f.encode("string_escape")))
 
 
 class Path(_Component):

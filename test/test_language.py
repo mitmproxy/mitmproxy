@@ -6,6 +6,10 @@ import tutils
 language.TESTING = True
 
 
+def test_quote():
+    assert language.quote("'\\\\'")
+
+
 def parse_request(s):
     return language.parse_requests(s)[0]
 
@@ -29,7 +33,7 @@ class TestValueLiteral:
         assert v.expr()
         assert v.val == "foo"
 
-        v = language.ValueLiteral(r"foo\n")
+        v = language.ValueLiteral("foo\n")
         assert v.expr()
         assert v.val == "foo\n"
         assert repr(v)
@@ -44,9 +48,20 @@ class TestValueLiteral:
         v = language.ValueLiteral("\"")
         assert v.spec() == repr(v) == '\'"\''
 
-    def test_freeze(self):
-        v = language.ValueLiteral("foo")
-        assert v.freeze({}).val == v.val
+    def roundtrip(self, spec):
+        e = language.ValueLiteral.expr()
+        v = language.ValueLiteral(spec)
+        v2 = e.parseString(v.spec())
+        assert v.val == v2[0].val
+        assert v.spec() == v2[0].spec()
+
+    def test_roundtrip(self):
+        self.roundtrip("'")
+        self.roundtrip('\'')
+        self.roundtrip("a")
+        self.roundtrip("\"")
+        self.roundtrip(r"\\")
+        self.roundtrip("200:b'foo':i23,'\\''")
 
 
 class TestValueGenerate:
@@ -242,13 +257,14 @@ class TestMisc:
         assert "@1" not in f.spec()
 
     def test_pathodspec_freeze(self):
-        spec = r'GET:"/foo":s"200:ir,\'\"\'"'
-        r = parse_request(spec)
-        assert r.freeze({})
-
-        spec = r'GET:"/foo":s"200:ir,\"\'\""'
-        r = parse_request(spec)
-        assert r.freeze({})
+        e = language.PathodSpec(
+            language.ValueLiteral(
+                "200:b'foo':i10,'\\''".encode(
+                    "string_escape"
+                )
+            )
+        )
+        assert e.freeze({})
 
     def test_code(self):
         e = language.Code.expr()
