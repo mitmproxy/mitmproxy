@@ -466,7 +466,7 @@ class FlowMaster(controller.Master):
         self.refresh_server_playback = False
         self.replacehooks = ReplaceHooks()
         self.setheaders = SetHeaders()
-        self.replay_ignore_params = False    
+        self.replay_ignore_params = False
         self.replay_ignore_content = None
 
 
@@ -719,7 +719,11 @@ class FlowMaster(controller.Master):
         if f.live:
             app = self.apps.get(f.request)
             if app:
-                err = app.serve(f, f.client_conn.wfile, **{"mitmproxy.master": self})
+                err = app.serve(
+                    f,
+                    f.client_conn.wfile,
+                    **{"mitmproxy.master": self}
+                )
                 if err:
                     self.add_event("Error in wsgi app. %s"%err, "error")
                 f.reply(protocol.KILL)
@@ -767,7 +771,6 @@ class FlowMaster(controller.Master):
     def stop_stream(self):
         self.stream.fo.close()
         self.stream = None
-
 
 
 class FlowWriter:

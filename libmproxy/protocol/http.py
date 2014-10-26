@@ -313,25 +313,37 @@ class HTTPRequest(HTTPMessage):
 
         request_line_parts = http.parse_init(request_line)
         if not request_line_parts:
-            raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
+            raise http.HttpError(
+                400,
+                "Bad HTTP request line: %s" % repr(request_line)
+            )
         method, path, httpversion = request_line_parts
 
         if path == '*' or path.startswith("/"):
             form_in = "relative"
             if not netlib.utils.isascii(path):
-                raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
+                raise http.HttpError(
+                    400,
+                    "Bad HTTP request line: %s" % repr(request_line)
+                )
         elif method.upper() == 'CONNECT':
             form_in = "authority"
             r = http.parse_init_connect(request_line)
             if not r:
-                raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
+                raise http.HttpError(
+                    400,
+                    "Bad HTTP request line: %s" % repr(request_line)
+                )
             host, port, _ = r
             path = None
         else:
             form_in = "absolute"
             r = http.parse_init_proxy(request_line)
             if not r:
-                raise http.HttpError(400, "Bad HTTP request line: %s" % repr(request_line))
+                raise http.HttpError(
+                    400,
+                    "Bad HTTP request line: %s" % repr(request_line)
+                )
             _, scheme, host, port, path, _ = r
 
         headers = http.read_headers(rfile)
@@ -343,23 +355,39 @@ class HTTPRequest(HTTPMessage):
                                           method, None, True)
             timestamp_end = utils.timestamp()
 
-        return HTTPRequest(form_in, method, scheme, host, port, path, httpversion, headers,
-                           content, timestamp_start, timestamp_end)
+        return HTTPRequest(
+            form_in,
+            method,
+            scheme,
+            host,
+            port,
+            path,
+            httpversion,
+            headers,
+            content,
+            timestamp_start,
+            timestamp_end
+        )
 
     def _assemble_first_line(self, form=None):
         form = form or self.form_out
 
         if form == "relative":
             path = self.path if self.method != "OPTIONS" else "*"
-            request_line = '%s %s HTTP/%s.%s' % \
-                           (self.method, path, self.httpversion[0], self.httpversion[1])
+            request_line = '%s %s HTTP/%s.%s' % (
+                self.method, path, self.httpversion[0], self.httpversion[1]
+            )
         elif form == "authority":
-            request_line = '%s %s:%s HTTP/%s.%s' % (self.method, self.host, self.port,
-                                                    self.httpversion[0], self.httpversion[1])
+            request_line = '%s %s:%s HTTP/%s.%s' % (
+                self.method, self.host, self.port, self.httpversion[0],
+                self.httpversion[1]
+            )
         elif form == "absolute":
-            request_line = '%s %s://%s:%s%s HTTP/%s.%s' % \
-                           (self.method, self.scheme, self.host, self.port, self.path,
-                            self.httpversion[0], self.httpversion[1])
+            request_line = '%s %s://%s:%s%s HTTP/%s.%s' % (
+                self.method, self.scheme, self.host,
+                self.port, self.path, self.httpversion[0],
+                self.httpversion[1]
+            )
         else:
             raise http.HttpError(400, "Invalid request form")
         return request_line
@@ -371,7 +399,8 @@ class HTTPRequest(HTTPMessage):
                   'Connection',
                   'Transfer-Encoding']:
             del headers[k]
-        if headers["Upgrade"] == ["h2c"]:  # Suppress HTTP2 https://http2.github.io/http2-spec/index.html#discover-http
+        if headers["Upgrade"] == ["h2c"]:
+            # Suppress HTTP2 https://http2.github.io/http2-spec/index.html#discover-http
             del headers["Upgrade"]
         if not 'host' in headers and self.scheme and self.host and self.port:
             headers["Host"] = [utils.hostport(self.scheme,
@@ -380,13 +409,16 @@ class HTTPRequest(HTTPMessage):
 
         if self.content:
             headers["Content-Length"] = [str(len(self.content))]
-        elif 'Transfer-Encoding' in self.headers:  # content-length for e.g. chuncked transfer-encoding with no content
+        elif 'Transfer-Encoding' in self.headers:
+            # content-length for e.g. chuncked transfer-encoding with no content
             headers["Content-Length"] = ["0"]
 
         return str(headers)
 
     def _assemble_head(self, form=None):
-        return "%s\r\n%s\r\n" % (self._assemble_first_line(form), self._assemble_headers())
+        return "%s\r\n%s\r\n" % (
+            self._assemble_first_line(form), self._assemble_headers()
+        )
 
     def assemble(self, form=None):
         """
@@ -396,7 +428,10 @@ class HTTPRequest(HTTPMessage):
             Raises an Exception if the request cannot be assembled.
         """
         if self.content == CONTENT_MISSING:
-            raise proxy.ProxyError(502, "Cannot assemble flow with CONTENT_MISSING")
+            raise proxy.ProxyError(
+                502,
+                "Cannot assemble flow with CONTENT_MISSING"
+            )
         head = self._assemble_head(form)
         if self.content:
             return head + self.content
@@ -937,16 +972,23 @@ class HTTPHandler(ProtocolHandler):
             try:
                 self.c.server_conn.send(request_raw)
                 # Only get the headers at first...
-                flow.response = HTTPResponse.from_stream(self.c.server_conn.rfile, flow.request.method,
-                                                         body_size_limit=self.c.config.body_size_limit,
-                                                         include_body=False)
+                flow.response = HTTPResponse.from_stream(
+                    self.c.server_conn.rfile, flow.request.method,
+                    body_size_limit=self.c.config.body_size_limit,
+                    include_body=False
+                )
                 break
             except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
-                self.c.log("error in server communication: %s" % repr(v), level="debug")
+                self.c.log(
+                    "error in server communication: %s" % repr(v),
+                    level="debug"
+                )
                 if attempt == 0:
-                    # In any case, we try to reconnect at least once.
-                    # This is necessary because it might be possible that we already initiated an upstream connection
-                    # after clientconnect that has already been expired, e.g consider the following event log:
+                    # In any case, we try to reconnect at least once. This is
+                    # necessary because it might be possible that we already
+                    # initiated an upstream connection after clientconnect that
+                    # has already been expired, e.g consider the following event
+                    # log:
                     # > clientconnect (transparent mode destination known)
                     # > serverconnect
                     # > read n% of large request
