@@ -35,6 +35,10 @@ def go_pathoc():
         help="Issue an HTTP CONNECT to connect to the specified host."
     )
     parser.add_argument(
+        "--memo-limit", dest='memolimit', default=5000, type=int, metavar="N",
+        help='Stop if we do not find a valid request after N attempts.'
+    )
+    parser.add_argument(
         "-m", dest='memo', action="store_true", default=False,
         help="""
             Remember specs, and never play the same one twice. Note that this

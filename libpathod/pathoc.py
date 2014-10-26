@@ -222,9 +222,14 @@ class Pathoc(tcp.TCPClient):
 
 def main(args):
     memo = set([])
+    trycount = 0
     try:
         cnt = 0
         while 1:
+            if trycount > args.memolimit:
+                print >> sys.stderr, "Memo limit exceeded..."
+                return
+
             cnt += 1
             if args.random:
                 playlist = [random.choice(args.requests)]
@@ -251,8 +256,10 @@ def main(args):
                         newlist.append(spec)
                 playlist = newlist
             if not playlist:
+                trycount += 1
                 continue
 
+            trycount = 0
             try:
                 p.connect(args.connect_to)
             except (tcp.NetLibError, PathocError), v:
