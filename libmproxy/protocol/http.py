@@ -18,6 +18,10 @@ HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
 
 
+class KillSignal(Exception):
+    pass
+
+
 def get_line(fp):
     """
     Get a line, possibly preceded by a blank.
@@ -1001,19 +1005,21 @@ class HTTPHandler(ProtocolHandler):
 
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
-        self.c.channel.ask("responseheaders", flow)
-
-        # now get the rest of the request body, if body still needs to be read
-        # but not streaming this response
-        if flow.response.stream:
-            flow.response.content = CONTENT_MISSING
+        flow = self.c.channel.ask("responseheaders", flow)
+        if flow == KILL:
+            raise KillSignal
         else:
-            flow.response.content = http.read_http_body(
-                self.c.server_conn.rfile, flow.response.headers,
-                self.c.config.body_size_limit,
-                flow.request.method, flow.response.code, False
-            )
-            flow.response.timestamp_end = utils.timestamp()
+            # now get the rest of the request body, if body still needs to be
+            # read but not streaming this response
+            if flow.response.stream:
+                flow.response.content = CONTENT_MISSING
+            else:
+                flow.response.content = http.read_http_body(
+                    self.c.server_conn.rfile, flow.response.headers,
+                    self.c.config.body_size_limit,
+                    flow.request.method, flow.response.code, False
+                )
+        flow.response.timestamp_end = utils.timestamp()
 
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
@@ -1092,8 +1098,16 @@ class HTTPHandler(ProtocolHandler):
             flow.live.restore_server()
 
             return True  # Next flow please.
-        except (HttpAuthenticationError, http.HttpError, proxy.ProxyError, tcp.NetLibError), e:
+        except (
+                HttpAuthenticationError,
+                http.HttpError,
+                proxy.ProxyError,
+                tcp.NetLibError,
+        ), e:
             self.handle_error(e, flow)
+        except KillSignal:
+            self.c.log("Connection killed", "info")
+            flow.live = None
         finally:
             flow.live = None  # Connection is not live anymore.
         return False

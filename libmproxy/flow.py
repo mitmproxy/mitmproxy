@@ -738,8 +738,12 @@ class FlowMaster(controller.Master):
     def handle_responseheaders(self, f):
         self.run_script_hook("responseheaders", f)
 
-        if self.stream_large_bodies:
-            self.stream_large_bodies.run(f, False)
+        try:
+            if self.stream_large_bodies:
+                self.stream_large_bodies.run(f, False)
+        except netlib.http.HttpError:
+            f.reply(protocol.KILL)
+            return
 
         f.reply()
         return f

@@ -248,14 +248,18 @@ def common_options(parser):
         "--stream",
         action="store", dest="stream_large_bodies", default=None,
         metavar="SIZE",
-        help="Stream data to the client if response body exceeds the given threshold. "
-             "If streamed, the body will not be stored in any way. Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
+        help="""
+        Stream data to the client if response body exceeds the given threshold.
+        If streamed, the body will not be stored in any way. Understands k/m/g
+        suffixes, i.e. 3m for 3 megabytes.
+         """
     )
 
     group = parser.add_argument_group("Proxy Options")
-    # We could make a mutually exclusive group out of -R, -U, -T, but we don't do that because
-    #  - --upstream-server should be in that group as well, but it's already in a different group.
-    #  - our own error messages are more helpful
+    # We could make a mutually exclusive group out of -R, -U, -T, but we don't
+    # do that because  - --upstream-server should be in that group as well, but
+    # it's already in a different group.  - our own error messages are more
+    # helpful
     group.add_argument(
         "-b",
         action="store", type=str, dest="addr", default='',
@@ -265,11 +269,14 @@ def common_options(parser):
         "-I", "--ignore",
         action="append", type=str, dest="ignore_hosts", default=[],
         metavar="HOST",
-        help="Ignore host and forward all traffic without processing it. "
-             "In transparent mode, it is recommended to use an IP address (range), not the hostname. "
-             "In regular mode, only SSL traffic is ignored and the hostname should be used. "
-             "The supplied value is interpreted as a regular expression and matched on the ip or the hostname. "
-             "Can be passed multiple times. "
+        help="""
+            Ignore host and forward all traffic without processing it. In
+            transparent mode, it is recommended to use an IP address (range),
+            not the hostname. In regular mode, only SSL traffic is ignored and
+            the hostname should be used. The supplied value is interpreted as a
+            regular expression and matched on the ip or the hostname. Can be
+            passed multiple times.
+        """
     )
     group.add_argument(
         "--tcp",
