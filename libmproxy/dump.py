@@ -1,10 +1,13 @@
 from __future__ import absolute_import
-import sys, os
+import sys
+import os
 import netlib.utils
 from . import flow, filt, utils
 from .protocol import http
 
-class DumpError(Exception): pass
+
+class DumpError(Exception):
+    pass
 
 
 class Options(object):
@@ -37,6 +40,7 @@ class Options(object):
         "replay_ignore_content",
         "replay_ignore_params",
     ]
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -71,7 +75,7 @@ class DumpMaster(flow.FlowMaster):
         self.anticache = options.anticache
         self.anticomp = options.anticomp
         self.showhost = options.showhost
-        self.replay_ignore_params = options.replay_ignore_params    
+        self.replay_ignore_params = options.replay_ignore_params
         self.replay_ignore_content = options.replay_ignore_content
         self.refresh_server_playback = options.refresh_server_playback
 
@@ -87,7 +91,6 @@ class DumpMaster(flow.FlowMaster):
 
         if options.stickyauth:
             self.set_stickyauth(options.stickyauth)
-
 
         if options.wfile:
             path = os.path.expanduser(options.wfile)
