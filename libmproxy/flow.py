@@ -969,7 +969,7 @@ class ServerPlaybackState:
 
         filtered = []
         for p in queriesArray:
-          if p[0] not in self.ignore_params:
+          if self.ignore_params and p[0] not in self.ignore_params:
             filtered.append(p)
 
         key = [
