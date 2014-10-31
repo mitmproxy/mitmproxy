@@ -70,7 +70,7 @@ class TestHTTPRequest:
 
     def test_http_options_relative_form_in(self):
         """
-        Exercises fix for Issue #xxx.
+        Exercises fix for Issue #392.
         """
         s = StringIO("OPTIONS /secret/resource HTTP/1.1")
         r = HTTPRequest.from_stream(s)
