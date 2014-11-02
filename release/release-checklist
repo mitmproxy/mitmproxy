@@ -26,3 +26,7 @@
     - tar -xzvf pkgfile.tgz
     - virtualenv venv
 
+- Build the OSX binaries
+    - Follow instructions in osxbinaries
+
+

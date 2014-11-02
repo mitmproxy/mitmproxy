@@ -10,7 +10,8 @@
 # answer is to touch the __init__.py file in the zope directory. On my system:
 #   touch /Library/Python/2.7/site-packages/zope/__init__.py
 
-# To run, change into the pyinstaller directory, and then run this script.
+# To run, first install netlib and mitmproxy, then change into the pyinstaller
+# directory, and then run this script.
 
 DST=/tmp/osx-mitmproxy
 MITMPROXY=~/mitmproxy/mitmproxy
