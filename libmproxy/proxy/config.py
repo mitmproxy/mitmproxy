@@ -43,9 +43,9 @@ class ProxyConfig:
         self.body_size_limit = body_size_limit
 
         if mode == "transparent":
-            self.mode = TransparentProxyMode(platform.resolver(), TRANSPARENT_SSL_PORTS)
+            self.mode = TransparentProxyMode(platform.resolver(), ssl_ports)
         elif mode == "socks5":
-            self.mode = Socks5ProxyMode(TRANSPARENT_SSL_PORTS)
+            self.mode = Socks5ProxyMode(ssl_ports)
         elif mode == "reverse":
             self.mode = ReverseProxyMode(upstream_server)
         elif mode == "upstream":

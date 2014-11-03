@@ -251,7 +251,7 @@ class HTTPRequest(HTTPMessage):
              - authority-form (CONNECT example.com:443)
              Details: http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-25#section-5.3
 
-        form_out: The request form which mitmproxy has send out to the
+        form_out: The request form which mitmproxy will send out to the
         destination
 
         timestamp_start: Timestamp indicating when request transmission started
@@ -401,9 +401,8 @@ class HTTPRequest(HTTPMessage):
         form = form or self.form_out
 
         if form == "relative":
-            path = self.path if self.method != "OPTIONS" else "*"
             request_line = '%s %s HTTP/%s.%s' % (
-                self.method, path, self.httpversion[0], self.httpversion[1]
+                self.method, self.path, self.httpversion[0], self.httpversion[1]
             )
         elif form == "authority":
             request_line = '%s %s:%s HTTP/%s.%s' % (

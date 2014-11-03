@@ -23,7 +23,7 @@ def test_stripped_chunked_encoding_no_content():
 
 
 class TestHTTPRequest:
-    def test_asterisk_form(self):
+    def test_asterisk_form_in(self):
         s = StringIO("OPTIONS * HTTP/1.1")
         f = tutils.tflow(req=None)
         f.request = HTTPRequest.from_stream(s)
@@ -33,7 +33,7 @@ class TestHTTPRequest:
         f.request.scheme = "http"
         assert f.request.assemble() == "OPTIONS * HTTP/1.1\r\nHost: address:22\r\n\r\n"
 
-    def test_origin_form(self):
+    def test_relative_form_in(self):
         s = StringIO("GET /foo\xff HTTP/1.1")
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
         s = StringIO("GET /foo HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: h2c")
@@ -52,8 +52,7 @@ class TestHTTPRequest:
         r.update_host_header()
         assert "Host" in r.headers
 
-
-    def test_authority_form(self):
+    def test_authority_form_in(self):
         s = StringIO("CONNECT oops-no-port.com HTTP/1.1")
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
         s = StringIO("CONNECT address:22 HTTP/1.1")
@@ -62,12 +61,36 @@ class TestHTTPRequest:
         assert r.assemble() == "CONNECT address:22 HTTP/1.1\r\nHost: address:22\r\n\r\n"
         assert r.pretty_url(False) == "address:22"
 
-    def test_absolute_form(self):
+    def test_absolute_form_in(self):
         s = StringIO("GET oops-no-protocol.com HTTP/1.1")
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
         s = StringIO("GET http://address:22/ HTTP/1.1")
         r = HTTPRequest.from_stream(s)
         assert r.assemble() == "GET http://address:22/ HTTP/1.1\r\nHost: address:22\r\n\r\n"
+
+    def test_http_options_relative_form_in(self):
+        """
+        Exercises fix for Issue #392.
+        """
+        s = StringIO("OPTIONS /secret/resource HTTP/1.1")
+        r = HTTPRequest.from_stream(s)
+        r.host = 'address'
+        r.port = 80
+        r.scheme = "http"
+        assert r.assemble() == ("OPTIONS "
+                                "/secret/resource "
+                                "HTTP/1.1\r\nHost: address\r\n\r\n")
+
+    def test_http_options_absolute_form_in(self):
+        s = StringIO("OPTIONS http://address/secret/resource HTTP/1.1")
+        r = HTTPRequest.from_stream(s)
+        r.host = 'address'
+        r.port = 80
+        r.scheme = "http"
+        assert r.assemble() == ("OPTIONS "
+                                "http://address:80/secret/resource "
+                                "HTTP/1.1\r\nHost: address\r\n\r\n")
+
 
     def test_assemble_unknown_form(self):
         r = tutils.treq()
