@@ -825,4 +825,4 @@ class FilteredFlowWriter:
         if self.filt and not f.match(self.filt):
             return
         d = f.get_state()
-        tnetstring.dump(d, self.fo)
+        tnetstring.dump(d, self.fo, 'utf-8')
