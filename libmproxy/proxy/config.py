@@ -33,7 +33,8 @@ class ProxyConfig:
                  no_upstream_cert=False, body_size_limit=None,
                  mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
                  authenticator=None, ignore_hosts=[], tcp_hosts=[],
-                 ciphers=None, certs=[], certforward=False, ssl_ports=TRANSPARENT_SSL_PORTS):
+                 ciphers=None, certs=[], certforward=False, ssl_ports=TRANSPARENT_SSL_PORTS,
+                 re_resolve_destip=False):
         self.host = host
         self.port = port
         self.server_version = server_version
@@ -66,6 +67,7 @@ class ProxyConfig:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
         self.ssl_ports = ssl_ports
+        self.re_resolve_destip = re_resolve_destip
 
 
 def process_proxy_options(parser, options):
@@ -150,7 +152,8 @@ def process_proxy_options(parser, options):
         ciphers=options.ciphers,
         certs=certs,
         certforward=options.certforward,
-        ssl_ports=ssl_ports
+        ssl_ports=ssl_ports,
+        re_resolve_destip=options.re_resolve_destip
     )
 
 

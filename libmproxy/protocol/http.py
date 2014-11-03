@@ -4,6 +4,7 @@ import urllib
 import urlparse
 import time
 import copy
+import socket
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import threading
 from netlib import http, tcp, http_status
@@ -1444,6 +1445,9 @@ class RequestReplayThread(threading.Thread):
             # In all modes, we directly connect to the server displayed
             if self.config.mode == "upstream":
                 server_address = self.config.mode.get_upstream_server(self.flow.client_conn)[2:]
+                #if re-resolve-destip is enabled, resolve server_address using dns.
+                if self.config.re_resolve_destip:
+                    server_address[0] = socket.gethostbyname(r.host)
                 server = ServerConnection(server_address)
                 server.connect()
                 if r.scheme == "https":
