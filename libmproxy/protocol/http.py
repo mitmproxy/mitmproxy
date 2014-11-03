@@ -1306,7 +1306,13 @@ class HTTPHandler(ProtocolHandler):
         # We provide a mostly unified API to the user, which needs to be
         # unfiddled here
         # ( See also: https://github.com/mitmproxy/mitmproxy/issues/337 )
-        address = netlib.tcp.Address((flow.request.host, flow.request.port))
+        import socket
+        #if re-resolve-destip is enabled, resolve server_address using dns.
+        if self.c.config.re_resolve_destip:
+            host_name = flow.request.headers.lst[0][1]
+            address = netlib.tcp.Address((socket.gethostbyname(host_name), flow.request.port))
+        else:
+            address = netlib.tcp.Address((flow.request.host, flow.request.port))
 
         ssl = (flow.request.scheme == "https")
 
@@ -1445,9 +1451,6 @@ class RequestReplayThread(threading.Thread):
             # In all modes, we directly connect to the server displayed
             if self.config.mode == "upstream":
                 server_address = self.config.mode.get_upstream_server(self.flow.client_conn)[2:]
-                #if re-resolve-destip is enabled, resolve server_address using dns.
-                if self.config.re_resolve_destip:
-                    server_address[0] = socket.gethostbyname(r.host)
                 server = ServerConnection(server_address)
                 server.connect()
                 if r.scheme == "https":

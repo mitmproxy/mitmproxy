@@ -87,7 +87,7 @@ class ConnectionHandler:
 
             # Check for existing connection: If an inline script already established a
             # connection, do not apply client_ssl or server_ssl.
-            if self.server_conn and not self.server_conn.connection:
+            if self.server_conn and not self.server_conn.connection and not self.config.re_resolve_destip:
                 self.establish_server_connection()
                 if client_ssl or server_ssl:
                     self.establish_ssl(client=client_ssl, server=server_ssl)
