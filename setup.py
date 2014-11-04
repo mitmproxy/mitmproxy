@@ -45,6 +45,9 @@ setup(
 
     install_requires=[
         'netlib>=%s' % version.MINORVERSION,
+        # It's INSANE that we have to do this, but...
+        # FIXME: Requirement to be removed at next release
+        "pip>=1.5.6",
         "requests>=2.4.1",
         "Flask>=0.10.1"
     ],
