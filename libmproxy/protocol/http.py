@@ -1309,7 +1309,7 @@ class HTTPHandler(ProtocolHandler):
         import socket
         #if re-resolve-destip is enabled, resolve server_address using dns.
         if self.c.config.re_resolve_destip:
-            host_name = flow.request.headers.lst[0][1]
+            host_name = dict(flow.request.headers.lst)["Host"]
             address = netlib.tcp.Address((socket.gethostbyname(host_name), flow.request.port))
         else:
             address = netlib.tcp.Address((flow.request.host, flow.request.port))
