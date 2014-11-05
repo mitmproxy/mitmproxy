@@ -1,9 +1,11 @@
 import os
 from cStringIO import StringIO
-from libmproxy import dump, flow, proxy
+from libmproxy import dump, flow
+from libmproxy.protocol import http
 from libmproxy.proxy.primitives import Log
 import tutils
 import mock
+
 
 def test_strfuncs():
     t = tutils.tresp()
@@ -57,6 +59,18 @@ class TestDumpMaster:
         m.handle_request(f)
         assert m.handle_error(f)
         assert "error" in cs.getvalue()
+
+    def test_missing_content(self):
+        cs = StringIO()
+        o = dump.Options(flow_detail=3)
+        m = dump.DumpMaster(None, o, outfile=cs)
+        f = tutils.tflow()
+        f.request.content = http.CONTENT_MISSING
+        m.handle_request(f)
+        f.response = tutils.tresp()
+        f.response.content = http.CONTENT_MISSING
+        m.handle_response(f)
+        assert "content missing" in cs.getvalue()
 
     def test_replay(self):
         cs = StringIO()
