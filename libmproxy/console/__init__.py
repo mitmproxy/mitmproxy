@@ -819,7 +819,7 @@ class ConsoleMaster(flow.FlowMaster):
                     self.statusbar.redraw()
                     size = self.drawscreen()
                 changed = self.tick(self.masterq, 0.01)
-                self.ui.set_input_timeouts(max_wait=0.1)
+                self.ui.set_input_timeouts(max_wait=0.01)
                 keys = self.ui.get_input()
                 if keys:
                     changed = True

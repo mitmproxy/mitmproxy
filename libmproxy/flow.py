@@ -27,7 +27,12 @@ class AppRegistry:
             Add a WSGI app to the registry, to be served for requests to the
             specified domain, on the specified port.
         """
-        self.apps[(domain, port)] = wsgi.WSGIAdaptor(app, domain, port, version.NAMEVERSION)
+        self.apps[(domain, port)] = wsgi.WSGIAdaptor(
+            app,
+            domain,
+            port,
+            version.NAMEVERSION
+        )
 
     def get(self, request):
         """
@@ -72,7 +77,8 @@ class ReplaceHooks:
 
     def get_specs(self):
         """
-            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
+            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s)
+            tuples.
         """
         return [i[:3] for i in self.lst]
 
@@ -119,7 +125,8 @@ class SetHeaders:
 
     def get_specs(self):
         """
-            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
+            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s)
+            tuples.
         """
         return [i[:3] for i in self.lst]
 
