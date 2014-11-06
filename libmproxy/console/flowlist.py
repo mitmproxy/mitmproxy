@@ -120,13 +120,15 @@ class ConnectionItem(common.WWrap):
             self.master.start_server_playback(
                 [i.copy() for i in self.master.state.view],
                 self.master.killextra, self.master.rheaders,
-                False, self.master.nopop
+                False, self.master.nopop,
+                self.master.options.replay_ignore_params, self.master.options.replay_ignore_content
             )
         elif k == "t":
             self.master.start_server_playback(
                 [self.flow.copy()],
                 self.master.killextra, self.master.rheaders,
-                False, self.master.nopop
+                False, self.master.nopop,
+                self.master.options.replay_ignore_params, self.master.options.replay_ignore_content
             )
         else:
             self.master.path_prompt(
