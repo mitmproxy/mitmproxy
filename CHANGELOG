@@ -1,5 +1,7 @@
 
 23 October 2014: mitmproxy 0.11:
+    
+    * Performance improvements for mitmproxy console
 
     * SOCKS5 proxy mode allows mitmproxy to act as a SOCKS5 proxy server
 
