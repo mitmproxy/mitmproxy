@@ -434,11 +434,9 @@ class HTTPRequest(HTTPMessage):
                                               self.host,
                                               self.port)]
 
-        if self.content:
+        # If content is defined (i.e. not None or CONTENT_MISSING), we always add a content-length header.
+        if self.content or self.content == "":
             headers["Content-Length"] = [str(len(self.content))]
-        elif 'Transfer-Encoding' in self.headers:
-            # content-length for e.g. chuncked transfer-encoding with no content
-            headers["Content-Length"] = ["0"]
 
         return str(headers)
 
@@ -761,11 +759,9 @@ class HTTPResponse(HTTPMessage):
         if not preserve_transfer_encoding:
             del headers['Transfer-Encoding']
 
-        if self.content:
+        # If content is defined (i.e. not None or CONTENT_MISSING), we always add a content-length header.
+        if self.content or self.content == "":
             headers["Content-Length"] = [str(len(self.content))]
-        # add content-length for chuncked transfer-encoding with no content
-        elif not preserve_transfer_encoding and 'Transfer-Encoding' in self.headers:
-            headers["Content-Length"] = ["0"]
 
         return str(headers)
 
