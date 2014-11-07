@@ -1,5 +1,4 @@
 from __future__ import (absolute_import, print_function, division)
-from passlib.apache import HtpasswdFile
 from argparse import Action, ArgumentTypeError
 from . import http
 
@@ -83,7 +82,8 @@ class PassManHtpasswd:
         """
             Raises ValueError if htpasswd file is invalid.
         """
-        self.htpasswd = HtpasswdFile(path)
+        import passlib.apache
+        self.htpasswd = passlib.apache.HtpasswdFile(path)
 
     def test(self, username, password_token):
         return bool(self.htpasswd.check_password(username, password_token))

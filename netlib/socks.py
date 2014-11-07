@@ -53,7 +53,10 @@ def _read(f, n):
         if len(d) == n:
             return d
         else:
-            raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, "Incomplete Read")
+            raise SocksError(
+                REP.GENERAL_SOCKS_SERVER_FAILURE,
+                "Incomplete Read"
+            )
     except socket.error as e:
         raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, str(e))
 
@@ -76,6 +79,7 @@ class ClientGreeting(object):
         f.write(struct.pack("!BB", self.ver, len(self.methods)))
         f.write(self.methods.tostring())
 
+
 class ServerGreeting(object):
     __slots__ = ("ver", "method")
 
@@ -90,6 +94,7 @@ class ServerGreeting(object):
 
     def to_file(self, f):
         f.write(struct.pack("!BB", self.ver, self.method))
+
 
 class Message(object):
     __slots__ = ("ver", "msg", "atyp", "addr")
@@ -108,7 +113,8 @@ class Message(object):
                              "Socks Request: Invalid reserved byte: %s" % rsv)
 
         if atyp == ATYP.IPV4_ADDRESS:
-            host = socket.inet_ntoa(_read(f, 4))  # We use tnoa here as ntop is not commonly available on Windows.
+            # We use tnoa here as ntop is not commonly available on Windows.
+            host = socket.inet_ntoa(_read(f, 4))
             use_ipv6 = False
         elif atyp == ATYP.IPV6_ADDRESS:
             host = socket.inet_ntop(socket.AF_INET6, _read(f, 16))
@@ -135,5 +141,9 @@ class Message(object):
             f.write(struct.pack("!B", len(self.addr.host)))
             f.write(self.addr.host)
         else:
-            raise SocksError(REP.ADDRESS_TYPE_NOT_SUPPORTED, "Unknown ATYP: %s" % self.atyp)
+            raise SocksError(
+                REP.ADDRESS_TYPE_NOT_SUPPORTED,
+                "Unknown ATYP: %s" % self.atyp
+            )
         f.write(struct.pack("!H", self.addr.port))
+

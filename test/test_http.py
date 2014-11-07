@@ -119,11 +119,11 @@ def test_expected_http_body_size():
     # gibber in the content-length field
     h = odict.ODictCaseless()
     h["content-length"] = ["foo"]
-    tutils.raises(http.HttpError, http.expected_http_body_size, h, False, "GET", 200)
+    assert http.expected_http_body_size(h, False, "GET", 200) is None
     # negative number in the content-length field
     h = odict.ODictCaseless()
     h["content-length"] = ["-7"]
-    tutils.raises(http.HttpError, http.expected_http_body_size, h, False, "GET", 200)
+    assert http.expected_http_body_size(h, False, "GET", 200) is None
     # explicit length
     h = odict.ODictCaseless()
     h["content-length"] = ["5"]

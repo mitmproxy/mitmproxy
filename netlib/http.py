@@ -406,8 +406,11 @@ def expected_http_body_size(headers, is_request, request_method, response_code):
     """
         Returns the expected body length:
          - a positive integer, if the size is known in advance
-         - None, if the size in unknown in advance (chunked encoding)
+         - None, if the size in unknown in advance (chunked encoding or invalid
+         data)
          - -1, if all data should be read until end of stream.
+
+        May raise HttpError.
     """
     # Determine response size according to
     # http://tools.ietf.org/html/rfc7230#section-3.3
@@ -429,10 +432,7 @@ def expected_http_body_size(headers, is_request, request_method, response_code):
                 raise ValueError()
             return size
         except ValueError:
-            raise HttpError(
-                400 if is_request else 502,
-                "Invalid content-length header: %s" % headers["content-length"]
-            )
+            return None
     if is_request:
         return 0
     return -1
