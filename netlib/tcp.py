@@ -253,7 +253,10 @@ class _Connection(object):
         # Closing the socket is not our task, therefore we don't call close then.
         if type(self.connection) != SSL.Connection:
             if not getattr(self.wfile, "closed", False):
-                self.wfile.flush()
+                try:
+                    self.wfile.flush()
+                except NetLibDisconnect:
+                    pass
 
             self.wfile.close()
             self.rfile.close()
