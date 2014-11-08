@@ -35,14 +35,7 @@ setup(
 
     packages=find_packages(),
     include_package_data=True,
-
-    entry_points={
-        'console_scripts': [
-            "pathod = libpathod.main:pathod",
-            "pathoc = libpathod.main:pathoc"
-        ]
-    },
-
+    scripts = ["pathod", "pathoc"],
     install_requires=[
         'netlib>=%s' % version.MINORVERSION,
         # It's INSANE that we have to do this, but...
