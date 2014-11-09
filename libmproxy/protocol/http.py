@@ -4,6 +4,7 @@ import urllib
 import urlparse
 import time
 import copy
+import socket
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import threading
 from netlib import http, tcp, http_status
@@ -1301,7 +1302,13 @@ class HTTPHandler(ProtocolHandler):
         # We provide a mostly unified API to the user, which needs to be
         # unfiddled here
         # ( See also: https://github.com/mitmproxy/mitmproxy/issues/337 )
-        address = netlib.tcp.Address((flow.request.host, flow.request.port))
+        import socket
+        #if re-resolve-destip is enabled, resolve server_address using dns.
+        if self.c.config.re_resolve_destip:
+            host_name = dict(flow.request.headers.lst)["Host"]
+            address = netlib.tcp.Address((socket.gethostbyname(host_name), flow.request.port))
+        else:
+            address = netlib.tcp.Address((flow.request.host, flow.request.port))
 
         ssl = (flow.request.scheme == "https")
 

@@ -88,13 +88,19 @@ class ConnectionHandler:
             # Check for existing connection: If an inline script already established a
             # connection, do not apply client_ssl or server_ssl.
             if self.server_conn and not self.server_conn.connection:
-                self.establish_server_connection()
+                if not self.config.re_resolve_destip:
+                    self.establish_server_connection()
+                    if client_ssl or server_ssl:
+                        self.establish_ssl(client=client_ssl, server=server_ssl)
+                else:
+                    if client_ssl or server_ssl:
+                        self.establish_ssl(client=True)
+                        if self.server_conn is None:
+                            raise ProxyError(502, "Can't establish connection to server.")
                 if client_ssl or server_ssl:
-                    self.establish_ssl(client=client_ssl, server=server_ssl)
-
-                if self.config.check_tcp(self.server_conn.address):
-                    self.log("Generic TCP mode for host: %s:%s" % self.server_conn.address(), "info")
-                    self.conntype = "tcp"
+                    if self.config.check_tcp(self.server_conn.address) or self.config.re_resolve_destip:
+                        self.log("Generic TCP mode for host: %s:%s" % self.server_conn.address(), "info")
+                        self.conntype = "tcp"
 
             # Delegate handling to the protocol handler
             protocol_handler(self.conntype)(self, **conn_kwargs).handle_messages()
@@ -200,21 +206,26 @@ class ConnectionHandler:
             except tcp.NetLibError as v:
                 raise ProxyError(400, repr(v))
 
-    def server_reconnect(self):
+    def server_reconnect(self, had_ssl=False):
         address = self.server_conn.address
-        had_ssl = self.server_conn.ssl_established
+        had_ssl = self.server_conn.ssl_established or had_ssl
         state = self.server_conn.state
         sni = self.sni
         self.log("(server reconnect follows)", "debug")
         self.del_server_connection()
-        self.set_server_address(address)
+
+        if self.config.re_resolve_destip:
+            self.set_server_address((socket.gethostbyname(sni), address.port))
+        else:
+            self.set_server_address(address)
+
         self.establish_server_connection()
 
         for s in state:
             protocol_handler(s[0])(self).handle_server_reconnect(s[1])
         self.server_conn.state = state
 
-        if had_ssl:
+        if had_ssl or had_ssl:
             self.sni = sni
             self.establish_ssl(server=True)
 
@@ -260,7 +271,7 @@ class ConnectionHandler:
             if sn and sn != self.sni:
                 self.sni = sn.decode("utf8").encode("idna")
                 self.log("SNI received: %s" % self.sni, "debug")
-                self.server_reconnect()  # reconnect to upstream server with SNI
+                self.server_reconnect(True)  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn._create_ssl_context(

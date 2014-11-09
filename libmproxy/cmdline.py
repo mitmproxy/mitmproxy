@@ -333,6 +333,12 @@ def common_options(parser):
         action="store", choices=("relative", "absolute"),
         help="Override the HTTP request form sent upstream by the proxy"
     )
+    group.add_argument(
+        "--re-resolve-destip",
+        action="store_true", dest="re_resolve_destip", default=False,
+        help="Ignores the destination ip and re-resolve the host name using proxy " \
+             "server's DNS in transparent mode."
+    )
 
     group = parser.add_argument_group("Onboarding App")
     group.add_argument(
