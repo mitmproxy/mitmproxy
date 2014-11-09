@@ -97,10 +97,10 @@ class ConnectionHandler:
                         self.establish_ssl(client=True)
                         if self.server_conn is None:
                             raise ProxyError(502, "Can't establish connection to server.")
-
-                if self.config.check_tcp(self.server_conn.address) or self.config.re_resolve_destip:
-                    self.log("Generic TCP mode for host: %s:%s" % self.server_conn.address(), "info")
-                    self.conntype = "tcp"
+                if client_ssl or server_ssl:
+                    if self.config.check_tcp(self.server_conn.address) or self.config.re_resolve_destip:
+                        self.log("Generic TCP mode for host: %s:%s" % self.server_conn.address(), "info")
+                        self.conntype = "tcp"
 
             # Delegate handling to the protocol handler
             protocol_handler(self.conntype)(self, **conn_kwargs).handle_messages()
