@@ -637,11 +637,10 @@ class FlowView(common.WWrap):
         return self._view_nextprev_flow("prev", flow)
 
     def change_this_display_mode(self, t):
-        self.state.add_flow_setting(
-            self.flow,
-            (self.state.view_flow_mode, "prettyview"),
-            contentview.get_by_shortcut(t)
-        )
+        key = (self.state.view_flow_mode, "prettyview")
+        value = contentview.get_by_shortcut(t)
+        if value:
+            self.state.add_flow_setting(self.flow, key, value)
         self.master.refresh_flow(self.flow)
 
     def delete_body(self, t):
@@ -749,7 +748,7 @@ class FlowView(common.WWrap):
             self.master.statusbar.message("")
         elif key == "m":
             p = list(contentview.view_prompts)
-            p.insert(0, ("clear", "c"))
+            p.insert(0, ("Clear", "C"))
             self.master.prompt_onekey(
                 "Display mode",
                 p,
