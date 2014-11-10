@@ -1,7 +1,7 @@
-# This scripts demonstrates how mitmproxy can switch to a different upstream proxy
+# This scripts demonstrates how mitmproxy can switch to a second/different upstream proxy
 # in upstream proxy mode.
 #
-# Usage: mitmdump -s "change_upstream_proxy.py host"
+# Usage: mitmdump -U http://default-upstream-proxy.local:8080/ -s "change_upstream_proxy.py host"
 from libmproxy.protocol.http import send_connect_request
 
 alternative_upstream_proxy = ("localhost", 8082)
