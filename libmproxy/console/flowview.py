@@ -637,10 +637,11 @@ class FlowView(common.WWrap):
         return self._view_nextprev_flow("prev", flow)
 
     def change_this_display_mode(self, t):
-        key = (self.state.view_flow_mode, "prettyview")
-        value = contentview.get_by_shortcut(t)
-        if value:
-            self.state.add_flow_setting(self.flow, key, value)
+        self.state.add_flow_setting(
+            self.flow,
+            (self.state.view_flow_mode, "prettyview"),
+            contentview.get_by_shortcut(t)
+        )
         self.master.refresh_flow(self.flow)
 
     def delete_body(self, t):
