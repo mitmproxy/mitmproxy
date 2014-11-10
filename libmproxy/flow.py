@@ -192,6 +192,7 @@ class ClientPlaybackState:
         """
         if self.flows and not self.current:
             n = self.flows.pop(0)
+            n.response = None
             n.reply = controller.DummyReply()
             self.current = master.handle_request(n)
             if not testing and not self.current.response:
@@ -615,7 +616,7 @@ class FlowMaster(controller.Master):
             ]
             if all(e):
                 self.shutdown()
-            self.client_playback.tick(self, timeout)
+            self.client_playback.tick(self)
 
         return controller.Master.tick(self, q, timeout)
 
