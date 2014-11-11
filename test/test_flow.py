@@ -692,7 +692,8 @@ class TestFlowMaster:
 
         f = tutils.tflow(resp=True)
         pb = [tutils.tflow(resp=True), f]
-        fm = flow.FlowMaster(None, s)
+
+        fm = flow.FlowMaster(DummyServer(ProxyConfig()), s)
         assert not fm.start_server_playback(pb, False, [], False, False, None, False)
         assert not fm.start_client_playback(pb, False)
 

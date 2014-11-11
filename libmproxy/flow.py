@@ -191,7 +191,7 @@ class ClientPlaybackState:
             testing: Disables actual replay for testing.
         """
         if self.flows and not self.current:
-            n = self.flows.pop(0)
+            n = self.flows.pop(0).copy()
             n.response = None
             n.reply = controller.DummyReply()
             self.current = master.handle_request(n)
