@@ -153,7 +153,7 @@ class CommonTests(tutils.DaemonTests):
         assert l["type"] == "error"
         assert "foo" in l["msg"]
 
-    def test_invalid_body(self):
+    def test_invalid_content_length(self):
         tutils.raises(
             http.HttpError,
             self.pathoc,
@@ -161,7 +161,7 @@ class CommonTests(tutils.DaemonTests):
         )
         l = self.d.last_log()
         assert l["type"] == "error"
-        assert "Invalid" in l["msg"]
+        assert "Content-Length unknown" in l["msg"]
 
     def test_invalid_headers(self):
         tutils.raises(http.HttpError, self.pathoc, "get:/:h'\t'='foo'")
