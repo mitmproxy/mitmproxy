@@ -16,7 +16,7 @@ if os.name != "nt":
     scripts.append("mitmproxy")
 
 deps = {
-    "netlib>=%s" % version.MINORVERSION,
+    "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "pyasn1>0.1.2",
     "pyOpenSSL>=0.14",
     "Flask>=0.10.1",
@@ -81,7 +81,7 @@ setup(
             "nose>=1.3.0",
             "nose-cov>=1.6",
             "coveralls>=0.4.1",
-            "pathod>=%s" % version.MINORVERSION
+            "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION)
         ],
         'contentviews': [
             "pyamf>=0.6.1",
