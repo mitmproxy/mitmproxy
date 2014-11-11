@@ -23,15 +23,16 @@ python ./setup.py -q sdist --dist-dir $DST
 echo "Creating virtualenv for test install..."
 virtualenv -q $DST/venv
 
+cd $DST
 echo "Installing netlib..."
-$DST/venv/bin/pip -q install --download-cache ~/.pipcache $DST/netlib*
+./venv/bin/pip -q install --download-cache ~/.pipcache ./netlib*
 echo "Installing pathod..."
-$DST/venv/bin/pip -q install --download-cache ~/.pipcache $DST/pathod*
+./venv/bin/pip -q install --download-cache ~/.pipcache ./pathod*
 echo "Installing mitmproxy..."
-$DST/venv/bin/pip -q install --download-cache ~/.pipcache $DST/mitmproxy*
+./venv/bin/pip -q install --download-cache ~/.pipcache ./mitmproxy*
 
 echo "Running binaries..."
-$DST/venv/bin/mitmproxy --version
-$DST/venv/bin/mitmdump --version
-$DST/venv/bin/pathod --version
-$DST/venv/bin/pathoc --version
+./venv/bin/mitmproxy --version
+./venv/bin/mitmdump --version
+./venv/bin/pathod --version
+./venv/bin/pathoc --version
