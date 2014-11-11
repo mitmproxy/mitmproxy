@@ -2,8 +2,6 @@
 - Bump the version number: 
 
     mitmproxy/libmproxy/version.py
-    mitmproxy/requirements.txt
-    mitmproxy/test/requirements.txt
     netlib/netlib/version.py
     netlib/requirements.txt
     netlib/test/requirements.txt
