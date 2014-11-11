@@ -35,16 +35,12 @@ setup(
 
     packages=find_packages(),
     include_package_data=True,
-
-    entry_points={
-        'console_scripts': [
-            "pathod = libpathod.main:pathod",
-            "pathoc = libpathod.main:pathoc"
-        ]
-    },
-
+    scripts = ["pathod", "pathoc"],
     install_requires=[
         "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
+        # It's INSANE that we have to do this, but...
+        # FIXME: Requirement to be removed at next release
+        "pip>=1.5.6",
         "requests>=2.4.1",
         "Flask>=0.10.1"
     ],

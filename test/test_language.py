@@ -1,8 +1,17 @@
-import os, cStringIO
+import os
+import cStringIO
 from libpathod import language, utils
 import tutils
 
 language.TESTING = True
+
+
+def test_quote():
+    assert language.quote("'\\\\'")
+
+
+def parse_request(s):
+    return language.parse_requests(s)[0]
 
 
 class TestValueNakedLiteral:
@@ -24,21 +33,35 @@ class TestValueLiteral:
         assert v.expr()
         assert v.val == "foo"
 
-        v = language.ValueLiteral(r"foo\n")
+        v = language.ValueLiteral("foo\n")
         assert v.expr()
         assert v.val == "foo\n"
         assert repr(v)
 
     def test_spec(self):
         v = language.ValueLiteral("foo")
-        assert v.spec() == r'"foo"'
+        assert v.spec() == r"'foo'"
 
         v = language.ValueLiteral("f\x00oo")
-        assert v.spec() == repr(v) == r'"f\x00oo"'
+        assert v.spec() == repr(v) == r"'f\x00oo'"
 
-    def test_freeze(self):
-        v = language.ValueLiteral("foo")
-        assert v.freeze({}).val == v.val
+        v = language.ValueLiteral("\"")
+        assert v.spec() == repr(v) == '\'"\''
+
+    def roundtrip(self, spec):
+        e = language.ValueLiteral.expr()
+        v = language.ValueLiteral(spec)
+        v2 = e.parseString(v.spec())
+        assert v.val == v2[0].val
+        assert v.spec() == v2[0].spec()
+
+    def test_roundtrip(self):
+        self.roundtrip("'")
+        self.roundtrip('\'')
+        self.roundtrip("a")
+        self.roundtrip("\"")
+        self.roundtrip(r"\\")
+        self.roundtrip("200:b'foo':i23,'\\''")
 
 
 class TestValueGenerate:
@@ -181,7 +204,7 @@ class TestMisc:
         assert e.parseString("'get'")[0].value.val == "get"
 
         assert e.parseString("get")[0].spec() == "get"
-        assert e.parseString("'foo'")[0].spec() == '"foo"'
+        assert e.parseString("'foo'")[0].spec() == "'foo'"
 
         s = e.parseString("get")[0].spec()
         assert s == e.parseString(s)[0].spec()
@@ -217,6 +240,31 @@ class TestMisc:
 
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
+
+    def test_pathodspec(self):
+        e = language.PathodSpec.expr()
+        v = e.parseString("s'200'")[0]
+        assert v.value.val == "200"
+        tutils.raises(
+            language.ParseException,
+            e.parseString,
+            "s'foo'"
+        )
+
+        v = e.parseString('s"200:b@1"')[0]
+        assert "@1" in v.spec()
+        f = v.freeze({})
+        assert "@1" not in f.spec()
+
+    def test_pathodspec_freeze(self):
+        e = language.PathodSpec(
+            language.ValueLiteral(
+                "200:b'foo':i10,'\\''".encode(
+                    "string_escape"
+                )
+            )
+        )
+        assert e.freeze({})
 
     def test_code(self):
         e = language.Code.expr()
@@ -298,11 +346,11 @@ class TestHeaders:
         assert v2.value.val == v3.value.val
 
     def test_shortcuts(self):
-        assert language.parse_response({}, "400:c'foo'").headers[0].key.val == "Content-Type"
-        assert language.parse_response({}, "400:l'foo'").headers[0].key.val == "Location"
+        assert language.parse_response("400:c'foo'").headers[0].key.val == "Content-Type"
+        assert language.parse_response("400:l'foo'").headers[0].key.val == "Location"
 
-        assert 'Android' in language.parse_request({}, "get:/:ua").headers[0].value.val
-        assert language.parse_request({}, "get:/:ua").headers[0].key.val == "User-Agent"
+        assert 'Android' in parse_request("get:/:ua").headers[0].value.val
+        assert parse_request("get:/:ua").headers[0].key.val == "User-Agent"
 
 
 class TestShortcutUserAgent:
@@ -336,7 +384,7 @@ class Test_Action:
         assert l[0].offset == 0
 
     def test_resolve(self):
-        r = language.parse_request({}, 'GET:"/foo"')
+        r = parse_request('GET:"/foo"')
         e = language.DisconnectAt("r")
         ret = e.resolve(r, {})
         assert isinstance(ret.offset, int)
@@ -352,9 +400,9 @@ class Test_Action:
 
 class TestDisconnects:
     def test_parse_response(self):
-        a = language.parse_response({}, "400:d0").actions[0]
+        a = language.parse_response("400:d0").actions[0]
         assert a.spec() == "d0"
-        a = language.parse_response({}, "400:dr").actions[0]
+        a = language.parse_response("400:dr").actions[0]
         assert a.spec() == "dr"
 
     def test_at(self):
@@ -377,12 +425,12 @@ class TestDisconnects:
 
 class TestInject:
     def test_parse_response(self):
-        a = language.parse_response({}, "400:ir,@100").actions[0]
+        a = language.parse_response("400:ir,@100").actions[0]
         assert a.offset == "r"
         assert a.value.datatype == "bytes"
         assert a.value.usize == 100
 
-        a = language.parse_response({}, "400:ia,@100").actions[0]
+        a = language.parse_response("400:ia,@100").actions[0]
         assert a.offset == "a"
 
     def test_at(self):
@@ -397,7 +445,7 @@ class TestInject:
 
     def test_serve(self):
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:i0,'foo'")
+        r = language.parse_response("400:i0,'foo'")
         assert language.serve(r, s, {})
 
     def test_spec(self):
@@ -430,7 +478,7 @@ class TestPauses:
         assert v.offset == "a"
 
     def test_request(self):
-        r = language.parse_response({}, '400:p10,10')
+        r = language.parse_response('400:p10,10')
         assert r.actions[0].spec() == "p10,10"
 
     def test_spec(self):
@@ -444,30 +492,59 @@ class TestPauses:
 
 
 class TestRequest:
-    def test_file(self):
-        p = tutils.test_data.path("data")
-        d = dict(staticdir=p)
-        r = language.parse_request(d, "+request")
-        assert r.path.values({})[0][:] == "/foo"
-
     def test_nonascii(self):
-        tutils.raises("ascii", language.parse_request, {}, "get:\xf0")
+        tutils.raises("ascii", parse_request, "get:\xf0")
 
     def test_err(self):
-        tutils.raises(language.ParseException, language.parse_request, {}, 'GET')
+        tutils.raises(language.ParseException, parse_request, 'GET')
 
     def test_simple(self):
-        r = language.parse_request({}, 'GET:"/foo"')
+        r = parse_request('GET:"/foo"')
         assert r.method.string() == "GET"
         assert r.path.string() == "/foo"
-        r = language.parse_request({}, 'GET:/foo')
+        r = parse_request('GET:/foo')
         assert r.path.string() == "/foo"
-        r = language.parse_request({}, 'GET:@1k')
+        r = parse_request('GET:@1k')
         assert len(r.path.string()) == 1024
+
+    def test_multiple(self):
+        r = language.parse_requests("GET:/ PUT:/")
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "PUT"
+        assert len(r) == 2
+
+        l = """
+            GET
+            "/foo"
+            ir,@1
+
+            PUT
+
+            "/foo
+
+
+
+            bar"
+
+            ir,@1
+        """
+        r = language.parse_requests(l)
+        assert len(r) == 2
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "PUT"
+
+        l = """
+            get:"http://localhost:9999/p/200":ir,@1
+            get:"http://localhost:9999/p/200":ir,@2
+        """
+        r = language.parse_requests(l)
+        assert len(r) == 2
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "GET"
 
     def test_render(self):
         s = cStringIO.StringIO()
-        r = language.parse_request({}, "GET:'/foo'")
+        r = parse_request("GET:'/foo'")
         assert language.serve(r, s, {}, "foo.com")
 
     def test_multiline(self):
@@ -476,11 +553,10 @@ class TestRequest:
             "/foo"
             ir,@1
         """
-        r = language.parse_request({}, l)
+        r = parse_request(l)
         assert r.method.string() == "GET"
         assert r.path.string() == "/foo"
         assert r.actions
-
 
         l = """
             GET
@@ -493,24 +569,24 @@ class TestRequest:
 
             ir,@1
         """
-        r = language.parse_request({}, l)
+        r = parse_request(l)
         assert r.method.string() == "GET"
         assert r.path.string().endswith("bar")
         assert r.actions
 
     def test_spec(self):
         def rt(s):
-            s = language.parse_request({}, s).spec()
-            assert language.parse_request({}, s).spec() == s
+            s = parse_request(s).spec()
+            assert parse_request(s).spec() == s
         rt("get:/foo")
         rt("get:/foo:da")
 
     def test_freeze(self):
-        r = language.parse_request({}, "GET:/:b@100").freeze({})
+        r = parse_request("GET:/:b@100").freeze({})
         assert len(r.spec()) > 100
 
     def test_path_generator(self):
-        r = language.parse_request({}, "GET:@100").freeze({})
+        r = parse_request("GET:@100").freeze({})
         assert len(r.spec()) > 100
 
 
@@ -580,72 +656,69 @@ class TestWriteValues:
 
     def test_write_values_after(self):
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:da")
+        r = language.parse_response("400:da")
         language.serve(r, s, {})
 
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:pa,0")
+        r = language.parse_response("400:pa,0")
         language.serve(r, s, {})
 
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:ia,'xx'")
+        r = language.parse_response("400:ia,'xx'")
         language.serve(r, s, {})
         assert s.getvalue().endswith('xx')
 
 
 class TestResponse:
     def dummy_response(self):
-        return language.parse_response({}, "400'msg'")
-
-    def test_file(self):
-        p = tutils.test_data.path("data")
-        d = dict(staticdir=p)
-        r = language.parse_response(d, "+response")
-        assert r.code.string() == "202"
+        return language.parse_response("400'msg'")
 
     def test_response(self):
-        r = language.parse_response({}, "400:m'msg'")
+        r = language.parse_response("400:m'msg'")
         assert r.code.string() == "400"
         assert r.reason.string() == "msg"
 
-        r = language.parse_response({}, "400:m'msg':b@100b")
+        r = language.parse_response("400:m'msg':b@100b")
         assert r.reason.string() == "msg"
         assert r.body.values({})
         assert str(r)
 
-        r = language.parse_response({}, "200")
+        r = language.parse_response("200")
         assert r.code.string() == "200"
         assert not r.reason
         assert "OK" in [i[:] for i in r.preamble({})]
 
     def test_render(self):
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:m'msg'")
+        r = language.parse_response("400:m'msg'")
         assert language.serve(r, s, {})
+
+        r = language.parse_response("400:p0,100:dr")
+        assert "p0" in r.spec()
+        s = r.preview_safe()
+        assert "p0" not in s.spec()
 
     def test_raw(self):
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:b'foo'")
+        r = language.parse_response("400:b'foo'")
         language.serve(r, s, {})
         v = s.getvalue()
         assert "Content-Length" in v
-        assert "Date" in v
 
         s = cStringIO.StringIO()
-        r = language.parse_response({}, "400:b'foo':r")
+        r = language.parse_response("400:b'foo':r")
         language.serve(r, s, {})
         v = s.getvalue()
         assert not "Content-Length" in v
-        assert not "Date" in v
 
     def test_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
             language.serve(x, s, {})
             assert x.length({}) == len(s.getvalue())
-        testlen(language.parse_response({}, "400:m'msg':r"))
-        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':r"))
-        testlen(language.parse_response({}, "400:m'msg':h'foo'='bar':b@100b:r"))
+        testlen(language.parse_response("400:m'msg':r"))
+        testlen(language.parse_response("400:m'msg':h'foo'='bar':r"))
+        testlen(language.parse_response("400:m'msg':h'foo'='bar':b@100b:r"))
 
     def test_maximum_length(self):
         def testlen(x):
@@ -654,63 +727,59 @@ class TestResponse:
             language.serve(x, s, {})
             assert m >= len(s.getvalue())
 
-        r = language.parse_response({}, "400:m'msg':b@100:d0")
+        r = language.parse_response("400:m'msg':b@100:d0")
         testlen(r)
 
-        r = language.parse_response({}, "400:m'msg':b@100:d0:i0,'foo'")
+        r = language.parse_response("400:m'msg':b@100:d0:i0,'foo'")
         testlen(r)
 
-        r = language.parse_response({}, "400:m'msg':b@100:d0:i0,'foo'")
+        r = language.parse_response("400:m'msg':b@100:d0:i0,'foo'")
         testlen(r)
-
-    def test_render(self):
-        r = language.parse_response({}, "400:p0,100:dr")
-        assert "p0" in r.spec()
-        s = r.preview_safe()
-        assert not "p0" in s.spec()
 
     def test_parse_err(self):
-        tutils.raises(language.ParseException, language.parse_response, {}, "400:msg,b:")
+        tutils.raises(
+            language.ParseException, language.parse_response, "400:msg,b:"
+        )
         try:
-            language.parse_response({}, "400'msg':b:")
+            language.parse_response("400'msg':b:")
         except language.ParseException, v:
             assert v.marked()
             assert str(v)
 
     def test_nonascii(self):
-        tutils.raises("ascii", language.parse_response, {}, "foo:b\xf0")
+        tutils.raises("ascii", language.parse_response, "foo:b\xf0")
 
     def test_parse_header(self):
-        r = language.parse_response({}, '400:h"foo"="bar"')
+        r = language.parse_response('400:h"foo"="bar"')
         assert utils.get_header("foo", r.headers)
 
     def test_parse_pause_before(self):
-        r = language.parse_response({}, "400:p0,10")
+        r = language.parse_response("400:p0,10")
         assert r.actions[0].spec() == "p0,10"
 
     def test_parse_pause_after(self):
-        r = language.parse_response({}, "400:pa,10")
+        r = language.parse_response("400:pa,10")
         assert r.actions[0].spec() == "pa,10"
 
     def test_parse_pause_random(self):
-        r = language.parse_response({}, "400:pr,10")
+        r = language.parse_response("400:pr,10")
         assert r.actions[0].spec() == "pr,10"
 
     def test_parse_stress(self):
-        # While larger values are known to work on linux,
-        # len() technically returns an int and a python 2.7 int on windows has 32bit precision.
-        # Therefore, we should keep the body length < 2147483647 bytes in our tests.
-        r = language.parse_response({}, "400:b@1g")
+        # While larger values are known to work on linux, len() technically
+        # returns an int and a python 2.7 int on windows has 32bit precision.
+        # Therefore, we should keep the body length < 2147483647 bytes in our
+        # tests.
+        r = language.parse_response("400:b@1g")
         assert r.length({})
 
     def test_spec(self):
         def rt(s):
-            s = language.parse_response({}, s).spec()
-            assert language.parse_response({}, s).spec() == s
+            s = language.parse_response(s).spec()
+            assert language.parse_response(s).spec() == s
         rt("400:b@100g")
         rt("400")
         rt("400:da")
-
 
 
 def test_read_file():
@@ -719,9 +788,23 @@ def test_read_file():
     d = dict(staticdir=p)
     assert language.read_file(d, "+./file").strip() == "testfile"
     assert language.read_file(d, "+file").strip() == "testfile"
-    tutils.raises(language.FileAccessDenied, language.read_file, d, "+./nonexistent")
-    tutils.raises(language.FileAccessDenied, language.read_file, d, "+/nonexistent")
-
-    tutils.raises(language.FileAccessDenied, language.read_file, d, "+../test_language.py")
+    tutils.raises(
+        language.FileAccessDenied,
+        language.read_file,
+        d,
+        "+./nonexistent"
+    )
+    tutils.raises(
+        language.FileAccessDenied,
+        language.read_file,
+        d,
+        "+/nonexistent"
+    )
+    tutils.raises(
+        language.FileAccessDenied,
+        language.read_file,
+        d,
+        "+../test_language.py"
+    )
     d["unconstrained_file_access"] = True
     assert language.read_file(d, "+../test_language.py")

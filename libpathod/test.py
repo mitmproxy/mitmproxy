@@ -1,10 +1,10 @@
-import threading, Queue
+import threading
+import Queue
 import requests
 import requests.packages.urllib3
 import pathod
 
 requests.packages.urllib3.disable_warnings()
-
 
 
 class Daemon:
@@ -14,7 +14,11 @@ class Daemon:
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()
         self.port = self.q.get(True, 5)
-        self.urlbase = "%s://%s:%s"%("https" if ssl else "http", self.IFACE, self.port)
+        self.urlbase = "%s://%s:%s"%(
+            "https" if ssl else "http",
+            self.IFACE,
+            self.port
+        )
 
     def __enter__(self):
         return self
@@ -80,6 +84,9 @@ class _PaThread(threading.Thread):
             ssl = self.ssl,
             **self.daemonargs
         )
-        self.name = "PathodThread (%s:%s)" % (self.server.address.host, self.server.address.port)
+        self.name = "PathodThread (%s:%s)" % (
+            self.server.address.host,
+            self.server.address.port
+        )
         self.q.put(self.server.address.port)
         self.server.serve_forever()

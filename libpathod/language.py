@@ -1,6 +1,11 @@
-import operator, string, random, mmap, os, time, copy
+import operator
+import string
+import random
+import mmap
+import os
+import time
+import copy
 import abc
-from email.utils import formatdate
 import contrib.pyparsing as pp
 from netlib import http_status, tcp, http_uastrings
 
@@ -9,7 +14,20 @@ import utils
 BLOCKSIZE = 1024
 TRUNCATE = 1024
 
-class FileAccessDenied(Exception): pass
+
+def escape_backslash(s):
+    return s.replace("\\", "\\\\")
+
+
+def quote(s):
+    quotechar = s[0]
+    s = s[1:-1]
+    s = s.replace(quotechar, "\\" + quotechar)
+    return quotechar + s + quotechar
+
+
+class FileAccessDenied(Exception):
+    pass
 
 
 class ParseException(Exception):
@@ -20,7 +38,7 @@ class ParseException(Exception):
         self.col = col
 
     def marked(self):
-        return "%s\n%s"%(self.s, " "*(self.col-1) + "^")
+        return "%s\n%s"%(self.s, " "*(self.col - 1) + "^")
 
     def __str__(self):
         return "%s at char %s"%(self.msg, self.col)
@@ -40,7 +58,9 @@ def send_chunk(fp, val, blocksize, start, end):
 def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
     """
         vals: A list of values, which may be strings or Value objects.
-        actions: A list of (offset, action, arg) tuples. Action may be "pause" or "disconnect".
+
+        actions: A list of (offset, action, arg) tuples. Action may be "pause"
+        or "disconnect".
 
         Both vals and actions are in reverse order, with the first items last.
 
@@ -53,7 +73,13 @@ def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
             offset = 0
             while actions and actions[-1][0] < (sofar + len(v)):
                 a = actions.pop()
-                offset += send_chunk(fp, v, blocksize, offset, a[0]-sofar-offset)
+                offset += send_chunk(
+                    fp,
+                    v,
+                    blocksize,
+                    offset,
+                    a[0]-sofar-offset
+                )
                 if a[1] == "pause":
                     time.sleep(a[2])
                 elif a[1] == "disconnect":
@@ -121,15 +147,25 @@ DATATYPES = dict(
 )
 
 
-v_integer = pp.Regex(r"\d+")\
+v_integer = pp.Word(pp.nums)\
     .setName("integer")\
     .setParseAction(lambda toks: int(toks[0]))
 
 
 v_literal = pp.MatchFirst(
     [
-        pp.QuotedString("\"", escChar="\\", unquoteResults=True, multiline=True),
-        pp.QuotedString("'", escChar="\\", unquoteResults=True, multiline=True),
+        pp.QuotedString(
+            "\"",
+            escChar="\\",
+            unquoteResults=True,
+            multiline=True
+        ),
+        pp.QuotedString(
+            "'",
+            escChar="\\",
+            unquoteResults=True,
+            multiline=True
+        ),
     ]
 )
 
@@ -155,7 +191,7 @@ class LiteralGenerator:
         return self.s.__getslice__(a, b)
 
     def __repr__(self):
-        return '"%s"'%self.s
+        return "'%s'"%self.s
 
 
 class RandomGenerator:
@@ -202,6 +238,7 @@ class _Token(object):
         A specification token. Tokens are immutable.
     """
     __metaclass__ = abc.ABCMeta
+
     @abc.abstractmethod
     def expr(klass): # pragma: no cover
         """
@@ -242,10 +279,16 @@ class ValueLiteral(_ValueLiteral):
     @classmethod
     def expr(klass):
         e = v_literal.copy()
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(klass.parseAction)
+
+    @classmethod
+    def parseAction(klass, x):
+        v = klass(*x)
+        return v
 
     def spec(self):
-        return '"%s"'%self.val.encode("string_escape")
+        ret = "'%s'"%self.val.encode("string_escape")
+        return ret
 
 
 class ValueNakedLiteral(_ValueLiteral):
@@ -278,7 +321,10 @@ class ValueGenerate(_Token):
     def expr(klass):
         e = pp.Literal("@").suppress() + v_integer
 
-        u = reduce(operator.or_, [pp.Literal(i) for i in utils.SIZE_UNITS.keys()])
+        u = reduce(
+            operator.or_,
+            [pp.Literal(i) for i in utils.SIZE_UNITS.keys()]
+        ).leaveWhitespace()
         e = e + pp.Optional(u, default=None)
 
         s = pp.Literal(",").suppress()
@@ -318,13 +364,15 @@ class ValueFile(_Token):
         s = os.path.expanduser(self.path)
         s = os.path.normpath(os.path.abspath(os.path.join(sd, s)))
         if not uf and not s.startswith(sd):
-            raise FileAccessDenied("File access outside of configured directory")
+            raise FileAccessDenied(
+                "File access outside of configured directory"
+            )
         if not os.path.isfile(s):
             raise FileAccessDenied("File not readable")
         return FileGenerator(s)
 
     def spec(self):
-        return '<"%s"'%self.path.encode("string_escape")
+        return "<'%s'"%self.path.encode("string_escape")
 
 
 Value = pp.MatchFirst(
@@ -347,12 +395,12 @@ NakedValue = pp.MatchFirst(
 
 
 Offset = pp.MatchFirst(
-        [
-            v_integer,
-            pp.Literal("r"),
-            pp.Literal("a")
-        ]
-    )
+    [
+        v_integer,
+        pp.Literal("r"),
+        pp.Literal("a")
+    ]
+)
 
 
 class Raw(_Token):
@@ -392,11 +440,11 @@ class _Header(_Component):
 
     def values(self, settings):
         return [
-                self.key.get_generator(settings),
-                ": ",
-                self.value.get_generator(settings),
-                "\r\n",
-            ]
+            self.key.get_generator(settings),
+            ": ",
+            self.value.get_generator(settings),
+            "\r\n",
+        ]
 
 
 class Header(_Header):
@@ -459,7 +507,10 @@ class ShortcutUserAgent(_Header):
     @classmethod
     def expr(klass):
         e = pp.Literal("u").suppress()
-        u = reduce(operator.or_, [pp.Literal(i[1]) for i in http_uastrings.UASTRINGS])
+        u = reduce(
+            operator.or_,
+            [pp.Literal(i[1]) for i in http_uastrings.UASTRINGS]
+        )
         e += u | Value
         return e.setParseAction(lambda x: klass(*x))
 
@@ -468,7 +519,6 @@ class ShortcutUserAgent(_Header):
 
     def freeze(self, settings):
         return ShortcutUserAgent(self.value.freeze(settings))
-
 
 
 class Body(_Component):
@@ -483,14 +533,46 @@ class Body(_Component):
 
     def values(self, settings):
         return [
-                self.value.get_generator(settings),
-            ]
+            self.value.get_generator(settings),
+        ]
 
     def spec(self):
         return "b%s"%(self.value.spec())
 
     def freeze(self, settings):
         return Body(self.value.freeze(settings))
+
+
+class PathodSpec(_Token):
+    def __init__(self, value):
+        self.value = value
+        try:
+            self.parsed = Response(
+                Response.expr().parseString(
+                    value.val,
+                    parseAll=True
+                )
+            )
+        except pp.ParseException, v:
+            raise ParseException(v.msg, v.line, v.col)
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("s").suppress()
+        e = e + ValueLiteral.expr()
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings),
+        ]
+
+    def spec(self):
+        return "s%s"%(self.value.spec())
+
+    def freeze(self, settings):
+        f = self.parsed.freeze(settings).spec()
+        return PathodSpec(ValueLiteral(f.encode("string_escape")))
 
 
 class Path(_Component):
@@ -506,8 +588,8 @@ class Path(_Component):
 
     def values(self, settings):
         return [
-                self.value.get_generator(settings),
-            ]
+            self.value.get_generator(settings),
+        ]
 
     def spec(self):
         return "%s"%(self.value.spec())
@@ -527,6 +609,7 @@ class Method(_Component):
         "trace",
         "connect",
     ]
+
     def __init__(self, value):
         # If it's a string, we were passed one of the methods, so we upper-case
         # it to be canonical. The user can specify a different case by using a
@@ -645,11 +728,11 @@ class PauseAt(_Action):
         e += Offset
         e += pp.Literal(",").suppress()
         e += pp.MatchFirst(
-                    [
-                        v_integer,
-                        pp.Literal("f")
-                    ]
-                )
+            [
+                v_integer,
+                pp.Literal("f")
+            ]
+        )
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
@@ -700,10 +783,10 @@ class InjectAt(_Action):
 
     def intermediate(self, settings):
         return (
-                self.offset,
-                "inject",
-                self.value.get_generator(settings)
-            )
+            self.offset,
+            "inject",
+            self.value.get_generator(settings)
+        )
 
     def freeze(self, settings):
         return InjectAt(self.offset, self.value.freeze(settings))
@@ -712,6 +795,7 @@ class InjectAt(_Action):
 class _Message(object):
     __metaclass__ = abc.ABCMeta
     version = "HTTP/1.1"
+
     def __init__(self, tokens):
         self.tokens = tokens
 
@@ -741,7 +825,8 @@ class _Message(object):
 
     def length(self, settings):
         """
-            Calculate the length of the base message without any applied actions.
+            Calculate the length of the base message without any applied
+            actions.
         """
         return sum(len(x) for x in self.values(settings))
 
@@ -754,7 +839,8 @@ class _Message(object):
 
     def maximum_length(self, settings):
         """
-            Calculate the maximum length of the base message with all applied actions.
+            Calculate the maximum length of the base message with all applied
+            actions.
         """
         l = self.length(settings)
         for i in self.actions:
@@ -781,14 +867,6 @@ class _Message(object):
                             ValueLiteral(request_host)
                         )
                     )
-            else:
-                if not utils.get_header("Date", self.headers):
-                    tokens.append(
-                        Header(
-                            ValueLiteral("Date"),
-                            ValueLiteral(formatdate(timeval=None, localtime=False, usegmt=True))
-                        )
-                    )
         intermediate = self.__class__(tokens)
         return self.__class__([i.resolve(intermediate, settings) for i in tokens])
 
@@ -807,7 +885,8 @@ class _Message(object):
         ret = {}
         for i in self.logattrs:
             v = getattr(self, i)
-            # Careful not to log any VALUE specs without sanitizing them first. We truncate at 1k.
+            # Careful not to log any VALUE specs without sanitizing them first.
+            # We truncate at 1k.
             if hasattr(v, "values"):
                 v = [x[:TRUNCATE] for x in v.values(settings)]
                 v = "".join(v).encode("string_escape")
@@ -838,6 +917,7 @@ class _Message(object):
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
 
+
 class Response(_Message):
     comps = (
         Body,
@@ -851,6 +931,7 @@ class Response(_Message):
         Reason
     )
     logattrs = ["code", "reason", "version", "body"]
+
     @property
     def code(self):
         return self._get_token(Code)
@@ -866,7 +947,14 @@ class Response(_Message):
         if self.reason:
             l.extend(self.reason.values(settings))
         else:
-            l.append(LiteralGenerator(http_status.RESPONSES.get(int(self.code.code), "Unknown code")))
+            l.append(
+                LiteralGenerator(
+                    http_status.RESPONSES.get(
+                        int(self.code.code),
+                        "Unknown code"
+                    )
+                )
+            )
         return l
 
     @classmethod
@@ -894,9 +982,11 @@ class Request(_Message):
         InjectAt,
         ShortcutContentType,
         ShortcutUserAgent,
-        Raw
+        Raw,
+        PathodSpec,
     )
     logattrs = ["method", "path", "body"]
+
     @property
     def method(self):
         return self._get_token(Method)
@@ -905,10 +995,16 @@ class Request(_Message):
     def path(self):
         return self._get_token(Path)
 
+    @property
+    def pathodspec(self):
+        return self._get_token(PathodSpec)
+
     def preamble(self, settings):
         v = self.method.values(settings)
         v.append(" ")
         v.extend(self.path.values(settings))
+        if self.pathodspec:
+            v.append(self.pathodspec.parsed.spec())
         v.append(" ")
         v.append(self.version)
         return v
@@ -944,7 +1040,7 @@ def make_error_response(reason, body=None):
     ]
     return PathodErrorResponse(tokens)
 
-FILESTART = "+"
+
 def read_file(settings, s):
     uf = settings.get("unconstrained_file_access")
     sd = settings.get("staticdir")
@@ -961,33 +1057,34 @@ def read_file(settings, s):
     return file(s, "rb").read()
 
 
-def parse_response(settings, s):
+def parse_response(s):
     """
-        May raise ParseException or FileAccessDenied
+        May raise ParseException
     """
     try:
         s = s.decode("ascii")
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
-    if s.startswith(FILESTART):
-        s = read_file(settings, s)
     try:
         return Response(Response.expr().parseString(s, parseAll=True))
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)
 
 
-def parse_request(settings, s):
+def parse_requests(s):
     """
-        May raise ParseException or FileAccessDenied
+        May raise ParseException
     """
     try:
         s = s.decode("ascii")
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
-    if s.startswith(FILESTART):
-        s = read_file(settings, s)
     try:
-        return Request(Request.expr().parseString(s, parseAll=True))
+        parts = pp.OneOrMore(
+            pp.Group(
+                Request.expr()
+            )
+        ).parseString(s, parseAll=True)
+        return [Request(i) for i in parts]
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)

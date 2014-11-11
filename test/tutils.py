@@ -1,7 +1,11 @@
-import tempfile, os, shutil
+import tempfile
+import os
+import re
+import shutil
 from contextlib import contextmanager
-from libpathod import utils, test, pathoc, pathod
+from libpathod import utils, test, pathoc, pathod, language
 import requests
+
 
 class DaemonTests:
     noweb = False
@@ -11,6 +15,7 @@ class DaemonTests:
     timeout = None
     hexdump = False
     ssloptions = None
+
     @classmethod
     def setUpAll(self):
         opts = self.ssloptions or {}
@@ -19,7 +24,9 @@ class DaemonTests:
         so = pathod.SSLOptions(**opts)
         self.d = test.Daemon(
             staticdir=test_data.path("data"),
-            anchors=[("/anchor/.*", "202:da")],
+            anchors=[
+                (re.compile("/anchor/.*"), language.parse_response("202:da"))
+            ],
             ssl = self.ssl,
             ssloptions = so,
             sizelimit=1*1024*1024,
@@ -45,7 +52,13 @@ class DaemonTests:
     def getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
         return requests.get(
-            "%s://localhost:%s/%s"%(scheme, self.d.port, path), verify=False, params=params
+            "%s://localhost:%s/%s"%(
+                scheme,
+                self.d.port,
+                path
+            ),
+            verify=False,
+            params=params
         )
 
     def get(self, spec):
