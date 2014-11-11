@@ -749,7 +749,7 @@ class FlowView(common.WWrap):
             self.master.statusbar.message("")
         elif key == "m":
             p = list(contentview.view_prompts)
-            p.insert(0, ("clear", "c"))
+            p.insert(0, ("Clear", "C"))
             self.master.prompt_onekey(
                 "Display mode",
                 p,

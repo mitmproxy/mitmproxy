@@ -516,7 +516,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.start_server_playback(
                 ret,
                 self.killextra, self.rheaders,
-                False, self.nopop
+                False, self.nopop,
+                self.options.replay_ignore_params, self.options.replay_ignore_content
             )
 
     def spawn_editor(self, data):
