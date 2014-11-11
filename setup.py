@@ -47,7 +47,7 @@ setup(
             "nose>=1.3.0",
             "nose-cov>=1.6",
             "coveralls>=0.4.1",
-            "pathod>=0.%s" % version.MINORVERSION
+            "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION)
         ]
     }
 )
