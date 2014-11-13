@@ -129,6 +129,8 @@ class GridWalker(urwid.ListWalker):
         if emsg:
             self.editor.master.statusbar.message(emsg, 1000)
             errors.add(self.focus_col)
+        else:
+            errors.discard(self.focus_col)
 
         row = list(self.lst[self.focus][0])
         row[self.focus_col] = val
