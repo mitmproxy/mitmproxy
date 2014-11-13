@@ -71,6 +71,15 @@ For example, you can generate a certificate in this format using these instructi
 </pre>
 
 
+Using a custom certificate authority
+------------------------------------
+
+By default, mitmproxy will (generate and) use <samp>~/.mitmproxy/mitmproxy-ca.pem</samp> as the default certificate
+authority to generate certificates for all domains for which no custom certificate is provided (see above).
+You can use your own certificate authority by passing the <kbd>--confdir</kbd> option to mitmproxy.
+mitmproxy will then look for <samp>mitmproxy-ca.pem</samp> in the specified directory. If no such file exists,
+it will be generated automatically.
+
 Installing the mitmproxy CA
 ---------------------------
 
