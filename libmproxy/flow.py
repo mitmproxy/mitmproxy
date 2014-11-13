@@ -169,6 +169,7 @@ class ClientPlaybackState:
     def __init__(self, flows, exit):
         self.flows, self.exit = flows, exit
         self.current = None
+        self.testing = False  # Disables actual replay for testing.
 
     def count(self):
         return len(self.flows)
@@ -186,19 +187,16 @@ class ClientPlaybackState:
         if flow is self.current:
             self.current = None
 
-    def tick(self, master, testing=False):
-        """
-            testing: Disables actual replay for testing.
-        """
+    def tick(self, master):
         if self.flows and not self.current:
-            n = self.flows.pop(0).copy()
-            n.response = None
-            n.reply = controller.DummyReply()
-            self.current = master.handle_request(n)
-            if not testing and not self.current.response:
-                master.replay_request(self.current)  # pragma: no cover
-            elif self.current.response:
-                master.handle_response(self.current)
+            self.current = self.flows.pop(0).copy()
+            if not self.testing:
+                master.replay_request(self.current)
+            else:
+                self.current.reply = controller.DummyReply()
+                master.handle_request(self.current)
+                if self.current.response:
+                    master.handle_response(self.current)
 
 
 class ServerPlaybackState:
@@ -371,6 +369,8 @@ class State(object):
         """
             Add a request to the state. Returns the matching flow.
         """
+        if flow in self._flow_list:  # catch flow replay
+            return flow
         self._flow_list.append(flow)
         if flow.match(self._limit):
             self.view.append(flow)

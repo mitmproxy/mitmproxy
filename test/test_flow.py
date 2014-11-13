@@ -86,19 +86,20 @@ class TestClientPlaybackState:
         fm = flow.FlowMaster(None, s)
         fm.start_client_playback([first, tutils.tflow()], True)
         c = fm.client_playback
+        c.testing = True
 
         assert not c.done()
         assert not s.flow_count()
         assert c.count() == 2
-        c.tick(fm, testing=True)
+        c.tick(fm)
         assert s.flow_count()
         assert c.count() == 1
 
-        c.tick(fm, testing=True)
+        c.tick(fm)
         assert c.count() == 1
 
         c.clear(c.current)
-        c.tick(fm, testing=True)
+        c.tick(fm)
         assert c.count() == 0
         c.clear(c.current)
         assert c.done()
@@ -696,6 +697,7 @@ class TestFlowMaster:
         fm = flow.FlowMaster(DummyServer(ProxyConfig()), s)
         assert not fm.start_server_playback(pb, False, [], False, False, None, False)
         assert not fm.start_client_playback(pb, False)
+        fm.client_playback.testing = True
 
         q = Queue.Queue()
         assert not fm.state.flow_count()

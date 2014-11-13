@@ -1040,7 +1040,7 @@ class HTTPHandler(ProtocolHandler):
         # inline script to set flow.stream = True
         flow = self.c.channel.ask("responseheaders", flow)
         if flow == KILL:
-            raise KillSignal
+            raise KillSignal()
         else:
             # now get the rest of the request body, if body still needs to be
             # read but not streaming this response
@@ -1085,7 +1085,7 @@ class HTTPHandler(ProtocolHandler):
             self.process_server_address(flow)  # The inline script may have changed request.host
 
             if request_reply is None or request_reply == KILL:
-                return False
+                raise KillSignal()
 
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
@@ -1099,7 +1099,7 @@ class HTTPHandler(ProtocolHandler):
             self.c.log("response", "debug", [flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response", flow)
             if response_reply is None or response_reply == KILL:
-                return False
+                raise KillSignal()
 
             self.send_response_to_client(flow)
 
@@ -1140,7 +1140,6 @@ class HTTPHandler(ProtocolHandler):
             self.handle_error(e, flow)
         except KillSignal:
             self.c.log("Connection killed", "info")
-            flow.live = None
         finally:
             flow.live = None  # Connection is not live anymore.
         return False
@@ -1437,32 +1436,43 @@ class RequestReplayThread(threading.Thread):
         r = self.flow.request
         form_out_backup = r.form_out
         try:
-            # In all modes, we directly connect to the server displayed
-            if self.config.mode == "upstream":
-                server_address = self.config.mode.get_upstream_server(self.flow.client_conn)[2:]
-                server = ServerConnection(server_address)
-                server.connect()
-                if r.scheme == "https":
-                    send_connect_request(server, r.host, r.port)
-                    server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
-                    r.form_out = "relative"
-                else:
-                    r.form_out = "absolute"
+            self.flow.response = None
+            request_reply = self.channel.ask("request", self.flow)
+            if request_reply is None or request_reply == KILL:
+                raise KillSignal()
+            elif isinstance(request_reply, HTTPResponse):
+                self.flow.response = request_reply
             else:
-                server_address = (r.host, r.port)
-                server = ServerConnection(server_address)
-                server.connect()
-                if r.scheme == "https":
-                    server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
-                r.form_out = "relative"
+                # In all modes, we directly connect to the server displayed
+                if self.config.mode == "upstream":
+                    server_address = self.config.mode.get_upstream_server(self.flow.client_conn)[2:]
+                    server = ServerConnection(server_address)
+                    server.connect()
+                    if r.scheme == "https":
+                        send_connect_request(server, r.host, r.port)
+                        server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
+                        r.form_out = "relative"
+                    else:
+                        r.form_out = "absolute"
+                else:
+                    server_address = (r.host, r.port)
+                    server = ServerConnection(server_address)
+                    server.connect()
+                    if r.scheme == "https":
+                        server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
+                    r.form_out = "relative"
 
-            server.send(r.assemble())
-            self.flow.server_conn = server
-            self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
-                                                          body_size_limit=self.config.body_size_limit)
-            self.channel.ask("response", self.flow)
-        except (proxy.ProxyError, http.HttpError, tcp.NetLibError), v:
+                server.send(r.assemble())
+                self.flow.server_conn = server
+                self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
+                                                              body_size_limit=self.config.body_size_limit)
+            response_reply = self.channel.ask("response", self.flow)
+            if response_reply is None or response_reply == KILL:
+                raise KillSignal()
+        except (proxy.ProxyError, http.HttpError, tcp.NetLibError) as v:
             self.flow.error = Error(repr(v))
             self.channel.ask("error", self.flow)
+        except KillSignal:
+            self.channel.tell("log", proxy.Log("Connection killed", "info"))
         finally:
             r.form_out = form_out_backup
