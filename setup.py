@@ -37,7 +37,7 @@ setup(
     include_package_data=True,
     scripts = ["pathod", "pathoc"],
     install_requires=[
-        'netlib>=%s' % version.MINORVERSION,
+        "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
         # It's INSANE that we have to do this, but...
         # FIXME: Requirement to be removed at next release
         "pip>=1.5.6",
