@@ -255,10 +255,10 @@ class _Connection(object):
             if not getattr(self.wfile, "closed", False):
                 try:
                     self.wfile.flush()
+                    self.wfile.close()
                 except NetLibDisconnect:
                     pass
 
-            self.wfile.close()
             self.rfile.close()
         else:
             try:
