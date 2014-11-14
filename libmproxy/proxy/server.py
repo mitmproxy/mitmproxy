@@ -99,7 +99,6 @@ class ConnectionHandler:
             # Delegate handling to the protocol handler
             protocol_handler(self.conntype)(self, **conn_kwargs).handle_messages()
 
-            self.del_server_connection()
             self.log("clientdisconnect", "info")
             self.channel.tell("clientdisconnect", self)
 
@@ -112,6 +111,10 @@ class ConnectionHandler:
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
             print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
+        finally:
+            # Make sure that we close the server connection in any case.
+            # The client connection is closed by the ProxyServer and does not have be handled here.
+            self.del_server_connection()
 
     def del_server_connection(self):
         """
@@ -119,6 +122,7 @@ class ConnectionHandler:
         """
         if self.server_conn and self.server_conn.connection:
             self.server_conn.finish()
+            self.server_conn.close()
             self.log("serverdisconnect", "debug", ["%s:%s" % (self.server_conn.address.host,
                                                               self.server_conn.address.port)])
             self.channel.tell("serverdisconnect", self)
