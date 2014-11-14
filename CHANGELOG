@@ -1,5 +1,10 @@
 
-23 October 2014: mitmproxy 0.11:
+15 November 2014: mitmproxy 0.11.1:
+
+    * Bug fixes: connection leaks some crashes 
+
+
+7 November 2014: mitmproxy 0.11:
     
     * Performance improvements for mitmproxy console
 
