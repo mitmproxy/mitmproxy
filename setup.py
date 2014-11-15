@@ -28,7 +28,7 @@ script_deps = {
         "urwid>=1.1",
         "lxml>=3.3.6",
         "Pillow>=2.3.0",
-        "-e git+https://github.com/JustusW/harparser.git#egg=harparser",
+        "harparser",
     },
     "mitmdump": set()
 }
