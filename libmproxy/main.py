@@ -8,6 +8,9 @@ from .proxy import process_proxy_options, ProxyServerError
 from .proxy.server import DummyServer, ProxyServer
 
 
+# This file is not included in coverage analysis or tests - anything that can be
+# tested should live elsewhere.
+
 def check_versions():
     """
     Having installed a wrong version of pyOpenSSL or netlib is unfortunately a
