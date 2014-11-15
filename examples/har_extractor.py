@@ -65,7 +65,7 @@ def response(context, flow):
         # Get the ssl_time for this server_conn as the difference between the start of the successful
         # tcp setup and the successful ssl setup. Afterwards add it to seen list, in order to avoid
         # the ssl_time being present in entries that use an existing connection. If  no ssl setup has
-        # been made initiate it is also left as -1 since it doesn't apply to this connection.
+        # been made it is also left as -1 since it doesn't apply to this connection.
         ssl_time = flow.server_conn.timestamp_ssl_setup - flow.server_conn.timestamp_tcp_setup
         context.seen_server_ssl.add(flow.server_conn)
 
