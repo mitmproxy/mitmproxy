@@ -84,6 +84,7 @@ setup(
         'examples': [
             "pytz",
             "harparser",
+            "beautifulsoup4"
         ]
     }
 )
