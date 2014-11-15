@@ -209,17 +209,17 @@ def common_options(parser):
         help="Use the Host header to construct URLs for display."
     )
     parser.add_argument(
-        "-q",
+        "-q", "--quiet",
         action="store_true", dest="quiet",
         help="Quiet."
     )
     parser.add_argument(
-        "-r",
+        "-r", "--read-flows",
         action="store", dest="rfile", default=None,
         help="Read flows from file."
     )
     parser.add_argument(
-        "-s",
+        "-s", "--script",
         action="append", type=str, dest="scripts", default=[],
         metavar='"script.py --bar"',
         help="""
@@ -228,7 +228,7 @@ def common_options(parser):
         """
     )
     parser.add_argument(
-        "-t",
+        "-t", "--stickycookie",
         action="store",
         dest="stickycookie_filt",
         default=None,
@@ -236,27 +236,27 @@ def common_options(parser):
         help="Set sticky cookie filter. Matched against requests."
     )
     parser.add_argument(
-        "-u",
+        "-u", "--stickyauth",
         action="store", dest="stickyauth_filt", default=None, metavar="FILTER",
         help="Set sticky auth filter. Matched against requests."
     )
     parser.add_argument(
-        "-v",
+        "-v", "--verbose",
         action="store_const", dest="verbose", default=1, const=2,
         help="Increase event log verbosity."
     )
     parser.add_argument(
-        "-w",
+        "-w", "--wfile",
         action="store", dest="wfile", default=None,
         help="Write flows to file."
     )
     parser.add_argument(
-        "-z",
+        "-z", "--anticomp",
         action="store_true", dest="anticomp", default=False,
         help="Try to convince servers to send us un-compressed data."
     )
     parser.add_argument(
-        "-Z",
+        "-Z", "--body-size-limit",
         action="store", dest="body_size_limit", default=None,
         metavar="SIZE",
         help="Byte size limit of HTTP request and response bodies."
@@ -279,7 +279,7 @@ def common_options(parser):
     # it's already in a different group.  - our own error messages are more
     # helpful
     group.add_argument(
-        "-b",
+        "-b", "--bind-address",
         action="store", type=str, dest="addr", default='',
         help="Address to bind proxy to (defaults to all interfaces)"
     )
@@ -307,7 +307,7 @@ def common_options(parser):
         """
     )
     group.add_argument(
-        "-n",
+        "-n", "--no-server",
         action="store_true", dest="no_server",
         help="Don't start a proxy server."
     )
@@ -317,7 +317,7 @@ def common_options(parser):
         help="Proxy service port."
     )
     group.add_argument(
-        "-R",
+        "-R", "--reverse",
         action="store",
         type=parse_server_spec,
         dest="reverse_proxy",
@@ -333,12 +333,12 @@ def common_options(parser):
         help="Set SOCKS5 proxy mode."
     )
     group.add_argument(
-        "-T",
+        "-T", "--transparent",
         action="store_true", dest="transparent_proxy", default=False,
         help="Set transparent proxy mode."
     )
     group.add_argument(
-        "-U",
+        "-U", "--upstream",
         action="store",
         type=parse_server_spec,
         dest="upstream_proxy",
@@ -367,7 +367,7 @@ def common_options(parser):
 
     group = parser.add_argument_group("Onboarding App")
     group.add_argument(
-        "-a",
+        "-a", "--noapp",
         action="store_false", dest="app", default=True,
         help="Disable the mitmproxy onboarding app."
     )
@@ -392,19 +392,19 @@ def common_options(parser):
 
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
-        "-c",
+        "-c", "--client-replay",
         action="store", dest="client_replay", default=None, metavar="PATH",
         help="Replay client requests from a saved file."
     )
 
     group = parser.add_argument_group("Server Replay")
     group.add_argument(
-        "-S",
+        "-S", "--server-replay",
         action="store", dest="server_replay", default=None, metavar="PATH",
         help="Replay server responses from a saved file."
     )
     group.add_argument(
-        "-k",
+        "-k", "--kill",
         action="store_true", dest="kill", default=False,
         help="Kill extra requests during replay."
     )
@@ -543,7 +543,7 @@ def mitmproxy():
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
     parser.add_argument(
-        "-e",
+        "-e", "--eventlog",
         action="store_true", dest="eventlog",
         help="Show event log."
     )
@@ -556,7 +556,6 @@ def mitmproxy():
         type=str, dest="intercept", default=None,
         help="Intercept filter expression."
     )
-
     return parser
 
 
@@ -587,7 +586,7 @@ def mitmdump():
         """
     )
     parser.add_argument(
-        "-d",
+        "-d", "--detail",
         action="count", dest="flow_detail", default=1,
         help="Increase flow detail display level. Can be passed multiple times."
     )
