@@ -2,8 +2,14 @@
     This inline script utilizes harparser.HAR from https://github.com/JustusW/harparser
     to generate a HAR log object.
 """
-from pytz import utc
-from harparser import HAR
+try:
+    from harparser import HAR
+    from pytz import UTC
+except ImportError as e:
+    import sys
+    print >> sys.stderr, "\r\nMissing dependencies: please run `pip install mitmproxy[examples]`.\r\n"
+    raise
+
 from datetime import datetime, timedelta, tzinfo
 
 
