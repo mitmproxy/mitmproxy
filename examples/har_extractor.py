@@ -2,22 +2,15 @@
     This inline script utilizes harparser.HAR from https://github.com/JustusW/harparser
     to generate a HAR log object.
 """
+from pytz import utc
 from harparser import HAR
 from datetime import datetime, timedelta, tzinfo
 
 
-class UTC(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(0)
-
-    def dst(self, dt):
-        return timedelta(0)
-
-    def tzname(self, dt):
-        return "Z"
-
-
 class _HARLog(HAR.log):
+    # The attributes need to be registered here for them to actually be available later via self. This is
+    # due to HAREncodable linking __getattr__ to __getitem__. Anything that is set only in __init__ will
+    # just be added as key/value pair to self.__classes__.
     __page_list__ = []
     __page_count__ = 0
     __page_ref__ = {}
@@ -35,7 +28,7 @@ class _HARLog(HAR.log):
                                 "entries": []})
 
     def reset(self):
-        self.__init__()
+        self.__init__(self.__page_list__)
 
     def add(self, obj):
         if isinstance(obj, HAR.pages):
@@ -110,7 +103,7 @@ def response(context, flow):
         if item > -1:
             full_time += item
 
-    started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, tz=UTC()).isoformat()
+    started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, tz=utc).isoformat()
 
     request_query_string = [{"name": k, "value": v} for k, v in flow.request.get_query()]
     request_http_version = ".".join([str(v) for v in flow.request.httpversion])
@@ -128,8 +121,8 @@ def response(context, flow):
     response_body_size = len(flow.response.content)
     response_body_decoded_size = len(flow.response.get_decoded_content())
     response_body_compression = response_body_decoded_size - response_body_size
-    response_mime_type = flow.response.headers.get('Content-Type', [''])[0]
-    response_redirect_url = flow.response.headers.get('Location', [''])[0]
+    response_mime_type = flow.response.headers.get_first('Content-Type', '')
+    response_redirect_url = flow.response.headers.get_first('Location', '')
 
     entry = HAR.entries({"startedDateTime": started_date_time,
                          "time": full_time,
