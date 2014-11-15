@@ -80,6 +80,10 @@ setup(
             "pyamf>=0.6.1",
             "protobuf>=2.5.0",
             "cssutils>=1.0"
+        ],
+        'examples': [
+            "pytz",
+            "harparser",
         ]
     }
 )
