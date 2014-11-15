@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import re
-from argparse import ArgumentTypeError
+from configargparse import ArgumentTypeError
 from netlib import http
 from . import filt, utils
 from .proxy import config
@@ -22,7 +22,9 @@ def _parse_hook(s):
     elif len(parts) == 3:
         patt, a, b = parts
     else:
-        raise ParseException("Malformed hook specifier - too few clauses: %s" % s)
+        raise ParseException(
+            "Malformed hook specifier - too few clauses: %s" % s
+        )
 
     if not a:
         raise ParseException("Empty clause: %s" % str(patt))
@@ -184,12 +186,16 @@ def common_options(parser):
     parser.add_argument(
         "--anticache",
         action="store_true", dest="anticache", default=False,
-        help="Strip out request headers that might cause the server to return 304-not-modified."
+
+        help="""
+            Strip out request headers that might cause the server to return
+            304-not-modified.
+        """
     )
     parser.add_argument(
-        "--confdir",
-        action="store", type=str, dest="confdir", default='~/.mitmproxy',
-        help="Configuration directory, contains default CA file. (~/.mitmproxy)"
+        "--cadir",
+        action="store", type=str, dest="cadir", default=config.CA_DIR,
+        help="Location of the default mitmproxy CA files. (%s)"%config.CA_DIR
     )
     parser.add_argument(
         "--host",
@@ -210,11 +216,17 @@ def common_options(parser):
         "-s",
         action="append", type=str, dest="scripts", default=[],
         metavar='"script.py --bar"',
-        help="Run a script. Surround with quotes to pass script arguments. Can be passed multiple times."
+        help="""
+            Run a script. Surround with quotes to pass script arguments. Can be
+            passed multiple times.
+        """
     )
     parser.add_argument(
         "-t",
-        action="store", dest="stickycookie_filt", default=None, metavar="FILTER",
+        action="store",
+        dest="stickycookie_filt",
+        default=None,
+        metavar="FILTER",
         help="Set sticky cookie filter. Matched against requests."
     )
     parser.add_argument(
@@ -241,7 +253,7 @@ def common_options(parser):
         "-Z",
         action="store", dest="body_size_limit", default=None,
         metavar="SIZE",
-        help="Byte size limit of HTTP request and response bodies." \
+        help="Byte size limit of HTTP request and response bodies."
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
     parser.add_argument(
@@ -249,9 +261,9 @@ def common_options(parser):
         action="store", dest="stream_large_bodies", default=None,
         metavar="SIZE",
         help="""
-        Stream data to the client if response body exceeds the given threshold.
-        If streamed, the body will not be stored in any way. Understands k/m/g
-        suffixes, i.e. 3m for 3 megabytes.
+            Stream data to the client if response body exceeds the given
+            threshold. If streamed, the body will not be stored in any way.
+            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
          """
     )
 
@@ -282,8 +294,11 @@ def common_options(parser):
         "--tcp",
         action="append", type=str, dest="tcp_hosts", default=[],
         metavar="HOST",
-        help="Generic TCP SSL proxy mode for all hosts that match the pattern. Similar to --ignore,"
-             "but SSL connections are intercepted. The communication contents are printed to the event log in verbose mode."
+        help="""
+            Generic TCP SSL proxy mode for all hosts that match the pattern.
+            Similar to --ignore, but SSL connections are intercepted. The
+            communication contents are printed to the event log in verbose mode.
+        """
     )
     group.add_argument(
         "-n",
@@ -297,8 +312,14 @@ def common_options(parser):
     )
     group.add_argument(
         "-R",
-        action="store", type=parse_server_spec, dest="reverse_proxy", default=None,
-        help="Forward all requests to upstream HTTP server: http[s][2http[s]]://host[:port]"
+        action="store",
+        type=parse_server_spec,
+        dest="reverse_proxy",
+        default=None,
+        help="""
+            Forward all requests to upstream HTTP server:
+            http[s][2http[s]]://host[:port]
+        """
     )
     group.add_argument(
         "--socks",
@@ -312,16 +333,20 @@ def common_options(parser):
     )
     group.add_argument(
         "-U",
-        action="store", type=parse_server_spec, dest="upstream_proxy", default=None,
+        action="store",
+        type=parse_server_spec,
+        dest="upstream_proxy",
+        default=None,
         help="Forward all requests to upstream proxy server: http://host[:port]"
     )
 
     group = parser.add_argument_group(
         "Advanced Proxy Options",
         """
-            The following options allow a custom adjustment of the proxy behavior.
-            Normally, you don't want to use these options directly and use the provided wrappers instead (-R, -U, -T).
-        """.strip()
+            The following options allow a custom adjustment of the proxy
+            behavior. Normally, you don't want to use these options directly and
+            use the provided wrappers instead (-R, -U, -T).
+        """
     )
     group.add_argument(
         "--http-form-in", dest="http_form_in", default=None,
@@ -343,13 +368,19 @@ def common_options(parser):
     group.add_argument(
         "--app-host",
         action="store", dest="app_host", default=APP_HOST, metavar="host",
-        help="Domain to serve the onboarding app from. For transparent mode, use an IP when\
-                a DNS entry for the app domain is not present. Default: %s" % APP_HOST
-
+        help="""
+            Domain to serve the onboarding app from. For transparent mode, use
+            an IP when a DNS entry for the app domain is not present. Default:
+            %s
+        """ % APP_HOST
     )
     group.add_argument(
         "--app-port",
-        action="store", dest="app_port", default=APP_PORT, type=int, metavar="80",
+        action="store",
+        dest="app_port",
+        default=APP_PORT,
+        type=int,
+        metavar="80",
         help="Port to serve the onboarding app from."
     )
 
@@ -380,8 +411,10 @@ def common_options(parser):
     group.add_argument(
         "--norefresh",
         action="store_true", dest="norefresh", default=False,
-        help="Disable response refresh, "
-             "which updates times in cookies and headers for replayed responses."
+        help="""
+            Disable response refresh, which updates times in cookies and headers
+            for replayed responses.
+        """
     )
     group.add_argument(
         "--no-pop",
@@ -392,13 +425,17 @@ def common_options(parser):
     group.add_argument(
         "--replay-ignore-content",
         action="store_true", dest="replay_ignore_content", default=False,
-        help="Ignore request's content while searching for a saved flow to replay"
+        help="""
+            Ignore request's content while searching for a saved flow to replay
+        """
     )
     group.add_argument(
         "--replay-ignore-param",
         action="append", dest="replay_ignore_params", type=str,
-        help="Request's parameters to be ignored while searching for a saved flow to replay"
-           "Can be passed multiple times."
+        help="""
+            Request's parameters to be ignored while searching for a saved flow
+            to replay. Can be passed multiple times.
+        """
     )
 
     group = parser.add_argument_group(
@@ -417,9 +454,12 @@ def common_options(parser):
     )
     group.add_argument(
         "--replace-from-file",
-        action="append", type=str, dest="replace_file", default=[],
-        metavar="PATH",
-        help="Replacement pattern, where the replacement clause is a path to a file."
+        action = "append", type=str, dest="replace_file", default=[],
+        metavar = "PATH",
+        help = """
+            Replacement pattern, where the replacement clause is a path to a
+            file.
+        """
     )
 
     group = parser.add_argument_group(
@@ -455,7 +495,10 @@ def common_options(parser):
         "--singleuser",
         action="store", dest="auth_singleuser", type=str,
         metavar="USER",
-        help="Allows access to a a single user, specified in the form username:password."
+        help="""
+            Allows access to a a single user, specified in the form
+            username:password.
+        """
     )
     user_specification_group.add_argument(
         "--htpasswd",

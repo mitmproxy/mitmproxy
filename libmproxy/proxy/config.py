@@ -7,7 +7,7 @@ from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMod
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
-CONF_DIR = "~/.mitmproxy"
+CA_DIR = "~/.mitmproxy"
 
 
 class HostMatcher(object):
@@ -28,12 +28,27 @@ class HostMatcher(object):
 
 
 class ProxyConfig:
-    def __init__(self, host='', port=8080, server_version=version.NAMEVERSION,
-                 confdir=CONF_DIR, clientcerts=None,
-                 no_upstream_cert=False, body_size_limit=None,
-                 mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
-                 authenticator=None, ignore_hosts=[], tcp_hosts=[],
-                 ciphers=None, certs=[], certforward=False, ssl_ports=TRANSPARENT_SSL_PORTS):
+    def __init__(
+            self,
+            host='',
+            port=8080,
+            server_version=version.NAMEVERSION,
+            cadir=CA_DIR,
+            clientcerts=None,
+            no_upstream_cert=False,
+            body_size_limit=None,
+            mode=None,
+            upstream_server=None,
+            http_form_in=None,
+            http_form_out=None,
+            authenticator=None,
+            ignore_hosts=[],
+            tcp_hosts=[],
+            ciphers=None,
+            certs=[],
+            certforward=False,
+            ssl_ports=TRANSPARENT_SSL_PORTS
+    ):
         self.host = host
         self.port = port
         self.server_version = server_version
@@ -60,8 +75,8 @@ class ProxyConfig:
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
         self.authenticator = authenticator
-        self.confdir = os.path.expanduser(confdir)
-        self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
+        self.cadir = os.path.expanduser(cadir)
+        self.certstore = certutils.CertStore.from_store(self.cadir, CONF_BASENAME)
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
@@ -136,7 +151,7 @@ def process_proxy_options(parser, options):
     return ProxyConfig(
         host=options.addr,
         port=options.port,
-        confdir=options.confdir,
+        cadir=options.cadir,
         clientcerts=options.clientcerts,
         no_upstream_cert=options.no_upstream_cert,
         body_size_limit=body_size_limit,

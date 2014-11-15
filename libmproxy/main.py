@@ -1,4 +1,5 @@
 from __future__ import print_function, absolute_import
+import configargparse
 import argparse
 import os
 import signal
@@ -11,25 +12,38 @@ from .proxy.server import DummyServer, ProxyServer
 
 def check_versions():
     """
-    Having installed a wrong version of pyOpenSSL or netlib is unfortunately a very common source of error.
-    Check before every start that both versions are somewhat okay.
+    Having installed a wrong version of pyOpenSSL or netlib is unfortunately a
+    very common source of error. Check before every start that both versions are
+    somewhat okay.
     """
-    # We don't introduce backward-incompatible changes in patch versions. Only consider major and minor version.
+    # We don't introduce backward-incompatible changes in patch versions. Only
+    # consider major and minor version.
     if netlib.version.IVERSION[:2] != version.IVERSION[:2]:
         print(
             "Warning: You are using mitmdump %s with netlib %s. "
-            "Most likely, that doesn't work - please upgrade!" % (version.VERSION, netlib.version.VERSION),
-            file=sys.stderr)
-    import OpenSSL, inspect
-
+            "Most likely, that won't work - please upgrade!" % (
+                version.VERSION, netlib.version.VERSION
+            ),
+            file=sys.stderr
+        )
+    import OpenSSL
+    import inspect
     v = tuple([int(x) for x in OpenSSL.__version__.split(".")][:2])
     if v < (0, 14):
-        print("You are using an outdated version of pyOpenSSL: mitmproxy requires pyOpenSSL 0.14 or greater.",
-              file=sys.stderr)
-        # Some users apparently have multiple versions of pyOpenSSL installed. Report which one we got.
+        print(
+            "You are using an outdated version of pyOpenSSL:"
+            " mitmproxy requires pyOpenSSL 0.14 or greater.",
+            file=sys.stderr
+        )
+        # Some users apparently have multiple versions of pyOpenSSL installed.
+        # Report which one we got.
         pyopenssl_path = os.path.dirname(inspect.getfile(OpenSSL))
-        print("Your pyOpenSSL %s installation is located at %s" % (OpenSSL.__version__, pyopenssl_path),
-              file=sys.stderr)
+        print(
+            "Your pyOpenSSL %s installation is located at %s" % (
+                OpenSSL.__version__, pyopenssl_path
+            ),
+            file=sys.stderr
+        )
         sys.exit(1)
 
 
@@ -38,8 +52,14 @@ def assert_utf8_env():
     for i in ["LANG", "LC_CTYPE", "LC_ALL"]:
         spec += os.environ.get(i, "").lower()
     if "utf" not in spec:
-        print("Error: mitmproxy requires a UTF console environment.", file=sys.stderr)
-        print("Set your LANG enviroment variable to something like en_US.UTF-8", file=sys.stderr)
+        print(
+            "Error: mitmproxy requires a UTF console environment.",
+            file=sys.stderr
+        )
+        print(
+            "Set your LANG enviroment variable to something like en_US.UTF-8",
+            file=sys.stderr
+        )
         sys.exit(1)
 
 
@@ -55,12 +75,17 @@ def get_server(dummy_server, options):
 
 
 def mitmproxy_cmdline():
-    # Don't import libmproxy.console for mitmdump, urwid is not available on all platforms.
+    # Don't import libmproxy.console for mitmdump, urwid is not available on all
+    # platforms.
     from . import console
     from .console import palettes
 
-    parser = argparse.ArgumentParser(usage="%(prog)s [options]")
-    parser.add_argument('--version', action='version', version=version.NAMEVERSION)
+    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=version.NAMEVERSION
+    )
     cmdline.common_options(parser)
     parser.add_argument(
         "--palette", type=str, default="dark",
@@ -113,13 +138,21 @@ def mitmproxy():  # pragma: nocover
 def mitmdump_cmdline():
     from . import dump
 
-    parser = argparse.ArgumentParser(usage="%(prog)s [options] [filter]")
-    parser.add_argument('--version', action='version', version="mitmdump" + " " + version.VERSION)
+    parser = configargparse.ArgumentParser(usage="%(prog)s [options] [filter]")
+
+    parser.add_argument(
+        '--version',
+        action= 'version',
+        version= "mitmdump" + " " + version.VERSION
+    )
     cmdline.common_options(parser)
     parser.add_argument(
         "--keepserving",
-        action="store_true", dest="keepserving", default=False,
-        help="Continue serving after client playback or file read. We exit by default."
+        action= "store_true", dest="keepserving", default=False,
+        help= """
+            Continue serving after client playback or file read. We exit by
+            default.
+        """
     )
     parser.add_argument(
         "-d",
@@ -166,7 +199,7 @@ def mitmdump():  # pragma: nocover
 
 def mitmweb_cmdline():
     from . import web
-    parser = argparse.ArgumentParser(usage="%(prog)s [options]")
+    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
     parser.add_argument(
         '--version',
         action='version',
