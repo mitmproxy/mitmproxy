@@ -37,110 +37,104 @@ class _HARLog(HAR.log):
 
 
 def start(context, argv):
+    """
+        On start we reset the HAR, it's not really necessary since it will have been
+        instantiated earlier during initial parsing of this file. You will have to
+        adapt this to suit your actual needs of HAR generation.
+    """
     HARLog.reset()
-
-
-def clientconnect(context, conn_handler):
-    """
-        Called when a client initiates a connection to the proxy. Note that a
-        connection can correspond to multiple HTTP requests
-    """
-    import time
-    context.log("clientconnect" + str(time.time()))
-
-
-def serverconnect(context, conn_handler):
-    """
-        Called when the proxy initiates a connection to the target server. Note that a
-        connection can correspond to multiple HTTP requests
-    """
-    CONNECT_TIMES.pop(conn_handler.server_conn.address.address, None)
-    SSL_TIMES.pop(conn_handler.server_conn.address.address, None)
-    import time
-    context.log("serverconnect " + str(time.time()))
-
-
-def request(context, flow):
-    """
-        Called when a client request has been received.
-    """
-    # print_attributes(flow)
-    # print_attributes(context)
-    import time
-    context.log("request " + str(time.time()) + " " + str(flow.request.timestamp_start))
-
-
-def responseheaders(context, flow):
-    """
-        Called when the response headers for a server response have been received,
-        but the response body has not been processed yet. Can be used to tell mitmproxy
-        to stream the response.
-    """
-    context.log("responseheaders")
+    context.seen_server_connect = set()
+    context.seen_server_ssl = set()
 
 
 def response(context, flow):
     """
-       Called when a server response has been received.
+       Called when a server response has been received. At the time of this message both
+       a request and a response are present and completely done.
     """
-    import time
-    context.log("response " + str(time.time()) + " " + str(flow.request.timestamp_start))
-    context.log("response " + str(time.time()) + " " + str(flow.response.timestamp_end))
-    connect_time = CONNECT_TIMES.get(flow.server_conn.address.address,
-                                     int((flow.server_conn.timestamp_tcp_setup
-                                          - flow.server_conn.timestamp_start)
-                                         * 1000))
-    CONNECT_TIMES[flow.server_conn.address.address] = -1
+    connect_time = -1
+    if flow.server_conn not in context.seen_server_connect:
+        # Calculate the connect_time for this server_conn. Afterwards add it to seen list, in
+        # order to avoid the connect_time being present in entries that use an existing connection.
+        connect_time = flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
+        context.seen_server_connect.add(flow.server_conn)
 
     ssl_time = -1
-    if flow.server_conn.timestamp_ssl_setup is not None:
-        ssl_time = SSL_TIMES.get(flow.server_conn.address.address,
-                                 int((flow.server_conn.timestamp_ssl_setup
-                                      - flow.server_conn.timestamp_tcp_setup)
-                                     * 1000))
-        SSL_TIMES[flow.server_conn.address.address] = -1
+    if flow.server_conn not in context.seen_server_connect \
+            and flow.server_conn.timestamp_ssl_setup is not None:
+        # Get the ssl_time for this server_conn as the difference between the start of the successful
+        # tcp setup and the successful ssl setup. Afterwards add it to seen list, in order to avoid
+        # the ssl_time being present in entries that use an existing connection. If  no ssl setup has
+        # been made initiate it is also left as -1 since it doesn't apply to this connection.
+        ssl_time = flow.server_conn.timestamp_ssl_setup - flow.server_conn.timestamp_tcp_setup
+        context.seen_server_ssl.add(flow.server_conn)
 
-    timings = {'send': int((flow.request.timestamp_end - flow.request.timestamp_start) * 1000),
-               'wait': int((flow.response.timestamp_start - flow.request.timestamp_end) * 1000),
-               'receive': int((flow.response.timestamp_end - flow.response.timestamp_start) * 1000),
-               'connect': connect_time,
-               'ssl': ssl_time}
+    # Calculate the raw timings from the different timestamps present in the request and response object.
+    # For lack of a way to measure it dns timings can not be calculated. The same goes for HAR blocked:
+    # MITMProxy will open a server connection as soon as it receives the host and port from the client
+    # connection. So the time spent waiting is actually spent waiting between request.timestamp_end and
+    # response.timestamp_start thus it correlates to HAR wait instead.
+    timings_raw = {'send': flow.request.timestamp_end - flow.request.timestamp_start,
+                   'wait': flow.response.timestamp_start - flow.request.timestamp_end,
+                   'receive': flow.response.timestamp_end - flow.response.timestamp_start,
+                   'connect': connect_time,
+                   'ssl': ssl_time}
 
+    # HAR timings are integers in ms, so we have to re-encode the raw timings to that format.
+    timings = dict([(key, int(1000 * value)) for key, value in timings_raw.iteritems()])
+
+    # The full_time is the sum of all timings. Timings set to -1 will be ignored as per spec.
     full_time = 0
     for item in timings.values():
         if item > -1:
             full_time += item
 
-    entry = HAR.entries({"startedDateTime": datetime.fromtimestamp(flow.request.timestamp_start, tz=UTC()).isoformat(),
+    started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, tz=UTC()).isoformat()
+
+    request_query_string = [{"name": k, "value": v} for k, v in flow.request.get_query()]
+    request_http_version = ".".join([str(v) for v in flow.request.httpversion])
+    # Cookies are shaped as tuples by MITMProxy.
+    request_cookies = [{"name": k.strip(), "value": v[0]} for k, v in (flow.request.get_cookies() or {}).iteritems()]
+    request_headers = [{"name": k, "value": v} for k, v in flow.request.headers]
+    request_headers_size = len(str(flow.request.headers))
+    request_body_size = len(flow.request.content)
+
+    response_http_version = ".".join([str(v) for v in flow.response.httpversion])
+    # Cookies are shaped as tuples by MITMProxy.
+    response_cookies = [{"name": k.strip(), "value": v[0]} for k, v in (flow.response.get_cookies() or {}).iteritems()]
+    response_headers = [{"name": k, "value": v} for k, v in flow.response.headers]
+    response_headers_size = len(str(flow.response.headers))
+    response_body_size = len(flow.response.content)
+    response_body_decoded_size = len(flow.response.content)
+    response_body_compression = response_body_decoded_size - response_body_size
+    response_mime_type = flow.response.headers.get('Content-Type', [''])[0]
+    response_redirect_url = flow.response.headers.get('Location', [''])[0]
+
+    entry = HAR.entries({"startedDateTime": started_date_time,
                          "time": full_time,
                          "request": {"method": flow.request.method,
                                      "url": flow.request.url,
-                                     "httpVersion": ".".join([str(v) for v in flow.request.httpversion]),
-                                     "cookies": [{"name": k.strip(), "value": v[0]}
-                                                 for k, v in (flow.request.get_cookies() or {}).iteritems()],
-                                     "headers": [{"name": k, "value": v}
-                                                 for k, v in flow.request.headers],
-                                     "queryString": [{"name": k, "value": v}
-                                                     for k, v in flow.request.get_query()],
-                                     "headersSize": len(str(flow.request.headers).split("\r\n\r\n")[0]),
-                                     "bodySize": len(flow.request.content), },
+                                     "httpVersion": request_http_version,
+                                     "cookies": request_cookies,
+                                     "headers": request_headers,
+                                     "queryString": request_query_string,
+                                     "headersSize": request_headers_size,
+                                     "bodySize": request_body_size, },
                          "response": {"status": flow.response.code,
                                       "statusText": flow.response.msg,
-                                      "httpVersion": ".".join([str(v) for v in flow.response.httpversion]),
-                                      "cookies": [{"name": k.strip(), "value": v[0]}
-                                                  for k, v in (flow.response.get_cookies() or {}).iteritems()],
-                                      "headers": [{"name": k, "value": v}
-                                                  for k, v in flow.response.headers],
-                                      "content": {"size": len(flow.response.content),
-                                                  "compression": len(flow.response.get_decoded_content()) - len(
-                                                      flow.response.content),
-                                                  "mimeType": flow.response.headers.get('Content-Type', ('', ))[0]},
-                                      "redirectURL": flow.response.headers.get('Location', ''),
-                                      "headersSize": len(str(flow.response.headers).split("\r\n\r\n")[0]),
-                                      "bodySize": len(flow.response.content), },
+                                      "httpVersion": response_http_version,
+                                      "cookies": response_cookies,
+                                      "headers": response_headers,
+                                      "content": {"size": response_body_size,
+                                                  "compression": response_body_compression,
+                                                  "mimeType": response_mime_type},
+                                      "redirectURL": response_redirect_url,
+                                      "headersSize": response_headers_size,
+                                      "bodySize": response_body_size, },
                          "cache": {},
                          "timings": timings, })
 
+    # If the current url is in HARPAGE_LIST or does not have a referer we add it as a new pages object.
     if flow.request.url in HARPAGE_LIST or flow.request.headers.get('Referer', None) is None:
         PAGE_COUNT[1] += 1
         page_id = "_".join([str(v) for v in PAGE_COUNT])
@@ -150,29 +144,12 @@ def response(context, flow):
         PAGE_REF[flow.request.url] = page_id
         entry['pageref'] = page_id
 
-    if flow.request.headers.get('Referer', (None, ))[0] in PAGE_REF.keys():
+    # Lookup the referer in our PAGE_REF dict to point this entries pageref attribute to the right pages object.
+    elif flow.request.headers.get('Referer', (None, ))[0] in PAGE_REF.keys():
         entry['pageref'] = PAGE_REF[flow.request.headers['Referer'][0]]
         PAGE_REF[flow.request.url] = entry['pageref']
 
     HARLog.add(entry)
-
-
-def error(context, flow):
-    """
-        Called when a flow error has occured, e.g. invalid server responses, or
-        interrupted connections. This is distinct from a valid server HTTP error
-        response, which is simply a response with an HTTP error code.
-    """
-    # context.log("error")
-
-
-def clientdisconnect(context, conn_handler):
-    """
-        Called when a client disconnects from the proxy.
-    """
-    # print "clientdisconnect"
-    # print_attributes(context._master)
-    # print_attributes(conn_handler)
 
 
 def done(context):
@@ -182,13 +159,21 @@ def done(context):
     from pprint import pprint
     import json
 
-    pprint(json.loads(HARLog.json()))
-    print HARLog.json()
-    print HARLog.compress()
-    print "%s%%" % str(100. * len(HARLog.compress()) / len(HARLog.json()))
+    json_dump = HARLog.json()
+    compressed_json_dump = HARLog.compress()
+
+    print "=" * 100
+    pprint(json.loads(json_dump))
+    print "=" * 100
+    print "HAR log finished with %s bytes (%s bytes compressed)" % (len(json_dump), len(compressed_json_dump))
+    print "Compression rate is %s%%" % str(100. * len(compressed_json_dump) / len(json_dump))
+    print "=" * 100
 
 
 def print_attributes(obj, filter=None):
+    """
+        Useful helper method to quickly get all attributes of an object and its values.
+    """
     for attr in dir(obj):
         # if "__" in attr:
         # continue
@@ -198,6 +183,7 @@ def print_attributes(obj, filter=None):
         print "%s.%s" % ('obj', attr), value, type(value)
 
 
+# Some initializations. Add any page you want to have its own pages object to HARPAGE_LIST
 HARPAGE_LIST = ['https://github.com/']
 HARLog = _HARLog()
 
