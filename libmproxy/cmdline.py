@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import os
 import re
 import configargparse
-import argparse
 from netlib import http
 from . import filt, utils, version
 from .proxy import config
@@ -105,7 +104,7 @@ def parse_server_spec(url):
 
     p = http.parse_url(normalized_url)
     if not p or not p[1]:
-        raise argparse.ArgumentTypeError(
+        raise configargparse.ArgumentTypeError(
             "Invalid server specification: %s" % url
         )
 
@@ -136,17 +135,17 @@ def get_common_options(options):
         try:
             p = parse_replace_hook(i)
         except ParseException, e:
-            raise argparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e.message)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException, e:
-            raise argparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e.message)
         try:
             v = open(path, "rb").read()
         except IOError, e:
-            raise argparse.ArgumentTypeError(
+            raise configargparse.ArgumentTypeError(
                 "Could not read replace file: %s" % path
             )
         reps.append((patt, rex, v))
@@ -156,7 +155,7 @@ def get_common_options(options):
         try:
             p = parse_setheader(i)
         except ParseException, e:
-            raise argparse.ArgumentTypeError(e.message)
+            raise configargparse.ArgumentTypeError(e.message)
         setheaders.append(p)
 
     return dict(
@@ -590,7 +589,7 @@ def mitmdump():
         action="count", dest="flow_detail", default=1,
         help="Increase flow detail display level. Can be passed multiple times."
     )
-    parser.add_argument('args', nargs=argparse.REMAINDER)
+    parser.add_argument('args', nargs="...")
     return parser
 
 
