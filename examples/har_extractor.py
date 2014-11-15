@@ -126,7 +126,7 @@ def response(context, flow):
     response_headers = [{"name": k, "value": v} for k, v in flow.response.headers]
     response_headers_size = len(str(flow.response.headers))
     response_body_size = len(flow.response.content)
-    response_body_decoded_size = len(flow.response.content)
+    response_body_decoded_size = len(flow.response.get_decoded_content())
     response_body_compression = response_body_decoded_size - response_body_size
     response_mime_type = flow.response.headers.get('Content-Type', [''])[0]
     response_redirect_url = flow.response.headers.get('Location', [''])[0]
