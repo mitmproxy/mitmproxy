@@ -189,6 +189,11 @@ def get_common_options(options):
 
 def common_options(parser):
     parser.add_argument(
+        '--version',
+        action= 'version',
+        version= "%(prog)s" + " " + version.VERSION
+    )
+    parser.add_argument(
         "--anticache",
         action="store_true", dest="anticache", default=False,
 
@@ -530,11 +535,6 @@ def mitmproxy():
         add_config_file_help = True,
         add_env_var_help = True
     )
-    parser.add_argument(
-        '--version',
-        action='version',
-        version=version.NAMEVERSION
-    )
     common_options(parser)
     parser.add_argument(
         "--palette", type=str, default="dark",
@@ -570,11 +570,6 @@ def mitmdump():
         add_env_var_help = True
     )
 
-    parser.add_argument(
-        '--version',
-        action= 'version',
-        version= "mitmdump" + " " + version.VERSION
-    )
     common_options(parser)
     parser.add_argument(
         "--keepserving",
@@ -603,11 +598,6 @@ def mitmweb():
         ],
         add_config_file_help = True,
         add_env_var_help = True
-    )
-    parser.add_argument(
-        '--version',
-        action='version',
-        version="mitmweb" + " " + version.VERSION
     )
 
     group = parser.add_argument_group("Mitmweb")
