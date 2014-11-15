@@ -170,14 +170,14 @@ def done(context):
     print "=" * 100
 
 
-def print_attributes(obj, filter=None):
+def print_attributes(obj, filter_string=None, hide_privates=False):
     """
         Useful helper method to quickly get all attributes of an object and its values.
     """
     for attr in dir(obj):
-        # if "__" in attr:
-        # continue
-        if filter is not None and filter not in attr:
+        if hide_privates and "__" in attr:
+            continue
+        if filter_string is not None and filter_string not in attr:
             continue
         value = getattr(obj, attr)
         print "%s.%s" % ('obj', attr), value, type(value)
