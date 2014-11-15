@@ -18,7 +18,15 @@ class UTC(tzinfo):
 
 
 class _HARLog(HAR.log):
-    def __init__(self):
+    __page_list__ = []
+    __page_count__ = 0
+    __page_ref__ = {}
+
+    def __init__(self, page_list):
+        self.__page_list__ = page_list
+        self.__page_count__ = 0
+        self.__page_ref__ = {}
+
         HAR.log.__init__(self, {"version": "1.2",
                                 "creator": {"name": "MITMPROXY HARExtractor",
                                             "version": "0.1",
@@ -35,14 +43,27 @@ class _HARLog(HAR.log):
         if isinstance(obj, HAR.entries):
             self['entries'].append(obj)
 
+    def create_page_id(self):
+        self.__page_count__ += 1
+        return "autopage_%s" % str(self.__page_count__)
+
+    def set_page_ref(self, page, ref):
+        self.__page_ref__[page] = ref
+
+    def get_page_ref(self, page):
+        return self.__page_ref__.get(page, None)
+
+    def get_page_list(self):
+        return self.__page_list__
+
 
 def start(context, argv):
     """
-        On start we reset the HAR, it's not really necessary since it will have been
-        instantiated earlier during initial parsing of this file. You will have to
-        adapt this to suit your actual needs of HAR generation.
+        On start we create a HARLog instance. You will have to adapt this to suit your actual needs
+        of HAR generation. As it will probably be necessary to cluster logs by IPs or reset them
+        from time to time.
     """
-    HARLog.reset()
+    context.HARLog = _HARLog(['https://github.com'])
     context.seen_server_connect = set()
     context.seen_server_ssl = set()
 
@@ -52,15 +73,15 @@ def response(context, flow):
        Called when a server response has been received. At the time of this message both
        a request and a response are present and completely done.
     """
-    connect_time = -1
+    connect_time = -.001
     if flow.server_conn not in context.seen_server_connect:
         # Calculate the connect_time for this server_conn. Afterwards add it to seen list, in
         # order to avoid the connect_time being present in entries that use an existing connection.
         connect_time = flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
         context.seen_server_connect.add(flow.server_conn)
 
-    ssl_time = -1
-    if flow.server_conn not in context.seen_server_connect \
+    ssl_time = -.001
+    if flow.server_conn not in context.seen_server_ssl \
             and flow.server_conn.timestamp_ssl_setup is not None:
         # Get the ssl_time for this server_conn as the difference between the start of the successful
         # tcp setup and the successful ssl setup. Afterwards add it to seen list, in order to avoid
@@ -134,22 +155,23 @@ def response(context, flow):
                          "cache": {},
                          "timings": timings, })
 
-    # If the current url is in HARPAGE_LIST or does not have a referer we add it as a new pages object.
-    if flow.request.url in HARPAGE_LIST or flow.request.headers.get('Referer', None) is None:
-        PAGE_COUNT[1] += 1
-        page_id = "_".join([str(v) for v in PAGE_COUNT])
-        HARLog.add(HAR.pages({"startedDateTime": entry['startedDateTime'],
-                              "id": page_id,
-                              "title": flow.request.url, }))
-        PAGE_REF[flow.request.url] = page_id
+    # If the current url is in the page list of context.HARLog or does not have a referrer we add it as a new
+    # pages object.
+    if flow.request.url in context.HARLog.get_page_list() or flow.request.headers.get('Referer', None) is None:
+        page_id = context.HARLog.create_page_id()
+        context.HARLog.add(HAR.pages({"startedDateTime": entry['startedDateTime'],
+                                      "id": page_id,
+                                      "title": flow.request.url, }))
+        context.HARLog.set_page_ref(flow.request.url, page_id)
         entry['pageref'] = page_id
 
-    # Lookup the referer in our PAGE_REF dict to point this entries pageref attribute to the right pages object.
-    elif flow.request.headers.get('Referer', (None, ))[0] in PAGE_REF.keys():
-        entry['pageref'] = PAGE_REF[flow.request.headers['Referer'][0]]
-        PAGE_REF[flow.request.url] = entry['pageref']
+    # Lookup the referer in the page_ref of context.HARLog to point this entries pageref attribute to the right
+    # pages object, then set it as a new reference to build a reference tree.
+    elif context.HARLog.get_page_ref(flow.request.headers.get('Referer', (None, ))[0]) is not None:
+        entry['pageref'] = context.HARLog.get_page_ref(flow.request.headers['Referer'][0])
+        context.HARLog.set_page_ref(flow.request.headers['Referer'][0], entry['pageref'])
 
-    HARLog.add(entry)
+    context.HARLog.add(entry)
 
 
 def done(context):
@@ -159,8 +181,8 @@ def done(context):
     from pprint import pprint
     import json
 
-    json_dump = HARLog.json()
-    compressed_json_dump = HARLog.compress()
+    json_dump = context.HARLog.json()
+    compressed_json_dump = context.HARLog.compress()
 
     print "=" * 100
     pprint(json.loads(json_dump))
@@ -181,13 +203,3 @@ def print_attributes(obj, filter_string=None, hide_privates=False):
             continue
         value = getattr(obj, attr)
         print "%s.%s" % ('obj', attr), value, type(value)
-
-
-# Some initializations. Add any page you want to have its own pages object to HARPAGE_LIST
-HARPAGE_LIST = ['https://github.com/']
-HARLog = _HARLog()
-
-CONNECT_TIMES = {}
-SSL_TIMES = {}
-PAGE_REF = {}
-PAGE_COUNT = ['autopage', 0]
