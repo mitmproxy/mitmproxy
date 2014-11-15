@@ -28,8 +28,6 @@ script_deps = {
         "urwid>=1.1",
         "lxml>=3.3.6",
         "Pillow>=2.3.0",
-        "pytz",
-        "harparser",
     },
     "mitmdump": set()
 }
@@ -80,6 +78,10 @@ setup(
             "pyamf>=0.6.1",
             "protobuf>=2.5.0",
             "cssutils>=1.0"
+        ],
+        'examples': [
+            "pytz",
+            "harparser",
         ]
     }
 )

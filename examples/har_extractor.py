@@ -56,9 +56,14 @@ def start(context, argv):
         of HAR generation. As it will probably be necessary to cluster logs by IPs or reset them
         from time to time.
     """
+    context.dump_file = None
+    if len(argv) > 1:
+        context.dump_file = argv[1]
+    else:
+        raise ValueError('Usage: -s "har_extractor.py filename" '
+                         '(- will output to stdout, filenames ending with .zhar will result in compressed har)')
     context.HARLog = _HARLog(['https://github.com'])
-    context.seen_server_connect = set()
-    context.seen_server_ssl = set()
+    context.seen_server = set()
 
 
 def response(context, flow):
@@ -66,22 +71,20 @@ def response(context, flow):
        Called when a server response has been received. At the time of this message both
        a request and a response are present and completely done.
     """
+    # Values are converted from float seconds to int milliseconds later.
+    ssl_time = -.001
     connect_time = -.001
-    if flow.server_conn not in context.seen_server_connect:
+    if flow.server_conn not in context.seen_server:
         # Calculate the connect_time for this server_conn. Afterwards add it to seen list, in
         # order to avoid the connect_time being present in entries that use an existing connection.
         connect_time = flow.server_conn.timestamp_tcp_setup - flow.server_conn.timestamp_start
-        context.seen_server_connect.add(flow.server_conn)
+        context.seen_server.add(flow.server_conn)
 
-    ssl_time = -.001
-    if flow.server_conn not in context.seen_server_ssl \
-            and flow.server_conn.timestamp_ssl_setup is not None:
-        # Get the ssl_time for this server_conn as the difference between the start of the successful
-        # tcp setup and the successful ssl setup. Afterwards add it to seen list, in order to avoid
-        # the ssl_time being present in entries that use an existing connection. If  no ssl setup has
-        # been made it is also left as -1 since it doesn't apply to this connection.
-        ssl_time = flow.server_conn.timestamp_ssl_setup - flow.server_conn.timestamp_tcp_setup
-        context.seen_server_ssl.add(flow.server_conn)
+        if flow.server_conn.timestamp_ssl_setup is not None:
+            # Get the ssl_time for this server_conn as the difference between the start of the successful
+            # tcp setup and the successful ssl setup. If  no ssl setup has been made it is left as -1 since
+            # it doesn't apply to this connection.
+            ssl_time = flow.server_conn.timestamp_ssl_setup - flow.server_conn.timestamp_tcp_setup
 
     # Calculate the raw timings from the different timestamps present in the request and response object.
     # For lack of a way to measure it dns timings can not be calculated. The same goes for HAR blocked:
@@ -178,7 +181,12 @@ def done(context):
     compressed_json_dump = context.HARLog.compress()
 
     print "=" * 100
-    pprint(json.loads(json_dump))
+    if context.dump_file == '-':
+        pprint(json.loads(json_dump))
+    elif context.dump_file.endswith('.zhar'):
+        file(context.dump_file, "w").write(compressed_json_dump)
+    else:
+        file(context.dump_file, "w").write(json_dump)
     print "=" * 100
     print "HAR log finished with %s bytes (%s bytes compressed)" % (len(json_dump), len(compressed_json_dump))
     print "Compression rate is %s%%" % str(100. * len(compressed_json_dump) / len(json_dump))
