@@ -99,7 +99,7 @@ class ProxTestBase(object):
 
     @classmethod
     def teardownAll(cls):
-        shutil.rmtree(cls.confdir)
+        shutil.rmtree(cls.cadir)
         cls.proxy.shutdown()
         cls.server.shutdown()
         cls.server2.shutdown()
@@ -116,10 +116,10 @@ class ProxTestBase(object):
 
     @classmethod
     def get_proxy_config(cls):
-        cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return dict(
             no_upstream_cert = cls.no_upstream_cert,
-            confdir = cls.confdir,
+            cadir = cls.cadir,
             authenticator = cls.authenticator,
             certforward = cls.certforward,
             ssl_ports=([cls.server.port, cls.server2.port] if cls.ssl else []),

@@ -70,9 +70,9 @@ class TestProcessProxyOptions:
     def test_simple(self):
         assert self.p()
 
-    def test_confdir(self):
-        with tutils.tmpdir() as confdir:
-            self.assert_noerr("--confdir", confdir)
+    def test_cadir(self):
+        with tutils.tmpdir() as cadir:
+            self.assert_noerr("--cadir", cadir)
 
     @mock.patch("libmproxy.platform.resolver", None)
     def test_no_transparent(self):
@@ -94,12 +94,12 @@ class TestProcessProxyOptions:
         self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
 
     def test_client_certs(self):
-        with tutils.tmpdir() as confdir:
-            self.assert_noerr("--client-certs", confdir)
+        with tutils.tmpdir() as cadir:
+            self.assert_noerr("--client-certs", cadir)
             self.assert_err("directory does not exist", "--client-certs", "nonexistent")
 
     def test_certs(self):
-        with tutils.tmpdir() as confdir:
+        with tutils.tmpdir() as cadir:
             self.assert_noerr("--cert", tutils.test_data.path("data/testkey.pem"))
             self.assert_err("does not exist", "--cert", "nonexistent")
 
