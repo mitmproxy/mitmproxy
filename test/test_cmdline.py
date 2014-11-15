@@ -1,7 +1,6 @@
 import argparse
 from libmproxy import cmdline
 import tutils
-import os.path
 
 
 def test_parse_replace_hook():
@@ -50,6 +49,7 @@ def test_parse_server_spec():
 def test_parse_setheaders():
     x = cmdline.parse_setheader("/foo/bar/voing")
     assert x == ("foo", "bar", "voing")
+
 
 def test_common():
     parser = argparse.ArgumentParser()
@@ -107,4 +107,20 @@ def test_common():
     v = cmdline.get_common_options(opts)["replacements"]
     assert len(v) == 1
     assert v[0][2].strip() == "replacecontents"
+
+
+def test_mitmproxy():
+    ap = cmdline.mitmproxy()
+    assert ap
+
+
+def test_mitmdump():
+    ap = cmdline.mitmdump()
+    assert ap
+
+
+def test_mitmweb():
+    ap = cmdline.mitmweb()
+    assert ap
+
 

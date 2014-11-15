@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import os
 import re
 import configargparse
 import argparse
@@ -311,7 +312,7 @@ def common_options(parser):
         help="Don't start a proxy server."
     )
     group.add_argument(
-        "-p",
+        "-p", "--port",
         action="store", type=int, dest="port", default=8080,
         help="Proxy service port."
     )
@@ -520,7 +521,16 @@ def mitmproxy():
     # platforms.
     from .console import palettes
 
-    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
+    parser = configargparse.ArgumentParser(
+        usage="%(prog)s [options]",
+        args_for_setting_config_path = ["--conf"],
+        default_config_files = [
+            os.path.join(config.CA_DIR, "common.conf"),
+            os.path.join(config.CA_DIR, "mitmproxy.conf")
+        ],
+        add_config_file_help = True,
+        add_env_var_help = True
+    )
     parser.add_argument(
         '--version',
         action='version',
@@ -551,7 +561,16 @@ def mitmproxy():
 
 
 def mitmdump():
-    parser = configargparse.ArgumentParser(usage="%(prog)s [options] [filter]")
+    parser = configargparse.ArgumentParser(
+        usage="%(prog)s [options] [filter]",
+        args_for_setting_config_path = ["--conf"],
+        default_config_files = [
+            os.path.join(config.CA_DIR, "common.conf"),
+            os.path.join(config.CA_DIR, "mitmdump.conf")
+        ],
+        add_config_file_help = True,
+        add_env_var_help = True
+    )
 
     parser.add_argument(
         '--version',
@@ -577,7 +596,16 @@ def mitmdump():
 
 
 def mitmweb():
-    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
+    parser = configargparse.ArgumentParser(
+        usage="%(prog)s [options]",
+        args_for_setting_config_path = ["--conf"],
+        default_config_files = [
+            os.path.join(config.CA_DIR, "common.conf"),
+            os.path.join(config.CA_DIR, "mitmweb.conf")
+        ],
+        add_config_file_help = True,
+        add_env_var_help = True
+    )
     parser.add_argument(
         '--version',
         action='version',
