@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 import re
-from configargparse import ArgumentTypeError
+import configargparse
+import argparse
 from netlib import http
-from . import filt, utils
+from . import filt, utils, version
 from .proxy import config
 
 APP_HOST = "mitm.it"
@@ -103,7 +104,9 @@ def parse_server_spec(url):
 
     p = http.parse_url(normalized_url)
     if not p or not p[1]:
-        raise ArgumentTypeError("Invalid server specification: %s" % url)
+        raise argparse.ArgumentTypeError(
+            "Invalid server specification: %s" % url
+        )
 
     if url.lower().startswith("https2http"):
         ssl = [True, False]
@@ -132,17 +135,19 @@ def get_common_options(options):
         try:
             p = parse_replace_hook(i)
         except ParseException, e:
-            raise ArgumentTypeError(e.message)
+            raise argparse.ArgumentTypeError(e.message)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
         except ParseException, e:
-            raise ArgumentTypeError(e.message)
+            raise argparse.ArgumentTypeError(e.message)
         try:
             v = open(path, "rb").read()
         except IOError, e:
-            raise ArgumentTypeError("Could not read replace file: %s" % path)
+            raise argparse.ArgumentTypeError(
+                "Could not read replace file: %s" % path
+            )
         reps.append((patt, rex, v))
 
     setheaders = []
@@ -150,7 +155,7 @@ def get_common_options(options):
         try:
             p = parse_setheader(i)
         except ParseException, e:
-            raise ArgumentTypeError(e.message)
+            raise argparse.ArgumentTypeError(e.message)
         setheaders.append(p)
 
     return dict(
@@ -508,3 +513,105 @@ def common_options(parser):
     )
 
     config.ssl_option_group(parser)
+
+
+def mitmproxy():
+    # Don't import libmproxy.console for mitmdump, urwid is not available on all
+    # platforms.
+    from .console import palettes
+
+    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=version.NAMEVERSION
+    )
+    common_options(parser)
+    parser.add_argument(
+        "--palette", type=str, default="dark",
+        action="store", dest="palette",
+        help="Select color palette: " + ", ".join(palettes.palettes.keys())
+    )
+    parser.add_argument(
+        "-e",
+        action="store_true", dest="eventlog",
+        help="Show event log."
+    )
+    group = parser.add_argument_group(
+        "Filters",
+        "See help in mitmproxy for filter expression syntax."
+    )
+    group.add_argument(
+        "-i", "--intercept", action="store",
+        type=str, dest="intercept", default=None,
+        help="Intercept filter expression."
+    )
+
+    return parser
+
+
+def mitmdump():
+    parser = configargparse.ArgumentParser(usage="%(prog)s [options] [filter]")
+
+    parser.add_argument(
+        '--version',
+        action= 'version',
+        version= "mitmdump" + " " + version.VERSION
+    )
+    common_options(parser)
+    parser.add_argument(
+        "--keepserving",
+        action= "store_true", dest="keepserving", default=False,
+        help= """
+            Continue serving after client playback or file read. We exit by
+            default.
+        """
+    )
+    parser.add_argument(
+        "-d",
+        action="count", dest="flow_detail", default=1,
+        help="Increase flow detail display level. Can be passed multiple times."
+    )
+    parser.add_argument('args', nargs=argparse.REMAINDER)
+    return parser
+
+
+def mitmweb():
+    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
+    parser.add_argument(
+        '--version',
+        action='version',
+        version="mitmweb" + " " + version.VERSION
+    )
+
+    group = parser.add_argument_group("Mitmweb")
+    group.add_argument(
+        "--wport",
+        action="store", type=int, dest="wport", default=8081,
+        metavar="PORT",
+        help="Mitmweb port."
+    )
+    group.add_argument(
+        "--wiface",
+        action="store", dest="wiface", default="127.0.0.1",
+        metavar="IFACE",
+        help="Mitmweb interface."
+    )
+    group.add_argument(
+        "--wdebug",
+        action="store_true", dest="wdebug",
+        help="Turn on mitmweb debugging"
+    )
+
+    common_options(parser)
+    group = parser.add_argument_group(
+        "Filters",
+        "See help in mitmproxy for filter expression syntax."
+    )
+    group.add_argument(
+        "-i", "--intercept", action="store",
+        type=str, dest="intercept", default=None,
+        help="Intercept filter expression."
+    )
+    return parser
+

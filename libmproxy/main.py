@@ -1,6 +1,4 @@
 from __future__ import print_function, absolute_import
-import configargparse
-import argparse
 import os
 import signal
 import sys
@@ -74,39 +72,13 @@ def get_server(dummy_server, options):
             sys.exit(1)
 
 
-def mitmproxy_cmdline():
-    # Don't import libmproxy.console for mitmdump, urwid is not available on all
-    # platforms.
+def mitmproxy():  # pragma: nocover
     from . import console
-    from .console import palettes
 
-    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
-    parser.add_argument(
-        '--version',
-        action='version',
-        version=version.NAMEVERSION
-    )
-    cmdline.common_options(parser)
-    parser.add_argument(
-        "--palette", type=str, default="dark",
-        action="store", dest="palette",
-        help="Select color palette: " + ", ".join(palettes.palettes.keys())
-    )
-    parser.add_argument(
-        "-e",
-        action="store_true", dest="eventlog",
-        help="Show event log."
-    )
-    group = parser.add_argument_group(
-        "Filters",
-        "See help in mitmproxy for filter expression syntax."
-    )
-    group.add_argument(
-        "-i", "--intercept", action="store",
-        type=str, dest="intercept", default=None,
-        help="Intercept filter expression."
-    )
+    check_versions()
+    assert_utf8_env()
 
+    parser = cmdline.mitmproxy()
     options = parser.parse_args()
     if options.quiet:
         options.verbose = 0
@@ -117,15 +89,6 @@ def mitmproxy_cmdline():
     console_options.eventlog = options.eventlog
     console_options.intercept = options.intercept
 
-    return console_options, proxy_config
-
-
-def mitmproxy():  # pragma: nocover
-    from . import console
-
-    check_versions()
-    assert_utf8_env()
-    console_options, proxy_config = mitmproxy_cmdline()
     server = get_server(console_options.no_server, proxy_config)
 
     m = console.ConsoleMaster(server, console_options)
@@ -135,32 +98,12 @@ def mitmproxy():  # pragma: nocover
         pass
 
 
-def mitmdump_cmdline():
+def mitmdump():  # pragma: nocover
     from . import dump
 
-    parser = configargparse.ArgumentParser(usage="%(prog)s [options] [filter]")
+    check_versions()
 
-    parser.add_argument(
-        '--version',
-        action= 'version',
-        version= "mitmdump" + " " + version.VERSION
-    )
-    cmdline.common_options(parser)
-    parser.add_argument(
-        "--keepserving",
-        action= "store_true", dest="keepserving", default=False,
-        help= """
-            Continue serving after client playback or file read. We exit by
-            default.
-        """
-    )
-    parser.add_argument(
-        "-d",
-        action="count", dest="flow_detail", default=1,
-        help="Increase flow detail display level. Can be passed multiple times."
-    )
-    parser.add_argument('args', nargs=argparse.REMAINDER)
-
+    parser = cmdline.mitmdump()
     options = parser.parse_args()
     if options.quiet:
         options.verbose = 0
@@ -172,14 +115,6 @@ def mitmdump_cmdline():
     dump_options.keepserving = options.keepserving
     dump_options.filtstr = " ".join(options.args) if options.args else None
 
-    return dump_options, proxy_config
-
-
-def mitmdump():  # pragma: nocover
-    from . import dump
-
-    check_versions()
-    dump_options, proxy_config = mitmdump_cmdline()
     server = get_server(dump_options.no_server, proxy_config)
 
     try:
@@ -197,44 +132,11 @@ def mitmdump():  # pragma: nocover
         pass
 
 
-def mitmweb_cmdline():
+def mitmweb():  # pragma: nocover
     from . import web
-    parser = configargparse.ArgumentParser(usage="%(prog)s [options]")
-    parser.add_argument(
-        '--version',
-        action='version',
-        version="mitmweb" + " " + version.VERSION
-    )
 
-    group = parser.add_argument_group("Mitmweb")
-    group.add_argument(
-        "--wport",
-        action="store", type=int, dest="wport", default=8081,
-        metavar="PORT",
-        help="Mitmweb port."
-    )
-    group.add_argument(
-        "--wiface",
-        action="store", dest="wiface", default="127.0.0.1",
-        metavar="IFACE",
-        help="Mitmweb interface."
-    )
-    group.add_argument(
-        "--wdebug",
-        action="store_true", dest="wdebug",
-        help="Turn on mitmweb debugging"
-    )
-
-    cmdline.common_options(parser)
-    group = parser.add_argument_group(
-        "Filters",
-        "See help in mitmproxy for filter expression syntax."
-    )
-    group.add_argument(
-        "-i", "--intercept", action="store",
-        type=str, dest="intercept", default=None,
-        help="Intercept filter expression."
-    )
+    check_versions()
+    parser = cmdline.mitmweb()
 
     options = parser.parse_args()
     if options.quiet:
@@ -246,14 +148,7 @@ def mitmweb_cmdline():
     web_options.wdebug = options.wdebug
     web_options.wiface = options.wiface
     web_options.wport = options.wport
-    return web_options, proxy_config
 
-
-def mitmweb():  # pragma: nocover
-    from . import web
-
-    check_versions()
-    web_options, proxy_config = mitmweb_cmdline()
     server = get_server(web_options.no_server, proxy_config)
 
     m = web.WebMaster(server, web_options)
