@@ -21,7 +21,6 @@ deps = {
     "pyOpenSSL>=0.14",
     "Flask>=0.10.1",
     "tornado>=4.0.2",
-    "sortedcontainers>=0.9.1",
     "configargparse>=0.9.3"
 }
 script_deps = {
