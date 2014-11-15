@@ -26,5 +26,20 @@
 
 - Build the OSX binaries
     - Follow instructions in osxbinaries
+    - Package:
+        cp -r ./doc /tmp/osx-mitmproxy/
+        mv /tmp/osx-mitmproxy /tmp/osx-mitmproxy-VERSION
+        tar -czvf /tmp/osx-mitmproxy-VERSION.tar.gz /tmp/osx-mitmproxy-VERSION
+        mv /tmp/osx-mitmproxy-VERSION.tar.gz ~/mitmproxy/www.mitmproxy.org/src/download
 
+- Build the sources for each project:
+    python ./setup.py sdist
+    mv ./dist/FILE ~/mitmproxy/www.mitmproxy.org/src/download
+
+
+- Adjust links on www.mitmproxy.org
+
+- Upload to pypi for each project:
+
+    python ./setup.py sdist upload
 
