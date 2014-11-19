@@ -174,7 +174,7 @@ class LiveConnection(object):
         self._backup_server_conn = None
         """@type: libmproxy.proxy.connection.ServerConnection"""
 
-    def change_server(self, address, ssl=None, force=False, persistent_change=False):
+    def change_server(self, address, ssl=None, sni=None, force=False, persistent_change=False):
         """
         Change the server connection to the specified address.
         @returns:
@@ -183,7 +183,14 @@ class LiveConnection(object):
         """
         address = netlib.tcp.Address.wrap(address)
 
-        ssl_mismatch = (ssl is not None and ssl != self.c.server_conn.ssl_established)
+        ssl_mismatch = (
+            ssl is not None and
+            (
+                ssl != self.c.server_conn.ssl_established
+                or
+                (sni is not None and sni != self.c.sni)
+            )
+        )
         address_mismatch = (address != self.c.server_conn.address)
 
         if persistent_change:
@@ -212,6 +219,8 @@ class LiveConnection(object):
 
             self.c.set_server_address(address)
             self.c.establish_server_connection(ask=False)
+            if sni:
+                self.c.sni = sni
             if ssl:
                 self.c.establish_ssl(server=True)
             return True
