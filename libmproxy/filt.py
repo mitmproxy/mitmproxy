@@ -343,7 +343,9 @@ bnf = _make()
 
 def parse(s):
     try:
-        return bnf.parseString(s, parseAll=True)[0]
+        filt = bnf.parseString(s, parseAll=True)[0]
+        filt.pattern = s
+        return filt
     except pp.ParseException:
         return None
     except ValueError:

@@ -346,11 +346,13 @@ class State(object):
         # These are compiled filt expressions:
         self._limit = None
         self.intercept = None
-        self._limit_txt = None
 
     @property
     def limit_txt(self):
-        return self._limit_txt
+        if self.filt:
+            return self.filt.pattern
+        else:
+            return None
 
     def flow_count(self):
         return len(self._flow_list)
@@ -407,10 +409,8 @@ class State(object):
             if not f:
                 return "Invalid filter expression."
             self._limit = f
-            self._limit_txt = txt
         else:
             self._limit = None
-            self._limit_txt = None
         self.recalculate_view()
 
     def set_intercept(self, txt):
