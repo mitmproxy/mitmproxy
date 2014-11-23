@@ -349,8 +349,8 @@ class State(object):
 
     @property
     def limit_txt(self):
-        if self.filt:
-            return self.filt.pattern
+        if self._limit:
+            return self._limit.pattern
         else:
             return None
 
