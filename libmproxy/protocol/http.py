@@ -1198,7 +1198,7 @@ class HTTPHandler(ProtocolHandler):
                 <head>
                     <title>%d %s</title>
                 </head>
-                <body %s</body>
+                <body>%s</body>
             </html>
         """ % (code, response, message)
         self.c.client_conn.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
