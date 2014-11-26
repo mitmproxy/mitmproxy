@@ -7,8 +7,14 @@ var MainView = React.createClass({
         };
     },
     componentDidMount: function () {
-        this.flowStore = FlowStore.getView();
-        this.flowStore.addListener("change",this.onFlowChange);
+        //FIXME: The store should be global, move out of here.
+        window.flowstore = new LiveFlowStore();
+
+        this.flowStore = window.flowstore.open_view();
+        this.flowStore.addListener("add",this.onFlowChange);
+        this.flowStore.addListener("update",this.onFlowChange);
+        this.flowStore.addListener("remove",this.onFlowChange);
+        this.flowStore.addListener("recalculate",this.onFlowChange);
     },
     componentWillUnmount: function () {
         this.flowStore.removeListener("change",this.onFlowChange);
@@ -16,7 +22,7 @@ var MainView = React.createClass({
     },
     onFlowChange: function () {
         this.setState({
-            flows: this.flowStore.getAll()
+            flows: this.flowStore.flows
         });
     },
     selectDetailTab: function(panel) {

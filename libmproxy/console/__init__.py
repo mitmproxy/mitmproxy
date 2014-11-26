@@ -277,16 +277,16 @@ class ConsoleState(flow.State):
         d = self.flowsettings.get(flow, {})
         return d.get(key, default)
 
-    def add_request(self, f):
-        flow.State.add_request(self, f)
+    def add_flow(self, f):
+        super(ConsoleState, self).add_flow(f)
         if self.focus is None:
             self.set_focus(0)
         elif self.follow_focus:
             self.set_focus(len(self.view) - 1)
         return f
 
-    def add_response(self, resp):
-        f = flow.State.add_response(self, resp)
+    def update_flow(self, f):
+        super(ConsoleState, self).update_flow(f)
         if self.focus is None:
             self.set_focus(0)
         return f

@@ -9,9 +9,32 @@ class Stop(Exception):
     pass
 
 
+class WebFlowView(flow.FlowView):
+    def __init__(self, store):
+        super(WebFlowView, self).__init__(store, None)
+
+    def _add(self, f):
+        super(WebFlowView, self)._add(f)
+        app.FlowUpdates.broadcast("add", f.get_state(short=True))
+
+    def _update(self, f):
+        super(WebFlowView, self)._update(f)
+        app.FlowUpdates.broadcast("update", f.get_state(short=True))
+
+    def _remove(self, f):
+        super(WebFlowView, self)._remove(f)
+        app.FlowUpdates.broadcast("remove", f.get_state(short=True))
+
+    def _recalculate(self, flows):
+        super(WebFlowView, self)._recalculate(flows)
+        app.FlowUpdates.broadcast("recalculate", None)
+
+
 class WebState(flow.State):
     def __init__(self):
-        flow.State.__init__(self)
+        super(WebState, self).__init__()
+        self.view._close()
+        self.view = WebFlowView(self.flows)
 
 
 class Options(object):
@@ -58,8 +81,8 @@ class Options(object):
 class WebMaster(flow.FlowMaster):
     def __init__(self, server, options):
         self.options = options
-        self.app = app.Application(self.options.wdebug)
         super(WebMaster, self).__init__(server, WebState())
+        self.app = app.Application(self.state, self.options.wdebug)
 
         self.last_log_id = 0
 
@@ -83,22 +106,15 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def handle_request(self, f):
-        app.ClientConnection.broadcast("add_flow", f.get_state(True))
-        flow.FlowMaster.handle_request(self, f)
+        super(WebMaster, self).handle_request(f)
         if f:
             f.reply()
         return f
 
     def handle_response(self, f):
-        app.ClientConnection.broadcast("update_flow", f.get_state(True))
-        flow.FlowMaster.handle_response(self, f)
+        super(WebMaster, self).handle_response(f)
         if f:
             f.reply()
-        return f
-
-    def handle_error(self, f):
-        app.ClientConnection.broadcast("update_flow", f.get_state(True))
-        flow.FlowMaster.handle_error(self, f)
         return f
 
     def handle_log(self, l):
