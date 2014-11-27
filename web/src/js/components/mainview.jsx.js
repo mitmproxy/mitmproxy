@@ -51,18 +51,18 @@ var MainView = React.createClass({
             this.replaceWith("flows");
         }
     },
-    selectFlowRelative: function (i) {
+    selectFlowRelative: function (shift) {
         var flows = this.state.view.flows;
         var index;
         if (!this.getParams().flowId) {
-            if (i > 0) {
+            if (shift > 0) {
                 index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            i = flows.length;
             var currFlowId = this.getParams().flowId;
+            var i = flows.length;
             while (i--) {
                 if (flows[i].id === currFlowId) {
                     index = i;
@@ -70,7 +70,7 @@ var MainView = React.createClass({
                 }
             }
             index = Math.min(
-                Math.max(0, index + i),
+                Math.max(0, index + shift),
                 flows.length - 1);
         }
         this.selectFlow(flows[index]);

@@ -441,38 +441,46 @@ SortByInsertionOrder.prototype.key = function (flow) {
 
 var default_sort = (new SortByInsertionOrder()).key;
 
-function FlowView(store, filt, sort) {
+function FlowView(store, filt, sortfun) {
     EventEmitter.call(this);
     filt = filt || function (flow) {
         return true;
     };
-    sort = sort || default_sort;
+    sortfun = sortfun || default_sort;
 
     this.store = store;
     this.store._views.push(this);
-    this.recalculate(this.store._flow_list, filt, sort);
+    this.recalculate(this.store._flow_list, filt, sortfun);
 }
 
 _.extend(FlowView.prototype, EventEmitter.prototype, {
     close: function () {
         this.store._views = _.without(this.store._views, this);
     },
-    recalculate: function (flows, filt, sort) {
+    recalculate: function (flows, filt, sortfun) {
         if (filt) {
             this.filt = filt;
         }
-        if (sort) {
-            this.sort = sort;
+        if (sortfun) {
+            this.sortfun = sortfun;
         }
+
+        //Ugly workaround: Call .sortfun() for each flow once in order,
+        //so that SortByInsertionOrder make sense.
+        var i = flows.length;
+        while(i--){
+            this.sortfun(flows[i]);
+        }
+
         this.flows = flows.filter(this.filt);
         this.flows.sort(function (a, b) {
-            return this.sort(a) - this.sort(b);
+            return this.sortfun(b) - this.sortfun(a);
         }.bind(this));
         this.emit("recalculate");
     },
     add: function (flow) {
         if (this.filt(flow)) {
-            var idx = _.sortedIndex(this.flows, flow, this.sort);
+            var idx = _.sortedIndex(this.flows, flow, this.sortfun);
             if (idx === this.flows.length) { //happens often, .push is way faster.
                 this.flows.push(flow);
             } else {
@@ -497,7 +505,7 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
         } else if (!this.filt(flow)) {
             this.remove(flow.id);
         } else {
-            if (this.sort(this.flows[idx]) !== this.sort(flow)) { //sortpos has changed
+            if (this.sortfun(this.flows[idx]) !== this.sortfun(flow)) { //sortpos has changed
                 this.remove(this.flows[idx]);
                 this.add(flow);
             } else {
@@ -1367,18 +1375,18 @@ var MainView = React.createClass({displayName: 'MainView',
             this.replaceWith("flows");
         }
     },
-    selectFlowRelative: function (i) {
+    selectFlowRelative: function (shift) {
         var flows = this.state.view.flows;
         var index;
         if (!this.getParams().flowId) {
-            if (i > 0) {
+            if (shift > 0) {
                 index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            i = flows.length;
             var currFlowId = this.getParams().flowId;
+            var i = flows.length;
             while (i--) {
                 if (flows[i].id === currFlowId) {
                     index = i;
@@ -1386,7 +1394,7 @@ var MainView = React.createClass({displayName: 'MainView',
                 }
             }
             index = Math.min(
-                Math.max(0, index + i),
+                Math.max(0, index + shift),
                 flows.length - 1);
         }
         this.selectFlow(flows[index]);
