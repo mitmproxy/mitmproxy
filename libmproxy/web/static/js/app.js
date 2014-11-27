@@ -374,13 +374,8 @@ _.extend(FlowStore.prototype, {
             this._pos_map[flow.id] = i;
         }
     },
-    open_view: function (filt, sort) {
-        var view = new FlowView(this._flow_list, filt, sort);
-        this._views.push(view);
-        return view;
-    },
-    close_view: function (view) {
-        this._views = _.without(this._views, view);
+    get: function(flow_id){
+        return this._flow_list[this._pos_map[flow_id]];
     }
 });
 
@@ -397,6 +392,15 @@ function LiveFlowStore(endpoint) {
     }.bind(this);
 }
 _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
+    close: function(){
+        this.conn.close();
+    },
+    add: function(flow) {
+        // Make sure that deferred adds don't add an element twice.
+        if(!this._pos_map[flow.id]){
+            FlowStore.prototype.add.call(this, flow);
+        }
+    },
     handle_update: function (type, data) {
         console.log("LiveFlowStore.handle_update", type, data);
         if (this.updates_before_init) {
@@ -437,16 +441,22 @@ SortByInsertionOrder.prototype.key = function (flow) {
 
 var default_sort = (new SortByInsertionOrder()).key;
 
-function FlowView(flows, filt, sort) {
+function FlowView(store, filt, sort) {
     EventEmitter.call(this);
     filt = filt || function (flow) {
         return true;
     };
     sort = sort || default_sort;
-    this.recalculate(flows, filt, sort);
+
+    this.store = store;
+    this.store._views.push(this);
+    this.recalculate(this.store._flow_list, filt, sort);
 }
 
 _.extend(FlowView.prototype, EventEmitter.prototype, {
+    close: function(){
+        this.store._views = _.without(this.store._views, this);
+    },
     recalculate: function (flows, filt, sort) {
         if (filt) {
             this.filt = filt;
@@ -545,8 +555,6 @@ Connection.prototype.onclose = function (close) {
 Connection.prototype.close = function(){
     this.ws.close();
 };
-/** @jsx React.DOM */
-
 //React utils. For other utilities, see ../utils.js
 
 var Splitter = React.createClass({displayName: 'Splitter',
@@ -639,14 +647,12 @@ var Splitter = React.createClass({displayName: 'Splitter',
             className += " splitter-y";
         }
         return (
-            React.DOM.div({className: className}, 
-                React.DOM.div({onMouseDown: this.onMouseDown, draggable: "true"})
+            React.createElement("div", {className: className}, 
+                React.createElement("div", {onMouseDown: this.onMouseDown, draggable: "true"})
             )
         );
     }
 });
-/** @jsx React.DOM */
-
 var MainMenu = React.createClass({displayName: 'MainMenu',
     statics: {
         title: "Traffic",
@@ -659,9 +665,9 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
     },
     render: function () {
         return (
-            React.DOM.div(null, 
-                React.DOM.button({className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
-                React.DOM.i({className: "fa fa-database"}), " Display Event Log"
+            React.createElement("div", null, 
+                React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
+                React.createElement("i", {className: "fa fa-database"}), " Display Event Log"
                 )
             )
             );
@@ -675,7 +681,7 @@ var ToolsMenu = React.createClass({displayName: 'ToolsMenu',
         route: "flows"
     },
     render: function () {
-        return React.DOM.div(null, "Tools Menu");
+        return React.createElement("div", null, "Tools Menu");
     }
 });
 
@@ -686,7 +692,7 @@ var ReportsMenu = React.createClass({displayName: 'ReportsMenu',
         route: "reports"
     },
     render: function () {
-        return React.DOM.div(null, "Reports Menu");
+        return React.createElement("div", null, "Reports Menu");
     }
 });
 
@@ -695,15 +701,16 @@ var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
 
 
 var Header = React.createClass({displayName: 'Header',
+    mixins: [ReactRouter.Navigation],
     getInitialState: function () {
         return {
             active: header_entries[0]
         };
     },
-    handleClick: function (active) {
-        ReactRouter.transitionTo(active.route);
+    handleClick: function (active, e) {
+        e.preventDefault();
+        this.transitionTo(active.route);
         this.setState({active: active});
-        return false;
     },
     handleFileClick: function () {
         console.log("File click");
@@ -714,7 +721,7 @@ var Header = React.createClass({displayName: 'Header',
                 active: entry == this.state.active
             });
             return (
-                React.DOM.a({key: i, 
+                React.createElement("a", {key: i, 
                    href: "#", 
                    className: classes, 
                    onClick: this.handleClick.bind(this, entry)
@@ -725,29 +732,26 @@ var Header = React.createClass({displayName: 'Header',
         }.bind(this));
         
         return (
-            React.DOM.header(null, 
-                React.DOM.div({className: "title-bar"}, 
+            React.createElement("header", null, 
+                React.createElement("div", {className: "title-bar"}, 
                     "mitmproxy ",  this.props.settings.version
                 ), 
-                React.DOM.nav({className: "nav-tabs nav-tabs-lg"}, 
-                    React.DOM.a({href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
+                React.createElement("nav", {className: "nav-tabs nav-tabs-lg"}, 
+                    React.createElement("a", {href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
                     header
                 ), 
-                React.DOM.div({className: "menu"}, 
-                    this.state.active({settings: this.props.settings})
+                React.createElement("div", {className: "menu"}, 
+                    React.createElement(this.state.active, {settings: this.props.settings})
                 )
             )
             );
     }
 });
 
-/** @jsx React.DOM */
-
-
 var TLSColumn = React.createClass({displayName: 'TLSColumn',
     statics: {
         renderTitle: function(){
-            return React.DOM.th({key: "tls", className: "col-tls"});
+            return React.createElement("th", {key: "tls", className: "col-tls"});
         }
     },
     render: function(){
@@ -759,7 +763,7 @@ var TLSColumn = React.createClass({displayName: 'TLSColumn',
         } else {
             classes = "col-tls col-tls-http";
         }
-        return React.DOM.td({className: classes});
+        return React.createElement("td", {className: classes});
     }
 });
 
@@ -767,7 +771,7 @@ var TLSColumn = React.createClass({displayName: 'TLSColumn',
 var IconColumn = React.createClass({displayName: 'IconColumn',
     statics: {
         renderTitle: function(){
-            return React.DOM.th({key: "icon", className: "col-icon"});
+            return React.createElement("th", {key: "icon", className: "col-icon"});
         }
     },
     render: function(){
@@ -798,19 +802,19 @@ var IconColumn = React.createClass({displayName: 'IconColumn',
 
 
         icon += " resource-icon";
-        return React.DOM.td({className: "col-icon"}, React.DOM.div({className: icon}));
+        return React.createElement("td", {className: "col-icon"}, React.createElement("div", {className: icon}));
     }
 });
 
 var PathColumn = React.createClass({displayName: 'PathColumn',
     statics: {
         renderTitle: function(){
-            return React.DOM.th({key: "path", className: "col-path"}, "Path");
+            return React.createElement("th", {key: "path", className: "col-path"}, "Path");
         }
     },
     render: function(){
         var flow = this.props.flow;
-        return React.DOM.td({className: "col-path"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
+        return React.createElement("td", {className: "col-path"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
     }
 });
 
@@ -818,12 +822,12 @@ var PathColumn = React.createClass({displayName: 'PathColumn',
 var MethodColumn = React.createClass({displayName: 'MethodColumn',
     statics: {
         renderTitle: function(){
-            return React.DOM.th({key: "method", className: "col-method"}, "Method");
+            return React.createElement("th", {key: "method", className: "col-method"}, "Method");
         }
     },
     render: function(){
         var flow = this.props.flow;
-        return React.DOM.td({className: "col-method"}, flow.request.method);
+        return React.createElement("td", {className: "col-method"}, flow.request.method);
     }
 });
 
@@ -831,7 +835,7 @@ var MethodColumn = React.createClass({displayName: 'MethodColumn',
 var StatusColumn = React.createClass({displayName: 'StatusColumn',
     statics: {
         renderTitle: function(){
-            return React.DOM.th({key: "status", className: "col-status"}, "Status");
+            return React.createElement("th", {key: "status", className: "col-status"}, "Status");
         }
     },
     render: function(){
@@ -842,7 +846,7 @@ var StatusColumn = React.createClass({displayName: 'StatusColumn',
         } else {
             status = null;
         }
-        return React.DOM.td({className: "col-status"}, status);
+        return React.createElement("td", {className: "col-status"}, status);
     }
 });
 
@@ -850,7 +854,7 @@ var StatusColumn = React.createClass({displayName: 'StatusColumn',
 var SizeColumn = React.createClass({displayName: 'SizeColumn',
     statics: {
         renderTitle: function(){
-            return React.DOM.th({key: "size", className: "col-size"}, "Size");
+            return React.createElement("th", {key: "size", className: "col-size"}, "Size");
         }
     },
     render: function(){
@@ -861,7 +865,7 @@ var SizeColumn = React.createClass({displayName: 'SizeColumn',
             total += flow.response.contentLength || 0;
         }
         var size = formatSize(total);
-        return React.DOM.td({className: "col-size"}, size);
+        return React.createElement("td", {className: "col-size"}, size);
     }
 });
 
@@ -869,7 +873,7 @@ var SizeColumn = React.createClass({displayName: 'SizeColumn',
 var TimeColumn = React.createClass({displayName: 'TimeColumn',
     statics: {
         renderTitle: function(){
-            return React.DOM.th({key: "time", className: "col-time"}, "Time");
+            return React.createElement("th", {key: "time", className: "col-time"}, "Time");
         }
     },
     render: function(){
@@ -880,7 +884,7 @@ var TimeColumn = React.createClass({displayName: 'TimeColumn',
         } else {
             time = "...";
         }
-        return React.DOM.td({className: "col-time"}, time);
+        return React.createElement("td", {className: "col-time"}, time);
     }
 });
 
@@ -895,20 +899,18 @@ var all_columns = [
     TimeColumn];
 
 
-/** @jsx React.DOM */
-
 var FlowRow = React.createClass({displayName: 'FlowRow',
     render: function(){
         var flow = this.props.flow;
-        var columns = this.props.columns.map(function(column){
-            return column({key: column.displayName, flow: flow});
+        var columns = this.props.columns.map(function(Column){
+            return React.createElement(Column, {key: Column.displayName, flow: flow});
         }.bind(this));
         var className = "";
         if(this.props.selected){
             className += "selected";
         }
         return (
-            React.DOM.tr({className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
+            React.createElement("tr", {className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
                 columns
             ));
     },
@@ -926,7 +928,7 @@ var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
         var columns = this.props.columns.map(function(column){
             return column.renderTitle();
         }.bind(this));
-        return React.DOM.thead(null, React.DOM.tr(null, columns));
+        return React.createElement("thead", null, React.createElement("tr", null, columns));
     }
 });
 
@@ -934,7 +936,7 @@ var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
     render: function(){
         var rows = this.props.flows.map(function(flow){
             var selected = (flow == this.props.selected);
-            return FlowRow({key: flow.id, 
+            return React.createElement(FlowRow, {key: flow.id, 
                             ref: flow.id, 
                             flow: flow, 
                             columns: this.props.columns, 
@@ -942,7 +944,7 @@ var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
                             selectFlow: this.props.selectFlow}
                             );
         }.bind(this));
-        return React.DOM.tbody(null, rows);
+        return React.createElement("tbody", null, rows);
     }
 });
 
@@ -975,11 +977,11 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
     },
     render: function () {
         return (
-            React.DOM.div({className: "flow-table", onScroll: this.adjustHead}, 
-                React.DOM.table(null, 
-                    FlowTableHead({ref: "head", 
+            React.createElement("div", {className: "flow-table", onScroll: this.adjustHead}, 
+                React.createElement("table", null, 
+                    React.createElement(FlowTableHead, {ref: "head", 
                                    columns: this.state.columns}), 
-                    FlowTableBody({ref: "body", 
+                    React.createElement(FlowTableBody, {ref: "body", 
                                    flows: this.props.flows, 
                                    selected: this.props.selected, 
                                    selectFlow: this.props.selectFlow, 
@@ -990,44 +992,42 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
     }
 });
 
-/** @jsx React.DOM */
-
 var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
-    render: function(){
+    render: function () {
 
-        var items = this.props.tabs.map(function(e){
+        var items = this.props.tabs.map(function (e) {
             var str = e.charAt(0).toUpperCase() + e.slice(1);
             var className = this.props.active === e ? "active" : "";
-            var onClick = function(){
+            var onClick = function (e) {
                 this.props.selectTab(e);
-                return false;
+                e.preventDefault();
             }.bind(this);
-            return React.DOM.a({key: e, 
-                      href: "#", 
-                      className: className, 
-                      onClick: onClick}, str);
+            return React.createElement("a", {key: e, 
+                href: "#", 
+                className: className, 
+                onClick: onClick}, str);
         }.bind(this));
         return (
-            React.DOM.nav({ref: "head", className: "nav-tabs nav-tabs-sm"}, 
+            React.createElement("nav", {ref: "head", className: "nav-tabs nav-tabs-sm"}, 
                 items
             )
         );
-    } 
+    }
 });
 
 var Headers = React.createClass({displayName: 'Headers',
-    render: function(){
-        var rows = this.props.message.headers.map(function(header, i){
+    render: function () {
+        var rows = this.props.message.headers.map(function (header, i) {
             return (
-                React.DOM.tr({key: i}, 
-                    React.DOM.td({className: "header-name"}, header[0]+":"), 
-                    React.DOM.td({className: "header-value"}, header[1])
+                React.createElement("tr", {key: i}, 
+                    React.createElement("td", {className: "header-name"}, header[0] + ":"), 
+                    React.createElement("td", {className: "header-value"}, header[1])
                 )
             );
         });
         return (
-            React.DOM.table({className: "header-table"}, 
-                React.DOM.tbody(null, 
+            React.createElement("table", {className: "header-table"}, 
+                React.createElement("tbody", null, 
                     rows
                 )
             )
@@ -1036,27 +1036,27 @@ var Headers = React.createClass({displayName: 'Headers',
 });
 
 var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var first_line = [
-                flow.request.method,
-                RequestUtils.pretty_url(flow.request),
-                "HTTP/"+ flow.response.httpversion.join(".")
-            ].join(" ");
+            flow.request.method,
+            RequestUtils.pretty_url(flow.request),
+            "HTTP/" + flow.response.httpversion.join(".")
+        ].join(" ");
         var content = null;
-        if(flow.request.contentLength > 0){
-            content = "Request Content Size: "+ formatSize(flow.request.contentLength);
+        if (flow.request.contentLength > 0) {
+            content = "Request Content Size: " + formatSize(flow.request.contentLength);
         } else {
-            content = React.DOM.div({className: "alert alert-info"}, "No Content");
+            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
         }
 
         //TODO: Styling
 
         return (
-            React.DOM.section(null, 
-                React.DOM.div({className: "first-line"}, first_line ), 
-                Headers({message: flow.request}), 
-                React.DOM.hr(null), 
+            React.createElement("section", null, 
+                React.createElement("div", {className: "first-line"}, first_line ), 
+                React.createElement(Headers, {message: flow.request}), 
+                React.createElement("hr", null), 
                 content
             )
         );
@@ -1064,27 +1064,27 @@ var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
 });
 
 var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var first_line = [
-                "HTTP/"+ flow.response.httpversion.join("."),
-                flow.response.code,
-                flow.response.msg
-            ].join(" ");
+            "HTTP/" + flow.response.httpversion.join("."),
+            flow.response.code,
+            flow.response.msg
+        ].join(" ");
         var content = null;
-        if(flow.response.contentLength > 0){
-            content = "Response Content Size: "+ formatSize(flow.response.contentLength);
+        if (flow.response.contentLength > 0) {
+            content = "Response Content Size: " + formatSize(flow.response.contentLength);
         } else {
-            content = React.DOM.div({className: "alert alert-info"}, "No Content");
+            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
         }
 
         //TODO: Styling
 
         return (
-            React.DOM.section(null, 
-                React.DOM.div({className: "first-line"}, first_line ), 
-                Headers({message: flow.response}), 
-                React.DOM.hr(null), 
+            React.createElement("section", null, 
+                React.createElement("div", {className: "first-line"}, first_line ), 
+                React.createElement(Headers, {message: flow.response}), 
+                React.createElement("hr", null), 
                 content
             )
         );
@@ -1092,42 +1092,53 @@ var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
 });
 
 var TimeStamp = React.createClass({displayName: 'TimeStamp',
-    render: function() {
+    render: function () {
 
-        if(!this.props.t){
+        if (!this.props.t) {
             //should be return null, but that triggers a React bug.
-            return React.DOM.tr(null);
+            return React.createElement("tr", null);
         }
 
         var ts = (new Date(this.props.t * 1000)).toISOString();
-        ts = ts.replace("T", " ").replace("Z","");
+        ts = ts.replace("T", " ").replace("Z", "");
 
         var delta;
-        if(this.props.deltaTo){
-            delta = formatTimeDelta(1000 * (this.props.t-this.props.deltaTo));
-            delta = React.DOM.span({className: "text-muted"}, "(" + delta + ")");
+        if (this.props.deltaTo) {
+            delta = formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
+            delta = React.createElement("span", {className: "text-muted"}, "(" + delta + ")");
         } else {
             delta = null;
         }
 
-        return React.DOM.tr(null, React.DOM.td(null, this.props.title + ":"), React.DOM.td(null, ts, " ", delta));
+        return React.createElement("tr", null, 
+            React.createElement("td", null, this.props.title + ":"), 
+            React.createElement("td", null, ts, " ", delta)
+        );
     }
 });
 
 var ConnectionInfo = React.createClass({displayName: 'ConnectionInfo',
 
-    render: function() {
+    render: function () {
         var conn = this.props.conn;
         var address = conn.address.address.join(":");
 
-        var sni = React.DOM.tr({key: "sni"}); //should be null, but that triggers a React bug.
-        if(conn.sni){
-            sni = React.DOM.tr({key: "sni"}, React.DOM.td(null, React.DOM.abbr({title: "TLS Server Name Indication"}, "TLS SNI:")), React.DOM.td(null, conn.sni));
+        var sni = React.createElement("tr", {key: "sni"}); //should be null, but that triggers a React bug.
+        if (conn.sni) {
+            sni = React.createElement("tr", {key: "sni"}, 
+                React.createElement("td", null, 
+                    React.createElement("abbr", {title: "TLS Server Name Indication"}, "TLS SNI:")
+                ), 
+                React.createElement("td", null, conn.sni)
+            );
         }
         return (
-            React.DOM.table({className: "connection-table"}, 
-                React.DOM.tbody(null, 
-                    React.DOM.tr({key: "address"}, React.DOM.td(null, "Address:"), React.DOM.td(null, address)), 
+            React.createElement("table", {className: "connection-table"}, 
+                React.createElement("tbody", null, 
+                    React.createElement("tr", {key: "address"}, 
+                        React.createElement("td", null, "Address:"), 
+                        React.createElement("td", null, address)
+                    ), 
                     sni
                 )
             )
@@ -1136,7 +1147,7 @@ var ConnectionInfo = React.createClass({displayName: 'ConnectionInfo',
 });
 
 var CertificateInfo = React.createClass({displayName: 'CertificateInfo',
-    render: function(){
+    render: function () {
         //TODO: We should fetch human-readable certificate representation
         // from the server
         var flow = this.props.flow;
@@ -1145,19 +1156,19 @@ var CertificateInfo = React.createClass({displayName: 'CertificateInfo',
 
         var preStyle = {maxHeight: 100};
         return (
-            React.DOM.div(null, 
-            client_conn.cert ? React.DOM.h4(null, "Client Certificate") : null, 
-            client_conn.cert ? React.DOM.pre({style: preStyle}, client_conn.cert) : null, 
+            React.createElement("div", null, 
+            client_conn.cert ? React.createElement("h4", null, "Client Certificate") : null, 
+            client_conn.cert ? React.createElement("pre", {style: preStyle}, client_conn.cert) : null, 
 
-            server_conn.cert ? React.DOM.h4(null, "Server Certificate") : null, 
-            server_conn.cert ? React.DOM.pre({style: preStyle}, server_conn.cert) : null
+            server_conn.cert ? React.createElement("h4", null, "Server Certificate") : null, 
+            server_conn.cert ? React.createElement("pre", {style: preStyle}, server_conn.cert) : null
             )
         );
     }
 });
 
 var Timing = React.createClass({displayName: 'Timing',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var sc = flow.server_conn;
         var cc = flow.client_conn;
@@ -1210,46 +1221,46 @@ var Timing = React.createClass({displayName: 'Timing',
         }
 
         //Add unique key for each row.
-        timestamps.forEach(function(e){
+        timestamps.forEach(function (e) {
             e.key = e.title;
         });
 
         timestamps = _.sortBy(timestamps, 't');
 
-        var rows = timestamps.map(function(e){
-            return TimeStamp(e);
+        var rows = timestamps.map(function (e) {
+            return React.createElement(TimeStamp, React.__spread({},  e));
         });
 
         return (
-            React.DOM.div(null, 
-            React.DOM.h4(null, "Timing"), 
-            React.DOM.table({className: "timing-table"}, 
-                React.DOM.tbody(null, 
+            React.createElement("div", null, 
+                React.createElement("h4", null, "Timing"), 
+                React.createElement("table", {className: "timing-table"}, 
+                    React.createElement("tbody", null, 
                     rows
+                    )
                 )
-            )
             )
         );
     }
 });
 
 var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnectionInfo',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
         var server_conn = flow.server_conn;
         return (
-            React.DOM.section(null, 
+            React.createElement("section", null, 
 
-            React.DOM.h4(null, "Client Connection"), 
-            ConnectionInfo({conn: client_conn}), 
+                React.createElement("h4", null, "Client Connection"), 
+                React.createElement(ConnectionInfo, {conn: client_conn}), 
 
-            React.DOM.h4(null, "Server Connection"), 
-            ConnectionInfo({conn: server_conn}), 
+                React.createElement("h4", null, "Server Connection"), 
+                React.createElement(ConnectionInfo, {conn: server_conn}), 
 
-            CertificateInfo({flow: flow}), 
+                React.createElement(CertificateInfo, {flow: flow}), 
 
-            Timing({flow: flow})
+                React.createElement(Timing, {flow: flow})
 
             )
         );
@@ -1263,100 +1274,120 @@ var tabs = {
 };
 
 var FlowDetail = React.createClass({displayName: 'FlowDetail',
-    getDefaultProps: function(){
+    getDefaultProps: function () {
         return {
-            tabs: ["request","response", "details"]
+            tabs: ["request", "response", "details"]
         };
     },
-    mixins: [StickyHeadMixin],
-    nextTab: function(i) {
+    mixins: [StickyHeadMixin, ReactRouter.Navigation, ReactRouter.State],
+    nextTab: function (i) {
         var currentIndex = this.props.tabs.indexOf(this.props.active);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
         var nextIndex = (currentIndex + i + this.props.tabs.length) % this.props.tabs.length;
-        this.props.selectTab(this.props.tabs[nextIndex]);
+        this.selectTab(this.props.tabs[nextIndex]);
     },
-    render: function(){
-        var flow = JSON.stringify(this.props.flow, null, 2);
-        var Tab = tabs[this.props.active];
-        return (
-            React.DOM.div({className: "flow-detail", onScroll: this.adjustHead}, 
-                FlowDetailNav({ref: "head", 
-                               tabs: this.props.tabs, 
-                               active: this.props.active, 
-                               selectTab: this.props.selectTab}), 
-                Tab({flow: this.props.flow})
-            )
-            );
-    } 
-});
-/** @jsx React.DOM */
-
-var MainView = React.createClass({displayName: 'MainView',
-    getInitialState: function() {
-        return {
-            flows: [],
-        };
-    },
-    componentDidMount: function () {
-        //FIXME: The store should be global, move out of here.
-        window.flowstore = new LiveFlowStore();
-
-        this.flowStore = window.flowstore.open_view();
-        this.flowStore.addListener("add",this.onFlowChange);
-        this.flowStore.addListener("update",this.onFlowChange);
-        this.flowStore.addListener("remove",this.onFlowChange);
-        this.flowStore.addListener("recalculate",this.onFlowChange);
-    },
-    componentWillUnmount: function () {
-        this.flowStore.removeListener("change",this.onFlowChange);
-        this.flowStore.close();
-    },
-    onFlowChange: function () {
-        this.setState({
-            flows: this.flowStore.flows
-        });
-    },
-    selectDetailTab: function(panel) {
-        ReactRouter.replaceWith(
+    selectTab: function (panel) {
+        this.replaceWith(
             "flow",
             {
-                flowId: this.props.params.flowId,
+                flowId: this.getParams().flowId,
                 detailTab: panel
             }
         );
     },
-    selectFlow: function(flow) {
-        if(flow){
-            ReactRouter.replaceWith(
-                "flow", 
-                {
-                    flowId: flow.id,
-                    detailTab: this.props.params.detailTab || "request"
-                }
-            );
-            this.refs.flowTable.scrollIntoView(flow);
-        } else {
-            ReactRouter.replaceWith("flows");
+    render: function () {
+        var flow = JSON.stringify(this.props.flow, null, 2);
+        var Tab = tabs[this.props.active];
+        return (
+            React.createElement("div", {className: "flow-detail", onScroll: this.adjustHead}, 
+                React.createElement(FlowDetailNav, {ref: "head", 
+                    tabs: this.props.tabs, 
+                    active: this.props.active, 
+                    selectTab: this.selectTab}), 
+                React.createElement(Tab, {flow: this.props.flow})
+            )
+        );
+    }
+});
+var MainView = React.createClass({displayName: 'MainView',
+    mixins: [ReactRouter.Navigation, ReactRouter.State],
+    getInitialState: function () {
+        return {
+            flows: []
+        };
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.flowStore !== this.props.flowStore) {
+            this.closeView();
+            this.openView(nextProps.flowStore);
         }
     },
-    selectFlowRelative: function(i){
+    openView: function (store) {
+        var view = new FlowView(store);
+        this.setState({
+            view: view
+        });
+        view.addListener("add", this.onFlowChange);
+        view.addListener("update", this.onFlowChange);
+        view.addListener("remove", this.onFlowChange);
+        view.addListener("recalculate", this.onFlowChange);
+    },
+    closeView: function () {
+        this.state.view.close();
+    },
+    componentDidMount: function () {
+        this.openView(this.props.flowStore);
+    },
+    componentWillUnmount: function () {
+        this.closeView();
+    },
+    onFlowChange: function () {
+        console.warn("onFlowChange is deprecated");
+        this.setState({
+            flows: this.state.view.flows
+        });
+    },
+    selectFlow: function (flow) {
+        if (flow) {
+            this.replaceWith(
+                "flow",
+                {
+                    flowId: flow.id,
+                    detailTab: this.getParams().detailTab || "request"
+                }
+            );
+            console.log("TODO: Scroll into view");
+            //this.refs.flowTable.scrollIntoView(flow);
+        } else {
+            this.replaceWith("flows");
+        }
+    },
+    selectFlowRelative: function (i) {
+        var flows = this.state.view.flows;
         var index;
-        if(!this.props.params.flowId){
-            if(i > 0){
-                index = this.state.flows.length-1;
+        if (!this.getParams().flowId) {
+            if (i > 0) {
+                index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            index = _.findIndex(this.state.flows, function(f){
-                return f.id === this.props.params.flowId;
-            }.bind(this));
-            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+            i = flows.length;
+            var currFlowId = this.getParams().flowId;
+            while (i--) {
+                if (flows[i].id === currFlowId) {
+                    index = i;
+                    break;
+                }
+            }
+            index = Math.min(
+                Math.max(0, index + i),
+                flows.length - 1);
         }
-        this.selectFlow(this.state.flows[index]);
+        this.selectFlow(flows[index]);
     },
-    onKeyDown: function(e){
-        switch(e.keyCode){
+    onKeyDown: function (e) {
+        switch (e.keyCode) {
             case Key.K:
             case Key.UP:
                 this.selectFlowRelative(-1);
@@ -1377,14 +1408,14 @@ var MainView = React.createClass({displayName: 'MainView',
                 break;
             case Key.H:
             case Key.LEFT:
-                if(this.refs.flowDetails){
+                if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
             case Key.L:
             case Key.TAB:
             case Key.RIGHT:
-                if(this.refs.flowDetails){
+                if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
@@ -1392,53 +1423,50 @@ var MainView = React.createClass({displayName: 'MainView',
                 console.debug("keydown", e.keyCode);
                 return;
         }
-        return false;
+        e.preventDefault();
     },
-    render: function() {
-        var selected = _.find(this.state.flows, { id: this.props.params.flowId });
+    render: function () {
+        var selected = this.props.flowStore.get(this.getParams().flowId);
 
         var details;
-        if(selected){
+        if (selected) {
             details = (
-                FlowDetail({ref: "flowDetails", 
-                            flow: selected, 
-                            selectTab: this.selectDetailTab, 
-                            active: this.props.params.detailTab})
+                React.createElement(FlowDetail, {ref: "flowDetails", 
+                    flow: selected, 
+                    active: this.getParams().detailTab})
             );
         } else {
             details = null;
         }
 
         return (
-            React.DOM.div({className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
-                FlowTable({ref: "flowTable", 
-                           flows: this.state.flows, 
-                           selectFlow: this.selectFlow, 
-                           selected: selected}), 
-                 details ? Splitter(null) : null, 
+            React.createElement("div", {className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
+                React.createElement(FlowTable, {ref: "flowTable", 
+                    flows: this.state.view ? this.state.view.flows : [], 
+                    selectFlow: this.selectFlow, 
+                    selected: selected}), 
+                 details ? React.createElement(Splitter, null) : null, 
                 details
             )
         );
     }
 });
-/** @jsx React.DOM */
-
 var LogMessage = React.createClass({displayName: 'LogMessage',
     render: function(){
         var entry = this.props.entry;
         var indicator;
         switch(entry.level){
             case "web":
-                indicator = React.DOM.i({className: "fa fa-fw fa-html5"});
+                indicator = React.createElement("i", {className: "fa fa-fw fa-html5"});
                 break;
             case "debug":
-                indicator = React.DOM.i({className: "fa fa-fw fa-bug"});
+                indicator = React.createElement("i", {className: "fa fa-fw fa-bug"});
                 break;
             default:
-                indicator = React.DOM.i({className: "fa fa-fw fa-info"});
+                indicator = React.createElement("i", {className: "fa fa-fw fa-info"});
         }
         return (
-            React.DOM.div(null, 
+            React.createElement("div", null, 
                 indicator, " ", entry.message
             )
         );
@@ -1473,14 +1501,15 @@ var EventLogContents = React.createClass({displayName: 'EventLogContents',
             if(!this.props.filter[row.level]){
                 return null;
             }
-            return LogMessage({key: row.id, entry: row});
+            return React.createElement(LogMessage, {key: row.id, entry: row});
         }.bind(this));
-        return React.DOM.pre(null, messages);
+        return React.createElement("pre", null, messages);
     }
 });
 
 var ToggleFilter = React.createClass({displayName: 'ToggleFilter',
-    toggle: function(){
+    toggle: function(e){
+        e.preventDefault();
         return this.props.toggleLevel(this.props.name);
     },
     render: function(){
@@ -1491,7 +1520,7 @@ var ToggleFilter = React.createClass({displayName: 'ToggleFilter',
             className += "label-default";
         }
         return (
-            React.DOM.a({
+            React.createElement("a", {
                 href: "#", 
                 className: className, 
                 onClick: this.toggle}, 
@@ -1520,52 +1549,50 @@ var EventLog = React.createClass({displayName: 'EventLog',
         var filter = this.state.filter;
         filter[level] = !filter[level];
         this.setState({filter: filter});
-        return false;
     },
     render: function () {
         return (
-            React.DOM.div({className: "eventlog"}, 
-                React.DOM.div(null, 
+            React.createElement("div", {className: "eventlog"}, 
+                React.createElement("div", null, 
                     "Eventlog", 
-                    React.DOM.div({className: "pull-right"}, 
-                        ToggleFilter({name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel}), 
-                        ToggleFilter({name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel}), 
-                        ToggleFilter({name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel}), 
-                        React.DOM.i({onClick: this.close, className: "fa fa-close"})
+                    React.createElement("div", {className: "pull-right"}, 
+                        React.createElement(ToggleFilter, {name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel}), 
+                        React.createElement(ToggleFilter, {name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel}), 
+                        React.createElement(ToggleFilter, {name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel}), 
+                        React.createElement("i", {onClick: this.close, className: "fa fa-close"})
                     )
 
                 ), 
-                EventLogContents({filter: this.state.filter})
+                React.createElement(EventLogContents, {filter: this.state.filter})
             )
         );
     }
 });
-/** @jsx React.DOM */
-
 var Footer = React.createClass({displayName: 'Footer',
     render: function () {
         var mode = this.props.settings.mode;
         return (
-            React.DOM.footer(null, 
-                mode != "regular" ? React.DOM.span({className: "label label-success"}, mode, " mode") : null
+            React.createElement("footer", null, 
+                mode != "regular" ? React.createElement("span", {className: "label label-success"}, mode, " mode") : null
             )
             );
     }
 });
 
-/** @jsx React.DOM */
-
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({displayName: 'Reports',
     render: function () {
-        return React.DOM.div(null, "ReportEditor");
+        return React.createElement("div", null, "ReportEditor");
     }
 });
 
 
 var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
     getInitialState: function () {
-        return { settings: SettingsStore.getAll() };
+        return {
+            settings: SettingsStore.getAll(),
+            flowStore: new LiveFlowStore()
+        };
     },
     componentDidMount: function () {
         SettingsStore.addListener("change", this.onSettingsChange);
@@ -1578,37 +1605,37 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
     },
     render: function () {
         return (
-            React.DOM.div({id: "container"}, 
-                Header({settings: this.state.settings}), 
-                this.props.activeRouteHandler({settings: this.state.settings}), 
-                this.state.settings.showEventLog ? Splitter({axis: "y"}) : null, 
-                this.state.settings.showEventLog ? EventLog(null) : null, 
-                Footer({settings: this.state.settings})
+            React.createElement("div", {id: "container"}, 
+                React.createElement(Header, {settings: this.state.settings}), 
+                React.createElement(RouteHandler, {settings: this.state.settings, flowStore: this.state.flowStore}), 
+                this.state.settings.showEventLog ? React.createElement(Splitter, {axis: "y"}) : null, 
+                this.state.settings.showEventLog ? React.createElement(EventLog, null) : null, 
+                React.createElement(Footer, {settings: this.state.settings})
             )
-            );
+        );
     }
 });
 
 
-var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
+var RouteHandler = ReactRouter.RouteHandler;
 var Redirect = ReactRouter.Redirect;
 var DefaultRoute = ReactRouter.DefaultRoute;
 var NotFoundRoute = ReactRouter.NotFoundRoute;
 
 
-var ProxyApp = (
-    Routes({location: "hash"}, 
-        Route({path: "/", handler: ProxyAppMain}, 
-            Route({name: "flows", path: "flows", handler: MainView}), 
-            Route({name: "flow", path: "flows/:flowId/:detailTab", handler: MainView}), 
-            Route({name: "reports", handler: Reports}), 
-            Redirect({path: "/", to: "flows"})
-        )
+var routes = (
+    React.createElement(Route, {path: "/", handler: ProxyAppMain}, 
+        React.createElement(Route, {name: "flows", path: "flows", handler: MainView}), 
+        React.createElement(Route, {name: "flow", path: "flows/:flowId/:detailTab", handler: MainView}), 
+        React.createElement(Route, {name: "reports", handler: Reports}), 
+        React.createElement(Redirect, {path: "/", to: "flows"})
     )
-    );
+);
 $(function () {
-    window.app = React.renderComponent(ProxyApp, document.body);
+    ReactRouter.run(routes, function (Handler) {
+        React.render(React.createElement(Handler, null), document.body);
+    });
     var UpdateConnection = new Connection("/updates");
     UpdateConnection.onmessage = function (message) {
         var m = JSON.parse(message.data);

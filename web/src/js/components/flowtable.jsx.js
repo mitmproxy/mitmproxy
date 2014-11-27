@@ -1,10 +1,8 @@
-/** @jsx React.DOM */
-
 var FlowRow = React.createClass({
     render: function(){
         var flow = this.props.flow;
-        var columns = this.props.columns.map(function(column){
-            return <column key={column.displayName} flow={flow}/>;
+        var columns = this.props.columns.map(function(Column){
+            return <Column key={Column.displayName} flow={flow}/>;
         }.bind(this));
         var className = "";
         if(this.props.selected){

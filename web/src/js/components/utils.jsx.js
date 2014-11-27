@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 //React utils. For other utilities, see ../utils.js
 
 var Splitter = React.createClass({

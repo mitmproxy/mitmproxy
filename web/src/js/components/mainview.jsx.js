@@ -1,71 +1,82 @@
-/** @jsx React.DOM */
-
 var MainView = React.createClass({
-    getInitialState: function() {
+    mixins: [ReactRouter.Navigation, ReactRouter.State],
+    getInitialState: function () {
         return {
-            flows: [],
+            flows: []
         };
     },
-    componentDidMount: function () {
-        //FIXME: The store should be global, move out of here.
-        window.flowstore = new LiveFlowStore();
-
-        this.flowStore = window.flowstore.open_view();
-        this.flowStore.addListener("add",this.onFlowChange);
-        this.flowStore.addListener("update",this.onFlowChange);
-        this.flowStore.addListener("remove",this.onFlowChange);
-        this.flowStore.addListener("recalculate",this.onFlowChange);
-    },
-    componentWillUnmount: function () {
-        this.flowStore.removeListener("change",this.onFlowChange);
-        this.flowStore.close();
-    },
-    onFlowChange: function () {
-        this.setState({
-            flows: this.flowStore.flows
-        });
-    },
-    selectDetailTab: function(panel) {
-        ReactRouter.replaceWith(
-            "flow",
-            {
-                flowId: this.props.params.flowId,
-                detailTab: panel
-            }
-        );
-    },
-    selectFlow: function(flow) {
-        if(flow){
-            ReactRouter.replaceWith(
-                "flow", 
-                {
-                    flowId: flow.id,
-                    detailTab: this.props.params.detailTab || "request"
-                }
-            );
-            this.refs.flowTable.scrollIntoView(flow);
-        } else {
-            ReactRouter.replaceWith("flows");
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.flowStore !== this.props.flowStore) {
+            this.closeView();
+            this.openView(nextProps.flowStore);
         }
     },
-    selectFlowRelative: function(i){
+    openView: function (store) {
+        var view = new FlowView(store);
+        this.setState({
+            view: view
+        });
+        view.addListener("add", this.onFlowChange);
+        view.addListener("update", this.onFlowChange);
+        view.addListener("remove", this.onFlowChange);
+        view.addListener("recalculate", this.onFlowChange);
+    },
+    closeView: function () {
+        this.state.view.close();
+    },
+    componentDidMount: function () {
+        this.openView(this.props.flowStore);
+    },
+    componentWillUnmount: function () {
+        this.closeView();
+    },
+    onFlowChange: function () {
+        console.warn("onFlowChange is deprecated");
+        this.setState({
+            flows: this.state.view.flows
+        });
+    },
+    selectFlow: function (flow) {
+        if (flow) {
+            this.replaceWith(
+                "flow",
+                {
+                    flowId: flow.id,
+                    detailTab: this.getParams().detailTab || "request"
+                }
+            );
+            console.log("TODO: Scroll into view");
+            //this.refs.flowTable.scrollIntoView(flow);
+        } else {
+            this.replaceWith("flows");
+        }
+    },
+    selectFlowRelative: function (i) {
+        var flows = this.state.view.flows;
         var index;
-        if(!this.props.params.flowId){
-            if(i > 0){
-                index = this.state.flows.length-1;
+        if (!this.getParams().flowId) {
+            if (i > 0) {
+                index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            index = _.findIndex(this.state.flows, function(f){
-                return f.id === this.props.params.flowId;
-            }.bind(this));
-            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+            i = flows.length;
+            var currFlowId = this.getParams().flowId;
+            while (i--) {
+                if (flows[i].id === currFlowId) {
+                    index = i;
+                    break;
+                }
+            }
+            index = Math.min(
+                Math.max(0, index + i),
+                flows.length - 1);
         }
-        this.selectFlow(this.state.flows[index]);
+        this.selectFlow(flows[index]);
     },
-    onKeyDown: function(e){
-        switch(e.keyCode){
+    onKeyDown: function (e) {
+        switch (e.keyCode) {
             case Key.K:
             case Key.UP:
                 this.selectFlowRelative(-1);
@@ -86,14 +97,14 @@ var MainView = React.createClass({
                 break;
             case Key.H:
             case Key.LEFT:
-                if(this.refs.flowDetails){
+                if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
             case Key.L:
             case Key.TAB:
             case Key.RIGHT:
-                if(this.refs.flowDetails){
+                if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
@@ -101,18 +112,17 @@ var MainView = React.createClass({
                 console.debug("keydown", e.keyCode);
                 return;
         }
-        return false;
+        e.preventDefault();
     },
-    render: function() {
-        var selected = _.find(this.state.flows, { id: this.props.params.flowId });
+    render: function () {
+        var selected = this.props.flowStore.get(this.getParams().flowId);
 
         var details;
-        if(selected){
+        if (selected) {
             details = (
-                <FlowDetail ref="flowDetails" 
-                            flow={selected}
-                            selectTab={this.selectDetailTab}
-                            active={this.props.params.detailTab}/>
+                <FlowDetail ref="flowDetails"
+                    flow={selected}
+                    active={this.getParams().detailTab}/>
             );
         } else {
             details = null;
@@ -121,9 +131,9 @@ var MainView = React.createClass({
         return (
             <div className="main-view" onKeyDown={this.onKeyDown} tabIndex="0">
                 <FlowTable ref="flowTable"
-                           flows={this.state.flows}
-                           selectFlow={this.selectFlow}
-                           selected={selected} />
+                    flows={this.state.view ? this.state.view.flows : []}
+                    selectFlow={this.selectFlow}
+                    selected={selected} />
                 { details ? <Splitter/> : null }
                 {details}
             </div>

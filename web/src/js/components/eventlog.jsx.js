@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 var LogMessage = React.createClass({
     render: function(){
         var entry = this.props.entry;
@@ -57,7 +55,8 @@ var EventLogContents = React.createClass({
 });
 
 var ToggleFilter = React.createClass({
-    toggle: function(){
+    toggle: function(e){
+        e.preventDefault();
         return this.props.toggleLevel(this.props.name);
     },
     render: function(){
@@ -97,7 +96,6 @@ var EventLog = React.createClass({
         var filter = this.state.filter;
         filter[level] = !filter[level];
         this.setState({filter: filter});
-        return false;
     },
     render: function () {
         return (

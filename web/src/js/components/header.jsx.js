@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 var MainMenu = React.createClass({
     statics: {
         title: "Traffic",
@@ -48,15 +46,16 @@ var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
 
 
 var Header = React.createClass({
+    mixins: [ReactRouter.Navigation],
     getInitialState: function () {
         return {
             active: header_entries[0]
         };
     },
-    handleClick: function (active) {
-        ReactRouter.transitionTo(active.route);
+    handleClick: function (active, e) {
+        e.preventDefault();
+        this.transitionTo(active.route);
         this.setState({active: active});
-        return false;
     },
     handleFileClick: function () {
         console.log("File click");

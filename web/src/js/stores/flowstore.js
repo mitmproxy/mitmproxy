@@ -37,13 +37,8 @@ _.extend(FlowStore.prototype, {
             this._pos_map[flow.id] = i;
         }
     },
-    open_view: function (filt, sort) {
-        var view = new FlowView(this._flow_list, filt, sort);
-        this._views.push(view);
-        return view;
-    },
-    close_view: function (view) {
-        this._views = _.without(this._views, view);
+    get: function(flow_id){
+        return this._flow_list[this._pos_map[flow_id]];
     }
 });
 
@@ -60,6 +55,15 @@ function LiveFlowStore(endpoint) {
     }.bind(this);
 }
 _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
+    close: function(){
+        this.conn.close();
+    },
+    add: function(flow) {
+        // Make sure that deferred adds don't add an element twice.
+        if(!this._pos_map[flow.id]){
+            FlowStore.prototype.add.call(this, flow);
+        }
+    },
     handle_update: function (type, data) {
         console.log("LiveFlowStore.handle_update", type, data);
         if (this.updates_before_init) {
@@ -100,16 +104,22 @@ SortByInsertionOrder.prototype.key = function (flow) {
 
 var default_sort = (new SortByInsertionOrder()).key;
 
-function FlowView(flows, filt, sort) {
+function FlowView(store, filt, sort) {
     EventEmitter.call(this);
     filt = filt || function (flow) {
         return true;
     };
     sort = sort || default_sort;
-    this.recalculate(flows, filt, sort);
+
+    this.store = store;
+    this.store._views.push(this);
+    this.recalculate(this.store._flow_list, filt, sort);
 }
 
 _.extend(FlowView.prototype, EventEmitter.prototype, {
+    close: function(){
+        this.store._views = _.without(this.store._views, this);
+    },
     recalculate: function (flows, filt, sort) {
         if (filt) {
             this.filt = filt;

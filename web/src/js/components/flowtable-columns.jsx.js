@@ -1,6 +1,3 @@
-/** @jsx React.DOM */
-
-
 var TLSColumn = React.createClass({
     statics: {
         renderTitle: function(){
