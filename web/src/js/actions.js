@@ -25,13 +25,13 @@ var SettingsActions = {
 
 var event_id = 0;
 var EventLogActions = {
-    add_event: function(message){
+    add_event: function (message) {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.ADD_EVENT,
             data: {
                 message: message,
                 level: "web",
-                id: "viewAction-"+event_id++
+                id: "viewAction-" + event_id++
             }
         });
     }

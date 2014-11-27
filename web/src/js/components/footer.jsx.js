@@ -5,6 +5,6 @@ var Footer = React.createClass({
             <footer>
                 {mode != "regular" ? <span className="label label-success">{mode} mode</span> : null}
             </footer>
-            );
+        );
     }
 });

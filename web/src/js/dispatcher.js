@@ -18,7 +18,7 @@ Dispatcher.prototype.unregister = function (callback) {
 };
 Dispatcher.prototype.dispatch = function (payload) {
     console.debug("dispatch", payload);
-    for(var i = 0; i < this.callbacks.length; i++){
+    for (var i = 0; i < this.callbacks.length; i++) {
         this.callbacks[i](payload);
     }
 };

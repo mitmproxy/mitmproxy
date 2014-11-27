@@ -41,8 +41,8 @@ var Key = {
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    var i=0;
-    while (Math.abs(size) >= 1024 && i < prefix.length-1) {
+    var i = 0;
+    while (Math.abs(size) >= 1024 && i < prefix.length - 1) {
         i++;
         size = size / 1024;
     }
@@ -80,7 +80,7 @@ Dispatcher.prototype.unregister = function (callback) {
 };
 Dispatcher.prototype.dispatch = function (payload) {
     console.debug("dispatch", payload);
-    for(var i = 0; i < this.callbacks.length; i++){
+    for (var i = 0; i < this.callbacks.length; i++) {
         this.callbacks[i](payload);
     }
 };
@@ -123,13 +123,13 @@ var SettingsActions = {
 
 var event_id = 0;
 var EventLogActions = {
-    add_event: function(message){
+    add_event: function (message) {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.ADD_EVENT,
             data: {
                 message: message,
                 level: "web",
-                id: "viewAction-"+event_id++
+                id: "viewAction-" + event_id++
             }
         });
     }
@@ -264,7 +264,7 @@ _.extend(EventLogView.prototype, EventEmitter.prototype, {
     },
     add: function (entry) {
         this.log.push(entry);
-        if(this.log.length > 200){
+        if (this.log.length > 200) {
             this.log.shift();
         }
         this.emit("change");
@@ -289,37 +289,37 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
         var view = new EventLogView(this, !since);
         return view;
         /*
-        //TODO: Really do bulk retrieval of last messages.
-        window.setTimeout(function () {
-            view.add_bulk([
-                {
-                    id: 1,
-                    message: "Hello World"
-                },
-                {
-                    id: 2,
-                    message: "I was already transmitted as an event."
-                }
-            ]);
-        }, 100);
+         //TODO: Really do bulk retrieval of last messages.
+         window.setTimeout(function () {
+         view.add_bulk([
+         {
+         id: 1,
+         message: "Hello World"
+         },
+         {
+         id: 2,
+         message: "I was already transmitted as an event."
+         }
+         ]);
+         }, 100);
 
-        var id = 2;
-        view.add({
-            id: id++,
-            message: "I was already transmitted as an event."
-        });
-        view.add({
-            id: id++,
-            message: "I was only transmitted as an event before the bulk was added.."
-        });
-        window.setInterval(function () {
-            view.add({
-                id: id++,
-                message: "."
-            });
-        }, 1000);
-        return view;
-        */
+         var id = 2;
+         view.add({
+         id: id++,
+         message: "I was already transmitted as an event."
+         });
+         view.add({
+         id: id++,
+         message: "I was only transmitted as an event before the bulk was added.."
+         });
+         window.setInterval(function () {
+         view.add({
+         id: id++,
+         message: "."
+         });
+         }, 1000);
+         return view;
+         */
     },
     handle: function (action) {
         switch (action.type) {
@@ -374,7 +374,7 @@ _.extend(FlowStore.prototype, {
             this._pos_map[flow.id] = i;
         }
     },
-    get: function(flow_id){
+    get: function (flow_id) {
         return this._flow_list[this._pos_map[flow_id]];
     }
 });
@@ -392,12 +392,12 @@ function LiveFlowStore(endpoint) {
     }.bind(this);
 }
 _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
-    close: function(){
+    close: function () {
         this.conn.close();
     },
-    add: function(flow) {
+    add: function (flow) {
         // Make sure that deferred adds don't add an element twice.
-        if(!this._pos_map[flow.id]){
+        if (!this._pos_map[flow.id]) {
             FlowStore.prototype.add.call(this, flow);
         }
     },
@@ -454,7 +454,7 @@ function FlowView(store, filt, sort) {
 }
 
 _.extend(FlowView.prototype, EventEmitter.prototype, {
-    close: function(){
+    close: function () {
         this.store._views = _.without(this.store._views, this);
     },
     recalculate: function (flows, filt, sort) {
@@ -518,22 +518,22 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
     }
 });
 function Connection(url) {
-    if(url[0] != "/"){
+    if (url[0] != "/") {
         this.url = url;
     } else {
         this.url = location.origin.replace("http", "ws") + url;
     }
     var ws = new WebSocket(this.url);
-    ws.onopen = function(){
+    ws.onopen = function () {
         this.onopen.apply(this, arguments);
     }.bind(this);
-    ws.onmessage = function(){
+    ws.onmessage = function () {
         this.onmessage.apply(this, arguments);
     }.bind(this);
-    ws.onerror = function(){
+    ws.onerror = function () {
         this.onerror.apply(this, arguments);
     }.bind(this);
-    ws.onclose = function(){
+    ws.onclose = function () {
         this.onclose.apply(this, arguments);
     }.bind(this);
     this.ws = ws;
@@ -552,7 +552,7 @@ Connection.prototype.onclose = function (close) {
     EventLogActions.add_event("WebSocket Connection closed.");
     console.debug("onclose", this, arguments);
 };
-Connection.prototype.close = function(){
+Connection.prototype.close = function () {
     this.ws.close();
 };
 //React utils. For other utilities, see ../utils.js
@@ -563,85 +563,85 @@ var Splitter = React.createClass({displayName: 'Splitter',
             axis: "x"
         };
     },
-    getInitialState: function(){
+    getInitialState: function () {
         return {
             applied: false,
             startX: false,
             startY: false
         };
     },
-    onMouseDown: function(e){
+    onMouseDown: function (e) {
         this.setState({
             startX: e.pageX,
             startY: e.pageY
         });
-        window.addEventListener("mousemove",this.onMouseMove);
-        window.addEventListener("mouseup",this.onMouseUp);
+        window.addEventListener("mousemove", this.onMouseMove);
+        window.addEventListener("mouseup", this.onMouseUp);
         // Occasionally, only a dragEnd event is triggered, but no mouseUp.
-        window.addEventListener("dragend",this.onDragEnd);
+        window.addEventListener("dragend", this.onDragEnd);
     },
-    onDragEnd: function(){
-        this.getDOMNode().style.transform="";
-        window.removeEventListener("dragend",this.onDragEnd);
-        window.removeEventListener("mouseup",this.onMouseUp);
-        window.removeEventListener("mousemove",this.onMouseMove);
+    onDragEnd: function () {
+        this.getDOMNode().style.transform = "";
+        window.removeEventListener("dragend", this.onDragEnd);
+        window.removeEventListener("mouseup", this.onMouseUp);
+        window.removeEventListener("mousemove", this.onMouseMove);
     },
-    onMouseUp: function(e){
+    onMouseUp: function (e) {
         this.onDragEnd();
 
         var node = this.getDOMNode();
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
 
-        var dX = e.pageX-this.state.startX;
-        var dY = e.pageY-this.state.startY;
+        var dX = e.pageX - this.state.startX;
+        var dY = e.pageY - this.state.startY;
         var flexBasis;
-        if(this.props.axis === "x"){
+        if (this.props.axis === "x") {
             flexBasis = prev.offsetWidth + dX;
         } else {
             flexBasis = prev.offsetHeight + dY;
         }
 
-        prev.style.flex = "0 0 "+Math.max(0, flexBasis)+"px";   
+        prev.style.flex = "0 0 " + Math.max(0, flexBasis) + "px";
         next.style.flex = "1 1 auto";
 
         this.setState({
             applied: true
         });
     },
-    onMouseMove: function(e){
+    onMouseMove: function (e) {
         var dX = 0, dY = 0;
-        if(this.props.axis === "x"){
-            dX = e.pageX-this.state.startX;
+        if (this.props.axis === "x") {
+            dX = e.pageX - this.state.startX;
         } else {
-            dY = e.pageY-this.state.startY;
+            dY = e.pageY - this.state.startY;
         }
-        this.getDOMNode().style.transform = "translate("+dX+"px,"+dY+"px)";
+        this.getDOMNode().style.transform = "translate(" + dX + "px," + dY + "px)";
     },
-    reset: function(willUnmount) {
+    reset: function (willUnmount) {
         if (!this.state.applied) {
             return;
         }
         var node = this.getDOMNode();
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
-        
+
         prev.style.flex = "";
         next.style.flex = "";
 
-        if(!willUnmount){
+        if (!willUnmount) {
             this.setState({
                 applied: false
             });
         }
 
     },
-    componentWillUnmount: function(){
+    componentWillUnmount: function () {
         this.reset(true);
     },
-    render: function(){
+    render: function () {
         var className = "splitter";
-        if(this.props.axis === "x"){
+        if (this.props.axis === "x") {
             className += " splitter-x";
         } else {
             className += " splitter-y";
@@ -667,10 +667,11 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
         return (
             React.createElement("div", null, 
                 React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
-                React.createElement("i", {className: "fa fa-database"}), " Display Event Log"
+                    React.createElement("i", {className: "fa fa-database"}), 
+                "Display Event Log"
                 )
             )
-            );
+        );
     }
 });
 
@@ -716,25 +717,25 @@ var Header = React.createClass({displayName: 'Header',
         console.log("File click");
     },
     render: function () {
-        var header = header_entries.map(function(entry, i){
+        var header = header_entries.map(function (entry, i) {
             var classes = React.addons.classSet({
                 active: entry == this.state.active
             });
             return (
                 React.createElement("a", {key: i, 
-                   href: "#", 
-                   className: classes, 
-                   onClick: this.handleClick.bind(this, entry)
+                    href: "#", 
+                    className: classes, 
+                    onClick: this.handleClick.bind(this, entry)
                 }, 
                      entry.title
                 )
-                );
+            );
         }.bind(this));
-        
+
         return (
             React.createElement("header", null, 
                 React.createElement("div", {className: "title-bar"}, 
-                    "mitmproxy ",  this.props.settings.version
+                "mitmproxy ",  this.props.settings.version
                 ), 
                 React.createElement("nav", {className: "nav-tabs nav-tabs-lg"}, 
                     React.createElement("a", {href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
@@ -744,21 +745,21 @@ var Header = React.createClass({displayName: 'Header',
                     React.createElement(this.state.active, {settings: this.props.settings})
                 )
             )
-            );
+        );
     }
 });
 
 var TLSColumn = React.createClass({displayName: 'TLSColumn',
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return React.createElement("th", {key: "tls", className: "col-tls"});
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var ssl = (flow.request.scheme == "https");
         var classes;
-        if(ssl){
+        if (ssl) {
             classes = "col-tls col-tls-https";
         } else {
             classes = "col-tls col-tls-http";
@@ -770,23 +771,23 @@ var TLSColumn = React.createClass({displayName: 'TLSColumn',
 
 var IconColumn = React.createClass({displayName: 'IconColumn',
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return React.createElement("th", {key: "icon", className: "col-icon"});
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
 
         var icon;
-        if(flow.response){
+        if (flow.response) {
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            if(flow.response.code == 304) {
+            if (flow.response.code == 304) {
                 icon = "resource-icon-not-modified";
-            } else if(300 <= flow.response.code && flow.response.code < 400) {
+            } else if (300 <= flow.response.code && flow.response.code < 400) {
                 icon = "resource-icon-redirect";
-            } else if(contentType && contentType.indexOf("image") >= 0) {
+            } else if (contentType && contentType.indexOf("image") >= 0) {
                 icon = "resource-icon-image";
             } else if (contentType && contentType.indexOf("javascript") >= 0) {
                 icon = "resource-icon-js";
@@ -796,23 +797,25 @@ var IconColumn = React.createClass({displayName: 'IconColumn',
                 icon = "resource-icon-document";
             }
         }
-        if(!icon){
+        if (!icon) {
             icon = "resource-icon-plain";
         }
 
 
         icon += " resource-icon";
-        return React.createElement("td", {className: "col-icon"}, React.createElement("div", {className: icon}));
+        return React.createElement("td", {className: "col-icon"}, 
+            React.createElement("div", {className: icon})
+        );
     }
 });
 
 var PathColumn = React.createClass({displayName: 'PathColumn',
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return React.createElement("th", {key: "path", className: "col-path"}, "Path");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         return React.createElement("td", {className: "col-path"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
     }
@@ -821,11 +824,11 @@ var PathColumn = React.createClass({displayName: 'PathColumn',
 
 var MethodColumn = React.createClass({displayName: 'MethodColumn',
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return React.createElement("th", {key: "method", className: "col-method"}, "Method");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         return React.createElement("td", {className: "col-method"}, flow.request.method);
     }
@@ -834,14 +837,14 @@ var MethodColumn = React.createClass({displayName: 'MethodColumn',
 
 var StatusColumn = React.createClass({displayName: 'StatusColumn',
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return React.createElement("th", {key: "status", className: "col-status"}, "Status");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var status;
-        if(flow.response){
+        if (flow.response) {
             status = flow.response.code;
         } else {
             status = null;
@@ -853,15 +856,15 @@ var StatusColumn = React.createClass({displayName: 'StatusColumn',
 
 var SizeColumn = React.createClass({displayName: 'SizeColumn',
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return React.createElement("th", {key: "size", className: "col-size"}, "Size");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
 
         var total = flow.request.contentLength;
-        if(flow.response){
+        if (flow.response) {
             total += flow.response.contentLength || 0;
         }
         var size = formatSize(total);
@@ -872,14 +875,14 @@ var SizeColumn = React.createClass({displayName: 'SizeColumn',
 
 var TimeColumn = React.createClass({displayName: 'TimeColumn',
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return React.createElement("th", {key: "time", className: "col-time"}, "Time");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var time;
-        if(flow.response){
+        if (flow.response) {
             time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";
@@ -900,13 +903,13 @@ var all_columns = [
 
 
 var FlowRow = React.createClass({displayName: 'FlowRow',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
-        var columns = this.props.columns.map(function(Column){
+        var columns = this.props.columns.map(function (Column) {
             return React.createElement(Column, {key: Column.displayName, flow: flow});
         }.bind(this));
         var className = "";
-        if(this.props.selected){
+        if (this.props.selected) {
             className += "selected";
         }
         return (
@@ -914,35 +917,37 @@ var FlowRow = React.createClass({displayName: 'FlowRow',
                 columns
             ));
     },
-    shouldComponentUpdate: function(nextProps){
+    shouldComponentUpdate: function (nextProps) {
         var isEqual = (
-            this.props.columns.length === nextProps.columns.length && 
-            this.props.selected === nextProps.selected &&
-            this.props.flow.response === nextProps.flow.response);
+        this.props.columns.length === nextProps.columns.length &&
+        this.props.selected === nextProps.selected &&
+        this.props.flow.response === nextProps.flow.response);
         return !isEqual;
     }
 });
 
 var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
-    render: function(){
-        var columns = this.props.columns.map(function(column){
+    render: function () {
+        var columns = this.props.columns.map(function (column) {
             return column.renderTitle();
         }.bind(this));
-        return React.createElement("thead", null, React.createElement("tr", null, columns));
+        return React.createElement("thead", null, 
+            React.createElement("tr", null, columns)
+        );
     }
 });
 
 var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
-    render: function(){
-        var rows = this.props.flows.map(function(flow){
+    render: function () {
+        var rows = this.props.flows.map(function (flow) {
             var selected = (flow == this.props.selected);
             return React.createElement(FlowRow, {key: flow.id, 
-                            ref: flow.id, 
-                            flow: flow, 
-                            columns: this.props.columns, 
-                            selected: selected, 
-                            selectFlow: this.props.selectFlow}
-                            );
+                ref: flow.id, 
+                flow: flow, 
+                columns: this.props.columns, 
+                selected: selected, 
+                selectFlow: this.props.selectFlow}
+            );
         }.bind(this));
         return React.createElement("tbody", null, rows);
     }
@@ -956,7 +961,7 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             columns: all_columns
         };
     },
-    scrollIntoView: function(flow){
+    scrollIntoView: function (flow) {
         // Now comes the fun part: Scroll the flow into the view.
         var viewport = this.getDOMNode();
         var flowNode = this.refs.body.refs[flow.id].getDOMNode();
@@ -969,9 +974,9 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
         // -thead_height pixel earlier.
         flowNode_top -= this.refs.body.getDOMNode().offsetTop;
 
-        if(flowNode_top < viewport_top){
+        if (flowNode_top < viewport_top) {
             viewport.scrollTop = flowNode_top;
-        } else if(flowNode_bottom > viewport_bottom) {
+        } else if (flowNode_bottom > viewport_bottom) {
             viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
         }
     },
@@ -980,15 +985,15 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             React.createElement("div", {className: "flow-table", onScroll: this.adjustHead}, 
                 React.createElement("table", null, 
                     React.createElement(FlowTableHead, {ref: "head", 
-                                   columns: this.state.columns}), 
+                        columns: this.state.columns}), 
                     React.createElement(FlowTableBody, {ref: "body", 
-                                   flows: this.props.flows, 
-                                   selected: this.props.selected, 
-                                   selectFlow: this.props.selectFlow, 
-                                   columns: this.state.columns})
+                        flows: this.props.flows, 
+                        selected: this.props.selected, 
+                        selectFlow: this.props.selectFlow, 
+                        columns: this.state.columns})
                 )
             )
-            );
+        );
     }
 });
 
@@ -1452,10 +1457,10 @@ var MainView = React.createClass({displayName: 'MainView',
     }
 });
 var LogMessage = React.createClass({displayName: 'LogMessage',
-    render: function(){
+    render: function () {
         var entry = this.props.entry;
         var indicator;
-        switch(entry.level){
+        switch (entry.level) {
             case "web":
                 indicator = React.createElement("i", {className: "fa fa-fw fa-html5"});
                 break;
@@ -1471,13 +1476,13 @@ var LogMessage = React.createClass({displayName: 'LogMessage',
             )
         );
     },
-    shouldComponentUpdate: function(){
+    shouldComponentUpdate: function () {
         return false; // log entries are immutable.
     }
 });
 
 var EventLogContents = React.createClass({displayName: 'EventLogContents',
-    mixins:[AutoScrollMixin],
+    mixins: [AutoScrollMixin],
     getInitialState: function () {
         return {
             log: []
@@ -1497,8 +1502,8 @@ var EventLogContents = React.createClass({displayName: 'EventLogContents',
         });
     },
     render: function () {
-        var messages = this.state.log.map(function(row) {
-            if(!this.props.filter[row.level]){
+        var messages = this.state.log.map(function (row) {
+            if (!this.props.filter[row.level]) {
                 return null;
             }
             return React.createElement(LogMessage, {key: row.id, entry: row});
@@ -1508,11 +1513,11 @@ var EventLogContents = React.createClass({displayName: 'EventLogContents',
 });
 
 var ToggleFilter = React.createClass({displayName: 'ToggleFilter',
-    toggle: function(e){
+    toggle: function (e) {
         e.preventDefault();
         return this.props.toggleLevel(this.props.name);
     },
-    render: function(){
+    render: function () {
         var className = "label ";
         if (this.props.active) {
             className += "label-primary";
@@ -1527,11 +1532,11 @@ var ToggleFilter = React.createClass({displayName: 'ToggleFilter',
                 this.props.name
             )
         );
-   } 
+    }
 });
 
 var EventLog = React.createClass({displayName: 'EventLog',
-    getInitialState: function(){
+    getInitialState: function () {
         return {
             filter: {
                 "debug": false,
@@ -1545,7 +1550,7 @@ var EventLog = React.createClass({displayName: 'EventLog',
             showEventLog: false
         });
     },
-    toggleLevel: function(level){
+    toggleLevel: function (level) {
         var filter = this.state.filter;
         filter[level] = !filter[level];
         this.setState({filter: filter});
@@ -1554,7 +1559,7 @@ var EventLog = React.createClass({displayName: 'EventLog',
         return (
             React.createElement("div", {className: "eventlog"}, 
                 React.createElement("div", null, 
-                    "Eventlog", 
+                "Eventlog", 
                     React.createElement("div", {className: "pull-right"}, 
                         React.createElement(ToggleFilter, {name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel}), 
                         React.createElement(ToggleFilter, {name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel}), 
@@ -1575,7 +1580,7 @@ var Footer = React.createClass({displayName: 'Footer',
             React.createElement("footer", null, 
                 mode != "regular" ? React.createElement("span", {className: "label label-success"}, mode, " mode") : null
             )
-            );
+        );
     }
 });
 

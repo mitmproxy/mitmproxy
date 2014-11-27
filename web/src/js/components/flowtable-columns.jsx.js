@@ -1,14 +1,14 @@
 var TLSColumn = React.createClass({
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return <th key="tls" className="col-tls"></th>;
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var ssl = (flow.request.scheme == "https");
         var classes;
-        if(ssl){
+        if (ssl) {
             classes = "col-tls col-tls-https";
         } else {
             classes = "col-tls col-tls-http";
@@ -20,23 +20,23 @@ var TLSColumn = React.createClass({
 
 var IconColumn = React.createClass({
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return <th key="icon" className="col-icon"></th>;
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
 
         var icon;
-        if(flow.response){
+        if (flow.response) {
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            if(flow.response.code == 304) {
+            if (flow.response.code == 304) {
                 icon = "resource-icon-not-modified";
-            } else if(300 <= flow.response.code && flow.response.code < 400) {
+            } else if (300 <= flow.response.code && flow.response.code < 400) {
                 icon = "resource-icon-redirect";
-            } else if(contentType && contentType.indexOf("image") >= 0) {
+            } else if (contentType && contentType.indexOf("image") >= 0) {
                 icon = "resource-icon-image";
             } else if (contentType && contentType.indexOf("javascript") >= 0) {
                 icon = "resource-icon-js";
@@ -46,23 +46,25 @@ var IconColumn = React.createClass({
                 icon = "resource-icon-document";
             }
         }
-        if(!icon){
+        if (!icon) {
             icon = "resource-icon-plain";
         }
 
 
         icon += " resource-icon";
-        return <td className="col-icon"><div className={icon}></div></td>;
+        return <td className="col-icon">
+            <div className={icon}></div>
+        </td>;
     }
 });
 
 var PathColumn = React.createClass({
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return <th key="path" className="col-path">Path</th>;
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         return <td className="col-path">{flow.request.scheme + "://" + flow.request.host + flow.request.path}</td>;
     }
@@ -71,11 +73,11 @@ var PathColumn = React.createClass({
 
 var MethodColumn = React.createClass({
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return <th key="method" className="col-method">Method</th>;
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         return <td className="col-method">{flow.request.method}</td>;
     }
@@ -84,14 +86,14 @@ var MethodColumn = React.createClass({
 
 var StatusColumn = React.createClass({
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return <th key="status" className="col-status">Status</th>;
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var status;
-        if(flow.response){
+        if (flow.response) {
             status = flow.response.code;
         } else {
             status = null;
@@ -103,15 +105,15 @@ var StatusColumn = React.createClass({
 
 var SizeColumn = React.createClass({
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return <th key="size" className="col-size">Size</th>;
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
 
         var total = flow.request.contentLength;
-        if(flow.response){
+        if (flow.response) {
             total += flow.response.contentLength || 0;
         }
         var size = formatSize(total);
@@ -122,14 +124,14 @@ var SizeColumn = React.createClass({
 
 var TimeColumn = React.createClass({
     statics: {
-        renderTitle: function(){
+        renderTitle: function () {
             return <th key="time" className="col-time">Time</th>;
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var time;
-        if(flow.response){
+        if (flow.response) {
             time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";

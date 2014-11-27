@@ -12,10 +12,11 @@ var MainMenu = React.createClass({
         return (
             <div>
                 <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
-                <i className="fa fa-database"></i> Display Event Log
+                    <i className="fa fa-database"></i>
+                Display Event Log
                 </button>
             </div>
-            );
+        );
     }
 });
 
@@ -61,25 +62,25 @@ var Header = React.createClass({
         console.log("File click");
     },
     render: function () {
-        var header = header_entries.map(function(entry, i){
+        var header = header_entries.map(function (entry, i) {
             var classes = React.addons.classSet({
                 active: entry == this.state.active
             });
             return (
-                <a key={i} 
-                   href="#"
-                   className={classes}
-                   onClick={this.handleClick.bind(this, entry)}
+                <a key={i}
+                    href="#"
+                    className={classes}
+                    onClick={this.handleClick.bind(this, entry)}
                 >
                     { entry.title}
                 </a>
-                );
+            );
         }.bind(this));
-        
+
         return (
             <header>
                 <div className="title-bar">
-                    mitmproxy { this.props.settings.version }
+                mitmproxy { this.props.settings.version }
                 </div>
                 <nav className="nav-tabs nav-tabs-lg">
                     <a href="#" className="special" onClick={this.handleFileClick}> File </a>
@@ -89,6 +90,6 @@ var Header = React.createClass({
                     <this.state.active settings={this.props.settings}/>
                 </div>
             </header>
-            );
+        );
     }
 });

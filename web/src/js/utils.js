@@ -41,8 +41,8 @@ var Key = {
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    var i=0;
-    while (Math.abs(size) >= 1024 && i < prefix.length-1) {
+    var i = 0;
+    while (Math.abs(size) >= 1024 && i < prefix.length - 1) {
         i++;
         size = size / 1024;
     }

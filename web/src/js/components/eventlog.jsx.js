@@ -1,8 +1,8 @@
 var LogMessage = React.createClass({
-    render: function(){
+    render: function () {
         var entry = this.props.entry;
         var indicator;
-        switch(entry.level){
+        switch (entry.level) {
             case "web":
                 indicator = <i className="fa fa-fw fa-html5"></i>;
                 break;
@@ -18,13 +18,13 @@ var LogMessage = React.createClass({
             </div>
         );
     },
-    shouldComponentUpdate: function(){
+    shouldComponentUpdate: function () {
         return false; // log entries are immutable.
     }
 });
 
 var EventLogContents = React.createClass({
-    mixins:[AutoScrollMixin],
+    mixins: [AutoScrollMixin],
     getInitialState: function () {
         return {
             log: []
@@ -44,8 +44,8 @@ var EventLogContents = React.createClass({
         });
     },
     render: function () {
-        var messages = this.state.log.map(function(row) {
-            if(!this.props.filter[row.level]){
+        var messages = this.state.log.map(function (row) {
+            if (!this.props.filter[row.level]) {
                 return null;
             }
             return <LogMessage key={row.id} entry={row}/>;
@@ -55,11 +55,11 @@ var EventLogContents = React.createClass({
 });
 
 var ToggleFilter = React.createClass({
-    toggle: function(e){
+    toggle: function (e) {
         e.preventDefault();
         return this.props.toggleLevel(this.props.name);
     },
-    render: function(){
+    render: function () {
         var className = "label ";
         if (this.props.active) {
             className += "label-primary";
@@ -74,11 +74,11 @@ var ToggleFilter = React.createClass({
                 {this.props.name}
             </a>
         );
-   } 
+    }
 });
 
 var EventLog = React.createClass({
-    getInitialState: function(){
+    getInitialState: function () {
         return {
             filter: {
                 "debug": false,
@@ -92,7 +92,7 @@ var EventLog = React.createClass({
             showEventLog: false
         });
     },
-    toggleLevel: function(level){
+    toggleLevel: function (level) {
         var filter = this.state.filter;
         filter[level] = !filter[level];
         this.setState({filter: filter});
@@ -101,7 +101,7 @@ var EventLog = React.createClass({
         return (
             <div className="eventlog">
                 <div>
-                    Eventlog
+                Eventlog
                     <div className="pull-right">
                         <ToggleFilter name="debug" active={this.state.filter.debug} toggleLevel={this.toggleLevel}/>
                         <ToggleFilter name="info" active={this.state.filter.info} toggleLevel={this.toggleLevel}/>

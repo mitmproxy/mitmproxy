@@ -37,7 +37,7 @@ _.extend(FlowStore.prototype, {
             this._pos_map[flow.id] = i;
         }
     },
-    get: function(flow_id){
+    get: function (flow_id) {
         return this._flow_list[this._pos_map[flow_id]];
     }
 });
@@ -55,12 +55,12 @@ function LiveFlowStore(endpoint) {
     }.bind(this);
 }
 _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
-    close: function(){
+    close: function () {
         this.conn.close();
     },
-    add: function(flow) {
+    add: function (flow) {
         // Make sure that deferred adds don't add an element twice.
-        if(!this._pos_map[flow.id]){
+        if (!this._pos_map[flow.id]) {
             FlowStore.prototype.add.call(this, flow);
         }
     },
@@ -117,7 +117,7 @@ function FlowView(store, filt, sort) {
 }
 
 _.extend(FlowView.prototype, EventEmitter.prototype, {
-    close: function(){
+    close: function () {
         this.store._views = _.without(this.store._views, this);
     },
     recalculate: function (flows, filt, sort) {

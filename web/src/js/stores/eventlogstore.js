@@ -26,7 +26,7 @@ _.extend(EventLogView.prototype, EventEmitter.prototype, {
     },
     add: function (entry) {
         this.log.push(entry);
-        if(this.log.length > 200){
+        if (this.log.length > 200) {
             this.log.shift();
         }
         this.emit("change");
@@ -51,37 +51,37 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
         var view = new EventLogView(this, !since);
         return view;
         /*
-        //TODO: Really do bulk retrieval of last messages.
-        window.setTimeout(function () {
-            view.add_bulk([
-                {
-                    id: 1,
-                    message: "Hello World"
-                },
-                {
-                    id: 2,
-                    message: "I was already transmitted as an event."
-                }
-            ]);
-        }, 100);
+         //TODO: Really do bulk retrieval of last messages.
+         window.setTimeout(function () {
+         view.add_bulk([
+         {
+         id: 1,
+         message: "Hello World"
+         },
+         {
+         id: 2,
+         message: "I was already transmitted as an event."
+         }
+         ]);
+         }, 100);
 
-        var id = 2;
-        view.add({
-            id: id++,
-            message: "I was already transmitted as an event."
-        });
-        view.add({
-            id: id++,
-            message: "I was only transmitted as an event before the bulk was added.."
-        });
-        window.setInterval(function () {
-            view.add({
-                id: id++,
-                message: "."
-            });
-        }, 1000);
-        return view;
-        */
+         var id = 2;
+         view.add({
+         id: id++,
+         message: "I was already transmitted as an event."
+         });
+         view.add({
+         id: id++,
+         message: "I was only transmitted as an event before the bulk was added.."
+         });
+         window.setInterval(function () {
+         view.add({
+         id: id++,
+         message: "."
+         });
+         }, 1000);
+         return view;
+         */
     },
     handle: function (action) {
         switch (action.type) {
