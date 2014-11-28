@@ -485,7 +485,7 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
 
         //Ugly workaround: Call .sortfun() for each flow once in order,
         //so that SortByInsertionOrder make sense.
-        for(var i = 0; i < flows.length; i++) {
+        for (var i = 0; i < flows.length; i++) {
             this.sortfun(flows[i]);
         }
 
@@ -705,35 +705,57 @@ var VirtualScrollMixin = {
             stop: 0
         }
     },
+    componentWillMount: function(){
+        if(!this.props.rowHeight){
+            console.warn("VirtualScrollMixin: No rowHeight specified", this);
+        }
+    },
     getPlaceholderTop: function () {
+        var Tag = this.props.placeholderTagName || "tr";
         var style = {
             height: this.state.start * this.props.rowHeight
         };
-        var spacer = React.createElement("tr", {key: "placeholder-top", style: style});
+        var spacer = React.createElement(Tag, {key: "placeholder-top", style: style});
 
         if (this.state.start % 2 === 1) {
             // fix even/odd rows
-            return [spacer, React.createElement("tr", {key: "placeholder-top-2"})];
+            return [spacer, React.createElement(Tag, {key: "placeholder-top-2"})];
         } else {
             return spacer;
         }
     },
     getPlaceholderBottom: function (total) {
+        var Tag = this.props.placeholderTagName || "tr";
         var style = {
             height: Math.max(0, total - this.state.stop) * this.props.rowHeight
         };
-        return React.createElement("tr", {key: "placeholder-bottom", style: style});
+        return React.createElement(Tag, {key: "placeholder-bottom", style: style});
+    },
+    componentDidMount: function () {
+        this.onScroll();
     },
     onScroll: function () {
         var viewport = this.getDOMNode();
         var top = viewport.scrollTop;
         var height = viewport.offsetHeight;
         var start = Math.floor(top / this.props.rowHeight);
-        var stop = start + Math.ceil(height / this.props.rowHeight);
+        var stop = start + Math.ceil(height / (this.props.rowHeightMin || this.props.rowHeight));
+
         this.setState({
             start: start,
             stop: stop
         });
+        console.log(start, stop);
+    },
+    renderRows: function(elems){
+        var rows = [];
+        var max = Math.min(elems.length, this.state.stop);
+
+        for (var i = this.state.start; i < max; i++) {
+            var elem = elems[i];
+            rows.push(this.renderRow(elem));
+        }
+        return rows;
     },
     scrollRowIntoView: function(index, head_height){
 
@@ -1066,9 +1088,6 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             nextProps.view.addListener("add update remove recalculate", this.onChange);
         }
     },
-    componentDidMount: function () {
-        this.onScroll2();
-    },
     getDefaultProps: function () {
         return {
             rowHeight: ROW_HEIGHT
@@ -1088,27 +1107,20 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             this.refs.body.getDOMNode().offsetTop
         );
     },
+    renderRow: function (flow) {
+        var selected = (flow === this.props.selected);
+        return React.createElement(FlowRow, {key: flow.id, 
+            ref: flow.id, 
+            flow: flow, 
+            columns: this.state.columns, 
+            selected: selected, 
+            selectFlow: this.props.selectFlow}
+        );
+    },
     render: function () {
-        var space_top = 0, space_bottom = 0, fix_nth_row = null;
-        var rows = [];
-        if (this.props.view) {
-            var flows = this.props.view.flows;
-            var max = Math.min(flows.length, this.state.stop);
+        var flows = this.props.view ? this.props.view.flows : [];
 
-            for (var i = this.state.start; i < max; i++) {
-                var flow = flows[i];
-                var selected = (flow === this.props.selected);
-                rows.push(
-                    React.createElement(FlowRow, {key: flow.id, 
-                        ref: flow.id, 
-                        flow: flow, 
-                        columns: this.state.columns, 
-                        selected: selected, 
-                        selectFlow: this.props.selectFlow}
-                    )
-                );
-            }
-        }
+        var rows = this.renderRows(flows);
 
         return (
             React.createElement("div", {className: "flow-table", onScroll: this.onScroll2}, 
@@ -1599,7 +1611,7 @@ var LogMessage = React.createClass({displayName: 'LogMessage',
 });
 
 var EventLogContents = React.createClass({displayName: 'EventLogContents',
-    mixins: [AutoScrollMixin],
+    mixins: [AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             log: []
@@ -1614,18 +1626,37 @@ var EventLogContents = React.createClass({displayName: 'EventLogContents',
         this.log.close();
     },
     onEventLogChange: function () {
+        var log = this.log.getAll().filter(function (entry) {
+            return this.props.filter[entry.level];
+        }.bind(this));
         this.setState({
-            log: this.log.getAll()
+            log: log
         });
     },
+    componentWillReceiveProps: function () {
+        if (this.log) {
+            this.onEventLogChange();
+        }
+
+    },
+    getDefaultProps: function () {
+        return {
+            rowHeight: 45,
+            rowHeightMin: 15,
+            placeholderTagName: "div"
+        };
+    },
+    renderRow: function(elem){
+        return React.createElement(LogMessage, {key: elem.id, entry: elem});
+    },
     render: function () {
-        var messages = this.state.log.map(function (row) {
-            if (!this.props.filter[row.level]) {
-                return null;
-            }
-            return React.createElement(LogMessage, {key: row.id, entry: row});
-        }.bind(this));
-        return React.createElement("pre", null, messages);
+        var rows = this.renderRows(this.state.log);
+
+        return React.createElement("pre", {onScroll: this.onScroll}, 
+             this.getPlaceholderTop(), 
+            rows, 
+             this.getPlaceholderBottom(this.state.log.length) 
+        );
     }
 });
 
@@ -1676,7 +1707,7 @@ var EventLog = React.createClass({displayName: 'EventLog',
         return (
             React.createElement("div", {className: "eventlog"}, 
                 React.createElement("div", null, 
-                "Eventlog", 
+                    "Eventlog", 
                     React.createElement("div", {className: "pull-right"}, 
                         React.createElement(ToggleFilter, {name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel}), 
                         React.createElement(ToggleFilter, {name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel}), 

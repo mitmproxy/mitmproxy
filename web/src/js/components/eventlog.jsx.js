@@ -24,7 +24,7 @@ var LogMessage = React.createClass({
 });
 
 var EventLogContents = React.createClass({
-    mixins: [AutoScrollMixin],
+    mixins: [AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             log: []
@@ -39,18 +39,37 @@ var EventLogContents = React.createClass({
         this.log.close();
     },
     onEventLogChange: function () {
+        var log = this.log.getAll().filter(function (entry) {
+            return this.props.filter[entry.level];
+        }.bind(this));
         this.setState({
-            log: this.log.getAll()
+            log: log
         });
     },
+    componentWillReceiveProps: function () {
+        if (this.log) {
+            this.onEventLogChange();
+        }
+
+    },
+    getDefaultProps: function () {
+        return {
+            rowHeight: 45,
+            rowHeightMin: 15,
+            placeholderTagName: "div"
+        };
+    },
+    renderRow: function(elem){
+        return <LogMessage key={elem.id} entry={elem}/>;
+    },
     render: function () {
-        var messages = this.state.log.map(function (row) {
-            if (!this.props.filter[row.level]) {
-                return null;
-            }
-            return <LogMessage key={row.id} entry={row}/>;
-        }.bind(this));
-        return <pre>{messages}</pre>;
+        var rows = this.renderRows(this.state.log);
+
+        return <pre onScroll={this.onScroll}>
+            { this.getPlaceholderTop() }
+            {rows}
+            { this.getPlaceholderBottom(this.state.log.length) }
+        </pre>;
     }
 });
 
@@ -101,7 +120,7 @@ var EventLog = React.createClass({
         return (
             <div className="eventlog">
                 <div>
-                Eventlog
+                    Eventlog
                     <div className="pull-right">
                         <ToggleFilter name="debug" active={this.state.filter.debug} toggleLevel={this.toggleLevel}/>
                         <ToggleFilter name="info" active={this.state.filter.info} toggleLevel={this.toggleLevel}/>

@@ -144,7 +144,7 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
 
         //Ugly workaround: Call .sortfun() for each flow once in order,
         //so that SortByInsertionOrder make sense.
-        for(var i = 0; i < flows.length; i++) {
+        for (var i = 0; i < flows.length; i++) {
             this.sortfun(flows[i]);
         }
 

@@ -58,9 +58,6 @@ var FlowTable = React.createClass({
             nextProps.view.addListener("add update remove recalculate", this.onChange);
         }
     },
-    componentDidMount: function () {
-        this.onScroll2();
-    },
     getDefaultProps: function () {
         return {
             rowHeight: ROW_HEIGHT
@@ -80,27 +77,20 @@ var FlowTable = React.createClass({
             this.refs.body.getDOMNode().offsetTop
         );
     },
+    renderRow: function (flow) {
+        var selected = (flow === this.props.selected);
+        return <FlowRow key={flow.id}
+            ref={flow.id}
+            flow={flow}
+            columns={this.state.columns}
+            selected={selected}
+            selectFlow={this.props.selectFlow}
+        />;
+    },
     render: function () {
-        var space_top = 0, space_bottom = 0, fix_nth_row = null;
-        var rows = [];
-        if (this.props.view) {
-            var flows = this.props.view.flows;
-            var max = Math.min(flows.length, this.state.stop);
+        var flows = this.props.view ? this.props.view.flows : [];
 
-            for (var i = this.state.start; i < max; i++) {
-                var flow = flows[i];
-                var selected = (flow === this.props.selected);
-                rows.push(
-                    <FlowRow key={flow.id}
-                        ref={flow.id}
-                        flow={flow}
-                        columns={this.state.columns}
-                        selected={selected}
-                        selectFlow={this.props.selectFlow}
-                    />
-                );
-            }
-        }
+        var rows = this.renderRows(flows);
 
         return (
             <div className="flow-table" onScroll={this.onScroll2}>
