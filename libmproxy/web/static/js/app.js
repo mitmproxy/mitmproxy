@@ -386,7 +386,8 @@ _.extend(FlowStore.prototype, {
 
 function LiveFlowStore(endpoint) {
     FlowStore.call(this);
-    this.updates_before_init = []; // (empty array is true in js)
+    this.updates_before_fetch = undefined;
+    this._fetchxhr = false;
     this.endpoint = endpoint || "/flows";
     this.conn = new Connection(this.endpoint + "/updates");
     this.conn.onopen = this._onopen.bind(this);
@@ -401,32 +402,45 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
     },
     add: function (flow) {
         // Make sure that deferred adds don't add an element twice.
-        if (!this._pos_map[flow.id]) {
+        if (!(flow.id in this._pos_map)) {
             FlowStore.prototype.add.call(this, flow);
-        }
-    },
-    handle_update: function (type, data) {
-        console.log("LiveFlowStore.handle_update", type, data);
-        if (this.updates_before_init) {
-            console.log("defer update", type, data);
-            this.updates_before_init.push(arguments);
-        } else {
-            this[type](data);
-        }
-    },
-    handle_fetch: function (data) {
-        console.log("Flows fetched.");
-        this.reset(data.flows);
-        var updates = this.updates_before_init;
-        this.updates_before_init = false;
-        for (var i = 0; i < updates.length; i++) {
-            this.handle_update.apply(this, updates[i]);
         }
     },
     _onopen: function () {
         //Update stream openend, fetch list of flows.
         console.log("Update Connection opened, fetching flows...");
-        $.getJSON(this.endpoint, this.handle_fetch.bind(this));
+        this.fetch();
+    },
+    fetch: function () {
+        if (this._fetchxhr) {
+            this._fetchxhr.abort();
+        }
+        this._fetchxhr = $.getJSON(this.endpoint, this.handle_fetch.bind(this));
+        this.updates_before_fetch = [];  // (JS: empty array is true)
+    },
+    handle_update: function (type, data) {
+        console.log("LiveFlowStore.handle_update", type, data);
+
+        if (type === "reset") {
+            return this.fetch();
+        }
+
+        if (this.updates_before_fetch) {
+            console.log("defer update", type, data);
+            this.updates_before_fetch.push(arguments);
+        } else {
+            this[type](data);
+        }
+    },
+    handle_fetch: function (data) {
+        this._fetchxhr = false;
+        console.log("Flows fetched.");
+        this.reset(data.flows);
+        var updates = this.updates_before_fetch;
+        this.updates_before_fetch = false;
+        for (var i = 0; i < updates.length; i++) {
+            this.handle_update.apply(this, updates[i]);
+        }
     },
 });
 
@@ -471,20 +485,22 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
 
         //Ugly workaround: Call .sortfun() for each flow once in order,
         //so that SortByInsertionOrder make sense.
-        var i = flows.length;
-        while(i--){
+        for(var i = 0; i < flows.length; i++) {
             this.sortfun(flows[i]);
         }
 
         this.flows = flows.filter(this.filt);
         this.flows.sort(function (a, b) {
-            return this.sortfun(b) - this.sortfun(a);
+            return this.sortfun(a) - this.sortfun(b);
         }.bind(this));
         this.emit("recalculate");
     },
+    index: function (flow) {
+        return _.sortedIndex(this.flows, flow, this.sortfun);
+    },
     add: function (flow) {
         if (this.filt(flow)) {
-            var idx = _.sortedIndex(this.flows, flow, this.sortfun);
+            var idx = this.index(flow);
             if (idx === this.flows.length) { //happens often, .push is way faster.
                 this.flows.push(flow);
             } else {
@@ -665,6 +681,23 @@ var Splitter = React.createClass({displayName: 'Splitter',
         );
     }
 });
+
+function getCookie(name) {
+    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    return r ? r[1] : undefined;
+}
+var xsrf = $.param({_xsrf: getCookie("_xsrf")});
+
+//Tornado XSRF Protection.
+$.ajaxPrefilter(function(options){
+    if(options.type === "post" && options.url[0] === "/"){
+        if(options.data){
+            options.data += ("&" + xsrf);
+        } else {
+            options.data = xsrf;
+        }
+    }
+});
 var MainMenu = React.createClass({displayName: 'MainMenu',
     statics: {
         title: "Traffic",
@@ -675,12 +708,17 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
             showEventLog: !this.props.settings.showEventLog
         });
     },
+    clearFlows: function(){
+        $.post("/flows/clear");
+    },
     render: function () {
         return (
             React.createElement("div", null, 
                 React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
-                    React.createElement("i", {className: "fa fa-database"}), 
-                "Display Event Log"
+                    React.createElement("i", {className: "fa fa-database"}), " Display Event Log"
+                ), " ", 
+                React.createElement("button", {className: "btn btn-default", onClick: this.clearFlows}, 
+                    React.createElement("i", {className: "fa fa-eraser"}), " Clear Flows"
                 )
             )
         );
@@ -999,20 +1037,23 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
     scrollIntoView: function (flow) {
         // Now comes the fun part: Scroll the flow into the view.
         var viewport = this.getDOMNode();
-        var flowNode = this.refs.body.refs[flow.id].getDOMNode();
+        var thead_height = this.refs.body.getDOMNode().offsetTop;
+
+        var flow_top = (this.props.view.index(flow) * ROW_HEIGHT) + thead_height;
+
         var viewport_top = viewport.scrollTop;
         var viewport_bottom = viewport_top + viewport.offsetHeight;
-        var flowNode_top = flowNode.offsetTop;
-        var flowNode_bottom = flowNode_top + flowNode.offsetHeight;
+        var flow_bottom = flow_top + ROW_HEIGHT;
 
-        // Account for pinned thead by pretending that the flowNode starts
-        // -thead_height pixel earlier.
-        flowNode_top -= this.refs.body.getDOMNode().offsetTop;
+        // Account for pinned thead
 
-        if (flowNode_top < viewport_top) {
-            viewport.scrollTop = flowNode_top;
-        } else if (flowNode_bottom > viewport_bottom) {
-            viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
+
+        console.log("scrollInto", flow_top, flow_bottom, viewport_top, viewport_bottom, thead_height);
+
+        if (flow_top - thead_height < viewport_top) {
+            viewport.scrollTop = flow_top - thead_height;
+        } else if (flow_bottom > viewport_bottom) {
+            viewport.scrollTop = flow_bottom - viewport.offsetHeight;
         }
     },
     render: function () {
@@ -1050,7 +1091,7 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
                 React.createElement("table", null, 
                     React.createElement(FlowTableHead, {ref: "head", 
                         columns: this.state.columns}), 
-                    React.createElement("tbody", null, 
+                    React.createElement("tbody", {ref: "body"}, 
                         React.createElement("tr", {style: {height: space_top}}), 
                         fix_nth_row, 
                         rows, 
@@ -1068,9 +1109,9 @@ var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
         var items = this.props.tabs.map(function (e) {
             var str = e.charAt(0).toUpperCase() + e.slice(1);
             var className = this.props.active === e ? "active" : "";
-            var onClick = function (e) {
+            var onClick = function (event) {
                 this.props.selectTab(e);
-                e.preventDefault();
+                event.preventDefault();
             }.bind(this);
             return React.createElement("a", {key: e, 
                 href: "#", 
@@ -1366,7 +1407,6 @@ var FlowDetail = React.createClass({displayName: 'FlowDetail',
         );
     },
     render: function () {
-        var flow = JSON.stringify(this.props.flow, null, 2);
         var Tab = tabs[this.props.active];
         return (
             React.createElement("div", {className: "flow-detail", onScroll: this.adjustHead}, 
@@ -1416,8 +1456,7 @@ var MainView = React.createClass({displayName: 'MainView',
                     detailTab: this.getParams().detailTab || "request"
                 }
             );
-            console.log("TODO: Scroll into view");
-            //this.refs.flowTable.scrollIntoView(flow);
+            this.refs.flowTable.scrollIntoView(flow);
         } else {
             this.replaceWith("flows");
         }

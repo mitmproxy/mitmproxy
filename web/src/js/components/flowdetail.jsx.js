@@ -4,9 +4,9 @@ var FlowDetailNav = React.createClass({
         var items = this.props.tabs.map(function (e) {
             var str = e.charAt(0).toUpperCase() + e.slice(1);
             var className = this.props.active === e ? "active" : "";
-            var onClick = function (e) {
+            var onClick = function (event) {
                 this.props.selectTab(e);
-                e.preventDefault();
+                event.preventDefault();
             }.bind(this);
             return <a key={e}
                 href="#"
@@ -302,7 +302,6 @@ var FlowDetail = React.createClass({
         );
     },
     render: function () {
-        var flow = JSON.stringify(this.props.flow, null, 2);
         var Tab = tabs[this.props.active];
         return (
             <div className="flow-detail" onScroll={this.adjustHead}>

@@ -27,7 +27,7 @@ class WebFlowView(flow.FlowView):
 
     def _recalculate(self, flows):
         super(WebFlowView, self)._recalculate(flows)
-        app.FlowUpdates.broadcast("recalculate", None)
+        app.FlowUpdates.broadcast("reset", None)
 
 
 class WebState(flow.State):

@@ -83,20 +83,23 @@ var FlowTable = React.createClass({
     scrollIntoView: function (flow) {
         // Now comes the fun part: Scroll the flow into the view.
         var viewport = this.getDOMNode();
-        var flowNode = this.refs.body.refs[flow.id].getDOMNode();
+        var thead_height = this.refs.body.getDOMNode().offsetTop;
+
+        var flow_top = (this.props.view.index(flow) * ROW_HEIGHT) + thead_height;
+
         var viewport_top = viewport.scrollTop;
         var viewport_bottom = viewport_top + viewport.offsetHeight;
-        var flowNode_top = flowNode.offsetTop;
-        var flowNode_bottom = flowNode_top + flowNode.offsetHeight;
+        var flow_bottom = flow_top + ROW_HEIGHT;
 
-        // Account for pinned thead by pretending that the flowNode starts
-        // -thead_height pixel earlier.
-        flowNode_top -= this.refs.body.getDOMNode().offsetTop;
+        // Account for pinned thead
 
-        if (flowNode_top < viewport_top) {
-            viewport.scrollTop = flowNode_top;
-        } else if (flowNode_bottom > viewport_bottom) {
-            viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
+
+        console.log("scrollInto", flow_top, flow_bottom, viewport_top, viewport_bottom, thead_height);
+
+        if (flow_top - thead_height < viewport_top) {
+            viewport.scrollTop = flow_top - thead_height;
+        } else if (flow_bottom > viewport_bottom) {
+            viewport.scrollTop = flow_bottom - viewport.offsetHeight;
         }
     },
     render: function () {
@@ -134,7 +137,7 @@ var FlowTable = React.createClass({
                 <table>
                     <FlowTableHead ref="head"
                         columns={this.state.columns}/>
-                    <tbody>
+                    <tbody ref="body">
                         <tr style={{height: space_top}}></tr>
                         { fix_nth_row }
                         {rows}

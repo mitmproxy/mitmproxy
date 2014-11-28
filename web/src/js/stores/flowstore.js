@@ -45,7 +45,8 @@ _.extend(FlowStore.prototype, {
 
 function LiveFlowStore(endpoint) {
     FlowStore.call(this);
-    this.updates_before_init = []; // (empty array is true in js)
+    this.updates_before_fetch = undefined;
+    this._fetchxhr = false;
     this.endpoint = endpoint || "/flows";
     this.conn = new Connection(this.endpoint + "/updates");
     this.conn.onopen = this._onopen.bind(this);
@@ -60,32 +61,45 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
     },
     add: function (flow) {
         // Make sure that deferred adds don't add an element twice.
-        if (!this._pos_map[flow.id]) {
+        if (!(flow.id in this._pos_map)) {
             FlowStore.prototype.add.call(this, flow);
-        }
-    },
-    handle_update: function (type, data) {
-        console.log("LiveFlowStore.handle_update", type, data);
-        if (this.updates_before_init) {
-            console.log("defer update", type, data);
-            this.updates_before_init.push(arguments);
-        } else {
-            this[type](data);
-        }
-    },
-    handle_fetch: function (data) {
-        console.log("Flows fetched.");
-        this.reset(data.flows);
-        var updates = this.updates_before_init;
-        this.updates_before_init = false;
-        for (var i = 0; i < updates.length; i++) {
-            this.handle_update.apply(this, updates[i]);
         }
     },
     _onopen: function () {
         //Update stream openend, fetch list of flows.
         console.log("Update Connection opened, fetching flows...");
-        $.getJSON(this.endpoint, this.handle_fetch.bind(this));
+        this.fetch();
+    },
+    fetch: function () {
+        if (this._fetchxhr) {
+            this._fetchxhr.abort();
+        }
+        this._fetchxhr = $.getJSON(this.endpoint, this.handle_fetch.bind(this));
+        this.updates_before_fetch = [];  // (JS: empty array is true)
+    },
+    handle_update: function (type, data) {
+        console.log("LiveFlowStore.handle_update", type, data);
+
+        if (type === "reset") {
+            return this.fetch();
+        }
+
+        if (this.updates_before_fetch) {
+            console.log("defer update", type, data);
+            this.updates_before_fetch.push(arguments);
+        } else {
+            this[type](data);
+        }
+    },
+    handle_fetch: function (data) {
+        this._fetchxhr = false;
+        console.log("Flows fetched.");
+        this.reset(data.flows);
+        var updates = this.updates_before_fetch;
+        this.updates_before_fetch = false;
+        for (var i = 0; i < updates.length; i++) {
+            this.handle_update.apply(this, updates[i]);
+        }
     },
 });
 
@@ -130,20 +144,22 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
 
         //Ugly workaround: Call .sortfun() for each flow once in order,
         //so that SortByInsertionOrder make sense.
-        var i = flows.length;
-        while(i--){
+        for(var i = 0; i < flows.length; i++) {
             this.sortfun(flows[i]);
         }
 
         this.flows = flows.filter(this.filt);
         this.flows.sort(function (a, b) {
-            return this.sortfun(b) - this.sortfun(a);
+            return this.sortfun(a) - this.sortfun(b);
         }.bind(this));
         this.emit("recalculate");
     },
+    index: function (flow) {
+        return _.sortedIndex(this.flows, flow, this.sortfun);
+    },
     add: function (flow) {
         if (this.filt(flow)) {
-            var idx = _.sortedIndex(this.flows, flow, this.sortfun);
+            var idx = this.index(flow);
             if (idx === this.flows.length) { //happens often, .push is way faster.
                 this.flows.push(flow);
             } else {

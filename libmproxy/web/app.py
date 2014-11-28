@@ -1,4 +1,5 @@
 import os.path
+import sys
 import tornado.web
 import tornado.websocket
 import logging
@@ -8,6 +9,7 @@ from .. import flow
 
 class IndexHandler(tornado.web.RequestHandler):
     def get(self):
+        _ = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         self.render("index.html")
 
 
@@ -35,11 +37,16 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
                 logging.error("Error sending message", exc_info=True)
 
 
-class FlowsHandler(tornado.web.RequestHandler):
+class Flows(tornado.web.RequestHandler):
     def get(self):
         self.write(dict(
             flows=[f.get_state(short=True) for f in self.application.state.flows]
         ))
+
+
+class FlowClear(tornado.web.RequestHandler):
+    def post(self):
+        self.application.state.clear()
 
 
 class FlowUpdates(WebSocketEventBroadcaster):
@@ -56,14 +63,15 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", IndexHandler),
             (r"/updates", ClientConnection),
-            (r"/flows", FlowsHandler),
+            (r"/flows", Flows),
+            (r"/flows/clear", FlowClear),
             (r"/flows/updates", FlowUpdates),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
-            cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
+            cookie_secret=os.urandom(256),
             debug=debug,
         )
         tornado.web.Application.__init__(self, handlers, **settings)

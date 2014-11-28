@@ -96,3 +96,20 @@ var Splitter = React.createClass({
         );
     }
 });
+
+function getCookie(name) {
+    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    return r ? r[1] : undefined;
+}
+var xsrf = $.param({_xsrf: getCookie("_xsrf")});
+
+//Tornado XSRF Protection.
+$.ajaxPrefilter(function(options){
+    if(options.type === "post" && options.url[0] === "/"){
+        if(options.data){
+            options.data += ("&" + xsrf);
+        } else {
+            options.data = xsrf;
+        }
+    }
+});

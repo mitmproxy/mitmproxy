@@ -8,12 +8,17 @@ var MainMenu = React.createClass({
             showEventLog: !this.props.settings.showEventLog
         });
     },
+    clearFlows: function(){
+        $.post("/flows/clear");
+    },
     render: function () {
         return (
             <div>
                 <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
-                    <i className="fa fa-database"></i>
-                Display Event Log
+                    <i className="fa fa-database"></i>&nbsp;Display Event Log
+                </button>&nbsp;
+                <button className="btn btn-default" onClick={this.clearFlows}>
+                    <i className="fa fa-eraser"></i>&nbsp;Clear Flows
                 </button>
             </div>
         );

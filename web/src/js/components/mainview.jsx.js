@@ -35,8 +35,7 @@ var MainView = React.createClass({
                     detailTab: this.getParams().detailTab || "request"
                 }
             );
-            console.log("TODO: Scroll into view");
-            //this.refs.flowTable.scrollIntoView(flow);
+            this.refs.flowTable.scrollIntoView(flow);
         } else {
             this.replaceWith("flows");
         }
