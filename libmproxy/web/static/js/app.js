@@ -193,18 +193,22 @@ EventEmitter.prototype.emit = function (event) {
         listener.apply(this, args);
     }.bind(this));
 };
-EventEmitter.prototype.addListener = function (event, f) {
-    this.listeners[event] = this.listeners[event] || [];
-    this.listeners[event].push(f);
+EventEmitter.prototype.addListener = function (events, f) {
+    events.split(" ").forEach(function (event) {
+        this.listeners[event] = this.listeners[event] || [];
+        this.listeners[event].push(f);
+    }.bind(this));
 };
-EventEmitter.prototype.removeListener = function (event, f) {
-    if (!(event in this.listeners)) {
+EventEmitter.prototype.removeListener = function (events, f) {
+    if (!(events in this.listeners)) {
         return false;
     }
-    var index = this.listeners[event].indexOf(f);
-    if (index >= 0) {
-        this.listeners[event].splice(index, 1);
-    }
+    events.split(" ").forEach(function (event) {
+        var index = this.listeners[event].indexOf(f);
+        if (index >= 0) {
+            this.listeners[event].splice(index, 1);
+        }
+    }.bind(this));
 };
 
 function _SettingsStore() {
@@ -926,11 +930,13 @@ var FlowRow = React.createClass({displayName: 'FlowRow',
             ));
     },
     shouldComponentUpdate: function (nextProps) {
-        var isEqual = (
-        this.props.columns.length === nextProps.columns.length &&
-        this.props.selected === nextProps.selected &&
-        this.props.flow.response === nextProps.flow.response);
-        return !isEqual;
+        return true;
+        // Further optimization could be done here
+        // by calling forceUpdate on flow updates, selection changes and column changes.
+        //return (
+        //(this.props.columns.length !== nextProps.columns.length) ||
+        //(this.props.selected !== nextProps.selected)
+        //);
     }
 });
 
@@ -945,29 +951,50 @@ var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
     }
 });
 
-var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
-    render: function () {
-        var rows = this.props.flows.map(function (flow) {
-            var selected = (flow == this.props.selected);
-            return React.createElement(FlowRow, {key: flow.id, 
-                ref: flow.id, 
-                flow: flow, 
-                columns: this.props.columns, 
-                selected: selected, 
-                selectFlow: this.props.selectFlow}
-            );
-        }.bind(this));
-        return React.createElement("tbody", null, rows);
-    }
-});
 
+var ROW_HEIGHT = 32;
 
 var FlowTable = React.createClass({displayName: 'FlowTable',
     mixins: [StickyHeadMixin, AutoScrollMixin],
     getInitialState: function () {
         return {
-            columns: all_columns
+            columns: all_columns,
+            start: 0,
+            stop: 0
         };
+    },
+    componentWillMount: function () {
+        if (this.props.view) {
+            this.props.view.addListener("add update remove recalculate", this.onChange);
+        }
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.view !== this.props.view) {
+            if (this.props.view) {
+                this.props.view.removeListener("add update remove recalculate");
+            }
+            nextProps.view.addListener("add update remove recalculate", this.onChange);
+        }
+    },
+    componentDidMount: function () {
+        this.onScroll();
+    },
+    onScroll: function () {
+        this.adjustHead();
+
+        var viewport = this.getDOMNode();
+        var top = viewport.scrollTop;
+        var height = viewport.offsetHeight;
+        var start = Math.floor(top / ROW_HEIGHT);
+        var stop = start + Math.ceil(height / ROW_HEIGHT);
+        this.setState({
+            start: start,
+            stop: stop
+        });
+    },
+    onChange: function () {
+        console.log("onChange");
+        this.forceUpdate();
     },
     scrollIntoView: function (flow) {
         // Now comes the fun part: Scroll the flow into the view.
@@ -989,16 +1016,46 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
         }
     },
     render: function () {
+        var space_top = 0, space_bottom = 0, fix_nth_row = null;
+        var rows = [];
+        if (this.props.view) {
+            var flows = this.props.view.flows;
+            var max = Math.min(flows.length, this.state.stop);
+            console.log("render", this.props.view.flows.length, this.state.start, max - this.state.start, flows.length - this.state.stop);
+
+            for (var i = this.state.start; i < max; i++) {
+                var flow = flows[i];
+                var selected = (flow === this.props.selected);
+                rows.push(
+                    React.createElement(FlowRow, {key: flow.id, 
+                        ref: flow.id, 
+                        flow: flow, 
+                        columns: this.state.columns, 
+                        selected: selected, 
+                        selectFlow: this.props.selectFlow}
+                    )
+                );
+            }
+
+            space_top = this.state.start * ROW_HEIGHT;
+            space_bottom = Math.max(0, flows.length - this.state.stop) * ROW_HEIGHT;
+            if(this.state.start % 2 === 1){
+                fix_nth_row = React.createElement("tr", null);
+            }
+        }
+
+
         return (
-            React.createElement("div", {className: "flow-table", onScroll: this.adjustHead}, 
+            React.createElement("div", {className: "flow-table", onScroll: this.onScroll}, 
                 React.createElement("table", null, 
                     React.createElement(FlowTableHead, {ref: "head", 
                         columns: this.state.columns}), 
-                    React.createElement(FlowTableBody, {ref: "body", 
-                        flows: this.props.flows, 
-                        selected: this.props.selected, 
-                        selectFlow: this.props.selectFlow, 
-                        columns: this.state.columns})
+                    React.createElement("tbody", null, 
+                        React.createElement("tr", {style: {height: space_top}}), 
+                        fix_nth_row, 
+                        rows, 
+                        React.createElement("tr", {style: {height: space_bottom}})
+                    )
                 )
             )
         );
@@ -1340,25 +1397,15 @@ var MainView = React.createClass({displayName: 'MainView',
         this.setState({
             view: view
         });
-        view.addListener("add", this.onFlowChange);
-        view.addListener("update", this.onFlowChange);
-        view.addListener("remove", this.onFlowChange);
-        view.addListener("recalculate", this.onFlowChange);
     },
     closeView: function () {
         this.state.view.close();
     },
-    componentDidMount: function () {
+    componentWillMount: function () {
         this.openView(this.props.flowStore);
     },
     componentWillUnmount: function () {
         this.closeView();
-    },
-    onFlowChange: function () {
-        console.warn("onFlowChange is deprecated");
-        this.setState({
-            flows: this.state.view.flows
-        });
     },
     selectFlow: function (flow) {
         if (flow) {
@@ -1455,7 +1502,7 @@ var MainView = React.createClass({displayName: 'MainView',
         return (
             React.createElement("div", {className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
                 React.createElement(FlowTable, {ref: "flowTable", 
-                    flows: this.state.view ? this.state.view.flows : [], 
+                    view: this.state.view, 
                     selectFlow: this.selectFlow, 
                     selected: selected}), 
                  details ? React.createElement(Splitter, null) : null, 

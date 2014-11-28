@@ -16,25 +16,15 @@ var MainView = React.createClass({
         this.setState({
             view: view
         });
-        view.addListener("add", this.onFlowChange);
-        view.addListener("update", this.onFlowChange);
-        view.addListener("remove", this.onFlowChange);
-        view.addListener("recalculate", this.onFlowChange);
     },
     closeView: function () {
         this.state.view.close();
     },
-    componentDidMount: function () {
+    componentWillMount: function () {
         this.openView(this.props.flowStore);
     },
     componentWillUnmount: function () {
         this.closeView();
-    },
-    onFlowChange: function () {
-        console.warn("onFlowChange is deprecated");
-        this.setState({
-            flows: this.state.view.flows
-        });
     },
     selectFlow: function (flow) {
         if (flow) {
@@ -131,7 +121,7 @@ var MainView = React.createClass({
         return (
             <div className="main-view" onKeyDown={this.onKeyDown} tabIndex="0">
                 <FlowTable ref="flowTable"
-                    flows={this.state.view ? this.state.view.flows : []}
+                    view={this.state.view}
                     selectFlow={this.selectFlow}
                     selected={selected} />
                 { details ? <Splitter/> : null }

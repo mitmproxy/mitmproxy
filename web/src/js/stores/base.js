@@ -10,16 +10,20 @@ EventEmitter.prototype.emit = function (event) {
         listener.apply(this, args);
     }.bind(this));
 };
-EventEmitter.prototype.addListener = function (event, f) {
-    this.listeners[event] = this.listeners[event] || [];
-    this.listeners[event].push(f);
+EventEmitter.prototype.addListener = function (events, f) {
+    events.split(" ").forEach(function (event) {
+        this.listeners[event] = this.listeners[event] || [];
+        this.listeners[event].push(f);
+    }.bind(this));
 };
-EventEmitter.prototype.removeListener = function (event, f) {
-    if (!(event in this.listeners)) {
+EventEmitter.prototype.removeListener = function (events, f) {
+    if (!(events in this.listeners)) {
         return false;
     }
-    var index = this.listeners[event].indexOf(f);
-    if (index >= 0) {
-        this.listeners[event].splice(index, 1);
-    }
+    events.split(" ").forEach(function (event) {
+        var index = this.listeners[event].indexOf(f);
+        if (index >= 0) {
+            this.listeners[event].splice(index, 1);
+        }
+    }.bind(this));
 };
