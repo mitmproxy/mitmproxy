@@ -39,12 +39,10 @@ var FlowTableHead = React.createClass({
 var ROW_HEIGHT = 32;
 
 var FlowTable = React.createClass({
-    mixins: [StickyHeadMixin, AutoScrollMixin],
+    mixins: [StickyHeadMixin, AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
-            columns: all_columns,
-            start: 0,
-            stop: 0
+            columns: all_columns
         };
     },
     componentWillMount: function () {
@@ -61,46 +59,26 @@ var FlowTable = React.createClass({
         }
     },
     componentDidMount: function () {
-        this.onScroll();
+        this.onScroll2();
     },
-    onScroll: function () {
+    getDefaultProps: function () {
+        return {
+            rowHeight: ROW_HEIGHT
+        };
+    },
+    onScroll2: function () {
         this.adjustHead();
-
-        var viewport = this.getDOMNode();
-        var top = viewport.scrollTop;
-        var height = viewport.offsetHeight;
-        var start = Math.floor(top / ROW_HEIGHT);
-        var stop = start + Math.ceil(height / ROW_HEIGHT);
-        this.setState({
-            start: start,
-            stop: stop
-        });
+        this.onScroll();
     },
     onChange: function () {
         console.log("onChange");
         this.forceUpdate();
     },
     scrollIntoView: function (flow) {
-        // Now comes the fun part: Scroll the flow into the view.
-        var viewport = this.getDOMNode();
-        var thead_height = this.refs.body.getDOMNode().offsetTop;
-
-        var flow_top = (this.props.view.index(flow) * ROW_HEIGHT) + thead_height;
-
-        var viewport_top = viewport.scrollTop;
-        var viewport_bottom = viewport_top + viewport.offsetHeight;
-        var flow_bottom = flow_top + ROW_HEIGHT;
-
-        // Account for pinned thead
-
-
-        console.log("scrollInto", flow_top, flow_bottom, viewport_top, viewport_bottom, thead_height);
-
-        if (flow_top - thead_height < viewport_top) {
-            viewport.scrollTop = flow_top - thead_height;
-        } else if (flow_bottom > viewport_bottom) {
-            viewport.scrollTop = flow_bottom - viewport.offsetHeight;
-        }
+        this.scrollRowIntoView(
+            this.props.view.index(flow),
+            this.refs.body.getDOMNode().offsetTop
+        );
     },
     render: function () {
         var space_top = 0, space_bottom = 0, fix_nth_row = null;
@@ -108,7 +86,6 @@ var FlowTable = React.createClass({
         if (this.props.view) {
             var flows = this.props.view.flows;
             var max = Math.min(flows.length, this.state.stop);
-            console.log("render", this.props.view.flows.length, this.state.start, max - this.state.start, flows.length - this.state.stop);
 
             for (var i = this.state.start; i < max; i++) {
                 var flow = flows[i];
@@ -123,25 +100,17 @@ var FlowTable = React.createClass({
                     />
                 );
             }
-
-            space_top = this.state.start * ROW_HEIGHT;
-            space_bottom = Math.max(0, flows.length - this.state.stop) * ROW_HEIGHT;
-            if(this.state.start % 2 === 1){
-                fix_nth_row = <tr></tr>;
-            }
         }
 
-
         return (
-            <div className="flow-table" onScroll={this.onScroll}>
+            <div className="flow-table" onScroll={this.onScroll2}>
                 <table>
                     <FlowTableHead ref="head"
                         columns={this.state.columns}/>
                     <tbody ref="body">
-                        <tr style={{height: space_top}}></tr>
-                        { fix_nth_row }
+                        { this.getPlaceholderTop() }
                         {rows}
-                        <tr style={{height: space_bottom}}></tr>
+                        { this.getPlaceholderBottom(flows.length) }
                     </tbody>
                 </table>
             </div>
