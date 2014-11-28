@@ -123,7 +123,6 @@ class GridWalker(urwid.ListWalker):
             except ValueError:
                 self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
                 return
-
         errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
         if emsg:
@@ -322,9 +321,11 @@ class GridEditor(common.WWrap):
         elif key == "d":
             self.walker.delete_focus()
         elif key == "r":
-            self.master.path_prompt("Read file: ", "", self.read_file)
+            if self.walker.get_current_value() is not None:
+                self.master.path_prompt("Read file: ", "", self.read_file)
         elif key == "R":
-            self.master.path_prompt("Read unescaped file: ", "", self.read_file, True)
+            if self.walker.get_current_value() is not None:
+                self.master.path_prompt("Read unescaped file: ", "", self.read_file, True)
         elif key == "e":
             o = self.walker.get_current_value()
             if o is not None:
