@@ -60,6 +60,11 @@ var formatTimeDelta = function (milliseconds) {
     }
     return Math.round(time) + prefix[i];
 };
+
+var formatTimeStamp = function (seconds) {
+    var ts = (new Date(seconds * 1000)).toISOString();
+    return ts.replace("T", " ").replace("Z", "");
+};
 const PayloadSources = {
     VIEW: "view",
     SERVER: "server"
@@ -434,7 +439,7 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
     },
     handle_fetch: function (data) {
         this._fetchxhr = false;
-        console.log("Flows fetched.");
+        console.log("Flows fetched.", this.updates_before_fetch);
         this.reset(data.flows);
         var updates = this.updates_before_fetch;
         this.updates_before_fetch = false;
@@ -703,7 +708,7 @@ var VirtualScrollMixin = {
         return {
             start: 0,
             stop: 0
-        }
+        };
     },
     componentWillMount: function(){
         if(!this.props.rowHeight){
@@ -745,7 +750,6 @@ var VirtualScrollMixin = {
             start: start,
             stop: stop
         });
-        console.log(start, stop);
     },
     renderRows: function(elems){
         var rows = [];
@@ -1093,12 +1097,11 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
             rowHeight: ROW_HEIGHT
         };
     },
-    onScroll2: function () {
+    onScrollFlowTable: function () {
         this.adjustHead();
         this.onScroll();
     },
     onChange: function () {
-        console.log("onChange");
         this.forceUpdate();
     },
     scrollIntoView: function (flow) {
@@ -1118,12 +1121,13 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
         );
     },
     render: function () {
+        //console.log("render flowtable", this.state.start, this.state.stop, this.props.selected);
         var flows = this.props.view ? this.props.view.flows : [];
 
         var rows = this.renderRows(flows);
 
         return (
-            React.createElement("div", {className: "flow-table", onScroll: this.onScroll2}, 
+            React.createElement("div", {className: "flow-table", onScroll: this.onScrollFlowTable}, 
                 React.createElement("table", null, 
                     React.createElement(FlowTableHead, {ref: "head", 
                         columns: this.state.columns}), 
@@ -1187,7 +1191,7 @@ var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
         var first_line = [
             flow.request.method,
             RequestUtils.pretty_url(flow.request),
-            "HTTP/" + flow.response.httpversion.join(".")
+            "HTTP/" + flow.request.httpversion.join(".")
         ].join(" ");
         var content = null;
         if (flow.request.contentLength > 0) {
@@ -1237,6 +1241,20 @@ var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
     }
 });
 
+var FlowDetailError = React.createClass({displayName: 'FlowDetailError',
+    render: function () {
+        var flow = this.props.flow;
+        return (
+            React.createElement("section", null, 
+                React.createElement("div", {className: "alert alert-warning"}, 
+                flow.error.msg, 
+                    React.createElement("div", null, React.createElement("small", null,  formatTimeStamp(flow.error.timestamp) ))
+                )
+            )
+        );
+    }
+});
+
 var TimeStamp = React.createClass({displayName: 'TimeStamp',
     render: function () {
 
@@ -1245,8 +1263,7 @@ var TimeStamp = React.createClass({displayName: 'TimeStamp',
             return React.createElement("tr", null);
         }
 
-        var ts = (new Date(this.props.t * 1000)).toISOString();
-        ts = ts.replace("T", " ").replace("Z", "");
+        var ts = formatTimeStamp(this.props.t);
 
         var delta;
         if (this.props.deltaTo) {
@@ -1413,24 +1430,31 @@ var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnec
     }
 });
 
-var tabs = {
+var allTabs = {
     request: FlowDetailRequest,
     response: FlowDetailResponse,
+    error: FlowDetailError,
     details: FlowDetailConnectionInfo
 };
 
 var FlowDetail = React.createClass({displayName: 'FlowDetail',
-    getDefaultProps: function () {
-        return {
-            tabs: ["request", "response", "details"]
-        };
-    },
     mixins: [StickyHeadMixin, ReactRouter.Navigation, ReactRouter.State],
+    getTabs: function (flow) {
+        var tabs = [];
+        ["request", "response", "error"].forEach(function (e) {
+            if (flow[e]) {
+                tabs.push(e);
+            }
+        });
+        tabs.push("details");
+        return tabs;
+    },
     nextTab: function (i) {
-        var currentIndex = this.props.tabs.indexOf(this.props.active);
+        var tabs = this.getTabs();
+        var currentIndex = tabs.indexOf(this.getParams().detailTab);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
-        var nextIndex = (currentIndex + i + this.props.tabs.length) % this.props.tabs.length;
-        this.selectTab(this.props.tabs[nextIndex]);
+        var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
+        this.selectTab(tabs[nextIndex]);
     },
     selectTab: function (panel) {
         this.replaceWith(
@@ -1442,14 +1466,29 @@ var FlowDetail = React.createClass({displayName: 'FlowDetail',
         );
     },
     render: function () {
-        var Tab = tabs[this.props.active];
+        var flow = this.props.flow;
+        var tabs = this.getTabs(flow);
+        var active = this.getParams().detailTab;
+
+        if (!_.contains(tabs, active)) {
+            if (active === "response" && flow.error) {
+                active = "error";
+            } else if (active === "error" && flow.response) {
+                active = "response";
+            } else {
+                active = tabs[0];
+            }
+            this.selectTab(active);
+        }
+
+        var Tab = allTabs[active];
         return (
             React.createElement("div", {className: "flow-detail", onScroll: this.adjustHead}, 
                 React.createElement(FlowDetailNav, {ref: "head", 
-                    tabs: this.props.tabs, 
-                    active: this.props.active, 
+                    tabs: tabs, 
+                    active: active, 
                     selectTab: this.selectTab}), 
-                React.createElement(Tab, {flow: this.props.flow})
+                React.createElement(Tab, {flow: flow})
             )
         );
     }
@@ -1472,6 +1511,21 @@ var MainView = React.createClass({displayName: 'MainView',
         this.setState({
             view: view
         });
+
+        view.addListener("recalculate", this.onRecalculate);
+        view.addListener("add update remove", this.onUpdate);
+    },
+    onRecalculate: function(){
+        this.forceUpdate();
+        var selected = this.getSelected();
+        if(selected){
+            this.refs.flowTable.scrollIntoView();
+        }
+    },
+    onUpdate: function (flow) {
+        if (flow.id === this.getParams().flowId) {
+            this.forceUpdate();
+        }
     },
     closeView: function () {
         this.state.view.close();
@@ -1559,16 +1613,18 @@ var MainView = React.createClass({displayName: 'MainView',
         }
         e.preventDefault();
     },
+    getSelected: function(){
+        return this.props.flowStore.get(this.getParams().flowId);
+    },
     render: function () {
-        var selected = this.props.flowStore.get(this.getParams().flowId);
+        var selected = this.getSelected();
 
         var details;
         if (selected) {
-            details = (
-                React.createElement(FlowDetail, {ref: "flowDetails", 
-                    flow: selected, 
-                    active: this.getParams().detailTab})
-            );
+            details = [
+                React.createElement(Splitter, {key: "splitter"}),
+                React.createElement(FlowDetail, {key: "flowDetails", ref: "flowDetails", flow: selected})
+            ];
         } else {
             details = null;
         }
@@ -1579,7 +1635,6 @@ var MainView = React.createClass({displayName: 'MainView',
                     view: this.state.view, 
                     selectFlow: this.selectFlow, 
                     selected: selected}), 
-                 details ? React.createElement(Splitter, null) : null, 
                 details
             )
         );

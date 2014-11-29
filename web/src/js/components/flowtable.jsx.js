@@ -63,12 +63,11 @@ var FlowTable = React.createClass({
             rowHeight: ROW_HEIGHT
         };
     },
-    onScroll2: function () {
+    onScrollFlowTable: function () {
         this.adjustHead();
         this.onScroll();
     },
     onChange: function () {
-        console.log("onChange");
         this.forceUpdate();
     },
     scrollIntoView: function (flow) {
@@ -88,12 +87,13 @@ var FlowTable = React.createClass({
         />;
     },
     render: function () {
+        //console.log("render flowtable", this.state.start, this.state.stop, this.props.selected);
         var flows = this.props.view ? this.props.view.flows : [];
 
         var rows = this.renderRows(flows);
 
         return (
-            <div className="flow-table" onScroll={this.onScroll2}>
+            <div className="flow-table" onScroll={this.onScrollFlowTable}>
                 <table>
                     <FlowTableHead ref="head"
                         columns={this.state.columns}/>

@@ -3,7 +3,7 @@ var VirtualScrollMixin = {
         return {
             start: 0,
             stop: 0
-        }
+        };
     },
     componentWillMount: function(){
         if(!this.props.rowHeight){
@@ -45,7 +45,6 @@ var VirtualScrollMixin = {
             start: start,
             stop: stop
         });
-        console.log(start, stop);
     },
     renderRows: function(elems){
         var rows = [];

@@ -47,7 +47,7 @@ var FlowDetailRequest = React.createClass({
         var first_line = [
             flow.request.method,
             RequestUtils.pretty_url(flow.request),
-            "HTTP/" + flow.response.httpversion.join(".")
+            "HTTP/" + flow.request.httpversion.join(".")
         ].join(" ");
         var content = null;
         if (flow.request.contentLength > 0) {
@@ -97,6 +97,20 @@ var FlowDetailResponse = React.createClass({
     }
 });
 
+var FlowDetailError = React.createClass({
+    render: function () {
+        var flow = this.props.flow;
+        return (
+            <section>
+                <div className="alert alert-warning">
+                {flow.error.msg}
+                    <div><small>{ formatTimeStamp(flow.error.timestamp) }</small></div>
+                </div>
+            </section>
+        );
+    }
+});
+
 var TimeStamp = React.createClass({
     render: function () {
 
@@ -105,8 +119,7 @@ var TimeStamp = React.createClass({
             return <tr></tr>;
         }
 
-        var ts = (new Date(this.props.t * 1000)).toISOString();
-        ts = ts.replace("T", " ").replace("Z", "");
+        var ts = formatTimeStamp(this.props.t);
 
         var delta;
         if (this.props.deltaTo) {
@@ -273,24 +286,31 @@ var FlowDetailConnectionInfo = React.createClass({
     }
 });
 
-var tabs = {
+var allTabs = {
     request: FlowDetailRequest,
     response: FlowDetailResponse,
+    error: FlowDetailError,
     details: FlowDetailConnectionInfo
 };
 
 var FlowDetail = React.createClass({
-    getDefaultProps: function () {
-        return {
-            tabs: ["request", "response", "details"]
-        };
-    },
     mixins: [StickyHeadMixin, ReactRouter.Navigation, ReactRouter.State],
+    getTabs: function (flow) {
+        var tabs = [];
+        ["request", "response", "error"].forEach(function (e) {
+            if (flow[e]) {
+                tabs.push(e);
+            }
+        });
+        tabs.push("details");
+        return tabs;
+    },
     nextTab: function (i) {
-        var currentIndex = this.props.tabs.indexOf(this.props.active);
+        var tabs = this.getTabs();
+        var currentIndex = tabs.indexOf(this.getParams().detailTab);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
-        var nextIndex = (currentIndex + i + this.props.tabs.length) % this.props.tabs.length;
-        this.selectTab(this.props.tabs[nextIndex]);
+        var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
+        this.selectTab(tabs[nextIndex]);
     },
     selectTab: function (panel) {
         this.replaceWith(
@@ -302,14 +322,29 @@ var FlowDetail = React.createClass({
         );
     },
     render: function () {
-        var Tab = tabs[this.props.active];
+        var flow = this.props.flow;
+        var tabs = this.getTabs(flow);
+        var active = this.getParams().detailTab;
+
+        if (!_.contains(tabs, active)) {
+            if (active === "response" && flow.error) {
+                active = "error";
+            } else if (active === "error" && flow.response) {
+                active = "response";
+            } else {
+                active = tabs[0];
+            }
+            this.selectTab(active);
+        }
+
+        var Tab = allTabs[active];
         return (
             <div className="flow-detail" onScroll={this.adjustHead}>
                 <FlowDetailNav ref="head"
-                    tabs={this.props.tabs}
-                    active={this.props.active}
+                    tabs={tabs}
+                    active={active}
                     selectTab={this.selectTab}/>
-                <Tab flow={this.props.flow}/>
+                <Tab flow={flow}/>
             </div>
         );
     }

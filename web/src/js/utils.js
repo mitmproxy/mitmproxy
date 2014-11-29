@@ -60,3 +60,8 @@ var formatTimeDelta = function (milliseconds) {
     }
     return Math.round(time) + prefix[i];
 };
+
+var formatTimeStamp = function (seconds) {
+    var ts = (new Date(seconds * 1000)).toISOString();
+    return ts.replace("T", " ").replace("Z", "");
+};

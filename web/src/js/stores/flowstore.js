@@ -93,7 +93,7 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
     },
     handle_fetch: function (data) {
         this._fetchxhr = false;
-        console.log("Flows fetched.");
+        console.log("Flows fetched.", this.updates_before_fetch);
         this.reset(data.flows);
         var updates = this.updates_before_fetch;
         this.updates_before_fetch = false;

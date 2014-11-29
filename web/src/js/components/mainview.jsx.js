@@ -16,6 +16,21 @@ var MainView = React.createClass({
         this.setState({
             view: view
         });
+
+        view.addListener("recalculate", this.onRecalculate);
+        view.addListener("add update remove", this.onUpdate);
+    },
+    onRecalculate: function(){
+        this.forceUpdate();
+        var selected = this.getSelected();
+        if(selected){
+            this.refs.flowTable.scrollIntoView();
+        }
+    },
+    onUpdate: function (flow) {
+        if (flow.id === this.getParams().flowId) {
+            this.forceUpdate();
+        }
     },
     closeView: function () {
         this.state.view.close();
@@ -103,16 +118,18 @@ var MainView = React.createClass({
         }
         e.preventDefault();
     },
+    getSelected: function(){
+        return this.props.flowStore.get(this.getParams().flowId);
+    },
     render: function () {
-        var selected = this.props.flowStore.get(this.getParams().flowId);
+        var selected = this.getSelected();
 
         var details;
         if (selected) {
-            details = (
-                <FlowDetail ref="flowDetails"
-                    flow={selected}
-                    active={this.getParams().detailTab}/>
-            );
+            details = [
+                <Splitter key="splitter"/>,
+                <FlowDetail key="flowDetails" ref="flowDetails" flow={selected}/>
+            ];
         } else {
             details = null;
         }
@@ -123,7 +140,6 @@ var MainView = React.createClass({
                     view={this.state.view}
                     selectFlow={this.selectFlow}
                     selected={selected} />
-                { details ? <Splitter/> : null }
                 {details}
             </div>
         );
