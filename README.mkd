@@ -72,8 +72,7 @@ This installs the latest GitHub versions of mitmproxy, netlib and pathod into `m
 
 The test suite requires the `dev` extra requirements listed in [setup.py](https://github.com/mitmproxy/mitmproxy/blob/master/setup.py) and [pathod](http://pathod.net), version matching mitmproxy. Install these with:
 
-`
-pip install "mitmproxy[dev]""`
+`pip install "mitmproxy[dev]"`
 
 
 Please ensure that all patches are accompanied by matching changes in the test
@@ -85,8 +84,3 @@ suite. The project maintains 100% test coverage.
 Rendering the documentation requires [countershape](http://github.com/cortesi/countershape). After installation, you can render the documentation to the doc like this:
 
 `cshape doc-src doc`
-
-
-
-
-
