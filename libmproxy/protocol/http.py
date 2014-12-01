@@ -419,17 +419,19 @@ class HTTPRequest(HTTPMessage):
             raise http.HttpError(400, "Invalid request form")
         return request_line
 
+    # This list is adopted legacy code.
+    # We probably don't need to strip off keep-alive.
+    _headers_to_strip_off = ['Proxy-Connection',
+                             'Keep-Alive',
+                             'Connection',
+                             'Transfer-Encoding',
+                             'Upgrade']
+
     def _assemble_headers(self):
         headers = self.headers.copy()
-        for k in ['Proxy-Connection',
-                  'Keep-Alive',
-                  'Connection',
-                  'Transfer-Encoding']:
+        for k in self._headers_to_strip_off:
             del headers[k]
-        if headers["Upgrade"] == ["h2c"]:
-            # Suppress HTTP2 https://http2.github.io/http2-spec/index.html#discover-http
-            del headers["Upgrade"]
-        if not 'host' in headers and self.scheme and self.host and self.port:
+        if 'host' not in headers and self.scheme and self.host and self.port:
             headers["Host"] = [utils.hostport(self.scheme,
                                               self.host,
                                               self.port)]
@@ -750,11 +752,13 @@ class HTTPResponse(HTTPMessage):
         return 'HTTP/%s.%s %s %s' % \
                (self.httpversion[0], self.httpversion[1], self.code, self.msg)
 
+    _headers_to_strip_off = ['Proxy-Connection',
+                             'Alternate-Protocol',
+                             'Alt-Svc']
+
     def _assemble_headers(self, preserve_transfer_encoding=False):
         headers = self.headers.copy()
-        for k in ['Proxy-Connection',
-                  'Alternate-Protocol',
-                  'Alt-Svc']:
+        for k in self._headers_to_strip_off:
             del headers[k]
         if not preserve_transfer_encoding:
             del headers['Transfer-Encoding']
