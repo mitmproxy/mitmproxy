@@ -1401,6 +1401,12 @@ class HTTPHandler(ProtocolHandler):
 
             # In practice, nobody issues a CONNECT request to send unencrypted HTTP requests afterwards.
             # If we don't delegate to TCP mode, we should always negotiate a SSL connection.
+            #
+            # FIXME:
+            # Turns out the previous statement isn't entirely true. Chrome on Windows CONNECTs to :80
+            # if an explicit proxy is configured and a websocket connection should be established.
+            # We don't support websocket at the moment, so it fails anyway, but we should come up with
+            # a better solution to this if we start to support WebSockets.
             should_establish_ssl = (
                 address.port in self.c.config.ssl_ports
                 or
