@@ -14,14 +14,21 @@ from libmproxy.protocol.tcp import TCPHandler
 from libmproxy.protocol import KILL
 from libmproxy.script import concurrent
 
-HTTPRequest._headers_to_strip_off.remove("Connection")
-HTTPRequest._headers_to_strip_off.remove("Upgrade")
+
+def start(context, argv):
+    HTTPRequest._headers_to_strip_off.remove("Connection")
+    HTTPRequest._headers_to_strip_off.remove("Upgrade")
+
+
+def done(context):
+    HTTPRequest._headers_to_strip_off.append("Connection")
+    HTTPRequest._headers_to_strip_off.append("Upgrade")
 
 @concurrent
 def response(context, flow):
-	if flow.response.headers.get_first("Connection", None) == "Upgrade":
-		# We need to send the response manually now...
-		flow.client_conn.send(flow.response.assemble())
-		# ...and then delegate to tcp passthrough.
-		TCPHandler(flow.live.c, log=False).handle_messages()
-		flow.reply(KILL)
+    if flow.response.headers.get_first("Connection", None) == "Upgrade":
+        # We need to send the response manually now...
+        flow.client_conn.send(flow.response.assemble())
+        # ...and then delegate to tcp passthrough.
+        TCPHandler(flow.live.c, log=False).handle_messages()
+        flow.reply(KILL)

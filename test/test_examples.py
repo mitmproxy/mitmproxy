@@ -16,4 +16,5 @@ def test_load_scripts():
             f += " foo"  # one argument required
         if "modify_response_body" in f:
             f += " foo bar"  # two arguments required
-        script.Script(f, tmaster)  # Loads the script file.
+        s = script.Script(f, tmaster)  # Loads the script file.
+        s.unload()
