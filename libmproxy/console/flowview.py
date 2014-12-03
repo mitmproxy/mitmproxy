@@ -574,9 +574,8 @@ class FlowView(common.WWrap):
         else:
             if not self.flow.response:
                 self.flow.response = HTTPResponse(
-                    self.flow.request,
                     self.flow.request.httpversion,
-                    200, "OK", flow.ODictCaseless(), "", None
+                    200, "OK", flow.ODictCaseless(), ""
                 )
                 self.flow.response.reply = controller.DummyReply()
             conn = self.flow.response
