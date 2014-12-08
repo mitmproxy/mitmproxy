@@ -1043,7 +1043,7 @@ class HTTPHandler(ProtocolHandler):
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
         flow = self.c.channel.ask("responseheaders", flow)
-        if flow == KILL:
+        if flow is None or flow == KILL:
             raise KillSignal()
         else:
             # now get the rest of the request body, if body still needs to be
@@ -1086,10 +1086,10 @@ class HTTPHandler(ProtocolHandler):
             # sent through to the Master.
             flow.request = req
             request_reply = self.c.channel.ask("request", flow)
-            self.process_server_address(flow)  # The inline script may have changed request.host
-
             if request_reply is None or request_reply == KILL:
                 raise KillSignal()
+
+            self.process_server_address(flow)  # The inline script may have changed request.host
 
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
