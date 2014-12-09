@@ -8,13 +8,18 @@ var ActionTypes = {
     UPDATE_SETTINGS: "update_settings",
 
     // EventLog
+    EVENT_STORE: "events",
     ADD_EVENT: "add_event",
 
     // Flow
-    ADD_FLOW: "add_flow",
-    UPDATE_FLOW: "update_flow",
-    REMOVE_FLOW: "remove_flow",
-    RESET_FLOWS: "reset_flows",
+    FLOW_STORE: "flows",
+};
+
+var StoreCmds = {
+    ADD: "add",
+    UPDATE: "update",
+    REMOVE: "remove",
+    RESET: "reset"
 };
 
 var ConnectionActions = {
@@ -52,7 +57,8 @@ var EventLogActions_event_id = 0;
 var EventLogActions = {
     add_event: function (message) {
         AppDispatcher.dispatchViewAction({
-            type: ActionTypes.ADD_EVENT,
+            type: ActionTypes.EVENT_STORE,
+            cmd: StoreCmds.ADD,
             data: {
                 message: message,
                 level: "web",

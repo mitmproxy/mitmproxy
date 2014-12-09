@@ -88,7 +88,7 @@ var FlowTable = React.createClass({
     },
     render: function () {
         //console.log("render flowtable", this.state.start, this.state.stop, this.props.selected);
-        var flows = this.props.view ? this.props.view.flows : [];
+        var flows = this.props.view ? this.props.view.list : [];
 
         var rows = this.renderRows(flows);
 
@@ -98,7 +98,7 @@ var FlowTable = React.createClass({
                     <FlowTableHead ref="head"
                         columns={this.state.columns}/>
                     <tbody ref="body">
-                        { this.getPlaceholderTop() }
+                        { this.getPlaceholderTop(flows.length) }
                         {rows}
                         { this.getPlaceholderBottom(flows.length) }
                     </tbody>

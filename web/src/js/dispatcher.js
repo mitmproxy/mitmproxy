@@ -11,9 +11,9 @@ Dispatcher.prototype.register = function (callback) {
     this.callbacks.push(callback);
 };
 Dispatcher.prototype.unregister = function (callback) {
-    var index = this.callbacks.indexOf(f);
+    var index = this.callbacks.indexOf(callback);
     if (index >= 0) {
-        this.callbacks.splice(this.callbacks.indexOf(f), 1);
+        this.callbacks.splice(index, 1);
     }
 };
 Dispatcher.prototype.dispatch = function (payload) {

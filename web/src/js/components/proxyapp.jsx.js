@@ -10,7 +10,7 @@ var ProxyAppMain = React.createClass({
     getInitialState: function () {
         return {
             settings: SettingsStore.getAll(),
-            flowStore: new LiveFlowStore()
+            flowStore: new FlowStore()
         };
     },
     componentDidMount: function () {

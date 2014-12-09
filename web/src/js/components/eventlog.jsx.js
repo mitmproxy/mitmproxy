@@ -25,32 +25,33 @@ var LogMessage = React.createClass({
 
 var EventLogContents = React.createClass({
     mixins: [AutoScrollMixin, VirtualScrollMixin],
-    getInitialState: function () {
+    getInitialState: function(){
+        var store = new EventLogStore();
+        var view = new StoreView(store, function(entry){
+            return this.props.filter[entry.level];
+        }.bind(this));
+        view.addListener("add recalculate", this.onEventLogChange);
         return {
+            store: store,
+            view: view,
             log: []
         };
     },
-    componentDidMount: function () {
-        this.log = EventLogStore.getView();
-        this.log.addListener("change", this.onEventLogChange);
-    },
     componentWillUnmount: function () {
-        this.log.removeListener("change", this.onEventLogChange);
-        this.log.close();
+        this.state.view.removeListener("add recalculate", this.onEventLogChange);
+        this.state.view.close();
+        this.state.store.close();
     },
     onEventLogChange: function () {
-        var log = this.log.getAll().filter(function (entry) {
-            return this.props.filter[entry.level];
-        }.bind(this));
         this.setState({
-            log: log
+            log: this.state.view.list
         });
     },
-    componentWillReceiveProps: function () {
-        if (this.log) {
-            this.onEventLogChange();
+    componentWillReceiveProps: function (nextProps) {
+        if(nextProps.filter !== this.props.filter){
+            this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
+            this.state.view.recalculate(this.state.store._list);
         }
-
     },
     getDefaultProps: function () {
         return {
@@ -66,7 +67,7 @@ var EventLogContents = React.createClass({
         var rows = this.renderRows(this.state.log);
 
         return <pre onScroll={this.onScroll}>
-            { this.getPlaceholderTop() }
+            { this.getPlaceholderTop(this.state.log.length) }
             {rows}
             { this.getPlaceholderBottom(this.state.log.length) }
         </pre>;
@@ -112,7 +113,7 @@ var EventLog = React.createClass({
         });
     },
     toggleLevel: function (level) {
-        var filter = this.state.filter;
+        var filter = _.extend({}, this.state.filter);
         filter[level] = !filter[level];
         this.setState({filter: filter});
     },

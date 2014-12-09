@@ -35,7 +35,13 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 class Flows(tornado.web.RequestHandler):
     def get(self):
         self.write(dict(
-            flows=[f.get_state(short=True) for f in self.application.state.flows]
+            list=[f.get_state(short=True) for f in self.application.state.flows]
+        ))
+
+class Events(tornado.web.RequestHandler):
+    def get(self):
+        self.write(dict(
+            list=list(self.application.state.events)
         ))
 
 
@@ -54,6 +60,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/", IndexHandler),
             (r"/updates", ClientConnection),
+            (r"/events", Events),
             (r"/flows", Flows),
             (r"/flows/clear", FlowClear),
         ]

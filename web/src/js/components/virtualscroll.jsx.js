@@ -5,15 +5,17 @@ var VirtualScrollMixin = {
             stop: 0
         };
     },
-    componentWillMount: function(){
-        if(!this.props.rowHeight){
+    componentWillMount: function () {
+        if (!this.props.rowHeight) {
             console.warn("VirtualScrollMixin: No rowHeight specified", this);
         }
     },
-    getPlaceholderTop: function () {
+    getPlaceholderTop: function (total) {
         var Tag = this.props.placeholderTagName || "tr";
+        // When a large trunk of elements is removed from the button, start may be far off the viewport.
+        // To make this issue less severe, limit the top placeholder to the total number of rows.
         var style = {
-            height: this.state.start * this.props.rowHeight
+            height: Math.min(this.state.start, total) * this.props.rowHeight
         };
         var spacer = <Tag key="placeholder-top" style={style}></Tag>;
 
@@ -46,7 +48,7 @@ var VirtualScrollMixin = {
             stop: stop
         });
     },
-    renderRows: function(elems){
+    renderRows: function (elems) {
         var rows = [];
         var max = Math.min(elems.length, this.state.stop);
 
@@ -56,7 +58,7 @@ var VirtualScrollMixin = {
         }
         return rows;
     },
-    scrollRowIntoView: function(index, head_height){
+    scrollRowIntoView: function (index, head_height) {
 
         var row_top = (index * this.props.rowHeight) + head_height;
         var row_bottom = row_top + this.props.rowHeight;

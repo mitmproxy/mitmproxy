@@ -12,7 +12,7 @@ var MainView = React.createClass({
         }
     },
     openView: function (store) {
-        var view = new FlowView(store);
+        var view = new StoreView(store);
         this.setState({
             view: view
         });

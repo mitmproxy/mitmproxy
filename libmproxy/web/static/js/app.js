@@ -78,9 +78,9 @@ Dispatcher.prototype.register = function (callback) {
     this.callbacks.push(callback);
 };
 Dispatcher.prototype.unregister = function (callback) {
-    var index = this.callbacks.indexOf(f);
+    var index = this.callbacks.indexOf(callback);
     if (index >= 0) {
-        this.callbacks.splice(this.callbacks.indexOf(f), 1);
+        this.callbacks.splice(index, 1);
     }
 };
 Dispatcher.prototype.dispatch = function (payload) {
@@ -111,13 +111,18 @@ var ActionTypes = {
     UPDATE_SETTINGS: "update_settings",
 
     // EventLog
+    EVENT_STORE: "events",
     ADD_EVENT: "add_event",
 
     // Flow
-    ADD_FLOW: "add_flow",
-    UPDATE_FLOW: "update_flow",
-    REMOVE_FLOW: "remove_flow",
-    RESET_FLOWS: "reset_flows",
+    FLOW_STORE: "flows",
+};
+
+var StoreCmds = {
+    ADD: "add",
+    UPDATE: "update",
+    REMOVE: "remove",
+    RESET: "reset"
 };
 
 var ConnectionActions = {
@@ -155,7 +160,8 @@ var EventLogActions_event_id = 0;
 var EventLogActions = {
     add_event: function (message) {
         AppDispatcher.dispatchViewAction({
-            type: ActionTypes.ADD_EVENT,
+            type: ActionTypes.EVENT_STORE,
+            cmd: StoreCmds.ADD,
             data: {
                 message: message,
                 level: "web",
@@ -295,6 +301,9 @@ _.extend(Store.prototype, {
     },
     get: function (elem_id) {
         return this._list[this._pos_map[elem_id]];
+    },
+    index: function(elem_id) {
+        return this._pos_map[elem_id];
     }
 });
 
@@ -320,7 +329,7 @@ _.extend(LiveStore.prototype, Store.prototype, {
             return this.fetch();
         }
         if (event.type === this.type) {
-            if (event.cmd === "reset") {
+            if (event.cmd === StoreCmds.RESET) {
                 this.fetch();
             } else if (this._updates_before_fetch) {
                 console.log("defer update", event);
@@ -344,7 +353,7 @@ _.extend(LiveStore.prototype, Store.prototype, {
     handle_fetch: function (data) {
         this._fetchxhr = false;
         console.log(this.type + " fetched.", this._updates_before_fetch);
-        this.reset(data.flows);
+        this.reset(data.list);
         var updates = this._updates_before_fetch;
         this._updates_before_fetch = false;
         for (var i = 0; i < updates.length; i++) {
@@ -352,6 +361,103 @@ _.extend(LiveStore.prototype, Store.prototype, {
         }
     },
 });
+
+
+function SortByStoreOrder(elem) {
+    return this.store.index(elem.id);
+}
+
+var default_sort = SortByStoreOrder;
+var default_filt = function(elem){
+    return true;
+};
+
+function StoreView(store, filt, sortfun) {
+    EventEmitter.call(this);
+    filt = filt || default_filt;
+    sortfun = sortfun || default_sort;
+
+    this.store = store;
+    this.store._views.push(this);
+    this.recalculate(this.store._list, filt, sortfun);
+}
+
+_.extend(StoreView.prototype, EventEmitter.prototype, {
+    close: function () {
+        this.store._views = _.without(this.store._views, this);
+    },
+    recalculate: function (elems, filt, sortfun) {
+        if (filt) {
+            this.filt = filt;
+        }
+        if (sortfun) {
+            this.sortfun = sortfun.bind(this);
+        }
+
+        this.list = elems.filter(this.filt);
+        this.list.sort(function (a, b) {
+            return this.sortfun(a) - this.sortfun(b);
+        }.bind(this));
+        this.emit("recalculate");
+    },
+    index: function (elem) {
+        return _.sortedIndex(this.list, elem, this.sortfun);
+    },
+    add: function (elem) {
+        if (this.filt(elem)) {
+            var idx = this.index(elem);
+            if (idx === this.list.length) { //happens often, .push is way faster.
+                this.list.push(elem);
+            } else {
+                this.list.splice(idx, 0, elem);
+            }
+            this.emit("add", elem, idx);
+        }
+    },
+    update: function (elem) {
+        var idx;
+        var i = this.list.length;
+        // Search from the back, we usually update the latest entries.
+        while (i--) {
+            if (this.list[i].id === elem.id) {
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx === -1) { //not contained in list
+            this.add(elem);
+        } else if (!this.filt(elem)) {
+            this.remove(elem.id);
+        } else {
+            if (this.sortfun(this.list[idx]) !== this.sortfun(elem)) { //sortpos has changed
+                this.remove(this.list[idx]);
+                this.add(elem);
+            } else {
+                this.list[idx] = elem;
+                this.emit("update", elem, idx);
+            }
+        }
+    },
+    remove: function (elem_id) {
+        var idx = this.list.length;
+        while (idx--) {
+            if (this.list[idx].id === elem_id) {
+                this.list.splice(idx, 1);
+                this.emit("remove", elem_id, idx);
+                break;
+            }
+        }
+    }
+});
+
+
+function FlowStore() {
+    return new LiveStore(ActionTypes.FLOW_STORE);
+}
+function EventLogStore() {
+    return new LiveStore(ActionTypes.EVENT_STORE);
+}
 function _SettingsStore() {
     EventEmitter.call(this);
 
@@ -381,210 +487,8 @@ _.extend(_SettingsStore.prototype, EventEmitter.prototype, {
 var SettingsStore = new _SettingsStore();
 AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
 
-//
-// We have an EventLogView and an EventLogStore:
-// The basic architecture is that one can request views on the event log
-// from the store, which returns a view object and then deals with getting the data required for the view.
-// The view object is accessed by React components and distributes updates etc.
-//
-// See also: components/EventLog.react.js
-function EventLogView(store, live) {
-    EventEmitter.call(this);
-    this._store = store;
-    this.live = live;
-    this.log = [];
-
-    this.add = this.add.bind(this);
-
-    if (live) {
-        this._store.addListener(ActionTypes.ADD_EVENT, this.add);
-    }
-}
-_.extend(EventLogView.prototype, EventEmitter.prototype, {
-    close: function () {
-        this._store.removeListener(ActionTypes.ADD_EVENT, this.add);
-    },
-    getAll: function () {
-        return this.log;
-    },
-    add: function (entry) {
-        this.log.push(entry);
-        if (this.log.length > 200) {
-            this.log.shift();
-        }
-        this.emit("change");
-    },
-    add_bulk: function (messages) {
-        var log = messages;
-        var last_id = log[log.length - 1].id;
-        var to_add = _.filter(this.log, function (entry) {
-            return entry.id > last_id;
-        });
-        this.log = log.concat(to_add);
-        this.emit("change");
-    }
-});
 
 
-function _EventLogStore() {
-    EventEmitter.call(this);
-}
-_.extend(_EventLogStore.prototype, EventEmitter.prototype, {
-    getView: function (since) {
-        var view = new EventLogView(this, !since);
-        return view;
-        /*
-         //TODO: Really do bulk retrieval of last messages.
-         window.setTimeout(function () {
-         view.add_bulk([
-         {
-         id: 1,
-         message: "Hello World"
-         },
-         {
-         id: 2,
-         message: "I was already transmitted as an event."
-         }
-         ]);
-         }, 100);
-
-         var id = 2;
-         view.add({
-         id: id++,
-         message: "I was already transmitted as an event."
-         });
-         view.add({
-         id: id++,
-         message: "I was only transmitted as an event before the bulk was added.."
-         });
-         window.setInterval(function () {
-         view.add({
-         id: id++,
-         message: "."
-         });
-         }, 1000);
-         return view;
-         */
-    },
-    handle: function (action) {
-        switch (action.type) {
-            case ActionTypes.ADD_EVENT:
-                this.emit(ActionTypes.ADD_EVENT, action.data);
-                break;
-            default:
-                return;
-        }
-    }
-});
-
-
-var EventLogStore = new _EventLogStore();
-AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
-function LiveFlowStore() {
-    return new LiveStore("flows");
-}
-
-function SortByInsertionOrder() {
-    this.i = 0;
-    this.map = {};
-    this.key = this.key.bind(this);
-}
-SortByInsertionOrder.prototype.key = function (flow) {
-    if (!(flow.id in this.map)) {
-        this.i++;
-        this.map[flow.id] = this.i;
-    }
-    return this.map[flow.id];
-};
-
-var default_sort = (new SortByInsertionOrder()).key;
-
-function FlowView(store, filt, sortfun) {
-    EventEmitter.call(this);
-    filt = filt || function (flow) {
-        return true;
-    };
-    sortfun = sortfun || default_sort;
-
-    this.store = store;
-    this.store._views.push(this);
-    this.recalculate(this.store._list, filt, sortfun);
-}
-
-_.extend(FlowView.prototype, EventEmitter.prototype, {
-    close: function () {
-        this.store._views = _.without(this.store._views, this);
-    },
-    recalculate: function (flows, filt, sortfun) {
-        if (filt) {
-            this.filt = filt;
-        }
-        if (sortfun) {
-            this.sortfun = sortfun;
-        }
-
-        //Ugly workaround: Call .sortfun() for each flow once in order,
-        //so that SortByInsertionOrder make sense.
-        for (var i = 0; i < flows.length; i++) {
-            this.sortfun(flows[i]);
-        }
-
-        this.flows = flows.filter(this.filt);
-        this.flows.sort(function (a, b) {
-            return this.sortfun(a) - this.sortfun(b);
-        }.bind(this));
-        this.emit("recalculate");
-    },
-    index: function (flow) {
-        return _.sortedIndex(this.flows, flow, this.sortfun);
-    },
-    add: function (flow) {
-        if (this.filt(flow)) {
-            var idx = this.index(flow);
-            if (idx === this.flows.length) { //happens often, .push is way faster.
-                this.flows.push(flow);
-            } else {
-                this.flows.splice(idx, 0, flow);
-            }
-            this.emit("add", flow, idx);
-        }
-    },
-    update: function (flow) {
-        var idx;
-        var i = this.flows.length;
-        // Search from the back, we usually update the latest flows.
-        while (i--) {
-            if (this.flows[i].id === flow.id) {
-                idx = i;
-                break;
-            }
-        }
-
-        if (idx === -1) { //not contained in list
-            this.add(flow);
-        } else if (!this.filt(flow)) {
-            this.remove(flow.id);
-        } else {
-            if (this.sortfun(this.flows[idx]) !== this.sortfun(flow)) { //sortpos has changed
-                this.remove(this.flows[idx]);
-                this.add(flow);
-            } else {
-                this.flows[idx] = flow;
-                this.emit("update", flow, idx);
-            }
-        }
-    },
-    remove: function (flow_id) {
-        var i = this.flows.length;
-        while (i--) {
-            if (this.flows[i].id === flow_id) {
-                this.flows.splice(i, 1);
-                this.emit("remove", flow_id, i);
-                break;
-            }
-        }
-    }
-});
 function Connection(url) {
 
     if (url[0] === "/") {
@@ -736,10 +640,12 @@ var VirtualScrollMixin = {
             console.warn("VirtualScrollMixin: No rowHeight specified", this);
         }
     },
-    getPlaceholderTop: function () {
+    getPlaceholderTop: function (total) {
         var Tag = this.props.placeholderTagName || "tr";
+        // When a large trunk of elements is removed from the button, start may be far off the viewport.
+        // To make this issue less severe, limit the top placeholder to the total number of rows.
         var style = {
-            height: this.state.start * this.props.rowHeight
+            height: Math.min(this.state.start , total) * this.props.rowHeight
         };
         var spacer = React.createElement(Tag, {key: "placeholder-top", style: style});
 
@@ -1143,7 +1049,7 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
     },
     render: function () {
         //console.log("render flowtable", this.state.start, this.state.stop, this.props.selected);
-        var flows = this.props.view ? this.props.view.flows : [];
+        var flows = this.props.view ? this.props.view.list : [];
 
         var rows = this.renderRows(flows);
 
@@ -1153,7 +1059,7 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
                     React.createElement(FlowTableHead, {ref: "head", 
                         columns: this.state.columns}), 
                     React.createElement("tbody", {ref: "body"}, 
-                         this.getPlaceholderTop(), 
+                         this.getPlaceholderTop(flows.length), 
                         rows, 
                          this.getPlaceholderBottom(flows.length) 
                     )
@@ -1528,7 +1434,7 @@ var MainView = React.createClass({displayName: 'MainView',
         }
     },
     openView: function (store) {
-        var view = new FlowView(store);
+        var view = new StoreView(store);
         this.setState({
             view: view
         });
@@ -1688,32 +1594,33 @@ var LogMessage = React.createClass({displayName: 'LogMessage',
 
 var EventLogContents = React.createClass({displayName: 'EventLogContents',
     mixins: [AutoScrollMixin, VirtualScrollMixin],
-    getInitialState: function () {
+    getInitialState: function(){
+        var store = new EventLogStore();
+        var view = new StoreView(store, function(entry){
+            return this.props.filter[entry.level];
+        }.bind(this));
+        view.addListener("add recalculate", this.onEventLogChange);
         return {
+            store: store,
+            view: view,
             log: []
         };
     },
-    componentDidMount: function () {
-        this.log = EventLogStore.getView();
-        this.log.addListener("change", this.onEventLogChange);
-    },
     componentWillUnmount: function () {
-        this.log.removeListener("change", this.onEventLogChange);
-        this.log.close();
+        this.state.view.removeListener("add recalculate", this.onEventLogChange);
+        this.state.view.close();
+        this.state.store.close();
     },
     onEventLogChange: function () {
-        var log = this.log.getAll().filter(function (entry) {
-            return this.props.filter[entry.level];
-        }.bind(this));
         this.setState({
-            log: log
+            log: this.state.view.list
         });
     },
-    componentWillReceiveProps: function () {
-        if (this.log) {
-            this.onEventLogChange();
+    componentWillReceiveProps: function (nextProps) {
+        if(nextProps.filter !== this.props.filter){
+            this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
+            this.state.view.recalculate(this.state.store._list);
         }
-
     },
     getDefaultProps: function () {
         return {
@@ -1729,7 +1636,7 @@ var EventLogContents = React.createClass({displayName: 'EventLogContents',
         var rows = this.renderRows(this.state.log);
 
         return React.createElement("pre", {onScroll: this.onScroll}, 
-             this.getPlaceholderTop(), 
+             this.getPlaceholderTop(this.state.log.length), 
             rows, 
              this.getPlaceholderBottom(this.state.log.length) 
         );
@@ -1775,7 +1682,7 @@ var EventLog = React.createClass({displayName: 'EventLog',
         });
     },
     toggleLevel: function (level) {
-        var filter = this.state.filter;
+        var filter = _.extend({}, this.state.filter);
         filter[level] = !filter[level];
         this.setState({filter: filter});
     },
@@ -1820,7 +1727,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
     getInitialState: function () {
         return {
             settings: SettingsStore.getAll(),
-            flowStore: new LiveFlowStore()
+            flowStore: new FlowStore()
         };
     },
     componentDidMount: function () {

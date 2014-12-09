@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function
+import collections
 import tornado.ioloop
 import tornado.httpserver
 from .. import controller, flow
@@ -51,6 +52,22 @@ class WebState(flow.State):
         self.view._close()
         self.view = WebFlowView(self.flows)
 
+        self._last_event_id = 0
+        self.events = collections.deque(maxlen=1000)
+
+    def add_event(self, e, level):
+        self._last_event_id += 1
+        entry = {
+            "id": self._last_event_id,
+            "message": e,
+            "level": level
+        }
+        self.events.append(entry)
+        app.ClientConnection.broadcast(
+            type="events",
+            cmd="add",
+            data=entry
+        )
 
 class Options(object):
     attributes = [
@@ -99,8 +116,6 @@ class WebMaster(flow.FlowMaster):
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self.state, self.options.wdebug)
 
-        self.last_log_id = 0
-
     def tick(self):
         flow.FlowMaster.tick(self, self.masterq, timeout=0)
 
@@ -132,16 +147,6 @@ class WebMaster(flow.FlowMaster):
             f.reply()
         return f
 
-    def handle_log(self, l):
-        self.last_log_id += 1
-        app.ClientConnection.broadcast(
-            type="add_event",
-            data={
-                "id": self.last_log_id,
-                "message": l.msg,
-                "level": l.level
-            }
-        )
-        self.add_event(l.msg, l.level)
-        l.reply()
-
+    def add_event(self, e, level="info"):
+        super(WebMaster, self).add_event(e, level)
+        self.state.add_event(e, level)
