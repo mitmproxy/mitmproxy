@@ -1,114 +1,6 @@
-function FlowStore() {
-    this._views = [];
-    this.reset();
-}
-_.extend(FlowStore.prototype, {
-    add: function (flow) {
-        this._pos_map[flow.id] = this._flow_list.length;
-        this._flow_list.push(flow);
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].add(flow);
-        }
-    },
-    update: function (flow) {
-        this._flow_list[this._pos_map[flow.id]] = flow;
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].update(flow);
-        }
-    },
-    remove: function (flow_id) {
-        this._flow_list.splice(this._pos_map[flow_id], 1);
-        this._build_map();
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].remove(flow_id);
-        }
-    },
-    reset: function (flows) {
-        this._flow_list = flows || [];
-        this._build_map();
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].recalculate(this._flow_list);
-        }
-    },
-    _build_map: function () {
-        this._pos_map = {};
-        for (var i = 0; i < this._flow_list.length; i++) {
-            var flow = this._flow_list[i];
-            this._pos_map[flow.id] = i;
-        }
-    },
-    get: function (flow_id) {
-        return this._flow_list[this._pos_map[flow_id]];
-    }
-});
-
-
 function LiveFlowStore() {
-    FlowStore.call(this);
-    this.updates_before_fetch = undefined;
-    this._fetchxhr = false;
-
-    this.handle = this.handle.bind(this);
-    AppDispatcher.register(this.handle);
-
-    // Avoid double-fetch on startup.
-    if(!(window.ws && window.ws.readyState === WebSocket.CONNECTING)) {
-        this.fetch();
-    }
+    return new LiveStore("flows");
 }
-_.extend(LiveFlowStore.prototype, FlowStore.prototype, {
-    handle: function (event) {
-        switch (event.type) {
-            case ActionTypes.CONNECTION_OPEN:
-            case ActionTypes.RESET_FLOWS:
-                this.fetch();
-                break;
-            case ActionTypes.ADD_FLOW:
-            case ActionTypes.UPDATE_FLOW:
-            case ActionTypes.REMOVE_FLOW:
-                if (this.updates_before_fetch) {
-                    console.log("defer update", type, data);
-                    this.updates_before_fetch.push(event);
-                } else {
-                    if(event.type === ActionTypes.ADD_FLOW){
-                        this.add(event.data);
-                    } else if (event.type === ActionTypes.UPDATE_FLOW){
-                        this.update(event.data);
-                    } else {
-                        this.remove(event.data);
-                    }
-                }
-                break;
-        }
-    },
-    close: function () {
-        AppDispatcher.unregister(this.handle);
-    },
-    add: function (flow) {
-        // Make sure that deferred adds don't add an element twice.
-        if (!(flow.id in this._pos_map)) {
-            FlowStore.prototype.add.call(this, flow);
-        }
-    },
-    fetch: function () {
-        console.log("fetch");
-        if (this._fetchxhr) {
-            this._fetchxhr.abort();
-        }
-        this._fetchxhr = $.getJSON("/flows", this.handle_fetch.bind(this));
-        this.updates_before_fetch = [];  // (JS: empty array is true)
-    },
-    handle_fetch: function (data) {
-        this._fetchxhr = false;
-        console.log("Flows fetched.", this.updates_before_fetch);
-        this.reset(data.flows);
-        var updates = this.updates_before_fetch;
-        this.updates_before_fetch = false;
-        for (var i = 0; i < updates.length; i++) {
-            this.handle(updates[i]);
-        }
-    },
-});
 
 function SortByInsertionOrder() {
     this.i = 0;
@@ -134,7 +26,7 @@ function FlowView(store, filt, sortfun) {
 
     this.store = store;
     this.store._views.push(this);
-    this.recalculate(this.store._flow_list, filt, sortfun);
+    this.recalculate(this.store._list, filt, sortfun);
 }
 
 _.extend(FlowView.prototype, EventEmitter.prototype, {

@@ -15,19 +15,34 @@ class WebFlowView(flow.FlowView):
 
     def _add(self, f):
         super(WebFlowView, self)._add(f)
-        app.ClientConnection.broadcast("add_flow", f.get_state(short=True))
+        app.ClientConnection.broadcast(
+            type="flows",
+            cmd="add",
+            data=f.get_state(short=True)
+        )
 
     def _update(self, f):
         super(WebFlowView, self)._update(f)
-        app.ClientConnection.broadcast("update_flow", f.get_state(short=True))
+        app.ClientConnection.broadcast(
+            type="flows",
+            cmd="update",
+            data=f.get_state(short=True)
+        )
 
     def _remove(self, f):
         super(WebFlowView, self)._remove(f)
-        app.ClientConnection.broadcast("remove_flow", f.get_state(short=True))
+        app.ClientConnection.broadcast(
+            type="flows",
+            cmd="remove",
+            data=f.get_state(short=True)
+        )
 
     def _recalculate(self, flows):
         super(WebFlowView, self)._recalculate(flows)
-        app.ClientConnection.broadcast("reset_flows", None)
+        app.ClientConnection.broadcast(
+            type="flows",
+            cmd="reset"
+        )
 
 
 class WebState(flow.State):
@@ -120,7 +135,8 @@ class WebMaster(flow.FlowMaster):
     def handle_log(self, l):
         self.last_log_id += 1
         app.ClientConnection.broadcast(
-            "add_event", {
+            type="add_event",
+            data={
                 "id": self.last_log_id,
                 "message": l.msg,
                 "level": l.level

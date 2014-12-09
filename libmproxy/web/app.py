@@ -23,13 +23,8 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
         self.connections.remove(self)
 
     @classmethod
-    def broadcast(cls, type, data):
-        message = json.dumps(
-            {
-                "type": type,
-                "data": data
-            }
-        )
+    def broadcast(cls, **kwargs):
+        message = json.dumps(kwargs)
         for conn in cls.connections:
             try:
                 conn.write_message(message)
