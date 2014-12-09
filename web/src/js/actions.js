@@ -1,13 +1,38 @@
 var ActionTypes = {
-    //Settings
+    // Connection
+    CONNECTION_OPEN: "connection_open",
+    CONNECTION_CLOSE: "connection_close",
+    CONNECTION_ERROR: "connection_error",
+
+    // Settings
     UPDATE_SETTINGS: "update_settings",
 
-    //EventLog
+    // EventLog
     ADD_EVENT: "add_event",
 
-    //Flow
+    // Flow
     ADD_FLOW: "add_flow",
     UPDATE_FLOW: "update_flow",
+    REMOVE_FLOW: "remove_flow",
+    RESET_FLOWS: "reset_flows",
+};
+
+var ConnectionActions = {
+    open: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CONNECTION_OPEN
+        });
+    },
+    close: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CONNECTION_CLOSE
+        });
+    },
+    error: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CONNECTION_ERROR
+        });
+    }
 };
 
 var SettingsActions = {
@@ -23,7 +48,7 @@ var SettingsActions = {
     }
 };
 
-var event_id = 0;
+var EventLogActions_event_id = 0;
 var EventLogActions = {
     add_event: function (message) {
         AppDispatcher.dispatchViewAction({
@@ -31,7 +56,7 @@ var EventLogActions = {
             data: {
                 message: message,
                 level: "web",
-                id: "viewAction-" + event_id++
+                id: "viewAction-" + EventLogActions_event_id++
             }
         });
     }

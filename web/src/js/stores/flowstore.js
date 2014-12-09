@@ -1,4 +1,4 @@
-function FlowStore(endpoint) {
+function FlowStore() {
     this._views = [];
     this.reset();
 }
@@ -43,21 +43,46 @@ _.extend(FlowStore.prototype, {
 });
 
 
-function LiveFlowStore(endpoint) {
+function LiveFlowStore() {
     FlowStore.call(this);
     this.updates_before_fetch = undefined;
     this._fetchxhr = false;
-    this.endpoint = endpoint || "/flows";
-    this.conn = new Connection(this.endpoint + "/updates");
-    this.conn.onopen = this._onopen.bind(this);
-    this.conn.onmessage = function (e) {
-        var message = JSON.parse(e.data);
-        this.handle_update(message.type, message.data);
-    }.bind(this);
+
+    this.handle = this.handle.bind(this);
+    AppDispatcher.register(this.handle);
+
+    // Avoid double-fetch on startup.
+    if(!(window.ws && window.ws.readyState === WebSocket.CONNECTING)) {
+        this.fetch();
+    }
 }
 _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
+    handle: function (event) {
+        switch (event.type) {
+            case ActionTypes.CONNECTION_OPEN:
+            case ActionTypes.RESET_FLOWS:
+                this.fetch();
+                break;
+            case ActionTypes.ADD_FLOW:
+            case ActionTypes.UPDATE_FLOW:
+            case ActionTypes.REMOVE_FLOW:
+                if (this.updates_before_fetch) {
+                    console.log("defer update", type, data);
+                    this.updates_before_fetch.push(event);
+                } else {
+                    if(event.type === ActionTypes.ADD_FLOW){
+                        this.add(event.data);
+                    } else if (event.type === ActionTypes.UPDATE_FLOW){
+                        this.update(event.data);
+                    } else {
+                        this.remove(event.data);
+                    }
+                }
+                break;
+        }
+    },
     close: function () {
-        this.conn.close();
+        AppDispatcher.unregister(this.handle);
     },
     add: function (flow) {
         // Make sure that deferred adds don't add an element twice.
@@ -65,31 +90,13 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
             FlowStore.prototype.add.call(this, flow);
         }
     },
-    _onopen: function () {
-        //Update stream openend, fetch list of flows.
-        console.log("Update Connection opened, fetching flows...");
-        this.fetch();
-    },
     fetch: function () {
+        console.log("fetch");
         if (this._fetchxhr) {
             this._fetchxhr.abort();
         }
-        this._fetchxhr = $.getJSON(this.endpoint, this.handle_fetch.bind(this));
+        this._fetchxhr = $.getJSON("/flows", this.handle_fetch.bind(this));
         this.updates_before_fetch = [];  // (JS: empty array is true)
-    },
-    handle_update: function (type, data) {
-        console.log("LiveFlowStore.handle_update", type, data);
-
-        if (type === "reset") {
-            return this.fetch();
-        }
-
-        if (this.updates_before_fetch) {
-            console.log("defer update", type, data);
-            this.updates_before_fetch.push(arguments);
-        } else {
-            this[type](data);
-        }
     },
     handle_fetch: function (data) {
         this._fetchxhr = false;
@@ -98,7 +105,7 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
         var updates = this.updates_before_fetch;
         this.updates_before_fetch = false;
         for (var i = 0; i < updates.length; i++) {
-            this.handle_update.apply(this, updates[i]);
+            this.handle(updates[i]);
         }
     },
 });

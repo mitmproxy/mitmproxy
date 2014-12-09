@@ -15,19 +15,19 @@ class WebFlowView(flow.FlowView):
 
     def _add(self, f):
         super(WebFlowView, self)._add(f)
-        app.FlowUpdates.broadcast("add", f.get_state(short=True))
+        app.ClientConnection.broadcast("add_flow", f.get_state(short=True))
 
     def _update(self, f):
         super(WebFlowView, self)._update(f)
-        app.FlowUpdates.broadcast("update", f.get_state(short=True))
+        app.ClientConnection.broadcast("update_flow", f.get_state(short=True))
 
     def _remove(self, f):
         super(WebFlowView, self)._remove(f)
-        app.FlowUpdates.broadcast("remove", f.get_state(short=True))
+        app.ClientConnection.broadcast("remove_flow", f.get_state(short=True))
 
     def _recalculate(self, flows):
         super(WebFlowView, self)._recalculate(flows)
-        app.FlowUpdates.broadcast("reset", None)
+        app.ClientConnection.broadcast("reset_flows", None)
 
 
 class WebState(flow.State):

@@ -1,12 +1,12 @@
 /*!
- * QUnit 1.15.0
+ * QUnit 1.16.0
  * http://qunitjs.com/
  *
- * Copyright 2014 jQuery Foundation and other contributors
+ * Copyright 2006, 2014 jQuery Foundation and other contributors
  * Released under the MIT license
  * http://jquery.org/license
  *
- * Date: 2014-08-08T16:00Z
+ * Date: 2014-12-03T16:32Z
  */
 
 /** Font Family and Sizes */
@@ -91,12 +91,24 @@
 	list-style-position: inside;
 }
 
+#qunit-tests > li {
+	display: none;
+}
+
+#qunit-tests li.pass, #qunit-tests li.running, #qunit-tests li.fail {
+	display: list-item;
+}
+
 #qunit-tests.hidepass li.pass, #qunit-tests.hidepass li.running  {
 	display: none;
 }
 
 #qunit-tests li strong {
 	cursor: pointer;
+}
+
+#qunit-tests li.skipped strong {
+	cursor: default;
 }
 
 #qunit-tests li a {
@@ -211,6 +223,21 @@
 
 #qunit-banner.qunit-fail                    { background-color: #EE5757; }
 
+/*** Skipped tests */
+
+#qunit-tests .skipped {
+	background-color: #EBECE9;
+}
+
+#qunit-tests .qunit-skipped-label {
+	background-color: #F4FF77;
+	display: inline-block;
+	font-style: normal;
+	color: #366097;
+	line-height: 1.8em;
+	padding: 0 0.5em;
+	margin: -0.4em 0.4em -0.4em 0;
+}
 
 /** Result */
 

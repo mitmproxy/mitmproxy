@@ -102,15 +102,40 @@ AppDispatcher.dispatchServerAction = function (action) {
 };
 
 var ActionTypes = {
-    //Settings
+    // Channel
+    CHANNEL_OPEN: "channel_open",
+    CHANNEL_CLOSE: "channel_close",
+    CHANNEL_ERROR: "channel_error",
+
+    // Settings
     UPDATE_SETTINGS: "update_settings",
 
-    //EventLog
+    // EventLog
     ADD_EVENT: "add_event",
 
-    //Flow
+    // Flow
     ADD_FLOW: "add_flow",
     UPDATE_FLOW: "update_flow",
+    REMOVE_FLOW: "remove_flow",
+    RESET_FLOWS: "reset_flows",
+};
+
+var ConnectionActions = {
+    open: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CHANNEL_OPEN
+        });
+    },
+    close: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CHANNEL_CLOSE
+        });
+    },
+    error: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CHANNEL_ERROR
+        });
+    }
 };
 
 var SettingsActions = {
@@ -126,7 +151,7 @@ var SettingsActions = {
     }
 };
 
-var event_id = 0;
+var EventLogActions_event_id = 0;
 var EventLogActions = {
     add_event: function (message) {
         AppDispatcher.dispatchViewAction({
@@ -134,7 +159,7 @@ var EventLogActions = {
             data: {
                 message: message,
                 level: "web",
-                id: "viewAction-" + event_id++
+                id: "viewAction-" + EventLogActions_event_id++
             }
         });
     }
@@ -344,7 +369,7 @@ _.extend(_EventLogStore.prototype, EventEmitter.prototype, {
 
 var EventLogStore = new _EventLogStore();
 AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
-function FlowStore(endpoint) {
+function FlowStore() {
     this._views = [];
     this.reset();
 }
@@ -389,21 +414,46 @@ _.extend(FlowStore.prototype, {
 });
 
 
-function LiveFlowStore(endpoint) {
+function LiveFlowStore() {
     FlowStore.call(this);
     this.updates_before_fetch = undefined;
     this._fetchxhr = false;
-    this.endpoint = endpoint || "/flows";
-    this.conn = new Connection(this.endpoint + "/updates");
-    this.conn.onopen = this._onopen.bind(this);
-    this.conn.onmessage = function (e) {
-        var message = JSON.parse(e.data);
-        this.handle_update(message.type, message.data);
-    }.bind(this);
+
+    this.handle = this.handle.bind(this);
+    AppDispatcher.register(this.handle);
+
+    // Avoid double-fetch on startup.
+    if(!(window.ws && window.ws.readyState === WebSocket.CONNECTING)) {
+        this.fetch();
+    }
 }
 _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
+    handle: function (event) {
+        switch (event.type) {
+            case ActionTypes.CHANNEL_OPEN:
+            case ActionTypes.RESET_FLOWS:
+                this.fetch();
+                break;
+            case ActionTypes.ADD_FLOW:
+            case ActionTypes.UPDATE_FLOW:
+            case ActionTypes.REMOVE_FLOW:
+                if (this.updates_before_fetch) {
+                    console.log("defer update", type, data);
+                    this.updates_before_fetch.push(event);
+                } else {
+                    if(event.type === ActionTypes.ADD_FLOW){
+                        this.add(event.data);
+                    } else if (event.type === ActionTypes.UPDATE_FLOW){
+                        this.update(event.data);
+                    } else {
+                        this.remove(event.data);
+                    }
+                }
+                break;
+        }
+    },
     close: function () {
-        this.conn.close();
+        AppDispatcher.unregister(this.handle);
     },
     add: function (flow) {
         // Make sure that deferred adds don't add an element twice.
@@ -411,31 +461,13 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
             FlowStore.prototype.add.call(this, flow);
         }
     },
-    _onopen: function () {
-        //Update stream openend, fetch list of flows.
-        console.log("Update Connection opened, fetching flows...");
-        this.fetch();
-    },
     fetch: function () {
+        console.log("fetch");
         if (this._fetchxhr) {
             this._fetchxhr.abort();
         }
-        this._fetchxhr = $.getJSON(this.endpoint, this.handle_fetch.bind(this));
+        this._fetchxhr = $.getJSON("/flows", this.handle_fetch.bind(this));
         this.updates_before_fetch = [];  // (JS: empty array is true)
-    },
-    handle_update: function (type, data) {
-        console.log("LiveFlowStore.handle_update", type, data);
-
-        if (type === "reset") {
-            return this.fetch();
-        }
-
-        if (this.updates_before_fetch) {
-            console.log("defer update", type, data);
-            this.updates_before_fetch.push(arguments);
-        } else {
-            this[type](data);
-        }
     },
     handle_fetch: function (data) {
         this._fetchxhr = false;
@@ -444,7 +476,7 @@ _.extend(LiveFlowStore.prototype, FlowStore.prototype, {
         var updates = this.updates_before_fetch;
         this.updates_before_fetch = false;
         for (var i = 0; i < updates.length; i++) {
-            this.handle_update.apply(this, updates[i]);
+            this.handle(updates[i]);
         }
     },
 });
@@ -550,44 +582,30 @@ _.extend(FlowView.prototype, EventEmitter.prototype, {
         }
     }
 });
-function Connection(url) {
-    if (url[0] != "/") {
-        this.url = url;
-    } else {
-        this.url = location.origin.replace("http", "ws") + url;
+function Channel(url) {
+
+    if (url[0] === "/") {
+        url = location.origin.replace("http", "ws") + url;
     }
-    var ws = new WebSocket(this.url);
+
+    var ws = new WebSocket(url);
     ws.onopen = function () {
-        this.onopen.apply(this, arguments);
-    }.bind(this);
-    ws.onmessage = function () {
-        this.onmessage.apply(this, arguments);
-    }.bind(this);
+        ConnectionActions.open();
+    };
+    ws.onmessage = function (message) {
+        var m = JSON.parse(message.data);
+        AppDispatcher.dispatchServerAction(m);
+    };
     ws.onerror = function () {
-        this.onerror.apply(this, arguments);
-    }.bind(this);
+        ConnectionActions.error();
+        EventLogActions.add_event("WebSocket connection error.");
+    };
     ws.onclose = function () {
-        this.onclose.apply(this, arguments);
-    }.bind(this);
-    this.ws = ws;
+        ConnectionActions.close();
+        EventLogActions.add_event("WebSocket connection closed.");
+    };
+    return ws;
 }
-Connection.prototype.onopen = function (open) {
-    console.debug("onopen", this, arguments);
-};
-Connection.prototype.onmessage = function (message) {
-    console.warn("onmessage (not implemented)", this, message.data);
-};
-Connection.prototype.onerror = function (error) {
-    EventLogActions.add_event("WebSocket Connection Error.");
-    console.debug("onerror", this, arguments);
-};
-Connection.prototype.onclose = function (close) {
-    EventLogActions.add_event("WebSocket Connection closed.");
-    console.debug("onclose", this, arguments);
-};
-Connection.prototype.close = function () {
-    this.ws.close();
-};
 //React utils. For other utilities, see ../utils.js
 
 var Splitter = React.createClass({displayName: 'Splitter',
@@ -1450,7 +1468,7 @@ var FlowDetail = React.createClass({displayName: 'FlowDetail',
         return tabs;
     },
     nextTab: function (i) {
-        var tabs = this.getTabs();
+        var tabs = this.getTabs(this.props.flow);
         var currentIndex = tabs.indexOf(this.getParams().detailTab);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
         var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
@@ -1519,7 +1537,7 @@ var MainView = React.createClass({displayName: 'MainView',
         this.forceUpdate();
         var selected = this.getSelected();
         if(selected){
-            this.refs.flowTable.scrollIntoView();
+            this.refs.flowTable.scrollIntoView(selected);
         }
     },
     onUpdate: function (flow) {
@@ -1841,13 +1859,10 @@ var routes = (
     )
 );
 $(function () {
+    window.ws = new Channel("/updates");
+
     ReactRouter.run(routes, function (Handler) {
         React.render(React.createElement(Handler, null), document.body);
     });
-    var UpdateConnection = new Connection("/updates");
-    UpdateConnection.onmessage = function (message) {
-        var m = JSON.parse(message.data);
-        AppDispatcher.dispatchServerAction(m);
-    };
 });
 //# sourceMappingURL=app.js.map

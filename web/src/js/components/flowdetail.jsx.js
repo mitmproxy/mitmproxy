@@ -306,7 +306,7 @@ var FlowDetail = React.createClass({
         return tabs;
     },
     nextTab: function (i) {
-        var tabs = this.getTabs();
+        var tabs = this.getTabs(this.props.flow);
         var currentIndex = tabs.indexOf(this.getParams().detailTab);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
         var nextIndex = (currentIndex + i + tabs.length) % tabs.length;

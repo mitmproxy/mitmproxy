@@ -24,7 +24,7 @@ var MainView = React.createClass({
         this.forceUpdate();
         var selected = this.getSelected();
         if(selected){
-            this.refs.flowTable.scrollIntoView();
+            this.refs.flowTable.scrollIntoView(selected);
         }
     },
     onUpdate: function (flow) {

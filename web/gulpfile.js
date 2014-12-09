@@ -30,7 +30,6 @@ var path = {
             'vendor/lodash/lodash.js',
             'vendor/react/react-with-addons.js',
             'vendor/react-router/react-router.js',
-            'vendor/react-bootstrap/react-bootstrap.js'
         ],
         app: [
             'js/utils.js',

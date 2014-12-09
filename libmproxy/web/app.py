@@ -49,10 +49,6 @@ class FlowClear(tornado.web.RequestHandler):
         self.application.state.clear()
 
 
-class FlowUpdates(WebSocketEventBroadcaster):
-    connections = set()
-
-
 class ClientConnection(WebSocketEventBroadcaster):
     connections = set()
 
@@ -65,7 +61,6 @@ class Application(tornado.web.Application):
             (r"/updates", ClientConnection),
             (r"/flows", Flows),
             (r"/flows/clear", FlowClear),
-            (r"/flows/updates", FlowUpdates),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
