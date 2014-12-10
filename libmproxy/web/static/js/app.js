@@ -72,6 +72,28 @@ var formatTimeStamp = function (seconds) {
 };
 
 
+function listToDict(list, propKey, propVal) {
+    var dict = {};
+    for (var i = 0; i < list.length; i++) {
+        var e = list[i];
+        dict[e[propKey]] = e[propVal];
+    }
+    return dict;
+}
+function dictToList(dict, propKey, propVal) {
+    var list = [];
+    for (var key in dict) {
+        if (dict.hasOwnProperty(key)) {
+            var elem = {};
+            elem[propKey] = key;
+            elem[propVal] = dict[key];
+            list.push(elem);
+        }
+    }
+    return list;
+}
+
+
 function EventEmitter() {
     this.listeners = {};
 }
@@ -144,11 +166,11 @@ var ActionTypes = {
     CONNECTION_ERROR: "connection_error",
 
     // Settings
+    SETTINGS_STORE: "settings",
     UPDATE_SETTINGS: "update_settings",
 
     // EventLog
     EVENT_STORE: "events",
-    ADD_EVENT: "add_event",
 
     // Flow
     FLOW_STORE: "flows",
@@ -181,13 +203,13 @@ var ConnectionActions = {
 
 var SettingsActions = {
     update: function (settings) {
-        settings = _.merge({}, SettingsStore.getAll(), settings);
+
         //TODO: Update server.
 
-        //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
-            type: ActionTypes.UPDATE_SETTINGS,
-            settings: settings
+            type: ActionTypes.SETTINGS_STORE,
+            cmd: StoreCmds.UPDATE,
+            data: settings
         });
     }
 };
@@ -253,68 +275,71 @@ var RequestUtils = _.extend(_MessageUtils, {
 });
 
 var ResponseUtils = _.extend(_MessageUtils, {});
-function Store() {
-    this._views = [];
+function ListStore() {
+    EventEmitter.call(this);
     this.reset();
 }
-_.extend(Store.prototype, {
+_.extend(ListStore.prototype, EventEmitter.prototype, {
     add: function (elem) {
         if (elem.id in this._pos_map) {
             return;
         }
-
-        this._pos_map[elem.id] = this._list.length;
-        this._list.push(elem);
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].add(elem);
-        }
+        this._pos_map[elem.id] = this.list.length;
+        this.list.push(elem);
+        this.emit("add", elem);
     },
     update: function (elem) {
         if (!(elem.id in this._pos_map)) {
             return;
         }
-
-        this._list[this._pos_map[elem.id]] = elem;
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].update(elem);
-        }
+        this.list[this._pos_map[elem.id]] = elem;
+        this.emit("update", elem);
     },
     remove: function (elem_id) {
         if (!(elem.id in this._pos_map)) {
             return;
         }
-
-        this._list.splice(this._pos_map[elem_id], 1);
+        this.list.splice(this._pos_map[elem_id], 1);
         this._build_map();
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].remove(elem_id);
-        }
+        this.emit("remove", elem_id);
     },
     reset: function (elems) {
-        this._list = elems || [];
+        this.list = elems || [];
         this._build_map();
-        for (var i = 0; i < this._views.length; i++) {
-            this._views[i].recalculate(this._list);
-        }
+        this.emit("recalculate", this.list);
     },
     _build_map: function () {
         this._pos_map = {};
-        for (var i = 0; i < this._list.length; i++) {
-            var elem = this._list[i];
+        for (var i = 0; i < this.list.length; i++) {
+            var elem = this.list[i];
             this._pos_map[elem.id] = i;
         }
     },
     get: function (elem_id) {
-        return this._list[this._pos_map[elem_id]];
+        return this.list[this._pos_map[elem_id]];
     },
-    index: function(elem_id) {
+    index: function (elem_id) {
         return this._pos_map[elem_id];
     }
 });
 
 
-function LiveStore(type) {
-    Store.call(this);
+function DictStore() {
+    EventEmitter.call(this);
+    this.reset();
+}
+_.extend(DictStore.prototype, EventEmitter.prototype, {
+    update: function (dict) {
+        _.merge(this.dict, dict);
+        this.emit("recalculate", this.dict);
+    },
+    reset: function (dict) {
+        this.dict = dict || {};
+        this.emit("recalculate", this.dict);
+    }
+});
+
+function LiveStoreMixin(type) {
     this.type = type;
 
     this._updates_before_fetch = undefined;
@@ -328,7 +353,7 @@ function LiveStore(type) {
         this.fetch();
     }
 }
-_.extend(LiveStore.prototype, Store.prototype, {
+_.extend(LiveStoreMixin.prototype, {
     handle: function (event) {
         if (event.type === ActionTypes.CONNECTION_OPEN) {
             return this.fetch();
@@ -347,18 +372,28 @@ _.extend(LiveStore.prototype, Store.prototype, {
     close: function () {
         AppDispatcher.unregister(this.handle);
     },
-    fetch: function () {
+    fetch: function (data) {
         console.log("fetch " + this.type);
         if (this._fetchxhr) {
             this._fetchxhr.abort();
         }
-        this._fetchxhr = $.getJSON("/" + this.type, this.handle_fetch.bind(this));
-        this._updates_before_fetch = [];  // (JS: empty array is true)
+        this._updates_before_fetch = []; // (JS: empty array is true)
+        if (data) {
+            this.handle_fetch(data);
+        } else {
+            this._fetchxhr = $.getJSON("/" + this.type)
+                .done(function (message) {
+                    this.handle_fetch(message.data);
+                }.bind(this))
+                .fail(function () {
+                    EventLogActions.add_event("Could not fetch " + this.type);
+                }.bind(this));
+        }
     },
     handle_fetch: function (data) {
         this._fetchxhr = false;
         console.log(this.type + " fetched.", this._updates_before_fetch);
-        this.reset(data.list);
+        this.reset(data);
         var updates = this._updates_before_fetch;
         this._updates_before_fetch = false;
         for (var i = 0; i < updates.length; i++) {
@@ -367,15 +402,40 @@ _.extend(LiveStore.prototype, Store.prototype, {
     },
 });
 
+function LiveListStore(type) {
+    ListStore.call(this);
+    LiveStoreMixin.call(this, type);
+}
+_.extend(LiveListStore.prototype, ListStore.prototype, LiveStoreMixin.prototype);
+
+function LiveDictStore(type) {
+    DictStore.call(this);
+    LiveStoreMixin.call(this, type);
+}
+_.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
+
 
 function FlowStore() {
-    return new LiveStore(ActionTypes.FLOW_STORE);
+    return new LiveListStore(ActionTypes.FLOW_STORE);
 }
 
+function SettingsStore() {
+    return new LiveDictStore(ActionTypes.SETTINGS_STORE);
+}
 
 function EventLogStore() {
-    return new LiveStore(ActionTypes.EVENT_STORE);
+    LiveListStore.call(this, ActionTypes.EVENT_STORE);
 }
+_.extend(EventLogStore.prototype, LiveListStore.prototype, {
+    fetch: function(){
+        LiveListStore.prototype.fetch.apply(this, arguments);
+        if(this._fetchxhr){
+            this._fetchxhr.fail(function(){
+                this.handle_fetch(null);
+            }.bind(this));
+        }
+    }
+});
 function SortByStoreOrder(elem) {
     return this.store.index(elem.id);
 }
@@ -391,13 +451,25 @@ function StoreView(store, filt, sortfun) {
     sortfun = sortfun || default_sort;
 
     this.store = store;
-    this.store._views.push(this);
-    this.recalculate(this.store._list, filt, sortfun);
+
+    this.add = this.add.bind(this);
+    this.update = this.update.bind(this);
+    this.remove = this.remove.bind(this);
+    this.recalculate = this.recalculate.bind(this);
+    this.store.addListener("add", this.add);
+    this.store.addListener("update", this.update);
+    this.store.addListener("remove", this.remove);
+    this.store.addListener("recalculate", this.recalculate);
+
+    this.recalculate(this.store.list, filt, sortfun);
 }
 
 _.extend(StoreView.prototype, EventEmitter.prototype, {
     close: function () {
-        this.store._views = _.without(this.store._views, this);
+        this.store.removeListener("add", this.add);
+        this.store.removeListener("update", this.update);
+        this.store.removeListener("remove", this.remove);
+        this.store.removeListener("recalculate", this.recalculate);
     },
     recalculate: function (elems, filt, sortfun) {
         if (filt) {
@@ -463,34 +535,6 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         }
     }
 });
-function _SettingsStore() {
-    EventEmitter.call(this);
-
-    //FIXME: What do we do if we haven't requested anything from the server yet?
-    this.settings = {
-        version: "0.12",
-        showEventLog: true,
-        mode: "transparent",
-    };
-}
-_.extend(_SettingsStore.prototype, EventEmitter.prototype, {
-    getAll: function () {
-        return this.settings;
-    },
-    handle: function (action) {
-        switch (action.type) {
-            case ActionTypes.UPDATE_SETTINGS:
-                this.settings = action.settings;
-                this.emit("change");
-                break;
-            default:
-                return;
-        }
-    }
-});
-
-var SettingsStore = new _SettingsStore();
-AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
 
 function Connection(url) {
 
@@ -1493,7 +1537,7 @@ var MainView = React.createClass({displayName: 'MainView',
         }
     },
     selectFlowRelative: function (shift) {
-        var flows = this.state.view.flows;
+        var flows = this.state.view.list;
         var index;
         if (!this.getParams().flowId) {
             if (shift > 0) {
@@ -1609,22 +1653,29 @@ var LogMessage = React.createClass({displayName: 'LogMessage',
 
 var EventLogContents = React.createClass({displayName: 'EventLogContents',
     mixins: [AutoScrollMixin, VirtualScrollMixin],
-    getInitialState: function(){
-        var store = new EventLogStore();
-        var view = new StoreView(store, function(entry){
-            return this.props.filter[entry.level];
-        }.bind(this));
-        view.addListener("add recalculate", this.onEventLogChange);
+    getInitialState: function () {
         return {
-            store: store,
-            view: view,
             log: []
         };
     },
+    componentWillMount: function () {
+        this.openView(this.props.eventStore);
+    },
     componentWillUnmount: function () {
-        this.state.view.removeListener("add recalculate", this.onEventLogChange);
+        this.closeView();
+    },
+    openView: function (store) {
+        var view = new StoreView(store, function (entry) {
+            return this.props.filter[entry.level];
+        }.bind(this));
+        this.setState({
+            view: view
+        });
+
+        view.addListener("add recalculate", this.onEventLogChange);
+    },
+    closeView: function () {
         this.state.view.close();
-        this.state.store.close();
     },
     onEventLogChange: function () {
         this.setState({
@@ -1632,9 +1683,13 @@ var EventLogContents = React.createClass({displayName: 'EventLogContents',
         });
     },
     componentWillReceiveProps: function (nextProps) {
-        if(nextProps.filter !== this.props.filter){
+        if (nextProps.filter !== this.props.filter) {
             this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
-            this.state.view.recalculate(this.state.store._list);
+            this.state.view.recalculate(this.props.eventStore.list);
+        }
+        if (nextProps.eventStore !== this.props.eventStore) {
+            this.closeView();
+            this.openView(nextProps.eventStore);
         }
     },
     getDefaultProps: function () {
@@ -1644,7 +1699,7 @@ var EventLogContents = React.createClass({displayName: 'EventLogContents',
             placeholderTagName: "div"
         };
     },
-    renderRow: function(elem){
+    renderRow: function (elem) {
         return React.createElement(LogMessage, {key: elem.id, entry: elem});
     },
     render: function () {
@@ -1714,7 +1769,7 @@ var EventLog = React.createClass({displayName: 'EventLog',
                     )
 
                 ), 
-                React.createElement(EventLogContents, {filter: this.state.filter})
+                React.createElement(EventLogContents, {filter: this.state.filter, eventStore: this.props.eventStore})
             )
         );
     }
@@ -1740,27 +1795,36 @@ var Reports = React.createClass({displayName: 'Reports',
 
 var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
     getInitialState: function () {
+        var eventStore = new EventLogStore();
+        var flowStore = new FlowStore();
+        var settings = new SettingsStore();
+        _.extend(settings.dict,{
+            showEventLog: true
+        });
         return {
-            settings: SettingsStore.getAll(),
-            flowStore: new FlowStore()
+            settings: settings,
+            flowStore: flowStore,
+            eventStore: eventStore
         };
     },
     componentDidMount: function () {
-        SettingsStore.addListener("change", this.onSettingsChange);
+        this.state.settings.addListener("recalculate", this.onSettingsChange);
     },
     componentWillUnmount: function () {
-        SettingsStore.removeListener("change", this.onSettingsChange);
+        this.state.settings.removeListener("recalculate", this.onSettingsChange);
     },
-    onSettingsChange: function () {
-        this.setState({settings: SettingsStore.getAll()});
+    onSettingsChange: function(){
+        this.setState({
+            settings: this.state.settings
+        });
     },
     render: function () {
 
         var eventlog;
-        if (this.state.settings.showEventLog) {
+        if (this.state.settings.dict.showEventLog) {
             eventlog = [
                 React.createElement(Splitter, {key: "splitter", axis: "y"}),
-                React.createElement(EventLog, {key: "eventlog"})
+                React.createElement(EventLog, {key: "eventlog", eventStore: this.state.eventStore})
             ];
         } else {
             eventlog = null;
@@ -1768,10 +1832,10 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
 
         return (
             React.createElement("div", {id: "container"}, 
-                React.createElement(Header, {settings: this.state.settings}), 
-                React.createElement(RouteHandler, {settings: this.state.settings, flowStore: this.state.flowStore}), 
+                React.createElement(Header, {settings: this.state.settings.dict}), 
+                React.createElement(RouteHandler, {settings: this.state.settings.dict, flowStore: this.state.flowStore}), 
                 eventlog, 
-                React.createElement(Footer, {settings: this.state.settings})
+                React.createElement(Footer, {settings: this.state.settings.dict})
             )
         );
     }

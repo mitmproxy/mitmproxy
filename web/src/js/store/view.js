@@ -13,13 +13,25 @@ function StoreView(store, filt, sortfun) {
     sortfun = sortfun || default_sort;
 
     this.store = store;
-    this.store._views.push(this);
-    this.recalculate(this.store._list, filt, sortfun);
+
+    this.add = this.add.bind(this);
+    this.update = this.update.bind(this);
+    this.remove = this.remove.bind(this);
+    this.recalculate = this.recalculate.bind(this);
+    this.store.addListener("add", this.add);
+    this.store.addListener("update", this.update);
+    this.store.addListener("remove", this.remove);
+    this.store.addListener("recalculate", this.recalculate);
+
+    this.recalculate(this.store.list, filt, sortfun);
 }
 
 _.extend(StoreView.prototype, EventEmitter.prototype, {
     close: function () {
-        this.store._views = _.without(this.store._views, this);
+        this.store.removeListener("add", this.add);
+        this.store.removeListener("update", this.update);
+        this.store.removeListener("remove", this.remove);
+        this.store.removeListener("recalculate", this.recalculate);
     },
     recalculate: function (elems, filt, sortfun) {
         if (filt) {

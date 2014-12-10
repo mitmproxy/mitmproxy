@@ -56,7 +56,7 @@ var MainView = React.createClass({
         }
     },
     selectFlowRelative: function (shift) {
-        var flows = this.state.view.flows;
+        var flows = this.state.view.list;
         var index;
         if (!this.getParams().flowId) {
             if (shift > 0) {

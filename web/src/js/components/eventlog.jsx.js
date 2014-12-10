@@ -25,22 +25,29 @@ var LogMessage = React.createClass({
 
 var EventLogContents = React.createClass({
     mixins: [AutoScrollMixin, VirtualScrollMixin],
-    getInitialState: function(){
-        var store = new EventLogStore();
-        var view = new StoreView(store, function(entry){
-            return this.props.filter[entry.level];
-        }.bind(this));
-        view.addListener("add recalculate", this.onEventLogChange);
+    getInitialState: function () {
         return {
-            store: store,
-            view: view,
             log: []
         };
     },
+    componentWillMount: function () {
+        this.openView(this.props.eventStore);
+    },
     componentWillUnmount: function () {
-        this.state.view.removeListener("add recalculate", this.onEventLogChange);
+        this.closeView();
+    },
+    openView: function (store) {
+        var view = new StoreView(store, function (entry) {
+            return this.props.filter[entry.level];
+        }.bind(this));
+        this.setState({
+            view: view
+        });
+
+        view.addListener("add recalculate", this.onEventLogChange);
+    },
+    closeView: function () {
         this.state.view.close();
-        this.state.store.close();
     },
     onEventLogChange: function () {
         this.setState({
@@ -48,9 +55,13 @@ var EventLogContents = React.createClass({
         });
     },
     componentWillReceiveProps: function (nextProps) {
-        if(nextProps.filter !== this.props.filter){
+        if (nextProps.filter !== this.props.filter) {
             this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
-            this.state.view.recalculate(this.state.store._list);
+            this.state.view.recalculate(this.props.eventStore.list);
+        }
+        if (nextProps.eventStore !== this.props.eventStore) {
+            this.closeView();
+            this.openView(nextProps.eventStore);
         }
     },
     getDefaultProps: function () {
@@ -60,7 +71,7 @@ var EventLogContents = React.createClass({
             placeholderTagName: "div"
         };
     },
-    renderRow: function(elem){
+    renderRow: function (elem) {
         return <LogMessage key={elem.id} entry={elem}/>;
     },
     render: function () {
@@ -130,7 +141,7 @@ var EventLog = React.createClass({
                     </div>
 
                 </div>
-                <EventLogContents filter={this.state.filter}/>
+                <EventLogContents filter={this.state.filter} eventStore={this.props.eventStore}/>
             </div>
         );
     }

@@ -8,27 +8,38 @@ var Reports = React.createClass({
 
 var ProxyAppMain = React.createClass({
     getInitialState: function () {
+        var eventStore = new EventLogStore();
+        var flowStore = new FlowStore();
+        var settings = new SettingsStore();
+
+        // Default Settings before fetch
+        _.extend(settings.dict,{
+            showEventLog: true
+        });
         return {
-            settings: SettingsStore.getAll(),
-            flowStore: new FlowStore()
+            settings: settings,
+            flowStore: flowStore,
+            eventStore: eventStore
         };
     },
     componentDidMount: function () {
-        SettingsStore.addListener("change", this.onSettingsChange);
+        this.state.settings.addListener("recalculate", this.onSettingsChange);
     },
     componentWillUnmount: function () {
-        SettingsStore.removeListener("change", this.onSettingsChange);
+        this.state.settings.removeListener("recalculate", this.onSettingsChange);
     },
-    onSettingsChange: function () {
-        this.setState({settings: SettingsStore.getAll()});
+    onSettingsChange: function(){
+        this.setState({
+            settings: this.state.settings
+        });
     },
     render: function () {
 
         var eventlog;
-        if (this.state.settings.showEventLog) {
+        if (this.state.settings.dict.showEventLog) {
             eventlog = [
                 <Splitter key="splitter" axis="y"/>,
-                <EventLog key="eventlog"/>
+                <EventLog key="eventlog" eventStore={this.state.eventStore}/>
             ];
         } else {
             eventlog = null;
@@ -36,10 +47,10 @@ var ProxyAppMain = React.createClass({
 
         return (
             <div id="container">
-                <Header settings={this.state.settings}/>
-                <RouteHandler settings={this.state.settings} flowStore={this.state.flowStore}/>
+                <Header settings={this.state.settings.dict}/>
+                <RouteHandler settings={this.state.settings.dict} flowStore={this.state.flowStore}/>
                 {eventlog}
-                <Footer settings={this.state.settings}/>
+                <Footer settings={this.state.settings.dict}/>
             </div>
         );
     }

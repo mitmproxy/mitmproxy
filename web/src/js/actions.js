@@ -4,14 +4,9 @@ var ActionTypes = {
     CONNECTION_CLOSE: "connection_close",
     CONNECTION_ERROR: "connection_error",
 
-    // Settings
-    UPDATE_SETTINGS: "update_settings",
-
-    // EventLog
+    // Stores
+    SETTINGS_STORE: "settings",
     EVENT_STORE: "events",
-    ADD_EVENT: "add_event",
-
-    // Flow
     FLOW_STORE: "flows",
 };
 
@@ -42,13 +37,14 @@ var ConnectionActions = {
 
 var SettingsActions = {
     update: function (settings) {
-        settings = _.merge({}, SettingsStore.getAll(), settings);
+
         //TODO: Update server.
 
         //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
-            type: ActionTypes.UPDATE_SETTINGS,
-            settings: settings
+            type: ActionTypes.SETTINGS_STORE,
+            cmd: StoreCmds.UPDATE,
+            data: settings
         });
     }
 };
