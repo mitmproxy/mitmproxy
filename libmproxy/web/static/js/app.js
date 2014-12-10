@@ -72,28 +72,6 @@ var formatTimeStamp = function (seconds) {
 };
 
 
-function listToDict(list, propKey, propVal) {
-    var dict = {};
-    for (var i = 0; i < list.length; i++) {
-        var e = list[i];
-        dict[e[propKey]] = e[propVal];
-    }
-    return dict;
-}
-function dictToList(dict, propKey, propVal) {
-    var list = [];
-    for (var key in dict) {
-        if (dict.hasOwnProperty(key)) {
-            var elem = {};
-            elem[propKey] = key;
-            elem[propVal] = dict[key];
-            list.push(elem);
-        }
-    }
-    return list;
-}
-
-
 function EventEmitter() {
     this.listeners = {};
 }
@@ -165,14 +143,9 @@ var ActionTypes = {
     CONNECTION_CLOSE: "connection_close",
     CONNECTION_ERROR: "connection_error",
 
-    // Settings
+    // Stores
     SETTINGS_STORE: "settings",
-    UPDATE_SETTINGS: "update_settings",
-
-    // EventLog
     EVENT_STORE: "events",
-
-    // Flow
     FLOW_STORE: "flows",
 };
 
@@ -206,6 +179,7 @@ var SettingsActions = {
 
         //TODO: Update server.
 
+        //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.SETTINGS_STORE,
             cmd: StoreCmds.UPDATE,
@@ -429,6 +403,9 @@ function EventLogStore() {
 _.extend(EventLogStore.prototype, LiveListStore.prototype, {
     fetch: function(){
         LiveListStore.prototype.fetch.apply(this, arguments);
+
+        // Make sure to display updates even if fetching all events failed.
+        // This way, we can send "fetch failed" log messages to the log.
         if(this._fetchxhr){
             this._fetchxhr.fail(function(){
                 this.handle_fetch(null);
@@ -774,17 +751,20 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
             showEventLog: !this.props.settings.showEventLog
         });
     },
-    clearFlows: function(){
+    clearFlows: function () {
         $.post("/flows/clear");
     },
     render: function () {
         return (
             React.createElement("div", null, 
                 React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
-                    React.createElement("i", {className: "fa fa-database"}), " Display Event Log"
-                ), " ", 
+                    React.createElement("i", {className: "fa fa-database"}), 
+                " Display Event Log"
+                ), 
+            " ", 
                 React.createElement("button", {className: "btn btn-default", onClick: this.clearFlows}, 
-                    React.createElement("i", {className: "fa fa-eraser"}), " Clear Flows"
+                    React.createElement("i", {className: "fa fa-eraser"}), 
+                " Clear Flows"
                 )
             )
         );
@@ -813,6 +793,80 @@ var ReportsMenu = React.createClass({displayName: 'ReportsMenu',
     }
 });
 
+var FileMenu = React.createClass({displayName: 'FileMenu',
+    getInitialState: function () {
+        return {
+            showFileMenu: false
+        };
+    },
+    handleFileClick: function (e) {
+        e.preventDefault();
+        if (!this.state.showFileMenu) {
+            var close = function () {
+                this.setState({showFileMenu: false});
+                document.removeEventListener("click", close);
+            }.bind(this);
+            document.addEventListener("click", close);
+
+            this.setState({
+                showFileMenu: true
+            });
+        }
+    },
+    handleNewClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleNewClick");
+    },
+    handleOpenClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleOpenClick");
+    },
+    handleSaveClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleSaveClick");
+    },
+    handleShutdownClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleShutdownClick");
+    },
+    render: function () {
+        var fileMenuClass = "dropdown pull-left" + (this.state.showFileMenu ? " open" : "");
+
+        return (
+            React.createElement("div", {className: fileMenuClass}, 
+                React.createElement("a", {href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
+                React.createElement("ul", {className: "dropdown-menu", role: "menu"}, 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleNewClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-file"}), 
+                            "New"
+                        )
+                    ), 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleOpenClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-folder-open"}), 
+                            "Open"
+                        )
+                    ), 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleSaveClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-save"}), 
+                            "Save"
+                        )
+                    ), 
+                    React.createElement("li", {role: "presentation", className: "divider"}), 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleShutdownClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-plug"}), 
+                            "Shutdown"
+                        )
+                    )
+                )
+            )
+        );
+    }
+});
+
 
 var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
 
@@ -828,9 +882,6 @@ var Header = React.createClass({displayName: 'Header',
         e.preventDefault();
         this.transitionTo(active.route);
         this.setState({active: active});
-    },
-    handleFileClick: function () {
-        console.log("File click");
     },
     render: function () {
         var header = header_entries.map(function (entry, i) {
@@ -851,10 +902,10 @@ var Header = React.createClass({displayName: 'Header',
         return (
             React.createElement("header", null, 
                 React.createElement("div", {className: "title-bar"}, 
-                "mitmproxy ",  this.props.settings.version
+                    "mitmproxy ",  this.props.settings.version
                 ), 
                 React.createElement("nav", {className: "nav-tabs nav-tabs-lg"}, 
-                    React.createElement("a", {href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
+                    React.createElement(FileMenu, null), 
                     header
                 ), 
                 React.createElement("div", {className: "menu"}, 
@@ -1798,6 +1849,8 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
         var eventStore = new EventLogStore();
         var flowStore = new FlowStore();
         var settings = new SettingsStore();
+
+        // Default Settings before fetch
         _.extend(settings.dict,{
             showEventLog: true
         });
