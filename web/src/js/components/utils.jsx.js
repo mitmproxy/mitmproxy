@@ -51,6 +51,7 @@ var Splitter = React.createClass({
         this.setState({
             applied: true
         });
+        this.onResize();
     },
     onMouseMove: function (e) {
         var dX = 0, dY = 0;
@@ -60,6 +61,13 @@ var Splitter = React.createClass({
             dY = e.pageY - this.state.startY;
         }
         this.getDOMNode().style.transform = "translate(" + dX + "px," + dY + "px)";
+    },
+    onResize: function () {
+        // Trigger a global resize event. This notifies components that employ virtual scrolling
+        // that their viewport may have changed.
+        window.setTimeout(function () {
+            window.dispatchEvent(new CustomEvent("resize"));
+        }, 1);
     },
     reset: function (willUnmount) {
         if (!this.state.applied) {
@@ -77,7 +85,7 @@ var Splitter = React.createClass({
                 applied: false
             });
         }
-
+        this.onResize();
     },
     componentWillUnmount: function () {
         this.reset(true);
@@ -104,9 +112,9 @@ function getCookie(name) {
 var xsrf = $.param({_xsrf: getCookie("_xsrf")});
 
 //Tornado XSRF Protection.
-$.ajaxPrefilter(function(options){
-    if(options.type === "post" && options.url[0] === "/"){
-        if(options.data){
+$.ajaxPrefilter(function (options) {
+    if (options.type === "post" && options.url[0] === "/") {
+        if (options.data) {
             options.data += ("&" + xsrf);
         } else {
             options.data = xsrf;

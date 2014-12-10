@@ -35,6 +35,10 @@ var VirtualScrollMixin = {
     },
     componentDidMount: function () {
         this.onScroll();
+        window.addEventListener('resize', this.onScroll);
+    },
+    componentWillUnmount: function(){
+        window.removeEventListener('resize', this.onScroll);
     },
     onScroll: function () {
         var viewport = this.getDOMNode();

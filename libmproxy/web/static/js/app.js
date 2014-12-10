@@ -12,6 +12,7 @@ var AutoScrollMixin = {
     },
 };
 
+
 var StickyHeadMixin = {
     adjustHead: function () {
         // Abusing CSS transforms to set the element
@@ -20,6 +21,7 @@ var StickyHeadMixin = {
         head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
     }
 };
+
 
 var Key = {
     UP: 38,
@@ -38,6 +40,7 @@ var Key = {
     L: 76
 };
 
+
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
@@ -48,6 +51,7 @@ var formatSize = function (bytes) {
     }
     return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix[i];
 };
+
 
 var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
@@ -61,9 +65,41 @@ var formatTimeDelta = function (milliseconds) {
     return Math.round(time) + prefix[i];
 };
 
+
 var formatTimeStamp = function (seconds) {
     var ts = (new Date(seconds * 1000)).toISOString();
     return ts.replace("T", " ").replace("Z", "");
+};
+
+
+function EventEmitter() {
+    this.listeners = {};
+}
+EventEmitter.prototype.emit = function (event) {
+    if (!(event in this.listeners)) {
+        return;
+    }
+    var args = Array.prototype.slice.call(arguments, 1);
+    this.listeners[event].forEach(function (listener) {
+        listener.apply(this, args);
+    }.bind(this));
+};
+EventEmitter.prototype.addListener = function (events, f) {
+    events.split(" ").forEach(function (event) {
+        this.listeners[event] = this.listeners[event] || [];
+        this.listeners[event].push(f);
+    }.bind(this));
+};
+EventEmitter.prototype.removeListener = function (events, f) {
+    if (!(events in this.listeners)) {
+        return false;
+    }
+    events.split(" ").forEach(function (event) {
+        var index = this.listeners[event].indexOf(f);
+        if (index >= 0) {
+            this.listeners[event].splice(index, 1);
+        }
+    }.bind(this));
 };
 const PayloadSources = {
     VIEW: "view",
@@ -217,37 +253,6 @@ var RequestUtils = _.extend(_MessageUtils, {
 });
 
 var ResponseUtils = _.extend(_MessageUtils, {});
-function EventEmitter() {
-    this.listeners = {};
-}
-EventEmitter.prototype.emit = function (event) {
-    if (!(event in this.listeners)) {
-        return;
-    }
-    var args = Array.prototype.slice.call(arguments, 1);
-    this.listeners[event].forEach(function (listener) {
-        listener.apply(this, args);
-    }.bind(this));
-};
-EventEmitter.prototype.addListener = function (events, f) {
-    events.split(" ").forEach(function (event) {
-        this.listeners[event] = this.listeners[event] || [];
-        this.listeners[event].push(f);
-    }.bind(this));
-};
-EventEmitter.prototype.removeListener = function (events, f) {
-    if (!(events in this.listeners)) {
-        return false;
-    }
-    events.split(" ").forEach(function (event) {
-        var index = this.listeners[event].indexOf(f);
-        if (index >= 0) {
-            this.listeners[event].splice(index, 1);
-        }
-    }.bind(this));
-};
-
-
 function Store() {
     this._views = [];
     this.reset();
@@ -363,6 +368,14 @@ _.extend(LiveStore.prototype, Store.prototype, {
 });
 
 
+function FlowStore() {
+    return new LiveStore(ActionTypes.FLOW_STORE);
+}
+
+
+function EventLogStore() {
+    return new LiveStore(ActionTypes.EVENT_STORE);
+}
 function SortByStoreOrder(elem) {
     return this.store.index(elem.id);
 }
@@ -450,14 +463,6 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         }
     }
 });
-
-
-function FlowStore() {
-    return new LiveStore(ActionTypes.FLOW_STORE);
-}
-function EventLogStore() {
-    return new LiveStore(ActionTypes.EVENT_STORE);
-}
 function _SettingsStore() {
     EventEmitter.call(this);
 
@@ -486,8 +491,6 @@ _.extend(_SettingsStore.prototype, EventEmitter.prototype, {
 
 var SettingsStore = new _SettingsStore();
 AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
-
-
 
 function Connection(url) {
 
@@ -566,6 +569,7 @@ var Splitter = React.createClass({displayName: 'Splitter',
         this.setState({
             applied: true
         });
+        this.onResize();
     },
     onMouseMove: function (e) {
         var dX = 0, dY = 0;
@@ -575,6 +579,13 @@ var Splitter = React.createClass({displayName: 'Splitter',
             dY = e.pageY - this.state.startY;
         }
         this.getDOMNode().style.transform = "translate(" + dX + "px," + dY + "px)";
+    },
+    onResize: function () {
+        // Trigger a global resize event. This notifies components that employ virtual scrolling
+        // that their viewport may have changed.
+        window.setTimeout(function () {
+            window.dispatchEvent(new CustomEvent("resize"));
+        }, 1);
     },
     reset: function (willUnmount) {
         if (!this.state.applied) {
@@ -592,7 +603,7 @@ var Splitter = React.createClass({displayName: 'Splitter',
                 applied: false
             });
         }
-
+        this.onResize();
     },
     componentWillUnmount: function () {
         this.reset(true);
@@ -619,9 +630,9 @@ function getCookie(name) {
 var xsrf = $.param({_xsrf: getCookie("_xsrf")});
 
 //Tornado XSRF Protection.
-$.ajaxPrefilter(function(options){
-    if(options.type === "post" && options.url[0] === "/"){
-        if(options.data){
+$.ajaxPrefilter(function (options) {
+    if (options.type === "post" && options.url[0] === "/") {
+        if (options.data) {
             options.data += ("&" + xsrf);
         } else {
             options.data = xsrf;
@@ -635,8 +646,8 @@ var VirtualScrollMixin = {
             stop: 0
         };
     },
-    componentWillMount: function(){
-        if(!this.props.rowHeight){
+    componentWillMount: function () {
+        if (!this.props.rowHeight) {
             console.warn("VirtualScrollMixin: No rowHeight specified", this);
         }
     },
@@ -645,7 +656,7 @@ var VirtualScrollMixin = {
         // When a large trunk of elements is removed from the button, start may be far off the viewport.
         // To make this issue less severe, limit the top placeholder to the total number of rows.
         var style = {
-            height: Math.min(this.state.start , total) * this.props.rowHeight
+            height: Math.min(this.state.start, total) * this.props.rowHeight
         };
         var spacer = React.createElement(Tag, {key: "placeholder-top", style: style});
 
@@ -665,6 +676,10 @@ var VirtualScrollMixin = {
     },
     componentDidMount: function () {
         this.onScroll();
+        window.addEventListener('resize', this.onScroll);
+    },
+    componentWillUnmount: function(){
+        window.removeEventListener('resize', this.onScroll);
     },
     onScroll: function () {
         var viewport = this.getDOMNode();
@@ -678,7 +693,7 @@ var VirtualScrollMixin = {
             stop: stop
         });
     },
-    renderRows: function(elems){
+    renderRows: function (elems) {
         var rows = [];
         var max = Math.min(elems.length, this.state.stop);
 
@@ -688,7 +703,7 @@ var VirtualScrollMixin = {
         }
         return rows;
     },
-    scrollRowIntoView: function(index, head_height){
+    scrollRowIntoView: function (index, head_height) {
 
         var row_top = (index * this.props.rowHeight) + head_height;
         var row_bottom = row_top + this.props.rowHeight;
@@ -1740,12 +1755,22 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
         this.setState({settings: SettingsStore.getAll()});
     },
     render: function () {
+
+        var eventlog;
+        if (this.state.settings.showEventLog) {
+            eventlog = [
+                React.createElement(Splitter, {key: "splitter", axis: "y"}),
+                React.createElement(EventLog, {key: "eventlog"})
+            ];
+        } else {
+            eventlog = null;
+        }
+
         return (
             React.createElement("div", {id: "container"}, 
                 React.createElement(Header, {settings: this.state.settings}), 
                 React.createElement(RouteHandler, {settings: this.state.settings, flowStore: this.state.flowStore}), 
-                this.state.settings.showEventLog ? React.createElement(Splitter, {axis: "y"}) : null, 
-                this.state.settings.showEventLog ? React.createElement(EventLog, null) : null, 
+                eventlog, 
                 React.createElement(Footer, {settings: this.state.settings})
             )
         );

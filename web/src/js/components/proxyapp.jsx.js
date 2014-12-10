@@ -23,12 +23,22 @@ var ProxyAppMain = React.createClass({
         this.setState({settings: SettingsStore.getAll()});
     },
     render: function () {
+
+        var eventlog;
+        if (this.state.settings.showEventLog) {
+            eventlog = [
+                <Splitter key="splitter" axis="y"/>,
+                <EventLog key="eventlog"/>
+            ];
+        } else {
+            eventlog = null;
+        }
+
         return (
             <div id="container">
                 <Header settings={this.state.settings}/>
                 <RouteHandler settings={this.state.settings} flowStore={this.state.flowStore}/>
-                {this.state.settings.showEventLog ? <Splitter axis="y"/> : null}
-                {this.state.settings.showEventLog ? <EventLog/> : null}
+                {eventlog}
                 <Footer settings={this.state.settings}/>
             </div>
         );
