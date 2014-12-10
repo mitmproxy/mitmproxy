@@ -24,6 +24,11 @@ if __name__ == '__main__':
         help="Ignore request's content while searching for a saved flow to replay"
     )
     parser.add_argument(
+        "--append",
+        action="store_true", dest="append", default=False,
+        help="Append captured flows to existing file instead of creating a new one."
+    )
+    parser.add_argument(
         "--replay-ignore-param",
         action="append", dest="replay_ignore_params", type=str,
         help="Request's parameters to be ignored while searching for a saved flow to replay"
@@ -62,6 +67,7 @@ if __name__ == '__main__':
     dumpopts.keepserving = options.keepserving
     dumpopts.replay_ignore_content = options.replay_ignore_content
     dumpopts.replay_ignore_params = options.replay_ignore_params
+    dumpopts.append = options.append
     if options.replay_not_found:
         dumpopts.replay_not_found = " ".join(options.replay_not_found) 
     else:
