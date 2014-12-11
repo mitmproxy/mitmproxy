@@ -30,7 +30,7 @@ class Options(object):
         "stickycookie",
         "stickyauth",
         "verbosity",
-        "wfile",
+        "outfile",
         "replay_ignore_content",
         "replay_ignore_params",
         "replay_not_found",
@@ -87,14 +87,10 @@ class DumpMaster(flow.FlowMaster):
         if options.stickyauth:
             self.set_stickyauth(options.stickyauth)
 
-        if options.wfile:
-            path = os.path.expanduser(options.wfile)
+        if options.outfile:
+            path = os.path.expanduser(options.outfile[0])
             try:
-                if (options.append):
-                    f = file(path, "ab")
-                else:
-                    f = file(path, "wb")
-                    
+                f = file(path, options.outfile[1])
                 self.start_stream(f, self.filt)
             except IOError, v:
                 raise DumpError(v.strerror)
