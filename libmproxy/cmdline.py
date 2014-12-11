@@ -148,7 +148,7 @@ def get_common_options(options):
         stickycookie = stickycookie,
         stickyauth = stickyauth,
         showhost = options.showhost,
-        wfile = options.wfile,
+        outfile = options.outfile,
         verbosity = options.verbose,
         nopop = options.nopop,
     )
@@ -231,11 +231,17 @@ def common_options(parser):
         action="count", dest="verbose", default=1,
         help="Increase verbosity. Can be passed multiple times."
     )
-    parser.add_argument(
-        "-w",
-        action="store", dest="wfile", default=None,
+    outfile = parser.add_mutually_exclusive_group()
+    outfile.add_argument(
+        "-w", "--wfile",
+        action="store", dest="outfile", type=lambda f: (f, "wb"),
         help="Write flows to file."
     )
+    outfile.add_argument(
+        "--afile",
+        action="store", dest="outfile", type=lambda f: (f, "ab"),
+        help="Append flows to file."
+    )    
     parser.add_argument(
         "-z",
         action="store_true", dest="anticomp", default=False,
