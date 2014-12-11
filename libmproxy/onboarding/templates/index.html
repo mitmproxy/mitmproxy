@@ -1,5 +1,5 @@
 {% extends "frame.html" %}
-{% block body %}  
+{% block body %}
 
 <center>
 <h2> Click to install the mitmproxy certificate: </h2>
@@ -21,6 +21,15 @@
         <a href="/cert/pem"><i class="fa fa-asterisk fa-5x"></i></a>
         <p>Other</p>
     </div>
+</div>
+
+<hr/>
+<div class="text-center">
+    Other mitmproxy users cannot intercept your connection.
+</div>
+<div class="text-center text-muted">
+    This page is served by your local mitmproxy instance. The certificate you are about to install has been uniquely generated on mitmproxy's first run and is not shared
+    between mitmproxy installations.
 </div>
 
 {% endblock %}  

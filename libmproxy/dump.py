@@ -1,10 +1,13 @@
 from __future__ import absolute_import
-import sys, os
+import sys
+import os
 import netlib.utils
 from . import flow, filt, utils
 from .protocol import http
 
-class DumpError(Exception): pass
+
+class DumpError(Exception):
+    pass
 
 
 class Options(object):
@@ -37,6 +40,7 @@ class Options(object):
         "replay_ignore_content",
         "replay_ignore_params",
     ]
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -71,7 +75,7 @@ class DumpMaster(flow.FlowMaster):
         self.anticache = options.anticache
         self.anticomp = options.anticomp
         self.showhost = options.showhost
-        self.replay_ignore_params = options.replay_ignore_params    
+        self.replay_ignore_params = options.replay_ignore_params
         self.replay_ignore_content = options.replay_ignore_content
         self.refresh_server_playback = options.refresh_server_playback
 
@@ -87,7 +91,6 @@ class DumpMaster(flow.FlowMaster):
 
         if options.stickyauth:
             self.set_stickyauth(options.stickyauth)
-
 
         if options.wfile:
             path = os.path.expanduser(options.wfile)
@@ -152,7 +155,7 @@ class DumpMaster(flow.FlowMaster):
         return flows
 
     def add_event(self, e, level="info"):
-        needed = dict(error=1, info=1, debug=2).get(level, 1)
+        needed = dict(error=0, info=1, debug=2).get(level, 1)
         if self.o.verbosity >= needed:
             print >> self.outfile, e
             self.outfile.flush()
@@ -202,7 +205,7 @@ class DumpMaster(flow.FlowMaster):
         elif self.o.flow_detail >= 3:
             print >> self.outfile, str_request(f, self.showhost)
             print >> self.outfile, self.indent(4, f.request.headers)
-            if utils.isBin(f.request.content):
+            if f.request.content != http.CONTENT_MISSING and utils.isBin(f.request.content):
                 d = netlib.utils.hexdump(f.request.content)
                 d = "\n".join("%s\t%s %s"%i for i in d)
                 print >> self.outfile, self.indent(4, d)

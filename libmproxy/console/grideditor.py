@@ -123,12 +123,13 @@ class GridWalker(urwid.ListWalker):
             except ValueError:
                 self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
                 return
-
         errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
         if emsg:
             self.editor.master.statusbar.message(emsg, 1000)
             errors.add(self.focus_col)
+        else:
+            errors.discard(self.focus_col)
 
         row = list(self.lst[self.focus][0])
         row[self.focus_col] = val
@@ -320,9 +321,11 @@ class GridEditor(common.WWrap):
         elif key == "d":
             self.walker.delete_focus()
         elif key == "r":
-            self.master.path_prompt("Read file: ", "", self.read_file)
+            if self.walker.get_current_value() is not None:
+                self.master.path_prompt("Read file: ", "", self.read_file)
         elif key == "R":
-            self.master.path_prompt("Read unescaped file: ", "", self.read_file, True)
+            if self.walker.get_current_value() is not None:
+                self.master.path_prompt("Read unescaped file: ", "", self.read_file, True)
         elif key == "e":
             o = self.walker.get_current_value()
             if o is not None:
@@ -495,8 +498,8 @@ class ScriptEditor(GridEditor):
             return str(v)
 
 
-class IgnoreEditor(GridEditor):
-    title = "Editing ignore patterns"
+class HostPatternEditor(GridEditor):
+    title = "Editing host patterns"
     columns = 1
     headings = ("Regex (matched on hostname:port / ip:port)",)
 

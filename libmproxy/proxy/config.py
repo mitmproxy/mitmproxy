@@ -1,26 +1,54 @@
 from __future__ import absolute_import
 import os
 import re
-from netlib import http_auth, certutils
+from netlib import http_auth, certutils, tcp
 from .. import utils, platform, version
-from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode
+from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
-CONF_DIR = "~/.mitmproxy"
+CA_DIR = "~/.mitmproxy"
 
 
-def parse_host_pattern(patterns):
-    return [re.compile(p, re.IGNORECASE) for p in patterns]
+class HostMatcher(object):
+    def __init__(self, patterns=[]):
+        self.patterns = list(patterns)
+        self.regexes = [re.compile(p, re.IGNORECASE) for p in self.patterns]
+
+    def __call__(self, address):
+        address = tcp.Address.wrap(address)
+        host = "%s:%s" % (address.host, address.port)
+        if any(rex.search(host) for rex in self.regexes):
+            return True
+        else:
+            return False
+
+    def __nonzero__(self):
+        return bool(self.patterns)
 
 
 class ProxyConfig:
-    def __init__(self, host='', port=8080, server_version=version.NAMEVERSION,
-                 confdir=CONF_DIR, ca_file=None, clientcerts=None,
-                 no_upstream_cert=False, body_size_limit=None,
-                 mode=None, upstream_server=None, http_form_in=None, http_form_out=None,
-                 authenticator=None, ignore=[],
-                 ciphers=None, certs=[], certforward=False, ssl_ports=TRANSPARENT_SSL_PORTS):
+    def __init__(
+            self,
+            host='',
+            port=8080,
+            server_version=version.NAMEVERSION,
+            cadir=CA_DIR,
+            clientcerts=None,
+            no_upstream_cert=False,
+            body_size_limit=None,
+            mode=None,
+            upstream_server=None,
+            http_form_in=None,
+            http_form_out=None,
+            authenticator=None,
+            ignore_hosts=[],
+            tcp_hosts=[],
+            ciphers=None,
+            certs=[],
+            certforward=False,
+            ssl_ports=TRANSPARENT_SSL_PORTS
+    ):
         self.host = host
         self.port = port
         self.server_version = server_version
@@ -30,7 +58,9 @@ class ProxyConfig:
         self.body_size_limit = body_size_limit
 
         if mode == "transparent":
-            self.mode = TransparentProxyMode(platform.resolver(), TRANSPARENT_SSL_PORTS)
+            self.mode = TransparentProxyMode(platform.resolver(), ssl_ports)
+        elif mode == "socks5":
+            self.mode = Socks5ProxyMode(ssl_ports)
         elif mode == "reverse":
             self.mode = ReverseProxyMode(upstream_server)
         elif mode == "upstream":
@@ -42,11 +72,11 @@ class ProxyConfig:
         self.mode.http_form_in = http_form_in or self.mode.http_form_in
         self.mode.http_form_out = http_form_out or self.mode.http_form_out
 
-        self.ignore = parse_host_pattern(ignore)
+        self.check_ignore = HostMatcher(ignore_hosts)
+        self.check_tcp = HostMatcher(tcp_hosts)
         self.authenticator = authenticator
-        self.confdir = os.path.expanduser(confdir)
-        self.ca_file = ca_file or os.path.join(self.confdir, CONF_BASENAME + "-ca.pem")
-        self.certstore = certutils.CertStore.from_store(self.confdir, CONF_BASENAME)
+        self.cadir = os.path.expanduser(cadir)
+        self.certstore = certutils.CertStore.from_store(self.cadir, CONF_BASENAME)
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
@@ -63,6 +93,9 @@ def process_proxy_options(parser, options):
         if not platform.resolver:
             return parser.error("Transparent mode not supported on this platform.")
         mode = "transparent"
+    if options.socks_proxy:
+        c += 1
+        mode = "socks5"
     if options.reverse_proxy:
         c += 1
         mode = "reverse"
@@ -72,7 +105,7 @@ def process_proxy_options(parser, options):
         mode = "upstream"
         upstream_server = options.upstream_proxy
     if c > 1:
-        return parser.error("Transparent mode, reverse mode and upstream proxy mode "
+        return parser.error("Transparent, SOCKS5, reverse and upstream proxy mode "
                             "are mutually exclusive.")
 
     if options.clientcerts:
@@ -109,10 +142,16 @@ def process_proxy_options(parser, options):
             parser.error("Certificate file does not exist: %s" % parts[1])
         certs.append(parts)
 
+    ssl_ports = options.ssl_ports
+    if options.ssl_ports != TRANSPARENT_SSL_PORTS:
+        # arparse appends to default value by default, strip that off.
+        # see http://bugs.python.org/issue16399
+        ssl_ports = ssl_ports[len(TRANSPARENT_SSL_PORTS):]
+
     return ProxyConfig(
         host=options.addr,
         port=options.port,
-        confdir=options.confdir,
+        cadir=options.cadir,
         clientcerts=options.clientcerts,
         no_upstream_cert=options.no_upstream_cert,
         body_size_limit=body_size_limit,
@@ -120,11 +159,13 @@ def process_proxy_options(parser, options):
         upstream_server=upstream_server,
         http_form_in=options.http_form_in,
         http_form_out=options.http_form_out,
-        ignore=options.ignore,
+        ignore_hosts=options.ignore_hosts,
+        tcp_hosts=options.tcp_hosts,
         authenticator=authenticator,
         ciphers=options.ciphers,
         certs=certs,
         certforward=options.certforward,
+        ssl_ports=ssl_ports
     )
 
 
@@ -133,10 +174,12 @@ def ssl_option_group(parser):
     group.add_argument(
         "--cert", dest='certs', default=[], type=str,
         metavar="SPEC", action="append",
-        help='Add an SSL certificate. SPEC is of the form "[domain=]path". ' \
-             'The domain may include a wildcard, and is equal to "*" if not specified. ' \
-             'The file at path is a certificate in PEM format. If a private key is included in the PEM, ' \
-             'it is used, else the default key in the conf dir is used. Can be passed multiple times.'
+        help='Add an SSL certificate. SPEC is of the form "[domain=]path". '
+             'The domain may include a wildcard, and is equal to "*" if not specified. '
+             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '
+             'it is used, else the default key in the conf dir is used. '
+             'The PEM file should contain the full certificate chain, with the leaf certificate as the first entry. '
+             'Can be passed multiple times.'
     )
     group.add_argument(
         "--client-certs", action="store",
@@ -159,7 +202,7 @@ def ssl_option_group(parser):
         help="Don't connect to upstream server to look up certificate details."
     )
     group.add_argument(
-        "--ssl-port", action="append", type=int, dest="ssl_ports", default=TRANSPARENT_SSL_PORTS,
+        "--ssl-port", action="append", type=int, dest="ssl_ports", default=list(TRANSPARENT_SSL_PORTS),
         metavar="PORT",
         help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
              "Defaults to %s." % str(TRANSPARENT_SSL_PORTS)

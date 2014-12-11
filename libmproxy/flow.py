@@ -11,7 +11,7 @@ import netlib.http
 from . import controller, protocol, tnetstring, filt, script, version
 from .onboarding import app
 from .protocol import http, handle
-from .proxy.config import parse_host_pattern
+from .proxy.config import HostMatcher
 import urlparse
 
 ODict = odict.ODict
@@ -27,7 +27,12 @@ class AppRegistry:
             Add a WSGI app to the registry, to be served for requests to the
             specified domain, on the specified port.
         """
-        self.apps[(domain, port)] = wsgi.WSGIAdaptor(app, domain, port, version.NAMEVERSION)
+        self.apps[(domain, port)] = wsgi.WSGIAdaptor(
+            app,
+            domain,
+            port,
+            version.NAMEVERSION
+        )
 
     def get(self, request):
         """
@@ -72,7 +77,8 @@ class ReplaceHooks:
 
     def get_specs(self):
         """
-            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
+            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s)
+            tuples.
         """
         return [i[:3] for i in self.lst]
 
@@ -119,7 +125,8 @@ class SetHeaders:
 
     def get_specs(self):
         """
-            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s) tuples.
+            Retrieve the hook specifcations. Returns a list of (fpatt, rex, s)
+            tuples.
         """
         return [i[:3] for i in self.lst]
 
@@ -162,6 +169,7 @@ class ClientPlaybackState:
     def __init__(self, flows, exit):
         self.flows, self.exit = flows, exit
         self.current = None
+        self.testing = False  # Disables actual replay for testing.
 
     def count(self):
         return len(self.flows)
@@ -179,18 +187,16 @@ class ClientPlaybackState:
         if flow is self.current:
             self.current = None
 
-    def tick(self, master, testing=False):
-        """
-            testing: Disables actual replay for testing.
-        """
+    def tick(self, master):
         if self.flows and not self.current:
-            n = self.flows.pop(0)
-            n.reply = controller.DummyReply()
-            self.current = master.handle_request(n)
-            if not testing and not self.current.response:
-                master.replay_request(self.current)  # pragma: no cover
-            elif self.current.response:
-                master.handle_response(self.current)
+            self.current = self.flows.pop(0).copy()
+            if not self.testing:
+                master.replay_request(self.current)
+            else:
+                self.current.reply = controller.DummyReply()
+                master.handle_request(self.current)
+                if self.current.response:
+                    master.handle_response(self.current)
 
 
 class ServerPlaybackState:
@@ -219,9 +225,10 @@ class ServerPlaybackState:
         queriesArray = urlparse.parse_qsl(query)
 
         filtered = []
+        ignore_params = self.ignore_params or []
         for p in queriesArray:
-          if p[0] not in self.ignore_params:
-            filtered.append(p)
+            if p[0] not in ignore_params:
+                filtered.append(p)
 
         key = [
             str(r.host),
@@ -339,11 +346,13 @@ class State(object):
         # These are compiled filt expressions:
         self._limit = None
         self.intercept = None
-        self._limit_txt = None
 
     @property
     def limit_txt(self):
-        return self._limit_txt
+        if self._limit:
+            return self._limit.pattern
+        else:
+            return None
 
     def flow_count(self):
         return len(self._flow_list)
@@ -362,6 +371,8 @@ class State(object):
         """
             Add a request to the state. Returns the matching flow.
         """
+        if flow in self._flow_list:  # catch flow replay
+            return flow
         self._flow_list.append(flow)
         if flow.match(self._limit):
             self.view.append(flow)
@@ -398,10 +409,8 @@ class State(object):
             if not f:
                 return "Invalid filter expression."
             self._limit = f
-            self._limit_txt = txt
         else:
             self._limit = None
-            self._limit_txt = None
         self.recalculate_view()
 
     def set_intercept(self, txt):
@@ -465,7 +474,7 @@ class FlowMaster(controller.Master):
         self.refresh_server_playback = False
         self.replacehooks = ReplaceHooks()
         self.setheaders = SetHeaders()
-        self.replay_ignore_params = False    
+        self.replay_ignore_params = False
         self.replay_ignore_content = None
 
 
@@ -515,11 +524,17 @@ class FlowMaster(controller.Master):
         for script in self.scripts:
             self.run_single_script_hook(script, name, *args, **kwargs)
 
-    def get_ignore(self):
-        return [i.pattern for i in self.server.config.ignore]
+    def get_ignore_filter(self):
+        return self.server.config.check_ignore.patterns
 
-    def set_ignore(self, ignore):
-        self.server.config.ignore = parse_host_pattern(ignore)
+    def set_ignore_filter(self, host_patterns):
+        self.server.config.check_ignore = HostMatcher(host_patterns)
+
+    def get_tcp_filter(self):
+        return self.server.config.check_tcp.patterns
+
+    def set_tcp_filter(self, host_patterns):
+        self.server.config.check_tcp = HostMatcher(host_patterns)
 
     def set_stickycookie(self, txt):
         if txt:
@@ -601,7 +616,7 @@ class FlowMaster(controller.Master):
             ]
             if all(e):
                 self.shutdown()
-            self.client_playback.tick(self, timeout)
+            self.client_playback.tick(self)
 
         return controller.Master.tick(self, q, timeout)
 
@@ -612,6 +627,11 @@ class FlowMaster(controller.Master):
         """
             Loads a flow, and returns a new flow object.
         """
+
+        if self.server and self.server.config.mode == "reverse":
+            f.request.host, f.request.port = self.server.config.mode.dst[2:]
+            f.request.scheme = "https" if self.server.config.mode.dst[1] else "http"
+
         f.reply = controller.DummyReply()
         if f.request:
             self.handle_request(f)
@@ -656,6 +676,8 @@ class FlowMaster(controller.Master):
         """
             Returns None if successful, or error message if not.
         """
+        if f.live:
+            return "Can't replay request which is still live..."
         if f.intercepting:
             return "Can't replay while intercepting..."
         if f.request.content == http.CONTENT_MISSING:
@@ -705,7 +727,11 @@ class FlowMaster(controller.Master):
         if f.live:
             app = self.apps.get(f.request)
             if app:
-                err = app.serve(f, f.client_conn.wfile, **{"mitmproxy.master": self})
+                err = app.serve(
+                    f,
+                    f.client_conn.wfile,
+                    **{"mitmproxy.master": self}
+                )
                 if err:
                     self.add_event("Error in wsgi app. %s"%err, "error")
                 f.reply(protocol.KILL)
@@ -720,8 +746,12 @@ class FlowMaster(controller.Master):
     def handle_responseheaders(self, f):
         self.run_script_hook("responseheaders", f)
 
-        if self.stream_large_bodies:
-            self.stream_large_bodies.run(f, False)
+        try:
+            if self.stream_large_bodies:
+                self.stream_large_bodies.run(f, False)
+        except netlib.http.HttpError:
+            f.reply(protocol.KILL)
+            return
 
         f.reply()
         return f
@@ -755,7 +785,6 @@ class FlowMaster(controller.Master):
         self.stream = None
 
 
-
 class FlowWriter:
     def __init__(self, fo):
         self.fo = fo
@@ -787,7 +816,7 @@ class FlowReader:
                     v = ".".join(str(i) for i in data["version"])
                     raise FlowReadError("Incompatible serialized data version: %s"%v)
                 off = self.fo.tell()
-                yield handle.protocols[data["conntype"]]["flow"].from_state(data)
+                yield handle.protocols[data["type"]]["flow"].from_state(data)
         except ValueError, v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':

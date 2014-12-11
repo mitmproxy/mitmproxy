@@ -1,0 +1,30 @@
+WebSockets or other non-HTTP protocols are not supported by mitmproxy yet. However, you can exempt hostnames from
+processing, so that mitmproxy acts as a generic TCP forwarder. This feature is closely related to the
+[ignore domains](@!urlTo("passthrough.html")!@) functionality, but differs in two important aspects:
+
+- The raw TCP messages are printed to the event log.
+- SSL connections will be intercepted.
+
+Please note that message interception or modification are not possible yet.
+If you are not interested in the raw TCP messages, you should use the ignore domains feature.
+
+## How it works
+
+
+<table class="table">
+    <tbody>
+        <tr>
+            <th width="20%">command-line</th> <td>--tcp HOST</td>
+        </tr>
+        <tr>
+            <th>mitmproxy shortcut</th> <td><b>T</b></td>
+        </tr>
+    </tbody>
+</table>
+
+For a detailed description on the structure of the hostname pattern, please refer to the [Ignore Domains](@!urlTo("passthrough.html")!@) feature.
+
+### See Also
+
+- [Ignore Domains](@!urlTo("passthrough.html")!@)
+- [Response Streaming](@!urlTo("responsestreaming.html")!@)

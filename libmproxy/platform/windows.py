@@ -1,4 +1,4 @@
-import argparse
+import configargparse
 import cPickle as pickle
 from ctypes import byref, windll, Structure
 from ctypes.wintypes import DWORD
@@ -361,7 +361,7 @@ class TransparentProxy(object):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Windows Transparent Proxy")
+    parser = configargparse.ArgumentParser(description="Windows Transparent Proxy")
     parser.add_argument('--mode', choices=['forward', 'local', 'both'], default="both",
                         help='redirection operation mode: "forward" to only redirect forwarded packets, '
                              '"local" to only redirect packets originating from the local machine')

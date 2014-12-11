@@ -1,0 +1,14 @@
+
+A fuzzing architecture for mitmproxy
+====================================
+
+Quick start:
+
+	honcho -f ./straight_stream start
+
+
+Notes:
+
+	- Processes are managed using honcho (pip install honcho)
+	- Paths and common settings live in .env
+

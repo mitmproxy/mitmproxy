@@ -16,13 +16,12 @@ if os.name != "nt":
     scripts.append("mitmproxy")
 
 deps = {
-    "netlib>=%s" % version.MINORVERSION,
+    "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "pyasn1>0.1.2",
-    "requests>=2.4.0",
     "pyOpenSSL>=0.14",
     "Flask>=0.10.1",
     "tornado>=4.0.2",
-    "sortedcontainers>=0.9.1"
+    "configargparse>=0.9.3"
 }
 script_deps = {
     "mitmproxy": {
@@ -36,10 +35,6 @@ for script in scripts:
     deps.update(script_deps[script])
 if os.name == "nt":
     deps.add("pydivert>=0.0.4")  # Transparent proxying on Windows
-
-console_scripts = [
-    "%s = libmproxy.main:%s" % (s, s) for s in scripts
-]
 
 
 setup(
@@ -67,14 +62,9 @@ setup(
         "Topic :: Internet :: Proxy Servers",
         "Topic :: Software Development :: Testing"
     ],
-
     packages=find_packages(),
     include_package_data=True,
-
-    entry_points={
-        'console_scripts': console_scripts
-    },
-
+    scripts = scripts,
     install_requires=list(deps),
     extras_require={
         'dev': [
@@ -82,12 +72,19 @@ setup(
             "nose>=1.3.0",
             "nose-cov>=1.6",
             "coveralls>=0.4.1",
-            "pathod>=%s" % version.MINORVERSION
+            "pathod>=%s, <%s" % (
+                version.MINORVERSION, version.NEXT_MINORVERSION
+            )
         ],
         'contentviews': [
             "pyamf>=0.6.1",
             "protobuf>=2.5.0",
             "cssutils>=1.0"
+        ],
+        'examples': [
+            "pytz",
+            "harparser",
+            "beautifulsoup4"
         ]
     }
 )

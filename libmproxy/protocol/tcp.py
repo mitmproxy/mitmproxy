@@ -13,6 +13,10 @@ class TCPHandler(ProtocolHandler):
 
     chunk_size = 4096
 
+    def __init__(self, c, log=True):
+        super(TCPHandler, self).__init__(c)
+        self.log = log
+
     def handle_messages(self):
         self.c.establish_server_connection()
 
@@ -63,26 +67,25 @@ class TCPHandler(ProtocolHandler):
                         # if one of the peers is over SSL, we need to send
                         # bytes/strings
                         if not src.ssl_established:
-                            # only ssl to dst, i.e. we revc'd into buf but need
-                            # bytes/string now.
+                            # we revc'd into buf but need bytes/string now.
                             contents = buf[:size].tobytes()
-                        self.c.log(
-                            "%s %s\r\n%s" % (
-                                direction, dst_str, cleanBin(contents)
-                            ),
-                            "debug"
-                        )
+                        if self.log:
+                            self.c.log(
+                                "%s %s\r\n%s" % (
+                                    direction, dst_str, cleanBin(contents)
+                                ),
+                                "info"
+                            )
                         dst.connection.send(contents)
                     else:
                         # socket.socket.send supports raw bytearrays/memoryviews
-                        self.c.log(
-                            "%s %s\r\n%s" % (
-                                direction,
-                                dst_str,
-                                cleanBin(buf.tobytes())
-                            ),
-                            "debug"
-                        )
+                        if self.log:
+                            self.c.log(
+                                "%s %s\r\n%s" % (
+                                    direction, dst_str, cleanBin(buf.tobytes())
+                                ),
+                                "info"
+                            )
                         dst.connection.send(buf[:size])
         except socket.error as e:
             self.c.log("TCP connection closed unexpectedly.", "debug")

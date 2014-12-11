@@ -41,10 +41,26 @@ The files created by mitmproxy in the .mitmproxy directory are as follows:
 Using a custom certificate
 --------------------------
 
-You can use your own certificate by passing the __--cert__ option to mitmproxy.
+You can use your own certificate by passing the <kbd>--cert</kbd> option to mitmproxy. mitmproxy then uses the provided
+certificate for interception of the specified domains instead of generating a cert signed by its own CA.
 
-The certificate file is expected to be in the PEM format. You can generate
-a certificate in this format using these instructions:
+The certificate file is expected to be in the PEM format.
+You can include intermediary certificates right below your leaf certificate, so that you PEM file roughly looks like
+this:
+
+<pre>
+-----BEGIN PRIVATE KEY-----
+&lt;private key&gt;
+-----END PRIVATE KEY-----
+-----BEGIN CERTIFICATE-----
+&lt;cert&gt;
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+&lt;intermediary cert (optional)&gt;
+-----END CERTIFICATE-----
+</pre>
+
+For example, you can generate a certificate in this format using these instructions:
 
 <pre class="terminal">
 > openssl genrsa -out cert.key 8192
@@ -54,6 +70,15 @@ a certificate in this format using these instructions:
 > mitmproxy --cert=cert.pem
 </pre>
 
+
+Using a custom certificate authority
+------------------------------------
+
+By default, mitmproxy will (generate and) use <samp>~/.mitmproxy/mitmproxy-ca.pem</samp> as the default certificate
+authority to generate certificates for all domains for which no custom certificate is provided (see above).
+You can use your own certificate authority by passing the <kbd>--confdir</kbd> option to mitmproxy.
+mitmproxy will then look for <samp>mitmproxy-ca.pem</samp> in the specified directory. If no such file exists,
+it will be generated automatically.
 
 Installing the mitmproxy CA
 ---------------------------

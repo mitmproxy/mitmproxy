@@ -9,9 +9,11 @@ pages = [
     Page("replacements.html", "Replacements"),
     Page("responsestreaming.html", "Response Streaming"),
     Page("reverseproxy.html", "Reverse proxy mode"),
+    Page("socksproxy.html", "SOCKS Mode"),
     Page("setheaders.html", "Set Headers"),
     Page("serverreplay.html", "Server-side replay"),
     Page("sticky.html", "Sticky cookies and auth"),
+    Page("tcpproxy.html", "TCP Proxy"),
     Page("upstreamcerts.html", "Upstream Certs"),
     Page("upstreamproxy.html", "Upstream proxy mode"),
 ]

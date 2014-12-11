@@ -574,9 +574,8 @@ class FlowView(common.WWrap):
         else:
             if not self.flow.response:
                 self.flow.response = HTTPResponse(
-                    self.flow.request,
                     self.flow.request.httpversion,
-                    200, "OK", flow.ODictCaseless(), "", None
+                    200, "OK", flow.ODictCaseless(), ""
                 )
                 self.flow.response.reply = controller.DummyReply()
             conn = self.flow.response
@@ -749,7 +748,7 @@ class FlowView(common.WWrap):
             self.master.statusbar.message("")
         elif key == "m":
             p = list(contentview.view_prompts)
-            p.insert(0, ("clear", "c"))
+            p.insert(0, ("Clear", "C"))
             self.master.prompt_onekey(
                 "Display mode",
                 p,

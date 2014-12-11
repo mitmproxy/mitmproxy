@@ -1,3 +1,53 @@
+
+15 November 2014: mitmproxy 0.11.1:
+
+    * Bug fixes: connection leaks some crashes 
+
+
+7 November 2014: mitmproxy 0.11:
+    
+    * Performance improvements for mitmproxy console
+
+    * SOCKS5 proxy mode allows mitmproxy to act as a SOCKS5 proxy server
+
+    * Data streaming for response bodies exceeding a threshold
+      (bradpeabody@gmail.com)
+
+    * Ignore hosts or IP addresses, forwarding both HTTP and HTTPS traffic
+      untouched
+
+    * Finer-grained control of traffic replay, including options to ignore
+      contents or parameters when matching flows (marcelo.glezer@gmail.com)
+
+    * Pass arguments to inline scripts 
+
+    * Configurable size limit on HTTP request and response bodies
+
+    * Per-domain specification of interception certificates and keys (see
+      --cert option)
+
+    * Certificate forwarding, relaying upstream SSL certificates verbatim (see
+      --cert-forward)
+
+    * Search and highlighting for HTTP request and response bodies in
+      mitmproxy console (pedro@worcel.com)
+
+    * Transparent proxy support on Windows
+
+    * Improved error messages and logging
+
+    * Support for FreeBSD in transparent mode, using pf (zbrdge@gmail.com)
+
+    * Content view mode for WBXML (davidshaw835@air-watch.com)
+
+    * Better documentation, with a new section on proxy modes
+
+    * Generic TCP proxy mode
+
+    * Countless bugfixes and other small improvements
+
+
+
 28 January 2014: mitmproxy 0.10:
 	
     * Support for multiple scripts and multiple script arguments

@@ -5,8 +5,10 @@ import mock
 from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
 from libmproxy.protocol.http import decoded, CONTENT_MISSING
-from libmproxy.proxy.connection import ClientConnection, ServerConnection
-from netlib import tcp
+from libmproxy.proxy.config import HostMatcher
+from libmproxy.proxy import ProxyConfig
+from libmproxy.proxy.server import DummyServer
+from libmproxy.proxy.connection import ClientConnection
 import tutils
 
 
@@ -84,19 +86,20 @@ class TestClientPlaybackState:
         fm = flow.FlowMaster(None, s)
         fm.start_client_playback([first, tutils.tflow()], True)
         c = fm.client_playback
+        c.testing = True
 
         assert not c.done()
         assert not s.flow_count()
         assert c.count() == 2
-        c.tick(fm, testing=True)
+        c.tick(fm)
         assert s.flow_count()
         assert c.count() == 1
 
-        c.tick(fm, testing=True)
+        c.tick(fm)
         assert c.count() == 1
 
         c.clear(c.current)
-        c.tick(fm, testing=True)
+        c.tick(fm)
         assert c.count() == 0
         c.clear(c.current)
         assert c.done()
@@ -531,6 +534,14 @@ class TestSerialize:
         fm.load_flows(r)
         assert len(s._flow_list) == 6
 
+    def test_load_flows_reverse(self):
+        r = self._treader()
+        s = flow.State()
+        conf = ProxyConfig(mode="reverse", upstream_server=[True,True,"use-this-domain",80])
+        fm = flow.FlowMaster(DummyServer(conf), s)
+        fm.load_flows(r)
+        assert s._flow_list[0].request.host == "use-this-domain"
+
     def test_filter(self):
         sio = StringIO()
         fl = filt.parse("~c 200")
@@ -584,11 +595,11 @@ class TestFlowMaster:
 
     def test_getset_ignore(self):
         p = mock.Mock()
-        p.config.ignore = []
+        p.config.check_ignore = HostMatcher()
         fm = flow.FlowMaster(p, flow.State())
-        assert not fm.get_ignore()
-        fm.set_ignore(["^apple\.com:", ":443$"])
-        assert fm.get_ignore()
+        assert not fm.get_ignore_filter()
+        fm.set_ignore_filter(["^apple\.com:", ":443$"])
+        assert fm.get_ignore_filter()
 
     def test_replay(self):
         s = flow.State()
@@ -599,6 +610,9 @@ class TestFlowMaster:
 
         f.intercepting = True
         assert "intercepting" in fm.replay_request(f)
+
+        f.live = True
+        assert "live" in fm.replay_request(f)
 
     def test_script_reqerr(self):
         s = flow.State()
@@ -679,9 +693,11 @@ class TestFlowMaster:
 
         f = tutils.tflow(resp=True)
         pb = [tutils.tflow(resp=True), f]
-        fm = flow.FlowMaster(None, s)
+
+        fm = flow.FlowMaster(DummyServer(ProxyConfig()), s)
         assert not fm.start_server_playback(pb, False, [], False, False, None, False)
         assert not fm.start_client_playback(pb, False)
+        fm.client_playback.testing = True
 
         q = Queue.Queue()
         assert not fm.state.flow_count()

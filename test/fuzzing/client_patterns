@@ -1,0 +1,4 @@
+get:'http://localhost:9999/p/200':ir,"\n"
+get:'http://localhost:9999/p/200':ir,"\0"
+get:'http://localhost:9999/p/200':ir,@5
+get:'http://localhost:9999/p/200':dr
