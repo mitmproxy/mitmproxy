@@ -143,8 +143,15 @@ class TestDumpMaster:
     def test_write(self):
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a")
-            self._dummy_cycle(1, None, "", wfile=p, verbosity=0)
+            self._dummy_cycle(1, None, "", outfile=(p,"wb"), verbosity=0)
             assert len(list(flow.FlowReader(open(p,"rb")).stream())) == 1
+
+    def test_write_append(self):
+        with tutils.tmpdir() as d:
+            p = os.path.join(d, "a.append")
+            self._dummy_cycle(1, None, "", outfile=(p,"wb"), verbosity=0)
+            self._dummy_cycle(1, None, "", outfile=(p,"ab"), verbosity=0)
+            assert len(list(flow.FlowReader(open(p,"rb")).stream())) == 2
 
     def test_write_err(self):
         tutils.raises(
@@ -153,7 +160,7 @@ class TestDumpMaster:
             1,
             None,
             "",
-            wfile = "nonexistentdir/foo"
+            outfile = ("nonexistentdir/foo", "wb")
         )
 
     def test_script(self):

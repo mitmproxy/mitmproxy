@@ -179,7 +179,7 @@ def get_common_options(options):
         stickyauth=stickyauth,
         stream_large_bodies=stream_large_bodies,
         showhost=options.showhost,
-        wfile=options.wfile,
+        outfile=options.outfile,
         verbosity=options.verbose,
         nopop=options.nopop,
         replay_ignore_content = options.replay_ignore_content,
@@ -249,10 +249,16 @@ def common_options(parser):
         action="store_const", dest="verbose", default=1, const=2,
         help="Increase event log verbosity."
     )
-    parser.add_argument(
+    outfile = parser.add_mutually_exclusive_group()
+    outfile.add_argument(
         "-w", "--wfile",
-        action="store", dest="wfile", default=None,
+        action="store", dest="outfile", type=lambda f: (f, "wb"),
         help="Write flows to file."
+    )
+    outfile.add_argument(
+        "-a", "--afile",
+        action="store", dest="outfile", type=lambda f: (f, "ab"),
+        help="Append flows to file."
     )
     parser.add_argument(
         "-z", "--anticomp",
@@ -371,7 +377,7 @@ def common_options(parser):
 
     group = parser.add_argument_group("Onboarding App")
     group.add_argument(
-        "-a", "--noapp",
+        "--noapp",
         action="store_false", dest="app", default=True,
         help="Disable the mitmproxy onboarding app."
     )
