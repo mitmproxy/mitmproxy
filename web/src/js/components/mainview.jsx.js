@@ -1,5 +1,5 @@
 var MainView = React.createClass({
-    mixins: [ReactRouter.Navigation, ReactRouter.State],
+    mixins: [Navigation, State],
     getInitialState: function () {
         return {
             flows: []
@@ -52,7 +52,7 @@ var MainView = React.createClass({
             );
             this.refs.flowTable.scrollIntoView(flow);
         } else {
-            this.replaceWith("flows");
+            this.replaceWith("flows", {});
         }
     },
     selectFlowRelative: function (shift) {

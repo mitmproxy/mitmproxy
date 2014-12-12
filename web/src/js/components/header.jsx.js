@@ -1,4 +1,13 @@
 var MainMenu = React.createClass({
+    mixins: [Navigation, State],
+    getInitialState: function(){
+        this.onQueryChange(Query.FILTER, function(oldVal, nextVal){
+            this.setState({filter: nextVal});
+        }.bind(this));
+        return {
+            filter: this.getQuery()[Query.FILTER]
+        };
+    },
     statics: {
         title: "Traffic",
         route: "flows"
@@ -10,6 +19,13 @@ var MainMenu = React.createClass({
     },
     clearFlows: function () {
         $.post("/flows/clear");
+    },
+    setFilter: function(e){
+        e.preventDefault();
+        this.setQuery(Query.FILTER, this.state.filter);
+    },
+    onFilterChange: function(e){
+        this.setState({filter: e.target.value});
     },
     render: function () {
         return (
@@ -23,6 +39,14 @@ var MainMenu = React.createClass({
                     <i className="fa fa-eraser"></i>
                 &nbsp;Clear Flows
                 </button>
+                &nbsp;
+                <form className="form-inline" onSubmit={this.setFilter} style={{display:"inline-block"}}>
+                    <input type="text" placeholder="filter expression"
+                        onChange={this.onFilterChange} value={this.state.filter}
+                        className="form-control"
+                    />
+                    </form>
+
             </div>
         );
     }
@@ -70,19 +94,19 @@ var FileMenu = React.createClass({
             });
         }
     },
-    handleNewClick: function(e){
+    handleNewClick: function (e) {
         e.preventDefault();
         console.error("unimplemented: handleNewClick");
     },
-    handleOpenClick: function(e){
+    handleOpenClick: function (e) {
         e.preventDefault();
         console.error("unimplemented: handleOpenClick");
     },
-    handleSaveClick: function(e){
+    handleSaveClick: function (e) {
         e.preventDefault();
         console.error("unimplemented: handleSaveClick");
     },
-    handleShutdownClick: function(e){
+    handleShutdownClick: function (e) {
         e.preventDefault();
         console.error("unimplemented: handleShutdownClick");
     },
@@ -129,7 +153,7 @@ var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
 
 
 var Header = React.createClass({
-    mixins: [ReactRouter.Navigation],
+    mixins: [Navigation],
     getInitialState: function () {
         return {
             active: header_entries[0]
@@ -137,7 +161,7 @@ var Header = React.createClass({
     },
     handleClick: function (active, e) {
         e.preventDefault();
-        this.transitionTo(active.route);
+        this.replaceWith(active.route);
         this.setState({active: active});
     },
     render: function () {

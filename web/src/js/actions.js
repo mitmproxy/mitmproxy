@@ -63,3 +63,7 @@ var EventLogActions = {
         });
     }
 };
+
+Query = {
+    FILTER: "f"
+};

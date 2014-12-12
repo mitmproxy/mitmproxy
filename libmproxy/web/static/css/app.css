@@ -206,6 +206,8 @@ header .menu {
   padding: 4px 8px;
   border-radius: 5px;
   word-break: break-all;
+  max-height: 100px;
+  overflow-y: auto;
 }
 .flow-detail table {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;

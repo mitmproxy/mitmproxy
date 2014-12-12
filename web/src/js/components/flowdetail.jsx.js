@@ -294,7 +294,7 @@ var allTabs = {
 };
 
 var FlowDetail = React.createClass({
-    mixins: [StickyHeadMixin, ReactRouter.Navigation, ReactRouter.State],
+    mixins: [StickyHeadMixin, Navigation, State],
     getTabs: function (flow) {
         var tabs = [];
         ["request", "response", "error"].forEach(function (e) {

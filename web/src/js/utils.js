@@ -23,6 +23,50 @@ var StickyHeadMixin = {
 };
 
 
+var Navigation = _.extend({}, ReactRouter.Navigation, {
+    setQuery: function (k, v) {
+        var q = this.context.getCurrentQuery();
+        q[k] = v;
+        this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
+    },
+    replaceWith: function(routeNameOrPath, params, query) {
+        if(routeNameOrPath === undefined){
+            routeNameOrPath = this.context.getCurrentPath();
+        }
+        if(params === undefined){
+            params = this.context.getCurrentParams();
+        }
+        if(query === undefined){
+            query = this.context.getCurrentQuery();
+        }
+        ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
+    }
+});
+
+var State = _.extend({}, ReactRouter.State, {
+    getInitialState: function () {
+        this._query = this.context.getCurrentQuery();
+        this._queryWatches = [];
+        return null;
+    },
+    onQueryChange: function (key, callback) {
+        this._queryWatches.push({
+            key: key,
+            callback: callback
+        });
+    },
+    componentWillReceiveProps: function (nextProps, nextState) {
+        var q = this.context.getCurrentQuery();
+        for (var i = 0; i < this._queryWatches.length; i++) {
+            var watch = this._queryWatches[i];
+            if (this._query[watch.key] !== q[watch.key]) {
+                watch.callback(this._query[watch.key], q[watch.key], watch.key);
+            }
+        }
+        this._query = q;
+    }
+});
+
 var Key = {
     UP: 38,
     DOWN: 40,
