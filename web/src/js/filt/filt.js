@@ -57,7 +57,7 @@ Filt = (function() {
         peg$c22 = { type: "literal", value: "(", description: "\"(\"" },
         peg$c23 = ")",
         peg$c24 = { type: "literal", value: ")", description: "\")\"" },
-        peg$c25 = function(expr) { return binding(orExpr); },
+        peg$c25 = function(expr) { return binding(expr); },
         peg$c26 = "~a",
         peg$c27 = { type: "literal", value: "~a", description: "\"~a\"" },
         peg$c28 = function() { return assetFilter; },
@@ -1512,31 +1512,42 @@ Filt = (function() {
 
     function or(first, second) {
         // Add explicit function names to ease debugging.
-        return function orFilter() {
+        function orFilter() {
             first.apply(this, arguments) || second.apply(this, arguments);
         };
+        orFilter.desc = first.desc + " or " + second.desc;
+        return orFilter;
     }
     function and(first, second) {
-        return function andFilter() {
+        function andFilter() {
             return first.apply(this, arguments) && second.apply(this, arguments);
         }
+        andFilter.desc = first.desc + " and " + second.desc;
+        return andFilter;
     }
     function not(expr) {
-        return function notFilter() {
+        function notFilter() {
             return !expr.apply(this, arguments);
         };
+        notFilter.desc = "not " + expr.desc;
+        return notFilter;
     }
     function binding(expr) {
-        return function bindingFilter() {
+        function bindingFilter() {
             return expr.apply(this, arguments);
         };
+        bindingFilter.desc = "(" + expr.desc + ")";
+        return bindingFilter;
     }
     function trueFilter(flow) {
         return true;
     }
+    trueFilter.desc = "true";
     function falseFilter(flow) {
         return false;
     }
+    falseFilter.desc = "false";
+
     var ASSET_TYPES = [
         new RegExp("text/javascript"),
         new RegExp("application/x-javascript"),
@@ -1557,83 +1568,107 @@ Filt = (function() {
         }
         return false;
     }
+    assetFilter.desc = "is asset";
     function responseCode(code){
         code = parseInt(code);
-        return function responseCodeFilter(flow){
+        function responseCodeFilter(flow){
             return flow.response && flow.response.code === code;
         };
+        responseCodeFilter.desc = "resp. code is " + code;
+        return responseCodeFilter;
     }
     function domain(regex){
         regex = new RegExp(regex, "i");
-        return function domainFilter(flow){
+        function domainFilter(flow){
             return flow.request && regex.test(flow.request.host);
         };
+        domainFilter.desc = "domain matches " + regex;
+        return domainFilter;
     }
     function errorFilter(flow){
         return !!flow.error;
     }
+    errorFilter.desc = "has error";
     function header(regex){
         regex = new RegExp(regex, "i");
-        return function headerFilter(flow){
+        function headerFilter(flow){
             return (
                 (flow.request && RequestUtils.match_header(flow.request, regex))
                 ||
                 (flow.response && ResponseUtils.match_header(flow.response, regex))
             );
         };
+        headerFilter.desc = "header matches " + regex;
+        return headerFilter;
     }
     function requestHeader(regex){
         regex = new RegExp(regex, "i");
-        return function requestHeaderFilter(flow){
+        function requestHeaderFilter(flow){
             return (flow.request && RequestUtils.match_header(flow.request, regex));
         }
+        requestHeaderFilter.desc = "req. header matches " + regex;
+        return requestHeaderFilter;
     }
     function responseHeader(regex){
         regex = new RegExp(regex, "i");
-        return function responseHeaderFilter(flow){
+        function responseHeaderFilter(flow){
             return (flow.response && ResponseUtils.match_header(flow.response, regex));
         }
+        responseHeaderFilter.desc = "resp. header matches " + regex;
+        return responseHeaderFilter;
     }
     function method(regex){
         regex = new RegExp(regex, "i");
-        return function methodFilter(flow){
+        function methodFilter(flow){
             return flow.request && regex.test(flow.request.method);
         };
+        methodFilter.desc = "method matches " + regex;
+        return methodFilter;
     }
     function noResponseFilter(flow){
         return flow.request && !flow.response;
     }
+    noResponseFilter.desc = "has no response";
     function responseFilter(flow){
         return !!flow.response;
     }
+    responseFilter.desc = "has response";
 
     function contentType(regex){
         regex = new RegExp(regex, "i");
-        return function contentTypeFilter(flow){
+        function contentTypeFilter(flow){
             return (
                 (flow.request && regex.test(RequestUtils.getContentType(flow.request)))
                 ||
                 (flow.response && regex.test(ResponseUtils.getContentType(flow.response)))
             );
         };
+        contentTypeFilter.desc = "content type matches " + regex;
+        return contentTypeFilter;
     }
     function requestContentType(regex){
         regex = new RegExp(regex, "i");
-        return function requestContentTypeFilter(flow){
+        function requestContentTypeFilter(flow){
             return flow.request && regex.test(RequestUtils.getContentType(flow.request));
         };
+        requestContentTypeFilter.desc = "req. content type matches " + regex;
+        return requestContentTypeFilter;
     }
     function responseContentType(regex){
         regex = new RegExp(regex, "i");
-        return function responseContentTypeFilter(flow){
+        function responseContentTypeFilter(flow){
             return flow.response && regex.test(ResponseUtils.getContentType(flow.response));
         };
+        responseContentTypeFilter.desc = "resp. content type matches " + regex;
+        return responseContentTypeFilter;
     }
     function url(regex){
         regex = new RegExp(regex, "i");
-        return function urlFilter(flow){
+        function urlFilter(flow){
             return flow.request && regex.test(RequestUtils.pretty_url(flow.request));
         }
+        urlFilter.desc = "url matches " + regex;
+        return urlFilter;
     }
 
 
