@@ -1,28 +1,131 @@
 // PEG.js filter rules - see http://pegjs.majda.cz/online
 
-/* Explain Filter */
 {
-  var or = function(first, second) {
-    return first + " or " + second;
-  };
-  var and = function(first, second) {
-    return first + " and " + second;
-  };
-  var not = function(expr) {
-    return "not " + expr;
-  };
-  var binding = function(expr) {
-    return "(" + expr + ")";
-  }
-  var assetFilter = "is asset";
-  var trueFilter = true;
-  var falseFilter = false;
-  var bodyFilter = function(s) {
-    return "body ~= '" + s + "'";
-  }
-  var urlFilter = function(s) {
-    return "url ~= '" + s + "'";
-  }
+function or(first, second) {
+    // Add explicit function names to ease debugging.
+    return function orFilter() {
+        first.apply(this, arguments) || second.apply(this, arguments);
+    };
+}
+function and(first, second) {
+    return function andFilter() {
+        return first.apply(this, arguments) && second.apply(this, arguments);
+    }
+}
+function not(expr) {
+    return function notFilter() {
+        return !expr.apply(this, arguments);
+    };
+}
+function binding(expr) {
+    return function bindingFilter() {
+        return expr.apply(this, arguments);
+    };
+}
+function trueFilter(flow) {
+    return true;
+}
+function falseFilter(flow) {
+    return false;
+}
+var ASSET_TYPES = [
+    new RegExp("text/javascript"),
+    new RegExp("application/x-javascript"),
+    new RegExp("application/javascript"),
+    new RegExp("text/css"),
+    new RegExp("image/.*"),
+    new RegExp("application/x-shockwave-flash")
+];
+function assetFilter(flow) {
+    if (flow.response) {
+        var ct = ResponseUtils.getContentType(flow.response);
+        var i = ASSET_TYPES.length;
+        while (i--) {
+            if (ASSET_TYPES[i].test(ct)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+function responseCode(code){
+    code = parseInt(code);
+    return function responseCodeFilter(flow){
+        return flow.response && flow.response.code === code;
+    };
+}
+function domain(regex){
+    regex = new RegExp(regex, "i");
+    return function domainFilter(flow){
+        return flow.request && regex.test(flow.request.host);
+    };
+}
+function errorFilter(flow){
+    return !!flow.error;
+}
+function header(regex){
+    regex = new RegExp(regex, "i");
+    return function headerFilter(flow){
+        return (
+            (flow.request && RequestUtils.match_header(flow.request, regex))
+            ||
+            (flow.response && ResponseUtils.match_header(flow.response, regex))
+        );
+    };
+}
+function requestHeader(regex){
+    regex = new RegExp(regex, "i");
+    return function requestHeaderFilter(flow){
+        return (flow.request && RequestUtils.match_header(flow.request, regex));
+    }
+}
+function responseHeader(regex){
+    regex = new RegExp(regex, "i");
+    return function responseHeaderFilter(flow){
+        return (flow.response && ResponseUtils.match_header(flow.response, regex));
+    }
+}
+function method(regex){
+    regex = new RegExp(regex, "i");
+    return function methodFilter(flow){
+        return flow.request && regex.test(flow.request.method);
+    };
+}
+function noResponseFilter(flow){
+    return flow.request && !flow.response;
+}
+function responseFilter(flow){
+    return !!flow.response;
+}
+
+function contentType(regex){
+    regex = new RegExp(regex, "i");
+    return function contentTypeFilter(flow){
+        return (
+            (flow.request && regex.test(RequestUtils.getContentType(flow.request)))
+            ||
+            (flow.response && regex.test(ResponseUtils.getContentType(flow.response)))
+        );
+    };
+}
+function requestContentType(regex){
+    regex = new RegExp(regex, "i");
+    return function requestContentTypeFilter(flow){
+        return flow.request && regex.test(RequestUtils.getContentType(flow.request));
+    };
+}
+function responseContentType(regex){
+    regex = new RegExp(regex, "i");
+    return function responseContentTypeFilter(flow){
+        return flow.response && regex.test(ResponseUtils.getContentType(flow.response));
+    };
+}
+function url(regex){
+    regex = new RegExp(regex, "i");
+    return function urlFilter(flow){
+        return flow.request && regex.test(RequestUtils.pretty_url(flow.request));
+    }
+}
 }
 
 start "filter expression"
@@ -60,15 +163,28 @@ Expr
 
 NullaryExpr
   = BooleanLiteral
-  / "~a" { return assetFilter; };
+  / "~a" { return assetFilter; }
+  / "~e" { return errorFilter; }
+  / "~q" { return noResponseFilter; }
+  / "~s" { return responseFilter; }
+
 
 BooleanLiteral
   = "true" { return trueFilter; }
   / "false" { return falseFilter; }
 
 UnaryExpr
-  = "~b" ws+ s:StringLiteral { return bodyFilter(s); }
-  / s:StringLiteral { return urlFilter(s); }
+  = "~c"  ws+ s:StringLiteral { return responseCode(s); }
+  / "~d"  ws+ s:StringLiteral { return domain(s); }
+  / "~h"  ws+ s:StringLiteral { return header(s); }
+  / "~hq" ws+ s:StringLiteral { return requestHeader(s); }
+  / "~hs" ws+ s:StringLiteral { return responseHeader(s); }
+  / "~m"  ws+ s:StringLiteral { return method(s); }
+  / "~t"  ws+ s:StringLiteral { return contentType(s); }
+  / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
+  / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
+  / "~u"  ws+ s:StringLiteral { return url(s); }
+  / s:StringLiteral { return url(s); }
 
 StringLiteral "string"
   = '"' chars:DoubleStringChar* '"' { return chars.join(""); }

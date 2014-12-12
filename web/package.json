@@ -12,6 +12,7 @@
     "gulp-livereload": "",
     "gulp-minify-css": "",
     "gulp-notify": "",
+    "gulp-peg": "",
     "gulp-plumber": "",
     "gulp-qunit": "",
     "gulp-react": "",

@@ -24,6 +24,7 @@ var ProxyAppMain = React.createClass({
     },
     componentDidMount: function () {
         this.state.settings.addListener("recalculate", this.onSettingsChange);
+        window.app = this;
     },
     componentWillUnmount: function () {
         this.state.settings.removeListener("recalculate", this.onSettingsChange);
