@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 var Footer = React.createClass({
     render: function () {
         var mode = this.props.settings.mode;
@@ -7,6 +5,6 @@ var Footer = React.createClass({
             <footer>
                 {mode != "regular" ? <span className="label label-success">{mode} mode</span> : null}
             </footer>
-            );
+        );
     }
 });

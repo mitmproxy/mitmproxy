@@ -1,34 +1,32 @@
-/** @jsx React.DOM */
-
 var FlowDetailNav = React.createClass({
-    render: function(){
+    render: function () {
 
-        var items = this.props.tabs.map(function(e){
+        var items = this.props.tabs.map(function (e) {
             var str = e.charAt(0).toUpperCase() + e.slice(1);
             var className = this.props.active === e ? "active" : "";
-            var onClick = function(){
+            var onClick = function (event) {
                 this.props.selectTab(e);
-                return false;
+                event.preventDefault();
             }.bind(this);
             return <a key={e}
-                      href="#" 
-                      className={className}
-                      onClick={onClick}>{str}</a>;
+                href="#"
+                className={className}
+                onClick={onClick}>{str}</a>;
         }.bind(this));
         return (
             <nav ref="head" className="nav-tabs nav-tabs-sm">
                 {items}
             </nav>
         );
-    } 
+    }
 });
 
 var Headers = React.createClass({
-    render: function(){
-        var rows = this.props.message.headers.map(function(header, i){
+    render: function () {
+        var rows = this.props.message.headers.map(function (header, i) {
             return (
                 <tr key={i}>
-                    <td className="header-name">{header[0]+":"}</td>
+                    <td className="header-name">{header[0] + ":"}</td>
                     <td className="header-value">{header[1]}</td>
                 </tr>
             );
@@ -44,16 +42,16 @@ var Headers = React.createClass({
 });
 
 var FlowDetailRequest = React.createClass({
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var first_line = [
-                flow.request.method,
-                RequestUtils.pretty_url(flow.request),
-                "HTTP/"+ flow.response.httpversion.join(".")
-            ].join(" ");
+            flow.request.method,
+            RequestUtils.pretty_url(flow.request),
+            "HTTP/" + flow.request.httpversion.join(".")
+        ].join(" ");
         var content = null;
-        if(flow.request.contentLength > 0){
-            content = "Request Content Size: "+ formatSize(flow.request.contentLength);
+        if (flow.request.contentLength > 0) {
+            content = "Request Content Size: " + formatSize(flow.request.contentLength);
         } else {
             content = <div className="alert alert-info">No Content</div>;
         }
@@ -72,16 +70,16 @@ var FlowDetailRequest = React.createClass({
 });
 
 var FlowDetailResponse = React.createClass({
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var first_line = [
-                "HTTP/"+ flow.response.httpversion.join("."),
-                flow.response.code,
-                flow.response.msg
-            ].join(" ");
+            "HTTP/" + flow.response.httpversion.join("."),
+            flow.response.code,
+            flow.response.msg
+        ].join(" ");
         var content = null;
-        if(flow.response.contentLength > 0){
-            content = "Response Content Size: "+ formatSize(flow.response.contentLength);
+        if (flow.response.contentLength > 0) {
+            content = "Response Content Size: " + formatSize(flow.response.contentLength);
         } else {
             content = <div className="alert alert-info">No Content</div>;
         }
@@ -99,43 +97,67 @@ var FlowDetailResponse = React.createClass({
     }
 });
 
-var TimeStamp = React.createClass({
-    render: function() {
+var FlowDetailError = React.createClass({
+    render: function () {
+        var flow = this.props.flow;
+        return (
+            <section>
+                <div className="alert alert-warning">
+                {flow.error.msg}
+                    <div><small>{ formatTimeStamp(flow.error.timestamp) }</small></div>
+                </div>
+            </section>
+        );
+    }
+});
 
-        if(!this.props.t){
+var TimeStamp = React.createClass({
+    render: function () {
+
+        if (!this.props.t) {
             //should be return null, but that triggers a React bug.
             return <tr></tr>;
         }
 
-        var ts = (new Date(this.props.t * 1000)).toISOString();
-        ts = ts.replace("T", " ").replace("Z","");
+        var ts = formatTimeStamp(this.props.t);
 
         var delta;
-        if(this.props.deltaTo){
-            delta = formatTimeDelta(1000 * (this.props.t-this.props.deltaTo));
+        if (this.props.deltaTo) {
+            delta = formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
             delta = <span className="text-muted">{"(" + delta + ")"}</span>;
         } else {
             delta = null;
         }
 
-        return <tr><td>{this.props.title + ":"}</td><td>{ts} {delta}</td></tr>;
+        return <tr>
+            <td>{this.props.title + ":"}</td>
+            <td>{ts} {delta}</td>
+        </tr>;
     }
 });
 
 var ConnectionInfo = React.createClass({
 
-    render: function() {
+    render: function () {
         var conn = this.props.conn;
         var address = conn.address.address.join(":");
 
         var sni = <tr key="sni"></tr>; //should be null, but that triggers a React bug.
-        if(conn.sni){
-            sni = <tr key="sni"><td><abbr title="TLS Server Name Indication">TLS SNI:</abbr></td><td>{conn.sni}</td></tr>;
+        if (conn.sni) {
+            sni = <tr key="sni">
+                <td>
+                    <abbr title="TLS Server Name Indication">TLS SNI:</abbr>
+                </td>
+                <td>{conn.sni}</td>
+            </tr>;
         }
         return (
             <table className="connection-table">
                 <tbody>
-                    <tr key="address"><td>Address:</td><td>{address}</td></tr>
+                    <tr key="address">
+                        <td>Address:</td>
+                        <td>{address}</td>
+                    </tr>
                     {sni}
                 </tbody>
             </table>
@@ -144,7 +166,7 @@ var ConnectionInfo = React.createClass({
 });
 
 var CertificateInfo = React.createClass({
-    render: function(){
+    render: function () {
         //TODO: We should fetch human-readable certificate representation
         // from the server
         var flow = this.props.flow;
@@ -165,7 +187,7 @@ var CertificateInfo = React.createClass({
 });
 
 var Timing = React.createClass({
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var sc = flow.server_conn;
         var cc = flow.client_conn;
@@ -218,82 +240,112 @@ var Timing = React.createClass({
         }
 
         //Add unique key for each row.
-        timestamps.forEach(function(e){
+        timestamps.forEach(function (e) {
             e.key = e.title;
         });
 
         timestamps = _.sortBy(timestamps, 't');
 
-        var rows = timestamps.map(function(e){
-            return TimeStamp(e);
+        var rows = timestamps.map(function (e) {
+            return <TimeStamp {...e}/>;
         });
 
         return (
             <div>
-            <h4>Timing</h4>
-            <table className="timing-table">
-                <tbody>
+                <h4>Timing</h4>
+                <table className="timing-table">
+                    <tbody>
                     {rows}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
             </div>
         );
     }
 });
 
 var FlowDetailConnectionInfo = React.createClass({
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
         var server_conn = flow.server_conn;
         return (
             <section>
 
-            <h4>Client Connection</h4>
-            <ConnectionInfo conn={client_conn}/>
+                <h4>Client Connection</h4>
+                <ConnectionInfo conn={client_conn}/>
 
-            <h4>Server Connection</h4>
-            <ConnectionInfo conn={server_conn}/>
+                <h4>Server Connection</h4>
+                <ConnectionInfo conn={server_conn}/>
 
-            <CertificateInfo flow={flow}/>
+                <CertificateInfo flow={flow}/>
 
-            <Timing flow={flow}/>
+                <Timing flow={flow}/>
 
             </section>
         );
     }
 });
 
-var tabs = {
+var allTabs = {
     request: FlowDetailRequest,
     response: FlowDetailResponse,
+    error: FlowDetailError,
     details: FlowDetailConnectionInfo
 };
 
 var FlowDetail = React.createClass({
-    getDefaultProps: function(){
-        return {
-            tabs: ["request","response", "details"]
-        };
+    mixins: [StickyHeadMixin, ReactRouter.Navigation, ReactRouter.State],
+    getTabs: function (flow) {
+        var tabs = [];
+        ["request", "response", "error"].forEach(function (e) {
+            if (flow[e]) {
+                tabs.push(e);
+            }
+        });
+        tabs.push("details");
+        return tabs;
     },
-    mixins: [StickyHeadMixin],
-    nextTab: function(i) {
-        var currentIndex = this.props.tabs.indexOf(this.props.active);
+    nextTab: function (i) {
+        var tabs = this.getTabs(this.props.flow);
+        var currentIndex = tabs.indexOf(this.getParams().detailTab);
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
-        var nextIndex = (currentIndex + i + this.props.tabs.length) % this.props.tabs.length;
-        this.props.selectTab(this.props.tabs[nextIndex]);
+        var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
+        this.selectTab(tabs[nextIndex]);
     },
-    render: function(){
-        var flow = JSON.stringify(this.props.flow, null, 2);
-        var Tab = tabs[this.props.active];
+    selectTab: function (panel) {
+        this.replaceWith(
+            "flow",
+            {
+                flowId: this.getParams().flowId,
+                detailTab: panel
+            }
+        );
+    },
+    render: function () {
+        var flow = this.props.flow;
+        var tabs = this.getTabs(flow);
+        var active = this.getParams().detailTab;
+
+        if (!_.contains(tabs, active)) {
+            if (active === "response" && flow.error) {
+                active = "error";
+            } else if (active === "error" && flow.response) {
+                active = "response";
+            } else {
+                active = tabs[0];
+            }
+            this.selectTab(active);
+        }
+
+        var Tab = allTabs[active];
         return (
             <div className="flow-detail" onScroll={this.adjustHead}>
                 <FlowDetailNav ref="head"
-                               tabs={this.props.tabs}
-                               active={this.props.active}
-                               selectTab={this.props.selectTab}/>
-                <Tab flow={this.props.flow}/>
+                    tabs={tabs}
+                    active={active}
+                    selectTab={this.selectTab}/>
+                <Tab flow={flow}/>
             </div>
-            );
-    } 
+        );
+    }
 });

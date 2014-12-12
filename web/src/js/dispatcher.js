@@ -11,14 +11,14 @@ Dispatcher.prototype.register = function (callback) {
     this.callbacks.push(callback);
 };
 Dispatcher.prototype.unregister = function (callback) {
-    var index = this.callbacks.indexOf(f);
+    var index = this.callbacks.indexOf(callback);
     if (index >= 0) {
-        this.callbacks.splice(this.callbacks.indexOf(f), 1);
+        this.callbacks.splice(index, 1);
     }
 };
 Dispatcher.prototype.dispatch = function (payload) {
     console.debug("dispatch", payload);
-    for(var i = 0; i < this.callbacks.length; i++){
+    for (var i = 0; i < this.callbacks.length; i++) {
         this.callbacks[i](payload);
     }
 };

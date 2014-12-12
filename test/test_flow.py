@@ -364,7 +364,7 @@ class TestState:
     def test_backup(self):
         c = flow.State()
         f = tutils.tflow()
-        c.add_request(f)
+        c.add_flow(f)
         f.backup()
         c.revert(f)
 
@@ -376,42 +376,42 @@ class TestState:
         """
         c = flow.State()
         f = tutils.tflow()
-        c.add_request(f)
+        c.add_flow(f)
         assert f
         assert c.flow_count() == 1
         assert c.active_flow_count() == 1
 
         newf = tutils.tflow()
-        assert c.add_request(newf)
+        assert c.add_flow(newf)
         assert c.active_flow_count() == 2
 
         f.response = tutils.tresp()
-        assert c.add_response(f)
+        assert c.update_flow(f)
         assert c.flow_count() == 2
         assert c.active_flow_count() == 1
 
         _ = tutils.tresp()
-        assert not c.add_response(None)
+        assert not c.update_flow(None)
         assert c.active_flow_count() == 1
 
         newf.response = tutils.tresp()
-        assert c.add_response(newf)
+        assert c.update_flow(newf)
         assert c.active_flow_count() == 0
 
     def test_err(self):
         c = flow.State()
         f = tutils.tflow()
-        c.add_request(f)
+        c.add_flow(f)
         f.error = Error("message")
-        assert c.add_error(f)
+        assert c.update_flow(f)
 
         c = flow.State()
         f = tutils.tflow()
-        c.add_request(f)
+        c.add_flow(f)
         c.set_limit("~e")
         assert not c.view
         f.error = tutils.terr()
-        assert c.add_error(f)
+        assert c.update_flow(f)
         assert c.view
 
     def test_set_limit(self):
@@ -420,20 +420,20 @@ class TestState:
         f = tutils.tflow()
         assert len(c.view) == 0
 
-        c.add_request(f)
+        c.add_flow(f)
         assert len(c.view) == 1
 
         c.set_limit("~s")
         assert c.limit_txt == "~s"
         assert len(c.view) == 0
         f.response = tutils.tresp()
-        c.add_response(f)
+        c.update_flow(f)
         assert len(c.view) == 1
         c.set_limit(None)
         assert len(c.view) == 1
 
         f = tutils.tflow()
-        c.add_request(f)
+        c.add_flow(f)
         assert len(c.view) == 2
         c.set_limit("~q")
         assert len(c.view) == 1
@@ -452,18 +452,18 @@ class TestState:
 
     def _add_request(self, state):
         f = tutils.tflow()
-        state.add_request(f)
+        state.add_flow(f)
         return f
 
     def _add_response(self, state):
         f = tutils.tflow()
-        state.add_request(f)
+        state.add_flow(f)
         f.response = tutils.tresp()
-        state.add_response(f)
+        state.update_flow(f)
 
     def _add_error(self, state):
         f = tutils.tflow(err=True)
-        state.add_request(f)
+        state.add_flow(f)
 
     def test_clear(self):
         c = flow.State()
@@ -487,7 +487,7 @@ class TestState:
         c.clear()
 
         c.load_flows(flows)
-        assert isinstance(c._flow_list[0], Flow)
+        assert isinstance(c.flows[0], Flow)
 
     def test_accept_all(self):
         c = flow.State()
@@ -532,7 +532,7 @@ class TestSerialize:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         fm.load_flows(r)
-        assert len(s._flow_list) == 6
+        assert len(s.flows) == 6
 
     def test_load_flows_reverse(self):
         r = self._treader()
@@ -540,7 +540,7 @@ class TestSerialize:
         conf = ProxyConfig(mode="reverse", upstream_server=[True,True,"use-this-domain",80])
         fm = flow.FlowMaster(DummyServer(conf), s)
         fm.load_flows(r)
-        assert s._flow_list[0].request.host == "use-this-domain"
+        assert s.flows[0].request.host == "use-this-domain"
 
     def test_filter(self):
         sio = StringIO()

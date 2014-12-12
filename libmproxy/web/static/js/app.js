@@ -12,6 +12,7 @@ var AutoScrollMixin = {
     },
 };
 
+
 var StickyHeadMixin = {
     adjustHead: function () {
         // Abusing CSS transforms to set the element
@@ -20,6 +21,7 @@ var StickyHeadMixin = {
         head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
     }
 };
+
 
 var Key = {
     UP: 38,
@@ -38,16 +40,18 @@ var Key = {
     L: 76
 };
 
+
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    var i=0;
-    while (Math.abs(size) >= 1024 && i < prefix.length-1) {
+    var i = 0;
+    while (Math.abs(size) >= 1024 && i < prefix.length - 1) {
         i++;
         size = size / 1024;
     }
     return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix[i];
 };
+
 
 var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
@@ -59,6 +63,43 @@ var formatTimeDelta = function (milliseconds) {
         i++;
     }
     return Math.round(time) + prefix[i];
+};
+
+
+var formatTimeStamp = function (seconds) {
+    var ts = (new Date(seconds * 1000)).toISOString();
+    return ts.replace("T", " ").replace("Z", "");
+};
+
+
+function EventEmitter() {
+    this.listeners = {};
+}
+EventEmitter.prototype.emit = function (event) {
+    if (!(event in this.listeners)) {
+        return;
+    }
+    var args = Array.prototype.slice.call(arguments, 1);
+    this.listeners[event].forEach(function (listener) {
+        listener.apply(this, args);
+    }.bind(this));
+};
+EventEmitter.prototype.addListener = function (events, f) {
+    events.split(" ").forEach(function (event) {
+        this.listeners[event] = this.listeners[event] || [];
+        this.listeners[event].push(f);
+    }.bind(this));
+};
+EventEmitter.prototype.removeListener = function (events, f) {
+    if (!(events in this.listeners)) {
+        return false;
+    }
+    events.split(" ").forEach(function (event) {
+        var index = this.listeners[event].indexOf(f);
+        if (index >= 0) {
+            this.listeners[event].splice(index, 1);
+        }
+    }.bind(this));
 };
 const PayloadSources = {
     VIEW: "view",
@@ -73,14 +114,14 @@ Dispatcher.prototype.register = function (callback) {
     this.callbacks.push(callback);
 };
 Dispatcher.prototype.unregister = function (callback) {
-    var index = this.callbacks.indexOf(f);
+    var index = this.callbacks.indexOf(callback);
     if (index >= 0) {
-        this.callbacks.splice(this.callbacks.indexOf(f), 1);
+        this.callbacks.splice(index, 1);
     }
 };
 Dispatcher.prototype.dispatch = function (payload) {
     console.debug("dispatch", payload);
-    for(var i = 0; i < this.callbacks.length; i++){
+    for (var i = 0; i < this.callbacks.length; i++) {
         this.callbacks[i](payload);
     }
 };
@@ -97,39 +138,66 @@ AppDispatcher.dispatchServerAction = function (action) {
 };
 
 var ActionTypes = {
-    //Settings
-    UPDATE_SETTINGS: "update_settings",
+    // Connection
+    CONNECTION_OPEN: "connection_open",
+    CONNECTION_CLOSE: "connection_close",
+    CONNECTION_ERROR: "connection_error",
 
-    //EventLog
-    ADD_EVENT: "add_event",
-
-    //Flow
-    ADD_FLOW: "add_flow",
-    UPDATE_FLOW: "update_flow",
+    // Stores
+    SETTINGS_STORE: "settings",
+    EVENT_STORE: "events",
+    FLOW_STORE: "flows",
 };
 
-var SettingsActions = {
-    update: function (settings) {
-        settings = _.merge({}, SettingsStore.getAll(), settings);
-        //TODO: Update server.
+var StoreCmds = {
+    ADD: "add",
+    UPDATE: "update",
+    REMOVE: "remove",
+    RESET: "reset"
+};
 
-        //Facebook Flux: We do an optimistic update on the client already.
+var ConnectionActions = {
+    open: function () {
         AppDispatcher.dispatchViewAction({
-            type: ActionTypes.UPDATE_SETTINGS,
-            settings: settings
+            type: ActionTypes.CONNECTION_OPEN
+        });
+    },
+    close: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CONNECTION_CLOSE
+        });
+    },
+    error: function () {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.CONNECTION_ERROR
         });
     }
 };
 
-var event_id = 0;
-var EventLogActions = {
-    add_event: function(message){
+var SettingsActions = {
+    update: function (settings) {
+
+        //TODO: Update server.
+
+        //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
-            type: ActionTypes.ADD_EVENT,
+            type: ActionTypes.SETTINGS_STORE,
+            cmd: StoreCmds.UPDATE,
+            data: settings
+        });
+    }
+};
+
+var EventLogActions_event_id = 0;
+var EventLogActions = {
+    add_event: function (message) {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.EVENT_STORE,
+            cmd: StoreCmds.ADD,
             data: {
                 message: message,
                 level: "web",
-                id: "viewAction-"+event_id++
+                id: "viewAction-" + EventLogActions_event_id++
             }
         });
     }
@@ -181,288 +249,294 @@ var RequestUtils = _.extend(_MessageUtils, {
 });
 
 var ResponseUtils = _.extend(_MessageUtils, {});
-function EventEmitter() {
-    this.listeners = {};
-}
-EventEmitter.prototype.emit = function (event) {
-    if (!(event in this.listeners)) {
-        return;
-    }
-    var args = Array.prototype.slice.call(arguments, 1);
-    this.listeners[event].forEach(function (listener) {
-        listener.apply(this, args);
-    }.bind(this));
-};
-EventEmitter.prototype.addListener = function (event, f) {
-    this.listeners[event] = this.listeners[event] || [];
-    this.listeners[event].push(f);
-};
-EventEmitter.prototype.removeListener = function (event, f) {
-    if (!(event in this.listeners)) {
-        return false;
-    }
-    var index = this.listeners[event].indexOf(f);
-    if (index >= 0) {
-        this.listeners[event].splice(index, 1);
-    }
-};
-
-function _SettingsStore() {
+function ListStore() {
     EventEmitter.call(this);
-
-    //FIXME: What do we do if we haven't requested anything from the server yet?
-    this.settings = {
-        version: "0.12",
-        showEventLog: true,
-        mode: "transparent",
-    };
+    this.reset();
 }
-_.extend(_SettingsStore.prototype, EventEmitter.prototype, {
-    getAll: function () {
-        return this.settings;
-    },
-    handle: function (action) {
-        switch (action.type) {
-            case ActionTypes.UPDATE_SETTINGS:
-                this.settings = action.settings;
-                this.emit("change");
-                break;
-            default:
-                return;
+_.extend(ListStore.prototype, EventEmitter.prototype, {
+    add: function (elem) {
+        if (elem.id in this._pos_map) {
+            return;
         }
+        this._pos_map[elem.id] = this.list.length;
+        this.list.push(elem);
+        this.emit("add", elem);
+    },
+    update: function (elem) {
+        if (!(elem.id in this._pos_map)) {
+            return;
+        }
+        this.list[this._pos_map[elem.id]] = elem;
+        this.emit("update", elem);
+    },
+    remove: function (elem_id) {
+        if (!(elem.id in this._pos_map)) {
+            return;
+        }
+        this.list.splice(this._pos_map[elem_id], 1);
+        this._build_map();
+        this.emit("remove", elem_id);
+    },
+    reset: function (elems) {
+        this.list = elems || [];
+        this._build_map();
+        this.emit("recalculate", this.list);
+    },
+    _build_map: function () {
+        this._pos_map = {};
+        for (var i = 0; i < this.list.length; i++) {
+            var elem = this.list[i];
+            this._pos_map[elem.id] = i;
+        }
+    },
+    get: function (elem_id) {
+        return this.list[this._pos_map[elem_id]];
+    },
+    index: function (elem_id) {
+        return this._pos_map[elem_id];
     }
 });
 
-var SettingsStore = new _SettingsStore();
-AppDispatcher.register(SettingsStore.handle.bind(SettingsStore));
 
-//
-// We have an EventLogView and an EventLogStore:
-// The basic architecture is that one can request views on the event log
-// from the store, which returns a view object and then deals with getting the data required for the view.
-// The view object is accessed by React components and distributes updates etc.
-//
-// See also: components/EventLog.react.js
-function EventLogView(store, live) {
+function DictStore() {
     EventEmitter.call(this);
-    this._store = store;
-    this.live = live;
-    this.log = [];
+    this.reset();
+}
+_.extend(DictStore.prototype, EventEmitter.prototype, {
+    update: function (dict) {
+        _.merge(this.dict, dict);
+        this.emit("recalculate", this.dict);
+    },
+    reset: function (dict) {
+        this.dict = dict || {};
+        this.emit("recalculate", this.dict);
+    }
+});
 
-    this.add = this.add.bind(this);
+function LiveStoreMixin(type) {
+    this.type = type;
 
-    if (live) {
-        this._store.addListener(ActionTypes.ADD_EVENT, this.add);
+    this._updates_before_fetch = undefined;
+    this._fetchxhr = false;
+
+    this.handle = this.handle.bind(this);
+    AppDispatcher.register(this.handle);
+
+    // Avoid double-fetch on startup.
+    if (!(window.ws && window.ws.readyState === WebSocket.CONNECTING)) {
+        this.fetch();
     }
 }
-_.extend(EventLogView.prototype, EventEmitter.prototype, {
+_.extend(LiveStoreMixin.prototype, {
+    handle: function (event) {
+        if (event.type === ActionTypes.CONNECTION_OPEN) {
+            return this.fetch();
+        }
+        if (event.type === this.type) {
+            if (event.cmd === StoreCmds.RESET) {
+                this.fetch();
+            } else if (this._updates_before_fetch) {
+                console.log("defer update", event);
+                this._updates_before_fetch.push(event);
+            } else {
+                this[event.cmd](event.data);
+            }
+        }
+    },
     close: function () {
-        this._store.removeListener(ActionTypes.ADD_EVENT, this.add);
+        AppDispatcher.unregister(this.handle);
     },
-    getAll: function () {
-        return this.log;
-    },
-    add: function (entry) {
-        this.log.push(entry);
-        if(this.log.length > 200){
-            this.log.shift();
+    fetch: function (data) {
+        console.log("fetch " + this.type);
+        if (this._fetchxhr) {
+            this._fetchxhr.abort();
         }
-        this.emit("change");
+        this._updates_before_fetch = []; // (JS: empty array is true)
+        if (data) {
+            this.handle_fetch(data);
+        } else {
+            this._fetchxhr = $.getJSON("/" + this.type)
+                .done(function (message) {
+                    this.handle_fetch(message.data);
+                }.bind(this))
+                .fail(function () {
+                    EventLogActions.add_event("Could not fetch " + this.type);
+                }.bind(this));
+        }
     },
-    add_bulk: function (messages) {
-        var log = messages;
-        var last_id = log[log.length - 1].id;
-        var to_add = _.filter(this.log, function (entry) {
-            return entry.id > last_id;
-        });
-        this.log = log.concat(to_add);
-        this.emit("change");
-    }
+    handle_fetch: function (data) {
+        this._fetchxhr = false;
+        console.log(this.type + " fetched.", this._updates_before_fetch);
+        this.reset(data);
+        var updates = this._updates_before_fetch;
+        this._updates_before_fetch = false;
+        for (var i = 0; i < updates.length; i++) {
+            this.handle(updates[i]);
+        }
+    },
 });
 
-
-function _EventLogStore() {
-    EventEmitter.call(this);
+function LiveListStore(type) {
+    ListStore.call(this);
+    LiveStoreMixin.call(this, type);
 }
-_.extend(_EventLogStore.prototype, EventEmitter.prototype, {
-    getView: function (since) {
-        var view = new EventLogView(this, !since);
-        return view;
-        /*
-        //TODO: Really do bulk retrieval of last messages.
-        window.setTimeout(function () {
-            view.add_bulk([
-                {
-                    id: 1,
-                    message: "Hello World"
-                },
-                {
-                    id: 2,
-                    message: "I was already transmitted as an event."
-                }
-            ]);
-        }, 100);
+_.extend(LiveListStore.prototype, ListStore.prototype, LiveStoreMixin.prototype);
 
-        var id = 2;
-        view.add({
-            id: id++,
-            message: "I was already transmitted as an event."
-        });
-        view.add({
-            id: id++,
-            message: "I was only transmitted as an event before the bulk was added.."
-        });
-        window.setInterval(function () {
-            view.add({
-                id: id++,
-                message: "."
-            });
-        }, 1000);
-        return view;
-        */
-    },
-    handle: function (action) {
-        switch (action.type) {
-            case ActionTypes.ADD_EVENT:
-                this.emit(ActionTypes.ADD_EVENT, action.data);
-                break;
-            default:
-                return;
+function LiveDictStore(type) {
+    DictStore.call(this);
+    LiveStoreMixin.call(this, type);
+}
+_.extend(LiveDictStore.prototype, DictStore.prototype, LiveStoreMixin.prototype);
+
+
+function FlowStore() {
+    return new LiveListStore(ActionTypes.FLOW_STORE);
+}
+
+function SettingsStore() {
+    return new LiveDictStore(ActionTypes.SETTINGS_STORE);
+}
+
+function EventLogStore() {
+    LiveListStore.call(this, ActionTypes.EVENT_STORE);
+}
+_.extend(EventLogStore.prototype, LiveListStore.prototype, {
+    fetch: function(){
+        LiveListStore.prototype.fetch.apply(this, arguments);
+
+        // Make sure to display updates even if fetching all events failed.
+        // This way, we can send "fetch failed" log messages to the log.
+        if(this._fetchxhr){
+            this._fetchxhr.fail(function(){
+                this.handle_fetch(null);
+            }.bind(this));
         }
     }
 });
+function SortByStoreOrder(elem) {
+    return this.store.index(elem.id);
+}
 
+var default_sort = SortByStoreOrder;
+var default_filt = function(elem){
+    return true;
+};
 
-var EventLogStore = new _EventLogStore();
-AppDispatcher.register(EventLogStore.handle.bind(EventLogStore));
-function FlowView(store, live) {
+function StoreView(store, filt, sortfun) {
     EventEmitter.call(this);
-    this._store = store;
-    this.live = live;
-    this.flows = [];
+    filt = filt || default_filt;
+    sortfun = sortfun || default_sort;
+
+    this.store = store;
 
     this.add = this.add.bind(this);
     this.update = this.update.bind(this);
+    this.remove = this.remove.bind(this);
+    this.recalculate = this.recalculate.bind(this);
+    this.store.addListener("add", this.add);
+    this.store.addListener("update", this.update);
+    this.store.addListener("remove", this.remove);
+    this.store.addListener("recalculate", this.recalculate);
 
-    if (live) {
-        this._store.addListener(ActionTypes.ADD_FLOW, this.add);
-        this._store.addListener(ActionTypes.UPDATE_FLOW, this.update);
-    }
+    this.recalculate(this.store.list, filt, sortfun);
 }
 
-_.extend(FlowView.prototype, EventEmitter.prototype, {
+_.extend(StoreView.prototype, EventEmitter.prototype, {
     close: function () {
-        this._store.removeListener(ActionTypes.ADD_FLOW, this.add);
-        this._store.removeListener(ActionTypes.UPDATE_FLOW, this.update);
+        this.store.removeListener("add", this.add);
+        this.store.removeListener("update", this.update);
+        this.store.removeListener("remove", this.remove);
+        this.store.removeListener("recalculate", this.recalculate);
     },
-    getAll: function () {
-        return this.flows;
-    },
-    add: function (flow) {
-        return this.update(flow);
-    },
-    add_bulk: function (flows) {
-        //Treat all previously received updates as newer than the bulk update.
-        //If they weren't newer, we're about to receive an update for them very soon.
-        var updates = this.flows;
-        this.flows = flows;
-        updates.forEach(function(flow){
-            this._update(flow);
-        }.bind(this));
-        this.emit("change");
-    },
-    _update: function(flow){
-        var idx = _.findIndex(this.flows, function(f){
-            return flow.id === f.id;
-        });
+    recalculate: function (elems, filt, sortfun) {
+        if (filt) {
+            this.filt = filt;
+        }
+        if (sortfun) {
+            this.sortfun = sortfun.bind(this);
+        }
 
-        if(idx < 0){
-            this.flows.push(flow);
-            //if(this.flows.length > 100){
-            //    this.flows.shift();
-            //}
-        } else {
-            this.flows[idx] = flow;
+        this.list = elems.filter(this.filt);
+        this.list.sort(function (a, b) {
+            return this.sortfun(a) - this.sortfun(b);
+        }.bind(this));
+        this.emit("recalculate");
+    },
+    index: function (elem) {
+        return _.sortedIndex(this.list, elem, this.sortfun);
+    },
+    add: function (elem) {
+        if (this.filt(elem)) {
+            var idx = this.index(elem);
+            if (idx === this.list.length) { //happens often, .push is way faster.
+                this.list.push(elem);
+            } else {
+                this.list.splice(idx, 0, elem);
+            }
+            this.emit("add", elem, idx);
         }
     },
-    update: function(flow){
-        this._update(flow);
-        this.emit("change");
-    },
-});
-
-
-function _FlowStore() {
-    EventEmitter.call(this);
-}
-_.extend(_FlowStore.prototype, EventEmitter.prototype, {
-    getView: function (since) {
-        var view = new FlowView(this, !since);
-
-        $.getJSON("/static/flows.json", function(flows){
-           flows = flows.concat(_.cloneDeep(flows)).concat(_.cloneDeep(flows));
-           var id = 1;
-           flows.forEach(function(flow){
-               flow.id = "uuid-" + id++;
-           });
-           view.add_bulk(flows); 
-
-        });
-
-        return view;
-    },
-    handle: function (action) {
-        switch (action.type) {
-            case ActionTypes.ADD_FLOW:
-            case ActionTypes.UPDATE_FLOW:
-                this.emit(action.type, action.data);
+    update: function (elem) {
+        var idx;
+        var i = this.list.length;
+        // Search from the back, we usually update the latest entries.
+        while (i--) {
+            if (this.list[i].id === elem.id) {
+                idx = i;
                 break;
-            default:
-                return;
+            }
+        }
+
+        if (idx === -1) { //not contained in list
+            this.add(elem);
+        } else if (!this.filt(elem)) {
+            this.remove(elem.id);
+        } else {
+            if (this.sortfun(this.list[idx]) !== this.sortfun(elem)) { //sortpos has changed
+                this.remove(this.list[idx]);
+                this.add(elem);
+            } else {
+                this.list[idx] = elem;
+                this.emit("update", elem, idx);
+            }
+        }
+    },
+    remove: function (elem_id) {
+        var idx = this.list.length;
+        while (idx--) {
+            if (this.list[idx].id === elem_id) {
+                this.list.splice(idx, 1);
+                this.emit("remove", elem_id, idx);
+                break;
+            }
         }
     }
 });
 
+function Connection(url) {
 
-var FlowStore = new _FlowStore();
-AppDispatcher.register(FlowStore.handle.bind(FlowStore));
+    if (url[0] === "/") {
+        url = location.origin.replace("http", "ws") + url;
+    }
 
-function _Connection(url) {
-    this.url = url;
+    var ws = new WebSocket(url);
+    ws.onopen = function () {
+        ConnectionActions.open();
+    };
+    ws.onmessage = function (message) {
+        var m = JSON.parse(message.data);
+        AppDispatcher.dispatchServerAction(m);
+    };
+    ws.onerror = function () {
+        ConnectionActions.error();
+        EventLogActions.add_event("WebSocket connection error.");
+    };
+    ws.onclose = function () {
+        ConnectionActions.close();
+        EventLogActions.add_event("WebSocket connection closed.");
+    };
+    return ws;
 }
-_Connection.prototype.init = function () {
-    this.openWebSocketConnection();
-};
-_Connection.prototype.openWebSocketConnection = function () {
-    this.ws = new WebSocket(this.url.replace("http", "ws"));
-    var ws = this.ws;
-
-    ws.onopen = this.onopen.bind(this);
-    ws.onmessage = this.onmessage.bind(this);
-    ws.onerror = this.onerror.bind(this);
-    ws.onclose = this.onclose.bind(this);
-};
-_Connection.prototype.onopen = function (open) {
-    console.debug("onopen", this, arguments);
-};
-_Connection.prototype.onmessage = function (message) {
-    //AppDispatcher.dispatchServerAction(...);
-    var m = JSON.parse(message.data);
-    AppDispatcher.dispatchServerAction(m);
-};
-_Connection.prototype.onerror = function (error) {
-    EventLogActions.add_event("WebSocket Connection Error.");
-    console.debug("onerror", this, arguments);
-};
-_Connection.prototype.onclose = function (close) {
-    EventLogActions.add_event("WebSocket Connection closed.");
-    console.debug("onclose", this, arguments);
-};
-
-var Connection = new _Connection(location.origin + "/updates");
-
-/** @jsx React.DOM */
-
 //React utils. For other utilities, see ../utils.js
 
 var Splitter = React.createClass({displayName: 'Splitter',
@@ -471,98 +545,202 @@ var Splitter = React.createClass({displayName: 'Splitter',
             axis: "x"
         };
     },
-    getInitialState: function(){
+    getInitialState: function () {
         return {
             applied: false,
             startX: false,
             startY: false
         };
     },
-    onMouseDown: function(e){
+    onMouseDown: function (e) {
         this.setState({
             startX: e.pageX,
             startY: e.pageY
         });
-        window.addEventListener("mousemove",this.onMouseMove);
-        window.addEventListener("mouseup",this.onMouseUp);
+        window.addEventListener("mousemove", this.onMouseMove);
+        window.addEventListener("mouseup", this.onMouseUp);
         // Occasionally, only a dragEnd event is triggered, but no mouseUp.
-        window.addEventListener("dragend",this.onDragEnd);
+        window.addEventListener("dragend", this.onDragEnd);
     },
-    onDragEnd: function(){
-        this.getDOMNode().style.transform="";
-        window.removeEventListener("dragend",this.onDragEnd);
-        window.removeEventListener("mouseup",this.onMouseUp);
-        window.removeEventListener("mousemove",this.onMouseMove);
+    onDragEnd: function () {
+        this.getDOMNode().style.transform = "";
+        window.removeEventListener("dragend", this.onDragEnd);
+        window.removeEventListener("mouseup", this.onMouseUp);
+        window.removeEventListener("mousemove", this.onMouseMove);
     },
-    onMouseUp: function(e){
+    onMouseUp: function (e) {
         this.onDragEnd();
 
         var node = this.getDOMNode();
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
 
-        var dX = e.pageX-this.state.startX;
-        var dY = e.pageY-this.state.startY;
+        var dX = e.pageX - this.state.startX;
+        var dY = e.pageY - this.state.startY;
         var flexBasis;
-        if(this.props.axis === "x"){
+        if (this.props.axis === "x") {
             flexBasis = prev.offsetWidth + dX;
         } else {
             flexBasis = prev.offsetHeight + dY;
         }
 
-        prev.style.flex = "0 0 "+Math.max(0, flexBasis)+"px";   
+        prev.style.flex = "0 0 " + Math.max(0, flexBasis) + "px";
         next.style.flex = "1 1 auto";
 
         this.setState({
             applied: true
         });
+        this.onResize();
     },
-    onMouseMove: function(e){
+    onMouseMove: function (e) {
         var dX = 0, dY = 0;
-        if(this.props.axis === "x"){
-            dX = e.pageX-this.state.startX;
+        if (this.props.axis === "x") {
+            dX = e.pageX - this.state.startX;
         } else {
-            dY = e.pageY-this.state.startY;
+            dY = e.pageY - this.state.startY;
         }
-        this.getDOMNode().style.transform = "translate("+dX+"px,"+dY+"px)";
+        this.getDOMNode().style.transform = "translate(" + dX + "px," + dY + "px)";
     },
-    reset: function(willUnmount) {
+    onResize: function () {
+        // Trigger a global resize event. This notifies components that employ virtual scrolling
+        // that their viewport may have changed.
+        window.setTimeout(function () {
+            window.dispatchEvent(new CustomEvent("resize"));
+        }, 1);
+    },
+    reset: function (willUnmount) {
         if (!this.state.applied) {
             return;
         }
         var node = this.getDOMNode();
         var prev = node.previousElementSibling;
         var next = node.nextElementSibling;
-        
+
         prev.style.flex = "";
         next.style.flex = "";
 
-        if(!willUnmount){
+        if (!willUnmount) {
             this.setState({
                 applied: false
             });
         }
-
+        this.onResize();
     },
-    componentWillUnmount: function(){
+    componentWillUnmount: function () {
         this.reset(true);
     },
-    render: function(){
+    render: function () {
         var className = "splitter";
-        if(this.props.axis === "x"){
+        if (this.props.axis === "x") {
             className += " splitter-x";
         } else {
             className += " splitter-y";
         }
         return (
-            React.DOM.div({className: className}, 
-                React.DOM.div({onMouseDown: this.onMouseDown, draggable: "true"})
+            React.createElement("div", {className: className}, 
+                React.createElement("div", {onMouseDown: this.onMouseDown, draggable: "true"})
             )
         );
     }
 });
-/** @jsx React.DOM */
 
+function getCookie(name) {
+    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    return r ? r[1] : undefined;
+}
+var xsrf = $.param({_xsrf: getCookie("_xsrf")});
+
+//Tornado XSRF Protection.
+$.ajaxPrefilter(function (options) {
+    if (options.type === "post" && options.url[0] === "/") {
+        if (options.data) {
+            options.data += ("&" + xsrf);
+        } else {
+            options.data = xsrf;
+        }
+    }
+});
+var VirtualScrollMixin = {
+    getInitialState: function () {
+        return {
+            start: 0,
+            stop: 0
+        };
+    },
+    componentWillMount: function () {
+        if (!this.props.rowHeight) {
+            console.warn("VirtualScrollMixin: No rowHeight specified", this);
+        }
+    },
+    getPlaceholderTop: function (total) {
+        var Tag = this.props.placeholderTagName || "tr";
+        // When a large trunk of elements is removed from the button, start may be far off the viewport.
+        // To make this issue less severe, limit the top placeholder to the total number of rows.
+        var style = {
+            height: Math.min(this.state.start, total) * this.props.rowHeight
+        };
+        var spacer = React.createElement(Tag, {key: "placeholder-top", style: style});
+
+        if (this.state.start % 2 === 1) {
+            // fix even/odd rows
+            return [spacer, React.createElement(Tag, {key: "placeholder-top-2"})];
+        } else {
+            return spacer;
+        }
+    },
+    getPlaceholderBottom: function (total) {
+        var Tag = this.props.placeholderTagName || "tr";
+        var style = {
+            height: Math.max(0, total - this.state.stop) * this.props.rowHeight
+        };
+        return React.createElement(Tag, {key: "placeholder-bottom", style: style});
+    },
+    componentDidMount: function () {
+        this.onScroll();
+        window.addEventListener('resize', this.onScroll);
+    },
+    componentWillUnmount: function(){
+        window.removeEventListener('resize', this.onScroll);
+    },
+    onScroll: function () {
+        var viewport = this.getDOMNode();
+        var top = viewport.scrollTop;
+        var height = viewport.offsetHeight;
+        var start = Math.floor(top / this.props.rowHeight);
+        var stop = start + Math.ceil(height / (this.props.rowHeightMin || this.props.rowHeight));
+
+        this.setState({
+            start: start,
+            stop: stop
+        });
+    },
+    renderRows: function (elems) {
+        var rows = [];
+        var max = Math.min(elems.length, this.state.stop);
+
+        for (var i = this.state.start; i < max; i++) {
+            var elem = elems[i];
+            rows.push(this.renderRow(elem));
+        }
+        return rows;
+    },
+    scrollRowIntoView: function (index, head_height) {
+
+        var row_top = (index * this.props.rowHeight) + head_height;
+        var row_bottom = row_top + this.props.rowHeight;
+
+        var viewport = this.getDOMNode();
+        var viewport_top = viewport.scrollTop;
+        var viewport_bottom = viewport_top + viewport.offsetHeight;
+
+        // Account for pinned thead
+        if (row_top - head_height < viewport_top) {
+            viewport.scrollTop = row_top - head_height;
+        } else if (row_bottom > viewport_bottom) {
+            viewport.scrollTop = row_bottom - viewport.offsetHeight;
+        }
+    },
+};
 var MainMenu = React.createClass({displayName: 'MainMenu',
     statics: {
         title: "Traffic",
@@ -573,14 +751,23 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
             showEventLog: !this.props.settings.showEventLog
         });
     },
+    clearFlows: function () {
+        $.post("/flows/clear");
+    },
     render: function () {
         return (
-            React.DOM.div(null, 
-                React.DOM.button({className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
-                React.DOM.i({className: "fa fa-database"}), " Display Event Log"
+            React.createElement("div", null, 
+                React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
+                    React.createElement("i", {className: "fa fa-database"}), 
+                " Display Event Log"
+                ), 
+            " ", 
+                React.createElement("button", {className: "btn btn-default", onClick: this.clearFlows}, 
+                    React.createElement("i", {className: "fa fa-eraser"}), 
+                " Clear Flows"
                 )
             )
-            );
+        );
     }
 });
 
@@ -591,7 +778,7 @@ var ToolsMenu = React.createClass({displayName: 'ToolsMenu',
         route: "flows"
     },
     render: function () {
-        return React.DOM.div(null, "Tools Menu");
+        return React.createElement("div", null, "Tools Menu");
     }
 });
 
@@ -602,7 +789,81 @@ var ReportsMenu = React.createClass({displayName: 'ReportsMenu',
         route: "reports"
     },
     render: function () {
-        return React.DOM.div(null, "Reports Menu");
+        return React.createElement("div", null, "Reports Menu");
+    }
+});
+
+var FileMenu = React.createClass({displayName: 'FileMenu',
+    getInitialState: function () {
+        return {
+            showFileMenu: false
+        };
+    },
+    handleFileClick: function (e) {
+        e.preventDefault();
+        if (!this.state.showFileMenu) {
+            var close = function () {
+                this.setState({showFileMenu: false});
+                document.removeEventListener("click", close);
+            }.bind(this);
+            document.addEventListener("click", close);
+
+            this.setState({
+                showFileMenu: true
+            });
+        }
+    },
+    handleNewClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleNewClick");
+    },
+    handleOpenClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleOpenClick");
+    },
+    handleSaveClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleSaveClick");
+    },
+    handleShutdownClick: function(e){
+        e.preventDefault();
+        console.error("unimplemented: handleShutdownClick");
+    },
+    render: function () {
+        var fileMenuClass = "dropdown pull-left" + (this.state.showFileMenu ? " open" : "");
+
+        return (
+            React.createElement("div", {className: fileMenuClass}, 
+                React.createElement("a", {href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
+                React.createElement("ul", {className: "dropdown-menu", role: "menu"}, 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleNewClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-file"}), 
+                            "New"
+                        )
+                    ), 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleOpenClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-folder-open"}), 
+                            "Open"
+                        )
+                    ), 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleSaveClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-save"}), 
+                            "Save"
+                        )
+                    ), 
+                    React.createElement("li", {role: "presentation", className: "divider"}), 
+                    React.createElement("li", null, 
+                        React.createElement("a", {href: "#", onClick: this.handleShutdownClick}, 
+                            React.createElement("i", {className: "fa fa-fw fa-plug"}), 
+                            "Shutdown"
+                        )
+                    )
+                )
+            )
+        );
     }
 });
 
@@ -611,94 +872,89 @@ var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
 
 
 var Header = React.createClass({displayName: 'Header',
+    mixins: [ReactRouter.Navigation],
     getInitialState: function () {
         return {
             active: header_entries[0]
         };
     },
-    handleClick: function (active) {
-        ReactRouter.transitionTo(active.route);
+    handleClick: function (active, e) {
+        e.preventDefault();
+        this.transitionTo(active.route);
         this.setState({active: active});
-        return false;
-    },
-    handleFileClick: function () {
-        console.log("File click");
     },
     render: function () {
-        var header = header_entries.map(function(entry, i){
+        var header = header_entries.map(function (entry, i) {
             var classes = React.addons.classSet({
                 active: entry == this.state.active
             });
             return (
-                React.DOM.a({key: i, 
-                   href: "#", 
-                   className: classes, 
-                   onClick: this.handleClick.bind(this, entry)
+                React.createElement("a", {key: i, 
+                    href: "#", 
+                    className: classes, 
+                    onClick: this.handleClick.bind(this, entry)
                 }, 
                      entry.title
                 )
-                );
+            );
         }.bind(this));
-        
+
         return (
-            React.DOM.header(null, 
-                React.DOM.div({className: "title-bar"}, 
+            React.createElement("header", null, 
+                React.createElement("div", {className: "title-bar"}, 
                     "mitmproxy ",  this.props.settings.version
                 ), 
-                React.DOM.nav({className: "nav-tabs nav-tabs-lg"}, 
-                    React.DOM.a({href: "#", className: "special", onClick: this.handleFileClick}, " File "), 
+                React.createElement("nav", {className: "nav-tabs nav-tabs-lg"}, 
+                    React.createElement(FileMenu, null), 
                     header
                 ), 
-                React.DOM.div({className: "menu"}, 
-                    this.state.active({settings: this.props.settings})
+                React.createElement("div", {className: "menu"}, 
+                    React.createElement(this.state.active, {settings: this.props.settings})
                 )
             )
-            );
+        );
     }
 });
 
-/** @jsx React.DOM */
-
-
 var TLSColumn = React.createClass({displayName: 'TLSColumn',
     statics: {
-        renderTitle: function(){
-            return React.DOM.th({key: "tls", className: "col-tls"});
+        renderTitle: function () {
+            return React.createElement("th", {key: "tls", className: "col-tls"});
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var ssl = (flow.request.scheme == "https");
         var classes;
-        if(ssl){
+        if (ssl) {
             classes = "col-tls col-tls-https";
         } else {
             classes = "col-tls col-tls-http";
         }
-        return React.DOM.td({className: classes});
+        return React.createElement("td", {className: classes});
     }
 });
 
 
 var IconColumn = React.createClass({displayName: 'IconColumn',
     statics: {
-        renderTitle: function(){
-            return React.DOM.th({key: "icon", className: "col-icon"});
+        renderTitle: function () {
+            return React.createElement("th", {key: "icon", className: "col-icon"});
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
 
         var icon;
-        if(flow.response){
+        if (flow.response) {
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            if(flow.response.code == 304) {
+            if (flow.response.code == 304) {
                 icon = "resource-icon-not-modified";
-            } else if(300 <= flow.response.code && flow.response.code < 400) {
+            } else if (300 <= flow.response.code && flow.response.code < 400) {
                 icon = "resource-icon-redirect";
-            } else if(contentType && contentType.indexOf("image") >= 0) {
+            } else if (contentType && contentType.indexOf("image") >= 0) {
                 icon = "resource-icon-image";
             } else if (contentType && contentType.indexOf("javascript") >= 0) {
                 icon = "resource-icon-js";
@@ -708,95 +964,97 @@ var IconColumn = React.createClass({displayName: 'IconColumn',
                 icon = "resource-icon-document";
             }
         }
-        if(!icon){
+        if (!icon) {
             icon = "resource-icon-plain";
         }
 
 
         icon += " resource-icon";
-        return React.DOM.td({className: "col-icon"}, React.DOM.div({className: icon}));
+        return React.createElement("td", {className: "col-icon"}, 
+            React.createElement("div", {className: icon})
+        );
     }
 });
 
 var PathColumn = React.createClass({displayName: 'PathColumn',
     statics: {
-        renderTitle: function(){
-            return React.DOM.th({key: "path", className: "col-path"}, "Path");
+        renderTitle: function () {
+            return React.createElement("th", {key: "path", className: "col-path"}, "Path");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
-        return React.DOM.td({className: "col-path"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
+        return React.createElement("td", {className: "col-path"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
     }
 });
 
 
 var MethodColumn = React.createClass({displayName: 'MethodColumn',
     statics: {
-        renderTitle: function(){
-            return React.DOM.th({key: "method", className: "col-method"}, "Method");
+        renderTitle: function () {
+            return React.createElement("th", {key: "method", className: "col-method"}, "Method");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
-        return React.DOM.td({className: "col-method"}, flow.request.method);
+        return React.createElement("td", {className: "col-method"}, flow.request.method);
     }
 });
 
 
 var StatusColumn = React.createClass({displayName: 'StatusColumn',
     statics: {
-        renderTitle: function(){
-            return React.DOM.th({key: "status", className: "col-status"}, "Status");
+        renderTitle: function () {
+            return React.createElement("th", {key: "status", className: "col-status"}, "Status");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var status;
-        if(flow.response){
+        if (flow.response) {
             status = flow.response.code;
         } else {
             status = null;
         }
-        return React.DOM.td({className: "col-status"}, status);
+        return React.createElement("td", {className: "col-status"}, status);
     }
 });
 
 
 var SizeColumn = React.createClass({displayName: 'SizeColumn',
     statics: {
-        renderTitle: function(){
-            return React.DOM.th({key: "size", className: "col-size"}, "Size");
+        renderTitle: function () {
+            return React.createElement("th", {key: "size", className: "col-size"}, "Size");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
 
         var total = flow.request.contentLength;
-        if(flow.response){
+        if (flow.response) {
             total += flow.response.contentLength || 0;
         }
         var size = formatSize(total);
-        return React.DOM.td({className: "col-size"}, size);
+        return React.createElement("td", {className: "col-size"}, size);
     }
 });
 
 
 var TimeColumn = React.createClass({displayName: 'TimeColumn',
     statics: {
-        renderTitle: function(){
-            return React.DOM.th({key: "time", className: "col-time"}, "Time");
+        renderTitle: function () {
+            return React.createElement("th", {key: "time", className: "col-time"}, "Time");
         }
     },
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var time;
-        if(flow.response){
+        if (flow.response) {
             time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";
         }
-        return React.DOM.td({className: "col-time"}, time);
+        return React.createElement("td", {className: "col-time"}, time);
     }
 });
 
@@ -811,139 +1069,152 @@ var all_columns = [
     TimeColumn];
 
 
-/** @jsx React.DOM */
-
 var FlowRow = React.createClass({displayName: 'FlowRow',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
-        var columns = this.props.columns.map(function(column){
-            return column({key: column.displayName, flow: flow});
+        var columns = this.props.columns.map(function (Column) {
+            return React.createElement(Column, {key: Column.displayName, flow: flow});
         }.bind(this));
         var className = "";
-        if(this.props.selected){
+        if (this.props.selected) {
             className += "selected";
         }
         return (
-            React.DOM.tr({className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
+            React.createElement("tr", {className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
                 columns
             ));
     },
-    shouldComponentUpdate: function(nextProps){
-        var isEqual = (
-            this.props.columns.length === nextProps.columns.length && 
-            this.props.selected === nextProps.selected &&
-            this.props.flow.response === nextProps.flow.response);
-        return !isEqual;
+    shouldComponentUpdate: function (nextProps) {
+        return true;
+        // Further optimization could be done here
+        // by calling forceUpdate on flow updates, selection changes and column changes.
+        //return (
+        //(this.props.columns.length !== nextProps.columns.length) ||
+        //(this.props.selected !== nextProps.selected)
+        //);
     }
 });
 
 var FlowTableHead = React.createClass({displayName: 'FlowTableHead',
-    render: function(){
-        var columns = this.props.columns.map(function(column){
+    render: function () {
+        var columns = this.props.columns.map(function (column) {
             return column.renderTitle();
         }.bind(this));
-        return React.DOM.thead(null, React.DOM.tr(null, columns));
+        return React.createElement("thead", null, 
+            React.createElement("tr", null, columns)
+        );
     }
 });
 
-var FlowTableBody = React.createClass({displayName: 'FlowTableBody',
-    render: function(){
-        var rows = this.props.flows.map(function(flow){
-            var selected = (flow == this.props.selected);
-            return FlowRow({key: flow.id, 
-                            ref: flow.id, 
-                            flow: flow, 
-                            columns: this.props.columns, 
-                            selected: selected, 
-                            selectFlow: this.props.selectFlow}
-                            );
-        }.bind(this));
-        return React.DOM.tbody(null, rows);
-    }
-});
 
+var ROW_HEIGHT = 32;
 
 var FlowTable = React.createClass({displayName: 'FlowTable',
-    mixins: [StickyHeadMixin, AutoScrollMixin],
+    mixins: [StickyHeadMixin, AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             columns: all_columns
         };
     },
-    scrollIntoView: function(flow){
-        // Now comes the fun part: Scroll the flow into the view.
-        var viewport = this.getDOMNode();
-        var flowNode = this.refs.body.refs[flow.id].getDOMNode();
-        var viewport_top = viewport.scrollTop;
-        var viewport_bottom = viewport_top + viewport.offsetHeight;
-        var flowNode_top = flowNode.offsetTop;
-        var flowNode_bottom = flowNode_top + flowNode.offsetHeight;
-
-        // Account for pinned thead by pretending that the flowNode starts
-        // -thead_height pixel earlier.
-        flowNode_top -= this.refs.body.getDOMNode().offsetTop;
-
-        if(flowNode_top < viewport_top){
-            viewport.scrollTop = flowNode_top;
-        } else if(flowNode_bottom > viewport_bottom) {
-            viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
+    componentWillMount: function () {
+        if (this.props.view) {
+            this.props.view.addListener("add update remove recalculate", this.onChange);
         }
     },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.view !== this.props.view) {
+            if (this.props.view) {
+                this.props.view.removeListener("add update remove recalculate");
+            }
+            nextProps.view.addListener("add update remove recalculate", this.onChange);
+        }
+    },
+    getDefaultProps: function () {
+        return {
+            rowHeight: ROW_HEIGHT
+        };
+    },
+    onScrollFlowTable: function () {
+        this.adjustHead();
+        this.onScroll();
+    },
+    onChange: function () {
+        this.forceUpdate();
+    },
+    scrollIntoView: function (flow) {
+        this.scrollRowIntoView(
+            this.props.view.index(flow),
+            this.refs.body.getDOMNode().offsetTop
+        );
+    },
+    renderRow: function (flow) {
+        var selected = (flow === this.props.selected);
+        return React.createElement(FlowRow, {key: flow.id, 
+            ref: flow.id, 
+            flow: flow, 
+            columns: this.state.columns, 
+            selected: selected, 
+            selectFlow: this.props.selectFlow}
+        );
+    },
     render: function () {
+        //console.log("render flowtable", this.state.start, this.state.stop, this.props.selected);
+        var flows = this.props.view ? this.props.view.list : [];
+
+        var rows = this.renderRows(flows);
+
         return (
-            React.DOM.div({className: "flow-table", onScroll: this.adjustHead}, 
-                React.DOM.table(null, 
-                    FlowTableHead({ref: "head", 
-                                   columns: this.state.columns}), 
-                    FlowTableBody({ref: "body", 
-                                   flows: this.props.flows, 
-                                   selected: this.props.selected, 
-                                   selectFlow: this.props.selectFlow, 
-                                   columns: this.state.columns})
+            React.createElement("div", {className: "flow-table", onScroll: this.onScrollFlowTable}, 
+                React.createElement("table", null, 
+                    React.createElement(FlowTableHead, {ref: "head", 
+                        columns: this.state.columns}), 
+                    React.createElement("tbody", {ref: "body"}, 
+                         this.getPlaceholderTop(flows.length), 
+                        rows, 
+                         this.getPlaceholderBottom(flows.length) 
+                    )
                 )
             )
-            );
+        );
     }
 });
 
-/** @jsx React.DOM */
-
 var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
-    render: function(){
+    render: function () {
 
-        var items = this.props.tabs.map(function(e){
+        var items = this.props.tabs.map(function (e) {
             var str = e.charAt(0).toUpperCase() + e.slice(1);
             var className = this.props.active === e ? "active" : "";
-            var onClick = function(){
+            var onClick = function (event) {
                 this.props.selectTab(e);
-                return false;
+                event.preventDefault();
             }.bind(this);
-            return React.DOM.a({key: e, 
-                      href: "#", 
-                      className: className, 
-                      onClick: onClick}, str);
+            return React.createElement("a", {key: e, 
+                href: "#", 
+                className: className, 
+                onClick: onClick}, str);
         }.bind(this));
         return (
-            React.DOM.nav({ref: "head", className: "nav-tabs nav-tabs-sm"}, 
+            React.createElement("nav", {ref: "head", className: "nav-tabs nav-tabs-sm"}, 
                 items
             )
         );
-    } 
+    }
 });
 
 var Headers = React.createClass({displayName: 'Headers',
-    render: function(){
-        var rows = this.props.message.headers.map(function(header, i){
+    render: function () {
+        var rows = this.props.message.headers.map(function (header, i) {
             return (
-                React.DOM.tr({key: i}, 
-                    React.DOM.td({className: "header-name"}, header[0]+":"), 
-                    React.DOM.td({className: "header-value"}, header[1])
+                React.createElement("tr", {key: i}, 
+                    React.createElement("td", {className: "header-name"}, header[0] + ":"), 
+                    React.createElement("td", {className: "header-value"}, header[1])
                 )
             );
         });
         return (
-            React.DOM.table({className: "header-table"}, 
-                React.DOM.tbody(null, 
+            React.createElement("table", {className: "header-table"}, 
+                React.createElement("tbody", null, 
                     rows
                 )
             )
@@ -952,27 +1223,27 @@ var Headers = React.createClass({displayName: 'Headers',
 });
 
 var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var first_line = [
-                flow.request.method,
-                RequestUtils.pretty_url(flow.request),
-                "HTTP/"+ flow.response.httpversion.join(".")
-            ].join(" ");
+            flow.request.method,
+            RequestUtils.pretty_url(flow.request),
+            "HTTP/" + flow.request.httpversion.join(".")
+        ].join(" ");
         var content = null;
-        if(flow.request.contentLength > 0){
-            content = "Request Content Size: "+ formatSize(flow.request.contentLength);
+        if (flow.request.contentLength > 0) {
+            content = "Request Content Size: " + formatSize(flow.request.contentLength);
         } else {
-            content = React.DOM.div({className: "alert alert-info"}, "No Content");
+            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
         }
 
         //TODO: Styling
 
         return (
-            React.DOM.section(null, 
-                React.DOM.div({className: "first-line"}, first_line ), 
-                Headers({message: flow.request}), 
-                React.DOM.hr(null), 
+            React.createElement("section", null, 
+                React.createElement("div", {className: "first-line"}, first_line ), 
+                React.createElement(Headers, {message: flow.request}), 
+                React.createElement("hr", null), 
                 content
             )
         );
@@ -980,70 +1251,94 @@ var FlowDetailRequest = React.createClass({displayName: 'FlowDetailRequest',
 });
 
 var FlowDetailResponse = React.createClass({displayName: 'FlowDetailResponse',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var first_line = [
-                "HTTP/"+ flow.response.httpversion.join("."),
-                flow.response.code,
-                flow.response.msg
-            ].join(" ");
+            "HTTP/" + flow.response.httpversion.join("."),
+            flow.response.code,
+            flow.response.msg
+        ].join(" ");
         var content = null;
-        if(flow.response.contentLength > 0){
-            content = "Response Content Size: "+ formatSize(flow.response.contentLength);
+        if (flow.response.contentLength > 0) {
+            content = "Response Content Size: " + formatSize(flow.response.contentLength);
         } else {
-            content = React.DOM.div({className: "alert alert-info"}, "No Content");
+            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
         }
 
         //TODO: Styling
 
         return (
-            React.DOM.section(null, 
-                React.DOM.div({className: "first-line"}, first_line ), 
-                Headers({message: flow.response}), 
-                React.DOM.hr(null), 
+            React.createElement("section", null, 
+                React.createElement("div", {className: "first-line"}, first_line ), 
+                React.createElement(Headers, {message: flow.response}), 
+                React.createElement("hr", null), 
                 content
             )
         );
     }
 });
 
-var TimeStamp = React.createClass({displayName: 'TimeStamp',
-    render: function() {
+var FlowDetailError = React.createClass({displayName: 'FlowDetailError',
+    render: function () {
+        var flow = this.props.flow;
+        return (
+            React.createElement("section", null, 
+                React.createElement("div", {className: "alert alert-warning"}, 
+                flow.error.msg, 
+                    React.createElement("div", null, React.createElement("small", null,  formatTimeStamp(flow.error.timestamp) ))
+                )
+            )
+        );
+    }
+});
 
-        if(!this.props.t){
+var TimeStamp = React.createClass({displayName: 'TimeStamp',
+    render: function () {
+
+        if (!this.props.t) {
             //should be return null, but that triggers a React bug.
-            return React.DOM.tr(null);
+            return React.createElement("tr", null);
         }
 
-        var ts = (new Date(this.props.t * 1000)).toISOString();
-        ts = ts.replace("T", " ").replace("Z","");
+        var ts = formatTimeStamp(this.props.t);
 
         var delta;
-        if(this.props.deltaTo){
-            delta = formatTimeDelta(1000 * (this.props.t-this.props.deltaTo));
-            delta = React.DOM.span({className: "text-muted"}, "(" + delta + ")");
+        if (this.props.deltaTo) {
+            delta = formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
+            delta = React.createElement("span", {className: "text-muted"}, "(" + delta + ")");
         } else {
             delta = null;
         }
 
-        return React.DOM.tr(null, React.DOM.td(null, this.props.title + ":"), React.DOM.td(null, ts, " ", delta));
+        return React.createElement("tr", null, 
+            React.createElement("td", null, this.props.title + ":"), 
+            React.createElement("td", null, ts, " ", delta)
+        );
     }
 });
 
 var ConnectionInfo = React.createClass({displayName: 'ConnectionInfo',
 
-    render: function() {
+    render: function () {
         var conn = this.props.conn;
         var address = conn.address.address.join(":");
 
-        var sni = React.DOM.tr({key: "sni"}); //should be null, but that triggers a React bug.
-        if(conn.sni){
-            sni = React.DOM.tr({key: "sni"}, React.DOM.td(null, React.DOM.abbr({title: "TLS Server Name Indication"}, "TLS SNI:")), React.DOM.td(null, conn.sni));
+        var sni = React.createElement("tr", {key: "sni"}); //should be null, but that triggers a React bug.
+        if (conn.sni) {
+            sni = React.createElement("tr", {key: "sni"}, 
+                React.createElement("td", null, 
+                    React.createElement("abbr", {title: "TLS Server Name Indication"}, "TLS SNI:")
+                ), 
+                React.createElement("td", null, conn.sni)
+            );
         }
         return (
-            React.DOM.table({className: "connection-table"}, 
-                React.DOM.tbody(null, 
-                    React.DOM.tr({key: "address"}, React.DOM.td(null, "Address:"), React.DOM.td(null, address)), 
+            React.createElement("table", {className: "connection-table"}, 
+                React.createElement("tbody", null, 
+                    React.createElement("tr", {key: "address"}, 
+                        React.createElement("td", null, "Address:"), 
+                        React.createElement("td", null, address)
+                    ), 
                     sni
                 )
             )
@@ -1052,7 +1347,7 @@ var ConnectionInfo = React.createClass({displayName: 'ConnectionInfo',
 });
 
 var CertificateInfo = React.createClass({displayName: 'CertificateInfo',
-    render: function(){
+    render: function () {
         //TODO: We should fetch human-readable certificate representation
         // from the server
         var flow = this.props.flow;
@@ -1061,19 +1356,19 @@ var CertificateInfo = React.createClass({displayName: 'CertificateInfo',
 
         var preStyle = {maxHeight: 100};
         return (
-            React.DOM.div(null, 
-            client_conn.cert ? React.DOM.h4(null, "Client Certificate") : null, 
-            client_conn.cert ? React.DOM.pre({style: preStyle}, client_conn.cert) : null, 
+            React.createElement("div", null, 
+            client_conn.cert ? React.createElement("h4", null, "Client Certificate") : null, 
+            client_conn.cert ? React.createElement("pre", {style: preStyle}, client_conn.cert) : null, 
 
-            server_conn.cert ? React.DOM.h4(null, "Server Certificate") : null, 
-            server_conn.cert ? React.DOM.pre({style: preStyle}, server_conn.cert) : null
+            server_conn.cert ? React.createElement("h4", null, "Server Certificate") : null, 
+            server_conn.cert ? React.createElement("pre", {style: preStyle}, server_conn.cert) : null
             )
         );
     }
 });
 
 var Timing = React.createClass({displayName: 'Timing',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var sc = flow.server_conn;
         var cc = flow.client_conn;
@@ -1126,147 +1421,198 @@ var Timing = React.createClass({displayName: 'Timing',
         }
 
         //Add unique key for each row.
-        timestamps.forEach(function(e){
+        timestamps.forEach(function (e) {
             e.key = e.title;
         });
 
         timestamps = _.sortBy(timestamps, 't');
 
-        var rows = timestamps.map(function(e){
-            return TimeStamp(e);
+        var rows = timestamps.map(function (e) {
+            return React.createElement(TimeStamp, React.__spread({},  e));
         });
 
         return (
-            React.DOM.div(null, 
-            React.DOM.h4(null, "Timing"), 
-            React.DOM.table({className: "timing-table"}, 
-                React.DOM.tbody(null, 
+            React.createElement("div", null, 
+                React.createElement("h4", null, "Timing"), 
+                React.createElement("table", {className: "timing-table"}, 
+                    React.createElement("tbody", null, 
                     rows
+                    )
                 )
-            )
             )
         );
     }
 });
 
 var FlowDetailConnectionInfo = React.createClass({displayName: 'FlowDetailConnectionInfo',
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
         var server_conn = flow.server_conn;
         return (
-            React.DOM.section(null, 
+            React.createElement("section", null, 
 
-            React.DOM.h4(null, "Client Connection"), 
-            ConnectionInfo({conn: client_conn}), 
+                React.createElement("h4", null, "Client Connection"), 
+                React.createElement(ConnectionInfo, {conn: client_conn}), 
 
-            React.DOM.h4(null, "Server Connection"), 
-            ConnectionInfo({conn: server_conn}), 
+                React.createElement("h4", null, "Server Connection"), 
+                React.createElement(ConnectionInfo, {conn: server_conn}), 
 
-            CertificateInfo({flow: flow}), 
+                React.createElement(CertificateInfo, {flow: flow}), 
 
-            Timing({flow: flow})
+                React.createElement(Timing, {flow: flow})
 
             )
         );
     }
 });
 
-var tabs = {
+var allTabs = {
     request: FlowDetailRequest,
     response: FlowDetailResponse,
+    error: FlowDetailError,
     details: FlowDetailConnectionInfo
 };
 
 var FlowDetail = React.createClass({displayName: 'FlowDetail',
-    getDefaultProps: function(){
-        return {
-            tabs: ["request","response", "details"]
-        };
-    },
-    mixins: [StickyHeadMixin],
-    nextTab: function(i) {
-        var currentIndex = this.props.tabs.indexOf(this.props.active);
-        // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
-        var nextIndex = (currentIndex + i + this.props.tabs.length) % this.props.tabs.length;
-        this.props.selectTab(this.props.tabs[nextIndex]);
-    },
-    render: function(){
-        var flow = JSON.stringify(this.props.flow, null, 2);
-        var Tab = tabs[this.props.active];
-        return (
-            React.DOM.div({className: "flow-detail", onScroll: this.adjustHead}, 
-                FlowDetailNav({ref: "head", 
-                               tabs: this.props.tabs, 
-                               active: this.props.active, 
-                               selectTab: this.props.selectTab}), 
-                Tab({flow: this.props.flow})
-            )
-            );
-    } 
-});
-/** @jsx React.DOM */
-
-var MainView = React.createClass({displayName: 'MainView',
-    getInitialState: function() {
-        return {
-            flows: [],
-        };
-    },
-    componentDidMount: function () {
-        this.flowStore = FlowStore.getView();
-        this.flowStore.addListener("change",this.onFlowChange);
-    },
-    componentWillUnmount: function () {
-        this.flowStore.removeListener("change",this.onFlowChange);
-        this.flowStore.close();
-    },
-    onFlowChange: function () {
-        this.setState({
-            flows: this.flowStore.getAll()
+    mixins: [StickyHeadMixin, ReactRouter.Navigation, ReactRouter.State],
+    getTabs: function (flow) {
+        var tabs = [];
+        ["request", "response", "error"].forEach(function (e) {
+            if (flow[e]) {
+                tabs.push(e);
+            }
         });
+        tabs.push("details");
+        return tabs;
     },
-    selectDetailTab: function(panel) {
-        ReactRouter.replaceWith(
+    nextTab: function (i) {
+        var tabs = this.getTabs(this.props.flow);
+        var currentIndex = tabs.indexOf(this.getParams().detailTab);
+        // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
+        var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
+        this.selectTab(tabs[nextIndex]);
+    },
+    selectTab: function (panel) {
+        this.replaceWith(
             "flow",
             {
-                flowId: this.props.params.flowId,
+                flowId: this.getParams().flowId,
                 detailTab: panel
             }
         );
     },
-    selectFlow: function(flow) {
-        if(flow){
-            ReactRouter.replaceWith(
-                "flow", 
+    render: function () {
+        var flow = this.props.flow;
+        var tabs = this.getTabs(flow);
+        var active = this.getParams().detailTab;
+
+        if (!_.contains(tabs, active)) {
+            if (active === "response" && flow.error) {
+                active = "error";
+            } else if (active === "error" && flow.response) {
+                active = "response";
+            } else {
+                active = tabs[0];
+            }
+            this.selectTab(active);
+        }
+
+        var Tab = allTabs[active];
+        return (
+            React.createElement("div", {className: "flow-detail", onScroll: this.adjustHead}, 
+                React.createElement(FlowDetailNav, {ref: "head", 
+                    tabs: tabs, 
+                    active: active, 
+                    selectTab: this.selectTab}), 
+                React.createElement(Tab, {flow: flow})
+            )
+        );
+    }
+});
+var MainView = React.createClass({displayName: 'MainView',
+    mixins: [ReactRouter.Navigation, ReactRouter.State],
+    getInitialState: function () {
+        return {
+            flows: []
+        };
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.flowStore !== this.props.flowStore) {
+            this.closeView();
+            this.openView(nextProps.flowStore);
+        }
+    },
+    openView: function (store) {
+        var view = new StoreView(store);
+        this.setState({
+            view: view
+        });
+
+        view.addListener("recalculate", this.onRecalculate);
+        view.addListener("add update remove", this.onUpdate);
+    },
+    onRecalculate: function(){
+        this.forceUpdate();
+        var selected = this.getSelected();
+        if(selected){
+            this.refs.flowTable.scrollIntoView(selected);
+        }
+    },
+    onUpdate: function (flow) {
+        if (flow.id === this.getParams().flowId) {
+            this.forceUpdate();
+        }
+    },
+    closeView: function () {
+        this.state.view.close();
+    },
+    componentWillMount: function () {
+        this.openView(this.props.flowStore);
+    },
+    componentWillUnmount: function () {
+        this.closeView();
+    },
+    selectFlow: function (flow) {
+        if (flow) {
+            this.replaceWith(
+                "flow",
                 {
                     flowId: flow.id,
-                    detailTab: this.props.params.detailTab || "request"
+                    detailTab: this.getParams().detailTab || "request"
                 }
             );
             this.refs.flowTable.scrollIntoView(flow);
         } else {
-            ReactRouter.replaceWith("flows");
+            this.replaceWith("flows");
         }
     },
-    selectFlowRelative: function(i){
+    selectFlowRelative: function (shift) {
+        var flows = this.state.view.list;
         var index;
-        if(!this.props.params.flowId){
-            if(i > 0){
-                index = this.state.flows.length-1;
+        if (!this.getParams().flowId) {
+            if (shift > 0) {
+                index = flows.length - 1;
             } else {
                 index = 0;
             }
         } else {
-            index = _.findIndex(this.state.flows, function(f){
-                return f.id === this.props.params.flowId;
-            }.bind(this));
-            index = Math.min(Math.max(0, index+i), this.state.flows.length-1);
+            var currFlowId = this.getParams().flowId;
+            var i = flows.length;
+            while (i--) {
+                if (flows[i].id === currFlowId) {
+                    index = i;
+                    break;
+                }
+            }
+            index = Math.min(
+                Math.max(0, index + shift),
+                flows.length - 1);
         }
-        this.selectFlow(this.state.flows[index]);
+        this.selectFlow(flows[index]);
     },
-    onKeyDown: function(e){
-        switch(e.keyCode){
+    onKeyDown: function (e) {
+        switch (e.keyCode) {
             case Key.K:
             case Key.UP:
                 this.selectFlowRelative(-1);
@@ -1287,14 +1633,14 @@ var MainView = React.createClass({displayName: 'MainView',
                 break;
             case Key.H:
             case Key.LEFT:
-                if(this.refs.flowDetails){
+                if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
             case Key.L:
             case Key.TAB:
             case Key.RIGHT:
-                if(this.refs.flowDetails){
+                if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
@@ -1302,98 +1648,128 @@ var MainView = React.createClass({displayName: 'MainView',
                 console.debug("keydown", e.keyCode);
                 return;
         }
-        return false;
+        e.preventDefault();
     },
-    render: function() {
-        var selected = _.find(this.state.flows, { id: this.props.params.flowId });
+    getSelected: function(){
+        return this.props.flowStore.get(this.getParams().flowId);
+    },
+    render: function () {
+        var selected = this.getSelected();
 
         var details;
-        if(selected){
-            details = (
-                FlowDetail({ref: "flowDetails", 
-                            flow: selected, 
-                            selectTab: this.selectDetailTab, 
-                            active: this.props.params.detailTab})
-            );
+        if (selected) {
+            details = [
+                React.createElement(Splitter, {key: "splitter"}),
+                React.createElement(FlowDetail, {key: "flowDetails", ref: "flowDetails", flow: selected})
+            ];
         } else {
             details = null;
         }
 
         return (
-            React.DOM.div({className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
-                FlowTable({ref: "flowTable", 
-                           flows: this.state.flows, 
-                           selectFlow: this.selectFlow, 
-                           selected: selected}), 
-                 details ? Splitter(null) : null, 
+            React.createElement("div", {className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
+                React.createElement(FlowTable, {ref: "flowTable", 
+                    view: this.state.view, 
+                    selectFlow: this.selectFlow, 
+                    selected: selected}), 
                 details
             )
         );
     }
 });
-/** @jsx React.DOM */
-
 var LogMessage = React.createClass({displayName: 'LogMessage',
-    render: function(){
+    render: function () {
         var entry = this.props.entry;
         var indicator;
-        switch(entry.level){
+        switch (entry.level) {
             case "web":
-                indicator = React.DOM.i({className: "fa fa-fw fa-html5"});
+                indicator = React.createElement("i", {className: "fa fa-fw fa-html5"});
                 break;
             case "debug":
-                indicator = React.DOM.i({className: "fa fa-fw fa-bug"});
+                indicator = React.createElement("i", {className: "fa fa-fw fa-bug"});
                 break;
             default:
-                indicator = React.DOM.i({className: "fa fa-fw fa-info"});
+                indicator = React.createElement("i", {className: "fa fa-fw fa-info"});
         }
         return (
-            React.DOM.div(null, 
+            React.createElement("div", null, 
                 indicator, " ", entry.message
             )
         );
     },
-    shouldComponentUpdate: function(){
+    shouldComponentUpdate: function () {
         return false; // log entries are immutable.
     }
 });
 
 var EventLogContents = React.createClass({displayName: 'EventLogContents',
-    mixins:[AutoScrollMixin],
+    mixins: [AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             log: []
         };
     },
-    componentDidMount: function () {
-        this.log = EventLogStore.getView();
-        this.log.addListener("change", this.onEventLogChange);
+    componentWillMount: function () {
+        this.openView(this.props.eventStore);
     },
     componentWillUnmount: function () {
-        this.log.removeListener("change", this.onEventLogChange);
-        this.log.close();
+        this.closeView();
+    },
+    openView: function (store) {
+        var view = new StoreView(store, function (entry) {
+            return this.props.filter[entry.level];
+        }.bind(this));
+        this.setState({
+            view: view
+        });
+
+        view.addListener("add recalculate", this.onEventLogChange);
+    },
+    closeView: function () {
+        this.state.view.close();
     },
     onEventLogChange: function () {
         this.setState({
-            log: this.log.getAll()
+            log: this.state.view.list
         });
     },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.filter !== this.props.filter) {
+            this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
+            this.state.view.recalculate(this.props.eventStore.list);
+        }
+        if (nextProps.eventStore !== this.props.eventStore) {
+            this.closeView();
+            this.openView(nextProps.eventStore);
+        }
+    },
+    getDefaultProps: function () {
+        return {
+            rowHeight: 45,
+            rowHeightMin: 15,
+            placeholderTagName: "div"
+        };
+    },
+    renderRow: function (elem) {
+        return React.createElement(LogMessage, {key: elem.id, entry: elem});
+    },
     render: function () {
-        var messages = this.state.log.map(function(row) {
-            if(!this.props.filter[row.level]){
-                return null;
-            }
-            return LogMessage({key: row.id, entry: row});
-        }.bind(this));
-        return React.DOM.pre(null, messages);
+        var rows = this.renderRows(this.state.log);
+
+        return React.createElement("pre", {onScroll: this.onScroll}, 
+             this.getPlaceholderTop(this.state.log.length), 
+            rows, 
+             this.getPlaceholderBottom(this.state.log.length) 
+        );
     }
 });
 
 var ToggleFilter = React.createClass({displayName: 'ToggleFilter',
-    toggle: function(){
+    toggle: function (e) {
+        e.preventDefault();
         return this.props.toggleLevel(this.props.name);
     },
-    render: function(){
+    render: function () {
         var className = "label ";
         if (this.props.active) {
             className += "label-primary";
@@ -1401,18 +1777,18 @@ var ToggleFilter = React.createClass({displayName: 'ToggleFilter',
             className += "label-default";
         }
         return (
-            React.DOM.a({
+            React.createElement("a", {
                 href: "#", 
                 className: className, 
                 onClick: this.toggle}, 
                 this.props.name
             )
         );
-   } 
+    }
 });
 
 var EventLog = React.createClass({displayName: 'EventLog',
-    getInitialState: function(){
+    getInitialState: function () {
         return {
             filter: {
                 "debug": false,
@@ -1426,99 +1802,119 @@ var EventLog = React.createClass({displayName: 'EventLog',
             showEventLog: false
         });
     },
-    toggleLevel: function(level){
-        var filter = this.state.filter;
+    toggleLevel: function (level) {
+        var filter = _.extend({}, this.state.filter);
         filter[level] = !filter[level];
         this.setState({filter: filter});
-        return false;
     },
     render: function () {
         return (
-            React.DOM.div({className: "eventlog"}, 
-                React.DOM.div(null, 
+            React.createElement("div", {className: "eventlog"}, 
+                React.createElement("div", null, 
                     "Eventlog", 
-                    React.DOM.div({className: "pull-right"}, 
-                        ToggleFilter({name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel}), 
-                        ToggleFilter({name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel}), 
-                        ToggleFilter({name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel}), 
-                        React.DOM.i({onClick: this.close, className: "fa fa-close"})
+                    React.createElement("div", {className: "pull-right"}, 
+                        React.createElement(ToggleFilter, {name: "debug", active: this.state.filter.debug, toggleLevel: this.toggleLevel}), 
+                        React.createElement(ToggleFilter, {name: "info", active: this.state.filter.info, toggleLevel: this.toggleLevel}), 
+                        React.createElement(ToggleFilter, {name: "web", active: this.state.filter.web, toggleLevel: this.toggleLevel}), 
+                        React.createElement("i", {onClick: this.close, className: "fa fa-close"})
                     )
 
                 ), 
-                EventLogContents({filter: this.state.filter})
+                React.createElement(EventLogContents, {filter: this.state.filter, eventStore: this.props.eventStore})
             )
         );
     }
 });
-/** @jsx React.DOM */
-
 var Footer = React.createClass({displayName: 'Footer',
     render: function () {
         var mode = this.props.settings.mode;
         return (
-            React.DOM.footer(null, 
-                mode != "regular" ? React.DOM.span({className: "label label-success"}, mode, " mode") : null
+            React.createElement("footer", null, 
+                mode != "regular" ? React.createElement("span", {className: "label label-success"}, mode, " mode") : null
             )
-            );
+        );
     }
 });
-
-/** @jsx React.DOM */
 
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({displayName: 'Reports',
     render: function () {
-        return React.DOM.div(null, "ReportEditor");
+        return React.createElement("div", null, "ReportEditor");
     }
 });
 
 
 var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
     getInitialState: function () {
-        return { settings: SettingsStore.getAll() };
+        var eventStore = new EventLogStore();
+        var flowStore = new FlowStore();
+        var settings = new SettingsStore();
+
+        // Default Settings before fetch
+        _.extend(settings.dict,{
+            showEventLog: true
+        });
+        return {
+            settings: settings,
+            flowStore: flowStore,
+            eventStore: eventStore
+        };
     },
     componentDidMount: function () {
-        SettingsStore.addListener("change", this.onSettingsChange);
+        this.state.settings.addListener("recalculate", this.onSettingsChange);
     },
     componentWillUnmount: function () {
-        SettingsStore.removeListener("change", this.onSettingsChange);
+        this.state.settings.removeListener("recalculate", this.onSettingsChange);
     },
-    onSettingsChange: function () {
-        this.setState({settings: SettingsStore.getAll()});
+    onSettingsChange: function(){
+        this.setState({
+            settings: this.state.settings
+        });
     },
     render: function () {
+
+        var eventlog;
+        if (this.state.settings.dict.showEventLog) {
+            eventlog = [
+                React.createElement(Splitter, {key: "splitter", axis: "y"}),
+                React.createElement(EventLog, {key: "eventlog", eventStore: this.state.eventStore})
+            ];
+        } else {
+            eventlog = null;
+        }
+
         return (
-            React.DOM.div({id: "container"}, 
-                Header({settings: this.state.settings}), 
-                this.props.activeRouteHandler({settings: this.state.settings}), 
-                this.state.settings.showEventLog ? Splitter({axis: "y"}) : null, 
-                this.state.settings.showEventLog ? EventLog(null) : null, 
-                Footer({settings: this.state.settings})
+            React.createElement("div", {id: "container"}, 
+                React.createElement(Header, {settings: this.state.settings.dict}), 
+                React.createElement(RouteHandler, {settings: this.state.settings.dict, flowStore: this.state.flowStore}), 
+                eventlog, 
+                React.createElement(Footer, {settings: this.state.settings.dict})
             )
-            );
+        );
     }
 });
 
 
-var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
+var RouteHandler = ReactRouter.RouteHandler;
 var Redirect = ReactRouter.Redirect;
 var DefaultRoute = ReactRouter.DefaultRoute;
 var NotFoundRoute = ReactRouter.NotFoundRoute;
 
 
-var ProxyApp = (
-    Routes({location: "hash"}, 
-        Route({path: "/", handler: ProxyAppMain}, 
-            Route({name: "flows", path: "flows", handler: MainView}), 
-            Route({name: "flow", path: "flows/:flowId/:detailTab", handler: MainView}), 
-            Route({name: "reports", handler: Reports}), 
-            Redirect({path: "/", to: "flows"})
-        )
+var routes = (
+    React.createElement(Route, {path: "/", handler: ProxyAppMain}, 
+        React.createElement(Route, {name: "flows", path: "flows", handler: MainView}), 
+        React.createElement(Route, {name: "flow", path: "flows/:flowId/:detailTab", handler: MainView}), 
+        React.createElement(Route, {name: "reports", handler: Reports}), 
+        React.createElement(Redirect, {path: "/", to: "flows"})
     )
-    );
+);
 $(function () {
-    Connection.init();
-    app = React.renderComponent(ProxyApp, document.body);
+    window.ws = new Connection("/updates");
+
+    ReactRouter.run(routes, function (Handler) {
+        React.render(React.createElement(Handler, null), document.body);
+    });
 });
 //# sourceMappingURL=app.js.map

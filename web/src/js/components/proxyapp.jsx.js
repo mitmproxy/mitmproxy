@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({
     render: function () {
@@ -10,45 +8,67 @@ var Reports = React.createClass({
 
 var ProxyAppMain = React.createClass({
     getInitialState: function () {
-        return { settings: SettingsStore.getAll() };
+        var eventStore = new EventLogStore();
+        var flowStore = new FlowStore();
+        var settings = new SettingsStore();
+
+        // Default Settings before fetch
+        _.extend(settings.dict,{
+            showEventLog: true
+        });
+        return {
+            settings: settings,
+            flowStore: flowStore,
+            eventStore: eventStore
+        };
     },
     componentDidMount: function () {
-        SettingsStore.addListener("change", this.onSettingsChange);
+        this.state.settings.addListener("recalculate", this.onSettingsChange);
     },
     componentWillUnmount: function () {
-        SettingsStore.removeListener("change", this.onSettingsChange);
+        this.state.settings.removeListener("recalculate", this.onSettingsChange);
     },
-    onSettingsChange: function () {
-        this.setState({settings: SettingsStore.getAll()});
+    onSettingsChange: function(){
+        this.setState({
+            settings: this.state.settings
+        });
     },
     render: function () {
+
+        var eventlog;
+        if (this.state.settings.dict.showEventLog) {
+            eventlog = [
+                <Splitter key="splitter" axis="y"/>,
+                <EventLog key="eventlog" eventStore={this.state.eventStore}/>
+            ];
+        } else {
+            eventlog = null;
+        }
+
         return (
             <div id="container">
-                <Header settings={this.state.settings}/>
-                <this.props.activeRouteHandler settings={this.state.settings}/>
-                {this.state.settings.showEventLog ? <Splitter axis="y"/> : null}
-                {this.state.settings.showEventLog ? <EventLog/> : null}
-                <Footer settings={this.state.settings}/>
+                <Header settings={this.state.settings.dict}/>
+                <RouteHandler settings={this.state.settings.dict} flowStore={this.state.flowStore}/>
+                {eventlog}
+                <Footer settings={this.state.settings.dict}/>
             </div>
-            );
+        );
     }
 });
 
 
-var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
+var RouteHandler = ReactRouter.RouteHandler;
 var Redirect = ReactRouter.Redirect;
 var DefaultRoute = ReactRouter.DefaultRoute;
 var NotFoundRoute = ReactRouter.NotFoundRoute;
 
 
-var ProxyApp = (
-    <Routes location="hash">
-        <Route path="/" handler={ProxyAppMain}>
-            <Route name="flows" path="flows" handler={MainView}/>
-            <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
-            <Route name="reports" handler={Reports}/>
-            <Redirect path="/" to="flows" />
-        </Route>
-    </Routes>
-    );
+var routes = (
+    <Route path="/" handler={ProxyAppMain}>
+        <Route name="flows" path="flows" handler={MainView}/>
+        <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
+        <Route name="reports" handler={Reports}/>
+        <Redirect path="/" to="flows" />
+    </Route>
+);

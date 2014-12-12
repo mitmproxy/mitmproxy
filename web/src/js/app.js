@@ -1,4 +1,7 @@
 $(function () {
-    Connection.init();
-    app = React.renderComponent(ProxyApp, document.body);
+    window.ws = new Connection("/updates");
+
+    ReactRouter.run(routes, function (Handler) {
+        React.render(<Handler/>, document.body);
+    });
 });

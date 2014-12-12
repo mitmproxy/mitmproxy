@@ -1,13 +1,11 @@
-/** @jsx React.DOM */
-
 var FlowRow = React.createClass({
-    render: function(){
+    render: function () {
         var flow = this.props.flow;
-        var columns = this.props.columns.map(function(column){
-            return <column key={column.displayName} flow={flow}/>;
+        var columns = this.props.columns.map(function (Column) {
+            return <Column key={Column.displayName} flow={flow}/>;
         }.bind(this));
         var className = "";
-        if(this.props.selected){
+        if (this.props.selected) {
             className += "selected";
         }
         return (
@@ -15,80 +13,97 @@ var FlowRow = React.createClass({
                 {columns}
             </tr>);
     },
-    shouldComponentUpdate: function(nextProps){
-        var isEqual = (
-            this.props.columns.length === nextProps.columns.length && 
-            this.props.selected === nextProps.selected &&
-            this.props.flow.response === nextProps.flow.response);
-        return !isEqual;
+    shouldComponentUpdate: function (nextProps) {
+        return true;
+        // Further optimization could be done here
+        // by calling forceUpdate on flow updates, selection changes and column changes.
+        //return (
+        //(this.props.columns.length !== nextProps.columns.length) ||
+        //(this.props.selected !== nextProps.selected)
+        //);
     }
 });
 
 var FlowTableHead = React.createClass({
-    render: function(){
-        var columns = this.props.columns.map(function(column){
+    render: function () {
+        var columns = this.props.columns.map(function (column) {
             return column.renderTitle();
         }.bind(this));
-        return <thead><tr>{columns}</tr></thead>;
+        return <thead>
+            <tr>{columns}</tr>
+        </thead>;
     }
 });
 
-var FlowTableBody = React.createClass({
-    render: function(){
-        var rows = this.props.flows.map(function(flow){
-            var selected = (flow == this.props.selected);
-            return <FlowRow key={flow.id}
-                            ref={flow.id}
-                            flow={flow}
-                            columns={this.props.columns}
-                            selected={selected}
-                            selectFlow={this.props.selectFlow}
-                            />;
-        }.bind(this));
-        return <tbody>{rows}</tbody>;
-    }
-});
 
+var ROW_HEIGHT = 32;
 
 var FlowTable = React.createClass({
-    mixins: [StickyHeadMixin, AutoScrollMixin],
+    mixins: [StickyHeadMixin, AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             columns: all_columns
         };
     },
-    scrollIntoView: function(flow){
-        // Now comes the fun part: Scroll the flow into the view.
-        var viewport = this.getDOMNode();
-        var flowNode = this.refs.body.refs[flow.id].getDOMNode();
-        var viewport_top = viewport.scrollTop;
-        var viewport_bottom = viewport_top + viewport.offsetHeight;
-        var flowNode_top = flowNode.offsetTop;
-        var flowNode_bottom = flowNode_top + flowNode.offsetHeight;
-
-        // Account for pinned thead by pretending that the flowNode starts
-        // -thead_height pixel earlier.
-        flowNode_top -= this.refs.body.getDOMNode().offsetTop;
-
-        if(flowNode_top < viewport_top){
-            viewport.scrollTop = flowNode_top;
-        } else if(flowNode_bottom > viewport_bottom) {
-            viewport.scrollTop = flowNode_bottom - viewport.offsetHeight;
+    componentWillMount: function () {
+        if (this.props.view) {
+            this.props.view.addListener("add update remove recalculate", this.onChange);
         }
     },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.view !== this.props.view) {
+            if (this.props.view) {
+                this.props.view.removeListener("add update remove recalculate");
+            }
+            nextProps.view.addListener("add update remove recalculate", this.onChange);
+        }
+    },
+    getDefaultProps: function () {
+        return {
+            rowHeight: ROW_HEIGHT
+        };
+    },
+    onScrollFlowTable: function () {
+        this.adjustHead();
+        this.onScroll();
+    },
+    onChange: function () {
+        this.forceUpdate();
+    },
+    scrollIntoView: function (flow) {
+        this.scrollRowIntoView(
+            this.props.view.index(flow),
+            this.refs.body.getDOMNode().offsetTop
+        );
+    },
+    renderRow: function (flow) {
+        var selected = (flow === this.props.selected);
+        return <FlowRow key={flow.id}
+            ref={flow.id}
+            flow={flow}
+            columns={this.state.columns}
+            selected={selected}
+            selectFlow={this.props.selectFlow}
+        />;
+    },
     render: function () {
+        //console.log("render flowtable", this.state.start, this.state.stop, this.props.selected);
+        var flows = this.props.view ? this.props.view.list : [];
+
+        var rows = this.renderRows(flows);
+
         return (
-            <div className="flow-table" onScroll={this.adjustHead}>
+            <div className="flow-table" onScroll={this.onScrollFlowTable}>
                 <table>
                     <FlowTableHead ref="head"
-                                   columns={this.state.columns}/>
-                    <FlowTableBody ref="body"
-                                   flows={this.props.flows}
-                                   selected={this.props.selected}
-                                   selectFlow={this.props.selectFlow}
-                                   columns={this.state.columns}/>
+                        columns={this.state.columns}/>
+                    <tbody ref="body">
+                        { this.getPlaceholderTop(flows.length) }
+                        {rows}
+                        { this.getPlaceholderBottom(flows.length) }
+                    </tbody>
                 </table>
             </div>
-            );
+        );
     }
 });

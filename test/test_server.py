@@ -747,19 +747,19 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
         assert req.content == "content"
         assert req.status_code == 418
 
-        assert not self.chain[1].tmaster.state._flow_list[0].response  # killed
-        assert self.chain[1].tmaster.state._flow_list[1].response
+        assert not self.chain[1].tmaster.state.flows[0].response  # killed
+        assert self.chain[1].tmaster.state.flows[1].response
 
-        assert self.proxy.tmaster.state._flow_list[0].request.form_in == "authority"
-        assert self.proxy.tmaster.state._flow_list[1].request.form_in == "relative"
+        assert self.proxy.tmaster.state.flows[0].request.form_in == "authority"
+        assert self.proxy.tmaster.state.flows[1].request.form_in == "relative"
 
-        assert self.chain[0].tmaster.state._flow_list[0].request.form_in == "authority"
-        assert self.chain[0].tmaster.state._flow_list[1].request.form_in == "relative"
-        assert self.chain[0].tmaster.state._flow_list[2].request.form_in == "authority"
-        assert self.chain[0].tmaster.state._flow_list[3].request.form_in == "relative"
+        assert self.chain[0].tmaster.state.flows[0].request.form_in == "authority"
+        assert self.chain[0].tmaster.state.flows[1].request.form_in == "relative"
+        assert self.chain[0].tmaster.state.flows[2].request.form_in == "authority"
+        assert self.chain[0].tmaster.state.flows[3].request.form_in == "relative"
 
-        assert self.chain[1].tmaster.state._flow_list[0].request.form_in == "relative"
-        assert self.chain[1].tmaster.state._flow_list[1].request.form_in == "relative"
+        assert self.chain[1].tmaster.state.flows[0].request.form_in == "relative"
+        assert self.chain[1].tmaster.state.flows[1].request.form_in == "relative"
 
         req = p.request("get:'/p/418:b\"content2\"'")
 

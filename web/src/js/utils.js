@@ -12,6 +12,7 @@ var AutoScrollMixin = {
     },
 };
 
+
 var StickyHeadMixin = {
     adjustHead: function () {
         // Abusing CSS transforms to set the element
@@ -20,6 +21,7 @@ var StickyHeadMixin = {
         head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
     }
 };
+
 
 var Key = {
     UP: 38,
@@ -38,16 +40,18 @@ var Key = {
     L: 76
 };
 
+
 var formatSize = function (bytes) {
     var size = bytes;
     var prefix = ["B", "KB", "MB", "GB", "TB"];
-    var i=0;
-    while (Math.abs(size) >= 1024 && i < prefix.length-1) {
+    var i = 0;
+    while (Math.abs(size) >= 1024 && i < prefix.length - 1) {
         i++;
         size = size / 1024;
     }
     return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix[i];
 };
+
 
 var formatTimeDelta = function (milliseconds) {
     var time = milliseconds;
@@ -59,4 +63,41 @@ var formatTimeDelta = function (milliseconds) {
         i++;
     }
     return Math.round(time) + prefix[i];
+};
+
+
+var formatTimeStamp = function (seconds) {
+    var ts = (new Date(seconds * 1000)).toISOString();
+    return ts.replace("T", " ").replace("Z", "");
+};
+
+
+function EventEmitter() {
+    this.listeners = {};
+}
+EventEmitter.prototype.emit = function (event) {
+    if (!(event in this.listeners)) {
+        return;
+    }
+    var args = Array.prototype.slice.call(arguments, 1);
+    this.listeners[event].forEach(function (listener) {
+        listener.apply(this, args);
+    }.bind(this));
+};
+EventEmitter.prototype.addListener = function (events, f) {
+    events.split(" ").forEach(function (event) {
+        this.listeners[event] = this.listeners[event] || [];
+        this.listeners[event].push(f);
+    }.bind(this));
+};
+EventEmitter.prototype.removeListener = function (events, f) {
+    if (!(events in this.listeners)) {
+        return false;
+    }
+    events.split(" ").forEach(function (event) {
+        var index = this.listeners[event].indexOf(f);
+        if (index >= 0) {
+            this.listeners[event].splice(index, 1);
+        }
+    }.bind(this));
 };

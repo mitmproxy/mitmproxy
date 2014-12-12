@@ -10,8 +10,7 @@
         "qunit": "", 
         "benchmark": "",
         "benchmarkjs-runner": "",
-        "bootstrap": "",
-        "react-bootstrap": ""
+        "bootstrap": ""
     },
     "install": {
         "path": "src/vendor",

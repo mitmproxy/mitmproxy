@@ -1,10 +1,8 @@
-/** @jsx React.DOM */
-
 var LogMessage = React.createClass({
-    render: function(){
+    render: function () {
         var entry = this.props.entry;
         var indicator;
-        switch(entry.level){
+        switch (entry.level) {
             case "web":
                 indicator = <i className="fa fa-fw fa-html5"></i>;
                 break;
@@ -20,47 +18,79 @@ var LogMessage = React.createClass({
             </div>
         );
     },
-    shouldComponentUpdate: function(){
+    shouldComponentUpdate: function () {
         return false; // log entries are immutable.
     }
 });
 
 var EventLogContents = React.createClass({
-    mixins:[AutoScrollMixin],
+    mixins: [AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             log: []
         };
     },
-    componentDidMount: function () {
-        this.log = EventLogStore.getView();
-        this.log.addListener("change", this.onEventLogChange);
+    componentWillMount: function () {
+        this.openView(this.props.eventStore);
     },
     componentWillUnmount: function () {
-        this.log.removeListener("change", this.onEventLogChange);
-        this.log.close();
+        this.closeView();
+    },
+    openView: function (store) {
+        var view = new StoreView(store, function (entry) {
+            return this.props.filter[entry.level];
+        }.bind(this));
+        this.setState({
+            view: view
+        });
+
+        view.addListener("add recalculate", this.onEventLogChange);
+    },
+    closeView: function () {
+        this.state.view.close();
     },
     onEventLogChange: function () {
         this.setState({
-            log: this.log.getAll()
+            log: this.state.view.list
         });
     },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.filter !== this.props.filter) {
+            this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
+            this.state.view.recalculate(this.props.eventStore.list);
+        }
+        if (nextProps.eventStore !== this.props.eventStore) {
+            this.closeView();
+            this.openView(nextProps.eventStore);
+        }
+    },
+    getDefaultProps: function () {
+        return {
+            rowHeight: 45,
+            rowHeightMin: 15,
+            placeholderTagName: "div"
+        };
+    },
+    renderRow: function (elem) {
+        return <LogMessage key={elem.id} entry={elem}/>;
+    },
     render: function () {
-        var messages = this.state.log.map(function(row) {
-            if(!this.props.filter[row.level]){
-                return null;
-            }
-            return <LogMessage key={row.id} entry={row}/>;
-        }.bind(this));
-        return <pre>{messages}</pre>;
+        var rows = this.renderRows(this.state.log);
+
+        return <pre onScroll={this.onScroll}>
+            { this.getPlaceholderTop(this.state.log.length) }
+            {rows}
+            { this.getPlaceholderBottom(this.state.log.length) }
+        </pre>;
     }
 });
 
 var ToggleFilter = React.createClass({
-    toggle: function(){
+    toggle: function (e) {
+        e.preventDefault();
         return this.props.toggleLevel(this.props.name);
     },
-    render: function(){
+    render: function () {
         var className = "label ";
         if (this.props.active) {
             className += "label-primary";
@@ -75,11 +105,11 @@ var ToggleFilter = React.createClass({
                 {this.props.name}
             </a>
         );
-   } 
+    }
 });
 
 var EventLog = React.createClass({
-    getInitialState: function(){
+    getInitialState: function () {
         return {
             filter: {
                 "debug": false,
@@ -93,11 +123,10 @@ var EventLog = React.createClass({
             showEventLog: false
         });
     },
-    toggleLevel: function(level){
-        var filter = this.state.filter;
+    toggleLevel: function (level) {
+        var filter = _.extend({}, this.state.filter);
         filter[level] = !filter[level];
         this.setState({filter: filter});
-        return false;
     },
     render: function () {
         return (
@@ -112,7 +141,7 @@ var EventLog = React.createClass({
                     </div>
 
                 </div>
-                <EventLogContents filter={this.state.filter}/>
+                <EventLogContents filter={this.state.filter} eventStore={this.props.eventStore}/>
             </div>
         );
     }

@@ -117,7 +117,10 @@ class HTTPMessage(stateobject.StateObject):
     def get_state(self, short=False):
         ret = super(HTTPMessage, self).get_state(short)
         if short:
-            ret["contentLength"] = len(self.content)
+            if self.content:
+                ret["contentLength"] = len(self.content)
+            else:
+                ret["contentLength"] = 0
         return ret
 
     def get_decoded_content(self):
