@@ -2,7 +2,11 @@
 var AutoScrollMixin = {
     componentWillUpdate: function () {
         var node = this.getDOMNode();
-        this._shouldScrollBottom = node.scrollTop + node.clientHeight === node.scrollHeight;
+        this._shouldScrollBottom = (
+            node.scrollTop !== 0
+            &&
+            node.scrollTop + node.clientHeight === node.scrollHeight
+        );
     },
     componentDidUpdate: function () {
         if (this._shouldScrollBottom) {
