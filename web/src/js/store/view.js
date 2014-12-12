@@ -23,7 +23,7 @@ function StoreView(store, filt, sortfun) {
     this.store.addListener("remove", this.remove);
     this.store.addListener("recalculate", this.recalculate);
 
-    this.recalculate(this.store.list, filt, sortfun);
+    this.recalculate(filt, sortfun);
 }
 
 _.extend(StoreView.prototype, EventEmitter.prototype, {
@@ -33,7 +33,7 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("remove", this.remove);
         this.store.removeListener("recalculate", this.recalculate);
     },
-    recalculate: function (elems, filt, sortfun) {
+    recalculate: function (filt, sortfun) {
         if (filt) {
             this.filt = filt;
         }
@@ -41,7 +41,7 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
             this.sortfun = sortfun.bind(this);
         }
 
-        this.list = elems.filter(this.filt);
+        this.list = this.store.list.filter(this.filt);
         this.list.sort(function (a, b) {
             return this.sortfun(a) - this.sortfun(b);
         }.bind(this));

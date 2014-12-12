@@ -130,6 +130,7 @@ function url(regex){
 
 start "filter expression"
   = __ orExpr:OrExpr __ { return orExpr; }
+  / {return trueFilter; }
 
 ws "whitespace" = [ \t\n\r]
 cc "control character" = [|&!()~"]

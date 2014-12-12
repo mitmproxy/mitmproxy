@@ -1,9 +1,17 @@
 var MainView = React.createClass({
     mixins: [Navigation, State],
     getInitialState: function () {
+        this.onQueryChange(Query.FILTER, function(){
+            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
+        }.bind(this));
         return {
             flows: []
         };
+    },
+    getViewFilt: function(){
+        return Filt.parse(this.getQuery()[Query.FILTER]);
+    },
+    getViewSort: function(){
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.flowStore !== this.props.flowStore) {
@@ -12,7 +20,7 @@ var MainView = React.createClass({
         }
     },
     openView: function (store) {
-        var view = new StoreView(store);
+        var view = new StoreView(store, this.getViewFilt(), this.getViewSort());
         this.setState({
             view: view
         });

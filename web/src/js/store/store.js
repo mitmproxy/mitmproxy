@@ -29,7 +29,7 @@ _.extend(ListStore.prototype, EventEmitter.prototype, {
     reset: function (elems) {
         this.list = elems || [];
         this._build_map();
-        this.emit("recalculate", this.list);
+        this.emit("recalculate");
     },
     _build_map: function () {
         this._pos_map = {};
@@ -54,11 +54,11 @@ function DictStore() {
 _.extend(DictStore.prototype, EventEmitter.prototype, {
     update: function (dict) {
         _.merge(this.dict, dict);
-        this.emit("recalculate", this.dict);
+        this.emit("recalculate");
     },
     reset: function (dict) {
         this.dict = dict || {};
-        this.emit("recalculate", this.dict);
+        this.emit("recalculate");
     }
 });
 
