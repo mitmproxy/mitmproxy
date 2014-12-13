@@ -133,6 +133,11 @@ header .menu {
   padding: 10px;
   border-bottom: solid #a6a6a6 1px;
 }
+.filter-input .popover {
+  top: 27px;
+  display: block;
+  width: 100%;
+}
 .flow-table {
   width: 100%;
   overflow: auto;

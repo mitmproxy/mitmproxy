@@ -1,11 +1,124 @@
+var FilterInput = React.createClass({
+    getInitialState: function () {
+        // Focus: Show popover
+        // Mousefocus: Mouse over Tooltip
+        // onBlur is triggered before click on tooltip,
+        // hiding the tooltip before link is clicked.
+        return {
+            value: this.props.value,
+            focus: false,
+            mousefocus: false
+        };
+    },
+    componentWillReceiveProps: function (nextProps) {
+        this.setState({value: nextProps.value});
+    },
+    onChange: function (e) {
+        var nextValue = e.target.value;
+        this.setState({
+            value: nextValue
+        });
+        try {
+            Filt.parse(nextValue);
+        } catch (err) {
+            return;
+        }
+        this.props.onChange(nextValue);
+    },
+    isValid: function () {
+        try {
+            Filt.parse(this.state.value);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    },
+    getDesc: function () {
+        var desc;
+        try {
+            desc = Filt.parse(this.state.value).desc;
+        } catch (e) {
+            desc = "" + e;
+        }
+        if (desc !== "true") {
+            return desc;
+        } else {
+            return (
+                <a href="https://mitmproxy.org/doc/features/filters.html" target="_blank">
+                    <i className="fa fa-external-link"></i>
+                    Filter Documentation
+                </a>
+            );
+        }
+    },
+    onFocus: function () {
+        this.setState({focus: true});
+    },
+    onBlur: function () {
+        this.setState({focus: false});
+    },
+    onMouseEnter: function () {
+        this.setState({mousefocus: true});
+    },
+    onMouseLeave: function () {
+        this.setState({mousefocus: false});
+    },
+    onKeyDown: function (e) {
+        if (e.target.value === "" &&
+            e.keyCode === Key.BACKSPACE) {
+            e.preventDefault();
+            this.remove();
+        }
+    },
+    remove: function () {
+        if(this.props.onRemove) {
+            this.props.onRemove();
+        }
+    },
+    focus: function () {
+        this.refs.input.getDOMNode().select();
+    },
+    render: function () {
+        var isValid = this.isValid();
+        var icon = "fa fa-fw fa-" + this.props.type;
+        var groupClassName = "filter-input input-group" + (isValid ? "" : " has-error");
+
+        var popover;
+        if (this.state.focus || this.state.mousefocus) {
+            popover = (
+                <div className="popover bottom" onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}>
+                    <div className="arrow"></div>
+                    <div className="popover-content">
+                    {this.getDesc()}
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className={groupClassName}>
+                <span className="input-group-addon">
+                    <i className={icon} style={{color: this.props.color}}></i>
+                </span>
+                <input type="text" placeholder="filter expression" className="form-control"
+                    ref="input"
+                    onChange={this.onChange}
+                    onFocus={this.onFocus}
+                    onBlur={this.onBlur}
+                    onKeyDown={this.onKeyDown}
+                    value={this.state.value}/>
+                {popover}
+            </div>
+        );
+    }
+});
+
 var MainMenu = React.createClass({
     mixins: [Navigation, State],
-    getInitialState: function(){
-        this.onQueryChange(Query.FILTER, function(oldVal, nextVal){
-            this.setState({filter: nextVal});
-        }.bind(this));
+    getInitialState: function () {
         return {
-            filter: this.getQuery()[Query.FILTER]
+            filter: this.getQuery()[Query.FILTER] || "",
+            highlight: (this.getQuery()[Query.HIGHLIGHT] || "").split("&").map(decodeURIComponent)
         };
     },
     statics: {
@@ -18,16 +131,64 @@ var MainMenu = React.createClass({
         });
     },
     clearFlows: function () {
-        $.post("/flows/clear");
+        $.post("/clear");
     },
-    setFilter: function(e){
-        e.preventDefault();
-        this.setQuery(Query.FILTER, this.state.filter);
+    applyFilter: function (filter, highlight) {
+        var d = {};
+        d[Query.FILTER] = filter;
+        d[Query.HIGHLIGHT] = highlight.map(encodeURIComponent).join("&");
+        this.setQuery(d);
     },
-    onFilterChange: function(e){
-        this.setState({filter: e.target.value});
+    onFilterChange: function (val) {
+        this.setState({filter: val});
+        this.applyFilter(val, this.state.highlight);
+    },
+    onHighlightChange: function (index, val) {
+        var highlight = this.state.highlight.slice();
+        highlight[index] = val;
+        if (highlight[highlight.length - 1] !== "" && highlight.length < 14) {
+            highlight.push("");
+        }
+        this.setState({
+            highlight: highlight
+        });
+        this.applyFilter(this.state.filter, highlight);
+    },
+    onHighlightRemove: function (index) {
+        if (this.state.highlight.length > 1 && index < this.state.highlight.length - 1) {
+            var highlight = this.state.highlight.slice();
+            highlight.splice(index, 1);
+            this.setState({
+                highlight: highlight
+            });
+        }
+        this.refs["highlight-" + Math.max(0, index - 1)].focus();
+    },
+    getColor: function (index) {
+        var colors = [
+            "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#1f77b4", "#bcbd22", "#17becf",
+            "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#aec7e8", "#dbdb8d", "#9edae5"
+        ];
+        return colors[index % colors.length];
     },
     render: function () {
+        var highlightFilterInputs = [];
+        for (var i = 0; i < this.state.highlight.length; i++) {
+            highlightFilterInputs.push(<span key={"placeholder-" + i}> </span>);
+            highlightFilterInputs.push(
+                <FilterInput
+                    key={"highlight-" + i}
+                    ref={"highlight-" + i}
+                    type="tag"
+                    color={this.getColor(i)}
+                    value={this.state.highlight[i]}
+                    onChange={this.onHighlightChange.bind(this, i)}
+                    onRemove={this.onHighlightRemove.bind(this, i)}
+                />
+            );
+
+        }
+
         return (
             <div>
                 <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
@@ -39,13 +200,11 @@ var MainMenu = React.createClass({
                     <i className="fa fa-eraser"></i>
                 &nbsp;Clear Flows
                 </button>
-                &nbsp;
-                <form className="form-inline" onSubmit={this.setFilter} style={{display:"inline-block"}}>
-                    <input type="text" placeholder="filter expression"
-                        onChange={this.onFilterChange} value={this.state.filter}
-                        className="form-control"
-                    />
-                    </form>
+            &nbsp;
+                <form className="form-inline" style={{display:"inline"}}>
+                    <FilterInput type="filter" color="black" value={this.state.filter} onChange={this.onFilterChange} />
+                    { highlightFilterInputs }
+                </form>
 
             </div>
         );

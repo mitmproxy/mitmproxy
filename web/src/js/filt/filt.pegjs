@@ -4,8 +4,8 @@
 function or(first, second) {
     // Add explicit function names to ease debugging.
     function orFilter() {
-        first.apply(this, arguments) || second.apply(this, arguments);
-    };
+        return first.apply(this, arguments) || second.apply(this, arguments);
+    }
     orFilter.desc = first.desc + " or " + second.desc;
     return orFilter;
 }
@@ -19,14 +19,14 @@ function and(first, second) {
 function not(expr) {
     function notFilter() {
         return !expr.apply(this, arguments);
-    };
+    }
     notFilter.desc = "not " + expr.desc;
     return notFilter;
 }
 function binding(expr) {
     function bindingFilter() {
         return expr.apply(this, arguments);
-    };
+    }
     bindingFilter.desc = "(" + expr.desc + ")";
     return bindingFilter;
 }
@@ -61,10 +61,9 @@ function assetFilter(flow) {
 }
 assetFilter.desc = "is asset";
 function responseCode(code){
-    code = parseInt(code);
     function responseCodeFilter(flow){
         return flow.response && flow.response.code === code;
-    };
+    }
     responseCodeFilter.desc = "resp. code is " + code;
     return responseCodeFilter;
 }
@@ -72,7 +71,7 @@ function domain(regex){
     regex = new RegExp(regex, "i");
     function domainFilter(flow){
         return flow.request && regex.test(flow.request.host);
-    };
+    }
     domainFilter.desc = "domain matches " + regex;
     return domainFilter;
 }
@@ -88,7 +87,7 @@ function header(regex){
             ||
             (flow.response && ResponseUtils.match_header(flow.response, regex))
         );
-    };
+    }
     headerFilter.desc = "header matches " + regex;
     return headerFilter;
 }
@@ -112,7 +111,7 @@ function method(regex){
     regex = new RegExp(regex, "i");
     function methodFilter(flow){
         return flow.request && regex.test(flow.request.method);
-    };
+    }
     methodFilter.desc = "method matches " + regex;
     return methodFilter;
 }
@@ -133,7 +132,7 @@ function contentType(regex){
             ||
             (flow.response && regex.test(ResponseUtils.getContentType(flow.response)))
         );
-    };
+    }
     contentTypeFilter.desc = "content type matches " + regex;
     return contentTypeFilter;
 }
@@ -141,7 +140,7 @@ function requestContentType(regex){
     regex = new RegExp(regex, "i");
     function requestContentTypeFilter(flow){
         return flow.request && regex.test(RequestUtils.getContentType(flow.request));
-    };
+    }
     requestContentTypeFilter.desc = "req. content type matches " + regex;
     return requestContentTypeFilter;
 }
@@ -149,7 +148,7 @@ function responseContentType(regex){
     regex = new RegExp(regex, "i");
     function responseContentTypeFilter(flow){
         return flow.response && regex.test(ResponseUtils.getContentType(flow.response));
-    };
+    }
     responseContentTypeFilter.desc = "resp. content type matches " + regex;
     return responseContentTypeFilter;
 }
@@ -210,7 +209,7 @@ BooleanLiteral
   / "false" { return falseFilter; }
 
 UnaryExpr
-  = "~c"  ws+ s:StringLiteral { return responseCode(s); }
+  = "~c"  ws+ s:IntegerLiteral { return responseCode(s); }
   / "~d"  ws+ s:StringLiteral { return domain(s); }
   / "~h"  ws+ s:StringLiteral { return header(s); }
   / "~hq" ws+ s:StringLiteral { return requestHeader(s); }
@@ -221,6 +220,9 @@ UnaryExpr
   / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
   / "~u"  ws+ s:StringLiteral { return url(s); }
   / s:StringLiteral { return url(s); }
+
+IntegerLiteral "integer"
+  = ['"]? digits:[0-9]+ ['"]? { return parseInt(digits.join(""), 10); }
 
 StringLiteral "string"
   = '"' chars:DoubleStringChar* '"' { return chars.join(""); }

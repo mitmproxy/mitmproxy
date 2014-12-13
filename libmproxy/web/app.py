@@ -54,7 +54,7 @@ class Settings(tornado.web.RequestHandler):
         ))
 
 
-class FlowClear(tornado.web.RequestHandler):
+class Clear(tornado.web.RequestHandler):
     def post(self):
         self.application.state.clear()
 
@@ -72,7 +72,7 @@ class Application(tornado.web.Application):
             (r"/events", Events),
             (r"/flows", Flows),
             (r"/settings", Settings),
-            (r"/flows/clear", FlowClear),
+            (r"/clear", Clear),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

@@ -9,7 +9,7 @@ var MainView = React.createClass({
         };
     },
     getViewFilt: function(){
-        return Filt.parse(this.getQuery()[Query.FILTER]);
+        return Filt.parse(this.getQuery()[Query.FILTER] || "");
     },
     getViewSort: function(){
     },
@@ -103,6 +103,12 @@ var MainView = React.createClass({
                 break;
             case Key.PAGE_UP:
                 this.selectFlowRelative(-10);
+                break;
+            case Key.END:
+                this.selectFlowRelative(+1e10);
+                break;
+            case Key.HOME:
+                this.selectFlowRelative(-1e10);
                 break;
             case Key.ESC:
                 this.selectFlow(null);

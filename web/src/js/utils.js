@@ -3,8 +3,7 @@ var AutoScrollMixin = {
     componentWillUpdate: function () {
         var node = this.getDOMNode();
         this._shouldScrollBottom = (
-            node.scrollTop !== 0
-            &&
+            node.scrollTop !== 0 &&
             node.scrollTop + node.clientHeight === node.scrollHeight
         );
     },
@@ -28,9 +27,14 @@ var StickyHeadMixin = {
 
 
 var Navigation = _.extend({}, ReactRouter.Navigation, {
-    setQuery: function (k, v) {
+    setQuery: function (dict) {
         var q = this.context.getCurrentQuery();
-        q[k] = v;
+        for(var i in dict){
+            if(dict.hasOwnProperty(i)){
+                q[i] = dict[i] || undefined; //falsey values shall be removed.
+            }
+        }
+        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/599
         this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
     },
     replaceWith: function(routeNameOrPath, params, query) {
@@ -46,6 +50,7 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
         ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
     }
 });
+_.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
 
 var State = _.extend({}, ReactRouter.State, {
     getInitialState: function () {
@@ -76,12 +81,15 @@ var Key = {
     DOWN: 40,
     PAGE_UP: 33,
     PAGE_DOWN: 34,
+    HOME: 36,
+    END: 35,
     LEFT: 37,
     RIGHT: 39,
     ENTER: 13,
     ESC: 27,
     TAB: 9,
     SPACE: 32,
+    BACKSPACE: 8,
     J: 74,
     K: 75,
     H: 72,

@@ -3,8 +3,7 @@ var AutoScrollMixin = {
     componentWillUpdate: function () {
         var node = this.getDOMNode();
         this._shouldScrollBottom = (
-            node.scrollTop !== 0
-            &&
+            node.scrollTop !== 0 &&
             node.scrollTop + node.clientHeight === node.scrollHeight
         );
     },
@@ -28,9 +27,14 @@ var StickyHeadMixin = {
 
 
 var Navigation = _.extend({}, ReactRouter.Navigation, {
-    setQuery: function (k, v) {
+    setQuery: function (dict) {
         var q = this.context.getCurrentQuery();
-        q[k] = v;
+        for(var i in dict){
+            if(dict.hasOwnProperty(i)){
+                q[i] = dict[i] || undefined; //falsey values shall be removed.
+            }
+        }
+        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/599
         this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
     },
     replaceWith: function(routeNameOrPath, params, query) {
@@ -46,6 +50,7 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
         ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
     }
 });
+_.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
 
 var State = _.extend({}, ReactRouter.State, {
     getInitialState: function () {
@@ -76,12 +81,15 @@ var Key = {
     DOWN: 40,
     PAGE_UP: 33,
     PAGE_DOWN: 34,
+    HOME: 36,
+    END: 35,
     LEFT: 37,
     RIGHT: 39,
     ENTER: 13,
     ESC: 27,
     TAB: 9,
     SPACE: 32,
+    BACKSPACE: 8,
     J: 74,
     K: 75,
     H: 72,
@@ -252,7 +260,8 @@ var EventLogActions = {
 };
 
 Query = {
-    FILTER: "f"
+    FILTER: "f",
+    HIGHLIGHT: "h"
 };
 Filt = (function() {
   /*
@@ -313,7 +322,7 @@ Filt = (function() {
         peg$c22 = { type: "literal", value: "(", description: "\"(\"" },
         peg$c23 = ")",
         peg$c24 = { type: "literal", value: ")", description: "\")\"" },
-        peg$c25 = function(expr) { return binding(orExpr); },
+        peg$c25 = function(expr) { return binding(expr); },
         peg$c26 = "~a",
         peg$c27 = { type: "literal", value: "~a", description: "\"~a\"" },
         peg$c28 = function() { return assetFilter; },
@@ -362,32 +371,39 @@ Filt = (function() {
         peg$c71 = "~u",
         peg$c72 = { type: "literal", value: "~u", description: "\"~u\"" },
         peg$c73 = function(s) { return url(s); },
-        peg$c74 = { type: "other", description: "string" },
-        peg$c75 = "\"",
-        peg$c76 = { type: "literal", value: "\"", description: "\"\\\"\"" },
-        peg$c77 = function(chars) { return chars.join(""); },
-        peg$c78 = "'",
-        peg$c79 = { type: "literal", value: "'", description: "\"'\"" },
-        peg$c80 = void 0,
-        peg$c81 = /^["\\]/,
-        peg$c82 = { type: "class", value: "[\"\\\\]", description: "[\"\\\\]" },
-        peg$c83 = { type: "any", description: "any character" },
-        peg$c84 = function(char) { return char; },
-        peg$c85 = "\\",
-        peg$c86 = { type: "literal", value: "\\", description: "\"\\\\\"" },
-        peg$c87 = /^['\\]/,
-        peg$c88 = { type: "class", value: "['\\\\]", description: "['\\\\]" },
-        peg$c89 = /^['"\\]/,
-        peg$c90 = { type: "class", value: "['\"\\\\]", description: "['\"\\\\]" },
-        peg$c91 = "n",
-        peg$c92 = { type: "literal", value: "n", description: "\"n\"" },
-        peg$c93 = function() { return "\n"; },
-        peg$c94 = "r",
-        peg$c95 = { type: "literal", value: "r", description: "\"r\"" },
-        peg$c96 = function() { return "\r"; },
-        peg$c97 = "t",
-        peg$c98 = { type: "literal", value: "t", description: "\"t\"" },
-        peg$c99 = function() { return "\t"; },
+        peg$c74 = { type: "other", description: "integer" },
+        peg$c75 = null,
+        peg$c76 = /^['"]/,
+        peg$c77 = { type: "class", value: "['\"]", description: "['\"]" },
+        peg$c78 = /^[0-9]/,
+        peg$c79 = { type: "class", value: "[0-9]", description: "[0-9]" },
+        peg$c80 = function(digits) { return parseInt(digits.join(""), 10); },
+        peg$c81 = { type: "other", description: "string" },
+        peg$c82 = "\"",
+        peg$c83 = { type: "literal", value: "\"", description: "\"\\\"\"" },
+        peg$c84 = function(chars) { return chars.join(""); },
+        peg$c85 = "'",
+        peg$c86 = { type: "literal", value: "'", description: "\"'\"" },
+        peg$c87 = void 0,
+        peg$c88 = /^["\\]/,
+        peg$c89 = { type: "class", value: "[\"\\\\]", description: "[\"\\\\]" },
+        peg$c90 = { type: "any", description: "any character" },
+        peg$c91 = function(char) { return char; },
+        peg$c92 = "\\",
+        peg$c93 = { type: "literal", value: "\\", description: "\"\\\\\"" },
+        peg$c94 = /^['\\]/,
+        peg$c95 = { type: "class", value: "['\\\\]", description: "['\\\\]" },
+        peg$c96 = /^['"\\]/,
+        peg$c97 = { type: "class", value: "['\"\\\\]", description: "['\"\\\\]" },
+        peg$c98 = "n",
+        peg$c99 = { type: "literal", value: "n", description: "\"n\"" },
+        peg$c100 = function() { return "\n"; },
+        peg$c101 = "r",
+        peg$c102 = { type: "literal", value: "r", description: "\"r\"" },
+        peg$c103 = function() { return "\r"; },
+        peg$c104 = "t",
+        peg$c105 = { type: "literal", value: "t", description: "\"t\"" },
+        peg$c106 = function() { return "\t"; },
 
         peg$currPos          = 0,
         peg$reportedPos      = 0,
@@ -1022,7 +1038,7 @@ Filt = (function() {
           s2 = peg$c1;
         }
         if (s2 !== peg$FAILED) {
-          s3 = peg$parseStringLiteral();
+          s3 = peg$parseIntegerLiteral();
           if (s3 !== peg$FAILED) {
             peg$reportedPos = s0;
             s1 = peg$c46(s3);
@@ -1403,17 +1419,91 @@ Filt = (function() {
       return s0;
     }
 
+    function peg$parseIntegerLiteral() {
+      var s0, s1, s2, s3;
+
+      peg$silentFails++;
+      s0 = peg$currPos;
+      if (peg$c76.test(input.charAt(peg$currPos))) {
+        s1 = input.charAt(peg$currPos);
+        peg$currPos++;
+      } else {
+        s1 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c77); }
+      }
+      if (s1 === peg$FAILED) {
+        s1 = peg$c75;
+      }
+      if (s1 !== peg$FAILED) {
+        s2 = [];
+        if (peg$c78.test(input.charAt(peg$currPos))) {
+          s3 = input.charAt(peg$currPos);
+          peg$currPos++;
+        } else {
+          s3 = peg$FAILED;
+          if (peg$silentFails === 0) { peg$fail(peg$c79); }
+        }
+        if (s3 !== peg$FAILED) {
+          while (s3 !== peg$FAILED) {
+            s2.push(s3);
+            if (peg$c78.test(input.charAt(peg$currPos))) {
+              s3 = input.charAt(peg$currPos);
+              peg$currPos++;
+            } else {
+              s3 = peg$FAILED;
+              if (peg$silentFails === 0) { peg$fail(peg$c79); }
+            }
+          }
+        } else {
+          s2 = peg$c1;
+        }
+        if (s2 !== peg$FAILED) {
+          if (peg$c76.test(input.charAt(peg$currPos))) {
+            s3 = input.charAt(peg$currPos);
+            peg$currPos++;
+          } else {
+            s3 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$c77); }
+          }
+          if (s3 === peg$FAILED) {
+            s3 = peg$c75;
+          }
+          if (s3 !== peg$FAILED) {
+            peg$reportedPos = s0;
+            s1 = peg$c80(s2);
+            s0 = s1;
+          } else {
+            peg$currPos = s0;
+            s0 = peg$c1;
+          }
+        } else {
+          peg$currPos = s0;
+          s0 = peg$c1;
+        }
+      } else {
+        peg$currPos = s0;
+        s0 = peg$c1;
+      }
+      peg$silentFails--;
+      if (s0 === peg$FAILED) {
+        s1 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$c74); }
+      }
+
+      return s0;
+    }
+
     function peg$parseStringLiteral() {
       var s0, s1, s2, s3;
 
       peg$silentFails++;
       s0 = peg$currPos;
       if (input.charCodeAt(peg$currPos) === 34) {
-        s1 = peg$c75;
+        s1 = peg$c82;
         peg$currPos++;
       } else {
         s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c76); }
+        if (peg$silentFails === 0) { peg$fail(peg$c83); }
       }
       if (s1 !== peg$FAILED) {
         s2 = [];
@@ -1424,15 +1514,15 @@ Filt = (function() {
         }
         if (s2 !== peg$FAILED) {
           if (input.charCodeAt(peg$currPos) === 34) {
-            s3 = peg$c75;
+            s3 = peg$c82;
             peg$currPos++;
           } else {
             s3 = peg$FAILED;
-            if (peg$silentFails === 0) { peg$fail(peg$c76); }
+            if (peg$silentFails === 0) { peg$fail(peg$c83); }
           }
           if (s3 !== peg$FAILED) {
             peg$reportedPos = s0;
-            s1 = peg$c77(s2);
+            s1 = peg$c84(s2);
             s0 = s1;
           } else {
             peg$currPos = s0;
@@ -1449,11 +1539,11 @@ Filt = (function() {
       if (s0 === peg$FAILED) {
         s0 = peg$currPos;
         if (input.charCodeAt(peg$currPos) === 39) {
-          s1 = peg$c78;
+          s1 = peg$c85;
           peg$currPos++;
         } else {
           s1 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c79); }
+          if (peg$silentFails === 0) { peg$fail(peg$c86); }
         }
         if (s1 !== peg$FAILED) {
           s2 = [];
@@ -1464,15 +1554,15 @@ Filt = (function() {
           }
           if (s2 !== peg$FAILED) {
             if (input.charCodeAt(peg$currPos) === 39) {
-              s3 = peg$c78;
+              s3 = peg$c85;
               peg$currPos++;
             } else {
               s3 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c79); }
+              if (peg$silentFails === 0) { peg$fail(peg$c86); }
             }
             if (s3 !== peg$FAILED) {
               peg$reportedPos = s0;
-              s1 = peg$c77(s2);
+              s1 = peg$c84(s2);
               s0 = s1;
             } else {
               peg$currPos = s0;
@@ -1493,7 +1583,7 @@ Filt = (function() {
           s2 = peg$parsecc();
           peg$silentFails--;
           if (s2 === peg$FAILED) {
-            s1 = peg$c80;
+            s1 = peg$c87;
           } else {
             peg$currPos = s1;
             s1 = peg$c1;
@@ -1511,7 +1601,7 @@ Filt = (function() {
             }
             if (s2 !== peg$FAILED) {
               peg$reportedPos = s0;
-              s1 = peg$c77(s2);
+              s1 = peg$c84(s2);
               s0 = s1;
             } else {
               peg$currPos = s0;
@@ -1526,7 +1616,7 @@ Filt = (function() {
       peg$silentFails--;
       if (s0 === peg$FAILED) {
         s1 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c74); }
+        if (peg$silentFails === 0) { peg$fail(peg$c81); }
       }
 
       return s0;
@@ -1538,16 +1628,16 @@ Filt = (function() {
       s0 = peg$currPos;
       s1 = peg$currPos;
       peg$silentFails++;
-      if (peg$c81.test(input.charAt(peg$currPos))) {
+      if (peg$c88.test(input.charAt(peg$currPos))) {
         s2 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s2 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c82); }
+        if (peg$silentFails === 0) { peg$fail(peg$c89); }
       }
       peg$silentFails--;
       if (s2 === peg$FAILED) {
-        s1 = peg$c80;
+        s1 = peg$c87;
       } else {
         peg$currPos = s1;
         s1 = peg$c1;
@@ -1558,11 +1648,11 @@ Filt = (function() {
           peg$currPos++;
         } else {
           s2 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c83); }
+          if (peg$silentFails === 0) { peg$fail(peg$c90); }
         }
         if (s2 !== peg$FAILED) {
           peg$reportedPos = s0;
-          s1 = peg$c84(s2);
+          s1 = peg$c91(s2);
           s0 = s1;
         } else {
           peg$currPos = s0;
@@ -1575,17 +1665,17 @@ Filt = (function() {
       if (s0 === peg$FAILED) {
         s0 = peg$currPos;
         if (input.charCodeAt(peg$currPos) === 92) {
-          s1 = peg$c85;
+          s1 = peg$c92;
           peg$currPos++;
         } else {
           s1 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c86); }
+          if (peg$silentFails === 0) { peg$fail(peg$c93); }
         }
         if (s1 !== peg$FAILED) {
           s2 = peg$parseEscapeSequence();
           if (s2 !== peg$FAILED) {
             peg$reportedPos = s0;
-            s1 = peg$c84(s2);
+            s1 = peg$c91(s2);
             s0 = s1;
           } else {
             peg$currPos = s0;
@@ -1606,16 +1696,16 @@ Filt = (function() {
       s0 = peg$currPos;
       s1 = peg$currPos;
       peg$silentFails++;
-      if (peg$c87.test(input.charAt(peg$currPos))) {
+      if (peg$c94.test(input.charAt(peg$currPos))) {
         s2 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s2 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c88); }
+        if (peg$silentFails === 0) { peg$fail(peg$c95); }
       }
       peg$silentFails--;
       if (s2 === peg$FAILED) {
-        s1 = peg$c80;
+        s1 = peg$c87;
       } else {
         peg$currPos = s1;
         s1 = peg$c1;
@@ -1626,11 +1716,11 @@ Filt = (function() {
           peg$currPos++;
         } else {
           s2 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c83); }
+          if (peg$silentFails === 0) { peg$fail(peg$c90); }
         }
         if (s2 !== peg$FAILED) {
           peg$reportedPos = s0;
-          s1 = peg$c84(s2);
+          s1 = peg$c91(s2);
           s0 = s1;
         } else {
           peg$currPos = s0;
@@ -1643,17 +1733,17 @@ Filt = (function() {
       if (s0 === peg$FAILED) {
         s0 = peg$currPos;
         if (input.charCodeAt(peg$currPos) === 92) {
-          s1 = peg$c85;
+          s1 = peg$c92;
           peg$currPos++;
         } else {
           s1 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c86); }
+          if (peg$silentFails === 0) { peg$fail(peg$c93); }
         }
         if (s1 !== peg$FAILED) {
           s2 = peg$parseEscapeSequence();
           if (s2 !== peg$FAILED) {
             peg$reportedPos = s0;
-            s1 = peg$c84(s2);
+            s1 = peg$c91(s2);
             s0 = s1;
           } else {
             peg$currPos = s0;
@@ -1677,7 +1767,7 @@ Filt = (function() {
       s2 = peg$parsews();
       peg$silentFails--;
       if (s2 === peg$FAILED) {
-        s1 = peg$c80;
+        s1 = peg$c87;
       } else {
         peg$currPos = s1;
         s1 = peg$c1;
@@ -1688,11 +1778,11 @@ Filt = (function() {
           peg$currPos++;
         } else {
           s2 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c83); }
+          if (peg$silentFails === 0) { peg$fail(peg$c90); }
         }
         if (s2 !== peg$FAILED) {
           peg$reportedPos = s0;
-          s1 = peg$c84(s2);
+          s1 = peg$c91(s2);
           s0 = s1;
         } else {
           peg$currPos = s0;
@@ -1709,53 +1799,53 @@ Filt = (function() {
     function peg$parseEscapeSequence() {
       var s0, s1;
 
-      if (peg$c89.test(input.charAt(peg$currPos))) {
+      if (peg$c96.test(input.charAt(peg$currPos))) {
         s0 = input.charAt(peg$currPos);
         peg$currPos++;
       } else {
         s0 = peg$FAILED;
-        if (peg$silentFails === 0) { peg$fail(peg$c90); }
+        if (peg$silentFails === 0) { peg$fail(peg$c97); }
       }
       if (s0 === peg$FAILED) {
         s0 = peg$currPos;
         if (input.charCodeAt(peg$currPos) === 110) {
-          s1 = peg$c91;
+          s1 = peg$c98;
           peg$currPos++;
         } else {
           s1 = peg$FAILED;
-          if (peg$silentFails === 0) { peg$fail(peg$c92); }
+          if (peg$silentFails === 0) { peg$fail(peg$c99); }
         }
         if (s1 !== peg$FAILED) {
           peg$reportedPos = s0;
-          s1 = peg$c93();
+          s1 = peg$c100();
         }
         s0 = s1;
         if (s0 === peg$FAILED) {
           s0 = peg$currPos;
           if (input.charCodeAt(peg$currPos) === 114) {
-            s1 = peg$c94;
+            s1 = peg$c101;
             peg$currPos++;
           } else {
             s1 = peg$FAILED;
-            if (peg$silentFails === 0) { peg$fail(peg$c95); }
+            if (peg$silentFails === 0) { peg$fail(peg$c102); }
           }
           if (s1 !== peg$FAILED) {
             peg$reportedPos = s0;
-            s1 = peg$c96();
+            s1 = peg$c103();
           }
           s0 = s1;
           if (s0 === peg$FAILED) {
             s0 = peg$currPos;
             if (input.charCodeAt(peg$currPos) === 116) {
-              s1 = peg$c97;
+              s1 = peg$c104;
               peg$currPos++;
             } else {
               s1 = peg$FAILED;
-              if (peg$silentFails === 0) { peg$fail(peg$c98); }
+              if (peg$silentFails === 0) { peg$fail(peg$c105); }
             }
             if (s1 !== peg$FAILED) {
               peg$reportedPos = s0;
-              s1 = peg$c99();
+              s1 = peg$c106();
             }
             s0 = s1;
           }
@@ -1768,31 +1858,42 @@ Filt = (function() {
 
     function or(first, second) {
         // Add explicit function names to ease debugging.
-        return function orFilter() {
-            first.apply(this, arguments) || second.apply(this, arguments);
-        };
+        function orFilter() {
+            return first.apply(this, arguments) || second.apply(this, arguments);
+        }
+        orFilter.desc = first.desc + " or " + second.desc;
+        return orFilter;
     }
     function and(first, second) {
-        return function andFilter() {
+        function andFilter() {
             return first.apply(this, arguments) && second.apply(this, arguments);
         }
+        andFilter.desc = first.desc + " and " + second.desc;
+        return andFilter;
     }
     function not(expr) {
-        return function notFilter() {
+        function notFilter() {
             return !expr.apply(this, arguments);
-        };
+        }
+        notFilter.desc = "not " + expr.desc;
+        return notFilter;
     }
     function binding(expr) {
-        return function bindingFilter() {
+        function bindingFilter() {
             return expr.apply(this, arguments);
-        };
+        }
+        bindingFilter.desc = "(" + expr.desc + ")";
+        return bindingFilter;
     }
     function trueFilter(flow) {
         return true;
     }
+    trueFilter.desc = "true";
     function falseFilter(flow) {
         return false;
     }
+    falseFilter.desc = "false";
+
     var ASSET_TYPES = [
         new RegExp("text/javascript"),
         new RegExp("application/x-javascript"),
@@ -1813,83 +1914,106 @@ Filt = (function() {
         }
         return false;
     }
+    assetFilter.desc = "is asset";
     function responseCode(code){
-        code = parseInt(code);
-        return function responseCodeFilter(flow){
+        function responseCodeFilter(flow){
             return flow.response && flow.response.code === code;
-        };
+        }
+        responseCodeFilter.desc = "resp. code is " + code;
+        return responseCodeFilter;
     }
     function domain(regex){
         regex = new RegExp(regex, "i");
-        return function domainFilter(flow){
+        function domainFilter(flow){
             return flow.request && regex.test(flow.request.host);
-        };
+        }
+        domainFilter.desc = "domain matches " + regex;
+        return domainFilter;
     }
     function errorFilter(flow){
         return !!flow.error;
     }
+    errorFilter.desc = "has error";
     function header(regex){
         regex = new RegExp(regex, "i");
-        return function headerFilter(flow){
+        function headerFilter(flow){
             return (
                 (flow.request && RequestUtils.match_header(flow.request, regex))
                 ||
                 (flow.response && ResponseUtils.match_header(flow.response, regex))
             );
-        };
+        }
+        headerFilter.desc = "header matches " + regex;
+        return headerFilter;
     }
     function requestHeader(regex){
         regex = new RegExp(regex, "i");
-        return function requestHeaderFilter(flow){
+        function requestHeaderFilter(flow){
             return (flow.request && RequestUtils.match_header(flow.request, regex));
         }
+        requestHeaderFilter.desc = "req. header matches " + regex;
+        return requestHeaderFilter;
     }
     function responseHeader(regex){
         regex = new RegExp(regex, "i");
-        return function responseHeaderFilter(flow){
+        function responseHeaderFilter(flow){
             return (flow.response && ResponseUtils.match_header(flow.response, regex));
         }
+        responseHeaderFilter.desc = "resp. header matches " + regex;
+        return responseHeaderFilter;
     }
     function method(regex){
         regex = new RegExp(regex, "i");
-        return function methodFilter(flow){
+        function methodFilter(flow){
             return flow.request && regex.test(flow.request.method);
-        };
+        }
+        methodFilter.desc = "method matches " + regex;
+        return methodFilter;
     }
     function noResponseFilter(flow){
         return flow.request && !flow.response;
     }
+    noResponseFilter.desc = "has no response";
     function responseFilter(flow){
         return !!flow.response;
     }
+    responseFilter.desc = "has response";
 
     function contentType(regex){
         regex = new RegExp(regex, "i");
-        return function contentTypeFilter(flow){
+        function contentTypeFilter(flow){
             return (
                 (flow.request && regex.test(RequestUtils.getContentType(flow.request)))
                 ||
                 (flow.response && regex.test(ResponseUtils.getContentType(flow.response)))
             );
-        };
+        }
+        contentTypeFilter.desc = "content type matches " + regex;
+        return contentTypeFilter;
     }
     function requestContentType(regex){
         regex = new RegExp(regex, "i");
-        return function requestContentTypeFilter(flow){
+        function requestContentTypeFilter(flow){
             return flow.request && regex.test(RequestUtils.getContentType(flow.request));
-        };
+        }
+        requestContentTypeFilter.desc = "req. content type matches " + regex;
+        return requestContentTypeFilter;
     }
     function responseContentType(regex){
         regex = new RegExp(regex, "i");
-        return function responseContentTypeFilter(flow){
+        function responseContentTypeFilter(flow){
             return flow.response && regex.test(ResponseUtils.getContentType(flow.response));
-        };
+        }
+        responseContentTypeFilter.desc = "resp. content type matches " + regex;
+        return responseContentTypeFilter;
     }
     function url(regex){
         regex = new RegExp(regex, "i");
-        return function urlFilter(flow){
+        function urlFilter(flow){
             return flow.request && regex.test(RequestUtils.pretty_url(flow.request));
         }
+        urlFilter.desc = "url matches " + regex;
+        return urlFilter;
     }
 
 
@@ -2053,7 +2177,7 @@ _.extend(LiveStoreMixin.prototype, {
         }
         if (event.type === this.type) {
             if (event.cmd === StoreCmds.RESET) {
-                this.fetch();
+                this.fetch(event.data);
             } else if (this._updates_before_fetch) {
                 console.log("defer update", event);
                 this._updates_before_fetch.push(event);
@@ -2460,14 +2584,127 @@ var VirtualScrollMixin = {
         }
     },
 };
+var FilterInput = React.createClass({displayName: 'FilterInput',
+    getInitialState: function () {
+        // Focus: Show popover
+        // Mousefocus: Mouse over Tooltip
+        // onBlur is triggered before click on tooltip,
+        // hiding the tooltip before link is clicked.
+        return {
+            value: this.props.value,
+            focus: false,
+            mousefocus: false
+        };
+    },
+    componentWillReceiveProps: function (nextProps) {
+        this.setState({value: nextProps.value});
+    },
+    onChange: function (e) {
+        var nextValue = e.target.value;
+        this.setState({
+            value: nextValue
+        });
+        try {
+            Filt.parse(nextValue);
+        } catch (err) {
+            return;
+        }
+        this.props.onChange(nextValue);
+    },
+    isValid: function () {
+        try {
+            Filt.parse(this.state.value);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    },
+    getDesc: function () {
+        var desc;
+        try {
+            desc = Filt.parse(this.state.value).desc;
+        } catch (e) {
+            desc = "" + e;
+        }
+        if (desc !== "true") {
+            return desc;
+        } else {
+            return (
+                React.createElement("a", {href: "https://mitmproxy.org/doc/features/filters.html", target: "_blank"}, 
+                    React.createElement("i", {className: "fa fa-external-link"}), 
+                    "Filter Documentation"
+                )
+            );
+        }
+    },
+    onFocus: function () {
+        this.setState({focus: true});
+    },
+    onBlur: function () {
+        this.setState({focus: false});
+    },
+    onMouseEnter: function () {
+        this.setState({mousefocus: true});
+    },
+    onMouseLeave: function () {
+        this.setState({mousefocus: false});
+    },
+    onKeyDown: function (e) {
+        if (e.target.value === "" &&
+            e.keyCode === Key.BACKSPACE) {
+            e.preventDefault();
+            this.remove();
+        }
+    },
+    remove: function () {
+        if(this.props.onRemove) {
+            this.props.onRemove();
+        }
+    },
+    focus: function () {
+        this.refs.input.getDOMNode().select();
+    },
+    render: function () {
+        var isValid = this.isValid();
+        var icon = "fa fa-fw fa-" + this.props.type;
+        var groupClassName = "filter-input input-group" + (isValid ? "" : " has-error");
+
+        var popover;
+        if (this.state.focus || this.state.mousefocus) {
+            popover = (
+                React.createElement("div", {className: "popover bottom", onMouseEnter: this.onMouseEnter, onMouseLeave: this.onMouseLeave}, 
+                    React.createElement("div", {className: "arrow"}), 
+                    React.createElement("div", {className: "popover-content"}, 
+                    this.getDesc()
+                    )
+                )
+            );
+        }
+
+        return (
+            React.createElement("div", {className: groupClassName}, 
+                React.createElement("span", {className: "input-group-addon"}, 
+                    React.createElement("i", {className: icon, style: {color: this.props.color}})
+                ), 
+                React.createElement("input", {type: "text", placeholder: "filter expression", className: "form-control", 
+                    ref: "input", 
+                    onChange: this.onChange, 
+                    onFocus: this.onFocus, 
+                    onBlur: this.onBlur, 
+                    onKeyDown: this.onKeyDown, 
+                    value: this.state.value}), 
+                popover
+            )
+        );
+    }
+});
+
 var MainMenu = React.createClass({displayName: 'MainMenu',
     mixins: [Navigation, State],
-    getInitialState: function(){
-        this.onQueryChange(Query.FILTER, function(oldVal, nextVal){
-            this.setState({filter: nextVal});
-        }.bind(this));
+    getInitialState: function () {
         return {
-            filter: this.getQuery()[Query.FILTER]
+            filter: this.getQuery()[Query.FILTER] || "",
+            highlight: (this.getQuery()[Query.HIGHLIGHT] || "").split("&").map(decodeURIComponent)
         };
     },
     statics: {
@@ -2480,16 +2717,64 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
         });
     },
     clearFlows: function () {
-        $.post("/flows/clear");
+        $.post("/clear");
     },
-    setFilter: function(e){
-        e.preventDefault();
-        this.setQuery(Query.FILTER, this.state.filter);
+    applyFilter: function (filter, highlight) {
+        var d = {};
+        d[Query.FILTER] = filter;
+        d[Query.HIGHLIGHT] = highlight.map(encodeURIComponent).join("&");
+        this.setQuery(d);
     },
-    onFilterChange: function(e){
-        this.setState({filter: e.target.value});
+    onFilterChange: function (val) {
+        this.setState({filter: val});
+        this.applyFilter(val, this.state.highlight);
+    },
+    onHighlightChange: function (index, val) {
+        var highlight = this.state.highlight.slice();
+        highlight[index] = val;
+        if (highlight[highlight.length - 1] !== "" && highlight.length < 14) {
+            highlight.push("");
+        }
+        this.setState({
+            highlight: highlight
+        });
+        this.applyFilter(this.state.filter, highlight);
+    },
+    onHighlightRemove: function (index) {
+        if (this.state.highlight.length > 1 && index < this.state.highlight.length - 1) {
+            var highlight = this.state.highlight.slice();
+            highlight.splice(index, 1);
+            this.setState({
+                highlight: highlight
+            });
+        }
+        this.refs["highlight-" + Math.max(0, index - 1)].focus();
+    },
+    getColor: function (index) {
+        var colors = [
+            "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#1f77b4", "#bcbd22", "#17becf",
+            "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#aec7e8", "#dbdb8d", "#9edae5"
+        ];
+        return colors[index % colors.length];
     },
     render: function () {
+        var highlightFilterInputs = [];
+        for (var i = 0; i < this.state.highlight.length; i++) {
+            highlightFilterInputs.push(React.createElement("span", {key: "placeholder-" + i}, " "));
+            highlightFilterInputs.push(
+                React.createElement(FilterInput, {
+                    key: "highlight-" + i, 
+                    ref: "highlight-" + i, 
+                    type: "tag", 
+                    color: this.getColor(i), 
+                    value: this.state.highlight[i], 
+                    onChange: this.onHighlightChange.bind(this, i), 
+                    onRemove: this.onHighlightRemove.bind(this, i)}
+                )
+            );
+
+        }
+
         return (
             React.createElement("div", null, 
                 React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
@@ -2501,13 +2786,11 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
                     React.createElement("i", {className: "fa fa-eraser"}), 
                 " Clear Flows"
                 ), 
-                " ", 
-                React.createElement("form", {className: "form-inline", onSubmit: this.setFilter, style: {display:"inline-block"}}, 
-                    React.createElement("input", {type: "text", placeholder: "filter expression", 
-                        onChange: this.onFilterChange, value: this.state.filter, 
-                        className: "form-control"}
-                    )
-                    )
+            " ", 
+                React.createElement("form", {className: "form-inline", style: {display:"inline"}}, 
+                    React.createElement(FilterInput, {type: "filter", color: "black", value: this.state.filter, onChange: this.onFilterChange}), 
+                    highlightFilterInputs 
+                )
 
             )
         );
@@ -3284,7 +3567,7 @@ var MainView = React.createClass({displayName: 'MainView',
         };
     },
     getViewFilt: function(){
-        return Filt.parse(this.getQuery()[Query.FILTER]);
+        return Filt.parse(this.getQuery()[Query.FILTER] || "");
     },
     getViewSort: function(){
     },
@@ -3378,6 +3661,12 @@ var MainView = React.createClass({displayName: 'MainView',
                 break;
             case Key.PAGE_UP:
                 this.selectFlowRelative(-10);
+                break;
+            case Key.END:
+                this.selectFlowRelative(+1e10);
+                break;
+            case Key.HOME:
+                this.selectFlowRelative(-1e10);
                 break;
             case Key.ESC:
                 this.selectFlow(null);

@@ -69,6 +69,15 @@ class WebState(flow.State):
             data=entry
         )
 
+    def clear(self):
+        super(WebState, self).clear()
+        self.events.clear()
+        app.ClientConnection.broadcast(
+            type="events",
+            cmd="reset",
+            data=[]
+        )
+
 class Options(object):
     attributes = [
         "app",

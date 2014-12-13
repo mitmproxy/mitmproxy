@@ -65,5 +65,6 @@ var EventLogActions = {
 };
 
 Query = {
-    FILTER: "f"
+    FILTER: "f",
+    HIGHLIGHT: "h"
 };
