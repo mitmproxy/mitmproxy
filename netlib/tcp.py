@@ -16,6 +16,8 @@ SSLv2_METHOD = SSL.SSLv2_METHOD
 SSLv3_METHOD = SSL.SSLv3_METHOD
 SSLv23_METHOD = SSL.SSLv23_METHOD
 TLSv1_METHOD = SSL.TLSv1_METHOD
+OP_NO_SSLv2 = SSL.OP_NO_SSLv2
+OP_NO_SSLv3 = SSL.OP_NO_SSLv3
 
 
 class NetLibError(Exception): pass
@@ -288,7 +290,7 @@ class TCPClient(_Connection):
         self.ssl_established = False
         self.sni = None
 
-    def convert_to_ssl(self, cert=None, sni=None, method=TLSv1_METHOD, options=None, cipher_list=None):
+    def convert_to_ssl(self, cert=None, sni=None, method=SSLv23_METHOD, options=(OP_NO_SSLv2 | OP_NO_SSLv3), cipher_list=None):
         """
             cert: Path to a file containing both client cert and private key.
 
@@ -362,7 +364,7 @@ class BaseHandler(_Connection):
         self.ssl_established = False
         self.clientcert = None
 
-    def _create_ssl_context(self, cert, key, method=SSLv23_METHOD, options=None,
+    def _create_ssl_context(self, cert, key, method=SSLv23_METHOD, options=OP_NO_SSLv2,
                            handle_sni=None, request_client_cert=None, cipher_list=None,
                            dhparams=None, chain_file=None):
         """
