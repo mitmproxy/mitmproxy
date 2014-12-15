@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import re
+from OpenSSL import SSL
 from netlib import http_auth, certutils, tcp
 from .. import utils, platform, version
 from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
@@ -47,6 +48,8 @@ class ProxyConfig:
             ciphers=None,
             certs=[],
             certforward=False,
+            ssl_version_client="secure",
+            ssl_version_server="secure",
             ssl_ports=TRANSPARENT_SSL_PORTS
     ):
         self.host = host
@@ -80,7 +83,30 @@ class ProxyConfig:
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
+        self.openssl_client_method, self.openssl_client_options = version_to_openssl(ssl_version_client)
+        self.openssl_server_method, self.openssl_server_options = version_to_openssl(ssl_version_server)
         self.ssl_ports = ssl_ports
+
+
+sslversion_choices = ("all", "secure", "SSLv2", "SSLv3", "TLSv1", "TLSv1_1", "TLSv1_2")
+
+
+def version_to_openssl(version):
+    """
+    Convert a reasonable SSL version specification into the format OpenSSL expects.
+    Don't ask...
+    https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
+    """
+    if version == "all":
+        return SSL.SSLv23_METHOD, None
+    elif version == "secure":
+        # SSLv23_METHOD + NO_SSLv2 + NO_SSLv3 == TLS 1.0+
+        # TLSv1_METHOD would be TLS 1.0 only
+        return SSL.SSLv23_METHOD, (SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3)
+    elif version in sslversion_choices:
+        return getattr(SSL, "%s_METHOD" % version), None
+    else:
+        raise ValueError("Invalid SSL version: %s" % version)
 
 
 def process_proxy_options(parser, options):
@@ -165,6 +191,8 @@ def process_proxy_options(parser, options):
         ciphers=options.ciphers,
         certs=certs,
         certforward=options.certforward,
+        ssl_version_client=options.ssl_version_client,
+        ssl_version_server=options.ssl_version_server,
         ssl_ports=ssl_ports
     )
 
@@ -195,6 +223,20 @@ def ssl_option_group(parser):
         "--cert-forward", action="store_true",
         dest="certforward", default=False,
         help="Simply forward SSL certificates from upstream."
+    )
+    group.add_argument(
+        "--ssl-version-client", dest="ssl_version_client",
+        default="secure", action="store",
+        choices=sslversion_choices,
+        help="Set supported SSL/TLS version for client connections. "
+             "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure."
+    )
+    group.add_argument(
+        "--ssl-version-server", dest="ssl_version_server",
+        default="secure", action="store",
+        choices=sslversion_choices,
+        help="Set supported SSL/TLS version for server connections. "
+             "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure."
     )
     group.add_argument(
         "--no-upstream-cert", default=False,

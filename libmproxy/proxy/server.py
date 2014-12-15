@@ -62,7 +62,6 @@ class ConnectionHandler:
         self.channel = channel
 
         self.conntype = "http"
-        self.sni = None
 
     def handle(self):
         try:
@@ -127,7 +126,6 @@ class ConnectionHandler:
                                                               self.server_conn.address.port)])
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
-        self.sni = None
 
     def set_server_address(self, address):
         """
@@ -165,7 +163,7 @@ class ConnectionHandler:
         except tcp.NetLibError, v:
             raise ProxyError(502, v)
 
-    def establish_ssl(self, client=False, server=False):
+    def establish_ssl(self, client=False, server=False, sni=None):
         """
         Establishes SSL on the existing connection(s) to the server or the client,
         as specified by the parameters.
@@ -177,7 +175,7 @@ class ConnectionHandler:
             if client:
                 subs.append("with client")
             if server:
-                subs.append("with server (sni: %s)" % self.sni)
+                subs.append("with server (sni: %s)" % sni)
             self.log("Establish SSL", "debug", subs)
 
         if server:
@@ -186,7 +184,12 @@ class ConnectionHandler:
             if self.server_conn.ssl_established:
                 raise ProxyError(502, "SSL to Server already established.")
             try:
-                self.server_conn.establish_ssl(self.config.clientcerts, self.sni)
+                self.server_conn.establish_ssl(
+                    self.config.clientcerts,
+                    sni,
+                    method=self.config.openssl_server_method,
+                    options=self.config.openssl_server_options
+                )
             except tcp.NetLibError as v:
                 raise ProxyError(502, repr(v))
         if client:
@@ -196,6 +199,8 @@ class ConnectionHandler:
             try:
                 self.client_conn.convert_to_ssl(
                     cert, key,
+                    method=self.config.openssl_client_method,
+                    options=self.config.openssl_client_options,
                     handle_sni=self.handle_sni,
                     cipher_list=self.config.ciphers,
                     dhparams=self.config.certstore.dhparams,
@@ -204,11 +209,11 @@ class ConnectionHandler:
             except tcp.NetLibError as v:
                 raise ProxyError(400, repr(v))
 
-    def server_reconnect(self):
+    def server_reconnect(self, new_sni=False):
         address = self.server_conn.address
         had_ssl = self.server_conn.ssl_established
         state = self.server_conn.state
-        sni = self.sni
+        sni = new_sni or self.server_conn.sni
         self.log("(server reconnect follows)", "debug")
         self.del_server_connection()
         self.set_server_address(address)
@@ -219,8 +224,7 @@ class ConnectionHandler:
         self.server_conn.state = state
 
         if had_ssl:
-            self.sni = sni
-            self.establish_ssl(server=True)
+            self.establish_ssl(server=True, sni=sni)
 
     def finish(self):
         self.client_conn.finish()
@@ -245,8 +249,8 @@ class ConnectionHandler:
                 if upstream_cert.cn:
                     host = upstream_cert.cn.decode("utf8").encode("idna")
                 sans = upstream_cert.altnames
-            elif self.sni:
-                sans = [self.sni]
+            elif self.server_conn.sni:
+                sans = [self.server_conn.sni]
 
             ret = self.config.certstore.get_cert(host, sans)
             if not ret:
@@ -261,15 +265,19 @@ class ConnectionHandler:
         """
         try:
             sn = connection.get_servername()
-            if sn and sn != self.sni:
-                self.sni = sn.decode("utf8").encode("idna")
-                self.log("SNI received: %s" % self.sni, "debug")
-                self.server_reconnect()  # reconnect to upstream server with SNI
+            if not sn:
+                return
+            sni = sn.decode("utf8").encode("idna")
+
+            if sni != self.server_conn.sni:
+                self.log("SNI received: %s" % sni, "debug")
+                self.server_reconnect(sni)  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn._create_ssl_context(
                     cert, key,
-                    method=SSL.TLSv1_METHOD,
+                    method=self.config.openssl_client_method,
+                    options=self.config.openssl_client_options,
                     cipher_list=self.config.ciphers,
                     dhparams=self.config.certstore.dhparams,
                     chain_file=chain_file

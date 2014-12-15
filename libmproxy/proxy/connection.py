@@ -144,13 +144,14 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.wfile.write(message)
         self.wfile.flush()
 
-    def establish_ssl(self, clientcerts, sni):
+    def establish_ssl(self, clientcerts, sni, **kwargs):
         clientcert = None
         if clientcerts:
             path = os.path.join(clientcerts, self.address.host.encode("idna")) + ".pem"
             if os.path.exists(path):
                 clientcert = path
-        self.convert_to_ssl(cert=clientcert, sni=sni)
+        self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
+        self.sni = sni
         self.timestamp_ssl_setup = utils.timestamp()
 
     def finish(self):

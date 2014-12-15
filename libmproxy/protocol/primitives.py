@@ -188,7 +188,7 @@ class LiveConnection(object):
             (
                 ssl != self.c.server_conn.ssl_established
                 or
-                (sni is not None and sni != self.c.sni)
+                (sni is not None and sni != self.c.server_conn.sni)
             )
         )
         address_mismatch = (address != self.c.server_conn.address)
@@ -219,10 +219,8 @@ class LiveConnection(object):
 
             self.c.set_server_address(address)
             self.c.establish_server_connection(ask=False)
-            if sni:
-                self.c.sni = sni
             if ssl:
-                self.c.establish_ssl(server=True)
+                self.c.establish_ssl(server=True, sni=sni)
             return True
         return False
 
