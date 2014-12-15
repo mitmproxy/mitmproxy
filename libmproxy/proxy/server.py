@@ -191,7 +191,15 @@ class ConnectionHandler:
                     options=self.config.openssl_server_options
                 )
             except tcp.NetLibError as v:
-                raise ProxyError(502, repr(v))
+                e = ProxyError(502, repr(v))
+                # Workaround for https://github.com/mitmproxy/mitmproxy/issues/427
+                # The upstream server may reject connections without SNI, which means we need to
+                # establish SSL with the client first, hope for a SNI (which triggers a reconnect which replaces the
+                # ServerConnection object) and see whether that worked.
+                if client and "handshake failure" in e.message:
+                    self.server_conn.may_require_sni = e
+                else:
+                    raise e
         if client:
             if self.client_conn.ssl_established:
                 raise ProxyError(502, "SSL to Client already established.")
@@ -209,6 +217,10 @@ class ConnectionHandler:
             except tcp.NetLibError as v:
                 raise ProxyError(400, repr(v))
 
+            # Workaround for #427 part 2
+            if server and hasattr(self.server_conn, "may_require_sni"):
+                raise self.server_conn.may_require_sni
+
     def server_reconnect(self, new_sni=False):
         address = self.server_conn.address
         had_ssl = self.server_conn.ssl_established
@@ -223,7 +235,9 @@ class ConnectionHandler:
             protocol_handler(s[0])(self).handle_server_reconnect(s[1])
         self.server_conn.state = state
 
-        if had_ssl:
+        # Receiving new_sni where had_ssl is False is a weird case that happens when the workaround for
+        # https://github.com/mitmproxy/mitmproxy/issues/427 is active. In this case, we want to establish SSL as well.
+        if had_ssl or new_sni:
             self.establish_ssl(server=True, sni=sni)
 
     def finish(self):
