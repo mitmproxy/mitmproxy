@@ -39,6 +39,7 @@ class Options(object):
         "outfile",
         "replay_ignore_content",
         "replay_ignore_params",
+        "replay_ignore_payload_params",
     ]
 
     def __init__(self, **kwargs):
@@ -78,6 +79,7 @@ class DumpMaster(flow.FlowMaster):
         self.replay_ignore_params = options.replay_ignore_params
         self.replay_ignore_content = options.replay_ignore_content
         self.refresh_server_playback = options.refresh_server_playback
+        self.replay_ignore_payload_params = options.replay_ignore_payload_params
 
         self.set_stream_large_bodies(options.stream_large_bodies)
 
@@ -115,7 +117,8 @@ class DumpMaster(flow.FlowMaster):
                 not options.keepserving,
                 options.nopop,
                 options.replay_ignore_params,
-                options.replay_ignore_content
+                options.replay_ignore_content,
+                options.replay_ignore_payload_params,
             )
 
         if options.client_replay:

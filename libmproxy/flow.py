@@ -201,12 +201,12 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
-    def __init__(self, headers, flows, exit, nopop, ignore_params, ignore_content):
+    def __init__(self, headers, flows, exit, nopop, ignore_params, ignore_content, ignore_payload_params):
         """
             headers: Case-insensitive list of request headers that should be
             included in request-response matching.
         """
-        self.headers, self.exit, self.nopop, self.ignore_params, self.ignore_content = headers, exit, nopop, ignore_params, ignore_content
+        self.headers, self.exit, self.nopop, self.ignore_params, self.ignore_content, self.ignore_payload_params = headers, exit, nopop, ignore_params, ignore_content, ignore_payload_params
         self.fmap = {}
         for i in flows:
             if i.response:
@@ -225,22 +225,37 @@ class ServerPlaybackState:
         _, _, path, _, query, _ = urlparse.urlparse(r.url)
         queriesArray = urlparse.parse_qsl(query)
 
-        filtered = []
-        ignore_params = self.ignore_params or []
-        for p in queriesArray:
-            if p[0] not in ignore_params:
-                filtered.append(p)
-
         key = [
             str(r.host),
             str(r.port),
             str(r.scheme),
             str(r.method),
             str(path),
-         ]
-        if not self.ignore_content:
-            key.append(str(r.content))
+        ]
 
+        if not self.ignore_content:
+            ignore_payload_params = self.ignore_payload_params or []
+            ct = r.headers["Content-Type"]
+            if len(ct) > 0:
+                ct = ct[0] 
+            if len(ignore_payload_params) > 0 and ct == "application/x-www-form-urlencoded": 
+                parsedContent = urlparse.parse_qsl(r.content)
+                filtered = []
+                for p in parsedContent:
+                    if p[0] not in ignore_payload_params:
+                        filtered.append(p)
+
+                for p in filtered:
+                    key.append(p[0])
+                    key.append(p[1])
+            else:
+                key.append(str(r.content))
+
+        filtered = []
+        ignore_params = self.ignore_params or []
+        for p in queriesArray:
+            if p[0] not in ignore_params:
+                filtered.append(p)
         for p in filtered:
             key.append(p[0])
             key.append(p[1])
@@ -697,14 +712,14 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params, ignore_content):
+    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params, ignore_content, ignore_payload_params):
         """
             flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
             ignore_params: list of parameters to ignore in server replay
             ignore_content: true if request content should be ignored in server replay
         """
-        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, ignore_params, ignore_content)
+        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, ignore_params, ignore_content, ignore_payload_params)
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
