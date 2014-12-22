@@ -234,20 +234,12 @@ class ServerPlaybackState:
         ]
 
         if not self.ignore_content:
-            ignore_payload_params = self.ignore_payload_params or []
-            ct = r.headers["Content-Type"]
-            if len(ct) > 0:
-                ct = ct[0] 
-            if len(ignore_payload_params) > 0 and ct == "application/x-www-form-urlencoded": 
-                parsedContent = urlparse.parse_qsl(r.content)
-                filtered = []
-                for p in parsedContent:
-                    if p[0] not in ignore_payload_params:
-                        filtered.append(p)
-
-                for p in filtered:
-                    key.append(p[0])
-                    key.append(p[1])
+            form_contents = r.get_form_urlencoded()
+            if self.ignore_payload_params and form_contents:
+                key.extend(
+                    p for p in form_contents
+                    if p[0] not in self.ignore_payload_params
+                )
             else:
                 key.append(str(r.content))
 
@@ -429,6 +421,7 @@ class FlowStore(FlowList):
     Responsible for handling flows in the state:
     Keeps a list of all flows and provides views on them.
     """
+
     def __init__(self):
         self._list = []
         self._set = set()  # Used for O(1) lookups
@@ -616,7 +609,6 @@ class FlowMaster(controller.Master):
         self.replay_ignore_params = False
         self.replay_ignore_content = None
 
-
         self.stream = None
         self.apps = AppRegistry()
 
@@ -712,14 +704,16 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params, ignore_content, ignore_payload_params):
+    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params, ignore_content,
+                              ignore_payload_params):
         """
             flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
             ignore_params: list of parameters to ignore in server replay
             ignore_content: true if request content should be ignored in server replay
         """
-        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, ignore_params, ignore_content, ignore_payload_params)
+        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, ignore_params, ignore_content,
+                                                   ignore_payload_params)
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
@@ -872,7 +866,7 @@ class FlowMaster(controller.Master):
                     **{"mitmproxy.master": self}
                 )
                 if err:
-                    self.add_event("Error in wsgi app. %s"%err, "error")
+                    self.add_event("Error in wsgi app. %s" % err, "error")
                 f.reply(protocol.KILL)
                 return
         if f not in self.state.flows:  # don't add again on replay
@@ -954,7 +948,7 @@ class FlowReader:
                 data = tnetstring.load(self.fo)
                 if tuple(data["version"][:2]) != version.IVERSION[:2]:
                     v = ".".join(str(i) for i in data["version"])
-                    raise FlowReadError("Incompatible serialized data version: %s"%v)
+                    raise FlowReadError("Incompatible serialized data version: %s" % v)
                 off = self.fo.tell()
                 yield handle.protocols[data["type"]]["flow"].from_state(data)
         except ValueError, v:
