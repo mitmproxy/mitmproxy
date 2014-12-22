@@ -114,7 +114,7 @@ class TestClientPlaybackState:
 
 class TestServerPlaybackState:
     def test_hash(self):
-        s = flow.ServerPlaybackState(None, [], False, False, None, False)
+        s = flow.ServerPlaybackState(None, [], False, False, None, False, None)
         r = tutils.tflow()
         r2 = tutils.tflow()
 
@@ -126,7 +126,7 @@ class TestServerPlaybackState:
         assert s._hash(r) != s._hash(r2)
 
     def test_headers(self):
-        s = flow.ServerPlaybackState(["foo"], [], False, False, None, False)
+        s = flow.ServerPlaybackState(["foo"], [], False, False, None, False, None)
         r = tutils.tflow(resp=True)
         r.request.headers["foo"] = ["bar"]
         r2 = tutils.tflow(resp=True)
@@ -147,7 +147,7 @@ class TestServerPlaybackState:
         r2 = tutils.tflow(resp=True)
         r2.request.headers["key"] = ["two"]
 
-        s = flow.ServerPlaybackState(None, [r, r2], False, False, None, False)
+        s = flow.ServerPlaybackState(None, [r, r2], False, False, None, False, None)
         assert s.count() == 2
         assert len(s.fmap.keys()) == 1
 
@@ -168,7 +168,7 @@ class TestServerPlaybackState:
         r2 = tutils.tflow(resp=True)
         r2.request.headers["key"] = ["two"]
 
-        s = flow.ServerPlaybackState(None, [r, r2], False, True, None, False)
+        s = flow.ServerPlaybackState(None, [r, r2], False, True, None, False, None)
 
         assert s.count() == 2
         s.next_flow(r)
@@ -176,7 +176,7 @@ class TestServerPlaybackState:
 
 
     def test_ignore_params(self):
-        s = flow.ServerPlaybackState(None, [], False, False, ["param1", "param2"], False)
+        s = flow.ServerPlaybackState(None, [], False, False, ["param1", "param2"], False, None)
         r = tutils.tflow(resp=True)
         r.request.path="/test?param1=1"
         r2 = tutils.tflow(resp=True)
@@ -189,8 +189,60 @@ class TestServerPlaybackState:
         r2.request.path="/test?param3=2"
         assert not s._hash(r) == s._hash(r2)
 
+    def test_ignore_payload_params(self):
+        s = flow.ServerPlaybackState(None, [], False, False, None, False, ["param1", "param2"])
+        r = tutils.tflow(resp=True)
+        r.request.headers["Content-Type"] = ["application/x-www-form-urlencoded"]
+        r.request.content = "paramx=x&param1=1"
+        r2 = tutils.tflow(resp=True)
+        r2.request.headers["Content-Type"] = ["application/x-www-form-urlencoded"]
+        r2.request.content = "paramx=x&param1=1"
+        # same parameters 
+        assert s._hash(r) == s._hash(r2)
+        # ignored parameters != 
+        r2.request.content = "paramx=x&param1=2"
+        assert s._hash(r) == s._hash(r2)
+        # missing parameter 
+        r2.request.content="paramx=x"
+        assert s._hash(r) == s._hash(r2)
+        # ignorable parameter added
+        r2.request.content="paramx=x&param1=2"
+        assert s._hash(r) == s._hash(r2)
+        # not ignorable parameter changed
+        r2.request.content="paramx=y&param1=1"
+        assert not s._hash(r) == s._hash(r2)
+        # not ignorable parameter missing
+        r2.request.content="param1=1"
+        assert not s._hash(r) == s._hash(r2)
+
+    def test_ignore_payload_params_other_content_type(self):
+        s = flow.ServerPlaybackState(None, [], False, False, None, False, ["param1", "param2"])
+        r = tutils.tflow(resp=True)
+        r.request.headers["Content-Type"] = ["application/json"]
+        r.request.content = '{"param1":"1"}'
+        r2 = tutils.tflow(resp=True)
+        r2.request.headers["Content-Type"] = ["application/json"]
+        r2.request.content = '{"param1":"1"}'
+        # same content 
+        assert s._hash(r) == s._hash(r2)
+        # distint content (note only x-www-form-urlencoded payload is analysed)
+        r2.request.content = '{"param1":"2"}'
+        assert not s._hash(r) == s._hash(r2)
+
+    def test_ignore_payload_wins_over_params(self):
+        #NOTE: parameters are mutually exclusive in options
+        s = flow.ServerPlaybackState(None, [], False, False, None, True, ["param1", "param2"])
+        r = tutils.tflow(resp=True)
+        r.request.headers["Content-Type"] = ["application/x-www-form-urlencoded"]
+        r.request.content = "paramx=y"
+        r2 = tutils.tflow(resp=True)
+        r2.request.headers["Content-Type"] = ["application/x-www-form-urlencoded"]
+        r2.request.content = "paramx=x"
+        # same parameters 
+        assert s._hash(r) == s._hash(r2)
+
     def test_ignore_content(self):
-        s = flow.ServerPlaybackState(None, [], False, False, None, False)
+        s = flow.ServerPlaybackState(None, [], False, False, None, False, None)
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
         
@@ -201,7 +253,7 @@ class TestServerPlaybackState:
         assert not s._hash(r) == s._hash(r2)
 
         #now ignoring content
-        s = flow.ServerPlaybackState(None, [], False, False, None, True)
+        s = flow.ServerPlaybackState(None, [], False, False, None, True, None)
         r = tutils.tflow(resp=True)
         r2 = tutils.tflow(resp=True)
         r.request.content = "foo"
@@ -695,7 +747,7 @@ class TestFlowMaster:
         pb = [tutils.tflow(resp=True), f]
 
         fm = flow.FlowMaster(DummyServer(ProxyConfig()), s)
-        assert not fm.start_server_playback(pb, False, [], False, False, None, False)
+        assert not fm.start_server_playback(pb, False, [], False, False, None, False, None)
         assert not fm.start_client_playback(pb, False)
         fm.client_playback.testing = True
 
@@ -718,16 +770,16 @@ class TestFlowMaster:
         fm.refresh_server_playback = True
         assert not fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(pb, False, [], False, False, None, False)
+        fm.start_server_playback(pb, False, [], False, False, None, False, None)
         assert fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(pb, False, [], True, False, None, False)
+        fm.start_server_playback(pb, False, [], True, False, None, False, None)
         r = tutils.tflow()
         r.request.content = "gibble"
         assert not fm.do_server_playback(r)
         assert fm.do_server_playback(tutils.tflow())
 
-        fm.start_server_playback(pb, False, [], True, False, None, False)
+        fm.start_server_playback(pb, False, [], True, False, None, False, None)
         q = Queue.Queue()
         fm.tick(q, 0)
         assert fm.should_exit.is_set()
@@ -742,7 +794,7 @@ class TestFlowMaster:
         pb = [f]
         fm = flow.FlowMaster(None, s)
         fm.refresh_server_playback = True
-        fm.start_server_playback(pb, True, [], False, False, None, False)
+        fm.start_server_playback(pb, True, [], False, False, None, False, None)
 
         f = tutils.tflow()
         f.request.host = "nonexistent"
