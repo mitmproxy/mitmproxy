@@ -23,11 +23,11 @@ var _MessageUtils = {
         }
         return message._headerLookups[regex];
     },
-    match_header: function(message, regex){
+    match_header: function (message, regex) {
         var headers = message.headers;
         var i = headers.length;
-        while(i--){
-            if(regex.test(headers[i].join(" "))){
+        while (i--) {
+            if (regex.test(headers[i].join(" "))) {
                 return headers[i];
             }
         }
@@ -55,3 +55,14 @@ var RequestUtils = _.extend(_MessageUtils, {
 });
 
 var ResponseUtils = _.extend(_MessageUtils, {});
+
+HighlightColors = [
+    "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#1f77b4", "#bcbd22", "#17becf",
+    "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#aec7e8", "#dbdb8d", "#9edae5"
+];
+FadedHighlightColors = HighlightColors.map(function (color) {
+    return "rgba(" +
+        parseInt(color.substr(1, 2), 16) + "," +
+        parseInt(color.substr(3, 2), 16) + "," +
+        parseInt(color.substr(5, 2), 16) + ",0.3)";
+});

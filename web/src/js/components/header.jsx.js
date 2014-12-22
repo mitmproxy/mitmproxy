@@ -165,11 +165,7 @@ var MainMenu = React.createClass({
         this.refs["highlight-" + Math.max(0, index - 1)].focus();
     },
     getColor: function (index) {
-        var colors = [
-            "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#1f77b4", "#bcbd22", "#17becf",
-            "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#aec7e8", "#dbdb8d", "#9edae5"
-        ];
-        return colors[index % colors.length];
+        return HighlightColors[index];
     },
     render: function () {
         var highlightFilterInputs = [];

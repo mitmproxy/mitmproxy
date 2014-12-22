@@ -1,17 +1,34 @@
 var MainView = React.createClass({
     mixins: [Navigation, State],
     getInitialState: function () {
-        this.onQueryChange(Query.FILTER, function(){
+        this.onQueryChange(Query.FILTER, function () {
+            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
+        }.bind(this));
+        this.onQueryChange(Query.HIGHLIGHT, function () {
             this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
         }.bind(this));
         return {
             flows: []
         };
     },
-    getViewFilt: function(){
-        return Filt.parse(this.getQuery()[Query.FILTER] || "");
+    getViewFilt: function () {
+        var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
+        var highlight = (this.getQuery()[Query.HIGHLIGHT] || "").split("&")
+            .map(decodeURIComponent)
+            .map(function (filtstr) {
+                return filtstr.trim() !== "" ? Filt.parse(filtstr) : false;
+            });
+        return function filter_and_highlight(flow) {
+            flow._highlight = [];
+            for (var i = 0; i < highlight.length; i++) {
+                if (highlight[i] && highlight[i](flow)) {
+                    flow._highlight.push(FadedHighlightColors[i]);
+                }
+            }
+            return filt(flow);
+        };
     },
-    getViewSort: function(){
+    getViewSort: function () {
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.flowStore !== this.props.flowStore) {
@@ -28,10 +45,10 @@ var MainView = React.createClass({
         view.addListener("recalculate", this.onRecalculate);
         view.addListener("add update remove", this.onUpdate);
     },
-    onRecalculate: function(){
+    onRecalculate: function () {
         this.forceUpdate();
         var selected = this.getSelected();
-        if(selected){
+        if (selected) {
             this.refs.flowTable.scrollIntoView(selected);
         }
     },
@@ -132,7 +149,7 @@ var MainView = React.createClass({
         }
         e.preventDefault();
     },
-    getSelected: function(){
+    getSelected: function () {
         return this.props.flowStore.get(this.getParams().flowId);
     },
     render: function () {

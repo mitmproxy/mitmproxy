@@ -8,8 +8,25 @@ var FlowRow = React.createClass({
         if (this.props.selected) {
             className += "selected";
         }
+
+        var highlight_count = flow._highlight.length;
+        if (highlight_count > 0) {
+            var background = "linear-gradient(90deg";
+            for(var i =0; i < highlight_count; i++){
+                var tag = flow._highlight[i];
+                var ps = (100 * i / highlight_count) + "%";
+                var pe = (100 * (i + 1) / highlight_count) + "%";
+                background += ("," + tag + " " + ps + "," + tag + " " + pe);
+            }
+            background += ")";
+        }
+
+        style = {
+            background: background
+        };
+
         return (
-            <tr className={className} onClick={this.props.selectFlow.bind(null, flow)}>
+            <tr className={className} onClick={this.props.selectFlow.bind(null, flow)} style={style}>
                 {columns}
             </tr>);
     },

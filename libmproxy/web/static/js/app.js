@@ -2060,11 +2060,11 @@ var _MessageUtils = {
         }
         return message._headerLookups[regex];
     },
-    match_header: function(message, regex){
+    match_header: function (message, regex) {
         var headers = message.headers;
         var i = headers.length;
-        while(i--){
-            if(regex.test(headers[i].join(" "))){
+        while (i--) {
+            if (regex.test(headers[i].join(" "))) {
                 return headers[i];
             }
         }
@@ -2092,6 +2092,17 @@ var RequestUtils = _.extend(_MessageUtils, {
 });
 
 var ResponseUtils = _.extend(_MessageUtils, {});
+
+HighlightColors = [
+    "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#1f77b4", "#bcbd22", "#17becf",
+    "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#aec7e8", "#dbdb8d", "#9edae5"
+];
+FadedHighlightColors = HighlightColors.map(function (color) {
+    return "rgba(" +
+        parseInt(color.substr(1, 2), 16) + "," +
+        parseInt(color.substr(3, 2), 16) + "," +
+        parseInt(color.substr(5, 2), 16) + ",0.3)";
+});
 function ListStore() {
     EventEmitter.call(this);
     this.reset();
@@ -2751,11 +2762,7 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
         this.refs["highlight-" + Math.max(0, index - 1)].focus();
     },
     getColor: function (index) {
-        var colors = [
-            "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#1f77b4", "#bcbd22", "#17becf",
-            "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#aec7e8", "#dbdb8d", "#9edae5"
-        ];
-        return colors[index % colors.length];
+        return HighlightColors[index];
     },
     render: function () {
         var highlightFilterInputs = [];
@@ -3105,8 +3112,25 @@ var FlowRow = React.createClass({displayName: 'FlowRow',
         if (this.props.selected) {
             className += "selected";
         }
+
+        var highlight_count = flow._highlight.length;
+        if (highlight_count > 0) {
+            var background = "linear-gradient(90deg";
+            for(var i =0; i < highlight_count; i++){
+                var tag = flow._highlight[i];
+                var ps = (100 * i / highlight_count) + "%";
+                var pe = (100 * (i + 1) / highlight_count) + "%";
+                background += ("," + tag + " " + ps + "," + tag + " " + pe);
+            }
+            background += ")";
+        }
+
+        style = {
+            background: background
+        };
+
         return (
-            React.createElement("tr", {className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
+            React.createElement("tr", {className: className, onClick: this.props.selectFlow.bind(null, flow), style: style}, 
                 columns
             ));
     },
@@ -3559,17 +3583,34 @@ var FlowDetail = React.createClass({displayName: 'FlowDetail',
 var MainView = React.createClass({displayName: 'MainView',
     mixins: [Navigation, State],
     getInitialState: function () {
-        this.onQueryChange(Query.FILTER, function(){
+        this.onQueryChange(Query.FILTER, function () {
+            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
+        }.bind(this));
+        this.onQueryChange(Query.HIGHLIGHT, function () {
             this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
         }.bind(this));
         return {
             flows: []
         };
     },
-    getViewFilt: function(){
-        return Filt.parse(this.getQuery()[Query.FILTER] || "");
+    getViewFilt: function () {
+        var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
+        var highlight = (this.getQuery()[Query.HIGHLIGHT] || "").split("&")
+            .map(decodeURIComponent)
+            .map(function (filtstr) {
+                return filtstr.trim() !== "" ? Filt.parse(filtstr) : false;
+            });
+        return function filter_and_highlight(flow) {
+            flow._highlight = [];
+            for (var i = 0; i < highlight.length; i++) {
+                if (highlight[i] && highlight[i](flow)) {
+                    flow._highlight.push(FadedHighlightColors[i]);
+                }
+            }
+            return filt(flow);
+        };
     },
-    getViewSort: function(){
+    getViewSort: function () {
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.flowStore !== this.props.flowStore) {
@@ -3586,10 +3627,10 @@ var MainView = React.createClass({displayName: 'MainView',
         view.addListener("recalculate", this.onRecalculate);
         view.addListener("add update remove", this.onUpdate);
     },
-    onRecalculate: function(){
+    onRecalculate: function () {
         this.forceUpdate();
         var selected = this.getSelected();
-        if(selected){
+        if (selected) {
             this.refs.flowTable.scrollIntoView(selected);
         }
     },
@@ -3690,7 +3731,7 @@ var MainView = React.createClass({displayName: 'MainView',
         }
         e.preventDefault();
     },
-    getSelected: function(){
+    getSelected: function () {
         return this.props.flowStore.get(this.getParams().flowId);
     },
     render: function () {
