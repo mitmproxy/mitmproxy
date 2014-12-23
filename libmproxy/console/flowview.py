@@ -3,7 +3,7 @@ import os, sys, copy
 import urwid
 from . import common, grideditor, contentview
 from .. import utils, flow, controller
-from ..protocol.http import HTTPResponse, CONTENT_MISSING
+from ..protocol.http import HTTPResponse, CONTENT_MISSING, decoded
 
 
 class SearchError(Exception): pass
@@ -570,7 +570,7 @@ class FlowView(common.WWrap):
 
     def edit(self, part):
         if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            conn = self.flow.request
+            message = self.flow.request
         else:
             if not self.flow.response:
                 self.flow.response = HTTPResponse(
@@ -578,14 +578,19 @@ class FlowView(common.WWrap):
                     200, "OK", flow.ODictCaseless(), ""
                 )
                 self.flow.response.reply = controller.DummyReply()
-            conn = self.flow.response
+            message = self.flow.response
 
         self.flow.backup()
         if part == "r":
-            c = self.master.spawn_editor(conn.content or "")
-            conn.content = c.rstrip("\n") # what?
+            with decoded(message):
+                # Fix an issue caused by some editors when editing a request/response body.
+                # Many editors make it hard to save a file without a terminating newline on the last
+                # line. When editing message bodies, this can cause problems. For now, I just
+                # strip the newlines off the end of the body when we return from an editor.
+                c = self.master.spawn_editor(message.content or "")
+                message.content = c.rstrip("\n")
         elif part == "f":
-            if not conn.get_form_urlencoded() and conn.content:
+            if not message.get_form_urlencoded() and message.content:
                 self.master.prompt_onekey(
                     "Existing body is not a URL-encoded form. Clear and edit?",
                     [
@@ -593,26 +598,26 @@ class FlowView(common.WWrap):
                         ("no", "n"),
                     ],
                     self.edit_form_confirm,
-                    conn
+                    message
                 )
             else:
-                self.edit_form(conn)
+                self.edit_form(message)
         elif part == "h":
-            self.master.view_grideditor(grideditor.HeaderEditor(self.master, conn.headers.lst, self.set_headers, conn))
+            self.master.view_grideditor(grideditor.HeaderEditor(self.master, message.headers.lst, self.set_headers, message))
         elif part == "p":
-            p = conn.get_path_components()
+            p = message.get_path_components()
             p = [[i] for i in p]
-            self.master.view_grideditor(grideditor.PathEditor(self.master, p, self.set_path_components, conn))
+            self.master.view_grideditor(grideditor.PathEditor(self.master, p, self.set_path_components, message))
         elif part == "q":
-            self.master.view_grideditor(grideditor.QueryEditor(self.master, conn.get_query().lst, self.set_query, conn))
+            self.master.view_grideditor(grideditor.QueryEditor(self.master, message.get_query().lst, self.set_query, message))
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_edit("URL", conn.url, self.set_url)
+            self.master.prompt_edit("URL", message.url, self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_onekey("Method", self.method_options, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
-            self.master.prompt_edit("Code", str(conn.code), self.set_resp_code)
+            self.master.prompt_edit("Code", str(message.code), self.set_resp_code)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
-            self.master.prompt_edit("Message", conn.msg, self.set_resp_msg)
+            self.master.prompt_edit("Message", message.msg, self.set_resp_msg)
         self.master.refresh_flow(self.flow)
 
     def _view_nextprev_flow(self, np, flow):
