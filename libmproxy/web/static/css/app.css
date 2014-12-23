@@ -174,7 +174,16 @@ header .menu {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.flow-table tr .col-tls {
+.flow-table tr.intercepted:not(.has-response) .col-path,
+.flow-table tr.intercepted:not(.has-response) .col-method {
+  color: #ff8000;
+}
+.flow-table tr.intercepted.has-response .col-status,
+.flow-table tr.intercepted.has-response .col-size,
+.flow-table tr.intercepted.has-response .col-time {
+  color: #ff8000;
+}
+.flow-table .col-tls {
   width: 10px;
 }
 .flow-table .col-tls-https {

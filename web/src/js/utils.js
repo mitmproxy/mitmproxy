@@ -90,11 +90,11 @@ var Key = {
     TAB: 9,
     SPACE: 32,
     BACKSPACE: 8,
-    J: 74,
-    K: 75,
-    H: 72,
-    L: 76
 };
+// Add A-Z
+for(var i=65; i <= 90; i++){
+    Key[String.fromCharCode(i)] = i;
+}
 
 
 var formatSize = function (bytes) {

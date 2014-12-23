@@ -108,7 +108,7 @@ def raw_format_flow(f, focus, extended, padding):
 
     preamble = sum(i[1] for i in req) + len(req) -1
 
-    if f["intercepting"] and not f["acked"]:
+    if f["intercepted"] and not f["acked"]:
         uc = "intercept"
     elif f["resp_code"] or f["err_msg"]:
         uc = "text"
@@ -138,7 +138,7 @@ def raw_format_flow(f, focus, extended, padding):
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
         resp.append(fcol(f["resp_code"], ccol))
-        if f["intercepting"] and f["resp_code"] and not f["acked"]:
+        if f["intercepted"] and f["resp_code"] and not f["acked"]:
             rc = "intercept"
         else:
             rc = "text"
@@ -171,7 +171,7 @@ flowcache = FlowCache()
 
 def format_flow(f, focus, extended=False, hostheader=False, padding=2):
     d = dict(
-        intercepting = f.intercepting,
+        intercepted = f.intercepted,
         acked = f.reply.acked,
 
         req_timestamp = f.request.timestamp_start,

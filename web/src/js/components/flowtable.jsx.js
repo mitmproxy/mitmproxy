@@ -11,6 +11,15 @@ var FlowRow = React.createClass({
         if (this.props.highlighted) {
             className += " highlighted";
         }
+        if (flow.intercepted) {
+            className += " intercepted";
+        }
+        if (flow.request) {
+            className += " has-request";
+        }
+        if (flow.response) {
+            className += " has-response";
+        }
 
         return (
             <tr className={className} onClick={this.props.selectFlow.bind(null, flow)}>

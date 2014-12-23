@@ -767,7 +767,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.prompt_done()
 
     def accept_all(self):
-        self.state.accept_all()
+        self.state.accept_all(self)
 
     def set_limit(self, txt):
         v = self.state.set_limit(txt)
@@ -1040,7 +1040,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def process_flow(self, f):
         if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
-            f.intercept()
+            f.intercept(self)
         else:
             f.reply()
         self.sync_list_view()

@@ -113,7 +113,7 @@ var xsrf = $.param({_xsrf: getCookie("_xsrf")});
 
 //Tornado XSRF Protection.
 $.ajaxPrefilter(function (options) {
-    if (options.type === "post" && options.url[0] === "/") {
+    if (["post","put","delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
         if (options.data) {
             options.data += ("&" + xsrf);
         } else {

@@ -494,9 +494,9 @@ class FlowStore(FlowList):
         return c
 
     # TODO: Should accept_all operate on views or on all flows?
-    def accept_all(self):
+    def accept_all(self, master):
         for f in self._list:
-            f.accept_intercept()
+            f.accept_intercept(master)
 
     def kill_all(self, master):
         for f in self._list:
@@ -574,8 +574,8 @@ class State(object):
     def clear(self):
         self.flows._clear()
 
-    def accept_all(self):
-        self.flows.accept_all()
+    def accept_all(self, master):
+        self.flows.accept_all(master)
 
     def revert(self, f):
         f.revert()
@@ -811,7 +811,7 @@ class FlowMaster(controller.Master):
         """
         if f.live:
             return "Can't replay request which is still live..."
-        if f.intercepting:
+        if f.intercepted:
             return "Can't replay while intercepting..."
         if f.request.content == http.CONTENT_MISSING:
             return "Can't replay request with missing content..."
@@ -901,6 +901,12 @@ class FlowMaster(controller.Master):
         if self.stream:
             self.stream.add(f)
         return f
+
+    def handle_intercept(self, f):
+        self.state.update_flow(f)
+
+    def handle_accept_intercept(self, f):
+        self.state.update_flow(f)
 
     def shutdown(self):
         self.unload_scripts()

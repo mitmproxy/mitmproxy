@@ -140,7 +140,7 @@ class ConnectionItem(common.WWrap):
     def keypress(self, (maxcol,), key):
         key = common.shortcuts(key)
         if key == "a":
-            self.flow.accept_intercept()
+            self.flow.accept_intercept(self.master)
             self.master.sync_list_view()
         elif key == "d":
             self.flow.kill(self.master)

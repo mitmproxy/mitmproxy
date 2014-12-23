@@ -1,9 +1,8 @@
 var FilterInput = React.createClass({
     getInitialState: function () {
-        // Focus: Show popover
-        // Mousefocus: Mouse over Tooltip
-        // onBlur is triggered before click on tooltip,
-        // hiding the tooltip before link is clicked.
+        // Consider both focus and mouseover for showing/hiding the tooltip,
+        // because onBlur of the input is triggered before the click on the tooltip
+        // finalized, hiding the tooltip just as the user clicks on it.
         return {
             value: this.props.value,
             focus: false,
@@ -18,16 +17,14 @@ var FilterInput = React.createClass({
         this.setState({
             value: nextValue
         });
-        try {
-            Filt.parse(nextValue);
-        } catch (err) {
-            return;
+        // Only propagate valid filters upwards.
+        if (this.isValid(nextValue)) {
+            this.props.onChange(nextValue);
         }
-        this.props.onChange(nextValue);
     },
-    isValid: function () {
+    isValid: function (filt) {
         try {
-            Filt.parse(this.state.value);
+            Filt.parse(filt || this.state.value);
             return true;
         } catch (e) {
             return false;
@@ -64,16 +61,14 @@ var FilterInput = React.createClass({
         this.setState({mousefocus: false});
     },
     onKeyDown: function (e) {
-        if (e.target.value === "" &&
-            e.keyCode === Key.BACKSPACE) {
-            e.preventDefault();
-            this.remove();
+        if (e.keyCode === Key.ESC || e.keyCode === Key.ENTER) {
+            this.blur();
+            // If closed using ESC/ENTER, hide the tooltip.
+            this.setState({mousefocus: false});
         }
     },
-    remove: function () {
-        if (this.props.onRemove) {
-            this.props.onRemove();
-        }
+    blur: function () {
+        this.refs.input.getDOMNode().blur();
     },
     focus: function () {
         this.refs.input.getDOMNode().select();
@@ -100,7 +95,7 @@ var FilterInput = React.createClass({
                 <span className="input-group-addon">
                     <i className={icon} style={{color: this.props.color}}></i>
                 </span>
-                <input type="text" placeholder="filter expression" className="form-control"
+                <input type="text" placeholder={this.props.placeholder} className="form-control"
                     ref="input"
                     onChange={this.onChange}
                     onFocus={this.onFocus}
@@ -115,12 +110,6 @@ var FilterInput = React.createClass({
 
 var MainMenu = React.createClass({
     mixins: [Navigation, State],
-    getInitialState: function () {
-        return {
-            filter: this.getQuery()[Query.FILTER] || "",
-            highlight: this.getQuery()[Query.HIGHLIGHT] || ""
-        };
-    },
     statics: {
         title: "Traffic",
         route: "flows"
@@ -131,39 +120,59 @@ var MainMenu = React.createClass({
         });
     },
     clearFlows: function () {
-        $.post("/clear");
-    },
-    applyFilter: function (filter, highlight) {
-        var d = {};
-        d[Query.FILTER] = filter;
-        d[Query.HIGHLIGHT] = highlight;
-        this.setQuery(d);
+        jQuery.post("/clear");
     },
     onFilterChange: function (val) {
-        this.setState({filter: val});
-        this.applyFilter(val, this.state.highlight);
+        var d = {};
+        d[Query.FILTER] = val;
+        this.setQuery(d);
     },
     onHighlightChange: function (val) {
-        this.setState({highlight: val});
-        this.applyFilter(this.state.filter, val);
+        var d = {};
+        d[Query.HIGHLIGHT] = val;
+        this.setQuery(d);
+    },
+    onInterceptChange: function (val) {
+        SettingsActions.update({intercept: val});
     },
     render: function () {
+        var filter = this.getQuery()[Query.FILTER] || "";
+        var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
+        var intercept = this.props.settings.intercept || "";
+
         return (
             <div>
                 <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
                     <i className="fa fa-database"></i>
                 &nbsp;Display Event Log
                 </button>
-            &nbsp;
+                <span> </span>
                 <button className="btn btn-default" onClick={this.clearFlows}>
                     <i className="fa fa-eraser"></i>
                 &nbsp;Clear Flows
                 </button>
-            &nbsp;
+                <span> </span>
                 <form className="form-inline" style={{display: "inline"}}>
-                    <FilterInput type="filter" color="black" value={this.state.filter} onChange={this.onFilterChange} />
-                    &nbsp;
-                    <FilterInput type="tag" color="hsl(48, 100%, 50%)" value={this.state.highlight} onChange={this.onHighlightChange}/>
+                    <FilterInput
+                        placeholder="Filter"
+                        type="filter"
+                        color="black"
+                        value={filter}
+                        onChange={this.onFilterChange} />
+                    <span> </span>
+                    <FilterInput
+                        placeholder="Highlight"
+                        type="tag"
+                        color="hsl(48, 100%, 50%)"
+                        value={highlight}
+                        onChange={this.onHighlightChange}/>
+                    <span> </span>
+                    <FilterInput
+                        placeholder="Intercept"
+                        type="pause"
+                        color="hsl(208, 56%, 53%)"
+                        value={intercept}
+                        onChange={this.onInterceptChange}/>
                 </form>
             </div>
         );

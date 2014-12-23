@@ -40,7 +40,16 @@
 		text-overflow: ellipsis;
 	}
 
-	tr
+	tr.intercepted:not(.has-response) {
+		.col-path, .col-method {
+			color: hsl(30, 100%, 50%);
+		}
+	}
+	tr.intercepted.has-response {
+		.col-status, .col-size, .col-time {
+			color: hsl(30, 100%, 50%);
+		}
+	}
 
 	.col-tls {
 		width: 10px;

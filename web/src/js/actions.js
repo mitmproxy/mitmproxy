@@ -38,7 +38,11 @@ var ConnectionActions = {
 var SettingsActions = {
     update: function (settings) {
 
-        //TODO: Update server.
+        jQuery.ajax({
+            type: "PUT",
+            url: "/settings",
+            data: settings
+        });
 
         //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({

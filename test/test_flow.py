@@ -344,7 +344,7 @@ class TestFlow:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         f = tutils.tflow()
-        f.intercept()
+        f.intercept(mock.Mock())
         assert not f.reply.acked
         f.kill(fm)
         assert f.reply.acked
@@ -368,9 +368,9 @@ class TestFlow:
     def test_accept_intercept(self):
         f = tutils.tflow()
 
-        f.intercept()
+        f.intercept(mock.Mock())
         assert not f.reply.acked
-        f.accept_intercept()
+        f.accept_intercept(mock.Mock())
         assert f.reply.acked
 
     def test_replace_unicode(self):
@@ -520,7 +520,7 @@ class TestState:
     def test_clear(self):
         c = flow.State()
         f = self._add_request(c)
-        f.intercepting = True
+        f.intercepted = True
 
         c.clear()
         assert c.flow_count() == 0
@@ -546,7 +546,7 @@ class TestState:
         self._add_request(c)
         self._add_response(c)
         self._add_request(c)
-        c.accept_all()
+        c.accept_all(mock.Mock())
 
 
 class TestSerialize:
@@ -660,7 +660,7 @@ class TestFlowMaster:
         f.request.content = CONTENT_MISSING
         assert "missing" in fm.replay_request(f)
 
-        f.intercepting = True
+        f.intercepted = True
         assert "intercepting" in fm.replay_request(f)
 
         f.live = True

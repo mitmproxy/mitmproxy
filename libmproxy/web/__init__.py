@@ -123,7 +123,7 @@ class WebMaster(flow.FlowMaster):
     def __init__(self, server, options):
         self.options = options
         super(WebMaster, self).__init__(server, WebState())
-        self.app = app.Application(self.state, self.options.wdebug)
+        self.app = app.Application(self, self.options.wdebug)
 
     def tick(self):
         flow.FlowMaster.tick(self, self.masterq, timeout=0)
@@ -144,17 +144,23 @@ class WebMaster(flow.FlowMaster):
         except (Stop, KeyboardInterrupt):
             self.shutdown()
 
+    def _process_flow(self, f):
+        if self.state.intercept and self.state.intercept(f) and not f.request.is_replay:
+            f.intercept(self)
+        else:
+            f.reply()
+
     def handle_request(self, f):
         super(WebMaster, self).handle_request(f)
-        if f:
-            f.reply()
-        return f
+        self._process_flow(f)
 
     def handle_response(self, f):
         super(WebMaster, self).handle_response(f)
-        if f:
-            f.reply()
-        return f
+        self._process_flow(f)
+
+    def handle_error(self, f):
+        super(WebMaster, self).handle_error(f)
+        self._process_flow(f)
 
     def add_event(self, e, level="info"):
         super(WebMaster, self).add_event(e, level)

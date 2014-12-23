@@ -71,14 +71,18 @@ class Flow(stateobject.StateObject):
 
         self.error = None
         """@type: Error"""
+        self.intercepted = False
+        """@type: bool"""
         self._backup = None
+        self.reply = None
 
     _stateobject_attributes = dict(
         id=str,
         error=Error,
         client_conn=ClientConnection,
         server_conn=ServerConnection,
-        type=str
+        type=str,
+        intercepted=bool
     )
 
     def get_state(self, short=False):
@@ -123,6 +127,32 @@ class Flow(stateobject.StateObject):
         if self._backup:
             self.load_state(self._backup)
             self._backup = None
+
+    def kill(self, master):
+        """
+            Kill this request.
+        """
+        self.error = Error("Connection killed")
+        self.intercepted = False
+        self.reply(KILL)
+        master.handle_error(self)
+
+    def intercept(self, master):
+        """
+            Intercept this Flow. Processing will stop until accept_intercept is
+            called.
+        """
+        self.intercepted = True
+        master.handle_intercept(self)
+
+    def accept_intercept(self, master):
+        """
+            Continue with the flow - called after an intercept().
+        """
+        self.intercepted = False
+        self.reply()
+        master.handle_accept_intercept(self)
+
 
 
 class ProtocolHandler(object):

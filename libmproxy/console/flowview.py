@@ -230,7 +230,7 @@ class FlowView(common.WWrap):
     def wrap_body(self, active, body):
         parts = []
 
-        if self.flow.intercepting and not self.flow.reply.acked and not self.flow.response:
+        if self.flow.intercepted and not self.flow.reply.acked and not self.flow.response:
             qt = "Request intercepted"
         else:
             qt = "Request"
@@ -239,7 +239,7 @@ class FlowView(common.WWrap):
         else:
             parts.append(self._tab(qt, "heading_inactive"))
 
-        if self.flow.intercepting and not self.flow.reply.acked and self.flow.response:
+        if self.flow.intercepted and not self.flow.reply.acked and self.flow.response:
             st = "Response intercepted"
         else:
             st = "Response"
@@ -677,7 +677,7 @@ class FlowView(common.WWrap):
             # Why doesn't this just work??
             self.w.keypress(size, key)
         elif key == "a":
-            self.flow.accept_intercept()
+            self.flow.accept_intercept(self.master)
             self.master.view_flow(self.flow)
         elif key == "A":
             self.master.accept_all()

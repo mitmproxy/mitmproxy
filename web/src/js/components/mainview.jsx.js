@@ -16,12 +16,12 @@ var MainView = React.createClass({
             var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
             var highlightStr = this.getQuery()[Query.HIGHLIGHT];
             var highlight = highlightStr ? Filt.parse(highlightStr) : false;
-        } catch(e){
+        } catch (e) {
             console.error("Error when processing filter: " + e);
         }
 
         return function filter_and_highlight(flow) {
-            if(!this._highlight){
+            if (!this._highlight) {
                 this._highlight = {};
             }
             this._highlight[flow.id] = highlight && highlight(flow);
@@ -141,6 +141,13 @@ var MainView = React.createClass({
             case Key.RIGHT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
+                }
+                break;
+            case Key.A:
+                if (e.shiftKey) {
+                    $.post("/flows/accept");
+                } else if(this.getSelected()) {
+                    $.post("/flows/" + this.getSelected().id + "/accept");
                 }
                 break;
             default:

@@ -40,7 +40,6 @@ var path = {
             'js/flow/utils.js',
             'js/store/store.js',
             'js/store/view.js',
-            'js/store/settingstore.js',
             'js/connection.js',
             'js/components/utils.jsx.js',
             'js/components/virtualscroll.jsx.js',
