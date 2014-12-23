@@ -44,12 +44,14 @@ var SettingsActions = {
             data: settings
         });
 
+        /*
         //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.SETTINGS_STORE,
             cmd: StoreCmds.UPDATE,
             data: settings
         });
+        */
     }
 };
 
@@ -68,7 +70,28 @@ var EventLogActions = {
     }
 };
 
+var FlowActions = {
+    accept: function (flow) {
+        jQuery.post("/flows/" + flow.id + "/accept");
+    },
+    accept_all: function(){
+        jQuery.post("/flows/accept");
+    },
+
+    update: function (flow) {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.FLOW_STORE,
+            cmd: StoreCmds.UPDATE,
+            data: flow
+        });
+    },
+    clear: function(){
+        jQuery.post("/clear");
+    }
+};
+
 Query = {
     FILTER: "f",
-    HIGHLIGHT: "h"
+    HIGHLIGHT: "h",
+    SHOW_EVENTLOG: "e"
 };

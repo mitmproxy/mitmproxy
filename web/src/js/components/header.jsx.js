@@ -115,12 +115,18 @@ var MainMenu = React.createClass({
         route: "flows"
     },
     toggleEventLog: function () {
-        SettingsActions.update({
-            showEventLog: !this.props.settings.showEventLog
-        });
+        var d = {};
+
+        if(this.getQuery()[Query.SHOW_EVENTLOG]){
+            d[Query.SHOW_EVENTLOG] = undefined;
+        } else {
+            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
+        }
+
+        this.setQuery(d);
     },
     clearFlows: function () {
-        jQuery.post("/clear");
+        FlowActions.clear();
     },
     onFilterChange: function (val) {
         var d = {};
@@ -139,10 +145,13 @@ var MainMenu = React.createClass({
         var filter = this.getQuery()[Query.FILTER] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
         var intercept = this.props.settings.intercept || "";
+        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
 
         return (
             <div>
-                <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
+                <button
+                    className={"btn " + (showEventLog ? "btn-primary" : "btn-default")}
+                    onClick={this.toggleEventLog}>
                     <i className="fa fa-database"></i>
                 &nbsp;Display Event Log
                 </button>

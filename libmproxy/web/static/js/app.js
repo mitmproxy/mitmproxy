@@ -239,12 +239,14 @@ var SettingsActions = {
             data: settings
         });
 
+        /*
         //Facebook Flux: We do an optimistic update on the client already.
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.SETTINGS_STORE,
             cmd: StoreCmds.UPDATE,
             data: settings
         });
+        */
     }
 };
 
@@ -263,9 +265,30 @@ var EventLogActions = {
     }
 };
 
+var FlowActions = {
+    accept: function (flow) {
+        jQuery.post("/flows/" + flow.id + "/accept");
+    },
+    accept_all: function(){
+        jQuery.post("/flows/accept");
+    },
+
+    update: function (flow) {
+        AppDispatcher.dispatchViewAction({
+            type: ActionTypes.FLOW_STORE,
+            cmd: StoreCmds.UPDATE,
+            data: flow
+        });
+    },
+    clear: function(){
+        jQuery.post("/clear");
+    }
+};
+
 Query = {
     FILTER: "f",
-    HIGHLIGHT: "h"
+    HIGHLIGHT: "h",
+    SHOW_EVENTLOG: "e"
 };
 Filt = (function() {
   /*
@@ -2704,12 +2727,18 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
         route: "flows"
     },
     toggleEventLog: function () {
-        SettingsActions.update({
-            showEventLog: !this.props.settings.showEventLog
-        });
+        var d = {};
+
+        if(this.getQuery()[Query.SHOW_EVENTLOG]){
+            d[Query.SHOW_EVENTLOG] = undefined;
+        } else {
+            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
+        }
+
+        this.setQuery(d);
     },
     clearFlows: function () {
-        jQuery.post("/clear");
+        FlowActions.clear();
     },
     onFilterChange: function (val) {
         var d = {};
@@ -2728,10 +2757,13 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
         var filter = this.getQuery()[Query.FILTER] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
         var intercept = this.props.settings.intercept || "";
+        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
 
         return (
             React.createElement("div", null, 
-                React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
+                React.createElement("button", {
+                    className: "btn " + (showEventLog ? "btn-primary" : "btn-default"), 
+                    onClick: this.toggleEventLog}, 
                     React.createElement("i", {className: "fa fa-database"}), 
                 " Display Event Log"
                 ), 
@@ -3694,9 +3726,9 @@ var MainView = React.createClass({displayName: 'MainView',
                 break;
             case Key.A:
                 if (e.shiftKey) {
-                    $.post("/flows/accept");
+                    FlowActions.accept_all();
                 } else if(this.getSelected()) {
-                    $.post("/flows/" + this.getSelected().id + "/accept");
+                    FlowActions.accept(this.getSelected());
                 }
                 break;
             default:
@@ -3853,9 +3885,9 @@ var EventLog = React.createClass({displayName: 'EventLog',
         };
     },
     close: function () {
-        SettingsActions.update({
-            showEventLog: false
-        });
+        var d = {};
+        d[Query.SHOW_EVENTLOG] = undefined;
+        this.setQuery(d);
     },
     toggleLevel: function (level) {
         var filter = _.extend({}, this.state.filter);
@@ -3903,6 +3935,7 @@ var Reports = React.createClass({displayName: 'Reports',
 
 
 var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
+    mixins: [State],
     getInitialState: function () {
         var eventStore = new EventLogStore();
         var flowStore = new FlowStore();
@@ -3910,7 +3943,6 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
 
         // Default Settings before fetch
         _.extend(settings.dict,{
-            showEventLog: true
         });
         return {
             settings: settings,
@@ -3933,7 +3965,7 @@ var ProxyAppMain = React.createClass({displayName: 'ProxyAppMain',
     render: function () {
 
         var eventlog;
-        if (this.state.settings.dict.showEventLog) {
+        if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 React.createElement(Splitter, {key: "splitter", axis: "y"}),
                 React.createElement(EventLog, {key: "eventlog", eventStore: this.state.eventStore})

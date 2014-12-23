@@ -7,6 +7,7 @@ var Reports = React.createClass({
 
 
 var ProxyAppMain = React.createClass({
+    mixins: [State],
     getInitialState: function () {
         var eventStore = new EventLogStore();
         var flowStore = new FlowStore();
@@ -14,7 +15,6 @@ var ProxyAppMain = React.createClass({
 
         // Default Settings before fetch
         _.extend(settings.dict,{
-            showEventLog: true
         });
         return {
             settings: settings,
@@ -37,7 +37,7 @@ var ProxyAppMain = React.createClass({
     render: function () {
 
         var eventlog;
-        if (this.state.settings.dict.showEventLog) {
+        if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 <Splitter key="splitter" axis="y"/>,
                 <EventLog key="eventlog" eventStore={this.state.eventStore}/>

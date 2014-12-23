@@ -119,9 +119,9 @@ var EventLog = React.createClass({
         };
     },
     close: function () {
-        SettingsActions.update({
-            showEventLog: false
-        });
+        var d = {};
+        d[Query.SHOW_EVENTLOG] = undefined;
+        this.setQuery(d);
     },
     toggleLevel: function (level) {
         var filter = _.extend({}, this.state.filter);

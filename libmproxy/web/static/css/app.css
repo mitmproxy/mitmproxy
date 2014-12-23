@@ -164,10 +164,10 @@ header .menu {
   background-color: rgba(193, 215, 235, 0.5) !important;
 }
 .flow-table tr.highlighted {
-  background-color: rgba(255, 204, 0, 0.4) !important;
+  background-color: rgba(255, 204, 0, 0.4);
 }
 .flow-table tr.highlighted:nth-child(even) {
-  background-color: rgba(255, 204, 0, 0.5) !important;
+  background-color: rgba(255, 204, 0, 0.5);
 }
 .flow-table td {
   overflow: hidden;

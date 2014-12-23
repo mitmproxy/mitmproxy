@@ -67,7 +67,6 @@ class Settings(tornado.web.RequestHandler):
     def get(self):
         self.write(dict(
             data=dict(
-                showEventLog=True,
                 intercept=self.application.state.intercept_txt
             )
         ))

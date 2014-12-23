@@ -145,9 +145,9 @@ var MainView = React.createClass({
                 break;
             case Key.A:
                 if (e.shiftKey) {
-                    $.post("/flows/accept");
+                    FlowActions.accept_all();
                 } else if(this.getSelected()) {
-                    $.post("/flows/" + this.getSelected().id + "/accept");
+                    FlowActions.accept(this.getSelected());
                 }
                 break;
             default:
