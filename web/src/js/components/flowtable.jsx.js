@@ -82,7 +82,12 @@ var FlowTable = React.createClass({
     },
     renderRow: function (flow) {
         var selected = (flow === this.props.selected);
-        var highlighted = (this.props.view._highlight && this.props.view._highlight[flow.id].length > 0);
+        var highlighted =
+            (
+            this.props.view._highlight &&
+            this.props.view._highlight[flow.id]
+            );
+
         return <FlowRow key={flow.id}
             ref={flow.id}
             flow={flow}

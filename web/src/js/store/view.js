@@ -35,7 +35,7 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
     },
     recalculate: function (filt, sortfun) {
         if (filt) {
-            this.filt = filt;
+            this.filt = filt.bind(this);
         }
         if (sortfun) {
             this.sortfun = sortfun.bind(this);
