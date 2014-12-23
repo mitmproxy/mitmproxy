@@ -71,7 +71,7 @@ var FilterInput = React.createClass({
         }
     },
     remove: function () {
-        if(this.props.onRemove) {
+        if (this.props.onRemove) {
             this.props.onRemove();
         }
     },
@@ -118,7 +118,7 @@ var MainMenu = React.createClass({
     getInitialState: function () {
         return {
             filter: this.getQuery()[Query.FILTER] || "",
-            highlight: (this.getQuery()[Query.HIGHLIGHT] || "").split("&").map(decodeURIComponent)
+            highlight: this.getQuery()[Query.HIGHLIGHT] || ""
         };
     },
     statics: {
@@ -136,55 +136,18 @@ var MainMenu = React.createClass({
     applyFilter: function (filter, highlight) {
         var d = {};
         d[Query.FILTER] = filter;
-        d[Query.HIGHLIGHT] = highlight.map(encodeURIComponent).join("&");
+        d[Query.HIGHLIGHT] = highlight;
         this.setQuery(d);
     },
     onFilterChange: function (val) {
         this.setState({filter: val});
         this.applyFilter(val, this.state.highlight);
     },
-    onHighlightChange: function (index, val) {
-        var highlight = this.state.highlight.slice();
-        highlight[index] = val;
-        if (highlight[highlight.length - 1] !== "" && highlight.length < 14) {
-            highlight.push("");
-        }
-        this.setState({
-            highlight: highlight
-        });
-        this.applyFilter(this.state.filter, highlight);
-    },
-    onHighlightRemove: function (index) {
-        if (this.state.highlight.length > 1 && index < this.state.highlight.length - 1) {
-            var highlight = this.state.highlight.slice();
-            highlight.splice(index, 1);
-            this.setState({
-                highlight: highlight
-            });
-        }
-        this.refs["highlight-" + Math.max(0, index - 1)].focus();
-    },
-    getColor: function (index) {
-        return HighlightColors[index];
+    onHighlightChange: function (val) {
+        this.setState({highlight: val});
+        this.applyFilter(this.state.filter, val);
     },
     render: function () {
-        var highlightFilterInputs = [];
-        for (var i = 0; i < this.state.highlight.length; i++) {
-            highlightFilterInputs.push(<span key={"placeholder-" + i}> </span>);
-            highlightFilterInputs.push(
-                <FilterInput
-                    key={"highlight-" + i}
-                    ref={"highlight-" + i}
-                    type="tag"
-                    color={this.getColor(i)}
-                    value={this.state.highlight[i]}
-                    onChange={this.onHighlightChange.bind(this, i)}
-                    onRemove={this.onHighlightRemove.bind(this, i)}
-                />
-            );
-
-        }
-
         return (
             <div>
                 <button className={"btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default")} onClick={this.toggleEventLog}>
@@ -197,11 +160,11 @@ var MainMenu = React.createClass({
                 &nbsp;Clear Flows
                 </button>
             &nbsp;
-                <form className="form-inline" style={{display:"inline"}}>
+                <form className="form-inline" style={{display: "inline"}}>
                     <FilterInput type="filter" color="black" value={this.state.filter} onChange={this.onFilterChange} />
-                    { highlightFilterInputs }
+                    &nbsp;
+                    <FilterInput type="tag" color="hsl(48, 100%, 50%)" value={this.state.highlight} onChange={this.onHighlightChange}/>
                 </form>
-
             </div>
         );
     }

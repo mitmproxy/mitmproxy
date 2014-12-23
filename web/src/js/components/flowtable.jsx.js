@@ -6,27 +6,14 @@ var FlowRow = React.createClass({
         }.bind(this));
         var className = "";
         if (this.props.selected) {
-            className += "selected";
+            className += " selected";
         }
-
-        var highlight_count = flow._highlight.length;
-        if (highlight_count > 0) {
-            var background = "linear-gradient(90deg";
-            for(var i =0; i < highlight_count; i++){
-                var tag = flow._highlight[i];
-                var ps = (100 * i / highlight_count) + "%";
-                var pe = (100 * (i + 1) / highlight_count) + "%";
-                background += ("," + tag + " " + ps + "," + tag + " " + pe);
-            }
-            background += ")";
+        if (this.props.highlighted) {
+            className += " highlighted";
         }
-
-        style = {
-            background: background
-        };
 
         return (
-            <tr className={className} onClick={this.props.selectFlow.bind(null, flow)} style={style}>
+            <tr className={className} onClick={this.props.selectFlow.bind(null, flow)}>
                 {columns}
             </tr>);
     },
@@ -95,11 +82,13 @@ var FlowTable = React.createClass({
     },
     renderRow: function (flow) {
         var selected = (flow === this.props.selected);
+        var highlighted = (this.props.view._highlight && this.props.view._highlight[flow.id].length > 0);
         return <FlowRow key={flow.id}
             ref={flow.id}
             flow={flow}
             columns={this.state.columns}
             selected={selected}
+            highlighted={highlighted}
             selectFlow={this.props.selectFlow}
         />;
     },

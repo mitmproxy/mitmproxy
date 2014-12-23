@@ -19,8 +19,18 @@
 
 	tr {
 		cursor: pointer;
+
+		&:nth-child(even) {
+			background-color : rgba(0,0,0,0.05);
+		}
 		&.selected {
 			background-color: hsla(209, 52%, 84%, 0.5) !important;
+		}
+		&.highlighted {
+			background-color: hsla(48, 100%, 50%, 0.4) !important;
+		}
+		&.highlighted:nth-child(even) {
+			background-color: hsla(48, 100%, 50%, 0.5) !important;
 		}
 	}
 
@@ -30,7 +40,7 @@
 		text-overflow: ellipsis;
 	}
 
-	tr:nth-child(even) { background-color : rgba(0,0,0,0.05); }
+	tr
 
 	.col-tls {
 		width: 10px;

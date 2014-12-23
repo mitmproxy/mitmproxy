@@ -12,21 +12,30 @@ var MainView = React.createClass({
         };
     },
     getViewFilt: function () {
-        var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
-        var highlight = (this.getQuery()[Query.HIGHLIGHT] || "").split("&")
-            .map(decodeURIComponent)
-            .map(function (filtstr) {
-                return filtstr.trim() !== "" ? Filt.parse(filtstr) : false;
-            });
+        try {
+            var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
+            var highlightStr = this.getQuery()[Query.HIGHLIGHT];
+            var highlight = highlightStr ? [Filt.parse(highlightStr)] : [];
+        } catch(e){
+            console.error("Error when processing filter: " + e);
+        }
+
+        var FadedHighlightColors = ["hsla(57, 100%, 50%, 0.33)"];
+
         return function filter_and_highlight(flow) {
-            flow._highlight = [];
+            var view = this.state.view;
+            if(!view._highlight){
+                view._highlight = {};
+            }
+            view._highlight[flow.id] = [];
+
             for (var i = 0; i < highlight.length; i++) {
                 if (highlight[i] && highlight[i](flow)) {
-                    flow._highlight.push(FadedHighlightColors[i]);
+                    view._highlight[flow.id].push(FadedHighlightColors[i]);
                 }
             }
             return filt(flow);
-        };
+        }.bind(this);
     },
     getViewSort: function () {
     },

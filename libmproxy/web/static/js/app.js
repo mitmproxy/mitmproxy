@@ -2092,17 +2092,6 @@ var RequestUtils = _.extend(_MessageUtils, {
 });
 
 var ResponseUtils = _.extend(_MessageUtils, {});
-
-HighlightColors = [
-    "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#1f77b4", "#bcbd22", "#17becf",
-    "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#aec7e8", "#dbdb8d", "#9edae5"
-];
-FadedHighlightColors = HighlightColors.map(function (color) {
-    return "rgba(" +
-        parseInt(color.substr(1, 2), 16) + "," +
-        parseInt(color.substr(3, 2), 16) + "," +
-        parseInt(color.substr(5, 2), 16) + ",0.3)";
-});
 function ListStore() {
     EventEmitter.call(this);
     this.reset();
@@ -2668,7 +2657,7 @@ var FilterInput = React.createClass({displayName: 'FilterInput',
         }
     },
     remove: function () {
-        if(this.props.onRemove) {
+        if (this.props.onRemove) {
             this.props.onRemove();
         }
     },
@@ -2715,7 +2704,7 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
     getInitialState: function () {
         return {
             filter: this.getQuery()[Query.FILTER] || "",
-            highlight: (this.getQuery()[Query.HIGHLIGHT] || "").split("&").map(decodeURIComponent)
+            highlight: this.getQuery()[Query.HIGHLIGHT] || ""
         };
     },
     statics: {
@@ -2733,55 +2722,18 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
     applyFilter: function (filter, highlight) {
         var d = {};
         d[Query.FILTER] = filter;
-        d[Query.HIGHLIGHT] = highlight.map(encodeURIComponent).join("&");
+        d[Query.HIGHLIGHT] = highlight;
         this.setQuery(d);
     },
     onFilterChange: function (val) {
         this.setState({filter: val});
         this.applyFilter(val, this.state.highlight);
     },
-    onHighlightChange: function (index, val) {
-        var highlight = this.state.highlight.slice();
-        highlight[index] = val;
-        if (highlight[highlight.length - 1] !== "" && highlight.length < 14) {
-            highlight.push("");
-        }
-        this.setState({
-            highlight: highlight
-        });
-        this.applyFilter(this.state.filter, highlight);
-    },
-    onHighlightRemove: function (index) {
-        if (this.state.highlight.length > 1 && index < this.state.highlight.length - 1) {
-            var highlight = this.state.highlight.slice();
-            highlight.splice(index, 1);
-            this.setState({
-                highlight: highlight
-            });
-        }
-        this.refs["highlight-" + Math.max(0, index - 1)].focus();
-    },
-    getColor: function (index) {
-        return HighlightColors[index];
+    onHighlightChange: function (val) {
+        this.setState({highlight: val});
+        this.applyFilter(this.state.filter, val);
     },
     render: function () {
-        var highlightFilterInputs = [];
-        for (var i = 0; i < this.state.highlight.length; i++) {
-            highlightFilterInputs.push(React.createElement("span", {key: "placeholder-" + i}, " "));
-            highlightFilterInputs.push(
-                React.createElement(FilterInput, {
-                    key: "highlight-" + i, 
-                    ref: "highlight-" + i, 
-                    type: "tag", 
-                    color: this.getColor(i), 
-                    value: this.state.highlight[i], 
-                    onChange: this.onHighlightChange.bind(this, i), 
-                    onRemove: this.onHighlightRemove.bind(this, i)}
-                )
-            );
-
-        }
-
         return (
             React.createElement("div", null, 
                 React.createElement("button", {className: "btn " + (this.props.settings.showEventLog ? "btn-primary" : "btn-default"), onClick: this.toggleEventLog}, 
@@ -2794,11 +2746,11 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
                 " Clear Flows"
                 ), 
             " ", 
-                React.createElement("form", {className: "form-inline", style: {display:"inline"}}, 
+                React.createElement("form", {className: "form-inline", style: {display: "inline"}}, 
                     React.createElement(FilterInput, {type: "filter", color: "black", value: this.state.filter, onChange: this.onFilterChange}), 
-                    highlightFilterInputs 
+                    " ", 
+                    React.createElement(FilterInput, {type: "tag", color: "hsl(48, 100%, 50%)", value: this.state.highlight, onChange: this.onHighlightChange})
                 )
-
             )
         );
     }
@@ -3110,27 +3062,14 @@ var FlowRow = React.createClass({displayName: 'FlowRow',
         }.bind(this));
         var className = "";
         if (this.props.selected) {
-            className += "selected";
+            className += " selected";
         }
-
-        var highlight_count = flow._highlight.length;
-        if (highlight_count > 0) {
-            var background = "linear-gradient(90deg";
-            for(var i =0; i < highlight_count; i++){
-                var tag = flow._highlight[i];
-                var ps = (100 * i / highlight_count) + "%";
-                var pe = (100 * (i + 1) / highlight_count) + "%";
-                background += ("," + tag + " " + ps + "," + tag + " " + pe);
-            }
-            background += ")";
+        if (this.props.highlighted) {
+            className += " highlighted";
         }
-
-        style = {
-            background: background
-        };
 
         return (
-            React.createElement("tr", {className: className, onClick: this.props.selectFlow.bind(null, flow), style: style}, 
+            React.createElement("tr", {className: className, onClick: this.props.selectFlow.bind(null, flow)}, 
                 columns
             ));
     },
@@ -3199,11 +3138,13 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
     },
     renderRow: function (flow) {
         var selected = (flow === this.props.selected);
+        var highlighted = (this.props.view._highlight && this.props.view._highlight[flow.id].length > 0);
         return React.createElement(FlowRow, {key: flow.id, 
             ref: flow.id, 
             flow: flow, 
             columns: this.state.columns, 
             selected: selected, 
+            highlighted: highlighted, 
             selectFlow: this.props.selectFlow}
         );
     },
@@ -3594,21 +3535,30 @@ var MainView = React.createClass({displayName: 'MainView',
         };
     },
     getViewFilt: function () {
-        var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
-        var highlight = (this.getQuery()[Query.HIGHLIGHT] || "").split("&")
-            .map(decodeURIComponent)
-            .map(function (filtstr) {
-                return filtstr.trim() !== "" ? Filt.parse(filtstr) : false;
-            });
+        try {
+            var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
+            var highlightStr = this.getQuery()[Query.HIGHLIGHT];
+            var highlight = highlightStr ? [Filt.parse(highlightStr)] : [];
+        } catch(e){
+            console.error("Error when processing filter: " + e);
+        }
+
+        var FadedHighlightColors = ["hsla(57, 100%, 50%, 0.33)"];
+
         return function filter_and_highlight(flow) {
-            flow._highlight = [];
+            var view = this.state.view;
+            if(!view._highlight){
+                view._highlight = {};
+            }
+            view._highlight[flow.id] = [];
+
             for (var i = 0; i < highlight.length; i++) {
                 if (highlight[i] && highlight[i](flow)) {
-                    flow._highlight.push(FadedHighlightColors[i]);
+                    view._highlight[flow.id].push(FadedHighlightColors[i]);
                 }
             }
             return filt(flow);
-        };
+        }.bind(this);
     },
     getViewSort: function () {
     },
