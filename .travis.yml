@@ -15,8 +15,6 @@ notifications:
   irc:
     channels:
       - "irc.oftc.net#mitmproxy"
-    use_notice: true
-    skip_join: true
     on_success: change
     on_failure: always
 cache:
