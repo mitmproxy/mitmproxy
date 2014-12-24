@@ -11,7 +11,7 @@ def test_load_scripts():
 
     for f in scripts:
         if "har_extractor" in f:
-            f += " foo"
+            f += " -"
         if "iframe_injector" in f:
             f += " foo"  # one argument required
         if "modify_response_body" in f:

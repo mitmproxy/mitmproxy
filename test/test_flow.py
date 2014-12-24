@@ -274,7 +274,9 @@ class TestFlow:
         f2 = f.copy()
         a = f.get_state()
         b = f2.get_state()
-        assert f.get_state() == f2.get_state()
+        del a["id"]
+        del b["id"]
+        assert a == b
         assert not f == f2
         assert not f is f2
         assert f.request.get_state() == f2.request.get_state()
@@ -333,6 +335,7 @@ class TestFlow:
         assert f.get_state() == protocol.http.HTTPFlow.from_state(state).get_state()
 
         f2 = f.copy()
+        f2.id = f.id  # copy creates a different uuid
         assert f.get_state() == f2.get_state()
         assert not f == f2
         f2.error = Error("e2")

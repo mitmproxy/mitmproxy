@@ -1,4 +1,5 @@
 language: python
+sudo: false
 python:
   - "2.7"
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
