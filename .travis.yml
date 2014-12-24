@@ -16,4 +16,6 @@ notifications:
       - "irc.oftc.net#mitmproxy"
     on_success: change
     on_failure: always
-
+cache:
+  directories:
+  - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
