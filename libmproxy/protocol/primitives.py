@@ -96,6 +96,8 @@ class Flow(stateobject.StateObject):
     def copy(self):
         f = copy.copy(self)
 
+        f.id = str(uuid.uuid4())
+        f.live = False
         f.client_conn = self.client_conn.copy()
         f.server_conn = self.server_conn.copy()
 
@@ -142,6 +144,8 @@ class Flow(stateobject.StateObject):
             Intercept this Flow. Processing will stop until accept_intercept is
             called.
         """
+        if self.intercepted:
+            return
         self.intercepted = True
         master.handle_intercept(self)
 
@@ -149,6 +153,8 @@ class Flow(stateobject.StateObject):
         """
             Continue with the flow - called after an intercept().
         """
+        if not self.intercepted:
+            return
         self.intercepted = False
         self.reply()
         master.handle_accept_intercept(self)

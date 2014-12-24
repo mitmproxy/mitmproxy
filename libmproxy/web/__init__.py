@@ -35,7 +35,7 @@ class WebFlowView(flow.FlowView):
         app.ClientConnection.broadcast(
             type="flows",
             cmd="remove",
-            data=f.get_state(short=True)
+            data=f.id
         )
 
     def _recalculate(self, flows):

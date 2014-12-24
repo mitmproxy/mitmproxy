@@ -428,6 +428,11 @@ class FlowStore(FlowList):
         self.views = []
         self._recalculate_views()
 
+    def get(self, flow_id):
+        for f in self._list:
+            if f.id == flow_id:
+                return f
+
     def __contains__(self, f):
         return f in self._set
 

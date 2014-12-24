@@ -105,6 +105,10 @@ var MainView = React.createClass({
         this.selectFlow(flows[index]);
     },
     onKeyDown: function (e) {
+        var flow = this.getSelected();
+        if(e.ctrlKey){
+            return;
+        }
         switch (e.keyCode) {
             case Key.K:
             case Key.UP:
@@ -143,11 +147,32 @@ var MainView = React.createClass({
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
+            case Key.C:
+                if (e.shiftKey) {
+                    FlowActions.clear();
+                }
+                break;
+            case Key.D:
+                if (flow) {
+                    if (e.shiftKey) {
+                        FlowActions.duplicate(flow);
+                    } else {
+                        var last_flow = this.state.view.index(flow) === this.state.view.list.length - 1;
+                        this.selectFlowRelative(last_flow ? -1 : +1);
+                        FlowActions.delete(flow);
+                    }
+                }
+                break;
             case Key.A:
                 if (e.shiftKey) {
                     FlowActions.accept_all();
-                } else if(this.getSelected()) {
-                    FlowActions.accept(this.getSelected());
+                } else if (flow) {
+                    FlowActions.accept(flow);
+                }
+                break;
+            case Key.R:
+                if(!e.shiftKey && flow){
+                    FlowActions.replay(flow);
                 }
                 break;
             default:

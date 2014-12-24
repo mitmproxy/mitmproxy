@@ -1,81 +1,3 @@
-// http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
-var AutoScrollMixin = {
-    componentWillUpdate: function () {
-        var node = this.getDOMNode();
-        this._shouldScrollBottom = (
-            node.scrollTop !== 0 &&
-            node.scrollTop + node.clientHeight === node.scrollHeight
-        );
-    },
-    componentDidUpdate: function () {
-        if (this._shouldScrollBottom) {
-            var node = this.getDOMNode();
-            node.scrollTop = node.scrollHeight;
-        }
-    },
-};
-
-
-var StickyHeadMixin = {
-    adjustHead: function () {
-        // Abusing CSS transforms to set the element
-        // referenced as head into some kind of position:sticky.
-        var head = this.refs.head.getDOMNode();
-        head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
-    }
-};
-
-
-var Navigation = _.extend({}, ReactRouter.Navigation, {
-    setQuery: function (dict) {
-        var q = this.context.getCurrentQuery();
-        for(var i in dict){
-            if(dict.hasOwnProperty(i)){
-                q[i] = dict[i] || undefined; //falsey values shall be removed.
-            }
-        }
-        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/599
-        this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
-    },
-    replaceWith: function(routeNameOrPath, params, query) {
-        if(routeNameOrPath === undefined){
-            routeNameOrPath = this.context.getCurrentPath();
-        }
-        if(params === undefined){
-            params = this.context.getCurrentParams();
-        }
-        if(query === undefined){
-            query = this.context.getCurrentQuery();
-        }
-        ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
-    }
-});
-_.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
-
-var State = _.extend({}, ReactRouter.State, {
-    getInitialState: function () {
-        this._query = this.context.getCurrentQuery();
-        this._queryWatches = [];
-        return null;
-    },
-    onQueryChange: function (key, callback) {
-        this._queryWatches.push({
-            key: key,
-            callback: callback
-        });
-    },
-    componentWillReceiveProps: function (nextProps, nextState) {
-        var q = this.context.getCurrentQuery();
-        for (var i = 0; i < this._queryWatches.length; i++) {
-            var watch = this._queryWatches[i];
-            if (this._query[watch.key] !== q[watch.key]) {
-                watch.callback(this._query[watch.key], q[watch.key], watch.key);
-            }
-        }
-        this._query = q;
-    }
-});
-
 var Key = {
     UP: 38,
     DOWN: 40,
@@ -92,7 +14,7 @@ var Key = {
     BACKSPACE: 8,
 };
 // Add A-Z
-for(var i=65; i <= 90; i++){
+for (var i = 65; i <= 90; i++) {
     Key[String.fromCharCode(i)] = i;
 }
 
@@ -157,6 +79,31 @@ EventEmitter.prototype.removeListener = function (events, f) {
         }
     }.bind(this));
 };
+
+
+function getCookie(name) {
+    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    return r ? r[1] : undefined;
+}
+var xsrf = $.param({_xsrf: getCookie("_xsrf")});
+
+//Tornado XSRF Protection.
+jQuery.ajaxPrefilter(function (options) {
+    if (["post", "put", "delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
+        if (options.data) {
+            options.data += ("&" + xsrf);
+        } else {
+            options.data = xsrf;
+        }
+    }
+});
+// Log AJAX Errors
+$(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+    var message = jqXHR.responseText;
+    console.error(message, arguments);
+    EventLogActions.add_event(thrownError + ": " + message);
+    window.alert(message);
+});
 const PayloadSources = {
     VIEW: "view",
     SERVER: "server"
@@ -272,7 +219,18 @@ var FlowActions = {
     accept_all: function(){
         jQuery.post("/flows/accept");
     },
-
+    "delete": function(flow){
+        jQuery.ajax({
+            type:"DELETE",
+            url: "/flows/" + flow.id
+        });
+    },
+    duplicate: function(flow){
+        jQuery.post("/flows/" + flow.id + "/duplicate");
+    },
+    replay: function(flow){
+        jQuery.post("/flows/" + flow.id + "/replay");
+    },
     update: function (flow) {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.FLOW_STORE,
@@ -2140,7 +2098,7 @@ _.extend(ListStore.prototype, EventEmitter.prototype, {
         this.emit("update", elem);
     },
     remove: function (elem_id) {
-        if (!(elem.id in this._pos_map)) {
+        if (!(elem_id in this._pos_map)) {
             return;
         }
         this.list.splice(this._pos_map[elem_id], 1);
@@ -2317,8 +2275,8 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("update", this.update);
         this.store.removeListener("remove", this.remove);
         this.store.removeListener("recalculate", this.recalculate);
-    },
-    recalculate: function (filt, sortfun) {
+        },
+        recalculate: function (filt, sortfun) {
         if (filt) {
             this.filt = filt.bind(this);
         }
@@ -2407,6 +2365,84 @@ function Connection(url) {
     return ws;
 }
 //React utils. For other utilities, see ../utils.js
+
+// http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
+var AutoScrollMixin = {
+    componentWillUpdate: function () {
+        var node = this.getDOMNode();
+        this._shouldScrollBottom = (
+            node.scrollTop !== 0 &&
+            node.scrollTop + node.clientHeight === node.scrollHeight
+        );
+    },
+    componentDidUpdate: function () {
+        if (this._shouldScrollBottom) {
+            var node = this.getDOMNode();
+            node.scrollTop = node.scrollHeight;
+        }
+    },
+};
+
+
+var StickyHeadMixin = {
+    adjustHead: function () {
+        // Abusing CSS transforms to set the element
+        // referenced as head into some kind of position:sticky.
+        var head = this.refs.head.getDOMNode();
+        head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
+    }
+};
+
+
+var Navigation = _.extend({}, ReactRouter.Navigation, {
+    setQuery: function (dict) {
+        var q = this.context.getCurrentQuery();
+        for(var i in dict){
+            if(dict.hasOwnProperty(i)){
+                q[i] = dict[i] || undefined; //falsey values shall be removed.
+            }
+        }
+        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/599
+        this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
+    },
+    replaceWith: function(routeNameOrPath, params, query) {
+        if(routeNameOrPath === undefined){
+            routeNameOrPath = this.context.getCurrentPath();
+        }
+        if(params === undefined){
+            params = this.context.getCurrentParams();
+        }
+        if(query === undefined){
+            query = this.context.getCurrentQuery();
+        }
+        ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
+    }
+});
+_.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
+
+var State = _.extend({}, ReactRouter.State, {
+    getInitialState: function () {
+        this._query = this.context.getCurrentQuery();
+        this._queryWatches = [];
+        return null;
+    },
+    onQueryChange: function (key, callback) {
+        this._queryWatches.push({
+            key: key,
+            callback: callback
+        });
+    },
+    componentWillReceiveProps: function (nextProps, nextState) {
+        var q = this.context.getCurrentQuery();
+        for (var i = 0; i < this._queryWatches.length; i++) {
+            var watch = this._queryWatches[i];
+            if (this._query[watch.key] !== q[watch.key]) {
+                watch.callback(this._query[watch.key], q[watch.key], watch.key);
+            }
+        }
+        this._query = q;
+    }
+});
 
 var Splitter = React.createClass({displayName: 'Splitter',
     getDefaultProps: function () {
@@ -2510,23 +2546,6 @@ var Splitter = React.createClass({displayName: 'Splitter',
                 React.createElement("div", {onMouseDown: this.onMouseDown, draggable: "true"})
             )
         );
-    }
-});
-
-function getCookie(name) {
-    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
-    return r ? r[1] : undefined;
-}
-var xsrf = $.param({_xsrf: getCookie("_xsrf")});
-
-//Tornado XSRF Protection.
-$.ajaxPrefilter(function (options) {
-    if (["post","put","delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
-        if (options.data) {
-            options.data += ("&" + xsrf);
-        } else {
-            options.data = xsrf;
-        }
     }
 });
 var VirtualScrollMixin = {
@@ -3686,6 +3705,10 @@ var MainView = React.createClass({displayName: 'MainView',
         this.selectFlow(flows[index]);
     },
     onKeyDown: function (e) {
+        var flow = this.getSelected();
+        if(e.ctrlKey){
+            return;
+        }
         switch (e.keyCode) {
             case Key.K:
             case Key.UP:
@@ -3724,11 +3747,32 @@ var MainView = React.createClass({displayName: 'MainView',
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
+            case Key.C:
+                if (e.shiftKey) {
+                    FlowActions.clear();
+                }
+                break;
+            case Key.D:
+                if (flow) {
+                    if (e.shiftKey) {
+                        FlowActions.duplicate(flow);
+                    } else {
+                        var last_flow = this.state.view.index(flow) === this.state.view.list.length - 1;
+                        this.selectFlowRelative(last_flow ? -1 : +1);
+                        FlowActions.delete(flow);
+                    }
+                }
+                break;
             case Key.A:
                 if (e.shiftKey) {
                     FlowActions.accept_all();
-                } else if(this.getSelected()) {
-                    FlowActions.accept(this.getSelected());
+                } else if (flow) {
+                    FlowActions.accept(flow);
+                }
+                break;
+            case Key.R:
+                if(!e.shiftKey && flow){
+                    FlowActions.replay(flow);
                 }
                 break;
             default:

@@ -1,11 +1,12 @@
 import os.path
-import sys
 import tornado.web
 import tornado.websocket
 import logging
 import json
-from .. import flow
 
+
+class APIError(tornado.web.HTTPError):
+    pass
 
 class IndexHandler(tornado.web.RequestHandler):
     def get(self):
@@ -36,38 +37,82 @@ class ClientConnection(WebSocketEventBroadcaster):
     connections = set()
 
 
-class Flows(tornado.web.RequestHandler):
+class RequestHandler(tornado.web.RequestHandler):
+    @property
+    def state(self):
+        return self.application.master.state
+
+    @property
+    def master(self):
+        return self.application.master
+
+    @property
+    def flow(self):
+        flow_id = str(self.path_kwargs["flow_id"])
+        flow = self.state.flows.get(flow_id)
+        if flow:
+            return flow
+        else:
+            raise APIError(400, "Flow not found.")
+
+    def write_error(self, status_code, **kwargs):
+        if "exc_info" in kwargs and isinstance(kwargs["exc_info"][1], APIError):
+            self.finish(kwargs["exc_info"][1].log_message)
+        else:
+            super(RequestHandler, self).write_error(status_code, **kwargs)
+
+
+class Flows(RequestHandler):
     def get(self):
         self.write(dict(
-            data=[f.get_state(short=True) for f in self.application.state.flows]
+            data=[f.get_state(short=True) for f in self.state.flows]
         ))
 
 
-class AcceptFlows(tornado.web.RequestHandler):
+class ClearAll(RequestHandler):
     def post(self):
-        self.application.state.flows.accept_all(self.application.master)
+        self.state.clear()
 
 
-class AcceptFlow(tornado.web.RequestHandler):
+class AcceptFlows(RequestHandler):
+    def post(self):
+        self.state.flows.accept_all(self.master)
+
+
+class AcceptFlow(RequestHandler):
     def post(self, flow_id):
-        flow_id = str(flow_id)
-        for flow in self.application.state.flows:
-            if flow.id == flow_id:
-                flow.accept_intercept(self.application.master)
-                break
+        self.flow.accept_intercept(self.master)
 
-class Events(tornado.web.RequestHandler):
+
+class FlowHandler(RequestHandler):
+    def delete(self, flow_id):
+        self.flow.kill(self.master)
+        self.state.delete_flow(self.flow)
+
+
+class DuplicateFlow(RequestHandler):
+    def post(self, flow_id):
+        self.master.duplicate_flow(self.flow)
+
+class ReplayFlow(RequestHandler):
+    def post(self, flow_id):
+        self.flow.backup()
+        r = self.master.replay_request(self.flow)
+        if r:
+            raise APIError(400, r)
+
+class Events(RequestHandler):
     def get(self):
         self.write(dict(
-            data=list(self.application.state.events)
+            data=list(self.state.events)
         ))
 
 
-class Settings(tornado.web.RequestHandler):
+class Settings(RequestHandler):
     def get(self):
         self.write(dict(
             data=dict(
-                intercept=self.application.state.intercept_txt
+                intercept=self.state.intercept_txt
             )
         ))
 
@@ -81,7 +126,7 @@ class Settings(tornado.web.RequestHandler):
             if k == "_xsrf":
                 continue
             elif k == "intercept":
-                self.application.state.set_intercept(v[0])
+                self.state.set_intercept(v[0])
                 update[k] = v[0]
             else:
                 print "Warning: Unknown setting {}: {}".format(k, v)
@@ -93,17 +138,7 @@ class Settings(tornado.web.RequestHandler):
         )
 
 
-class Clear(tornado.web.RequestHandler):
-    def post(self):
-        self.application.state.clear()
-
-
 class Application(tornado.web.Application):
-
-    @property
-    def state(self):
-        return self.master.state
-
     def __init__(self, master, debug):
         self.master = master
         handlers = [
@@ -112,9 +147,12 @@ class Application(tornado.web.Application):
             (r"/events", Events),
             (r"/flows", Flows),
             (r"/flows/accept", AcceptFlows),
-            (r"/flows/([0-9a-f\-]+)/accept", AcceptFlow),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/accept", AcceptFlow),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/settings", Settings),
-            (r"/clear", Clear),
+            (r"/clear", ClearAll),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

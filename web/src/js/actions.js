@@ -77,7 +77,18 @@ var FlowActions = {
     accept_all: function(){
         jQuery.post("/flows/accept");
     },
-
+    "delete": function(flow){
+        jQuery.ajax({
+            type:"DELETE",
+            url: "/flows/" + flow.id
+        });
+    },
+    duplicate: function(flow){
+        jQuery.post("/flows/" + flow.id + "/duplicate");
+    },
+    replay: function(flow){
+        jQuery.post("/flows/" + flow.id + "/replay");
+    },
     update: function (flow) {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.FLOW_STORE,

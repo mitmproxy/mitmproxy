@@ -19,7 +19,7 @@ _.extend(ListStore.prototype, EventEmitter.prototype, {
         this.emit("update", elem);
     },
     remove: function (elem_id) {
-        if (!(elem.id in this._pos_map)) {
+        if (!(elem_id in this._pos_map)) {
             return;
         }
         this.list.splice(this._pos_map[elem_id], 1);
