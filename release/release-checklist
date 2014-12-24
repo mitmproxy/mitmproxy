@@ -3,12 +3,7 @@
 
     mitmproxy/libmproxy/version.py
     netlib/netlib/version.py
-    netlib/requirements.txt
-    netlib/test/requirements.txt
-    pathod/netlib/version.py
-    pathod/requirements.txt
-    pathod/test/requirements.txt
-
+    pathod/libpathod/version.py
 
 - Render the docs:
     cshape doc-src doc
