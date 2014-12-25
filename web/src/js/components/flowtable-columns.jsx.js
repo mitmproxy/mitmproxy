@@ -66,7 +66,11 @@ var PathColumn = React.createClass({
     },
     render: function () {
         var flow = this.props.flow;
-        return <td className="col-path">{flow.request.scheme + "://" + flow.request.host + flow.request.path}</td>;
+        return <td className="col-path">
+            {flow.request.is_replay ? <i className="fa fa-fw fa-repeat pull-right"></i> : null}
+            {flow.intercepted ? <i className="fa fa-fw fa-pause pull-right"></i> : null}
+            {flow.request.scheme + "://" + flow.request.host + flow.request.path}
+        </td>;
     }
 });
 

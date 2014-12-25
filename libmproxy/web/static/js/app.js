@@ -2742,22 +2742,8 @@ var FilterInput = React.createClass({displayName: 'FilterInput',
 var MainMenu = React.createClass({displayName: 'MainMenu',
     mixins: [Navigation, State],
     statics: {
-        title: "Traffic",
+        title: "Start",
         route: "flows"
-    },
-    toggleEventLog: function () {
-        var d = {};
-
-        if(this.getQuery()[Query.SHOW_EVENTLOG]){
-            d[Query.SHOW_EVENTLOG] = undefined;
-        } else {
-            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
-        }
-
-        this.setQuery(d);
-    },
-    clearFlows: function () {
-        FlowActions.clear();
     },
     onFilterChange: function (val) {
         var d = {};
@@ -2776,22 +2762,9 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
         var filter = this.getQuery()[Query.FILTER] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
         var intercept = this.props.settings.intercept || "";
-        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
 
         return (
             React.createElement("div", null, 
-                React.createElement("button", {
-                    className: "btn " + (showEventLog ? "btn-primary" : "btn-default"), 
-                    onClick: this.toggleEventLog}, 
-                    React.createElement("i", {className: "fa fa-database"}), 
-                " Display Event Log"
-                ), 
-                React.createElement("span", null, " "), 
-                React.createElement("button", {className: "btn btn-default", onClick: this.clearFlows}, 
-                    React.createElement("i", {className: "fa fa-eraser"}), 
-                " Clear Flows"
-                ), 
-                React.createElement("span", null, " "), 
                 React.createElement("form", {className: "form-inline", style: {display: "inline"}}, 
                     React.createElement(FilterInput, {
                         placeholder: "Filter", 
@@ -2820,13 +2793,36 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
 });
 
 
-var ToolsMenu = React.createClass({displayName: 'ToolsMenu',
+var ViewMenu = React.createClass({displayName: 'ViewMenu',
     statics: {
-        title: "Tools",
+        title: "View",
         route: "flows"
     },
+    mixins: [Navigation, State],
+    toggleEventLog: function () {
+        var d = {};
+
+        if (this.getQuery()[Query.SHOW_EVENTLOG]) {
+            d[Query.SHOW_EVENTLOG] = undefined;
+        } else {
+            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
+        }
+
+        this.setQuery(d);
+    },
     render: function () {
-        return React.createElement("div", null, "Tools Menu");
+        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
+        return (
+            React.createElement("div", null, 
+                React.createElement("button", {
+                    className: "btn " + (showEventLog ? "btn-primary" : "btn-default"), 
+                    onClick: this.toggleEventLog}, 
+                    React.createElement("i", {className: "fa fa-database"}), 
+                " Show Eventlog"
+                ), 
+                React.createElement("span", null, " ")
+            )
+        );
     }
 });
 
@@ -2863,7 +2859,9 @@ var FileMenu = React.createClass({displayName: 'FileMenu',
     },
     handleNewClick: function (e) {
         e.preventDefault();
-        console.error("unimplemented: handleNewClick");
+        if (confirm("Delete all flows?")) {
+            FlowActions.clear();
+        }
     },
     handleOpenClick: function (e) {
         e.preventDefault();
@@ -2890,25 +2888,34 @@ var FileMenu = React.createClass({displayName: 'FileMenu',
                             "New"
                         )
                     ), 
-                    React.createElement("li", null, 
-                        React.createElement("a", {href: "#", onClick: this.handleOpenClick}, 
-                            React.createElement("i", {className: "fa fa-fw fa-folder-open"}), 
-                            "Open"
-                        )
-                    ), 
-                    React.createElement("li", null, 
-                        React.createElement("a", {href: "#", onClick: this.handleSaveClick}, 
-                            React.createElement("i", {className: "fa fa-fw fa-save"}), 
-                            "Save"
-                        )
-                    ), 
                     React.createElement("li", {role: "presentation", className: "divider"}), 
                     React.createElement("li", null, 
-                        React.createElement("a", {href: "#", onClick: this.handleShutdownClick}, 
-                            React.createElement("i", {className: "fa fa-fw fa-plug"}), 
-                            "Shutdown"
+                        React.createElement("a", {href: "http://mitm.it/", target: "_blank"}, 
+                            React.createElement("i", {className: "fa fa-fw fa-lock"}), 
+                            "Install Certificates..."
                         )
                     )
+                /*
+                 <li>
+                 <a href="#" onClick={this.handleOpenClick}>
+                 <i className="fa fa-fw fa-folder-open"></i>
+                 Open
+                 </a>
+                 </li>
+                 <li>
+                 <a href="#" onClick={this.handleSaveClick}>
+                 <i className="fa fa-fw fa-save"></i>
+                 Save
+                 </a>
+                 </li>
+                 <li role="presentation" className="divider"></li>
+                 <li>
+                 <a href="#" onClick={this.handleShutdownClick}>
+                 <i className="fa fa-fw fa-plug"></i>
+                 Shutdown
+                 </a>
+                 </li>
+                 */
                 )
             )
         );
@@ -2916,7 +2923,7 @@ var FileMenu = React.createClass({displayName: 'FileMenu',
 });
 
 
-var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
+var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 
 
 var Header = React.createClass({displayName: 'Header',
@@ -3032,7 +3039,11 @@ var PathColumn = React.createClass({displayName: 'PathColumn',
     },
     render: function () {
         var flow = this.props.flow;
-        return React.createElement("td", {className: "col-path"}, flow.request.scheme + "://" + flow.request.host + flow.request.path);
+        return React.createElement("td", {className: "col-path"}, 
+            flow.request.is_replay ? React.createElement("i", {className: "fa fa-fw fa-repeat pull-right"}) : null, 
+            flow.intercepted ? React.createElement("i", {className: "fa fa-fw fa-pause pull-right"}) : null, 
+            flow.request.scheme + "://" + flow.request.host + flow.request.path
+        );
     }
 });
 
@@ -3247,10 +3258,75 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
     }
 });
 
+var DeleteButton = React.createClass({displayName: 'DeleteButton',
+    onClick: function (e) {
+        e.preventDefault();
+        FlowActions.delete(this.props.flow);
+    },
+    render: function () {
+        return (
+            React.createElement("a", {title: "[d]elete Flow", 
+                href: "#", 
+                className: "nav-action", 
+                onClick: this.onClick}, 
+                React.createElement("i", {className: "fa fa-fw fa-trash"})
+            )
+        );
+    }
+});
+var DuplicateButton = React.createClass({displayName: 'DuplicateButton',
+    onClick: function (e) {
+        e.preventDefault();
+        FlowActions.duplicate(this.props.flow);
+    },
+    render: function () {
+        return (
+            React.createElement("a", {title: "[D]uplicate Flow", 
+                href: "#", 
+                className: "nav-action", 
+                onClick: this.onClick}, 
+                React.createElement("i", {className: "fa fa-fw fa-edit"})
+            )
+        );
+    }
+});
+var ReplayButton = React.createClass({displayName: 'ReplayButton',
+    onClick: function (e) {
+        e.preventDefault();
+        FlowActions.replay(this.props.flow);
+    },
+    render: function () {
+        return (
+            React.createElement("a", {title: "[r]eplay Flow", 
+                href: "#", 
+                className: "nav-action", 
+                onClick: this.onClick}, 
+                React.createElement("i", {className: "fa fa-fw fa-close"})
+            )
+        );
+    }
+});
+var AcceptButton = React.createClass({displayName: 'AcceptButton',
+    onClick: function (e) {
+        e.preventDefault();
+        FlowActions.accept(this.props.flow);
+    },
+    render: function () {
+        return (
+            React.createElement("a", {title: "[a]ccept (resume) Flow", 
+                href: "#", 
+                className: "nav-action", 
+                onClick: this.onClick}, 
+                React.createElement("i", {className: "fa fa-fw fa-play"})
+            )
+        );
+    }
+});
 var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
     render: function () {
+        var flow = this.props.flow;
 
-        var items = this.props.tabs.map(function (e) {
+        var tabs = this.props.tabs.map(function (e) {
             var str = e.charAt(0).toUpperCase() + e.slice(1);
             var className = this.props.active === e ? "active" : "";
             var onClick = function (event) {
@@ -3262,9 +3338,14 @@ var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
                 className: className, 
                 onClick: onClick}, str);
         }.bind(this));
+
         return (
             React.createElement("nav", {ref: "head", className: "nav-tabs nav-tabs-sm"}, 
-                items
+                tabs, 
+                React.createElement(DeleteButton, {flow: flow}), 
+                React.createElement(DuplicateButton, {flow: flow}), 
+                React.createElement(ReplayButton, {flow: flow}), 
+                 flow.intercepted ? React.createElement(AcceptButton, {flow: this.props.flow}) : null
             )
         );
     }
@@ -3353,7 +3434,9 @@ var FlowDetailError = React.createClass({displayName: 'FlowDetailError',
             React.createElement("section", null, 
                 React.createElement("div", {className: "alert alert-warning"}, 
                 flow.error.msg, 
-                    React.createElement("div", null, React.createElement("small", null,  formatTimeStamp(flow.error.timestamp) ))
+                    React.createElement("div", null, 
+                        React.createElement("small", null,  formatTimeStamp(flow.error.timestamp) )
+                    )
                 )
             )
         );
@@ -3590,6 +3673,7 @@ var FlowDetail = React.createClass({displayName: 'FlowDetail',
         return (
             React.createElement("div", {className: "flow-detail", onScroll: this.adjustHead}, 
                 React.createElement(FlowDetailNav, {ref: "head", 
+                    flow: flow, 
                     tabs: tabs, 
                     active: active, 
                     selectTab: this.selectTab}), 
@@ -3644,6 +3728,7 @@ var MainView = React.createClass({displayName: 'MainView',
 
         view.addListener("recalculate", this.onRecalculate);
         view.addListener("add update remove", this.onUpdate);
+        view.addListener("remove", this.onRemove);
     },
     onRecalculate: function () {
         this.forceUpdate();
@@ -3655,6 +3740,12 @@ var MainView = React.createClass({displayName: 'MainView',
     onUpdate: function (flow) {
         if (flow.id === this.getParams().flowId) {
             this.forceUpdate();
+        }
+    },
+    onRemove: function (flow_id, index) {
+        if (flow_id === this.getParams().flowId) {
+            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length -1)];
+            this.selectFlow(flow_to_select);
         }
     },
     closeView: function () {
@@ -3706,7 +3797,7 @@ var MainView = React.createClass({displayName: 'MainView',
     },
     onKeyDown: function (e) {
         var flow = this.getSelected();
-        if(e.ctrlKey){
+        if (e.ctrlKey) {
             return;
         }
         switch (e.keyCode) {
@@ -3757,8 +3848,6 @@ var MainView = React.createClass({displayName: 'MainView',
                     if (e.shiftKey) {
                         FlowActions.duplicate(flow);
                     } else {
-                        var last_flow = this.state.view.index(flow) === this.state.view.list.length - 1;
-                        this.selectFlowRelative(last_flow ? -1 : +1);
                         FlowActions.delete(flow);
                     }
                 }
@@ -3771,7 +3860,7 @@ var MainView = React.createClass({displayName: 'MainView',
                 }
                 break;
             case Key.R:
-                if(!e.shiftKey && flow){
+                if (!e.shiftKey && flow) {
                     FlowActions.replay(flow);
                 }
                 break;

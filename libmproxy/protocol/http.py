@@ -309,7 +309,8 @@ class HTTPRequest(HTTPMessage):
         host=str,
         port=int,
         path=str,
-        form_out=str
+        form_out=str,
+        is_replay=bool
     )
 
     @classmethod

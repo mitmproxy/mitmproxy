@@ -122,6 +122,11 @@ body,
   padding: 0px 7px;
   margin: 2px 2px -1px;
 }
+.nav-tabs-sm a.nav-action {
+  float: right;
+  padding: 0;
+  margin: 1px 0 0px;
+}
 header {
   background-color: white;
 }
@@ -183,6 +188,12 @@ header .menu {
 .flow-table tr.intercepted.has-response .col-time {
   color: #ff8000;
 }
+.flow-table .fa {
+  line-height: inherit;
+}
+.flow-table .fa.pull-right {
+  margin-left: 0;
+}
 .flow-table .col-tls {
   width: 10px;
 }
@@ -191,6 +202,12 @@ header .menu {
 }
 .flow-table .col-icon {
   width: 32px;
+}
+.flow-table .col-path .fa-repeat {
+  color: green;
+}
+.flow-table .col-path .fa-pause {
+  color: #ff8000;
 }
 .flow-table .col-method {
   width: 60px;

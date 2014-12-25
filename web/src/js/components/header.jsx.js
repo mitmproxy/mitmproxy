@@ -111,22 +111,8 @@ var FilterInput = React.createClass({
 var MainMenu = React.createClass({
     mixins: [Navigation, State],
     statics: {
-        title: "Traffic",
+        title: "Start",
         route: "flows"
-    },
-    toggleEventLog: function () {
-        var d = {};
-
-        if(this.getQuery()[Query.SHOW_EVENTLOG]){
-            d[Query.SHOW_EVENTLOG] = undefined;
-        } else {
-            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
-        }
-
-        this.setQuery(d);
-    },
-    clearFlows: function () {
-        FlowActions.clear();
     },
     onFilterChange: function (val) {
         var d = {};
@@ -145,22 +131,9 @@ var MainMenu = React.createClass({
         var filter = this.getQuery()[Query.FILTER] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
         var intercept = this.props.settings.intercept || "";
-        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
 
         return (
             <div>
-                <button
-                    className={"btn " + (showEventLog ? "btn-primary" : "btn-default")}
-                    onClick={this.toggleEventLog}>
-                    <i className="fa fa-database"></i>
-                &nbsp;Display Event Log
-                </button>
-                <span> </span>
-                <button className="btn btn-default" onClick={this.clearFlows}>
-                    <i className="fa fa-eraser"></i>
-                &nbsp;Clear Flows
-                </button>
-                <span> </span>
                 <form className="form-inline" style={{display: "inline"}}>
                     <FilterInput
                         placeholder="Filter"
@@ -189,13 +162,36 @@ var MainMenu = React.createClass({
 });
 
 
-var ToolsMenu = React.createClass({
+var ViewMenu = React.createClass({
     statics: {
-        title: "Tools",
+        title: "View",
         route: "flows"
     },
+    mixins: [Navigation, State],
+    toggleEventLog: function () {
+        var d = {};
+
+        if (this.getQuery()[Query.SHOW_EVENTLOG]) {
+            d[Query.SHOW_EVENTLOG] = undefined;
+        } else {
+            d[Query.SHOW_EVENTLOG] = "t"; // any non-false value will do it, keep it short
+        }
+
+        this.setQuery(d);
+    },
     render: function () {
-        return <div>Tools Menu</div>;
+        var showEventLog = this.getQuery()[Query.SHOW_EVENTLOG];
+        return (
+            <div>
+                <button
+                    className={"btn " + (showEventLog ? "btn-primary" : "btn-default")}
+                    onClick={this.toggleEventLog}>
+                    <i className="fa fa-database"></i>
+                &nbsp;Show Eventlog
+                </button>
+                <span> </span>
+            </div>
+        );
     }
 });
 
@@ -232,7 +228,9 @@ var FileMenu = React.createClass({
     },
     handleNewClick: function (e) {
         e.preventDefault();
-        console.error("unimplemented: handleNewClick");
+        if (confirm("Delete all flows?")) {
+            FlowActions.clear();
+        }
     },
     handleOpenClick: function (e) {
         e.preventDefault();
@@ -259,25 +257,34 @@ var FileMenu = React.createClass({
                             New
                         </a>
                     </li>
-                    <li>
-                        <a href="#" onClick={this.handleOpenClick}>
-                            <i className="fa fa-fw fa-folder-open"></i>
-                            Open
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" onClick={this.handleSaveClick}>
-                            <i className="fa fa-fw fa-save"></i>
-                            Save
-                        </a>
-                    </li>
                     <li role="presentation" className="divider"></li>
                     <li>
-                        <a href="#" onClick={this.handleShutdownClick}>
-                            <i className="fa fa-fw fa-plug"></i>
-                            Shutdown
+                        <a href="http://mitm.it/" target="_blank">
+                            <i className="fa fa-fw fa-lock"></i>
+                            Install Certificates...
                         </a>
                     </li>
+                {/*
+                 <li>
+                 <a href="#" onClick={this.handleOpenClick}>
+                 <i className="fa fa-fw fa-folder-open"></i>
+                 Open
+                 </a>
+                 </li>
+                 <li>
+                 <a href="#" onClick={this.handleSaveClick}>
+                 <i className="fa fa-fw fa-save"></i>
+                 Save
+                 </a>
+                 </li>
+                 <li role="presentation" className="divider"></li>
+                 <li>
+                 <a href="#" onClick={this.handleShutdownClick}>
+                 <i className="fa fa-fw fa-plug"></i>
+                 Shutdown
+                 </a>
+                 </li>
+                 */}
                 </ul>
             </div>
         );
@@ -285,7 +292,7 @@ var FileMenu = React.createClass({
 });
 
 
-var header_entries = [MainMenu, ToolsMenu, ReportsMenu];
+var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 
 
 var Header = React.createClass({

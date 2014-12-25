@@ -44,6 +44,7 @@ var MainView = React.createClass({
 
         view.addListener("recalculate", this.onRecalculate);
         view.addListener("add update remove", this.onUpdate);
+        view.addListener("remove", this.onRemove);
     },
     onRecalculate: function () {
         this.forceUpdate();
@@ -55,6 +56,12 @@ var MainView = React.createClass({
     onUpdate: function (flow) {
         if (flow.id === this.getParams().flowId) {
             this.forceUpdate();
+        }
+    },
+    onRemove: function (flow_id, index) {
+        if (flow_id === this.getParams().flowId) {
+            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length -1)];
+            this.selectFlow(flow_to_select);
         }
     },
     closeView: function () {
@@ -106,7 +113,7 @@ var MainView = React.createClass({
     },
     onKeyDown: function (e) {
         var flow = this.getSelected();
-        if(e.ctrlKey){
+        if (e.ctrlKey) {
             return;
         }
         switch (e.keyCode) {
@@ -157,8 +164,6 @@ var MainView = React.createClass({
                     if (e.shiftKey) {
                         FlowActions.duplicate(flow);
                     } else {
-                        var last_flow = this.state.view.index(flow) === this.state.view.list.length - 1;
-                        this.selectFlowRelative(last_flow ? -1 : +1);
                         FlowActions.delete(flow);
                     }
                 }
@@ -171,7 +176,7 @@ var MainView = React.createClass({
                 }
                 break;
             case Key.R:
-                if(!e.shiftKey && flow){
+                if (!e.shiftKey && flow) {
                     FlowActions.replay(flow);
                 }
                 break;

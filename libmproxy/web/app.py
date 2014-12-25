@@ -112,6 +112,7 @@ class Settings(RequestHandler):
     def get(self):
         self.write(dict(
             data=dict(
+                mode=str(self.master.server.config.mode),
                 intercept=self.state.intercept_txt
             )
         ))
