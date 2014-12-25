@@ -584,6 +584,7 @@ class State(object):
 
     def revert(self, f):
         f.revert()
+        self.update_flow(f)
 
     def killall(self, master):
         self.flows.kill_all(master)
@@ -821,6 +822,7 @@ class FlowMaster(controller.Master):
         if f.request.content == http.CONTENT_MISSING:
             return "Can't replay request with missing content..."
         if f.request:
+            f.backup()
             f.request.is_replay = True
             if f.request.content:
                 f.request.headers["Content-Length"] = [str(len(f.request.content))]

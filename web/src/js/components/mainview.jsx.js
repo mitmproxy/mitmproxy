@@ -171,13 +171,18 @@ var MainView = React.createClass({
             case Key.A:
                 if (e.shiftKey) {
                     FlowActions.accept_all();
-                } else if (flow) {
+                } else if (flow && flow.intercepted) {
                     FlowActions.accept(flow);
                 }
                 break;
             case Key.R:
                 if (!e.shiftKey && flow) {
                     FlowActions.replay(flow);
+                }
+                break;
+            case Key.V:
+                if(e.shiftKey && flow && flow.modified) {
+                    FlowActions.revert(flow);
                 }
                 break;
             default:

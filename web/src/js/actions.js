@@ -89,6 +89,9 @@ var FlowActions = {
     replay: function(flow){
         jQuery.post("/flows/" + flow.id + "/replay");
     },
+    revert: function(flow){
+        jQuery.post("/flows/" + flow.id + "/revert");
+    },
     update: function (flow) {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.FLOW_STORE,

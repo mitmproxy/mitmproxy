@@ -260,7 +260,7 @@ var FileMenu = React.createClass({
                     <li role="presentation" className="divider"></li>
                     <li>
                         <a href="http://mitm.it/" target="_blank">
-                            <i className="fa fa-fw fa-lock"></i>
+                            <i className="fa fa-fw fa-external-link"></i>
                             Install Certificates...
                         </a>
                     </li>

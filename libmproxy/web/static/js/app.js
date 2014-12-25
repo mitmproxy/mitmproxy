@@ -231,6 +231,9 @@ var FlowActions = {
     replay: function(flow){
         jQuery.post("/flows/" + flow.id + "/replay");
     },
+    revert: function(flow){
+        jQuery.post("/flows/" + flow.id + "/revert");
+    },
     update: function (flow) {
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.FLOW_STORE,
@@ -2891,7 +2894,7 @@ var FileMenu = React.createClass({displayName: 'FileMenu',
                     React.createElement("li", {role: "presentation", className: "divider"}), 
                     React.createElement("li", null, 
                         React.createElement("a", {href: "http://mitm.it/", target: "_blank"}, 
-                            React.createElement("i", {className: "fa fa-fw fa-lock"}), 
+                            React.createElement("i", {className: "fa fa-fw fa-external-link"}), 
                             "Install Certificates..."
                         )
                     )
@@ -3258,70 +3261,23 @@ var FlowTable = React.createClass({displayName: 'FlowTable',
     }
 });
 
-var DeleteButton = React.createClass({displayName: 'DeleteButton',
+var NavAction = React.createClass({displayName: 'NavAction',
     onClick: function (e) {
         e.preventDefault();
-        FlowActions.delete(this.props.flow);
+        this.props.onClick();
     },
     render: function () {
         return (
-            React.createElement("a", {title: "[d]elete Flow", 
+            React.createElement("a", {title: this.props.title, 
                 href: "#", 
                 className: "nav-action", 
                 onClick: this.onClick}, 
-                React.createElement("i", {className: "fa fa-fw fa-trash"})
+                React.createElement("i", {className: "fa fa-fw " + this.props.icon})
             )
         );
     }
 });
-var DuplicateButton = React.createClass({displayName: 'DuplicateButton',
-    onClick: function (e) {
-        e.preventDefault();
-        FlowActions.duplicate(this.props.flow);
-    },
-    render: function () {
-        return (
-            React.createElement("a", {title: "[D]uplicate Flow", 
-                href: "#", 
-                className: "nav-action", 
-                onClick: this.onClick}, 
-                React.createElement("i", {className: "fa fa-fw fa-edit"})
-            )
-        );
-    }
-});
-var ReplayButton = React.createClass({displayName: 'ReplayButton',
-    onClick: function (e) {
-        e.preventDefault();
-        FlowActions.replay(this.props.flow);
-    },
-    render: function () {
-        return (
-            React.createElement("a", {title: "[r]eplay Flow", 
-                href: "#", 
-                className: "nav-action", 
-                onClick: this.onClick}, 
-                React.createElement("i", {className: "fa fa-fw fa-close"})
-            )
-        );
-    }
-});
-var AcceptButton = React.createClass({displayName: 'AcceptButton',
-    onClick: function (e) {
-        e.preventDefault();
-        FlowActions.accept(this.props.flow);
-    },
-    render: function () {
-        return (
-            React.createElement("a", {title: "[a]ccept (resume) Flow", 
-                href: "#", 
-                className: "nav-action", 
-                onClick: this.onClick}, 
-                React.createElement("i", {className: "fa fa-fw fa-play"})
-            )
-        );
-    }
-});
+
 var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
     render: function () {
         var flow = this.props.flow;
@@ -3339,13 +3295,23 @@ var FlowDetailNav = React.createClass({displayName: 'FlowDetailNav',
                 onClick: onClick}, str);
         }.bind(this));
 
+        var acceptButton = null;
+        if(flow.intercepted){
+            acceptButton = React.createElement(NavAction, {title: "[a]ccept intercepted flow", icon: "fa-play", onClick: FlowActions.accept.bind(null, flow)})
+        }
+        var revertButton = null;
+        if(flow.modified){
+            revertButton = React.createElement(NavAction, {title: "revert changes to flow [V]", icon: "fa-history", onClick: FlowActions.revert.bind(null, flow)})
+        }
+
         return (
             React.createElement("nav", {ref: "head", className: "nav-tabs nav-tabs-sm"}, 
                 tabs, 
-                React.createElement(DeleteButton, {flow: flow}), 
-                React.createElement(DuplicateButton, {flow: flow}), 
-                React.createElement(ReplayButton, {flow: flow}), 
-                 flow.intercepted ? React.createElement(AcceptButton, {flow: this.props.flow}) : null
+                React.createElement(NavAction, {title: "[d]elete flow", icon: "fa-trash", onClick: FlowActions.delete.bind(null, flow)}), 
+                React.createElement(NavAction, {title: "[D]uplicate flow", icon: "fa-copy", onClick: FlowActions.duplicate.bind(null, flow)}), 
+                React.createElement(NavAction, {disabled: true, title: "[r]eplay flow", icon: "fa-repeat", onClick: FlowActions.replay.bind(null, flow)}), 
+                acceptButton, 
+                revertButton
             )
         );
     }
@@ -3855,13 +3821,18 @@ var MainView = React.createClass({displayName: 'MainView',
             case Key.A:
                 if (e.shiftKey) {
                     FlowActions.accept_all();
-                } else if (flow) {
+                } else if (flow && flow.intercepted) {
                     FlowActions.accept(flow);
                 }
                 break;
             case Key.R:
                 if (!e.shiftKey && flow) {
                     FlowActions.replay(flow);
+                }
+                break;
+            case Key.V:
+                if(e.shiftKey && flow && flow.modified) {
+                    FlowActions.revert(flow);
                 }
                 break;
             default:

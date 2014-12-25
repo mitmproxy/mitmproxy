@@ -150,7 +150,6 @@ class ConnectionItem(common.WWrap):
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
         elif key == "r":
-            self.flow.backup()
             r = self.master.replay_request(self.flow)
             if r:
                 self.master.statusbar.message(r)

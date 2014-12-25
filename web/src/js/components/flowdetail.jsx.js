@@ -1,67 +1,20 @@
-var DeleteButton = React.createClass({
+var NavAction = React.createClass({
     onClick: function (e) {
         e.preventDefault();
-        FlowActions.delete(this.props.flow);
+        this.props.onClick();
     },
     render: function () {
         return (
-            <a title="[d]elete Flow"
+            <a title={this.props.title}
                 href="#"
                 className="nav-action"
                 onClick={this.onClick}>
-                <i className="fa fa-fw fa-trash"></i>
+                <i className={"fa fa-fw " + this.props.icon}></i>
             </a>
         );
     }
 });
-var DuplicateButton = React.createClass({
-    onClick: function (e) {
-        e.preventDefault();
-        FlowActions.duplicate(this.props.flow);
-    },
-    render: function () {
-        return (
-            <a title="[D]uplicate Flow"
-                href="#"
-                className="nav-action"
-                onClick={this.onClick}>
-                <i className="fa fa-fw fa-edit"></i>
-            </a>
-        );
-    }
-});
-var ReplayButton = React.createClass({
-    onClick: function (e) {
-        e.preventDefault();
-        FlowActions.replay(this.props.flow);
-    },
-    render: function () {
-        return (
-            <a title="[r]eplay Flow"
-                href="#"
-                className="nav-action"
-                onClick={this.onClick}>
-                <i className="fa fa-fw fa-close"></i>
-            </a>
-        );
-    }
-});
-var AcceptButton = React.createClass({
-    onClick: function (e) {
-        e.preventDefault();
-        FlowActions.accept(this.props.flow);
-    },
-    render: function () {
-        return (
-            <a title="[a]ccept (resume) Flow"
-                href="#"
-                className="nav-action"
-                onClick={this.onClick}>
-                <i className="fa fa-fw fa-play"></i>
-            </a>
-        );
-    }
-});
+
 var FlowDetailNav = React.createClass({
     render: function () {
         var flow = this.props.flow;
@@ -79,13 +32,23 @@ var FlowDetailNav = React.createClass({
                 onClick={onClick}>{str}</a>;
         }.bind(this));
 
+        var acceptButton = null;
+        if(flow.intercepted){
+            acceptButton = <NavAction title="[a]ccept intercepted flow" icon="fa-play" onClick={FlowActions.accept.bind(null, flow)} />
+        }
+        var revertButton = null;
+        if(flow.modified){
+            revertButton = <NavAction title="revert changes to flow [V]" icon="fa-history" onClick={FlowActions.revert.bind(null, flow)} />
+        }
+
         return (
             <nav ref="head" className="nav-tabs nav-tabs-sm">
                 {tabs}
-                <DeleteButton flow={flow}/>
-                <DuplicateButton flow={flow}/>
-                <ReplayButton flow={flow}/>
-                { flow.intercepted ? <AcceptButton flow={this.props.flow}/> : null }
+                <NavAction title="[d]elete flow" icon="fa-trash" onClick={FlowActions.delete.bind(null, flow)} />
+                <NavAction title="[D]uplicate flow" icon="fa-copy" onClick={FlowActions.duplicate.bind(null, flow)} />
+                <NavAction disabled title="[r]eplay flow" icon="fa-repeat" onClick={FlowActions.replay.bind(null, flow)} />
+                {acceptButton}
+                {revertButton}
             </nav>
         );
     }

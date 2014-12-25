@@ -763,7 +763,6 @@ class FlowView(common.WWrap):
         elif key == "p":
             self.view_prev_flow(self.flow)
         elif key == "r":
-            self.flow.backup()
             r = self.master.replay_request(self.flow)
             if r:
                 self.master.statusbar.message(r)
