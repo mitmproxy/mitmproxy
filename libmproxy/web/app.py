@@ -3,6 +3,7 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
+from .. import version
 
 
 class APIError(tornado.web.HTTPError):
@@ -112,6 +113,7 @@ class Settings(RequestHandler):
     def get(self):
         self.write(dict(
             data=dict(
+                version=version.VERSION,
                 mode=str(self.master.server.config.mode),
                 intercept=self.state.intercept_txt
             )
