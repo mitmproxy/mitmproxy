@@ -40,29 +40,7 @@ def example(s):
 ns.example = example
 
 
-filt_help = []
-for i in filt.filt_unary:
-    filt_help.append(
-        ("~%s"%i.code, i.help)
-    )
-for i in filt.filt_rex:
-    filt_help.append(
-        ("~%s regex"%i.code, i.help)
-    )
-for i in filt.filt_int:
-    filt_help.append(
-        ("~%s int"%i.code, i.help)
-    )
-filt_help.sort()
-filt_help.extend(
-    [
-        ("!", "unary not"),
-        ("&", "and"),
-        ("|", "or"),
-        ("(...)", "grouping"),
-    ]
-)
-ns.filt_help = filt_help
+ns.filt_help = filt.help
 
 
 def nav(page, current, state):

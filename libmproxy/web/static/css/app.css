@@ -138,10 +138,30 @@ header .menu {
   padding: 10px;
   border-bottom: solid #a6a6a6 1px;
 }
+.menu-row {
+  margin-left: -2.5px;
+  margin-right: -2.5px;
+}
+.filter-input {
+  position: relative;
+  min-height: 1px;
+  padding-left: 2.5px;
+  padding-right: 2.5px;
+}
+@media (min-width: 992px) {
+  .filter-input {
+    float: left;
+    width: 25%;
+  }
+}
 .filter-input .popover {
   top: 27px;
   display: block;
-  width: 100%;
+  max-width: none;
+}
+.filter-input .popover .popover-content {
+  max-height: 500px;
+  overflow-y: auto;
 }
 .flow-table {
   width: 100%;

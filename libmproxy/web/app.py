@@ -4,7 +4,7 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
-from .. import version
+from .. import version, filt
 
 
 class APIError(tornado.web.HTTPError):
@@ -51,6 +51,12 @@ class IndexHandler(RequestHandler):
         _ = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         self.render("index.html")
 
+
+class FiltHelp(RequestHandler):
+    def get(self):
+        self.write(dict(
+            commands=filt.help
+        ))
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     connections = None  # raise an error if inherited class doesn't specify its own instance.
@@ -194,6 +200,7 @@ class Application(tornado.web.Application):
         self.master = master
         handlers = [
             (r"/", IndexHandler),
+            (r"/filter-help", FiltHelp),
             (r"/updates", ClientConnection),
             (r"/events", Events),
             (r"/flows", Flows),

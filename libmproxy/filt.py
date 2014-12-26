@@ -351,3 +351,26 @@ def parse(s):
     except ValueError:
         return None
 
+
+help = []
+for i in filt_unary:
+    help.append(
+        ("~%s"%i.code, i.help)
+    )
+for i in filt_rex:
+    help.append(
+        ("~%s regex"%i.code, i.help)
+    )
+for i in filt_int:
+    help.append(
+        ("~%s int"%i.code, i.help)
+    )
+help.sort()
+help.extend(
+    [
+        ("!", "unary not"),
+        ("&", "and"),
+        ("|", "or"),
+        ("(...)", "grouping"),
+    ]
+)

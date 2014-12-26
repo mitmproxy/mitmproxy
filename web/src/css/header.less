@@ -1,21 +1,37 @@
+@import (reference) '../../bower_components/bootstrap/less/variables.less';
+@import (reference) '../../bower_components/bootstrap/less/mixins/grid.less';
+
 header {
-    background-color: white;
+  background-color: white;
 
-    .title-bar {
-        line-height: 25px;
-        text-align: center;
-    }
+  .title-bar {
+    line-height: 25px;
+    text-align: center;
+  }
 
-    @separator-color: lighten(grey, 15%);
+  @separator-color: lighten(grey, 15%);
 
-    .menu {
-        padding: 10px;
-        border-bottom: solid @separator-color 1px;
-    }
+  .menu {
+    padding: 10px;
+    border-bottom: solid @separator-color 1px;
+  }
+}
+
+@menu-row-gutter-width: 5px;
+.menu-row {
+  .make-row(@menu-row-gutter-width);
+}
+
+.filter-input {
+  .make-md-column(3, @menu-row-gutter-width);
 }
 
 .filter-input .popover {
-    top: 27px;
-    display: block;
-    width: 100%;
+  top: 27px;
+  display: block;
+  max-width: none;
+  .popover-content {
+    max-height: 500px;
+    overflow-y: auto;
+  }
 }
