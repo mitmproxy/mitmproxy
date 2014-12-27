@@ -1,3 +1,45 @@
+var FilterDocs = React.createClass({
+    statics: {
+        xhr: false,
+        doc: false
+    },
+    componentWillMount: function () {
+        if (!FilterDocs.doc) {
+            FilterDocs.xhr = $.getJSON("/filter-help").done(function (doc) {
+                FilterDocs.doc = doc;
+                FilterDocs.xhr = false;
+            });
+        }
+        if (FilterDocs.xhr) {
+            FilterDocs.xhr.done(function () {
+                this.forceUpdate();
+            }.bind(this));
+        }
+    },
+    render: function () {
+        if (!FilterDocs.doc) {
+            return <i className="fa fa-spinner fa-spin"></i>;
+        } else {
+            var commands = FilterDocs.doc.commands.map(function (c) {
+                return <tr>
+                    <td>{c[0].replace(" ", '\u00a0')}</td>
+                    <td>{c[1]}</td>
+                </tr>;
+            });
+            commands.push(<tr>
+                <td colSpan="2">
+                    <a href="https://mitmproxy.org/doc/features/filters.html"
+                        target="_blank">
+                        <i className="fa fa-external-link"></i>
+                    &nbsp; mitmproxy docs</a>
+                </td>
+            </tr>);
+            return <table className="table table-condensed">
+                <tbody>{commands}</tbody>
+            </table>;
+        }
+    }
+});
 var FilterInput = React.createClass({
     getInitialState: function () {
         // Consider both focus and mouseover for showing/hiding the tooltip,
@@ -41,10 +83,7 @@ var FilterInput = React.createClass({
             return desc;
         } else {
             return (
-                <a href="https://mitmproxy.org/doc/features/filters.html" target="_blank">
-                    <i className="fa fa-external-link"></i>
-                    Filter Documentation
-                </a>
+                <FilterDocs/>
             );
         }
     },
@@ -134,28 +173,27 @@ var MainMenu = React.createClass({
 
         return (
             <div>
-                <form className="form-inline" style={{display: "inline"}}>
+                <div className="menu-row">
                     <FilterInput
                         placeholder="Filter"
                         type="filter"
                         color="black"
                         value={filter}
                         onChange={this.onFilterChange} />
-                    <span> </span>
                     <FilterInput
                         placeholder="Highlight"
                         type="tag"
                         color="hsl(48, 100%, 50%)"
                         value={highlight}
                         onChange={this.onHighlightChange}/>
-                    <span> </span>
                     <FilterInput
                         placeholder="Intercept"
                         type="pause"
                         color="hsl(208, 56%, 53%)"
                         value={intercept}
                         onChange={this.onInterceptChange}/>
-                </form>
+                </div>
+                <div className="clearfix"></div>
             </div>
         );
     }

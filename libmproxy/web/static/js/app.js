@@ -2632,6 +2632,48 @@ var VirtualScrollMixin = {
         }
     },
 };
+var FilterDocs = React.createClass({displayName: 'FilterDocs',
+    statics: {
+        xhr: false,
+        doc: false
+    },
+    componentWillMount: function () {
+        if (!FilterDocs.doc) {
+            FilterDocs.xhr = $.getJSON("/filter-help").done(function (doc) {
+                FilterDocs.doc = doc;
+                FilterDocs.xhr = false;
+            });
+        }
+        if (FilterDocs.xhr) {
+            FilterDocs.xhr.done(function () {
+                this.forceUpdate();
+            }.bind(this));
+        }
+    },
+    render: function () {
+        if (!FilterDocs.doc) {
+            return React.createElement("i", {className: "fa fa-spinner fa-spin"});
+        } else {
+            var commands = FilterDocs.doc.commands.map(function (c) {
+                return React.createElement("tr", null, 
+                    React.createElement("td", null, c[0].replace(" ", '\u00a0')), 
+                    React.createElement("td", null, c[1])
+                );
+            });
+            commands.push(React.createElement("tr", null, 
+                React.createElement("td", {colSpan: "2"}, 
+                    React.createElement("a", {href: "https://mitmproxy.org/doc/features/filters.html", 
+                        target: "_blank"}, 
+                        React.createElement("i", {className: "fa fa-external-link"}), 
+                    "  mitmproxy docs")
+                )
+            ));
+            return React.createElement("table", {className: "table table-condensed"}, 
+                React.createElement("tbody", null, commands)
+            );
+        }
+    }
+});
 var FilterInput = React.createClass({displayName: 'FilterInput',
     getInitialState: function () {
         // Consider both focus and mouseover for showing/hiding the tooltip,
@@ -2675,10 +2717,7 @@ var FilterInput = React.createClass({displayName: 'FilterInput',
             return desc;
         } else {
             return (
-                React.createElement("a", {href: "https://mitmproxy.org/doc/features/filters.html", target: "_blank"}, 
-                    React.createElement("i", {className: "fa fa-external-link"}), 
-                    "Filter Documentation"
-                )
+                React.createElement(FilterDocs, null)
             );
         }
     },
@@ -2768,28 +2807,27 @@ var MainMenu = React.createClass({displayName: 'MainMenu',
 
         return (
             React.createElement("div", null, 
-                React.createElement("form", {className: "form-inline", style: {display: "inline"}}, 
+                React.createElement("div", {className: "menu-row"}, 
                     React.createElement(FilterInput, {
                         placeholder: "Filter", 
                         type: "filter", 
                         color: "black", 
                         value: filter, 
                         onChange: this.onFilterChange}), 
-                    React.createElement("span", null, " "), 
                     React.createElement(FilterInput, {
                         placeholder: "Highlight", 
                         type: "tag", 
                         color: "hsl(48, 100%, 50%)", 
                         value: highlight, 
                         onChange: this.onHighlightChange}), 
-                    React.createElement("span", null, " "), 
                     React.createElement(FilterInput, {
                         placeholder: "Intercept", 
                         type: "pause", 
                         color: "hsl(208, 56%, 53%)", 
                         value: intercept, 
                         onChange: this.onInterceptChange})
-                )
+                ), 
+                React.createElement("div", {className: "clearfix"})
             )
         );
     }
