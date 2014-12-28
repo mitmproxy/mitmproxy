@@ -4,10 +4,13 @@ import datetime
 import countershape
 from countershape import Page, Directory, markup, model
 import countershape.template
-sys.path.insert(0, "..")
+
+MITMPROXY_SRC = os.path.abspath(
+    os.path.expanduser(os.environ.get("MITMPROXY_SRC", ".."))
+)
+sys.path.insert(0, MITMPROXY_SRC)
 from libmproxy import filt, version
 
-MITMPROXY_SRC = os.environ.get("MITMPROXY_SRC", os.path.abspath(".."))
 ns.VERSION = version.VERSION
 
 if ns.options.website:
