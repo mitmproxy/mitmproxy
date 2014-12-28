@@ -6,3 +6,5 @@ recursive-include doc *
 recursive-include test *
 recursive-include libmproxy *
 recursive-exclude * *.pyc *.pyo *.swo *.swp
+recursive-exclude netlib *
+recursive-exclude libpathod *
