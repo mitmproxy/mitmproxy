@@ -11,9 +11,6 @@
 - Run the test release, make sure the output is sensible
     ./release/test-release
 
-- Build sdist packages:
-    python ./setup.py sdist
-
 - Build the OSX binaries
     - Follow instructions in osxbinaries
     - Move to download dir:
@@ -23,7 +20,8 @@
     python ./setup.py sdist
     mv ./dist/FILE ~/mitmproxy/www.mitmproxy.org/src/download
 
-- Adjust links on www.mitmproxy.org
+- Tag with the version number, and do: 
+    git push --tags
 
 - Upload to pypi for each project:
 
@@ -34,4 +32,3 @@
     mitmproxy/libmproxy/version.py
     netlib/netlib/version.py
     pathod/libpathod/version.py
-

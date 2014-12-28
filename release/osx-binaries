@@ -46,4 +46,4 @@ cp ./dist/mitmdump $TMPDIR/$DST
 cshape ./doc-src $TMPDIR/$DST/doc
 
 cd $TMPDIR
-tar -czvf $DST.tgz $DST
+tar -czvf $DST.tar.gz $DST
