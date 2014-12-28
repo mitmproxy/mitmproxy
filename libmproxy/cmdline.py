@@ -197,7 +197,8 @@ def common_options(parser):
     parser.add_argument(
         '--shortversion',
         action= 'version',
-        version= version.VERSION
+        help = "show program's short version number and exit",
+        version = version.VERSION
     )
     parser.add_argument(
         "--anticache",
