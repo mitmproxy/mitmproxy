@@ -13,19 +13,28 @@
 # To run, first install netlib and mitmproxy, then change into the pyinstaller
 # directory, and then run this script.
 
-DST=/tmp/osx-mitmproxy
+TMPDIR=/tmp
+DST=$TMPDIR/osx-mitmproxy
 MITMPROXY=~/mitmproxy/mitmproxy
 PYINST_CMD="./pyinstaller.py -F --clean"
 
-rm -rf $DST
+rm -rf $TMPDIR/osx-mitmproxy*
 mkdir -p $DST
 rm -rf mitmproxy
 rm -rf mitmdump
 
 $PYINST_CMD $MITMPROXY/mitmproxy
+$MITMPROXY/mitmproxy --version || exit 1
 cp mitmproxy/dist/mitmproxy $DST
 
 $PYINST_CMD $MITMPROXY/mitmdump
+$MITMPROXY/mitmdump --version || exit 1
 cp mitmdump/dist/mitmdump $DST
 
 cshape $MITMPROXY/doc-src $DST/doc
+
+VBASE=osx-mitmproxy-`$MITMPROXY/mitmdump --shortversion 2>&1`
+mv $DST $TMPDIR/$VBASE
+TGZDST=$TMPDIR/$VBASE.tgz
+cd $TMPDIR
+tar -czvf $VBASE.tgz $VBASE

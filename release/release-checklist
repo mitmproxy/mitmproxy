@@ -31,7 +31,6 @@
     python ./setup.py sdist
     mv ./dist/FILE ~/mitmproxy/www.mitmproxy.org/src/download
 
-
 - Adjust links on www.mitmproxy.org
 
 - Upload to pypi for each project:
