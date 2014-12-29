@@ -332,6 +332,10 @@ class ConsoleState(flow.State):
         self.set_focus(self.focus)
         return ret
 
+    def clear(self):
+        self.focus = None
+        super(ConsoleState, self).clear()
+
 
 
 class Options(object):
