@@ -432,20 +432,20 @@ class ConsoleMaster(flow.FlowMaster):
                     print >> sys.stderr, "Script load error:", err
                     sys.exit(1)
 
-        if options.wfile:
-            err = self.start_stream(options.wfile)
+        if options.outfile:
+            err = self.start_stream_to_path(options.outfile[0], options.outfile[1])
             if err:
-                print >> sys.stderr, "Script load error:", err
+                print >> sys.stderr, "Stream file error:", err
                 sys.exit(1)
 
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
 
-    def start_stream(self, path):
+    def start_stream_to_path(self, path, mode="wb"):
         path = os.path.expanduser(path)
         try:
-            f = file(path, "wb")
-            flow.FlowMaster.start_stream(self, f, None)
+            f = file(path, mode)
+            self.start_stream(f, None)
         except IOError, v:
             return str(v)
         self.stream_path = path

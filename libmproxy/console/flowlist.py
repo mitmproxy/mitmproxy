@@ -263,7 +263,7 @@ class FlowListBox(urwid.ListBox):
                 self.master.path_prompt(
                     "Stream flows to: ",
                     self.master.state.last_saveload,
-                    self.master.start_stream
+                    self.master.start_stream_to_path
                 )
         else:
             return urwid.ListBox.keypress(self, size, key)
