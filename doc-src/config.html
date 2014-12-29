@@ -1,0 +1,86 @@
+
+
+Mitmproxy is configured through a set of files in the users ~/.mitmproxy
+directory. 
+
+<table class="table">
+	<tbody>
+		<tr>
+			<th>mitmproxy.conf</th> 
+			<td>Settings for the <b>mitmproxy</b>. This file can contain any options supported by mitmproxy.</td>
+		</tr>
+		<tr>
+			<th>mitmdump.conf</th> 
+			<td>Settings for the <b>mitmdump</b>. This file can contain any options supported by mitmdump.</td>
+		</tr>
+		<tr>
+			<th>common.conf</th>
+
+			<td>Settings shared between all command-line tools. Settings in
+			this file are over-ridden by those in the tool-specific
+			files. Only options shared by mitmproxy and mitmdump should be used in this file. </td>
+		</tr>
+	</tbody>
+</table>
+
+# Syntax
+
+## Comments
+
+<pre>
+# this is a comment
+; this is also a comment (.ini style)
+--- and this is a comment too (yaml style)
+</pre>
+
+## Key/Value pairs
+
+- Keys and values are case-sensitive
+- Whitespace is ignored
+- Lists are comma-delimited, and enclosed in square brackets
+
+<pre>
+name = value   # (.ini style) 
+name: value    # (yaml style)
+--name value   # (command-line option style)
+
+fruit = [apple, orange, lemon]
+indexes = [1, 12, 35 , 40]
+</pre>
+
+## Flags
+
+These are boolean options that take no value but true/false.
+
+<pre>
+name = true    # (.ini style)
+name
+--name 	 	   # (command-line option style)
+</pre>
+
+# Options
+
+The options available in the config files are precisely those available as
+command-line flags, with the key being the option's long name. To get a
+complete list of these, use the __--help__ option on each of the tools. Be
+careful to only specify common options in the __common.conf__ file -
+unsupported options in this file will be detected as an error on startup.
+
+# Examples
+
+## common.conf
+
+Note that __port__ is an option supported by all tools. 
+
+<pre class="code">
+port = 8080
+</pre>
+
+
+## mitmproxy.conf
+
+<pre class="code">
+palette = light
+</pre>
+
+

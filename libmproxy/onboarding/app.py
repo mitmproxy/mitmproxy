@@ -1,29 +1,80 @@
 from __future__ import absolute_import
-import flask
 import os
+import tornado.web
+import tornado.wsgi
+import tornado.template
+
+from .. import utils
 from ..proxy import config
 
-mapp = flask.Flask(__name__)
-mapp.debug = True
+
+loader = tornado.template.Loader(utils.pkg_data.path("onboarding/templates"))
 
 
-def master():
-    return flask.request.environ["mitmproxy.master"]
+class Adapter(tornado.wsgi.WSGIAdapter):
+    # Tornado doesn't make the WSGI environment available to pages, so this
+    # hideous monkey patch is the easiest way to get to the mitmproxy.master
+    # variable.
+    def __init__(self, application):
+        self._application = application
+
+    def application(self, request):
+        request.master = self.environ["mitmproxy.master"]
+        return self._application(request)
+
+    def __call__(self, environ, start_response):
+        self.environ = environ
+        return tornado.wsgi.WSGIAdapter.__call__(
+            self,
+            environ,
+            start_response
+        )
 
 
-@mapp.route("/")
-def index():
-    return flask.render_template("index.html", section="home")
+class Index(tornado.web.RequestHandler):
+    def get(self):
+        t = loader.load("index.html")
+        self.write(t.generate())
 
 
-@mapp.route("/cert/pem")
-def certs_pem():
-    p = os.path.join(master().server.config.cadir, config.CONF_BASENAME + "-ca-cert.pem")
-    return flask.Response(open(p, "rb").read(), mimetype='application/x-x509-ca-cert')
+class PEM(tornado.web.RequestHandler):
+    def get(self):
+        p = os.path.join(
+            self.request.master.server.config.cadir,
+            config.CONF_BASENAME + "-ca-cert.pem"
+        )
+        self.set_header(
+            "Content-Type", "application/x-x509-ca-cert"
+        )
+        self.write(open(p, "rb").read())
 
 
-@mapp.route("/cert/p12")
-def certs_p12():
-    p = os.path.join(master().server.config.cadir, config.CONF_BASENAME + "-ca-cert.p12")
-    return flask.Response(open(p, "rb").read(), mimetype='application/x-pkcs12')
+class P12(tornado.web.RequestHandler):
+    def get(self):
+        p = os.path.join(
+            self.request.master.server.config.cadir,
+            config.CONF_BASENAME + "-ca-cert.p12"
+        )
+        self.set_header(
+            "Content-Type", "application/x-pkcs12"
+        )
+        self.write(open(p, "rb").read())
+
+
+application = tornado.web.Application(
+    [
+        (r"/", Index),
+        (r"/cert/pem", PEM),
+        (r"/cert/p12", P12),
+        (
+            r"/static/(.*)",
+            tornado.web.StaticFileHandler,
+            {
+                "path": utils.pkg_data.path("onboarding/static")
+            }
+        ),
+    ],
+    #debug=True
+)
+mapp = Adapter(application)
 

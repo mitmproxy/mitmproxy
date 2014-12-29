@@ -19,7 +19,6 @@ deps = {
     "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "pyasn1>0.1.2",
     "pyOpenSSL>=0.14",
-    "Flask>=0.10.1",
     "tornado>=4.0.2",
     "configargparse>=0.9.3"
 }

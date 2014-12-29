@@ -1,5 +1,5 @@
 
-- Bump the version number: 
+- Check the version number:
 
     mitmproxy/libmproxy/version.py
     netlib/netlib/version.py
@@ -11,30 +11,24 @@
 - Run the test release, make sure the output is sensible
     ./release/test-release
 
-- Build sdist packages:
-    python ./setup.py sdist
-
-- Test the packages by installing in a virtualenv:
-    - cd dist
-    - tar -xzvf pkgfile.tgz
-    - virtualenv venv
-
 - Build the OSX binaries
     - Follow instructions in osxbinaries
-    - Package:
-        cp -r ./doc /tmp/osx-mitmproxy/
-        mv /tmp/osx-mitmproxy /tmp/osx-mitmproxy-VERSION
-        tar -czvf /tmp/osx-mitmproxy-VERSION.tar.gz /tmp/osx-mitmproxy-VERSION
-        mv /tmp/osx-mitmproxy-VERSION.tar.gz ~/mitmproxy/www.mitmproxy.org/src/download
+    - Move to download dir:
+        mv ./tmp/osx-mitmproxy-VERSION.tar.gz ~/mitmproxy/www.mitmproxy.org/src/download
 
 - Build the sources for each project:
     python ./setup.py sdist
     mv ./dist/FILE ~/mitmproxy/www.mitmproxy.org/src/download
 
-
-- Adjust links on www.mitmproxy.org
+- Tag with the version number, and do: 
+    git push --tags
 
 - Upload to pypi for each project:
 
     python ./setup.py sdist upload
 
+- Now bump the version number to be ready for the next cycle: 
+
+    mitmproxy/libmproxy/version.py
+    netlib/netlib/version.py
+    pathod/libpathod/version.py

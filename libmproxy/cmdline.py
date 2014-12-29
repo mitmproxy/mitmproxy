@@ -195,6 +195,12 @@ def common_options(parser):
         version= "%(prog)s" + " " + version.VERSION
     )
     parser.add_argument(
+        '--shortversion',
+        action= 'version',
+        help = "show program's short version number and exit",
+        version = version.VERSION
+    )
+    parser.add_argument(
         "--anticache",
         action="store_true", dest="anticache", default=False,
 
@@ -451,9 +457,9 @@ def common_options(parser):
         "--replay-ignore-payload-param",
         action="append", dest="replay_ignore_payload_params", type=str,
         help="""
-            Request's payload parameters (application/x-www-form-urlencoded) to 
-            be ignored while searching for a saved flow to replay. 
-            Can be passed multiple times. 
+            Request's payload parameters (application/x-www-form-urlencoded) to
+            be ignored while searching for a saved flow to replay.
+            Can be passed multiple times.
         """
     )
 

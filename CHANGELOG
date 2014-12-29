@@ -1,3 +1,10 @@
+29 Dec 2014: mitmproxy 0.11.2:
+
+    * Configuration files - mitmproxy.conf, mitmdump.conf, common.conf in the
+      .mitmproxy directory.
+    * Better handling of servers that reject connections that are not SNI.
+    * Many other small bugfixes and improvements.
+
 
 15 November 2014: mitmproxy 0.11.1:
 
