@@ -1,4 +1,4 @@
-IVERSION = (0, 11, 2)
+IVERSION = (0, 11, 3)
 VERSION = ".".join(str(i) for i in IVERSION)
 MINORVERSION = ".".join(str(i) for i in IVERSION[:2])
 NAME = "mitmproxy"
