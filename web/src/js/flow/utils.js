@@ -1,3 +1,5 @@
+var _ = require("lodash");
+
 var _MessageUtils = {
     getContentType: function (message) {
         return this.get_first_header(message, /^Content-Type$/i);
@@ -55,3 +57,8 @@ var RequestUtils = _.extend(_MessageUtils, {
 });
 
 var ResponseUtils = _.extend(_MessageUtils, {});
+
+
+module.exports = {
+    ResponseUtils: ResponseUtils
+}

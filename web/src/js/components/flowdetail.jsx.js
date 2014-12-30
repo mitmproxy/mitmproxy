@@ -34,11 +34,11 @@ var FlowDetailNav = React.createClass({
 
         var acceptButton = null;
         if(flow.intercepted){
-            acceptButton = <NavAction title="[a]ccept intercepted flow" icon="fa-play" onClick={FlowActions.accept.bind(null, flow)} />
+            acceptButton = <NavAction title="[a]ccept intercepted flow" icon="fa-play" onClick={FlowActions.accept.bind(null, flow)} />;
         }
         var revertButton = null;
         if(flow.modified){
-            revertButton = <NavAction title="revert changes to flow [V]" icon="fa-history" onClick={FlowActions.revert.bind(null, flow)} />
+            revertButton = <NavAction title="revert changes to flow [V]" icon="fa-history" onClick={FlowActions.revert.bind(null, flow)} />;
         }
 
         return (

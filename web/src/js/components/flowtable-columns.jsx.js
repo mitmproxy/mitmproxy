@@ -1,3 +1,7 @@
+var React = require("react");
+var flowutils = require("../flow/utils.js");
+var utils = require("../utils.js");
+
 var TLSColumn = React.createClass({
     statics: {
         renderTitle: function () {
@@ -29,7 +33,7 @@ var IconColumn = React.createClass({
 
         var icon;
         if (flow.response) {
-            var contentType = ResponseUtils.getContentType(flow.response);
+            var contentType = flowutils.ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
             if (flow.response.code == 304) {
@@ -120,7 +124,7 @@ var SizeColumn = React.createClass({
         if (flow.response) {
             total += flow.response.contentLength || 0;
         }
-        var size = formatSize(total);
+        var size = utils.formatSize(total);
         return <td className="col-size">{size}</td>;
     }
 });
@@ -136,7 +140,7 @@ var TimeColumn = React.createClass({
         var flow = this.props.flow;
         var time;
         if (flow.response) {
-            time = formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
+            time = utils.formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start));
         } else {
             time = "...";
         }
@@ -153,4 +157,8 @@ var all_columns = [
     StatusColumn,
     SizeColumn,
     TimeColumn];
+
+
+module.exports = all_columns;
+
 

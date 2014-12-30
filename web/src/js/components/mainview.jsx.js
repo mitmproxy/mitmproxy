@@ -1,5 +1,13 @@
+var React = require("react");
+
+var utils = require("./utils.jsx.js");
+var views = require("../store/view.js");
+var Filt = require("../filt/filt.js");
+FlowTable = require("./flowtable.jsx.js");
+
+
 var MainView = React.createClass({
-    mixins: [Navigation, State],
+    mixins: [utils.Navigation, utils.State],
     getInitialState: function () {
         this.onQueryChange(Query.FILTER, function () {
             this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
@@ -37,7 +45,7 @@ var MainView = React.createClass({
         }
     },
     openView: function (store) {
-        var view = new StoreView(store, this.getViewFilt(), this.getViewSort());
+        var view = new views.StoreView(store, this.getViewFilt(), this.getViewSort());
         this.setState({
             view: view
         });
@@ -218,3 +226,5 @@ var MainView = React.createClass({
         );
     }
 });
+
+module.exports = MainView;

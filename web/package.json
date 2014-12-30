@@ -1,28 +1,43 @@
 {
   "name": "mitmproxy",
   "private": true,
+  "dependencies": {
+        "jquery": "",
+        "lodash": "",
+        "react": "",
+        "react-router": "",
+        "bootstrap": ""
+  },
   "devDependencies": {
     "bower": "",
-    "bower-installer": "",
-    "clean-css": "",
+    "browserify": "^6.3.4",
     "gulp": "",
     "gulp-concat": "",
+    "gulp-connect": "",
     "gulp-jshint": "",
     "gulp-less": "",
     "gulp-livereload": "",
     "gulp-minify-css": "",
     "gulp-notify": "",
-    "gulp-peg": "",
     "gulp-plumber": "",
-    "gulp-qunit": "",
     "gulp-react": "",
     "gulp-rename": "",
+    "gulp-replace": "",
+    "gulp-rev": "",
     "gulp-sourcemaps": "",
     "gulp-uglify": "",
     "gulp-util": "",
+    "jest-cli": "^0.1.18",
     "jshint-stylish": "",
-    "merge-stream": "",
+    "lodash": "",
+    "map-stream": "",
     "react": "",
-    "react-tools": ""
+    "react-tools": "",
+    "reactify": "",
+    "vinyl-buffer": "",
+    "vinyl-source-stream": "",
+    "vinyl-transform": "",
+
+    "gulp-peg": ""
   }
 }

@@ -1,3 +1,6 @@
+var $ = require("jquery");
+
+
 var Key = {
     UP: 38,
     DOWN: 40,
@@ -88,7 +91,7 @@ function getCookie(name) {
 var xsrf = $.param({_xsrf: getCookie("_xsrf")});
 
 //Tornado XSRF Protection.
-jQuery.ajaxPrefilter(function (options) {
+$.ajaxPrefilter(function (options) {
     if (["post", "put", "delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
         if (options.data) {
             options.data += ("&" + xsrf);
@@ -104,3 +107,10 @@ $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
     EventLogActions.add_event(thrownError + ": " + message);
     window.alert(message);
 });
+
+module.exports = {
+    EventEmitter: EventEmitter,
+    formatSize: formatSize,
+    formatTimeDelta: formatTimeDelta,
+    formatTimeStamp: formatTimeStamp
+};

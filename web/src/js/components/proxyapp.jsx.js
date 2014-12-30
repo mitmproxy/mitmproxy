@@ -1,3 +1,14 @@
+var React = require("react");
+var ReactRouter = require("react-router");
+var _ = require("lodash");
+
+var utils = require("./utils.jsx.js");
+var MainView = require("./mainview.jsx.js");
+var Footer = require("./footer.jsx.js");
+var header = require("./header.jsx.js");
+var store = require("../store/store.js");
+
+
 //TODO: Move out of here, just a stub.
 var Reports = React.createClass({
     render: function () {
@@ -7,11 +18,11 @@ var Reports = React.createClass({
 
 
 var ProxyAppMain = React.createClass({
-    mixins: [State],
+    mixins: [utils.State],
     getInitialState: function () {
-        var eventStore = new EventLogStore();
-        var flowStore = new FlowStore();
-        var settings = new SettingsStore();
+        var eventStore = new store.EventLogStore();
+        var flowStore = new store.FlowStore();
+        var settings = new store.SettingsStore();
 
         // Default Settings before fetch
         _.extend(settings.dict,{
@@ -48,7 +59,7 @@ var ProxyAppMain = React.createClass({
 
         return (
             <div id="container">
-                <Header settings={this.state.settings.dict}/>
+                <header.Header settings={this.state.settings.dict}/>
                 <RouteHandler settings={this.state.settings.dict} flowStore={this.state.flowStore}/>
                 {eventlog}
                 <Footer settings={this.state.settings.dict}/>
@@ -73,3 +84,8 @@ var routes = (
         <Redirect path="/" to="flows" />
     </Route>
 );
+
+module.exports = {
+    routes: routes
+};
+

@@ -1,3 +1,8 @@
+var React = require("react");
+var $ = require("jquery");
+
+var utils = require("./utils.jsx.js");
+
 var FilterDocs = React.createClass({
     statics: {
         xhr: false,
@@ -148,7 +153,7 @@ var FilterInput = React.createClass({
 });
 
 var MainMenu = React.createClass({
-    mixins: [Navigation, State],
+    mixins: [utils.Navigation, utils.State],
     statics: {
         title: "Start",
         route: "flows"
@@ -205,7 +210,7 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    mixins: [Navigation, State],
+    mixins: [utils.Navigation, utils.State],
     toggleEventLog: function () {
         var d = {};
 
@@ -334,7 +339,7 @@ var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
 
 
 var Header = React.createClass({
-    mixins: [Navigation],
+    mixins: [utils.Navigation],
     getInitialState: function () {
         return {
             active: header_entries[0]
@@ -377,3 +382,8 @@ var Header = React.createClass({
         );
     }
 });
+
+
+module.exports = {
+    Header: Header
+}

@@ -109,3 +109,9 @@ Query = {
     HIGHLIGHT: "h",
     SHOW_EVENTLOG: "e"
 };
+
+module.exports = {
+    ActionTypes: ActionTypes,
+    ConnectionActions: ConnectionActions
+
+};

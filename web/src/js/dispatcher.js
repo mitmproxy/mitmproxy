@@ -33,3 +33,7 @@ AppDispatcher.dispatchServerAction = function (action) {
     action.source = PayloadSources.SERVER;
     this.dispatch(action);
 };
+
+module.exports = {
+    AppDispatcher: AppDispatcher
+};

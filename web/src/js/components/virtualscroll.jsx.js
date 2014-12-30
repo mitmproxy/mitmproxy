@@ -1,3 +1,5 @@
+var React = require("react");
+
 var VirtualScrollMixin = {
     getInitialState: function () {
         return {
@@ -79,3 +81,5 @@ var VirtualScrollMixin = {
         }
     },
 };
+
+module.exports  = VirtualScrollMixin;

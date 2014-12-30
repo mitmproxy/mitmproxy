@@ -1,3 +1,7 @@
+var React = require("react");
+var ReactRouter = require("react-router");
+var _ = require("lodash");
+
 //React utils. For other utilities, see ../utils.js
 
 // http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html (also contains inverse example)
@@ -182,3 +186,11 @@ var Splitter = React.createClass({
         );
     }
 });
+
+module.exports = {
+    State: State,
+    Navigation: Navigation,
+    StickyHeadMixin: StickyHeadMixin,
+    AutoScrollMixin: AutoScrollMixin,
+    Splitter: Splitter
+}
