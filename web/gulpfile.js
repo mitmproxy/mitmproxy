@@ -54,8 +54,7 @@ var CONF = {
         app: ["src/css/app.less"]
     },
     copy: [
-        "src/examples/**",
-        "src/fonts/**",
+        "src/images/**",
     ],
     templates: [
         "src/templates/*"
