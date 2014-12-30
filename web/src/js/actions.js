@@ -112,6 +112,9 @@ Query = {
 
 module.exports = {
     ActionTypes: ActionTypes,
-    ConnectionActions: ConnectionActions
+    ConnectionActions: ConnectionActions,
+    FlowActions: FlowActions,
+    StoreCmds: StoreCmds
+
 
 };

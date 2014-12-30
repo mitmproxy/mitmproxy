@@ -60,5 +60,7 @@ var ResponseUtils = _.extend(_MessageUtils, {});
 
 
 module.exports = {
-    ResponseUtils: ResponseUtils
+    ResponseUtils: ResponseUtils,
+    RequestUtils: RequestUtils
+
 }

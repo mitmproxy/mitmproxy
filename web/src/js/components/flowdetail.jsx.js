@@ -1,3 +1,11 @@
+var React = require("react");
+var _ = require("lodash");
+
+var utils = require("./utils.jsx.js");
+var actions = require("../actions.js");
+var flowutils = require("../flow/utils.js");
+var toputils = require("../utils.js");
+
 var NavAction = React.createClass({
     onClick: function (e) {
         e.preventDefault();
@@ -34,19 +42,19 @@ var FlowDetailNav = React.createClass({
 
         var acceptButton = null;
         if(flow.intercepted){
-            acceptButton = <NavAction title="[a]ccept intercepted flow" icon="fa-play" onClick={FlowActions.accept.bind(null, flow)} />;
+            acceptButton = <NavAction title="[a]ccept intercepted flow" icon="fa-play" onClick={actions.FlowActions.accept.bind(null, flow)} />;
         }
         var revertButton = null;
         if(flow.modified){
-            revertButton = <NavAction title="revert changes to flow [V]" icon="fa-history" onClick={FlowActions.revert.bind(null, flow)} />;
+            revertButton = <NavAction title="revert changes to flow [V]" icon="fa-history" onClick={actions.FlowActions.revert.bind(null, flow)} />;
         }
 
         return (
             <nav ref="head" className="nav-tabs nav-tabs-sm">
                 {tabs}
-                <NavAction title="[d]elete flow" icon="fa-trash" onClick={FlowActions.delete.bind(null, flow)} />
-                <NavAction title="[D]uplicate flow" icon="fa-copy" onClick={FlowActions.duplicate.bind(null, flow)} />
-                <NavAction disabled title="[r]eplay flow" icon="fa-repeat" onClick={FlowActions.replay.bind(null, flow)} />
+                <NavAction title="[d]elete flow" icon="fa-trash" onClick={actions.FlowActions.delete.bind(null, flow)} />
+                <NavAction title="[D]uplicate flow" icon="fa-copy" onClick={actions.FlowActions.duplicate.bind(null, flow)} />
+                <NavAction disabled title="[r]eplay flow" icon="fa-repeat" onClick={actions.FlowActions.replay.bind(null, flow)} />
                 {acceptButton}
                 {revertButton}
             </nav>
@@ -79,12 +87,12 @@ var FlowDetailRequest = React.createClass({
         var flow = this.props.flow;
         var first_line = [
             flow.request.method,
-            RequestUtils.pretty_url(flow.request),
+            flowutils.RequestUtils.pretty_url(flow.request),
             "HTTP/" + flow.request.httpversion.join(".")
         ].join(" ");
         var content = null;
         if (flow.request.contentLength > 0) {
-            content = "Request Content Size: " + formatSize(flow.request.contentLength);
+            content = "Request Content Size: " + toputils.formatSize(flow.request.contentLength);
         } else {
             content = <div className="alert alert-info">No Content</div>;
         }
@@ -112,7 +120,7 @@ var FlowDetailResponse = React.createClass({
         ].join(" ");
         var content = null;
         if (flow.response.contentLength > 0) {
-            content = "Response Content Size: " + formatSize(flow.response.contentLength);
+            content = "Response Content Size: " + toputils.formatSize(flow.response.contentLength);
         } else {
             content = <div className="alert alert-info">No Content</div>;
         }
@@ -138,7 +146,7 @@ var FlowDetailError = React.createClass({
                 <div className="alert alert-warning">
                 {flow.error.msg}
                     <div>
-                        <small>{ formatTimeStamp(flow.error.timestamp) }</small>
+                        <small>{ toputils.formatTimeStamp(flow.error.timestamp) }</small>
                     </div>
                 </div>
             </section>
@@ -154,11 +162,11 @@ var TimeStamp = React.createClass({
             return <tr></tr>;
         }
 
-        var ts = formatTimeStamp(this.props.t);
+        var ts = toputils.formatTimeStamp(this.props.t);
 
         var delta;
         if (this.props.deltaTo) {
-            delta = formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
+            delta = toputils.formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
             delta = <span className="text-muted">{"(" + delta + ")"}</span>;
         } else {
             delta = null;
@@ -329,7 +337,7 @@ var allTabs = {
 };
 
 var FlowDetail = React.createClass({
-    mixins: [StickyHeadMixin, Navigation, State],
+    mixins: [utils.StickyHeadMixin, utils.Navigation, utils.State],
     getTabs: function (flow) {
         var tabs = [];
         ["request", "response", "error"].forEach(function (e) {
@@ -385,3 +393,7 @@ var FlowDetail = React.createClass({
         );
     }
 });
+
+module.exports = {
+    FlowDetail: FlowDetail
+};

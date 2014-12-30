@@ -4,6 +4,7 @@ var utils = require("./utils.jsx.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
 FlowTable = require("./flowtable.jsx.js");
+var flowdetail = require("./flowdetail.jsx.js");
 
 
 var MainView = React.createClass({
@@ -208,8 +209,8 @@ var MainView = React.createClass({
         var details;
         if (selected) {
             details = [
-                <Splitter key="splitter"/>,
-                <FlowDetail key="flowDetails" ref="flowDetails" flow={selected}/>
+                <utils.Splitter key="splitter"/>,
+                <flowdetail.FlowDetail key="flowDetails" ref="flowDetails" flow={selected}/>
             ];
         } else {
             details = null;

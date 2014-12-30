@@ -91,7 +91,7 @@ _.extend(LiveStoreMixin.prototype, {
             return this.fetch();
         }
         if (event.type === this.type) {
-            if (event.cmd === StoreCmds.RESET) {
+            if (event.cmd === actions.StoreCmds.RESET) {
                 this.fetch(event.data);
             } else if (this._updates_before_fetch) {
                 console.log("defer update", event);
