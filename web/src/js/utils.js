@@ -112,5 +112,6 @@ module.exports = {
     EventEmitter: EventEmitter,
     formatSize: formatSize,
     formatTimeDelta: formatTimeDelta,
-    formatTimeStamp: formatTimeStamp
+    formatTimeStamp: formatTimeStamp,
+    Key: Key
 };

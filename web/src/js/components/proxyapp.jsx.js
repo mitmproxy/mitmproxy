@@ -6,6 +6,7 @@ var utils = require("./utils.jsx.js");
 var MainView = require("./mainview.jsx.js");
 var Footer = require("./footer.jsx.js");
 var header = require("./header.jsx.js");
+var EventLog = require("./eventlog.jsx.js");
 var store = require("../store/store.js");
 
 
@@ -50,7 +51,7 @@ var ProxyAppMain = React.createClass({
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
-                <Splitter key="splitter" axis="y"/>,
+                <utils.Splitter key="splitter" axis="y"/>,
                 <EventLog key="eventlog" eventStore={this.state.eventStore}/>
             ];
         } else {

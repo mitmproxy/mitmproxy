@@ -1,3 +1,8 @@
+var React = require("react");
+var utils = require("./utils.jsx.js");
+var VirtualScrollMixin = require("./virtualscroll.jsx.js");
+var views = require("../store/view.js");
+
 var LogMessage = React.createClass({
     render: function () {
         var entry = this.props.entry;
@@ -24,7 +29,7 @@ var LogMessage = React.createClass({
 });
 
 var EventLogContents = React.createClass({
-    mixins: [AutoScrollMixin, VirtualScrollMixin],
+    mixins: [utils.AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             log: []
@@ -37,7 +42,7 @@ var EventLogContents = React.createClass({
         this.closeView();
     },
     openView: function (store) {
-        var view = new StoreView(store, function (entry) {
+        var view = new views.StoreView(store, function (entry) {
             return this.props.filter[entry.level];
         }.bind(this));
         this.setState({
@@ -146,3 +151,5 @@ var EventLog = React.createClass({
         );
     }
 });
+
+module.exports = EventLog;

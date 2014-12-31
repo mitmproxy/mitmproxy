@@ -1,6 +1,7 @@
 var React = require("react");
 
 var utils = require("./utils.jsx.js");
+var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
 FlowTable = require("./flowtable.jsx.js");
@@ -126,49 +127,49 @@ var MainView = React.createClass({
             return;
         }
         switch (e.keyCode) {
-            case Key.K:
-            case Key.UP:
+            case toputils.Key.K:
+            case toputils.Key.UP:
                 this.selectFlowRelative(-1);
                 break;
-            case Key.J:
-            case Key.DOWN:
+            case toputils.Key.J:
+            case toputils.Key.DOWN:
                 this.selectFlowRelative(+1);
                 break;
-            case Key.SPACE:
-            case Key.PAGE_DOWN:
+            case toputils.Key.SPACE:
+            case toputils.Key.PAGE_DOWN:
                 this.selectFlowRelative(+10);
                 break;
-            case Key.PAGE_UP:
+            case toputils.Key.PAGE_UP:
                 this.selectFlowRelative(-10);
                 break;
-            case Key.END:
+            case toputils.Key.END:
                 this.selectFlowRelative(+1e10);
                 break;
-            case Key.HOME:
+            case toputils.Key.HOME:
                 this.selectFlowRelative(-1e10);
                 break;
-            case Key.ESC:
+            case toputils.Key.ESC:
                 this.selectFlow(null);
                 break;
-            case Key.H:
-            case Key.LEFT:
+            case toputils.Key.H:
+            case toputils.Key.LEFT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
-            case Key.L:
-            case Key.TAB:
-            case Key.RIGHT:
+            case toputils.Key.L:
+            case toputils.Key.TAB:
+            case toputils.Key.RIGHT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
-            case Key.C:
+            case toputils.Key.C:
                 if (e.shiftKey) {
                     FlowActions.clear();
                 }
                 break;
-            case Key.D:
+            case toputils.Key.D:
                 if (flow) {
                     if (e.shiftKey) {
                         FlowActions.duplicate(flow);
@@ -177,19 +178,19 @@ var MainView = React.createClass({
                     }
                 }
                 break;
-            case Key.A:
+            case toputils.Key.A:
                 if (e.shiftKey) {
                     FlowActions.accept_all();
                 } else if (flow && flow.intercepted) {
                     FlowActions.accept(flow);
                 }
                 break;
-            case Key.R:
+            case toputils.Key.R:
                 if (!e.shiftKey && flow) {
                     FlowActions.replay(flow);
                 }
                 break;
-            case Key.V:
+            case toputils.Key.V:
                 if(e.shiftKey && flow && flow.modified) {
                     FlowActions.revert(flow);
                 }
