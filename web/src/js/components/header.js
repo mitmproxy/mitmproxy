@@ -292,7 +292,7 @@ var FileMenu = React.createClass({
 
         return (
             <div className={fileMenuClass}>
-                <a href="#" className="special" onClick={this.handleFileClick}> File </a>
+                <a href="#" className="special" onClick={this.handleFileClick}> mitmproxy </a>
                 <ul className="dropdown-menu" role="menu">
                     <li>
                         <a href="#" onClick={this.handleNewClick}>
@@ -368,9 +368,6 @@ var Header = React.createClass({
 
         return (
             <header>
-                <div className="title-bar">
-                    mitmproxy { this.props.settings.version }
-                </div>
                 <nav className="nav-tabs nav-tabs-lg">
                     <FileMenu/>
                     {header}

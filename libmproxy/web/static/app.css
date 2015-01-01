@@ -128,11 +128,8 @@ body,
   margin: 1px 0 0px;
 }
 header {
+  padding-top: 0.5em;
   background-color: white;
-}
-header .title-bar {
-  line-height: 25px;
-  text-align: center;
 }
 header .menu {
   padding: 10px;
