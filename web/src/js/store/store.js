@@ -1,6 +1,7 @@
 
 var _ = require("lodash");
 var $ = require("jquery");
+var EventEmitter = require('events').EventEmitter;
 
 var utils = require("../utils.js");
 var actions = require("../actions.js");
@@ -8,10 +9,10 @@ var dispatcher = require("../dispatcher.js");
 
 
 function ListStore() {
-    utils.EventEmitter.call(this);
+    EventEmitter.call(this);
     this.reset();
 }
-_.extend(ListStore.prototype, utils.EventEmitter.prototype, {
+_.extend(ListStore.prototype, EventEmitter.prototype, {
     add: function (elem) {
         if (elem.id in this._pos_map) {
             return;
@@ -57,10 +58,10 @@ _.extend(ListStore.prototype, utils.EventEmitter.prototype, {
 
 
 function DictStore() {
-    utils.EventEmitter.call(this);
+    EventEmitter.call(this);
     this.reset();
 }
-_.extend(DictStore.prototype, utils.EventEmitter.prototype, {
+_.extend(DictStore.prototype, EventEmitter.prototype, {
     update: function (dict) {
         _.merge(this.dict, dict);
         this.emit("recalculate");
