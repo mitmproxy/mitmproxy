@@ -1,7 +1,7 @@
 var React = require("react");
-var utils = require("./utils.jsx.js");
-var VirtualScrollMixin = require("./virtualscroll.jsx.js");
-var flowtable_columns = require("./flowtable-columns.jsx.js");
+var utils = require("./utils.js");
+var VirtualScrollMixin = require("./virtualscroll.js");
+var flowtable_columns = require("./flowtable-columns.js");
 
 var FlowRow = React.createClass({
     render: function () {

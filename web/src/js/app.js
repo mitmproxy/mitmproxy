@@ -4,7 +4,7 @@ var ReactRouter = require("react-router");
 var $ = require("jquery");
 
 var Connection = require("./connection");
-var proxyapp = require("./components/proxyapp.jsx.js");
+var proxyapp = require("./components/proxyapp.js");
 
 $(function () {
     window.ws = new Connection("/updates");

@@ -1,7 +1,7 @@
 var React = require("react");
 var $ = require("jquery");
 
-var utils = require("./utils.jsx.js");
+var utils = require("./utils.js");
 
 var FilterDocs = React.createClass({
     statics: {

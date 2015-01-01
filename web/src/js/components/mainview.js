@@ -1,11 +1,11 @@
 var React = require("react");
 
-var utils = require("./utils.jsx.js");
+var utils = require("./utils.js");
 var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
-FlowTable = require("./flowtable.jsx.js");
-var flowdetail = require("./flowdetail.jsx.js");
+FlowTable = require("./flowtable.js");
+var flowdetail = require("./flowdetail.js");
 
 
 var MainView = React.createClass({

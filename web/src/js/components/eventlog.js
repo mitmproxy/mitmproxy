@@ -1,6 +1,6 @@
 var React = require("react");
-var utils = require("./utils.jsx.js");
-var VirtualScrollMixin = require("./virtualscroll.jsx.js");
+var utils = require("./utils.js");
+var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
 
 var LogMessage = React.createClass({

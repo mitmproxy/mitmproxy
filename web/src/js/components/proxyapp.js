@@ -2,11 +2,11 @@ var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
 
-var utils = require("./utils.jsx.js");
-var MainView = require("./mainview.jsx.js");
-var Footer = require("./footer.jsx.js");
-var header = require("./header.jsx.js");
-var EventLog = require("./eventlog.jsx.js");
+var utils = require("./utils.js");
+var MainView = require("./mainview.js");
+var Footer = require("./footer.js");
+var header = require("./header.js");
+var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 
 

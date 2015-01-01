@@ -1,7 +1,7 @@
 var React = require("react");
 var _ = require("lodash");
 
-var utils = require("./utils.jsx.js");
+var utils = require("./utils.js");
 var actions = require("../actions.js");
 var flowutils = require("../flow/utils.js");
 var toputils = require("../utils.js");
