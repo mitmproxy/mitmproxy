@@ -6,7 +6,8 @@
         "lodash": "",
         "react": "",
         "react-router": "",
-        "bootstrap": ""
+        "bootstrap": "",
+        "flux": ""
   },
   "devDependencies": {
     "bower": "",
