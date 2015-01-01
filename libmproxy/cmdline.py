@@ -100,24 +100,32 @@ def parse_setheader(s):
 
 
 def parse_server_spec(url):
-    normalized_url = re.sub("^https?2", "", url)
-
-    p = http.parse_url(normalized_url)
-    if not p or not p[1]:
+    p = http.parse_url(url)
+    if not p or not p[1] or p[0] not in ("http", "https"):
         raise configargparse.ArgumentTypeError(
             "Invalid server specification: %s" % url
         )
 
-    if url.lower().startswith("https2http"):
-        ssl = [True, False]
-    elif url.lower().startswith("http2https"):
-        ssl = [False, True]
-    elif url.lower().startswith("https"):
+    if p[0].lower() == "https":
         ssl = [True, True]
     else:
         ssl = [False, False]
 
     return ssl + list(p[1:3])
+
+
+def parse_server_spec_special(url):
+    """
+    Provides additional support for http2https and https2http schemes.
+    """
+    normalized_url = re.sub("^https?2", "", url)
+    ret = parse_server_spec(normalized_url)
+    if url.lower().startswith("https2http"):
+        ret[0] = True
+    elif url.lower().startswith("http2https"):
+        ret[0] = False
+    return ret
+
 
 
 def get_common_options(options):
@@ -336,7 +344,7 @@ def common_options(parser):
     group.add_argument(
         "-R", "--reverse",
         action="store",
-        type=parse_server_spec,
+        type=parse_server_spec_special,
         dest="reverse_proxy",
         default=None,
         help="""

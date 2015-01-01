@@ -11,17 +11,3 @@ mitmproxy forwards ordinary HTTP requests to an upstream server.
         </tr>
     </tbody>
 </table>
-
-Here, **schema** is one of http, https, http2https or https2http. The latter
-two extended schema specifications control the use of HTTP and HTTPS on
-mitmproxy and the upstream server. You can indicate that mitmproxy should use
-HTTP, and the upstream server uses HTTPS like this:
-
-	http2https://hostname:port
-
-And you can indicate that mitmproxy should use HTTPS while the upstream
-service uses HTTP like this:
-
-	https2http://hostname:port
-
-
