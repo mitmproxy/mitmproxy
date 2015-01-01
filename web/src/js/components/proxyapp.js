@@ -2,7 +2,7 @@ var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
 
-var utils = require("./utils.js");
+var common = require("./common.js");
 var MainView = require("./mainview.js");
 var Footer = require("./footer.js");
 var header = require("./header.js");
@@ -19,7 +19,7 @@ var Reports = React.createClass({
 
 
 var ProxyAppMain = React.createClass({
-    mixins: [utils.State],
+    mixins: [common.State],
     getInitialState: function () {
         var eventStore = new store.EventLogStore();
         var flowStore = new store.FlowStore();
@@ -51,7 +51,7 @@ var ProxyAppMain = React.createClass({
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
-                <utils.Splitter key="splitter" axis="y"/>,
+                <common.Splitter key="splitter" axis="y"/>,
                 <EventLog key="eventlog" eventStore={this.state.eventStore}/>
             ];
         } else {

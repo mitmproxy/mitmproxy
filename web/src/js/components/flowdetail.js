@@ -1,7 +1,7 @@
 var React = require("react");
 var _ = require("lodash");
 
-var utils = require("./utils.js");
+var common = require("./common.js");
 var actions = require("../actions.js");
 var flowutils = require("../flow/utils.js");
 var toputils = require("../utils.js");
@@ -337,7 +337,7 @@ var allTabs = {
 };
 
 var FlowDetail = React.createClass({
-    mixins: [utils.StickyHeadMixin, utils.Navigation, utils.State],
+    mixins: [common.StickyHeadMixin, common.Navigation, common.State],
     getTabs: function (flow) {
         var tabs = [];
         ["request", "response", "error"].forEach(function (e) {

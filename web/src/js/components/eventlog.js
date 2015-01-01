@@ -1,5 +1,5 @@
 var React = require("react");
-var utils = require("./utils.js");
+var common = require("./common.js");
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
 
@@ -29,7 +29,7 @@ var LogMessage = React.createClass({
 });
 
 var EventLogContents = React.createClass({
-    mixins: [utils.AutoScrollMixin, VirtualScrollMixin],
+    mixins: [common.AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             log: []

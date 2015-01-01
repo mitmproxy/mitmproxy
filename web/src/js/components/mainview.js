@@ -1,6 +1,6 @@
 var React = require("react");
 
-var utils = require("./utils.js");
+var common = require("./common.js");
 var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
@@ -9,7 +9,7 @@ var flowdetail = require("./flowdetail.js");
 
 
 var MainView = React.createClass({
-    mixins: [utils.Navigation, utils.State],
+    mixins: [common.Navigation, common.State],
     getInitialState: function () {
         this.onQueryChange(Query.FILTER, function () {
             this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
@@ -210,7 +210,7 @@ var MainView = React.createClass({
         var details;
         if (selected) {
             details = [
-                <utils.Splitter key="splitter"/>,
+                <common.Splitter key="splitter"/>,
                 <flowdetail.FlowDetail key="flowDetails" ref="flowDetails" flow={selected}/>
             ];
         } else {

@@ -1,5 +1,5 @@
 var React = require("react");
-var utils = require("./utils.js");
+var common = require("./common.js");
 var VirtualScrollMixin = require("./virtualscroll.js");
 var flowtable_columns = require("./flowtable-columns.js");
 
@@ -57,7 +57,7 @@ var FlowTableHead = React.createClass({
 var ROW_HEIGHT = 32;
 
 var FlowTable = React.createClass({
-    mixins: [utils.StickyHeadMixin, utils.AutoScrollMixin, VirtualScrollMixin],
+    mixins: [common.StickyHeadMixin, common.AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
         return {
             columns: flowtable_columns
