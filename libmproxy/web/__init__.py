@@ -127,7 +127,7 @@ class WebMaster(flow.FlowMaster):
         self.app = app.Application(self, self.options.wdebug)
         if options.rfile:
             try:
-                print(self.load_flows_file(options.rfile))
+                self.load_flows_file(options.rfile)
             except flow.FlowReadError, v:
                 self.add_event(
                     "Could not read flow file: %s"%v,

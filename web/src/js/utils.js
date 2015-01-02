@@ -23,14 +23,20 @@ for (var i = 65; i <= 90; i++) {
 
 
 var formatSize = function (bytes) {
-    var size = bytes;
-    var prefix = ["B", "KB", "MB", "GB", "TB"];
-    var i = 0;
-    while (Math.abs(size) >= 1024 && i < prefix.length - 1) {
-        i++;
-        size = size / 1024;
+    if (bytes === 0)
+        return "0";
+    var prefix = ["b", "kb", "mb", "gb", "tb"];
+    for (var i = 0; i < prefix.length; i++){
+        if (Math.pow(1024, i + 1) > bytes){
+            break;
+        }
     }
-    return (Math.floor(size * 100) / 100.0).toFixed(2) + prefix[i];
+    var precision;
+    if (bytes%Math.pow(1024, i) === 0)
+        precision = 0;
+    else
+        precision = 1;
+    return (bytes/Math.pow(1024, i)).toFixed(precision) + prefix[i];
 };
 
 

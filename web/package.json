@@ -1,44 +1,56 @@
 {
-  "name": "mitmproxy",
-  "private": true,
-  "dependencies": {
+    "name": "mitmproxy",
+    "private": true,
+    "scripts": {
+        "test": "jest ./src/js"
+    },
+    "jest": {
+        "testPathDirs": [
+            "./src/js"
+        ],
+        "testPathIgnorePatterns": [
+            "/node_modules/",
+            "testutils.js"
+        ],
+        "testDirectoryName": "tests"
+    },
+    "dependencies": {
         "jquery": "",
         "lodash": "",
         "react": "",
         "react-router": "",
         "bootstrap": "",
         "flux": ""
-  },
-  "devDependencies": {
-    "bower": "",
-    "browserify": "^6.3.4",
-    "gulp": "",
-    "gulp-concat": "",
-    "gulp-connect": "",
-    "gulp-jshint": "",
-    "gulp-less": "",
-    "gulp-livereload": "",
-    "gulp-minify-css": "",
-    "gulp-notify": "",
-    "gulp-plumber": "",
-    "gulp-react": "",
-    "gulp-rename": "",
-    "gulp-replace": "",
-    "gulp-rev": "",
-    "gulp-sourcemaps": "",
-    "gulp-uglify": "",
-    "gulp-util": "",
-    "jest-cli": "^0.1.18",
-    "jshint-stylish": "",
-    "lodash": "",
-    "map-stream": "",
-    "react": "",
-    "react-tools": "",
-    "reactify": "",
-    "vinyl-buffer": "",
-    "vinyl-source-stream": "",
-    "vinyl-transform": "",
-
-    "gulp-peg": ""
-  }
+    },
+    "devDependencies": {
+        "bower": "",
+        "browserify": "^6.3.4",
+        "gulp": "",
+        "gulp-concat": "",
+        "gulp-connect": "",
+        "gulp-jshint": "",
+        "gulp-less": "",
+        "gulp-livereload": "",
+        "gulp-minify-css": "",
+        "gulp-notify": "",
+        "gulp-plumber": "",
+        "gulp-react": "",
+        "gulp-rename": "",
+        "gulp-replace": "",
+        "gulp-rev": "",
+        "gulp-sourcemaps": "",
+        "gulp-uglify": "",
+        "gulp-util": "",
+        "jest-cli": "^0.1.18",
+        "jshint-stylish": "",
+        "lodash": "",
+        "map-stream": "",
+        "react": "",
+        "react-tools": "",
+        "reactify": "",
+        "vinyl-buffer": "",
+        "vinyl-source-stream": "",
+        "vinyl-transform": "",
+        "gulp-peg": ""
+    }
 }
