@@ -1,6 +1,8 @@
 // PEG.js filter rules - see http://pegjs.majda.cz/online
 
 {
+var flowutils = require("../flow/utils.js");
+
 function or(first, second) {
     // Add explicit function names to ease debugging.
     function orFilter() {
@@ -49,7 +51,7 @@ var ASSET_TYPES = [
 ];
 function assetFilter(flow) {
     if (flow.response) {
-        var ct = ResponseUtils.getContentType(flow.response);
+        var ct = flowutils.ResponseUtils.getContentType(flow.response);
         var i = ASSET_TYPES.length;
         while (i--) {
             if (ASSET_TYPES[i].test(ct)) {
@@ -83,9 +85,9 @@ function header(regex){
     regex = new RegExp(regex, "i");
     function headerFilter(flow){
         return (
-            (flow.request && RequestUtils.match_header(flow.request, regex))
+            (flow.request && flowutils.RequestUtils.match_header(flow.request, regex))
             ||
-            (flow.response && ResponseUtils.match_header(flow.response, regex))
+            (flow.response && flowutils.ResponseUtils.match_header(flow.response, regex))
         );
     }
     headerFilter.desc = "header matches " + regex;
@@ -94,7 +96,7 @@ function header(regex){
 function requestHeader(regex){
     regex = new RegExp(regex, "i");
     function requestHeaderFilter(flow){
-        return (flow.request && RequestUtils.match_header(flow.request, regex));
+        return (flow.request && flowutils.RequestUtils.match_header(flow.request, regex));
     }
     requestHeaderFilter.desc = "req. header matches " + regex;
     return requestHeaderFilter;
@@ -102,7 +104,7 @@ function requestHeader(regex){
 function responseHeader(regex){
     regex = new RegExp(regex, "i");
     function responseHeaderFilter(flow){
-        return (flow.response && ResponseUtils.match_header(flow.response, regex));
+        return (flow.response && flowutils.ResponseUtils.match_header(flow.response, regex));
     }
     responseHeaderFilter.desc = "resp. header matches " + regex;
     return responseHeaderFilter;
@@ -128,9 +130,9 @@ function contentType(regex){
     regex = new RegExp(regex, "i");
     function contentTypeFilter(flow){
         return (
-            (flow.request && regex.test(RequestUtils.getContentType(flow.request)))
+            (flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request)))
             ||
-            (flow.response && regex.test(ResponseUtils.getContentType(flow.response)))
+            (flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response)))
         );
     }
     contentTypeFilter.desc = "content type matches " + regex;
@@ -139,7 +141,7 @@ function contentType(regex){
 function requestContentType(regex){
     regex = new RegExp(regex, "i");
     function requestContentTypeFilter(flow){
-        return flow.request && regex.test(RequestUtils.getContentType(flow.request));
+        return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request));
     }
     requestContentTypeFilter.desc = "req. content type matches " + regex;
     return requestContentTypeFilter;
@@ -147,7 +149,7 @@ function requestContentType(regex){
 function responseContentType(regex){
     regex = new RegExp(regex, "i");
     function responseContentTypeFilter(flow){
-        return flow.response && regex.test(ResponseUtils.getContentType(flow.response));
+        return flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
     }
     responseContentTypeFilter.desc = "resp. content type matches " + regex;
     return responseContentTypeFilter;
@@ -155,7 +157,7 @@ function responseContentType(regex){
 function url(regex){
     regex = new RegExp(regex, "i");
     function urlFilter(flow){
-        return flow.request && regex.test(RequestUtils.pretty_url(flow.request));
+        return flow.request && regex.test(flowutils.RequestUtils.pretty_url(flow.request));
     }
     urlFilter.desc = "url matches " + regex;
     return urlFilter;

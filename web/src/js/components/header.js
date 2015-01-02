@@ -1,6 +1,9 @@
 var React = require("react");
 var $ = require("jquery");
 
+var Filt = require("../filt/filt.js");
+var utils = require("../utils.js");
+
 var common = require("./common.js");
 
 var FilterDocs = React.createClass({
@@ -105,7 +108,7 @@ var FilterInput = React.createClass({
         this.setState({mousefocus: false});
     },
     onKeyDown: function (e) {
-        if (e.keyCode === Key.ESC || e.keyCode === Key.ENTER) {
+        if (e.keyCode === utils.Key.ESC || e.keyCode === utils.Key.ENTER) {
             this.blur();
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({mousefocus: false});

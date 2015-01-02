@@ -22,8 +22,11 @@ var source = require('vinyl-source-stream');
 var sourcemaps = require('gulp-sourcemaps');
 var transform = require('vinyl-transform');
 var uglify = require('gulp-uglify');
+var peg = require("gulp-peg");
+var filelog = require('gulp-filelog');
 
 var packagejs = require('./package.json');
+var conf = require('./conf.js');
 
 
 // FIXME: react-with-addons.min.js for prod use issue
@@ -35,41 +38,13 @@ var manifest = {
     "app.js": "app.js",
 };
 
-var CONF = {
-    dist: "../libmproxy/web",
-    static: "../libmproxy/web/static",
-    js: {
-        // Don't package these in the vendor distribution
-        vendor_excludes: [
-            "bootstrap"
-        ],
-        // Package these as well as the dependencies
-        vendor_includes: [
-            "react/addons"
-        ],
-        app: 'src/js/app.js'
-    },
-    css: {
-        vendor: ["src/css/vendor.less"],
-        app: ["src/css/app.less"]
-    },
-    copy: [
-        "src/images/**",
-    ],
-    templates: [
-        "src/templates/*"
-    ],
-    fonts: ["src/fontawesome/fontawesome-webfont.*"],
-    port: 8082
-};
-
 var vendor_packages = _.difference(
-        _.union(
-            _.keys(packagejs.dependencies),
-            CONF.js.vendor_includes
-        ),
-        CONF.js.vendor_excludes
-    );
+    _.union(
+        _.keys(packagejs.dependencies),
+        conf.js.vendor_includes
+    ),
+    conf.js.vendor_excludes
+);
 
 
 // Custom linting reporter used for error notify
@@ -113,8 +88,8 @@ var dont_break_on_errors = function(){
 
 
 gulp.task("fonts", function () {
-    return gulp.src(CONF.fonts)
-        .pipe(gulp.dest(CONF.dist + "fonts"));
+    return gulp.src(conf.fonts)
+        .pipe(gulp.dest(conf.dist + "fonts"));
 });
 
 
@@ -124,14 +99,14 @@ function styles_dev(files) {
         .pipe(sourcemaps.init())
         .pipe(less())
         .pipe(sourcemaps.write(".", {sourceRoot: "/static"}))
-        .pipe(gulp.dest(CONF.static))
+        .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false })));
 }
 gulp.task("styles-app-dev", function(){
-    styles_dev(CONF.css.app);
+    styles_dev(conf.css.app);
 }); 
 gulp.task("styles-vendor-dev", function(){
-    styles_dev(CONF.css.vendor);
+    styles_dev(conf.css.vendor);
 }); 
 
 
@@ -143,14 +118,14 @@ function styles_prod(files) {
         .pipe(minifyCSS())
         .pipe(rev())
         .pipe(save_rev())
-        .pipe(gulp.dest(CONF.static))
+        .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false })));
 }
 gulp.task("styles-app-prod", function(){
-    styles_prod(CONF.css.app);
+    styles_prod(conf.css.app);
 }); 
 gulp.task("styles-vendor-prod", function(){
-    styles_prod(CONF.css.vendor);
+    styles_prod(conf.css.vendor);
 }); 
 
 
@@ -165,7 +140,7 @@ function vendor_stream(debug){
 }
 gulp.task("scripts-vendor-dev", function (){
     return vendor_stream(true)
-        .pipe(gulp.dest(CONF.static));
+        .pipe(gulp.dest(conf.static));
 });
 gulp.task("scripts-vendor-prod", function(){
     return vendor_stream(false)
@@ -173,7 +148,7 @@ gulp.task("scripts-vendor-prod", function(){
         .pipe(uglify())
         .pipe(rev())
         .pipe(save_rev())
-        .pipe(gulp.dest(CONF.static));
+        .pipe(gulp.dest(conf.static));
 });
 
 
@@ -186,14 +161,14 @@ function app_stream(debug) {
         b.transform(reactify);
         return b.bundle();
     });
-    return gulp.src([CONF.js.app])
+    return gulp.src([conf.js.app])
         .pipe(dont_break_on_errors())
         .pipe(browserified)
         .pipe(rename("app.js"));
 };
 gulp.task('scripts-app-dev', function () {
     return app_stream(true)
-        .pipe(gulp.dest(CONF.static))
+        .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false }));
 });
 gulp.task('scripts-app-prod', function () {
@@ -202,12 +177,12 @@ gulp.task('scripts-app-prod', function () {
         .pipe(uglify())
         .pipe(rev())
         .pipe(save_rev())
-        .pipe(gulp.dest(CONF.static));
+        .pipe(gulp.dest(conf.static));
 });
 
 
 gulp.task("jshint", function () {
-    return gulp.src(["src/js/**.js"])
+    return gulp.src(conf.js.jshint)
         .pipe(dont_break_on_errors())
         .pipe(react())
         .pipe(plumber())
@@ -217,27 +192,34 @@ gulp.task("jshint", function () {
 });
 
 gulp.task("copy", function(){
-    return gulp.src(CONF.copy, {base:"src/"})
-        .pipe(gulp.dest(CONF.dist));
+    return gulp.src(conf.copy, {base:"src/"})
+        .pipe(gulp.dest(conf.dist));
 });
 
 function templates(){
-    return gulp.src(CONF.templates, {base:"src/"})
+    return gulp.src(conf.templates, {base:"src/"})
         .pipe(replace(/\{\{\{(\S*)\}\}\}/g, function(match, p1) {
             return manifest[p1];
         })) 
-        .pipe(gulp.dest(CONF.dist));
+        .pipe(gulp.dest(conf.dist));
 };
 gulp.task('templates', templates);
 
 
+gulp.task("peg", function () {
+    return gulp.src(conf.peg, {base: "src/"})
+        .pipe(dont_break_on_errors())
+        .pipe(peg())
+        .pipe(filelog())
+        .pipe(gulp.dest("src/"));
+});
+
 gulp.task('connect', function() {
     connect.server({
-        port: CONF.port
+        port: conf.port
     });
 });
 
-common = ["fonts", "copy"];
 gulp.task(
     "dev",
     [
@@ -246,6 +228,7 @@ gulp.task(
         "styles-vendor-dev",
         "styles-app-dev",
         "scripts-vendor-dev",
+        "peg",
         "scripts-app-dev",
     ],
     templates
@@ -258,6 +241,7 @@ gulp.task(
         "styles-vendor-prod",
         "styles-app-prod",
         "scripts-vendor-prod",
+        "peg",
         "scripts-app-prod",
         "connect"
     ],
@@ -267,8 +251,9 @@ gulp.task(
 gulp.task("default", ["dev", "connect"], function () {
     livereload.listen({auto: true});
     gulp.watch(["src/css/vendor*"], ["styles-vendor-dev"]);
+    gulp.watch(conf.peg, ["peg", "scripts-app-dev"]);
     gulp.watch(["src/js/**"], ["scripts-app-dev", "jshint"]);
     gulp.watch(["src/css/**"], ["styles-app-dev"]);
-    gulp.watch(CONF.templates, ["templates"]);
-    gulp.watch(CONF.copy, ["copy"]);
+    gulp.watch(conf.templates, ["templates"]);
+    gulp.watch(conf.copy, ["copy"]);
 });

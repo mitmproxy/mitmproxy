@@ -13,3 +13,4 @@ $(function () {
         React.render(<Handler/>, document.body);
     });
 });
+
