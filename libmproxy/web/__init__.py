@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 import collections
 import tornado.ioloop
 import tornado.httpserver
+import os
 from .. import controller, flow
 from . import app
 
@@ -124,6 +125,14 @@ class WebMaster(flow.FlowMaster):
         self.options = options
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self, self.options.wdebug)
+        if options.rfile:
+            try:
+                print(self.load_flows_file(options.rfile))
+            except flow.FlowReadError, v:
+                self.add_event(
+                    "Could not read flow file: %s"%v,
+                    "error"
+                )
 
     def tick(self):
         flow.FlowMaster.tick(self, self.masterq, timeout=0)

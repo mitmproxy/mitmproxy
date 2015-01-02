@@ -18,9 +18,12 @@ class RequestHandler(tornado.web.RequestHandler):
         self.set_header("X-Frame-Options", "DENY")
         self.add_header("X-XSS-Protection", "1; mode=block")
         self.add_header("X-Content-Type-Options", "nosniff")
-        self.add_header("Content-Security-Policy", "default-src 'self'; "
-                                                   "connect-src 'self' ws://* ; "
-                                                   "style-src   'self' 'unsafe-inline'")
+        self.add_header(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            "connect-src 'self' ws://* ; "
+            "style-src   'self' 'unsafe-inline'"
+        )
 
     @property
     def state(self):

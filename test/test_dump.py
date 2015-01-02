@@ -99,15 +99,23 @@ class TestDumpMaster:
         with tutils.tmpdir() as t:
             p = os.path.join(t, "read")
             self._flowfile(p)
-            assert "GET" in self._dummy_cycle(0, None, "", flow_detail=1, rfile=p)
+            assert "GET" in self._dummy_cycle(
+                0,
+                None,
+                "",
+                flow_detail=1,
+                rfile=p
+            )
 
             tutils.raises(
                 dump.DumpError, self._dummy_cycle,
                 0, None, "", verbosity=1, rfile="/nonexistent"
             )
+            tutils.raises(
+                dump.DumpError, self._dummy_cycle,
+                0, None, "", verbosity=1, rfile="test_dump.py"
+            )
 
-            # We now just ignore errors
-            self._dummy_cycle(0, None, "", verbosity=1, rfile=tutils.test_data.path("test_dump.py"))
 
     def test_options(self):
         o = dump.Options(verbosity = 2)

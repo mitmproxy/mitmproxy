@@ -6,6 +6,7 @@ from abc import abstractmethod, ABCMeta
 import hashlib
 import Cookie
 import cookielib
+import os
 import re
 from netlib import odict, wsgi
 import netlib.http
@@ -785,8 +786,20 @@ class FlowMaster(controller.Master):
         """
             Load flows from a FlowReader object.
         """
+        cnt = 0
         for i in fr.stream():
+            cnt += 1
             self.load_flow(i)
+        return cnt
+
+    def load_flows_file(self, path):
+        path = os.path.expanduser(path)
+        try:
+            f = file(path, "rb")
+            freader = FlowReader(f)
+        except IOError, v:
+            raise FlowReadError(v.strerror)
+        return self.load_flows(freader)
 
     def process_new_request(self, f):
         if self.stickycookie_state:
@@ -961,7 +974,9 @@ class FlowReader:
                 data = tnetstring.load(self.fo)
                 if tuple(data["version"][:2]) != version.IVERSION[:2]:
                     v = ".".join(str(i) for i in data["version"])
-                    raise FlowReadError("Incompatible serialized data version: %s" % v)
+                    raise FlowReadError(
+                        "Incompatible serialized data version: %s" % v
+                    )
                 off = self.fo.tell()
                 yield handle.protocols[data["type"]]["flow"].from_state(data)
         except ValueError, v:

@@ -599,13 +599,20 @@ class ConsoleMaster(flow.FlowMaster):
 
         self.view_flowlist()
 
-        self.server.start_slave(controller.Slave, controller.Channel(self.masterq, self.should_exit))
+        self.server.start_slave(
+            controller.Slave,
+            controller.Channel(self.masterq, self.should_exit)
+        )
 
         if self.options.rfile:
-            ret = self.load_flows(self.options.rfile)
+            ret = self.load_flows_path(self.options.rfile)
             if ret and self.state.flow_count():
-                self.add_event("File truncated or corrupted. Loaded as many flows as possible.","error")
-            elif not self.state.flow_count():
+                self.add_event(
+                    "File truncated or corrupted. "
+                    "Loaded as many flows as possible.",
+                    "error"
+                )
+            elif ret and not self.state.flow_count():
                 self.shutdown()
                 print >> sys.stderr, "Could not load file:", ret
                 sys.exit(1)
@@ -700,23 +707,16 @@ class ConsoleMaster(flow.FlowMaster):
     def load_flows_callback(self, path):
         if not path:
             return
-        ret = self.load_flows(path)
+        ret = self.load_flows_path(path)
         return ret or "Flows loaded from %s"%path
 
-    def load_flows(self, path):
+    def load_flows_path(self, path):
         self.state.last_saveload = path
-        path = os.path.expanduser(path)
-        try:
-            f = file(path, "rb")
-            fr = flow.FlowReader(f)
-        except IOError, v:
-            return v.strerror
         reterr = None
         try:
-            flow.FlowMaster.load_flows(self, fr)
+            flow.FlowMaster.load_flows_file(self, path)
         except flow.FlowReadError, v:
-            reterr = v.strerror
-        f.close()
+            reterr = str(v)
         if self.flow_list_walker:
             self.sync_list_view()
         return reterr

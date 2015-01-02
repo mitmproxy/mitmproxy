@@ -134,16 +134,11 @@ class DumpMaster(flow.FlowMaster):
                 raise DumpError(err)
 
         if options.rfile:
-            path = os.path.expanduser(options.rfile)
             try:
-                f = file(path, "rb")
-                freader = flow.FlowReader(f)
-            except IOError, v:
-                raise DumpError(v.strerror)
-            try:
-                self.load_flows(freader)
+                self.load_flows_file(options.rfile)
             except flow.FlowReadError, v:
-                self.add_event("Flow file corrupted. Stopped loading.", "error")
+                self.add_event("Flow file corrupted.", "error")
+                raise DumpError(v)
 
         if self.o.app:
             self.start_app(self.o.app_host, self.o.app_port)
