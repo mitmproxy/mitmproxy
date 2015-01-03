@@ -24,7 +24,7 @@
     },
     "devDependencies": {
         "bower": "",
-        "browserify": "^6.3.4",
+        "browserify": "=8.0.1",
         "gulp": "",
         "gulp-concat": "",
         "gulp-connect": "",
