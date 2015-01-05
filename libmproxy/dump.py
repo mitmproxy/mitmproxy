@@ -143,11 +143,13 @@ class DumpMaster(flow.FlowMaster):
         if self.o.app:
             self.start_app(self.o.app_host, self.o.app_port)
 
-    def _readflow(self, path):
-        path = os.path.expanduser(path)
+    def _readflow(self, paths):
         try:
-            f = file(path, "rb")
-            flows = list(flow.FlowReader(f).stream())
+            flows = []
+            for path in paths:
+                path = os.path.expanduser(path)
+                f = file(path, "rb")
+                flows.extend(list(flow.FlowReader(f).stream()))
         except (IOError, flow.FlowReadError), v:
             raise DumpError(v.strerror)
         return flows
