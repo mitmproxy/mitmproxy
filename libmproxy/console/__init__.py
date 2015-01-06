@@ -496,11 +496,13 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlog = not self.eventlog
         self.view_flowlist()
 
-    def _readflow(self, path):
-        path = os.path.expanduser(path)
+    def _readflow(self, paths):
         try:
-            f = file(path, "rb")
-            flows = list(flow.FlowReader(f).stream())
+            flows = []
+            for path in paths:
+                path = os.path.expanduser(path)
+                f = file(path, "rb")
+                flows.extend(list(flow.FlowReader(f).stream()))
         except (IOError, flow.FlowReadError), v:
             return True, v.strerror
         return False, flows
@@ -521,7 +523,7 @@ class ConsoleMaster(flow.FlowMaster):
                 ret,
                 self.killextra, self.rheaders,
                 False, self.nopop,
-                self.options.replay_ignore_params, self.options.replay_ignore_content
+                self.options.replay_ignore_params, self.options.replay_ignore_content, self.options.replay_ignore_payload_params
             )
 
     def spawn_editor(self, data):
