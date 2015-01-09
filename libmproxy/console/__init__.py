@@ -508,14 +508,22 @@ class ConsoleMaster(flow.FlowMaster):
     def client_playback_path(self, path):
         err, ret = self._readflow(path)
         if err:
-            self.statusbar.message(ret)
+            if not self.statusbar:
+                print >> sys.stderr, ret
+                sys.exit(1)
+            else:
+                self.statusbar.message(ret)
         else:
             self.start_client_playback(ret, False)
 
     def server_playback_path(self, path):
         err, ret = self._readflow(path)
         if err:
-            self.statusbar.message(ret)
+            if not self.statusbar:
+                print >> sys.stderr, ret
+                sys.exit(1)
+            else:
+                self.statusbar.message(ret)
         else:
             self.start_server_playback(
                 ret,
