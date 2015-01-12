@@ -758,7 +758,7 @@ class FlowMaster(controller.Master):
                 self.shutdown()
             self.client_playback.tick(self)
 
-        return controller.Master.tick(self, q, timeout)
+        return super(FlowMaster, self).tick(q, timeout)
 
     def duplicate_flow(self, f):
         return self.load_flow(f.copy())

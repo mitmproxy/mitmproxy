@@ -510,14 +510,22 @@ class ConsoleMaster(flow.FlowMaster):
     def client_playback_path(self, path):
         err, ret = self._readflow(path)
         if err:
-            self.statusbar.message(ret)
+            if not self.statusbar:
+                print >> sys.stderr, ret
+                sys.exit(1)
+            else:
+                self.statusbar.message(ret)
         else:
             self.start_client_playback(ret, False)
 
     def server_playback_path(self, path):
         err, ret = self._readflow(path)
         if err:
-            self.statusbar.message(ret)
+            if not self.statusbar:
+                print >> sys.stderr, ret
+                sys.exit(1)
+            else:
+                self.statusbar.message(ret)
         else:
             self.start_server_playback(
                 ret,
@@ -825,8 +833,8 @@ class ConsoleMaster(flow.FlowMaster):
                 if changed:
                     self.statusbar.redraw()
                     size = self.drawscreen()
-                changed = self.tick(self.masterq, 0.01)
-                self.ui.set_input_timeouts(max_wait=0.01)
+                changed = self.tick(self.masterq, timeout=0.1)
+                self.ui.set_input_timeouts(max_wait=0)
                 keys = self.ui.get_input()
                 if keys:
                     changed = True
