@@ -529,7 +529,7 @@ class ConsoleMaster(flow.FlowMaster):
                 ret,
                 self.killextra, self.rheaders,
                 False, self.nopop,
-                self.options.replay_ignore_params, self.options.replay_ignore_content
+                self.options.replay_ignore_params, self.options.replay_ignore_content, self.options.replay_ignore_payload_params
             )
 
     def spawn_editor(self, data):
