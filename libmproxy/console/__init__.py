@@ -423,6 +423,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
 
+        self.statusbar = None
         if options.client_replay:
             self.client_playback_path(options.client_replay)
 
