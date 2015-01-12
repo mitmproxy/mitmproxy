@@ -501,8 +501,8 @@ class ConsoleMaster(flow.FlowMaster):
             flows = []
             for path in paths:
                 path = os.path.expanduser(path)
-                f = file(path, "rb")
-                flows.extend(list(flow.FlowReader(f).stream()))
+                with file(path, "rb") as f:
+                    flows.extend(list(flow.FlowReader(f).stream()))
         except (IOError, flow.FlowReadError), v:
             return True, v.strerror
         return False, flows
