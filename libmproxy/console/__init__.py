@@ -599,7 +599,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui.register_palette(self.palette)
         self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
         self.view = None
-        self.statusbar = None
         self.header = None
         self.body = None
         self.help_context = None
