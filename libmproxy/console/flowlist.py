@@ -13,6 +13,7 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
+        ("g", "copy response(content/headers) to clipboard"),        
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -139,9 +140,15 @@ class ConnectionItem(common.WWrap):
             )
     def server_copy_response(self, k):
         if k == "c":
-            pyperclip.copy(self.flow.response_content())
-        elif k == "t":
-            pyperclip.copy(self.flow.response_headers())
+            try:
+                pyperclip.copy(self.flow.response_content())
+            except TypeError:
+                self.master.statusbar.message("Content is binary or can be converted to text")
+        elif k == "h":
+            try:
+                pyperclip.copy(self.flow.response_headers())
+            except TypeError:
+                self.master.statusbar.message("Error converting headers to text")
 
     def keypress(self, (maxcol,), key):
         key = common.shortcuts(key)
