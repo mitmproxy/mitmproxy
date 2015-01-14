@@ -953,16 +953,6 @@ class HTTPFlow(Flow):
             c += self.response.replace(pattern, repl, *args, **kwargs)
         return c
 
-    def response_content(self):
-        with decoded(self.response):
-            s = self.response.content
-        return s
-
-    def response_headers(self):
-        with decoded(self.response):
-            s = str(self.response.headers) 
-        return s
-
 class HttpAuthenticationError(Exception):
     def __init__(self, auth_headers=None):
         super(HttpAuthenticationError, self).__init__(
