@@ -954,20 +954,18 @@ class HTTPFlow(Flow):
         return c
 
     def response_content(self):
-        s = "[No Content]"
         with decoded(self.response):
             s = self.response.content
+        if s == None:
+            s = "[No content]"
         return s
 
     def response_headers(self):
         with decoded(self.response):
-            sh = ""
-            for i in self.flow.response.headers:
-                v = self.flow.response.headers[i]
-                for j in v:
-                    sh += str(i)+"="+str(v[j])+"\n"
-        return sh
-
+            s = str(self.response.headers) 
+        if s == None:
+            s = "[]"
+        return s
 
 class HttpAuthenticationError(Exception):
     def __init__(self, auth_headers=None):
