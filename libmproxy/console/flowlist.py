@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import urwid
+import pyperclip
 from . import common
 
 def _mkhelp():
@@ -136,6 +137,11 @@ class ConnectionItem(common.WWrap):
                 self.state.last_saveload,
                 self.master.server_playback_path
             )
+    def server_copy_response(self, k):
+        if k == "c":
+            pyperclip.copy(self.flow.response_content())
+        elif k == "t":
+            pyperclip.copy(self.flow.response_headers())
 
     def keypress(self, (maxcol,), key):
         key = common.shortcuts(key)
@@ -201,6 +207,16 @@ class ConnectionItem(common.WWrap):
                 self.state.last_script,
                 self.master.run_script_once,
                 self.flow
+            )
+        elif key == "g":
+            #copy flow part
+            self.master.prompt_onekey(
+                "Copy Response",
+                (
+                    ("content", "c"),
+                    ("headers", "h"),
+                ),
+                self.server_copy_response,
             )
         else:
             return key
