@@ -3,6 +3,8 @@ sudo: false
 python:
   - "2.7"
   - pypy
+before_install:
+  - "sudo apt-get install -y xclip"
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
   - "pip install --upgrade --src . -r requirements.txt"
