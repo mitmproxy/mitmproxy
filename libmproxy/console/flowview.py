@@ -4,7 +4,7 @@ import urwid
 from . import common, grideditor, contentview
 from .. import utils, flow, controller
 from ..protocol.http import HTTPResponse, CONTENT_MISSING, decoded
-
+import pyperclip
 
 class SearchError(Exception): pass
 
@@ -19,6 +19,7 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "edit request/response"),
         ("f", "load full body data"),
+        ("g", "copy response(content/headers) to clipboard"),        
         ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +
@@ -648,6 +649,18 @@ class FlowView(common.WWrap):
         )
         self.master.refresh_flow(self.flow)
 
+    def server_copy_response(self, k):
+        if k == "c":
+            try:
+                pyperclip.copy(self.flow.response_content())
+            except TypeError:
+                self.master.statusbar.message("Content is binary or can be converted to text")
+        elif k == "h":
+            try:
+                pyperclip.copy(self.flow.response_headers())
+            except TypeError:
+                self.master.statusbar.message("Error converting headers to text")
+
     def delete_body(self, t):
         if t == "m":
             val = CONTENT_MISSING
@@ -751,6 +764,15 @@ class FlowView(common.WWrap):
             )
             self.master.refresh_flow(self.flow)
             self.master.statusbar.message("")
+        elif key == "g":
+            self.master.prompt_onekey(
+                "Copy Response",
+                (
+                    ("content", "c"),
+                    ("headers", "h"),
+                ),
+                self.server_copy_response,
+            )
         elif key == "m":
             p = list(contentview.view_prompts)
             p.insert(0, ("Clear", "C"))
