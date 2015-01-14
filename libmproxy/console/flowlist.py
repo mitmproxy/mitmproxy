@@ -218,7 +218,6 @@ class ConnectionItem(common.WWrap):
                 self.flow
             )
         elif key == "g":
-            #copy flow part
             self.master.prompt_onekey(
                 "Copy Response",
                 (
