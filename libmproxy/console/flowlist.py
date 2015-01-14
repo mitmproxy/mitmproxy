@@ -141,12 +141,12 @@ class ConnectionItem(common.WWrap):
     def server_copy_response(self, k):
         if k == "c":
             try:
-                pyperclip.copy(self.flow.response_content())
+                pyperclip.copy(self.flow.response.get_decoded_content())
             except TypeError:
                 self.master.statusbar.message("Content is binary or can be converted to text")
         elif k == "h":
             try:
-                pyperclip.copy(self.flow.response_headers())
+                pyperclip.copy(str(self.flow.response.headers))
             except TypeError:
                 self.master.statusbar.message("Error converting headers to text")
 
