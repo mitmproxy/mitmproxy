@@ -956,15 +956,11 @@ class HTTPFlow(Flow):
     def response_content(self):
         with decoded(self.response):
             s = self.response.content
-        if s == None:
-            s = "[No content]"
         return s
 
     def response_headers(self):
         with decoded(self.response):
             s = str(self.response.headers) 
-        if s == None:
-            s = "[]"
         return s
 
 class HttpAuthenticationError(Exception):
