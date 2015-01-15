@@ -213,8 +213,9 @@ class ConnectionItem(common.WWrap):
                     ("headers", "h"),
                 ),
                 common.server_copy_response,
+                self.master,
+                self.state,
                 self.flow.response,
-                self.master.statusbar
             )
         else:
             return key
