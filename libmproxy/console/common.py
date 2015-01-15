@@ -3,7 +3,10 @@ import urwid
 import urwid.util
 from .. import utils
 from ..protocol.http import CONTENT_MISSING
-
+try:
+    import pyperclip
+except:
+    pyperclip = False
 
 VIEW_LIST = 0
 VIEW_FLOW = 1
@@ -160,6 +163,21 @@ def raw_format_flow(f, focus, extended, padding):
         )
     pile.append(urwid.Columns(resp, dividechars=1))
     return urwid.Pile(pile)
+
+def server_copy_response( k, response, statusbar):
+    if pyperclip:
+        if k == "c":
+            try:
+                pyperclip.copy(response.get_decoded_content())
+            except TypeError:
+                statusbar.message("Content is binary or can be converted to text")
+        elif k == "h":
+            try:
+                pyperclip.copy(str(response.headers))
+            except TypeError:
+                statusbar.message("Error converting headers to text")
+    else:
+        statusbar.message("No clipboard support on your system, sorry.")
 
 
 class FlowCache:
