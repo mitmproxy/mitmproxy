@@ -166,7 +166,7 @@ def raw_format_flow(f, focus, extended, padding):
     return urwid.Pile(pile)
 
 ## common save body parts
-def _save_body(path, master, state, content):
+def save_body(path, master, state, content):
     if not path:
         return
     state.last_saveload = path
@@ -178,12 +178,12 @@ def _save_body(path, master, state, content):
     except IOError, v:
         master.statusbar.message(v.strerror)
 
-def save_body(k, master, state, content):
+def ask_save_body(k, master, state, content):
     if k == "y":
         master.path_prompt(
             "Save response body: ",
             state.last_saveload,
-            _save_body,
+            save_body,
             master,
             state,
             content,
@@ -202,7 +202,7 @@ def server_copy_response( k, master, state, response):
                         ("yes", "y"),
                         ("no", "n"),
                     ),
-                    save_body,
+                    ask_save_body,
                     master,
                     state,
                     response.get_decoded_content(),
