@@ -4,10 +4,7 @@ import urwid
 from . import common, grideditor, contentview
 from .. import utils, flow, controller
 from ..protocol.http import HTTPResponse, CONTENT_MISSING, decoded
-try:
-    import pyperclip
-except:
-    pyperclip = False
+
 
 class SearchError(Exception): pass
 
@@ -652,21 +649,6 @@ class FlowView(common.WWrap):
         )
         self.master.refresh_flow(self.flow)
 
-    def server_copy_response(self, k):
-        if pyperclip:
-            if k == "c":
-                try:
-                    pyperclip.copy(self.flow.response.get_decoded_content())
-                except TypeError:
-                    self.master.statusbar.message("Content is binary or can be converted to text")
-            elif k == "h":
-                try:
-                    pyperclip.copy(str(self.flow.response.headers))
-                except TypeError:
-                    self.master.statusbar.message("Error converting headers to text")
-        else:
-            self.master.statusbar.message("No clipboard support on your system, sorry.")
-
     def delete_body(self, t):
         if t == "m":
             val = CONTENT_MISSING
@@ -777,7 +759,9 @@ class FlowView(common.WWrap):
                     ("content", "c"),
                     ("headers", "h"),
                 ),
-                self.server_copy_response,
+                common.server_copy_response,
+                self.flow.response,
+                self.master.statusbar
             )
         elif key == "m":
             p = list(contentview.view_prompts)
