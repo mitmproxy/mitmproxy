@@ -508,22 +508,6 @@ class FlowView(common.WWrap):
                     self.flow.request.method = i[0].upper()
             self.master.refresh_flow(self.flow)
 
-    def save_body(self, path):
-        if not path:
-            return
-        self.state.last_saveload = path
-        if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            c = self.flow.request
-        else:
-            c = self.flow.response
-        path = os.path.expanduser(path)
-        try:
-            f = file(path, "wb")
-            f.write(str(c.content))
-            f.close()
-        except IOError, v:
-            self.master.statusbar.message(v.strerror)
-
     def set_url(self, url):
         request = self.flow.request
         try:
@@ -691,17 +675,20 @@ class FlowView(common.WWrap):
         elif key == "b":
             if conn:
                 if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-                    self.master.path_prompt(
-                        "Save request body: ",
-                        self.state.last_saveload,
-                        self.save_body
-                    )
-                else:
-                    self.master.path_prompt(
-                        "Save response body: ",
-                        self.state.last_saveload,
-                        self.save_body
-                    )
+                    msg = "Save request body: "
+                    content = self.flow.request.content
+                else: 
+                    msg = "Save response body: "
+                    content = self.flow.response.content                    
+
+                self.master.path_prompt(
+                    msg,
+                    self.state.last_saveload,
+                    common.save_body,
+                    self.master,
+                    self.state,
+                    content,
+                )
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()
