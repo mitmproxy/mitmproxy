@@ -4,7 +4,10 @@ import urwid
 from . import common, grideditor, contentview
 from .. import utils, flow, controller
 from ..protocol.http import HTTPResponse, CONTENT_MISSING, decoded
-import pyperclip
+try:
+    import pyperclip
+except:
+    pyperclip = False
 
 class SearchError(Exception): pass
 
@@ -650,16 +653,19 @@ class FlowView(common.WWrap):
         self.master.refresh_flow(self.flow)
 
     def server_copy_response(self, k):
-        if k == "c":
-            try:
-                pyperclip.copy(self.flow.response.get_decoded_content())
-            except TypeError:
-                self.master.statusbar.message("Content is binary or can be converted to text")
-        elif k == "h":
-            try:
-                pyperclip.copy(str(self.flow.response.headers))
-            except TypeError:
-                self.master.statusbar.message("Error converting headers to text")
+        if pyperclip:
+            if k == "c":
+                try:
+                    pyperclip.copy(self.flow.response.get_decoded_content())
+                except TypeError:
+                    self.master.statusbar.message("Content is binary or can be converted to text")
+            elif k == "h":
+                try:
+                    pyperclip.copy(str(self.flow.response.headers))
+                except TypeError:
+                    self.master.statusbar.message("Error converting headers to text")
+        else:
+            self.master.statusbar.message("No clipboard support on your system, sorry.")
 
     def delete_body(self, t):
         if t == "m":

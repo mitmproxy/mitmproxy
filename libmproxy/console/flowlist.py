@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 import urwid
-import pyperclip
 from . import common
+try:
+    import pyperclip
+except:
+    pyperclip = False
 
 def _mkhelp():
     text = []
@@ -141,16 +144,19 @@ class ConnectionItem(common.WWrap):
                 self.master.server_playback_path
             )
     def server_copy_response(self, k):
-        if k == "c":
-            try:
-                pyperclip.copy(self.flow.response.get_decoded_content())
-            except TypeError:
-                self.master.statusbar.message("Content is binary or can be converted to text")
-        elif k == "h":
-            try:
-                pyperclip.copy(str(self.flow.response.headers))
-            except TypeError:
-                self.master.statusbar.message("Error converting headers to text")
+        if pyperclip:
+            if k == "c":
+                try:
+                    pyperclip.copy(self.flow.response.get_decoded_content())
+                except TypeError:
+                    self.master.statusbar.message("Content is binary or can be converted to text")
+            elif k == "h":
+                try:
+                    pyperclip.copy(str(self.flow.response.headers))
+                except TypeError:
+                    self.master.statusbar.message("Error converting headers to text")
+        else:
+            self.master.statusbar.message("No clipboard support on your system, sorry.")
 
     def keypress(self, (maxcol,), key):
         key = common.shortcuts(key)
