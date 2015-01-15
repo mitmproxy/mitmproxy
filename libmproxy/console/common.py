@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import urwid
 import urwid.util
+import os
 from .. import utils
 from ..protocol.http import CONTENT_MISSING
 try:
@@ -164,20 +165,55 @@ def raw_format_flow(f, focus, extended, padding):
     pile.append(urwid.Columns(resp, dividechars=1))
     return urwid.Pile(pile)
 
-def server_copy_response( k, response, statusbar):
+## common save body parts
+def _save_body(path, master, state, content):
+    if not path:
+        return
+    state.last_saveload = path
+    path = os.path.expanduser(path)
+    try:
+        f = file(path, "wb")
+        f.write(str(content))
+        f.close()
+    except IOError, v:
+        master.statusbar.message(v.strerror)
+
+def save_body(k, master, state, content):
+    if k == "y":
+        master.path_prompt(
+            "Save response body: ",
+            state.last_saveload,
+            _save_body,
+            master,
+            state,
+            content,
+        )
+
+## common server_copy_response parts 
+def server_copy_response( k, master, state, response):
     if pyperclip:
         if k == "c":
             try:
                 pyperclip.copy(response.get_decoded_content())
             except TypeError:
-                statusbar.message("Content is binary or can be converted to text")
+                master.prompt_onekey(
+                    "Content is binary do you want to save it to a file instead?",
+                    (
+                        ("yes", "y"),
+                        ("no", "n"),
+                    ),
+                    save_body,
+                    master,
+                    state,
+                    response.get_decoded_content(),
+                )
         elif k == "h":
             try:
                 pyperclip.copy(str(response.headers))
             except TypeError:
-                statusbar.message("Error converting headers to text")
+                master.statusbar.message("Error converting headers to text")
     else:
-        statusbar.message("No clipboard support on your system, sorry.")
+        master.statusbar.message("No clipboard support on your system, sorry.")
 
 
 class FlowCache:
