@@ -189,8 +189,36 @@ def ask_save_body(k, master, state, content):
             content,
         )
 
+def which_body_save(k, master, state, flow):
+    if k == "q":
+        master.path_prompt(
+            "Save request content: ",
+            state.last_saveload,
+            save_body,
+            master,
+            state,
+            flow.request.get_decoded_content(),
+        )
+    elif k == "r":
+        if flow.response:
+            master.path_prompt(
+                "Save response content: ",
+                state.last_saveload,
+                save_body,
+                master,
+                state,
+                flow.response.get_decoded_content(),
+            )
+        else:
+            master.statusbar.message("Flow has no response")
+
 ## common copy_message parts 
 def copy_message( k, master, state, message):
+    if not message:
+        # only response could be None
+        master.statusbar.message("Flow has no response")                
+        return
+
     if pyperclip:
         if k == "c":
             try:

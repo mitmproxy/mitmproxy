@@ -7,6 +7,7 @@ def _mkhelp():
     keys = [
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
+        ("b", "save request/response body"),
         ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
@@ -229,6 +230,18 @@ class ConnectionItem(common.WWrap):
                 self.master,
                 self.state,
                 self.flow.request,
+            )
+        elif key == "b":
+            self.master.prompt_onekey(
+                "Save",
+                (
+                    ("request", "q"),
+                    ("response", "r"),
+                ),
+                common.which_body_save,
+                self.master,
+                self.state,
+                self.flow,
             )
         else:
             return key
