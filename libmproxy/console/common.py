@@ -181,7 +181,7 @@ def save_body(path, master, state, content):
 def ask_save_body(k, master, state, content):
     if k == "y":
         master.path_prompt(
-            "Save response body: ",
+            "Save message content: ",
             state.last_saveload,
             save_body,
             master,
@@ -189,12 +189,12 @@ def ask_save_body(k, master, state, content):
             content,
         )
 
-## common server_copy_response parts 
-def server_copy_response( k, master, state, response):
+## common copy_message parts 
+def copy_message( k, master, state, message):
     if pyperclip:
         if k == "c":
             try:
-                pyperclip.copy(response.get_decoded_content())
+                pyperclip.copy(message.get_decoded_content())
             except TypeError:
                 master.prompt_onekey(
                     "Content is binary do you want to save it to a file instead?",
@@ -205,16 +205,15 @@ def server_copy_response( k, master, state, response):
                     ask_save_body,
                     master,
                     state,
-                    response.get_decoded_content(),
+                    message.get_decoded_content(),
                 )
         elif k == "h":
             try:
-                pyperclip.copy(str(response.headers))
+                pyperclip.copy(str(message.headers))
             except TypeError:
                 master.statusbar.message("Error converting headers to text")
     else:
         master.statusbar.message("No clipboard support on your system, sorry.")
-
 
 class FlowCache:
     @utils.LRUCache(200)

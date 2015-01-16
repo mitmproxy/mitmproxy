@@ -13,6 +13,7 @@ def _mkhelp():
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
         ("g", "copy response(content/headers) to clipboard"),        
+        ("G", "copy request(content/headers) to clipboard"),                
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -210,10 +211,22 @@ class ConnectionItem(common.WWrap):
                     ("content", "c"),
                     ("headers", "h"),
                 ),
-                common.server_copy_response,
+                common.copy_message,
                 self.master,
                 self.state,
                 self.flow.response,
+            )
+        elif key == "G":
+            self.master.prompt_onekey(
+                "Copy Request",
+                (
+                    ("content", "c"),
+                    ("headers", "h"),
+                ),
+                common.copy_message,
+                self.master,
+                self.state,
+                self.flow.request,
             )
         else:
             return key

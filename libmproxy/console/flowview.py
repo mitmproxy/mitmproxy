@@ -20,6 +20,7 @@ def _mkhelp():
         ("e", "edit request/response"),
         ("f", "load full body data"),
         ("g", "copy response(content/headers) to clipboard"),        
+        ("G", "copy request(content/headers) to clipboard"),        
         ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +
@@ -746,10 +747,22 @@ class FlowView(common.WWrap):
                     ("content", "c"),
                     ("headers", "h"),
                 ),
-                common.server_copy_response,
+                common.copy_message,
                 self.master,
                 self.state,
                 self.flow.response,
+            )
+        elif key == "G":
+            self.master.prompt_onekey(
+                "Copy Request",
+                (
+                    ("content", "c"),
+                    ("headers", "h"),
+                ),
+                common.copy_message,
+                self.master,
+                self.state,
+                self.flow.request,
             )
         elif key == "m":
             p = list(contentview.view_prompts)
