@@ -240,6 +240,11 @@ def copy_message( k, master, state, message):
                 pyperclip.copy(str(message.headers))
             except TypeError:
                 master.statusbar.message("Error converting headers to text")
+        elif k == "u":
+            try:
+                pyperclip.copy(message.url)
+            except TypeError:
+                master.statusbar.message("Error copying url to clipboard")
     else:
         master.statusbar.message("No clipboard support on your system, sorry.")
 

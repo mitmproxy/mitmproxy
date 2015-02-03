@@ -14,7 +14,7 @@ def _mkhelp():
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
         ("g", "copy response(content/headers) to clipboard"),        
-        ("G", "copy request(content/headers) to clipboard"),                
+        ("G", "copy request(content/headers/url) to clipboard"),                
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -225,6 +225,7 @@ class ConnectionItem(common.WWrap):
                 (
                     ("content", "c"),
                     ("headers", "h"),
+                    ("url", "u"),                                        
                 ),
                 common.copy_message,
                 self.master,
