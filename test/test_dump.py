@@ -82,17 +82,17 @@ class TestDumpMaster:
             p = os.path.join(t, "rep")
             self._flowfile(p)
 
-            o = dump.Options(server_replay=p, kill=True)
+            o = dump.Options(server_replay=[p], kill=True)
             m = dump.DumpMaster(None, o, outfile=cs)
 
             self._cycle(m, "content")
             self._cycle(m, "content")
 
-            o = dump.Options(server_replay=p, kill=False)
+            o = dump.Options(server_replay=[p], kill=False)
             m = dump.DumpMaster(None, o, outfile=cs)
             self._cycle(m, "nonexistent")
 
-            o = dump.Options(client_replay=p, kill=False)
+            o = dump.Options(client_replay=[p], kill=False)
             m = dump.DumpMaster(None, o, outfile=cs)
 
     def test_read(self):

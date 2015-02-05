@@ -498,11 +498,13 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlog = not self.eventlog
         self.view_flowlist()
 
-    def _readflow(self, path):
-        path = os.path.expanduser(path)
+    def _readflow(self, paths):
         try:
-            f = file(path, "rb")
-            flows = list(flow.FlowReader(f).stream())
+            flows = []
+            for path in paths:
+                path = os.path.expanduser(path)
+                with file(path, "rb") as f:
+                    flows.extend(list(flow.FlowReader(f).stream()))
         except (IOError, flow.FlowReadError), v:
             return True, v.strerror
         return False, flows
