@@ -996,7 +996,7 @@ class HTTPHandler(ProtocolHandler):
                     include_body=False
                 )
                 break
-            except (tcp.NetLibDisconnect, http.HttpErrorConnClosed), v:
+            except (tcp.NetLibError, http.HttpErrorConnClosed), v:
                 self.c.log(
                     "error in server communication: %s" % repr(v),
                     level="debug"
@@ -1043,7 +1043,7 @@ class HTTPHandler(ProtocolHandler):
                     self.c.client_conn.rfile,
                     body_size_limit=self.c.config.body_size_limit
                 )
-            except tcp.NetLibDisconnect:
+            except tcp.NetLibError:
                 # don't throw an error for disconnects that happen
                 # before/between requests.
                 return False
@@ -1141,7 +1141,7 @@ class HTTPHandler(ProtocolHandler):
         message = repr(error)
         message_debug = None
 
-        if isinstance(error, tcp.NetLibDisconnect):
+        if isinstance(error, tcp.NetLibError):
             message = None
             message_debug = "TCP connection closed unexpectedly."
         elif "tlsv1 alert unknown ca" in message:

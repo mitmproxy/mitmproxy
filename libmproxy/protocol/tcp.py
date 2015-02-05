@@ -3,6 +3,7 @@ import select
 import socket
 from .primitives import ProtocolHandler
 from netlib.utils import cleanBin
+from netlib.tcp import NetLibError
 
 
 class TCPHandler(ProtocolHandler):
@@ -76,7 +77,8 @@ class TCPHandler(ProtocolHandler):
                                 ),
                                 "info"
                             )
-                        dst.connection.send(contents)
+                        # Do not use dst.connection.send here, which may raise OpenSSL-specific errors.
+                        dst.send(contents)
                     else:
                         # socket.socket.send supports raw bytearrays/memoryviews
                         if self.log:
@@ -87,6 +89,6 @@ class TCPHandler(ProtocolHandler):
                                 "info"
                             )
                         dst.connection.send(buf[:size])
-        except socket.error as e:
+        except (socket.error, NetLibError) as e:
             self.c.log("TCP connection closed unexpectedly.", "debug")
             return
