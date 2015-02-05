@@ -418,14 +418,14 @@ def common_options(parser):
     group = parser.add_argument_group("Client Replay")
     group.add_argument(
         "-c", "--client-replay",
-        action="store", dest="client_replay", default=None, metavar="PATH",
+        action="append", dest="client_replay", default=None, metavar="PATH",
         help="Replay client requests from a saved file."
     )
 
     group = parser.add_argument_group("Server Replay")
     group.add_argument(
         "-S", "--server-replay",
-        action="store", dest="server_replay", default=None, metavar="PATH",
+        action="append", dest="server_replay", default=None, metavar="PATH",
         help="Replay server responses from a saved file."
     )
     group.add_argument(
