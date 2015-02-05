@@ -75,7 +75,7 @@ class TestDumpMaster:
     def test_replay(self):
         cs = StringIO()
 
-        o = dump.Options(server_replay="nonexistent", kill=True)
+        o = dump.Options(server_replay=["nonexistent"], kill=True)
         tutils.raises(dump.DumpError, dump.DumpMaster, None, o, outfile=cs)
 
         with tutils.tmpdir() as t:

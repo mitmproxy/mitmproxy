@@ -945,6 +945,25 @@ class FlowMaster(controller.Master):
         self.stream = None
 
 
+def read_flows_from_paths(paths):
+    """
+    Given a list of filepaths, read all flows and return a list of them.
+    From a performance perspective, streaming would be advisable -
+    however, if there's an error with one of the files, we want it to be raised immediately.
+
+    If an error occurs, a FlowReadError will be raised.
+    """
+    try:
+        flows = []
+        for path in paths:
+            path = os.path.expanduser(path)
+            with file(path, "rb") as f:
+                flows.extend(FlowReader(f).stream())
+    except IOError as e:
+        raise FlowReadError(e.strerror)
+    return flows
+
+
 class FlowWriter:
     def __init__(self, fo):
         self.fo = fo
