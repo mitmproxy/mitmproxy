@@ -488,12 +488,15 @@ def get(name):
             return i
 
 
-def get_content_view(viewmode, hdrItems, content, limit, logfunc):
+def get_content_view(viewmode, hdrItems, content, limit, logfunc, is_request):
     """
         Returns a (msg, body) tuple.
     """
     if not content:
-        return ("No content", "")
+        if is_request:
+            return "No request content (press tab to view response)", ""
+        else:
+            return "No content", ""
     msg = []
 
     hdrs = flow.ODictCaseless([list(i) for i in hdrItems])

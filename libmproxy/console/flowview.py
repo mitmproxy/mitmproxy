@@ -3,7 +3,7 @@ import os, sys, copy
 import urwid
 from . import common, grideditor, contentview
 from .. import utils, flow, controller
-from ..protocol.http import HTTPResponse, CONTENT_MISSING, decoded
+from ..protocol.http import HTTPRequest, HTTPResponse, CONTENT_MISSING, decoded
 
 
 class SearchError(Exception): pass
@@ -129,8 +129,8 @@ class FlowView(common.WWrap):
         else:
             self.view_request()
 
-    def _cached_content_view(self, viewmode, hdrItems, content, limit):
-        return contentview.get_content_view(viewmode, hdrItems, content, limit, self.master.add_event)
+    def _cached_content_view(self, viewmode, hdrItems, content, limit, is_request):
+        return contentview.get_content_view(viewmode, hdrItems, content, limit, self.master.add_event, is_request)
 
     def content_view(self, viewmode, conn):
         full = self.state.get_flow_setting(
@@ -147,7 +147,8 @@ class FlowView(common.WWrap):
                     viewmode,
                     tuple(tuple(i) for i in conn.headers.lst),
                     conn.content,
-                    limit
+                    limit,
+                    isinstance(conn, HTTPRequest)
                 )
         return (description, text_objects)
 
