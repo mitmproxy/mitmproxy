@@ -499,38 +499,33 @@ class ConsoleMaster(flow.FlowMaster):
         self.view_flowlist()
 
     def _readflow(self, paths):
+        """
+        Utitility function that reads a list of flows
+        or prints an error to the UI if that fails.
+        Returns
+            - None, if there was an error.
+            - a list of flows, otherwise.
+        """
         try:
-            flows = []
-            for path in paths:
-                path = os.path.expanduser(path)
-                with file(path, "rb") as f:
-                    flows.extend(list(flow.FlowReader(f).stream()))
-        except (IOError, flow.FlowReadError), v:
-            return True, v.strerror
-        return False, flows
+            return flow.read_flows_from_paths(paths)
+        except flow.FlowReadError as e:
+            if not self.statusbar:
+                print >> sys.stderr, e.strerror
+                sys.exit(1)
+            else:
+                self.statusbar.message(e.strerror)
+            return None
 
     def client_playback_path(self, path):
-        err, ret = self._readflow(path)
-        if err:
-            if not self.statusbar:
-                print >> sys.stderr, ret
-                sys.exit(1)
-            else:
-                self.statusbar.message(ret)
-        else:
-            self.start_client_playback(ret, False)
+        flows = self._readflow(path)
+        if flows:
+            self.start_client_playback(flows, False)
 
     def server_playback_path(self, path):
-        err, ret = self._readflow(path)
-        if err:
-            if not self.statusbar:
-                print >> sys.stderr, ret
-                sys.exit(1)
-            else:
-                self.statusbar.message(ret)
-        else:
+        flows = self._readflow(path)
+        if flows:
             self.start_server_playback(
-                ret,
+                flows,
                 self.killextra, self.rheaders,
                 False, self.nopop,
                 self.options.replay_ignore_params, self.options.replay_ignore_content, self.options.replay_ignore_payload_params

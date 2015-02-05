@@ -144,15 +144,14 @@ class DumpMaster(flow.FlowMaster):
             self.start_app(self.o.app_host, self.o.app_port)
 
     def _readflow(self, paths):
+        """
+        Utitility function that reads a list of flows
+        or raises a DumpError if that fails.
+        """
         try:
-            flows = []
-            for path in paths:
-                path = os.path.expanduser(path)
-                with file(path, "rb") as f:
-                    flows.extend(list(flow.FlowReader(f).stream()))
-        except (IOError, flow.FlowReadError), v:
-            raise DumpError(v.strerror)
-        return flows
+            return flow.read_flows_from_paths(paths)
+        except flow.FlowReadError as e:
+            raise DumpError(e.strerror)
 
     def add_event(self, e, level="info"):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
