@@ -56,7 +56,9 @@ class TCPHandler(ProtocolHandler):
                         conns.remove(src.rfile)
                         # Shutdown connection to the other peer
                         if dst.ssl_established:
-                            dst.connection.shutdown()
+                            # We can't half-close a connection, so we just close everything here.
+                            # Sockets will be cleaned up on a higher level.
+                            return
                         else:
                             dst.connection.shutdown(socket.SHUT_WR)
 
