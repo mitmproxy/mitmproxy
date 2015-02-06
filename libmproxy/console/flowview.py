@@ -675,22 +675,10 @@ class FlowView(common.WWrap):
             self.master.accept_all()
             self.master.view_flow(self.flow)
         elif key == "b":
-            if conn:
-                if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-                    msg = "Save request body: "
-                    content = self.flow.request.content
-                else: 
-                    msg = "Save response body: "
-                    content = self.flow.response.content                    
-
-                self.master.path_prompt(
-                    msg,
-                    self.state.last_saveload,
-                    common.save_body,
-                    self.master,
-                    self.state,
-                    content,
-                )
+            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+                common.ask_save_body("q", self.master, self.state, self.flow)
+            else:
+                common.ask_save_body("s", self.master, self.state, self.flow)
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()

@@ -165,87 +165,104 @@ def raw_format_flow(f, focus, extended, padding):
     pile.append(urwid.Columns(resp, dividechars=1))
     return urwid.Pile(pile)
 
-## common save body parts
-def save_body(path, master, state, content):
+
+# Save file to disk
+def save_data(path, data, master, state):
     if not path:
         return
     state.last_saveload = path
     path = os.path.expanduser(path)
     try:
         with file(path, "wb") as f:
-            f.write(content)
+            f.write(data)
     except IOError, v:
         master.statusbar.message(v.strerror)
 
-def ask_save_body(k, master, state, content):
-    if k == "y":
-        master.path_prompt(
-            "Save message content: ",
-            state.last_saveload,
-            save_body,
-            master,
-            state,
-            content,
-        )
 
-def which_body_save(k, master, state, flow):
-    if k == "q":
-        master.path_prompt(
-            "Save request content: ",
-            state.last_saveload,
-            save_body,
-            master,
-            state,
-            flow.request.get_decoded_content(),
-        )
-    elif k == "r":
-        if flow.response:
-            master.path_prompt(
-                "Save response content: ",
-                state.last_saveload,
-                save_body,
+def ask_save_path(prompt, data, master, state):
+    master.path_prompt(
+        prompt,
+        state.last_saveload,
+        save_data,
+        data,
+        master,
+        state
+    )
+
+
+def ask_save_body(part, master, state, flow):
+    """
+    Save either the request or the response body to disk.
+    part can either be "q" (request), "s" (response) or None (ask user if necessary).
+    """
+
+    request_has_content = flow.request and flow.request.content
+    response_has_content = flow.response and flow.response.content
+
+    if part is None:
+        # We first need to determine whether we want to save the request or the response content.
+        if request_has_content and response_has_content:
+            master.prompt_onekey(
+                "Save",
+                (
+                    ("request", "q"),
+                    ("response", "s"),
+                ),
+                ask_save_body,
                 master,
                 state,
-                flow.response.get_decoded_content(),
+                flow
             )
+        elif response_has_content:
+            ask_save_body("s", master, state, flow)
         else:
-            master.statusbar.message("Flow has no response")
+            ask_save_body("q", master, state, flow)
 
-## common copy_message parts 
-def copy_message( k, master, state, message):
+    elif part == "q" and request_has_content:
+        ask_save_path("Save request content: ", flow.request.get_decoded_content(), master, state)
+    elif part == "s" and response_has_content:
+        ask_save_path("Save response content: ", flow.response.get_decoded_content(), master, state)
+    else:
+        master.statusbar.message("No content to save.")
+
+
+# common copy_message parts
+def copy_message(k, master, state, message):
+    if not pyperclip:
+        master.statusbar.message("No clipboard support on your system, sorry.")
+        return None
     if not message:
         # only response could be None
-        master.statusbar.message("Flow has no response")                
+        master.statusbar.message("Flow has no response")
         return
 
-    if pyperclip:
-        if k == "c":
-            try:
-                pyperclip.copy(message.get_decoded_content())
-            except TypeError:
-                master.prompt_onekey(
-                    "Cannot copy binary data to clipboard. Save as file?",
-                    (
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ),
-                    ask_save_body,
-                    master,
-                    state,
-                    message.get_decoded_content(),
-                )
-        elif k == "h":
-            try:
-                pyperclip.copy(message.headers)
-            except TypeError:
-                master.statusbar.message("Error converting headers to text")
-        elif k == "u":
-            try:
-                pyperclip.copy(message.url)
-            except TypeError:
-                master.statusbar.message("Error copying url to clipboard")
-    else:
-        master.statusbar.message("No clipboard support on your system, sorry.")
+    data = None
+    if k == "c":
+        data = message.get_decoded_content()
+    elif k == "h":
+        data = message.headers
+    elif k == "u":
+        data = message.url
+
+    if not data:
+        master.statusbar.message("No content to copy.")
+        return
+
+    try:
+        pyperclip.copy(data)
+    except TypeError:
+        def save(k):
+            if k == "y":
+                ask_save_path("Save data: ", data, master, state)
+        master.prompt_onekey(
+            "Cannot copy binary data to clipboard. Save as file?",
+            (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            save
+        )
+
 
 class FlowCache:
     @utils.LRUCache(200)

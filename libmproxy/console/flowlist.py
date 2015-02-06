@@ -217,7 +217,7 @@ class ConnectionItem(common.WWrap):
                 common.copy_message,
                 self.master,
                 self.state,
-                self.flow.response,
+                self.flow.response
             )
         elif key == "G":
             self.master.prompt_onekey(
@@ -230,20 +230,10 @@ class ConnectionItem(common.WWrap):
                 common.copy_message,
                 self.master,
                 self.state,
-                self.flow.request,
+                self.flow.request
             )
         elif key == "b":
-            self.master.prompt_onekey(
-                "Save",
-                (
-                    ("request", "q"),
-                    ("response", "r"),
-                ),
-                common.which_body_save,
-                self.master,
-                self.state,
-                self.flow,
-            )
+            common.ask_save_body(None, self.master, self.state, self.flow)
         else:
             return key
 
