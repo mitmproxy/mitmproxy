@@ -20,7 +20,6 @@ def _mkhelp():
         ("e", "edit request/response"),
         ("f", "load full body data"),
         ("g", "copy response(content/headers) to clipboard"),        
-        ("G", "copy request(content/headers/url) to clipboard"),        
         ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +
