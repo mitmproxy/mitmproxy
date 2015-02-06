@@ -224,7 +224,7 @@ def copy_message( k, master, state, message):
                 pyperclip.copy(message.get_decoded_content())
             except TypeError:
                 master.prompt_onekey(
-                    "Content is binary do you want to save it to a file instead?",
+                    "Cannot copy binary data to clipboard. Save as file?",
                     (
                         ("yes", "y"),
                         ("no", "n"),
@@ -236,7 +236,7 @@ def copy_message( k, master, state, message):
                 )
         elif k == "h":
             try:
-                pyperclip.copy(str(message.headers))
+                pyperclip.copy(message.headers)
             except TypeError:
                 master.statusbar.message("Error converting headers to text")
         elif k == "u":
