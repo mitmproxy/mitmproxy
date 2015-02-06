@@ -172,9 +172,8 @@ def save_body(path, master, state, content):
     state.last_saveload = path
     path = os.path.expanduser(path)
     try:
-        f = file(path, "wb")
-        f.write(str(content))
-        f.close()
+        with file(path, "wb") as f:
+            f.write(content)
     except IOError, v:
         master.statusbar.message(v.strerror)
 
