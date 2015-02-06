@@ -7,11 +7,14 @@ def _mkhelp():
     keys = [
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
+        ("b", "save request/response body"),
         ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
+        ("g", "copy response(content/headers) to clipboard"),        
+        ("G", "copy request(content/headers/url) to clipboard"),                
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -203,6 +206,43 @@ class ConnectionItem(common.WWrap):
                 self.state.last_script,
                 self.master.run_script_once,
                 self.flow
+            )
+        elif key == "g":
+            self.master.prompt_onekey(
+                "Copy Response",
+                (
+                    ("content", "c"),
+                    ("headers", "h"),
+                ),
+                common.copy_message,
+                self.master,
+                self.state,
+                self.flow.response,
+            )
+        elif key == "G":
+            self.master.prompt_onekey(
+                "Copy Request",
+                (
+                    ("content", "c"),
+                    ("headers", "h"),
+                    ("url", "u"),                                        
+                ),
+                common.copy_message,
+                self.master,
+                self.state,
+                self.flow.request,
+            )
+        elif key == "b":
+            self.master.prompt_onekey(
+                "Save",
+                (
+                    ("request", "q"),
+                    ("response", "r"),
+                ),
+                common.which_body_save,
+                self.master,
+                self.state,
+                self.flow,
             )
         else:
             return key
