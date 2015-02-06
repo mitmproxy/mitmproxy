@@ -3,7 +3,8 @@ import urwid
 import urwid.util
 import os
 from .. import utils
-from ..protocol.http import CONTENT_MISSING
+from ..protocol.http import CONTENT_MISSING, decoded
+
 try:
     import pyperclip
 except:
@@ -190,6 +191,86 @@ def ask_save_path(prompt, data, master, state):
     )
 
 
+def copy_flow_format_data(part, scope, flow):
+    if part == "u":
+        data = flow.request.url
+    else:
+        data = ""
+        if scope in ("q", "a"):
+            with decoded(flow.request):
+                if part == "h":
+                    data += flow.request.assemble()
+                elif part == "c":
+                    data += flow.request.content
+                else:
+                    raise ValueError("Unknown part: {}".format(part))
+        if scope == "a" and flow.request.content and flow.response:
+            # Add padding between request and response
+            data += "\r\n" * 2
+        if scope in ("s", "a") and flow.response:
+            with decoded(flow.response):
+                if part == "h":
+                    data += flow.response.assemble()
+                elif part == "c":
+                    data += flow.response.content
+                else:
+                    raise ValueError("Unknown part: {}".format(part))
+    return data
+
+
+def copy_flow(part, scope, flow, master, state):
+    """
+    part: _c_ontent, _a_ll, _u_rl
+    scope: _a_ll, re_q_uest, re_s_ponse
+    """
+    data = copy_flow_format_data(part, scope, flow)
+
+    if not data:
+        if scope == "q":
+            master.statusbar.message("No request content to copy.")
+        elif scope == "s":
+            master.statusbar.message("No response content to copy.")
+        else:
+            master.statusbar.message("No contents to copy.")
+        return
+
+    try:
+        master.add_event(str(len(data)))
+        pyperclip.copy(data)
+    except RuntimeError:
+        def save(k):
+            if k == "y":
+                ask_save_path("Save data: ", data, master, state)
+
+        master.prompt_onekey(
+            "Cannot copy binary data to clipboard. Save as file?",
+            (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            save
+        )
+
+
+def ask_copy_part(scope, flow, master, state):
+    choices = [
+        ("content", "c"),
+        ("headers+content", "h")
+    ]
+    if scope != "s":
+        choices.append(("url", "u"))
+
+    master.prompt_onekey(
+        "Copy",
+        choices,
+        copy_flow,
+        scope,
+        flow,
+        master,
+        state
+    )
+
+
 def ask_save_body(part, master, state, flow):
     """
     Save either the request or the response body to disk.
@@ -224,44 +305,6 @@ def ask_save_body(part, master, state, flow):
         ask_save_path("Save response content: ", flow.response.get_decoded_content(), master, state)
     else:
         master.statusbar.message("No content to save.")
-
-
-# common copy_message parts
-def copy_message(k, master, state, message):
-    if not pyperclip:
-        master.statusbar.message("No clipboard support on your system, sorry.")
-        return None
-    if not message:
-        # only response could be None
-        master.statusbar.message("Flow has no response")
-        return
-
-    data = None
-    if k == "c":
-        data = message.get_decoded_content()
-    elif k == "h":
-        data = message.headers
-    elif k == "u":
-        data = message.url
-
-    if not data:
-        master.statusbar.message("No content to copy.")
-        return
-
-    try:
-        pyperclip.copy(data)
-    except TypeError:
-        def save(k):
-            if k == "y":
-                ask_save_path("Save data: ", data, master, state)
-        master.prompt_onekey(
-            "Cannot copy binary data to clipboard. Save as file?",
-            (
-                ("yes", "y"),
-                ("no", "n"),
-            ),
-            save
-        )
 
 
 class FlowCache:
@@ -311,7 +354,6 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
         else:
             d["resp_ctype"] = ""
     return flowcache.format_flow(tuple(sorted(d.items())), focus, extended, padding)
-
 
 
 def int_version(v):

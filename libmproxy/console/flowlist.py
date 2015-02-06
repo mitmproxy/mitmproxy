@@ -13,8 +13,7 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
-        ("g", "copy response(content/headers) to clipboard"),        
-        ("G", "copy request(content/headers/url) to clipboard"),                
+        ("g", "copy flow to clipboard"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -208,30 +207,7 @@ class ConnectionItem(common.WWrap):
                 self.flow
             )
         elif key == "g":
-            self.master.prompt_onekey(
-                "Copy Response",
-                (
-                    ("content", "c"),
-                    ("headers", "h"),
-                ),
-                common.copy_message,
-                self.master,
-                self.state,
-                self.flow.response
-            )
-        elif key == "G":
-            self.master.prompt_onekey(
-                "Copy Request",
-                (
-                    ("content", "c"),
-                    ("headers", "h"),
-                    ("url", "u"),                                        
-                ),
-                common.copy_message,
-                self.master,
-                self.state,
-                self.flow.request
-            )
+            common.ask_copy_part("a", self.flow, self.master, self.state)
         elif key == "b":
             common.ask_save_body(None, self.master, self.state, self.flow)
         else:

@@ -730,30 +730,11 @@ class FlowView(common.WWrap):
             self.master.refresh_flow(self.flow)
             self.master.statusbar.message("")
         elif key == "g":
-            self.master.prompt_onekey(
-                "Copy Response",
-                (
-                    ("content", "c"),
-                    ("headers", "h"),
-                ),
-                common.copy_message,
-                self.master,
-                self.state,
-                self.flow.response,
-            )
-        elif key == "G":
-            self.master.prompt_onekey(
-                "Copy Request",
-                (
-                    ("content", "c"),
-                    ("headers", "h"),
-                    ("url", "u"),                    
-                ),
-                common.copy_message,
-                self.master,
-                self.state,
-                self.flow.request,
-            )
+            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+                scope = "q"
+            else:
+                scope = "s"
+            common.ask_copy_part(scope, self.flow, self.master, self.state)
         elif key == "m":
             p = list(contentview.view_prompts)
             p.insert(0, ("Clear", "C"))
