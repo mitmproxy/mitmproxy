@@ -2,7 +2,7 @@ language: python
 sudo: false
 python:
   - "2.7"
-  - pypy
+#  - pypy # pypy 2.5.0 has a regression bug which breaks our test suite.
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
   - "pip install --upgrade --src . -r requirements.txt"
