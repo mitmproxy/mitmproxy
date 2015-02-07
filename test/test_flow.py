@@ -47,7 +47,7 @@ class TestStickyCookieState:
         assert s.domain_match("google.com", ".google.com")
 
     def test_handle_response(self):
-        c = "SSID=mooo, FOO=bar; Domain=.google.com; Path=/; "\
+        c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; "\
             "Expires=Wed, 13-Jan-2021 22:23:01 GMT; Secure; "
 
         s, f = self._response(c, "host")

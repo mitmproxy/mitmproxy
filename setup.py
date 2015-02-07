@@ -33,8 +33,7 @@ script_deps = {
 for script in scripts:
     deps.update(script_deps[script])
 if os.name == "nt":
-    deps.add("pydivert>=0.0.4")  # Transparent proxying on Windows
-
+    deps.add("pydivert>=0.0.7")  # Transparent proxying on Windows
 
 setup(
     name="mitmproxy",
@@ -55,6 +54,8 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Security",
         "Topic :: Internet",
         "Topic :: Internet :: WWW/HTTP",
@@ -63,7 +64,7 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
-    scripts = scripts,
+    scripts=scripts,
     install_requires=list(deps),
     extras_require={
         'dev': [
