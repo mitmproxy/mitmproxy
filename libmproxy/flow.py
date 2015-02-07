@@ -824,12 +824,10 @@ class FlowMaster(controller.Master):
         if self.stickycookie_state:
             self.stickycookie_state.handle_response(f)
 
-    def replay_request(self, f, block=False):
+    def replay_request(self, f, block=False, run_scripthooks=True):
         """
             Returns None if successful, or error message if not.
         """
-        if f.live:
-            return "Can't replay request which is still live..."
         if f.intercepted:
             return "Can't replay while intercepting..."
         if f.request.content == http.CONTENT_MISSING:
@@ -845,7 +843,7 @@ class FlowMaster(controller.Master):
             rt = http.RequestReplayThread(
                 self.server.config,
                 f,
-                self.masterq,
+                self.masterq if run_scripthooks else False,
                 self.should_exit
             )
             rt.start()  # pragma: no cover

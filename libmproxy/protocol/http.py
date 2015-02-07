@@ -1416,20 +1416,31 @@ class RequestReplayThread(threading.Thread):
     name = "RequestReplayThread"
 
     def __init__(self, config, flow, masterq, should_exit):
-        self.config, self.flow, self.channel = config, flow, controller.Channel(masterq, should_exit)
-        threading.Thread.__init__(self)
+        """
+        masterqueue can be a queue or None, if no scripthooks should be processed.
+        """
+        self.config, self.flow = config, flow
+        if masterq:
+            self.channel = controller.Channel(masterq, should_exit)
+        else:
+            self.channel = None
+        super(RequestReplayThread, self).__init__()
 
     def run(self):
         r = self.flow.request
         form_out_backup = r.form_out
         try:
             self.flow.response = None
-            request_reply = self.channel.ask("request", self.flow)
-            if request_reply is None or request_reply == KILL:
-                raise KillSignal()
-            elif isinstance(request_reply, HTTPResponse):
-                self.flow.response = request_reply
-            else:
+
+            # If we have a channel, run script hooks.
+            if self.channel:
+                request_reply = self.channel.ask("request", self.flow)
+                if request_reply is None or request_reply == KILL:
+                    raise KillSignal()
+                elif isinstance(request_reply, HTTPResponse):
+                    self.flow.response = request_reply
+
+            if not self.flow.response:
                 # In all modes, we directly connect to the server displayed
                 if self.config.mode == "upstream":
                     server_address = self.config.mode.get_upstream_server(self.flow.client_conn)[2:]
@@ -1453,13 +1464,16 @@ class RequestReplayThread(threading.Thread):
                 self.flow.server_conn = server
                 self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
                                                               body_size_limit=self.config.body_size_limit)
-            response_reply = self.channel.ask("response", self.flow)
-            if response_reply is None or response_reply == KILL:
-                raise KillSignal()
+            if self.channel:
+                response_reply = self.channel.ask("response", self.flow)
+                if response_reply is None or response_reply == KILL:
+                    raise KillSignal()
         except (proxy.ProxyError, http.HttpError, tcp.NetLibError) as v:
             self.flow.error = Error(repr(v))
-            self.channel.ask("error", self.flow)
+            if self.channel:
+                self.channel.ask("error", self.flow)
         except KillSignal:
+            # KillSignal should only be raised if there's a channel in the first place.
             self.channel.tell("log", proxy.Log("Connection killed", "info"))
         finally:
             r.form_out = form_out_backup
