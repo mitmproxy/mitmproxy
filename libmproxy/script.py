@@ -20,6 +20,12 @@ class ScriptContext:
         """
         self._master.add_event(message, level)
 
+    def kill_flow(self, f):
+        """
+            Kills a flow immediately. No further data will be sent to the client or the server.
+        """
+        f.kill(self._master)
+
     def duplicate_flow(self, f):
         """
             Returns a duplicate of the specified flow. The flow is also
