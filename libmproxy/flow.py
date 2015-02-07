@@ -828,6 +828,8 @@ class FlowMaster(controller.Master):
         """
             Returns None if successful, or error message if not.
         """
+        if f.live and run_scripthooks:
+            return "Can't replay live request."
         if f.intercepted:
             return "Can't replay while intercepting..."
         if f.request.content == http.CONTENT_MISSING:
