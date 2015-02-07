@@ -1,9 +1,11 @@
 language: python
+sudo: false
 python:
   - "2.7"
+  - pypy
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: 
-  - "pip install --src .. -r requirements.txt"
+install:
+  - "pip install --src . -r requirements.txt"
 # command to run tests, e.g. python setup.py test
 script: 
   - "nosetests --with-cov --cov-report term-missing"
@@ -15,4 +17,7 @@ notifications:
       - "irc.oftc.net#mitmproxy"
     on_success: change
     on_failure: always
-
+cache:
+  directories:
+  - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
+  - /home/travis/virtualenv/pypy-2.5.0/site-packages
