@@ -59,13 +59,16 @@ $ <span style="color: white">mitmproxy --ignore ^example\.com:443$</span>
 
 Here are some other examples for ignore patterns:
 <pre>
-# Exempt traffic from the iOS App Store (usually just works):
+# Exempt traffic from the iOS App Store (the regex is lax, but usually just works):
 --ignore apple.com:443  
 # "Correct" version without false-positives:
 --ignore ^(.+\.)?apple\.com:443$ 
     
-# Ignore example.com on all ports, but no subdomains:
+# Ignore example.com, but not its subdomains:
 --ignore ^example.com:
+
+# Ignore everything but example.com and mitmproxy.org:
+--ignore ^(?!example\.com)(?!mitmproxy\.org)
     
 # Transparent mode:
 --ignore 17\.178\.96\.59:443
