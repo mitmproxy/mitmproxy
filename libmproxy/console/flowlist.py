@@ -7,11 +7,13 @@ def _mkhelp():
     keys = [
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
+        ("b", "save request/response body"),
         ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
+        ("g", "copy flow to clipboard"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("r", "replay request"),
@@ -204,6 +206,10 @@ class ConnectionItem(common.WWrap):
                 self.master.run_script_once,
                 self.flow
             )
+        elif key == "g":
+            common.ask_copy_part("a", self.flow, self.master, self.state)
+        elif key == "b":
+            common.ask_save_body(None, self.master, self.state, self.flow)
         else:
             return key
 
