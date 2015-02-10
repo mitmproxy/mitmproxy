@@ -17,6 +17,17 @@ VIEW_FLOW = 1
 VIEW_FLOW_REQUEST = 0
 VIEW_FLOW_RESPONSE = 1
 
+METHOD_OPTIONS = [
+    ("get", "g"),
+    ("post", "p"),
+    ("put", "u"),
+    ("head", "h"),
+    ("trace", "t"),
+    ("delete", "d"),
+    ("options", "o"),
+    ("edit raw", "e"),
+]
+
 
 def highlight_key(s, k):
     l = []

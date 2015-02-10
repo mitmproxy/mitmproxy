@@ -763,6 +763,15 @@ class FlowMaster(controller.Master):
     def duplicate_flow(self, f):
         return self.load_flow(f.copy())
 
+    def add_request(self, method, scheme, host, port, path):
+        f = http.HTTPFlow(None,None);
+        headers = ODictCaseless()
+        
+        req = http.HTTPRequest("relative", method, scheme, host, port, path, (1, 1), headers, None,
+                                 None, None, None)
+        f.request = req
+        return self.load_flow(f)
+
     def load_flow(self, f):
         """
             Loads a flow, and returns a new flow object.

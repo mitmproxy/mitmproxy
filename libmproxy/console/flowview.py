@@ -109,16 +109,6 @@ cache = CallbackCache()
 class FlowView(common.WWrap):
     REQ = 0
     RESP = 1
-    method_options = [
-        ("get", "g"),
-        ("post", "p"),
-        ("put", "u"),
-        ("head", "h"),
-        ("trace", "t"),
-        ("delete", "d"),
-        ("options", "o"),
-        ("edit raw", "e"),
-    ]
 
     highlight_color = "focusfield"
 
@@ -504,7 +494,7 @@ class FlowView(common.WWrap):
         if m == "e":
             self.master.prompt_edit("Method", self.flow.request.method, self.set_method_raw)
         else:
-            for i in self.method_options:
+            for i in common.METHOD_OPTIONS:
                 if i[1] == m:
                     self.flow.request.method = i[0].upper()
             self.master.refresh_flow(self.flow)
@@ -599,7 +589,7 @@ class FlowView(common.WWrap):
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", message.url, self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_onekey("Method", self.method_options, self.edit_method)
+            self.master.prompt_onekey("Method", common.METHOD_OPTIONS, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             self.master.prompt_edit("Code", str(message.code), self.set_resp_code)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
