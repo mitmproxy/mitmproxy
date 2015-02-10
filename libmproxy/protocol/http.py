@@ -1457,9 +1457,11 @@ class RequestReplayThread(threading.Thread):
                     server = ServerConnection(server_address)
                     server.connect()
                     if r.scheme == "https":
-                        server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
+                        sni = None
+                        if self.flow.server_conn:
+                            sni = self.flow.server_conn.sni
+                        server.establish_ssl(self.config.clientcerts, sni=sni)
                     r.form_out = "relative"
-
                 server.send(r.assemble())
                 self.flow.server_conn = server
                 self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
