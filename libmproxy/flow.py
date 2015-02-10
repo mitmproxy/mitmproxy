@@ -767,7 +767,7 @@ class FlowMaster(controller.Master):
         f = http.HTTPFlow(None,None);
         headers = ODictCaseless()
         
-        req = http.HTTPRequest("relative", method, scheme, host, port, path, (1, 1), headers, None,
+        req = http.HTTPRequest("absolute", method, scheme, host, port, path, (1, 1), headers, None,
                                  None, None, None)
         f.request = req
         return self.load_flow(f)
