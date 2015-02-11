@@ -763,7 +763,13 @@ class FlowMaster(controller.Master):
     def duplicate_flow(self, f):
         return self.load_flow(f.copy())
 
-    def add_request(self, method, scheme, host, port, path):
+    def create_request(self, method, scheme, host, port, path):
+        """
+        Creates a new request from params and add it to flow list.
+        created request is empty (except for method and url) but is able 
+        to be replayed 
+
+        """        
         f = http.HTTPFlow(None,None);
         headers = ODictCaseless()
         
