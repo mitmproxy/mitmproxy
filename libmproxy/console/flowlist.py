@@ -266,7 +266,7 @@ class FlowListBox(urwid.ListBox):
 
     def new_request(self, url, method):
         try:
-            scheme, host, port, path = http.parse_url(url)
+            scheme, host, port, path = http.parse_url(str(url))
             f = self.master.create_request(method, scheme, host, port, path)
             self.master.view_flow(f)
         except ValueError:
