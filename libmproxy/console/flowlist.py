@@ -265,12 +265,13 @@ class FlowListBox(urwid.ListBox):
         self.master.prompt("URL:", "http://www.example.com/", self.new_request, method)
 
     def new_request(self, url, method):
-        try:
-            scheme, host, port, path = http.parse_url(str(url))
-            f = self.master.create_request(method, scheme, host, port, path)
-            self.master.view_flow(f)
-        except ValueError:
+        parts = http.parse_url(str(url))
+        if not parts:
             self.master.statusbar.message("Invalid Url")
+            return
+        scheme, host, port, path = parts
+        f = self.master.create_request(method, scheme, host, port, path)
+        self.master.view_flow(f)
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
