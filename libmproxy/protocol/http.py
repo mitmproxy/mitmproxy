@@ -1457,10 +1457,7 @@ class RequestReplayThread(threading.Thread):
                     server = ServerConnection(server_address)
                     server.connect()
                     if r.scheme == "https":
-                        sni = None
-                        if self.flow.server_conn:
-                            sni = self.flow.server_conn.sni
-                        server.establish_ssl(self.config.clientcerts, sni=sni)
+                        server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
                     r.form_out = "relative"
                 server.send(r.assemble())
                 self.flow.server_conn = server

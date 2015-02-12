@@ -777,7 +777,9 @@ class FlowMaster(controller.Master):
                 address=dict(address=(host, port), use_ipv6=False),
                 state=[],
                 source_address=None, #source_address=dict(address=(host, port), use_ipv6=False),
-                cert=None
+                cert=None,
+                sni=host,
+                ssl_established=True
             ))
         f = http.HTTPFlow(c,s);
         headers = ODictCaseless()
