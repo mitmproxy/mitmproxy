@@ -766,9 +766,7 @@ class FlowMaster(controller.Master):
 
     def create_request(self, method, scheme, host, port, path):
         """
-        Creates a new request from params and add it to flow list.
-        created request is empty (except for method and url) but is able 
-        to be replayed 
+            this method creates a new artificial and minimalist request also adds it to flowlist
         """        
         c = ClientConnection.from_state(dict(
                 address=dict(address=(host, port), use_ipv6=False),
