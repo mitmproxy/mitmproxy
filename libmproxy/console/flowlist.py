@@ -17,7 +17,7 @@ def _mkhelp():
         ("g", "copy flow to clipboard"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
-        ("n", "creates a new request"),
+        ("n", "create a new request"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
@@ -262,7 +262,7 @@ class FlowListBox(urwid.ListBox):
             self.get_url(method)
 
     def get_url(self,method):
-        self.master.prompt("Url:", "http://www.example.com/", self.new_request, method)
+        self.master.prompt("URL:", "http://www.example.com/", self.new_request, method)
 
     def new_request(self, url, method):
         try:
