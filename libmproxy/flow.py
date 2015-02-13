@@ -8,12 +8,13 @@ import Cookie
 import cookielib
 import os
 import re
-from netlib import odict, wsgi
+from netlib import odict, wsgi, tcp
 import netlib.http
 from . import controller, protocol, tnetstring, filt, script, version
 from .onboarding import app
 from .protocol import http, handle
 from .proxy.config import HostMatcher
+from .proxy.connection import ClientConnection, ServerConnection
 import urlparse
 
 ODict = odict.ODict
@@ -762,6 +763,31 @@ class FlowMaster(controller.Master):
 
     def duplicate_flow(self, f):
         return self.load_flow(f.copy())
+
+    def create_request(self, method, scheme, host, port, path):
+        """
+            this method creates a new artificial and minimalist request also adds it to flowlist
+        """        
+        c = ClientConnection.from_state(dict(
+                address=dict(address=(host, port), use_ipv6=False),
+                clientcert=None
+            ))
+
+        s = ServerConnection.from_state(dict(
+                address=dict(address=(host, port), use_ipv6=False),
+                state=[],
+                source_address=None, #source_address=dict(address=(host, port), use_ipv6=False),
+                cert=None,
+                sni=host,
+                ssl_established=True
+            ))
+        f = http.HTTPFlow(c,s);
+        headers = ODictCaseless()
+        
+        req = http.HTTPRequest("absolute", method, scheme, host, port, path, (1, 1), headers, None,
+                                 None, None, None)
+        f.request = req
+        return self.load_flow(f)
 
     def load_flow(self, f):
         """

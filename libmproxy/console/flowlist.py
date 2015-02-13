@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import urwid
+from netlib import http
 from . import common
 
 def _mkhelp():
@@ -16,6 +17,7 @@ def _mkhelp():
         ("g", "copy flow to clipboard"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
+        ("n", "create a new request"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
@@ -245,6 +247,32 @@ class FlowListBox(urwid.ListBox):
         self.master = master
         urwid.ListBox.__init__(self, master.flow_list_walker)
 
+    def get_method_raw(self, k):
+        if k:
+            self.get_url(k)    
+
+    def get_method(self, k):
+        if k == "e":
+            self.master.prompt("Method:", "", self.get_method_raw)
+        else:
+            method = ""
+            for i in common.METHOD_OPTIONS:
+                if i[1] == k:
+                    method = i[0].upper()
+            self.get_url(method)
+
+    def get_url(self,method):
+        self.master.prompt("URL:", "http://www.example.com/", self.new_request, method)
+
+    def new_request(self, url, method):
+        parts = http.parse_url(str(url))
+        if not parts:
+            self.master.statusbar.message("Invalid Url")
+            return
+        scheme, host, port, path = parts
+        f = self.master.create_request(method, scheme, host, port, path)
+        self.master.view_flow(f)
+
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "A":
@@ -262,6 +290,8 @@ class FlowListBox(urwid.ListBox):
                 self.master.state.last_saveload,
                 self.master.load_flows_callback
             )
+        elif key == "n":
+            self.master.prompt_onekey("Method", common.METHOD_OPTIONS, self.get_method)
         elif key == "F":
             self.master.toggle_follow_flows()
         elif key == "W":
