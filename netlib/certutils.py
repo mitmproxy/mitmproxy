@@ -61,7 +61,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
 
     cert = OpenSSL.crypto.X509()
     cert.gmtime_adj_notBefore(-3600*48)
-    cert.gmtime_adj_notAfter(60 * 60 * 24 * 30 * 365 * 5)
+    cert.gmtime_adj_notAfter(60 * 60 * 24 * 365 * 5)
     cert.set_issuer(cacert.get_subject())
     cert.get_subject().CN = commonname
     cert.set_serial_number(int(time.time()*10000))
