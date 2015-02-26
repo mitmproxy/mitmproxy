@@ -79,6 +79,18 @@ def pretty_size(size):
                 x = int(x)
             return str(x) + suf
 
+def pretty_duration(secs):
+    formatters = [
+        (100, "{:.0f}s"), 
+        (10, "{:2.1f}s"), 
+        (1, "{:1.2f}s"),         
+    ]
+
+    for limit, formatter in formatters:
+        if secs >= limit:
+            return formatter.format(secs)
+    #less than 1 sec 
+    return "{:.0f}ms".format(secs*1000)
 
 class Data:
     def __init__(self, name):

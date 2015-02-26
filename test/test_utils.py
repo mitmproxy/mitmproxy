@@ -50,6 +50,19 @@ def test_urldecode():
     s = "one=two&three=four"
     assert len(utils.urldecode(s)) == 2
 
+def test_pretty_duration():
+    assert utils.pretty_duration(0.00001) == "0ms"
+    assert utils.pretty_duration(0.0001) == "0ms"
+    assert utils.pretty_duration(0.001) == "1ms"
+    assert utils.pretty_duration(0.01) == "10ms"
+    assert utils.pretty_duration(0.1) == "100ms"
+    assert utils.pretty_duration(1) == "1.00s"
+    assert utils.pretty_duration(10) == "10.0s"
+    assert utils.pretty_duration(100) == "100s"
+    assert utils.pretty_duration(1000) == "1000s"
+    assert utils.pretty_duration(10000) == "10000s"    
+    assert utils.pretty_duration(1.123) == "1.12s"
+    assert utils.pretty_duration(0.123) == "123ms"
 
 def test_LRUCache():
     class Foo:
