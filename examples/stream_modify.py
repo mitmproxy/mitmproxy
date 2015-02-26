@@ -1,3 +1,10 @@
+"""
+This inline script won't work with --stream SIZE command line option.
+
+That's because flow.response.stream will be overwritten to True if the
+command line option exists.
+"""
+
 def modify(chunks):
     """
     chunks is a generator that can be used to iterate over all chunks.
@@ -9,3 +16,4 @@ def modify(chunks):
 
 def responseheaders(ctx, flow):
     flow.response.stream = modify
+    flow.response.stream_large_bodies = 1024 # = 1KB
