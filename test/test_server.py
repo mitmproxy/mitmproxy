@@ -266,6 +266,12 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
         assert self.master.state.view[-1].response.content == CONTENT_MISSING
         self.master.set_stream_large_bodies(None)
 
+    def test_stream_modify(self):
+        self.master.load_script(tutils.test_data.path("scripts/stream_modify.py"))
+        d = self.pathod('200:b"foo"')
+        assert d.content == "bar"
+        self.master.unload_scripts()
+
 class TestHTTPAuth(tservers.HTTPProxTest):
     authenticator = http_auth.BasicProxyAuth(http_auth.PassManSingleUser("test", "test"), "realm")
     def test_auth(self):
