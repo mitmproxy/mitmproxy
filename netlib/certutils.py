@@ -6,7 +6,7 @@ from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
 
-DEFAULT_EXP = 62208000 # =24 * 60 * 60 * 720
+DEFAULT_EXP = 157680000 # = 24 * 60 * 60 * 365 * 5
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = """-----BEGIN DH PARAMETERS-----
 MIGHAoGBAOdPzMbYgoYfO3YBYauCLRlE8X1XypTiAjoeCFD0qWRx8YUsZ6Sj20W5
@@ -61,7 +61,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
 
     cert = OpenSSL.crypto.X509()
     cert.gmtime_adj_notBefore(-3600*48)
-    cert.gmtime_adj_notAfter(60 * 60 * 24 * 30)
+    cert.gmtime_adj_notAfter(DEFAULT_EXP)
     cert.set_issuer(cacert.get_subject())
     cert.get_subject().CN = commonname
     cert.set_serial_number(int(time.time()*10000))
