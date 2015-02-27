@@ -575,15 +575,21 @@ class TestSSLKeyLogger(test.ServerTestBase):
             )
 
     def test_log(self):
+        testval = "echo!\n"
         _logfun = tcp.log_ssl_key
 
         with tutils.tmpdir() as d:
             logfile = os.path.join(d, "foo", "bar", "logfile")
             tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
+
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
             c.convert_to_ssl()
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
             c.finish()
+
             tcp.log_ssl_key.close()
             with open(logfile, "rb") as f:
                 assert f.read().count("CLIENT_RANDOM") == 2
