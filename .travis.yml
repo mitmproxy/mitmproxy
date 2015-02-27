@@ -20,4 +20,6 @@ notifications:
 cache:
   directories:
   - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
+  - /home/travis/virtualenv/python2.7.9/bin
   - /home/travis/virtualenv/pypy-2.5.0/site-packages
+  - /home/travis/virtualenv/pypy-2.5.0/bin

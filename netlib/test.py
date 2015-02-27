@@ -15,7 +15,7 @@ class ServerThread(threading.Thread):
         self.server.shutdown()
 
 
-class ServerTestBase:
+class ServerTestBase(object):
     ssl = None
     handler = None
     addr = ("localhost", 0)

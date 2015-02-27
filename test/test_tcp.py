@@ -563,6 +563,7 @@ class TestServer(test.ServerTestBase):
         c.wfile.flush()
         assert c.rfile.readline() == testval
 
+
 class TestSSLKeyLogger(test.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
@@ -582,6 +583,7 @@ class TestSSLKeyLogger(test.ServerTestBase):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
             c.convert_to_ssl()
+            c.finish()
             tcp.log_ssl_key.close()
             with open(logfile, "rb") as f:
                 assert f.read().count("CLIENT_RANDOM") == 2
