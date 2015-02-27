@@ -1,5 +1,6 @@
 import socket, time
 from libmproxy.proxy.config import HostMatcher
+import libpathod
 from netlib import tcp, http_auth, http
 from libpathod import pathoc, pathod
 from netlib.certutils import SSLCert
@@ -330,6 +331,36 @@ class TestHTTPSNoCommonName(tservers.HTTPProxTest):
 
 class TestReverse(tservers.ReverseProxTest, CommonMixin, TcpMixin):
     reverse = True
+
+
+class TestHttps2Http(tservers.ReverseProxTest):
+    @classmethod
+    def get_proxy_config(cls):
+        d = super(TestHttps2Http, cls).get_proxy_config()
+        d["upstream_server"][0] = True
+        return d
+
+    def pathoc(self, ssl, sni=None):
+        """
+            Returns a connected Pathoc instance.
+        """
+        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=ssl, sni=sni)
+        p.connect()
+        return p
+
+    def test_all(self):
+        p = self.pathoc(ssl=True)
+        assert p.request("get:'/p/200'").status_code == 200
+
+    def test_sni(self):
+        p = self.pathoc(ssl=True, sni="example.com")
+        assert p.request("get:'/p/200'").status_code == 200
+        assert all("Error in handle_sni" not in msg for msg in self.proxy.log)
+
+    def test_http(self):
+        p = self.pathoc(ssl=False)
+        assert p.request("get:'/p/200'").status_code == 400
+
 
 
 class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):

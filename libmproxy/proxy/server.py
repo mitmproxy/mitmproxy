@@ -285,7 +285,12 @@ class ConnectionHandler:
 
             if sni != self.server_conn.sni:
                 self.log("SNI received: %s" % sni, "debug")
-                self.server_reconnect(sni)  # reconnect to upstream server with SNI
+                # We should only re-establish upstream SSL if one of the following conditions is true:
+                #   - We established SSL with the server previously
+                #   - We initially wanted to establish SSL with the server,
+                #     but the server refused to negotiate without SNI.
+                if self.server_conn.ssl_established or hasattr(self.server_conn, "may_require_sni"):
+                    self.server_reconnect(sni)  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn._create_ssl_context(
