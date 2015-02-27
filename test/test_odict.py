@@ -31,7 +31,9 @@ class TestODict:
         state = self.od.get_state()
         nd = odict.ODict.from_state(state)
         assert nd == self.od
-        nd.load_state(state)
+        b = odict.ODict()
+        b.load_state(state)
+        assert b == self.od
 
     def test_dictToHeader2(self):
         self.od["one"] = ["uno"]
@@ -78,6 +80,7 @@ class TestODict:
         self.od.add("foo", 2)
         self.od.add("bar", 3)
         assert self.od == self.od.copy()
+        assert not self.od != self.od.copy()
 
     def test_del(self):
         self.od.add("foo", 1)

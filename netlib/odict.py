@@ -166,7 +166,7 @@ class ODict:
         return [tuple(i) for i in self.lst]
 
     def load_state(self, state):
-        self.list = [list(i) for i in state]
+        self.lst = [list(i) for i in state]
 
     @classmethod
     def from_state(klass, state):
