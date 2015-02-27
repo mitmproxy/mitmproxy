@@ -19,6 +19,7 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "edit request/response"),
         ("f", "load full body data"),
+        ("g", "copy response(content/headers) to clipboard"),        
         ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +
@@ -108,16 +109,6 @@ cache = CallbackCache()
 class FlowView(common.WWrap):
     REQ = 0
     RESP = 1
-    method_options = [
-        ("get", "g"),
-        ("post", "p"),
-        ("put", "u"),
-        ("head", "h"),
-        ("trace", "t"),
-        ("delete", "d"),
-        ("options", "o"),
-        ("edit raw", "e"),
-    ]
 
     highlight_color = "focusfield"
 
@@ -503,26 +494,10 @@ class FlowView(common.WWrap):
         if m == "e":
             self.master.prompt_edit("Method", self.flow.request.method, self.set_method_raw)
         else:
-            for i in self.method_options:
+            for i in common.METHOD_OPTIONS:
                 if i[1] == m:
                     self.flow.request.method = i[0].upper()
             self.master.refresh_flow(self.flow)
-
-    def save_body(self, path):
-        if not path:
-            return
-        self.state.last_saveload = path
-        if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            c = self.flow.request
-        else:
-            c = self.flow.response
-        path = os.path.expanduser(path)
-        try:
-            f = file(path, "wb")
-            f.write(str(c.content))
-            f.close()
-        except IOError, v:
-            self.master.statusbar.message(v.strerror)
 
     def set_url(self, url):
         request = self.flow.request
@@ -614,7 +589,7 @@ class FlowView(common.WWrap):
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             self.master.prompt_edit("URL", message.url, self.set_url)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_onekey("Method", self.method_options, self.edit_method)
+            self.master.prompt_onekey("Method", common.METHOD_OPTIONS, self.edit_method)
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             self.master.prompt_edit("Code", str(message.code), self.set_resp_code)
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
@@ -689,19 +664,10 @@ class FlowView(common.WWrap):
             self.master.accept_all()
             self.master.view_flow(self.flow)
         elif key == "b":
-            if conn:
-                if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-                    self.master.path_prompt(
-                        "Save request body: ",
-                        self.state.last_saveload,
-                        self.save_body
-                    )
-                else:
-                    self.master.path_prompt(
-                        "Save response body: ",
-                        self.state.last_saveload,
-                        self.save_body
-                    )
+            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+                common.ask_save_body("q", self.master, self.state, self.flow)
+            else:
+                common.ask_save_body("s", self.master, self.state, self.flow)
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()
@@ -752,6 +718,12 @@ class FlowView(common.WWrap):
             )
             self.master.refresh_flow(self.flow)
             self.master.statusbar.message("")
+        elif key == "g":
+            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+                scope = "q"
+            else:
+                scope = "s"
+            common.ask_copy_part(scope, self.flow, self.master, self.state)
         elif key == "m":
             p = list(contentview.view_prompts)
             p.insert(0, ("Clear", "C"))
