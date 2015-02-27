@@ -75,7 +75,8 @@ class TServer(tcp.TCPServer):
                 handle_sni = getattr(h, "handle_sni", None),
                 request_client_cert = self.ssl["request_client_cert"],
                 cipher_list = self.ssl.get("cipher_list", None),
-                dhparams = self.ssl.get("dhparams", None)
+                dhparams = self.ssl.get("dhparams", None),
+                chain_file = self.ssl.get("chain_file", None)
             )
         h.handle()
         h.finish()

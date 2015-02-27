@@ -1,5 +1,6 @@
 from cStringIO import StringIO
 import socket
+import mock
 from nose.plugins.skip import SkipTest
 from netlib import socks, tcp
 import tutils
@@ -82,3 +83,14 @@ def test_message_unknown_atyp():
 
     m = socks.Message(5, 1, 0x02, tcp.Address(("example.com", 5050)))
     tutils.raises(socks.SocksError, m.to_file, StringIO())
+
+def test_read():
+    cs = StringIO("1234")
+    assert socks._read(cs, 3) == "123"
+
+    cs = StringIO("123")
+    tutils.raises(socks.SocksError, socks._read, cs, 4)
+
+    cs = mock.Mock()
+    cs.read = mock.Mock(side_effect=socket.error)
+    tutils.raises(socks.SocksError, socks._read, cs, 4)

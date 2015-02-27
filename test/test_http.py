@@ -325,6 +325,12 @@ def test_parse_url():
     assert po == 80
     assert pa == "/bar"
 
+    s, h, po, pa = http.parse_url("http://user:pass@foo/bar")
+    assert s == "http"
+    assert h == "foo"
+    assert po == 80
+    assert pa == "/bar"
+
     s, h, po, pa = http.parse_url("http://foo")
     assert pa == "/"
 

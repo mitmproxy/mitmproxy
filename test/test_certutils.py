@@ -80,7 +80,7 @@ class TestCertStore:
             ca2 = certutils.CertStore.from_store(os.path.join(d, "ca2"), "test")
             assert not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
 
-            dc = ca2.get_cert("foo.com", [])
+            dc = ca2.get_cert("foo.com", ["sans.example.com"])
             dcp = os.path.join(d, "dc")
             f = open(dcp, "wb")
             f.write(dc[0].to_pem())
@@ -118,31 +118,34 @@ class TestSSLCert:
     def test_simple(self):
         with open(tutils.test_data.path("data/text_cert"), "rb") as f:
             d = f.read()
-        c = certutils.SSLCert.from_pem(d)
-        assert c.cn == "google.com"
-        assert len(c.altnames) == 436
+        c1 = certutils.SSLCert.from_pem(d)
+        assert c1.cn == "google.com"
+        assert len(c1.altnames) == 436
 
         with open(tutils.test_data.path("data/text_cert_2"), "rb") as f:
             d = f.read()
-        c = certutils.SSLCert.from_pem(d)
-        assert c.cn == "www.inode.co.nz"
-        assert len(c.altnames) == 2
-        assert c.digest("sha1")
-        assert c.notbefore
-        assert c.notafter
-        assert c.subject
-        assert c.keyinfo == ("RSA", 2048)
-        assert c.serial
-        assert c.issuer
-        assert c.to_pem()
-        c.has_expired
+        c2 = certutils.SSLCert.from_pem(d)
+        assert c2.cn == "www.inode.co.nz"
+        assert len(c2.altnames) == 2
+        assert c2.digest("sha1")
+        assert c2.notbefore
+        assert c2.notafter
+        assert c2.subject
+        assert c2.keyinfo == ("RSA", 2048)
+        assert c2.serial
+        assert c2.issuer
+        assert c2.to_pem()
+        assert c2.has_expired is not None
+
+        assert not c1 == c2
+        assert c1 != c2
 
     def test_err_broken_sans(self):
         with open(tutils.test_data.path("data/text_cert_weird1"), "rb") as f:
             d = f.read()
         c = certutils.SSLCert.from_pem(d)
         # This breaks unless we ignore a decoding error.
-        c.altnames
+        assert c.altnames is not None
 
     def test_der(self):
         with open(tutils.test_data.path("data/dercert"), "rb") as f:
