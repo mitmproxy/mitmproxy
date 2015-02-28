@@ -189,6 +189,7 @@ class ConnectionHandler:
                     sni,
                     method=self.config.openssl_server_method,
                     options=self.config.openssl_server_options
+                    cipher_list=self.config.server_ciphers,
                 )
             except tcp.NetLibError as v:
                 e = ProxyError(502, repr(v))
@@ -210,7 +211,7 @@ class ConnectionHandler:
                     method=self.config.openssl_client_method,
                     options=self.config.openssl_client_options,
                     handle_sni=self.handle_sni,
-                    cipher_list=self.config.ciphers,
+                    cipher_list=self.config.client_ciphers,
                     dhparams=self.config.certstore.dhparams,
                     chain_file=chain_file
                 )
