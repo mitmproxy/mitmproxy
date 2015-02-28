@@ -55,7 +55,8 @@ class ProxyConfig:
         self.host = host
         self.port = port
         self.server_version = server_version
-        self.ciphers = ciphers
+        self.client_ciphers = client_ciphers
+        self.server_ciphers = server_ciphers
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
@@ -215,9 +216,14 @@ def ssl_option_group(parser):
         help="Client certificate directory."
     )
     group.add_argument(
-        "--ciphers", action="store",
-        type=str, dest="ciphers", default=None,
-        help="SSL cipher specification."
+        "--client-ciphers", action="store",
+        type=str, dest="client_ciphers", default=None,
+        help="Proxy client SSL cipher specification."
+    )
+    group.add_argument(
+        "--server-ciphers", action="store",
+        type=str, dest="server_ciphers", default=None,
+        help="Proxy server SSL cipher specification."
     )
     group.add_argument(
         "--cert-forward", action="store_true",
