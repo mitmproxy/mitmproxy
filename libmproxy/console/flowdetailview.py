@@ -40,8 +40,8 @@ class FlowDetailsView(urwid.ListBox):
             sc = self.flow.server_conn
             parts = [
                 ["Address", "%s:%s" % sc.address()],
-                ["Start time", utils.format_timestamp(sc.timestamp_start)],
-                ["End time", utils.format_timestamp(sc.timestamp_end) if sc.timestamp_end else "active"],
+                ["Start time", utils.format_timestamp(sc.timestamp_start, True)],
+                ["End time", utils.format_timestamp(sc.timestamp_end, True) if sc.timestamp_end else "active"],
             ]
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
@@ -84,10 +84,10 @@ class FlowDetailsView(urwid.ListBox):
             cc = self.flow.client_conn
             parts = [
                 ["Address", "%s:%s" % cc.address()],
-                ["Start time", utils.format_timestamp(cc.timestamp_start)],
+                ["Start time", utils.format_timestamp(cc.timestamp_start, True)],
                 # ["Requests", "%s"%cc.requestcount],
-                ["End time", utils.format_timestamp(cc.timestamp_end) if cc.timestamp_end else "active"],
+                ["End time", utils.format_timestamp(cc.timestamp_end, True) if cc.timestamp_end else "active"],
             ]
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
-
+            
         return text
