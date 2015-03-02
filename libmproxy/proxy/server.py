@@ -299,7 +299,7 @@ class ConnectionHandler:
                     cert, key,
                     method=self.config.openssl_client_method,
                     options=self.config.openssl_client_options,
-                    cipher_list=self.config.ciphers,
+                    cipher_list=self.config.client_ciphers,
                     dhparams=self.config.certstore.dhparams,
                     chain_file=chain_file
                 )
