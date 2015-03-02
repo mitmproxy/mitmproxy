@@ -162,7 +162,7 @@ def raw_format_flow(f, focus, extended, padding):
         if f["resp_ctype"]:
             resp.append(fcol(f["resp_ctype"], rc))
         resp.append(fcol(f["resp_clen"], rc))
-        resp.append(fcol(f["resp_rate"], rc))
+        resp.append(fcol(f["roundtrip"], rc))
 
     elif f["err_msg"]:
         resp.append(fcol(SYMBOL_RETURN, "error"))
@@ -345,19 +345,17 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
             contentdesc = "[content missing]"
         else:
             contentdesc = "[no content]"
-
-        if f.response.timestamp_end:
-            delta = f.response.timestamp_end - f.response.timestamp_start
-        else:
-            delta = 0
+        duration = 0
+        if f.response.timestamp_end and f.request.timestamp_start:
+            duration = f.response.timestamp_end - f.request.timestamp_start
         size = f.response.size()
-        rate = utils.pretty_size(size / ( delta if delta > 0 else 1 ) )
+        roundtrip = utils.pretty_duration(duration)
 
         d.update(dict(
             resp_code = f.response.code,
             resp_is_replay = f.response.is_replay,
             resp_clen = contentdesc,
-            resp_rate = "{0}/s".format(rate),
+            roundtrip = roundtrip,
         ))
         t = f.response.headers["content-type"]
         if t:
