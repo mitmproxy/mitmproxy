@@ -45,7 +45,8 @@ class ProxyConfig:
             authenticator=None,
             ignore_hosts=[],
             tcp_hosts=[],
-            ciphers=None,
+            client_ciphers=None,
+            server_ciphers=None,
             certs=[],
             certforward=False,
             ssl_version_client="secure",
@@ -55,7 +56,8 @@ class ProxyConfig:
         self.host = host
         self.port = port
         self.server_version = server_version
-        self.ciphers = ciphers
+        self.client_ciphers = client_ciphers
+        self.server_ciphers = server_ciphers
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
@@ -188,7 +190,8 @@ def process_proxy_options(parser, options):
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,
         authenticator=authenticator,
-        ciphers=options.ciphers,
+        client_ciphers=options.client_ciphers,
+        server_ciphers=options.server_ciphers,
         certs=certs,
         certforward=options.certforward,
         ssl_version_client=options.ssl_version_client,
@@ -215,9 +218,14 @@ def ssl_option_group(parser):
         help="Client certificate directory."
     )
     group.add_argument(
-        "--ciphers", action="store",
-        type=str, dest="ciphers", default=None,
-        help="SSL cipher specification."
+        "--client-ciphers", action="store",
+        type=str, dest="client_ciphers", default=None,
+        help="Client facing SSL cipher specification."
+    )
+    group.add_argument(
+        "--server-ciphers", action="store",
+        type=str, dest="server_ciphers", default=None,
+        help="Server facing SSL cipher specification."
     )
     group.add_argument(
         "--cert-forward", action="store_true",
