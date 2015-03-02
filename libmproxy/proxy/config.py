@@ -191,7 +191,7 @@ def process_proxy_options(parser, options):
         tcp_hosts=options.tcp_hosts,
         authenticator=authenticator,
         client_ciphers=options.client_ciphers,
-	server_ciphers=options.server_ciphers,
+        server_ciphers=options.server_ciphers,
         certs=certs,
         certforward=options.certforward,
         ssl_version_client=options.ssl_version_client,
