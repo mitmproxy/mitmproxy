@@ -218,12 +218,12 @@ class ReverseProxTest(ProxTestBase):
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
-        d["upstream_server"] = (
+        d["upstream_server"] = [
             True if cls.ssl else False,
             True if cls.ssl else False,
             "127.0.0.1",
             cls.server.port
-        )
+        ]
         d["mode"] = "reverse"
         return d
 

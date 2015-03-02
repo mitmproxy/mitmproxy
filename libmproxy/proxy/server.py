@@ -187,8 +187,9 @@ class ConnectionHandler:
                 self.server_conn.establish_ssl(
                     self.config.clientcerts,
                     sni,
-                    method=self.config.openssl_server_method,
-                    options=self.config.openssl_server_options
+                    method=self.config.openssl_method_server,
+                    options=self.config.openssl_options_server,
+                    cipher_list=self.config.ciphers_server,
                 )
             except tcp.NetLibError as v:
                 e = ProxyError(502, repr(v))
@@ -207,10 +208,10 @@ class ConnectionHandler:
             try:
                 self.client_conn.convert_to_ssl(
                     cert, key,
-                    method=self.config.openssl_client_method,
-                    options=self.config.openssl_client_options,
+                    method=self.config.openssl_method_client,
+                    options=self.config.openssl_options_client,
                     handle_sni=self.handle_sni,
-                    cipher_list=self.config.ciphers,
+                    cipher_list=self.config.ciphers_client,
                     dhparams=self.config.certstore.dhparams,
                     chain_file=chain_file
                 )
@@ -260,11 +261,12 @@ class ConnectionHandler:
             sans = []
             if self.server_conn.ssl_established and (not self.config.no_upstream_cert):
                 upstream_cert = self.server_conn.cert
+                sans.extend(upstream_cert.altnames)
                 if upstream_cert.cn:
+                    sans.append(host)
                     host = upstream_cert.cn.decode("utf8").encode("idna")
-                sans = upstream_cert.altnames
-            elif self.server_conn.sni:
-                sans = [self.server_conn.sni]
+            if self.server_conn.sni:
+                sans.append(self.server_conn.sni)
 
             ret = self.config.certstore.get_cert(host, sans)
             if not ret:
@@ -285,14 +287,19 @@ class ConnectionHandler:
 
             if sni != self.server_conn.sni:
                 self.log("SNI received: %s" % sni, "debug")
-                self.server_reconnect(sni)  # reconnect to upstream server with SNI
+                # We should only re-establish upstream SSL if one of the following conditions is true:
+                #   - We established SSL with the server previously
+                #   - We initially wanted to establish SSL with the server,
+                #     but the server refused to negotiate without SNI.
+                if self.server_conn.ssl_established or hasattr(self.server_conn, "may_require_sni"):
+                    self.server_reconnect(sni)  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn._create_ssl_context(
                     cert, key,
-                    method=self.config.openssl_client_method,
-                    options=self.config.openssl_client_options,
-                    cipher_list=self.config.ciphers,
+                    method=self.config.openssl_method_client,
+                    options=self.config.openssl_options_client,
+                    cipher_list=self.config.ciphers_client,
                     dhparams=self.config.certstore.dhparams,
                     chain_file=chain_file
                 )

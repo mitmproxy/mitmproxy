@@ -40,7 +40,6 @@ Responses that should be tagged for streaming by setting their respective .strea
 
 $!example("examples/stream.py")!$
 
-
 <h2>Implementation Details</h2>
 
 When response streaming is enabled, portions of the code which would have otherwise performed changes
@@ -48,6 +47,11 @@ on the response body will see an empty response body instead (<code>libmproxy.pr
 
 Streamed responses are usually sent in chunks of 4096 bytes. If the response is sent with a <code>Transfer-Encoding:
     chunked</code> header, the response will be streamed one chunk at a time.
+
+<h2>Modifying streamed data</h2>
+If the <code>.stream</code> attribute is callable, .stream will work as a hook in chunk data processing.
+
+$!example("examples/stream_modify.py")!$
 
 ### See Also
 

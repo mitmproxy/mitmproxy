@@ -165,7 +165,7 @@ class StreamLargeBodies(object):
             r.headers, is_request, flow.request.method, code
         )
         if not (0 <= expected_size <= self.max_size):
-            r.stream = True
+            r.stream = r.stream or True  # r.stream may already be a callable, which we want to preserve.
 
 
 class ClientPlaybackState:

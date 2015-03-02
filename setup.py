@@ -36,6 +36,10 @@ for script in scripts:
 if os.name == "nt":
     deps.add("pydivert>=0.0.7")  # Transparent proxying on Windows
 
+console_scripts = [
+    "%s = libmproxy.main:%s" % (s, s) for s in scripts
+]
+
 setup(
     name="mitmproxy",
     version=version.VERSION,
@@ -65,7 +69,9 @@ setup(
     ],
     packages=find_packages(),
     include_package_data=True,
-    scripts=scripts,
+    entry_points={
+        'console_scripts': console_scripts
+    },
     install_requires=list(deps),
     extras_require={
         'dev': [

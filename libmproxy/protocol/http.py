@@ -1332,10 +1332,19 @@ class HTTPHandler(ProtocolHandler):
             # incrementally:
             h = flow.response._assemble_head(preserve_transfer_encoding=True)
             self.c.client_conn.send(h)
-            for chunk in http.read_http_body_chunked(self.c.server_conn.rfile,
-                                                     flow.response.headers,
-                                                     self.c.config.body_size_limit, flow.request.method,
-                                                     flow.response.code, False, 4096):
+
+            chunks = http.read_http_body_chunked(
+                self.c.server_conn.rfile,
+                flow.response.headers,
+                self.c.config.body_size_limit,
+                flow.request.method,
+                flow.response.code,
+                False,
+                4096
+            )
+            if callable(flow.response.stream):
+                chunks = flow.response.stream(chunks)
+            for chunk in chunks:
                 for part in chunk:
                     self.c.client_conn.wfile.write(part)
                 self.c.client_conn.wfile.flush()
