@@ -188,7 +188,7 @@ class ConnectionHandler:
                     self.config.clientcerts,
                     sni,
                     method=self.config.openssl_server_method,
-                    options=self.config.openssl_server_options
+                    options=self.config.openssl_server_options,
                     cipher_list=self.config.server_ciphers,
                 )
             except tcp.NetLibError as v:
