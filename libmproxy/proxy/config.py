@@ -220,12 +220,12 @@ def ssl_option_group(parser):
     group.add_argument(
         "--client-ciphers", action="store",
         type=str, dest="client_ciphers", default=None,
-        help="Proxy client SSL cipher specification."
+        help="Client facing SSL cipher specification."
     )
     group.add_argument(
         "--server-ciphers", action="store",
         type=str, dest="server_ciphers", default=None,
-        help="Proxy server SSL cipher specification."
+        help="Server facing SSL cipher specification."
     )
     group.add_argument(
         "--cert-forward", action="store_true",
