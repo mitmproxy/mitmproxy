@@ -45,8 +45,8 @@ class ProxyConfig:
             authenticator=None,
             ignore_hosts=[],
             tcp_hosts=[],
-            client_ciphers=None,
-            server_ciphers=None,
+            ciphers_client=None,
+            ciphers_server=None,
             certs=[],
             certforward=False,
             ssl_version_client="secure",
@@ -56,8 +56,8 @@ class ProxyConfig:
         self.host = host
         self.port = port
         self.server_version = server_version
-        self.client_ciphers = client_ciphers
-        self.server_ciphers = server_ciphers
+        self.ciphers_client = ciphers_client
+        self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
@@ -85,8 +85,8 @@ class ProxyConfig:
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
-        self.openssl_client_method, self.openssl_client_options = version_to_openssl(ssl_version_client)
-        self.openssl_server_method, self.openssl_server_options = version_to_openssl(ssl_version_server)
+        self.openssl_method_client, self.openssl_options_client = version_to_openssl(ssl_version_client)
+        self.openssl_method_server, self.openssl_options_server = version_to_openssl(ssl_version_server)
         self.ssl_ports = ssl_ports
 
 
@@ -190,8 +190,8 @@ def process_proxy_options(parser, options):
         ignore_hosts=options.ignore_hosts,
         tcp_hosts=options.tcp_hosts,
         authenticator=authenticator,
-        client_ciphers=options.client_ciphers,
-        server_ciphers=options.server_ciphers,
+        ciphers_client=options.ciphers_client,
+        ciphers_server=options.ciphers_server,
         certs=certs,
         certforward=options.certforward,
         ssl_version_client=options.ssl_version_client,
@@ -213,24 +213,35 @@ def ssl_option_group(parser):
              'Can be passed multiple times.'
     )
     group.add_argument(
+        "--cert-forward", action="store_true",
+        dest="certforward", default=False,
+        help="Simply forward SSL certificates from upstream."
+    )
+    group.add_argument(
+        "--ciphers-client", action="store",
+        type=str, dest="ciphers_client", default=None,
+        help="Set supported ciphers for client connections. (OpenSSL Syntax)"
+    )
+    group.add_argument(
+        "--ciphers-server", action="store",
+        type=str, dest="ciphers_server", default=None,
+        help="Set supported ciphers for server connections. (OpenSSL Syntax)"
+    )
+    group.add_argument(
         "--client-certs", action="store",
         type=str, dest="clientcerts", default=None,
         help="Client certificate directory."
     )
     group.add_argument(
-        "--client-ciphers", action="store",
-        type=str, dest="client_ciphers", default=None,
-        help="Client facing SSL cipher specification."
+        "--no-upstream-cert", default=False,
+        action="store_true", dest="no_upstream_cert",
+        help="Don't connect to upstream server to look up certificate details."
     )
     group.add_argument(
-        "--server-ciphers", action="store",
-        type=str, dest="server_ciphers", default=None,
-        help="Server facing SSL cipher specification."
-    )
-    group.add_argument(
-        "--cert-forward", action="store_true",
-        dest="certforward", default=False,
-        help="Simply forward SSL certificates from upstream."
+        "--ssl-port", action="append", type=int, dest="ssl_ports", default=list(TRANSPARENT_SSL_PORTS),
+        metavar="PORT",
+        help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
+             "Defaults to %s." % str(TRANSPARENT_SSL_PORTS)
     )
     group.add_argument(
         "--ssl-version-client", dest="ssl_version_client",
@@ -245,15 +256,4 @@ def ssl_option_group(parser):
         choices=sslversion_choices,
         help="Set supported SSL/TLS version for server connections. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure."
-    )
-    group.add_argument(
-        "--no-upstream-cert", default=False,
-        action="store_true", dest="no_upstream_cert",
-        help="Don't connect to upstream server to look up certificate details."
-    )
-    group.add_argument(
-        "--ssl-port", action="append", type=int, dest="ssl_ports", default=list(TRANSPARENT_SSL_PORTS),
-        metavar="PORT",
-        help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
-             "Defaults to %s." % str(TRANSPARENT_SSL_PORTS)
     )

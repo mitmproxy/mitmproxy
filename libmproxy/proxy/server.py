@@ -187,9 +187,9 @@ class ConnectionHandler:
                 self.server_conn.establish_ssl(
                     self.config.clientcerts,
                     sni,
-                    method=self.config.openssl_server_method,
-                    options=self.config.openssl_server_options,
-                    cipher_list=self.config.server_ciphers,
+                    method=self.config.openssl_method_server,
+                    options=self.config.openssl_options_server,
+                    cipher_list=self.config.ciphers_server,
                 )
             except tcp.NetLibError as v:
                 e = ProxyError(502, repr(v))
@@ -208,10 +208,10 @@ class ConnectionHandler:
             try:
                 self.client_conn.convert_to_ssl(
                     cert, key,
-                    method=self.config.openssl_client_method,
-                    options=self.config.openssl_client_options,
+                    method=self.config.openssl_method_client,
+                    options=self.config.openssl_options_client,
                     handle_sni=self.handle_sni,
-                    cipher_list=self.config.client_ciphers,
+                    cipher_list=self.config.ciphers_client,
                     dhparams=self.config.certstore.dhparams,
                     chain_file=chain_file
                 )
@@ -297,9 +297,9 @@ class ConnectionHandler:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn._create_ssl_context(
                     cert, key,
-                    method=self.config.openssl_client_method,
-                    options=self.config.openssl_client_options,
-                    cipher_list=self.config.client_ciphers,
+                    method=self.config.openssl_method_client,
+                    options=self.config.openssl_options_client,
+                    cipher_list=self.config.ciphers_client,
                     dhparams=self.config.certstore.dhparams,
                     chain_file=chain_file
                 )
