@@ -10,7 +10,7 @@ def timestamp():
     return time.time()
 
 
-def format_timestamp(s, include_fractions = False):
+def format_timestamp(s):
     s = time.localtime(s)
     d = datetime.datetime.fromtimestamp(time.mktime(s))
     return d.strftime("%Y-%m-%d %H:%M:%S")
