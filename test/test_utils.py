@@ -8,6 +8,8 @@ utils.CERT_SLEEP_TIME = 0
 def test_format_timestamp():
     assert utils.format_timestamp(utils.timestamp())
 
+def test_format_timestamp_with_milli():
+    assert utils.format_timestamp_with_milli(utils.timestamp())
 
 def test_isBin():
     assert not utils.isBin("testing\n\r")
