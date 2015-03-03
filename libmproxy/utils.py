@@ -11,20 +11,14 @@ def timestamp():
 
 
 def format_timestamp(s, include_fractions = False):
-    if type(s) is not float:
-        s = time.localtime(s)
-        d = datetime.datetime.fromtimestamp(time.mktime(s))
-    else:
-        # s is a timestamp(float) can be converted to a datetime without lossing microsecs 
-        d = datetime.datetime.fromtimestamp(s)
-    if not include_fractions:
-        format = "%Y-%m-%d %H:%M:%S"
-    else:    
-        # this will show 3 miliseconds digits (but will truncate and not round the 4th significant digit 
-        # so 600999 microseconds will be 600ms and not 601ms)
-        format = "%Y-%m-%d %H:%M:%S."+str(d.microsecond/1000)
-    return d.strftime(format)
+    s = time.localtime(s)
+    d = datetime.datetime.fromtimestamp(time.mktime(s))
+    return d.strftime("%Y-%m-%d %H:%M:%S")
 
+def format_timestamp_with_milli(s):
+    d = datetime.datetime.fromtimestamp(s)
+    return d.strftime("%Y-%m-%d %H:%M:%S.")+str(d.microsecond/1000).zfill(3)
+    
 def isBin(s):
     """
         Does this string have any non-ASCII characters?
