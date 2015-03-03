@@ -48,9 +48,9 @@ class FlowDetailsView(urwid.ListBox):
             timing_parts.append(["Server conn. TCP handshake", utils.format_timestamp_with_milli(sc.timestamp_tcp_setup) if sc.timestamp_tcp_setup else "active"])
             if sc.ssl_established:
                 timing_parts.append(["Server conn. SSL handshake", utils.format_timestamp_with_milli(sc.timestamp_ssl_setup) if sc.timestamp_ssl_setup else "active"])
-        if cc:
-            if sc.ssl_established:
-                timing_parts.append(["Client conn. SSL handshake", utils.format_timestamp_with_milli(cc.timestamp_ssl_setup) if cc.timestamp_ssl_setup else "active"])
+
+        if cc and sc.ssl_established:
+            timing_parts.append(["Client conn. SSL handshake", utils.format_timestamp_with_milli(cc.timestamp_ssl_setup) if cc.timestamp_ssl_setup else "active"])
 
         timing_parts.append(["First request byte", utils.format_timestamp_with_milli(req.timestamp_start)])
         timing_parts.append(["Request complete", utils.format_timestamp_with_milli(req.timestamp_end) if req.timestamp_end else "active"])
@@ -58,7 +58,6 @@ class FlowDetailsView(urwid.ListBox):
         if resp:
             timing_parts.append(["First response byte", utils.format_timestamp_with_milli(resp.timestamp_start)])
             timing_parts.append(["response complete", utils.format_timestamp_with_milli(resp.timestamp_end) if resp.timestamp_end else "active"])
-
 
         if sc:
             text.append(urwid.Text([("head", "Server Connection:")]))
@@ -68,7 +67,7 @@ class FlowDetailsView(urwid.ListBox):
             
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
-            c = self.flow.server_conn.cert
+            c = sc.cert
             if c:
                 text.append(urwid.Text([("head", "Server Certificate:")]))
                 parts = [
