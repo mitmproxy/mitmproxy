@@ -35,17 +35,20 @@ class FlowDetailsView(urwid.ListBox):
         title = urwid.AttrWrap(title, "heading")
         text.append(title)
 
-        if self.flow.server_conn:
+        cc = self.flow.client_conn
+        sc = self.flow.server_conn
+        req = self.flow.request
+        resp = self.flow.response      
+
+        if sc:
             text.append(urwid.Text([("head", "Server Connection:")]))
-            sc = self.flow.server_conn
             parts = [
                 ["Address", "%s:%s" % sc.address()],
-                ["Start time", utils.format_timestamp(sc.timestamp_start)],
-                ["End time", utils.format_timestamp(sc.timestamp_end) if sc.timestamp_end else "active"],
             ]
+            
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
-            c = self.flow.server_conn.cert
+            c = sc.cert
             if c:
                 text.append(urwid.Text([("head", "Server Certificate:")]))
                 parts = [
@@ -79,15 +82,32 @@ class FlowDetailsView(urwid.ListBox):
                     )
                 text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
-        if self.flow.client_conn:
+        if cc:
             text.append(urwid.Text([("head", "Client Connection:")]))
-            cc = self.flow.client_conn
+
             parts = [
                 ["Address", "%s:%s" % cc.address()],
-                ["Start time", utils.format_timestamp(cc.timestamp_start)],
                 # ["Requests", "%s"%cc.requestcount],
-                ["End time", utils.format_timestamp(cc.timestamp_end) if cc.timestamp_end else "active"],
             ]
+   
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
+        parts = []
+
+        parts.append(["Client conn. established", utils.format_timestamp_with_milli(cc.timestamp_start) if (cc and cc.timestamp_start) else "active"])
+        parts.append(["Server conn. initiated", utils.format_timestamp_with_milli(sc.timestamp_start) if sc else "active" ])
+        parts.append(["Server conn. TCP handshake", utils.format_timestamp_with_milli(sc.timestamp_tcp_setup) if (sc and sc.timestamp_tcp_setup) else "active"])
+        if sc.ssl_established:
+            parts.append(["Server conn. SSL handshake", utils.format_timestamp_with_milli(sc.timestamp_ssl_setup) if sc.timestamp_ssl_setup else "active"])
+            parts.append(["Client conn. SSL handshake", utils.format_timestamp_with_milli(cc.timestamp_ssl_setup) if (cc and cc.timestamp_ssl_setup) else "active"])
+        parts.append(["First request byte", utils.format_timestamp_with_milli(req.timestamp_start)])
+        parts.append(["Request complete", utils.format_timestamp_with_milli(req.timestamp_end) if req.timestamp_end else "active"])
+        parts.append(["First response byte", utils.format_timestamp_with_milli(resp.timestamp_start) if resp else "active"])
+        parts.append(["Response complete", utils.format_timestamp_with_milli(resp.timestamp_end) if (resp and resp.timestamp_end) else "active"])
+
+        # sort operations by timestamp 
+        parts = sorted(parts, key=lambda p: p[1])
+
+        text.append(urwid.Text([("head", "Timing:")]))
+        text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
         return text
