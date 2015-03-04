@@ -917,6 +917,7 @@ class FlowMaster(controller.Master):
                         self.add_event("Error in wsgi app. %s" % err, "error")
                     f.reply(protocol.KILL)
                 t = threading.Thread(target=request_thread)
+                t.daemon = True
                 t.start()
                 # we don't bother joining the thread or even tracking a ref
                 # to it -- no big deal if it dies mid-execution
