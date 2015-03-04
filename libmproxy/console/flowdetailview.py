@@ -37,8 +37,8 @@ class FlowDetailsView(urwid.ListBox):
 
         cc = self.flow.client_conn
         sc = self.flow.server_conn
-        req = self.flow.request;
-        resp = self.flow.response;        
+        req = self.flow.request
+        resp = self.flow.response     
 
         if sc:
             text.append(urwid.Text([("head", "Server Connection:")]))
