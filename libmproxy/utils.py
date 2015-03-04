@@ -17,8 +17,8 @@ def format_timestamp(s):
 
 def format_timestamp_with_milli(s):
     d = datetime.datetime.fromtimestamp(s)
-	return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-	    
+    return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    
 def isBin(s):
     """
         Does this string have any non-ASCII characters?
