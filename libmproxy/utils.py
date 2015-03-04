@@ -15,10 +15,12 @@ def format_timestamp(s):
     d = datetime.datetime.fromtimestamp(time.mktime(s))
     return d.strftime("%Y-%m-%d %H:%M:%S")
 
+
 def format_timestamp_with_milli(s):
     d = datetime.datetime.fromtimestamp(s)
-    return d.strftime("%Y-%m-%d %H:%M:%S.")+str(d.microsecond/1000).zfill(3)
-    
+    return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
+
 def isBin(s):
     """
         Does this string have any non-ASCII characters?
@@ -84,15 +86,15 @@ def pretty_size(size):
 
 def pretty_duration(secs):
     formatters = [
-        (100, "{:.0f}s"), 
-        (10, "{:2.1f}s"), 
-        (1, "{:1.2f}s"),         
+        (100, "{:.0f}s"),
+        (10, "{:2.1f}s"),
+        (1, "{:1.2f}s"),
     ]
 
     for limit, formatter in formatters:
         if secs >= limit:
             return formatter.format(secs)
-    #less than 1 sec 
+    #less than 1 sec
     return "{:.0f}ms".format(secs*1000)
 
 class Data:

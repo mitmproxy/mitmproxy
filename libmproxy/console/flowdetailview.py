@@ -37,15 +37,15 @@ class FlowDetailsView(urwid.ListBox):
 
         cc = self.flow.client_conn
         sc = self.flow.server_conn
-        req = self.flow.request;
-        resp = self.flow.response;        
+        req = self.flow.request
+        resp = self.flow.response
 
         if sc:
             text.append(urwid.Text([("head", "Server Connection:")]))
             parts = [
                 ["Address", "%s:%s" % sc.address()],
             ]
-            
+
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
             c = sc.cert
@@ -89,7 +89,7 @@ class FlowDetailsView(urwid.ListBox):
                 ["Address", "%s:%s" % cc.address()],
                 # ["Requests", "%s"%cc.requestcount],
             ]
-   
+
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
         parts = []
@@ -105,7 +105,7 @@ class FlowDetailsView(urwid.ListBox):
         parts.append(["First response byte", utils.format_timestamp_with_milli(resp.timestamp_start) if resp else "active"])
         parts.append(["Response complete", utils.format_timestamp_with_milli(resp.timestamp_end) if (resp and resp.timestamp_end) else "active"])
 
-        # sort operations by timestamp 
+        # sort operations by timestamp
         parts = sorted(parts, key=lambda p: p[1])
 
         text.append(urwid.Text([("head", "Timing:")]))
