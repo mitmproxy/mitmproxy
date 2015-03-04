@@ -70,7 +70,10 @@ For example, you can generate a certificate in this format using these instructi
 > mitmproxy --cert=cert.pem
 </pre>
 
-
+Using a client side certificate
+------------------------------------
+You can use a client side certificate file by specifying the directory in which the certificate is present after this argument, "--client-certs". The certificate file should be in .pem format after the url of the website whose certificate you've specified. Suppose, for example you want to open mitmproxy.com with a client side certificate, your certificate file's name should be like "mitmproxy.com.pem".
+ 
 Using a custom certificate authority
 ------------------------------------
 
