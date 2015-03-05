@@ -65,15 +65,24 @@ var FlowTable = React.createClass({
     },
     componentWillMount: function () {
         if (this.props.view) {
-            this.props.view.addListener("add update remove recalculate", this.onChange);
+            this.props.view.addListener("add", this.onChange);
+            this.props.view.addListener("update", this.onChange);
+            this.props.view.addListener("remove", this.onChange);
+            this.props.view.addListener("recalculate", this.onChange);
         }
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.view !== this.props.view) {
             if (this.props.view) {
-                this.props.view.removeListener("add update remove recalculate");
+                this.props.view.removeListener("add");
+                this.props.view.removeListener("update");
+                this.props.view.removeListener("remove");
+                this.props.view.removeListener("recalculate");
             }
-            nextProps.view.addListener("add update remove recalculate", this.onChange);
+            nextProps.props.view.addListener("add", this.onChange);
+            nextProps.props.view.addListener("update", this.onChange);
+            nextProps.props.view.addListener("remove", this.onChange);
+            nextProps.props.view.addListener("recalculate", this.onChange);
         }
     },
     getDefaultProps: function () {
