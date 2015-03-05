@@ -2,7 +2,5 @@
 Starting up
 
 - npm install
-- bower-installer
 - gulp
-
-
+- run mitmweb and open http://localhost:8081/

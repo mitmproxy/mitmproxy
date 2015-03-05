@@ -23,7 +23,6 @@
         "flux": ""
     },
     "devDependencies": {
-        "bower": "",
         "browserify": "=8.0.1",
         "gulp": "",
         "gulp-concat": "",
@@ -33,6 +32,7 @@
         "gulp-livereload": "",
         "gulp-minify-css": "",
         "gulp-notify": "",
+        "gulp-peg": "",
         "gulp-plumber": "",
         "gulp-react": "",
         "gulp-rename": "",
@@ -40,17 +40,13 @@
         "gulp-rev": "",
         "gulp-sourcemaps": "",
         "gulp-uglify": "",
-        "gulp-util": "",
         "jest-cli": "^0.1.18",
         "jshint-stylish": "",
         "lodash": "",
         "map-stream": "",
-        "react": "",
-        "react-tools": "",
         "reactify": "",
         "vinyl-buffer": "",
         "vinyl-source-stream": "",
-        "vinyl-transform": "",
-        "gulp-peg": ""
+        "vinyl-transform": ""
     }
 }

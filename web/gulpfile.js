@@ -1,35 +1,36 @@
-var gulp = require("gulp");
 var path = require('path');
-var _ = require('lodash');
-
-var browserify = require('browserify');
-var concat = require('gulp-concat');
-var connect = require('gulp-connect');
-var buffer = require('vinyl-buffer');
-var jshint = require("gulp-jshint");
-var less = require("gulp-less");
-var livereload = require("gulp-livereload");
-var map = require("map-stream");
-var minifyCSS = require('gulp-minify-css');
-var notify = require("gulp-notify");
-var plumber = require("gulp-plumber");
-var rev = require("gulp-rev");
-var react = require("gulp-react");
-var reactify = require('reactify');
-var rename = require("gulp-rename");
-var replace = require('gulp-replace');
-var source = require('vinyl-source-stream');
-var sourcemaps = require('gulp-sourcemaps');
-var transform = require('vinyl-transform');
-var uglify = require('gulp-uglify');
-var peg = require("gulp-peg");
-var filelog = require('gulp-filelog');
 
 var packagejs = require('./package.json');
 var conf = require('./conf.js');
 
+// Sorted alphabetically!
+var browserify = require('browserify');
+var gulp = require("gulp");
+var concat = require('gulp-concat');
+var connect = require('gulp-connect');
+var jshint = require("gulp-jshint");
+var less = require("gulp-less");
+var livereload = require("gulp-livereload");
+var minifyCSS = require('gulp-minify-css');
+var notify = require("gulp-notify");
+var peg = require("gulp-peg");
+var plumber = require("gulp-plumber");
+var react = require("gulp-react");
+var rename = require("gulp-rename");
+var replace = require('gulp-replace');
+var rev = require("gulp-rev");
+var sourcemaps = require('gulp-sourcemaps');
+var uglify = require('gulp-uglify');
+var _ = require('lodash');
+var map = require("map-stream");
+var reactify = require('reactify');
+var buffer = require('vinyl-buffer');
+var source = require('vinyl-source-stream');
+var transform = require('vinyl-transform');
 
 // FIXME: react-with-addons.min.js for prod use issue
+// FIXME: Sourcemap URLs don't work correctly.
+// FIXME: Why don't we use gulp-rev's manifest feature?
 
 var manifest = {
     "vendor.css": "vendor.css",
@@ -86,12 +87,10 @@ var dont_break_on_errors = function(){
     );
 };
 
-
 gulp.task("fonts", function () {
     return gulp.src(conf.fonts)
-        .pipe(gulp.dest(conf.dist + "fonts"));
+        .pipe(gulp.dest(conf.static + "/fonts"))
 });
-
 
 function styles_dev(files) {
     return (gulp.src(files)
@@ -112,11 +111,11 @@ gulp.task("styles-vendor-dev", function(){
 
 function styles_prod(files) {
     return (gulp.src(files)
+        .pipe(sourcemaps.init())
         .pipe(less())
-        // No sourcemaps support yet :-/
-        // https://github.com/jonathanepollack/gulp-minify-css/issues/34
         .pipe(minifyCSS())
         .pipe(rev())
+        .pipe(sourcemaps.write(".", {sourceRoot: "/static"}))
         .pipe(save_rev())
         .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false })));
@@ -185,7 +184,6 @@ gulp.task("jshint", function () {
     return gulp.src(conf.js.jshint)
         .pipe(dont_break_on_errors())
         .pipe(react())
-        .pipe(plumber())
         .pipe(jshint())
         .pipe(jshint.reporter("jshint-stylish"))
         .pipe(jsHintErrorReporter());
@@ -193,7 +191,7 @@ gulp.task("jshint", function () {
 
 gulp.task("copy", function(){
     return gulp.src(conf.copy, {base:"src/"})
-        .pipe(gulp.dest(conf.dist));
+        .pipe(gulp.dest(conf.static));
 });
 
 function templates(){
@@ -209,14 +207,15 @@ gulp.task("peg", function () {
     return gulp.src(conf.peg, {base: "src/"})
         .pipe(dont_break_on_errors())
         .pipe(peg())
-        .pipe(filelog())
         .pipe(gulp.dest("src/"));
 });
 
 gulp.task('connect', function() {
-    connect.server({
-        port: conf.port
-    });
+    if(conf.connect){
+        connect.server({
+            port: conf.connect.port
+        });
+    }
 });
 
 gulp.task(
@@ -242,7 +241,6 @@ gulp.task(
         "scripts-vendor-prod",
         "peg",
         "scripts-app-prod",
-        "connect"
     ],
     templates
 );

@@ -6,7 +6,7 @@ var conf = {
     js: {
         // Don't package these in the vendor distribution
         vendor_excludes: [
-            "bootstrap"
+            "bootstrap" // We only use Bootstrap's CSS.
         ],
         // Package these as well as the dependencies
         vendor_includes: [
@@ -27,7 +27,7 @@ var conf = {
     ],
     fonts: ["src/fontawesome/fontawesome-webfont.*"],
     peg: ["src/js/filt/filt.peg"],
-    port: 8082
+    connect: false
 };
 
 module.exports = conf;
