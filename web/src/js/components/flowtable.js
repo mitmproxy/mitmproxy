@@ -79,10 +79,10 @@ var FlowTable = React.createClass({
                 this.props.view.removeListener("remove");
                 this.props.view.removeListener("recalculate");
             }
-            nextProps.props.view.addListener("add", this.onChange);
-            nextProps.props.view.addListener("update", this.onChange);
-            nextProps.props.view.addListener("remove", this.onChange);
-            nextProps.props.view.addListener("recalculate", this.onChange);
+            nextProps.view.addListener("add", this.onChange);
+            nextProps.view.addListener("update", this.onChange);
+            nextProps.view.addListener("remove", this.onChange);
+            nextProps.view.addListener("recalculate", this.onChange);
         }
     },
     getDefaultProps: function () {
