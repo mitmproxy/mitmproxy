@@ -11,7 +11,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.txt'), encoding='utf-8') as f:
     long_description = f.read()
 
-scripts = ["mitmdump"]
+scripts = ["mitmdump", "mitmweb"]
 if os.name != "nt":
     scripts.append("mitmproxy")
 
@@ -29,7 +29,8 @@ script_deps = {
         "lxml>=3.3.6",
         "Pillow>=2.3.0",
     },
-    "mitmdump": set()
+    "mitmdump": set(),
+    "mitmweb": set()
 }
 for script in scripts:
     deps.update(script_deps[script])
