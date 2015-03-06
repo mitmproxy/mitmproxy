@@ -1,6 +1,7 @@
 var React = require("react");
 
 var common = require("./common.js");
+var actions = require("../actions.js");
 var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
@@ -166,33 +167,33 @@ var MainView = React.createClass({
                 break;
             case toputils.Key.C:
                 if (e.shiftKey) {
-                    FlowActions.clear();
+                    actions.FlowActions.clear();
                 }
                 break;
             case toputils.Key.D:
                 if (flow) {
                     if (e.shiftKey) {
-                        FlowActions.duplicate(flow);
+                        actions.FlowActions.duplicate(flow);
                     } else {
-                        FlowActions.delete(flow);
+                        actions.FlowActions.delete(flow);
                     }
                 }
                 break;
             case toputils.Key.A:
                 if (e.shiftKey) {
-                    FlowActions.accept_all();
+                    actions.FlowActions.accept_all();
                 } else if (flow && flow.intercepted) {
-                    FlowActions.accept(flow);
+                    actions.FlowActions.accept(flow);
                 }
                 break;
             case toputils.Key.R:
                 if (!e.shiftKey && flow) {
-                    FlowActions.replay(flow);
+                    actions.FlowActions.replay(flow);
                 }
                 break;
             case toputils.Key.V:
                 if(e.shiftKey && flow && flow.modified) {
-                    FlowActions.revert(flow);
+                    actions.FlowActions.revert(flow);
                 }
                 break;
             default:

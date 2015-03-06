@@ -5,6 +5,7 @@ var Filt = require("../filt/filt.js");
 var utils = require("../utils.js");
 
 var common = require("./common.js");
+var actions = require("../actions.js");
 
 var FilterDocs = React.createClass({
     statics: {
@@ -275,7 +276,7 @@ var FileMenu = React.createClass({
     handleNewClick: function (e) {
         e.preventDefault();
         if (confirm("Delete all flows?")) {
-            FlowActions.clear();
+            actions.FlowActions.clear();
         }
     },
     handleOpenClick: function (e) {
