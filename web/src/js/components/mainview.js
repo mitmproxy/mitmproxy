@@ -54,7 +54,9 @@ var MainView = React.createClass({
         });
 
         view.addListener("recalculate", this.onRecalculate);
-        view.addListener("add update remove", this.onUpdate);
+        view.addListener("add", this.onUpdate);
+        view.addListener("update", this.onUpdate);
+        view.addListener("remove", this.onUpdate);
         view.addListener("remove", this.onRemove);
     },
     onRecalculate: function () {

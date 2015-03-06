@@ -49,7 +49,8 @@ var EventLogContents = React.createClass({
             view: view
         });
 
-        view.addListener("add recalculate", this.onEventLogChange);
+        view.addListener("add", this.onEventLogChange);
+        view.addListener("recalculate", this.onEventLogChange);
     },
     closeView: function () {
         this.state.view.close();
