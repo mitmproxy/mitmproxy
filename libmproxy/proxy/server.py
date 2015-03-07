@@ -295,7 +295,7 @@ class ConnectionHandler:
                     self.server_reconnect(sni)  # reconnect to upstream server with SNI
                 # Now, change client context to reflect changed certificate:
                 cert, key, chain_file = self.find_cert()
-                new_context = self.client_conn._create_ssl_context(
+                new_context = self.client_conn.create_ssl_context(
                     cert, key,
                     method=self.config.openssl_method_client,
                     options=self.config.openssl_options_client,
