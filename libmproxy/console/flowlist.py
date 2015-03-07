@@ -126,7 +126,8 @@ class ConnectionItem(common.WWrap):
                 self.master.killextra, self.master.rheaders,
                 False, self.master.nopop,
                 self.master.options.replay_ignore_params, self.master.options.replay_ignore_content,
-                self.master.options.replay_ignore_payload_params
+                self.master.options.replay_ignore_payload_params,
+                self.master.options.replay_ignore_host
             )
         elif k == "t":
             self.master.start_server_playback(
@@ -134,7 +135,8 @@ class ConnectionItem(common.WWrap):
                 self.master.killextra, self.master.rheaders,
                 False, self.master.nopop,
                 self.master.options.replay_ignore_params, self.master.options.replay_ignore_content,
-                self.master.options.replay_ignore_payload_params
+                self.master.options.replay_ignore_payload_params,
+                self.master.options.replay_ignore_host
             )
         else:
             self.master.path_prompt(
