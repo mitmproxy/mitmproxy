@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 from OpenSSL import SSL
+import OpenSSL
 
 from . import certutils
 
@@ -301,6 +302,10 @@ class _Connection(object):
                 self.connection.shutdown()
             except SSL.Error:
                 pass
+            except KeyError as e:
+                # Workaround for https://github.com/pyca/pyopenssl/pull/183
+                if OpenSSL.__version__ != "0.14":
+                    raise e
 
     """
     Creates an SSL Context.
