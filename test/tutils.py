@@ -31,7 +31,7 @@ def raises(exc, obj, *args, **kwargs):
         :kwargs Arguments to be passed to the callable.
     """
     try:
-        apply(obj, args, kwargs)
+        ret = apply(obj, args, kwargs)
     except Exception, v:
         if isinstance(exc, basestring):
             if exc.lower() in str(v).lower():
@@ -51,6 +51,6 @@ def raises(exc, obj, *args, **kwargs):
                         exc.__name__, v.__class__.__name__, str(v)
                     )
                 )
-    raise AssertionError("No exception raised.")
+    raise AssertionError("No exception raised. Return value: {}".format(ret))
 
 test_data = utils.Data(__name__)
