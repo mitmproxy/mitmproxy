@@ -49,7 +49,7 @@ var vendor_packages = _.difference(
 
 
 // Custom linting reporter used for error notify
-var jsHintErrorReporter = function(){ 
+var jsHintErrorReporter = function(){
     return map(function (file, cb) {
         if (file.jshint && !file.jshint.success) {
             file.jshint.results.forEach(function (err) {
@@ -103,10 +103,10 @@ function styles_dev(files) {
 }
 gulp.task("styles-app-dev", function(){
     styles_dev(conf.css.app);
-}); 
+});
 gulp.task("styles-vendor-dev", function(){
     styles_dev(conf.css.vendor);
-}); 
+});
 
 
 function styles_prod(files) {
@@ -122,10 +122,10 @@ function styles_prod(files) {
 }
 gulp.task("styles-app-prod", function(){
     styles_prod(conf.css.app);
-}); 
+});
 gulp.task("styles-vendor-prod", function(){
     styles_prod(conf.css.vendor);
-}); 
+});
 
 
 function vendor_stream(debug){
@@ -153,28 +153,34 @@ gulp.task("scripts-vendor-prod", function(){
 
 function app_stream(debug) {
     var browserified = transform(function(filename) {
-        var b = browserify(filename, {debug: debug})
+        var b = browserify(filename, {debug: debug});
         _.each(vendor_packages, function(v){
             b.external(v);
         });
         b.transform(reactify);
         return b.bundle();
     });
+
     return gulp.src([conf.js.app])
         .pipe(dont_break_on_errors())
         .pipe(browserified)
+        .pipe(sourcemaps.init({ loadMaps: true }))
         .pipe(rename("app.js"));
-};
+}
+
 gulp.task('scripts-app-dev', function () {
     return app_stream(true)
+        .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false }));
 });
+
 gulp.task('scripts-app-prod', function () {
     return app_stream(true)
         .pipe(buffer())
         .pipe(uglify())
         .pipe(rev())
+        .pipe(sourcemaps.write('./'))
         .pipe(save_rev())
         .pipe(gulp.dest(conf.static));
 });
@@ -198,7 +204,7 @@ function templates(){
     return gulp.src(conf.templates, {base:"src/"})
         .pipe(replace(/\{\{\{(\S*)\}\}\}/g, function(match, p1) {
             return manifest[p1];
-        })) 
+        }))
         .pipe(gulp.dest(conf.dist));
 };
 gulp.task('templates', templates);
@@ -232,7 +238,7 @@ gulp.task(
     templates
 );
 gulp.task(
-    "prod", 
+    "prod",
     [
         "fonts",
         "copy",
