@@ -18,16 +18,16 @@ _mitmproxy()
 
     case "${prev}" in
 		--conf | -r | --read-flows | -w | --wfile | -a | --afile | -c | --client-replay | -S | --server-replay | --replace-from-file )
-	    	COMPREPLY=( $(compgen -f -- ${cur}) )
+	    	_filedir
             return 0
             ;;
          
         --cadir | --client-certs)
-	    	COMPREPLY=( $(compgen -d -- ${cur}) )
+            _filedir -d
             return 0
 			;;
 		-s | --script)
-	    	COMPREPLY=( $(compgen -f *.py -- ${cur}) )
+            _filedir py
             return 0
             ;;
         --palette)
@@ -52,5 +52,4 @@ _mitmproxy()
     fi
 }
 
-complete -F _mitmproxy ./mitmproxy
 complete -F _mitmproxy mitmproxy
