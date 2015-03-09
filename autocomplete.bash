@@ -20,29 +20,29 @@ _base_mitmproxy()
     opts+="$extra_opts"
 
     case "${prev}" in
-		--conf | -r | --read-flows | -w | --wfile | -a | --afile | -c | --client-replay | -S | --server-replay | --replace-from-file )
-	    	_filedir
+        --conf | -r | --read-flows | -w | --wfile | -a | --afile | -c | --client-replay | -S | --server-replay | --replace-from-file )
+            _filedir
             return 0
             ;;
          
         --cadir | --client-certs)
             _filedir -d
             return 0
-			;;
-		-s | --script)
+            ;;
+        -s | --script)
             _filedir py
             return 0
             ;;
         --palette)
-	    	COMPREPLY=( $(compgen -W "dark light solarized_dark solarized_light" -- ${cur}) )
+            COMPREPLY=( $(compgen -W "dark light solarized_dark solarized_light" -- ${cur}) )
             return 0
             ;;
         --http-form-in | --http-form-out)
-	    	COMPREPLY=( $(compgen -W "relative absolute" -- ${cur}) )
+            COMPREPLY=( $(compgen -W "relative absolute" -- ${cur}) )
             return 0
             ;;
         --ssl-version-client | --ssl-version-server)
-	    	COMPREPLY=( $(compgen -W "all secure SSLv2 SSLv3 TLSv1 TLSv1_1 TLSv1_2" -- ${cur}) )
+            COMPREPLY=( $(compgen -W "all secure SSLv2 SSLv3 TLSv1 TLSv1_1 TLSv1_2" -- ${cur}) )
             return 0
             ;;
         *)
