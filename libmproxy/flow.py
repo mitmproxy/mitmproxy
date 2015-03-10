@@ -236,7 +236,7 @@ class ServerPlaybackState:
         ]
 
         if not self.ignore_content:
-            form_contents = r.get_form_urlencoded()
+            form_contents = r.get_form()
             if self.ignore_payload_params and form_contents:
                 key.extend(
                     p for p in form_contents

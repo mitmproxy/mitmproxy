@@ -210,33 +210,13 @@ class ViewMultipart:
     prompt = ("multipart", "m")
     content_types = ["multipart/form-data"]
     def __call__(self, hdrs, content, limit):
-        v = hdrs.get_first("content-type")
+        v = utils.multipartdecode(hdrs, content)
         if v:
-            v = utils.parse_content_type(v)
-            if not v:
-                return
-            boundary = v[2].get("boundary")
-            if not boundary:
-                return
-
-            rx = re.compile(r'\bname="([^"]+)"')
-            keys = []
-            vals = []
-
-            for i in content.split("--" + boundary):
-                parts = i.splitlines()
-                if len(parts) > 1 and parts[0][0:2] != "--":
-                    match = rx.search(parts[1])
-                    if match:
-                        keys.append(match.group(1) + ":")
-                        vals.append(netlib.utils.cleanBin(
-                            "\n".join(parts[3+parts[2:].index(""):])
-                        ))
             r = [
                 urwid.Text(("highlight", "Form data:\n")),
             ]
             r.extend(common.format_keyvals(
-                zip(keys, vals),
+                v,
                 key = "header",
                 val = "text"
             ))
