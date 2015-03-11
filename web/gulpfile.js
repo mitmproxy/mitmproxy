@@ -138,7 +138,7 @@ function vendor_stream(debug){
         .pipe(rename("vendor.js"));
 }
 gulp.task("scripts-vendor-dev", function (){
-    return vendor_stream(true)
+    return vendor_stream(false)
         .pipe(gulp.dest(conf.static));
 });
 gulp.task("scripts-vendor-prod", function(){
@@ -161,7 +161,7 @@ function app_stream(debug) {
         return b.bundle();
     });
 
-    return gulp.src([conf.js.app])
+    return gulp.src([conf.js.app], {base: conf.src})
         .pipe(dont_break_on_errors())
         .pipe(browserified)
         .pipe(sourcemaps.init({ loadMaps: true }))
@@ -170,7 +170,7 @@ function app_stream(debug) {
 
 gulp.task('scripts-app-dev', function () {
     return app_stream(true)
-        .pipe(sourcemaps.write('./'))
+        .pipe(sourcemaps.write('./', {sourceRoot: "/"}))
         .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false }));
 });
@@ -180,7 +180,7 @@ gulp.task('scripts-app-prod', function () {
         .pipe(buffer())
         .pipe(uglify())
         .pipe(rev())
-        .pipe(sourcemaps.write('./'))
+        .pipe(sourcemaps.write('./', {sourceRoot: "/"}))
         .pipe(save_rev())
         .pipe(gulp.dest(conf.static));
 });
