@@ -69,7 +69,7 @@ var jsHintErrorReporter = function(){
     })
 };
 
-var save_rev = function(){
+function save_rev(){
     return map(function(file, callback){
         if (file.revOrigBase){
             manifest[path.basename(file.revOrigPath)] = path.basename(file.path);
@@ -87,6 +87,32 @@ var dont_break_on_errors = function(){
     );
 };
 
+/*
+ * Sourcemaps are a wonderful way to develop directly from the chrome devtools.
+ * However, generating correct sourcemaps is a huge PITA, especially on Windows.
+ * Fixing this upstream is tedious as apparently nobody really cares and
+ * a single misbehaving transform breaks everything.
+ * Thus, we just manually fix all paths.
+ */
+//Normalize \ to / on Windows.
+function unixStylePath(filePath) {
+  return filePath.split(path.sep).join('/');
+}
+// Hijack the sourceRoot attr to do our transforms
+function fixSourceMapPaths(file){
+    file.sourceMap.sources = file.sourceMap.sources.map(function (x) {
+        return unixStylePath(path.relative(".", x));
+    });
+    return "/";
+}
+// Browserify fails for paths starting with "..".
+function fixBrowserifySourceMapPaths(file){
+    file.sourceMap.sources = file.sourceMap.sources.map(function (x) {
+        return x.replace("src/js/node_modules","node_modules");
+    });
+    return fixSourceMapPaths(file);
+}
+
 gulp.task("fonts", function () {
     return gulp.src(conf.fonts)
         .pipe(gulp.dest(conf.static + "/fonts"))
@@ -97,7 +123,7 @@ function styles_dev(files) {
         .pipe(dont_break_on_errors())
         .pipe(sourcemaps.init())
         .pipe(less())
-        .pipe(sourcemaps.write(".", {sourceRoot: "/static"}))
+        .pipe(sourcemaps.write(".", {sourceRoot: fixSourceMapPaths}))
         .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false })));
 }
@@ -111,11 +137,9 @@ gulp.task("styles-vendor-dev", function(){
 
 function styles_prod(files) {
     return (gulp.src(files)
-        .pipe(sourcemaps.init())
         .pipe(less())
         .pipe(minifyCSS())
         .pipe(rev())
-        .pipe(sourcemaps.write(".", {sourceRoot: "/static"}))
         .pipe(save_rev())
         .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false })));
@@ -161,7 +185,7 @@ function app_stream(debug) {
         return b.bundle();
     });
 
-    return gulp.src([conf.js.app], {base: conf.src})
+    return gulp.src([conf.js.app], {base: "."})
         .pipe(dont_break_on_errors())
         .pipe(browserified)
         .pipe(sourcemaps.init({ loadMaps: true }))
@@ -170,7 +194,7 @@ function app_stream(debug) {
 
 gulp.task('scripts-app-dev', function () {
     return app_stream(true)
-        .pipe(sourcemaps.write('./', {sourceRoot: "/"}))
+        .pipe(sourcemaps.write('./', {sourceRoot: fixBrowserifySourceMapPaths}))
         .pipe(gulp.dest(conf.static))
         .pipe(livereload({ auto: false }));
 });
@@ -180,7 +204,7 @@ gulp.task('scripts-app-prod', function () {
         .pipe(buffer())
         .pipe(uglify())
         .pipe(rev())
-        .pipe(sourcemaps.write('./', {sourceRoot: "/"}))
+        .pipe(sourcemaps.write('./', {sourceRoot: fixBrowserifySourceMapPaths}))
         .pipe(save_rev())
         .pipe(gulp.dest(conf.static));
 });
@@ -196,21 +220,21 @@ gulp.task("jshint", function () {
 });
 
 gulp.task("copy", function(){
-    return gulp.src(conf.copy, {base:"src/"})
+    return gulp.src(conf.copy, {base: conf.src})
         .pipe(gulp.dest(conf.static));
 });
 
 function templates(){
-    return gulp.src(conf.templates, {base:"src/"})
+    return gulp.src(conf.templates, {base: conf.src})
         .pipe(replace(/\{\{\{(\S*)\}\}\}/g, function(match, p1) {
             return manifest[p1];
         }))
         .pipe(gulp.dest(conf.dist));
-};
+}
 gulp.task('templates', templates);
 
 gulp.task("peg", function () {
-    return gulp.src(conf.peg, {base: "src/"})
+    return gulp.src(conf.peg, {base: conf.src})
         .pipe(dont_break_on_errors())
         .pipe(peg())
         .pipe(gulp.dest("src/"));
