@@ -4,12 +4,12 @@
 
 # A few quirks to note, which should be re-checked every release:
 # - We require the latest development version of PyInstaller.
- 
-# To run, first install netlib and mitmproxy, then run 
+
+# To run, first install netlib and mitmproxy, then run
 #
 #	./release/osx-binaries
 #
-# From the top-level mitmproxy directory. 
+# From the top-level mitmproxy directory.
 
 usage ()
 {
@@ -26,17 +26,22 @@ fi
 
 TMPDIR=./tmp
 PYINST_CMD=$1" -F --clean"
+CACHE="~/Library/Application Support/pyinstaller"
 
 rm -f dist/*
 rm -rf $TMPDIR
+rm -rf $CACHE
 
 $PYINST_CMD ./release/mitmdump.spec
+echo "Running mitmdump..."
 ./dist/mitmdump --version || exit 1
 
 $PYINST_CMD ./release/mitmproxy.spec
+echo "Running mitmproxy..."
 ./dist/mitmproxy --version || exit 1
 
 $PYINST_CMD ./release/mitmweb.spec
+echo "Running mitmweb..."
 ./dist/mitmweb --version || exit 1
 
 DST=osx-mitmproxy-`./dist/mitmdump --shortversion 2>&1`

@@ -1,14 +1,12 @@
 # -*- mode: python -*-
 
 from glob import glob
-block_cipher = None
 
 a = Analysis(['./mitmdump'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
              excludes=None,
-             cipher=block_cipher,
           )
 a.datas = Tree(
   "./libmproxy/onboarding/templates",
@@ -18,8 +16,7 @@ a.datas += Tree(
   "./libmproxy/onboarding/static",
   prefix="libmproxy/onboarding/static"
 )
-pyz = PYZ(a.pure,
-             cipher=block_cipher)
+pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
