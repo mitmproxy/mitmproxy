@@ -56,7 +56,7 @@ $PYINST_CMD ./release/mitmweb.spec
 echo "Running mitmweb..."
 ./dist/mitmweb --version || exit 1
 
-exit DST=osx-mitmproxy-`./dist/mitmdump --shortversion 2>&1`
+DST=osx-mitmproxy-`./dist/mitmdump --shortversion 2>&1`
 mkdir -p $TMPDIR/$DST
 cp ./dist/mitmproxy $TMPDIR/$DST
 cp ./dist/mitmdump $TMPDIR/$DST

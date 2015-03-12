@@ -571,6 +571,7 @@ def mitmproxy():
     parser.add_argument(
         "--palette", type=str, default="dark",
         action="store", dest="palette",
+        choices=sorted(palettes.palettes.keys()),
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
     parser.add_argument(
@@ -662,4 +663,3 @@ def mitmweb():
         help="Intercept filter expression."
     )
     return parser
-
