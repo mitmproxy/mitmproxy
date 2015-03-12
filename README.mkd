@@ -16,8 +16,7 @@ mitmproxy.org website:
 
 [mitmproxy.org](http://mitmproxy.org).
 
-
-You can find complete directions for installing mitmproxy [here](http://mitmproxy.org/doc/install.html). 
+You can find complete directions for installing mitmproxy [here](http://mitmproxy.org/doc/install.html).
 
 
 Features
@@ -41,43 +40,49 @@ only mitmdump is supported, which does not have a graphical user interface.
 Hacking
 -------
 
-
-### Requirements
-
-
-* [Python](http://www.python.org) 2.7.x.
-* [netlib](http://pypi.python.org/pypi/netlib), version matching mitmproxy.
-* Third-party packages listed in [setup.py](https://github.com/mitmproxy/mitmproxy/blob/master/setup.py)
-
-Optional packages for extended content decoding:
-
-* [PyAMF](http://www.pyamf.org/) version 0.6.1 or newer.
-* [protobuf](https://code.google.com/p/protobuf/) version 2.5.0 or newer.
-* [cssutils](http://cthedot.de/cssutils/) version 1.0 or newer.
-
-For convenience, all optional dependencies can be installed with 
-
-`pip install "mitmproxy[contentviews]"`
-
-### Setting up a dev environment
-
-The following procedure is recommended to set up your dev environment:
+To get started hacking on mitmproxy, make sure you have
+[Python](http://www.python.org) 2.7.x. with
+[virtualenv](https://virtualenv.pypa.io/en/latest/) installed (you can find
+installation instructions for virtualenv
+[here](https://virtualenv.pypa.io/en/latest/installation.html)). Then do the
+following:
 
 ```
 $ git clone https://github.com/mitmproxy/mitmproxy.git
+$ git clone https://github.com/mitmproxy/netlib.git
+$ git clone https://github.com/mitmproxy/pathod.git
 $ cd mitmproxy
-$ pip install --src . -r requirements.txt
+$ ./dev
 ```
 
-This installs the latest GitHub versions of mitmproxy, netlib and pathod into `mitmproxy/`. All other development dependencies save countershape are installed into their usual locations. 
+The *dev* script will create a virtualenv environment in a directory called
+"venv.mitmproxy", and install all of mitmproxy's development requirements, plus
+all optional modules. The primary mitmproxy components - mitmproxy, netlib and
+pathod - are all installed "editable", so any changes to the source in the git
+checkouts will be reflected live in the virtualenv.
+
+To confirm that you're up and running, activate the virtualenv, and run the
+mitmproxy test suite:
+
+```
+$ source ../venv.mitmproxy/bin/activate
+$ nosetests ./test
+```
+Note that the main executables for the project - **mitmdump**, **mitmproxy** and
+**mitmweb** - are all created within the virtualenv. After activating the
+virtualenv, they will be on your $PATH, and you can run them like any other
+command:
+
+```$ mitmdump --version```
+
 
 
 ### Testing
 
-The test suite requires the `dev` extra requirements listed in [setup.py](https://github.com/mitmproxy/mitmproxy/blob/master/setup.py). Install these with:
+If you've followed the procedure above, you already have all the development
+requirements installed, and you can simply run the test suite:
 
-`pip install "mitmproxy[dev]"`
-
+```nosetests ./test```
 
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project maintains 100% test coverage.
