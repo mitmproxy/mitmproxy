@@ -16,6 +16,7 @@ from .protocol import http, handle
 from .proxy.config import HostMatcher
 from .proxy.connection import ClientConnection, ServerConnection
 import urlparse
+import threading
 
 ODict = odict.ODict
 ODictCaseless = odict.ODictCaseless
@@ -906,14 +907,20 @@ class FlowMaster(controller.Master):
         if f.live:
             app = self.apps.get(f.request)
             if app:
-                err = app.serve(
-                    f,
-                    f.client_conn.wfile,
-                    **{"mitmproxy.master": self}
-                )
-                if err:
-                    self.add_event("Error in wsgi app. %s" % err, "error")
-                f.reply(protocol.KILL)
+                def request_thread():
+                    err = app.serve(
+                        f,
+                        f.client_conn.wfile,
+                        **{"mitmproxy.master": self}
+                    )
+                    if err:
+                        self.add_event("Error in wsgi app. %s" % err, "error")
+                    f.reply(protocol.KILL)
+                t = threading.Thread(target=request_thread)
+                t.daemon = True
+                t.start()
+                # we don't bother joining the thread or even tracking a ref
+                # to it -- no big deal if it dies mid-execution
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
