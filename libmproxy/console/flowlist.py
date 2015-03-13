@@ -92,12 +92,12 @@ class BodyPile(urwid.Pile):
         return self.focus_item.keypress(tsize, key)
 
 
-class ConnectionItem(common.WWrap):
+class ConnectionItem(urwid.WidgetWrap):
     def __init__(self, master, state, flow, focus):
         self.master, self.state, self.flow = master, state, flow
         self.f = focus
         w = self.get_text()
-        common.WWrap.__init__(self, w)
+        urwid.WidgetWrap.__init__(self, w)
 
     def get_text(self):
         return common.format_flow(

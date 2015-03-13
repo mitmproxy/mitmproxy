@@ -15,7 +15,7 @@ footer_editing = [
 ]
 
 
-class SText(common.WWrap):
+class SText(urwid.WidgetWrap):
     def __init__(self, txt, focused, error):
         txt = txt.encode("string-escape")
         w = urwid.Text(txt, wrap="any")
@@ -26,10 +26,10 @@ class SText(common.WWrap):
                 w = urwid.AttrWrap(w, "focusfield")
         elif error:
             w = urwid.AttrWrap(w, "field_error")
-        common.WWrap.__init__(self, w)
+        urwid.WidgetWrap.__init__(self, w)
 
     def get_text(self):
-        return self.w.get_text()[0]
+        return self._w.get_text()[0]
 
     def keypress(self, size, key):
         return key
@@ -38,21 +38,21 @@ class SText(common.WWrap):
         return True
 
 
-class SEdit(common.WWrap):
+class SEdit(urwid.WidgetWrap):
     def __init__(self, txt):
         txt = txt.encode("string-escape")
         w = urwid.Edit(edit_text=txt, wrap="any", multiline=True)
         w = urwid.AttrWrap(w, "editfield")
-        common.WWrap.__init__(self, w)
+        urwid.WidgetWrap.__init__(self, w)
 
     def get_text(self):
-        return self.w.get_text()[0]
+        return self._w.get_text()[0]
 
     def selectable(self):
         return True
 
 
-class GridRow(common.WWrap):
+class GridRow(urwid.WidgetWrap):
     def __init__(self, focused, editing, editor, values):
         self.focused, self.editing, self.editor = focused, editing, editor
 
@@ -76,14 +76,14 @@ class GridRow(common.WWrap):
         )
         if focused is not None:
             w.set_focus_column(focused)
-        common.WWrap.__init__(self, w)
+        urwid.WidgetWrap.__init__(self, w)
 
     def get_edit_value(self):
         return self.editing.get_text()
 
     def keypress(self, s, k):
         if self.editing:
-            w = self.w.column_widths(s)[self.focused]
+            w = self._w.column_widths(s)[self.focused]
             k = self.editing.keypress((w,), k)
         return k
 
@@ -213,7 +213,7 @@ class GridListBox(urwid.ListBox):
 
 FIRST_WIDTH_MAX = 40
 FIRST_WIDTH_MIN = 20
-class GridEditor(common.WWrap):
+class GridEditor(urwid.WidgetWrap):
     title = None
     columns = None
     headings = None
@@ -248,7 +248,7 @@ class GridEditor(common.WWrap):
 
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)
-        self.w = urwid.Frame(
+        self._w = urwid.Frame(
             self.lb,
             header = urwid.Pile([title, h])
         )
@@ -257,9 +257,9 @@ class GridEditor(common.WWrap):
 
     def show_empty_msg(self):
         if self.walker.lst:
-            self.w.set_footer(None)
+            self._w.set_footer(None)
         else:
-            self.w.set_footer(
+            self._w.set_footer(
                 urwid.Text(
                     [
                         ("highlight", "No values. Press "),
@@ -297,7 +297,7 @@ class GridEditor(common.WWrap):
                 if self.walker.focus == pf and self.walker.focus_col != pfc:
                     self.walker.start_edit()
             else:
-                self.w.keypress(size, key)
+                self._w.keypress(size, key)
             return None
 
         key = common.shortcuts(key)
@@ -336,7 +336,7 @@ class GridEditor(common.WWrap):
         elif key in ["enter"]:
             self.walker.start_edit()
         elif not self.handle_key(key):
-            return self.w.keypress(size, key)
+            return self._w.keypress(size, key)
 
     def is_error(self, col, val):
         """

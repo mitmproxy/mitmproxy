@@ -19,7 +19,7 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "edit request/response"),
         ("f", "load full body data"),
-        ("g", "copy response(content/headers) to clipboard"),        
+        ("g", "copy response(content/headers) to clipboard"),
         ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +
@@ -84,14 +84,14 @@ footer = [
 ]
 
 
-class FlowViewHeader(common.WWrap):
+class FlowViewHeader(urwid.WidgetWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
-        self.w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
+        self._w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
 
     def refresh_flow(self, f):
         if f == self.flow:
-            self.w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
+            self._w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
 
 
 class CallbackCache:
@@ -106,7 +106,7 @@ class CallbackCache:
 cache = CallbackCache()
 
 
-class FlowView(common.WWrap):
+class FlowView(urwid.WidgetWrap):
     REQ = 0
     RESP = 1
 
@@ -331,7 +331,7 @@ class FlowView(common.WWrap):
         merged = self.conn_text_merge(headers, msg, body)
         list_box = urwid.ListBox(merged)
         list_box.set_focus(focus_position + 2)
-        self.w = self.wrap_body(const, list_box)
+        self._w = self.wrap_body(const, list_box)
         self.master.statusbar.redraw()
 
         self.last_displayed_body = list_box
@@ -455,7 +455,7 @@ class FlowView(common.WWrap):
     def view_request(self):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
         body = self.conn_text(self.flow.request)
-        self.w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
+        self._w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
         self.master.statusbar.redraw()
 
     def view_response(self):
@@ -475,7 +475,7 @@ class FlowView(common.WWrap):
                             )
                         ]
                    )
-        self.w = self.wrap_body(common.VIEW_FLOW_RESPONSE, body)
+        self._w = self.wrap_body(common.VIEW_FLOW_RESPONSE, body)
         self.master.statusbar.redraw()
 
     def refresh_flow(self, c=None):
@@ -656,7 +656,7 @@ class FlowView(common.WWrap):
                 self.view_request()
         elif key in ("up", "down", "page up", "page down"):
             # Why doesn't this just work??
-            self.w.keypress(size, key)
+            self._w.keypress(size, key)
         elif key == "a":
             self.flow.accept_intercept(self.master)
             self.master.view_flow(self.flow)

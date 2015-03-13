@@ -85,7 +85,7 @@ class PathEdit(urwid.Edit, _PathCompleter):
         return urwid.Edit.keypress(self, size, key)
 
 
-class ActionBar(common.WWrap):
+class ActionBar(urwid.WidgetWrap):
     def __init__(self):
         self.message("")
 
@@ -94,7 +94,7 @@ class ActionBar(common.WWrap):
 
     def path_prompt(self, prompt, text):
         self.expire = None
-        self.w = PathEdit(prompt, text)
+        self._w = PathEdit(prompt, text)
 
     def prompt(self, prompt, text = ""):
         self.expire = None
@@ -103,19 +103,19 @@ class ActionBar(common.WWrap):
         # We can remove it once veryone is beyond 1.0.1
         if isinstance(prompt, basestring):
             prompt = unicode(prompt)
-        self.w = urwid.Edit(prompt, text or "")
+        self._w = urwid.Edit(prompt, text or "")
 
     def message(self, message, expire=None):
         self.expire = expire
-        self.w = urwid.Text(message)
+        self._w = urwid.Text(message)
 
 
-class StatusBar(common.WWrap):
+class StatusBar(urwid.WidgetWrap):
     def __init__(self, master, helptext):
         self.master, self.helptext = master, helptext
         self.ab = ActionBar()
-        self.ib = common.WWrap(urwid.Text(""))
-        self.w = urwid.Pile([self.ib, self.ab])
+        self.ib = urwid.WidgetWrap(urwid.Text(""))
+        self._w = urwid.Pile([self.ib, self.ab])
 
     def get_status(self):
         r = []
@@ -237,7 +237,7 @@ class StatusBar(common.WWrap):
                 align="right"
             ),
         ]), "heading")
-        self.ib.set_w(status)
+        self.ib._w = status
 
     def update(self, text):
         self.helptext = text

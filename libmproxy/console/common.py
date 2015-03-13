@@ -364,25 +364,3 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
     return flowcache.format_flow(
         tuple(sorted(d.items())), focus, extended, padding
     )
-
-
-def int_version(v):
-    SIG = 3
-    v = urwid.__version__.split("-")[0].split(".")
-    x = 0
-    for i in range(min(SIG, len(v))):
-        x += int(v[i]) * 10**(SIG-i)
-    return x
-
-
-# We have to do this to be portable over 0.9.8 and 0.9.9 If compatibility
-# becomes a pain to maintain, we'll just mandate 0.9.9 or newer.
-class WWrap(urwid.WidgetWrap):
-    if int_version(urwid.__version__) >= 990:
-        def set_w(self, x):
-            self._w = x
-
-        def get_w(self):
-            return self._w
-
-        w = property(get_w, set_w)
