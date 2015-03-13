@@ -41,6 +41,8 @@ def highlight_key(s, k):
 
 
 KEY_MAX = 30
+
+
 def format_keyvals(lst, key="key", val="text", indent=0):
     """
         Format a list of (key, value) tuples.
@@ -103,10 +105,8 @@ else:
     SYMBOL_RETURN = u"<-"
 
 
-
 def raw_format_flow(f, focus, extended, padding):
     f = dict(f)
-
     pile = []
     req = []
     if extended:
@@ -122,7 +122,7 @@ def raw_format_flow(f, focus, extended, padding):
         req.append(fcol(SYMBOL_REPLAY, "replay"))
     req.append(fcol(f["req_method"], "method"))
 
-    preamble = sum(i[1] for i in req) + len(req) -1
+    preamble = sum(i[1] for i in req) + len(req) - 1
 
     if f["intercepted"] and not f["acked"]:
         uc = "intercept"
@@ -348,7 +348,6 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
         duration = 0
         if f.response.timestamp_end and f.request.timestamp_start:
             duration = f.response.timestamp_end - f.request.timestamp_start
-        size = f.response.size()
         roundtrip = utils.pretty_duration(duration)
 
         d.update(dict(
@@ -362,7 +361,9 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
             d["resp_ctype"] = t[0].split(";")[0]
         else:
             d["resp_ctype"] = ""
-    return flowcache.format_flow(tuple(sorted(d.items())), focus, extended, padding)
+    return flowcache.format_flow(
+        tuple(sorted(d.items())), focus, extended, padding
+    )
 
 
 def int_version(v):
@@ -380,8 +381,8 @@ class WWrap(urwid.WidgetWrap):
     if int_version(urwid.__version__) >= 990:
         def set_w(self, x):
             self._w = x
+
         def get_w(self):
             return self._w
+
         w = property(get_w, set_w)
-
-

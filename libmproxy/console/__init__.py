@@ -776,7 +776,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.loop = urwid.MainLoop(
             self.view,
             screen = self.ui,
-            input_filter=self.input_filter
+            input_filter = self.input_filter
         )
         self.view_flowlist()
         self.statusbar.redraw()

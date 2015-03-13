@@ -3,6 +3,7 @@ import urwid
 from netlib import http
 from . import common
 
+
 def _mkhelp():
     text = []
     keys = [
@@ -35,6 +36,7 @@ footer = [
     ('heading_key', "?"), ":help ",
 ]
 
+
 class EventListBox(urwid.ListBox):
     def __init__(self, master):
         self.master = master
@@ -60,7 +62,10 @@ class BodyPile(urwid.Pile):
             self,
             [
                 FlowListBox(master),
-                urwid.Frame(EventListBox(master), header = self.inactive_header)
+                urwid.Frame(
+                    EventListBox(master),
+                    header = self.inactive_header
+                )
             ]
         )
         self.master = master
@@ -80,11 +85,11 @@ class BodyPile(urwid.Pile):
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
         item_rows = None
-        if len(size)==2:
-            item_rows = self.get_item_rows( size, focus=True )
+        if len(size) == 2:
+            item_rows = self.get_item_rows(size, focus = True)
         i = self.widget_list.index(self.focus_item)
-        tsize = self.get_item_size(size,i,True,item_rows)
-        return self.focus_item.keypress( tsize, key )
+        tsize = self.get_item_size(size, i, True, item_rows)
+        return self.focus_item.keypress(tsize, key)
 
 
 class ConnectionItem(common.WWrap):
@@ -95,7 +100,11 @@ class ConnectionItem(common.WWrap):
         common.WWrap.__init__(self, w)
 
     def get_text(self):
-        return common.format_flow(self.flow, self.f, hostheader=self.master.showhost)
+        return common.format_flow(
+            self.flow,
+            self.f,
+            hostheader = self.master.showhost
+        )
 
     def selectable(self):
         return True
@@ -125,7 +134,8 @@ class ConnectionItem(common.WWrap):
                 [i.copy() for i in self.master.state.view],
                 self.master.killextra, self.master.rheaders,
                 False, self.master.nopop,
-                self.master.options.replay_ignore_params, self.master.options.replay_ignore_content,
+                self.master.options.replay_ignore_params,
+                self.master.options.replay_ignore_content,
                 self.master.options.replay_ignore_payload_params
             )
         elif k == "t":
@@ -133,7 +143,8 @@ class ConnectionItem(common.WWrap):
                 [self.flow.copy()],
                 self.master.killextra, self.master.rheaders,
                 False, self.master.nopop,
-                self.master.options.replay_ignore_params, self.master.options.replay_ignore_content,
+                self.master.options.replay_ignore_params,
+                self.master.options.replay_ignore_content,
                 self.master.options.replay_ignore_payload_params
             )
         else:
@@ -249,7 +260,7 @@ class FlowListBox(urwid.ListBox):
 
     def get_method_raw(self, k):
         if k:
-            self.get_url(k)    
+            self.get_url(k)
 
     def get_method(self, k):
         if k == "e":
@@ -261,8 +272,13 @@ class FlowListBox(urwid.ListBox):
                     method = i[0].upper()
             self.get_url(method)
 
-    def get_url(self,method):
-        self.master.prompt("URL:", "http://www.example.com/", self.new_request, method)
+    def get_url(self, method):
+        self.master.prompt(
+            "URL:",
+            "http://www.example.com/",
+            self.new_request,
+            method
+        )
 
     def new_request(self, url, method):
         parts = http.parse_url(str(url))
@@ -283,7 +299,11 @@ class FlowListBox(urwid.ListBox):
         elif key == "e":
             self.master.toggle_eventlog()
         elif key == "l":
-            self.master.prompt("Limit: ", self.master.state.limit_txt, self.master.set_limit)
+            self.master.prompt(
+                "Limit: ",
+                self.master.state.limit_txt,
+                self.master.set_limit
+            )
         elif key == "L":
             self.master.path_prompt(
                 "Load flows: ",
@@ -291,7 +311,11 @@ class FlowListBox(urwid.ListBox):
                 self.master.load_flows_callback
             )
         elif key == "n":
-            self.master.prompt_onekey("Method", common.METHOD_OPTIONS, self.get_method)
+            self.master.prompt_onekey(
+                "Method",
+                common.METHOD_OPTIONS,
+                self.get_method
+            )
         elif key == "F":
             self.master.toggle_follow_flows()
         elif key == "W":
