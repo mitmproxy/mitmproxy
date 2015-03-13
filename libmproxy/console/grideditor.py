@@ -1,6 +1,10 @@
 from __future__ import absolute_import
-import copy, re, os
+
+import copy
+import re
+import os
 import urwid
+
 from . import common
 from .. import utils, filt, script
 from netlib import http_uastrings
@@ -121,7 +125,9 @@ class GridWalker(urwid.ListWalker):
             try:
                 val = val.decode("string-escape")
             except ValueError:
-                self.editor.master.statusbar.message("Invalid Python-style string encoding.", 1000)
+                self.editor.master.statusbar.message(
+                    "Invalid Python-style string encoding.", 1000
+                )
                 return
         errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
@@ -155,7 +161,9 @@ class GridWalker(urwid.ListWalker):
 
     def start_edit(self):
         if self.lst:
-            self.editing = GridRow(self.focus_col, True, self.editor, self.lst[self.focus])
+            self.editing = GridRow(
+                self.focus_col, True, self.editor, self.lst[self.focus]
+            )
             self.editor.master.statusbar.update(footer_editing)
             self._modified()
 
@@ -187,7 +195,12 @@ class GridWalker(urwid.ListWalker):
         if self.editing:
             return self.editing, self.focus
         elif self.lst:
-            return GridRow(self.focus_col, False, self.editor, self.lst[self.focus]), self.focus
+            return GridRow(
+                self.focus_col,
+                False,
+                self.editor,
+                self.lst[self.focus]
+            ), self.focus
         else:
             return None, None
 
@@ -213,10 +226,13 @@ class GridListBox(urwid.ListBox):
 
 FIRST_WIDTH_MAX = 40
 FIRST_WIDTH_MIN = 20
+
+
 class GridEditor(urwid.WidgetWrap):
     title = None
     columns = None
     headings = None
+
     def __init__(self, master, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
         self.master, self.value, self.callback = master, value, callback
@@ -325,7 +341,9 @@ class GridEditor(urwid.WidgetWrap):
                 self.master.path_prompt("Read file: ", "", self.read_file)
         elif key == "R":
             if self.walker.get_current_value() is not None:
-                self.master.path_prompt("Read unescaped file: ", "", self.read_file, True)
+                self.master.path_prompt(
+                    "Read unescaped file: ", "", self.read_file, True
+                )
         elif key == "e":
             o = self.walker.get_current_value()
             if o is not None:
@@ -362,7 +380,9 @@ class GridEditor(urwid.WidgetWrap):
             ("tab", "next field"),
             ("enter", "edit field"),
         ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.extend(
+            common.format_keyvals(keys, key="key", val="text", indent=4)
+        )
         text.append(
             urwid.Text(
                 [
@@ -384,6 +404,7 @@ class HeaderEditor(GridEditor):
     title = "Editing headers"
     columns = 2
     headings = ("Key", "Value")
+
     def make_help(self):
         h = GridEditor.make_help(self)
         text = []
@@ -391,7 +412,9 @@ class HeaderEditor(GridEditor):
         keys = [
             ("U", "add User-Agent header"),
         ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.extend(
+            common.format_keyvals(keys, key="key", val="text", indent=4)
+        )
         text.append(urwid.Text([("text", "\n")]))
         text.extend(h)
         return text
@@ -426,6 +449,7 @@ class ReplaceEditor(GridEditor):
     title = "Editing replacement patterns"
     columns = 3
     headings = ("Filter", "Regex", "Replacement")
+
     def is_error(self, col, val):
         if col == 0:
             if not filt.parse(val):
@@ -442,6 +466,7 @@ class SetHeadersEditor(GridEditor):
     title = "Editing header set patterns"
     columns = 3
     headings = ("Filter", "Header", "Value")
+
     def is_error(self, col, val):
         if col == 0:
             if not filt.parse(val):
@@ -455,7 +480,9 @@ class SetHeadersEditor(GridEditor):
         keys = [
             ("U", "add User-Agent header"),
         ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.extend(
+            common.format_keyvals(keys, key="key", val="text", indent=4)
+        )
         text.append(urwid.Text([("text", "\n")]))
         text.extend(h)
         return text
@@ -491,6 +518,7 @@ class ScriptEditor(GridEditor):
     title = "Editing scripts"
     columns = 1
     headings = ("Command",)
+
     def is_error(self, col, val):
         try:
             script.Script.parse_command(val)

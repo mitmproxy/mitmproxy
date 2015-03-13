@@ -1,5 +1,7 @@
 from __future__ import absolute_import
+
 import urwid
+
 from . import common
 from .. import filt, version
 
@@ -7,6 +9,7 @@ footer = [
     ("heading", 'mitmproxy v%s '%version.VERSION),
     ('heading_key', "q"), ":back ",
 ]
+
 
 class HelpView(urwid.ListBox):
     def __init__(self, master, help_context, state):
@@ -122,7 +125,9 @@ class HelpView(urwid.ListBox):
             ("T", "set tcp proxying pattern"),
             ("u", "set sticky auth expression"),
         ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.extend(
+            common.format_keyvals(keys, key="key", val="text", indent=4)
+        )
 
         text.append(urwid.Text([("head", "\n\nFilter expressions:\n")]))
         f = []
@@ -167,7 +172,9 @@ class HelpView(urwid.ListBox):
                 ("~q ~b test", "Requests where body contains \"test\""),
                 ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
-        text.extend(common.format_keyvals(examples, key="key", val="text", indent=4))
+        text.extend(
+            common.format_keyvals(examples, key="key", val="text", indent=4)
+        )
         return text
 
     def keypress(self, size, key):

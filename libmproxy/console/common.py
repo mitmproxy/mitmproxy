@@ -1,7 +1,9 @@
 from __future__ import absolute_import
+
 import urwid
 import urwid.util
 import os
+
 from .. import utils
 from ..protocol.http import CONTENT_MISSING, decoded
 
@@ -284,15 +286,16 @@ def ask_copy_part(scope, flow, master, state):
 
 def ask_save_body(part, master, state, flow):
     """
-    Save either the request or the response body to disk.
-    part can either be "q" (request), "s" (response) or None (ask user if necessary).
+    Save either the request or the response body to disk. part can either be
+    "q" (request), "s" (response) or None (ask user if necessary).
     """
 
     request_has_content = flow.request and flow.request.content
     response_has_content = flow.response and flow.response.content
 
     if part is None:
-        # We first need to determine whether we want to save the request or the response content.
+        # We first need to determine whether we want to save the request or the
+        # response content.
         if request_has_content and response_has_content:
             master.prompt_onekey(
                 "Save",
@@ -311,9 +314,19 @@ def ask_save_body(part, master, state, flow):
             ask_save_body("q", master, state, flow)
 
     elif part == "q" and request_has_content:
-        ask_save_path("Save request content: ", flow.request.get_decoded_content(), master, state)
+        ask_save_path(
+            "Save request content: ",
+            flow.request.get_decoded_content(),
+            master,
+            state
+        )
     elif part == "s" and response_has_content:
-        ask_save_path("Save response content: ", flow.response.get_decoded_content(), master, state)
+        ask_save_path(
+            "Save response content: ",
+            flow.response.get_decoded_content(),
+            master,
+            state
+        )
     else:
         master.statusbar.message("No content to save.")
 

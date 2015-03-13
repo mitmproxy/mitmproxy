@@ -1,14 +1,23 @@
 from __future__ import absolute_import
-import logging, subprocess, re, cStringIO, traceback, json, urwid
+import cStringIO
+import json
+import logging
+import lxml.html
+import lxml.etree
 from PIL import Image
 from PIL.ExifTags import TAGS
+import re
+import subprocess
+import traceback
+import urwid
 
-import lxml.html, lxml.etree
 import netlib.utils
+
 from . import common
 from .. import utils, encoding, flow
 from ..contrib import jsbeautifier, html2text
 from ..contrib.wbxml.ASCommandResponse import ASCommandResponse
+
 try:
     import pyamf
     from pyamf import remoting, flex
@@ -62,6 +71,7 @@ class ViewAuto:
     name = "Auto"
     prompt = ("auto", "a")
     content_types = []
+
     def __call__(self, hdrs, content, limit):
         ctype = hdrs.get_first("content-type")
         if ctype:
@@ -78,6 +88,7 @@ class ViewRaw:
     name = "Raw"
     prompt = ("raw", "r")
     content_types = []
+
     def __call__(self, hdrs, content, limit):
         txt = _view_text(content[:limit], len(content), limit)
         return "Raw", txt
@@ -87,6 +98,7 @@ class ViewHex:
     name = "Hex"
     prompt = ("hex", "e")
     content_types = []
+
     def __call__(self, hdrs, content, limit):
         txt = []
         for offset, hexa, s in netlib.utils.hexdump(content[:limit]):
@@ -105,8 +117,14 @@ class ViewXML:
     name = "XML"
     prompt = ("xml", "x")
     content_types = ["text/xml"]
+
     def __call__(self, hdrs, content, limit):
-        parser = lxml.etree.XMLParser(remove_blank_text=True, resolve_entities=False, strip_cdata=False, recover=False)
+        parser = lxml.etree.XMLParser(
+            remove_blank_text=True,
+            resolve_entities=False,
+            strip_cdata=False,
+            recover=False
+        )
         try:
             document = lxml.etree.fromstring(content, parser)
         except lxml.etree.XMLSyntaxError:
@@ -121,18 +139,18 @@ class ViewXML:
                 lxml.etree.tostring(p)
             )
             p = p.getprevious()
-        doctype=docinfo.doctype
+        doctype = docinfo.doctype
         if prev:
             doctype += "\n".join(prev).strip()
         doctype = doctype.strip()
 
         s = lxml.etree.tostring(
-                document,
-                pretty_print=True,
-                xml_declaration=True,
-                doctype=doctype or None,
-                encoding = docinfo.encoding
-            )
+            document,
+            pretty_print=True,
+            xml_declaration=True,
+            doctype=doctype or None,
+            encoding = docinfo.encoding
+        )
 
         txt = []
         for i in s[:limit].strip().split("\n"):
@@ -147,6 +165,7 @@ class ViewJSON:
     name = "JSON"
     prompt = ("json", "s")
     content_types = ["application/json"]
+
     def __call__(self, hdrs, content, limit):
         lines = utils.pretty_json(content)
         if lines:
@@ -167,12 +186,20 @@ class ViewHTML:
     name = "HTML"
     prompt = ("html", "h")
     content_types = ["text/html"]
+
     def __call__(self, hdrs, content, limit):
         if utils.isXML(content):
-            parser = lxml.etree.HTMLParser(strip_cdata=True, remove_blank_text=True)
+            parser = lxml.etree.HTMLParser(
+                strip_cdata=True,
+                remove_blank_text=True
+            )
             d = lxml.html.fromstring(content, parser=parser)
             docinfo = d.getroottree().docinfo
-            s = lxml.etree.tostring(d, pretty_print=True, doctype=docinfo.doctype)
+            s = lxml.etree.tostring(
+                d,
+                pretty_print=True,
+                doctype=docinfo.doctype
+            )
             return "HTML", _view_text(s[:limit], len(s), limit)
 
 
@@ -180,6 +207,7 @@ class ViewHTMLOutline:
     name = "HTML Outline"
     prompt = ("html outline", "o")
     content_types = ["text/html"]
+
     def __call__(self, hdrs, content, limit):
         content = content.decode("utf-8")
         h = html2text.HTML2Text(baseurl="")
@@ -194,14 +222,15 @@ class ViewURLEncoded:
     name = "URL-encoded"
     prompt = ("urlencoded", "u")
     content_types = ["application/x-www-form-urlencoded"]
+
     def __call__(self, hdrs, content, limit):
         lines = utils.urldecode(content)
         if lines:
             body = common.format_keyvals(
-                        [(k+":", v) for (k, v) in lines],
-                        key = "header",
-                        val = "text"
-                   )
+                [(k+":", v) for (k, v) in lines],
+                key = "header",
+                val = "text"
+            )
             return "URLEncoded form", body
 
 
@@ -209,6 +238,7 @@ class ViewMultipart:
     name = "Multipart Form"
     prompt = ("multipart", "m")
     content_types = ["multipart/form-data"]
+
     def __call__(self, hdrs, content, limit):
         v = hdrs.get_first("content-type")
         if v:
@@ -322,11 +352,13 @@ class ViewJavaScript:
         "application/javascript",
         "text/javascript"
     ]
+
     def __call__(self, hdrs, content, limit):
         opts = jsbeautifier.default_options()
         opts.indent_size = 2
         res = jsbeautifier.beautify(content[:limit], opts)
         return "JavaScript", _view_text(res, len(res), limit)
+
 
 class ViewCSS:
     name = "CSS"
@@ -355,6 +387,7 @@ class ViewImage:
         "image/vnd.microsoft.icon",
         "image/x-icon",
     ]
+
     def __call__(self, hdrs, content, limit):
         try:
             img = Image.open(cStringIO.StringIO(content))
@@ -380,13 +413,16 @@ class ViewImage:
                     )
         clean = []
         for i in parts:
-            clean.append([netlib.utils.cleanBin(i[0]), netlib.utils.cleanBin(i[1])])
-        fmt = common.format_keyvals(
-                clean,
-                key = "header",
-                val = "text"
+            clean.append(
+                [netlib.utils.cleanBin(i[0]), netlib.utils.cleanBin(i[1])]
             )
+        fmt = common.format_keyvals(
+            clean,
+            key = "header",
+            val = "text"
+        )
         return "%s image"%img.format, fmt
+
 
 class ViewProtobuf:
     """Human friendly view of protocol buffers
@@ -403,7 +439,10 @@ class ViewProtobuf:
     @staticmethod
     def is_available():
         try:
-            p = subprocess.Popen(["protoc", "--version"], stdout=subprocess.PIPE)
+            p = subprocess.Popen(
+                ["protoc", "--version"],
+                stdout=subprocess.PIPE
+            )
             out, _ = p.communicate()
             return out.startswith("libprotoc")
         except:
@@ -427,6 +466,7 @@ class ViewProtobuf:
         txt = _view_text(decoded[:limit], len(decoded), limit)
         return "Protobuf", txt
 
+
 class ViewWBXML:
     name = "WBXML"
     prompt = ("wbxml", "w")
@@ -436,14 +476,14 @@ class ViewWBXML:
     ]
 
     def __call__(self, hdrs, content, limit):
-        
+
         try:
             parser = ASCommandResponse(content)
             parsedContent = parser.xmlString
             txt = _view_text(parsedContent, len(parsedContent), limit)
             return "WBXML", txt
         except:
-        	return None
+            return None
 
 views = [
     ViewAuto(),
@@ -512,7 +552,7 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc, is_request):
     # Third-party viewers can fail in unexpected ways...
     except Exception:
         s = traceback.format_exc()
-        s = "Content viewer failed: \n"  + s
+        s = "Content viewer failed: \n" + s
         logfunc(s, "error")
         ret = None
     if not ret:
