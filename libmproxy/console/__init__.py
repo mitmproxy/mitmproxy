@@ -1,9 +1,23 @@
 from __future__ import absolute_import
-import mailcap, mimetypes, tempfile, os, subprocess, glob, time, shlex, stat
-import os.path, sys, weakref, traceback
+
+import glob
+import mailcap
+import mimetypes
+import tempfile
+import os
+import os.path
+import shlex
+import stat
+import subprocess
+import sys
+import time
+import traceback
 import urwid
-from .. import controller, utils, flow, script, proxy
-from . import flowlist, flowview, help, common, grideditor, palettes, contentview, flowdetailview
+import weakref
+
+from .. import controller, utils, flow, script
+from . import flowlist, flowview, help, common
+from . import grideditor, palettes, contentview, flowdetailview
 
 EVENTLOG_SIZE = 500
 
@@ -54,8 +68,6 @@ class _PathCompleter:
         ret = self.lookup[self.offset]
         self.final = ret[1]
         return ret[0]
-
-#begin nocover
 
 
 class PathEdit(urwid.Edit, _PathCompleter):
@@ -251,8 +263,6 @@ class StatusBar(common.WWrap):
         self.master.loop.draw_screen()
 
 
-#end nocover
-
 class ConsoleState(flow.State):
     def __init__(self):
         flow.State.__init__(self)
@@ -335,7 +345,6 @@ class ConsoleState(flow.State):
         super(ConsoleState, self).clear()
 
 
-
 class Options(object):
     attributes = [
         "app",
@@ -365,6 +374,7 @@ class Options(object):
         "nopop",
         "palette",
     ]
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -373,11 +383,9 @@ class Options(object):
                 setattr(self, i, None)
 
 
-#begin nocover
-
-
 class ConsoleMaster(flow.FlowMaster):
     palette = []
+
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
         self.looptime = 0
@@ -437,7 +445,10 @@ class ConsoleMaster(flow.FlowMaster):
                     sys.exit(1)
 
         if options.outfile:
-            err = self.start_stream_to_path(options.outfile[0], options.outfile[1])
+            err = self.start_stream_to_path(
+                options.outfile[0],
+                options.outfile[1]
+            )
             if err:
                 print >> sys.stderr, "Stream file error:", err
                 sys.exit(1)
@@ -526,7 +537,9 @@ class ConsoleMaster(flow.FlowMaster):
                 flows,
                 self.killextra, self.rheaders,
                 False, self.nopop,
-                self.options.replay_ignore_params, self.options.replay_ignore_content, self.options.replay_ignore_payload_params
+                self.options.replay_ignore_params,
+                self.options.replay_ignore_content,
+                self.options.replay_ignore_payload_params
             )
 
     def spawn_editor(self, data):
@@ -545,7 +558,7 @@ class ConsoleMaster(flow.FlowMaster):
         except:
             self.statusbar.message("Can't start editor: %s" % " ".join(c))
         else:
-            data = open(name,"rb").read()
+            data = open(name, "rb").read()
         self.ui.start()
         os.unlink(name)
         return data
@@ -582,7 +595,9 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             subprocess.call(cmd, shell=shell)
         except:
-            self.statusbar.message("Can't start external viewer: %s" % " ".join(c))
+            self.statusbar.message(
+                "Can't start external viewer: %s" % " ".join(c)
+            )
         self.ui.start()
         os.unlink(name)
 
@@ -792,7 +807,8 @@ class ConsoleMaster(flow.FlowMaster):
             sys.stdout.flush()
             print >> sys.stderr, traceback.format_exc()
             print >> sys.stderr, "mitmproxy has crashed!"
-            print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
+            print >> sys.stderr, "Please lodge a bug report at:"
+            print >> sys.stderr, "\thttps://github.com/mitmproxy/mitmproxy"
             print >> sys.stderr, "Shutting down..."
         sys.stderr.flush()
         self.shutdown()
@@ -1012,7 +1028,8 @@ class ConsoleMaster(flow.FlowMaster):
         elif a == "n":
             self.refresh_server_playback = not self.refresh_server_playback
         elif a == "u":
-            self.server.config.no_upstream_cert = not self.server.config.no_upstream_cert
+            self.server.config.no_upstream_cert =\
+                not self.server.config.no_upstream_cert
 
     def shutdown(self):
         self.state.killall(self)
