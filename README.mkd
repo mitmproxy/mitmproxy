@@ -64,8 +64,8 @@ checkouts will be reflected live in the virtualenv.
 To confirm that you're up and running, activate the virtualenv, and run the
 mitmproxy test suite:
 
-```
-$ ../venv.mitmproxy/bin/activate
+```shell
+$ source ../venv.mitmproxy/bin/activate # ..\venv.mitmproxy\Scripts\activate.bat on Windows
 $ nosetests ./test
 ```
 Note that the main executables for the project - **mitmdump**, **mitmproxy** and
