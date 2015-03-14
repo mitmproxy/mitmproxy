@@ -38,8 +38,8 @@ setup(
 
     entry_points={
         'console_scripts': [
-            "pathod = libpathod.main:pathod",
-            "pathoc = libpathod.main:pathoc"
+            "pathod = libpathod.cmdline:go_pathod",
+            "pathoc = libpathod.cmdline:go_pathoc"
         ]
     },
 
