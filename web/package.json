@@ -17,7 +17,7 @@
     "dependencies": {
         "jquery": "",
         "lodash": "",
-        "react": "",
+        "react": "0.12.x",
         "react-router": "",
         "bootstrap": "",
         "flux": ""
