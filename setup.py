@@ -35,16 +35,17 @@ setup(
 
     packages=find_packages(),
     include_package_data=True,
-
     entry_points={
         'console_scripts': [
             "pathod = libpathod.cmdline:go_pathod",
             "pathoc = libpathod.cmdline:go_pathoc"
         ]
     },
-
     install_requires=[
-        'netlib>=%s' % version.MINORVERSION,
+        "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
+        # It's INSANE that we have to do this, but...
+        # FIXME: Requirement to be removed at next release
+        "pip>=1.5.6",
         "requests>=2.4.1",
         "Flask>=0.10.1"
     ],

@@ -1,3 +1,12 @@
+7 November 2014: pathod 0.11:
+
+  * Hugely improved SSL support, including dynamic generation of certificates
+    using the mitproxy cacert
+  * pathoc -S dumps information on the remote SSL certificate chain
+  * Big improvements to fuzzing, including random spec selection and memoization to avoid repeating randomly generated patterns 
+  * Reflected patterns, allowing you to embed a pathod server response specification in a pathoc request, resolving both on client side. This makes fuzzing proxies and other intermediate systems much better.
+
+
 25 August 2013: pathod 0.9.2:
 
     * Adapt to interface changes in netlib

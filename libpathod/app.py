@@ -1,4 +1,6 @@
-import logging, pprint, cStringIO
+import logging
+import pprint
+import cStringIO
 from flask import Flask, jsonify, render_template, request, abort, make_response
 import version, language, utils
 from netlib import http_uastrings
@@ -39,7 +41,12 @@ def make_app(noapi):
     @app.route('/')
     @app.route('/index.html')
     def index():
-        return render("index.html", True, section="main")
+        return render(
+            "index.html",
+            True,
+            section="main",
+            version=version.VERSION
+        )
 
     @app.route('/download')
     @app.route('/download.html')
