@@ -51,6 +51,10 @@ def go_pathoc():
         help='Repeat N times. If 0 repeat for ever.'
     )
     parser.add_argument(
+        "-w", dest='wait', default=0, type=float, metavar="N",
+        help='Wait N seconds between each request.'
+    )
+    parser.add_argument(
         "-r", dest="random", action="store_true", default=False,
         help="""
         Select a random request from those specified. If this is not specified,

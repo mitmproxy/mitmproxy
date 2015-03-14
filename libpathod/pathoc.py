@@ -2,12 +2,15 @@ import sys
 import os
 import hashlib
 import random
+import time
+
+import OpenSSL.crypto
+
 from netlib import tcp, http, certutils
 import netlib.utils
 
 import language
 import utils
-import OpenSSL.crypto
 
 
 class PathocError(Exception):
@@ -226,9 +229,13 @@ def main(args):
     try:
         cnt = 0
         while 1:
+            if cnt == args.repeat and args.repeat != 0:
+                break
             if trycount > args.memolimit:
                 print >> sys.stderr, "Memo limit exceeded..."
                 return
+            if args.wait and cnt != 0:
+                time.sleep(args.wait)
 
             cnt += 1
             if args.random:
@@ -262,7 +269,10 @@ def main(args):
             trycount = 0
             try:
                 p.connect(args.connect_to)
-            except (tcp.NetLibError, PathocError), v:
+            except tcp.NetLibError, v:
+                print >> sys.stderr, str(v)
+                continue
+            except PathocError, v:
                 print >> sys.stderr, str(v)
                 sys.exit(1)
             if args.timeout:
@@ -281,7 +291,5 @@ def main(args):
                 sys.stdout.flush()
                 if ret and args.oneshot:
                     sys.exit(0)
-            if cnt == args.repeat:
-                break
     except KeyboardInterrupt:
         pass
