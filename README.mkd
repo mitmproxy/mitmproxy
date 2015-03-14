@@ -65,7 +65,7 @@ To confirm that you're up and running, activate the virtualenv, and run the
 mitmproxy test suite:
 
 ```
-$ source ../venv.mitmproxy/bin/activate
+$ ../venv.mitmproxy/bin/activate
 $ nosetests ./test
 ```
 Note that the main executables for the project - **mitmdump**, **mitmproxy** and

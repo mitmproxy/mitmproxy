@@ -1,16 +1,6 @@
 #!/bin/sh
 VENV=../venv.mitmproxy
-PIP="$VENV/bin/pip --cache-dir ~/.pipcache"
-
-echo "This script sets up the following:"
-echo "\t~/.pipcache - A pip cache directory"
-echo "\t$VENV - A development virtualenv"
-
-mkdir -p ~/.pipcache
 
 virtualenv $VENV
 source $VENV/bin/activate
-$PIP install -r ./requirements.txt
-# Re-install these to make them editable
-$PIP install --editable ../netlib
-$PIP install --editable ../pathod
+pip install --src .. -r requirements.txt
