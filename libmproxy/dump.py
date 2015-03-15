@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import sys
 import os
 import netlib.utils
@@ -156,65 +156,57 @@ class DumpMaster(flow.FlowMaster):
     def add_event(self, e, level="info"):
         needed = dict(error=0, info=1, debug=2).get(level, 1)
         if self.o.verbosity >= needed:
-            print >> self.outfile, e
+            print(e, file=self.outfile)
             self.outfile.flush()
 
     def indent(self, n, t):
         l = str(t).strip().split("\n")
         return "\n".join(" "*n + i for i in l)
 
+    def _print_message(self, message):
+        if self.o.flow_detail >= 2:
+            print(self.indent(4, message.headers), file=self.outfile)
+        if self.o.flow_detail >= 3:
+            if message.content == http.CONTENT_MISSING:
+                print("", file=self.outfile)
+                print(self.indent(4, "(content missing)"), file=self.outfile)
+            elif message.content:
+                print("", file=self.outfile)
+                content = message.get_decoded_content()
+                if not utils.isBin(content):
+                    print(self.indent(4, content), file=self.outfile)
+                else:
+                    d = netlib.utils.hexdump(content)
+                    d = "\n".join("%s\t%s %s"%i for i in d)
+                    print(self.indent(4, d), file=self.outfile)
+
     def _process_flow(self, f):
         self.state.delete_flow(f)
         if self.filt and not f.match(self.filt):
             return
 
-        if f.response:
-            if self.o.flow_detail > 0:
-                if f.response.content == http.CONTENT_MISSING:
-                    sz = "(content missing)"
-                else:
-                    sz = utils.pretty_size(len(f.response.content))
-                result = " << %s %s"%(str_response(f.response), sz)
-            if self.o.flow_detail > 1:
-                result = result + "\n\n" + self.indent(4, f.response.headers)
-            if self.o.flow_detail > 2:
-                if f.response.content == http.CONTENT_MISSING:
-                    cont = self.indent(4, "(content missing)")
-                elif utils.isBin(f.response.content):
-                    d = netlib.utils.hexdump(f.response.content)
-                    d = "\n".join("%s\t%s %s"%i for i in d)
-                    cont = self.indent(4, d)
-                elif f.response.content:
-                    cont = self.indent(4, f.response.content)
-                else:
-                    cont = ""
-                result = result + "\n\n" + cont
-        elif f.error:
-            result = " << %s"%f.error.msg
+        if self.o.flow_detail == 0:
+            return
 
-        if self.o.flow_detail == 1:
-            print >> self.outfile, str_request(f, self.showhost)
-            print >> self.outfile, result
-        elif self.o.flow_detail == 2:
-            print >> self.outfile, str_request(f, self.showhost)
-            print >> self.outfile, self.indent(4, f.request.headers)
-            print >> self.outfile
-            print >> self.outfile, result
-            print >> self.outfile, "\n"
-        elif self.o.flow_detail >= 3:
-            print >> self.outfile, str_request(f, self.showhost)
-            print >> self.outfile, self.indent(4, f.request.headers)
-            if f.request.content != http.CONTENT_MISSING and utils.isBin(f.request.content):
-                d = netlib.utils.hexdump(f.request.content)
-                d = "\n".join("%s\t%s %s"%i for i in d)
-                print >> self.outfile, self.indent(4, d)
-            elif f.request.content:
-                print >> self.outfile, self.indent(4, f.request.content)
-            print >> self.outfile
-            print >> self.outfile, result
-            print >> self.outfile, "\n"
-        if self.o.flow_detail:
-            self.outfile.flush()
+        if f.request:
+            print(str_request(f, self.showhost), file=self.outfile)
+            self._print_message(f.request)
+
+            if self.o.flow_detail >= 2:
+                print("", file=self.outfile)
+
+        if f.response:
+            if f.response.content == http.CONTENT_MISSING:
+                sz = "(content missing)"
+            else:
+                sz = utils.pretty_size(len(f.response.content))
+            print(" << %s %s"%(str_response(f.response), sz), file=self.outfile)
+            self._print_message(f.response)
+
+        if f.error:
+            print(" << {}".format(f.error.msg), file=self.outfile)
+
+        self.outfile.flush()
 
     def handle_request(self, f):
         flow.FlowMaster.handle_request(self, f)
