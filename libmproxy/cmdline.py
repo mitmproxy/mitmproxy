@@ -192,7 +192,8 @@ def get_common_options(options):
         nopop=options.nopop,
         replay_ignore_content = options.replay_ignore_content,
         replay_ignore_params = options.replay_ignore_params,
-        replay_ignore_payload_params = options.replay_ignore_payload_params
+        replay_ignore_payload_params = options.replay_ignore_payload_params,
+        replay_ignore_host = options.replay_ignore_host
     )
 
 
@@ -478,6 +479,11 @@ def common_options(parser):
             Request's parameters to be ignored while searching for a saved flow
             to replay. Can be passed multiple times.
         """
+    )
+    group.add_argument(
+        "--replay-ignore-host",
+        action="store_true", dest="replay_ignore_host", default=False,
+        help="Ignore request's destination host while searching for a saved flow to replay"
     )
 
     group = parser.add_argument_group(

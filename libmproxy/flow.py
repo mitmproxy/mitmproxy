@@ -203,12 +203,19 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
-    def __init__(self, headers, flows, exit, nopop, ignore_params, ignore_content, ignore_payload_params):
+    def __init__(self, headers, flows, exit, nopop, ignore_params, ignore_content,
+                 ignore_payload_params, ignore_host):
         """
             headers: Case-insensitive list of request headers that should be
             included in request-response matching.
         """
-        self.headers, self.exit, self.nopop, self.ignore_params, self.ignore_content, self.ignore_payload_params = headers, exit, nopop, ignore_params, ignore_content, ignore_payload_params
+        self.headers = headers
+        self.exit = exit
+        self.nopop = nopop
+        self.ignore_params = ignore_params
+        self.ignore_content = ignore_content
+        self.ignore_payload_params = ignore_payload_params
+        self.ignore_host = ignore_host
         self.fmap = {}
         for i in flows:
             if i.response:
@@ -228,7 +235,6 @@ class ServerPlaybackState:
         queriesArray = urlparse.parse_qsl(query)
 
         key = [
-            str(r.host),
             str(r.port),
             str(r.scheme),
             str(r.method),
@@ -244,6 +250,9 @@ class ServerPlaybackState:
                 )
             else:
                 key.append(str(r.content))
+
+        if not self.ignore_host:
+            key.append(r.host)
 
         filtered = []
         ignore_params = self.ignore_params or []
@@ -616,6 +625,7 @@ class FlowMaster(controller.Master):
         self.setheaders = SetHeaders()
         self.replay_ignore_params = False
         self.replay_ignore_content = None
+        self.replay_ignore_host = False
 
         self.stream = None
         self.apps = AppRegistry()
@@ -712,16 +722,19 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params, ignore_content,
-                              ignore_payload_params):
+    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params,
+                              ignore_content, ignore_payload_params, ignore_host):
         """
             flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
             ignore_params: list of parameters to ignore in server replay
             ignore_content: true if request content should be ignored in server replay
+            ignore_payload_params: list of content params to ignore in server replay
+            ignore_host: true if request host should be ignored in server replay
         """
-        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, ignore_params, ignore_content,
-                                                   ignore_payload_params)
+        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, 
+                                                   ignore_params, ignore_content,
+                                                   ignore_payload_params, ignore_host)
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):

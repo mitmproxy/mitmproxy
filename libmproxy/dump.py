@@ -41,6 +41,7 @@ class Options(object):
         "replay_ignore_content",
         "replay_ignore_params",
         "replay_ignore_payload_params",
+        "replay_ignore_host"
     ]
 
     def __init__(self, **kwargs):
@@ -79,6 +80,7 @@ class DumpMaster(flow.FlowMaster):
         self.showhost = options.showhost
         self.replay_ignore_params = options.replay_ignore_params
         self.replay_ignore_content = options.replay_ignore_content
+        self.replay_ignore_host = options.replay_ignore_host
         self.refresh_server_playback = options.refresh_server_playback
         self.replay_ignore_payload_params = options.replay_ignore_payload_params
 
@@ -120,6 +122,7 @@ class DumpMaster(flow.FlowMaster):
                 options.replay_ignore_params,
                 options.replay_ignore_content,
                 options.replay_ignore_payload_params,
+                options.replay_ignore_host
             )
 
         if options.client_replay:
