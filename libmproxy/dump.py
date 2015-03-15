@@ -1,4 +1,5 @@
 from __future__ import absolute_import, print_function
+import json
 import sys
 import os
 import netlib.utils
@@ -159,26 +160,33 @@ class DumpMaster(flow.FlowMaster):
             print(e, file=self.outfile)
             self.outfile.flush()
 
-    def indent(self, n, t):
-        l = str(t).strip().split("\n")
-        return "\n".join(" "*n + i for i in l)
+    @staticmethod
+    def indent(n, t):
+        l = str(t).strip().splitlines()
+        pad = " " * n
+        return "\n".join(pad + i for i in l)
 
     def _print_message(self, message):
         if self.o.flow_detail >= 2:
             print(self.indent(4, message.headers), file=self.outfile)
         if self.o.flow_detail >= 3:
             if message.content == http.CONTENT_MISSING:
-                print("", file=self.outfile)
                 print(self.indent(4, "(content missing)"), file=self.outfile)
             elif message.content:
                 print("", file=self.outfile)
                 content = message.get_decoded_content()
                 if not utils.isBin(content):
-                    print(self.indent(4, content), file=self.outfile)
+                    try:
+                        jsn = json.loads(content)
+                        print(self.indent(4, json.dumps(jsn, indent=2)), file=self.outfile)
+                    except ValueError:
+                        print(self.indent(4, content), file=self.outfile)
                 else:
                     d = netlib.utils.hexdump(content)
                     d = "\n".join("%s\t%s %s"%i for i in d)
                     print(self.indent(4, d), file=self.outfile)
+        if self.o.flow_detail >= 2:
+            print("", file=self.outfile)
 
     def _process_flow(self, f):
         self.state.delete_flow(f)
@@ -192,15 +200,12 @@ class DumpMaster(flow.FlowMaster):
             print(str_request(f, self.showhost), file=self.outfile)
             self._print_message(f.request)
 
-            if self.o.flow_detail >= 2:
-                print("", file=self.outfile)
-
         if f.response:
             if f.response.content == http.CONTENT_MISSING:
                 sz = "(content missing)"
             else:
                 sz = utils.pretty_size(len(f.response.content))
-            print(" << %s %s"%(str_response(f.response), sz), file=self.outfile)
+            print(" << %s %s" % (str_response(f.response), sz), file=self.outfile)
             self._print_message(f.response)
 
         if f.error:
