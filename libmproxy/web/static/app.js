@@ -410,7 +410,7 @@ var FlowActions = {
     }
 };
 
-Query = {
+var Query = {
     FILTER: "f",
     HIGHLIGHT: "h",
     SHOW_EVENTLOG: "e"
@@ -420,7 +420,8 @@ module.exports = {
     ActionTypes: ActionTypes,
     ConnectionActions: ConnectionActions,
     FlowActions: FlowActions,
-    StoreCmds: StoreCmds
+    StoreCmds: StoreCmds,
+    Query: Query
 };
 
 },{"jquery":"jquery"}],3:[function(require,module,exports){
@@ -428,14 +429,13 @@ module.exports = {
 var React = require("react");
 var ReactRouter = require("react-router");
 var $ = require("jquery");
-
 var Connection = require("./connection");
 var proxyapp = require("./components/proxyapp.js");
 
 $(function () {
     window.ws = new Connection("/updates");
 
-    ReactRouter.run(proxyapp.routes, function (Handler) {
+    ReactRouter.run(proxyapp.routes, function (Handler, state) {
         React.render(React.createElement(Handler, null), document.body);
     });
 });
@@ -483,7 +483,7 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
                 q[i] = dict[i] || undefined; //falsey values shall be removed.
             }
         }
-        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/599
+        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/957
         this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
     },
     replaceWith: function(routeNameOrPath, params, query) {
@@ -493,37 +493,15 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
         if(params === undefined){
             params = this.context.getCurrentParams();
         }
-        if(query === undefined){
+        if(query === undefined) {
             query = this.context.getCurrentQuery();
         }
+
+        // FIXME: react-router is just broken.
         ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
     }
 });
 _.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
-
-var State = _.extend({}, ReactRouter.State, {
-    getInitialState: function () {
-        this._query = this.context.getCurrentQuery();
-        this._queryWatches = [];
-        return null;
-    },
-    onQueryChange: function (key, callback) {
-        this._queryWatches.push({
-            key: key,
-            callback: callback
-        });
-    },
-    componentWillReceiveProps: function (nextProps, nextState) {
-        var q = this.context.getCurrentQuery();
-        for (var i = 0; i < this._queryWatches.length; i++) {
-            var watch = this._queryWatches[i];
-            if (this._query[watch.key] !== q[watch.key]) {
-                watch.callback(this._query[watch.key], q[watch.key], watch.key);
-            }
-        }
-        this._query = q;
-    }
-});
 
 var Splitter = React.createClass({displayName: "Splitter",
     getDefaultProps: function () {
@@ -631,16 +609,17 @@ var Splitter = React.createClass({displayName: "Splitter",
 });
 
 module.exports = {
-    State: State,
+    State: ReactRouter.State, // keep here - react-router is pretty buggy, we may need workarounds in the future.
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,
     AutoScrollMixin: AutoScrollMixin,
     Splitter: Splitter
-}
+};
 
 },{"lodash":"lodash","react":"react","react-router":"react-router"}],5:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
+var Query = require("../actions.js").Query;
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
 
@@ -796,7 +775,7 @@ var EventLog = React.createClass({displayName: "EventLog",
 
 module.exports = EventLog;
 
-},{"../store/view.js":19,"./common.js":4,"./virtualscroll.js":13,"react":"react"}],6:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":19,"./common.js":4,"./virtualscroll.js":13,"react":"react"}],6:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1537,9 +1516,9 @@ var $ = require("jquery");
 
 var Filt = require("../filt/filt.js");
 var utils = require("../utils.js");
-
 var common = require("./common.js");
 var actions = require("../actions.js");
+var Query = require("../actions.js").Query;
 
 var FilterDocs = React.createClass({displayName: "FilterDocs",
     statics: {
@@ -1564,12 +1543,12 @@ var FilterDocs = React.createClass({displayName: "FilterDocs",
             return React.createElement("i", {className: "fa fa-spinner fa-spin"});
         } else {
             var commands = FilterDocs.doc.commands.map(function (c) {
-                return React.createElement("tr", null, 
+                return React.createElement("tr", {key: c[1]}, 
                     React.createElement("td", null, c[0].replace(" ", '\u00a0')), 
                     React.createElement("td", null, c[1])
                 );
             });
-            commands.push(React.createElement("tr", null, 
+            commands.push(React.createElement("tr", {key: "docs-link"}, 
                 React.createElement("td", {colSpan: "2"}, 
                     React.createElement("a", {href: "https://mitmproxy.org/doc/features/filters.html", 
                         target: "_blank"}, 
@@ -1928,6 +1907,7 @@ var React = require("react");
 
 var common = require("./common.js");
 var actions = require("../actions.js");
+var Query = require("../actions.js").Query;
 var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
@@ -1938,12 +1918,6 @@ var flowdetail = require("./flowdetail.js");
 var MainView = React.createClass({displayName: "MainView",
     mixins: [common.Navigation, common.State],
     getInitialState: function () {
-        this.onQueryChange(Query.FILTER, function () {
-            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
-        }.bind(this));
-        this.onQueryChange(Query.HIGHLIGHT, function () {
-            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
-        }.bind(this));
         return {
             flows: []
         };
@@ -1972,6 +1946,12 @@ var MainView = React.createClass({displayName: "MainView",
             this.closeView();
             this.openView(nextProps.flowStore);
         }
+
+        var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
+        var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
+        if (filterChanged || highlightChanged) {
+            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
+        }
     },
     openView: function (store) {
         var view = new views.StoreView(store, this.getViewFilt(), this.getViewSort());
@@ -1999,7 +1979,7 @@ var MainView = React.createClass({displayName: "MainView",
     },
     onRemove: function (flow_id, index) {
         if (flow_id === this.getParams().flowId) {
-            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length -1)];
+            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length - 1)];
             this.selectFlow(flow_to_select);
         }
     },
@@ -2120,7 +2100,7 @@ var MainView = React.createClass({displayName: "MainView",
                 }
                 break;
             case toputils.Key.V:
-                if(e.shiftKey && flow && flow.modified) {
+                if (e.shiftKey && flow && flow.modified) {
                     actions.FlowActions.revert(flow);
                 }
                 break;
@@ -2172,6 +2152,7 @@ var Footer = require("./footer.js");
 var header = require("./header.js");
 var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
+var Query = require("../actions.js").Query;
 
 
 //TODO: Move out of here, just a stub.
@@ -2211,7 +2192,6 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
         });
     },
     render: function () {
-
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
@@ -2221,11 +2201,13 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
         } else {
             eventlog = null;
         }
-
         return (
             React.createElement("div", {id: "container"}, 
                 React.createElement(header.Header, {settings: this.state.settings.dict}), 
-                React.createElement(RouteHandler, {settings: this.state.settings.dict, flowStore: this.state.flowStore}), 
+                React.createElement(RouteHandler, {
+                    settings: this.state.settings.dict, 
+                    flowStore: this.state.flowStore, 
+                    query: this.getQuery()}), 
                 eventlog, 
                 React.createElement(Footer, {settings: this.state.settings.dict})
             )
@@ -2254,9 +2236,7 @@ module.exports = {
     routes: routes
 };
 
-
-
-},{"../store/store.js":18,"./common.js":4,"./eventlog.js":5,"./footer.js":9,"./header.js":10,"./mainview.js":11,"lodash":"lodash","react":"react","react-router":"react-router"}],13:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":18,"./common.js":4,"./eventlog.js":5,"./footer.js":9,"./header.js":10,"./mainview.js":11,"lodash":"lodash","react":"react","react-router":"react-router"}],13:[function(require,module,exports){
 var React = require("react");
 
 var VirtualScrollMixin = {
@@ -4425,7 +4405,6 @@ module.exports = {
 };
 
 },{"../actions.js":2,"../dispatcher.js":15,"../utils.js":20,"events":1,"jquery":"jquery","lodash":"lodash"}],19:[function(require,module,exports){
-
 var EventEmitter = require('events').EventEmitter;
 var _ = require("lodash");
 
@@ -4437,7 +4416,7 @@ function SortByStoreOrder(elem) {
 }
 
 var default_sort = SortByStoreOrder;
-var default_filt = function(elem){
+var default_filt = function (elem) {
     return true;
 };
 
@@ -4466,8 +4445,8 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("update", this.update);
         this.store.removeListener("remove", this.remove);
         this.store.removeListener("recalculate", this.recalculate);
-        },
-        recalculate: function (filt, sortfun) {
+    },
+    recalculate: function (filt, sortfun) {
         if (filt) {
             this.filt = filt.bind(this);
         }

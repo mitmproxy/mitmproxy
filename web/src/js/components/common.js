@@ -38,7 +38,7 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
                 q[i] = dict[i] || undefined; //falsey values shall be removed.
             }
         }
-        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/599
+        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/957
         this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
     },
     replaceWith: function(routeNameOrPath, params, query) {
@@ -48,37 +48,15 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
         if(params === undefined){
             params = this.context.getCurrentParams();
         }
-        if(query === undefined){
+        if(query === undefined) {
             query = this.context.getCurrentQuery();
         }
+
+        // FIXME: react-router is just broken.
         ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
     }
 });
 _.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
-
-var State = _.extend({}, ReactRouter.State, {
-    getInitialState: function () {
-        this._query = this.context.getCurrentQuery();
-        this._queryWatches = [];
-        return null;
-    },
-    onQueryChange: function (key, callback) {
-        this._queryWatches.push({
-            key: key,
-            callback: callback
-        });
-    },
-    componentWillReceiveProps: function (nextProps, nextState) {
-        var q = this.context.getCurrentQuery();
-        for (var i = 0; i < this._queryWatches.length; i++) {
-            var watch = this._queryWatches[i];
-            if (this._query[watch.key] !== q[watch.key]) {
-                watch.callback(this._query[watch.key], q[watch.key], watch.key);
-            }
-        }
-        this._query = q;
-    }
-});
 
 var Splitter = React.createClass({
     getDefaultProps: function () {
@@ -186,9 +164,9 @@ var Splitter = React.createClass({
 });
 
 module.exports = {
-    State: State,
+    State: ReactRouter.State, // keep here - react-router is pretty buggy, we may need workarounds in the future.
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,
     AutoScrollMixin: AutoScrollMixin,
     Splitter: Splitter
-}
+};

@@ -1,5 +1,6 @@
 var React = require("react");
 var common = require("./common.js");
+var Query = require("../actions.js").Query;
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
 

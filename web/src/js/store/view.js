@@ -1,4 +1,3 @@
-
 var EventEmitter = require('events').EventEmitter;
 var _ = require("lodash");
 
@@ -10,7 +9,7 @@ function SortByStoreOrder(elem) {
 }
 
 var default_sort = SortByStoreOrder;
-var default_filt = function(elem){
+var default_filt = function (elem) {
     return true;
 };
 
@@ -39,8 +38,8 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("update", this.update);
         this.store.removeListener("remove", this.remove);
         this.store.removeListener("recalculate", this.recalculate);
-        },
-        recalculate: function (filt, sortfun) {
+    },
+    recalculate: function (filt, sortfun) {
         if (filt) {
             this.filt = filt.bind(this);
         }

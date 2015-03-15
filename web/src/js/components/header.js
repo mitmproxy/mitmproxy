@@ -3,9 +3,9 @@ var $ = require("jquery");
 
 var Filt = require("../filt/filt.js");
 var utils = require("../utils.js");
-
 var common = require("./common.js");
 var actions = require("../actions.js");
+var Query = require("../actions.js").Query;
 
 var FilterDocs = React.createClass({
     statics: {
@@ -30,12 +30,12 @@ var FilterDocs = React.createClass({
             return <i className="fa fa-spinner fa-spin"></i>;
         } else {
             var commands = FilterDocs.doc.commands.map(function (c) {
-                return <tr>
+                return <tr key={c[1]}>
                     <td>{c[0].replace(" ", '\u00a0')}</td>
                     <td>{c[1]}</td>
                 </tr>;
             });
-            commands.push(<tr>
+            commands.push(<tr key="docs-link">
                 <td colSpan="2">
                     <a href="https://mitmproxy.org/doc/features/filters.html"
                         target="_blank">

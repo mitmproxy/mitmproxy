@@ -106,7 +106,7 @@ var FlowActions = {
     }
 };
 
-Query = {
+var Query = {
     FILTER: "f",
     HIGHLIGHT: "h",
     SHOW_EVENTLOG: "e"
@@ -116,5 +116,6 @@ module.exports = {
     ActionTypes: ActionTypes,
     ConnectionActions: ConnectionActions,
     FlowActions: FlowActions,
-    StoreCmds: StoreCmds
+    StoreCmds: StoreCmds,
+    Query: Query
 };

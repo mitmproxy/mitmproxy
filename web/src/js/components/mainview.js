@@ -2,6 +2,7 @@ var React = require("react");
 
 var common = require("./common.js");
 var actions = require("../actions.js");
+var Query = require("../actions.js").Query;
 var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
@@ -12,12 +13,6 @@ var flowdetail = require("./flowdetail.js");
 var MainView = React.createClass({
     mixins: [common.Navigation, common.State],
     getInitialState: function () {
-        this.onQueryChange(Query.FILTER, function () {
-            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
-        }.bind(this));
-        this.onQueryChange(Query.HIGHLIGHT, function () {
-            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
-        }.bind(this));
         return {
             flows: []
         };
@@ -46,6 +41,12 @@ var MainView = React.createClass({
             this.closeView();
             this.openView(nextProps.flowStore);
         }
+
+        var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
+        var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
+        if (filterChanged || highlightChanged) {
+            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
+        }
     },
     openView: function (store) {
         var view = new views.StoreView(store, this.getViewFilt(), this.getViewSort());
@@ -73,7 +74,7 @@ var MainView = React.createClass({
     },
     onRemove: function (flow_id, index) {
         if (flow_id === this.getParams().flowId) {
-            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length -1)];
+            var flow_to_select = this.state.view.list[Math.min(index, this.state.view.list.length - 1)];
             this.selectFlow(flow_to_select);
         }
     },
@@ -194,7 +195,7 @@ var MainView = React.createClass({
                 }
                 break;
             case toputils.Key.V:
-                if(e.shiftKey && flow && flow.modified) {
+                if (e.shiftKey && flow && flow.modified) {
                     actions.FlowActions.revert(flow);
                 }
                 break;

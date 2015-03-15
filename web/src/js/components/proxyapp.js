@@ -8,6 +8,7 @@ var Footer = require("./footer.js");
 var header = require("./header.js");
 var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
+var Query = require("../actions.js").Query;
 
 
 //TODO: Move out of here, just a stub.
@@ -47,7 +48,6 @@ var ProxyAppMain = React.createClass({
         });
     },
     render: function () {
-
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
@@ -57,11 +57,13 @@ var ProxyAppMain = React.createClass({
         } else {
             eventlog = null;
         }
-
         return (
             <div id="container">
                 <header.Header settings={this.state.settings.dict}/>
-                <RouteHandler settings={this.state.settings.dict} flowStore={this.state.flowStore}/>
+                <RouteHandler
+                    settings={this.state.settings.dict}
+                    flowStore={this.state.flowStore}
+                    query={this.getQuery()}/>
                 {eventlog}
                 <Footer settings={this.state.settings.dict}/>
             </div>
@@ -89,4 +91,3 @@ var routes = (
 module.exports = {
     routes: routes
 };
-
