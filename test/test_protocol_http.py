@@ -1,3 +1,4 @@
+from mock import MagicMock
 from libmproxy.protocol.http import *
 from cStringIO import StringIO
 import tutils, tservers
@@ -111,6 +112,26 @@ class TestHTTPRequest:
     def test_repr(self):
         r = tutils.treq()
         assert repr(r)
+
+    def test_get_form_for_urlencoded(self):
+        r = tutils.treq()
+        r.headers.add("content-type", "application/x-www-form-urlencoded")
+        r.get_form_urlencoded = MagicMock()
+
+        r.get_form()
+
+        assert r.get_form_urlencoded.called
+
+    def test_get_form_for_multipart(self):
+        r = tutils.treq()
+        r.headers.add("content-type", "multipart/form-data")
+        r.get_form_multipart = MagicMock()
+
+        r.get_form()
+
+        assert r.get_form_multipart.called
+
+
 
 
 class TestHTTPResponse:
