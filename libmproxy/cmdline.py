@@ -5,6 +5,7 @@ import configargparse
 from netlib import http
 from . import filt, utils, version
 from .proxy import config
+from argcomplete.completers import FilesCompleter
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -222,7 +223,7 @@ def common_options(parser):
         "--cadir",
         action="store", type=str, dest="cadir", default=config.CA_DIR,
         help="Location of the default mitmproxy CA files. (%s)"%config.CA_DIR
-    )
+    ).completer = FilesCompleter(allowednames=("",))
     parser.add_argument(
         "--host",
         action="store_true", dest="showhost", default=False,
@@ -237,7 +238,7 @@ def common_options(parser):
         "-r", "--read-flows",
         action="store", dest="rfile", default=None,
         help="Read flows from file."
-    )
+    ).completer = FilesCompleter()
     parser.add_argument(
         "-s", "--script",
         action="append", type=str, dest="scripts", default=[],
@@ -246,7 +247,7 @@ def common_options(parser):
             Run a script. Surround with quotes to pass script arguments. Can be
             passed multiple times.
         """
-    )
+    ).completer = FilesCompleter(allowednames=(".py",))
     parser.add_argument(
         "-t", "--stickycookie",
         action="store",
@@ -270,12 +271,12 @@ def common_options(parser):
         "-w", "--wfile",
         action="store", dest="outfile", type=lambda f: (f, "wb"),
         help="Write flows to file."
-    )
+    ).completer = FilesCompleter()
     outfile.add_argument(
         "-a", "--afile",
         action="store", dest="outfile", type=lambda f: (f, "ab"),
         help="Append flows to file."
-    )
+    ).completer = FilesCompleter()
     parser.add_argument(
         "-z", "--anticomp",
         action="store_true", dest="anticomp", default=False,
@@ -421,14 +422,14 @@ def common_options(parser):
         "-c", "--client-replay",
         action="append", dest="client_replay", default=None, metavar="PATH",
         help="Replay client requests from a saved file."
-    )
+    ).completer = FilesCompleter()
 
     group = parser.add_argument_group("Server Replay")
     group.add_argument(
         "-S", "--server-replay",
         action="append", dest="server_replay", default=None, metavar="PATH",
         help="Replay server responses from a saved file."
-    )
+    ).completer = FilesCompleter()
     group.add_argument(
         "-k", "--kill",
         action="store_true", dest="kill", default=False,
@@ -508,7 +509,7 @@ def common_options(parser):
             Replacement pattern, where the replacement clause is a path to a
             file.
         """
-    )
+    ).completer = FilesCompleter()
 
     group = parser.add_argument_group(
         "Set Headers",
