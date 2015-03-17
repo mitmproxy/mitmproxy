@@ -9,12 +9,12 @@ var Filt = require("../filt/filt.js");
 FlowTable = require("./flowtable.js");
 var flowdetail = require("./flowdetail.js");
 
-
 var MainView = React.createClass({
     mixins: [common.Navigation, common.State],
     getInitialState: function () {
         return {
-            flows: []
+            flows: [],
+            sortKeyFun: false
         };
     },
     getViewFilt: function () {
@@ -34,8 +34,6 @@ var MainView = React.createClass({
             return filt(flow);
         };
     },
-    getViewSort: function () {
-    },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.flowStore !== this.props.flowStore) {
             this.closeView();
@@ -45,11 +43,11 @@ var MainView = React.createClass({
         var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
         var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
         if (filterChanged || highlightChanged) {
-            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
+            this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
     },
     openView: function (store) {
-        var view = new views.StoreView(store, this.getViewFilt(), this.getViewSort());
+        var view = new views.StoreView(store, this.getViewFilt(), this.state.sortKeyFun);
         this.setState({
             view: view
         });
@@ -86,6 +84,12 @@ var MainView = React.createClass({
     },
     componentWillUnmount: function () {
         this.closeView();
+    },
+    setSortKeyFun: function(sortKeyFun){
+        this.setState({
+            sortKeyFun: sortKeyFun
+        });
+        this.state.view.recalculate(this.getViewFilt(), sortKeyFun);
     },
     selectFlow: function (flow) {
         if (flow) {
@@ -226,6 +230,7 @@ var MainView = React.createClass({
                 <FlowTable ref="flowTable"
                     view={this.state.view}
                     selectFlow={this.selectFlow}
+                    setSortKeyFun={this.setSortKeyFun}
                     selected={selected} />
                 {details}
             </div>

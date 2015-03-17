@@ -1,5 +1,8 @@
 var React = require("react");
 var common = require("./common.js");
+var utils = require("../utils.js");
+var _ = require("lodash");
+
 var VirtualScrollMixin = require("./virtualscroll.js");
 var flowtable_columns = require("./flowtable-columns.js");
 
@@ -43,9 +46,56 @@ var FlowRow = React.createClass({
 });
 
 var FlowTableHead = React.createClass({
+    getInitialState: function(){
+        return {
+            sortColumn: undefined,
+            sortDesc: false
+        };
+    },
+    onClick: function(Column){
+        var sortDesc = this.state.sortDesc;
+        var hasSort = Column.sortKeyFun;
+        if(Column === this.state.sortColumn){
+            sortDesc = !sortDesc;
+            this.setState({
+                sortDesc: sortDesc
+            });
+        } else {
+            this.setState({
+                sortColumn: hasSort && Column,
+                sortDesc: false
+            })
+        }
+        var sortKeyFun;
+        if(!sortDesc){
+            sortKeyFun = Column.sortKeyFun;
+        } else {
+            sortKeyFun = hasSort && function(){
+                var k = Column.sortKeyFun.apply(this, arguments);
+                if(_.isString(k)){
+                    return utils.reverseString(""+k);
+                } else {
+                    return -k;
+                }
+            }
+        }
+        this.props.setSortKeyFun(sortKeyFun);
+    },
     render: function () {
-        var columns = this.props.columns.map(function (column) {
-            return column.renderTitle();
+        var columns = this.props.columns.map(function (Column) {
+            var onClick = this.onClick.bind(this, Column);
+            var className;
+            if(this.state.sortColumn === Column) {
+                if(this.state.sortDesc){
+                    className = "sort-desc";
+                } else {
+                    className = "sort-asc";
+                }
+            }
+            return <Column.Title
+                        key={Column.displayName}
+                        onClick={onClick}
+                        className={className} />;
         }.bind(this));
         return <thead>
             <tr>{columns}</tr>
@@ -63,13 +113,17 @@ var FlowTable = React.createClass({
             columns: flowtable_columns
         };
     },
-    componentWillMount: function () {
-        if (this.props.view) {
-            this.props.view.addListener("add", this.onChange);
-            this.props.view.addListener("update", this.onChange);
-            this.props.view.addListener("remove", this.onChange);
-            this.props.view.addListener("recalculate", this.onChange);
+    _listen: function(view){
+        if(!view){
+            return;
         }
+        view.addListener("add", this.onChange);
+        view.addListener("update", this.onChange);
+        view.addListener("remove", this.onChange);
+        view.addListener("recalculate", this.onChange);
+    },
+    componentWillMount: function () {
+        this._listen(this.props.view);
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.view !== this.props.view) {
@@ -79,10 +133,7 @@ var FlowTable = React.createClass({
                 this.props.view.removeListener("remove");
                 this.props.view.removeListener("recalculate");
             }
-            nextProps.view.addListener("add", this.onChange);
-            nextProps.view.addListener("update", this.onChange);
-            nextProps.view.addListener("remove", this.onChange);
-            nextProps.view.addListener("recalculate", this.onChange);
+            this._listen(nextProps.view);
         }
     },
     getDefaultProps: function () {
@@ -130,7 +181,8 @@ var FlowTable = React.createClass({
             <div className="flow-table" onScroll={this.onScrollFlowTable}>
                 <table>
                     <FlowTableHead ref="head"
-                        columns={this.state.columns}/>
+                        columns={this.state.columns}
+                        setSortKeyFun={this.props.setSortKeyFun}/>
                     <tbody ref="body">
                         { this.getPlaceholderTop(flows.length) }
                         {rows}

@@ -1,5 +1,5 @@
 var $ = require("jquery");
-
+var _ = require("lodash");
 
 var Key = {
     UP: 38,
@@ -59,6 +59,18 @@ var formatTimeStamp = function (seconds) {
 };
 
 
+// At some places, we need to sort strings alphabetically descending,
+// but we can only provide a key function.
+// This beauty "reverses" a JS string.
+var end = String.fromCharCode(0xffff);
+function reverseString(s){
+    return String.fromCharCode.apply(String,
+        _.map(s.split(""), function (c) {
+            return 0xffff - c.charCodeAt();
+        })
+    ) + end;
+}
+
 function getCookie(name) {
     var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
     return r ? r[1] : undefined;
@@ -87,5 +99,6 @@ module.exports = {
     formatSize: formatSize,
     formatTimeDelta: formatTimeDelta,
     formatTimeStamp: formatTimeStamp,
+    reverseString: reverseString,
     Key: Key
 };

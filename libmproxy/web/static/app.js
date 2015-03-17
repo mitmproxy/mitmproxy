@@ -1178,13 +1178,19 @@ module.exports = {
 
 },{"../actions.js":2,"../flow/utils.js":17,"../utils.js":20,"./common.js":4,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
 var React = require("react");
-var flowutils = require("../flow/utils.js");
+var RequestUtils = require("../flow/utils.js").RequestUtils;
+var ResponseUtils = require("../flow/utils.js").ResponseUtils;
 var utils = require("../utils.js");
 
 var TLSColumn = React.createClass({displayName: "TLSColumn",
     statics: {
-        renderTitle: function () {
-            return React.createElement("th", {key: "tls", className: "col-tls"});
+        Title: React.createClass({displayName: "Title",
+            render: function(){
+                return React.createElement("th", React.__spread({},  this.props, {className: "col-tls " + (this.props.className || "") }));
+            }
+        }),
+        sortKeyFun: function(flow){
+            return flow.request.scheme;
         }
     },
     render: function () {
@@ -1203,16 +1209,18 @@ var TLSColumn = React.createClass({displayName: "TLSColumn",
 
 var IconColumn = React.createClass({displayName: "IconColumn",
     statics: {
-        renderTitle: function () {
-            return React.createElement("th", {key: "icon", className: "col-icon"});
-        }
+        Title: React.createClass({displayName: "Title",
+            render: function(){
+                return React.createElement("th", React.__spread({},  this.props, {className: "col-icon " + (this.props.className || "") }));
+            }
+        })
     },
     render: function () {
         var flow = this.props.flow;
 
         var icon;
         if (flow.response) {
-            var contentType = flowutils.ResponseUtils.getContentType(flow.response);
+            var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
             if (flow.response.code == 304) {
@@ -1243,8 +1251,13 @@ var IconColumn = React.createClass({displayName: "IconColumn",
 
 var PathColumn = React.createClass({displayName: "PathColumn",
     statics: {
-        renderTitle: function () {
-            return React.createElement("th", {key: "path", className: "col-path"}, "Path");
+        Title: React.createClass({displayName: "Title",
+            render: function(){
+                return React.createElement("th", React.__spread({},  this.props, {className: "col-path " + (this.props.className || "") }), "Path");
+            }
+        }),
+        sortKeyFun: function(flow){
+            return RequestUtils.pretty_url(flow.request);
         }
     },
     render: function () {
@@ -1252,7 +1265,7 @@ var PathColumn = React.createClass({displayName: "PathColumn",
         return React.createElement("td", {className: "col-path"}, 
             flow.request.is_replay ? React.createElement("i", {className: "fa fa-fw fa-repeat pull-right"}) : null, 
             flow.intercepted ? React.createElement("i", {className: "fa fa-fw fa-pause pull-right"}) : null, 
-            flow.request.scheme + "://" + flow.request.host + flow.request.path
+             RequestUtils.pretty_url(flow.request) 
         );
     }
 });
@@ -1260,8 +1273,13 @@ var PathColumn = React.createClass({displayName: "PathColumn",
 
 var MethodColumn = React.createClass({displayName: "MethodColumn",
     statics: {
-        renderTitle: function () {
-            return React.createElement("th", {key: "method", className: "col-method"}, "Method");
+        Title: React.createClass({displayName: "Title",
+            render: function(){
+                return React.createElement("th", React.__spread({},  this.props, {className: "col-method " + (this.props.className || "") }), "Method");
+            }
+        }),
+        sortKeyFun: function(flow){
+            return flow.request.method;
         }
     },
     render: function () {
@@ -1273,8 +1291,13 @@ var MethodColumn = React.createClass({displayName: "MethodColumn",
 
 var StatusColumn = React.createClass({displayName: "StatusColumn",
     statics: {
-        renderTitle: function () {
-            return React.createElement("th", {key: "status", className: "col-status"}, "Status");
+        Title: React.createClass({displayName: "Title",
+            render: function(){
+                return React.createElement("th", React.__spread({},  this.props, {className: "col-status " + (this.props.className || "") }), "Status");
+            }
+        }),
+        sortKeyFun: function(flow){
+            return flow.response ? flow.response.code : undefined;
         }
     },
     render: function () {
@@ -1292,8 +1315,17 @@ var StatusColumn = React.createClass({displayName: "StatusColumn",
 
 var SizeColumn = React.createClass({displayName: "SizeColumn",
     statics: {
-        renderTitle: function () {
-            return React.createElement("th", {key: "size", className: "col-size"}, "Size");
+        Title: React.createClass({displayName: "Title",
+            render: function(){
+                return React.createElement("th", React.__spread({},  this.props, {className: "col-size " + (this.props.className || "") }), "Size");
+            }
+        }),
+        sortKeyFun: function(flow){
+            var total = flow.request.contentLength;
+            if (flow.response) {
+                total += flow.response.contentLength || 0;
+            }
+            return total;
         }
     },
     render: function () {
@@ -1311,8 +1343,15 @@ var SizeColumn = React.createClass({displayName: "SizeColumn",
 
 var TimeColumn = React.createClass({displayName: "TimeColumn",
     statics: {
-        renderTitle: function () {
-            return React.createElement("th", {key: "time", className: "col-time"}, "Time");
+        Title: React.createClass({displayName: "Title",
+            render: function(){
+                return React.createElement("th", React.__spread({},  this.props, {className: "col-time " + (this.props.className || "") }), "Time");
+            }
+        }),
+        sortKeyFun: function(flow){
+            if(flow.response) {
+                return flow.response.timestamp_end - flow.request.timestamp_start;
+            }
         }
     },
     render: function () {
@@ -1335,17 +1374,17 @@ var all_columns = [
     MethodColumn,
     StatusColumn,
     SizeColumn,
-    TimeColumn];
-
+    TimeColumn
+];
 
 module.exports = all_columns;
-
-
-
 
 },{"../flow/utils.js":17,"../utils.js":20,"react":"react"}],8:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
+var utils = require("../utils.js");
+var _ = require("lodash");
+
 var VirtualScrollMixin = require("./virtualscroll.js");
 var flowtable_columns = require("./flowtable-columns.js");
 
@@ -1389,9 +1428,56 @@ var FlowRow = React.createClass({displayName: "FlowRow",
 });
 
 var FlowTableHead = React.createClass({displayName: "FlowTableHead",
+    getInitialState: function(){
+        return {
+            sortColumn: undefined,
+            sortDesc: false
+        };
+    },
+    onClick: function(Column){
+        var sortDesc = this.state.sortDesc;
+        var hasSort = Column.sortKeyFun;
+        if(Column === this.state.sortColumn){
+            sortDesc = !sortDesc;
+            this.setState({
+                sortDesc: sortDesc
+            });
+        } else {
+            this.setState({
+                sortColumn: hasSort && Column,
+                sortDesc: false
+            })
+        }
+        var sortKeyFun;
+        if(!sortDesc){
+            sortKeyFun = Column.sortKeyFun;
+        } else {
+            sortKeyFun = hasSort && function(){
+                var k = Column.sortKeyFun.apply(this, arguments);
+                if(_.isString(k)){
+                    return utils.reverseString(""+k);
+                } else {
+                    return -k;
+                }
+            }
+        }
+        this.props.setSortKeyFun(sortKeyFun);
+    },
     render: function () {
-        var columns = this.props.columns.map(function (column) {
-            return column.renderTitle();
+        var columns = this.props.columns.map(function (Column) {
+            var onClick = this.onClick.bind(this, Column);
+            var className;
+            if(this.state.sortColumn === Column) {
+                if(this.state.sortDesc){
+                    className = "sort-desc";
+                } else {
+                    className = "sort-asc";
+                }
+            }
+            return React.createElement(Column.Title, {
+                        key: Column.displayName, 
+                        onClick: onClick, 
+                        className: className});
         }.bind(this));
         return React.createElement("thead", null, 
             React.createElement("tr", null, columns)
@@ -1409,13 +1495,17 @@ var FlowTable = React.createClass({displayName: "FlowTable",
             columns: flowtable_columns
         };
     },
-    componentWillMount: function () {
-        if (this.props.view) {
-            this.props.view.addListener("add", this.onChange);
-            this.props.view.addListener("update", this.onChange);
-            this.props.view.addListener("remove", this.onChange);
-            this.props.view.addListener("recalculate", this.onChange);
+    _listen: function(view){
+        if(!view){
+            return;
         }
+        view.addListener("add", this.onChange);
+        view.addListener("update", this.onChange);
+        view.addListener("remove", this.onChange);
+        view.addListener("recalculate", this.onChange);
+    },
+    componentWillMount: function () {
+        this._listen(this.props.view);
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.view !== this.props.view) {
@@ -1425,10 +1515,7 @@ var FlowTable = React.createClass({displayName: "FlowTable",
                 this.props.view.removeListener("remove");
                 this.props.view.removeListener("recalculate");
             }
-            nextProps.view.addListener("add", this.onChange);
-            nextProps.view.addListener("update", this.onChange);
-            nextProps.view.addListener("remove", this.onChange);
-            nextProps.view.addListener("recalculate", this.onChange);
+            this._listen(nextProps.view);
         }
     },
     getDefaultProps: function () {
@@ -1476,7 +1563,8 @@ var FlowTable = React.createClass({displayName: "FlowTable",
             React.createElement("div", {className: "flow-table", onScroll: this.onScrollFlowTable}, 
                 React.createElement("table", null, 
                     React.createElement(FlowTableHead, {ref: "head", 
-                        columns: this.state.columns}), 
+                        columns: this.state.columns, 
+                        setSortKeyFun: this.props.setSortKeyFun}), 
                     React.createElement("tbody", {ref: "body"}, 
                          this.getPlaceholderTop(flows.length), 
                         rows, 
@@ -1491,7 +1579,7 @@ var FlowTable = React.createClass({displayName: "FlowTable",
 module.exports = FlowTable;
 
 
-},{"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":13,"react":"react"}],9:[function(require,module,exports){
+},{"../utils.js":20,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":13,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
 var React = require("react");
 
 var Footer = React.createClass({displayName: "Footer",
@@ -1914,12 +2002,12 @@ var Filt = require("../filt/filt.js");
 FlowTable = require("./flowtable.js");
 var flowdetail = require("./flowdetail.js");
 
-
 var MainView = React.createClass({displayName: "MainView",
     mixins: [common.Navigation, common.State],
     getInitialState: function () {
         return {
-            flows: []
+            flows: [],
+            sortKeyFun: false
         };
     },
     getViewFilt: function () {
@@ -1939,8 +2027,6 @@ var MainView = React.createClass({displayName: "MainView",
             return filt(flow);
         };
     },
-    getViewSort: function () {
-    },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.flowStore !== this.props.flowStore) {
             this.closeView();
@@ -1950,11 +2036,11 @@ var MainView = React.createClass({displayName: "MainView",
         var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
         var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
         if (filterChanged || highlightChanged) {
-            this.state.view.recalculate(this.getViewFilt(), this.getViewSort());
+            this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
     },
     openView: function (store) {
-        var view = new views.StoreView(store, this.getViewFilt(), this.getViewSort());
+        var view = new views.StoreView(store, this.getViewFilt(), this.state.sortKeyFun);
         this.setState({
             view: view
         });
@@ -1991,6 +2077,12 @@ var MainView = React.createClass({displayName: "MainView",
     },
     componentWillUnmount: function () {
         this.closeView();
+    },
+    setSortKeyFun: function(sortKeyFun){
+        this.setState({
+            sortKeyFun: sortKeyFun
+        });
+        this.state.view.recalculate(this.getViewFilt(), sortKeyFun);
     },
     selectFlow: function (flow) {
         if (flow) {
@@ -2131,6 +2223,7 @@ var MainView = React.createClass({displayName: "MainView",
                 React.createElement(FlowTable, {ref: "flowTable", 
                     view: this.state.view, 
                     selectFlow: this.selectFlow, 
+                    setSortKeyFun: this.setSortKeyFun, 
                     selected: selected}), 
                 details
             )
@@ -4408,7 +4501,6 @@ module.exports = {
 var EventEmitter = require('events').EventEmitter;
 var _ = require("lodash");
 
-
 var utils = require("../utils.js");
 
 function SortByStoreOrder(elem) {
@@ -4447,17 +4539,25 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("recalculate", this.recalculate);
     },
     recalculate: function (filt, sortfun) {
-        if (filt) {
-            this.filt = filt.bind(this);
-        }
-        if (sortfun) {
-            this.sortfun = sortfun.bind(this);
-        }
+        filt = filt || default_filt;
+        sortfun = sortfun || default_sort;
+        filt = filt.bind(this);
+        sortfun = sortfun.bind(this)
+        this.filt = filt;
+        this.sortfun = sortfun;
 
-        this.list = this.store.list.filter(this.filt);
+        this.list = this.store.list.filter(filt);
         this.list.sort(function (a, b) {
-            return this.sortfun(a) - this.sortfun(b);
-        }.bind(this));
+            var akey = sortfun(a);
+            var bkey = sortfun(b);
+            if(akey < bkey){
+                return -1;
+            } else if(akey > bkey){
+                return 1;
+            } else {
+                return 0;
+            }
+        });
         this.emit("recalculate");
     },
     index: function (elem) {
@@ -4517,7 +4617,7 @@ module.exports = {
 
 },{"../utils.js":20,"events":1,"lodash":"lodash"}],20:[function(require,module,exports){
 var $ = require("jquery");
-
+var _ = require("lodash");
 
 var Key = {
     UP: 38,
@@ -4577,6 +4677,18 @@ var formatTimeStamp = function (seconds) {
 };
 
 
+// At some places, we need to sort strings alphabetically descending,
+// but we can only provide a key function.
+// This beauty "reverses" a JS string.
+var end = String.fromCharCode(0xffff);
+function reverseString(s){
+    return String.fromCharCode.apply(String,
+        _.map(s.split(""), function (c) {
+            return 0xffff - c.charCodeAt();
+        })
+    ) + end;
+}
+
 function getCookie(name) {
     var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
     return r ? r[1] : undefined;
@@ -4605,10 +4717,11 @@ module.exports = {
     formatSize: formatSize,
     formatTimeDelta: formatTimeDelta,
     formatTimeStamp: formatTimeStamp,
+    reverseString: reverseString,
     Key: Key
 };
 
-},{"jquery":"jquery"}]},{},[3])
+},{"jquery":"jquery","lodash":"lodash"}]},{},[3])
 
 
 //# sourceMappingURL=app.js.map

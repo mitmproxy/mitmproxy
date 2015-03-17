@@ -1,3 +1,13 @@
+//TODO: move into utils
+.user-select (@val) {
+    -webkit-touch-callout:  @val;
+    -webkit-user-select:    @val;
+    -khtml-user-select:     @val;
+    -moz-user-select:       @val;
+    -ms-user-select:        @val;
+    user-select:            @val;
+}
+
 .flow-table {
   width: 100%;
   overflow: auto;
@@ -15,6 +25,28 @@
   th {
     font-weight: normal;
     box-shadow: 0 1px 0 #a6a6a6;
+    position: relative !important;
+    padding-left: 1px;
+    .user-select(none);
+
+    &.sort-asc, &.sort-desc {
+      background-color: lighten(#F2F2F2, 3%);
+    }
+    &.sort-asc:after, &.sort-desc:after {
+      font: normal normal normal 14px/1 FontAwesome;
+      position: absolute;
+      right: 3px;
+      top: 3px;
+      padding: 2px;
+      background-color: fadeout(lighten(#F2F2F2, 3%), 20%);
+    }
+    &.sort-asc:after {
+      content: "\f0de";
+    }
+    &.sort-desc:after {
+      content: "\f0dd";
+    }
+
   }
 
   tr {

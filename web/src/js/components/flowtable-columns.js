@@ -1,11 +1,17 @@
 var React = require("react");
-var flowutils = require("../flow/utils.js");
+var RequestUtils = require("../flow/utils.js").RequestUtils;
+var ResponseUtils = require("../flow/utils.js").ResponseUtils;
 var utils = require("../utils.js");
 
 var TLSColumn = React.createClass({
     statics: {
-        renderTitle: function () {
-            return <th key="tls" className="col-tls"></th>;
+        Title: React.createClass({
+            render: function(){
+                return <th {...this.props} className={"col-tls " + (this.props.className || "") }></th>;
+            }
+        }),
+        sortKeyFun: function(flow){
+            return flow.request.scheme;
         }
     },
     render: function () {
@@ -24,16 +30,18 @@ var TLSColumn = React.createClass({
 
 var IconColumn = React.createClass({
     statics: {
-        renderTitle: function () {
-            return <th key="icon" className="col-icon"></th>;
-        }
+        Title: React.createClass({
+            render: function(){
+                return <th {...this.props} className={"col-icon " + (this.props.className || "") }></th>;
+            }
+        })
     },
     render: function () {
         var flow = this.props.flow;
 
         var icon;
         if (flow.response) {
-            var contentType = flowutils.ResponseUtils.getContentType(flow.response);
+            var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
             if (flow.response.code == 304) {
@@ -64,8 +72,13 @@ var IconColumn = React.createClass({
 
 var PathColumn = React.createClass({
     statics: {
-        renderTitle: function () {
-            return <th key="path" className="col-path">Path</th>;
+        Title: React.createClass({
+            render: function(){
+                return <th {...this.props} className={"col-path " + (this.props.className || "") }>Path</th>;
+            }
+        }),
+        sortKeyFun: function(flow){
+            return RequestUtils.pretty_url(flow.request);
         }
     },
     render: function () {
@@ -73,7 +86,7 @@ var PathColumn = React.createClass({
         return <td className="col-path">
             {flow.request.is_replay ? <i className="fa fa-fw fa-repeat pull-right"></i> : null}
             {flow.intercepted ? <i className="fa fa-fw fa-pause pull-right"></i> : null}
-            {flow.request.scheme + "://" + flow.request.host + flow.request.path}
+            { RequestUtils.pretty_url(flow.request) }
         </td>;
     }
 });
@@ -81,8 +94,13 @@ var PathColumn = React.createClass({
 
 var MethodColumn = React.createClass({
     statics: {
-        renderTitle: function () {
-            return <th key="method" className="col-method">Method</th>;
+        Title: React.createClass({
+            render: function(){
+                return <th {...this.props} className={"col-method " + (this.props.className || "") }>Method</th>;
+            }
+        }),
+        sortKeyFun: function(flow){
+            return flow.request.method;
         }
     },
     render: function () {
@@ -94,8 +112,13 @@ var MethodColumn = React.createClass({
 
 var StatusColumn = React.createClass({
     statics: {
-        renderTitle: function () {
-            return <th key="status" className="col-status">Status</th>;
+        Title: React.createClass({
+            render: function(){
+                return <th {...this.props} className={"col-status " + (this.props.className || "") }>Status</th>;
+            }
+        }),
+        sortKeyFun: function(flow){
+            return flow.response ? flow.response.code : undefined;
         }
     },
     render: function () {
@@ -113,8 +136,17 @@ var StatusColumn = React.createClass({
 
 var SizeColumn = React.createClass({
     statics: {
-        renderTitle: function () {
-            return <th key="size" className="col-size">Size</th>;
+        Title: React.createClass({
+            render: function(){
+                return <th {...this.props} className={"col-size " + (this.props.className || "") }>Size</th>;
+            }
+        }),
+        sortKeyFun: function(flow){
+            var total = flow.request.contentLength;
+            if (flow.response) {
+                total += flow.response.contentLength || 0;
+            }
+            return total;
         }
     },
     render: function () {
@@ -132,8 +164,15 @@ var SizeColumn = React.createClass({
 
 var TimeColumn = React.createClass({
     statics: {
-        renderTitle: function () {
-            return <th key="time" className="col-time">Time</th>;
+        Title: React.createClass({
+            render: function(){
+                return <th {...this.props} className={"col-time " + (this.props.className || "") }>Time</th>;
+            }
+        }),
+        sortKeyFun: function(flow){
+            if(flow.response) {
+                return flow.response.timestamp_end - flow.request.timestamp_start;
+            }
         }
     },
     render: function () {
@@ -156,9 +195,7 @@ var all_columns = [
     MethodColumn,
     StatusColumn,
     SizeColumn,
-    TimeColumn];
-
+    TimeColumn
+];
 
 module.exports = all_columns;
-
-

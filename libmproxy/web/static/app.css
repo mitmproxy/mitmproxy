@@ -175,6 +175,33 @@ header .menu {
 .flow-table th {
   font-weight: normal;
   box-shadow: 0 1px 0 #a6a6a6;
+  position: relative !important;
+  padding-left: 1px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.flow-table th.sort-asc,
+.flow-table th.sort-desc {
+  background-color: #fafafa;
+}
+.flow-table th.sort-asc:after,
+.flow-table th.sort-desc:after {
+  font: normal normal normal 14px/1 FontAwesome;
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  padding: 2px;
+  background-color: rgba(250, 250, 250, 0.8);
+}
+.flow-table th.sort-asc:after {
+  content: "\f0de";
+}
+.flow-table th.sort-desc:after {
+  content: "\f0dd";
 }
 .flow-table tr {
   cursor: pointer;
