@@ -25,7 +25,7 @@ deps = {
 }
 script_deps = {
     "mitmproxy": {
-        "urwid>=1.1",
+        "urwid>=1.3",
         "lxml>=3.3.6",
         "Pillow>=2.3.0",
     },
