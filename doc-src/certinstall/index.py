@@ -1,6 +1,6 @@
 from countershape import Page
 
 pages = [
-    Page("webapp.html", "Using the Web App"),
+    Page("ssl.html", "SSL Options"),
     Page("mitm.it-error.html", "Error: No proxy configured"),
 ]
