@@ -555,6 +555,9 @@ class ConsoleMaster(flow.FlowMaster):
                         self.prompt_execute(k)
                 elif k == "enter":
                     self.prompt_execute()
+                else:
+                    if common.is_keypress(k):
+                        self.view.keypress(self.loop.screen_size, k)
             else:
                 k = self.view.keypress(self.loop.screen_size, k)
                 if k:

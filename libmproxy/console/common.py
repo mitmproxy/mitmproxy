@@ -31,6 +31,14 @@ METHOD_OPTIONS = [
 ]
 
 
+def is_keypress(k):
+    """
+        Is this input event a keypress?
+    """
+    if isinstance(k, basestring):
+        return True
+
+
 def highlight_key(s, k):
     l = []
     parts = s.split(k, 1)
