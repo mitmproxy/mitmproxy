@@ -111,7 +111,7 @@ class LowLight(Palette):
 
         # Status bar & heading
         heading = ('light gray', 'dark blue'),
-        heading_key = ('light cyan', 'black'),
+        heading_key = ('light cyan', 'dark blue'),
         heading_inactive = ('black', 'light gray'),
 
         # Help
@@ -149,7 +149,12 @@ class LowLight(Palette):
 
 
 class Light(LowLight):
-    pass
+    high = dict(
+        heading = ('g99', '#08f'),
+        heading_key = ('#0ff,bold', '#08f'),
+        heading_inactive = ('g35', 'g85'),
+        replay = ('#0a0,bold', 'default'),
+    )
 
 
 palettes = {
