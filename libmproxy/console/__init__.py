@@ -617,8 +617,6 @@ class ConsoleMaster(flow.FlowMaster):
                         self.prompt_execute(k)
                 elif k == "enter":
                     self.prompt_execute()
-                else:
-                    self.view.keypress(self.loop.screen_size, k)
             else:
                 k = self.view.keypress(self.loop.screen_size, k)
                 if k:
@@ -943,7 +941,7 @@ class ConsoleMaster(flow.FlowMaster):
                 mkup.append(",")
         prompt.extend(mkup)
         prompt.append(")? ")
-        self.onekey = "".join(i[1] for i in keys)
+        self.onekey = set(i[1] for i in keys)
         self.prompt(prompt, "", callback, *args)
 
     def prompt_done(self):
