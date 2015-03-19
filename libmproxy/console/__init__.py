@@ -765,7 +765,7 @@ class ConsoleMaster(flow.FlowMaster):
     def run(self):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
-        self.ui.register_palette(self.palette)
+        self.ui.register_palette(self.palette.palette())
         self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
         self.view = None
         self.statusbar = None
