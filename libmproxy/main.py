@@ -6,6 +6,7 @@ import netlib.version
 from . import version, cmdline
 from .proxy import process_proxy_options, ProxyServerError
 from .proxy.server import DummyServer, ProxyServer
+import argcomplete
 
 
 # This file is not included in coverage analysis or tests - anything that can be
@@ -82,6 +83,7 @@ def mitmproxy():  # pragma: nocover
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
+    argcomplete.autocomplete(parser)
     options = parser.parse_args()
     if options.quiet:
         options.verbose = 0
@@ -107,6 +109,7 @@ def mitmdump():  # pragma: nocover
     check_versions()
 
     parser = cmdline.mitmdump()
+    argcomplete.autocomplete(parser)    
     options = parser.parse_args()
     if options.quiet:
         options.verbose = 0
@@ -140,7 +143,8 @@ def mitmweb():  # pragma: nocover
 
     check_versions()
     parser = cmdline.mitmweb()
-
+    argcomplete.autocomplete(parser)
+    
     options = parser.parse_args()
     if options.quiet:
         options.verbose = 0
