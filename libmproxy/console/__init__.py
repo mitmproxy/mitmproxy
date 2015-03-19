@@ -36,11 +36,6 @@ class ActionBar(urwid.WidgetWrap):
 
     def prompt(self, prompt, text = ""):
         self.expire = None
-        # A (partial) workaround for this Urwid issue:
-        # https://github.com/Nic0/tyrs/issues/115
-        # We can remove it once veryone is beyond 1.0.1
-        if isinstance(prompt, basestring):
-            prompt = unicode(prompt)
         self._w = urwid.Edit(prompt, text or "")
 
     def message(self, message, expire=None):
