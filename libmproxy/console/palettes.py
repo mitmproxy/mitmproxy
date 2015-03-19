@@ -157,102 +157,102 @@ class Light(LowLight):
     )
 
 
+class SolarizedLight(LowLight):
+    high = dict(
+        body = ('dark cyan', 'default'),
+        food = ('dark gray', 'default'),
+        title = ('white,bold', 'light cyan'),
+        editline = ('white', 'default'),
+
+        # Status bar & heading
+        heading = ('light cyan', 'light gray'),
+        heading_key = ('dark blue', 'white'),
+        heading_inactive = ('white', 'light gray'),
+
+        # Help
+        key = ('dark blue', 'default',),
+        head = ('black,underline', 'default'),
+        text = ('light cyan', 'default'),
+
+        # List and Connections
+        method = ('dark cyan', 'default'),
+        focus = ('black', 'default'),
+
+        code_200 = ('dark green', 'default'),
+        code_300 = ('light blue', 'default'),
+        code_400 = ('dark red', 'default',),
+        code_500 = ('dark red', 'default'),
+        code_other = ('light red', 'default'),
+
+        error = ('light red', 'default'),
+
+        header = ('light cyan', 'default'),
+        highlight = ('black,bold', 'default'),
+        intercept = ('brown', 'default',),
+        replay = ('dark green', 'default',),
+        ack = ('dark red', 'default'),
+
+        # Hex view
+        offset = ('light cyan', 'default'),
+
+        # Grid Editor
+        focusfield = ('black', 'light gray'),
+        focusfield_error = ('dark red', 'light gray'),
+        field_error = ('dark red', 'black'),
+        editfield = ('white', 'light cyan'),
+    )
+
+class SolarizedDark(LowDark):
+    high = dict(
+        body = ('dark cyan', 'default'),
+        foot = ('dark gray', 'default'),
+        title = ('white,bold', 'default',),
+        editline = ('white', 'default',),
+
+        # Status bar & heading
+        heading = ('light gray', 'light cyan',),
+        heading_key = ('dark blue', 'white',),
+        heading_inactive = ('light cyan', 'light gray',),
+
+        # Help
+        key = ('dark blue', 'default',),
+        head = ('white,underline', 'default'),
+        text = ('light cyan', 'default'),
+
+        # List and Connections
+        method = ('dark cyan', 'default'),
+        focus = ('white', 'default'),
+
+        code_200 = ('dark green', 'default'),
+        code_300 = ('light blue', 'default'),
+        code_400 = ('dark red', 'default',),
+        code_500 = ('dark red', 'default'),
+        code_other = ('light red', 'default'),
+
+        error = ('light red', 'default'),
+
+        header = ('yellow', 'default'),
+        highlight = ('white', 'default'),
+        intercept = ('brown', 'default',),
+        replay = ('dark green', 'default',),
+        ack = ('dark red', 'default'),
+
+        # Hex view
+        offset = ('yellow', 'default'),
+
+        # Grid Editor
+        focusfield = ('white', 'light cyan'),
+        focusfield_error = ('dark red', 'light gray'),
+        field_error = ('dark red', 'black'),
+        editfiled = ('black', 'light gray'),
+    )
+
+
 palettes = {
     "lowlight": LowLight(),
     "lowdark": LowDark(),
     "light": Light(),
     "dark": Dark(),
-
-# # For dark backgrounds
-#   'solarized_dark': [
-#     ('body', 'dark cyan', 'default'),
-#     ('foot', 'dark gray', 'default'),
-#     ('title', 'white,bold', 'default',),
-#     ('editline', 'white', 'default',),
-#
-#     # Status bar & heading
-#     ('heading', 'light gray', 'light cyan',),
-#     ('heading_key', 'dark blue', 'white',),
-#     ('heading_inactive', 'light cyan', 'light gray',),
-#
-#     # Help
-#     ('key', 'dark blue', 'default',),
-#     ('head', 'white,underline', 'default'),
-#     ('text', 'light cyan', 'default'),
-#
-#     # List and Connections
-#     ('method', 'dark cyan', 'default'),
-#     ('focus', 'white', 'default'),
-#
-#     ('code_200', 'dark green', 'default'),
-#     ('code_300', 'light blue', 'default'),
-#     ('code_400', 'dark red', 'default',),
-#     ('code_500', 'dark red', 'default'),
-#     ('code_other', 'light red', 'default'),
-#
-#     ('error', 'light red', 'default'),
-#
-#     ('header', 'yellow', 'default'),
-#     ('highlight', 'white', 'default'),
-#     ('intercept', 'brown', 'default',),
-#     ('replay', 'dark green', 'default',),
-#     ('ack', 'dark red', 'default'),
-#
-#     # Hex view
-#     ('offset', 'yellow', 'default'),
-#     ('text', 'light cyan', 'default'),
-#
-#     # Grid Editor
-#     ('focusfield', 'white', 'light cyan'),
-#     ('focusfield_error', 'dark red', 'light gray'),
-#     ('field_error', 'dark red', 'black'),
-#     ('editfield', 'black', 'light gray'),
-#   ],
-#
-# # For light backgrounds
-#   'solarized_light': [
-#     ('body', 'dark cyan', 'default'),
-#     ('foot', 'dark gray', 'default'),
-#     ('title', 'white,bold', 'light cyan',),
-#     ('editline', 'white', 'default',),
-#
-#     # Status bar & heading
-#     ('heading', 'light cyan', 'light gray',),
-#     ('heading_key', 'dark blue', 'white',),
-#     ('heading_inactive', 'white', 'light gray',),
-#
-#     # Help
-#     ('key', 'dark blue', 'default',),
-#     ('head', 'black,underline', 'default'),
-#     ('text', 'light cyan', 'default'),
-#
-#     # List and Connections
-#     ('method', 'dark cyan', 'default'),
-#     ('focus', 'black', 'default'),
-#
-#     ('code_200', 'dark green', 'default'),
-#     ('code_300', 'light blue', 'default'),
-#     ('code_400', 'dark red', 'default',),
-#     ('code_500', 'dark red', 'default'),
-#     ('code_other', 'light red', 'default'),
-#
-#     ('error', 'light red', 'default'),
-#
-#     ('header', 'light cyan', 'default'),
-#     ('highlight', 'black,bold', 'default'),
-#     ('intercept', 'brown', 'default',),
-#     ('replay', 'dark green', 'default',),
-#     ('ack', 'dark red', 'default'),
-#
-#     # Hex view
-#     ('offset', 'light cyan', 'default'),
-#     ('text', 'yellow', 'default'),
-#
-#     # Grid Editor
-#     ('focusfield', 'black', 'light gray'),
-#     ('focusfield_error', 'dark red', 'light gray'),
-#     ('field_error', 'dark red', 'black'),
-#     ('editfield', 'white', 'light cyan'),
-#   ],
-
+    "solarized_light": SolarizedLight(),
+    "solarized_dark": SolarizedDark(),
 }
