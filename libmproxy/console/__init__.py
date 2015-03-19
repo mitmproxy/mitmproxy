@@ -7,6 +7,7 @@ import tempfile
 import os
 import os.path
 import shlex
+import signal
 import stat
 import subprocess
 import sys
@@ -25,7 +26,8 @@ EVENTLOG_SIZE = 500
 class _PathCompleter:
     def __init__(self, _testing=False):
         """
-            _testing: disables reloading of the lookup table to make testing possible.
+            _testing: disables reloading of the lookup table to make testing
+            possible.
         """
         self.lookup, self.offset = None, None
         self.final = None
@@ -37,7 +39,8 @@ class _PathCompleter:
 
     def complete(self, txt):
         """
-            Returns the next completion for txt, or None if there is no completion.
+            Returns the next completion for txt, or None if there is no
+            completion.
         """
         path = os.path.expanduser(txt)
         if not self.lookup:
@@ -702,14 +705,6 @@ class ConsoleMaster(flow.FlowMaster):
                                 self.edit_scripts
                             )
                         )
-                        #if self.scripts:
-                        #    self.load_script(None)
-                        #else:
-                        #    self.path_prompt(
-                        #        "Set script: ",
-                        #        self.state.last_script,
-                        #        self.set_script
-                        #    )
                     elif k == "S":
                         if not self.server_playback:
                             self.path_prompt(
@@ -799,6 +794,14 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
         self.loop.set_alarm_in(0.01, self.ticker)
+
+        # It's not clear why we need to handle this explicitly - without this,
+        # mitmproxy hangs on keyboard interrupt. Remove if we ever figure it
+        # out.
+        def exit(s, f):
+            raise urwid.ExitMainLoop
+        signal.signal(signal.SIGINT, exit)
+
         try:
             self.loop.run()
         except Exception:
