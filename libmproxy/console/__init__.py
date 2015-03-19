@@ -18,74 +18,9 @@ import weakref
 
 from .. import controller, utils, flow, script
 from . import flowlist, flowview, help, common
-from . import grideditor, palettes, contentview, flowdetailview
+from . import grideditor, palettes, contentview, flowdetailview, pathedit
 
 EVENTLOG_SIZE = 500
-
-
-class _PathCompleter:
-    def __init__(self, _testing=False):
-        """
-            _testing: disables reloading of the lookup table to make testing
-            possible.
-        """
-        self.lookup, self.offset = None, None
-        self.final = None
-        self._testing = _testing
-
-    def reset(self):
-        self.lookup = None
-        self.offset = -1
-
-    def complete(self, txt):
-        """
-            Returns the next completion for txt, or None if there is no
-            completion.
-        """
-        path = os.path.expanduser(txt)
-        if not self.lookup:
-            if not self._testing:
-                # Lookup is a set of (display value, actual value) tuples.
-                self.lookup = []
-                if os.path.isdir(path):
-                    files = glob.glob(os.path.join(path, "*"))
-                    prefix = txt
-                else:
-                    files = glob.glob(path+"*")
-                    prefix = os.path.dirname(txt)
-                prefix = prefix or "./"
-                for f in files:
-                    display = os.path.join(prefix, os.path.basename(f))
-                    if os.path.isdir(f):
-                        display += "/"
-                    self.lookup.append((display, f))
-            if not self.lookup:
-                self.final = path
-                return path
-            self.lookup.sort()
-            self.offset = -1
-            self.lookup.append((txt, txt))
-        self.offset += 1
-        if self.offset >= len(self.lookup):
-            self.offset = 0
-        ret = self.lookup[self.offset]
-        self.final = ret[1]
-        return ret[0]
-
-
-class PathEdit(urwid.Edit, _PathCompleter):
-    def __init__(self, *args, **kwargs):
-        urwid.Edit.__init__(self, *args, **kwargs)
-        _PathCompleter.__init__(self)
-
-    def keypress(self, size, key):
-        if key == "tab":
-            comp = self.complete(self.get_edit_text())
-            self.set_edit_text(comp)
-            self.set_edit_pos(len(comp))
-        else:
-            self.reset()
-        return urwid.Edit.keypress(self, size, key)
 
 
 class ActionBar(urwid.WidgetWrap):
@@ -97,7 +32,7 @@ class ActionBar(urwid.WidgetWrap):
 
     def path_prompt(self, prompt, text):
         self.expire = None
-        self._w = PathEdit(prompt, text)
+        self._w = pathedit.PathEdit(prompt, text)
 
     def prompt(self, prompt, text = ""):
         self.expire = None
