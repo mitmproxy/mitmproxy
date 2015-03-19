@@ -131,14 +131,16 @@ class TestDumpMaster:
         assert len(m.apps.apps) == 1
 
     def test_replacements(self):
+        cs = StringIO()
         o = dump.Options(replacements=[(".*", "content", "foo")])
-        m = dump.DumpMaster(None, o)
+        m = dump.DumpMaster(None, o, outfile=cs)
         f = self._cycle(m, "content")
         assert f.request.content == "foo"
 
     def test_setheader(self):
+        cs = StringIO()
         o = dump.Options(setheaders=[(".*", "one", "two")])
-        m = dump.DumpMaster(None, o)
+        m = dump.DumpMaster(None, o, outfile=cs)
         f = self._cycle(m, "content")
         assert f.request.headers["one"] == ["two"]
 
@@ -195,4 +197,3 @@ class TestDumpMaster:
 
     def test_stickyauth(self):
         self._dummy_cycle(1, None, "", stickyauth = ".*")
-
