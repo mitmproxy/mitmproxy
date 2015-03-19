@@ -1,11 +1,36 @@
+SSL traffic poses a potential problem when using mitmproxy, as it is encrypted, it is opaque to inspection.  
+In order to be able to decrypt the traffic, you must use a certificate that the client, whose traffic you are intercepting, trusts.  
+This document outlines the different options you have for either using the certificate that mitmproxy generates or using your own.
 
-The first time __mitmproxy__ or __mitmdump__ is run, a set of certificate files
-for the mitmproxy Certificate Authority are created in the config directory
-(~/.mitmproxy by default). This CA is used for on-the-fly generation of dummy
-certificates for SSL interception. Since your browser won't trust the
-__mitmproxy__ CA out of the box (and rightly so), you will see an SSL cert
+Quick Setup
+-----------
+
+By far the easiest way to install the mitmproxy certificates is to use the built-in
+web app. To do this, start mitmproxy and configure your target device with the
+correct proxy settings. Now start a browser on the device, and visit the domain **mitm.it**.
+You should see something like this:
+
+<img src="@!urlTo("webapp.png")!@"></img>
+
+Just click on the relevant icon, and then follow the setup instructions
+for the platform you're on.
+
+Certificates are installed via several different methods depending on the client.
+There are too many to go into in this document, consult the documentation for 
+the client that you would to have trust the mitmproxy root certificate,
+for specific installation instructions.
+
+
+More On mitmproxy Certificates
+------------------------------
+
+The first time __mitmproxy__ or __mitmdump__ is run, the mitmproxy Certificate 
+Authority(CA) is created in the config directory (~/.mitmproxy by default).
+This CA is used for on-the-fly generation of dummy certificates for each of the 
+SSL sites that your client visits. Since your browser won't trust the
+__mitmproxy__ CA out of the box , you will see an SSL certificate
 warning every time you visit a new SSL domain through __mitmproxy__. When
-you're testing a single site through a browser, just accepting the bogus SSL
+you are testing a single site through a browser, just accepting the bogus SSL
 cert manually is not too much trouble, but there are a many circumstances where
 you will want to configure your testing system or browser to trust the
 __mitmproxy__ CA as a signing root authority.
@@ -42,7 +67,7 @@ Using a custom certificate
 --------------------------
 
 You can use your own certificate by passing the <kbd>--cert</kbd> option to mitmproxy. mitmproxy then uses the provided
-certificate for interception of the specified domains instead of generating a cert signed by its own CA.
+certificate for interception of the specified domains instead of generating a certificate signed by its own CA.
 
 The certificate file is expected to be in the PEM format.
 You can include intermediary certificates right below your leaf certificate, so that you PEM file roughly looks like
@@ -63,7 +88,7 @@ this:
 For example, you can generate a certificate in this format using these instructions:
 
 <pre class="terminal">
-> openssl genrsa -out cert.key 8192
+> openssl genrsa -out cert.key 2048
 > openssl req -new -x509 -key cert.key -out cert.crt
     (Specify the mitm domain as Common Name, e.g. *.google.com)
 > cat cert.key cert.crt > cert.pem
@@ -86,14 +111,3 @@ authority to generate certificates for all domains for which no custom certifica
 You can use your own certificate authority by passing the <kbd>--confdir</kbd> option to mitmproxy.
 mitmproxy will then look for <samp>mitmproxy-ca.pem</samp> in the specified directory. If no such file exists,
 it will be generated automatically.
-
-Installing the mitmproxy CA
----------------------------
-
-* [Firefox](@!urlTo("certinstall/firefox.html")!@)
-* [OSX](@!urlTo("certinstall/osx.html")!@)
-* [Windows 7](@!urlTo("certinstall/windows7.html")!@)
-* [iPhone/iPad](@!urlTo("certinstall/ios.html")!@)
-* [IOS Simulator](@!urlTo("certinstall/ios-simulator.html")!@)
-* [Android](@!urlTo("certinstall/android.html")!@)
-
