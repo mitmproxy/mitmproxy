@@ -9,7 +9,7 @@
 
 class Palette:
     _fields = [
-        'body', 'foot', 'title', 'editline',
+        'title',
 
         # Status bar & heading
         'heading', 'heading_key', 'heading_inactive',
@@ -21,7 +21,7 @@ class Palette:
         'method', 'focus',
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
         'error',
-        'header', 'highlight', 'intercept', 'replay', 'ack',
+        'header', 'highlight', 'intercept', 'replay',
 
         # Hex view
         'offset',
@@ -48,10 +48,7 @@ class LowDark(Palette):
         Low-color dark background
     """
     low = dict(
-        body = ('black', 'dark cyan'),
-        foot = ('light gray', 'default'),
         title = ('white,bold', 'default'),
-        editline = ('white', 'default'),
 
         # Status bar & heading
         heading = ('light gray', 'dark blue'),
@@ -79,7 +76,6 @@ class LowDark(Palette):
         highlight = ('white,bold', 'default'),
         intercept = ('brown', 'default'),
         replay = ('light green', 'default'),
-        ack = ('light red', 'default'),
 
         # Hex view
         offset = ('dark cyan', 'default'),
@@ -104,10 +100,7 @@ class LowLight(Palette):
         Low-color light background
     """
     low = dict(
-        body = ('black', 'dark cyan'),
-        foot = ('dark gray', 'default'),
         title = ('dark magenta,bold', 'light blue'),
-        editline = ('white', 'default'),
 
         # Status bar & heading
         heading = ('light gray', 'dark blue'),
@@ -135,7 +128,6 @@ class LowLight(Palette):
         highlight = ('black,bold', 'default'),
         intercept = ('brown', 'default'),
         replay = ('dark green', 'default'),
-        ack = ('dark red', 'default'),
 
         # Hex view
         offset = ('dark blue', 'default'),
@@ -157,94 +149,105 @@ class Light(LowLight):
     )
 
 
+# Solarized palette in Urwid-style terminal high-colour offsets
+# See: http://ethanschoonover.com/solarized
+sol_base03 = "h234"
+sol_base02 = "h235"
+sol_base01 = "h240"
+sol_base00 = "h241"
+sol_base0  = "h244"
+sol_base1  = "h245"
+sol_base2  = "h254"
+sol_base3  = "h230"
+sol_yellow = "h136"
+sol_orange = "h166"
+sol_red = "h160"
+sol_magenta = "h125"
+sol_violet = "h61"
+sol_blue = "h33"
+sol_cyan = "h37"
+sol_green = "h64"
 class SolarizedLight(LowLight):
     high = dict(
-        body = ('dark cyan', 'default'),
-        food = ('dark gray', 'default'),
-        title = ('white,bold', 'light cyan'),
-        editline = ('white', 'default'),
+        title = (sol_blue, 'default'),
+        text = (sol_base00, 'default'),
 
         # Status bar & heading
-        heading = ('light cyan', 'light gray'),
-        heading_key = ('dark blue', 'white'),
-        heading_inactive = ('white', 'light gray'),
+        heading = (sol_base2, sol_base02),
+        heading_key = (sol_blue, sol_base03),
+        heading_inactive = (sol_base03, sol_base1),
 
         # Help
-        key = ('dark blue', 'default',),
-        head = ('black,underline', 'default'),
-        text = ('light cyan', 'default'),
+        key = (sol_blue, 'default',),
+        head = (sol_base00, 'default'),
 
         # List and Connections
-        method = ('dark cyan', 'default'),
-        focus = ('black', 'default'),
+        method = (sol_cyan, 'default'),
+        focus = (sol_base01, 'default'),
 
-        code_200 = ('dark green', 'default'),
-        code_300 = ('light blue', 'default'),
-        code_400 = ('dark red', 'default',),
-        code_500 = ('dark red', 'default'),
-        code_other = ('light red', 'default'),
+        code_200 = (sol_green, 'default'),
+        code_300 = (sol_blue, 'default'),
+        code_400 = (sol_orange, 'default',),
+        code_500 = (sol_red, 'default'),
+        code_other = (sol_magenta, 'default'),
 
-        error = ('light red', 'default'),
+        error = (sol_red, 'default'),
 
-        header = ('light cyan', 'default'),
-        highlight = ('black,bold', 'default'),
-        intercept = ('brown', 'default',),
-        replay = ('dark green', 'default',),
-        ack = ('dark red', 'default'),
+        header = (sol_base01, 'default'),
+        highlight = (sol_base01, 'default'),
+        intercept = (sol_red, 'default',),
+        replay = (sol_green, 'default',),
 
         # Hex view
-        offset = ('light cyan', 'default'),
+        offset = (sol_cyan, 'default'),
 
         # Grid Editor
-        focusfield = ('black', 'light gray'),
-        focusfield_error = ('dark red', 'light gray'),
-        field_error = ('dark red', 'black'),
-        editfield = ('white', 'light cyan'),
+        focusfield = (sol_base00, sol_base2),
+        focusfield_error = (sol_red, sol_base2),
+        field_error = (sol_red, 'default'),
+        editfield = (sol_base01, 'default'),
     )
+
 
 class SolarizedDark(LowDark):
     high = dict(
-        body = ('dark cyan', 'default'),
-        foot = ('dark gray', 'default'),
-        title = ('white,bold', 'default',),
-        editline = ('white', 'default',),
+        title = (sol_blue, 'default'),
+        text = (sol_base0, 'default'),
 
         # Status bar & heading
-        heading = ('light gray', 'light cyan',),
-        heading_key = ('dark blue', 'white',),
-        heading_inactive = ('light cyan', 'light gray',),
+        heading = (sol_base03, sol_base1),
+        heading_key = (sol_blue+",bold", sol_base1),
+        heading_inactive = (sol_base1, sol_base02),
 
         # Help
-        key = ('dark blue', 'default',),
-        head = ('white,underline', 'default'),
-        text = ('light cyan', 'default'),
+        key = (sol_blue, 'default',),
+        head = (sol_base00, 'default'),
 
         # List and Connections
-        method = ('dark cyan', 'default'),
-        focus = ('white', 'default'),
+        method = (sol_cyan, 'default'),
+        focus = (sol_base1, 'default'),
 
-        code_200 = ('dark green', 'default'),
-        code_300 = ('light blue', 'default'),
-        code_400 = ('dark red', 'default',),
-        code_500 = ('dark red', 'default'),
-        code_other = ('light red', 'default'),
+        code_200 = (sol_green, 'default'),
+        code_300 = (sol_blue, 'default'),
+        code_400 = (sol_orange, 'default',),
+        code_500 = (sol_red, 'default'),
+        code_other = (sol_magenta, 'default'),
 
-        error = ('light red', 'default'),
+        error = (sol_red, 'default'),
 
-        header = ('yellow', 'default'),
-        highlight = ('white', 'default'),
-        intercept = ('brown', 'default',),
-        replay = ('dark green', 'default',),
-        ack = ('dark red', 'default'),
+        header = (sol_base01, 'default'),
+        highlight = (sol_base01, 'default'),
+        intercept = (sol_red, 'default',),
+        replay = (sol_green, 'default',),
 
         # Hex view
-        offset = ('yellow', 'default'),
+        offset = (sol_cyan, 'default'),
 
         # Grid Editor
-        focusfield = ('white', 'light cyan'),
-        focusfield_error = ('dark red', 'light gray'),
-        field_error = ('dark red', 'black'),
-        editfiled = ('black', 'light gray'),
+        focusfield = (sol_base0, sol_base02),
+        focusfield_error = (sol_red, sol_base02),
+        field_error = (sol_red, 'default'),
+        editfield = (sol_base1, 'default'),
     )
 
 
