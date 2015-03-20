@@ -1,4 +1,5 @@
 import urwid
+from . import common
 
 class Window(urwid.Frame):
     def __init__(self, master, body, header, footer):
