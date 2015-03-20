@@ -15,7 +15,7 @@ import urwid
 import weakref
 
 from .. import controller, flow, script
-from . import flowlist, flowview, help, common, window
+from . import flowlist, flowview, help, common, window, signals
 from . import grideditor, palettes, contentview, flowdetailview, statusbar
 
 EVENTLOG_SIZE = 500
@@ -238,7 +238,9 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             s = script.Script(command, self)
         except script.ScriptError, v:
-            self.statusbar.message("Error loading script.")
+            signals.status_message.send(
+                message = "Error loading script."
+            )
             self.add_event("Error loading script:\n%s"%v.args[0], "error")
             return
 
@@ -257,7 +259,7 @@ class ConsoleMaster(flow.FlowMaster):
             return
         ret = self.load_script(command)
         if ret:
-            self.statusbar.message(ret)
+            signals.status_message.send(message=ret)
         self.state.last_script = command
 
     def toggle_eventlog(self):
@@ -279,7 +281,7 @@ class ConsoleMaster(flow.FlowMaster):
                 print >> sys.stderr, e.strerror
                 sys.exit(1)
             else:
-                self.statusbar.message(e.strerror)
+                signals.status_message.send(message=e.strerror)
             return None
 
     def client_playback_path(self, path):
@@ -314,7 +316,7 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             subprocess.call(cmd)
         except:
-            self.statusbar.message("Can't start editor: %s" % " ".join(c))
+            signals.status_message.send(message="Can't start editor: %s" % " ".join(c))
         else:
             data = open(name, "rb").read()
         self.ui.start()
@@ -353,8 +355,8 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             subprocess.call(cmd, shell=shell)
         except:
-            self.statusbar.message(
-                "Can't start external viewer: %s" % " ".join(c)
+            signals.status_message.send(
+                message="Can't start external viewer: %s" % " ".join(c)
             )
         self.ui.start()
         os.unlink(name)
@@ -505,7 +507,7 @@ class ConsoleMaster(flow.FlowMaster):
                 fw.add(i)
             f.close()
         except IOError, v:
-            self.statusbar.message(v.strerror)
+            signals.status_message.send(message=v.strerror)
 
     def save_one_flow(self, path, flow):
         return self._write_flows(path, [flow])
@@ -565,7 +567,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.prompting = False
         self.onekey = False
         self.view.set_focus("body")
-        self.statusbar.message("")
+        signals.status_message.send(message="")
 
     def prompt_execute(self, txt=None):
         if not txt:
@@ -574,7 +576,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.prompt_done()
         msg = p(txt, *args)
         if msg:
-            self.statusbar.message(msg, 1000)
+            signals.status_message.send(message=msg, expire=1000)
 
     def prompt_cancel(self):
         self.prompt_done()

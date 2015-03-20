@@ -21,7 +21,8 @@ deps = {
     "pyOpenSSL>=0.14",
     "tornado>=4.0.2",
     "configargparse>=0.9.3",
-    "pyperclip>=1.5.8"
+    "pyperclip>=1.5.8",
+    "blinker>=1.3"
 }
 script_deps = {
     "mitmproxy": {

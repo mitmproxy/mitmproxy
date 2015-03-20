@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import os, sys, copy
 import urwid
-from . import common, grideditor, contentview
+from . import common, grideditor, contentview, signals
 from .. import utils, flow, controller
 from ..protocol.http import HTTPRequest, HTTPResponse, CONTENT_MISSING, decoded
 
@@ -282,10 +282,10 @@ class FlowView(urwid.WidgetWrap):
         if last_search_string:
             message = self.search(last_search_string, backwards)
             if message:
-                self.master.statusbar.message(message)
+                signals.status_message.send(message=message)
         else:
             message = "no previous searches have been made"
-            self.master.statusbar.message(message)
+            signals.status_message.send(message=message)
 
         return message
 
@@ -606,7 +606,7 @@ class FlowView(urwid.WidgetWrap):
         else:
             new_flow, new_idx = self.state.get_prev(idx)
         if new_flow is None:
-            self.master.statusbar.message("No more flows!")
+            signals.status_message.send(message="No more flows!")
             return
         self.master.view_flow(new_flow)
 
@@ -681,7 +681,7 @@ class FlowView(urwid.WidgetWrap):
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
-            self.master.statusbar.message("Duplicated.")
+            signals.status_message.send(message="Duplicated.")
         elif key == "e":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
                 self.master.prompt_onekey(
@@ -710,14 +710,14 @@ class FlowView(urwid.WidgetWrap):
                 )
             key = None
         elif key == "f":
-            self.master.statusbar.message("Loading all body data...")
+            signals.status_message.send(message="Loading all body data...")
             self.state.add_flow_setting(
                 self.flow,
                 (self.state.view_flow_mode, "fullcontents"),
                 True
             )
             self.master.refresh_flow(self.flow)
-            self.master.statusbar.message("")
+            signals.status_message.send(message="")
         elif key == "g":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
                 scope = "q"
@@ -738,15 +738,15 @@ class FlowView(urwid.WidgetWrap):
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:
-                self.master.statusbar.message(r)
+                signals.status_message.send(message=r)
             self.master.refresh_flow(self.flow)
         elif key == "V":
             if not self.flow.modified():
-                self.master.statusbar.message("Flow not modified.")
+                signals.status_message.send(message="Flow not modified.")
                 return
             self.state.revert(self.flow)
             self.master.refresh_flow(self.flow)
-            self.master.statusbar.message("Reverted.")
+            signals.status_message.send(message="Reverted.")
         elif key == "W":
             self.master.path_prompt(
                 "Save this flow: ",
@@ -761,7 +761,7 @@ class FlowView(urwid.WidgetWrap):
                 if os.environ.has_key("EDITOR") or os.environ.has_key("PAGER"):
                     self.master.spawn_external_viewer(conn.content, t)
                 else:
-                    self.master.statusbar.message("Error! Set $EDITOR or $PAGER.")
+                    signals.status_message.send(message="Error! Set $EDITOR or $PAGER.")
         elif key == "|":
             self.master.path_prompt(
                 "Send flow to script: ", self.state.last_script,
@@ -785,7 +785,7 @@ class FlowView(urwid.WidgetWrap):
                 e = conn.headers.get_first("content-encoding", "identity")
                 if e != "identity":
                     if not conn.decode():
-                        self.master.statusbar.message("Could not decode - invalid data?")
+                        signals.status_message.send(message="Could not decode - invalid data?")
                 else:
                     self.master.prompt_onekey(
                         "Select encoding: ",

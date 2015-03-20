@@ -5,7 +5,7 @@ import re
 import os
 import urwid
 
-from . import common
+from . import common, signals
 from .. import utils, filt, script
 from netlib import http_uastrings
 
@@ -125,14 +125,14 @@ class GridWalker(urwid.ListWalker):
             try:
                 val = val.decode("string-escape")
             except ValueError:
-                self.editor.master.statusbar.message(
-                    "Invalid Python-style string encoding.", 1000
+                signals.status_message.send(
+                    self, message = "Invalid Python-style string encoding.", expure = 1000
                 )
                 return
         errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
         if emsg:
-            self.editor.master.statusbar.message(emsg, 1000)
+            signals.status_message.send(message = emsg, expire = 1000)
             errors.add(self.focus_col)
         else:
             errors.discard(self.focus_col)

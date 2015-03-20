@@ -3,26 +3,26 @@ import time
 
 import urwid
 
-from . import pathedit
+from . import pathedit, signals
 from .. import utils
+
 
 
 class ActionBar(urwid.WidgetWrap):
     def __init__(self):
-        self.message("")
+        urwid.WidgetWrap.__init__(self, urwid.Text(""))
+        signals.status_message.connect(self.message)
 
     def selectable(self):
         return True
 
     def path_prompt(self, prompt, text):
-        self.expire = None
         self._w = pathedit.PathEdit(prompt, text)
 
     def prompt(self, prompt, text = ""):
-        self.expire = None
         self._w = urwid.Edit(prompt, text or "")
 
-    def message(self, message, expire=None):
+    def message(self, sender, message, expire=None):
         self.expire = expire
         self._w = urwid.Text(message)
 
@@ -127,9 +127,6 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        if self.ab.expire and time.time() > self.ab.expire:
-            self.message("")
-
         fc = self.master.state.flow_count()
         if self.master.state.focus is None:
             offset = 0
@@ -175,9 +172,3 @@ class StatusBar(urwid.WidgetWrap):
 
     def prompt(self, prompt, text = ""):
         self.ab.prompt(prompt, text)
-
-    def message(self, msg, expire=None):
-        if expire:
-            expire = time.time() + float(expire)/1000
-        self.ab.message(msg, expire)
-        self.master.loop.draw_screen()

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import urwid
 from netlib import http
-from . import common
+from . import common, signals
 
 
 def _mkhelp():
@@ -171,7 +171,7 @@ class ConnectionItem(urwid.WidgetWrap):
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:
-                self.master.statusbar.message(r)
+                signals.status_message.send(message=r)
             self.master.sync_list_view()
         elif key == "S":
             if not self.master.server_playback:
@@ -195,11 +195,11 @@ class ConnectionItem(urwid.WidgetWrap):
                 )
         elif key == "V":
             if not self.flow.modified():
-                self.master.statusbar.message("Flow not modified.")
+                signals.status_message.send(message="Flow not modified.")
                 return
             self.state.revert(self.flow)
             self.master.sync_list_view()
-            self.master.statusbar.message("Reverted.")
+            signals.status_message.send(message="Reverted.")
         elif key == "w":
             self.master.prompt_onekey(
                 "Save",
@@ -285,7 +285,7 @@ class FlowListBox(urwid.ListBox):
     def new_request(self, url, method):
         parts = http.parse_url(str(url))
         if not parts:
-            self.master.statusbar.message("Invalid Url")
+            signals.status_message.send(message="Invalid Url")
             return
         scheme, host, port, path = parts
         f = self.master.create_request(method, scheme, host, port, path)

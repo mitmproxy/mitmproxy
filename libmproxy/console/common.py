@@ -6,6 +6,7 @@ import os
 
 from .. import utils
 from ..protocol.http import CONTENT_MISSING, decoded
+from . import signals
 
 try:
     import pyperclip
@@ -198,7 +199,7 @@ def save_data(path, data, master, state):
         with file(path, "wb") as f:
             f.write(data)
     except IOError, v:
-        master.statusbar.message(v.strerror)
+        signals.status_message.send(message=v.strerror)
 
 
 def ask_save_path(prompt, data, master, state):
@@ -248,11 +249,11 @@ def copy_flow(part, scope, flow, master, state):
 
     if not data:
         if scope == "q":
-            master.statusbar.message("No request content to copy.")
+            signals.status_message.send(message="No request content to copy.")
         elif scope == "s":
-            master.statusbar.message("No response content to copy.")
+            signals.status_message.send(message="No response content to copy.")
         else:
-            master.statusbar.message("No contents to copy.")
+            signals.status_message.send(message="No contents to copy.")
         return
 
     try:
@@ -336,7 +337,7 @@ def ask_save_body(part, master, state, flow):
             state
         )
     else:
-        master.statusbar.message("No content to save.")
+        signals.status_message.send(message="No content to save.")
 
 
 class FlowCache:

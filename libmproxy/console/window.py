@@ -1,5 +1,5 @@
 import urwid
-from . import common
+from . import common, grideditor
 
 class Window(urwid.Frame):
     def __init__(self, master, body, header, footer):
