@@ -15,7 +15,7 @@ import urwid
 import weakref
 
 from .. import controller, flow, script
-from . import flowlist, flowview, help, common
+from . import flowlist, flowview, help, common, window
 from . import grideditor, palettes, contentview, flowdetailview, statusbar
 
 EVENTLOG_SIZE = 500
@@ -146,7 +146,6 @@ class ConsoleMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
-        self.looptime = 0
         self.stream_path = None
         self.options = options
 
@@ -363,149 +362,6 @@ class ConsoleMaster(flow.FlowMaster):
     def set_palette(self, name):
         self.palette = palettes.palettes[name]
 
-    def input_filter(self, keys, raw):
-        for k in keys:
-            if self.prompting:
-                if k == "esc":
-                    self.prompt_cancel()
-                elif self.onekey:
-                    if k == "enter":
-                        self.prompt_cancel()
-                    elif k in self.onekey:
-                        self.prompt_execute(k)
-                elif k == "enter":
-                    self.prompt_execute()
-                else:
-                    if common.is_keypress(k):
-                        self.view.keypress(self.loop.screen_size, k)
-            else:
-                k = self.view.keypress(self.loop.screen_size, k)
-                if k:
-                    self.statusbar.message("")
-                    if k == "?":
-                        self.view_help()
-                    elif k == "c":
-                        if not self.client_playback:
-                            self.path_prompt(
-                                "Client replay: ",
-                                self.state.last_saveload,
-                                self.client_playback_path
-                            )
-                        else:
-                            self.prompt_onekey(
-                                "Stop current client replay?",
-                                (
-                                    ("yes", "y"),
-                                    ("no", "n"),
-                                ),
-                                self.stop_client_playback_prompt,
-                            )
-                    elif k == "H":
-                        self.view_grideditor(
-                            grideditor.SetHeadersEditor(
-                                self,
-                                self.setheaders.get_specs(),
-                                self.setheaders.set
-                            )
-                        )
-                    elif k == "I":
-                        self.view_grideditor(
-                            grideditor.HostPatternEditor(
-                                self,
-                                [[x] for x in self.get_ignore_filter()],
-                                self.edit_ignore_filter
-                            )
-                        )
-                    elif k == "T":
-                        self.view_grideditor(
-                            grideditor.HostPatternEditor(
-                                self,
-                                [[x] for x in self.get_tcp_filter()],
-                                self.edit_tcp_filter
-                            )
-                        )
-                    elif k == "i":
-                        self.prompt(
-                            "Intercept filter: ",
-                            self.state.intercept_txt,
-                            self.set_intercept
-                        )
-                    elif k == "Q":
-                        raise urwid.ExitMainLoop
-                    elif k == "q":
-                        self.prompt_onekey(
-                            "Quit",
-                            (
-                                ("yes", "y"),
-                                ("no", "n"),
-                            ),
-                            self.quit,
-                        )
-                    elif k == "M":
-                        self.prompt_onekey(
-                            "Global default display mode",
-                            contentview.view_prompts,
-                            self.change_default_display_mode
-                        )
-                    elif k == "R":
-                        self.view_grideditor(
-                            grideditor.ReplaceEditor(
-                                self,
-                                self.replacehooks.get_specs(),
-                                self.replacehooks.set
-                            )
-                        )
-                    elif k == "s":
-                        self.view_grideditor(
-                            grideditor.ScriptEditor(
-                                self,
-                                [[i.command] for i in self.scripts],
-                                self.edit_scripts
-                            )
-                        )
-                    elif k == "S":
-                        if not self.server_playback:
-                            self.path_prompt(
-                                "Server replay path: ",
-                                self.state.last_saveload,
-                                self.server_playback_path
-                            )
-                        else:
-                            self.prompt_onekey(
-                                "Stop current server replay?",
-                                (
-                                    ("yes", "y"),
-                                    ("no", "n"),
-                                ),
-                                self.stop_server_playback_prompt,
-                            )
-                    elif k == "o":
-                        self.prompt_onekey(
-                            "Options",
-                            (
-                                ("anticache", "a"),
-                                ("anticomp", "c"),
-                                ("showhost", "h"),
-                                ("killextra", "k"),
-                                ("norefresh", "n"),
-                                ("no-upstream-certs", "u"),
-                            ),
-                            self._change_options
-                        )
-                    elif k == "t":
-                        self.prompt(
-                            "Sticky cookie filter: ",
-                            self.stickycookie_txt,
-                            self.set_stickycookie
-                        )
-                    elif k == "u":
-                        self.prompt(
-                            "Sticky auth filter: ",
-                            self.stickyauth_txt,
-                            self.set_stickyauth
-                        )
-            self.statusbar.redraw()
-
     def ticker(self, *userdata):
         changed = self.tick(self.masterq, timeout=0)
         if changed:
@@ -528,7 +384,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.loop = urwid.MainLoop(
             self.view,
             screen = self.ui,
-            input_filter = self.input_filter
         )
         self.view_flowlist()
         self.statusbar.redraw()
@@ -574,12 +429,13 @@ class ConsoleMaster(flow.FlowMaster):
         self.shutdown()
 
     def make_view(self):
-        self.view = urwid.Frame(
+        self.view = window.Window(
+            self,
             self.body,
             header = self.header,
             footer = self.statusbar
         )
-        self.view.set_focus("body")
+        self.statusbar.redraw()
         return self.view
 
     def view_help(self):

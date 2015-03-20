@@ -34,6 +34,9 @@ class StatusBar(urwid.WidgetWrap):
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self._w = urwid.Pile([self.ib, self.ab])
 
+    def keypress(self, *args, **kwargs):
+        return self.ab.keypress(*args, **kwargs)
+
     def get_status(self):
         r = []
 
