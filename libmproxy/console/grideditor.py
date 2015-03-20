@@ -132,7 +132,7 @@ class GridWalker(urwid.ListWalker):
         errors = self.lst[self.focus][1]
         emsg = self.editor.is_error(self.focus_col, val)
         if emsg:
-            signals.status_message.send(message = emsg, expire = 1000)
+            signals.status_message.send(message = emsg, expire = 1)
             errors.add(self.focus_col)
         else:
             errors.discard(self.focus_col)

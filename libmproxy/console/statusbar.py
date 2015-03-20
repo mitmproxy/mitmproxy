@@ -1,4 +1,3 @@
-
 import time
 
 import urwid
@@ -7,11 +6,14 @@ from . import pathedit, signals
 from .. import utils
 
 
-
 class ActionBar(urwid.WidgetWrap):
     def __init__(self):
-        urwid.WidgetWrap.__init__(self, urwid.Text(""))
-        signals.status_message.connect(self.message)
+        urwid.WidgetWrap.__init__(self, None)
+        self.clear()
+        signals.status_message.connect(self.sig_message)
+
+    def clear(self):
+        self._w = urwid.Text("")
 
     def selectable(self):
         return True
@@ -22,9 +24,14 @@ class ActionBar(urwid.WidgetWrap):
     def prompt(self, prompt, text = ""):
         self._w = urwid.Edit(prompt, text or "")
 
-    def message(self, sender, message, expire=None):
-        self.expire = expire
-        self._w = urwid.Text(message)
+    def sig_message(self, sender, message, expire=None):
+        w = urwid.Text(message)
+        self._w = w
+        if expire:
+            def cb(*args):
+                if w == self._w:
+                    self.clear()
+            signals.call_in.send(seconds=expire, callback=cb)
 
 
 class StatusBar(urwid.WidgetWrap):

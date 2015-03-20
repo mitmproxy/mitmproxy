@@ -212,6 +212,12 @@ class ConsoleMaster(flow.FlowMaster):
 
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
+        signals.call_in.connect(self.sig_call_in)
+
+    def sig_call_in(self, sender, seconds, callback, args=()):
+        def cb(*_):
+            return callback(*args)
+        self.loop.set_alarm_in(seconds, cb)
 
     def start_stream_to_path(self, path, mode="wb"):
         path = os.path.expanduser(path)
@@ -576,7 +582,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.prompt_done()
         msg = p(txt, *args)
         if msg:
-            signals.status_message.send(message=msg, expire=1000)
+            signals.status_message.send(message=msg, expire=1)
 
     def prompt_cancel(self):
         self.prompt_done()
