@@ -290,6 +290,9 @@ header .menu {
   max-height: 100px;
   overflow-y: auto;
 }
+.view-selector {
+  margin-top: 10px;
+}
 .flow-detail table {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   width: 100%;
@@ -315,6 +318,13 @@ header .menu {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.flowview-image {
+  text-align: center;
+}
+.flowview-image img {
+  max-width: 100%;
+  max-height: 100%;
 }
 .eventlog {
   height: 200px;

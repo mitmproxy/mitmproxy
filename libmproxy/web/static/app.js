@@ -443,7 +443,7 @@ $(function () {
 
 
 
-},{"./components/proxyapp.js":15,"./connection":17,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
+},{"./components/proxyapp.js":16,"./connection":18,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -777,7 +777,7 @@ var EventLog = React.createClass({displayName: "EventLog",
 
 module.exports = EventLog;
 
-},{"../actions.js":2,"../store/view.js":22,"./common.js":4,"./virtualscroll.js":16,"lodash":"lodash","react":"react"}],6:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":23,"./common.js":4,"./virtualscroll.js":17,"lodash":"lodash","react":"react"}],6:[function(require,module,exports){
 var React = require("react");
 var RequestUtils = require("../flow/utils.js").RequestUtils;
 var ResponseUtils = require("../flow/utils.js").ResponseUtils;
@@ -980,7 +980,7 @@ var all_columns = [
 
 module.exports = all_columns;
 
-},{"../flow/utils.js":20,"../utils.js":23,"react":"react"}],7:[function(require,module,exports){
+},{"../flow/utils.js":21,"../utils.js":24,"react":"react"}],7:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 var utils = require("../utils.js");
@@ -1180,7 +1180,167 @@ var FlowTable = React.createClass({displayName: "FlowTable",
 module.exports = FlowTable;
 
 
-},{"../utils.js":23,"./common.js":4,"./flowtable-columns.js":6,"./virtualscroll.js":16,"lodash":"lodash","react":"react"}],8:[function(require,module,exports){
+},{"../utils.js":24,"./common.js":4,"./flowtable-columns.js":6,"./virtualscroll.js":17,"lodash":"lodash","react":"react"}],8:[function(require,module,exports){
+var React = require("react");
+var _ = require("lodash");
+
+var MessageUtils = require("../../flow/utils.js").MessageUtils;
+var utils = require("../../utils.js");
+
+var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
+var Image = React.createClass({displayName: "Image",
+    statics: {
+        matches: function (message) {
+            return image_regex.test(MessageUtils.getContentType(message));
+        }
+    },
+    render: function () {
+        var message_name = this.props.flow.request === this.props.message ? "request" : "response";
+        var url = "/flows/" + this.props.flow.id + "/" + message_name + "/content";
+        return React.createElement("div", {className: "flowview-image"}, 
+            React.createElement("img", {src: url, alt: "preview", className: "img-thumbnail"})
+        );
+    }
+});
+
+var Raw = React.createClass({displayName: "Raw",
+    statics: {
+        matches: function (message) {
+            return true;
+        }
+    },
+    render: function () {
+        //FIXME
+        return React.createElement("div", null, "raw");
+    }
+});
+
+
+var Auto = React.createClass({displayName: "Auto",
+    statics: {
+        matches: function () {
+            return false; // don't match itself
+        },
+        findView: function (message) {
+            for (var i = 0; i < all.length; i++) {
+                if (all[i].matches(message)) {
+                    return all[i];
+                }
+            }
+            return all[all.length - 1];
+        }
+    },
+    render: function () {
+        var View = Auto.findView(this.props.message);
+        return React.createElement(View, React.__spread({},  this.props));
+    }
+});
+
+var all = [Auto, Image, Raw];
+
+
+var ContentEmpty = React.createClass({displayName: "ContentEmpty",
+    render: function () {
+        var message_name = this.props.flow.request === this.props.message ? "request" : "response";
+        return React.createElement("div", {className: "alert alert-info"}, "No ", message_name, " content.");
+    }
+});
+
+var ContentMissing = React.createClass({displayName: "ContentMissing",
+    render: function () {
+        var message_name = this.props.flow.request === this.props.message ? "Request" : "Response";
+        return React.createElement("div", {className: "alert alert-info"}, message_name, " content missing.");
+    }
+});
+
+var TooLarge = React.createClass({displayName: "TooLarge",
+    render: function () {
+        var size = utils.formatSize(this.props.message.contentLength);
+        return React.createElement("div", {className: "alert alert-warning"}, 
+            React.createElement("button", {onClick: this.props.onClick, className: "btn btn-xs btn-warning pull-right"}, "Display anyway"), 
+            size, " content size."
+        );
+    }
+});
+
+var ViewSelector = React.createClass({displayName: "ViewSelector",
+    render: function () {
+        var views = [];
+        for (var i = 0; i < all.length; i++) {
+            var view = all[i];
+            var className = "btn btn-default";
+            if (view === this.props.active) {
+                className += " active";
+            }
+            var text;
+            if (view === Auto) {
+                text = "auto: " + Auto.findView(this.props.message).displayName.toLowerCase();
+            } else {
+                text = view.displayName.toLowerCase();
+            }
+            views.push(
+                React.createElement("button", {
+                    key: view.displayName, 
+                    onClick: this.props.selectView.bind(null, view), 
+                    className: className}, 
+                    text
+                )
+            );
+        }
+
+        return React.createElement("div", {className: "view-selector btn-group btn-group-xs"}, views);
+    }
+});
+
+var ContentView = React.createClass({displayName: "ContentView",
+    getInitialState: function () {
+        return {
+            displayLarge: false,
+            View: Auto
+        };
+    },
+    propTypes: {
+        // It may seem a bit weird at the first glance:
+        // Every view takes the flow and the message as props, e.g.
+        // <Auto flow={flow} message={flow.request}/>
+        flow: React.PropTypes.object.isRequired,
+        message: React.PropTypes.object.isRequired,
+    },
+    selectView: function (view) {
+        this.setState({
+            View: view
+        });
+    },
+    displayLarge: function () {
+        this.setState({displayLarge: true});
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.message !== this.props.message) {
+            this.setState(this.getInitialState());
+        }
+    },
+    render: function () {
+        var message = this.props.message;
+        if (message.contentLength === 0) {
+            return React.createElement(ContentEmpty, React.__spread({},  this.props));
+        } else if (message.contentLength === null) {
+            return React.createElement(ContentMissing, React.__spread({},  this.props));
+        } else if (message.contentLength > 1024 * 1024 * 3 && !this.state.displayLarge) {
+            return React.createElement(TooLarge, React.__spread({},  this.props, {onClick: this.displayLarge}));
+        }
+
+        return React.createElement("div", null, 
+            React.createElement(this.state.View, React.__spread({},  this.props)), 
+            React.createElement("div", {className: "text-center"}, 
+                React.createElement(ViewSelector, {selectView: this.selectView, active: this.state.View, message: message})
+            )
+        );
+    }
+});
+
+module.exports = ContentView;
+
+},{"../../flow/utils.js":21,"../../utils.js":24,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1363,7 +1523,7 @@ var Details = React.createClass({displayName: "Details",
 
 module.exports = Details;
 
-},{"../../utils.js":23,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
+},{"../../utils.js":24,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1439,11 +1599,12 @@ var FlowView = React.createClass({displayName: "FlowView",
 
 module.exports = FlowView;
 
-},{"../common.js":4,"./details.js":8,"./messages.js":10,"./nav.js":11,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../common.js":4,"./details.js":9,"./messages.js":11,"./nav.js":12,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 var React = require("react");
 
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
+var ContentView = require("./contentview.js");
 
 var Headers = React.createClass({displayName: "Headers",
     render: function () {
@@ -1473,12 +1634,6 @@ var Request = React.createClass({displayName: "Request",
             flowutils.RequestUtils.pretty_url(flow.request),
             "HTTP/" + flow.request.httpversion.join(".")
         ].join(" ");
-        var content = null;
-        if (flow.request.contentLength > 0) {
-            content = "Request Content Size: " + utils.formatSize(flow.request.contentLength);
-        } else {
-            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
-        }
 
         //TODO: Styling
 
@@ -1487,7 +1642,7 @@ var Request = React.createClass({displayName: "Request",
                 React.createElement("div", {className: "first-line"}, first_line ), 
                 React.createElement(Headers, {message: flow.request}), 
                 React.createElement("hr", null), 
-                content
+                React.createElement(ContentView, {flow: flow, message: flow.request})
             )
         );
     }
@@ -1501,12 +1656,6 @@ var Response = React.createClass({displayName: "Response",
             flow.response.code,
             flow.response.msg
         ].join(" ");
-        var content = null;
-        if (flow.response.contentLength > 0) {
-            content = "Response Content Size: " + utils.formatSize(flow.response.contentLength);
-        } else {
-            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
-        }
 
         //TODO: Styling
 
@@ -1515,7 +1664,7 @@ var Response = React.createClass({displayName: "Response",
                 React.createElement("div", {className: "first-line"}, first_line ), 
                 React.createElement(Headers, {message: flow.response}), 
                 React.createElement("hr", null), 
-                content
+                React.createElement(ContentView, {flow: flow, message: flow.response})
             )
         );
     }
@@ -1543,7 +1692,7 @@ module.exports = {
     Error: Error
 };
 
-},{"../../flow/utils.js":20,"../../utils.js":23,"react":"react"}],11:[function(require,module,exports){
+},{"../../flow/utils.js":21,"../../utils.js":24,"./contentview.js":8,"react":"react"}],12:[function(require,module,exports){
 var React = require("react");
 
 var actions = require("../../actions.js");
@@ -1606,7 +1755,7 @@ var Nav = React.createClass({displayName: "Nav",
 
 module.exports = Nav;
 
-},{"../../actions.js":2,"react":"react"}],12:[function(require,module,exports){
+},{"../../actions.js":2,"react":"react"}],13:[function(require,module,exports){
 var React = require("react");
 
 var Footer = React.createClass({displayName: "Footer",
@@ -1625,7 +1774,7 @@ var Footer = React.createClass({displayName: "Footer",
 
 module.exports = Footer;
 
-},{"react":"react"}],13:[function(require,module,exports){
+},{"react":"react"}],14:[function(require,module,exports){
 var React = require("react");
 var $ = require("jquery");
 
@@ -2017,7 +2166,7 @@ module.exports = {
     Header: Header
 }
 
-},{"../actions.js":2,"../filt/filt.js":19,"../utils.js":23,"./common.js":4,"jquery":"jquery","react":"react"}],14:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":20,"../utils.js":24,"./common.js":4,"jquery":"jquery","react":"react"}],15:[function(require,module,exports){
 var React = require("react");
 
 var common = require("./common.js");
@@ -2263,7 +2412,7 @@ var MainView = React.createClass({displayName: "MainView",
 module.exports = MainView;
 
 
-},{"../actions.js":2,"../filt/filt.js":19,"../store/view.js":22,"../utils.js":23,"./common.js":4,"./flowtable.js":7,"./flowview/index.js":9,"react":"react"}],15:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":20,"../store/view.js":23,"../utils.js":24,"./common.js":4,"./flowtable.js":7,"./flowview/index.js":10,"react":"react"}],16:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -2358,7 +2507,7 @@ module.exports = {
     routes: routes
 };
 
-},{"../actions.js":2,"../store/store.js":21,"./common.js":4,"./eventlog.js":5,"./footer.js":12,"./header.js":13,"./mainview.js":14,"lodash":"lodash","react":"react","react-router":"react-router"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":22,"./common.js":4,"./eventlog.js":5,"./footer.js":13,"./header.js":14,"./mainview.js":15,"lodash":"lodash","react":"react","react-router":"react-router"}],17:[function(require,module,exports){
 var React = require("react");
 
 var VirtualScrollMixin = {
@@ -2445,7 +2594,7 @@ var VirtualScrollMixin = {
 
 module.exports  = VirtualScrollMixin;
 
-},{"react":"react"}],17:[function(require,module,exports){
+},{"react":"react"}],18:[function(require,module,exports){
 
 var actions = require("./actions.js");
 
@@ -2475,7 +2624,7 @@ function Connection(url) {
 
 module.exports = Connection;
 
-},{"./actions.js":2}],18:[function(require,module,exports){
+},{"./actions.js":2}],19:[function(require,module,exports){
 
 var flux = require("flux");
 
@@ -2499,7 +2648,7 @@ module.exports = {
     AppDispatcher: AppDispatcher
 };
 
-},{"flux":"flux"}],19:[function(require,module,exports){
+},{"flux":"flux"}],20:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -4275,7 +4424,7 @@ module.exports = (function() {
   };
 })();
 
-},{"../flow/utils.js":20}],20:[function(require,module,exports){
+},{"../flow/utils.js":21}],21:[function(require,module,exports){
 var _ = require("lodash");
 
 var MessageUtils = {
@@ -4343,7 +4492,7 @@ module.exports = {
     MessageUtils: MessageUtils
 };
 
-},{"lodash":"lodash"}],21:[function(require,module,exports){
+},{"lodash":"lodash"}],22:[function(require,module,exports){
 
 var _ = require("lodash");
 var $ = require("jquery");
@@ -4526,7 +4675,7 @@ module.exports = {
     FlowStore: FlowStore
 };
 
-},{"../actions.js":2,"../dispatcher.js":18,"../utils.js":23,"events":1,"jquery":"jquery","lodash":"lodash"}],22:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":19,"../utils.js":24,"events":1,"jquery":"jquery","lodash":"lodash"}],23:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
 var _ = require("lodash");
 
@@ -4642,7 +4791,7 @@ module.exports = {
     StoreView: StoreView
 };
 
-},{"../utils.js":23,"events":1,"lodash":"lodash"}],23:[function(require,module,exports){
+},{"../utils.js":24,"events":1,"lodash":"lodash"}],24:[function(require,module,exports){
 var $ = require("jquery");
 var _ = require("lodash");
 

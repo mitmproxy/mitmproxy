@@ -2,6 +2,7 @@ var React = require("react");
 
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
+var ContentView = require("./contentview.js");
 
 var Headers = React.createClass({
     render: function () {
@@ -31,12 +32,6 @@ var Request = React.createClass({
             flowutils.RequestUtils.pretty_url(flow.request),
             "HTTP/" + flow.request.httpversion.join(".")
         ].join(" ");
-        var content = null;
-        if (flow.request.contentLength > 0) {
-            content = "Request Content Size: " + utils.formatSize(flow.request.contentLength);
-        } else {
-            content = <div className="alert alert-info">No Content</div>;
-        }
 
         //TODO: Styling
 
@@ -45,7 +40,7 @@ var Request = React.createClass({
                 <div className="first-line">{ first_line }</div>
                 <Headers message={flow.request}/>
                 <hr/>
-                {content}
+                <ContentView flow={flow} message={flow.request}/>
             </section>
         );
     }
@@ -59,12 +54,6 @@ var Response = React.createClass({
             flow.response.code,
             flow.response.msg
         ].join(" ");
-        var content = null;
-        if (flow.response.contentLength > 0) {
-            content = "Response Content Size: " + utils.formatSize(flow.response.contentLength);
-        } else {
-            content = <div className="alert alert-info">No Content</div>;
-        }
 
         //TODO: Styling
 
@@ -73,7 +62,7 @@ var Response = React.createClass({
                 <div className="first-line">{ first_line }</div>
                 <Headers message={flow.response}/>
                 <hr/>
-                {content}
+                <ContentView flow={flow} message={flow.response}/>
             </section>
         );
     }
