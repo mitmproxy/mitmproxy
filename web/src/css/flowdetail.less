@@ -1,13 +1,12 @@
 //TODO: Move into some utils
-.monospace(){
+.monospace() {
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
-
 
 .flow-detail {
     width: 100%;
     overflow: auto;
-    
+
     nav {
         background-color: #F2F2F2;
     }
@@ -27,10 +26,15 @@
         max-height: 100px;
         overflow-y: auto;
     }
+
+    hr {
+        margin: 0 0 5px;
+    }
+
 }
 
 .view-selector {
-  margin-top: 10px;
+    margin-top: 10px;
 }
 
 .flow-detail table {
@@ -38,10 +42,10 @@
     width: 100%;
     table-layout: fixed;
     word-break: break-all;
-    
+
     tr {
-        &:not(:first-child){
-        border-top: 1px solid #f7f7f7;
+        &:not(:first-child) {
+            border-top: 1px solid #f7f7f7;
         }
     }
 
@@ -62,12 +66,15 @@
 }
 
 .header-table {
+    td {
+        line-height: 1.3em;
+    }
     .header-name {
         width: 33%;
         padding-right: 1em;
     }
     .header-value {
-        
+
     }
 }
 

@@ -290,6 +290,9 @@ header .menu {
   max-height: 100px;
   overflow-y: auto;
 }
+.flow-detail hr {
+  margin: 0 0 5px;
+}
 .view-selector {
   margin-top: 10px;
 }
@@ -308,6 +311,9 @@ header .menu {
 .connection-table td:first-child {
   width: 50%;
   padding-right: 1em;
+}
+.header-table td {
+  line-height: 1.3em;
 }
 .header-table .header-name {
   width: 33%;
