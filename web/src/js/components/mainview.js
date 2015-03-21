@@ -7,7 +7,7 @@ var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
 FlowTable = require("./flowtable.js");
-var flowdetail = require("./flowdetail.js");
+var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({
     mixins: [common.Navigation, common.State],
@@ -221,7 +221,7 @@ var MainView = React.createClass({
         if (selected) {
             details = [
                 <common.Splitter key="splitter"/>,
-                <flowdetail.FlowDetail key="flowDetails" ref="flowDetails" flow={selected}/>
+                <FlowView key="flowDetails" ref="flowDetails" flow={selected}/>
             ];
         } else {
             details = null;

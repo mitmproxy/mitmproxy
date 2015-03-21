@@ -1,6 +1,6 @@
 var _ = require("lodash");
 
-var _MessageUtils = {
+var MessageUtils = {
     getContentType: function (message) {
         return this.get_first_header(message, /^Content-Type$/i);
     },
@@ -42,7 +42,7 @@ var defaultPorts = {
     "https": 443
 };
 
-var RequestUtils = _.extend(_MessageUtils, {
+var RequestUtils = _.extend(MessageUtils, {
     pretty_host: function (request) {
         //FIXME: Add hostheader
         return request.host;
@@ -56,11 +56,11 @@ var RequestUtils = _.extend(_MessageUtils, {
     }
 });
 
-var ResponseUtils = _.extend(_MessageUtils, {});
+var ResponseUtils = _.extend(MessageUtils, {});
 
 
 module.exports = {
     ResponseUtils: ResponseUtils,
-    RequestUtils: RequestUtils
-
-}
+    RequestUtils: RequestUtils,
+    MessageUtils: MessageUtils
+};
