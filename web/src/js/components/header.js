@@ -173,7 +173,7 @@ var MainMenu = React.createClass({
         this.setQuery(d);
     },
     onInterceptChange: function (val) {
-        SettingsActions.update({intercept: val});
+        actions.SettingsActions.update({intercept: val});
     },
     render: function () {
         var filter = this.getQuery()[Query.FILTER] || "";

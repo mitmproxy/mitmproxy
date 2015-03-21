@@ -203,6 +203,8 @@ var MainView = React.createClass({
                     actions.FlowActions.revert(flow);
                 }
                 break;
+            case toputils.Key.SHIFT:
+                break;
             default:
                 console.debug("keydown", e.keyCode);
                 return;

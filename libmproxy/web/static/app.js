@@ -421,6 +421,7 @@ module.exports = {
     ConnectionActions: ConnectionActions,
     FlowActions: FlowActions,
     StoreCmds: StoreCmds,
+    SettingsActions: SettingsActions,
     Query: Query
 };
 
@@ -622,6 +623,7 @@ var common = require("./common.js");
 var Query = require("../actions.js").Query;
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
+var _ = require("lodash");
 
 var LogMessage = React.createClass({displayName: "LogMessage",
     render: function () {
@@ -775,7 +777,7 @@ var EventLog = React.createClass({displayName: "EventLog",
 
 module.exports = EventLog;
 
-},{"../actions.js":2,"../store/view.js":19,"./common.js":4,"./virtualscroll.js":13,"react":"react"}],6:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":19,"./common.js":4,"./virtualscroll.js":13,"lodash":"lodash","react":"react"}],6:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1774,7 +1776,7 @@ var MainMenu = React.createClass({displayName: "MainMenu",
         this.setQuery(d);
     },
     onInterceptChange: function (val) {
-        SettingsActions.update({intercept: val});
+        actions.SettingsActions.update({intercept: val});
     },
     render: function () {
         var filter = this.getQuery()[Query.FILTER] || "";
@@ -2195,6 +2197,8 @@ var MainView = React.createClass({displayName: "MainView",
                 if (e.shiftKey && flow && flow.modified) {
                     actions.FlowActions.revert(flow);
                 }
+                break;
+            case toputils.Key.SHIFT:
                 break;
             default:
                 console.debug("keydown", e.keyCode);
@@ -4514,8 +4518,6 @@ var default_filt = function (elem) {
 
 function StoreView(store, filt, sortfun) {
     EventEmitter.call(this);
-    filt = filt || default_filt;
-    sortfun = sortfun || default_sort;
 
     this.store = store;
 
@@ -4539,10 +4541,10 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("recalculate", this.recalculate);
     },
     recalculate: function (filt, sortfun) {
-        filt = filt || default_filt;
-        sortfun = sortfun || default_sort;
+        filt = filt || this.filt || default_filt;
+        sortfun = sortfun || this.sortfun || default_sort;
         filt = filt.bind(this);
-        sortfun = sortfun.bind(this)
+        sortfun = sortfun.bind(this);
         this.filt = filt;
         this.sortfun = sortfun;
 
@@ -4633,6 +4635,7 @@ var Key = {
     TAB: 9,
     SPACE: 32,
     BACKSPACE: 8,
+    SHIFT: 16
 };
 // Add A-Z
 for (var i = 65; i <= 90; i++) {
