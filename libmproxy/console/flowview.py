@@ -114,9 +114,6 @@ cache = CallbackCache()
 
 
 class FlowView(urwid.WidgetWrap):
-    REQ = 0
-    RESP = 1
-
     highlight_color = "focusfield"
 
     def __init__(self, master, state, flow):
@@ -633,8 +630,9 @@ class FlowView(urwid.WidgetWrap):
             new_flow, new_idx = self.state.get_prev(idx)
         if new_flow is None:
             signals.status_message.send(message="No more flows!")
-            return
-        self.master.view_flow(new_flow)
+        else:
+            signals.pop_view_state.send(self)
+            self.master.view_flow(new_flow)
 
     def view_next_flow(self, flow):
         return self._view_nextprev_flow("next", flow)
@@ -673,8 +671,8 @@ class FlowView(urwid.WidgetWrap):
             conn = self.flow.response
 
         if key == "q":
-            self.master.view_flowlist()
-            key = None
+            signals.pop_view_state.send(self)
+            return None
         elif key == "tab":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
                 self.view_response()

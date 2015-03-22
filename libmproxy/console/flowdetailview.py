@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import urwid
-from . import common
+from . import common, signals
 from .. import utils
 
 footer = [
@@ -8,8 +8,8 @@ footer = [
 ]
 
 class FlowDetailsView(urwid.ListBox):
-    def __init__(self, master, flow, state):
-        self.master, self.flow, self.state = master, flow, state
+    def __init__(self, flow):
+        self.flow = flow
         urwid.ListBox.__init__(
             self,
             self.flowtext()
@@ -18,7 +18,7 @@ class FlowDetailsView(urwid.ListBox):
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "q":
-            self.master.loop.widget = self.state
+            signals.pop_view_state.send(self)
             return None
         elif key == "?":
             key = None

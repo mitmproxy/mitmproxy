@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import urwid
 
-from . import common
+from . import common, signals
 from .. import filt, version
 
 footer = [
@@ -12,8 +12,7 @@ footer = [
 
 
 class HelpView(urwid.ListBox):
-    def __init__(self, master, help_context, state):
-        self.master, self.state = master, state
+    def __init__(self, help_context):
         self.help_context = help_context or []
         urwid.ListBox.__init__(
             self,
@@ -180,7 +179,7 @@ class HelpView(urwid.ListBox):
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "q":
-            self.master.loop.widget = self.state
+            signals.pop_view_state.send(self)
             return None
         elif key == "?":
             key = None

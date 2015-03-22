@@ -28,7 +28,6 @@ class ConsoleState(flow.State):
         self.follow_focus = None
         self.default_body_view = contentview.get("Auto")
 
-        self.view_mode = common.VIEW_LIST
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
 
         self.flowsettings = weakref.WeakKeyDictionary()
@@ -210,9 +209,13 @@ class ConsoleMaster(flow.FlowMaster):
                 print >> sys.stderr, "Stream file error:", err
                 sys.exit(1)
 
+        self.view_stack = []
+
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
         signals.call_in.connect(self.sig_call_in)
+        signals.pop_view_state.connect(self.sig_pop_view_state)
+        signals.push_view_state.connect(self.sig_push_view_state)
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -222,6 +225,13 @@ class ConsoleMaster(flow.FlowMaster):
         def cb(*_):
             return callback(*args)
         self.loop.set_alarm_in(seconds, cb)
+
+    def sig_pop_view_state(self, sender):
+        if self.view_stack:
+            self.loop.widget = self.view_stack.pop()
+
+    def sig_push_view_state(self, sender):
+        self.view_stack.append(self.loop.widget)
 
     def start_stream_to_path(self, path, mode="wb"):
         path = os.path.expanduser(path)
@@ -433,30 +443,25 @@ class ConsoleMaster(flow.FlowMaster):
         self.shutdown()
 
     def view_help(self):
+        signals.push_view_state.send(self)
         self.loop.widget = window.Window(
             self,
-            help.HelpView(
-                self,
-                self.help_context,
-                self.loop.widget,
-            ),
+            help.HelpView(self.help_context),
             None,
             statusbar.StatusBar(self, help.footer)
         )
 
     def view_flowdetails(self, flow):
+        signals.push_view_state.send(self)
         self.loop.widget = window.Window(
             self,
-            flowdetailview.FlowDetailsView(
-                self,
-                flow,
-                self.loop.widget
-            ),
+            flowdetailview.FlowDetailsView(low),
             None,
             statusbar.StatusBar(self, flowdetailview.footer)
         )
 
     def view_grideditor(self, ge):
+        signals.push_view_state.send(self)
         self.help_context = ge.make_help()
         self.loop.widget = window.Window(
             self,
@@ -475,7 +480,6 @@ class ConsoleMaster(flow.FlowMaster):
             body = flowlist.BodyPile(self)
         else:
             body = flowlist.FlowListBox(self)
-        self.state.view_mode = common.VIEW_LIST
 
         self.help_context = flowlist.help_context
         self.loop.widget = window.Window(
@@ -487,8 +491,8 @@ class ConsoleMaster(flow.FlowMaster):
         self.loop.draw_screen()
 
     def view_flow(self, flow):
+        signals.push_view_state.send(self)
         self.state.set_focus_flow(flow)
-        self.state.view_mode = common.VIEW_FLOW
         self.help_context = flowview.help_context
         self.loop.widget = window.Window(
             self,
@@ -547,12 +551,6 @@ class ConsoleMaster(flow.FlowMaster):
         v = contentview.get_by_shortcut(t)
         self.state.default_body_view = v
         self.refresh_focus()
-
-    def pop_view(self):
-        if self.state.view_mode == common.VIEW_FLOW:
-            self.view_flow(self.state.view[self.state.focus])
-        else:
-            self.view_flowlist()
 
     def edit_scripts(self, scripts):
         commands = [x[0] for x in scripts]  # remove outer array

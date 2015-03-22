@@ -13,9 +13,6 @@ try:
 except:
     pyperclip = False
 
-VIEW_LIST = 0
-VIEW_FLOW = 1
-
 
 VIEW_FLOW_REQUEST = 0
 VIEW_FLOW_RESPONSE = 1

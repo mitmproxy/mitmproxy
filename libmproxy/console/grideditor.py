@@ -323,7 +323,7 @@ class GridEditor(urwid.WidgetWrap):
                 if not i[1] and any([x.strip() for x in i[0]]):
                     res.append(i[0])
             self.callback(res, *self.cb_args, **self.cb_kwargs)
-            self.master.pop_view()
+            signals.pop_view_state.send(self)
         elif key in ["h", "left"]:
             self.walker.left()
         elif key in ["l", "right"]:
