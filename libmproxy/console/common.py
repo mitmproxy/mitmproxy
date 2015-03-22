@@ -203,13 +203,11 @@ def save_data(path, data, master, state):
 
 
 def ask_save_path(prompt, data, master, state):
-    master.path_prompt(
-        prompt,
-        state.last_saveload,
-        save_data,
-        data,
-        master,
-        state
+    signals.status_path_prompt.send(
+        prompt = prompt,
+        text = state.last_saveload,
+        callback = save_data,
+        args = (data, master, state)
     )
 
 
@@ -263,14 +261,13 @@ def copy_flow(part, scope, flow, master, state):
         def save(k):
             if k == "y":
                 ask_save_path("Save data: ", data, master, state)
-
-        master.prompt_onekey(
-            "Cannot copy binary data to clipboard. Save as file?",
-            (
+        signals.status_prompt_onekey.send(
+            prompt = "Cannot copy binary data to clipboard. Save as file?",
+            keys = (
                 ("yes", "y"),
                 ("no", "n"),
             ),
-            save
+            callback = save
         )
 
 
@@ -282,14 +279,11 @@ def ask_copy_part(scope, flow, master, state):
     if scope != "s":
         choices.append(("url", "u"))
 
-    master.prompt_onekey(
-        "Copy",
-        choices,
-        copy_flow,
-        scope,
-        flow,
-        master,
-        state
+    signals.status_prompt_onekey.send(
+        prompt = "Copy",
+        keys = choices,
+        callback = copy_flow,
+        args = (scope, flow, master, state)
     )
 
 
@@ -306,16 +300,14 @@ def ask_save_body(part, master, state, flow):
         # We first need to determine whether we want to save the request or the
         # response content.
         if request_has_content and response_has_content:
-            master.prompt_onekey(
-                "Save",
-                (
+            signals.status_prompt_onekey.send(
+                prompt = "Save",
+                keys = (
                     ("request", "q"),
                     ("response", "s"),
                 ),
-                ask_save_body,
-                master,
-                state,
-                flow
+                callback = ask_save_body,
+                args = (master, state, flow)
             )
         elif response_has_content:
             ask_save_body("s", master, state, flow)

@@ -272,7 +272,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlog = not self.eventlog
         self.view_flowlist()
 
-    def _readflow(self, paths):
+    def _readflows(self, path):
         """
         Utitility function that reads a list of flows
         or prints an error to the UI if that fails.
@@ -281,7 +281,7 @@ class ConsoleMaster(flow.FlowMaster):
             - a list of flows, otherwise.
         """
         try:
-            return flow.read_flows_from_paths(paths)
+            return flow.read_flows_from_paths([path])
         except flow.FlowReadError as e:
             if not self.statusbar:
                 print >> sys.stderr, e.strerror
@@ -291,12 +291,12 @@ class ConsoleMaster(flow.FlowMaster):
             return None
 
     def client_playback_path(self, path):
-        flows = self._readflow(path)
+        flows = self._readflows(path)
         if flows:
             self.start_client_playback(flows, False)
 
     def server_playback_path(self, path):
-        flows = self._readflow(path)
+        flows = self._readflows(path)
         if flows:
             self.start_server_playback(
                 flows,
@@ -387,7 +387,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.header = None
         self.body = None
         self.help_context = None
-        self.prompting = False
         self.onekey = False
         self.loop = urwid.MainLoop(
             self.view,
@@ -537,55 +536,6 @@ class ConsoleMaster(flow.FlowMaster):
         if self.flow_list_walker:
             self.sync_list_view()
         return reterr
-
-    def path_prompt(self, prompt, text, callback, *args):
-        self.statusbar.path_prompt(prompt, text)
-        self.view.set_focus("footer")
-        self.prompting = (callback, args)
-
-    def prompt(self, prompt, text, callback, *args):
-        self.statusbar.prompt(prompt, text)
-        self.view.set_focus("footer")
-        self.prompting = (callback, args)
-
-    def prompt_edit(self, prompt, text, callback):
-        self.statusbar.prompt(prompt + ": ", text)
-        self.view.set_focus("footer")
-        self.prompting = (callback, [])
-
-    def prompt_onekey(self, prompt, keys, callback, *args):
-        """
-            Keys are a set of (word, key) tuples. The appropriate key in the
-            word is highlighted.
-        """
-        prompt = [prompt, " ("]
-        mkup = []
-        for i, e in enumerate(keys):
-            mkup.extend(common.highlight_key(e[0], e[1]))
-            if i < len(keys)-1:
-                mkup.append(",")
-        prompt.extend(mkup)
-        prompt.append(")? ")
-        self.onekey = set(i[1] for i in keys)
-        self.prompt(prompt, "", callback, *args)
-
-    def prompt_done(self):
-        self.prompting = False
-        self.onekey = False
-        self.view.set_focus("body")
-        signals.status_message.send(message="")
-
-    def prompt_execute(self, txt=None):
-        if not txt:
-            txt = self.statusbar.get_edit_text()
-        p, args = self.prompting
-        self.prompt_done()
-        msg = p(txt, *args)
-        if msg:
-            signals.status_message.send(message=msg, expire=1)
-
-    def prompt_cancel(self):
-        self.prompt_done()
 
     def accept_all(self):
         self.state.accept_all(self)

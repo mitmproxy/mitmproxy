@@ -338,11 +338,20 @@ class GridEditor(urwid.WidgetWrap):
             self.walker.delete_focus()
         elif key == "r":
             if self.walker.get_current_value() is not None:
-                self.master.path_prompt("Read file: ", "", self.read_file)
+                signals.status_path_prompt.send(
+                    self,
+                    prompt = "Read file: ",
+                    text = "",
+                    callback = self.read_file
+                )
         elif key == "R":
             if self.walker.get_current_value() is not None:
-                self.master.path_prompt(
-                    "Read unescaped file: ", "", self.read_file, True
+                signals.status_path_prompt.send(
+                    self,
+                    prompt = "Read unescaped file: ",
+                    text = "",
+                    callback = self.read_file,
+                    args = (True,)
                 )
         elif key == "e":
             o = self.walker.get_current_value()
@@ -431,10 +440,10 @@ class HeaderEditor(GridEditor):
 
     def handle_key(self, key):
         if key == "U":
-            self.master.prompt_onekey(
-                "Add User-Agent header:",
-                [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
-                self.set_user_agent,
+            signals.status_prompt_onekey.send(
+                prompt = "Add User-Agent header:",
+                keys = [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                callback = self.set_user_agent,
             )
             return True
 
@@ -500,10 +509,10 @@ class SetHeadersEditor(GridEditor):
 
     def handle_key(self, key):
         if key == "U":
-            self.master.prompt_onekey(
-                "Add User-Agent header:",
-                [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
-                self.set_user_agent,
+            signals.status_prompt_onekey.send(
+                prompt = "Add User-Agent header:",
+                keys = [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                callback = self.set_user_agent,
             )
             return True
 

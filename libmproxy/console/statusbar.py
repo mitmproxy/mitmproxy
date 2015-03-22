@@ -2,7 +2,7 @@ import time
 
 import urwid
 
-from . import pathedit, signals
+from . import pathedit, signals, common
 from .. import utils
 
 
@@ -11,18 +11,12 @@ class ActionBar(urwid.WidgetWrap):
         urwid.WidgetWrap.__init__(self, None)
         self.clear()
         signals.status_message.connect(self.sig_message)
+        signals.status_prompt.connect(self.sig_prompt)
+        signals.status_path_prompt.connect(self.sig_path_prompt)
+        signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
 
-    def clear(self):
-        self._w = urwid.Text("")
-
-    def selectable(self):
-        return True
-
-    def path_prompt(self, prompt, text):
-        self._w = pathedit.PathEdit(prompt, text)
-
-    def prompt(self, prompt, text = ""):
-        self._w = urwid.Edit(prompt, text or "")
+        self.prompting = False
+        self.onekey = False
 
     def sig_message(self, sender, message, expire=None):
         w = urwid.Text(message)
@@ -32,6 +26,72 @@ class ActionBar(urwid.WidgetWrap):
                 if w == self._w:
                     self.clear()
             signals.call_in.send(seconds=expire, callback=cb)
+
+    def sig_prompt(self, sender, prompt, text, callback, args=()):
+        signals.focus.send(self, section="footer")
+        self._w = urwid.Edit(prompt, text or "")
+        self.prompting = (callback, args)
+
+    def sig_path_prompt(self, sender, prompt, text, callback, args=()):
+        signals.focus.send(self, section="footer")
+        self._w = pathedit.PathEdit(prompt, text)
+        self.prompting = (callback, args)
+
+    def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
+        """
+            Keys are a set of (word, key) tuples. The appropriate key in the
+            word is highlighted.
+        """
+        signals.focus.send(self, section="footer")
+        prompt = [prompt, " ("]
+        mkup = []
+        for i, e in enumerate(keys):
+            mkup.extend(common.highlight_key(e[0], e[1]))
+            if i < len(keys)-1:
+                mkup.append(",")
+        prompt.extend(mkup)
+        prompt.append(")? ")
+        self.onekey = set(i[1] for i in keys)
+        self._w = urwid.Edit(prompt, "")
+        self.prompting = (callback, args)
+
+    def selectable(self):
+        return True
+
+    def keypress(self, size, k):
+        if self.prompting:
+            if k == "esc":
+                self.prompt_done()
+            elif self.onekey:
+                if k == "enter":
+                    self.prompt_done()
+                elif k in self.onekey:
+                    self.prompt_execute(k)
+            elif k == "enter":
+                self.prompt_execute()
+            else:
+                if common.is_keypress(k):
+                    self._w.keypress(size, k)
+                else:
+                    return k
+
+    def clear(self):
+        self._w = urwid.Text("")
+
+    def prompt_done(self):
+        self.prompting = False
+        self.onekey = False
+        signals.status_message.send(message="")
+        signals.focus.send(self, section="body")
+
+    def prompt_execute(self, txt=None):
+        if not txt:
+            txt = self._w.get_edit_text()
+        p, args = self.prompting
+        self.prompt_done()
+        msg = p(txt, *args)
+        if msg:
+            signals.status_message.send(message=msg, expire=1)
 
 
 class StatusBar(urwid.WidgetWrap):

@@ -111,17 +111,17 @@ class ConnectionItem(urwid.WidgetWrap):
 
     def save_flows_prompt(self, k):
         if k == "a":
-            self.master.path_prompt(
-                "Save all flows to: ",
-                self.state.last_saveload,
-                self.master.save_flows
+            signals.status_path_prompt.send(
+                prompt = "Save all flows to: ",
+                text = self.state.last_saveload,
+                callback = self.master.save_flows
             )
         else:
-            self.master.path_prompt(
-                "Save this flow to: ",
-                self.state.last_saveload,
-                self.master.save_one_flow,
-                self.flow
+            signals.status_path_prompt.send(
+                prompt = "Save this flow to: ",
+                text = self.state.last_saveload,
+                callback = self.master.save_one_flow,
+                args = (self.flow,)
             )
 
     def stop_server_playback_prompt(self, a):
@@ -150,10 +150,10 @@ class ConnectionItem(urwid.WidgetWrap):
                 self.master.options.replay_ignore_host
             )
         else:
-            self.master.path_prompt(
-                "Server replay path: ",
-                self.state.last_saveload,
-                self.master.server_playback_path
+            signals.status_path_prompt.send(
+                prompt = "Server replay path: ",
+                text = self.state.last_saveload,
+                callback = self.master.server_playback_path
             )
 
     def keypress(self, (maxcol,), key):
@@ -175,23 +175,23 @@ class ConnectionItem(urwid.WidgetWrap):
             self.master.sync_list_view()
         elif key == "S":
             if not self.master.server_playback:
-                self.master.prompt_onekey(
-                    "Server Replay",
-                    (
+                signals.status_prompt_onekey.send(
+                    prompt = "Server Replay",
+                    keys = (
                         ("all flows", "a"),
                         ("this flow", "t"),
                         ("file", "f"),
                     ),
-                    self.server_replay_prompt,
+                    callback = self.server_replay_prompt,
                 )
             else:
-                self.master.prompt_onekey(
-                    "Stop current server replay?",
-                    (
+                signals.status_prompt_onekey.send(
+                    prompt = "Stop current server replay?",
+                    keys = (
                         ("yes", "y"),
                         ("no", "n"),
                     ),
-                    self.stop_server_playback_prompt,
+                    callback = self.stop_server_playback_prompt,
                 )
         elif key == "V":
             if not self.flow.modified():
@@ -201,13 +201,14 @@ class ConnectionItem(urwid.WidgetWrap):
             self.master.sync_list_view()
             signals.status_message.send(message="Reverted.")
         elif key == "w":
-            self.master.prompt_onekey(
-                "Save",
-                (
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Save",
+                keys = (
                     ("all flows", "a"),
                     ("this flow", "t"),
                 ),
-                self.save_flows_prompt,
+                callback = self.save_flows_prompt,
             )
         elif key == "X":
             self.flow.kill(self.master)
@@ -215,11 +216,11 @@ class ConnectionItem(urwid.WidgetWrap):
             if self.flow.request:
                 self.master.view_flow(self.flow)
         elif key == "|":
-            self.master.path_prompt(
-                "Send flow to script: ",
-                self.state.last_script,
-                self.master.run_script_once,
-                self.flow
+            signals.status_path_prompt.send(
+                prompt = "Send flow to script: ",
+                text = self.state.last_script,
+                callback = self.master.run_script_once,
+                args = (self.flow,)
             )
         elif key == "g":
             common.ask_copy_part("a", self.flow, self.master, self.state)
@@ -266,7 +267,12 @@ class FlowListBox(urwid.ListBox):
 
     def get_method(self, k):
         if k == "e":
-            self.master.prompt("Method:", "", self.get_method_raw)
+            signals.status_prompt.send(
+                self,
+                prompt = "Method:",
+                text = "",
+                callback = self.get_method_raw
+            )
         else:
             method = ""
             for i in common.METHOD_OPTIONS:
@@ -275,11 +281,11 @@ class FlowListBox(urwid.ListBox):
             self.get_url(method)
 
     def get_url(self, method):
-        self.master.prompt(
-            "URL:",
-            "http://www.example.com/",
-            self.new_request,
-            method
+        signals.status_prompt.send(
+            prompt = "URL:",
+            text = "http://www.example.com/",
+            callback = self.new_request,
+            args = (method,)
         )
 
     def new_request(self, url, method):
@@ -301,22 +307,23 @@ class FlowListBox(urwid.ListBox):
         elif key == "e":
             self.master.toggle_eventlog()
         elif key == "l":
-            self.master.prompt(
-                "Limit: ",
-                self.master.state.limit_txt,
-                self.master.set_limit
+            signals.status_prompt.send(
+                prompt = "Limit: ",
+                text = self.master.state.limit_txt,
+                callback = self.master.set_limit
             )
         elif key == "L":
-            self.master.path_prompt(
-                "Load flows: ",
-                self.master.state.last_saveload,
-                self.master.load_flows_callback
+            signals.status_path_prompt.send(
+                self,
+                prompt = "Load flows: ",
+                text = self.master.state.last_saveload,
+                callback = self.master.load_flows_callback
             )
         elif key == "n":
-            self.master.prompt_onekey(
-                "Method",
-                common.METHOD_OPTIONS,
-                self.get_method
+            signals.status_prompt_onekey.send(
+                prompt = "Method",
+                keys = common.METHOD_OPTIONS,
+                callback = self.get_method
             )
         elif key == "F":
             self.master.toggle_follow_flows()
@@ -324,10 +331,11 @@ class FlowListBox(urwid.ListBox):
             if self.master.stream:
                 self.master.stop_stream()
             else:
-                self.master.path_prompt(
-                    "Stream flows to: ",
-                    self.master.state.last_saveload,
-                    self.master.start_stream_to_path
+                signals.status_path_prompt.send(
+                    self,
+                    prompt = "Stream flows to: ",
+                    text = self.master.state.last_saveload,
+                    callback = self.master.start_stream_to_path
                 )
         else:
             return urwid.ListBox.keypress(self, size, key)

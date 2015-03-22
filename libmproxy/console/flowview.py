@@ -492,7 +492,11 @@ class FlowView(urwid.WidgetWrap):
 
     def edit_method(self, m):
         if m == "e":
-            self.master.prompt_edit("Method", self.flow.request.method, self.set_method_raw)
+            signals.status_prompt.send(
+                prompt = "Method: ",
+                text = self.flow.request.method,
+                callback = self.set_method_raw
+            )
         else:
             for i in common.METHOD_OPTIONS:
                 if i[1] == m:
@@ -567,14 +571,14 @@ class FlowView(urwid.WidgetWrap):
                 message.content = c.rstrip("\n")
         elif part == "f":
             if not message.get_form_urlencoded() and message.content:
-                self.master.prompt_onekey(
-                    "Existing body is not a URL-encoded form. Clear and edit?",
-                    [
+                signals.status_prompt_onekey.send(
+                    prompt = "Existing body is not a URL-encoded form. Clear and edit?",
+                    keys = [
                         ("yes", "y"),
                         ("no", "n"),
                     ],
-                    self.edit_form_confirm,
-                    message
+                    callback = self.edit_form_confirm,
+                    args = (message,)
                 )
             else:
                 self.edit_form(message)
@@ -587,13 +591,29 @@ class FlowView(urwid.WidgetWrap):
         elif part == "q":
             self.master.view_grideditor(grideditor.QueryEditor(self.master, message.get_query().lst, self.set_query, message))
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_edit("URL", message.url, self.set_url)
+            signals.status_prompt.send(
+                prompt = "URL: ",
+                text = message.url,
+                callback = self.set_url
+            )
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-            self.master.prompt_onekey("Method", common.METHOD_OPTIONS, self.edit_method)
+            signals.status_prompt_onekey.send(
+                prompt = "Method",
+                keys = common.METHOD_OPTIONS,
+                callback = self.edit_method
+            )
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
-            self.master.prompt_edit("Code", str(message.code), self.set_resp_code)
+            signals.status_prompt.send(
+                prompt = "Code: ",
+                text = str(message.code),
+                callback = self.set_resp_code
+            )
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
-            self.master.prompt_edit("Message", message.msg, self.set_resp_msg)
+            signals.status_prompt.send(
+                prompt = "Message: ",
+                text = message.msg,
+                callback = self.set_resp_msg
+            )
         self.master.refresh_flow(self.flow)
 
     def _view_nextprev_flow(self, np, flow):
@@ -684,9 +704,9 @@ class FlowView(urwid.WidgetWrap):
             signals.status_message.send(message="Duplicated.")
         elif key == "e":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-                self.master.prompt_onekey(
-                    "Edit request",
-                    (
+                signals.status_prompt_onekey.send(
+                    prompt = "Edit request",
+                    keys = (
                         ("query", "q"),
                         ("path", "p"),
                         ("url", "u"),
@@ -695,18 +715,18 @@ class FlowView(urwid.WidgetWrap):
                         ("raw body", "r"),
                         ("method", "m"),
                     ),
-                    self.edit
+                    callback = self.edit
                 )
             else:
-                self.master.prompt_onekey(
-                    "Edit response",
-                    (
+                signals.status_prompt_onekey.send(
+                    prompt = "Edit response",
+                    keys = (
                         ("code", "c"),
                         ("message", "m"),
                         ("header", "h"),
                         ("raw body", "r"),
                     ),
-                    self.edit
+                    callback = self.edit
                 )
             key = None
         elif key == "f":
@@ -727,10 +747,11 @@ class FlowView(urwid.WidgetWrap):
         elif key == "m":
             p = list(contentview.view_prompts)
             p.insert(0, ("Clear", "C"))
-            self.master.prompt_onekey(
-                "Display mode",
-                p,
-                self.change_this_display_mode
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Display mode",
+                keys = p,
+                callback = self.change_this_display_mode
             )
             key = None
         elif key == "p":
@@ -748,11 +769,11 @@ class FlowView(urwid.WidgetWrap):
             self.master.refresh_flow(self.flow)
             signals.status_message.send(message="Reverted.")
         elif key == "W":
-            self.master.path_prompt(
-                "Save this flow: ",
-                self.state.last_saveload,
-                self.master.save_one_flow,
-                self.flow
+            signals.status_path_prompt.send(
+                prompt = "Save this flow: ",
+                text = self.state.last_saveload,
+                callback = self.master.save_one_flow,
+                args = (self.flow,)
             )
         elif key == "v":
             if conn and conn.content:
@@ -763,18 +784,20 @@ class FlowView(urwid.WidgetWrap):
                 else:
                     signals.status_message.send(message="Error! Set $EDITOR or $PAGER.")
         elif key == "|":
-            self.master.path_prompt(
-                "Send flow to script: ", self.state.last_script,
-                self.master.run_script_once, self.flow
+            signals.status_path_prompt.send(
+                prompt = "Send flow to script: ",
+                text = self.state.last_script,
+                callback = self.master.run_script_once,
+                args = (self.flow,)
             )
         elif key == "x":
-            self.master.prompt_onekey(
-                "Delete body",
-                (
+            signals.status_prompt_onekey.send(
+                prompt = "Delete body",
+                keys = (
                     ("completely", "c"),
                     ("mark as missing", "m"),
                 ),
-                self.delete_body
+                callback = self.delete_body
             )
             key = None
         elif key == "X":
@@ -787,22 +810,24 @@ class FlowView(urwid.WidgetWrap):
                     if not conn.decode():
                         signals.status_message.send(message="Could not decode - invalid data?")
                 else:
-                    self.master.prompt_onekey(
-                        "Select encoding: ",
-                        (
+                    signals.status_prompt_onekey.send(
+                        prompt = "Select encoding: ",
+                        keys = (
                             ("gzip", "z"),
                             ("deflate", "d"),
                         ),
-                        self.encode_callback,
-                        conn
+                        callback = self.encode_callback,
+                        args = (conn,)
                     )
                 self.master.refresh_flow(self.flow)
         elif key == "/":
             last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
             search_prompt = "Search body ["+last_search_string+"]: " if last_search_string else "Search body: "
-            self.master.prompt(search_prompt,
-                    None,
-                    self.search)
+            signals.status_prompt.send(
+                prompt = search_prompt,
+                text = "",
+                callback = self.search
+            )
         elif key == "n":
             self.search_again(backwards=False)
         elif key == "N":
