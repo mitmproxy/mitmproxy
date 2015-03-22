@@ -271,7 +271,8 @@ header .menu {
 }
 .flow-detail {
   width: 100%;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
 }
 .flow-detail nav {
   background-color: #F2F2F2;
