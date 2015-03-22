@@ -12,7 +12,7 @@ class ActionBar(urwid.WidgetWrap):
         self.clear()
         signals.status_message.connect(self.sig_message)
         signals.status_prompt.connect(self.sig_prompt)
-        signals.status_path_prompt.connect(self.sig_path_prompt)
+        signals.status_prompt_path.connect(self.sig_path_prompt)
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
 
         self.prompting = False
@@ -27,14 +27,17 @@ class ActionBar(urwid.WidgetWrap):
                     self.clear()
             signals.call_in.send(seconds=expire, callback=cb)
 
+    def prep_prompt(self, p):
+        return p.strip() + ": "
+
     def sig_prompt(self, sender, prompt, text, callback, args=()):
         signals.focus.send(self, section="footer")
-        self._w = urwid.Edit(prompt, text or "")
+        self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = (callback, args)
 
     def sig_path_prompt(self, sender, prompt, text, callback, args=()):
         signals.focus.send(self, section="footer")
-        self._w = pathedit.PathEdit(prompt, text)
+        self._w = pathedit.PathEdit(self.prep_prompt(prompt), text)
         self.prompting = (callback, args)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
@@ -230,12 +233,3 @@ class StatusBar(urwid.WidgetWrap):
 
     def selectable(self):
         return True
-
-    def get_edit_text(self):
-        return self.ab._w.get_edit_text()
-
-    def path_prompt(self, prompt, text):
-        return self.ab.path_prompt(prompt, text)
-
-    def prompt(self, prompt, text = ""):
-        self.ab.prompt(prompt, text)

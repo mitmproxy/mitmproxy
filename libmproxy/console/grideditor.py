@@ -338,17 +338,17 @@ class GridEditor(urwid.WidgetWrap):
             self.walker.delete_focus()
         elif key == "r":
             if self.walker.get_current_value() is not None:
-                signals.status_path_prompt.send(
+                signals.status_prompt_path.send(
                     self,
-                    prompt = "Read file: ",
+                    prompt = "Read file",
                     text = "",
                     callback = self.read_file
                 )
         elif key == "R":
             if self.walker.get_current_value() is not None:
-                signals.status_path_prompt.send(
+                signals.status_prompt_path.send(
                     self,
-                    prompt = "Read unescaped file: ",
+                    prompt = "Read unescaped file",
                     text = "",
                     callback = self.read_file,
                     args = (True,)

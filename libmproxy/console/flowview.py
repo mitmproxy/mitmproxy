@@ -493,7 +493,7 @@ class FlowView(urwid.WidgetWrap):
     def edit_method(self, m):
         if m == "e":
             signals.status_prompt.send(
-                prompt = "Method: ",
+                prompt = "Method",
                 text = self.flow.request.method,
                 callback = self.set_method_raw
             )
@@ -592,7 +592,7 @@ class FlowView(urwid.WidgetWrap):
             self.master.view_grideditor(grideditor.QueryEditor(self.master, message.get_query().lst, self.set_query, message))
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             signals.status_prompt.send(
-                prompt = "URL: ",
+                prompt = "URL",
                 text = message.url,
                 callback = self.set_url
             )
@@ -604,13 +604,13 @@ class FlowView(urwid.WidgetWrap):
             )
         elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             signals.status_prompt.send(
-                prompt = "Code: ",
+                prompt = "Code",
                 text = str(message.code),
                 callback = self.set_resp_code
             )
         elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
             signals.status_prompt.send(
-                prompt = "Message: ",
+                prompt = "Message",
                 text = message.msg,
                 callback = self.set_resp_msg
             )
@@ -769,8 +769,8 @@ class FlowView(urwid.WidgetWrap):
             self.master.refresh_flow(self.flow)
             signals.status_message.send(message="Reverted.")
         elif key == "W":
-            signals.status_path_prompt.send(
-                prompt = "Save this flow: ",
+            signals.status_prompt_path.send(
+                prompt = "Save this flow",
                 text = self.state.last_saveload,
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
@@ -784,8 +784,8 @@ class FlowView(urwid.WidgetWrap):
                 else:
                     signals.status_message.send(message="Error! Set $EDITOR or $PAGER.")
         elif key == "|":
-            signals.status_path_prompt.send(
-                prompt = "Send flow to script: ",
+            signals.status_prompt_path.send(
+                prompt = "Send flow to script",
                 text = self.state.last_script,
                 callback = self.master.run_script_once,
                 args = (self.flow,)
@@ -822,7 +822,7 @@ class FlowView(urwid.WidgetWrap):
                 self.master.refresh_flow(self.flow)
         elif key == "/":
             last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
-            search_prompt = "Search body ["+last_search_string+"]: " if last_search_string else "Search body: "
+            search_prompt = "Search body ["+last_search_string+"]" if last_search_string else "Search body"
             signals.status_prompt.send(
                 prompt = search_prompt,
                 text = "",

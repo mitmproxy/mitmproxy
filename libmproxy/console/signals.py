@@ -7,7 +7,7 @@ status_message = blinker.Signal()
 status_prompt = blinker.Signal()
 
 # Prompt for a path
-status_path_prompt = blinker.Signal()
+status_prompt_path = blinker.Signal()
 
 # Prompt for a single keystroke
 status_prompt_onekey = blinker.Signal()

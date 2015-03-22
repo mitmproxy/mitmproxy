@@ -203,7 +203,7 @@ def save_data(path, data, master, state):
 
 
 def ask_save_path(prompt, data, master, state):
-    signals.status_path_prompt.send(
+    signals.status_prompt_path.send(
         prompt = prompt,
         text = state.last_saveload,
         callback = save_data,
@@ -260,7 +260,7 @@ def copy_flow(part, scope, flow, master, state):
     except RuntimeError:
         def save(k):
             if k == "y":
-                ask_save_path("Save data: ", data, master, state)
+                ask_save_path("Save data", data, master, state)
         signals.status_prompt_onekey.send(
             prompt = "Cannot copy binary data to clipboard. Save as file?",
             keys = (
@@ -316,14 +316,14 @@ def ask_save_body(part, master, state, flow):
 
     elif part == "q" and request_has_content:
         ask_save_path(
-            "Save request content: ",
+            "Save request content",
             flow.request.get_decoded_content(),
             master,
             state
         )
     elif part == "s" and response_has_content:
         ask_save_path(
-            "Save response content: ",
+            "Save response content",
             flow.response.get_decoded_content(),
             master,
             state

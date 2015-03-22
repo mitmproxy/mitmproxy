@@ -111,14 +111,14 @@ class ConnectionItem(urwid.WidgetWrap):
 
     def save_flows_prompt(self, k):
         if k == "a":
-            signals.status_path_prompt.send(
-                prompt = "Save all flows to: ",
+            signals.status_prompt_path.send(
+                prompt = "Save all flows to",
                 text = self.state.last_saveload,
                 callback = self.master.save_flows
             )
         else:
-            signals.status_path_prompt.send(
-                prompt = "Save this flow to: ",
+            signals.status_prompt_path.send(
+                prompt = "Save this flow to",
                 text = self.state.last_saveload,
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
@@ -150,8 +150,8 @@ class ConnectionItem(urwid.WidgetWrap):
                 self.master.options.replay_ignore_host
             )
         else:
-            signals.status_path_prompt.send(
-                prompt = "Server replay path: ",
+            signals.status_prompt_path.send(
+                prompt = "Server replay path",
                 text = self.state.last_saveload,
                 callback = self.master.server_playback_path
             )
@@ -216,8 +216,8 @@ class ConnectionItem(urwid.WidgetWrap):
             if self.flow.request:
                 self.master.view_flow(self.flow)
         elif key == "|":
-            signals.status_path_prompt.send(
-                prompt = "Send flow to script: ",
+            signals.status_prompt_path.send(
+                prompt = "Send flow to script",
                 text = self.state.last_script,
                 callback = self.master.run_script_once,
                 args = (self.flow,)
@@ -269,7 +269,7 @@ class FlowListBox(urwid.ListBox):
         if k == "e":
             signals.status_prompt.send(
                 self,
-                prompt = "Method:",
+                prompt = "Method",
                 text = "",
                 callback = self.get_method_raw
             )
@@ -282,7 +282,7 @@ class FlowListBox(urwid.ListBox):
 
     def get_url(self, method):
         signals.status_prompt.send(
-            prompt = "URL:",
+            prompt = "URL",
             text = "http://www.example.com/",
             callback = self.new_request,
             args = (method,)
@@ -308,14 +308,14 @@ class FlowListBox(urwid.ListBox):
             self.master.toggle_eventlog()
         elif key == "l":
             signals.status_prompt.send(
-                prompt = "Limit: ",
+                prompt = "Limit",
                 text = self.master.state.limit_txt,
                 callback = self.master.set_limit
             )
         elif key == "L":
-            signals.status_path_prompt.send(
+            signals.status_prompt_path.send(
                 self,
-                prompt = "Load flows: ",
+                prompt = "Load flows",
                 text = self.master.state.last_saveload,
                 callback = self.master.load_flows_callback
             )
@@ -331,9 +331,9 @@ class FlowListBox(urwid.ListBox):
             if self.master.stream:
                 self.master.stop_stream()
             else:
-                signals.status_path_prompt.send(
+                signals.status_prompt_path.send(
                     self,
-                    prompt = "Stream flows to: ",
+                    prompt = "Stream flows to",
                     text = self.master.state.last_saveload,
                     callback = self.master.start_stream_to_path
                 )
