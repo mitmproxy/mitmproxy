@@ -107,16 +107,7 @@ class FlowViewHeader(urwid.WidgetWrap):
             )
 
 
-class CallbackCache:
-    @utils.LRUCache(200)
-    def _callback(self, method, *args, **kwargs):
-        return getattr(self.obj, method)(*args, **kwargs)
-
-    def callback(self, obj, method, *args, **kwargs):
-        # obj varies!
-        self.obj = obj
-        return self._callback(method, *args, **kwargs)
-cache = CallbackCache()
+cache = utils.LRUCache(200)
 
 
 class FlowView(urwid.WidgetWrap):
@@ -158,8 +149,8 @@ class FlowView(urwid.WidgetWrap):
             limit = sys.maxint
         else:
             limit = contentview.VIEW_CUTOFF
-        description, text_objects = cache.callback(
-                    self, "_cached_content_view",
+        description, text_objects = cache.get(
+                    self._cached_content_view,
                     viewmode,
                     tuple(tuple(i) for i in conn.headers.lst),
                     conn.content,

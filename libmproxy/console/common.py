@@ -327,11 +327,7 @@ def ask_save_body(part, master, state, flow):
         signals.status_message.send(message="No content to save.")
 
 
-class FlowCache:
-    @utils.LRUCache(200)
-    def format_flow(self, *args):
-        return raw_format_flow(*args)
-flowcache = FlowCache()
+flowcache = utils.LRUCache(800)
 
 
 def format_flow(f, focus, extended=False, hostheader=False, padding=2):
@@ -370,6 +366,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
             d["resp_ctype"] = t[0].split(";")[0]
         else:
             d["resp_ctype"] = ""
-    return flowcache.format_flow(
+    return flowcache.get(
+        raw_format_flow,
         tuple(sorted(d.items())), focus, extended, padding
     )
