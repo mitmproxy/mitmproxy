@@ -17,3 +17,6 @@ call_in = blinker.Signal()
 
 # Focus the body, footer or header of the main window
 focus = blinker.Signal()
+
+# Fired when settings change
+update_settings = blinker.Signal()

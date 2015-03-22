@@ -113,6 +113,10 @@ class StatusBar(urwid.WidgetWrap):
         self.ab = ActionBar()
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self._w = urwid.Pile([self.ib, self.ab])
+        signals.update_settings.connect(self.sig_update_settings)
+
+    def sig_update_settings(self, sender):
+        self.redraw()
 
     def keypress(self, *args, **kwargs):
         return self.ab.keypress(*args, **kwargs)

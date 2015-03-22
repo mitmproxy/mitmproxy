@@ -33,6 +33,10 @@ class ConsoleState(flow.State):
 
         self.flowsettings = weakref.WeakKeyDictionary()
 
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        signals.update_settings.send(self)
+
     def add_flow_setting(self, flow, key, value):
         d = self.flowsettings.setdefault(flow, {})
         d[key] = value
@@ -211,6 +215,10 @@ class ConsoleMaster(flow.FlowMaster):
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
         signals.call_in.connect(self.sig_call_in)
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        signals.update_settings.send(self)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -598,6 +606,7 @@ class ConsoleMaster(flow.FlowMaster):
         elif a == "u":
             self.server.config.no_upstream_cert =\
                 not self.server.config.no_upstream_cert
+            signals.update_settings.send(self)
 
     def shutdown(self):
         self.state.killall(self)
