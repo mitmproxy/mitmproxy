@@ -10,11 +10,11 @@ from .. import utils, filt, script
 from netlib import http_uastrings
 
 
-footer = [
+FOOTER = [
     ('heading_key', "enter"), ":edit ",
     ('heading_key', "q"), ":back ",
 ]
-footer_editing = [
+FOOTER_EDITING = [
     ('heading_key', "esc"), ":stop editing ",
 ]
 
@@ -164,12 +164,12 @@ class GridWalker(urwid.ListWalker):
             self.editing = GridRow(
                 self.focus_col, True, self.editor, self.lst[self.focus]
             )
-            self.editor.master.statusbar.update(footer_editing)
+            self.editor.master.loop.widget.footer.update(FOOTER_EDITING)
             self._modified()
 
     def stop_edit(self):
         if self.editing:
-            self.editor.master.statusbar.update(footer)
+            self.editor.master.loop.widget.footer.update(FOOTER)
             self.set_current_value(self.editing.get_edit_value(), False)
             self.editing = False
             self._modified()
@@ -268,7 +268,7 @@ class GridEditor(urwid.WidgetWrap):
             self.lb,
             header = urwid.Pile([title, h])
         )
-        self.master.statusbar.update("")
+        self.master.loop.widget.footer.update("")
         self.show_empty_msg()
 
     def show_empty_msg(self):

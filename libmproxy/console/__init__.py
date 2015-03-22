@@ -188,8 +188,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
 
-        self.statusbar = None
-
         if options.client_replay:
             self.client_playback_path(options.client_replay)
 
@@ -287,12 +285,7 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             return flow.read_flows_from_paths([path])
         except flow.FlowReadError as e:
-            if not self.statusbar:
-                print >> sys.stderr, e.strerror
-                sys.exit(1)
-            else:
-                signals.status_message.send(message=e.strerror)
-            return None
+            signals.status_message.send(message=e.strerror)
 
     def client_playback_path(self, path):
         flows = self._readflows(path)
@@ -326,7 +319,9 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             subprocess.call(cmd)
         except:
-            signals.status_message.send(message="Can't start editor: %s" % " ".join(c))
+            signals.status_message.send(
+                message = "Can't start editor: %s" % " ".join(c)
+            )
         else:
             data = open(name, "rb").read()
         self.ui.start()
@@ -386,17 +381,11 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui.set_terminal_properties(256)
         self.ui.register_palette(self.palette.palette())
         self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
-        self.view = None
-        self.statusbar = None
-        self.header = None
-        self.body = None
         self.help_context = None
-        self.onekey = False
         self.loop = urwid.MainLoop(
-            self.view,
+            urwid.SolidFill("x"),
             screen = self.ui,
         )
-        self.view_flowlist()
 
         self.server.start_slave(
             controller.Slave,
@@ -425,6 +414,11 @@ class ConsoleMaster(flow.FlowMaster):
             raise urwid.ExitMainLoop
         signal.signal(signal.SIGINT, exit)
 
+        self.loop.set_alarm_in(
+            0.0001,
+            lambda *args: self.view_flowlist()
+        )
+
         try:
             self.loop.run()
         except Exception:
@@ -438,43 +432,38 @@ class ConsoleMaster(flow.FlowMaster):
         sys.stderr.flush()
         self.shutdown()
 
-    def make_view(self):
-        self.view = window.Window(
-            self,
-            self.body,
-            header = self.header,
-            footer = self.statusbar
-        )
-        return self.view
-
     def view_help(self):
-        h = help.HelpView(
+        self.loop.widget = window.Window(
             self,
-            self.help_context,
-            (self.statusbar, self.body, self.header)
+            help.HelpView(
+                self,
+                self.help_context,
+                self.loop.widget,
+            ),
+            None,
+            statusbar.StatusBar(self, help.footer)
         )
-        self.statusbar = statusbar.StatusBar(self, help.footer)
-        self.body = h
-        self.header = None
-        self.loop.widget = self.make_view()
 
     def view_flowdetails(self, flow):
-        h = flowdetailview.FlowDetailsView(
+        self.loop.widget = window.Window(
             self,
-            flow,
-            (self.statusbar, self.body, self.header)
+            flowdetailview.FlowDetailsView(
+                self,
+                flow,
+                self.loop.widget
+            ),
+            None,
+            statusbar.StatusBar(self, flowdetailview.footer)
         )
-        self.statusbar = statusbar.StatusBar(self, flowdetailview.footer)
-        self.body = h
-        self.header = None
-        self.loop.widget = self.make_view()
 
     def view_grideditor(self, ge):
-        self.body = ge
-        self.header = None
         self.help_context = ge.make_help()
-        self.statusbar = statusbar.StatusBar(self, grideditor.footer)
-        self.loop.widget = self.make_view()
+        self.loop.widget = window.Window(
+            self,
+            ge,
+            None,
+            statusbar.StatusBar(self, grideditor.FOOTER)
+        )
 
     def view_flowlist(self):
         if self.ui.started:
@@ -483,24 +472,30 @@ class ConsoleMaster(flow.FlowMaster):
             self.state.set_focus(self.state.flow_count())
 
         if self.eventlog:
-            self.body = flowlist.BodyPile(self)
+            body = flowlist.BodyPile(self)
         else:
-            self.body = flowlist.FlowListBox(self)
-        self.statusbar = statusbar.StatusBar(self, flowlist.footer)
-        self.header = None
+            body = flowlist.FlowListBox(self)
         self.state.view_mode = common.VIEW_LIST
 
-        self.loop.widget = self.make_view()
         self.help_context = flowlist.help_context
+        self.loop.widget = window.Window(
+            self,
+            body,
+            None,
+            statusbar.StatusBar(self, flowlist.footer)
+        )
+        self.loop.draw_screen()
 
     def view_flow(self, flow):
-        self.body = flowview.FlowView(self, self.state, flow)
-        self.header = flowview.FlowViewHeader(self, flow)
-        self.statusbar = statusbar.StatusBar(self, flowview.footer)
         self.state.set_focus_flow(flow)
         self.state.view_mode = common.VIEW_FLOW
-        self.loop.widget = self.make_view()
         self.help_context = flowview.help_context
+        self.loop.widget = window.Window(
+            self,
+            flowview.FlowView(self, self.state, flow),
+            flowview.FlowViewHeader(self, flow),
+            statusbar.StatusBar(self, flowview.footer)
+        )
 
     def _write_flows(self, path, flows):
         if not path:

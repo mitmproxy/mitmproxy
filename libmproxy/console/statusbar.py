@@ -114,6 +114,7 @@ class StatusBar(urwid.WidgetWrap):
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self._w = urwid.Pile([self.ib, self.ab])
         signals.update_settings.connect(self.sig_update_settings)
+        self.redraw()
 
     def sig_update_settings(self, sender):
         self.redraw()
@@ -188,7 +189,11 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.state.follow_focus:
             opts.append("following")
         if self.master.stream_large_bodies:
-            opts.append("stream:%s" % utils.pretty_size(self.master.stream_large_bodies.max_size))
+            opts.append(
+                "stream:%s" % utils.pretty_size(
+                    self.master.stream_large_bodies.max_size
+                )
+            )
 
         if opts:
             r.append("[%s]"%(":".join(opts)))
