@@ -30,6 +30,13 @@ var StickyHeadMixin = {
 };
 
 
+var ChildFocus = {
+   contextTypes: {
+       returnFocus: React.PropTypes.func
+   }
+};
+
+
 var Navigation = _.extend({}, ReactRouter.Navigation, {
     setQuery: function (dict) {
         var q = this.context.router.getCurrentQuery();
@@ -176,6 +183,7 @@ var Splitter = React.createClass({
 });
 
 module.exports = {
+    ChildFocus: ChildFocus,
     State: State,
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,

@@ -1,4 +1,5 @@
 var $ = require("jquery");
+var _ = require("lodash");
 var AppDispatcher = require("./dispatcher.js").AppDispatcher;
 
 var ActionTypes = {
@@ -44,7 +45,8 @@ var SettingsActions = {
         $.ajax({
             type: "PUT",
             url: "/settings",
-            data: settings
+            contentType: 'application/json',
+            data: JSON.stringify(settings)
         });
 
         /*
@@ -95,15 +97,26 @@ var FlowActions = {
     revert: function(flow){
         $.post("/flows/" + flow.id + "/revert");
     },
-    update: function (flow) {
+    update: function (flow, nextProps) {
+        /*
+        //Facebook Flux: We do an optimistic update on the client already.
+        var nextFlow = _.cloneDeep(flow);
+        _.merge(nextFlow, nextProps);
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.FLOW_STORE,
             cmd: StoreCmds.UPDATE,
-            data: flow
+            data: nextFlow
+        });
+        */
+        $.ajax({
+            type: "PUT",
+            url: "/flows/" + flow.id,
+            contentType: 'application/json',
+            data: JSON.stringify(nextProps)
         });
     },
     clear: function(){
-        $.post("/clear");
+        $.post("/flows/" + flow.id);
     }
 };
 

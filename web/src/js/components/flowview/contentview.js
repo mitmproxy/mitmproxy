@@ -27,7 +27,7 @@ var RawMixin = {
         }
     },
     requestContent: function (nextProps) {
-        if(this.state.request){
+        if (this.state.request) {
             this.state.request.abort();
         }
         var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
@@ -38,11 +38,11 @@ var RawMixin = {
         request.done(function (data) {
             this.setState({content: data});
         }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
-            if(textStatus === "abort"){
+            if (textStatus === "abort") {
                 return;
             }
             this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
-        }.bind(this)).always(function(){
+        }.bind(this)).always(function () {
             this.setState({request: undefined});
         }.bind(this));
 
@@ -55,8 +55,8 @@ var RawMixin = {
             this.requestContent(nextProps);
         }
     },
-    componentWillUnmount: function(){
-        if(this.state.request){
+    componentWillUnmount: function () {
+        if (this.state.request) {
             this.state.request.abort();
         }
     },
@@ -94,7 +94,7 @@ var ViewJSON = React.createClass({
         var json = this.state.content;
         try {
             json = JSON.stringify(JSON.parse(json), null, 2);
-        } catch(e) {
+        } catch (e) {
         }
         return <pre>{json}</pre>;
     }
@@ -139,7 +139,7 @@ var ContentMissing = React.createClass({
 
 var TooLarge = React.createClass({
     statics: {
-        isTooLarge: function(message){
+        isTooLarge: function (message) {
             var max_mb = ViewImage.matches(message) ? 10 : 0.2;
             return message.contentLength > 1024 * 1024 * max_mb;
         }
@@ -225,8 +225,10 @@ var ContentView = React.createClass({
             <this.state.View {...this.props} />
             <div className="view-options text-center">
                 <ViewSelector selectView={this.selectView} active={this.state.View} message={message}/>
-                &nbsp;
-                <a className="btn btn-default btn-xs" href={downloadUrl}><i className="fa fa-download"/></a>
+            &nbsp;
+                <a className="btn btn-default btn-xs" href={downloadUrl}>
+                    <i className="fa fa-download"/>
+                </a>
             </div>
         </div>;
     }

@@ -303,6 +303,7 @@ function isUndefined(arg) {
 
 },{}],2:[function(require,module,exports){
 var $ = require("jquery");
+var _ = require("lodash");
 var AppDispatcher = require("./dispatcher.js").AppDispatcher;
 
 var ActionTypes = {
@@ -348,7 +349,8 @@ var SettingsActions = {
         $.ajax({
             type: "PUT",
             url: "/settings",
-            data: settings
+            contentType: 'application/json',
+            data: JSON.stringify(settings)
         });
 
         /*
@@ -399,15 +401,26 @@ var FlowActions = {
     revert: function(flow){
         $.post("/flows/" + flow.id + "/revert");
     },
-    update: function (flow) {
+    update: function (flow, nextProps) {
+        /*
+        //Facebook Flux: We do an optimistic update on the client already.
+        var nextFlow = _.cloneDeep(flow);
+        _.merge(nextFlow, nextProps);
         AppDispatcher.dispatchViewAction({
             type: ActionTypes.FLOW_STORE,
             cmd: StoreCmds.UPDATE,
-            data: flow
+            data: nextFlow
+        });
+        */
+        $.ajax({
+            type: "PUT",
+            url: "/flows/" + flow.id,
+            contentType: 'application/json',
+            data: JSON.stringify(nextProps)
         });
     },
     clear: function(){
-        $.post("/clear");
+        $.post("/flows/" + flow.id);
     }
 };
 
@@ -427,7 +440,7 @@ module.exports = {
     Query: Query
 };
 
-},{"./dispatcher.js":19,"jquery":"jquery"}],3:[function(require,module,exports){
+},{"./dispatcher.js":19,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
 
 var React = require("react");
 var ReactRouter = require("react-router");
@@ -475,6 +488,13 @@ var StickyHeadMixin = {
         var head = this.refs.head.getDOMNode();
         head.style.transform = "translate(0," + this.getDOMNode().scrollTop + "px)";
     }
+};
+
+
+var ChildFocus = {
+   contextTypes: {
+       returnFocus: React.PropTypes.func
+   }
 };
 
 
@@ -624,6 +644,7 @@ var Splitter = React.createClass({displayName: "Splitter",
 });
 
 module.exports = {
+    ChildFocus: ChildFocus,
     State: State,
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,
@@ -810,7 +831,7 @@ var TLSColumn = React.createClass({displayName: "TLSColumn",
     },
     render: function () {
         var flow = this.props.flow;
-        var ssl = (flow.request.scheme == "https");
+        var ssl = (flow.request.scheme === "https");
         var classes;
         if (ssl) {
             classes = "col-tls col-tls-https";
@@ -838,7 +859,7 @@ var IconColumn = React.createClass({displayName: "IconColumn",
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            if (flow.response.code == 304) {
+            if (flow.response.code === 304) {
                 icon = "resource-icon-not-modified";
             } else if (300 <= flow.response.code && flow.response.code < 400) {
                 icon = "resource-icon-redirect";
@@ -1224,7 +1245,7 @@ var RawMixin = {
         }
     },
     requestContent: function (nextProps) {
-        if(this.state.request){
+        if (this.state.request) {
             this.state.request.abort();
         }
         var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
@@ -1235,11 +1256,11 @@ var RawMixin = {
         request.done(function (data) {
             this.setState({content: data});
         }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
-            if(textStatus === "abort"){
+            if (textStatus === "abort") {
                 return;
             }
             this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
-        }.bind(this)).always(function(){
+        }.bind(this)).always(function () {
             this.setState({request: undefined});
         }.bind(this));
 
@@ -1252,8 +1273,8 @@ var RawMixin = {
             this.requestContent(nextProps);
         }
     },
-    componentWillUnmount: function(){
-        if(this.state.request){
+    componentWillUnmount: function () {
+        if (this.state.request) {
             this.state.request.abort();
         }
     },
@@ -1291,7 +1312,7 @@ var ViewJSON = React.createClass({displayName: "ViewJSON",
         var json = this.state.content;
         try {
             json = JSON.stringify(JSON.parse(json), null, 2);
-        } catch(e) {
+        } catch (e) {
         }
         return React.createElement("pre", null, json);
     }
@@ -1336,7 +1357,7 @@ var ContentMissing = React.createClass({displayName: "ContentMissing",
 
 var TooLarge = React.createClass({displayName: "TooLarge",
     statics: {
-        isTooLarge: function(message){
+        isTooLarge: function (message) {
             var max_mb = ViewImage.matches(message) ? 10 : 0.2;
             return message.contentLength > 1024 * 1024 * max_mb;
         }
@@ -1422,8 +1443,10 @@ var ContentView = React.createClass({displayName: "ContentView",
             React.createElement(this.state.View, React.__spread({},  this.props)), 
             React.createElement("div", {className: "view-options text-center"}, 
                 React.createElement(ViewSelector, {selectView: this.selectView, active: this.state.View, message: message}), 
-                " ", 
-                React.createElement("a", {className: "btn btn-default btn-xs", href: downloadUrl}, React.createElement("i", {className: "fa fa-download"}))
+            " ", 
+                React.createElement("a", {className: "btn btn-default btn-xs", href: downloadUrl}, 
+                    React.createElement("i", {className: "fa fa-download"})
+                )
             )
         );
     }
@@ -1692,7 +1715,10 @@ module.exports = FlowView;
 
 },{"../common.js":4,"./details.js":9,"./messages.js":11,"./nav.js":12,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 var React = require("react");
+var _ = require("lodash");
 
+var common = require("../common.js");
+var actions = require("../../actions.js");
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
 var ContentView = require("./contentview.js");
@@ -1717,20 +1743,217 @@ var Headers = React.createClass({displayName: "Headers",
     }
 });
 
+var InlineInput = React.createClass({displayName: "InlineInput",
+    mixins: [common.ChildFocus],
+    getInitialState: function () {
+        return {
+            editable: false
+        };
+    },
+    render: function () {
+        var Tag = this.props.tag || "span";
+        var className = "inline-input " + (this.props.className || "");
+        var html = {__html: _.escape(this.props.content)};
+        return React.createElement(Tag, React.__spread({}, 
+            this.props, 
+            {tabIndex: "0", 
+            className: className, 
+            contentEditable: this.state.editable || undefined, 
+            onInput: this.onInput, 
+            onFocus: this.onFocus, 
+            onBlur: this.onBlur, 
+            onKeyDown: this.onKeyDown, 
+            dangerouslySetInnerHTML: html})
+        );
+    },
+    onKeyDown: function (e) {
+        e.stopPropagation();
+        switch (e.keyCode) {
+            case utils.Key.ESC:
+                this.blur();
+                break;
+            case utils.Key.ENTER:
+                e.preventDefault();
+                if (!e.ctrlKey) {
+                    this.blur();
+                } else {
+                    this.props.onDone && this.props.onDone();
+                }
+                break;
+            default:
+                break;
+        }
+    },
+    blur: function(){
+        this.getDOMNode().blur();
+        this.context.returnFocus && this.context.returnFocus();
+    },
+    selectContents: function () {
+        var range = document.createRange();
+        range.selectNodeContents(this.getDOMNode());
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    },
+    onFocus: function () {
+        this.setState({editable: true}, this.selectContents);
+    },
+    onBlur: function (e) {
+        this.setState({editable: false});
+        this.handleChange();
+        this.props.onDone && this.props.onDone();
+    },
+    onInput: function () {
+        this.handleChange();
+    },
+    handleChange: function () {
+        var content = this.getDOMNode().textContent;
+        if (content !== this.props.content) {
+            this.props.onChange(content);
+        }
+    }
+});
+
+var ValidateInlineInput = React.createClass({displayName: "ValidateInlineInput",
+    getInitialState: function () {
+        return {
+            content: ""+this.props.content,
+            originalContent: ""+this.props.content
+        };
+    },
+    onChange: function (val) {
+        this.setState({
+            content: val
+        });
+    },
+    onDone: function () {
+        if (this.state.content === this.state.originalContent) {
+            return true;
+        }
+        if (this.props.isValid(this.state.content)) {
+            this.props.onChange(this.state.content);
+        } else {
+            this.setState({
+                content: this.state.originalContent
+            });
+        }
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.content !== this.state.content) {
+            this.setState({
+                content: ""+nextProps.content,
+                originalContent: ""+nextProps.content
+            })
+        }
+    },
+    render: function () {
+        var className = this.props.className || "";
+        if (this.props.isValid(this.state.content)) {
+            className += " has-success";
+        } else {
+            className += " has-warning"
+        }
+        return React.createElement(InlineInput, React.__spread({},  this.props, 
+            {className: className, 
+            content: this.state.content, 
+            onChange: this.onChange, 
+            onDone: this.onDone})
+        );
+    }
+});
+
+var RequestLine = React.createClass({displayName: "RequestLine",
+    render: function () {
+        var flow = this.props.flow;
+        var url = flowutils.RequestUtils.pretty_url(flow.request);
+        var httpver = "HTTP/" + flow.request.httpversion.join(".");
+
+        return React.createElement("div", {className: "first-line request-line"}, 
+            React.createElement(ValidateInlineInput, {content: flow.request.method, onChange: this.onMethodChange, isValid: this.isValidMethod}), 
+        " ", 
+            React.createElement(ValidateInlineInput, {content: url, onChange: this.onUrlChange, isValid: this.isValidUrl}), 
+        " ", 
+            React.createElement(ValidateInlineInput, {content: httpver, onChange: this.onHttpVersionChange, isValid: flowutils.isValidHttpVersion})
+        )
+    },
+    isValidMethod: function (method) {
+        return true;
+    },
+    isValidUrl: function (url) {
+        var u = flowutils.parseUrl(url);
+        return !!u.host;
+    },
+    onMethodChange: function (nextMethod) {
+        actions.FlowActions.update(
+            this.props.flow,
+            {request: {method: nextMethod}}
+        );
+    },
+    onUrlChange: function (nextUrl) {
+        var props = flowutils.parseUrl(nextUrl);
+        props.path = props.path || "";
+        actions.FlowActions.update(
+            this.props.flow,
+            {request: props}
+        );
+    },
+    onHttpVersionChange: function (nextVer) {
+        var ver = flowutils.parseHttpVersion(nextVer);
+        actions.FlowActions.update(
+            this.props.flow,
+            {request: {httpversion: ver}}
+        );
+    }
+});
+
+var ResponseLine = React.createClass({displayName: "ResponseLine",
+    render: function () {
+        var flow = this.props.flow;
+        var httpver = "HTTP/" + flow.response.httpversion.join(".");
+        return React.createElement("div", {className: "first-line response-line"}, 
+            React.createElement(ValidateInlineInput, {content: httpver, onChange: this.onHttpVersionChange, isValid: flowutils.isValidHttpVersion}), 
+        " ", 
+            React.createElement(ValidateInlineInput, {content: flow.response.code, onChange: this.onCodeChange, isValid: this.isValidCode}), 
+        " ", 
+            React.createElement(ValidateInlineInput, {content: flow.response.msg, onChange: this.onMsgChange, isValid: this.isValidMsg})
+
+        );
+    },
+    isValidCode: function (code) {
+        return /^\d+$/.test(code);
+    },
+    isValidMsg: function () {
+        return true;
+    },
+    onHttpVersionChange: function (nextVer) {
+        var ver = flowutils.parseHttpVersion(nextVer);
+        actions.FlowActions.update(
+            this.props.flow,
+            {response: {httpversion: ver}}
+        );
+    },
+    onMsgChange: function(nextMsg){
+        actions.FlowActions.update(
+            this.props.flow,
+            {response: {msg: nextMsg}}
+        );
+    },
+    onCodeChange: function(nextCode){
+        nextCode = parseInt(nextCode);
+        actions.FlowActions.update(
+            this.props.flow,
+            {response: {code: nextCode}}
+        );
+    }
+});
+
 var Request = React.createClass({displayName: "Request",
     render: function () {
         var flow = this.props.flow;
-        var first_line = [
-            flow.request.method,
-            flowutils.RequestUtils.pretty_url(flow.request),
-            "HTTP/" + flow.request.httpversion.join(".")
-        ].join(" ");
-
-        //TODO: Styling
-
         return (
-            React.createElement("section", null, 
-                React.createElement("div", {className: "first-line"}, first_line ), 
+            React.createElement("section", {className: "request"}, 
+                React.createElement(RequestLine, {flow: flow}), 
+                /*<ResponseLine flow={flow}/>*/
                 React.createElement(Headers, {message: flow.request}), 
                 React.createElement("hr", null), 
                 React.createElement(ContentView, {flow: flow, message: flow.request})
@@ -1742,17 +1965,10 @@ var Request = React.createClass({displayName: "Request",
 var Response = React.createClass({displayName: "Response",
     render: function () {
         var flow = this.props.flow;
-        var first_line = [
-            "HTTP/" + flow.response.httpversion.join("."),
-            flow.response.code,
-            flow.response.msg
-        ].join(" ");
-
-        //TODO: Styling
-
         return (
-            React.createElement("section", null, 
-                React.createElement("div", {className: "first-line"}, first_line ), 
+            React.createElement("section", {className: "response"}, 
+                /*<RequestLine flow={flow}/>*/
+                React.createElement(ResponseLine, {flow: flow}), 
                 React.createElement(Headers, {message: flow.response}), 
                 React.createElement("hr", null), 
                 React.createElement(ContentView, {flow: flow, message: flow.response})
@@ -1783,7 +1999,7 @@ module.exports = {
     Error: Error
 };
 
-},{"../../flow/utils.js":21,"../../utils.js":24,"./contentview.js":8,"react":"react"}],12:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":21,"../../utils.js":24,"../common.js":4,"./contentview.js":8,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
 var React = require("react");
 
 var actions = require("../../actions.js");
@@ -2273,6 +2489,15 @@ var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({displayName: "MainView",
     mixins: [common.Navigation, common.State],
+    childContextTypes: {
+         returnFocus: React.PropTypes.func.isRequired
+    },
+    getChildContext: function() {
+         return { returnFocus: this.returnFocus };
+    },
+    returnFocus: function(){
+        this.getDOMNode().focus();
+    },
     getInitialState: function () {
         return {
             flows: [],
@@ -4522,9 +4747,17 @@ module.exports = (function() {
 var _ = require("lodash");
 var $ = require("jquery");
 
+var defaultPorts = {
+    "http": 80,
+    "https": 443
+};
+
 var MessageUtils = {
     getContentType: function (message) {
-        return this.get_first_header(message, /^Content-Type$/i).split(";")[0].trim();
+        var ct = this.get_first_header(message, /^Content-Type$/i);
+        if(ct){
+            return ct.split(";")[0].trim();
+        }
     },
     get_first_header: function (message, regex) {
         //FIXME: Cache Invalidation.
@@ -4557,23 +4790,18 @@ var MessageUtils = {
         }
         return false;
     },
-    getContentURL: function(flow, message){
-        if(message === flow.request){
+    getContentURL: function (flow, message) {
+        if (message === flow.request) {
             message = "request";
-        } else if (message === flow.response){
+        } else if (message === flow.response) {
             message = "response";
         }
         return "/flows/" + flow.id + "/" + message + "/content";
     },
-    getContent: function(flow, message){
+    getContent: function (flow, message) {
         var url = MessageUtils.getContentURL(flow, message);
         return $.get(url);
     }
-};
-
-var defaultPorts = {
-    "http": 80,
-    "https": 443
 };
 
 var RequestUtils = _.extend(MessageUtils, {
@@ -4593,10 +4821,55 @@ var RequestUtils = _.extend(MessageUtils, {
 var ResponseUtils = _.extend(MessageUtils, {});
 
 
+var parseUrl_regex = /^(?:(https?):\/\/)?([^\/:]+)?(?::(\d+))?(\/.*)?$/i;
+var parseUrl = function (url) {
+    //there are many correct ways to parse a URL,
+    //however, a mitmproxy user may also wish to generate a not-so-correct URL. ;-)
+    var parts = parseUrl_regex.exec(url);
+
+    var scheme = parts[1],
+        host = parts[2],
+        port = parseInt(parts[3]),
+        path = parts[4];
+    if (scheme) {
+        port = port || defaultPorts[scheme];
+    }
+    var ret = {};
+    if (scheme) {
+        ret.scheme = scheme;
+    }
+    if (host) {
+        ret.host = host;
+    }
+    if (port) {
+        ret.port = port;
+    }
+    if (path) {
+        ret.path = path;
+    }
+    return ret;
+};
+
+
+var isValidHttpVersion_regex = /^HTTP\/\d+(\.\d+)*$/i;
+var isValidHttpVersion = function (httpVersion) {
+    return isValidHttpVersion_regex.test(httpVersion);
+};
+
+var parseHttpVersion = function (httpVersion) {
+    httpVersion = httpVersion.replace("HTTP/", "").split(".");
+    return _.map(httpVersion, function (x) {
+        return parseInt(x);
+    });
+};
+
 module.exports = {
     ResponseUtils: ResponseUtils,
     RequestUtils: RequestUtils,
-    MessageUtils: MessageUtils
+    MessageUtils: MessageUtils,
+    parseUrl: parseUrl,
+    parseHttpVersion: parseHttpVersion,
+    isValidHttpVersion: isValidHttpVersion
 };
 
 },{"jquery":"jquery","lodash":"lodash"}],22:[function(require,module,exports){
@@ -4903,6 +5176,10 @@ var $ = require("jquery");
 var _ = require("lodash");
 var actions = require("./actions.js");
 
+//debug
+window.$ = $;
+window._ = _;
+
 var Key = {
     UP: 38,
     DOWN: 40,
@@ -4929,17 +5206,17 @@ var formatSize = function (bytes) {
     if (bytes === 0)
         return "0";
     var prefix = ["b", "kb", "mb", "gb", "tb"];
-    for (var i = 0; i < prefix.length; i++){
-        if (Math.pow(1024, i + 1) > bytes){
+    for (var i = 0; i < prefix.length; i++) {
+        if (Math.pow(1024, i + 1) > bytes) {
             break;
         }
     }
     var precision;
-    if (bytes%Math.pow(1024, i) === 0)
+    if (bytes % Math.pow(1024, i) === 0)
         precision = 0;
     else
         precision = 1;
-    return (bytes/Math.pow(1024, i)).toFixed(precision) + prefix[i];
+    return (bytes / Math.pow(1024, i)).toFixed(precision) + prefix[i];
 };
 
 
@@ -4961,17 +5238,16 @@ var formatTimeStamp = function (seconds) {
     return ts.replace("T", " ").replace("Z", "");
 };
 
-
 // At some places, we need to sort strings alphabetically descending,
 // but we can only provide a key function.
 // This beauty "reverses" a JS string.
 var end = String.fromCharCode(0xffff);
-function reverseString(s){
+function reverseString(s) {
     return String.fromCharCode.apply(String,
-        _.map(s.split(""), function (c) {
-            return 0xffff - c.charCodeAt(0);
-        })
-    ) + end;
+            _.map(s.split(""), function (c) {
+                return 0xffff - c.charCodeAt(0);
+            })
+        ) + end;
 }
 
 function getCookie(name) {
@@ -4983,21 +5259,22 @@ var xsrf = $.param({_xsrf: getCookie("_xsrf")});
 //Tornado XSRF Protection.
 $.ajaxPrefilter(function (options) {
     if (["post", "put", "delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
-        if (options.data) {
-            options.data += ("&" + xsrf);
+        if(options.url.indexOf("?") === -1){
+            options.url += "?" + xsrf;
         } else {
-            options.data = xsrf;
+            options.url += "&" + xsrf;
         }
     }
 });
 // Log AJAX Errors
 $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
-    if(thrownError === "abort"){
+    if (thrownError === "abort") {
         return;
     }
     var message = jqXHR.responseText;
     console.error(thrownError, message, arguments);
     actions.EventLogActions.add_event(thrownError + ": " + message);
+    alert(message);
 });
 
 module.exports = {
@@ -5005,7 +5282,7 @@ module.exports = {
     formatTimeDelta: formatTimeDelta,
     formatTimeStamp: formatTimeStamp,
     reverseString: reverseString,
-    Key: Key
+    Key: Key,
 };
 
 },{"./actions.js":2,"jquery":"jquery","lodash":"lodash"}]},{},[3])

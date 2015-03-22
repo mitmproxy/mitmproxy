@@ -27,11 +27,35 @@
         max-height: 100px;
         overflow-y: auto;
     }
+    .request-line {
+        margin-bottom: 2px;
+    }
+    /*.request .response-line,
+    .response .request-line {
+        opacity: 0.7;
+    }*/
 
     hr {
         margin: 0 0 5px;
     }
 
+}
+
+.inline-input {
+    margin: 0 -5px;
+    padding: 0 5px;
+
+    &[contenteditable] {
+
+        background-color: rgba(255, 255, 255, 0.2);
+
+        &.has-warning {
+            color: rgb(255, 184, 184);
+        }
+        &.has-success {
+            //color: green;
+        }
+    }
 }
 
 .view-options {

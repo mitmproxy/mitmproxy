@@ -11,6 +11,15 @@ var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({
     mixins: [common.Navigation, common.State],
+    childContextTypes: {
+         returnFocus: React.PropTypes.func.isRequired
+    },
+    getChildContext: function() {
+         return { returnFocus: this.returnFocus };
+    },
+    returnFocus: function(){
+        this.getDOMNode().focus();
+    },
     getInitialState: function () {
         return {
             flows: [],

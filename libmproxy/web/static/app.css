@@ -273,6 +273,10 @@ header .menu {
   width: 100%;
   overflow-x: auto;
   overflow-y: scroll;
+  /*.request .response-line,
+    .response .request-line {
+        opacity: 0.7;
+    }*/
 }
 .flow-detail nav {
   background-color: #F2F2F2;
@@ -291,8 +295,21 @@ header .menu {
   max-height: 100px;
   overflow-y: auto;
 }
+.flow-detail .request-line {
+  margin-bottom: 2px;
+}
 .flow-detail hr {
   margin: 0 0 5px;
+}
+.inline-input {
+  margin: 0 -5px;
+  padding: 0 5px;
+}
+.inline-input[contenteditable] {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.inline-input[contenteditable].has-warning {
+  color: #ffb8b8;
 }
 .view-options {
   margin-top: 10px;
