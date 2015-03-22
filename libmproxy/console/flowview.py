@@ -129,43 +129,30 @@ class FlowView(urwid.WidgetWrap):
             else:
                 self.view_request()
 
-    def _cached_content_view(self, viewmode, hdrItems, content, limit, is_request):
-        return contentview.get_content_view(
-            viewmode,
-            hdrItems,
-            content,
-            limit,
-            self.master.add_event,
-            is_request
-        )
-
     def content_view(self, viewmode, conn):
-        full = self.state.get_flow_setting(
-            self.flow,
-            (self.state.view_flow_mode, "fullcontents"),
-            False
-        )
-        if full:
-            limit = sys.maxint
-        else:
-            limit = contentview.VIEW_CUTOFF
-        description, text_objects = cache.get(
-                    self._cached_content_view,
-                    viewmode,
-                    tuple(tuple(i) for i in conn.headers.lst),
-                    conn.content,
-                    limit,
-                    isinstance(conn, HTTPRequest)
-                )
-        return (description, text_objects)
-
-    def cont_view_handle_missing(self, conn, viewmode):
-            if conn.content == CONTENT_MISSING:
-                msg, body = "", [urwid.Text([("error", "[content missing]")])]
-            else:
-                msg, body = self.content_view(viewmode, conn)
-
+        if conn.content == CONTENT_MISSING:
+            msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return (msg, body)
+        else:
+            full = self.state.get_flow_setting(
+                self.flow,
+                (self.state.view_flow_mode, "fullcontents"),
+                False
+            )
+            if full:
+                limit = sys.maxint
+            else:
+                limit = contentview.VIEW_CUTOFF
+            description, text_objects = cache.get(
+                        contentview.get_content_view,
+                        viewmode,
+                        tuple(tuple(i) for i in conn.headers.lst),
+                        conn.content,
+                        limit,
+                        self.master.add_event,
+                        isinstance(conn, HTTPRequest)
+                    )
+            return (description, text_objects)
 
     def viewmode_get(self, override):
         return self.state.default_body_view if override is None else override
@@ -186,7 +173,7 @@ class FlowView(urwid.WidgetWrap):
             )
         override = self.override_get()
         viewmode = self.viewmode_get(override)
-        msg, body = self.cont_view_handle_missing(conn, viewmode)
+        msg, body = self.content_view(viewmode, conn)
         return headers, msg, body
 
     def conn_text_merge(self, headers, msg, body):
