@@ -87,7 +87,13 @@ footer = [
 class FlowViewHeader(urwid.WidgetWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
-        self._w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
+        self._w = common.format_flow(
+            f,
+            False,
+            extended=True,
+            padding=0,
+            hostheader=self.master.showhost
+        )
         signals.flow_change.connect(self.sig_flow_change)
 
     def sig_flow_change(self, sender, flow):
@@ -133,7 +139,14 @@ class FlowView(urwid.WidgetWrap):
                 self.view_request()
 
     def _cached_content_view(self, viewmode, hdrItems, content, limit, is_request):
-        return contentview.get_content_view(viewmode, hdrItems, content, limit, self.master.add_event, is_request)
+        return contentview.get_content_view(
+            viewmode,
+            hdrItems,
+            content,
+            limit,
+            self.master.add_event,
+            is_request
+        )
 
     def content_view(self, viewmode, conn):
         full = self.state.get_flow_setting(
@@ -219,7 +232,8 @@ class FlowView(urwid.WidgetWrap):
 
     def conn_text(self, conn):
         """
-        Same as conn_text_raw, but returns result wrapped in a listbox ready for usage.
+        Same as conn_text_raw, but returns result wrapped in a listbox ready for
+        usage.
         """
         headers, msg, body = self.conn_text_raw(conn)
         merged = self.conn_text_merge(headers, msg, body)
@@ -290,7 +304,9 @@ class FlowView(urwid.WidgetWrap):
         """
             runs the previous search again, forwards or backwards.
         """
-        last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
+        last_search_string = self.state.get_flow_setting(
+            self.flow, "last_search_string"
+        )
         if last_search_string:
             message = self.search(last_search_string, backwards)
             if message:
@@ -331,7 +347,11 @@ class FlowView(urwid.WidgetWrap):
         # generate the body, highlight the words and get focus
         headers, msg, body = self.conn_text_raw(text)
         try:
-            body, focus_position = self.search_highlight_text(body, search_string, backwards=backwards)
+            body, focus_position = self.search_highlight_text(
+                body,
+                search_string,
+                backwards=backwards
+            )
         except SearchError:
             return "Search not supported in this view."
 
@@ -348,7 +368,11 @@ class FlowView(urwid.WidgetWrap):
 
         self.last_displayed_body = list_box
 
-        wrapped, wrapped_message = self.search_wrapped_around(last_find_line, last_search_index, backwards)
+        wrapped, wrapped_message = self.search_wrapped_around(
+            last_find_line,
+            last_search_index,
+            backwards
+        )
 
         if wrapped:
             return wrapped_message
@@ -356,9 +380,15 @@ class FlowView(urwid.WidgetWrap):
     def search_get_start(self, search_string):
         start_line = 0
         start_index = 0
-        last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
+        last_search_string = self.state.get_flow_setting(
+            self.flow,
+            "last_search_string"
+        )
         if search_string == last_search_string:
-            start_line = self.state.get_flow_setting(self.flow, "last_find_line")
+            start_line = self.state.get_flow_setting(
+                self.flow,
+                "last_find_line"
+            )
             start_index = self.state.get_flow_setting(self.flow,
                     "last_search_index")
 
@@ -403,7 +433,10 @@ class FlowView(urwid.WidgetWrap):
 
         found = False
         text_objects = copy.deepcopy(text_objects)
-        loop_range = self.search_get_range(len(text_objects), start_line, backwards)
+        loop_range = self.search_get_range(
+            len(text_objects),
+            start_line, backwards
+        )
         for i in loop_range:
             text_object = text_objects[i]
 
@@ -415,10 +448,19 @@ class FlowView(urwid.WidgetWrap):
             if i != start_line:
                 start_index = 0
 
-            find_index = self.search_find(text, search_string, start_index, backwards)
+            find_index = self.search_find(
+                text,
+                search_string,
+                start_index,
+                backwards
+            )
 
             if find_index != -1:
-                new_text = self.search_highlight_object(text, find_index, search_string)
+                new_text = self.search_highlight_object(
+                    text,
+                    find_index,
+                    search_string
+                )
                 text_objects[i] = new_text
 
                 found = True
@@ -436,14 +478,26 @@ class FlowView(urwid.WidgetWrap):
                 focus_pos = None
             else:
                 if not backwards:
-                    self.state.add_flow_setting(self.flow, "last_search_index", 0)
-                    self.state.add_flow_setting(self.flow, "last_find_line", 0)
+                    self.state.add_flow_setting(
+                        self.flow, "last_search_index", 0
+                    )
+                    self.state.add_flow_setting(
+                        self.flow, "last_find_line", 0
+                    )
                 else:
-                    self.state.add_flow_setting(self.flow, "last_search_index", None)
-                    self.state.add_flow_setting(self.flow, "last_find_line", len(text_objects) - 1)
+                    self.state.add_flow_setting(
+                        self.flow, "last_search_index", None
+                    )
+                    self.state.add_flow_setting(
+                        self.flow, "last_find_line", len(text_objects) - 1
+                    )
 
-                text_objects, focus_pos = self.search_highlight_text(text_objects,
-                        search_string, looping=True, backwards=backwards)
+                text_objects, focus_pos = self.search_highlight_text(
+                    text_objects,
+                    search_string,
+                    looping=True,
+                    backwards=backwards
+                )
 
         return text_objects, focus_pos
 
@@ -575,10 +629,12 @@ class FlowView(urwid.WidgetWrap):
         self.flow.backup()
         if part == "r":
             with decoded(message):
-                # Fix an issue caused by some editors when editing a request/response body.
-                # Many editors make it hard to save a file without a terminating newline on the last
-                # line. When editing message bodies, this can cause problems. For now, I just
-                # strip the newlines off the end of the body when we return from an editor.
+                # Fix an issue caused by some editors when editing a
+                # request/response body. Many editors make it hard to save a
+                # file without a terminating newline on the last line. When
+                # editing message bodies, this can cause problems. For now, I
+                # just strip the newlines off the end of the body when we return
+                # from an editor.
                 c = self.master.spawn_editor(message.content or "")
                 message.content = c.rstrip("\n")
         elif part == "f":
@@ -606,9 +662,22 @@ class FlowView(urwid.WidgetWrap):
         elif part == "p":
             p = message.get_path_components()
             p = [[i] for i in p]
-            self.master.view_grideditor(grideditor.PathEditor(self.master, p, self.set_path_components, message))
+            self.master.view_grideditor(
+                grideditor.PathEditor(
+                    self.master,
+                    p,
+                    self.set_path_components,
+                    message
+                )
+            )
         elif part == "q":
-            self.master.view_grideditor(grideditor.QueryEditor(self.master, message.get_query().lst, self.set_query, message))
+            self.master.view_grideditor(
+                grideditor.QueryEditor(
+                    self.master,
+                    message.get_query().lst,
+                    self.set_query, message
+                )
+            )
         elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
             signals.status_prompt.send(
                 prompt = "URL",
@@ -801,7 +870,9 @@ class FlowView(urwid.WidgetWrap):
                 if os.environ.has_key("EDITOR") or os.environ.has_key("PAGER"):
                     self.master.spawn_external_viewer(conn.content, t)
                 else:
-                    signals.status_message.send(message="Error! Set $EDITOR or $PAGER.")
+                    signals.status_message.send(
+                        message = "Error! Set $EDITOR or $PAGER."
+                    )
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
@@ -826,7 +897,9 @@ class FlowView(urwid.WidgetWrap):
                 e = conn.headers.get_first("content-encoding", "identity")
                 if e != "identity":
                     if not conn.decode():
-                        signals.status_message.send(message="Could not decode - invalid data?")
+                        signals.status_message.send(
+                            message = "Could not decode - invalid data?"
+                        )
                 else:
                     signals.status_prompt_onekey.send(
                         prompt = "Select encoding: ",
@@ -839,7 +912,10 @@ class FlowView(urwid.WidgetWrap):
                     )
                 signals.flow_change.send(self, flow = self.flow)
         elif key == "/":
-            last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
+            last_search_string = self.state.get_flow_setting(
+                self.flow,
+                "last_search_string"
+            )
             search_prompt = "Search body ["+last_search_string+"]" if last_search_string else "Search body"
             signals.status_prompt.send(
                 prompt = search_prompt,
