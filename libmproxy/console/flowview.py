@@ -771,7 +771,6 @@ class FlowView(urwid.WidgetWrap):
         elif key == "W":
             signals.status_prompt_path.send(
                 prompt = "Save this flow",
-                text = self.state.last_saveload,
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
             )
@@ -786,7 +785,6 @@ class FlowView(urwid.WidgetWrap):
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
-                text = self.state.last_script,
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )

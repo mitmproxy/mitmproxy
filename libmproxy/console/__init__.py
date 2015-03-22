@@ -31,8 +31,6 @@ class ConsoleState(flow.State):
         self.view_mode = common.VIEW_LIST
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
 
-        self.last_script = ""
-        self.last_saveload = ""
         self.flowsettings = weakref.WeakKeyDictionary()
 
     def add_flow_setting(self, flow, key, value):
@@ -258,7 +256,6 @@ class ConsoleMaster(flow.FlowMaster):
             self._run_script_method("error", s, f)
         s.unload()
         self.refresh_flow(f)
-        self.state.last_script = command
 
     def set_script(self, command):
         if not command:
@@ -266,7 +263,6 @@ class ConsoleMaster(flow.FlowMaster):
         ret = self.load_script(command)
         if ret:
             signals.status_message.send(message=ret)
-        self.state.last_script = command
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
@@ -501,7 +497,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.help_context = flowview.help_context
 
     def _write_flows(self, path, flows):
-        self.state.last_saveload = path
         if not path:
             return
         path = os.path.expanduser(path)
@@ -527,7 +522,6 @@ class ConsoleMaster(flow.FlowMaster):
         return ret or "Flows loaded from %s"%path
 
     def load_flows_path(self, path):
-        self.state.last_saveload = path
         reterr = None
         try:
             flow.FlowMaster.load_flows_file(self, path)

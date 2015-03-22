@@ -19,7 +19,6 @@ class Window(urwid.Frame):
                 signals.status_prompt_path.send(
                     self,
                     prompt = "Client replay",
-                    text = self.master.state.last_saveload,
                     callback = self.master.client_playback_path
                 )
             else:
@@ -102,7 +101,6 @@ class Window(urwid.Frame):
                 signals.status_prompt_path.send(
                     self,
                     prompt = "Server replay path",
-                    text = self.master.state.last_saveload,
                     callback = self.master.server_playback_path
                 )
             else:

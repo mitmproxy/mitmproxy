@@ -193,7 +193,6 @@ def raw_format_flow(f, focus, extended, padding):
 def save_data(path, data, master, state):
     if not path:
         return
-    state.last_saveload = path
     path = os.path.expanduser(path)
     try:
         with file(path, "wb") as f:
@@ -205,7 +204,6 @@ def save_data(path, data, master, state):
 def ask_save_path(prompt, data, master, state):
     signals.status_prompt_path.send(
         prompt = prompt,
-        text = state.last_saveload,
         callback = save_data,
         args = (data, master, state)
     )

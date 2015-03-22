@@ -341,7 +341,6 @@ class GridEditor(urwid.WidgetWrap):
                 signals.status_prompt_path.send(
                     self,
                     prompt = "Read file",
-                    text = "",
                     callback = self.read_file
                 )
         elif key == "R":
@@ -349,7 +348,6 @@ class GridEditor(urwid.WidgetWrap):
                 signals.status_prompt_path.send(
                     self,
                     prompt = "Read unescaped file",
-                    text = "",
                     callback = self.read_file,
                     args = (True,)
                 )

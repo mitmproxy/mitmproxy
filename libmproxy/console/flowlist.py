@@ -113,13 +113,11 @@ class ConnectionItem(urwid.WidgetWrap):
         if k == "a":
             signals.status_prompt_path.send(
                 prompt = "Save all flows to",
-                text = self.state.last_saveload,
                 callback = self.master.save_flows
             )
         else:
             signals.status_prompt_path.send(
                 prompt = "Save this flow to",
-                text = self.state.last_saveload,
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
             )
@@ -152,7 +150,6 @@ class ConnectionItem(urwid.WidgetWrap):
         else:
             signals.status_prompt_path.send(
                 prompt = "Server replay path",
-                text = self.state.last_saveload,
                 callback = self.master.server_playback_path
             )
 
@@ -218,7 +215,6 @@ class ConnectionItem(urwid.WidgetWrap):
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
-                text = self.state.last_script,
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
@@ -316,7 +312,6 @@ class FlowListBox(urwid.ListBox):
             signals.status_prompt_path.send(
                 self,
                 prompt = "Load flows",
-                text = self.master.state.last_saveload,
                 callback = self.master.load_flows_callback
             )
         elif key == "n":
@@ -334,7 +329,6 @@ class FlowListBox(urwid.ListBox):
                 signals.status_prompt_path.send(
                     self,
                     prompt = "Stream flows to",
-                    text = self.master.state.last_saveload,
                     callback = self.master.start_stream_to_path
                 )
         else:

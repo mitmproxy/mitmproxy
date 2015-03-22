@@ -1,4 +1,5 @@
 import time
+import os.path
 
 import urwid
 
@@ -15,8 +16,12 @@ class ActionBar(urwid.WidgetWrap):
         signals.status_prompt_path.connect(self.sig_path_prompt)
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
 
+        self.last_path = ""
+
         self.prompting = False
         self.onekey = False
+        self.pathprompt = False
+
 
     def sig_message(self, sender, message, expire=None):
         w = urwid.Text(message)
@@ -35,9 +40,13 @@ class ActionBar(urwid.WidgetWrap):
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = (callback, args)
 
-    def sig_path_prompt(self, sender, prompt, text, callback, args=()):
+    def sig_path_prompt(self, sender, prompt, callback, args=()):
         signals.focus.send(self, section="footer")
-        self._w = pathedit.PathEdit(self.prep_prompt(prompt), text)
+        self._w = pathedit.PathEdit(
+            self.prep_prompt(prompt),
+            os.path.dirname(self.last_path)
+        )
+        self.pathprompt = True
         self.prompting = (callback, args)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
@@ -71,7 +80,7 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
-                self.prompt_execute()
+                self.prompt_execute(self._w.get_edit_text())
             else:
                 if common.is_keypress(k):
                     self._w.keypress(size, k)
@@ -84,12 +93,13 @@ class ActionBar(urwid.WidgetWrap):
     def prompt_done(self):
         self.prompting = False
         self.onekey = False
+        self.pathprompt = False
         signals.status_message.send(message="")
         signals.focus.send(self, section="body")
 
-    def prompt_execute(self, txt=None):
-        if not txt:
-            txt = self._w.get_edit_text()
+    def prompt_execute(self, txt):
+        if self.pathprompt:
+            self.last_path = txt
         p, args = self.prompting
         self.prompt_done()
         msg = p(txt, *args)
