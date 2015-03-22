@@ -263,7 +263,7 @@ class ConsoleMaster(flow.FlowMaster):
         if f.error:
             self._run_script_method("error", s, f)
         s.unload()
-        self.refresh_flow(f)
+        signals.flow_change.send(self, flow = f)
 
     def set_script(self, command):
         if not command:
@@ -378,7 +378,7 @@ class ConsoleMaster(flow.FlowMaster):
         changed = self.tick(self.masterq, timeout=0)
         if changed:
             self.loop.draw_screen()
-            self.statusbar.redraw()
+            signals.update_settings.send()
         self.loop.set_alarm_in(0.01, self.ticker)
 
     def run(self):
@@ -397,7 +397,6 @@ class ConsoleMaster(flow.FlowMaster):
             screen = self.ui,
         )
         self.view_flowlist()
-        self.statusbar.redraw()
 
         self.server.start_slave(
             controller.Slave,
@@ -446,7 +445,6 @@ class ConsoleMaster(flow.FlowMaster):
             header = self.header,
             footer = self.statusbar
         )
-        self.statusbar.redraw()
         return self.view
 
     def view_help(self):
@@ -633,15 +631,10 @@ class ConsoleMaster(flow.FlowMaster):
 
     def refresh_focus(self):
         if self.state.view:
-            self.refresh_flow(self.state.view[self.state.focus])
-
-    def refresh_flow(self, c):
-        if hasattr(self.header, "refresh_flow"):
-            self.header.refresh_flow(c)
-        if hasattr(self.body, "refresh_flow"):
-            self.body.refresh_flow(c)
-        if hasattr(self.statusbar, "refresh_flow"):
-            self.statusbar.refresh_flow(c)
+            signals.flow_change.send(
+                self,
+                flow = self.state.view[self.state.focus]
+            )
 
     def process_flow(self, f):
         if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
@@ -649,7 +642,7 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             f.reply()
         self.sync_list_view()
-        self.refresh_flow(f)
+        signals.flow_change.send(self, flow = f)
 
     def clear_events(self):
         self.eventlist[:] = []

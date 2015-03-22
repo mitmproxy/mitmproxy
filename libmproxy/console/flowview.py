@@ -88,10 +88,17 @@ class FlowViewHeader(urwid.WidgetWrap):
     def __init__(self, master, f):
         self.master, self.flow = master, f
         self._w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
+        signals.flow_change.connect(self.sig_flow_change)
 
-    def refresh_flow(self, f):
-        if f == self.flow:
-            self._w = common.format_flow(f, False, extended=True, padding=0, hostheader=self.master.showhost)
+    def sig_flow_change(self, sender, flow):
+        if flow == self.flow:
+            self._w = common.format_flow(
+                flow,
+                False,
+                extended=True,
+                padding=0,
+                hostheader=self.master.showhost
+            )
 
 
 class CallbackCache:
@@ -119,6 +126,14 @@ class FlowView(urwid.WidgetWrap):
             self.view_response()
         else:
             self.view_request()
+        signals.flow_change.connect(self.sig_flow_change)
+
+    def sig_flow_change(self, sender, flow):
+        if flow == self.flow:
+            if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE and self.flow.response:
+                self.view_response()
+            else:
+                self.view_request()
 
     def _cached_content_view(self, viewmode, hdrItems, content, limit, is_request):
         return contentview.get_content_view(viewmode, hdrItems, content, limit, self.master.add_event, is_request)
@@ -332,7 +347,7 @@ class FlowView(urwid.WidgetWrap):
         list_box = urwid.ListBox(merged)
         list_box.set_focus(focus_position + 2)
         self._w = self.wrap_body(const, list_box)
-        self.master.statusbar.redraw()
+        signals.update_settings.send(self)
 
         self.last_displayed_body = list_box
 
@@ -456,7 +471,6 @@ class FlowView(urwid.WidgetWrap):
         self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
         body = self.conn_text(self.flow.request)
         self._w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
-        self.master.statusbar.redraw()
 
     def view_response(self):
         self.state.view_flow_mode = common.VIEW_FLOW_RESPONSE
@@ -476,19 +490,11 @@ class FlowView(urwid.WidgetWrap):
                         ]
                    )
         self._w = self.wrap_body(common.VIEW_FLOW_RESPONSE, body)
-        self.master.statusbar.redraw()
-
-    def refresh_flow(self, c=None):
-        if c == self.flow:
-            if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE and self.flow.response:
-                self.view_response()
-            else:
-                self.view_request()
 
     def set_method_raw(self, m):
         if m:
             self.flow.request.method = m
-            self.master.refresh_flow(self.flow)
+            signals.flow_change.send(self, flow = self.flow)
 
     def edit_method(self, m):
         if m == "e":
@@ -501,7 +507,7 @@ class FlowView(urwid.WidgetWrap):
             for i in common.METHOD_OPTIONS:
                 if i[1] == m:
                     self.flow.request.method = i[0].upper()
-            self.master.refresh_flow(self.flow)
+            signals.flow_change.send(self, flow = self.flow)
 
     def set_url(self, url):
         request = self.flow.request
@@ -509,7 +515,7 @@ class FlowView(urwid.WidgetWrap):
             request.url = str(url)
         except ValueError:
             return "Invalid URL."
-        self.master.refresh_flow(self.flow)
+        signals.flow_change.send(self, flow = self.flow)
 
     def set_resp_code(self, code):
         response = self.flow.response
@@ -520,12 +526,12 @@ class FlowView(urwid.WidgetWrap):
         import BaseHTTPServer
         if BaseHTTPServer.BaseHTTPRequestHandler.responses.has_key(int(code)):
             response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[int(code)][0]
-        self.master.refresh_flow(self.flow)
+        signals.flow_change.send(self, flow = self.flow)
 
     def set_resp_msg(self, msg):
         response = self.flow.response
         response.msg = msg
-        self.master.refresh_flow(self.flow)
+        signals.flow_change.send(self, flow = self.flow)
 
     def set_headers(self, lst, conn):
         conn.headers = flow.ODictCaseless(lst)
@@ -614,7 +620,7 @@ class FlowView(urwid.WidgetWrap):
                 text = message.msg,
                 callback = self.set_resp_msg
             )
-        self.master.refresh_flow(self.flow)
+        signals.flow_change.send(self, flow = self.flow)
 
     def _view_nextprev_flow(self, np, flow):
         try:
@@ -642,7 +648,7 @@ class FlowView(urwid.WidgetWrap):
             (self.state.view_flow_mode, "prettyview"),
             contentview.get_by_shortcut(t)
         )
-        self.master.refresh_flow(self.flow)
+        signals.flow_change.send(self, flow = self.flow)
 
     def delete_body(self, t):
         if t == "m":
@@ -653,7 +659,7 @@ class FlowView(urwid.WidgetWrap):
             self.flow.request.content = val
         else:
             self.flow.response.content = val
-        self.master.refresh_flow(self.flow)
+        signals.flow_change.send(self, flow = self.flow)
 
     def keypress(self, size, key):
         if key == " ":
@@ -736,7 +742,7 @@ class FlowView(urwid.WidgetWrap):
                 (self.state.view_flow_mode, "fullcontents"),
                 True
             )
-            self.master.refresh_flow(self.flow)
+            signals.flow_change.send(self, flow = self.flow)
             signals.status_message.send(message="")
         elif key == "g":
             if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
@@ -760,13 +766,13 @@ class FlowView(urwid.WidgetWrap):
             r = self.master.replay_request(self.flow)
             if r:
                 signals.status_message.send(message=r)
-            self.master.refresh_flow(self.flow)
+            signals.flow_change.send(self, flow = self.flow)
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
                 return
             self.state.revert(self.flow)
-            self.master.refresh_flow(self.flow)
+            signals.flow_change.send(self, flow = self.flow)
             signals.status_message.send(message="Reverted.")
         elif key == "W":
             signals.status_prompt_path.send(
@@ -817,7 +823,7 @@ class FlowView(urwid.WidgetWrap):
                         callback = self.encode_callback,
                         args = (conn,)
                     )
-                self.master.refresh_flow(self.flow)
+                signals.flow_change.send(self, flow = self.flow)
         elif key == "/":
             last_search_string = self.state.get_flow_setting(self.flow, "last_search_string")
             search_prompt = "Search body ["+last_search_string+"]" if last_search_string else "Search body"
@@ -839,4 +845,4 @@ class FlowView(urwid.WidgetWrap):
             "d": "deflate",
         }
         conn.encode(encoding_map[key])
-        self.master.refresh_flow(self.flow)
+        signals.flow_change.send(self, flow = self.flow)

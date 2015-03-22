@@ -20,3 +20,6 @@ focus = blinker.Signal()
 
 # Fired when settings change
 update_settings = blinker.Signal()
+
+# Fired when a flow changes
+flow_change = blinker.Signal()
