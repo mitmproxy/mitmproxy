@@ -532,19 +532,28 @@ class FlowView(urwid.WidgetWrap):
 
     def set_headers(self, lst, conn):
         conn.headers = flow.ODictCaseless(lst)
+        signals.flow_change.send(self, flow = self.flow)
 
     def set_query(self, lst, conn):
         conn.set_query(flow.ODict(lst))
+        signals.flow_change.send(self, flow = self.flow)
 
     def set_path_components(self, lst, conn):
         conn.set_path_components([i[0] for i in lst])
+        signals.flow_change.send(self, flow = self.flow)
 
     def set_form(self, lst, conn):
         conn.set_form_urlencoded(flow.ODict(lst))
+        signals.flow_change.send(self, flow = self.flow)
 
     def edit_form(self, conn):
         self.master.view_grideditor(
-            grideditor.URLEncodedFormEditor(self.master, conn.get_form_urlencoded().lst, self.set_form, conn)
+            grideditor.URLEncodedFormEditor(
+                self.master,
+                conn.get_form_urlencoded().lst,
+                self.set_form,
+                conn
+            )
         )
 
     def edit_form_confirm(self, key, conn):
@@ -586,7 +595,14 @@ class FlowView(urwid.WidgetWrap):
             else:
                 self.edit_form(message)
         elif part == "h":
-            self.master.view_grideditor(grideditor.HeaderEditor(self.master, message.headers.lst, self.set_headers, message))
+            self.master.view_grideditor(
+                grideditor.HeaderEditor(
+                    self.master,
+                    message.headers.lst,
+                    self.set_headers,
+                    message
+                )
+            )
         elif part == "p":
             p = message.get_path_components()
             p = [[i] for i in p]
