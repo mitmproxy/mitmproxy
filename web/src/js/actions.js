@@ -1,4 +1,5 @@
 var $ = require("jquery");
+var AppDispatcher = require("./dispatcher.js").AppDispatcher;
 
 var ActionTypes = {
     // Connection
@@ -118,5 +119,6 @@ module.exports = {
     FlowActions: FlowActions,
     StoreCmds: StoreCmds,
     SettingsActions: SettingsActions,
+    EventLogActions: EventLogActions,
     Query: Query
 };

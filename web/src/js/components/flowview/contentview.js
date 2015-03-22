@@ -5,7 +5,7 @@ var MessageUtils = require("../../flow/utils.js").MessageUtils;
 var utils = require("../../utils.js");
 
 var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
-var Image = React.createClass({
+var ViewImage = React.createClass({
     statics: {
         matches: function (message) {
             return image_regex.test(MessageUtils.getContentType(message));
@@ -22,16 +22,28 @@ var Image = React.createClass({
 var RawMixin = {
     getInitialState: function () {
         return {
-            content: undefined
+            content: undefined,
+            request: undefined
         }
     },
     requestContent: function (nextProps) {
-        this.setState({content: undefined});
+        if(this.state.request){
+            this.state.request.abort();
+        }
         var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        this.setState({
+            content: undefined,
+            request: request
+        });
         request.done(function (data) {
             this.setState({content: data});
         }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
-            this.setState({content: "AJAX Error: " + textStatus});
+            if(textStatus === "abort"){
+                return;
+            }
+            this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
+        }.bind(this)).always(function(){
+            this.setState({request: undefined});
         }.bind(this));
 
     },
@@ -41,6 +53,11 @@ var RawMixin = {
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.message !== this.props.message) {
             this.requestContent(nextProps);
+        }
+    },
+    componentWillUnmount: function(){
+        if(this.state.request){
+            this.state.request.abort();
         }
     },
     render: function () {
@@ -53,7 +70,7 @@ var RawMixin = {
     }
 };
 
-var Raw = React.createClass({
+var ViewRaw = React.createClass({
     mixins: [RawMixin],
     statics: {
         matches: function (message) {
@@ -65,8 +82,25 @@ var Raw = React.createClass({
     }
 });
 
+var json_regex = /^application\/json$/i;
+var ViewJSON = React.createClass({
+    mixins: [RawMixin],
+    statics: {
+        matches: function (message) {
+            return json_regex.test(MessageUtils.getContentType(message));
+        }
+    },
+    renderContent: function () {
+        var json = this.state.content;
+        try {
+            json = JSON.stringify(JSON.parse(json), null, 2);
+        } catch(e) {
+        }
+        return <pre>{json}</pre>;
+    }
+});
 
-var Auto = React.createClass({
+var ViewAuto = React.createClass({
     statics: {
         matches: function () {
             return false; // don't match itself
@@ -81,12 +115,12 @@ var Auto = React.createClass({
         }
     },
     render: function () {
-        var View = Auto.findView(this.props.message);
+        var View = ViewAuto.findView(this.props.message);
         return <View {...this.props}/>;
     }
 });
 
-var all = [Auto, Image, Raw];
+var all = [ViewAuto, ViewImage, ViewJSON, ViewRaw];
 
 
 var ContentEmpty = React.createClass({
@@ -104,6 +138,12 @@ var ContentMissing = React.createClass({
 });
 
 var TooLarge = React.createClass({
+    statics: {
+        isTooLarge: function(message){
+            var max_mb = ViewImage.matches(message) ? 10 : 0.2;
+            return message.contentLength > 1024 * 1024 * max_mb;
+        }
+    },
     render: function () {
         var size = utils.formatSize(this.props.message.contentLength);
         return <div className="alert alert-warning">
@@ -123,10 +163,10 @@ var ViewSelector = React.createClass({
                 className += " active";
             }
             var text;
-            if (view === Auto) {
-                text = "auto: " + Auto.findView(this.props.message).displayName.toLowerCase();
+            if (view === ViewAuto) {
+                text = "auto: " + ViewAuto.findView(this.props.message).displayName.toLowerCase().replace("view", "");
             } else {
-                text = view.displayName.toLowerCase();
+                text = view.displayName.toLowerCase().replace("view", "");
             }
             views.push(
                 <button
@@ -146,7 +186,7 @@ var ContentView = React.createClass({
     getInitialState: function () {
         return {
             displayLarge: false,
-            View: Auto
+            View: ViewAuto
         };
     },
     propTypes: {
@@ -175,7 +215,7 @@ var ContentView = React.createClass({
             return <ContentEmpty {...this.props}/>;
         } else if (message.contentLength === null) {
             return <ContentMissing {...this.props}/>;
-        } else if (message.contentLength > 1024 * 1024 * 3 && !this.state.displayLarge) {
+        } else if (!this.state.displayLarge && TooLarge.isTooLarge(message)) {
             return <TooLarge {...this.props} onClick={this.displayLarge}/>;
         }
 

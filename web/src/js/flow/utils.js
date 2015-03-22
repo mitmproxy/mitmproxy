@@ -3,7 +3,7 @@ var $ = require("jquery");
 
 var MessageUtils = {
     getContentType: function (message) {
-        return this.get_first_header(message, /^Content-Type$/i);
+        return this.get_first_header(message, /^Content-Type$/i).split(";")[0].trim();
     },
     get_first_header: function (message, regex) {
         //FIXME: Cache Invalidation.

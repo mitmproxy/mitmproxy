@@ -303,6 +303,7 @@ function isUndefined(arg) {
 
 },{}],2:[function(require,module,exports){
 var $ = require("jquery");
+var AppDispatcher = require("./dispatcher.js").AppDispatcher;
 
 var ActionTypes = {
     // Connection
@@ -422,10 +423,11 @@ module.exports = {
     FlowActions: FlowActions,
     StoreCmds: StoreCmds,
     SettingsActions: SettingsActions,
+    EventLogActions: EventLogActions,
     Query: Query
 };
 
-},{"jquery":"jquery"}],3:[function(require,module,exports){
+},{"./dispatcher.js":19,"jquery":"jquery"}],3:[function(require,module,exports){
 
 var React = require("react");
 var ReactRouter = require("react-router");
@@ -1200,7 +1202,7 @@ var MessageUtils = require("../../flow/utils.js").MessageUtils;
 var utils = require("../../utils.js");
 
 var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
-var Image = React.createClass({displayName: "Image",
+var ViewImage = React.createClass({displayName: "ViewImage",
     statics: {
         matches: function (message) {
             return image_regex.test(MessageUtils.getContentType(message));
@@ -1217,16 +1219,28 @@ var Image = React.createClass({displayName: "Image",
 var RawMixin = {
     getInitialState: function () {
         return {
-            content: undefined
+            content: undefined,
+            request: undefined
         }
     },
     requestContent: function (nextProps) {
-        this.setState({content: undefined});
+        if(this.state.request){
+            this.state.request.abort();
+        }
         var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        this.setState({
+            content: undefined,
+            request: request
+        });
         request.done(function (data) {
             this.setState({content: data});
         }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
-            this.setState({content: "AJAX Error: " + textStatus});
+            if(textStatus === "abort"){
+                return;
+            }
+            this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
+        }.bind(this)).always(function(){
+            this.setState({request: undefined});
         }.bind(this));
 
     },
@@ -1236,6 +1250,11 @@ var RawMixin = {
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.message !== this.props.message) {
             this.requestContent(nextProps);
+        }
+    },
+    componentWillUnmount: function(){
+        if(this.state.request){
+            this.state.request.abort();
         }
     },
     render: function () {
@@ -1248,7 +1267,7 @@ var RawMixin = {
     }
 };
 
-var Raw = React.createClass({displayName: "Raw",
+var ViewRaw = React.createClass({displayName: "ViewRaw",
     mixins: [RawMixin],
     statics: {
         matches: function (message) {
@@ -1260,8 +1279,25 @@ var Raw = React.createClass({displayName: "Raw",
     }
 });
 
+var json_regex = /^application\/json$/i;
+var ViewJSON = React.createClass({displayName: "ViewJSON",
+    mixins: [RawMixin],
+    statics: {
+        matches: function (message) {
+            return json_regex.test(MessageUtils.getContentType(message));
+        }
+    },
+    renderContent: function () {
+        var json = this.state.content;
+        try {
+            json = JSON.stringify(JSON.parse(json), null, 2);
+        } catch(e) {
+        }
+        return React.createElement("pre", null, json);
+    }
+});
 
-var Auto = React.createClass({displayName: "Auto",
+var ViewAuto = React.createClass({displayName: "ViewAuto",
     statics: {
         matches: function () {
             return false; // don't match itself
@@ -1276,12 +1312,12 @@ var Auto = React.createClass({displayName: "Auto",
         }
     },
     render: function () {
-        var View = Auto.findView(this.props.message);
+        var View = ViewAuto.findView(this.props.message);
         return React.createElement(View, React.__spread({},  this.props));
     }
 });
 
-var all = [Auto, Image, Raw];
+var all = [ViewAuto, ViewImage, ViewJSON, ViewRaw];
 
 
 var ContentEmpty = React.createClass({displayName: "ContentEmpty",
@@ -1299,6 +1335,12 @@ var ContentMissing = React.createClass({displayName: "ContentMissing",
 });
 
 var TooLarge = React.createClass({displayName: "TooLarge",
+    statics: {
+        isTooLarge: function(message){
+            var max_mb = ViewImage.matches(message) ? 10 : 0.2;
+            return message.contentLength > 1024 * 1024 * max_mb;
+        }
+    },
     render: function () {
         var size = utils.formatSize(this.props.message.contentLength);
         return React.createElement("div", {className: "alert alert-warning"}, 
@@ -1318,10 +1360,10 @@ var ViewSelector = React.createClass({displayName: "ViewSelector",
                 className += " active";
             }
             var text;
-            if (view === Auto) {
-                text = "auto: " + Auto.findView(this.props.message).displayName.toLowerCase();
+            if (view === ViewAuto) {
+                text = "auto: " + ViewAuto.findView(this.props.message).displayName.toLowerCase().replace("view", "");
             } else {
-                text = view.displayName.toLowerCase();
+                text = view.displayName.toLowerCase().replace("view", "");
             }
             views.push(
                 React.createElement("button", {
@@ -1341,7 +1383,7 @@ var ContentView = React.createClass({displayName: "ContentView",
     getInitialState: function () {
         return {
             displayLarge: false,
-            View: Auto
+            View: ViewAuto
         };
     },
     propTypes: {
@@ -1370,7 +1412,7 @@ var ContentView = React.createClass({displayName: "ContentView",
             return React.createElement(ContentEmpty, React.__spread({},  this.props));
         } else if (message.contentLength === null) {
             return React.createElement(ContentMissing, React.__spread({},  this.props));
-        } else if (message.contentLength > 1024 * 1024 * 3 && !this.state.displayLarge) {
+        } else if (!this.state.displayLarge && TooLarge.isTooLarge(message)) {
             return React.createElement(TooLarge, React.__spread({},  this.props, {onClick: this.displayLarge}));
         }
 
@@ -2644,6 +2686,7 @@ module.exports  = VirtualScrollMixin;
 },{"react":"react"}],18:[function(require,module,exports){
 
 var actions = require("./actions.js");
+var AppDispatcher = require("./dispatcher.js").AppDispatcher;
 
 function Connection(url) {
     if (url[0] === "/") {
@@ -2660,18 +2703,18 @@ function Connection(url) {
     };
     ws.onerror = function () {
         actions.ConnectionActions.error();
-        EventLogActions.add_event("WebSocket connection error.");
+        actions.EventLogActions.add_event("WebSocket connection error.");
     };
     ws.onclose = function () {
         actions.ConnectionActions.close();
-        EventLogActions.add_event("WebSocket connection closed.");
+        actions.EventLogActions.add_event("WebSocket connection closed.");
     };
     return ws;
 }
 
 module.exports = Connection;
 
-},{"./actions.js":2}],19:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":19}],19:[function(require,module,exports){
 
 var flux = require("flux");
 
@@ -2681,7 +2724,7 @@ const PayloadSources = {
 };
 
 
-AppDispatcher = new flux.Dispatcher();
+var AppDispatcher = new flux.Dispatcher();
 AppDispatcher.dispatchViewAction = function (action) {
     action.source = PayloadSources.VIEW;
     this.dispatch(action);
@@ -4477,7 +4520,7 @@ var $ = require("jquery");
 
 var MessageUtils = {
     getContentType: function (message) {
-        return this.get_first_header(message, /^Content-Type$/i);
+        return this.get_first_header(message, /^Content-Type$/i).split(";")[0].trim();
     },
     get_first_header: function (message, regex) {
         //FIXME: Cache Invalidation.
@@ -4854,6 +4897,7 @@ module.exports = {
 },{"../utils.js":24,"events":1,"lodash":"lodash"}],24:[function(require,module,exports){
 var $ = require("jquery");
 var _ = require("lodash");
+var actions = require("./actions.js");
 
 var Key = {
     UP: 38,
@@ -4921,13 +4965,13 @@ var end = String.fromCharCode(0xffff);
 function reverseString(s){
     return String.fromCharCode.apply(String,
         _.map(s.split(""), function (c) {
-            return 0xffff - c.charCodeAt();
+            return 0xffff - c.charCodeAt(0);
         })
     ) + end;
 }
 
 function getCookie(name) {
-    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
 var xsrf = $.param({_xsrf: getCookie("_xsrf")});
@@ -4944,10 +4988,12 @@ $.ajaxPrefilter(function (options) {
 });
 // Log AJAX Errors
 $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+    if(thrownError === "abort"){
+        return;
+    }
     var message = jqXHR.responseText;
-    console.error(message, arguments);
-    EventLogActions.add_event(thrownError + ": " + message);
-    window.alert(message);
+    console.error(thrownError, message, arguments);
+    actions.EventLogActions.add_event(thrownError + ": " + message);
 });
 
 module.exports = {
@@ -4958,7 +5004,7 @@ module.exports = {
     Key: Key
 };
 
-},{"jquery":"jquery","lodash":"lodash"}]},{},[3])
+},{"./actions.js":2,"jquery":"jquery","lodash":"lodash"}]},{},[3])
 
 
 //# sourceMappingURL=app.js.map

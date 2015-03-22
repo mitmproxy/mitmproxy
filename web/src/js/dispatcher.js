@@ -7,7 +7,7 @@ const PayloadSources = {
 };
 
 
-AppDispatcher = new flux.Dispatcher();
+var AppDispatcher = new flux.Dispatcher();
 AppDispatcher.dispatchViewAction = function (action) {
     action.source = PayloadSources.VIEW;
     this.dispatch(action);

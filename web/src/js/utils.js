@@ -1,5 +1,6 @@
 var $ = require("jquery");
 var _ = require("lodash");
+var actions = require("./actions.js");
 
 var Key = {
     UP: 38,
@@ -67,13 +68,13 @@ var end = String.fromCharCode(0xffff);
 function reverseString(s){
     return String.fromCharCode.apply(String,
         _.map(s.split(""), function (c) {
-            return 0xffff - c.charCodeAt();
+            return 0xffff - c.charCodeAt(0);
         })
     ) + end;
 }
 
 function getCookie(name) {
-    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
 var xsrf = $.param({_xsrf: getCookie("_xsrf")});
@@ -90,10 +91,12 @@ $.ajaxPrefilter(function (options) {
 });
 // Log AJAX Errors
 $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+    if(thrownError === "abort"){
+        return;
+    }
     var message = jqXHR.responseText;
-    console.error(message, arguments);
-    EventLogActions.add_event(thrownError + ": " + message);
-    window.alert(message);
+    console.error(thrownError, message, arguments);
+    actions.EventLogActions.add_event(thrownError + ": " + message);
 });
 
 module.exports = {
