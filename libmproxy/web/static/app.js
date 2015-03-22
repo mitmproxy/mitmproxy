@@ -1195,23 +1195,56 @@ var Image = React.createClass({displayName: "Image",
         }
     },
     render: function () {
-        var message_name = this.props.flow.request === this.props.message ? "request" : "response";
-        var url = "/flows/" + this.props.flow.id + "/" + message_name + "/content";
+        var url = MessageUtils.getContentURL(this.props.flow, this.props.message);
         return React.createElement("div", {className: "flowview-image"}, 
             React.createElement("img", {src: url, alt: "preview", className: "img-thumbnail"})
         );
     }
 });
 
+var RawMixin = {
+    getInitialState: function () {
+        return {
+            content: undefined
+        }
+    },
+    requestContent: function (nextProps) {
+        this.setState({content: undefined});
+        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        request.done(function (data) {
+            this.setState({content: data});
+        }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
+            this.setState({content: "AJAX Error: " + textStatus});
+        }.bind(this));
+
+    },
+    componentWillMount: function () {
+        this.requestContent(this.props);
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.message !== this.props.message) {
+            this.requestContent(nextProps);
+        }
+    },
+    render: function () {
+        if (!this.state.content) {
+            return React.createElement("div", {className: "text-center"}, 
+                React.createElement("i", {className: "fa fa-spinner fa-spin"})
+            );
+        }
+        return this.renderContent();
+    }
+};
+
 var Raw = React.createClass({displayName: "Raw",
+    mixins: [RawMixin],
     statics: {
         matches: function (message) {
             return true;
         }
     },
-    render: function () {
-        //FIXME
-        return React.createElement("div", null, "raw");
+    renderContent: function () {
+        return React.createElement("pre", null, this.state.content);
     }
 });
 
@@ -4426,6 +4459,7 @@ module.exports = (function() {
 
 },{"../flow/utils.js":21}],21:[function(require,module,exports){
 var _ = require("lodash");
+var $ = require("jquery");
 
 var MessageUtils = {
     getContentType: function (message) {
@@ -4461,6 +4495,18 @@ var MessageUtils = {
             }
         }
         return false;
+    },
+    getContentURL: function(flow, message){
+        if(message === flow.request){
+            message = "request";
+        } else if (message === flow.response){
+            message = "response";
+        }
+        return "/flows/" + flow.id + "/" + message + "/content";
+    },
+    getContent: function(flow, message){
+        var url = MessageUtils.getContentURL(flow, message);
+        return $.get(url);
     }
 };
 
@@ -4492,7 +4538,7 @@ module.exports = {
     MessageUtils: MessageUtils
 };
 
-},{"lodash":"lodash"}],22:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],22:[function(require,module,exports){
 
 var _ = require("lodash");
 var $ = require("jquery");

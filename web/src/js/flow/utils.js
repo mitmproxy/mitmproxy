@@ -1,4 +1,5 @@
 var _ = require("lodash");
+var $ = require("jquery");
 
 var MessageUtils = {
     getContentType: function (message) {
@@ -34,6 +35,18 @@ var MessageUtils = {
             }
         }
         return false;
+    },
+    getContentURL: function(flow, message){
+        if(message === flow.request){
+            message = "request";
+        } else if (message === flow.response){
+            message = "response";
+        }
+        return "/flows/" + flow.id + "/" + message + "/content";
+    },
+    getContent: function(flow, message){
+        var url = MessageUtils.getContentURL(flow, message);
+        return $.get(url);
     }
 };
 

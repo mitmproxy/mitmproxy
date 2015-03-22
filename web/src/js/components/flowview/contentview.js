@@ -12,23 +12,56 @@ var Image = React.createClass({
         }
     },
     render: function () {
-        var message_name = this.props.flow.request === this.props.message ? "request" : "response";
-        var url = "/flows/" + this.props.flow.id + "/" + message_name + "/content";
+        var url = MessageUtils.getContentURL(this.props.flow, this.props.message);
         return <div className="flowview-image">
             <img src={url} alt="preview" className="img-thumbnail"/>
         </div>;
     }
 });
 
+var RawMixin = {
+    getInitialState: function () {
+        return {
+            content: undefined
+        }
+    },
+    requestContent: function (nextProps) {
+        this.setState({content: undefined});
+        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        request.done(function (data) {
+            this.setState({content: data});
+        }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
+            this.setState({content: "AJAX Error: " + textStatus});
+        }.bind(this));
+
+    },
+    componentWillMount: function () {
+        this.requestContent(this.props);
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.message !== this.props.message) {
+            this.requestContent(nextProps);
+        }
+    },
+    render: function () {
+        if (!this.state.content) {
+            return <div className="text-center">
+                <i className="fa fa-spinner fa-spin"></i>
+            </div>;
+        }
+        return this.renderContent();
+    }
+};
+
 var Raw = React.createClass({
+    mixins: [RawMixin],
     statics: {
         matches: function (message) {
             return true;
         }
     },
-    render: function () {
-        //FIXME
-        return <div>raw</div>;
+    renderContent: function () {
+        return <pre>{this.state.content}</pre>;
     }
 });
 
