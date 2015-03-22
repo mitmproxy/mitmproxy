@@ -421,6 +421,7 @@ module.exports = {
     ConnectionActions: ConnectionActions,
     FlowActions: FlowActions,
     StoreCmds: StoreCmds,
+    SettingsActions: SettingsActions,
     Query: Query
 };
 
@@ -442,7 +443,7 @@ $(function () {
 
 
 
-},{"./components/proxyapp.js":12,"./connection":14,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
+},{"./components/proxyapp.js":16,"./connection":18,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -622,6 +623,7 @@ var common = require("./common.js");
 var Query = require("../actions.js").Query;
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
+var _ = require("lodash");
 
 var LogMessage = React.createClass({displayName: "LogMessage",
     render: function () {
@@ -775,408 +777,7 @@ var EventLog = React.createClass({displayName: "EventLog",
 
 module.exports = EventLog;
 
-},{"../actions.js":2,"../store/view.js":19,"./common.js":4,"./virtualscroll.js":13,"react":"react"}],6:[function(require,module,exports){
-var React = require("react");
-var _ = require("lodash");
-
-var common = require("./common.js");
-var actions = require("../actions.js");
-var flowutils = require("../flow/utils.js");
-var toputils = require("../utils.js");
-
-var NavAction = React.createClass({displayName: "NavAction",
-    onClick: function (e) {
-        e.preventDefault();
-        this.props.onClick();
-    },
-    render: function () {
-        return (
-            React.createElement("a", {title: this.props.title, 
-                href: "#", 
-                className: "nav-action", 
-                onClick: this.onClick}, 
-                React.createElement("i", {className: "fa fa-fw " + this.props.icon})
-            )
-        );
-    }
-});
-
-var FlowDetailNav = React.createClass({displayName: "FlowDetailNav",
-    render: function () {
-        var flow = this.props.flow;
-
-        var tabs = this.props.tabs.map(function (e) {
-            var str = e.charAt(0).toUpperCase() + e.slice(1);
-            var className = this.props.active === e ? "active" : "";
-            var onClick = function (event) {
-                this.props.selectTab(e);
-                event.preventDefault();
-            }.bind(this);
-            return React.createElement("a", {key: e, 
-                href: "#", 
-                className: className, 
-                onClick: onClick}, str);
-        }.bind(this));
-
-        var acceptButton = null;
-        if(flow.intercepted){
-            acceptButton = React.createElement(NavAction, {title: "[a]ccept intercepted flow", icon: "fa-play", onClick: actions.FlowActions.accept.bind(null, flow)});
-        }
-        var revertButton = null;
-        if(flow.modified){
-            revertButton = React.createElement(NavAction, {title: "revert changes to flow [V]", icon: "fa-history", onClick: actions.FlowActions.revert.bind(null, flow)});
-        }
-
-        return (
-            React.createElement("nav", {ref: "head", className: "nav-tabs nav-tabs-sm"}, 
-                tabs, 
-                React.createElement(NavAction, {title: "[d]elete flow", icon: "fa-trash", onClick: actions.FlowActions.delete.bind(null, flow)}), 
-                React.createElement(NavAction, {title: "[D]uplicate flow", icon: "fa-copy", onClick: actions.FlowActions.duplicate.bind(null, flow)}), 
-                React.createElement(NavAction, {disabled: true, title: "[r]eplay flow", icon: "fa-repeat", onClick: actions.FlowActions.replay.bind(null, flow)}), 
-                acceptButton, 
-                revertButton
-            )
-        );
-    }
-});
-
-var Headers = React.createClass({displayName: "Headers",
-    render: function () {
-        var rows = this.props.message.headers.map(function (header, i) {
-            return (
-                React.createElement("tr", {key: i}, 
-                    React.createElement("td", {className: "header-name"}, header[0] + ":"), 
-                    React.createElement("td", {className: "header-value"}, header[1])
-                )
-            );
-        });
-        return (
-            React.createElement("table", {className: "header-table"}, 
-                React.createElement("tbody", null, 
-                    rows
-                )
-            )
-        );
-    }
-});
-
-var FlowDetailRequest = React.createClass({displayName: "FlowDetailRequest",
-    render: function () {
-        var flow = this.props.flow;
-        var first_line = [
-            flow.request.method,
-            flowutils.RequestUtils.pretty_url(flow.request),
-            "HTTP/" + flow.request.httpversion.join(".")
-        ].join(" ");
-        var content = null;
-        if (flow.request.contentLength > 0) {
-            content = "Request Content Size: " + toputils.formatSize(flow.request.contentLength);
-        } else {
-            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
-        }
-
-        //TODO: Styling
-
-        return (
-            React.createElement("section", null, 
-                React.createElement("div", {className: "first-line"}, first_line ), 
-                React.createElement(Headers, {message: flow.request}), 
-                React.createElement("hr", null), 
-                content
-            )
-        );
-    }
-});
-
-var FlowDetailResponse = React.createClass({displayName: "FlowDetailResponse",
-    render: function () {
-        var flow = this.props.flow;
-        var first_line = [
-            "HTTP/" + flow.response.httpversion.join("."),
-            flow.response.code,
-            flow.response.msg
-        ].join(" ");
-        var content = null;
-        if (flow.response.contentLength > 0) {
-            content = "Response Content Size: " + toputils.formatSize(flow.response.contentLength);
-        } else {
-            content = React.createElement("div", {className: "alert alert-info"}, "No Content");
-        }
-
-        //TODO: Styling
-
-        return (
-            React.createElement("section", null, 
-                React.createElement("div", {className: "first-line"}, first_line ), 
-                React.createElement(Headers, {message: flow.response}), 
-                React.createElement("hr", null), 
-                content
-            )
-        );
-    }
-});
-
-var FlowDetailError = React.createClass({displayName: "FlowDetailError",
-    render: function () {
-        var flow = this.props.flow;
-        return (
-            React.createElement("section", null, 
-                React.createElement("div", {className: "alert alert-warning"}, 
-                flow.error.msg, 
-                    React.createElement("div", null, 
-                        React.createElement("small", null,  toputils.formatTimeStamp(flow.error.timestamp) )
-                    )
-                )
-            )
-        );
-    }
-});
-
-var TimeStamp = React.createClass({displayName: "TimeStamp",
-    render: function () {
-
-        if (!this.props.t) {
-            //should be return null, but that triggers a React bug.
-            return React.createElement("tr", null);
-        }
-
-        var ts = toputils.formatTimeStamp(this.props.t);
-
-        var delta;
-        if (this.props.deltaTo) {
-            delta = toputils.formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
-            delta = React.createElement("span", {className: "text-muted"}, "(" + delta + ")");
-        } else {
-            delta = null;
-        }
-
-        return React.createElement("tr", null, 
-            React.createElement("td", null, this.props.title + ":"), 
-            React.createElement("td", null, ts, " ", delta)
-        );
-    }
-});
-
-var ConnectionInfo = React.createClass({displayName: "ConnectionInfo",
-
-    render: function () {
-        var conn = this.props.conn;
-        var address = conn.address.address.join(":");
-
-        var sni = React.createElement("tr", {key: "sni"}); //should be null, but that triggers a React bug.
-        if (conn.sni) {
-            sni = React.createElement("tr", {key: "sni"}, 
-                React.createElement("td", null, 
-                    React.createElement("abbr", {title: "TLS Server Name Indication"}, "TLS SNI:")
-                ), 
-                React.createElement("td", null, conn.sni)
-            );
-        }
-        return (
-            React.createElement("table", {className: "connection-table"}, 
-                React.createElement("tbody", null, 
-                    React.createElement("tr", {key: "address"}, 
-                        React.createElement("td", null, "Address:"), 
-                        React.createElement("td", null, address)
-                    ), 
-                    sni
-                )
-            )
-        );
-    }
-});
-
-var CertificateInfo = React.createClass({displayName: "CertificateInfo",
-    render: function () {
-        //TODO: We should fetch human-readable certificate representation
-        // from the server
-        var flow = this.props.flow;
-        var client_conn = flow.client_conn;
-        var server_conn = flow.server_conn;
-
-        var preStyle = {maxHeight: 100};
-        return (
-            React.createElement("div", null, 
-            client_conn.cert ? React.createElement("h4", null, "Client Certificate") : null, 
-            client_conn.cert ? React.createElement("pre", {style: preStyle}, client_conn.cert) : null, 
-
-            server_conn.cert ? React.createElement("h4", null, "Server Certificate") : null, 
-            server_conn.cert ? React.createElement("pre", {style: preStyle}, server_conn.cert) : null
-            )
-        );
-    }
-});
-
-var Timing = React.createClass({displayName: "Timing",
-    render: function () {
-        var flow = this.props.flow;
-        var sc = flow.server_conn;
-        var cc = flow.client_conn;
-        var req = flow.request;
-        var resp = flow.response;
-
-        var timestamps = [
-            {
-                title: "Server conn. initiated",
-                t: sc.timestamp_start,
-                deltaTo: req.timestamp_start
-            }, {
-                title: "Server conn. TCP handshake",
-                t: sc.timestamp_tcp_setup,
-                deltaTo: req.timestamp_start
-            }, {
-                title: "Server conn. SSL handshake",
-                t: sc.timestamp_ssl_setup,
-                deltaTo: req.timestamp_start
-            }, {
-                title: "Client conn. established",
-                t: cc.timestamp_start,
-                deltaTo: req.timestamp_start
-            }, {
-                title: "Client conn. SSL handshake",
-                t: cc.timestamp_ssl_setup,
-                deltaTo: req.timestamp_start
-            }, {
-                title: "First request byte",
-                t: req.timestamp_start,
-            }, {
-                title: "Request complete",
-                t: req.timestamp_end,
-                deltaTo: req.timestamp_start
-            }
-        ];
-
-        if (flow.response) {
-            timestamps.push(
-                {
-                    title: "First response byte",
-                    t: resp.timestamp_start,
-                    deltaTo: req.timestamp_start
-                }, {
-                    title: "Response complete",
-                    t: resp.timestamp_end,
-                    deltaTo: req.timestamp_start
-                }
-            );
-        }
-
-        //Add unique key for each row.
-        timestamps.forEach(function (e) {
-            e.key = e.title;
-        });
-
-        timestamps = _.sortBy(timestamps, 't');
-
-        var rows = timestamps.map(function (e) {
-            return React.createElement(TimeStamp, React.__spread({},  e));
-        });
-
-        return (
-            React.createElement("div", null, 
-                React.createElement("h4", null, "Timing"), 
-                React.createElement("table", {className: "timing-table"}, 
-                    React.createElement("tbody", null, 
-                    rows
-                    )
-                )
-            )
-        );
-    }
-});
-
-var FlowDetailConnectionInfo = React.createClass({displayName: "FlowDetailConnectionInfo",
-    render: function () {
-        var flow = this.props.flow;
-        var client_conn = flow.client_conn;
-        var server_conn = flow.server_conn;
-        return (
-            React.createElement("section", null, 
-
-                React.createElement("h4", null, "Client Connection"), 
-                React.createElement(ConnectionInfo, {conn: client_conn}), 
-
-                React.createElement("h4", null, "Server Connection"), 
-                React.createElement(ConnectionInfo, {conn: server_conn}), 
-
-                React.createElement(CertificateInfo, {flow: flow}), 
-
-                React.createElement(Timing, {flow: flow})
-
-            )
-        );
-    }
-});
-
-var allTabs = {
-    request: FlowDetailRequest,
-    response: FlowDetailResponse,
-    error: FlowDetailError,
-    details: FlowDetailConnectionInfo
-};
-
-var FlowDetail = React.createClass({displayName: "FlowDetail",
-    mixins: [common.StickyHeadMixin, common.Navigation, common.State],
-    getTabs: function (flow) {
-        var tabs = [];
-        ["request", "response", "error"].forEach(function (e) {
-            if (flow[e]) {
-                tabs.push(e);
-            }
-        });
-        tabs.push("details");
-        return tabs;
-    },
-    nextTab: function (i) {
-        var tabs = this.getTabs(this.props.flow);
-        var currentIndex = tabs.indexOf(this.getParams().detailTab);
-        // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
-        var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
-        this.selectTab(tabs[nextIndex]);
-    },
-    selectTab: function (panel) {
-        this.replaceWith(
-            "flow",
-            {
-                flowId: this.getParams().flowId,
-                detailTab: panel
-            }
-        );
-    },
-    render: function () {
-        var flow = this.props.flow;
-        var tabs = this.getTabs(flow);
-        var active = this.getParams().detailTab;
-
-        if (!_.contains(tabs, active)) {
-            if (active === "response" && flow.error) {
-                active = "error";
-            } else if (active === "error" && flow.response) {
-                active = "response";
-            } else {
-                active = tabs[0];
-            }
-            this.selectTab(active);
-        }
-
-        var Tab = allTabs[active];
-        return (
-            React.createElement("div", {className: "flow-detail", onScroll: this.adjustHead}, 
-                React.createElement(FlowDetailNav, {ref: "head", 
-                    flow: flow, 
-                    tabs: tabs, 
-                    active: active, 
-                    selectTab: this.selectTab}), 
-                React.createElement(Tab, {flow: flow})
-            )
-        );
-    }
-});
-
-module.exports = {
-    FlowDetail: FlowDetail
-};
-
-},{"../actions.js":2,"../flow/utils.js":17,"../utils.js":20,"./common.js":4,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":23,"./common.js":4,"./virtualscroll.js":17,"lodash":"lodash","react":"react"}],6:[function(require,module,exports){
 var React = require("react");
 var RequestUtils = require("../flow/utils.js").RequestUtils;
 var ResponseUtils = require("../flow/utils.js").ResponseUtils;
@@ -1379,7 +980,7 @@ var all_columns = [
 
 module.exports = all_columns;
 
-},{"../flow/utils.js":17,"../utils.js":20,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":21,"../utils.js":24,"react":"react"}],7:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 var utils = require("../utils.js");
@@ -1579,7 +1180,582 @@ var FlowTable = React.createClass({displayName: "FlowTable",
 module.exports = FlowTable;
 
 
-},{"../utils.js":20,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":13,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
+},{"../utils.js":24,"./common.js":4,"./flowtable-columns.js":6,"./virtualscroll.js":17,"lodash":"lodash","react":"react"}],8:[function(require,module,exports){
+var React = require("react");
+var _ = require("lodash");
+
+var MessageUtils = require("../../flow/utils.js").MessageUtils;
+var utils = require("../../utils.js");
+
+var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
+var Image = React.createClass({displayName: "Image",
+    statics: {
+        matches: function (message) {
+            return image_regex.test(MessageUtils.getContentType(message));
+        }
+    },
+    render: function () {
+        var message_name = this.props.flow.request === this.props.message ? "request" : "response";
+        var url = "/flows/" + this.props.flow.id + "/" + message_name + "/content";
+        return React.createElement("div", {className: "flowview-image"}, 
+            React.createElement("img", {src: url, alt: "preview", className: "img-thumbnail"})
+        );
+    }
+});
+
+var Raw = React.createClass({displayName: "Raw",
+    statics: {
+        matches: function (message) {
+            return true;
+        }
+    },
+    render: function () {
+        //FIXME
+        return React.createElement("div", null, "raw");
+    }
+});
+
+
+var Auto = React.createClass({displayName: "Auto",
+    statics: {
+        matches: function () {
+            return false; // don't match itself
+        },
+        findView: function (message) {
+            for (var i = 0; i < all.length; i++) {
+                if (all[i].matches(message)) {
+                    return all[i];
+                }
+            }
+            return all[all.length - 1];
+        }
+    },
+    render: function () {
+        var View = Auto.findView(this.props.message);
+        return React.createElement(View, React.__spread({},  this.props));
+    }
+});
+
+var all = [Auto, Image, Raw];
+
+
+var ContentEmpty = React.createClass({displayName: "ContentEmpty",
+    render: function () {
+        var message_name = this.props.flow.request === this.props.message ? "request" : "response";
+        return React.createElement("div", {className: "alert alert-info"}, "No ", message_name, " content.");
+    }
+});
+
+var ContentMissing = React.createClass({displayName: "ContentMissing",
+    render: function () {
+        var message_name = this.props.flow.request === this.props.message ? "Request" : "Response";
+        return React.createElement("div", {className: "alert alert-info"}, message_name, " content missing.");
+    }
+});
+
+var TooLarge = React.createClass({displayName: "TooLarge",
+    render: function () {
+        var size = utils.formatSize(this.props.message.contentLength);
+        return React.createElement("div", {className: "alert alert-warning"}, 
+            React.createElement("button", {onClick: this.props.onClick, className: "btn btn-xs btn-warning pull-right"}, "Display anyway"), 
+            size, " content size."
+        );
+    }
+});
+
+var ViewSelector = React.createClass({displayName: "ViewSelector",
+    render: function () {
+        var views = [];
+        for (var i = 0; i < all.length; i++) {
+            var view = all[i];
+            var className = "btn btn-default";
+            if (view === this.props.active) {
+                className += " active";
+            }
+            var text;
+            if (view === Auto) {
+                text = "auto: " + Auto.findView(this.props.message).displayName.toLowerCase();
+            } else {
+                text = view.displayName.toLowerCase();
+            }
+            views.push(
+                React.createElement("button", {
+                    key: view.displayName, 
+                    onClick: this.props.selectView.bind(null, view), 
+                    className: className}, 
+                    text
+                )
+            );
+        }
+
+        return React.createElement("div", {className: "view-selector btn-group btn-group-xs"}, views);
+    }
+});
+
+var ContentView = React.createClass({displayName: "ContentView",
+    getInitialState: function () {
+        return {
+            displayLarge: false,
+            View: Auto
+        };
+    },
+    propTypes: {
+        // It may seem a bit weird at the first glance:
+        // Every view takes the flow and the message as props, e.g.
+        // <Auto flow={flow} message={flow.request}/>
+        flow: React.PropTypes.object.isRequired,
+        message: React.PropTypes.object.isRequired,
+    },
+    selectView: function (view) {
+        this.setState({
+            View: view
+        });
+    },
+    displayLarge: function () {
+        this.setState({displayLarge: true});
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.message !== this.props.message) {
+            this.setState(this.getInitialState());
+        }
+    },
+    render: function () {
+        var message = this.props.message;
+        if (message.contentLength === 0) {
+            return React.createElement(ContentEmpty, React.__spread({},  this.props));
+        } else if (message.contentLength === null) {
+            return React.createElement(ContentMissing, React.__spread({},  this.props));
+        } else if (message.contentLength > 1024 * 1024 * 3 && !this.state.displayLarge) {
+            return React.createElement(TooLarge, React.__spread({},  this.props, {onClick: this.displayLarge}));
+        }
+
+        return React.createElement("div", null, 
+            React.createElement(this.state.View, React.__spread({},  this.props)), 
+            React.createElement("div", {className: "text-center"}, 
+                React.createElement(ViewSelector, {selectView: this.selectView, active: this.state.View, message: message})
+            )
+        );
+    }
+});
+
+module.exports = ContentView;
+
+},{"../../flow/utils.js":21,"../../utils.js":24,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
+var React = require("react");
+var _ = require("lodash");
+
+var utils = require("../../utils.js");
+
+var TimeStamp = React.createClass({displayName: "TimeStamp",
+    render: function () {
+
+        if (!this.props.t) {
+            //should be return null, but that triggers a React bug.
+            return React.createElement("tr", null);
+        }
+
+        var ts = utils.formatTimeStamp(this.props.t);
+
+        var delta;
+        if (this.props.deltaTo) {
+            delta = utils.formatTimeDelta(1000 * (this.props.t - this.props.deltaTo));
+            delta = React.createElement("span", {className: "text-muted"}, "(" + delta + ")");
+        } else {
+            delta = null;
+        }
+
+        return React.createElement("tr", null, 
+            React.createElement("td", null, this.props.title + ":"), 
+            React.createElement("td", null, ts, " ", delta)
+        );
+    }
+});
+
+var ConnectionInfo = React.createClass({displayName: "ConnectionInfo",
+
+    render: function () {
+        var conn = this.props.conn;
+        var address = conn.address.address.join(":");
+
+        var sni = React.createElement("tr", {key: "sni"}); //should be null, but that triggers a React bug.
+        if (conn.sni) {
+            sni = React.createElement("tr", {key: "sni"}, 
+                React.createElement("td", null, 
+                    React.createElement("abbr", {title: "TLS Server Name Indication"}, "TLS SNI:")
+                ), 
+                React.createElement("td", null, conn.sni)
+            );
+        }
+        return (
+            React.createElement("table", {className: "connection-table"}, 
+                React.createElement("tbody", null, 
+                    React.createElement("tr", {key: "address"}, 
+                        React.createElement("td", null, "Address:"), 
+                        React.createElement("td", null, address)
+                    ), 
+                    sni
+                )
+            )
+        );
+    }
+});
+
+var CertificateInfo = React.createClass({displayName: "CertificateInfo",
+    render: function () {
+        //TODO: We should fetch human-readable certificate representation
+        // from the server
+        var flow = this.props.flow;
+        var client_conn = flow.client_conn;
+        var server_conn = flow.server_conn;
+
+        var preStyle = {maxHeight: 100};
+        return (
+            React.createElement("div", null, 
+            client_conn.cert ? React.createElement("h4", null, "Client Certificate") : null, 
+            client_conn.cert ? React.createElement("pre", {style: preStyle}, client_conn.cert) : null, 
+
+            server_conn.cert ? React.createElement("h4", null, "Server Certificate") : null, 
+            server_conn.cert ? React.createElement("pre", {style: preStyle}, server_conn.cert) : null
+            )
+        );
+    }
+});
+
+var Timing = React.createClass({displayName: "Timing",
+    render: function () {
+        var flow = this.props.flow;
+        var sc = flow.server_conn;
+        var cc = flow.client_conn;
+        var req = flow.request;
+        var resp = flow.response;
+
+        var timestamps = [
+            {
+                title: "Server conn. initiated",
+                t: sc.timestamp_start,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Server conn. TCP handshake",
+                t: sc.timestamp_tcp_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Server conn. SSL handshake",
+                t: sc.timestamp_ssl_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Client conn. established",
+                t: cc.timestamp_start,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "Client conn. SSL handshake",
+                t: cc.timestamp_ssl_setup,
+                deltaTo: req.timestamp_start
+            }, {
+                title: "First request byte",
+                t: req.timestamp_start,
+            }, {
+                title: "Request complete",
+                t: req.timestamp_end,
+                deltaTo: req.timestamp_start
+            }
+        ];
+
+        if (flow.response) {
+            timestamps.push(
+                {
+                    title: "First response byte",
+                    t: resp.timestamp_start,
+                    deltaTo: req.timestamp_start
+                }, {
+                    title: "Response complete",
+                    t: resp.timestamp_end,
+                    deltaTo: req.timestamp_start
+                }
+            );
+        }
+
+        //Add unique key for each row.
+        timestamps.forEach(function (e) {
+            e.key = e.title;
+        });
+
+        timestamps = _.sortBy(timestamps, 't');
+
+        var rows = timestamps.map(function (e) {
+            return React.createElement(TimeStamp, React.__spread({},  e));
+        });
+
+        return (
+            React.createElement("div", null, 
+                React.createElement("h4", null, "Timing"), 
+                React.createElement("table", {className: "timing-table"}, 
+                    React.createElement("tbody", null, 
+                    rows
+                    )
+                )
+            )
+        );
+    }
+});
+
+var Details = React.createClass({displayName: "Details",
+    render: function () {
+        var flow = this.props.flow;
+        var client_conn = flow.client_conn;
+        var server_conn = flow.server_conn;
+        return (
+            React.createElement("section", null, 
+
+                React.createElement("h4", null, "Client Connection"), 
+                React.createElement(ConnectionInfo, {conn: client_conn}), 
+
+                React.createElement("h4", null, "Server Connection"), 
+                React.createElement(ConnectionInfo, {conn: server_conn}), 
+
+                React.createElement(CertificateInfo, {flow: flow}), 
+
+                React.createElement(Timing, {flow: flow})
+
+            )
+        );
+    }
+});
+
+module.exports = Details;
+
+},{"../../utils.js":24,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+var React = require("react");
+var _ = require("lodash");
+
+var common = require("../common.js");
+var Nav = require("./nav.js");
+var Messages = require("./messages.js");
+var Details = require("./details.js");
+
+var allTabs = {
+    request: Messages.Request,
+    response: Messages.Response,
+    error: Messages.Error,
+    details: Details
+};
+
+var FlowView = React.createClass({displayName: "FlowView",
+    mixins: [common.StickyHeadMixin, common.Navigation, common.State],
+    getTabs: function (flow) {
+        var tabs = [];
+        ["request", "response", "error"].forEach(function (e) {
+            if (flow[e]) {
+                tabs.push(e);
+            }
+        });
+        tabs.push("details");
+        return tabs;
+    },
+    nextTab: function (i) {
+        var tabs = this.getTabs(this.props.flow);
+        var currentIndex = tabs.indexOf(this.getParams().detailTab);
+        // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
+        var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
+        this.selectTab(tabs[nextIndex]);
+    },
+    selectTab: function (panel) {
+        this.replaceWith(
+            "flow",
+            {
+                flowId: this.getParams().flowId,
+                detailTab: panel
+            }
+        );
+    },
+    render: function () {
+        var flow = this.props.flow;
+        var tabs = this.getTabs(flow);
+        var active = this.getParams().detailTab;
+
+        if (!_.contains(tabs, active)) {
+            if (active === "response" && flow.error) {
+                active = "error";
+            } else if (active === "error" && flow.response) {
+                active = "response";
+            } else {
+                active = tabs[0];
+            }
+            this.selectTab(active);
+        }
+
+        var Tab = allTabs[active];
+        return (
+            React.createElement("div", {className: "flow-detail", onScroll: this.adjustHead}, 
+                React.createElement(Nav, {ref: "head", 
+                    flow: flow, 
+                    tabs: tabs, 
+                    active: active, 
+                    selectTab: this.selectTab}), 
+                React.createElement(Tab, {flow: flow})
+            )
+        );
+    }
+});
+
+module.exports = FlowView;
+
+},{"../common.js":4,"./details.js":9,"./messages.js":11,"./nav.js":12,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+var React = require("react");
+
+var flowutils = require("../../flow/utils.js");
+var utils = require("../../utils.js");
+var ContentView = require("./contentview.js");
+
+var Headers = React.createClass({displayName: "Headers",
+    render: function () {
+        var rows = this.props.message.headers.map(function (header, i) {
+            return (
+                React.createElement("tr", {key: i}, 
+                    React.createElement("td", {className: "header-name"}, header[0] + ":"), 
+                    React.createElement("td", {className: "header-value"}, header[1])
+                )
+            );
+        });
+        return (
+            React.createElement("table", {className: "header-table"}, 
+                React.createElement("tbody", null, 
+                    rows
+                )
+            )
+        );
+    }
+});
+
+var Request = React.createClass({displayName: "Request",
+    render: function () {
+        var flow = this.props.flow;
+        var first_line = [
+            flow.request.method,
+            flowutils.RequestUtils.pretty_url(flow.request),
+            "HTTP/" + flow.request.httpversion.join(".")
+        ].join(" ");
+
+        //TODO: Styling
+
+        return (
+            React.createElement("section", null, 
+                React.createElement("div", {className: "first-line"}, first_line ), 
+                React.createElement(Headers, {message: flow.request}), 
+                React.createElement("hr", null), 
+                React.createElement(ContentView, {flow: flow, message: flow.request})
+            )
+        );
+    }
+});
+
+var Response = React.createClass({displayName: "Response",
+    render: function () {
+        var flow = this.props.flow;
+        var first_line = [
+            "HTTP/" + flow.response.httpversion.join("."),
+            flow.response.code,
+            flow.response.msg
+        ].join(" ");
+
+        //TODO: Styling
+
+        return (
+            React.createElement("section", null, 
+                React.createElement("div", {className: "first-line"}, first_line ), 
+                React.createElement(Headers, {message: flow.response}), 
+                React.createElement("hr", null), 
+                React.createElement(ContentView, {flow: flow, message: flow.response})
+            )
+        );
+    }
+});
+
+var Error = React.createClass({displayName: "Error",
+    render: function () {
+        var flow = this.props.flow;
+        return (
+            React.createElement("section", null, 
+                React.createElement("div", {className: "alert alert-warning"}, 
+                flow.error.msg, 
+                    React.createElement("div", null, 
+                        React.createElement("small", null,  utils.formatTimeStamp(flow.error.timestamp) )
+                    )
+                )
+            )
+        );
+    }
+});
+
+module.exports = {
+    Request: Request,
+    Response: Response,
+    Error: Error
+};
+
+},{"../../flow/utils.js":21,"../../utils.js":24,"./contentview.js":8,"react":"react"}],12:[function(require,module,exports){
+var React = require("react");
+
+var actions = require("../../actions.js");
+
+var NavAction = React.createClass({displayName: "NavAction",
+    onClick: function (e) {
+        e.preventDefault();
+        this.props.onClick();
+    },
+    render: function () {
+        return (
+            React.createElement("a", {title: this.props.title, 
+                href: "#", 
+                className: "nav-action", 
+                onClick: this.onClick}, 
+                React.createElement("i", {className: "fa fa-fw " + this.props.icon})
+            )
+        );
+    }
+});
+
+var Nav = React.createClass({displayName: "Nav",
+    render: function () {
+        var flow = this.props.flow;
+
+        var tabs = this.props.tabs.map(function (e) {
+            var str = e.charAt(0).toUpperCase() + e.slice(1);
+            var className = this.props.active === e ? "active" : "";
+            var onClick = function (event) {
+                this.props.selectTab(e);
+                event.preventDefault();
+            }.bind(this);
+            return React.createElement("a", {key: e, 
+                href: "#", 
+                className: className, 
+                onClick: onClick}, str);
+        }.bind(this));
+
+        var acceptButton = null;
+        if(flow.intercepted){
+            acceptButton = React.createElement(NavAction, {title: "[a]ccept intercepted flow", icon: "fa-play", onClick: actions.FlowActions.accept.bind(null, flow)});
+        }
+        var revertButton = null;
+        if(flow.modified){
+            revertButton = React.createElement(NavAction, {title: "revert changes to flow [V]", icon: "fa-history", onClick: actions.FlowActions.revert.bind(null, flow)});
+        }
+
+        return (
+            React.createElement("nav", {ref: "head", className: "nav-tabs nav-tabs-sm"}, 
+                tabs, 
+                React.createElement(NavAction, {title: "[d]elete flow", icon: "fa-trash", onClick: actions.FlowActions.delete.bind(null, flow)}), 
+                React.createElement(NavAction, {title: "[D]uplicate flow", icon: "fa-copy", onClick: actions.FlowActions.duplicate.bind(null, flow)}), 
+                React.createElement(NavAction, {disabled: true, title: "[r]eplay flow", icon: "fa-repeat", onClick: actions.FlowActions.replay.bind(null, flow)}), 
+                acceptButton, 
+                revertButton
+            )
+        );
+    }
+});
+
+module.exports = Nav;
+
+},{"../../actions.js":2,"react":"react"}],13:[function(require,module,exports){
 var React = require("react");
 
 var Footer = React.createClass({displayName: "Footer",
@@ -1598,7 +1774,7 @@ var Footer = React.createClass({displayName: "Footer",
 
 module.exports = Footer;
 
-},{"react":"react"}],10:[function(require,module,exports){
+},{"react":"react"}],14:[function(require,module,exports){
 var React = require("react");
 var $ = require("jquery");
 
@@ -1774,7 +1950,7 @@ var MainMenu = React.createClass({displayName: "MainMenu",
         this.setQuery(d);
     },
     onInterceptChange: function (val) {
-        SettingsActions.update({intercept: val});
+        actions.SettingsActions.update({intercept: val});
     },
     render: function () {
         var filter = this.getQuery()[Query.FILTER] || "";
@@ -1990,7 +2166,7 @@ module.exports = {
     Header: Header
 }
 
-},{"../actions.js":2,"../filt/filt.js":16,"../utils.js":20,"./common.js":4,"jquery":"jquery","react":"react"}],11:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":20,"../utils.js":24,"./common.js":4,"jquery":"jquery","react":"react"}],15:[function(require,module,exports){
 var React = require("react");
 
 var common = require("./common.js");
@@ -2000,7 +2176,7 @@ var toputils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
 FlowTable = require("./flowtable.js");
-var flowdetail = require("./flowdetail.js");
+var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({displayName: "MainView",
     mixins: [common.Navigation, common.State],
@@ -2196,6 +2372,8 @@ var MainView = React.createClass({displayName: "MainView",
                     actions.FlowActions.revert(flow);
                 }
                 break;
+            case toputils.Key.SHIFT:
+                break;
             default:
                 console.debug("keydown", e.keyCode);
                 return;
@@ -2212,7 +2390,7 @@ var MainView = React.createClass({displayName: "MainView",
         if (selected) {
             details = [
                 React.createElement(common.Splitter, {key: "splitter"}),
-                React.createElement(flowdetail.FlowDetail, {key: "flowDetails", ref: "flowDetails", flow: selected})
+                React.createElement(FlowView, {key: "flowDetails", ref: "flowDetails", flow: selected})
             ];
         } else {
             details = null;
@@ -2234,7 +2412,7 @@ var MainView = React.createClass({displayName: "MainView",
 module.exports = MainView;
 
 
-},{"../actions.js":2,"../filt/filt.js":16,"../store/view.js":19,"../utils.js":20,"./common.js":4,"./flowdetail.js":6,"./flowtable.js":8,"react":"react"}],12:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":20,"../store/view.js":23,"../utils.js":24,"./common.js":4,"./flowtable.js":7,"./flowview/index.js":10,"react":"react"}],16:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -2329,7 +2507,7 @@ module.exports = {
     routes: routes
 };
 
-},{"../actions.js":2,"../store/store.js":18,"./common.js":4,"./eventlog.js":5,"./footer.js":9,"./header.js":10,"./mainview.js":11,"lodash":"lodash","react":"react","react-router":"react-router"}],13:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":22,"./common.js":4,"./eventlog.js":5,"./footer.js":13,"./header.js":14,"./mainview.js":15,"lodash":"lodash","react":"react","react-router":"react-router"}],17:[function(require,module,exports){
 var React = require("react");
 
 var VirtualScrollMixin = {
@@ -2416,7 +2594,7 @@ var VirtualScrollMixin = {
 
 module.exports  = VirtualScrollMixin;
 
-},{"react":"react"}],14:[function(require,module,exports){
+},{"react":"react"}],18:[function(require,module,exports){
 
 var actions = require("./actions.js");
 
@@ -2446,7 +2624,7 @@ function Connection(url) {
 
 module.exports = Connection;
 
-},{"./actions.js":2}],15:[function(require,module,exports){
+},{"./actions.js":2}],19:[function(require,module,exports){
 
 var flux = require("flux");
 
@@ -2470,7 +2648,7 @@ module.exports = {
     AppDispatcher: AppDispatcher
 };
 
-},{"flux":"flux"}],16:[function(require,module,exports){
+},{"flux":"flux"}],20:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -4246,10 +4424,10 @@ module.exports = (function() {
   };
 })();
 
-},{"../flow/utils.js":17}],17:[function(require,module,exports){
+},{"../flow/utils.js":21}],21:[function(require,module,exports){
 var _ = require("lodash");
 
-var _MessageUtils = {
+var MessageUtils = {
     getContentType: function (message) {
         return this.get_first_header(message, /^Content-Type$/i);
     },
@@ -4291,7 +4469,7 @@ var defaultPorts = {
     "https": 443
 };
 
-var RequestUtils = _.extend(_MessageUtils, {
+var RequestUtils = _.extend(MessageUtils, {
     pretty_host: function (request) {
         //FIXME: Add hostheader
         return request.host;
@@ -4305,16 +4483,16 @@ var RequestUtils = _.extend(_MessageUtils, {
     }
 });
 
-var ResponseUtils = _.extend(_MessageUtils, {});
+var ResponseUtils = _.extend(MessageUtils, {});
 
 
 module.exports = {
     ResponseUtils: ResponseUtils,
-    RequestUtils: RequestUtils
+    RequestUtils: RequestUtils,
+    MessageUtils: MessageUtils
+};
 
-}
-
-},{"lodash":"lodash"}],18:[function(require,module,exports){
+},{"lodash":"lodash"}],22:[function(require,module,exports){
 
 var _ = require("lodash");
 var $ = require("jquery");
@@ -4497,7 +4675,7 @@ module.exports = {
     FlowStore: FlowStore
 };
 
-},{"../actions.js":2,"../dispatcher.js":15,"../utils.js":20,"events":1,"jquery":"jquery","lodash":"lodash"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":19,"../utils.js":24,"events":1,"jquery":"jquery","lodash":"lodash"}],23:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
 var _ = require("lodash");
 
@@ -4514,8 +4692,6 @@ var default_filt = function (elem) {
 
 function StoreView(store, filt, sortfun) {
     EventEmitter.call(this);
-    filt = filt || default_filt;
-    sortfun = sortfun || default_sort;
 
     this.store = store;
 
@@ -4539,10 +4715,10 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("recalculate", this.recalculate);
     },
     recalculate: function (filt, sortfun) {
-        filt = filt || default_filt;
-        sortfun = sortfun || default_sort;
+        filt = filt || this.filt || default_filt;
+        sortfun = sortfun || this.sortfun || default_sort;
         filt = filt.bind(this);
-        sortfun = sortfun.bind(this)
+        sortfun = sortfun.bind(this);
         this.filt = filt;
         this.sortfun = sortfun;
 
@@ -4615,7 +4791,7 @@ module.exports = {
     StoreView: StoreView
 };
 
-},{"../utils.js":20,"events":1,"lodash":"lodash"}],20:[function(require,module,exports){
+},{"../utils.js":24,"events":1,"lodash":"lodash"}],24:[function(require,module,exports){
 var $ = require("jquery");
 var _ = require("lodash");
 
@@ -4633,6 +4809,7 @@ var Key = {
     TAB: 9,
     SPACE: 32,
     BACKSPACE: 8,
+    SHIFT: 16
 };
 // Add A-Z
 for (var i = 65; i <= 90; i++) {

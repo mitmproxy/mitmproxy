@@ -119,6 +119,8 @@ class HTTPMessage(stateobject.StateObject):
         if short:
             if self.content:
                 ret["contentLength"] = len(self.content)
+            elif self.content == CONTENT_MISSING:
+                ret["contentLength"] = None
             else:
                 ret["contentLength"] = 0
         return ret

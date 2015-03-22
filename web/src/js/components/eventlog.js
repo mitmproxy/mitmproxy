@@ -3,6 +3,7 @@ var common = require("./common.js");
 var Query = require("../actions.js").Query;
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
+var _ = require("lodash");
 
 var LogMessage = React.createClass({
     render: function () {

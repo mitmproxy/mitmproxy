@@ -117,5 +117,6 @@ module.exports = {
     ConnectionActions: ConnectionActions,
     FlowActions: FlowActions,
     StoreCmds: StoreCmds,
+    SettingsActions: SettingsActions,
     Query: Query
 };

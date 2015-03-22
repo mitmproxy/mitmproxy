@@ -290,6 +290,12 @@ header .menu {
   max-height: 100px;
   overflow-y: auto;
 }
+.flow-detail hr {
+  margin: 0 0 5px;
+}
+.view-selector {
+  margin-top: 10px;
+}
 .flow-detail table {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   width: 100%;
@@ -306,6 +312,9 @@ header .menu {
   width: 50%;
   padding-right: 1em;
 }
+.header-table td {
+  line-height: 1.3em;
+}
 .header-table .header-name {
   width: 33%;
   padding-right: 1em;
@@ -315,6 +324,13 @@ header .menu {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.flowview-image {
+  text-align: center;
+}
+.flowview-image img {
+  max-width: 100%;
+  max-height: 100%;
 }
 .eventlog {
   height: 200px;
