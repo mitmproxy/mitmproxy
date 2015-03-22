@@ -219,10 +219,14 @@ var ContentView = React.createClass({
             return <TooLarge {...this.props} onClick={this.displayLarge}/>;
         }
 
+        var downloadUrl = MessageUtils.getContentURL(this.props.flow, message);
+
         return <div>
             <this.state.View {...this.props} />
-            <div className="text-center">
+            <div className="view-options text-center">
                 <ViewSelector selectView={this.selectView} active={this.state.View} message={message}/>
+                &nbsp;
+                <a className="btn btn-default btn-xs" href={downloadUrl}><i className="fa fa-download"/></a>
             </div>
         </div>;
     }

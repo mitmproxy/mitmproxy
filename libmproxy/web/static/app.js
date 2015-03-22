@@ -1416,10 +1416,14 @@ var ContentView = React.createClass({displayName: "ContentView",
             return React.createElement(TooLarge, React.__spread({},  this.props, {onClick: this.displayLarge}));
         }
 
+        var downloadUrl = MessageUtils.getContentURL(this.props.flow, message);
+
         return React.createElement("div", null, 
             React.createElement(this.state.View, React.__spread({},  this.props)), 
-            React.createElement("div", {className: "text-center"}, 
-                React.createElement(ViewSelector, {selectView: this.selectView, active: this.state.View, message: message})
+            React.createElement("div", {className: "view-options text-center"}, 
+                React.createElement(ViewSelector, {selectView: this.selectView, active: this.state.View, message: message}), 
+                " ", 
+                React.createElement("a", {className: "btn btn-default btn-xs", href: downloadUrl}, React.createElement("i", {className: "fa fa-download"}))
             )
         );
     }
