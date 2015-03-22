@@ -356,15 +356,17 @@ var Header = React.createClass({
     },
     render: function () {
         var header = header_entries.map(function (entry, i) {
-            var classes = React.addons.classSet({
-                active: entry == this.state.active
-            });
+            var className;
+            if(entry === this.state.active){
+                className = "active";
+            } else {
+                className = "";
+            }
             return (
                 <a key={i}
                     href="#"
-                    className={classes}
-                    onClick={this.handleClick.bind(this, entry)}
-                >
+                    className={className}
+                    onClick={this.handleClick.bind(this, entry)}>
                     { entry.title}
                 </a>
             );

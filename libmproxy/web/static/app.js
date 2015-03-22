@@ -478,31 +478,43 @@ var StickyHeadMixin = {
 
 var Navigation = _.extend({}, ReactRouter.Navigation, {
     setQuery: function (dict) {
-        var q = this.context.getCurrentQuery();
+        var q = this.context.router.getCurrentQuery();
         for(var i in dict){
             if(dict.hasOwnProperty(i)){
                 q[i] = dict[i] || undefined; //falsey values shall be removed.
             }
         }
         q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/957
-        this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
+        this.replaceWith(this.context.router.getCurrentPath(), this.context.router.getCurrentParams(), q);
     },
     replaceWith: function(routeNameOrPath, params, query) {
         if(routeNameOrPath === undefined){
-            routeNameOrPath = this.context.getCurrentPath();
+            routeNameOrPath = this.context.router.getCurrentPath();
         }
         if(params === undefined){
-            params = this.context.getCurrentParams();
+            params = this.context.router.getCurrentParams();
         }
         if(query === undefined) {
-            query = this.context.getCurrentQuery();
+            query = this.context.router.getCurrentQuery();
         }
 
-        // FIXME: react-router is just broken.
-        ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
+        // FIXME: react-router is just broken,
+        // we hopefully just need to wait for the next release with https://github.com/rackt/react-router/pull/957.
+        this.context.router.replaceWith(routeNameOrPath, params, query);
     }
 });
-_.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
+
+// react-router is fairly good at changing its API regularly.
+// We keep the old method for now - if it should turn out that their changes are permanent,
+// we may remove this mixin and access react-router directly again.
+var State = _.extend({}, ReactRouter.State, {
+    getQuery: function(){
+        return this.context.router.getCurrentQuery();
+    },
+    getParams: function(){
+        return this.context.router.getCurrentParams();
+    }
+});
 
 var Splitter = React.createClass({displayName: "Splitter",
     getDefaultProps: function () {
@@ -610,7 +622,7 @@ var Splitter = React.createClass({displayName: "Splitter",
 });
 
 module.exports = {
-    State: ReactRouter.State, // keep here - react-router is pretty buggy, we may need workarounds in the future.
+    State: State,
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,
     AutoScrollMixin: AutoScrollMixin,
@@ -2166,15 +2178,17 @@ var Header = React.createClass({displayName: "Header",
     },
     render: function () {
         var header = header_entries.map(function (entry, i) {
-            var classes = React.addons.classSet({
-                active: entry == this.state.active
-            });
+            var className;
+            if(entry === this.state.active){
+                className = "active";
+            } else {
+                className = "";
+            }
             return (
                 React.createElement("a", {key: i, 
                     href: "#", 
-                    className: classes, 
-                    onClick: this.handleClick.bind(this, entry)
-                }, 
+                    className: className, 
+                    onClick: this.handleClick.bind(this, entry)}, 
                      entry.title
                 )
             );
