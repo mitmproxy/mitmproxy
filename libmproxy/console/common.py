@@ -252,7 +252,7 @@ def copy_flow(part, scope, flow, master, state):
     try:
         master.add_event(str(len(data)))
         pyperclip.copy(data)
-    except RuntimeError:
+    except (RuntimeError, UnicodeDecodeError):
         def save(k):
             if k == "y":
                 ask_save_path("Save data", data, master, state)
