@@ -771,6 +771,8 @@ class FlowMaster(controller.Master):
             if all(e):
                 self.shutdown()
             self.client_playback.tick(self)
+            if self.client_playback.done():
+                self.client_playback = None
 
         return super(FlowMaster, self).tick(q, timeout)
 
