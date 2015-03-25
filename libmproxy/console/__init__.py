@@ -293,7 +293,7 @@ class ConsoleMaster(flow.FlowMaster):
             - a list of flows, otherwise.
         """
         try:
-            return flow.read_flows_from_paths([path])
+            return flow.read_flows_from_paths(path)
         except flow.FlowReadError as e:
             signals.status_message.send(message=e.strerror)
 
