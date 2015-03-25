@@ -298,6 +298,8 @@ class ConsoleMaster(flow.FlowMaster):
             signals.status_message.send(message=e.strerror)
 
     def client_playback_path(self, path):
+        if not isinstance(path, list):
+            path = [path]
         flows = self._readflows(path)
         if flows:
             self.start_client_playback(flows, False)
