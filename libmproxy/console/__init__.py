@@ -305,6 +305,8 @@ class ConsoleMaster(flow.FlowMaster):
             self.start_client_playback(flows, False)
 
     def server_playback_path(self, path):
+        if not isinstance(path, list):
+            path = [path]
         flows = self._readflows(path)
         if flows:
             self.start_server_playback(
