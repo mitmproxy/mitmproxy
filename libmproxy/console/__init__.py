@@ -293,16 +293,20 @@ class ConsoleMaster(flow.FlowMaster):
             - a list of flows, otherwise.
         """
         try:
-            return flow.read_flows_from_paths([path])
+            return flow.read_flows_from_paths(path)
         except flow.FlowReadError as e:
             signals.status_message.send(message=e.strerror)
 
     def client_playback_path(self, path):
+        if not isinstance(path, list):
+            path = [path]
         flows = self._readflows(path)
         if flows:
             self.start_client_playback(flows, False)
 
     def server_playback_path(self, path):
+        if not isinstance(path, list):
+            path = [path]
         flows = self._readflows(path)
         if flows:
             self.start_server_playback(
