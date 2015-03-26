@@ -45,7 +45,6 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
                 q[i] = dict[i] || undefined; //falsey values shall be removed.
             }
         }
-        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/957
         this.replaceWith(this.context.router.getCurrentPath(), this.context.router.getCurrentParams(), q);
     },
     replaceWith: function(routeNameOrPath, params, query) {
@@ -59,8 +58,6 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
             query = this.context.router.getCurrentQuery();
         }
 
-        // FIXME: react-router is just broken,
-        // we hopefully just need to wait for the next release with https://github.com/rackt/react-router/pull/957.
         this.context.router.replaceWith(routeNameOrPath, params, query);
     }
 });
