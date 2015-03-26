@@ -1,5 +1,5 @@
 import json
-from libmproxy import utils
+from libmproxy import utils, flow
 import tutils
 
 utils.CERT_SLEEP_TIME = 0
@@ -51,6 +51,23 @@ def test_pretty_json():
 def test_urldecode():
     s = "one=two&three=four"
     assert len(utils.urldecode(s)) == 2
+
+def test_multipartdecode():
+    boundary = 'somefancyboundary'
+    headers = flow.ODict([('content-type', ('multipart/form-data; boundary=%s' % boundary))])
+    content = "--{0}\n" \
+              "Content-Disposition: form-data; name=\"field1\"\n\n" \
+              "value1\n" \
+              "--{0}\n" \
+              "Content-Disposition: form-data; name=\"field2\"\n\n" \
+              "value2\n" \
+              "--{0}--".format(boundary)
+
+    form = utils.multipartdecode(headers, content)
+
+    assert len(form) == 2
+    assert form[0] == ('field1', 'value1')
+    assert form[1] == ('field2', 'value2')
 
 def test_pretty_duration():
     assert utils.pretty_duration(0.00001) == "0ms"

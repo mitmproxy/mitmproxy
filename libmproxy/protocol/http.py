@@ -15,6 +15,7 @@ from ..proxy.connection import ServerConnection
 from .. import encoding, utils, controller, stateobject, proxy
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
+HDR_FORM_MULTIPART = "multipart/form-data"
 CONTENT_MISSING = 0
 
 
@@ -509,6 +510,19 @@ class HTTPRequest(HTTPMessage):
         """
         self.headers["Host"] = [self.host]
 
+    def get_form(self):
+        """
+            Retrieves the URL-encoded or multipart form data, returning an ODict object.
+            Returns an empty ODict if there is no data or the content-type
+            indicates non-form data.
+        """
+        if self.content:
+            if self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
+                return self.get_form_urlencoded()
+            elif self.headers.in_any("content-type", HDR_FORM_MULTIPART, True):
+                return self.get_form_multipart()
+        return ODict([])
+
     def get_form_urlencoded(self):
         """
             Retrieves the URL-encoded form data, returning an ODict object.
@@ -516,7 +530,12 @@ class HTTPRequest(HTTPMessage):
             indicates non-form data.
         """
         if self.content and self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
-            return ODict(utils.urldecode(self.content))
+                return ODict(utils.urldecode(self.content))
+        return ODict([])
+
+    def get_form_multipart(self):
+        if self.content and self.headers.in_any("content-type", HDR_FORM_MULTIPART, True):
+                return ODict(utils.multipartdecode(self.headers, self.content))
         return ODict([])
 
     def set_form_urlencoded(self, odict):
