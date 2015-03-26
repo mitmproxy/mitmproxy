@@ -133,6 +133,9 @@ class WebMaster(flow.FlowMaster):
                     "Could not read flow file: %s"%v,
                     "error"
                 )
+        if self.options.app:
+            self.start_app(self.options.app_host, self.options.app_port)
+
 
     def tick(self):
         flow.FlowMaster.tick(self, self.masterq, timeout=0)
