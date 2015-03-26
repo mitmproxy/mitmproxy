@@ -119,6 +119,7 @@ class FlowHandler(RequestHandler):
 
     def put(self, flow_id):
         flow = self.flow
+        self.state.backup(flow)
         for a, b in self.json.iteritems():
 
             if a == "request":
@@ -130,6 +131,8 @@ class FlowHandler(RequestHandler):
                         request.port = int(v)
                     elif k == "httpversion":
                         request.httpversion = tuple(int(x) for x in v)
+                    elif k == "headers":
+                        request.headers.load_state(v)
                     else:
                         print "Warning: Unknown update {}.{}: {}".format(a, k, v)
 
@@ -142,6 +145,10 @@ class FlowHandler(RequestHandler):
                         response.code = int(v)
                     elif k == "httpversion":
                         response.httpversion = tuple(int(x) for x in v)
+                    elif k == "headers":
+                        response.headers.load_state(v)
+                    else:
+                        print "Warning: Unknown update {}.{}: {}".format(a, k, v)
             else:
                 print "Warning: Unknown update {}: {}".format(a, b)
         self.state.update_flow(flow)

@@ -593,6 +593,10 @@ class State(object):
     def accept_all(self, master):
         self.flows.accept_all(master)
 
+    def backup(self, f):
+        f.backup()
+        self.update_flow(f)
+
     def revert(self, f):
         f.revert()
         self.update_flow(f)
