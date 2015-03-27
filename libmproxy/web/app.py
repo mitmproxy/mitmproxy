@@ -166,6 +166,10 @@ class RevertFlow(RequestHandler):
 
 class ReplayFlow(RequestHandler):
     def post(self, flow_id):
+        self.flow.backup()
+        self.flow.response = None
+        self.state.update_flow(self.flow)
+
         r = self.master.replay_request(self.flow)
         if r:
             raise APIError(400, r)

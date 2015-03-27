@@ -155,6 +155,7 @@ header .menu {
   top: 27px;
   display: block;
   max-width: none;
+  opacity: 0.9;
 }
 .filter-input .popover .popover-content {
   max-height: 500px;
