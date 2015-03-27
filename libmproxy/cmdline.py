@@ -466,7 +466,7 @@ def common_options(parser):
         "--replay-ignore-payload-param",
         action="append", dest="replay_ignore_payload_params", type=str,
         help="""
-            Request's payload parameters (application/x-www-form-urlencoded) to
+            Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
             be ignored while searching for a saved flow to replay.
             Can be passed multiple times.
         """

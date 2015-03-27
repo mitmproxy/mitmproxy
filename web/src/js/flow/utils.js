@@ -80,6 +80,9 @@ var parseUrl = function (url) {
     //there are many correct ways to parse a URL,
     //however, a mitmproxy user may also wish to generate a not-so-correct URL. ;-)
     var parts = parseUrl_regex.exec(url);
+    if(!parts){
+        return false;
+    }
 
     var scheme = parts[1],
         host = parts[2],
