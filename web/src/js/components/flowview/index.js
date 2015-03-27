@@ -14,7 +14,7 @@ var allTabs = {
 };
 
 var FlowView = React.createClass({
-    mixins: [common.StickyHeadMixin, common.Navigation, common.State],
+    mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
     getTabs: function (flow) {
         var tabs = [];
         ["request", "response", "error"].forEach(function (e) {

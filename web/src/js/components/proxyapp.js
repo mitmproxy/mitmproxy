@@ -20,52 +20,48 @@ var Reports = React.createClass({
 
 
 var ProxyAppMain = React.createClass({
-    mixins: [common.State],
+    mixins: [common.RouterState],
+    childContextTypes: {
+        settingsStore: React.PropTypes.object.isRequired,
+        flowStore: React.PropTypes.object.isRequired,
+        eventStore: React.PropTypes.object.isRequired
+    },
+    getChildContext: function () {
+        return {
+            settingsStore: this.state.settingsStore,
+            flowStore: this.state.flowStore,
+            eventStore: this.state.eventStore
+        };
+    },
     getInitialState: function () {
         var eventStore = new store.EventLogStore();
         var flowStore = new store.FlowStore();
-        var settings = new store.SettingsStore();
+        var settingsStore = new store.SettingsStore();
 
         // Default Settings before fetch
-        _.extend(settings.dict,{
-        });
+        _.extend(settingsStore.dict, {});
         return {
-            settings: settings,
+            settingsStore: settingsStore,
             flowStore: flowStore,
             eventStore: eventStore
         };
-    },
-    componentDidMount: function () {
-        this.state.settings.addListener("recalculate", this.onSettingsChange);
-        window.app = this;
-    },
-    componentWillUnmount: function () {
-        this.state.settings.removeListener("recalculate", this.onSettingsChange);
-    },
-    onSettingsChange: function(){
-        this.setState({
-            settings: this.state.settings
-        });
     },
     render: function () {
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 <common.Splitter key="splitter" axis="y"/>,
-                <EventLog key="eventlog" eventStore={this.state.eventStore}/>
+                <EventLog key="eventlog"/>
             ];
         } else {
             eventlog = null;
         }
         return (
             <div id="container">
-                <header.Header settings={this.state.settings.dict}/>
-                <RouteHandler
-                    settings={this.state.settings.dict}
-                    flowStore={this.state.flowStore}
-                    query={this.getQuery()}/>
+                <header.Header/>
+                <RouteHandler query={this.getQuery()}/>
                 {eventlog}
-                <Footer settings={this.state.settings.dict}/>
+                <Footer/>
             </div>
         );
     }

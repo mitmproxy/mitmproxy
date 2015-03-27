@@ -10,21 +10,39 @@ FlowTable = require("./flowtable.js");
 var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState],
+    contextTypes: {
+        flowStore: React.PropTypes.object.isRequired,
+    },
     childContextTypes: {
-         returnFocus: React.PropTypes.func.isRequired
+        returnFocus: React.PropTypes.func.isRequired,
+        view: React.PropTypes.object.isRequired,
     },
-    getChildContext: function() {
-         return { returnFocus: this.returnFocus };
+    getChildContext: function () {
+        return {
+            returnFocus: this.returnFocus,
+            view: this.state.view
+        };
     },
-    returnFocus: function(){
+    returnFocus: function () {
         this.getDOMNode().focus();
     },
     getInitialState: function () {
+        var sortKeyFun = false;
+        var view = new views.StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
+        view.addListener("recalculate", this.onRecalculate);
+        view.addListener("add", this.onUpdate);
+        view.addListener("update", this.onUpdate);
+        view.addListener("remove", this.onUpdate);
+        view.addListener("remove", this.onRemove);
+
         return {
-            flows: [],
-            sortKeyFun: false
+            view: view,
+            sortKeyFun: sortKeyFun
         };
+    },
+    componentWillUnmount: function () {
+        this.state.view.close();
     },
     getViewFilt: function () {
         try {
@@ -44,28 +62,11 @@ var MainView = React.createClass({
         };
     },
     componentWillReceiveProps: function (nextProps) {
-        if (nextProps.flowStore !== this.props.flowStore) {
-            this.closeView();
-            this.openView(nextProps.flowStore);
-        }
-
         var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
         var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
-    },
-    openView: function (store) {
-        var view = new views.StoreView(store, this.getViewFilt(), this.state.sortKeyFun);
-        this.setState({
-            view: view
-        });
-
-        view.addListener("recalculate", this.onRecalculate);
-        view.addListener("add", this.onUpdate);
-        view.addListener("update", this.onUpdate);
-        view.addListener("remove", this.onUpdate);
-        view.addListener("remove", this.onRemove);
     },
     onRecalculate: function () {
         this.forceUpdate();
@@ -85,16 +86,7 @@ var MainView = React.createClass({
             this.selectFlow(flow_to_select);
         }
     },
-    closeView: function () {
-        this.state.view.close();
-    },
-    componentWillMount: function () {
-        this.openView(this.props.flowStore);
-    },
-    componentWillUnmount: function () {
-        this.closeView();
-    },
-    setSortKeyFun: function(sortKeyFun){
+    setSortKeyFun: function (sortKeyFun) {
         this.setState({
             sortKeyFun: sortKeyFun
         });
@@ -221,7 +213,7 @@ var MainView = React.createClass({
         e.preventDefault();
     },
     getSelected: function () {
-        return this.props.flowStore.get(this.getParams().flowId);
+        return this.context.flowStore.get(this.getParams().flowId);
     },
     render: function () {
         var selected = this.getSelected();
@@ -239,7 +231,6 @@ var MainView = React.createClass({
         return (
             <div className="main-view" onKeyDown={this.onKeyDown} tabIndex="0">
                 <FlowTable ref="flowTable"
-                    view={this.state.view}
                     selectFlow={this.selectFlow}
                     setSortKeyFun={this.setSortKeyFun}
                     selected={selected} />

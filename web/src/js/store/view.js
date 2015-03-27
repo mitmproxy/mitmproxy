@@ -35,6 +35,7 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("update", this.update);
         this.store.removeListener("remove", this.remove);
         this.store.removeListener("recalculate", this.recalculate);
+        this.removeAllListeners();
     },
     recalculate: function (filt, sortfun) {
         filt = filt || this.filt || default_filt;

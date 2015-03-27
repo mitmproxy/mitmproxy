@@ -31,45 +31,36 @@ var LogMessage = React.createClass({
 });
 
 var EventLogContents = React.createClass({
+    contextTypes: {
+        eventStore: React.PropTypes.object.isRequired
+    },
     mixins: [common.AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
-        return {
-            log: []
-        };
-    },
-    componentWillMount: function () {
-        this.openView(this.props.eventStore);
-    },
-    componentWillUnmount: function () {
-        this.closeView();
-    },
-    openView: function (store) {
-        var view = new views.StoreView(store, function (entry) {
+        var filterFn = function (entry) {
             return this.props.filter[entry.level];
-        }.bind(this));
-        this.setState({
-            view: view
-        });
-
+        };
+        var view = new views.StoreView(this.context.eventStore, filterFn.bind(this));
         view.addListener("add", this.onEventLogChange);
         view.addListener("recalculate", this.onEventLogChange);
+
+        return {
+            log: view.list,
+            view: view
+        };
     },
-    closeView: function () {
+    componentWillUnmount: function () {
         this.state.view.close();
     },
+    filter: function (entry) {
+        return this.props.filter[entry.level];
+    },
     onEventLogChange: function () {
-        this.setState({
-            log: this.state.view.list
-        });
+        this.forceUpdate();
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.filter !== this.props.filter) {
             this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
             this.state.view.recalculate();
-        }
-        if (nextProps.eventStore !== this.props.eventStore) {
-            this.closeView();
-            this.openView(nextProps.eventStore);
         }
     },
     getDefaultProps: function () {
@@ -149,7 +140,7 @@ var EventLog = React.createClass({
                     </div>
 
                 </div>
-                <EventLogContents filter={this.state.filter} eventStore={this.props.eventStore}/>
+                <EventLogContents filter={this.state.filter}/>
             </div>
         );
     }

@@ -468,8 +468,8 @@ var AutoScrollMixin = {
     componentWillUpdate: function () {
         var node = this.getDOMNode();
         this._shouldScrollBottom = (
-            node.scrollTop !== 0 &&
-            node.scrollTop + node.clientHeight === node.scrollHeight
+        node.scrollTop !== 0 &&
+        node.scrollTop + node.clientHeight === node.scrollHeight
         );
     },
     componentDidUpdate: function () {
@@ -490,32 +490,54 @@ var StickyHeadMixin = {
     }
 };
 
+var SettingsState = {
+    contextTypes: {
+        settingsStore: React.PropTypes.object.isRequired
+    },
+    getInitialState: function () {
+        return {
+            settings: this.context.settingsStore.dict
+        };
+    },
+    componentDidMount: function () {
+        this.context.settingsStore.addListener("recalculate", this.onSettingsChange);
+    },
+    componentWillUnmount: function () {
+        this.context.settingsStore.removeListener("recalculate", this.onSettingsChange);
+    },
+    onSettingsChange: function () {
+        this.setState({
+            settings: this.context.settingsStore.dict
+        });
+    },
+};
+
 
 var ChildFocus = {
-   contextTypes: {
-       returnFocus: React.PropTypes.func
-   }
+    contextTypes: {
+        returnFocus: React.PropTypes.func
+    }
 };
 
 
 var Navigation = _.extend({}, ReactRouter.Navigation, {
     setQuery: function (dict) {
         var q = this.context.router.getCurrentQuery();
-        for(var i in dict){
-            if(dict.hasOwnProperty(i)){
+        for (var i in dict) {
+            if (dict.hasOwnProperty(i)) {
                 q[i] = dict[i] || undefined; //falsey values shall be removed.
             }
         }
         this.replaceWith(this.context.router.getCurrentPath(), this.context.router.getCurrentParams(), q);
     },
-    replaceWith: function(routeNameOrPath, params, query) {
-        if(routeNameOrPath === undefined){
+    replaceWith: function (routeNameOrPath, params, query) {
+        if (routeNameOrPath === undefined) {
             routeNameOrPath = this.context.router.getCurrentPath();
         }
-        if(params === undefined){
+        if (params === undefined) {
             params = this.context.router.getCurrentParams();
         }
-        if(query === undefined) {
+        if (query === undefined) {
             query = this.context.router.getCurrentQuery();
         }
 
@@ -526,13 +548,13 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
 // react-router is fairly good at changing its API regularly.
 // We keep the old method for now - if it should turn out that their changes are permanent,
 // we may remove this mixin and access react-router directly again.
-var State = _.extend({}, ReactRouter.State, {
-    getQuery: function(){
+var RouterState = _.extend({}, ReactRouter.State, {
+    getQuery: function () {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
         return _.clone(this.context.router.getCurrentQuery());
     },
-    getParams: function(){
+    getParams: function () {
         return _.clone(this.context.router.getCurrentParams());
     }
 });
@@ -644,11 +666,12 @@ var Splitter = React.createClass({displayName: "Splitter",
 
 module.exports = {
     ChildFocus: ChildFocus,
-    State: State,
+    RouterState: RouterState,
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,
     AutoScrollMixin: AutoScrollMixin,
-    Splitter: Splitter
+    Splitter: Splitter,
+    SettingsState: SettingsState
 };
 
 },{"lodash":"lodash","react":"react","react-router":"react-router"}],5:[function(require,module,exports){
@@ -685,45 +708,36 @@ var LogMessage = React.createClass({displayName: "LogMessage",
 });
 
 var EventLogContents = React.createClass({displayName: "EventLogContents",
+    contextTypes: {
+        eventStore: React.PropTypes.object.isRequired
+    },
     mixins: [common.AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
-        return {
-            log: []
-        };
-    },
-    componentWillMount: function () {
-        this.openView(this.props.eventStore);
-    },
-    componentWillUnmount: function () {
-        this.closeView();
-    },
-    openView: function (store) {
-        var view = new views.StoreView(store, function (entry) {
+        var filterFn = function (entry) {
             return this.props.filter[entry.level];
-        }.bind(this));
-        this.setState({
-            view: view
-        });
-
+        };
+        var view = new views.StoreView(this.context.eventStore, filterFn.bind(this));
         view.addListener("add", this.onEventLogChange);
         view.addListener("recalculate", this.onEventLogChange);
+
+        return {
+            log: view.list,
+            view: view
+        };
     },
-    closeView: function () {
+    componentWillUnmount: function () {
         this.state.view.close();
     },
+    filter: function (entry) {
+        return this.props.filter[entry.level];
+    },
     onEventLogChange: function () {
-        this.setState({
-            log: this.state.view.list
-        });
+        this.forceUpdate();
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.filter !== this.props.filter) {
             this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
             this.state.view.recalculate();
-        }
-        if (nextProps.eventStore !== this.props.eventStore) {
-            this.closeView();
-            this.openView(nextProps.eventStore);
         }
     },
     getDefaultProps: function () {
@@ -803,7 +817,7 @@ var EventLog = React.createClass({displayName: "EventLog",
                     )
 
                 ), 
-                React.createElement(EventLogContents, {filter: this.state.filter, eventStore: this.props.eventStore})
+                React.createElement(EventLogContents, {filter: this.state.filter})
             )
         );
     }
@@ -1125,33 +1139,25 @@ var ROW_HEIGHT = 32;
 
 var FlowTable = React.createClass({displayName: "FlowTable",
     mixins: [common.StickyHeadMixin, common.AutoScrollMixin, VirtualScrollMixin],
+    contextTypes: {
+        view: React.PropTypes.object.isRequired
+    },
     getInitialState: function () {
         return {
             columns: flowtable_columns
         };
     },
-    _listen: function(view){
-        if(!view){
-            return;
-        }
-        view.addListener("add", this.onChange);
-        view.addListener("update", this.onChange);
-        view.addListener("remove", this.onChange);
-        view.addListener("recalculate", this.onChange);
-    },
     componentWillMount: function () {
-        this._listen(this.props.view);
+        this.context.view.addListener("add", this.onChange);
+        this.context.view.addListener("update", this.onChange);
+        this.context.view.addListener("remove", this.onChange);
+        this.context.view.addListener("recalculate", this.onChange);
     },
-    componentWillReceiveProps: function (nextProps) {
-        if (nextProps.view !== this.props.view) {
-            if (this.props.view) {
-                this.props.view.removeListener("add");
-                this.props.view.removeListener("update");
-                this.props.view.removeListener("remove");
-                this.props.view.removeListener("recalculate");
-            }
-            this._listen(nextProps.view);
-        }
+    componentWillUnmount: function(){
+        this.context.view.removeListener("add", this.onChange);
+        this.context.view.removeListener("update", this.onChange);
+        this.context.view.removeListener("remove", this.onChange);
+        this.context.view.removeListener("recalculate", this.onChange);
     },
     getDefaultProps: function () {
         return {
@@ -1167,7 +1173,7 @@ var FlowTable = React.createClass({displayName: "FlowTable",
     },
     scrollIntoView: function (flow) {
         this.scrollRowIntoView(
-            this.props.view.index(flow),
+            this.context.view.index(flow),
             this.refs.body.getDOMNode().offsetTop
         );
     },
@@ -1175,8 +1181,8 @@ var FlowTable = React.createClass({displayName: "FlowTable",
         var selected = (flow === this.props.selected);
         var highlighted =
             (
-            this.props.view._highlight &&
-            this.props.view._highlight[flow.id]
+            this.context.view._highlight &&
+            this.context.view._highlight[flow.id]
             );
 
         return React.createElement(FlowRow, {key: flow.id, 
@@ -1189,9 +1195,7 @@ var FlowTable = React.createClass({displayName: "FlowTable",
         );
     },
     render: function () {
-        //console.log("render flowtable", this.state.start, this.state.stop, this.props.selected);
-        var flows = this.props.view ? this.props.view.list : [];
-
+        var flows = this.context.view.list;
         var rows = this.renderRows(flows);
 
         return (
@@ -1653,7 +1657,7 @@ var allTabs = {
 };
 
 var FlowView = React.createClass({displayName: "FlowView",
-    mixins: [common.StickyHeadMixin, common.Navigation, common.State],
+    mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
     getTabs: function (flow) {
         var tabs = [];
         ["request", "response", "error"].forEach(function (e) {
@@ -2171,11 +2175,13 @@ module.exports = Nav;
 
 },{"../../actions.js":2,"react":"react"}],13:[function(require,module,exports){
 var React = require("react");
+var common = require("./common.js");
 
 var Footer = React.createClass({displayName: "Footer",
+    mixins: [common.SettingsState],
     render: function () {
-        var mode = this.props.settings.mode;
-        var intercept = this.props.settings.intercept;
+        var mode = this.state.settings.mode;
+        var intercept = this.state.settings.intercept;
         return (
             React.createElement("footer", null, 
                 mode != "regular" ? React.createElement("span", {className: "label label-success"}, mode, " mode") : null, 
@@ -2188,7 +2194,7 @@ var Footer = React.createClass({displayName: "Footer",
 
 module.exports = Footer;
 
-},{"react":"react"}],14:[function(require,module,exports){
+},{"./common.js":4,"react":"react"}],14:[function(require,module,exports){
 var React = require("react");
 var $ = require("jquery");
 
@@ -2348,7 +2354,7 @@ var FilterInput = React.createClass({displayName: "FilterInput",
 });
 
 var MainMenu = React.createClass({displayName: "MainMenu",
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState, common.SettingsState],
     statics: {
         title: "Start",
         route: "flows"
@@ -2369,7 +2375,7 @@ var MainMenu = React.createClass({displayName: "MainMenu",
     render: function () {
         var filter = this.getQuery()[Query.FILTER] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
-        var intercept = this.props.settings.intercept || "";
+        var intercept = this.state.settings.intercept || "";
 
         return (
             React.createElement("div", null, 
@@ -2405,7 +2411,7 @@ var ViewMenu = React.createClass({displayName: "ViewMenu",
         title: "View",
         route: "flows"
     },
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState],
     toggleEventLog: function () {
         var d = {};
 
@@ -2570,7 +2576,7 @@ var Header = React.createClass({displayName: "Header",
                     header
                 ), 
                 React.createElement("div", {className: "menu"}, 
-                    React.createElement(this.state.active, {settings: this.props.settings})
+                    React.createElement(this.state.active, null)
                 )
             )
         );
@@ -2580,7 +2586,7 @@ var Header = React.createClass({displayName: "Header",
 
 module.exports = {
     Header: Header
-}
+};
 
 },{"../actions.js":2,"../filt/filt.js":20,"../utils.js":24,"./common.js":4,"jquery":"jquery","react":"react"}],15:[function(require,module,exports){
 var React = require("react");
@@ -2595,21 +2601,39 @@ FlowTable = require("./flowtable.js");
 var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({displayName: "MainView",
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState],
+    contextTypes: {
+        flowStore: React.PropTypes.object.isRequired,
+    },
     childContextTypes: {
-         returnFocus: React.PropTypes.func.isRequired
+        returnFocus: React.PropTypes.func.isRequired,
+        view: React.PropTypes.object.isRequired,
     },
-    getChildContext: function() {
-         return { returnFocus: this.returnFocus };
+    getChildContext: function () {
+        return {
+            returnFocus: this.returnFocus,
+            view: this.state.view
+        };
     },
-    returnFocus: function(){
+    returnFocus: function () {
         this.getDOMNode().focus();
     },
     getInitialState: function () {
+        var sortKeyFun = false;
+        var view = new views.StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
+        view.addListener("recalculate", this.onRecalculate);
+        view.addListener("add", this.onUpdate);
+        view.addListener("update", this.onUpdate);
+        view.addListener("remove", this.onUpdate);
+        view.addListener("remove", this.onRemove);
+
         return {
-            flows: [],
-            sortKeyFun: false
+            view: view,
+            sortKeyFun: sortKeyFun
         };
+    },
+    componentWillUnmount: function () {
+        this.state.view.close();
     },
     getViewFilt: function () {
         try {
@@ -2629,28 +2653,11 @@ var MainView = React.createClass({displayName: "MainView",
         };
     },
     componentWillReceiveProps: function (nextProps) {
-        if (nextProps.flowStore !== this.props.flowStore) {
-            this.closeView();
-            this.openView(nextProps.flowStore);
-        }
-
         var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
         var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
-    },
-    openView: function (store) {
-        var view = new views.StoreView(store, this.getViewFilt(), this.state.sortKeyFun);
-        this.setState({
-            view: view
-        });
-
-        view.addListener("recalculate", this.onRecalculate);
-        view.addListener("add", this.onUpdate);
-        view.addListener("update", this.onUpdate);
-        view.addListener("remove", this.onUpdate);
-        view.addListener("remove", this.onRemove);
     },
     onRecalculate: function () {
         this.forceUpdate();
@@ -2670,16 +2677,7 @@ var MainView = React.createClass({displayName: "MainView",
             this.selectFlow(flow_to_select);
         }
     },
-    closeView: function () {
-        this.state.view.close();
-    },
-    componentWillMount: function () {
-        this.openView(this.props.flowStore);
-    },
-    componentWillUnmount: function () {
-        this.closeView();
-    },
-    setSortKeyFun: function(sortKeyFun){
+    setSortKeyFun: function (sortKeyFun) {
         this.setState({
             sortKeyFun: sortKeyFun
         });
@@ -2806,7 +2804,7 @@ var MainView = React.createClass({displayName: "MainView",
         e.preventDefault();
     },
     getSelected: function () {
-        return this.props.flowStore.get(this.getParams().flowId);
+        return this.context.flowStore.get(this.getParams().flowId);
     },
     render: function () {
         var selected = this.getSelected();
@@ -2824,7 +2822,6 @@ var MainView = React.createClass({displayName: "MainView",
         return (
             React.createElement("div", {className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
                 React.createElement(FlowTable, {ref: "flowTable", 
-                    view: this.state.view, 
                     selectFlow: this.selectFlow, 
                     setSortKeyFun: this.setSortKeyFun, 
                     selected: selected}), 
@@ -2860,52 +2857,48 @@ var Reports = React.createClass({displayName: "Reports",
 
 
 var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
-    mixins: [common.State],
+    mixins: [common.RouterState],
+    childContextTypes: {
+        settingsStore: React.PropTypes.object.isRequired,
+        flowStore: React.PropTypes.object.isRequired,
+        eventStore: React.PropTypes.object.isRequired
+    },
+    getChildContext: function () {
+        return {
+            settingsStore: this.state.settingsStore,
+            flowStore: this.state.flowStore,
+            eventStore: this.state.eventStore
+        };
+    },
     getInitialState: function () {
         var eventStore = new store.EventLogStore();
         var flowStore = new store.FlowStore();
-        var settings = new store.SettingsStore();
+        var settingsStore = new store.SettingsStore();
 
         // Default Settings before fetch
-        _.extend(settings.dict,{
-        });
+        _.extend(settingsStore.dict, {});
         return {
-            settings: settings,
+            settingsStore: settingsStore,
             flowStore: flowStore,
             eventStore: eventStore
         };
-    },
-    componentDidMount: function () {
-        this.state.settings.addListener("recalculate", this.onSettingsChange);
-        window.app = this;
-    },
-    componentWillUnmount: function () {
-        this.state.settings.removeListener("recalculate", this.onSettingsChange);
-    },
-    onSettingsChange: function(){
-        this.setState({
-            settings: this.state.settings
-        });
     },
     render: function () {
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 React.createElement(common.Splitter, {key: "splitter", axis: "y"}),
-                React.createElement(EventLog, {key: "eventlog", eventStore: this.state.eventStore})
+                React.createElement(EventLog, {key: "eventlog"})
             ];
         } else {
             eventlog = null;
         }
         return (
             React.createElement("div", {id: "container"}, 
-                React.createElement(header.Header, {settings: this.state.settings.dict}), 
-                React.createElement(RouteHandler, {
-                    settings: this.state.settings.dict, 
-                    flowStore: this.state.flowStore, 
-                    query: this.getQuery()}), 
+                React.createElement(header.Header, null), 
+                React.createElement(RouteHandler, {query: this.getQuery()}), 
                 eventlog, 
-                React.createElement(Footer, {settings: this.state.settings.dict})
+                React.createElement(Footer, null)
             )
         );
     }
@@ -5203,6 +5196,7 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("update", this.update);
         this.store.removeListener("remove", this.remove);
         this.store.removeListener("recalculate", this.recalculate);
+        this.removeAllListeners();
     },
     recalculate: function (filt, sortfun) {
         filt = filt || this.filt || default_filt;

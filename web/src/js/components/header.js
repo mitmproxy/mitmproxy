@@ -157,7 +157,7 @@ var FilterInput = React.createClass({
 });
 
 var MainMenu = React.createClass({
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState, common.SettingsState],
     statics: {
         title: "Start",
         route: "flows"
@@ -178,7 +178,7 @@ var MainMenu = React.createClass({
     render: function () {
         var filter = this.getQuery()[Query.FILTER] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
-        var intercept = this.props.settings.intercept || "";
+        var intercept = this.state.settings.intercept || "";
 
         return (
             <div>
@@ -214,7 +214,7 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState],
     toggleEventLog: function () {
         var d = {};
 
@@ -379,7 +379,7 @@ var Header = React.createClass({
                     {header}
                 </nav>
                 <div className="menu">
-                    <this.state.active settings={this.props.settings}/>
+                    <this.state.active/>
                 </div>
             </header>
         );
@@ -389,4 +389,4 @@ var Header = React.createClass({
 
 module.exports = {
     Header: Header
-}
+};

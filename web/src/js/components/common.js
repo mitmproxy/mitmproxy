@@ -7,8 +7,8 @@ var AutoScrollMixin = {
     componentWillUpdate: function () {
         var node = this.getDOMNode();
         this._shouldScrollBottom = (
-            node.scrollTop !== 0 &&
-            node.scrollTop + node.clientHeight === node.scrollHeight
+        node.scrollTop !== 0 &&
+        node.scrollTop + node.clientHeight === node.scrollHeight
         );
     },
     componentDidUpdate: function () {
@@ -29,32 +29,54 @@ var StickyHeadMixin = {
     }
 };
 
+var SettingsState = {
+    contextTypes: {
+        settingsStore: React.PropTypes.object.isRequired
+    },
+    getInitialState: function () {
+        return {
+            settings: this.context.settingsStore.dict
+        };
+    },
+    componentDidMount: function () {
+        this.context.settingsStore.addListener("recalculate", this.onSettingsChange);
+    },
+    componentWillUnmount: function () {
+        this.context.settingsStore.removeListener("recalculate", this.onSettingsChange);
+    },
+    onSettingsChange: function () {
+        this.setState({
+            settings: this.context.settingsStore.dict
+        });
+    },
+};
+
 
 var ChildFocus = {
-   contextTypes: {
-       returnFocus: React.PropTypes.func
-   }
+    contextTypes: {
+        returnFocus: React.PropTypes.func
+    }
 };
 
 
 var Navigation = _.extend({}, ReactRouter.Navigation, {
     setQuery: function (dict) {
         var q = this.context.router.getCurrentQuery();
-        for(var i in dict){
-            if(dict.hasOwnProperty(i)){
+        for (var i in dict) {
+            if (dict.hasOwnProperty(i)) {
                 q[i] = dict[i] || undefined; //falsey values shall be removed.
             }
         }
         this.replaceWith(this.context.router.getCurrentPath(), this.context.router.getCurrentParams(), q);
     },
-    replaceWith: function(routeNameOrPath, params, query) {
-        if(routeNameOrPath === undefined){
+    replaceWith: function (routeNameOrPath, params, query) {
+        if (routeNameOrPath === undefined) {
             routeNameOrPath = this.context.router.getCurrentPath();
         }
-        if(params === undefined){
+        if (params === undefined) {
             params = this.context.router.getCurrentParams();
         }
-        if(query === undefined) {
+        if (query === undefined) {
             query = this.context.router.getCurrentQuery();
         }
 
@@ -65,13 +87,13 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
 // react-router is fairly good at changing its API regularly.
 // We keep the old method for now - if it should turn out that their changes are permanent,
 // we may remove this mixin and access react-router directly again.
-var State = _.extend({}, ReactRouter.State, {
-    getQuery: function(){
+var RouterState = _.extend({}, ReactRouter.State, {
+    getQuery: function () {
         // For whatever reason, react-router always returns the same object, which makes comparing
         // the current props with nextProps impossible. As a workaround, we just clone the query object.
         return _.clone(this.context.router.getCurrentQuery());
     },
-    getParams: function(){
+    getParams: function () {
         return _.clone(this.context.router.getCurrentParams());
     }
 });
@@ -183,9 +205,10 @@ var Splitter = React.createClass({
 
 module.exports = {
     ChildFocus: ChildFocus,
-    State: State,
+    RouterState: RouterState,
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,
     AutoScrollMixin: AutoScrollMixin,
-    Splitter: Splitter
+    Splitter: Splitter,
+    SettingsState: SettingsState
 };
