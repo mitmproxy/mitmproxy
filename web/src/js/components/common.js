@@ -67,10 +67,12 @@ var Navigation = _.extend({}, ReactRouter.Navigation, {
 // we may remove this mixin and access react-router directly again.
 var State = _.extend({}, ReactRouter.State, {
     getQuery: function(){
-        return this.context.router.getCurrentQuery();
+        // For whatever reason, react-router always returns the same object, which makes comparing
+        // the current props with nextProps impossible. As a workaround, we just clone the query object.
+        return _.clone(this.context.router.getCurrentQuery());
     },
     getParams: function(){
-        return this.context.router.getCurrentParams();
+        return _.clone(this.context.router.getCurrentParams());
     }
 });
 
