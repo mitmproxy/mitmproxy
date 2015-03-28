@@ -800,6 +800,17 @@ class TestFakeResponse(tservers.HTTPProxTest):
         assert "header_response" in f.headers.keys()
 
 
+class TestServerConnect(tservers.HTTPProxTest):
+    masterclass = MasterFakeResponse
+    no_upstream_cert = True
+    ssl = True
+    def test_unnecessary_serverconnect(self):
+        """A replayed/fake response with no_upstream_cert should not connect to an upstream server"""
+        assert self.pathod("200").status_code == 200
+        for msg in self.proxy.tmaster.log:
+            assert "serverconnect" not in msg
+
+
 class MasterKillRequest(tservers.TestMaster):
     def handle_request(self, f):
         f.reply(KILL)
