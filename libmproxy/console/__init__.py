@@ -27,7 +27,6 @@ class ConsoleState(flow.State):
         self.focus = None
         self.follow_focus = None
         self.default_body_view = contentview.get("Auto")
-        self.view_flow_mode = common.VIEW_FLOW_REQUEST
         self.flowsettings = weakref.WeakKeyDictionary()
         self.last_search = None
 
@@ -458,7 +457,7 @@ class ConsoleMaster(flow.FlowMaster):
         signals.push_view_state.send(self)
         self.loop.widget = window.Window(
             self,
-            flowdetailview.FlowDetailsView(low),
+            flowdetailview.FlowDetailsView(flow),
             None,
             statusbar.StatusBar(self, flowdetailview.footer)
         )
@@ -493,13 +492,13 @@ class ConsoleMaster(flow.FlowMaster):
         )
         self.loop.draw_screen()
 
-    def view_flow(self, flow):
+    def view_flow(self, flow, tab_offset=0):
         signals.push_view_state.send(self)
         self.state.set_focus_flow(flow)
         self.help_context = flowview.help_context
         self.loop.widget = window.Window(
             self,
-            flowview.FlowView(self, self.state, flow),
+            flowview.FlowView(self, self.state, flow, tab_offset),
             flowview.FlowViewHeader(self, flow),
             statusbar.StatusBar(self, flowview.footer)
         )

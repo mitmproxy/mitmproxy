@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import os, sys, copy
 import urwid
-from . import common, grideditor, contentview, signals, searchable
+from . import common, grideditor, contentview, signals, searchable, tabs
 from .. import utils, flow, controller
 from ..protocol.http import HTTPRequest, HTTPResponse, CONTENT_MISSING, decoded
 
@@ -109,25 +109,48 @@ class FlowViewHeader(urwid.WidgetWrap):
 
 cache = utils.LRUCache(200)
 
+TAB_REQ = 0
+TAB_RESP = 1
 
-class FlowView(urwid.WidgetWrap):
+class FlowView(tabs.Tabs):
     highlight_color = "focusfield"
 
-    def __init__(self, master, state, flow):
+    def __init__(self, master, state, flow, tab_offset):
         self.master, self.state, self.flow = master, state, flow
+        tabs.Tabs.__init__(self,
+            [
+                (self.tab_request, self.view_request),
+                (self.tab_response, self.view_response),
+            ],
+            tab_offset
+        )
+        self.show()
         self.last_displayed_body = None
-        if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
-            self.view_response()
-        else:
-            self.view_request()
         signals.flow_change.connect(self.sig_flow_change)
+
+    def tab_request(self):
+        if self.flow.intercepted and not self.flow.reply.acked and not self.flow.response:
+            return "Request intercepted"
+        else:
+            return "Request"
+
+    def tab_response(self):
+        if self.flow.intercepted and not self.flow.reply.acked and self.flow.response:
+            return "Response intercepted"
+        else:
+            return "Response"
+
+    def view_request(self):
+        return self.conn_text(self.flow.request)
+
+    def view_response(self):
+        return self.conn_text(self.flow.response)
+
+
 
     def sig_flow_change(self, sender, flow):
         if flow == self.flow:
-            if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE and self.flow.response:
-                self.view_response()
-            else:
-                self.view_request()
+            self.show()
 
     def content_view(self, viewmode, conn):
         if conn.content == CONTENT_MISSING:
@@ -136,7 +159,7 @@ class FlowView(urwid.WidgetWrap):
         else:
             full = self.state.get_flow_setting(
                 self.flow,
-                (self.state.view_flow_mode, "fullcontents"),
+                (self.tab_offset, "fullcontents"),
                 False
             )
             if full:
@@ -157,7 +180,7 @@ class FlowView(urwid.WidgetWrap):
     def viewmode_get(self):
         override = self.state.get_flow_setting(
             self.flow,
-            (self.state.view_flow_mode, "prettyview")
+            (self.tab_offset, "prettyview")
         )
         return self.state.default_body_view if override is None else override
 
@@ -202,50 +225,6 @@ class FlowView(urwid.WidgetWrap):
                 )
             ]
         return searchable.Searchable(self.state, txt)
-
-    def _tab(self, content, attr):
-        p = urwid.Text(content)
-        p = urwid.Padding(p, align="left", width=("relative", 100))
-        p = urwid.AttrWrap(p, attr)
-        return p
-
-    def wrap_body(self, active, body):
-        parts = []
-
-        if self.flow.intercepted and not self.flow.reply.acked and not self.flow.response:
-            qt = "Request intercepted"
-        else:
-            qt = "Request"
-        if active == common.VIEW_FLOW_REQUEST:
-            parts.append(self._tab(qt, "heading"))
-        else:
-            parts.append(self._tab(qt, "heading_inactive"))
-
-        if self.flow.intercepted and not self.flow.reply.acked and self.flow.response:
-            st = "Response intercepted"
-        else:
-            st = "Response"
-        if active == common.VIEW_FLOW_RESPONSE:
-            parts.append(self._tab(st, "heading"))
-        else:
-            parts.append(self._tab(st, "heading_inactive"))
-
-        h = urwid.Columns(parts)
-        f = urwid.Frame(
-                    body,
-                    header=h
-                )
-        return f
-
-    def view_request(self):
-        self.state.view_flow_mode = common.VIEW_FLOW_REQUEST
-        body = self.conn_text(self.flow.request)
-        self._w = self.wrap_body(common.VIEW_FLOW_REQUEST, body)
-
-    def view_response(self):
-        self.state.view_flow_mode = common.VIEW_FLOW_RESPONSE
-        body = self.conn_text(self.flow.response)
-        self._w = self.wrap_body(common.VIEW_FLOW_RESPONSE, body)
 
     def set_method_raw(self, m):
         if m:
@@ -320,7 +299,7 @@ class FlowView(urwid.WidgetWrap):
             self.edit_form(conn)
 
     def edit(self, part):
-        if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+        if self.tab_offset == TAB_REQ:
             message = self.flow.request
         else:
             if not self.flow.response:
@@ -383,25 +362,25 @@ class FlowView(urwid.WidgetWrap):
                     self.set_query, message
                 )
             )
-        elif part == "u" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+        elif part == "u" and self.tab_offset == TAB_REQ:
             signals.status_prompt.send(
                 prompt = "URL",
                 text = message.url,
                 callback = self.set_url
             )
-        elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+        elif part == "m" and self.tab_offset == TAB_REQ:
             signals.status_prompt_onekey.send(
                 prompt = "Method",
                 keys = common.METHOD_OPTIONS,
                 callback = self.edit_method
             )
-        elif part == "c" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
+        elif part == "c" and self.tab_offset == TAB_RESP:
             signals.status_prompt.send(
                 prompt = "Code",
                 text = str(message.code),
                 callback = self.set_resp_code
             )
-        elif part == "m" and self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
+        elif part == "m" and self.tab_offset == TAB_RESP:
             signals.status_prompt.send(
                 prompt = "Message",
                 text = message.msg,
@@ -422,7 +401,7 @@ class FlowView(urwid.WidgetWrap):
             signals.status_message.send(message="No more flows!")
         else:
             signals.pop_view_state.send(self)
-            self.master.view_flow(new_flow)
+            self.master.view_flow(new_flow, self.tab_offset)
 
     def view_next_flow(self, flow):
         return self._view_nextprev_flow("next", flow)
@@ -433,7 +412,7 @@ class FlowView(urwid.WidgetWrap):
     def change_this_display_mode(self, t):
         self.state.add_flow_setting(
             self.flow,
-            (self.state.view_flow_mode, "prettyview"),
+            (self.tab_offset, "prettyview"),
             contentview.get_by_shortcut(t)
         )
         signals.flow_change.send(self, flow = self.flow)
@@ -443,7 +422,7 @@ class FlowView(urwid.WidgetWrap):
             val = CONTENT_MISSING
         else:
             val = None
-        if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+        if self.tab_offset == TAB_REQ:
             self.flow.request.content = val
         else:
             self.flow.response.content = val
@@ -455,7 +434,7 @@ class FlowView(urwid.WidgetWrap):
             return
 
         key = common.shortcuts(key)
-        if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+        if self.tab_offset == TAB_REQ:
             conn = self.flow.request
         else:
             conn = self.flow.response
@@ -463,11 +442,6 @@ class FlowView(urwid.WidgetWrap):
         if key == "q":
             signals.pop_view_state.send(self)
             return None
-        elif key == "tab":
-            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
-                self.view_response()
-            else:
-                self.view_request()
         elif key in ("up", "down", "page up", "page down"):
             # Why doesn't this just work??
             self._w.keypress(size, key)
@@ -478,7 +452,7 @@ class FlowView(urwid.WidgetWrap):
             self.master.accept_all()
             self.master.view_flow(self.flow)
         elif key == "b":
-            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+            if self.tab_offset == TAB_REQ:
                 common.ask_save_body("q", self.master, self.state, self.flow)
             else:
                 common.ask_save_body("s", self.master, self.state, self.flow)
@@ -497,7 +471,7 @@ class FlowView(urwid.WidgetWrap):
             self.master.view_flow(f)
             signals.status_message.send(message="Duplicated.")
         elif key == "e":
-            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+            if self.tab_offset == TAB_REQ:
                 signals.status_prompt_onekey.send(
                     prompt = "Edit request",
                     keys = (
@@ -527,13 +501,13 @@ class FlowView(urwid.WidgetWrap):
             signals.status_message.send(message="Loading all body data...")
             self.state.add_flow_setting(
                 self.flow,
-                (self.state.view_flow_mode, "fullcontents"),
+                (self.tab_state, "fullcontents"),
                 True
             )
             signals.flow_change.send(self, flow = self.flow)
             signals.status_message.send(message="")
         elif key == "g":
-            if self.state.view_flow_mode == common.VIEW_FLOW_REQUEST:
+            if self.tab_offset == TAB_REQ:
                 scope = "q"
             else:
                 scope = "s"
