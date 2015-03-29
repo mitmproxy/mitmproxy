@@ -67,10 +67,10 @@ def _mkhelp():
         ("W", "save this flow"),
         ("x", "delete body"),
         ("z", "encode/decode a request/response"),
-        ("tab", "toggle request/response view"),
+        ("tab", "next tab"),
         ("space", "next flow"),
         ("|", "run script on this flow"),
-        ("/", "search in response body (case sensitive)"),
+        ("/", "search (case sensitive)"),
         ("n", "repeat search forward"),
         ("N", "repeat search backwards"),
     ]
@@ -367,25 +367,25 @@ class FlowView(tabs.Tabs):
                     self.set_query, message
                 )
             )
-        elif part == "u" and self.tab_offset == TAB_REQ:
+        elif part == "u":
             signals.status_prompt.send(
                 prompt = "URL",
                 text = message.url,
                 callback = self.set_url
             )
-        elif part == "m" and self.tab_offset == TAB_REQ:
+        elif part == "m":
             signals.status_prompt_onekey.send(
                 prompt = "Method",
                 keys = common.METHOD_OPTIONS,
                 callback = self.edit_method
             )
-        elif part == "c" and self.tab_offset == TAB_RESP:
+        elif part == "c":
             signals.status_prompt.send(
                 prompt = "Code",
                 text = str(message.code),
                 callback = self.set_resp_code
             )
-        elif part == "m" and self.tab_offset == TAB_RESP:
+        elif part == "m":
             signals.status_prompt.send(
                 prompt = "Message",
                 text = message.msg,
@@ -441,8 +441,10 @@ class FlowView(tabs.Tabs):
         key = common.shortcuts(key)
         if self.tab_offset == TAB_REQ:
             conn = self.flow.request
-        else:
+        elif self.tab_offset == TAB_RESP:
             conn = self.flow.response
+        else:
+            conn = None
 
         if key == "q":
             signals.pop_view_state.send(self)
@@ -456,11 +458,6 @@ class FlowView(tabs.Tabs):
         elif key == "A":
             self.master.accept_all()
             self.master.view_flow(self.flow)
-        elif key == "b":
-            if self.tab_offset == TAB_REQ:
-                common.ask_save_body("q", self.master, self.state, self.flow)
-            else:
-                common.ask_save_body("s", self.master, self.state, self.flow)
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()
@@ -475,58 +472,6 @@ class FlowView(tabs.Tabs):
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
             signals.status_message.send(message="Duplicated.")
-        elif key == "e":
-            if self.tab_offset == TAB_REQ:
-                signals.status_prompt_onekey.send(
-                    prompt = "Edit request",
-                    keys = (
-                        ("query", "q"),
-                        ("path", "p"),
-                        ("url", "u"),
-                        ("header", "h"),
-                        ("form", "f"),
-                        ("raw body", "r"),
-                        ("method", "m"),
-                    ),
-                    callback = self.edit
-                )
-            else:
-                signals.status_prompt_onekey.send(
-                    prompt = "Edit response",
-                    keys = (
-                        ("code", "c"),
-                        ("message", "m"),
-                        ("header", "h"),
-                        ("raw body", "r"),
-                    ),
-                    callback = self.edit
-                )
-            key = None
-        elif key == "f":
-            signals.status_message.send(message="Loading all body data...")
-            self.state.add_flow_setting(
-                self.flow,
-                (self.tab_state, "fullcontents"),
-                True
-            )
-            signals.flow_change.send(self, flow = self.flow)
-            signals.status_message.send(message="")
-        elif key == "g":
-            if self.tab_offset == TAB_REQ:
-                scope = "q"
-            else:
-                scope = "s"
-            common.ask_copy_part(scope, self.flow, self.master, self.state)
-        elif key == "m":
-            p = list(contentview.view_prompts)
-            p.insert(0, ("Clear", "C"))
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Display mode",
-                keys = p,
-                callback = self.change_this_display_mode
-            )
-            key = None
         elif key == "p":
             self.view_prev_flow(self.flow)
         elif key == "r":
@@ -547,34 +492,97 @@ class FlowView(tabs.Tabs):
                 callback = self.master.save_one_flow,
                 args = (self.flow,)
             )
-        elif key == "v":
-            if conn and conn.content:
-                t = conn.headers["content-type"] or [None]
-                t = t[0]
-                if os.environ.has_key("EDITOR") or os.environ.has_key("PAGER"):
-                    self.master.spawn_external_viewer(conn.content, t)
-                else:
-                    signals.status_message.send(
-                        message = "Error! Set $EDITOR or $PAGER."
-                    )
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
-        elif key == "x":
-            signals.status_prompt_onekey.send(
-                prompt = "Delete body",
-                keys = (
-                    ("completely", "c"),
-                    ("mark as missing", "m"),
-                ),
-                callback = self.delete_body
+
+        if not conn and key in "befgmxvz":
+            signals.status_message.send(
+                message = "Tab to the request or response",
+                expire = 1
             )
-            key = None
-        elif key == "z":
-            if conn:
+        elif conn:
+            if key == "b":
+                if self.tab_offset == TAB_REQ:
+                    common.ask_save_body("q", self.master, self.state, self.flow)
+                else:
+                    common.ask_save_body("s", self.master, self.state, self.flow)
+            elif key == "e":
+                if self.tab_offset == TAB_REQ:
+                    signals.status_prompt_onekey.send(
+                        prompt = "Edit request",
+                        keys = (
+                            ("query", "q"),
+                            ("path", "p"),
+                            ("url", "u"),
+                            ("header", "h"),
+                            ("form", "f"),
+                            ("raw body", "r"),
+                            ("method", "m"),
+                        ),
+                        callback = self.edit
+                    )
+                else:
+                    signals.status_prompt_onekey.send(
+                        prompt = "Edit response",
+                        keys = (
+                            ("code", "c"),
+                            ("message", "m"),
+                            ("header", "h"),
+                            ("raw body", "r"),
+                        ),
+                        callback = self.edit
+                    )
+                key = None
+            elif key == "f":
+                signals.status_message.send(message="Loading all body data...")
+                self.state.add_flow_setting(
+                    self.flow,
+                    (self.tab_offset, "fullcontents"),
+                    True
+                )
+                signals.flow_change.send(self, flow = self.flow)
+                signals.status_message.send(message="")
+            elif key == "g":
+                if self.tab_offset == TAB_REQ:
+                    scope = "q"
+                else:
+                    scope = "s"
+                common.ask_copy_part(scope, self.flow, self.master, self.state)
+            elif key == "m":
+                p = list(contentview.view_prompts)
+                p.insert(0, ("Clear", "C"))
+                signals.status_prompt_onekey.send(
+                    self,
+                    prompt = "Display mode",
+                    keys = p,
+                    callback = self.change_this_display_mode
+                )
+                key = None
+            elif key == "x":
+                signals.status_prompt_onekey.send(
+                    prompt = "Delete body",
+                    keys = (
+                        ("completely", "c"),
+                        ("mark as missing", "m"),
+                    ),
+                    callback = self.delete_body
+                )
+                key = None
+            elif key == "v":
+                if conn.content:
+                    t = conn.headers["content-type"] or [None]
+                    t = t[0]
+                    if os.environ.has_key("EDITOR") or os.environ.has_key("PAGER"):
+                        self.master.spawn_external_viewer(conn.content, t)
+                    else:
+                        signals.status_message.send(
+                            message = "Error! Set $EDITOR or $PAGER."
+                        )
+            elif key == "z":
                 self.flow.backup()
                 e = conn.headers.get_first("content-encoding", "identity")
                 if e != "identity":
@@ -593,6 +601,8 @@ class FlowView(tabs.Tabs):
                         args = (conn,)
                     )
                 signals.flow_change.send(self, flow = self.flow)
+            else:
+                return super(self.__class__, self).keypress(size, key)
         else:
             return super(self.__class__, self).keypress(size, key)
 
