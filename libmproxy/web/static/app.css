@@ -50,6 +50,7 @@ body,
 #container {
   display: flex;
   flex-direction: column;
+  outline: none;
 }
 #container > header,
 #container > footer,
@@ -60,7 +61,6 @@ body,
   flex: 1 1 auto;
   display: flex;
   flex-direction: row;
-  outline: 0;
 }
 .main-view.vertical {
   flex-direction: column;
@@ -145,7 +145,7 @@ header .menu {
   padding-left: 2.5px;
   padding-right: 2.5px;
 }
-@media (min-width: 992px) {
+@media (min-width: 768px) {
   .filter-input {
     float: left;
     width: 25%;

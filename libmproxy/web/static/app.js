@@ -2247,6 +2247,7 @@ var FilterDocs = React.createClass({displayName: "FilterDocs",
     }
 });
 var FilterInput = React.createClass({displayName: "FilterInput",
+    mixins: [common.ChildFocus],
     getInitialState: function () {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -2311,11 +2312,13 @@ var FilterInput = React.createClass({displayName: "FilterInput",
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({mousefocus: false});
         }
+        e.stopPropagation();
     },
     blur: function () {
         this.refs.input.getDOMNode().blur();
+        this.context.returnFocus && this.context.returnFocus();
     },
-    focus: function () {
+    select: function () {
         this.refs.input.getDOMNode().select();
     },
     render: function () {
@@ -2381,18 +2384,21 @@ var MainMenu = React.createClass({displayName: "MainMenu",
             React.createElement("div", null, 
                 React.createElement("div", {className: "menu-row"}, 
                     React.createElement(FilterInput, {
+                        ref: "filter", 
                         placeholder: "Filter", 
                         type: "filter", 
                         color: "black", 
                         value: filter, 
                         onChange: this.onFilterChange}), 
                     React.createElement(FilterInput, {
+                        ref: "highlight", 
                         placeholder: "Highlight", 
                         type: "tag", 
                         color: "hsl(48, 100%, 50%)", 
                         value: highlight, 
                         onChange: this.onHighlightChange}), 
                     React.createElement(FilterInput, {
+                        ref: "intercept", 
                         placeholder: "Intercept", 
                         type: "pause", 
                         color: "hsl(208, 56%, 53%)", 
@@ -2554,7 +2560,7 @@ var Header = React.createClass({displayName: "Header",
     render: function () {
         var header = header_entries.map(function (entry, i) {
             var className;
-            if(entry === this.state.active){
+            if (entry === this.state.active) {
                 className = "active";
             } else {
                 className = "";
@@ -2576,7 +2582,7 @@ var Header = React.createClass({displayName: "Header",
                     header
                 ), 
                 React.createElement("div", {className: "menu"}, 
-                    React.createElement(this.state.active, null)
+                    React.createElement(this.state.active, {ref: "active"})
                 )
             )
         );
@@ -2585,7 +2591,8 @@ var Header = React.createClass({displayName: "Header",
 
 
 module.exports = {
-    Header: Header
+    Header: Header,
+    MainMenu: MainMenu
 };
 
 },{"../actions.js":2,"../filt/filt.js":20,"../utils.js":24,"./common.js":4,"jquery":"jquery","react":"react"}],15:[function(require,module,exports){
@@ -2606,17 +2613,12 @@ var MainView = React.createClass({displayName: "MainView",
         flowStore: React.PropTypes.object.isRequired,
     },
     childContextTypes: {
-        returnFocus: React.PropTypes.func.isRequired,
         view: React.PropTypes.object.isRequired,
     },
     getChildContext: function () {
         return {
-            returnFocus: this.returnFocus,
             view: this.state.view
         };
-    },
-    returnFocus: function () {
-        this.getDOMNode().focus();
     },
     getInitialState: function () {
         var sortKeyFun = false;
@@ -2721,7 +2723,7 @@ var MainView = React.createClass({displayName: "MainView",
         }
         this.selectFlow(flows[index]);
     },
-    onKeyDown: function (e) {
+    onMainKeyDown: function (e) {
         var flow = this.getSelected();
         if (e.ctrlKey) {
             return;
@@ -2820,7 +2822,7 @@ var MainView = React.createClass({displayName: "MainView",
         }
 
         return (
-            React.createElement("div", {className: "main-view", onKeyDown: this.onKeyDown, tabIndex: "0"}, 
+            React.createElement("div", {className: "main-view"}, 
                 React.createElement(FlowTable, {ref: "flowTable", 
                     selectFlow: this.selectFlow, 
                     setSortKeyFun: this.setSortKeyFun, 
@@ -2846,6 +2848,7 @@ var header = require("./header.js");
 var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
+var Key = require("../utils.js").Key;
 
 
 //TODO: Move out of here, just a stub.
@@ -2861,13 +2864,18 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
     childContextTypes: {
         settingsStore: React.PropTypes.object.isRequired,
         flowStore: React.PropTypes.object.isRequired,
-        eventStore: React.PropTypes.object.isRequired
+        eventStore: React.PropTypes.object.isRequired,
+        returnFocus: React.PropTypes.func.isRequired,
+    },
+    componentDidMount: function () {
+        this.focus();
     },
     getChildContext: function () {
         return {
             settingsStore: this.state.settingsStore,
             flowStore: this.state.flowStore,
-            eventStore: this.state.eventStore
+            eventStore: this.state.eventStore,
+            returnFocus: this.focus,
         };
     },
     getInitialState: function () {
@@ -2883,6 +2891,40 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
             eventStore: eventStore
         };
     },
+    focus: function () {
+        React.findDOMNode(this).focus();
+    },
+    getMainComponent: function () {
+        return this.refs.view.refs.__routeHandler__;
+    },
+    onKeydown: function (e) {
+
+        var selectFilterInput = function (name) {
+            var headerComponent = this.refs.header;
+            headerComponent.setState({active: header.MainMenu}, function () {
+                headerComponent.refs.active.refs[name].select();
+            });
+        }.bind(this);
+
+        switch (e.keyCode) {
+            case Key.I:
+                selectFilterInput("intercept");
+                break;
+            case Key.L:
+                selectFilterInput("filter");
+                break;
+            case Key.H:
+                selectFilterInput("highlight");
+                break;
+            default:
+                var main = this.getMainComponent();
+                if (main.onMainKeyDown) {
+                    main.onMainKeyDown(e);
+                }
+                return; // don't prevent default then
+        }
+        e.preventDefault();
+    },
     render: function () {
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
@@ -2894,9 +2936,9 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
             eventlog = null;
         }
         return (
-            React.createElement("div", {id: "container"}, 
-                React.createElement(header.Header, null), 
-                React.createElement(RouteHandler, {query: this.getQuery()}), 
+            React.createElement("div", {id: "container", tabIndex: "0", onKeyDown: this.onKeydown}, 
+                React.createElement(header.Header, {ref: "header"}), 
+                React.createElement(RouteHandler, {ref: "view", query: this.getQuery()}), 
                 eventlog, 
                 React.createElement(Footer, null)
             )
@@ -2925,7 +2967,7 @@ module.exports = {
     routes: routes
 };
 
-},{"../actions.js":2,"../store/store.js":22,"./common.js":4,"./eventlog.js":5,"./footer.js":13,"./header.js":14,"./mainview.js":15,"lodash":"lodash","react":"react","react-router":"react-router"}],17:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":22,"../utils.js":24,"./common.js":4,"./eventlog.js":5,"./footer.js":13,"./header.js":14,"./mainview.js":15,"lodash":"lodash","react":"react","react-router":"react-router"}],17:[function(require,module,exports){
 var React = require("react");
 
 var VirtualScrollMixin = {
@@ -5280,9 +5322,10 @@ var $ = require("jquery");
 var _ = require("lodash");
 var actions = require("./actions.js");
 
-//debug
-window.$ = $;
-window._ = _;
+//Debug (don't expose by default, this increases compile time drastically)
+//window.$ = $;
+//window._ = _;
+//window.React = require("React");
 
 var Key = {
     UP: 38,

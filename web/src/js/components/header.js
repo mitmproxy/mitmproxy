@@ -50,6 +50,7 @@ var FilterDocs = React.createClass({
     }
 });
 var FilterInput = React.createClass({
+    mixins: [common.ChildFocus],
     getInitialState: function () {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -114,11 +115,13 @@ var FilterInput = React.createClass({
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({mousefocus: false});
         }
+        e.stopPropagation();
     },
     blur: function () {
         this.refs.input.getDOMNode().blur();
+        this.context.returnFocus && this.context.returnFocus();
     },
-    focus: function () {
+    select: function () {
         this.refs.input.getDOMNode().select();
     },
     render: function () {
@@ -184,18 +187,21 @@ var MainMenu = React.createClass({
             <div>
                 <div className="menu-row">
                     <FilterInput
+                        ref="filter"
                         placeholder="Filter"
                         type="filter"
                         color="black"
                         value={filter}
                         onChange={this.onFilterChange} />
                     <FilterInput
+                        ref="highlight"
                         placeholder="Highlight"
                         type="tag"
                         color="hsl(48, 100%, 50%)"
                         value={highlight}
                         onChange={this.onHighlightChange}/>
                     <FilterInput
+                        ref="intercept"
                         placeholder="Intercept"
                         type="pause"
                         color="hsl(208, 56%, 53%)"
@@ -357,7 +363,7 @@ var Header = React.createClass({
     render: function () {
         var header = header_entries.map(function (entry, i) {
             var className;
-            if(entry === this.state.active){
+            if (entry === this.state.active) {
                 className = "active";
             } else {
                 className = "";
@@ -379,7 +385,7 @@ var Header = React.createClass({
                     {header}
                 </nav>
                 <div className="menu">
-                    <this.state.active/>
+                    <this.state.active ref="active"/>
                 </div>
             </header>
         );
@@ -388,5 +394,6 @@ var Header = React.createClass({
 
 
 module.exports = {
-    Header: Header
+    Header: Header,
+    MainMenu: MainMenu
 };
