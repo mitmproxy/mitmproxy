@@ -130,7 +130,7 @@ var MainView = React.createClass({
         }
         this.selectFlow(flows[index]);
     },
-    onKeyDown: function (e) {
+    onMainKeyDown: function (e) {
         var flow = this.getSelected();
         if (e.ctrlKey) {
             return;
@@ -229,7 +229,7 @@ var MainView = React.createClass({
         }
 
         return (
-            <div className="main-view" onKeyDown={this.onKeyDown} tabIndex="0">
+            <div className="main-view">
                 <FlowTable ref="flowTable"
                     selectFlow={this.selectFlow}
                     setSortKeyFun={this.setSortKeyFun}

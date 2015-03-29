@@ -5,6 +5,7 @@ var actions = require("./actions.js");
 //debug
 window.$ = $;
 window._ = _;
+window.React = require("React/addons");
 
 var Key = {
     UP: 38,

@@ -9,6 +9,7 @@ var header = require("./header.js");
 var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
+var Key = require("../utils.js").Key;
 
 
 //TODO: Move out of here, just a stub.
@@ -25,6 +26,9 @@ var ProxyAppMain = React.createClass({
         settingsStore: React.PropTypes.object.isRequired,
         flowStore: React.PropTypes.object.isRequired,
         eventStore: React.PropTypes.object.isRequired
+    },
+    componentDidMount: function () {
+        React.findDOMNode(this).focus();
     },
     getChildContext: function () {
         return {
@@ -46,6 +50,22 @@ var ProxyAppMain = React.createClass({
             eventStore: eventStore
         };
     },
+    getMainComponent: function () {
+        return this.refs.view.refs.__routeHandler__;
+    },
+    onKeydown: function (e) {
+        switch(e.keyCode){
+            case Key.I:
+                console.error("unimplemented: intercept");
+                break;
+            default:
+                var main = this.getMainComponent();
+                if(main && main.onMainKeyDown){
+                    main.onMainKeyDown(e);
+                }
+        }
+
+    },
     render: function () {
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
@@ -57,9 +77,9 @@ var ProxyAppMain = React.createClass({
             eventlog = null;
         }
         return (
-            <div id="container">
+            <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
                 <header.Header/>
-                <RouteHandler query={this.getQuery()}/>
+                <RouteHandler ref="view" query={this.getQuery()}/>
                 {eventlog}
                 <Footer/>
             </div>
