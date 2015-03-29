@@ -25,16 +25,18 @@ var ProxyAppMain = React.createClass({
     childContextTypes: {
         settingsStore: React.PropTypes.object.isRequired,
         flowStore: React.PropTypes.object.isRequired,
-        eventStore: React.PropTypes.object.isRequired
+        eventStore: React.PropTypes.object.isRequired,
+        returnFocus: React.PropTypes.func.isRequired,
     },
     componentDidMount: function () {
-        React.findDOMNode(this).focus();
+        this.focus();
     },
     getChildContext: function () {
         return {
             settingsStore: this.state.settingsStore,
             flowStore: this.state.flowStore,
-            eventStore: this.state.eventStore
+            eventStore: this.state.eventStore,
+            returnFocus: this.focus,
         };
     },
     getInitialState: function () {
@@ -50,21 +52,39 @@ var ProxyAppMain = React.createClass({
             eventStore: eventStore
         };
     },
+    focus: function () {
+        React.findDOMNode(this).focus();
+    },
     getMainComponent: function () {
         return this.refs.view.refs.__routeHandler__;
     },
     onKeydown: function (e) {
-        switch(e.keyCode){
+
+        var selectFilterInput = function (name) {
+            var headerComponent = this.refs.header;
+            headerComponent.setState({active: header.MainMenu}, function () {
+                headerComponent.refs.active.refs[name].select();
+            });
+        }.bind(this);
+
+        switch (e.keyCode) {
             case Key.I:
-                console.error("unimplemented: intercept");
+                selectFilterInput("intercept");
+                break;
+            case Key.L:
+                selectFilterInput("filter");
+                break;
+            case Key.H:
+                selectFilterInput("highlight");
                 break;
             default:
                 var main = this.getMainComponent();
-                if(main && main.onMainKeyDown){
+                if (main.onMainKeyDown) {
                     main.onMainKeyDown(e);
                 }
+                return; // don't prevent default then
         }
-
+        e.preventDefault();
     },
     render: function () {
         var eventlog;
@@ -78,7 +98,7 @@ var ProxyAppMain = React.createClass({
         }
         return (
             <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
-                <header.Header/>
+                <header.Header ref="header"/>
                 <RouteHandler ref="view" query={this.getQuery()}/>
                 {eventlog}
                 <Footer/>

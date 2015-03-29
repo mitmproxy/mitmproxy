@@ -15,17 +15,12 @@ var MainView = React.createClass({
         flowStore: React.PropTypes.object.isRequired,
     },
     childContextTypes: {
-        returnFocus: React.PropTypes.func.isRequired,
         view: React.PropTypes.object.isRequired,
     },
     getChildContext: function () {
         return {
-            returnFocus: this.returnFocus,
             view: this.state.view
         };
-    },
-    returnFocus: function () {
-        this.getDOMNode().focus();
     },
     getInitialState: function () {
         var sortKeyFun = false;

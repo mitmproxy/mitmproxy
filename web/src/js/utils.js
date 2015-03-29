@@ -2,10 +2,10 @@ var $ = require("jquery");
 var _ = require("lodash");
 var actions = require("./actions.js");
 
-//debug
-window.$ = $;
-window._ = _;
-window.React = require("React/addons");
+//Debug (don't expose by default, this increases compile time drastically)
+//window.$ = $;
+//window._ = _;
+//window.React = require("React");
 
 var Key = {
     UP: 38,
