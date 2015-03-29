@@ -36,7 +36,7 @@ class Searchable(urwid.ListBox):
         if key == "N":
             self.find_next(True)
         else:
-            return super(self.__class__, self).keypress(size, key)
+            return key
 
     def set_search(self, text):
         self.state.last_search = text

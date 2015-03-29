@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import os, sys, copy
 import urwid
 from . import common, grideditor, contentview, signals, searchable, tabs
+from . import flowdetailview
 from .. import utils, flow, controller
 from ..protocol.http import HTTPRequest, HTTPResponse, CONTENT_MISSING, decoded
 
@@ -65,7 +66,6 @@ def _mkhelp():
         ("w", "save all flows matching current limit"),
         ("W", "save this flow"),
         ("x", "delete body"),
-        ("X", "view flow details"),
         ("z", "encode/decode a request/response"),
         ("tab", "toggle request/response view"),
         ("space", "next flow"),
@@ -121,6 +121,7 @@ class FlowView(tabs.Tabs):
             [
                 (self.tab_request, self.view_request),
                 (self.tab_response, self.view_response),
+                (self.tab_details, self.view_details),
             ],
             tab_offset
         )
@@ -140,13 +141,17 @@ class FlowView(tabs.Tabs):
         else:
             return "Response"
 
+    def tab_details(self):
+        return "Detail"
+
     def view_request(self):
         return self.conn_text(self.flow.request)
 
     def view_response(self):
         return self.conn_text(self.flow.response)
 
-
+    def view_details(self):
+        return flowdetailview.flowdetails(self.state, self.flow)
 
     def sig_flow_change(self, sender, flow):
         if flow == self.flow:
@@ -568,8 +573,6 @@ class FlowView(tabs.Tabs):
                 callback = self.delete_body
             )
             key = None
-        elif key == "X":
-            self.master.view_flowdetails(self.flow)
         elif key == "z":
             if conn:
                 self.flow.backup()

@@ -8,8 +8,8 @@ class Tabs(urwid.WidgetWrap):
         self.show()
 
     def _tab(self, content, attr):
-        p = urwid.Text(content)
-        p = urwid.Padding(p, align="left", width=("relative", 100))
+        p = urwid.Text(content, align="center")
+        p = urwid.Padding(p, align="center", width=("relative", 100))
         p = urwid.AttrWrap(p, attr)
         return p
 
@@ -18,7 +18,7 @@ class Tabs(urwid.WidgetWrap):
             self.tab_offset = (self.tab_offset + 1)%(len(self.tabs))
             self.show()
         else:
-            return key
+            return self._w.keypress(size, key)
 
     def show(self):
         headers = []
@@ -28,7 +28,7 @@ class Tabs(urwid.WidgetWrap):
                 headers.append(self._tab(txt, "heading"))
             else:
                 headers.append(self._tab(txt, "heading_inactive"))
-        headers = urwid.Columns(headers)
+        headers = urwid.Columns(headers, dividechars=1)
         self._w = urwid.Frame(
             body = self.tabs[self.tab_offset][1](),
             header = headers

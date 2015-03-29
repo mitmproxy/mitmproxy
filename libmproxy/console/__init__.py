@@ -453,15 +453,6 @@ class ConsoleMaster(flow.FlowMaster):
             statusbar.StatusBar(self, help.footer)
         )
 
-    def view_flowdetails(self, flow):
-        signals.push_view_state.send(self)
-        self.loop.widget = window.Window(
-            self,
-            flowdetailview.FlowDetailsView(flow),
-            None,
-            statusbar.StatusBar(self, flowdetailview.footer)
-        )
-
     def view_grideditor(self, ge):
         signals.push_view_state.send(self)
         self.help_context = ge.make_help()
