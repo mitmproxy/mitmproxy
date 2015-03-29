@@ -41,7 +41,7 @@ var MainView = React.createClass({
     },
     getViewFilt: function () {
         try {
-            var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
+            var filt = Filt.parse(this.getQuery()[Query.SEARCH] || "");
             var highlightStr = this.getQuery()[Query.HIGHLIGHT];
             var highlight = highlightStr ? Filt.parse(highlightStr) : false;
         } catch (e) {
@@ -57,7 +57,7 @@ var MainView = React.createClass({
         };
     },
     componentWillReceiveProps: function (nextProps) {
-        var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
+        var filterChanged = (this.props.query[Query.SEARCH] !== nextProps.query[Query.SEARCH]);
         var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);

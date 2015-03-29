@@ -167,7 +167,7 @@ var MainMenu = React.createClass({
     },
     onFilterChange: function (val) {
         var d = {};
-        d[Query.FILTER] = val;
+        d[Query.SEARCH] = val;
         this.setQuery(d);
     },
     onHighlightChange: function (val) {
@@ -179,7 +179,7 @@ var MainMenu = React.createClass({
         actions.SettingsActions.update({intercept: val});
     },
     render: function () {
-        var filter = this.getQuery()[Query.FILTER] || "";
+        var search = this.getQuery()[Query.SEARCH] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
         var intercept = this.state.settings.intercept || "";
 
@@ -187,11 +187,11 @@ var MainMenu = React.createClass({
             <div>
                 <div className="menu-row">
                     <FilterInput
-                        ref="filter"
-                        placeholder="Filter"
-                        type="filter"
+                        ref="search"
+                        placeholder="Search"
+                        type="search"
                         color="black"
-                        value={filter}
+                        value={search}
                         onChange={this.onFilterChange} />
                     <FilterInput
                         ref="highlight"

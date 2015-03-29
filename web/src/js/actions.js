@@ -121,7 +121,7 @@ var FlowActions = {
 };
 
 var Query = {
-    FILTER: "f",
+    SEARCH: "s",
     HIGHLIGHT: "h",
     SHOW_EVENTLOG: "e"
 };

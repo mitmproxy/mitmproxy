@@ -425,7 +425,7 @@ var FlowActions = {
 };
 
 var Query = {
-    FILTER: "f",
+    SEARCH: "s",
     HIGHLIGHT: "h",
     SHOW_EVENTLOG: "e"
 };
@@ -2364,7 +2364,7 @@ var MainMenu = React.createClass({displayName: "MainMenu",
     },
     onFilterChange: function (val) {
         var d = {};
-        d[Query.FILTER] = val;
+        d[Query.SEARCH] = val;
         this.setQuery(d);
     },
     onHighlightChange: function (val) {
@@ -2376,7 +2376,7 @@ var MainMenu = React.createClass({displayName: "MainMenu",
         actions.SettingsActions.update({intercept: val});
     },
     render: function () {
-        var filter = this.getQuery()[Query.FILTER] || "";
+        var search = this.getQuery()[Query.SEARCH] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
         var intercept = this.state.settings.intercept || "";
 
@@ -2384,11 +2384,11 @@ var MainMenu = React.createClass({displayName: "MainMenu",
             React.createElement("div", null, 
                 React.createElement("div", {className: "menu-row"}, 
                     React.createElement(FilterInput, {
-                        ref: "filter", 
-                        placeholder: "Filter", 
-                        type: "filter", 
+                        ref: "search", 
+                        placeholder: "Search", 
+                        type: "search", 
                         color: "black", 
-                        value: filter, 
+                        value: search, 
                         onChange: this.onFilterChange}), 
                     React.createElement(FilterInput, {
                         ref: "highlight", 
@@ -2639,7 +2639,7 @@ var MainView = React.createClass({displayName: "MainView",
     },
     getViewFilt: function () {
         try {
-            var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
+            var filt = Filt.parse(this.getQuery()[Query.SEARCH] || "");
             var highlightStr = this.getQuery()[Query.HIGHLIGHT];
             var highlight = highlightStr ? Filt.parse(highlightStr) : false;
         } catch (e) {
@@ -2655,7 +2655,7 @@ var MainView = React.createClass({displayName: "MainView",
         };
     },
     componentWillReceiveProps: function (nextProps) {
-        var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
+        var filterChanged = (this.props.query[Query.SEARCH] !== nextProps.query[Query.SEARCH]);
         var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
