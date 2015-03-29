@@ -598,6 +598,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def sync_list_view(self):
         self.flow_list_walker._modified()
+        signals.update_settings.send(self)
 
     def clear_flows(self):
         self.state.clear()
