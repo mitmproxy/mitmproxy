@@ -161,56 +161,47 @@ class FlowView(urwid.WidgetWrap):
         )
         return self.state.default_body_view if override is None else override
 
-    def conn_text_raw(self, conn):
-        """
-            Based on a request/response, conn, returns the elements for
-            display.
-        """
-        headers = common.format_keyvals(
-                [(h+":", v) for (h, v) in conn.headers.lst],
-                key = "header",
-                val = "text"
-            )
-        viewmode = self.viewmode_get()
-        msg, body = self.content_view(viewmode, conn)
-        return headers, msg, body
-
-    def conn_text_merge(self, headers, msg, body):
-        """
-            Grabs what is returned by conn_text_raw and merges them all
-            toghether, mainly used by conn_text
-        """
-        viewmode = self.viewmode_get()
-        cols = [urwid.Text(
-                [
-                    ("heading", msg),
-                ]
-            )
-        ]
-        cols.append(urwid.Text([
-                    " ",
-                    ('heading', "["),
-                    ('heading_key', "m"),
-                    ('heading', (":%s]"%viewmode.name)),
-                ],
-                align="right"
-            )
-        )
-
-        title = urwid.AttrWrap(urwid.Columns(cols), "heading")
-        headers.append(title)
-        headers.extend(body)
-
-        return headers
-
     def conn_text(self, conn):
-        """
-        Same as conn_text_raw, but returns result wrapped in a listbox ready for
-        usage.
-        """
-        headers, msg, body = self.conn_text_raw(conn)
-        merged = self.conn_text_merge(headers, msg, body)
-        return searchable.Searchable(self.state, merged)
+        if conn:
+            txt = common.format_keyvals(
+                    [(h+":", v) for (h, v) in conn.headers.lst],
+                    key = "header",
+                    val = "text"
+                )
+            viewmode = self.viewmode_get()
+            msg, body = self.content_view(viewmode, conn)
+
+            cols = [urwid.Text(
+                    [
+                        ("heading", msg),
+                    ]
+                )
+            ]
+            cols.append(urwid.Text([
+                        " ",
+                        ('heading', "["),
+                        ('heading_key', "m"),
+                        ('heading', (":%s]"%viewmode.name)),
+                    ],
+                    align="right"
+                )
+            )
+            title = urwid.AttrWrap(urwid.Columns(cols), "heading")
+
+            txt.append(title)
+            txt.extend(body)
+        else:
+            txt = [
+                urwid.Text(""),
+                urwid.Text(
+                    [
+                        ("highlight", "No response. Press "),
+                        ("key", "e"),
+                        ("highlight", " and edit any aspect to add one."),
+                    ]
+                )
+            ]
+        return searchable.Searchable(self.state, txt)
 
     def _tab(self, content, attr):
         p = urwid.Text(content)
@@ -253,22 +244,7 @@ class FlowView(urwid.WidgetWrap):
 
     def view_response(self):
         self.state.view_flow_mode = common.VIEW_FLOW_RESPONSE
-        if self.flow.response:
-            body = self.conn_text(self.flow.response)
-        else:
-            body = searchable.Searchable(
-                        self.state,
-                        [
-                            urwid.Text(""),
-                            urwid.Text(
-                                [
-                                    ("highlight", "No response. Press "),
-                                    ("key", "e"),
-                                    ("highlight", " and edit any aspect to add one."),
-                                ]
-                            )
-                        ]
-                   )
+        body = self.conn_text(self.flow.response)
         self._w = self.wrap_body(common.VIEW_FLOW_RESPONSE, body)
 
     def set_method_raw(self, m):
