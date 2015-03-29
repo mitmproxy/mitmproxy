@@ -27,10 +27,9 @@ class ConsoleState(flow.State):
         self.focus = None
         self.follow_focus = None
         self.default_body_view = contentview.get("Auto")
-
         self.view_flow_mode = common.VIEW_FLOW_REQUEST
-
         self.flowsettings = weakref.WeakKeyDictionary()
+        self.last_search = None
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value

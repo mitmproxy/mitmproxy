@@ -215,7 +215,7 @@ class FlowView(urwid.WidgetWrap):
         """
         headers, msg, body = self.conn_text_raw(conn)
         merged = self.conn_text_merge(headers, msg, body)
-        return searchable.Searchable(merged)
+        return searchable.Searchable(self.state, merged)
 
     def _tab(self, content, attr):
         p = urwid.Text(content)
@@ -262,6 +262,7 @@ class FlowView(urwid.WidgetWrap):
             body = self.conn_text(self.flow.response)
         else:
             body = searchable.Searchable(
+                        self.state,
                         [
                             urwid.Text(""),
                             urwid.Text(

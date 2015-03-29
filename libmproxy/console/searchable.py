@@ -14,11 +14,12 @@ class Highlight(urwid.AttrMap):
 
 
 class Searchable(urwid.ListBox):
-    def __init__(self, contents):
+    def __init__(self, state, contents):
         urwid.ListBox.__init__(
             self,
             urwid.SimpleFocusListWalker(contents)
         )
+        self.state = state
         self.search_offset = 0
         self.current_highlight = None
         self.search_term = None
@@ -38,6 +39,7 @@ class Searchable(urwid.ListBox):
             return super(self.__class__, self).keypress(size, key)
 
     def set_search(self, text):
+        self.state.last_search = text
         self.search_term = text or None
         self.find_next(False)
 
@@ -61,8 +63,11 @@ class Searchable(urwid.ListBox):
 
     def find_next(self, backwards):
         if not self.search_term:
-            self.set_highlight(None)
-            return
+            if self.state.last_search:
+                self.search_term = self.state.last_search
+            else:
+                self.set_highlight(None)
+                return
         # Start search at focus + 1
         if backwards:
             rng = xrange(len(self.body)-1, -1, -1)
