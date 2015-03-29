@@ -154,12 +154,12 @@ class FlowView(urwid.WidgetWrap):
                     )
             return (description, text_objects)
 
-    def viewmode_get(self, override):
+    def viewmode_get(self):
+        override = self.state.get_flow_setting(
+            self.flow,
+            (self.state.view_flow_mode, "prettyview")
+        )
         return self.state.default_body_view if override is None else override
-
-    def override_get(self):
-        return self.state.get_flow_setting(self.flow,
-                (self.state.view_flow_mode, "prettyview"))
 
     def conn_text_raw(self, conn):
         """
@@ -171,8 +171,7 @@ class FlowView(urwid.WidgetWrap):
                 key = "header",
                 val = "text"
             )
-        override = self.override_get()
-        viewmode = self.viewmode_get(override)
+        viewmode = self.viewmode_get()
         msg, body = self.content_view(viewmode, conn)
         return headers, msg, body
 
@@ -181,26 +180,22 @@ class FlowView(urwid.WidgetWrap):
             Grabs what is returned by conn_text_raw and merges them all
             toghether, mainly used by conn_text
         """
-        override = self.override_get()
-        viewmode = self.viewmode_get(override)
-
+        viewmode = self.viewmode_get()
         cols = [urwid.Text(
                 [
                     ("heading", msg),
                 ]
             )
         ]
-
-        if override is not None:
-            cols.append(urwid.Text([
-                        " ",
-                        ('heading', "["),
-                        ('heading_key', "m"),
-                        ('heading', (":%s]"%viewmode.name)),
-                    ],
-                    align="right"
-                )
+        cols.append(urwid.Text([
+                    " ",
+                    ('heading', "["),
+                    ('heading_key', "m"),
+                    ('heading', (":%s]"%viewmode.name)),
+                ],
+                align="right"
             )
+        )
 
         title = urwid.AttrWrap(urwid.Columns(cols), "heading")
         headers.append(title)
