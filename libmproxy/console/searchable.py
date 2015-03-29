@@ -19,7 +19,6 @@ class Searchable(urwid.ListBox):
             self,
             urwid.SimpleFocusListWalker(contents)
         )
-
         self.search_offset = 0
         self.current_highlight = None
         self.search_term = None
@@ -68,7 +67,7 @@ class Searchable(urwid.ListBox):
         if backwards:
             rng = xrange(len(self.body)-1, -1, -1)
         else:
-            rng = xrange(1, len(self.body))
+            rng = xrange(1, len(self.body) + 1)
         for i in rng:
             off = (self.focus_position + i)%len(self.body)
             w = self.body[off]
