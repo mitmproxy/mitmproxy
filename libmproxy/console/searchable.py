@@ -28,7 +28,7 @@ class Searchable(urwid.ListBox):
         if key == "/":
             signals.status_prompt.send(
                 prompt = "Search for",
-                text = self.search_term or "",
+                text = "",
                 callback = self.set_search
             )
         if key == "n":
