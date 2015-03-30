@@ -1,12 +1,13 @@
 var React = require("react");
 
-var common = require("./common.js");
 var actions = require("../actions.js");
 var Query = require("../actions.js").Query;
-var toputils = require("../utils.js");
+var utils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
-FlowTable = require("./flowtable.js");
+
+var common = require("./common.js");
+var FlowTable = require("./flowtable.js");
 var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({
@@ -105,7 +106,7 @@ var MainView = React.createClass({
         var flows = this.state.view.list;
         var index;
         if (!this.getParams().flowId) {
-            if (shift > 0) {
+            if (shift < 0) {
                 index = flows.length - 1;
             } else {
                 index = 0;
@@ -131,49 +132,49 @@ var MainView = React.createClass({
             return;
         }
         switch (e.keyCode) {
-            case toputils.Key.K:
-            case toputils.Key.UP:
+            case utils.Key.K:
+            case utils.Key.UP:
                 this.selectFlowRelative(-1);
                 break;
-            case toputils.Key.J:
-            case toputils.Key.DOWN:
+            case utils.Key.J:
+            case utils.Key.DOWN:
                 this.selectFlowRelative(+1);
                 break;
-            case toputils.Key.SPACE:
-            case toputils.Key.PAGE_DOWN:
+            case utils.Key.SPACE:
+            case utils.Key.PAGE_DOWN:
                 this.selectFlowRelative(+10);
                 break;
-            case toputils.Key.PAGE_UP:
+            case utils.Key.PAGE_UP:
                 this.selectFlowRelative(-10);
                 break;
-            case toputils.Key.END:
+            case utils.Key.END:
                 this.selectFlowRelative(+1e10);
                 break;
-            case toputils.Key.HOME:
+            case utils.Key.HOME:
                 this.selectFlowRelative(-1e10);
                 break;
-            case toputils.Key.ESC:
+            case utils.Key.ESC:
                 this.selectFlow(null);
                 break;
-            case toputils.Key.H:
-            case toputils.Key.LEFT:
+            case utils.Key.H:
+            case utils.Key.LEFT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
-            case toputils.Key.L:
-            case toputils.Key.TAB:
-            case toputils.Key.RIGHT:
+            case utils.Key.L:
+            case utils.Key.TAB:
+            case utils.Key.RIGHT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
-            case toputils.Key.C:
+            case utils.Key.C:
                 if (e.shiftKey) {
                     actions.FlowActions.clear();
                 }
                 break;
-            case toputils.Key.D:
+            case utils.Key.D:
                 if (flow) {
                     if (e.shiftKey) {
                         actions.FlowActions.duplicate(flow);
@@ -182,24 +183,29 @@ var MainView = React.createClass({
                     }
                 }
                 break;
-            case toputils.Key.A:
+            case utils.Key.A:
                 if (e.shiftKey) {
                     actions.FlowActions.accept_all();
                 } else if (flow && flow.intercepted) {
                     actions.FlowActions.accept(flow);
                 }
                 break;
-            case toputils.Key.R:
+            case utils.Key.R:
                 if (!e.shiftKey && flow) {
                     actions.FlowActions.replay(flow);
                 }
                 break;
-            case toputils.Key.V:
+            case utils.Key.V:
                 if (e.shiftKey && flow && flow.modified) {
                     actions.FlowActions.revert(flow);
                 }
                 break;
-            case toputils.Key.SHIFT:
+            case utils.Key.E:
+                if (this.refs.flowDetails) {
+                    this.refs.flowDetails.promptEdit();
+                }
+                break;
+            case utils.Key.SHIFT:
                 break;
             default:
                 console.debug("keydown", e.keyCode);

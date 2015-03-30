@@ -44,7 +44,6 @@ var EventLogContents = React.createClass({
         view.addListener("recalculate", this.onEventLogChange);
 
         return {
-            log: view.list,
             view: view
         };
     },
@@ -74,12 +73,13 @@ var EventLogContents = React.createClass({
         return <LogMessage key={elem.id} entry={elem}/>;
     },
     render: function () {
-        var rows = this.renderRows(this.state.log);
+        var entries = this.state.view.list;
+        var rows = this.renderRows(entries);
 
         return <pre onScroll={this.onScroll}>
-            { this.getPlaceholderTop(this.state.log.length) }
+            { this.getPlaceholderTop(entries.length) }
             {rows}
-            { this.getPlaceholderBottom(this.state.log.length) }
+            { this.getPlaceholderBottom(entries.length) }
         </pre>;
     }
 });

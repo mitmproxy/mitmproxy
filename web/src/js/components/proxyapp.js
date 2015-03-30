@@ -72,7 +72,7 @@ var ProxyAppMain = React.createClass({
                 selectFilterInput("intercept");
                 break;
             case Key.L:
-                selectFilterInput("filter");
+                selectFilterInput("search");
                 break;
             case Key.H:
                 selectFilterInput("highlight");

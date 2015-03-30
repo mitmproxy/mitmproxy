@@ -5,6 +5,8 @@ var common = require("../common.js");
 var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
+var Prompt = require("../prompt.js");
+
 
 var allTabs = {
     request: Messages.Request,
@@ -15,6 +17,11 @@ var allTabs = {
 
 var FlowView = React.createClass({
     mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
+    getInitialState: function () {
+        return {
+            prompt: false
+        };
+    },
     getTabs: function (flow) {
         var tabs = [];
         ["request", "response", "error"].forEach(function (e) {
@@ -27,7 +34,7 @@ var FlowView = React.createClass({
     },
     nextTab: function (i) {
         var tabs = this.getTabs(this.props.flow);
-        var currentIndex = tabs.indexOf(this.getParams().detailTab);
+        var currentIndex = tabs.indexOf(this.getActive());
         // JS modulo operator doesn't correct negative numbers, make sure that we are positive.
         var nextIndex = (currentIndex + i + tabs.length) % tabs.length;
         this.selectTab(tabs[nextIndex]);
@@ -41,10 +48,50 @@ var FlowView = React.createClass({
             }
         );
     },
+    getActive: function(){
+        return this.getParams().detailTab;
+    },
+    promptEdit: function () {
+        var options;
+        switch(this.getActive()){
+            case "request":
+                options = [
+                    "method",
+                    "url",
+                    {text:"http version", key:"v"},
+                    "header"
+                    /*, "content"*/];
+                break;
+            case "response":
+                options = [
+                    {text:"http version", key:"v"},
+                    "code",
+                    "message",
+                    "header"
+                    /*, "content"*/];
+                break;
+            case "details":
+                return;
+            default:
+                throw "Unknown tab for edit: " + this.getActive();
+        }
+
+        this.setState({
+            prompt: {
+                done: function (k) {
+                    this.setState({prompt: false});
+                    if(k){
+                        this.refs.tab.edit(k);
+                    }
+                }.bind(this),
+                options: options
+            }
+        });
+    },
     render: function () {
         var flow = this.props.flow;
         var tabs = this.getTabs(flow);
-        var active = this.getParams().detailTab;
+        var active = this.getActive();
 
         if (!_.contains(tabs, active)) {
             if (active === "response" && flow.error) {
@@ -57,6 +104,11 @@ var FlowView = React.createClass({
             this.selectTab(active);
         }
 
+        var prompt = null;
+        if (this.state.prompt) {
+            prompt = <Prompt {...this.state.prompt}/>;
+        }
+
         var Tab = allTabs[active];
         return (
             <div className="flow-detail" onScroll={this.adjustHead}>
@@ -65,7 +117,8 @@ var FlowView = React.createClass({
                     tabs={tabs}
                     active={active}
                     selectTab={this.selectTab}/>
-                <Tab flow={flow}/>
+                <Tab ref="tab" flow={flow}/>
+                {prompt}
             </div>
         );
     }

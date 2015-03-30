@@ -1,0 +1,27 @@
+.prompt-dialog {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: fixed;
+    z-index: 100;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.prompt-content {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 25px;
+    padding: 2px 5px;
+    background-color: white;
+    box-shadow: 0 -1px 3px lightgray;
+
+    .option {
+        cursor: pointer;
+        &:not(:last-child)::after {
+            content: ", ";
+        }
+    }
+}

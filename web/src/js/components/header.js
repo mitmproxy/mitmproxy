@@ -165,7 +165,7 @@ var MainMenu = React.createClass({
         title: "Start",
         route: "flows"
     },
-    onFilterChange: function (val) {
+    onSearchChange: function (val) {
         var d = {};
         d[Query.SEARCH] = val;
         this.setQuery(d);
@@ -192,7 +192,7 @@ var MainMenu = React.createClass({
                         type="search"
                         color="black"
                         value={search}
-                        onChange={this.onFilterChange} />
+                        onChange={this.onSearchChange} />
                     <FilterInput
                         ref="highlight"
                         placeholder="Highlight"

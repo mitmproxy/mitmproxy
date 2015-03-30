@@ -23,12 +23,15 @@ var Headers = React.createClass({
             } else {
                 nextHeaders.splice(row, 1);
                 // manually move selection target if this has been the last row.
-                if(row === nextHeaders.length){
-                    this._nextSel = (row-1)+"-value";
+                if (row === nextHeaders.length) {
+                    this._nextSel = (row - 1) + "-value";
                 }
             }
         }
         this.props.onChange(nextHeaders);
+    },
+    edit: function () {
+        this.refs["0-key"].focus();
     },
     onTab: function (row, col, e) {
         var headers = this.props.message.headers;
@@ -138,9 +141,11 @@ var InlineInput = React.createClass({
     },
     blur: function () {
         this.getDOMNode().blur();
+        window.getSelection().removeAllRanges();
         this.context.returnFocus && this.context.returnFocus();
     },
-    selectContents: function () {
+    focus: function () {
+        React.findDOMNode(this).focus();
         var range = document.createRange();
         range.selectNodeContents(this.getDOMNode());
         var sel = window.getSelection();
@@ -148,7 +153,7 @@ var InlineInput = React.createClass({
         sel.addRange(range);
     },
     onFocus: function () {
-        this.setState({editable: true}, this.selectContents);
+        this.setState({editable: true}, this.focus);
     },
     onBlur: function (e) {
         this.setState({editable: false});
@@ -182,7 +187,7 @@ var HeaderInlineInput = React.createClass({
                 }
                 break;
             case utils.Key.TAB:
-                if(!e.shiftKey){
+                if (!e.shiftKey) {
                     this.props.onTab(e);
                 }
                 break;
@@ -201,6 +206,9 @@ var ValidateInlineInput = React.createClass({
             content: this.props.content,
             originalContent: this.props.content
         };
+    },
+    focus: function () {
+        this.getDOMNode().focus();
     },
     onChange: function (val) {
         this.setState({
@@ -253,11 +261,11 @@ var RequestLine = React.createClass({
         var httpver = "HTTP/" + flow.request.httpversion.join(".");
 
         return <div className="first-line request-line">
-            <InlineInput content={flow.request.method} onChange={this.onMethodChange}/>
+            <InlineInput ref="method" content={flow.request.method} onChange={this.onMethodChange}/>
         &nbsp;
-            <ValidateInlineInput content={url} onChange={this.onUrlChange} isValid={this.isValidUrl} />
+            <ValidateInlineInput ref="url" content={url} onChange={this.onUrlChange} isValid={this.isValidUrl} />
         &nbsp;
-            <ValidateInlineInput immediate content={httpver} onChange={this.onHttpVersionChange} isValid={flowutils.isValidHttpVersion} />
+            <ValidateInlineInput ref="httpVersion" immediate content={httpver} onChange={this.onHttpVersionChange} isValid={flowutils.isValidHttpVersion} />
         </div>
     },
     isValidUrl: function (url) {
@@ -292,11 +300,11 @@ var ResponseLine = React.createClass({
         var flow = this.props.flow;
         var httpver = "HTTP/" + flow.response.httpversion.join(".");
         return <div className="first-line response-line">
-            <ValidateInlineInput immediate content={httpver} onChange={this.onHttpVersionChange} isValid={flowutils.isValidHttpVersion} />
+            <ValidateInlineInput ref="httpVersion" immediate content={httpver} onChange={this.onHttpVersionChange} isValid={flowutils.isValidHttpVersion} />
         &nbsp;
-            <ValidateInlineInput immediate content={flow.response.code + ""} onChange={this.onCodeChange} isValid={this.isValidCode} />
+            <ValidateInlineInput ref="code" immediate content={flow.response.code + ""} onChange={this.onCodeChange} isValid={this.isValidCode} />
         &nbsp;
-            <InlineInput content={flow.response.msg} onChange={this.onMsgChange}/>
+            <InlineInput ref="msg" content={flow.response.msg} onChange={this.onMsgChange}/>
 
         </div>;
     },
@@ -330,13 +338,31 @@ var Request = React.createClass({
         var flow = this.props.flow;
         return (
             <section className="request">
-                <RequestLine flow={flow}/>
+                <RequestLine ref="requestLine" flow={flow}/>
                 {/*<ResponseLine flow={flow}/>*/}
-                <Headers  message={flow.request} onChange={this.onHeaderChange}/>
+                <Headers ref="headers" message={flow.request} onChange={this.onHeaderChange}/>
                 <hr/>
                 <ContentView flow={flow} message={flow.request}/>
             </section>
         );
+    },
+    edit: function (k) {
+        switch (k) {
+            case "m":
+                this.refs.requestLine.refs.method.focus();
+                break;
+            case "u":
+                this.refs.requestLine.refs.url.focus();
+                break;
+            case "v":
+                this.refs.requestLine.refs.httpVersion.focus();
+                break;
+            case "h":
+                this.refs.headers.edit();
+                break;
+            default:
+                throw "Unimplemented: "+ k;
+        }
     },
     onHeaderChange: function (nextHeaders) {
         actions.FlowActions.update(this.props.flow, {
@@ -353,12 +379,30 @@ var Response = React.createClass({
         return (
             <section className="response">
                 {/*<RequestLine flow={flow}/>*/}
-                <ResponseLine flow={flow}/>
-                <Headers message={flow.response} onChange={this.onHeaderChange}/>
+                <ResponseLine ref="responseLine" flow={flow}/>
+                <Headers ref="headers" message={flow.response} onChange={this.onHeaderChange}/>
                 <hr/>
                 <ContentView flow={flow} message={flow.response}/>
             </section>
         );
+    },
+    edit: function (k) {
+        switch (k) {
+            case "c":
+                this.refs.responseLine.refs.code.focus();
+                break;
+            case "m":
+                this.refs.responseLine.refs.msg.focus();
+                break;
+            case "v":
+                this.refs.responseLine.refs.httpVersion.focus();
+                break;
+            case "h":
+                this.refs.headers.edit();
+                break;
+            default:
+                throw "Unimplemented: "+ k;
+        }
     },
     onHeaderChange: function (nextHeaders) {
         actions.FlowActions.update(this.props.flow, {

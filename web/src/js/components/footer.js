@@ -8,7 +8,7 @@ var Footer = React.createClass({
         var intercept = this.state.settings.intercept;
         return (
             <footer>
-                {mode != "regular" ? <span className="label label-success">{mode} mode</span> : null}
+                {mode && mode != "regular" ? <span className="label label-success">{mode} mode</span> : null}
                 &nbsp;
                 {intercept ? <span className="label label-success">Intercept: {intercept}</span> : null}
             </footer>
