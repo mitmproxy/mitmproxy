@@ -420,7 +420,7 @@ var FlowActions = {
         });
     },
     clear: function(){
-        $.post("/flows/" + flow.id);
+        $.post("/clear");
     }
 };
 
