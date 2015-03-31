@@ -73,6 +73,8 @@ class ConsoleState(flow.State):
             elif idx < 0:
                 idx = 0
             self.focus = idx
+        else:
+            self.focus = None
 
     def set_focus_flow(self, f):
         self.set_focus(self.view.index(f))
