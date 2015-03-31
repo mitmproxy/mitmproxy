@@ -434,6 +434,8 @@ class FlowView(tabs.Tabs):
         signals.flow_change.send(self, flow = self.flow)
 
     def keypress(self, size, key):
+        key = super(self.__class__, self).keypress(size, key)
+
         if key == " ":
             self.view_next_flow(self.flow)
             return
@@ -446,10 +448,7 @@ class FlowView(tabs.Tabs):
         else:
             conn = None
 
-        if key == "q":
-            signals.pop_view_state.send(self)
-            return None
-        elif key in ("up", "down", "page up", "page down"):
+        if key in ("up", "down", "page up", "page down"):
             # Why doesn't this just work??
             self._w.keypress(size, key)
         elif key == "a":
@@ -499,7 +498,7 @@ class FlowView(tabs.Tabs):
                 args = (self.flow,)
             )
 
-        if not conn and key in "befgmxvz":
+        if not conn and key in set(list("befgmxvz")):
             signals.status_message.send(
                 message = "Tab to the request or response",
                 expire = 1
@@ -601,10 +600,7 @@ class FlowView(tabs.Tabs):
                         args = (conn,)
                     )
                 signals.flow_change.send(self, flow = self.flow)
-            else:
-                return super(self.__class__, self).keypress(size, key)
-        else:
-            return super(self.__class__, self).keypress(size, key)
+        return key
 
     def encode_callback(self, key, conn):
         encoding_map = {

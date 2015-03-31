@@ -17,8 +17,7 @@ class Tabs(urwid.WidgetWrap):
         if key == "tab":
             self.tab_offset = (self.tab_offset + 1)%(len(self.tabs))
             self.show()
-        else:
-            return self._w.keypress(size, key)
+        return self._w.keypress(size, key)
 
     def show(self):
         headers = []

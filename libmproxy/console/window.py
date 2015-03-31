@@ -1,19 +1,21 @@
 import urwid
-from . import common, grideditor, signals, contentview
+from . import grideditor, signals, contentview
+
 
 class Window(urwid.Frame):
-    def __init__(self, master, body, header, footer):
+    def __init__(self, master, body, header, footer, helpctx):
         urwid.Frame.__init__(self, body, header=header, footer=footer)
         self.master = master
+        self.helpctx = helpctx
         signals.focus.connect(self.sig_focus)
 
     def sig_focus(self, sender, section):
         self.focus_position = section
 
     def keypress(self, size, k):
-        k = urwid.Frame.keypress(self, self.master.loop.screen_size, k)
+        k = super(self.__class__, self).keypress(size, k)
         if k == "?":
-            self.master.view_help()
+            self.master.view_help(self.helpctx)
         elif k == "c":
             if not self.master.client_playback:
                 signals.status_prompt_path.send(
@@ -65,15 +67,7 @@ class Window(urwid.Frame):
         elif k == "Q":
             raise urwid.ExitMainLoop
         elif k == "q":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Quit",
-                keys = (
-                    ("yes", "y"),
-                    ("no", "n"),
-                ),
-                callback = self.master.quit,
-            )
+            signals.pop_view_state.send(self)
         elif k == "M":
             signals.status_prompt_onekey.send(
                 prompt = "Global default display mode",
