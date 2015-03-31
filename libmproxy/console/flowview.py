@@ -68,6 +68,7 @@ def _mkhelp():
         ("x", "delete body"),
         ("z", "encode/decode a request/response"),
         ("tab", "next tab"),
+        ("h, l", "previous tab, next tab"),
         ("space", "next flow"),
         ("|", "run script on this flow"),
         ("/", "search (case sensitive)"),
