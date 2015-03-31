@@ -33,3 +33,4 @@ class Tabs(urwid.WidgetWrap):
             body = self.tabs[self.tab_offset][1](),
             header = headers
         )
+        self._w.set_focus("body")
