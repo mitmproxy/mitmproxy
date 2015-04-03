@@ -19,6 +19,7 @@ class Palette:
 
         # Options
         'option_selected', 'option_active', 'option_active_selected',
+        'option_selected_key',
 
         # List and Connections
         'method', 'focus',
@@ -120,6 +121,7 @@ class LowLight(Palette):
 
         # Options
         option_selected = ('light gray', 'dark blue'),
+        option_selected_key = ('dark blue,bold', 'dark blue'),
         option_active = ('light red', 'default'),
         option_active_selected = ('light red', 'dark blue'),
 
@@ -194,6 +196,7 @@ class SolarizedLight(LowLight):
 
         # Options
         option_selected = (sol_base2, sol_base02),
+        option_selected_key = (sol_blue, sol_base02),
         option_active = (sol_orange, 'default'),
         option_active_selected = (sol_orange, sol_base02),
 
@@ -271,7 +274,7 @@ class SolarizedDark(LowDark):
 
 
 palettes = {
-    #"lowlight": LowLight(),
+    "lowlight": LowLight(),
     #"lowdark": LowDark(),
     #"light": Light(),
     #"dark": Dark(),

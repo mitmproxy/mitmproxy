@@ -6,15 +6,25 @@ help_context = None
 
 
 class OptionWidget(urwid.WidgetWrap):
-    def __init__(self, option, text, active, focus):
+    def __init__(self, option, text, shortcut, active, focus):
         self.option = option
-        opt = urwid.Text(text, align="center")
+        textattr = "text"
+        keyattr = "key"
         if focus and active:
-            opt = urwid.AttrWrap(opt, "option_active_selected")
+            textattr = "option_active_selected"
         elif focus:
-            opt = urwid.AttrWrap(opt, "option_selected")
+            textattr = "option_selected"
+            keyattr = "option_selected_key"
         elif active:
-            opt = urwid.AttrWrap(opt, "option_active")
+            textattr = "option_active"
+        text = common.highlight_key(
+            text,
+            shortcut,
+            textattr=textattr,
+            keyattr=keyattr
+        )
+        opt = urwid.Text(text, align="center")
+        opt = urwid.AttrWrap(opt, textattr)
         opt = urwid.Padding(opt, align="center", width=("relative", 20))
         urwid.WidgetWrap.__init__(self, opt)
 
@@ -58,24 +68,33 @@ class OptionListBox(urwid.ListBox):
             self,
             OptionWalker(options)
         )
+        self.options = options
+        self.keymap = {}
+        for i in options:
+            self.keymap[i.shortcut] = i
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "enter":
-            self.get_focus()[0].option.ativate()
+            self.get_focus()[0].option.activate()
+            return None
+        if key in self.keymap:
+            self.keymap[key].activate()
+            self.set_focus(self.options.index(self.keymap[key]))
             return None
         return super(self.__class__, self).keypress(size, key)
 
 
 _neg = lambda: False
 class Option:
-    def __init__(self, text, getstate=None, ativate=None):
+    def __init__(self, text, shortcut, getstate=None, activate=None):
         self.text = text
+        self.shortcut = shortcut
         self.getstate = getstate or _neg
-        self.ativate = ativate or _neg
+        self.activate = activate or _neg
 
     def render(self, focus):
-        return OptionWidget(self, self.text, self.getstate(), focus)
+        return OptionWidget(self, self.text, self.shortcut, self.getstate(), focus)
 
 
 class Options(urwid.WidgetWrap):
@@ -85,11 +104,13 @@ class Options(urwid.WidgetWrap):
             [
                 Option(
                     "Anti-Cache",
+                    "C",
                     lambda: master.anticache,
                     self.toggle_anticache
                 ),
                 Option(
                     "Anti-Compression",
+                    "o",
                     lambda: master.anticomp,
                     self.toggle_anticomp
                 ),
@@ -97,6 +118,7 @@ class Options(urwid.WidgetWrap):
                 #Option("Ignore Patterns"),
                 Option(
                     "Kill Extra",
+                    "E",
                     lambda: master.killextra,
                     self.toggle_killextra
                 ),
@@ -104,6 +126,7 @@ class Options(urwid.WidgetWrap):
                 #Option("Replacement Patterns"),
                 Option(
                     "Show Host",
+                    "H",
                     lambda: master.showhost,
                     self.toggle_showhost
                 ),
@@ -112,11 +135,13 @@ class Options(urwid.WidgetWrap):
                 #Option("TCP Proxying"),
                 Option(
                     "No Refresh",
+                    "R",
                     lambda: not master.refresh_server_playback,
                     self.toggle_refresh_server_playback
                 ),
                 Option(
                     "No Upstream Certs",
+                    "U",
                     lambda: master.server.config.no_upstream_cert,
                     self.toggle_upstream_cert
                 ),
