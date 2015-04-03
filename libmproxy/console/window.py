@@ -64,6 +64,8 @@ class Window(urwid.Frame):
                 text = self.master.state.intercept_txt,
                 callback = self.master.set_intercept
             )
+        elif k == "o":
+            self.master.view_options()
         elif k == "Q":
             raise urwid.ExitMainLoop
         elif k == "q":
@@ -107,19 +109,6 @@ class Window(urwid.Frame):
                     ),
                     callback = self.master.stop_server_playback_prompt,
                 )
-        elif k == "o":
-            signals.status_prompt_onekey.send(
-                prompt = "Options",
-                keys = (
-                    ("anticache", "a"),
-                    ("anticomp", "c"),
-                    ("showhost", "h"),
-                    ("killextra", "k"),
-                    ("norefresh", "n"),
-                    ("no-upstream-certs", "u"),
-                ),
-                callback = self.master._change_options
-            )
         elif k == "t":
             signals.status_prompt.send(
                 prompt = "Sticky cookie filter",

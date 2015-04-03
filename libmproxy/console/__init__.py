@@ -15,7 +15,7 @@ import urwid
 import weakref
 
 from .. import controller, flow, script
-from . import flowlist, flowview, help, window, signals
+from . import flowlist, flowview, help, window, signals, options
 from . import grideditor, palettes, contentview, statusbar
 
 EVENTLOG_SIZE = 500
@@ -465,6 +465,16 @@ class ConsoleMaster(flow.FlowMaster):
             None
         )
 
+    def view_options(self):
+        signals.push_view_state.send(self)
+        self.loop.widget = window.Window(
+            self,
+            options.Options(self),
+            None,
+            statusbar.StatusBar(self, help.footer),
+            None
+        )
+
     def view_grideditor(self, ge):
         signals.push_view_state.send(self)
         self.loop.widget = window.Window(
@@ -585,24 +595,6 @@ class ConsoleMaster(flow.FlowMaster):
     def quit(self, a):
         if a != "n":
             raise urwid.ExitMainLoop
-
-    def _change_options(self, a):
-        if a == "a":
-            self.anticache = not self.anticache
-        if a == "c":
-            self.anticomp = not self.anticomp
-        if a == "h":
-            self.showhost = not self.showhost
-            self.sync_list_view()
-            self.refresh_focus()
-        elif a == "k":
-            self.killextra = not self.killextra
-        elif a == "n":
-            self.refresh_server_playback = not self.refresh_server_playback
-        elif a == "u":
-            self.server.config.no_upstream_cert =\
-                not self.server.config.no_upstream_cert
-            signals.update_settings.send(self)
 
     def shutdown(self):
         self.state.killall(self)

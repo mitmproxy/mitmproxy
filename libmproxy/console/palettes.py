@@ -17,6 +17,9 @@ class Palette:
         # Help
         'key', 'head', 'text',
 
+        # Options
+        'option_selected', 'option_active', 'option_active_selected',
+
         # List and Connections
         'method', 'focus',
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
@@ -59,6 +62,9 @@ class LowDark(Palette):
         key = ('light cyan', 'default'),
         head = ('white,bold', 'default'),
         text = ('light gray', 'default'),
+
+        # Options
+        option_selected = ('light gray', 'dark blue'),
 
         # List and Connections
         method = ('dark cyan', 'default'),
@@ -111,6 +117,11 @@ class LowLight(Palette):
         key = ('dark blue,bold', 'default'),
         head = ('black,bold', 'default'),
         text = ('dark gray', 'default'),
+
+        # Options
+        option_selected = ('light gray', 'dark blue'),
+        option_active = ('light red', 'default'),
+        option_active_selected = ('light red', 'dark blue'),
 
         # List and Connections
         method = ('dark cyan', 'default'),
@@ -181,6 +192,11 @@ class SolarizedLight(LowLight):
         key = (sol_blue, 'default',),
         head = (sol_base00, 'default'),
 
+        # Options
+        option_selected = (sol_base2, sol_base02),
+        option_active = (sol_orange, 'default'),
+        option_active_selected = (sol_orange, sol_base02),
+
         # List and Connections
         method = (sol_cyan, 'default'),
         focus = (sol_base01, 'default'),
@@ -223,6 +239,9 @@ class SolarizedDark(LowDark):
         key = (sol_blue, 'default',),
         head = (sol_base00, 'default'),
 
+        # Options
+        option_selected = (sol_base03, sol_base01),
+
         # List and Connections
         method = (sol_cyan, 'default'),
         focus = (sol_base1, 'default'),
@@ -252,10 +271,10 @@ class SolarizedDark(LowDark):
 
 
 palettes = {
-    "lowlight": LowLight(),
-    "lowdark": LowDark(),
-    "light": Light(),
-    "dark": Dark(),
+    #"lowlight": LowLight(),
+    #"lowdark": LowDark(),
+    #"light": Light(),
+    #"dark": Dark(),
     "solarized_light": SolarizedLight(),
-    "solarized_dark": SolarizedDark(),
+    #"solarized_dark": SolarizedDark(),
 }
