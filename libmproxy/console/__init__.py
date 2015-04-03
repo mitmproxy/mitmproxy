@@ -471,7 +471,7 @@ class ConsoleMaster(flow.FlowMaster):
             self,
             options.Options(self),
             None,
-            statusbar.StatusBar(self, help.footer),
+            statusbar.StatusBar(self, options.footer),
             None
         )
 

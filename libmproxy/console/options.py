@@ -3,6 +3,10 @@ import urwid
 from . import common, signals
 
 help_context = None
+footer = [
+    ('heading_key', "enter/space"), ":toggle ",
+    ('heading_key', "C"), ":clear all ",
+]
 
 
 class OptionWidget(urwid.WidgetWrap):
@@ -12,6 +16,7 @@ class OptionWidget(urwid.WidgetWrap):
         keyattr = "key"
         if focus and active:
             textattr = "option_active_selected"
+            keyattr = "option_selected_key"
         elif focus:
             textattr = "option_selected"
             keyattr = "option_selected_key"
@@ -74,10 +79,10 @@ class OptionListBox(urwid.ListBox):
             self.keymap[i.shortcut] = i
 
     def keypress(self, size, key):
-        key = common.shortcuts(key)
-        if key == "enter":
+        if key == "enter" or key == " ":
             self.get_focus()[0].option.activate()
             return None
+        key = common.shortcuts(key)
         if key in self.keymap:
             self.keymap[key].activate()
             self.set_focus(self.options.index(self.keymap[key]))
@@ -104,7 +109,7 @@ class Options(urwid.WidgetWrap):
             [
                 Option(
                     "Anti-Cache",
-                    "C",
+                    "a",
                     lambda: master.anticache,
                     self.toggle_anticache
                 ),
@@ -155,6 +160,25 @@ class Options(urwid.WidgetWrap):
             header = title
         )
         self.master.loop.widget.footer.update("")
+
+    def keypress(self, size, key):
+        if key == "C":
+            self.clearall()
+            return None
+        return super(self.__class__, self).keypress(size, key)
+
+    def clearall(self):
+        self.master.anticache = False
+        self.master.anticomp = False
+        self.master.killextra = False
+        self.master.showhost = False
+        self.master.refresh_server_playback = True
+        self.master.server.config.no_upstream_cert = False
+        signals.update_settings.send(self)
+        signals.status_message.send(
+            message = "All options cleared",
+            expire = 1
+        )
 
     def toggle_anticache(self):
         self.master.anticache = not self.master.anticache
