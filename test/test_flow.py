@@ -125,6 +125,10 @@ class TestServerPlaybackState:
         r.request.path = "voing"
         assert s._hash(r) != s._hash(r2)
 
+        r.request.path = "path?blank_value"
+        r2.request.path = "path?"
+        assert s._hash(r) != s._hash(r2)
+
     def test_headers(self):
         s = flow.ServerPlaybackState(["foo"], [], False, False, None, False, None, False)
         r = tutils.tflow(resp=True)
@@ -197,12 +201,12 @@ class TestServerPlaybackState:
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = ["application/x-www-form-urlencoded"]
         r2.request.content = "paramx=x&param1=1"
-        # same parameters 
+        # same parameters
         assert s._hash(r) == s._hash(r2)
-        # ignored parameters != 
+        # ignored parameters !=
         r2.request.content = "paramx=x&param1=2"
         assert s._hash(r) == s._hash(r2)
-        # missing parameter 
+        # missing parameter
         r2.request.content="paramx=x"
         assert s._hash(r) == s._hash(r2)
         # ignorable parameter added
@@ -223,7 +227,7 @@ class TestServerPlaybackState:
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = ["application/json"]
         r2.request.content = '{"param1":"1"}'
-        # same content 
+        # same content
         assert s._hash(r) == s._hash(r2)
         # distint content (note only x-www-form-urlencoded payload is analysed)
         r2.request.content = '{"param1":"2"}'
@@ -238,7 +242,7 @@ class TestServerPlaybackState:
         r2 = tutils.tflow(resp=True)
         r2.request.headers["Content-Type"] = ["application/x-www-form-urlencoded"]
         r2.request.content = "paramx=x"
-        # same parameters 
+        # same parameters
         assert s._hash(r) == s._hash(r2)
 
     def test_ignore_content(self):
