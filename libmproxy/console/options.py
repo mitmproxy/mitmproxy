@@ -2,11 +2,20 @@ import urwid
 
 from . import common, signals
 
-help_context = None
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
     ('heading_key', "C"), ":clear all ",
 ]
+
+def _mkhelp():
+    text = []
+    keys = [
+        ("enter/space", "activate option"),
+        ("C", "clear all options"),
+    ]
+    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+    return text
+help_context = _mkhelp()
 
 
 class OptionWidget(urwid.WidgetWrap):
@@ -25,12 +34,12 @@ class OptionWidget(urwid.WidgetWrap):
         text = common.highlight_key(
             text,
             shortcut,
-            textattr=textattr,
-            keyattr=keyattr
+            textattr = textattr,
+            keyattr = keyattr
         )
         opt = urwid.Text(text, align="center")
         opt = urwid.AttrWrap(opt, textattr)
-        opt = urwid.Padding(opt, align="center", width=("relative", 20))
+        opt = urwid.Padding(opt, align = "center", width = ("relative", 20))
         urwid.WidgetWrap.__init__(self, opt)
 
     def keypress(self, size, key):

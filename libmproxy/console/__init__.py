@@ -472,7 +472,7 @@ class ConsoleMaster(flow.FlowMaster):
             options.Options(self),
             None,
             statusbar.StatusBar(self, options.footer),
-            None
+            options.help_context,
         )
 
     def view_grideditor(self, ge):
