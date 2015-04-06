@@ -279,6 +279,7 @@ class SolarizedDark(LowDark):
     )
 
 
+DEFAULT = "dark"
 palettes = {
     "lowlight": LowLight(),
     "lowdark": LowDark(),

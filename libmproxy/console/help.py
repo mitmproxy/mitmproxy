@@ -103,3 +103,25 @@ class HelpView(urwid.ListBox):
         elif key == "?":
             key = None
         return urwid.ListBox.keypress(self, size, key)
+
+
+class PalettePicker(urwid.WidgetWrap):
+    def __init__(self, master):
+        self.master = master
+        self.lb = select.Select(
+            [
+                select.Heading("Low"),
+                select.Option(
+                    "One Two",
+                    "O",
+                ),
+            ]
+        )
+        title = urwid.Text("Palettes")
+        title = urwid.Padding(title, align="left", width=("relative", 100))
+        title = urwid.AttrWrap(title, "heading")
+        self._w = urwid.Frame(
+            self.lb,
+            header = title
+        )
+        

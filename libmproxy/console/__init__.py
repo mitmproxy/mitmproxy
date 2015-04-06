@@ -16,7 +16,7 @@ import weakref
 
 from .. import controller, flow, script
 from . import flowlist, flowview, help, window, signals, options
-from . import grideditor, palettes, contentview, statusbar
+from . import grideditor, palettes, contentview, statusbar, palettepicker
 
 EVENTLOG_SIZE = 500
 
@@ -157,7 +157,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.setheaders.add(*i)
 
         self.flow_list_walker = None
-        self.set_palette(options.palette)
 
         r = self.set_intercept(options.intercept)
         if r:
@@ -183,6 +182,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.rheaders = options.rheaders
         self.nopop = options.nopop
         self.showhost = options.showhost
+        self.palette = options.palette
 
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
@@ -391,7 +391,11 @@ class ConsoleMaster(flow.FlowMaster):
         os.unlink(name)
 
     def set_palette(self, name):
-        self.palette = palettes.palettes[name]
+        self.palette = name
+        self.ui.register_palette(
+            palettes.palettes[name].palette()
+        )
+        self.ui.clear()
 
     def ticker(self, *userdata):
         changed = self.tick(self.masterq, timeout=0)
@@ -403,7 +407,7 @@ class ConsoleMaster(flow.FlowMaster):
     def run(self):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
-        self.ui.register_palette(self.palette.palette())
+        self.set_palette(self.palette)
         self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
@@ -473,6 +477,16 @@ class ConsoleMaster(flow.FlowMaster):
             None,
             statusbar.StatusBar(self, options.footer),
             options.help_context,
+        )
+
+    def view_palette_picker(self):
+        signals.push_view_state.send(self)
+        self.loop.widget = window.Window(
+            self,
+            palettepicker.PalettePicker(self),
+            None,
+            statusbar.StatusBar(self, palettepicker.footer),
+            palettepicker.help_context,
         )
 
     def view_grideditor(self, ge):

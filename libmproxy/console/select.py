@@ -15,12 +15,13 @@ class _OptionWidget(urwid.WidgetWrap):
             keyattr = "option_selected_key"
         elif active:
             textattr = "option_active"
-        text = common.highlight_key(
-            text,
-            shortcut,
-            textattr = textattr,
-            keyattr = keyattr
-        )
+        if shortcut:
+            text = common.highlight_key(
+                text,
+                shortcut,
+                textattr = textattr,
+                keyattr = keyattr
+            )
         opt = urwid.Text(text, align="left")
         opt = urwid.AttrWrap(opt, textattr)
         opt = urwid.Padding(opt, align = "center", width = 40)
@@ -89,7 +90,7 @@ class Select(urwid.ListBox):
         self.options = options
         self.keymap = {}
         for i in options:
-            if hasattr(i, "shortcut"):
+            if hasattr(i, "shortcut") and i.shortcut:
                 if i.shortcut in self.keymap:
                     raise ValueError("Duplicate shortcut key: %s"%i.shortcut)
                 self.keymap[i.shortcut] = i

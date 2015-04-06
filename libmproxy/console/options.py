@@ -58,6 +58,12 @@ class Options(urwid.WidgetWrap):
                     self.default_displaymode
                 ),
                 select.Option(
+                    "Palette",
+                    "P",
+                    lambda: False,
+                    self.palette
+                ),
+                select.Option(
                     "Show Host",
                     "w",
                     lambda: master.showhost,
@@ -117,9 +123,9 @@ class Options(urwid.WidgetWrap):
                 ),
             ]
         )
-        title = urwid.Text("select.Options")
+        title = urwid.Text("Options")
         title = urwid.Padding(title, align="left", width=("relative", 100))
-        title = urwid.AttrWrap(title, "select.Heading")
+        title = urwid.AttrWrap(title, "heading")
         self._w = urwid.Frame(
             self.lb,
             header = title
@@ -259,3 +265,6 @@ class Options(urwid.WidgetWrap):
             text = self.master.stickycookie_txt,
             callback = self.master.set_stickycookie
         )
+
+    def palette(self):
+        self.master.view_palette_picker()
