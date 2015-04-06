@@ -39,11 +39,9 @@ class HelpView(urwid.ListBox):
             ("c", "client replay"),
             ("i", "set interception pattern"),
             ("o", "options"),
-            ("q", "quit / return to flow list"),
+            ("q", "quit / return to previous page"),
             ("Q", "quit without confirm prompt"),
             ("S", "server replay"),
-            ("t", "set sticky cookie expression"),
-            ("u", "set sticky auth expression"),
         ]
         text.extend(
             common.format_keyvals(keys, key="key", val="text", indent=4)

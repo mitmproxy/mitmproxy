@@ -63,17 +63,5 @@ class Window(urwid.Frame):
                     ),
                     callback = self.master.stop_server_playback_prompt,
                 )
-        elif k == "t":
-            signals.status_prompt.send(
-                prompt = "Sticky cookie filter",
-                text = self.master.stickycookie_txt,
-                callback = self.master.set_stickycookie
-            )
-        elif k == "u":
-            signals.status_prompt.send(
-                prompt = "Sticky auth filter",
-                text = self.master.stickyauth_txt,
-                callback = self.master.set_stickyauth
-            )
         else:
             return k

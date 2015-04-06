@@ -212,11 +212,15 @@ class Options(urwid.WidgetWrap):
                 ),
                 Option(
                     "Sticky Auth",
-                    "A"
+                    "A",
+                    lambda: master.stickyauth_txt,
+                    self.sticky_auth
                 ),
                 Option(
                     "Sticky Cookies",
-                    "t"
+                    "t",
+                    lambda: master.stickycookie_txt,
+                    self.sticky_cookie
                 ),
             ]
         )
@@ -247,6 +251,10 @@ class Options(urwid.WidgetWrap):
         self.master.set_ignore_filter([])
         self.master.set_tcp_filter([])
         self.master.scripts = []
+        self.master.set_stickyauth(None)
+        self.master.set_stickycookie(None)
+        self.master.state.default_body_view = contentview.get("Auto")
+
         signals.update_settings.send(self)
         signals.status_message.send(
             message = "All options cleared",
@@ -339,4 +347,18 @@ class Options(urwid.WidgetWrap):
                 [[x] for x in self.master.get_tcp_filter()],
                 _set
             )
+        )
+
+    def sticky_auth(self):
+        signals.status_prompt.send(
+            prompt = "Sticky auth filter",
+            text = self.master.stickyauth_txt,
+            callback = self.master.set_stickyauth
+        )
+
+    def sticky_cookie(self):
+        signals.status_prompt.send(
+            prompt = "Sticky cookie filter",
+            text = self.master.stickycookie_txt,
+            callback = self.master.set_stickycookie
         )
