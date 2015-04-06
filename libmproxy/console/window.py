@@ -60,14 +60,6 @@ class Window(urwid.Frame):
                 keys = contentview.view_prompts,
                 callback = self.master.change_default_display_mode
             )
-        elif k == "s":
-            self.master.view_grideditor(
-                grideditor.ScriptEditor(
-                    self.master,
-                    [[i.command] for i in self.master.scripts],
-                    self.master.edit_scripts
-                )
-            )
         elif k == "S":
             if not self.master.server_playback:
                 signals.status_prompt_path.send(

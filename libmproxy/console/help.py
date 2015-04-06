@@ -90,7 +90,6 @@ class HelpView(urwid.ListBox):
             ("o", "options"),
             ("q", "quit / return to flow list"),
             ("Q", "quit without confirm prompt"),
-            ("s", "add/remove scripts"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),
             ("T", "set tcp proxying pattern"),

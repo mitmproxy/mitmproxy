@@ -152,7 +152,9 @@ class Options(urwid.WidgetWrap):
                 ),
                 Option(
                     "Scripts",
-                    "S"
+                    "S",
+                    lambda: master.scripts,
+                    self.scripts
                 ),
 
                 Heading("Interface"),
@@ -239,6 +241,7 @@ class Options(urwid.WidgetWrap):
         self.master.setheaders.clear()
         self.master.replacehooks.clear()
         self.master.set_ignore_filter([])
+        self.master.scripts = []
         signals.update_settings.send(self)
         signals.status_message.send(
             message = "All options cleared",
@@ -298,5 +301,14 @@ class Options(urwid.WidgetWrap):
                 self.master,
                 self.master.replacehooks.get_specs(),
                 _set
+            )
+        )
+
+    def scripts(self):
+        self.master.view_grideditor(
+            grideditor.ScriptEditor(
+                self.master,
+                [[i.command] for i in self.master.scripts],
+                self.master.edit_scripts
             )
         )

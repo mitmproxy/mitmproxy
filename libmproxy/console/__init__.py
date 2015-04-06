@@ -575,6 +575,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.unload_scripts()
         for command in commands:
             self.load_script(command)
+        signals.update_settings.send(self)
 
     def edit_tcp_filter(self, tcp):
         patterns = (x[0] for x in tcp)
