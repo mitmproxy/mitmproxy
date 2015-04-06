@@ -33,14 +33,6 @@ class Window(urwid.Frame):
                     ),
                     callback = self.master.stop_client_playback_prompt,
                 )
-        elif k == "I":
-            self.master.view_grideditor(
-                grideditor.HostPatternEditor(
-                    self.master,
-                    [[x] for x in self.master.get_ignore_filter()],
-                    self.master.edit_ignore_filter
-                )
-            )
         elif k == "T":
             self.master.view_grideditor(
                 grideditor.HostPatternEditor(

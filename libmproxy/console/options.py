@@ -140,7 +140,9 @@ class Options(urwid.WidgetWrap):
                 ),
                 Option(
                     "Ignore Patterns",
-                    "I"
+                    "I",
+                    lambda: master.server.config.check_ignore,
+                    self.ignorepatterns
                 ),
                 Option(
                     "Replacement Patterns",
@@ -233,6 +235,7 @@ class Options(urwid.WidgetWrap):
         self.master.refresh_server_playback = True
         self.master.server.config.no_upstream_cert = False
         self.master.setheaders.clear()
+        self.master.set_ignore_filter([])
         signals.update_settings.send(self)
         signals.status_message.send(
             message = "All options cleared",
@@ -266,6 +269,19 @@ class Options(urwid.WidgetWrap):
             grideditor.SetHeadersEditor(
                 self.master,
                 self.master.setheaders.get_specs(),
+                _set
+            )
+        )
+
+    def ignorepatterns(self):
+        def _set(ignore):
+            patterns = (x[0] for x in ignore)
+            self.master.set_ignore_filter(patterns)
+            signals.update_settings.send(self)
+        self.master.view_grideditor(
+            grideditor.HostPatternEditor(
+                self.master,
+                [[x] for x in self.master.get_ignore_filter()],
                 _set
             )
         )

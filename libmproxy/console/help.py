@@ -37,8 +37,6 @@ class HelpView(urwid.ListBox):
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
             ("c", "client replay"),
-            ("H", "edit global header set patterns"),
-            ("I", "set ignore pattern"),
             ("i", "set interception pattern"),
             ("M", "change global default display mode"),
                 (None,

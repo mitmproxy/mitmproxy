@@ -576,10 +576,6 @@ class ConsoleMaster(flow.FlowMaster):
         for command in commands:
             self.load_script(command)
 
-    def edit_ignore_filter(self, ignore):
-        patterns = (x[0] for x in ignore)
-        self.set_ignore_filter(patterns)
-
     def edit_tcp_filter(self, tcp):
         patterns = (x[0] for x in tcp)
         self.set_tcp_filter(patterns)
