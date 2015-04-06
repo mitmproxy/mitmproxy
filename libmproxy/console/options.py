@@ -1,6 +1,7 @@
 import urwid
 
 from . import common, signals, grideditor, contentview
+from . import select
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
@@ -18,205 +19,97 @@ def _mkhelp():
 help_context = _mkhelp()
 
 
-class OptionWidget(urwid.WidgetWrap):
-    def __init__(self, option, text, shortcut, active, focus):
-        self.option = option
-        textattr = "text"
-        keyattr = "key"
-        if focus and active:
-            textattr = "option_active_selected"
-            keyattr = "option_selected_key"
-        elif focus:
-            textattr = "option_selected"
-            keyattr = "option_selected_key"
-        elif active:
-            textattr = "option_active"
-        text = common.highlight_key(
-            text,
-            shortcut,
-            textattr = textattr,
-            keyattr = keyattr
-        )
-        opt = urwid.Text(text, align="left")
-        opt = urwid.AttrWrap(opt, textattr)
-        opt = urwid.Padding(opt, align = "center", width = 40)
-        urwid.WidgetWrap.__init__(self, opt)
-
-    def keypress(self, size, key):
-        return key
-
-    def selectable(self):
-        return True
-
-
-class OptionWalker(urwid.ListWalker):
-    def __init__(self, options):
-        urwid.ListWalker.__init__(self)
-        self.options = options
-        self.focus = 0
-        signals.update_settings.connect(self.sig_update_settings)
-
-    def sig_update_settings(self, sender):
-        self._modified()
-
-    def set_focus(self, pos):
-        self.focus = pos
-
-    def get_focus(self):
-        return self.options[self.focus].render(True), self.focus
-
-    def get_next(self, pos):
-        if pos >= len(self.options)-1:
-            return None, None
-        return self.options[pos+1].render(False), pos+1
-
-    def get_prev(self, pos):
-        if pos <= 0:
-            return None, None
-        return self.options[pos-1].render(False), pos-1
-
-
-class OptionListBox(urwid.ListBox):
-    def __init__(self, options):
-        urwid.ListBox.__init__(
-            self,
-            OptionWalker(options)
-        )
-        self.options = options
-        self.keymap = {}
-        for i in options:
-            if hasattr(i, "shortcut"):
-                if i.shortcut in self.keymap:
-                    raise ValueError("Duplicate shortcut key: %s"%i.shortcut)
-                self.keymap[i.shortcut] = i
-
-    def keypress(self, size, key):
-        if key == "enter" or key == " ":
-            self.get_focus()[0].option.activate()
-            return None
-        key = common.shortcuts(key)
-        if key in self.keymap:
-            self.keymap[key].activate()
-            self.set_focus(self.options.index(self.keymap[key]))
-            return None
-        return super(self.__class__, self).keypress(size, key)
-
-
-
-class Heading:
-    def __init__(self, text):
-        self.text = text
-
-    def render(self, focus):
-        opt = urwid.Text("\n" + self.text, align="left")
-        opt = urwid.AttrWrap(opt, "title")
-        opt = urwid.Padding(opt, align = "center", width = 40)
-        return opt
-
-
-_neg = lambda: False
-class Option:
-    def __init__(self, text, shortcut, getstate=None, activate=None):
-        self.text = text
-        self.shortcut = shortcut
-        self.getstate = getstate or _neg
-        self.activate = activate or _neg
-
-    def render(self, focus):
-        return OptionWidget(self, self.text, self.shortcut, self.getstate(), focus)
-
-
 class Options(urwid.WidgetWrap):
     def __init__(self, master):
         self.master = master
-        self.lb = OptionListBox(
+        self.lb = select.Select(
             [
-                Heading("Traffic Manipulation"),
-                Option(
+                select.Heading("Traffic Manipulation"),
+                select.Option(
                     "Header Set Patterns",
                     "H",
                     lambda: master.setheaders.count(),
                     self.setheaders
                 ),
-                Option(
+                select.Option(
                     "Ignore Patterns",
                     "I",
                     lambda: master.server.config.check_ignore,
                     self.ignorepatterns
                 ),
-                Option(
+                select.Option(
                     "Replacement Patterns",
                     "R",
                     lambda: master.replacehooks.count(),
                     self.replacepatterns
                 ),
-                Option(
+                select.Option(
                     "Scripts",
                     "S",
                     lambda: master.scripts,
                     self.scripts
                 ),
 
-                Heading("Interface"),
-                Option(
+                select.Heading("Interface"),
+                select.Option(
                     "Default Display Mode",
                     "M",
                     self.has_default_displaymode,
                     self.default_displaymode
                 ),
-                Option(
+                select.Option(
                     "Show Host",
                     "w",
                     lambda: master.showhost,
                     self.toggle_showhost
                 ),
 
-                Heading("Network"),
-                Option(
+                select.Heading("Network"),
+                select.Option(
                     "No Upstream Certs",
                     "U",
                     lambda: master.server.config.no_upstream_cert,
                     self.toggle_upstream_cert
                 ),
-                Option(
+                select.Option(
                     "TCP Proxying",
                     "T",
                     lambda: master.server.config.check_tcp,
                     self.tcp_proxy
                 ),
 
-                Heading("Utility"),
-                Option(
+                select.Heading("Utility"),
+                select.Option(
                     "Anti-Cache",
                     "a",
                     lambda: master.anticache,
                     self.toggle_anticache
                 ),
-                Option(
+                select.Option(
                     "Anti-Compression",
                     "o",
                     lambda: master.anticomp,
                     self.toggle_anticomp
                 ),
-                Option(
+                select.Option(
                     "Kill Extra",
                     "x",
                     lambda: master.killextra,
                     self.toggle_killextra
                 ),
-                Option(
+                select.Option(
                     "No Refresh",
                     "f",
                     lambda: not master.refresh_server_playback,
                     self.toggle_refresh_server_playback
                 ),
-                Option(
+                select.Option(
                     "Sticky Auth",
                     "A",
                     lambda: master.stickyauth_txt,
                     self.sticky_auth
                 ),
-                Option(
+                select.Option(
                     "Sticky Cookies",
                     "t",
                     lambda: master.stickycookie_txt,
@@ -224,14 +117,18 @@ class Options(urwid.WidgetWrap):
                 ),
             ]
         )
-        title = urwid.Text("Options")
+        title = urwid.Text("select.Options")
         title = urwid.Padding(title, align="left", width=("relative", 100))
-        title = urwid.AttrWrap(title, "heading")
+        title = urwid.AttrWrap(title, "select.Heading")
         self._w = urwid.Frame(
             self.lb,
             header = title
         )
         self.master.loop.widget.footer.update("")
+        signals.update_settings.connect(self.sig_update_settings)
+
+    def sig_update_settings(self, sender):
+        self.lb.walker._modified()
 
     def keypress(self, size, key):
         if key == "C":
@@ -257,7 +154,7 @@ class Options(urwid.WidgetWrap):
 
         signals.update_settings.send(self)
         signals.status_message.send(
-            message = "All options cleared",
+            message = "All select.Options cleared",
             expire = 1
         )
 
