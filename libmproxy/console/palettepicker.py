@@ -1,10 +1,11 @@
 import urwid
 
-from . import select, common, palettes
+from . import select, common, palettes, signals
 
 footer = [
     ('heading_key', "enter/space"), ":select",
 ]
+
 
 def _mkhelp():
     text = []
@@ -36,7 +37,7 @@ class PalettePicker(urwid.WidgetWrap):
             return select.Option(
                 i,
                 None,
-                None,
+                lambda: self.master.palette == name,
                 lambda: self.select(name)
             )
 
@@ -46,6 +47,18 @@ class PalettePicker(urwid.WidgetWrap):
         for i in low:
             options.append(mkopt(i))
 
+        options.extend(
+            [
+                select.Heading("Options"),
+                select.Option(
+                    "Transparent",
+                    "T",
+                    lambda: master.palette_transparent,
+                    self.toggle_palette_transparent
+                )
+            ]
+        )
+
         self.lb = select.Select(options)
         title = urwid.Text("Palettes")
         title = urwid.Padding(title, align="left", width=("relative", 100))
@@ -54,6 +67,15 @@ class PalettePicker(urwid.WidgetWrap):
             self.lb,
             header = title
         )
+        signals.update_settings.connect(self.sig_update_settings)
+
+    def sig_update_settings(self, sender):
+        self.lb.walker._modified()
 
     def select(self, name):
         self.master.set_palette(name)
+
+    def toggle_palette_transparent(self):
+        self.master.palette_transparent = not self.master.palette_transparent
+        self.master.set_palette(self.master.palette)
+        signals.update_settings.send(self)
