@@ -577,10 +577,6 @@ class ConsoleMaster(flow.FlowMaster):
             self.load_script(command)
         signals.update_settings.send(self)
 
-    def edit_tcp_filter(self, tcp):
-        patterns = (x[0] for x in tcp)
-        self.set_tcp_filter(patterns)
-
     def stop_client_playback_prompt(self, a):
         if a != "n":
             self.stop_client_playback()

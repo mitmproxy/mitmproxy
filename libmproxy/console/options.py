@@ -180,7 +180,9 @@ class Options(urwid.WidgetWrap):
                 ),
                 Option(
                     "TCP Proxying",
-                    "T"
+                    "T",
+                    lambda: master.server.config.check_tcp,
+                    self.tcp_proxy
                 ),
 
                 Heading("Utility"),
@@ -243,6 +245,7 @@ class Options(urwid.WidgetWrap):
         self.master.setheaders.clear()
         self.master.replacehooks.clear()
         self.master.set_ignore_filter([])
+        self.master.set_tcp_filter([])
         self.master.scripts = []
         signals.update_settings.send(self)
         signals.status_message.send(
@@ -324,3 +327,16 @@ class Options(urwid.WidgetWrap):
 
     def has_default_displaymode(self):
         return self.master.state.default_body_view.name != "Auto"
+
+    def tcp_proxy(self):
+        def _set(tcp):
+            patterns = (x[0] for x in tcp)
+            self.master.set_tcp_filter(patterns)
+            signals.update_settings.send(self)
+        self.master.view_grideditor(
+            grideditor.HostPatternEditor(
+                self.master,
+                [[x] for x in self.master.get_tcp_filter()],
+                _set
+            )
+        )

@@ -43,7 +43,6 @@ class HelpView(urwid.ListBox):
             ("Q", "quit without confirm prompt"),
             ("S", "server replay"),
             ("t", "set sticky cookie expression"),
-            ("T", "set tcp proxying pattern"),
             ("u", "set sticky auth expression"),
         ]
         text.extend(

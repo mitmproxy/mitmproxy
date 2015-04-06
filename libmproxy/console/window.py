@@ -33,14 +33,6 @@ class Window(urwid.Frame):
                     ),
                     callback = self.master.stop_client_playback_prompt,
                 )
-        elif k == "T":
-            self.master.view_grideditor(
-                grideditor.HostPatternEditor(
-                    self.master,
-                    [[x] for x in self.master.get_tcp_filter()],
-                    self.master.edit_tcp_filter
-                )
-            )
         elif k == "i":
             signals.status_prompt.send(
                 self,
