@@ -581,6 +581,11 @@ def mitmproxy():
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
     )
     parser.add_argument(
+        "--palette-transparent",
+        action="store_true", dest="palette_transparent", default=False,
+        help="Set transparent background for palette."
+    )
+    parser.add_argument(
         "-e", "--eventlog",
         action="store_true", dest="eventlog",
         help="Show event log."

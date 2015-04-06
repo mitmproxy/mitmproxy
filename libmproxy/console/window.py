@@ -1,10 +1,15 @@
 import urwid
-from . import grideditor, signals, contentview
+from . import signals
 
 
 class Window(urwid.Frame):
     def __init__(self, master, body, header, footer, helpctx):
-        urwid.Frame.__init__(self, body, header=header, footer=footer)
+        urwid.Frame.__init__(
+            self,
+            urwid.AttrWrap(body, "background"),
+            header = urwid.AttrWrap(header, "background") if header else None,
+            footer = urwid.AttrWrap(footer, "background") if footer else None
+        )
         self.master = master
         self.helpctx = helpctx
         signals.focus.connect(self.sig_focus)

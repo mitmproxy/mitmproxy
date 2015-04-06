@@ -1,4 +1,3 @@
-
 # Low-color themes should ONLY use the standard foreground and background
 # colours listed here:
 #
@@ -6,9 +5,9 @@
 #
 
 
-
 class Palette:
     _fields = [
+        'background',
         'title',
 
         # Status bar & heading
@@ -35,15 +34,33 @@ class Palette:
     ]
     high = None
 
-    def palette(self):
+    def palette(self, transparent):
         l = []
+        highback, lowback = None, None
+        if not transparent:
+            if self.high and self.high.get("background"):
+                highback = self.high["background"][1]
+            lowback = self.low["background"][1]
+
         for i in self._fields:
-            v = [i]
-            v.extend(self.low[i])
-            if self.high and i in self.high:
-                v.append(None)
-                v.extend(self.high[i])
-            l.append(tuple(v))
+            if transparent and i == "background":
+                l.append(["background", "default", "default"])
+            else:
+                v = [i]
+                low = list(self.low[i])
+                if lowback and low[1] == "default":
+                    low[1] = lowback
+                v.extend(low)
+                if self.high and i in self.high:
+                    v.append(None)
+                    high = list(self.high[i])
+                    if highback and high[1] == "default":
+                        high[1] = highback
+                    v.extend(high)
+                elif highback:
+                    high = [None, low[0], highback]
+                    v.extend(high)
+                l.append(tuple(v))
         return l
 
 
@@ -52,6 +69,7 @@ class LowDark(Palette):
         Low-color dark background
     """
     low = dict(
+        background = ('white', 'black'),
         title = ('white,bold', 'default'),
 
         # Status bar & heading
@@ -110,6 +128,7 @@ class LowLight(Palette):
         Low-color light background
     """
     low = dict(
+        background = ('black', 'white'),
         title = ('dark magenta', 'default'),
 
         # Status bar & heading
@@ -158,6 +177,7 @@ class LowLight(Palette):
 
 class Light(LowLight):
     high = dict(
+        background = ('black', 'g100'),
         heading = ('g99', '#08f'),
         heading_key = ('#0ff,bold', '#08f'),
         heading_inactive = ('g35', 'g85'),
@@ -171,10 +191,10 @@ sol_base03 = "h234"
 sol_base02 = "h235"
 sol_base01 = "h240"
 sol_base00 = "h241"
-sol_base0  = "h244"
-sol_base1  = "h245"
-sol_base2  = "h254"
-sol_base3  = "h230"
+sol_base0 = "h244"
+sol_base1 = "h245"
+sol_base2 = "h254"
+sol_base3 = "h230"
 sol_yellow = "h136"
 sol_orange = "h166"
 sol_red = "h160"
@@ -183,8 +203,11 @@ sol_violet = "h61"
 sol_blue = "h33"
 sol_cyan = "h37"
 sol_green = "h64"
+
+
 class SolarizedLight(LowLight):
     high = dict(
+        background = (sol_base00, sol_base3),
         title = (sol_cyan, 'default'),
         text = (sol_base00, 'default'),
 
@@ -233,6 +256,7 @@ class SolarizedLight(LowLight):
 
 class SolarizedDark(LowDark):
     high = dict(
+        background = (sol_base2, sol_base03),
         title = (sol_blue, 'default'),
         text = (sol_base1, 'default'),
 

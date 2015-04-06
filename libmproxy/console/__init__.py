@@ -132,6 +132,7 @@ class Options(object):
         "wfile",
         "nopop",
         "palette",
+        "palette_transparent"
     ]
 
     def __init__(self, **kwargs):
@@ -183,6 +184,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.nopop = options.nopop
         self.showhost = options.showhost
         self.palette = options.palette
+        self.palette_transparent = options.palette_transparent
 
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
@@ -393,7 +395,7 @@ class ConsoleMaster(flow.FlowMaster):
     def set_palette(self, name):
         self.palette = name
         self.ui.register_palette(
-            palettes.palettes[name].palette()
+            palettes.palettes[name].palette(self.palette_transparent)
         )
         self.ui.clear()
 

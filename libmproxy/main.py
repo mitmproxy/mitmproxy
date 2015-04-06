@@ -89,6 +89,7 @@ def mitmproxy():  # pragma: nocover
     proxy_config = process_proxy_options(parser, options)
     console_options = console.Options(**cmdline.get_common_options(options))
     console_options.palette = options.palette
+    console_options.palette_transparent = options.palette_transparent
     console_options.eventlog = options.eventlog
     console_options.intercept = options.intercept
 
