@@ -146,7 +146,9 @@ class Options(urwid.WidgetWrap):
                 ),
                 Option(
                     "Replacement Patterns",
-                    "R"
+                    "R",
+                    lambda: master.replacehooks.count(),
+                    self.replacepatterns
                 ),
                 Option(
                     "Scripts",
@@ -235,6 +237,7 @@ class Options(urwid.WidgetWrap):
         self.master.refresh_server_playback = True
         self.master.server.config.no_upstream_cert = False
         self.master.setheaders.clear()
+        self.master.replacehooks.clear()
         self.master.set_ignore_filter([])
         signals.update_settings.send(self)
         signals.status_message.send(
@@ -282,6 +285,18 @@ class Options(urwid.WidgetWrap):
             grideditor.HostPatternEditor(
                 self.master,
                 [[x] for x in self.master.get_ignore_filter()],
+                _set
+            )
+        )
+
+    def replacepatterns(self):
+        def _set(*args, **kwargs):
+            self.master.replacehooks.set(*args, **kwargs)
+            signals.update_settings.send(self)
+        self.master.view_grideditor(
+            grideditor.ReplaceEditor(
+                self.master,
+                self.master.replacehooks.get_specs(),
                 _set
             )
         )

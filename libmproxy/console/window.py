@@ -60,14 +60,6 @@ class Window(urwid.Frame):
                 keys = contentview.view_prompts,
                 callback = self.master.change_default_display_mode
             )
-        elif k == "R":
-            self.master.view_grideditor(
-                grideditor.ReplaceEditor(
-                    self.master,
-                    self.master.replacehooks.get_specs(),
-                    self.master.replacehooks.set
-                )
-            )
         elif k == "s":
             self.master.view_grideditor(
                 grideditor.ScriptEditor(
