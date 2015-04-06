@@ -38,55 +38,6 @@ class HelpView(urwid.ListBox):
         keys = [
             ("c", "client replay"),
             ("i", "set interception pattern"),
-            ("M", "change global default display mode"),
-                (None,
-                    common.highlight_key("automatic", "a") +
-                    [("text", ": automatic detection")]
-                ),
-                (None,
-                    common.highlight_key("hex", "e") +
-                    [("text", ": Hex")]
-                ),
-                (None,
-                    common.highlight_key("html", "h") +
-                    [("text", ": HTML")]
-                ),
-                (None,
-                    common.highlight_key("image", "i") +
-                    [("text", ": Image")]
-                ),
-                (None,
-                    common.highlight_key("javascript", "j") +
-                    [("text", ": JavaScript")]
-                ),
-                (None,
-                    common.highlight_key("json", "s") +
-                    [("text", ": JSON")]
-                ),
-                (None,
-                    common.highlight_key("css", "c") +
-                    [("text", ": CSS")]
-                ),
-                (None,
-                    common.highlight_key("urlencoded", "u") +
-                    [("text", ": URL-encoded data")]
-                ),
-                (None,
-                    common.highlight_key("raw", "r") +
-                    [("text", ": raw data")]
-                ),
-                (None,
-                    common.highlight_key("xml", "x") +
-                    [("text", ": XML")]
-                ),
-                (None,
-                    common.highlight_key("wbxml", "w") +
-                    [("text", ": WBXML")]
-                ),
-                (None,
-                    common.highlight_key("amf", "f") +
-                    [("text", ": AMF (requires PyAMF)")]
-                ),
             ("o", "options"),
             ("q", "quit / return to flow list"),
             ("Q", "quit without confirm prompt"),

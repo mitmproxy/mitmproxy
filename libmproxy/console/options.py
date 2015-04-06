@@ -1,6 +1,6 @@
 import urwid
 
-from . import common, signals, grideditor
+from . import common, signals, grideditor, contentview
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
@@ -160,7 +160,9 @@ class Options(urwid.WidgetWrap):
                 Heading("Interface"),
                 Option(
                     "Default Display Mode",
-                    "M"
+                    "M",
+                    self.has_default_displaymode,
+                    self.default_displaymode
                 ),
                 Option(
                     "Show Host",
@@ -312,3 +314,13 @@ class Options(urwid.WidgetWrap):
                 self.master.edit_scripts
             )
         )
+
+    def default_displaymode(self):
+        signals.status_prompt_onekey.send(
+            prompt = "Global default display mode",
+            keys = contentview.view_prompts,
+            callback = self.master.change_default_display_mode
+        )
+
+    def has_default_displaymode(self):
+        return self.master.state.default_body_view.name != "Auto"

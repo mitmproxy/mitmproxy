@@ -54,12 +54,6 @@ class Window(urwid.Frame):
             raise urwid.ExitMainLoop
         elif k == "q":
             signals.pop_view_state.send(self)
-        elif k == "M":
-            signals.status_prompt_onekey.send(
-                prompt = "Global default display mode",
-                keys = contentview.view_prompts,
-                callback = self.master.change_default_display_mode
-            )
         elif k == "S":
             if not self.master.server_playback:
                 signals.status_prompt_path.send(
