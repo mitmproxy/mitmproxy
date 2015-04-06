@@ -1,6 +1,6 @@
 import urwid
 
-from . import common, signals
+from . import common, signals, grideditor
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
@@ -37,9 +37,9 @@ class OptionWidget(urwid.WidgetWrap):
             textattr = textattr,
             keyattr = keyattr
         )
-        opt = urwid.Text(text, align="center")
+        opt = urwid.Text(text, align="left")
         opt = urwid.AttrWrap(opt, textattr)
-        opt = urwid.Padding(opt, align = "center", width = ("relative", 20))
+        opt = urwid.Padding(opt, align = "center", width = 40)
         urwid.WidgetWrap.__init__(self, opt)
 
     def keypress(self, size, key):
@@ -85,7 +85,10 @@ class OptionListBox(urwid.ListBox):
         self.options = options
         self.keymap = {}
         for i in options:
-            self.keymap[i.shortcut] = i
+            if hasattr(i, "shortcut"):
+                if i.shortcut in self.keymap:
+                    raise ValueError("Duplicate shortcut key: %s"%i.shortcut)
+                self.keymap[i.shortcut] = i
 
     def keypress(self, size, key):
         if key == "enter" or key == " ":
@@ -97,6 +100,18 @@ class OptionListBox(urwid.ListBox):
             self.set_focus(self.options.index(self.keymap[key]))
             return None
         return super(self.__class__, self).keypress(size, key)
+
+
+
+class Heading:
+    def __init__(self, text):
+        self.text = text
+
+    def render(self, focus):
+        opt = urwid.Text("\n" + self.text, align="left")
+        opt = urwid.AttrWrap(opt, "title")
+        opt = urwid.Padding(opt, align = "center", width = 40)
+        return opt
 
 
 _neg = lambda: False
@@ -116,6 +131,51 @@ class Options(urwid.WidgetWrap):
         self.master = master
         self.lb = OptionListBox(
             [
+                Heading("Traffic Manipulation"),
+                Option(
+                    "Header Set Patterns",
+                    "H",
+                    lambda: master.setheaders.count(),
+                    self.setheaders
+                ),
+                Option(
+                    "Ignore Patterns",
+                    "I"
+                ),
+                Option(
+                    "Replacement Patterns",
+                    "R"
+                ),
+                Option(
+                    "Scripts",
+                    "S"
+                ),
+
+                Heading("Interface"),
+                Option(
+                    "Default Display Mode",
+                    "M"
+                ),
+                Option(
+                    "Show Host",
+                    "w",
+                    lambda: master.showhost,
+                    self.toggle_showhost
+                ),
+
+                Heading("Network"),
+                Option(
+                    "No Upstream Certs",
+                    "U",
+                    lambda: master.server.config.no_upstream_cert,
+                    self.toggle_upstream_cert
+                ),
+                Option(
+                    "TCP Proxying",
+                    "T"
+                ),
+
+                Heading("Utility"),
                 Option(
                     "Anti-Cache",
                     "a",
@@ -128,36 +188,25 @@ class Options(urwid.WidgetWrap):
                     lambda: master.anticomp,
                     self.toggle_anticomp
                 ),
-                #Option("Header Set Patterns"),
-                #Option("Ignore Patterns"),
                 Option(
                     "Kill Extra",
-                    "E",
+                    "x",
                     lambda: master.killextra,
                     self.toggle_killextra
                 ),
-                #Option("Manage Scripts"),
-                #Option("Replacement Patterns"),
-                Option(
-                    "Show Host",
-                    "H",
-                    lambda: master.showhost,
-                    self.toggle_showhost
-                ),
-                #Option("Sticky Cookies"),
-                #Option("Sticky Auth"),
-                #Option("TCP Proxying"),
                 Option(
                     "No Refresh",
-                    "R",
+                    "f",
                     lambda: not master.refresh_server_playback,
                     self.toggle_refresh_server_playback
                 ),
                 Option(
-                    "No Upstream Certs",
-                    "U",
-                    lambda: master.server.config.no_upstream_cert,
-                    self.toggle_upstream_cert
+                    "Sticky Auth",
+                    "A"
+                ),
+                Option(
+                    "Sticky Cookies",
+                    "t"
                 ),
             ]
         )
@@ -183,6 +232,7 @@ class Options(urwid.WidgetWrap):
         self.master.showhost = False
         self.master.refresh_server_playback = True
         self.master.server.config.no_upstream_cert = False
+        self.master.setheaders.clear()
         signals.update_settings.send(self)
         signals.status_message.send(
             message = "All options cleared",
@@ -207,3 +257,15 @@ class Options(urwid.WidgetWrap):
     def toggle_upstream_cert(self):
         self.master.server.config.no_upstream_cert = not self.master.server.config.no_upstream_cert
         signals.update_settings.send(self)
+
+    def setheaders(self):
+        def _set(*args, **kwargs):
+            self.master.setheaders.set(*args, **kwargs)
+            signals.update_settings.send(self)
+        self.master.view_grideditor(
+            grideditor.SetHeadersEditor(
+                self.master,
+                self.master.setheaders.get_specs(),
+                _set
+            )
+        )

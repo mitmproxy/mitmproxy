@@ -33,14 +33,6 @@ class Window(urwid.Frame):
                     ),
                     callback = self.master.stop_client_playback_prompt,
                 )
-        elif k == "H":
-            self.master.view_grideditor(
-                grideditor.SetHeadersEditor(
-                    self.master,
-                    self.master.setheaders.get_specs(),
-                    self.master.setheaders.set
-                )
-            )
         elif k == "I":
             self.master.view_grideditor(
                 grideditor.HostPatternEditor(

@@ -185,7 +185,7 @@ sol_cyan = "h37"
 sol_green = "h64"
 class SolarizedLight(LowLight):
     high = dict(
-        title = (sol_blue, 'default'),
+        title = (sol_cyan, 'default'),
         text = (sol_base00, 'default'),
 
         # Status bar & heading
