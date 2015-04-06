@@ -15,8 +15,8 @@ import urwid
 import weakref
 
 from .. import controller, flow, script
-from . import flowlist, flowview, help, common, window, signals
-from . import grideditor, palettes, contentview, flowdetailview, statusbar
+from . import flowlist, flowview, help, window, signals, options
+from . import grideditor, palettes, contentview, statusbar
 
 EVENTLOG_SIZE = 500
 
@@ -73,6 +73,8 @@ class ConsoleState(flow.State):
             elif idx < 0:
                 idx = 0
             self.focus = idx
+        else:
+            self.focus = None
 
     def set_focus_flow(self, f):
         self.set_focus(self.view.index(f))
@@ -227,6 +229,16 @@ class ConsoleMaster(flow.FlowMaster):
     def sig_pop_view_state(self, sender):
         if self.view_stack:
             self.loop.widget = self.view_stack.pop()
+        else:
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Quit",
+                keys = (
+                    ("yes", "y"),
+                    ("no", "n"),
+                ),
+                callback = self.quit,
+            )
 
     def sig_push_view_state(self, sender):
         self.view_stack.append(self.loop.widget)
@@ -393,7 +405,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui.set_terminal_properties(256)
         self.ui.register_palette(self.palette.palette())
         self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
-        self.help_context = None
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             screen = self.ui,
@@ -444,23 +455,34 @@ class ConsoleMaster(flow.FlowMaster):
         sys.stderr.flush()
         self.shutdown()
 
-    def view_help(self):
+    def view_help(self, helpctx):
         signals.push_view_state.send(self)
         self.loop.widget = window.Window(
             self,
-            help.HelpView(self.help_context),
+            help.HelpView(helpctx),
             None,
-            statusbar.StatusBar(self, help.footer)
+            statusbar.StatusBar(self, help.footer),
+            None
+        )
+
+    def view_options(self):
+        signals.push_view_state.send(self)
+        self.loop.widget = window.Window(
+            self,
+            options.Options(self),
+            None,
+            statusbar.StatusBar(self, options.footer),
+            None
         )
 
     def view_grideditor(self, ge):
         signals.push_view_state.send(self)
-        self.help_context = ge.make_help()
         self.loop.widget = window.Window(
             self,
             ge,
             None,
-            statusbar.StatusBar(self, grideditor.FOOTER)
+            statusbar.StatusBar(self, grideditor.FOOTER),
+            ge.make_help()
         )
 
     def view_flowlist(self):
@@ -474,24 +496,24 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             body = flowlist.FlowListBox(self)
 
-        self.help_context = flowlist.help_context
         self.loop.widget = window.Window(
             self,
             body,
             None,
-            statusbar.StatusBar(self, flowlist.footer)
+            statusbar.StatusBar(self, flowlist.footer),
+            flowlist.help_context
         )
         self.loop.draw_screen()
 
     def view_flow(self, flow, tab_offset=0):
         signals.push_view_state.send(self)
         self.state.set_focus_flow(flow)
-        self.help_context = flowview.help_context
         self.loop.widget = window.Window(
             self,
             flowview.FlowView(self, self.state, flow, tab_offset),
             flowview.FlowViewHeader(self, flow),
-            statusbar.StatusBar(self, flowview.footer)
+            statusbar.StatusBar(self, flowview.footer),
+            flowview.help_context
         )
 
     def _write_flows(self, path, flows):
@@ -573,24 +595,6 @@ class ConsoleMaster(flow.FlowMaster):
     def quit(self, a):
         if a != "n":
             raise urwid.ExitMainLoop
-
-    def _change_options(self, a):
-        if a == "a":
-            self.anticache = not self.anticache
-        if a == "c":
-            self.anticomp = not self.anticomp
-        if a == "h":
-            self.showhost = not self.showhost
-            self.sync_list_view()
-            self.refresh_focus()
-        elif a == "k":
-            self.killextra = not self.killextra
-        elif a == "n":
-            self.refresh_server_playback = not self.refresh_server_playback
-        elif a == "u":
-            self.server.config.no_upstream_cert =\
-                not self.server.config.no_upstream_cert
-            signals.update_settings.send(self)
 
     def shutdown(self):
         self.state.killall(self)

@@ -1,19 +1,21 @@
 import urwid
-from . import common, grideditor, signals, contentview
+from . import grideditor, signals, contentview
+
 
 class Window(urwid.Frame):
-    def __init__(self, master, body, header, footer):
+    def __init__(self, master, body, header, footer, helpctx):
         urwid.Frame.__init__(self, body, header=header, footer=footer)
         self.master = master
+        self.helpctx = helpctx
         signals.focus.connect(self.sig_focus)
 
     def sig_focus(self, sender, section):
         self.focus_position = section
 
     def keypress(self, size, k):
-        k = urwid.Frame.keypress(self, self.master.loop.screen_size, k)
+        k = super(self.__class__, self).keypress(size, k)
         if k == "?":
-            self.master.view_help()
+            self.master.view_help(self.helpctx)
         elif k == "c":
             if not self.master.client_playback:
                 signals.status_prompt_path.send(
@@ -62,18 +64,12 @@ class Window(urwid.Frame):
                 text = self.master.state.intercept_txt,
                 callback = self.master.set_intercept
             )
+        elif k == "o":
+            self.master.view_options()
         elif k == "Q":
             raise urwid.ExitMainLoop
         elif k == "q":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Quit",
-                keys = (
-                    ("yes", "y"),
-                    ("no", "n"),
-                ),
-                callback = self.master.quit,
-            )
+            signals.pop_view_state.send(self)
         elif k == "M":
             signals.status_prompt_onekey.send(
                 prompt = "Global default display mode",
@@ -113,19 +109,6 @@ class Window(urwid.Frame):
                     ),
                     callback = self.master.stop_server_playback_prompt,
                 )
-        elif k == "o":
-            signals.status_prompt_onekey.send(
-                prompt = "Options",
-                keys = (
-                    ("anticache", "a"),
-                    ("anticomp", "c"),
-                    ("showhost", "h"),
-                    ("killextra", "k"),
-                    ("norefresh", "n"),
-                    ("no-upstream-certs", "u"),
-                ),
-                callback = self.master._change_options
-            )
         elif k == "t":
             signals.status_prompt.send(
                 prompt = "Sticky cookie filter",

@@ -17,6 +17,10 @@ class Palette:
         # Help
         'key', 'head', 'text',
 
+        # Options
+        'option_selected', 'option_active', 'option_active_selected',
+        'option_selected_key',
+
         # List and Connections
         'method', 'focus',
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
@@ -60,6 +64,12 @@ class LowDark(Palette):
         head = ('white,bold', 'default'),
         text = ('light gray', 'default'),
 
+        # Options
+        option_selected = ('light gray', 'dark blue'),
+        option_selected_key = ('light cyan', 'dark blue'),
+        option_active = ('light red', 'default'),
+        option_active_selected = ('light red', 'dark blue'),
+
         # List and Connections
         method = ('dark cyan', 'default'),
         focus = ('yellow', 'default'),
@@ -100,17 +110,23 @@ class LowLight(Palette):
         Low-color light background
     """
     low = dict(
-        title = ('dark magenta,bold', 'light blue'),
+        title = ('dark magenta', 'default'),
 
         # Status bar & heading
-        heading = ('light gray', 'dark blue'),
-        heading_key = ('light cyan', 'dark blue'),
+        heading = ('white', 'black'),
+        heading_key = ('dark blue', 'black'),
         heading_inactive = ('black', 'light gray'),
 
         # Help
-        key = ('dark blue,bold', 'default'),
-        head = ('black,bold', 'default'),
+        key = ('dark blue', 'default'),
+        head = ('black', 'default'),
         text = ('dark gray', 'default'),
+
+        # Options
+        option_selected = ('black', 'light gray'),
+        option_selected_key = ('dark blue', 'light gray'),
+        option_active = ('light red', 'default'),
+        option_active_selected = ('light red', 'light gray'),
 
         # List and Connections
         method = ('dark cyan', 'default'),
@@ -181,6 +197,12 @@ class SolarizedLight(LowLight):
         key = (sol_blue, 'default',),
         head = (sol_base00, 'default'),
 
+        # Options
+        option_selected = (sol_base03, sol_base2),
+        option_selected_key = (sol_blue, sol_base2),
+        option_active = (sol_orange, 'default'),
+        option_active_selected = (sol_orange, sol_base2),
+
         # List and Connections
         method = (sol_cyan, 'default'),
         focus = (sol_base01, 'default'),
@@ -212,16 +234,22 @@ class SolarizedLight(LowLight):
 class SolarizedDark(LowDark):
     high = dict(
         title = (sol_blue, 'default'),
-        text = (sol_base0, 'default'),
+        text = (sol_base1, 'default'),
 
         # Status bar & heading
-        heading = (sol_base03, sol_base1),
-        heading_key = (sol_blue+",bold", sol_base1),
+        heading = (sol_base2, sol_base01),
+        heading_key = (sol_blue+",bold", sol_base01),
         heading_inactive = (sol_base1, sol_base02),
 
         # Help
         key = (sol_blue, 'default',),
-        head = (sol_base00, 'default'),
+        head = (sol_base2, 'default'),
+
+        # Options
+        option_selected = (sol_base03, sol_base00),
+        option_selected_key = (sol_blue, sol_base00),
+        option_active = (sol_orange, 'default'),
+        option_active_selected = (sol_orange, sol_base00),
 
         # List and Connections
         method = (sol_cyan, 'default'),
