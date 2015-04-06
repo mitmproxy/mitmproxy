@@ -57,7 +57,7 @@ class Palette:
                     if highback and high[1] == "default":
                         high[1] = highback
                     v.extend(high)
-                elif highback:
+                elif highback and self.low[i][1] == "default":
                     high = [None, low[0], highback]
                     v.extend(high)
                 l.append(tuple(v))
@@ -73,9 +73,9 @@ class LowDark(Palette):
         title = ('white,bold', 'default'),
 
         # Status bar & heading
-        heading = ('light gray', 'dark blue'),
+        heading = ('white', 'dark blue'),
         heading_key = ('light cyan', 'dark blue'),
-        heading_inactive = ('white', 'dark gray'),
+        heading_inactive = ('dark gray', 'light gray'),
 
         # Help
         key = ('light cyan', 'default'),
@@ -83,10 +83,10 @@ class LowDark(Palette):
         text = ('light gray', 'default'),
 
         # Options
-        option_selected = ('light gray', 'dark blue'),
-        option_selected_key = ('light cyan', 'dark blue'),
+        option_selected = ('black', 'light gray'),
+        option_selected_key = ('light cyan', 'light gray'),
         option_active = ('light red', 'default'),
-        option_active_selected = ('light red', 'dark blue'),
+        option_active_selected = ('light red', 'light gray'),
 
         # List and Connections
         method = ('dark cyan', 'default'),
@@ -120,6 +120,10 @@ class Dark(LowDark):
     high = dict(
         heading_inactive = ('g58', 'g11'),
         intercept = ('#f60', 'default'),
+
+        option_selected = ('g85', 'g45'),
+        option_selected_key = ('light cyan', 'g50'),
+        option_active_selected = ('light red', 'g50'),
     )
 
 
@@ -182,6 +186,10 @@ class Light(LowLight):
         heading_key = ('#0ff,bold', '#08f'),
         heading_inactive = ('g35', 'g85'),
         replay = ('#0a0,bold', 'default'),
+
+        option_selected = ('black', 'g85'),
+        option_selected_key = ('dark blue', 'g85'),
+        option_active_selected = ('light red', 'g85'),
     )
 
 
