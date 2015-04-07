@@ -232,7 +232,7 @@ class ServerPlaybackState:
         r = flow.request
 
         _, _, path, _, query, _ = urlparse.urlparse(r.url)
-        queriesArray = urlparse.parse_qsl(query)
+        queriesArray = urlparse.parse_qsl(query, keep_blank_values=True)
 
         key = [
             str(r.port),
