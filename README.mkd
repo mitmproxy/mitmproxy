@@ -75,6 +75,10 @@ command:
 
 ```$ mitmdump --version```
 
+For convenience, the project includes an
+[autoenv](https://github.com/kennethreitz/autoenv) file
+([.env](https://github.com/mitmproxy/mitmproxy/blob/master/.env)) that
+auto-activates the virtualenv when you cd into the mitmproxy directory.
 
 
 ### Testing
