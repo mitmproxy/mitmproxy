@@ -309,6 +309,12 @@ class FlowListBox(urwid.ListBox):
             self.master.clear_flows()
         elif key == "e":
             self.master.toggle_eventlog()
+        elif key == "G":
+            self.master.state.set_focus(0)
+            signals.flowlist_change.send(self)
+        elif key == "g":
+            self.master.state.set_focus(self.master.state.flow_count())
+            signals.flowlist_change.send(self)
         elif key == "l":
             signals.status_prompt.send(
                 prompt = "Limit",

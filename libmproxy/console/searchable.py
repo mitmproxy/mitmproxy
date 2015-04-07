@@ -15,10 +15,8 @@ class Highlight(urwid.AttrMap):
 
 class Searchable(urwid.ListBox):
     def __init__(self, state, contents):
-        urwid.ListBox.__init__(
-            self,
-            urwid.SimpleFocusListWalker(contents)
-        )
+        self.walker = urwid.SimpleFocusListWalker(contents)
+        urwid.ListBox.__init__(self, self.walker)
         self.state = state
         self.search_offset = 0
         self.current_highlight = None
@@ -31,10 +29,16 @@ class Searchable(urwid.ListBox):
                 text = "",
                 callback = self.set_search
             )
-        if key == "n":
+        elif key == "n":
             self.find_next(False)
-        if key == "N":
+        elif key == "N":
             self.find_next(True)
+        elif key == "G":
+            self.set_focus(0)
+            self.walker._modified()
+        elif key == "g":
+            self.set_focus(len(self.walker)-1)
+            self.walker._modified()
         else:
             return super(self.__class__, self).keypress(size, key)
 

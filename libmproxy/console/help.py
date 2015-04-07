@@ -28,6 +28,7 @@ class HelpView(urwid.ListBox):
         keys = [
             ("j, k", "down, up"),
             ("h, l", "left, right (in some contexts)"),
+            ("g, G", "go to end, beginning"),
             ("space", "page down"),
             ("pg up/down", "page up/down"),
             ("arrows", "up, down, left, right"),
