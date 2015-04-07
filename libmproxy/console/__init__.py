@@ -472,6 +472,9 @@ class ConsoleMaster(flow.FlowMaster):
         )
 
     def view_options(self):
+        for i in self.view_stack:
+            if isinstance(i["body"], options.Options):
+                return
         signals.push_view_state.send(self)
         self.loop.widget = window.Window(
             self,
