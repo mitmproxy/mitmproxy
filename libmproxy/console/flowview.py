@@ -20,7 +20,6 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "edit request/response"),
         ("f", "load full body data"),
-        ("g", "copy response(content/headers) to clipboard"),
         ("m", "change body display mode for this entity"),
             (None,
                 common.highlight_key("automatic", "a") +
@@ -60,6 +59,7 @@ def _mkhelp():
             ),
         ("M", "change default body display mode"),
         ("p", "previous flow"),
+        ("P", "copy response(content/headers) to clipboard"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("v", "view body in external viewer"),
@@ -546,7 +546,7 @@ class FlowView(tabs.Tabs):
                 )
                 signals.flow_change.send(self, flow = self.flow)
                 signals.status_message.send(message="")
-            elif key == "g":
+            elif key == "P":
                 if self.tab_offset == TAB_REQ:
                     scope = "q"
                 else:

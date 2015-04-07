@@ -15,10 +15,10 @@ def _mkhelp():
         ("D", "duplicate flow"),
         ("e", "toggle eventlog"),
         ("F", "toggle follow flow list"),
-        ("g", "copy flow to clipboard"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
         ("n", "create a new request"),
+        ("P", "copy flow to clipboard"),
         ("r", "replay request"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
@@ -157,11 +157,11 @@ class ConnectionItem(urwid.WidgetWrap):
         key = common.shortcuts(key)
         if key == "a":
             self.flow.accept_intercept(self.master)
-            self.master.sync_list_view()
+            signals.flowlist_change.send(self)
         elif key == "d":
             self.flow.kill(self.master)
             self.state.delete_flow(self.flow)
-            self.master.sync_list_view()
+            signals.flowlist_change.send(self)
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
@@ -169,7 +169,7 @@ class ConnectionItem(urwid.WidgetWrap):
             r = self.master.replay_request(self.flow)
             if r:
                 signals.status_message.send(message=r)
-            self.master.sync_list_view()
+            signals.flowlist_change.send(self)
         elif key == "S":
             if not self.master.server_playback:
                 signals.status_prompt_onekey.send(
@@ -195,7 +195,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 signals.status_message.send(message="Flow not modified.")
                 return
             self.state.revert(self.flow)
-            self.master.sync_list_view()
+            signals.flowlist_change.send(self)
             signals.status_message.send(message="Reverted.")
         elif key == "w":
             signals.status_prompt_onekey.send(
@@ -218,7 +218,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
-        elif key == "g":
+        elif key == "P":
             common.ask_copy_part("a", self.flow, self.master, self.state)
         elif key == "b":
             common.ask_save_body(None, self.master, self.state, self.flow)
@@ -231,6 +231,10 @@ class FlowListWalker(urwid.ListWalker):
         self.master, self.state = master, state
         if self.state.flow_count():
             self.set_focus(0)
+        signals.flowlist_change.connect(self.sig_flowlist_change)
+
+    def sig_flowlist_change(self, sender):
+        self._modified()
 
     def get_focus(self):
         f, i = self.state.get_focus()
@@ -255,7 +259,10 @@ class FlowListWalker(urwid.ListWalker):
 class FlowListBox(urwid.ListBox):
     def __init__(self, master):
         self.master = master
-        urwid.ListBox.__init__(self, master.flow_list_walker)
+        urwid.ListBox.__init__(
+            self,
+            FlowListWalker(master, master.state)
+        )
 
     def get_method_raw(self, k):
         if k:
@@ -297,7 +304,7 @@ class FlowListBox(urwid.ListBox):
         key = common.shortcuts(key)
         if key == "A":
             self.master.accept_all()
-            self.master.sync_list_view()
+            signals.flowlist_change.send(self)
         elif key == "C":
             self.master.clear_flows()
         elif key == "e":

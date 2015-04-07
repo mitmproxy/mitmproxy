@@ -157,8 +157,6 @@ class ConsoleMaster(flow.FlowMaster):
         for i in options.setheaders:
             self.setheaders.add(*i)
 
-        self.flow_list_walker = None
-
         r = self.set_intercept(options.intercept)
         if r:
             print >> sys.stderr, "Intercept error:", r
@@ -410,7 +408,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.palette)
-        self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             screen = self.ui,
@@ -566,8 +563,7 @@ class ConsoleMaster(flow.FlowMaster):
             flow.FlowMaster.load_flows_file(self, path)
         except flow.FlowReadError, v:
             reterr = str(v)
-        if self.flow_list_walker:
-            self.sync_list_view()
+        signals.flowlist_change.send(self)
         return reterr
 
     def accept_all(self):
@@ -575,7 +571,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def set_limit(self, txt):
         v = self.state.set_limit(txt)
-        self.sync_list_view()
+        signals.flowlist_change.send(self)
         return v
 
     def set_intercept(self, txt):
@@ -612,13 +608,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.killall(self)
         flow.FlowMaster.shutdown(self)
 
-    def sync_list_view(self):
-        self.flow_list_walker._modified()
-        signals.update_settings.send(self)
-
     def clear_flows(self):
         self.state.clear()
-        self.sync_list_view()
+        signals.flowlist_change.send(self)
 
     def toggle_follow_flows(self):
         # toggle flow follow
@@ -626,11 +618,11 @@ class ConsoleMaster(flow.FlowMaster):
         # jump to most recent flow if follow is now on
         if self.state.follow_focus:
             self.state.set_focus(self.state.flow_count())
-            self.sync_list_view()
+            signals.flowlist_change.send(self)
 
     def delete_flow(self, f):
         self.state.delete_flow(f)
-        self.sync_list_view()
+        signals.flowlist_change.send(self)
 
     def refresh_focus(self):
         if self.state.view:
@@ -644,7 +636,7 @@ class ConsoleMaster(flow.FlowMaster):
             f.intercept(self)
         else:
             f.reply()
-        self.sync_list_view()
+        signals.flowlist_change.send(self)
         signals.flow_change.send(self, flow = f)
 
     def clear_events(self):

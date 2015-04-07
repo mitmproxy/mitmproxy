@@ -1,7 +1,7 @@
 import urwid
 
 from . import common, signals, grideditor, contentview
-from . import select
+from . import select, palettes
 
 footer = [
     ('heading_key', "enter/space"), ":toggle ",
@@ -60,7 +60,7 @@ class Options(urwid.WidgetWrap):
                 select.Option(
                     "Palette",
                     "P",
-                    lambda: False,
+                    lambda: self.master.palette != palettes.DEFAULT,
                     self.palette
                 ),
                 select.Option(
