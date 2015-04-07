@@ -114,6 +114,7 @@ class StatusBar(urwid.WidgetWrap):
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self._w = urwid.Pile([self.ib, self.ab])
         signals.update_settings.connect(self.sig_update_settings)
+        signals.flowlist_change.connect(self.sig_update_settings)
         self.redraw()
 
     def sig_update_settings(self, sender):

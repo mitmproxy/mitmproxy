@@ -1,4 +1,3 @@
-
 # Low-color themes should ONLY use the standard foreground and background
 # colours listed here:
 #
@@ -6,9 +5,9 @@
 #
 
 
-
 class Palette:
     _fields = [
+        'background',
         'title',
 
         # Status bar & heading
@@ -16,6 +15,10 @@ class Palette:
 
         # Help
         'key', 'head', 'text',
+
+        # Options
+        'option_selected', 'option_active', 'option_active_selected',
+        'option_selected_key',
 
         # List and Connections
         'method', 'focus',
@@ -31,15 +34,33 @@ class Palette:
     ]
     high = None
 
-    def palette(self):
+    def palette(self, transparent):
         l = []
+        highback, lowback = None, None
+        if not transparent:
+            if self.high and self.high.get("background"):
+                highback = self.high["background"][1]
+            lowback = self.low["background"][1]
+
         for i in self._fields:
-            v = [i]
-            v.extend(self.low[i])
-            if self.high and i in self.high:
-                v.append(None)
-                v.extend(self.high[i])
-            l.append(tuple(v))
+            if transparent and i == "background":
+                l.append(["background", "default", "default"])
+            else:
+                v = [i]
+                low = list(self.low[i])
+                if lowback and low[1] == "default":
+                    low[1] = lowback
+                v.extend(low)
+                if self.high and i in self.high:
+                    v.append(None)
+                    high = list(self.high[i])
+                    if highback and high[1] == "default":
+                        high[1] = highback
+                    v.extend(high)
+                elif highback and self.low[i][1] == "default":
+                    high = [None, low[0], highback]
+                    v.extend(high)
+                l.append(tuple(v))
         return l
 
 
@@ -48,17 +69,24 @@ class LowDark(Palette):
         Low-color dark background
     """
     low = dict(
+        background = ('white', 'black'),
         title = ('white,bold', 'default'),
 
         # Status bar & heading
-        heading = ('light gray', 'dark blue'),
+        heading = ('white', 'dark blue'),
         heading_key = ('light cyan', 'dark blue'),
-        heading_inactive = ('white', 'dark gray'),
+        heading_inactive = ('dark gray', 'light gray'),
 
         # Help
         key = ('light cyan', 'default'),
         head = ('white,bold', 'default'),
         text = ('light gray', 'default'),
+
+        # Options
+        option_selected = ('black', 'light gray'),
+        option_selected_key = ('light cyan', 'light gray'),
+        option_active = ('light red', 'default'),
+        option_active_selected = ('light red', 'light gray'),
 
         # List and Connections
         method = ('dark cyan', 'default'),
@@ -92,6 +120,10 @@ class Dark(LowDark):
     high = dict(
         heading_inactive = ('g58', 'g11'),
         intercept = ('#f60', 'default'),
+
+        option_selected = ('g85', 'g45'),
+        option_selected_key = ('light cyan', 'g50'),
+        option_active_selected = ('light red', 'g50'),
     )
 
 
@@ -100,17 +132,24 @@ class LowLight(Palette):
         Low-color light background
     """
     low = dict(
-        title = ('dark magenta,bold', 'light blue'),
+        background = ('black', 'white'),
+        title = ('dark magenta', 'default'),
 
         # Status bar & heading
-        heading = ('light gray', 'dark blue'),
-        heading_key = ('light cyan', 'dark blue'),
+        heading = ('white', 'black'),
+        heading_key = ('dark blue', 'black'),
         heading_inactive = ('black', 'light gray'),
 
         # Help
-        key = ('dark blue,bold', 'default'),
-        head = ('black,bold', 'default'),
+        key = ('dark blue', 'default'),
+        head = ('black', 'default'),
         text = ('dark gray', 'default'),
+
+        # Options
+        option_selected = ('black', 'light gray'),
+        option_selected_key = ('dark blue', 'light gray'),
+        option_active = ('light red', 'default'),
+        option_active_selected = ('light red', 'light gray'),
 
         # List and Connections
         method = ('dark cyan', 'default'),
@@ -142,10 +181,15 @@ class LowLight(Palette):
 
 class Light(LowLight):
     high = dict(
+        background = ('black', 'g100'),
         heading = ('g99', '#08f'),
         heading_key = ('#0ff,bold', '#08f'),
         heading_inactive = ('g35', 'g85'),
         replay = ('#0a0,bold', 'default'),
+
+        option_selected = ('black', 'g85'),
+        option_selected_key = ('dark blue', 'g85'),
+        option_active_selected = ('light red', 'g85'),
     )
 
 
@@ -155,10 +199,10 @@ sol_base03 = "h234"
 sol_base02 = "h235"
 sol_base01 = "h240"
 sol_base00 = "h241"
-sol_base0  = "h244"
-sol_base1  = "h245"
-sol_base2  = "h254"
-sol_base3  = "h230"
+sol_base0 = "h244"
+sol_base1 = "h245"
+sol_base2 = "h254"
+sol_base3 = "h230"
 sol_yellow = "h136"
 sol_orange = "h166"
 sol_red = "h160"
@@ -167,9 +211,12 @@ sol_violet = "h61"
 sol_blue = "h33"
 sol_cyan = "h37"
 sol_green = "h64"
+
+
 class SolarizedLight(LowLight):
     high = dict(
-        title = (sol_blue, 'default'),
+        background = (sol_base00, sol_base3),
+        title = (sol_cyan, 'default'),
         text = (sol_base00, 'default'),
 
         # Status bar & heading
@@ -180,6 +227,12 @@ class SolarizedLight(LowLight):
         # Help
         key = (sol_blue, 'default',),
         head = (sol_base00, 'default'),
+
+        # Options
+        option_selected = (sol_base03, sol_base2),
+        option_selected_key = (sol_blue, sol_base2),
+        option_active = (sol_orange, 'default'),
+        option_active_selected = (sol_orange, sol_base2),
 
         # List and Connections
         method = (sol_cyan, 'default'),
@@ -211,17 +264,24 @@ class SolarizedLight(LowLight):
 
 class SolarizedDark(LowDark):
     high = dict(
+        background = (sol_base2, sol_base03),
         title = (sol_blue, 'default'),
-        text = (sol_base0, 'default'),
+        text = (sol_base1, 'default'),
 
         # Status bar & heading
-        heading = (sol_base03, sol_base1),
-        heading_key = (sol_blue+",bold", sol_base1),
+        heading = (sol_base2, sol_base01),
+        heading_key = (sol_blue+",bold", sol_base01),
         heading_inactive = (sol_base1, sol_base02),
 
         # Help
         key = (sol_blue, 'default',),
-        head = (sol_base00, 'default'),
+        head = (sol_base2, 'default'),
+
+        # Options
+        option_selected = (sol_base03, sol_base00),
+        option_selected_key = (sol_blue, sol_base00),
+        option_active = (sol_orange, 'default'),
+        option_active_selected = (sol_orange, sol_base00),
 
         # List and Connections
         method = (sol_cyan, 'default'),
@@ -251,6 +311,7 @@ class SolarizedDark(LowDark):
     )
 
 
+DEFAULT = "dark"
 palettes = {
     "lowlight": LowLight(),
     "lowdark": LowDark(),

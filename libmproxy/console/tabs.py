@@ -14,11 +14,13 @@ class Tabs(urwid.WidgetWrap):
         return p
 
     def keypress(self, size, key):
-        if key == "tab":
+        if key in ["tab", "l"]:
             self.tab_offset = (self.tab_offset + 1)%(len(self.tabs))
             self.show()
-        else:
-            return self._w.keypress(size, key)
+        elif key == "h":
+            self.tab_offset = (self.tab_offset - 1)%(len(self.tabs))
+            self.show()
+        return self._w.keypress(size, key)
 
     def show(self):
         headers = []
@@ -33,3 +35,4 @@ class Tabs(urwid.WidgetWrap):
             body = self.tabs[self.tab_offset][1](),
             header = headers
         )
+        self._w.set_focus("body")

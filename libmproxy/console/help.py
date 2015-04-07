@@ -28,6 +28,7 @@ class HelpView(urwid.ListBox):
         keys = [
             ("j, k", "down, up"),
             ("h, l", "left, right (in some contexts)"),
+            ("g, G", "go to end, beginning"),
             ("space", "page down"),
             ("pg up/down", "page up/down"),
             ("arrows", "up, down, left, right"),
@@ -37,92 +38,11 @@ class HelpView(urwid.ListBox):
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
             ("c", "client replay"),
-            ("H", "edit global header set patterns"),
-            ("I", "set ignore pattern"),
             ("i", "set interception pattern"),
-            ("M", "change global default display mode"),
-                (None,
-                    common.highlight_key("automatic", "a") +
-                    [("text", ": automatic detection")]
-                ),
-                (None,
-                    common.highlight_key("hex", "e") +
-                    [("text", ": Hex")]
-                ),
-                (None,
-                    common.highlight_key("html", "h") +
-                    [("text", ": HTML")]
-                ),
-                (None,
-                    common.highlight_key("image", "i") +
-                    [("text", ": Image")]
-                ),
-                (None,
-                    common.highlight_key("javascript", "j") +
-                    [("text", ": JavaScript")]
-                ),
-                (None,
-                    common.highlight_key("json", "s") +
-                    [("text", ": JSON")]
-                ),
-                (None,
-                    common.highlight_key("css", "c") +
-                    [("text", ": CSS")]
-                ),
-                (None,
-                    common.highlight_key("urlencoded", "u") +
-                    [("text", ": URL-encoded data")]
-                ),
-                (None,
-                    common.highlight_key("raw", "r") +
-                    [("text", ": raw data")]
-                ),
-                (None,
-                    common.highlight_key("xml", "x") +
-                    [("text", ": XML")]
-                ),
-                (None,
-                    common.highlight_key("wbxml", "w") +
-                    [("text", ": WBXML")]
-                ),
-                (None,
-                    common.highlight_key("amf", "f") +
-                    [("text", ": AMF (requires PyAMF)")]
-                ),
-            ("o", "toggle options:"),
-                (None,
-                    common.highlight_key("anticache", "a") +
-                    [("text", ": prevent cached responses")]
-                ),
-                (None,
-                    common.highlight_key("anticomp", "c") +
-                    [("text", ": prevent compressed responses")]
-                ),
-                (None,
-                    common.highlight_key("showhost", "h") +
-                    [("text", ": use Host header for URL display")]
-                ),
-                (None,
-                    common.highlight_key("killextra", "k") +
-                    [("text", ": kill requests not part of server replay")]
-                ),
-                (None,
-                    common.highlight_key("norefresh", "n") +
-                    [("text", ": disable server replay response refresh")]
-                ),
-                (None,
-                    common.highlight_key("upstream certs", "u") +
-                    [("text", ": sniff cert info from upstream server")]
-                ),
-
-            ("q", "quit / return to flow list"),
+            ("o", "options"),
+            ("q", "quit / return to previous page"),
             ("Q", "quit without confirm prompt"),
-            ("R", "edit replacement patterns"),
-            ("s", "add/remove scripts"),
             ("S", "server replay"),
-            ("t", "set sticky cookie expression"),
-            ("T", "set tcp proxying pattern"),
-            ("u", "set sticky auth expression"),
         ]
         text.extend(
             common.format_keyvals(keys, key="key", val="text", indent=4)

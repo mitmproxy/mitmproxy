@@ -1,7 +1,16 @@
 from __future__ import absolute_import
 import urwid
-from . import common, signals, searchable
+from . import common, searchable
 from .. import utils
+
+
+def maybe_timestamp(base, attr):
+    if base and getattr(base, attr):
+        return utils.format_timestamp_with_milli(getattr(base, attr))
+    else:
+        return "active"
+    pass
+
 
 def flowdetails(state, flow):
     text = []
@@ -81,16 +90,61 @@ def flowdetails(state, flow):
 
     parts = []
 
-    parts.append(["Client conn. established", utils.format_timestamp_with_milli(cc.timestamp_start) if (cc and cc.timestamp_start) else "active"])
-    parts.append(["Server conn. initiated", utils.format_timestamp_with_milli(sc.timestamp_start) if sc else "active" ])
-    parts.append(["Server conn. TCP handshake", utils.format_timestamp_with_milli(sc.timestamp_tcp_setup) if (sc and sc.timestamp_tcp_setup) else "active"])
+    parts.append(
+        [
+            "Client conn. established",
+            maybe_timestamp(cc, "timestamp_start")
+        ]
+    )
+    parts.append(
+        [
+            "Server conn. initiated",
+            maybe_timestamp(sc, "timestamp_start")
+        ]
+    )
+    parts.append(
+        [
+            "Server conn. TCP handshake",
+            maybe_timestamp(sc, "timestamp_tcp_setup")
+        ]
+    )
     if sc.ssl_established:
-        parts.append(["Server conn. SSL handshake", utils.format_timestamp_with_milli(sc.timestamp_ssl_setup) if sc.timestamp_ssl_setup else "active"])
-        parts.append(["Client conn. SSL handshake", utils.format_timestamp_with_milli(cc.timestamp_ssl_setup) if (cc and cc.timestamp_ssl_setup) else "active"])
-    parts.append(["First request byte", utils.format_timestamp_with_milli(req.timestamp_start)])
-    parts.append(["Request complete", utils.format_timestamp_with_milli(req.timestamp_end) if req.timestamp_end else "active"])
-    parts.append(["First response byte", utils.format_timestamp_with_milli(resp.timestamp_start) if resp else "active"])
-    parts.append(["Response complete", utils.format_timestamp_with_milli(resp.timestamp_end) if (resp and resp.timestamp_end) else "active"])
+        parts.append(
+            [
+                "Server conn. SSL handshake",
+                maybe_timestamp(sc, "timestamp_ssl_setup")
+            ]
+        )
+        parts.append(
+            [
+                "Client conn. SSL handshake",
+                maybe_timestamp(cc, "timestamp_ssl_setup")
+            ]
+        )
+    parts.append(
+        [
+            "First request byte",
+            maybe_timestamp(req, "timestamp_start")
+        ]
+    )
+    parts.append(
+        [
+            "Request complete",
+            maybe_timestamp(req, "timestamp_end")
+        ]
+    )
+    parts.append(
+        [
+            "First response byte",
+            maybe_timestamp(resp, "timestamp_start")
+        ]
+    )
+    parts.append(
+        [
+            "Response complete",
+            maybe_timestamp(resp, "timestamp_end")
+        ]
+    )
 
     # sort operations by timestamp
     parts = sorted(parts, key=lambda p: p[1])

@@ -24,6 +24,8 @@ update_settings = blinker.Signal()
 # Fired when a flow changes
 flow_change = blinker.Signal()
 
+# Fired when the flow list or focus changes
+flowlist_change = blinker.Signal()
 
 # Pop and push view state onto a stack
 pop_view_state = blinker.Signal()

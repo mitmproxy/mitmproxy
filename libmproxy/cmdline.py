@@ -575,10 +575,15 @@ def mitmproxy():
     )
     common_options(parser)
     parser.add_argument(
-        "--palette", type=str, default="dark",
+        "--palette", type=str, default=palettes.DEFAULT,
         action="store", dest="palette",
         choices=sorted(palettes.palettes.keys()),
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
+    )
+    parser.add_argument(
+        "--palette-transparent",
+        action="store_true", dest="palette_transparent", default=False,
+        help="Set transparent background for palette."
     )
     parser.add_argument(
         "-e", "--eventlog",
