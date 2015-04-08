@@ -75,14 +75,14 @@ def get_server(dummy_server, options):
             sys.exit(1)
 
 
-def mitmproxy():  # pragma: nocover
+def mitmproxy(args=None):  # pragma: nocover
     from . import console
 
     check_versions()
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     if options.quiet:
         options.verbose = 0
 
@@ -102,13 +102,13 @@ def mitmproxy():  # pragma: nocover
         pass
 
 
-def mitmdump():  # pragma: nocover
+def mitmdump(args=None):  # pragma: nocover
     from . import dump
 
     check_versions()
 
     parser = cmdline.mitmdump()
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     if options.quiet:
         options.verbose = 0
         options.flow_detail = 0
@@ -136,13 +136,13 @@ def mitmdump():  # pragma: nocover
         pass
 
 
-def mitmweb():  # pragma: nocover
+def mitmweb(args=None):  # pragma: nocover
     from . import web
 
     check_versions()
     parser = cmdline.mitmweb()
 
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     if options.quiet:
         options.verbose = 0
 

@@ -15,6 +15,8 @@ def test_load_scripts():
             f += " -"
         if "iframe_injector" in f:
             f += " foo"  # one argument required
+        if "filt" in f:
+            f += " ~a"
         if "modify_response_body" in f:
             f += " foo bar"  # two arguments required
         try:
