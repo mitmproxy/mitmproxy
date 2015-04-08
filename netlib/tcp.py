@@ -302,7 +302,7 @@ class _Connection(object):
                 self.connection.shutdown()
             except SSL.Error:
                 pass
-            except KeyError as e:
+            except KeyError as e:  # pragma: no cover
                 # Workaround for https://github.com/pyca/pyopenssl/pull/183
                 if OpenSSL.__version__ != "0.14":
                     raise e

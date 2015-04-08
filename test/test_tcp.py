@@ -1,6 +1,7 @@
 import cStringIO, Queue, time, socket, random
 import os
 from netlib import tcp, certutils, test, certffi
+import threading
 import mock
 import tutils
 from OpenSSL import SSL
@@ -39,6 +40,15 @@ class TestServer(test.ServerTestBase):
         c.wfile.flush()
         assert c.rfile.readline() == testval
 
+    def test_thread_start_error(self):
+        with mock.patch.object(threading.Thread, "start", side_effect=threading.ThreadError("nonewthread")) as m:
+            c = tcp.TCPClient(("127.0.0.1", self.port))
+            c.connect()
+            assert not c.rfile.read(1)
+            assert m.called
+            assert "nonewthread" in self.q.get_nowait()
+        self.test_echo()
+
 
 class TestServerBind(test.ServerTestBase):
     class handler(tcp.BaseHandler):
@@ -72,7 +82,7 @@ class TestServerIPv6(test.ServerTestBase):
         assert c.rfile.readline() == testval
 
 
-class TestDisconnect(test.ServerTestBase):
+class TestEcho(test.ServerTestBase):
     handler = EchoHandler
     def test_echo(self):
         testval = "echo!\n"
@@ -551,17 +561,6 @@ class TestAddress:
         assert a == c
         assert not a != c
         assert repr(a)
-
-
-class TestServer(test.ServerTestBase):
-    handler = EchoHandler
-    def test_echo(self):
-        testval = "echo!\n"
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.wfile.write(testval)
-        c.wfile.flush()
-        assert c.rfile.readline() == testval
 
 
 class TestSSLKeyLogger(test.ServerTestBase):
