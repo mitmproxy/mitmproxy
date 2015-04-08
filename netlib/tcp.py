@@ -560,7 +560,11 @@ class TCPServer(object):
                               self.address.host, self.address.port)
                     )
                     t.setDaemon(1)
-                    t.start()
+                    try:
+                        t.start()
+                    except threading.ThreadError:
+                        self.handle_error(connection, Address(client_address))
+                        connection.close()
         finally:
             self.__shutdown_request = False
             self.__is_shut_down.set()
