@@ -3,18 +3,18 @@ import cStringIO, urllib, time, traceback
 from . import odict, tcp
 
 
-class ClientConn:
+class ClientConn(object):
     def __init__(self, address):
         self.address = tcp.Address.wrap(address)
 
 
-class Flow:
+class Flow(object):
     def __init__(self, address, request):
         self.client_conn = ClientConn(address)
         self.request = request
 
 
-class Request:
+class Request(object):
     def __init__(self, scheme, method, path, headers, content):
         self.scheme, self.method, self.path = scheme, method, path
         self.headers, self.content = headers, content
@@ -35,7 +35,7 @@ def date_time_string():
     return s
 
 
-class WSGIAdaptor:
+class WSGIAdaptor(object):
     def __init__(self, app, domain, port, sversion):
         self.app, self.domain, self.port, self.sversion = app, domain, port, sversion
 

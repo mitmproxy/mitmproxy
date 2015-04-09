@@ -120,7 +120,7 @@ class CertStoreEntry(object):
         self.chain_file = chain_file
 
 
-class CertStore:
+class CertStore(object):
     """
         Implements an in-memory certificate store.
     """
@@ -288,7 +288,7 @@ class _GeneralNames(univ.SequenceOf):
     sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
 
 
-class SSLCert:
+class SSLCert(object):
     def __init__(self, cert):
         """
             Returns a (common name, [subject alternative names]) tuple.
