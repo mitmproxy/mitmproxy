@@ -631,8 +631,10 @@ class HTTPRequest(HTTPMessage):
             host = self.headers.get_first("host")
         if not host:
             host = self.host
-        host = host.encode("idna")
-        return host
+        if host:
+            return host.encode("idna")
+        else:
+            return None
 
     def pretty_url(self, hostheader):
         if self.form_out == "authority":  # upstream proxy mode
