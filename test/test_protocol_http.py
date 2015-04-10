@@ -121,6 +121,20 @@ class TestHTTPRequest:
         r = tutils.treq()
         assert repr(r)
 
+    def test_pretty_host(self):
+        r = tutils.treq()
+        assert r.pretty_host(True) == "address"
+        assert r.pretty_host(False) == "address"
+        r.headers["host"] = ["other"]
+        assert r.pretty_host(True) == "other"
+        assert r.pretty_host(False) == "address"
+        r.host = None
+        assert r.pretty_host(True) == "other"
+        assert r.pretty_host(False) is None
+        del r.headers["host"]
+        assert r.pretty_host(True) is None
+        assert r.pretty_host(False) is None
+
     def test_get_form_for_urlencoded(self):
         r = tutils.treq()
         r.headers.add("content-type", "application/x-www-form-urlencoded")
