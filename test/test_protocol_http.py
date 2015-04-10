@@ -55,6 +55,14 @@ class TestHTTPRequest:
         r.update_host_header()
         assert "Host" in r.headers
 
+    def test_expect_header(self):
+        s = StringIO("GET / HTTP/1.1\r\nContent-Length: 3\r\nExpect: 100-continue\r\n\r\nfoobar")
+        w = StringIO()
+        r = HTTPRequest.from_stream(s, wfile=w)
+        assert w.getvalue() == "HTTP/1.1 100 Continue\r\n\r\n"
+        assert r.content == "foo"
+        assert s.read(3) == "bar"
+
     def test_authority_form_in(self):
         s = StringIO("CONNECT oops-no-port.com HTTP/1.1")
         tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
