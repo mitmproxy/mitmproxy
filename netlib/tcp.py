@@ -64,7 +64,7 @@ class SSLKeyLogger(object):
 log_ssl_key = SSLKeyLogger.create_logfun(os.getenv("MITMPROXY_SSLKEYLOGFILE") or os.getenv("SSLKEYLOGFILE"))
 
 
-class _FileLike:
+class _FileLike(object):
     BLOCKSIZE = 1024 * 32
     def __init__(self, o):
         self.o = o
@@ -134,8 +134,8 @@ class Writer(_FileLike):
                     r = self.o.write(v)
                     self.add_log(v[:r])
                     return r
-            except (SSL.Error, socket.error), v:
-                raise NetLibDisconnect(str(v))
+            except (SSL.Error, socket.error) as  e:
+                raise NetLibDisconnect(str(e))
 
 
 class Reader(_FileLike):
@@ -302,7 +302,7 @@ class _Connection(object):
                 self.connection.shutdown()
             except SSL.Error:
                 pass
-            except KeyError as e:
+            except KeyError as e:  # pragma: no cover
                 # Workaround for https://github.com/pyca/pyopenssl/pull/183
                 if OpenSSL.__version__ != "0.14":
                     raise e
@@ -546,10 +546,10 @@ class TCPServer(object):
                 try:
                     r, w, e = select.select([self.socket], [], [], poll_interval)
                 except select.error as ex:  # pragma: no cover
-                        if ex[0] == EINTR:
-                            continue
-                        else:
-                            raise
+                    if ex[0] == EINTR:
+                        continue
+                    else:
+                        raise
                 if self.socket in r:
                     connection, client_address = self.socket.accept()
                     t = threading.Thread(
@@ -560,7 +560,11 @@ class TCPServer(object):
                               self.address.host, self.address.port)
                     )
                     t.setDaemon(1)
-                    t.start()
+                    try:
+                        t.start()
+                    except threading.ThreadError:
+                        self.handle_error(connection, Address(client_address))
+                        connection.close()
         finally:
             self.__shutdown_request = False
             self.__is_shut_down.set()

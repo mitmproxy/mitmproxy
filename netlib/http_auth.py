@@ -3,7 +3,7 @@ from argparse import Action, ArgumentTypeError
 from . import http
 
 
-class NullProxyAuth():
+class NullProxyAuth(object):
     """
         No proxy auth at all (returns empty challange headers)
     """
@@ -59,12 +59,12 @@ class BasicProxyAuth(NullProxyAuth):
         return {self.CHALLENGE_HEADER:'Basic realm="%s"'%self.realm}
 
 
-class PassMan():
+class PassMan(object):
     def test(self, username, password_token):
         return False
 
 
-class PassManNonAnon:
+class PassManNonAnon(PassMan):
     """
         Ensure the user specifies a username, accept any password.
     """
@@ -74,7 +74,7 @@ class PassManNonAnon:
         return False
 
 
-class PassManHtpasswd:
+class PassManHtpasswd(PassMan):
     """
         Read usernames and passwords from an htpasswd file
     """
@@ -89,7 +89,7 @@ class PassManHtpasswd:
         return bool(self.htpasswd.check_password(username, password_token))
 
 
-class PassManSingleUser:
+class PassManSingleUser(PassMan):
     def __init__(self, username, password):
         self.username, self.password = username, password
 

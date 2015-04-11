@@ -11,7 +11,7 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
     return re.subn(str(pattern), str(repl), target, *args, **kwargs)
 
 
-class ODict:
+class ODict(object):
     """
         A dictionary-like object for managing ordered (key, value) data.
     """

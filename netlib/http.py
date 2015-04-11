@@ -333,8 +333,8 @@ def read_response(rfile, request_method, body_size_limit, include_body=True):
             False
         )
     else:
-         # if include_body==False then a None content means the body should be
-         # read separately
+        # if include_body==False then a None content means the body should be
+        # read separately
         content = None
     return httpversion, code, msg, headers, content
 
