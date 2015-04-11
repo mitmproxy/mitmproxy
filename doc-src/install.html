@@ -1,20 +1,19 @@
 
 ## Installing from source
 
-The preferred way to install mitmproxy - whether you're installing the latest
-release or from source - is to use [pip](http://www.pip-installer.org/). If you
-don't already have pip on your system, you can find installation instructions
-[here](http://www.pip-installer.org/en/latest/installing.html).
+The preferred way to install mitmproxy - whether you're installing the latest release or from source - is to use [pip](http://www.pip-installer.org/). If you don't already have pip on your system, you can find installation instructions [here](http://www.pip-installer.org/en/latest/installing.html).
+
+If you are looking for a more information on how to install mitmproxy directly from the master branch on GitHub, or are wanting to set up mitmproxy for developement purposes, see the <a href="https://github.com/mitmproxy/mitmproxy/blob/master/README.mkd#hacking">Hacking</a> section of the README on GitHub. 
 
 <pre class="terminal">
-pip install mitmproxy
+$ sudo pip install mitmproxy
 </pre>
 
 If you also want to install the optional packages AMF, protobuf and CSS
 content views, do this:
 
 <pre class="terminal">
-pip install "mitmproxy[contentviews]"
+$ sudo pip install "mitmproxy[contentviews]"
 </pre>
 
 
@@ -46,14 +45,35 @@ video/*; /usr/bin/open -Wn %s
 
 ## Ubuntu
 
-On Ubuntu, you will need the following native packages to install mitmproxy
-from source:
+Ubuntu comes with Python but we need to install pip, python-dev and several libraries.  This was tested on a fully patched installation of Ubuntu 14.04.
 
-- build-essential
-- python-dev
-- libffi-dev
-- libssl-dev
-- libxml2-dev
-- libxslt1-dev
+<pre class="terminal">
+$ sudo apt-get python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev
 
+$ sudo pip install mitmproxy
+</pre>
+
+
+## Windows
+
+mitmweb and mitmdump are the only parts of mitmproxy that work on Windows.
+
+Install the latest version of Python 2 from the <a href="https://www.python.org/downloads/windows/">Python website</a>.  The Windows MSI installer is fairly straight forward and even includes pip as long as you are installing a version of Python 2 after 2.7.9.  One option you should change during installation is "Add python.exe to Path".  This will make it easier to run Python.
+<img src="@!urlTo('winpythoninstaller.jpg')!@"/>
+
+Now log out of Windows and back in to finish having Python added to your PATH.
+
+<pre class="terminal">
+C:\> pip install mitmproxy
+</pre>
+
+From that point you just run mitmweb or mitmdump from the Command Prompt
+ 
+<pre class="terminal">
+C:\> mitmweb
+</pre>
+or
+<pre class="terminal">
+C:\> mitmdump
+</pre>
 
