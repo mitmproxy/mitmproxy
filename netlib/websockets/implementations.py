@@ -32,7 +32,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
  
     def handshake(self):
         client_hs = ws.read_handshake(self.rfile.read, 1)
-        key       = ws.server_process_handshake(client_hs)
+        key       = ws.process_handshake_from_client(client_hs)
         response  = ws.create_server_handshake(key)
         self.wfile.write(response)
         self.wfile.flush()
@@ -46,9 +46,9 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
 class WebSocketsClient(tcp.TCPClient):
     def __init__(self, address, source_address=None):
         super(WebSocketsClient, self).__init__(address, source_address)
-        self.version    = "13"
-        self.key        = ws.generate_client_nounce()
-        self.resource   = "/"
+        self.version       = "13"
+        self.client_nounce = ws.create_client_nounce()
+        self.resource      = "/"
 
     def connect(self):
         super(WebSocketsClient, self).connect()
@@ -56,7 +56,7 @@ class WebSocketsClient(tcp.TCPClient):
         handshake = ws.create_client_handshake(
             self.address.host,
             self.address.port,
-            self.key,
+            self.client_nounce,
             self.version,
             self.resource
         )
@@ -64,9 +64,14 @@ class WebSocketsClient(tcp.TCPClient):
         self.wfile.write(handshake)
         self.wfile.flush()
 
-        response = ws.read_handshake(self.rfile.read, 1)
+        server_handshake = ws.read_handshake(self.rfile.read, 1)
         
-        if not response:
+        if not server_handshake:
+            self.close()
+
+        server_nounce = ws.process_handshake_from_server(server_handshake, self.client_nounce)
+
+        if not server_nounce == ws.create_server_nounce(self.client_nounce):
             self.close()
 
     def read_next_message(self):
