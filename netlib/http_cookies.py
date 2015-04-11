@@ -59,29 +59,39 @@ def _read_quoted_string(s, start):
     return "".join(ret), i+1
 
 
-def _read_value(s, start):
+def _read_value(s, start, special):
     """
         Reads a value - the RHS of a token/value pair in a cookie.
+
+        special: If the value is special, commas are premitted. Else comma
+        terminates. This helps us support old and new style values.
     """
-    if s[start] == '"':
+    if start >= len(s):
+        return "", start
+    elif s[start] == '"':
         return _read_quoted_string(s, start)
+    elif special:
+        return _read_until(s, start, ";")
     else:
         return _read_until(s, start, ";,")
 
 
-def _read_pairs(s):
+def _read_pairs(s, specials=()):
     """
         Read pairs of lhs=rhs values.
+
+        specials: A lower-cased list of keys that may contain commas.
     """
     off = 0
     vals = []
     while 1:
         lhs, off = _read_token(s, off)
+        lhs = lhs.lstrip()
         rhs = None
         if off < len(s):
             if s[off] == "=":
-                rhs, off = _read_value(s, off+1)
-        vals.append([lhs.lstrip(), rhs])
+                rhs, off = _read_value(s, off+1, lhs.lower() in specials)
+        vals.append([lhs, rhs])
         off += 1
         if not off < len(s):
             break
@@ -89,18 +99,30 @@ def _read_pairs(s):
 
 
 ESCAPE = re.compile(r"([\"\\])")
-SPECIAL = re.compile(r"^\w+$")
 
 
-def _format_pairs(lst):
+def _has_special(s):
+    for i in s:
+        if i in '",;\\':
+            return True
+        o = ord(i)
+        if o < 0x21 or o > 0x7e:
+            return True
+    return False
+
+
+def _format_pairs(lst, specials=()):
+    """
+        specials: A lower-cased list of keys that will not be quoted.
+    """
     vals = []
     for k, v in lst:
         if v is None:
             vals.append(k)
         else:
-            match = SPECIAL.search(v)
-            if match:
-                v = ESCAPE.sub(r"\1", v)
+            if k.lower() not in specials and _has_special(v):
+                v = ESCAPE.sub(r"\\\1", v)
+                v = '"%s"'%v
             vals.append("%s=%s"%(k, v))
     return "; ".join(vals)
 
@@ -118,11 +140,7 @@ def unparse_cookies(od):
     """
         Formats a Cookie header value.
     """
-    vals = []
-    for i in od.lst:
-        vals.append("%s=%s"%(i[0], i[1]))
-    return "; ".join(vals)
-
+    return _format_pairs(od.lst)
 
 
 def parse_set_cookies(s):

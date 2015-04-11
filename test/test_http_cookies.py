@@ -38,6 +38,10 @@ def test_read_pairs():
             [["one", "two"]]
         ],
         [
+            "one=",
+            [["one", ""]]
+        ],
+        [
             'one="two"',
             [["one", "two"]]
         ],
@@ -80,6 +84,10 @@ def test_pairs_roundtrips():
         [
             'one="un\\"o"',
             [["one", 'un"o']]
+        ],
+        [
+            'one="uno,due"',
+            [["one", 'uno,due']]
         ],
         [
             "one=uno; two; three=tre",
