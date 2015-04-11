@@ -65,7 +65,6 @@ class WebSocketsFrame(object):
         payload               = None, # bytestring 
         masking_key           = None, # 32 bit byte string
         actual_payload_length = None, # any decimal integer
-        use_validation        = True  # indicates whether or not you care if this frame adheres to the spec
     ):
         self.fin                   = fin
         self.rsv1                  = rsv1
@@ -78,21 +77,18 @@ class WebSocketsFrame(object):
         self.payload               = payload
         self.decoded_payload       = decoded_payload
         self.actual_payload_length = actual_payload_length
-        self.use_validation        = use_validation
-
-        if self.use_validation:
-            self.validate_frame()
 
     @classmethod
     def from_bytes(cls, bytestring):
         """
           Construct a websocket frame from an in-memory bytestring
-          to construct a frame from a stream of bytes, use read_frame() directly
+          to construct a frame from a stream of bytes, use from_byte_stream() directly
         """ 
         self.from_byte_stream(io.BytesIO(bytestring).read)
 
+
     @classmethod
-    def default_frame_from_message(cls, message, from_client = False):
+    def default(cls, message, from_client = False):
         """
           Construct a basic websocket frame from some default values. 
           Creates a non-fragmented text frame.
@@ -119,7 +115,7 @@ class WebSocketsFrame(object):
             actual_payload_length = actual_length
         )
 
-    def validate_frame(self):
+    def frame_is_valid(self):
         """
          Validate websocket frame invariants, call at anytime to ensure the WebSocketsFrame
          has not been corrupted.
@@ -141,10 +137,11 @@ class WebSocketsFrame(object):
             assert self.actual_payload_length == len(self.payload)
 
             if self.payload is not None and self.masking_key is not None:
-                apply_mask(self.payload, self.masking_key) == self.decoded_payload
+                assert apply_mask(self.payload, self.masking_key) == self.decoded_payload
 
+            return True 
         except AssertionError:
-            raise WebSocketFrameValidationException()
+            return False
 
     def human_readable(self):
         return "\n".join([
@@ -161,15 +158,19 @@ class WebSocketsFrame(object):
           ("actual_payload_length - " + str(self.actual_payload_length)),
           ("use_validation        - " + str(self.use_validation))])
 
+    def safe_to_bytes(self):
+      try:
+          assert self.frame_is_valid()
+          return self.to_bytes()
+      except:
+          raise WebSocketFrameValidationException()
+
     def to_bytes(self):
         """
           Serialize the frame back into the wire format, returns a bytestring
+          If you haven't checked is_valid_frame() then there's no guarentees that the
+          serialized bytes will be correct. see safe_to_bytes()
         """ 
-        # validate enforces all the assumptions made by this serializer
-        # in the spritit of mitmproxy, it's possible to create and serialize invalid frames 
-        # by skipping validation.
-        if self.use_validation:
-            self.validate_frame()
 
         max_16_bit_int = (1 << 16)
         max_64_bit_int = (1 << 63)
@@ -198,6 +199,7 @@ class WebSocketsFrame(object):
             pass
         
         elif self.actual_payload_length < max_16_bit_int:
+
             # '!H' pack as 16 bit unsigned short
             bytes += struct.pack('!H', self.actual_payload_length) # add 2 byte extended payload length
         
@@ -283,9 +285,6 @@ def apply_mask(message, masking_key):
 
 def random_masking_key():
     return os.urandom(4)
-
-def masking_key_list(masking_key):
-    return [utils.bytes_to_int(byte) for byte in masking_key]
 
 def create_client_handshake(host, port, key, version, resource):
     """

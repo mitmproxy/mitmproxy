@@ -26,8 +26,8 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         self.on_message(decoded)
 
     def send_message(self, message):
-        frame = ws.WebSocketsFrame.default_frame_from_message(message, from_client = False)
-        self.wfile.write(frame.to_bytes())
+        frame = ws.WebSocketsFrame.default(message, from_client = False)
+        self.wfile.write(frame.safe_to_bytes())
         self.wfile.flush()
  
     def handshake(self):
@@ -47,7 +47,7 @@ class WebSocketsClient(tcp.TCPClient):
     def __init__(self, address, source_address=None):
         super(WebSocketsClient, self).__init__(address, source_address)
         self.version    = "13"
-        self.key        = b64encode(os.urandom(16)).decode('utf-8')
+        self.key        = ws.generate_client_nounce()
         self.resource   = "/"
 
     def connect(self):
@@ -76,6 +76,6 @@ class WebSocketsClient(tcp.TCPClient):
             self.close()
  
     def send_message(self, message):
-        frame = ws.WebSocketsFrame.default_frame_from_message(message, from_client = True)
-        self.wfile.write(frame.to_bytes())
+        frame = ws.WebSocketsFrame.default(message, from_client = True)
+        self.wfile.write(frame.safe_to_bytes())
         self.wfile.flush()
