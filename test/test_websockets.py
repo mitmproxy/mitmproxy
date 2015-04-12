@@ -71,8 +71,3 @@ class TestBadHandshake(test.ServerTestBase):
         client = impl.WebSocketsClient(("127.0.0.1", self.port))
         client.connect()
         client.send_message("hello")
-
-
-
-
-
