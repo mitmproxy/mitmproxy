@@ -12,6 +12,7 @@ import traceback
 import urwid
 
 import netlib.utils
+from netlib import odict
 
 from . import common
 from .. import utils, encoding, flow
@@ -519,7 +520,7 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc, is_request):
             return "No content", ""
     msg = []
 
-    hdrs = flow.ODictCaseless([list(i) for i in hdrItems])
+    hdrs = odict.ODictCaseless([list(i) for i in hdrItems])
 
     enc = hdrs.get_first("content-encoding")
     if enc and enc != "identity":

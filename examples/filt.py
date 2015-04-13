@@ -4,7 +4,6 @@
 from libmproxy import filt
 
 def start(context, argv):
-	print argv
 	if len(argv) != 2:
 		raise ValueError("Usage: -s 'filt.py FILTER'")
 	context.filter = filt.parse(argv[1])

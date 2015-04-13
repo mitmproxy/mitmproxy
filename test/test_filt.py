@@ -1,4 +1,5 @@
 import cStringIO
+from netlib import odict
 from libmproxy import filt, flow
 from libmproxy.protocol import http
 from libmproxy.protocol.primitives import Error
@@ -74,7 +75,7 @@ class TestParsing:
 
 class TestMatching:
     def req(self):
-        headers = flow.ODictCaseless()
+        headers = odict.ODictCaseless()
         headers["header"] = ["qvalue"]
         req = http.HTTPRequest(
             "absolute",
@@ -96,7 +97,7 @@ class TestMatching:
     def resp(self):
         f = self.req()
 
-        headers = flow.ODictCaseless()
+        headers = odict.ODictCaseless()
         headers["header_response"] = ["svalue"]
         f.response = http.HTTPResponse((1, 1), 200, "OK", headers, "content_response", None, None)
 
@@ -253,4 +254,3 @@ class TestMatching:
         assert self.q("! ~c 201", s)
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
-

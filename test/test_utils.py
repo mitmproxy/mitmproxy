@@ -1,5 +1,6 @@
 import json
 from libmproxy import utils, flow
+from netlib import odict
 import tutils
 
 utils.CERT_SLEEP_TIME = 0
@@ -54,7 +55,7 @@ def test_urldecode():
 
 def test_multipartdecode():
     boundary = 'somefancyboundary'
-    headers = flow.ODict([('content-type', ('multipart/form-data; boundary=%s' % boundary))])
+    headers = odict.ODict([('content-type', ('multipart/form-data; boundary=%s' % boundary))])
     content = "--{0}\n" \
               "Content-Disposition: form-data; name=\"field1\"\n\n" \
               "value1\n" \

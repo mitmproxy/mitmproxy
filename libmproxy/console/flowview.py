@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os, sys, copy
 import urwid
+from netlib import odict
 from . import common, grideditor, contentview, signals, searchable, tabs
 from . import flowdetailview
 from .. import utils, flow, controller
@@ -275,11 +276,11 @@ class FlowView(tabs.Tabs):
         signals.flow_change.send(self, flow = self.flow)
 
     def set_headers(self, lst, conn):
-        conn.headers = flow.ODictCaseless(lst)
+        conn.headers = odict.ODictCaseless(lst)
         signals.flow_change.send(self, flow = self.flow)
 
     def set_query(self, lst, conn):
-        conn.set_query(flow.ODict(lst))
+        conn.set_query(odict.ODict(lst))
         signals.flow_change.send(self, flow = self.flow)
 
     def set_path_components(self, lst, conn):
@@ -287,7 +288,7 @@ class FlowView(tabs.Tabs):
         signals.flow_change.send(self, flow = self.flow)
 
     def set_form(self, lst, conn):
-        conn.set_form_urlencoded(flow.ODict(lst))
+        conn.set_form_urlencoded(odict.ODict(lst))
         signals.flow_change.send(self, flow = self.flow)
 
     def edit_form(self, conn):
@@ -311,7 +312,7 @@ class FlowView(tabs.Tabs):
             if not self.flow.response:
                 self.flow.response = HTTPResponse(
                     self.flow.request.httpversion,
-                    200, "OK", flow.ODictCaseless(), ""
+                    200, "OK", odict.ODictCaseless(), ""
                 )
                 self.flow.response.reply = controller.DummyReply()
             message = self.flow.response

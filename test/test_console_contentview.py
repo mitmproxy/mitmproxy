@@ -2,8 +2,9 @@ import os
 from nose.plugins.skip import SkipTest
 if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
-
 import sys
+
+from netlib import odict
 import libmproxy.console.contentview as cv
 from libmproxy import utils, flow, encoding
 import tutils
@@ -30,14 +31,14 @@ class TestContentView:
     def test_view_auto(self):
         v = cv.ViewAuto()
         f = v(
-                flow.ODictCaseless(),
+                odict.ODictCaseless(),
                 "foo",
                 1000
               )
         assert f[0] == "Raw"
 
         f = v(
-                flow.ODictCaseless(
+                odict.ODictCaseless(
                     [["content-type", "text/html"]],
                 ),
                 "<html></html>",
@@ -46,7 +47,7 @@ class TestContentView:
         assert f[0] == "HTML"
 
         f = v(
-                flow.ODictCaseless(
+                odict.ODictCaseless(
                     [["content-type", "text/flibble"]],
                 ),
                 "foo",
@@ -55,7 +56,7 @@ class TestContentView:
         assert f[0] == "Raw"
 
         f = v(
-                flow.ODictCaseless(
+                odict.ODictCaseless(
                     [["content-type", "text/flibble"]],
                 ),
                 "<xml></xml>",
@@ -166,20 +167,20 @@ Content-Disposition: form-data; name="submit-name"
 Larry
 --AaB03x
         """.strip()
-        h = flow.ODictCaseless(
+        h = odict.ODictCaseless(
             [("Content-Type", "multipart/form-data; boundary=AaB03x")]
         )
         assert view(h, v, 1000)
 
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         assert not view(h, v, 1000)
 
-        h = flow.ODictCaseless(
+        h = odict.ODictCaseless(
             [("Content-Type", "multipart/form-data")]
         )
         assert not view(h, v, 1000)
 
-        h = flow.ODictCaseless(
+        h = odict.ODictCaseless(
             [("Content-Type", "unparseable")]
         )
         assert not view(h, v, 1000)
@@ -281,4 +282,3 @@ if cv.ViewProtobuf.is_available():
 
 def test_get_by_shortcut():
     assert cv.get_by_shortcut("h")
-

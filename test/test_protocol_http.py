@@ -1,6 +1,10 @@
-from mock import MagicMock
-from libmproxy.protocol.http import *
 from cStringIO import StringIO
+
+from mock import MagicMock
+
+from libmproxy.protocol.http import *
+from netlib import odict
+
 import tutils, tservers
 
 
@@ -130,6 +134,41 @@ class TestHTTPRequest:
         r.get_form()
 
         assert r.get_form_multipart.called
+
+    def test_get_cookies_none(self):
+        h = odict.ODictCaseless()
+        r = tutils.treq()
+        r.headers = h
+        assert r.get_cookies() is None
+
+    def test_get_cookies_single(self):
+        h = odict.ODictCaseless()
+        h["Cookie"] = ["cookiename=cookievalue"]
+        r = tutils.treq()
+        r.headers = h
+        result = r.get_cookies()
+        assert len(result)==1
+        assert result['cookiename']==('cookievalue',{})
+
+    def test_get_cookies_double(self):
+        h = odict.ODictCaseless()
+        h["Cookie"] = ["cookiename=cookievalue;othercookiename=othercookievalue"]
+        r = tutils.treq()
+        r.headers = h
+        result = r.get_cookies()
+        assert len(result)==2
+        assert result['cookiename']==('cookievalue',{})
+        assert result['othercookiename']==('othercookievalue',{})
+
+    def test_get_cookies_withequalsign(self):
+        h = odict.ODictCaseless()
+        h["Cookie"] = ["cookiename=coo=kievalue;othercookiename=othercookievalue"]
+        r = tutils.treq()
+        r.headers = h
+        result = r.get_cookies()
+        assert len(result)==2
+        assert result['cookiename']==('coo=kievalue',{})
+        assert result['othercookiename']==('othercookievalue',{})
 
 
 

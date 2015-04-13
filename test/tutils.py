@@ -9,7 +9,7 @@ import mock_urwid
 from libmproxy.console.flowview import FlowView
 from libmproxy.console import ConsoleState
 from libmproxy.protocol.primitives import Error
-from netlib import certutils
+from netlib import certutils, odict
 from nose.plugins.skip import SkipTest
 from mock import Mock
 from time import time
@@ -81,7 +81,7 @@ def treq(content="content", scheme="http", host="address", port=22):
     """
     @return: libmproxy.protocol.http.HTTPRequest
     """
-    headers = flow.ODictCaseless()
+    headers = odict.ODictCaseless()
     headers["header"] = ["qvalue"]
     req = http.HTTPRequest("relative", "GET", scheme, host, port, "/path", (1, 1), headers, content,
                                  None, None, None)
@@ -104,7 +104,7 @@ def tresp(content="message"):
     @return: libmproxy.protocol.http.HTTPResponse
     """
 
-    headers = flow.ODictCaseless()
+    headers = odict.ODictCaseless()
     headers["header_response"] = ["svalue"]
 
     resp = http.HTTPResponse((1, 1), 200, "OK", headers, content, time(), time())

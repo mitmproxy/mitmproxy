@@ -8,7 +8,7 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 import threading
 from netlib import http, tcp, http_status
 import netlib.utils
-from netlib.odict import ODict, ODictCaseless
+from netlib import odict
 from .tcp import TCPHandler
 from .primitives import KILL, ProtocolHandler, Flow, Error
 from ..proxy.connection import ServerConnection
@@ -45,7 +45,7 @@ def send_connect_request(conn, host, port, update_state=True):
         port,
         None,
         (1, 1),
-        ODictCaseless(),
+        odict.ODictCaseless(),
         ""
     )
     conn.send(upstream_request.assemble())
@@ -100,7 +100,7 @@ class HTTPMessage(stateobject.StateObject):
                  timestamp_end=None):
         self.httpversion = httpversion
         self.headers = headers
-        """@type: ODictCaseless"""
+        """@type: odict.ODictCaseless"""
         self.content = content
 
         self.timestamp_start = timestamp_start
@@ -108,7 +108,7 @@ class HTTPMessage(stateobject.StateObject):
 
     _stateobject_attributes = dict(
         httpversion=tuple,
-        headers=ODictCaseless,
+        headers=odict.ODictCaseless,
         content=str,
         timestamp_start=float,
         timestamp_end=float
@@ -242,7 +242,7 @@ class HTTPRequest(HTTPMessage):
 
         httpversion: HTTP version tuple, e.g. (1,1)
 
-        headers: ODictCaseless object
+        headers: odict.ODictCaseless object
 
         content: Content of the request, None, or CONTENT_MISSING if there
         is content associated, but not present. CONTENT_MISSING evaluates
@@ -280,7 +280,7 @@ class HTTPRequest(HTTPMessage):
         timestamp_end=None,
         form_out=None
     ):
-        assert isinstance(headers, ODictCaseless) or not headers
+        assert isinstance(headers, odict.ODictCaseless) or not headers
         HTTPMessage.__init__(
             self,
             httpversion,
@@ -521,7 +521,7 @@ class HTTPRequest(HTTPMessage):
                 return self.get_form_urlencoded()
             elif self.headers.in_any("content-type", HDR_FORM_MULTIPART, True):
                 return self.get_form_multipart()
-        return ODict([])
+        return odict.ODict([])
 
     def get_form_urlencoded(self):
         """
@@ -530,13 +530,13 @@ class HTTPRequest(HTTPMessage):
             indicates non-form data.
         """
         if self.content and self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
-                return ODict(utils.urldecode(self.content))
-        return ODict([])
+                return odict.ODict(utils.urldecode(self.content))
+        return odict.ODict([])
 
     def get_form_multipart(self):
         if self.content and self.headers.in_any("content-type", HDR_FORM_MULTIPART, True):
-                return ODict(utils.multipartdecode(self.headers, self.content))
-        return ODict([])
+                return odict.ODict(utils.multipartdecode(self.headers, self.content))
+        return odict.ODict([])
 
     def set_form_urlencoded(self, odict):
         """
@@ -577,8 +577,8 @@ class HTTPRequest(HTTPMessage):
         """
         _, _, _, _, query, _ = urlparse.urlparse(self.url)
         if query:
-            return ODict(utils.urldecode(query))
-        return ODict([])
+            return odict.ODict(utils.urldecode(query))
+        return odict.ODict([])
 
     def set_query(self, odict):
         """
@@ -697,7 +697,7 @@ class HTTPResponse(HTTPMessage):
 
     def __init__(self, httpversion, code, msg, headers, content, timestamp_start=None,
                  timestamp_end=None):
-        assert isinstance(headers, ODictCaseless) or headers is None
+        assert isinstance(headers, odict.ODictCaseless) or headers is None
         HTTPMessage.__init__(
             self,
             httpversion,

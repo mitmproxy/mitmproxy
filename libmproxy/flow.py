@@ -17,9 +17,6 @@ from .proxy.config import HostMatcher
 from .proxy.connection import ClientConnection, ServerConnection
 import urlparse
 
-ODict = odict.ODict
-ODictCaseless = odict.ODictCaseless
-
 
 class AppRegistry:
     def __init__(self):

@@ -2,6 +2,7 @@ import Queue, time, os.path
 from cStringIO import StringIO
 import email.utils
 import mock
+from netlib import odict
 from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
 from libmproxy.protocol.http import decoded, CONTENT_MISSING
@@ -931,7 +932,7 @@ class TestRequest:
         assert r.get_path_components() == []
         r.path = "/foo/bar"
         assert r.get_path_components() == ["foo", "bar"]
-        q = flow.ODict()
+        q = odict.ODict()
         q["test"] = ["123"]
         r.set_query(q)
         assert r.get_path_components() == ["foo", "bar"]
@@ -945,12 +946,12 @@ class TestRequest:
         assert "%2F" in r.path
 
     def test_getset_form_urlencoded(self):
-        d = flow.ODict([("one", "two"), ("three", "four")])
+        d = odict.ODict([("one", "two"), ("three", "four")])
         r = tutils.treq(content=utils.urlencode(d.lst))
         r.headers["content-type"] = [protocol.http.HDR_FORM_URLENCODED]
         assert r.get_form_urlencoded() == d
 
-        d = flow.ODict([("x", "y")])
+        d = odict.ODict([("x", "y")])
         r.set_form_urlencoded(d)
         assert r.get_form_urlencoded() == d
 
@@ -958,7 +959,7 @@ class TestRequest:
         assert not r.get_form_urlencoded()
 
     def test_getset_query(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
 
         r = tutils.treq()
         r.path = "/foo?x=y&a=b"
@@ -975,14 +976,14 @@ class TestRequest:
 
         r.path = "/foo?x=y&a=b"
         assert r.get_query()
-        r.set_query(flow.ODict([]))
+        r.set_query(odict.ODict([]))
         assert not r.get_query()
-        qv = flow.ODict([("a", "b"), ("c", "d")])
+        qv = odict.ODict([("a", "b"), ("c", "d")])
         r.set_query(qv)
         assert r.get_query() == qv
 
     def test_anticache(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         r = tutils.treq()
         r.headers = h
         h["if-modified-since"] = ["test"]
@@ -1046,43 +1047,8 @@ class TestRequest:
         r.encode("gzip")
         assert r.get_decoded_content() == "falafel"
 
-    def test_get_cookies_none(self):
-        h = flow.ODictCaseless()
-        r = tutils.treq()
-        r.headers = h
-        assert r.get_cookies() is None
-
-    def test_get_cookies_single(self):
-        h = flow.ODictCaseless()
-        h["Cookie"] = ["cookiename=cookievalue"]
-        r = tutils.treq()
-        r.headers = h
-        result = r.get_cookies()
-        assert len(result)==1
-        assert result['cookiename']==('cookievalue',{})
-
-    def test_get_cookies_double(self):
-        h = flow.ODictCaseless()
-        h["Cookie"] = ["cookiename=cookievalue;othercookiename=othercookievalue"]
-        r = tutils.treq()
-        r.headers = h
-        result = r.get_cookies()
-        assert len(result)==2
-        assert result['cookiename']==('cookievalue',{})
-        assert result['othercookiename']==('othercookievalue',{})
-
-    def test_get_cookies_withequalsign(self):
-        h = flow.ODictCaseless()
-        h["Cookie"] = ["cookiename=coo=kievalue;othercookiename=othercookievalue"]
-        r = tutils.treq()
-        r.headers = h
-        result = r.get_cookies()
-        assert len(result)==2
-        assert result['cookiename']==('coo=kievalue',{})
-        assert result['othercookiename']==('othercookievalue',{})
-
     def test_header_size(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         h["headername"] = ["headervalue"]
         r = tutils.treq()
         r.headers = h
@@ -1090,7 +1056,7 @@ class TestRequest:
         assert len(raw) == 62
 
     def test_get_content_type(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         h["Content-Type"] = ["text/plain"]
         resp = tutils.tresp()
         resp.headers = h
@@ -1183,13 +1149,13 @@ class TestResponse:
         assert result==44
 
     def test_get_cookies_none(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         resp = tutils.tresp()
         resp.headers = h
         assert not resp.get_cookies()
 
     def test_get_cookies_simple(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         h["Set-Cookie"] = ["cookiename=cookievalue"]
         resp = tutils.tresp()
         resp.headers = h
@@ -1199,7 +1165,7 @@ class TestResponse:
         assert result["cookiename"] == ("cookievalue", {})
 
     def test_get_cookies_with_parameters(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         h["Set-Cookie"] = ["cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly"]
         resp = tutils.tresp()
         resp.headers = h
@@ -1214,7 +1180,7 @@ class TestResponse:
         assert result["cookiename"][1]["httponly"]==""
 
     def test_get_cookies_no_value(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         h["Set-Cookie"] = ["cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"]
         resp = tutils.tresp()
         resp.headers = h
@@ -1225,7 +1191,7 @@ class TestResponse:
         assert len(result["cookiename"][1])==2
 
     def test_get_cookies_twocookies(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         h["Set-Cookie"] = ["cookiename=cookievalue","othercookie=othervalue"]
         resp = tutils.tresp()
         resp.headers = h
@@ -1237,7 +1203,7 @@ class TestResponse:
         assert result["othercookie"] == ("othervalue", {})
 
     def test_get_content_type(self):
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         h["Content-Type"] = ["text/plain"]
         resp = tutils.tresp()
         resp.headers = h
