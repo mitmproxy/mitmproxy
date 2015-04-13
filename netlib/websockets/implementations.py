@@ -65,9 +65,6 @@ class WebSocketsClient(tcp.TCPClient):
         self.wfile.flush()
 
         server_handshake = ws.read_handshake(self.rfile.read, 1)
-        
-        if not server_handshake:
-            self.close()
 
         server_nounce = ws.process_handshake_from_server(server_handshake, self.client_nounce)
 
@@ -75,11 +72,8 @@ class WebSocketsClient(tcp.TCPClient):
             self.close()
 
     def read_next_message(self):
-        try:
-            return ws.WebSocketsFrame.from_byte_stream(self.rfile.read).payload
-        except IndexError:
-            self.close()
- 
+        return ws.WebSocketsFrame.from_byte_stream(self.rfile.read).payload
+
     def send_message(self, message):
         frame = ws.WebSocketsFrame.default(message, from_client = True)
         self.wfile.write(frame.safe_to_bytes())

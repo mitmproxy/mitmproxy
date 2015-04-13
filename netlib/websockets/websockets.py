@@ -158,11 +158,10 @@ class WebSocketsFrame(object):
           ("actual_payload_length - " + str(self.actual_payload_length))])
 
     def safe_to_bytes(self):
-      try:
-          assert self.is_valid()
-          return self.to_bytes()
-      except:
-          raise WebSocketFrameValidationException()
+        if self.is_valid():
+            return self.to_bytes()
+        else:
+            raise WebSocketFrameValidationException()
 
     def to_bytes(self):
         """

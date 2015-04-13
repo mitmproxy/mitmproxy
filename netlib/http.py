@@ -29,20 +29,6 @@ def _is_valid_host(host):
         return None
     return True
 
-def is_successful_upgrade(request, response):
-    """
-        determines if a client and server successfully agreed to an HTTP protocol upgrade
-
-        https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism
-    """
-    http_switching_protocols_code = 101
-    
-    if request and response:
-        responseUpgrade = request.headers.get("Upgrade")
-        requestUpgrade  = response.headers.get("Upgrade")
-        if response.code == http_switching_protocols_code and responseUpgrade == requestUpgrade:
-            return requestUpgrade[0] if len(requestUpgrade) > 0 else None
-    return None
 
 def parse_url(url):
     """

@@ -22,8 +22,8 @@ class TestWebSockets(test.ServerTestBase):
         self.echo("hello I'm the client")
 
     def test_frame_sizes(self):
-        small_msg  = self.random_bytes(100)   # length can fit in the the 7 bit payload length 
-        medium_msg = self.random_bytes(50000) # 50kb, sligthly larger than can fit in a 7 bit int
+        small_msg  = self.random_bytes(100)    # length can fit in the the 7 bit payload length 
+        medium_msg = self.random_bytes(50000)  # 50kb, sligthly larger than can fit in a 7 bit int
         large_msg  = self.random_bytes(150000) # 150kb, slightly larger than can fit in a 16 bit int
 
         self.echo(small_msg)
@@ -42,6 +42,10 @@ class TestWebSockets(test.ServerTestBase):
         assert server_frame.is_valid()
 
     def test_serialization_bijection(self):
+        """
+          Ensure that various frame types can be serialized/deserialized back and forth
+          between to_bytes() and from_bytes()
+        """ 
         for is_client in [True, False]:
           for num_bytes in [100, 50000, 150000]:
             frame = ws.WebSocketsFrame.default(self.random_bytes(num_bytes), is_client)
@@ -49,6 +53,12 @@ class TestWebSockets(test.ServerTestBase):
 
         bytes = b'\x81\x11cba'
         assert ws.WebSocketsFrame.from_bytes(bytes).to_bytes() == bytes
+
+    @raises(ws.WebSocketFrameValidationException)
+    def test_safe_to_bytes(self):
+        frame = ws.WebSocketsFrame.default(self.random_bytes(8))
+        frame.actual_payload_length = 1 #corrupt the frame
+        frame.safe_to_bytes()
 
 
 class BadHandshakeHandler(impl.WebSocketsEchoHandler):
