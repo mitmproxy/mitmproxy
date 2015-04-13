@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 VENV=../venv.mitmproxy
 
-virtualenv $VENV
+python2 -m virtualenv $VENV
 source $VENV/bin/activate
 pip install --src .. -r requirements.txt
 
