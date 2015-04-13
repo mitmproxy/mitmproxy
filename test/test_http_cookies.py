@@ -156,6 +156,12 @@ def test_parse_set_cookie_pairs():
             ]
         ],
         [
+            "one=un\x20",
+            [
+                ["one", "un\x20"]
+            ]
+        ],
+        [
             "one=uno; foo",
             [
                 ["one", "uno"],

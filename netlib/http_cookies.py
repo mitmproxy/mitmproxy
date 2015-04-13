@@ -88,14 +88,12 @@ def _read_value(s, start, delims):
         return _read_until(s, start, delims)
 
 
-def _read_pairs(s, off=0, term=None, specials=()):
+def _read_pairs(s, off=0, specials=()):
     """
         Read pairs of lhs=rhs values.
 
         off: start offset
-        term: if True, treat a comma as a terminator for the pairs lists
-        specials: a lower-cased list of keys that may contain commas if term is
-        True
+        specials: a lower-cased list of keys that may contain commas
     """
     vals = []
     while 1:
@@ -105,16 +103,10 @@ def _read_pairs(s, off=0, term=None, specials=()):
             rhs = None
             if off < len(s):
                 if s[off] == "=":
-                    if term and lhs.lower() not in specials:
-                        delims = ";,"
-                    else:
-                        delims = ";"
-                    rhs, off = _read_value(s, off+1, delims)
+                    rhs, off = _read_value(s, off+1, ";")
             vals.append([lhs, rhs])
         off += 1
         if not off < len(s):
-            break
-        if term and s[off-1] == ",":
             break
     return vals, off
 
