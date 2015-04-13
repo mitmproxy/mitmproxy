@@ -1,12 +1,26 @@
 """
 A flexible module for cookie parsing and manipulation.
 
-We try to be as permissive as possible. Parsing accepts formats from RFC6265 an
-RFC2109. Serialization follows RFC6265 strictly.
+This module differs from usual standards-compliant cookie modules in a number of
+ways. We try to be as permissive as possible, and to retain even mal-formed
+information. Duplicate cookies are preserved in parsing, and can be set in
+formatting. We do attempt to escape and quote values where needed, but will not
+reject data that violate the specs.
+
+Parsing accepts the formats in RFC6265 and partially RFC2109 and RFC2965. We do
+not parse the comma-separated variant of Set-Cookie that allows multiple cookies
+to be set in a single header. Technically this should be feasible, but it turns
+out that violations of RFC6265 that makes the parsing problem indeterminate are
+much more common than genuine occurences of the multi-cookie variants.
+Serialization follows RFC6265.
 
     http://tools.ietf.org/html/rfc6265
     http://tools.ietf.org/html/rfc2109
+    http://tools.ietf.org/html/rfc2965
 """
+
+# TODO
+# - Disallow LHS-only Cookie values
 
 import re
 
@@ -59,7 +73,7 @@ def _read_quoted_string(s, start):
     return "".join(ret), i+1
 
 
-def _read_value(s, start, special):
+def _read_value(s, start, delims):
     """
         Reads a value - the RHS of a token/value pair in a cookie.
 
@@ -70,35 +84,39 @@ def _read_value(s, start, special):
         return "", start
     elif s[start] == '"':
         return _read_quoted_string(s, start)
-    elif special:
-        return _read_until(s, start, ";")
     else:
-        return _read_until(s, start, ";,")
+        return _read_until(s, start, delims)
 
 
-def _read_pairs(s, specials=()):
+def _read_pairs(s, off=0, term=None, specials=()):
     """
         Read pairs of lhs=rhs values.
 
-        specials: A lower-cased list of keys that may contain commas.
+        off: start offset
+        term: if True, treat a comma as a terminator for the pairs lists
+        specials: a lower-cased list of keys that may contain commas if term is
+        True
     """
-    off = 0
     vals = []
     while 1:
         lhs, off = _read_token(s, off)
         lhs = lhs.lstrip()
-        rhs = None
-        if off < len(s):
-            if s[off] == "=":
-                rhs, off = _read_value(s, off+1, lhs.lower() in specials)
-        vals.append([lhs, rhs])
+        if lhs:
+            rhs = None
+            if off < len(s):
+                if s[off] == "=":
+                    if term and lhs.lower() not in specials:
+                        delims = ";,"
+                    else:
+                        delims = ";"
+                    rhs, off = _read_value(s, off+1, delims)
+            vals.append([lhs, rhs])
         off += 1
         if not off < len(s):
             break
+        if term and s[off-1] == ",":
+            break
     return vals, off
-
-
-ESCAPE = re.compile(r"([\"\\])")
 
 
 def _has_special(s):
@@ -109,6 +127,9 @@ def _has_special(s):
         if o < 0x21 or o > 0x7e:
             return True
     return False
+
+
+ESCAPE = re.compile(r"([\"\\])")
 
 
 def _format_pairs(lst, specials=()):
@@ -127,25 +148,58 @@ def _format_pairs(lst, specials=()):
     return "; ".join(vals)
 
 
-def parse_cookies(s):
+def _format_set_cookie_pairs(lst):
+    return _format_pairs(
+        lst,
+        specials = ("expires", "path")
+    )
+
+
+def _parse_set_cookie_pairs(s):
     """
-        Parses a Cookie header value.
-        Returns an ODict object.
+        For Set-Cookie, we support multiple cookies as described in RFC2109.
+        This function therefore returns a list of lists.
     """
-    pairs, off = _read_pairs(s)
+    pairs, off = _read_pairs(
+        s,
+        specials = ("expires", "path")
+    )
+    return pairs
+
+
+def parse_set_cookie_header(str):
+    """
+        Parse a Set-Cookie header value
+
+        Returns a (name, value, attrs) tuple, or None, where attrs is an
+        ODictCaseless set of attributes. No attempt is made to parse attribute
+        values - they are treated purely as strings.
+    """
+    pairs = _parse_set_cookie_pairs(str)
+    if pairs:
+        return pairs[0][0], pairs[0][1], odict.ODictCaseless(pairs[1:])
+
+
+def format_set_cookie_header(name, value, attrs):
+    """
+        Formats a Set-Cookie header value.
+    """
+    pairs = [[name, value]]
+    pairs.extend(attrs.lst)
+    return _format_set_cookie_pairs(pairs)
+
+
+def parse_cookie_header(str):
+    """
+        Parse a Cookie header value.
+        Returns a (possibly empty) ODict object.
+    """
+    pairs, off = _read_pairs(str)
     return odict.ODict(pairs)
 
 
-def unparse_cookies(od):
+def format_cookie_header(od):
     """
         Formats a Cookie header value.
     """
     return _format_pairs(od.lst)
-
-
-def parse_set_cookies(s):
-    start = 0
-
-
-def unparse_set_cookies(s):
-    pass
