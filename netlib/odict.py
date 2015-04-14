@@ -108,6 +108,12 @@ class ODict(object):
         lst = copy.deepcopy(self.lst)
         return self.__class__(lst)
 
+    def extend(self, other):
+        """
+            Add the contents of other, preserving any duplicates.
+        """
+        self.lst.extend(other.lst)
+
     def __repr__(self):
         elements = []
         for itm in self.lst:

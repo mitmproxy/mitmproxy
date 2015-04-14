@@ -109,6 +109,12 @@ class TestODict:
         assert self.od.get_first("one") == "two"
         assert self.od.get_first("two") == None
 
+    def test_extend(self):
+        a = odict.ODict([["a", "b"], ["c", "d"]])
+        b = odict.ODict([["a", "b"], ["e", "f"]])
+        a.extend(b)
+        assert len(a) == 4
+        assert a["a"] == ["b", "b"]
 
 class TestODictCaseless:
     def setUp(self):
@@ -144,4 +150,3 @@ class TestODictCaseless:
         assert self.od.keys() == ["foo"]
         self.od.add("bar", 2)
         assert len(self.od.keys()) == 2
-
