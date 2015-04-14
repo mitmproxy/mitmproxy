@@ -84,7 +84,7 @@ class ODict(object):
         return False
 
     def add(self, key, value):
-        self.lst.append([key, str(value)])
+        self.lst.append([key, value])
 
     def get(self, k, d=None):
         if k in self:
@@ -117,7 +117,7 @@ class ODict(object):
     def __repr__(self):
         elements = []
         for itm in self.lst:
-            elements.append(itm[0] + ": " + itm[1])
+            elements.append(itm[0] + ": " + str(itm[1]))
         elements.append("")
         return "\r\n".join(elements)
 
