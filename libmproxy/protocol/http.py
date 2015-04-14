@@ -902,20 +902,21 @@ class HTTPResponse(HTTPMessage):
             self.headers["set-cookie"] = c
 
     def get_cookies(self):
-        cookie_headers = self.headers.get("set-cookie")
-        if not cookie_headers:
-            return None
+        """
+            Get the contents of all Set-Cookie headers.
 
-        cookies = []
-        for header in cookie_headers:
-            pairs = [pair.partition("=") for pair in header.split(';')]
-            cookie_name = pairs[0][0]  # the key of the first key/value pairs
-            cookie_value = pairs[0][2]  # the value of the first key/value pairs
-            cookie_parameters = {
-                key.strip().lower(): value.strip() for key, sep, value in pairs[1:]
-            }
-            cookies.append((cookie_name, (cookie_value, cookie_parameters)))
-        return dict(cookies)
+            Returns a possibly empty ODict, where keys are cookie name strings,
+            and values are [value, attr] lists. Value is a string, and attr is
+            an ODictCaseless containing cookie attributes. Within attrs, unary
+            attributes (e.g. HTTPOnly) are indicated by a Null value.
+        """
+        ret = []
+        for header in self.headers["set-cookie"]:
+            v = http_cookies.parse_set_cookie_header(header)
+            if v:
+                name, value, attrs = v
+                ret.append([name, [value, attrs]])
+        return odict.ODict(ret)
 
 
 class HTTPFlow(Flow):

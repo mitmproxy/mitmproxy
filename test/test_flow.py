@@ -1148,60 +1148,6 @@ class TestResponse:
         result = len(r._assemble_headers())
         assert result==44
 
-    def test_get_cookies_none(self):
-        h = odict.ODictCaseless()
-        resp = tutils.tresp()
-        resp.headers = h
-        assert not resp.get_cookies()
-
-    def test_get_cookies_simple(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=cookievalue"]
-        resp = tutils.tresp()
-        resp.headers = h
-        result = resp.get_cookies()
-        assert len(result)==1
-        assert "cookiename" in result
-        assert result["cookiename"] == ("cookievalue", {})
-
-    def test_get_cookies_with_parameters(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=cookievalue;domain=example.com;expires=Wed Oct  21 16:29:41 2015;path=/; HttpOnly"]
-        resp = tutils.tresp()
-        resp.headers = h
-        result = resp.get_cookies()
-        assert len(result)==1
-        assert "cookiename" in result
-        assert result["cookiename"][0] == "cookievalue"
-        assert len(result["cookiename"][1])==4
-        assert result["cookiename"][1]["domain"]=="example.com"
-        assert result["cookiename"][1]["expires"]=="Wed Oct  21 16:29:41 2015"
-        assert result["cookiename"][1]["path"]=="/"
-        assert result["cookiename"][1]["httponly"]==""
-
-    def test_get_cookies_no_value(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"]
-        resp = tutils.tresp()
-        resp.headers = h
-        result = resp.get_cookies()
-        assert len(result)==1
-        assert "cookiename" in result
-        assert result["cookiename"][0] == ""
-        assert len(result["cookiename"][1])==2
-
-    def test_get_cookies_twocookies(self):
-        h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=cookievalue","othercookie=othervalue"]
-        resp = tutils.tresp()
-        resp.headers = h
-        result = resp.get_cookies()
-        assert len(result)==2
-        assert "cookiename" in result
-        assert result["cookiename"] == ("cookievalue", {})
-        assert "othercookie" in result
-        assert result["othercookie"] == ("othervalue", {})
-
     def test_get_content_type(self):
         h = odict.ODictCaseless()
         h["Content-Type"] = ["text/plain"]
