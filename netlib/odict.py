@@ -13,7 +13,8 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
 
 class ODict(object):
     """
-        A dictionary-like object for managing ordered (key, value) data.
+        A dictionary-like object for managing ordered (key, value) data. Think
+        about it as a convenient interface to a list of (key, value) tuples.
     """
     def __init__(self, lst=None):
         self.lst = lst or []
@@ -64,11 +65,20 @@ class ODict(object):
             key, they are cleared.
         """
         if isinstance(valuelist, basestring):
-            raise ValueError("Expected list of values instead of string. Example: odict['Host'] = ['www.example.com']")
-
-        new = self._filter_lst(k, self.lst)
-        for i in valuelist:
-            new.append([k, i])
+            raise ValueError(
+                "Expected list of values instead of string. "
+                "Example: odict['Host'] = ['www.example.com']"
+            )
+        kc = self._kconv(k)
+        new = []
+        for i in self.lst:
+            if self._kconv(i[0]) == kc:
+                if valuelist:
+                    new.append([k, valuelist.pop(0)])
+            else:
+                new.append(i)
+        while valuelist:
+            new.append([k, valuelist.pop(0)])
         self.lst = new
 
     def __delitem__(self, k):
@@ -115,6 +125,9 @@ class ODict(object):
         self.lst.extend(other.lst)
 
     def __repr__(self):
+        return repr(self.lst)
+
+    def format(self):
         elements = []
         for itm in self.lst:
             elements.append(itm[0] + ": " + str(itm[1]))

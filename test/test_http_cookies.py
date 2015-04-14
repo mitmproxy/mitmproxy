@@ -135,18 +135,6 @@ def test_cookie_roundtrips():
         nose.tools.eq_(ret.lst, lst)
 
 
-# TODO
-# I've seen the following pathological cookie in the wild:
-#
-#   cid=09,0,0,0,0; expires=Wed, 10-Jun-2015 21:54:53 GMT; path=/
-#
-# It's not compliant under any RFC - the latest RFC prohibits commas in cookie
-# values completely, earlier RFCs require them to be within a quoted string.
-#
-# If we ditch support for earlier RFCs, we can handle this correctly. This
-# leaves us with the question: what's more common, multiple-value Set-Cookie
-# headers, or Set-Cookie headers that violate the standards?
-
 def test_parse_set_cookie_pairs():
     pairs = [
         [
@@ -204,6 +192,9 @@ def test_parse_set_cookie_header():
     vals = [
         [
             "", None
+        ],
+        [
+            ";", None
         ],
         [
             "one=uno",

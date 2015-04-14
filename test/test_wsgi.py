@@ -100,4 +100,3 @@ class TestWSGI:
             start_response(status, response_headers, ei)
             yield "bbb"
         assert "Internal Server Error" in self._serve(app)
-
