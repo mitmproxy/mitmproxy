@@ -328,9 +328,22 @@ class HTTPRequest(HTTPMessage):
         )
 
     @classmethod
-    def from_stream(cls, rfile, include_body=True, body_size_limit=None):
+    def from_stream(cls, rfile, include_body=True, body_size_limit=None, wfile=None):
         """
         Parse an HTTP request from a file stream
+
+        Args:
+            rfile (file): Input file to read from
+            include_body (bool): Read response body as well
+            body_size_limit (bool): Maximum body size
+            wfile (file): If specified, HTTP Expect headers are handled automatically.
+                          by writing a HTTP 100 CONTINUE response to the stream.
+
+        Returns:
+            HTTPRequest: The HTTP request
+
+        Raises:
+            HttpError: If the input is invalid.
         """
         httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end = (
             None, None, None, None, None, None, None, None, None, None)
@@ -384,6 +397,15 @@ class HTTPRequest(HTTPMessage):
         headers = http.read_headers(rfile)
         if headers is None:
             raise http.HttpError(400, "Invalid headers")
+
+        expect_header = headers.get_first("expect")
+        if expect_header and expect_header.lower() == "100-continue" and httpversion >= (1, 1):
+            wfile.write(
+                'HTTP/1.1 100 Continue\r\n'
+                '\r\n'
+            )
+            wfile.flush()
+            del headers['expect']
 
         if include_body:
             content = http.read_http_body(rfile, headers, body_size_limit,
@@ -609,8 +631,10 @@ class HTTPRequest(HTTPMessage):
             host = self.headers.get_first("host")
         if not host:
             host = self.host
-        host = host.encode("idna")
-        return host
+        if host:
+            return host.encode("idna")
+        else:
+            return None
 
     def pretty_url(self, hostheader):
         if self.form_out == "authority":  # upstream proxy mode
@@ -1062,7 +1086,8 @@ class HTTPHandler(ProtocolHandler):
             try:
                 req = HTTPRequest.from_stream(
                     self.c.client_conn.rfile,
-                    body_size_limit=self.c.config.body_size_limit
+                    body_size_limit=self.c.config.body_size_limit,
+                    wfile=self.c.client_conn.wfile
                 )
             except tcp.NetLibError:
                 # don't throw an error for disconnects that happen
