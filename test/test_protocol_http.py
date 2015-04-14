@@ -5,7 +5,8 @@ from mock import MagicMock
 from libmproxy.protocol.http import *
 from netlib import odict
 
-import tutils, tservers
+import tutils
+import tservers
 
 
 def test_HttpAuthenticationError():
@@ -169,28 +170,32 @@ class TestHTTPRequest:
         r = tutils.treq()
         r.headers = h
         result = r.get_cookies()
-        assert len(result)==1
-        assert result['cookiename']==['cookievalue']
+        assert len(result) == 1
+        assert result['cookiename'] == ['cookievalue']
 
     def test_get_cookies_double(self):
         h = odict.ODictCaseless()
-        h["Cookie"] = ["cookiename=cookievalue;othercookiename=othercookievalue"]
+        h["Cookie"] = [
+            "cookiename=cookievalue;othercookiename=othercookievalue"
+        ]
         r = tutils.treq()
         r.headers = h
         result = r.get_cookies()
-        assert len(result)==2
-        assert result['cookiename']==['cookievalue']
-        assert result['othercookiename']==['othercookievalue']
+        assert len(result) == 2
+        assert result['cookiename'] == ['cookievalue']
+        assert result['othercookiename'] == ['othercookievalue']
 
     def test_get_cookies_withequalsign(self):
         h = odict.ODictCaseless()
-        h["Cookie"] = ["cookiename=coo=kievalue;othercookiename=othercookievalue"]
+        h["Cookie"] = [
+            "cookiename=coo=kievalue;othercookiename=othercookievalue"
+        ]
         r = tutils.treq()
         r.headers = h
         result = r.get_cookies()
-        assert len(result)==2
-        assert result['cookiename']==['coo=kievalue']
-        assert result['othercookiename']==['othercookievalue']
+        assert len(result) == 2
+        assert result['cookiename'] == ['coo=kievalue']
+        assert result['othercookiename'] == ['othercookievalue']
 
     def test_set_cookies(self):
         h = odict.ODictCaseless()
@@ -218,10 +223,14 @@ class TestHTTPResponse:
         assert HTTPResponse.from_stream(s, "GET").code == 204
 
         s = StringIO(_s)
-        r = HTTPResponse.from_stream(s, "HEAD")  # HEAD must not have content by spec. We should leave it on the pipe.
+        # HEAD must not have content by spec. We should leave it on the pipe.
+        r = HTTPResponse.from_stream(s, "HEAD")
         assert r.code == 200
         assert r.content == ""
-        tutils.raises("Invalid server response: 'content", HTTPResponse.from_stream, s, "GET")
+        tutils.raises(
+            "Invalid server response: 'content",
+            HTTPResponse.from_stream, s, "GET"
+        )
 
     def test_repr(self):
         r = tutils.tresp()
@@ -242,7 +251,7 @@ class TestHTTPResponse:
         resp = tutils.tresp()
         resp.headers = h
         result = resp.get_cookies()
-        assert len(result)==1
+        assert len(result) == 1
         assert "cookiename" in result
         assert result["cookiename"][0] == ["cookievalue", odict.ODict()]
 
@@ -252,11 +261,11 @@ class TestHTTPResponse:
         resp = tutils.tresp()
         resp.headers = h
         result = resp.get_cookies()
-        assert len(result)==1
+        assert len(result) == 1
         assert "cookiename" in result
         assert result["cookiename"][0][0] == "cookievalue"
         attrs = result["cookiename"][0][1]
-        assert len(attrs)==4
+        assert len(attrs) == 4
         assert attrs["domain"] == ["example.com"]
         assert attrs["expires"] == ["Wed Oct  21 16:29:41 2015"]
         assert attrs["path"] == ["/"]
@@ -264,29 +273,30 @@ class TestHTTPResponse:
 
     def test_get_cookies_no_value(self):
         h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"]
+        h["Set-Cookie"] = [
+            "cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"
+        ]
         resp = tutils.tresp()
         resp.headers = h
         result = resp.get_cookies()
-        assert len(result)==1
+        assert len(result) == 1
         assert "cookiename" in result
         assert result["cookiename"][0][0] == ""
-        assert len(result["cookiename"][0][1])==2
+        assert len(result["cookiename"][0][1]) == 2
 
     def test_get_cookies_twocookies(self):
         h = odict.ODictCaseless()
-        h["Set-Cookie"] = ["cookiename=cookievalue","othercookie=othervalue"]
+        h["Set-Cookie"] = ["cookiename=cookievalue", "othercookie=othervalue"]
         resp = tutils.tresp()
         resp.headers = h
         result = resp.get_cookies()
-        assert len(result)==2
+        assert len(result) == 2
         assert "cookiename" in result
         assert result["cookiename"][0] == ["cookievalue", odict.ODict()]
         assert "othercookie" in result
         assert result["othercookie"][0] == ["othervalue", odict.ODict()]
 
     def test_set_cookies(self):
-        h = odict.ODictCaseless()
         resp = tutils.tresp()
         v = resp.get_cookies()
         v.add("foo", ["bar", odict.ODictCaseless()])
@@ -297,7 +307,6 @@ class TestHTTPResponse:
         assert v["foo"] == [["bar", odict.ODictCaseless()]]
 
 
-
 class TestHTTPFlow(object):
     def test_repr(self):
         f = tutils.tflow(resp=True, err=True)
@@ -306,6 +315,7 @@ class TestHTTPFlow(object):
 
 class TestInvalidRequests(tservers.HTTPProxTest):
     ssl = True
+
     def test_double_connect(self):
         p = self.pathoc()
         r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
