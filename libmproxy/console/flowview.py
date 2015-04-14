@@ -1,14 +1,16 @@
 from __future__ import absolute_import
-import os, sys, copy
+import os
+import sys
 import urwid
 from netlib import odict
 from . import common, grideditor, contentview, signals, searchable, tabs
 from . import flowdetailview
-from .. import utils, flow, controller
+from .. import utils, controller
 from ..protocol.http import HTTPRequest, HTTPResponse, CONTENT_MISSING, decoded
 
 
-class SearchError(Exception): pass
+class SearchError(Exception):
+    pass
 
 
 def _mkhelp():
@@ -114,6 +116,7 @@ cache = utils.LRUCache(200)
 TAB_REQ = 0
 TAB_RESP = 1
 
+
 class FlowView(tabs.Tabs):
     highlight_color = "focusfield"
 
@@ -174,14 +177,14 @@ class FlowView(tabs.Tabs):
             else:
                 limit = contentview.VIEW_CUTOFF
             description, text_objects = cache.get(
-                        contentview.get_content_view,
-                        viewmode,
-                        tuple(tuple(i) for i in conn.headers.lst),
-                        conn.content,
-                        limit,
-                        self.master.add_event,
-                        isinstance(conn, HTTPRequest)
-                    )
+                contentview.get_content_view,
+                viewmode,
+                tuple(tuple(i) for i in conn.headers.lst),
+                conn.content,
+                limit,
+                self.master.add_event,
+                isinstance(conn, HTTPRequest)
+            )
             return (description, text_objects)
 
     def viewmode_get(self):
@@ -194,20 +197,23 @@ class FlowView(tabs.Tabs):
     def conn_text(self, conn):
         if conn:
             txt = common.format_keyvals(
-                    [(h+":", v) for (h, v) in conn.headers.lst],
-                    key = "header",
-                    val = "text"
-                )
+                [(h+":", v) for (h, v) in conn.headers.lst],
+                key = "header",
+                val = "text"
+            )
             viewmode = self.viewmode_get()
             msg, body = self.content_view(viewmode, conn)
 
-            cols = [urwid.Text(
+            cols = [
+                urwid.Text(
                     [
                         ("heading", msg),
                     ]
                 )
             ]
-            cols.append(urwid.Text([
+            cols.append(
+                urwid.Text(
+                    [
                         " ",
                         ('heading', "["),
                         ('heading_key', "m"),
@@ -305,6 +311,11 @@ class FlowView(tabs.Tabs):
         if key == "y":
             self.edit_form(conn)
 
+    def set_cookies(self, lst, conn):
+        od = odict.ODict(lst)
+        conn.set_cookies(od)
+        signals.flow_change.send(self, flow = self.flow)
+
     def edit(self, part):
         if self.tab_offset == TAB_REQ:
             message = self.flow.request
@@ -318,6 +329,16 @@ class FlowView(tabs.Tabs):
             message = self.flow.response
 
         self.flow.backup()
+        if message == self.flow.request and part == "c":
+            self.master.view_grideditor(
+                grideditor.CookieEditor(
+                    self.master,
+                    message.get_cookies().lst,
+                    self.set_cookies,
+                    message
+                )
+            )
+            pass
         if part == "r":
             with decoded(message):
                 # Fix an issue caused by some editors when editing a
@@ -381,7 +402,7 @@ class FlowView(tabs.Tabs):
                 keys = common.METHOD_OPTIONS,
                 callback = self.edit_method
             )
-        elif part == "c":
+        elif part == "o":
             signals.status_prompt.send(
                 prompt = "Code",
                 text = str(message.code),
@@ -508,14 +529,19 @@ class FlowView(tabs.Tabs):
         elif conn:
             if key == "b":
                 if self.tab_offset == TAB_REQ:
-                    common.ask_save_body("q", self.master, self.state, self.flow)
+                    common.ask_save_body(
+                        "q", self.master, self.state, self.flow
+                    )
                 else:
-                    common.ask_save_body("s", self.master, self.state, self.flow)
+                    common.ask_save_body(
+                        "s", self.master, self.state, self.flow
+                    )
             elif key == "e":
                 if self.tab_offset == TAB_REQ:
                     signals.status_prompt_onekey.send(
                         prompt = "Edit request",
                         keys = (
+                            ("cookie", "c"),
                             ("query", "q"),
                             ("path", "p"),
                             ("url", "u"),
@@ -530,7 +556,7 @@ class FlowView(tabs.Tabs):
                     signals.status_prompt_onekey.send(
                         prompt = "Edit response",
                         keys = (
-                            ("code", "c"),
+                            ("code", "o"),
                             ("message", "m"),
                             ("header", "h"),
                             ("raw body", "r"),

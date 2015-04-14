@@ -543,3 +543,9 @@ class HostPatternEditor(GridEditor):
             re.compile(val, re.IGNORECASE)
         except re.error as e:
             return "Invalid regex: %s" % str(e)
+
+
+class CookieEditor(GridEditor):
+    title = "Editing request Cookie header"
+    columns = 2
+    headings = ("Name", "Value")
