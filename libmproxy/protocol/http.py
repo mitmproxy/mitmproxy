@@ -918,6 +918,25 @@ class HTTPResponse(HTTPMessage):
                 ret.append([name, [value, attrs]])
         return odict.ODict(ret)
 
+    def set_cookies(self, odict):
+        """
+            Set the Set-Cookie headers on this response, over-writing existing
+            headers.
+
+            Accepts an ODict of the same format as that returned by get_cookies.
+        """
+        values = []
+        for i in odict.lst:
+            values.append(
+                http_cookies.format_set_cookie_header(
+                    i[0],
+                    i[1][0],
+                    i[1][1]
+                )
+            )
+        self.headers["Set-Cookie"] = values
+
+
 
 class HTTPFlow(Flow):
     """

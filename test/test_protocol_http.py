@@ -285,6 +285,17 @@ class TestHTTPResponse:
         assert "othercookie" in result
         assert result["othercookie"][0] == ["othervalue", odict.ODict()]
 
+    def test_set_cookies(self):
+        h = odict.ODictCaseless()
+        resp = tutils.tresp()
+        v = resp.get_cookies()
+        v.add("foo", ["bar", odict.ODictCaseless()])
+        resp.set_cookies(v)
+
+        v = resp.get_cookies()
+        assert len(v) == 1
+        assert v["foo"] == [["bar", odict.ODictCaseless()]]
+
 
 
 class TestHTTPFlow(object):
