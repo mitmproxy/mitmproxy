@@ -469,7 +469,7 @@ class HTTPRequest(HTTPMessage):
         if self.content or self.content == "":
             headers["Content-Length"] = [str(len(self.content))]
 
-        return str(headers)
+        return headers.format()
 
     def _assemble_head(self, form=None):
         return "%s\r\n%s\r\n" % (
@@ -823,7 +823,7 @@ class HTTPResponse(HTTPMessage):
         if self.content or self.content == "":
             headers["Content-Length"] = [str(len(self.content))]
 
-        return str(headers)
+        return headers.format()
 
     def _assemble_head(self, preserve_transfer_encoding=False):
         return '%s\r\n%s\r\n' % (

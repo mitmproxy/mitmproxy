@@ -268,7 +268,7 @@ class ServerPlaybackState:
                 # to prevent a mismatch between unicode/non-unicode.
                 v = [str(x) for x in v]
                 hdrs.append((i, v))
-            key.append(repr(hdrs))
+            key.append(hdrs)
         return hashlib.sha256(repr(key)).digest()
 
     def next_flow(self, request):
