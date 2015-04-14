@@ -161,7 +161,7 @@ class TestHTTPRequest:
         h = odict.ODictCaseless()
         r = tutils.treq()
         r.headers = h
-        assert r.get_cookies() is None
+        assert len(r.get_cookies()) == 0
 
     def test_get_cookies_single(self):
         h = odict.ODictCaseless()
@@ -170,7 +170,7 @@ class TestHTTPRequest:
         r.headers = h
         result = r.get_cookies()
         assert len(result)==1
-        assert result['cookiename']==('cookievalue',{})
+        assert result['cookiename']==['cookievalue']
 
     def test_get_cookies_double(self):
         h = odict.ODictCaseless()
@@ -179,8 +179,8 @@ class TestHTTPRequest:
         r.headers = h
         result = r.get_cookies()
         assert len(result)==2
-        assert result['cookiename']==('cookievalue',{})
-        assert result['othercookiename']==('othercookievalue',{})
+        assert result['cookiename']==['cookievalue']
+        assert result['othercookiename']==['othercookievalue']
 
     def test_get_cookies_withequalsign(self):
         h = odict.ODictCaseless()
@@ -189,10 +189,18 @@ class TestHTTPRequest:
         r.headers = h
         result = r.get_cookies()
         assert len(result)==2
-        assert result['cookiename']==('coo=kievalue',{})
-        assert result['othercookiename']==('othercookievalue',{})
+        assert result['cookiename']==['coo=kievalue']
+        assert result['othercookiename']==['othercookievalue']
 
-
+    def test_set_cookies(self):
+        h = odict.ODictCaseless()
+        h["Cookie"] = ["cookiename=cookievalue"]
+        r = tutils.treq()
+        r.headers = h
+        result = r.get_cookies()
+        result["cookiename"] = ["foo"]
+        r.set_cookies(result)
+        assert r.get_cookies()["cookiename"] == ["foo"]
 
 
 class TestHTTPResponse:

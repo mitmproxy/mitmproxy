@@ -6,7 +6,7 @@ import time
 import copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
 import threading
-from netlib import http, tcp, http_status
+from netlib import http, tcp, http_status, http_cookies
 import netlib.utils
 from netlib import odict
 from .tcp import TCPHandler
@@ -670,15 +670,22 @@ class HTTPRequest(HTTPMessage):
         self.scheme, self.host, self.port, self.path = parts
 
     def get_cookies(self):
-        cookie_headers = self.headers.get("cookie")
-        if not cookie_headers:
-            return None
+        """
 
-        cookies = []
-        for header in cookie_headers:
-            pairs = [pair.partition("=") for pair in header.split(';')]
-            cookies.extend((pair[0], (pair[2], {})) for pair in pairs)
-        return dict(cookies)
+            Returns a possibly empty netlib.odict.ODict object.
+        """
+        ret = odict.ODict()
+        for i in self.headers["cookie"]:
+            ret.extend(http_cookies.parse_cookie_header(i))
+        return ret
+
+    def set_cookies(self, odict):
+        """
+            Takes an netlib.odict.ODict object. Over-writes any existing Cookie
+            headers.
+        """
+        v = http_cookies.format_cookie_header(odict)
+        self.headers["Cookie"] = [v]
 
     def replace(self, pattern, repl, *args, **kwargs):
         """
