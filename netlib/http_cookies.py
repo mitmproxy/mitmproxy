@@ -124,7 +124,7 @@ def _has_special(s):
 ESCAPE = re.compile(r"([\"\\])")
 
 
-def _format_pairs(lst, specials=()):
+def _format_pairs(lst, specials=(), sep="; "):
     """
         specials: A lower-cased list of keys that will not be quoted.
     """
@@ -137,7 +137,7 @@ def _format_pairs(lst, specials=()):
                 v = ESCAPE.sub(r"\\\1", v)
                 v = '"%s"'%v
             vals.append("%s=%s"%(k, v))
-    return "; ".join(vals)
+    return sep.join(vals)
 
 
 def _format_set_cookie_pairs(lst):
