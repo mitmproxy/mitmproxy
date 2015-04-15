@@ -316,6 +316,19 @@ class FlowView(tabs.Tabs):
         conn.set_cookies(od)
         signals.flow_change.send(self, flow = self.flow)
 
+    def set_setcookies(self, lst, conn):
+        vals = []
+        for i in lst:
+            vals.append(
+                [
+                    i[0],
+                    [i[1], odict.ODictCaseless(i[2])]
+                ]
+            )
+        od = odict.ODict(vals)
+        conn.set_cookies(od)
+        signals.flow_change.send(self, flow = self.flow)
+
     def edit(self, part):
         if self.tab_offset == TAB_REQ:
             message = self.flow.request
@@ -338,7 +351,18 @@ class FlowView(tabs.Tabs):
                     message
                 )
             )
-            pass
+        if message == self.flow.response and part == "c":
+            flattened = []
+            for k, v in message.get_cookies().items():
+                flattened.append([k, v[0], v[1].lst])
+            self.master.view_grideditor(
+                grideditor.SetCookieEditor(
+                    self.master,
+                    flattened,
+                    self.set_setcookies,
+                    message
+                )
+            )
         if part == "r":
             with decoded(message):
                 # Fix an issue caused by some editors when editing a
@@ -541,7 +565,7 @@ class FlowView(tabs.Tabs):
                     signals.status_prompt_onekey.send(
                         prompt = "Edit request",
                         keys = (
-                            ("cookie", "c"),
+                            ("cookies", "c"),
                             ("query", "q"),
                             ("path", "p"),
                             ("url", "u"),
@@ -556,6 +580,7 @@ class FlowView(tabs.Tabs):
                     signals.status_prompt_onekey.send(
                         prompt = "Edit response",
                         keys = (
+                            ("cookies", "c"),
                             ("code", "o"),
                             ("message", "m"),
                             ("header", "h"),
