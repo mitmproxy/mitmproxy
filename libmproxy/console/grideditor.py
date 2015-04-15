@@ -549,3 +549,9 @@ class CookieEditor(GridEditor):
     title = "Editing request Cookie header"
     columns = 2
     headings = ("Name", "Value")
+
+
+class SetCookieEditor(GridEditor):
+    title = "Editing request SetCookie header"
+    columns = 2
+    headings = ("Name", "Value")

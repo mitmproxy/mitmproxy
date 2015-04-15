@@ -116,6 +116,7 @@ class Options(object):
         "keepserving",
         "kill",
         "intercept",
+        "limit",
         "no_server",
         "refresh_server_playback",
         "rfile",
@@ -161,6 +162,9 @@ class ConsoleMaster(flow.FlowMaster):
         if r:
             print >> sys.stderr, "Intercept error:", r
             sys.exit(1)
+
+        if options.limit:
+            self.set_limit(options.limit)
 
         r = self.set_stickycookie(options.stickycookie)
         if r:

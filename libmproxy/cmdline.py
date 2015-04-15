@@ -599,6 +599,11 @@ def mitmproxy():
         type=str, dest="intercept", default=None,
         help="Intercept filter expression."
     )
+    group.add_argument(
+        "-l", "--limit", action="store",
+        type=str, dest="limit", default=None,
+        help="Limit filter expression."
+    )
     return parser
 
 

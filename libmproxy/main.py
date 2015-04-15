@@ -92,6 +92,7 @@ def mitmproxy(args=None):  # pragma: nocover
     console_options.palette_transparent = options.palette_transparent
     console_options.eventlog = options.eventlog
     console_options.intercept = options.intercept
+    console_options.limit = options.limit
 
     server = get_server(console_options.no_server, proxy_config)
 
