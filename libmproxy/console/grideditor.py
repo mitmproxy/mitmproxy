@@ -31,6 +31,34 @@ class TextColumn:
     def blank(self):
         return ""
 
+    def keypress(self, key, editor):
+        if key == "r":
+            if editor.walker.get_current_value() is not None:
+                signals.status_prompt_path.send(
+                    self,
+                    prompt = "Read file",
+                    callback = editor.read_file
+                )
+        elif key == "R":
+            if editor.walker.get_current_value() is not None:
+                signals.status_prompt_path.send(
+                    editor,
+                    prompt = "Read unescaped file",
+                    callback = editor.read_file,
+                    args = (True,)
+                )
+        elif key == "e":
+            o = editor.walker.get_current_value()
+            if o is not None:
+                n = editor.master.spawn_editor(o.encode("string-escape"))
+                n = utils.clean_hanging_newline(n)
+                editor.walker.set_current_value(n, False)
+                editor.walker._modified()
+        elif key in ["enter"]:
+            editor.walker.start_edit()
+        else:
+            return key
+
 
 class SubgridColumn:
     def __init__(self, heading, subeditor):
@@ -43,6 +71,27 @@ class SubgridColumn:
 
     def blank(self):
         return []
+
+    def keypress(self, key, editor):
+        if key in "rRe":
+            signals.status_message.send(
+                self,
+                message = "Press enter to edit this field.",
+                expire = 1000
+            )
+            return
+        elif key in ["enter"]:
+            editor.master.view_grideditor(
+                self.subeditor(
+                    editor.master,
+                    editor.walker.get_current_value(),
+                    editor.set_subeditor_value,
+                    editor.walker.focus,
+                    editor.walker.focus_col
+                )
+            )
+        else:
+            return key
 
 
 class SEscaped(urwid.WidgetWrap):
@@ -195,7 +244,8 @@ class GridWalker(urwid.ListWalker):
         return self._insert(min(self.focus + 1, len(self.lst)))
 
     def start_edit(self):
-        if self.lst:
+        col = self.editor.columns[self.focus_col]
+        if self.lst and not col.subeditor:
             self.editing = GridRow(
                 self.focus_col, True, self.editor, self.lst[self.focus]
             )
@@ -374,64 +424,7 @@ class GridEditor(urwid.WidgetWrap):
             self.walker.insert()
         elif key == "d":
             self.walker.delete_focus()
-        elif key == "r":
-            if column.subeditor:
-                signals.status_message.send(
-                    self,
-                    message = "Press enter to edit this field.",
-                    expire = 1000
-                )
-                return
-            if self.walker.get_current_value() is not None:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Read file",
-                    callback = self.read_file
-                )
-        elif key == "R":
-            if column.subeditor:
-                signals.status_message.send(
-                    self,
-                    message = "Press enter to edit this field.",
-                    expire = 1000
-                )
-                return
-            if self.walker.get_current_value() is not None:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Read unescaped file",
-                    callback = self.read_file,
-                    args = (True,)
-                )
-        elif key == "e":
-            if column.subeditor:
-                signals.status_message.send(
-                    self,
-                    message = "Press enter to edit this field.",
-                    expire = 1000
-                )
-                return
-            o = self.walker.get_current_value()
-            if o is not None:
-                n = self.master.spawn_editor(o.encode("string-escape"))
-                n = utils.clean_hanging_newline(n)
-                self.walker.set_current_value(n, False)
-                self.walker._modified()
-        elif key in ["enter"]:
-            if column.subeditor:
-                self.master.view_grideditor(
-                    self.columns[self.walker.focus_col].subeditor(
-                        self.master,
-                        self.walker.get_current_value(),
-                        self.set_subeditor_value,
-                        self.walker.focus,
-                        self.walker.focus_col
-                    )
-                )
-            else:
-                self.walker.start_edit()
-
-        elif not self.handle_key(key):
+        elif column.keypress(key, self) and not self.handle_key(key):
             return self._w.keypress(size, key)
 
     def is_error(self, col, val):
