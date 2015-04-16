@@ -246,7 +246,7 @@ class SolarizedLight(LowLight):
 
         error = (sol_red, 'default'),
 
-        header = (sol_base01, 'default'),
+        header = (sol_blue, 'default'),
         highlight = (sol_base01, 'default'),
         intercept = (sol_red, 'default',),
         replay = (sol_green, 'default',),
@@ -295,7 +295,7 @@ class SolarizedDark(LowDark):
 
         error = (sol_red, 'default'),
 
-        header = (sol_base01, 'default'),
+        header = (sol_blue, 'default'),
         highlight = (sol_base01, 'default'),
         intercept = (sol_red, 'default',),
         replay = (sol_green, 'default',),
