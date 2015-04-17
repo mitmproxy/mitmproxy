@@ -179,7 +179,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
 
     reqs = []
     for r in args.requests:
-        if os.path.exists(r):
+        if os.path.isfile(r):
             data = open(r).read()
             r = data
         try:
@@ -346,7 +346,7 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         if len(parts) == 1:
             parts = ["*", parts[0]]
         parts[1] = os.path.expanduser(parts[1])
-        if not os.path.exists(parts[1]):
+        if not os.path.isfile(parts[1]):
             return parser.error("Certificate file does not exist: %s"%parts[1])
         certs.append(parts)
     args.ssl_certs = certs
@@ -369,7 +369,7 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
 
     anchors = []
     for patt, spec in args.anchors:
-        if os.path.exists(spec):
+        if os.path.isfile(spec):
             data = open(spec).read()
             spec = data
 
@@ -382,8 +382,7 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         try:
             arex = re.compile(patt)
         except re.error:
-            print >> stderr, "Invalid regex in anchor: %s" % patt
-            sys.exit(1)
+            return parser.error("Invalid regex in anchor: %s" % patt)
         anchors.append((arex, req))
     args.anchors = anchors
     return args
