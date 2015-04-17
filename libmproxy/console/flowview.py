@@ -290,7 +290,7 @@ class FlowView(tabs.Tabs):
         signals.flow_change.send(self, flow = self.flow)
 
     def set_path_components(self, lst, conn):
-        conn.set_path_components([i[0] for i in lst])
+        conn.set_path_components(lst)
         signals.flow_change.send(self, flow = self.flow)
 
     def set_form(self, lst, conn):
@@ -316,17 +316,8 @@ class FlowView(tabs.Tabs):
         conn.set_cookies(od)
         signals.flow_change.send(self, flow = self.flow)
 
-    def set_setcookies(self, lst, conn):
-        vals = []
-        for i in lst:
-            vals.append(
-                [
-                    i[0],
-                    [i[1], odict.ODictCaseless(i[2])]
-                ]
-            )
-        od = odict.ODict(vals)
-        conn.set_cookies(od)
+    def set_setcookies(self, data, conn):
+        conn.set_cookies(data)
         signals.flow_change.send(self, flow = self.flow)
 
     def edit(self, part):
@@ -352,13 +343,10 @@ class FlowView(tabs.Tabs):
                 )
             )
         if message == self.flow.response and part == "c":
-            flattened = []
-            for k, v in message.get_cookies().items():
-                flattened.append([k, v[0], v[1].lst])
             self.master.view_grideditor(
                 grideditor.SetCookieEditor(
                     self.master,
-                    flattened,
+                    message.get_cookies(),
                     self.set_setcookies,
                     message
                 )
@@ -397,7 +385,6 @@ class FlowView(tabs.Tabs):
             )
         elif part == "p":
             p = message.get_path_components()
-            p = [[i] for i in p]
             self.master.view_grideditor(
                 grideditor.PathEditor(
                     self.master,

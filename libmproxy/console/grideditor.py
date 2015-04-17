@@ -7,7 +7,7 @@ import urwid
 
 from . import common, signals
 from .. import utils, filt, script
-from netlib import http_uastrings, http_cookies
+from netlib import http_uastrings, http_cookies, odict
 
 
 FOOTER = [
@@ -231,8 +231,10 @@ class GridWalker(urwid.ListWalker):
     def _insert(self, pos):
         self.focus = pos
         self.lst.insert(
-            self.focus, [
-            [c.blank() for c in self.editor.columns], set([])]
+            self.focus,
+            [
+                [c.blank() for c in self.editor.columns], set([])
+            ]
         )
         self.focus_col = 0
         self.start_edit()
@@ -318,7 +320,7 @@ class GridEditor(urwid.WidgetWrap):
     columns = None
 
     def __init__(self, master, value, callback, *cb_args, **cb_kwargs):
-        value = copy.deepcopy(value)
+        value = self.data_in(copy.deepcopy(value))
         self.master, self.value, self.callback = master, value, callback
         self.cb_args, self.cb_kwargs = cb_args, cb_kwargs
 
@@ -410,7 +412,7 @@ class GridEditor(urwid.WidgetWrap):
             for i in self.walker.lst:
                 if not i[1] and any([x for x in i[0]]):
                     res.append(i[0])
-            self.callback(res, *self.cb_args, **self.cb_kwargs)
+            self.callback(self.data_out(res), *self.cb_args, **self.cb_kwargs)
             signals.pop_view_state.send(self)
         elif key in ["h", "left"]:
             self.walker.left()
@@ -426,6 +428,19 @@ class GridEditor(urwid.WidgetWrap):
             self.walker.delete_focus()
         elif column.keypress(key, self) and not self.handle_key(key):
             return self._w.keypress(size, key)
+
+    def data_out(self, data):
+        """
+            Called on raw list data, before data is returned through the
+            callback.
+        """
+        return data
+
+    def data_in(self, data):
+        """
+            Called to prepare provided data.
+        """
+        return data
 
     def is_error(self, col, val):
         """
@@ -597,6 +612,12 @@ class PathEditor(GridEditor):
         TextColumn("Component"),
     ]
 
+    def data_in(self, data):
+        return [[i] for i in data]
+
+    def data_out(self, data):
+        return [i[0] for i in data]
+
 
 class ScriptEditor(GridEditor):
     title = "Editing scripts"
@@ -623,6 +644,12 @@ class HostPatternEditor(GridEditor):
         except re.error as e:
             return "Invalid regex: %s" % str(e)
 
+    def data_in(self, data):
+        return [[i] for i in data]
+
+    def data_out(self, data):
+        return [i[0] for i in data]
+
 
 class CookieEditor(GridEditor):
     title = "Editing request Cookie header"
@@ -639,6 +666,15 @@ class CookieAttributeEditor(GridEditor):
         TextColumn("Value"),
     ]
 
+    def data_out(self, data):
+        ret = []
+        for i in data:
+            if not i[1]:
+                ret.append([i[0], None])
+            else:
+                ret.append(i)
+        return ret
+
 
 class SetCookieEditor(GridEditor):
     title = "Editing response SetCookie header"
@@ -647,3 +683,20 @@ class SetCookieEditor(GridEditor):
         TextColumn("Value"),
         SubgridColumn("Attributes", CookieAttributeEditor),
     ]
+
+    def data_in(self, data):
+        flattened = []
+        for k, v in data.items():
+            flattened.append([k, v[0], v[1].lst])
+        return flattened
+
+    def data_out(self, data):
+        vals = []
+        for i in data:
+            vals.append(
+                [
+                    i[0],
+                    [i[1], odict.ODictCaseless(i[2])]
+                ]
+            )
+        return odict.ODict(vals)

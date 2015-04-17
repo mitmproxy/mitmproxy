@@ -197,13 +197,12 @@ class Options(urwid.WidgetWrap):
 
     def ignorepatterns(self):
         def _set(ignore):
-            patterns = (x[0] for x in ignore)
-            self.master.set_ignore_filter(patterns)
+            self.master.set_ignore_filter(ignore)
             signals.update_settings.send(self)
         self.master.view_grideditor(
             grideditor.HostPatternEditor(
                 self.master,
-                [[x] for x in self.master.get_ignore_filter()],
+                self.master.get_ignore_filter(),
                 _set
             )
         )
@@ -241,13 +240,12 @@ class Options(urwid.WidgetWrap):
 
     def tcp_proxy(self):
         def _set(tcp):
-            patterns = (x[0] for x in tcp)
-            self.master.set_tcp_filter(patterns)
+            self.master.set_tcp_filter(tcp)
             signals.update_settings.send(self)
         self.master.view_grideditor(
             grideditor.HostPatternEditor(
                 self.master,
-                [[x] for x in self.master.get_tcp_filter()],
+                self.master.get_tcp_filter(),
                 _set
             )
         )
