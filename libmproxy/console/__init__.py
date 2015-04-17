@@ -231,8 +231,9 @@ class ConsoleMaster(flow.FlowMaster):
         self.loop.set_alarm_in(seconds, cb)
 
     def sig_pop_view_state(self, sender):
-        if self.view_stack:
-            self.loop.widget = self.view_stack.pop()
+        if len(self.view_stack) > 1:
+            self.view_stack.pop()
+            self.loop.widget = self.view_stack[-1]
         else:
             signals.status_prompt_onekey.send(
                 self,
@@ -244,8 +245,10 @@ class ConsoleMaster(flow.FlowMaster):
                 callback = self.quit,
             )
 
-    def sig_push_view_state(self, sender):
-        self.view_stack.append(self.loop.widget)
+    def sig_push_view_state(self, sender, window):
+        self.view_stack.append(window)
+        self.loop.widget = window
+        self.loop.draw_screen()
 
     def start_stream_to_path(self, path, mode="wb"):
         path = os.path.expanduser(path)
@@ -463,46 +466,54 @@ class ConsoleMaster(flow.FlowMaster):
         self.shutdown()
 
     def view_help(self, helpctx):
-        signals.push_view_state.send(self)
-        self.loop.widget = window.Window(
+        signals.push_view_state.send(
             self,
-            help.HelpView(helpctx),
-            None,
-            statusbar.StatusBar(self, help.footer),
-            None
+            window = window.Window(
+                self,
+                help.HelpView(helpctx),
+                None,
+                statusbar.StatusBar(self, help.footer),
+                None
+            )
         )
 
     def view_options(self):
         for i in self.view_stack:
             if isinstance(i["body"], options.Options):
                 return
-        signals.push_view_state.send(self)
-        self.loop.widget = window.Window(
+        signals.push_view_state.send(
             self,
-            options.Options(self),
-            None,
-            statusbar.StatusBar(self, options.footer),
-            options.help_context,
+            window = window.Window(
+                self,
+                options.Options(self),
+                None,
+                statusbar.StatusBar(self, options.footer),
+                options.help_context,
+            )
         )
 
     def view_palette_picker(self):
-        signals.push_view_state.send(self)
-        self.loop.widget = window.Window(
+        signals.push_view_state.send(
             self,
-            palettepicker.PalettePicker(self),
-            None,
-            statusbar.StatusBar(self, palettepicker.footer),
-            palettepicker.help_context,
+            window = window.Window(
+                self,
+                palettepicker.PalettePicker(self),
+                None,
+                statusbar.StatusBar(self, palettepicker.footer),
+                palettepicker.help_context,
+            )
         )
 
     def view_grideditor(self, ge):
-        signals.push_view_state.send(self)
-        self.loop.widget = window.Window(
+        signals.push_view_state.send(
             self,
-            ge,
-            None,
-            statusbar.StatusBar(self, grideditor.FOOTER),
-            ge.make_help()
+            window = window.Window(
+                self,
+                ge,
+                None,
+                statusbar.StatusBar(self, grideditor.FOOTER),
+                ge.make_help()
+            )
         )
 
     def view_flowlist(self):
@@ -516,24 +527,28 @@ class ConsoleMaster(flow.FlowMaster):
         else:
             body = flowlist.FlowListBox(self)
 
-        self.loop.widget = window.Window(
+        signals.push_view_state.send(
             self,
-            body,
-            None,
-            statusbar.StatusBar(self, flowlist.footer),
-            flowlist.help_context
+            window = window.Window(
+                self,
+                body,
+                None,
+                statusbar.StatusBar(self, flowlist.footer),
+                flowlist.help_context
+            )
         )
-        self.loop.draw_screen()
 
     def view_flow(self, flow, tab_offset=0):
-        signals.push_view_state.send(self)
         self.state.set_focus_flow(flow)
-        self.loop.widget = window.Window(
+        signals.push_view_state.send(
             self,
-            flowview.FlowView(self, self.state, flow, tab_offset),
-            flowview.FlowViewHeader(self, flow),
-            statusbar.StatusBar(self, flowview.footer),
-            flowview.help_context
+            window = window.Window(
+                self,
+                flowview.FlowView(self, self.state, flow, tab_offset),
+                flowview.FlowViewHeader(self, flow),
+                statusbar.StatusBar(self, flowview.footer),
+                flowview.help_context
+            )
         )
 
     def _write_flows(self, path, flows):
