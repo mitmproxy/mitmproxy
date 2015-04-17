@@ -103,4 +103,8 @@ class HelpView(urwid.ListBox):
             return None
         elif key == "?":
             key = None
+        elif key == "G":
+            self.set_focus(0)
+        elif key == "g":
+            self.set_focus(len(self.body.contents))
         return urwid.ListBox.keypress(self, size, key)

@@ -294,6 +294,7 @@ class GridWalker(urwid.ListWalker):
     def set_focus(self, focus):
         self.stop_edit()
         self.focus = focus
+        self._modified()
 
     def get_next(self, pos):
         if pos+1 >= len(self.lst):
@@ -414,6 +415,10 @@ class GridEditor(urwid.WidgetWrap):
                     res.append(i[0])
             self.callback(self.data_out(res), *self.cb_args, **self.cb_kwargs)
             signals.pop_view_state.send(self)
+        elif key == "G":
+            self.walker.set_focus(0)
+        elif key == "g":
+            self.walker.set_focus(len(self.walker.lst)-1)
         elif key in ["h", "left"]:
             self.walker.left()
         elif key in ["l", "right"]:
@@ -459,10 +464,10 @@ class GridEditor(urwid.WidgetWrap):
             ("a", "add row after cursor"),
             ("d", "delete row"),
             ("e", "spawn external editor on current field"),
-            ("q", "return to flow view"),
+            ("q", "save changes and exit editor"),
             ("r", "read value from file"),
             ("R", "read unescaped value from file"),
-            ("esc", "return to flow view/exit field edit mode"),
+            ("esc", "save changes and exit editor"),
             ("tab", "next field"),
             ("enter", "edit field"),
         ]

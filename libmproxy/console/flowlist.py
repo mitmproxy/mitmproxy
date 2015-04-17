@@ -47,6 +47,10 @@ class EventListBox(urwid.ListBox):
         if key == "C":
             self.master.clear_events()
             key = None
+        elif key == "G":
+            self.set_focus(0)
+        elif key == "g":
+            self.set_focus(len(self.master.eventlist)-1)
         return urwid.ListBox.keypress(self, size, key)
 
 
