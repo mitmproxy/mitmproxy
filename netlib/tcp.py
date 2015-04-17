@@ -247,24 +247,32 @@ def close_socket(sock):
     """
     try:
         # We already indicate that we close our end.
-        # If we close RD, any further received bytes would result in a RST being set, which we want to avoid
-        # for our purposes
         sock.shutdown(socket.SHUT_WR)  # may raise "Transport endpoint is not connected" on Linux
 
         # Section 4.2.2.13 of RFC 1122 tells us that a close() with any
         # pending readable data could lead to an immediate RST being sent (which is the case on Windows).
         # http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
         #
-        # However, we cannot rely on the shutdown()-followed-by-read()-eof technique proposed by the page above:
-        # Some remote machines just don't send a TCP FIN, which would leave us in the unfortunate situation that
-        # recv() would block infinitely.
-        # As a workaround, we set a timeout here even if we are in blocking mode.
-        # Please let us know if you have a better solution to this problem.
+        # This in turn results in the following issue: If we send an error page to the client and then close the socket,
+        # the RST may be received by the client before the error page and the users sees a connection error rather than
+        # the error page. Thus, we try to empty the read buffer on Windows first.
+        # (see https://github.com/mitmproxy/mitmproxy/issues/527#issuecomment-93782988)
+        #
+        if os.name == "nt":  # pragma: no cover
+            # We cannot rely on the shutdown()-followed-by-read()-eof technique proposed by the page above:
+            # Some remote machines just don't send a TCP FIN, which would leave us in the unfortunate situation that
+            # recv() would block infinitely.
+            # As a workaround, we set a timeout here even if we are in blocking mode.
+            sock.settimeout(sock.gettimeout() or 20)
 
-        sock.settimeout(sock.gettimeout() or 20)
-        # may raise a timeout/disconnect exception.
-        while sock.recv(4096):  # pragma: no cover
-            pass
+            # limit at a megabyte so that we don't read infinitely
+            for _ in xrange(1024 ** 3 // 4096):
+                # may raise a timeout/disconnect exception.
+                if not sock.recv(4096):
+                    break
+
+        # Now we can close the other half as well.
+        sock.shutdown(socket.SHUT_RD)
 
     except socket.error:
         pass
