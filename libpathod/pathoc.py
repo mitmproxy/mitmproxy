@@ -223,7 +223,7 @@ class Pathoc(tcp.TCPClient):
             return True
 
 
-def main(args):
+def main(args): # pragma: nocover
     memo = set([])
     trycount = 0
     try:

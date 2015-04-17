@@ -104,7 +104,7 @@ def raises(exc, obj, *args, **kwargs):
     """
     try:
         apply(obj, args, kwargs)
-    except Exception, v:
+    except (Exception, SystemExit), v:
         if isinstance(exc, basestring):
             if exc.lower() in str(v).lower():
                 return

@@ -112,7 +112,7 @@ class Data:
 
 data = Data(__name__)
 
-def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'): # pragma: nocover
     try:
         pid = os.fork()
         if pid > 0:
@@ -136,5 +136,3 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
     os.dup2(si.fileno(), sys.stdin.fileno())
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
-
-

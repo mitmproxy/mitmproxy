@@ -8,17 +8,17 @@ from . import pathoc, pathod, version, utils, language
 from netlib import http_uastrings
 
 
-def go_pathoc():
+def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     preparser = argparse.ArgumentParser(add_help=False)
     preparser.add_argument(
         "--show-uas", dest="showua", action="store_true", default=False,
         help="Print user agent shortcuts and exit."
     )
-    pa = preparser.parse_known_args()[0]
+    pa = preparser.parse_known_args(argv)[0]
     if pa.showua:
-        print "User agent strings:"
+        print >> stdout, "User agent strings:"
         for i in http_uastrings.UASTRINGS:
-            print "  ", i[1], i[0]
+            print >> stdout, "  ", i[1], i[0]
         sys.exit(0)
 
     parser = argparse.ArgumentParser(
@@ -145,7 +145,7 @@ def go_pathoc():
         help="Output in hexdump format"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv[1:])
 
     args.port = None
     if ":" in args.host:
@@ -153,7 +153,7 @@ def go_pathoc():
         try:
             p = int(p)
         except ValueError:
-            parser.error("Invalid port in host spec: %s" % args.host)
+            return parser.error("Invalid port in host spec: %s" % args.host)
         args.host = h
         args.port = p
 
@@ -163,16 +163,16 @@ def go_pathoc():
     try:
         args.ignorecodes = [int(i) for i in args.ignorecodes.split(",") if i]
     except ValueError:
-        parser.error("Invalid return code specification: %s"%args.ignorecodes)
+        return parser.error("Invalid return code specification: %s"%args.ignorecodes)
 
     if args.connect_to:
         parts = args.connect_to.split(":")
         if len(parts) != 2:
-            parser.error("Invalid CONNECT specification: %s"%args.connect_to)
+            return parser.error("Invalid CONNECT specification: %s"%args.connect_to)
         try:
             parts[1] = int(parts[1])
         except ValueError:
-            parser.error("Invalid CONNECT specification: %s"%args.connect_to)
+            return parser.error("Invalid CONNECT specification: %s"%args.connect_to)
         args.connect_to = parts
     else:
         args.connect_to = None
@@ -185,14 +185,19 @@ def go_pathoc():
         try:
             reqs.extend(language.parse_requests(r))
         except language.ParseException, v:
-            print >> sys.stderr, "Error parsing request spec: %s"%v.msg
-            print >> sys.stderr, v.marked()
+            print >> stderr, "Error parsing request spec: %s"%v.msg
+            print >> stderr, v.marked()
             sys.exit(1)
     args.requests = reqs
+    return args
+
+
+def go_pathoc(): #  pragma: nocover
+    args = args_pathoc(sys.argv)
     pathoc.main(args)
 
 
-def go_pathod():
+def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
     parser = argparse.ArgumentParser(
         description='A pathological HTTP/S daemon.'
     )
@@ -333,7 +338,7 @@ def go_pathod():
         "-x", dest="hexdump", action="store_true", default=False,
         help="Log request/response in hexdump format"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv[1:])
 
     certs = []
     for i in args.ssl_certs:
@@ -342,7 +347,7 @@ def go_pathod():
             parts = ["*", parts[0]]
         parts[1] = os.path.expanduser(parts[1])
         if not os.path.exists(parts[1]):
-            parser.error("Certificate file does not exist: %s"%parts[1])
+            return parser.error("Certificate file does not exist: %s"%parts[1])
         certs.append(parts)
     args.ssl_certs = certs
 
@@ -350,7 +355,7 @@ def go_pathod():
     for i in args.anchors:
         parts = utils.parse_anchor_spec(i)
         if not parts:
-            parser.error("Invalid anchor specification: %s"%i)
+            return parser.error("Invalid anchor specification: %s"%i)
         alst.append(parts)
     args.anchors = alst
 
@@ -359,7 +364,7 @@ def go_pathod():
         try:
             sizelimit = utils.parse_size(args.sizelimit)
         except ValueError, v:
-            parser.error(v)
+            return parser.error(v)
     args.sizelimit = sizelimit
 
     anchors = []
@@ -371,15 +376,19 @@ def go_pathod():
         try:
             req = language.parse_response(spec)
         except language.ParseException, v:
-            print >> sys.stderr, "Error parsing anchor spec: %s"%v.msg
-            print >> sys.stderr, v.marked()
+            print >> stderr, "Error parsing anchor spec: %s"%v.msg
+            print >> stderr, v.marked()
             sys.exit(1)
         try:
             arex = re.compile(patt)
         except re.error:
-            print >> sys.stderr, "Invalid regex in anchor: %s" % patt
+            print >> stderr, "Invalid regex in anchor: %s" % patt
             sys.exit(1)
         anchors.append((arex, req))
     args.anchors = anchors
+    return args
 
+
+def go_pathod(): # pragma: nocover
+    args = args_pathod(sys.argv)
     pathod.main(args)
