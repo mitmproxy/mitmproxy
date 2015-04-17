@@ -9,7 +9,7 @@ import os
 # Simple websocket client and servers that are used to exercise the functionality in websockets.py
 # These are *not* fully RFC6455 compliant
 
-class WebSocketsEchoHandler(tcp.BaseHandler): 
+class WebSocketsEchoHandler(tcp.BaseHandler):
     def __init__(self, connection, address, server):
         super(WebSocketsEchoHandler, self).__init__(connection, address, server)
         self.handshake_done = False
@@ -22,14 +22,14 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
               self.read_next_message()
 
     def read_next_message(self):
-        decoded = ws.WebSocketsFrame.from_byte_stream(self.rfile.read).decoded_payload
+        decoded = ws.Frame.from_byte_stream(self.rfile.read).decoded_payload
         self.on_message(decoded)
 
     def send_message(self, message):
-        frame = ws.WebSocketsFrame.default(message, from_client = False)
+        frame = ws.Frame.default(message, from_client = False)
         self.wfile.write(frame.safe_to_bytes())
         self.wfile.flush()
- 
+
     def handshake(self):
         client_hs = ws.read_handshake(self.rfile.read, 1)
         key       = ws.process_handshake_from_client(client_hs)
@@ -72,9 +72,9 @@ class WebSocketsClient(tcp.TCPClient):
             self.close()
 
     def read_next_message(self):
-        return ws.WebSocketsFrame.from_byte_stream(self.rfile.read).payload
+        return ws.Frame.from_byte_stream(self.rfile.read).payload
 
     def send_message(self, message):
-        frame = ws.WebSocketsFrame.default(message, from_client = True)
+        frame = ws.Frame.default(message, from_client = True)
         self.wfile.write(frame.safe_to_bytes())
         self.wfile.flush()

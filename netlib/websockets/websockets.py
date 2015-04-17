@@ -29,7 +29,7 @@ class WebSocketFrameValidationException(Exception):
     pass
 
 
-class WebSocketsFrame(object):
+class Frame(object):
     """
         Represents one websockets frame.
         Constructor takes human readable forms of the frame components
@@ -98,29 +98,29 @@ class WebSocketsFrame(object):
         length_code, actual_length = get_payload_length_pair(message)
 
         if from_client:
-            mask_bit    = 1
+            mask_bit = 1
             masking_key = random_masking_key()
-            payload     = apply_mask(message, masking_key)
+            payload = apply_mask(message, masking_key)
         else:
-            mask_bit    = 0
+            mask_bit = 0
             masking_key = None
-            payload     = message
+            payload = message
 
         return cls(
-            fin                   = 1, # final frame
-            opcode                = 1, # text
-            mask_bit              = mask_bit,
-            payload_length_code   = length_code,
-            payload               = payload,
-            masking_key           = masking_key,
-            decoded_payload       = message,
+            fin = 1, # final frame
+            opcode = 1, # text
+            mask_bit = mask_bit,
+            payload_length_code = length_code,
+            payload = payload,
+            masking_key = masking_key,
+            decoded_payload = message,
             actual_payload_length = actual_length
         )
 
     def is_valid(self):
         """
-         Validate websocket frame invariants, call at anytime to ensure the
-         WebSocketsFrame has not been corrupted.
+            Validate websocket frame invariants, call at anytime to ensure the
+            Frame has not been corrupted.
         """
         try:
             assert 0 <= self.fin <= 1
@@ -147,17 +147,18 @@ class WebSocketsFrame(object):
 
     def human_readable(self):
         return "\n".join([
-          ("fin                   - " + str(self.fin)),
-          ("rsv1                  - " + str(self.rsv1)),
-          ("rsv2                  - " + str(self.rsv2)),
-          ("rsv3                  - " + str(self.rsv3)),
-          ("opcode                - " + str(self.opcode)),
-          ("mask_bit              - " + str(self.mask_bit)),
-          ("payload_length_code   - " + str(self.payload_length_code)),
-          ("masking_key           - " + str(self.masking_key)),
-          ("payload               - " + str(self.payload)),
-          ("decoded_payload       - " + str(self.decoded_payload)),
-          ("actual_payload_length - " + str(self.actual_payload_length))])
+            ("fin                   - " + str(self.fin)),
+            ("rsv1                  - " + str(self.rsv1)),
+            ("rsv2                  - " + str(self.rsv2)),
+            ("rsv3                  - " + str(self.rsv3)),
+            ("opcode                - " + str(self.opcode)),
+            ("mask_bit              - " + str(self.mask_bit)),
+            ("payload_length_code   - " + str(self.payload_length_code)),
+            ("masking_key           - " + str(self.masking_key)),
+            ("payload               - " + str(self.payload)),
+            ("decoded_payload       - " + str(self.decoded_payload)),
+            ("actual_payload_length - " + str(self.actual_payload_length))
+        ])
 
     def safe_to_bytes(self):
         if self.is_valid():
@@ -167,11 +168,10 @@ class WebSocketsFrame(object):
 
     def to_bytes(self):
         """
-          Serialize the frame back into the wire format, returns a bytestring If
-          you haven't checked is_valid_frame() then there's no guarentees that
-          the serialized bytes will be correct. see safe_to_bytes()
+            Serialize the frame back into the wire format, returns a bytestring
+            If you haven't checked is_valid_frame() then there's no guarentees
+            that the serialized bytes will be correct. see safe_to_bytes()
         """
-
         max_16_bit_int = (1 << 16)
         max_64_bit_int = (1 << 63)
 
@@ -199,13 +199,10 @@ class WebSocketsFrame(object):
 
         if self.actual_payload_length < 126:
             pass
-
         elif self.actual_payload_length < max_16_bit_int:
-
             # '!H' pack as 16 bit unsigned short
             # add 2 byte extended payload length
             bytes += struct.pack('!H', self.actual_payload_length)
-
         elif self.actual_payload_length < max_64_bit_int:
             # '!Q' = pack as 64 bit unsigned long long
             # add 8 bytes extended payload length
@@ -215,7 +212,6 @@ class WebSocketsFrame(object):
             bytes += self.masking_key
 
         bytes += self.payload # already will be encoded if neccessary
-
         return bytes
 
     @classmethod
@@ -264,29 +260,31 @@ class WebSocketsFrame(object):
             decoded_payload = payload
 
         return cls(
-            fin                   = fin,
-            opcode                = opcode,
-            mask_bit              = mask_bit,
-            payload_length_code   = payload_length,
-            payload               = payload,
-            masking_key           = masking_key,
-            decoded_payload       = decoded_payload,
+            fin = fin,
+            opcode = opcode,
+            mask_bit = mask_bit,
+            payload_length_code = payload_length,
+            payload = payload,
+            masking_key = masking_key,
+            decoded_payload = decoded_payload,
             actual_payload_length = actual_payload_length
         )
 
     def __eq__(self, other):
         return (
-         self.fin                   == other.fin and
-         self.rsv1                  == other.rsv1 and
-         self.rsv2                  == other.rsv2 and
-         self.rsv3                  == other.rsv3 and
-         self.opcode                == other.opcode and
-         self.mask_bit              == other.mask_bit and
-         self.payload_length_code   == other.payload_length_code and
-         self.masking_key           == other.masking_key and
-         self.payload               == other.payload and
-         self.decoded_payload       == other.decoded_payload and
-         self.actual_payload_length == other.actual_payload_length)
+            self.fin == other.fin and
+            self.rsv1 == other.rsv1 and
+            self.rsv2 == other.rsv2 and
+            self.rsv3 == other.rsv3 and
+            self.opcode == other.opcode and
+            self.mask_bit == other.mask_bit and
+            self.payload_length_code == other.payload_length_code and
+            self.masking_key == other.masking_key and
+            self.payload == other.payload and
+            self.decoded_payload == other.decoded_payload and
+            self.actual_payload_length == other.actual_payload_length
+        )
+
 
 def apply_mask(message, masking_key):
     """
