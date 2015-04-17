@@ -32,7 +32,7 @@ class TestTimeout(tutils.DaemonTests):
     def test_noweb(self):
         # FIXME: Add float values to spec language, reduce test timeout to
         # increase test performance
-        tutils.raises("server disconnect", self.pathoc, "get:/:p1,1")
+        tutils.raises(tcp.NetLibDisconnect, self.pathoc, "get:/:p1,1")
         assert self.d.last_log()["type"] == "timeout"
 
 
