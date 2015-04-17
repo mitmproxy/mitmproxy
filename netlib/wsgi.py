@@ -1,5 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
-import cStringIO, urllib, time, traceback
+import cStringIO
+import urllib
+import time
+import traceback
 from . import odict, tcp
 
 
@@ -23,15 +26,18 @@ class Request(object):
 def date_time_string():
     """Return the current date and time formatted for a message header."""
     WEEKS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    MONTHS = [None,
-                 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    MONTHS = [
+        None,
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ]
     now = time.time()
     year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
     s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
-            WEEKS[wd],
-            day, MONTHS[month], year,
-            hh, mm, ss)
+        WEEKS[wd],
+        day, MONTHS[month], year,
+        hh, mm, ss
+    )
     return s
 
 
@@ -100,6 +106,7 @@ class WSGIAdaptor(object):
             status = None,
             headers = None
         )
+
         def write(data):
             if not state["headers_sent"]:
                 soc.write("HTTP/1.1 %s\r\n"%state["status"])
@@ -108,7 +115,7 @@ class WSGIAdaptor(object):
                     h["Server"] = [self.sversion]
                 if 'date' not in h:
                     h["Date"] = [date_time_string()]
-                soc.write(str(h))
+                soc.write(h.format())
                 soc.write("\r\n")
                 state["headers_sent"] = True
             if data:
@@ -130,7 +137,9 @@ class WSGIAdaptor(object):
 
         errs = cStringIO.StringIO()
         try:
-            dataiter = self.app(self.make_environ(request, errs, **env), start_response)
+            dataiter = self.app(
+                self.make_environ(request, errs, **env), start_response
+            )
             for i in dataiter:
                 write(i)
             if not state["headers_sent"]:
@@ -143,5 +152,3 @@ class WSGIAdaptor(object):
             except Exception:    # pragma: no cover
                 pass
         return errs.getvalue()
-
-

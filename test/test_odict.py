@@ -6,6 +6,11 @@ class TestODict:
     def setUp(self):
         self.od = odict.ODict()
 
+    def test_repr(self):
+        h = odict.ODict()
+        h["one"] = ["two"]
+        assert repr(h)
+
     def test_str_err(self):
         h = odict.ODict()
         tutils.raises(ValueError, h.__setitem__, "key", "foo")
@@ -20,7 +25,7 @@ class TestODict:
             "two: tre\r\n",
             "\r\n"
         ]
-        out = repr(self.od)
+        out = self.od.format()
         for i in expected:
             assert out.find(i) >= 0
 
@@ -39,7 +44,7 @@ class TestODict:
         self.od["one"] = ["uno"]
         expected1 = "one: uno\r\n"
         expected2 = "\r\n"
-        out = repr(self.od)
+        out = self.od.format()
         assert out.find(expected1) >= 0
         assert out.find(expected2) >= 0
 
@@ -109,6 +114,12 @@ class TestODict:
         assert self.od.get_first("one") == "two"
         assert self.od.get_first("two") == None
 
+    def test_extend(self):
+        a = odict.ODict([["a", "b"], ["c", "d"]])
+        b = odict.ODict([["a", "b"], ["e", "f"]])
+        a.extend(b)
+        assert len(a) == 4
+        assert a["a"] == ["b", "b"]
 
 class TestODictCaseless:
     def setUp(self):
@@ -145,3 +156,18 @@ class TestODictCaseless:
         self.od.add("bar", 2)
         assert len(self.od.keys()) == 2
 
+    def test_add_order(self):
+        od = odict.ODict(
+            [
+                ["one", "uno"],
+                ["two", "due"],
+                ["three", "tre"],
+            ]
+        )
+        od["two"] = ["foo", "bar"]
+        assert od.lst == [
+            ["one", "uno"],
+            ["two", "foo"],
+            ["three", "tre"],
+            ["two", "bar"],
+        ]

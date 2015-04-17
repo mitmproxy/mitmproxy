@@ -53,6 +53,7 @@ def test_connection_close():
     h["connection"] = ["close"]
     assert http.connection_close((1, 1), h)
 
+
 def test_get_header_tokens():
     h = odict.ODictCaseless()
     assert http.get_header_tokens(h, "foo") == []
@@ -69,10 +70,12 @@ def test_read_http_body_request():
     r = cStringIO.StringIO("testing")
     assert http.read_http_body(r, h, None, "GET", None, True) == ""
 
+
 def test_read_http_body_response():
     h = odict.ODictCaseless()
     s = cStringIO.StringIO("testing")
     assert http.read_http_body(s, h, None, "GET", 200, False) == "testing"
+
 
 def test_read_http_body():
     # test default case
@@ -115,6 +118,7 @@ def test_read_http_body():
     s = cStringIO.StringIO("5\r\naaaaa\r\n0\r\n\r\n")
     assert http.read_http_body(s, h, 100, "GET", 200, False) == "aaaaa"
 
+
 def test_expected_http_body_size():
     # gibber in the content-length field
     h = odict.ODictCaseless()
@@ -134,6 +138,7 @@ def test_expected_http_body_size():
     # no length request
     h = odict.ODictCaseless()
     assert http.expected_http_body_size(h, True, "GET", None) == 0
+
 
 def test_parse_http_protocol():
     assert http.parse_http_protocol("HTTP/1.1") == (1, 1)
@@ -188,6 +193,7 @@ def test_parse_init_http():
     assert not http.parse_init_http("GET invalid HTTP/1.1")
     assert not http.parse_init_http("GET /test foo/1.1")
     assert not http.parse_init_http("GET /test\xc0 HTTP/1.1")
+
 
 class TestReadHeaders:
     def _read(self, data, verbatim=False):
@@ -251,11 +257,12 @@ class TestReadResponseNoContentLength(test.ServerTestBase):
         httpversion, code, msg, headers, content = http.read_response(c.rfile, "GET", None)
         assert content == "bar\r\n\r\n"
 
+
 def test_read_response():
     def tst(data, method, limit, include_body=True):
         data = textwrap.dedent(data)
         r = cStringIO.StringIO(data)
-        return  http.read_response(r, method, limit, include_body=include_body)
+        return http.read_response(r, method, limit, include_body = include_body)
 
     tutils.raises("server disconnect", tst, "", "GET", None)
     tutils.raises("invalid server response", tst, "foo", "GET", None)
@@ -351,6 +358,7 @@ def test_parse_url():
     # Invalid IPv6 URL - see http://www.ietf.org/rfc/rfc2732.txt
     assert not http.parse_url('http://lo[calhost')
 
+
 def test_parse_http_basic_auth():
     vals = ("basic", "foo", "bar")
     assert http.parse_http_basic_auth(http.assemble_http_basic_auth(*vals)) == vals
@@ -358,4 +366,3 @@ def test_parse_http_basic_auth():
     assert not http.parse_http_basic_auth("foo bar")
     v = "basic " + binascii.b2a_base64("foo")
     assert not http.parse_http_basic_auth(v)
-
