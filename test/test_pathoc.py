@@ -78,7 +78,10 @@ class _TestDaemon:
 
 class TestDaemonSSL(_TestDaemon):
     ssl = True
-    ssloptions = pathod.SSLOptions(request_client_cert=True)
+    ssloptions = pathod.SSLOptions(
+        request_client_cert=True,
+        sans = ["test1.com", "test2.com"]
+    )
 
     def test_sni(self):
         c = pathoc.Pathoc(

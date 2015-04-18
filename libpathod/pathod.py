@@ -22,9 +22,15 @@ class PathodError(Exception):
 
 
 class SSLOptions:
-    def __init__(self, confdir=CONFDIR, cn=None, not_after_connect=None,
-                 request_client_cert=False, sslversion=tcp.SSLv23_METHOD,
-                 ciphers=None, certs=None):
+    def __init__(self,
+                 confdir=CONFDIR,
+                 cn=None,
+                 sans=(),
+                 not_after_connect=None,
+                 request_client_cert=False,
+                 sslversion=tcp.SSLv23_METHOD,
+                 ciphers=None,
+                 certs=None):
         self.confdir = confdir
         self.cn = cn
         self.certstore = certutils.CertStore.from_store(
@@ -37,13 +43,14 @@ class SSLOptions:
         self.request_client_cert = request_client_cert
         self.ciphers = ciphers
         self.sslversion = sslversion
+        self.sans = sans
 
     def get_cert(self, name):
         if self.cn:
             name = self.cn
         elif not name:
             name = DEFAULT_CERT_DOMAIN
-        return self.certstore.get_cert(name, [])
+        return self.certstore.get_cert(name, self.sans)
 
 
 class PathodHandler(tcp.BaseHandler):
@@ -51,7 +58,9 @@ class PathodHandler(tcp.BaseHandler):
     sni = None
 
     def info(self, s):
-        logger.info("%s:%s: %s" % (self.address.host, self.address.port, str(s)))
+        logger.info(
+            "%s:%s: %s" % (self.address.host, self.address.port, str(s))
+        )
 
     def handle_sni(self, connection):
         self.sni = connection.get_servername()

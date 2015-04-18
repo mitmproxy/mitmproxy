@@ -206,16 +206,14 @@ class TestDaemon(CommonTests):
 
 class TestDaemonSSL(CommonTests):
     ssl = True
-    def _test_ssl_conn_failure(self):
+
+    def test_ssl_conn_failure(self):
         c = tcp.TCPClient(("localhost", self.d.port))
         c.rbufsize = 0
         c.wbufsize = 0
         c.connect()
-        try:
-            while 1:
-                c.wfile.write("\r\n\r\n\r\n")
-        except:
-            pass
+        c.wfile.write("\0\0\0\0")
+        tutils.raises(tcp.NetLibError, c.convert_to_ssl)
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "SSL" in l["msg"]
