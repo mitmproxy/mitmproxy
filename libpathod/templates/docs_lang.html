@@ -1,5 +1,5 @@
 {% extends "docframe.html" %}
-{% block body %}  
+{% block body %}
 
 <div class="page-header">
    <h1>
@@ -16,7 +16,7 @@
 <div class="tab-content">
     <div class="tab-pane active" id="specifying_responses">
         <p>The general form of a response is as follows:</p>
-            
+
         <pre class="example">code:[colon-separated list of features]</pre></p>
 
         <table class="table table-bordered">
@@ -40,14 +40,14 @@
                 <tr>
                     <td> d<a href="#offsetspec">OFFSET</a> </td>
                     <td>
-                        Disconnect after OFFSET bytes. 
+                        Disconnect after OFFSET bytes.
                     </td>
                 </tr>
 
                 <tr>
                     <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Set a header. 
+                        Set a header.
                     </td>
                 </tr>
 
@@ -55,7 +55,7 @@
                 <tr>
                     <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Inject the specified value at the offset. 
+                        Inject the specified value at the offset.
                     </td>
                 </tr>
 
@@ -71,7 +71,7 @@
                     <td> m<a href="#valuespec">VALUE</a> </td>
                     <td>
                         HTTP Reason message. Automatically chosen according to
-                        the response code if not specified. 
+                        the response code if not specified.
                     </td>
                 </tr>
 
@@ -79,7 +79,7 @@
                     <td> p<a href="#offsetspec">OFFSET</a>,SECONDS </td>
                     <td>
                         Pause for SECONDS seconds after OFFSET bytes. SECONDS can
-                        be an integer or "f" to pause forever. 
+                        be an integer or "f" to pause forever.
                     </td>
                 </tr>
 
@@ -98,7 +98,7 @@
 
     <div class="tab-pane" id="specifying_requests">
         <p>The general form of a request is as follows:</p>
-            
+
         <pre class="example">method:path:[colon-separated list of features]</pre></p>
 
         <table class="table table-bordered">
@@ -122,21 +122,21 @@
                 <tr>
                     <td> d<a href="#offsetspec">OFFSET</a> </td>
                     <td>
-                        Disconnect after OFFSET bytes. 
+                        Disconnect after OFFSET bytes.
                     </td>
                 </tr>
 
                 <tr>
                     <td> h<a href="#valuespec">VALUE</a>=<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Set a header. 
+                        Set a header.
                     </td>
                 </tr>
 
                 <tr>
                     <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
                     <td>
-                        Inject the specified value at the offset. 
+                        Inject the specified value at the offset.
                     </td>
                 </tr>
 
@@ -144,7 +144,7 @@
                     <td> p<a href="#offsetspec">OFFSET</a>,SECONDS </td>
                     <td>
                         Pause for SECONDS seconds after OFFSET bytes. SECONDS can
-                        be an integer or "f" to pause forever. 
+                        be an integer or "f" to pause forever.
                     </td>
                 </tr>
 
@@ -153,6 +153,14 @@
                     <td>
                         Set the "raw" flag on this response. Pathod will not
                         calculate a Content-Length header if a body is set.
+                    </td>
+                </tr>
+
+                <tr>
+                    <td> s<a href="#valuespec">VALUE</a> </td>
+                    <td>
+                        An embedded Response specification, appended to the path
+                        of the request.
                     </td>
                 </tr>
 
@@ -196,9 +204,9 @@
             injections or other transforms are applied. They have 3 flavors:</p>
 
             <ul>
-                <li>An integer byte offset </li> 
-                <li><b>r</b> for a random location</li> 
-                <li><b>a</b> for the end of the message</li> 
+                <li>An integer byte offset </li>
+                <li><b>r</b> for a random location</li>
+                <li><b>a</b> for the end of the message</li>
             </ul>
 
         <a id="valuespec"></a>
@@ -229,7 +237,7 @@
 
         <p>All paths are relative paths under this directory. File loads are indicated by
         starting the value specifier with the left angle bracket:
-            
+
         <pre class="example">&lt;my/path</pre></p>
 
         <p>The path value can also be a quoted string, with the same syntax as literals:</p>
@@ -244,7 +252,7 @@
         pathod assumes a data type of "bytes". </p>
 
         <p>Here's a value specifier for generating 100 bytes:
-            
+
         <pre class="example">@100</pre></p>
 
         <p>You can use standard suffixes to indicate larger values. Here, for instance, is
@@ -333,4 +341,4 @@
         </table>
 </section>
 
-{% endblock %}  
+{% endblock %}

@@ -1,5 +1,5 @@
 {% extends "docframe.html" %}
-{% block body %}  
+{% block body %}
 <div class="page-header">
    <h1>
         pathoc
@@ -20,14 +20,14 @@ the command-line help:</p>
     <div class="page-header">
        <h1>Getting Started</h1>
     </div>
-    
+
     <p>The basic pattern for pathoc commands is as follows: </p>
 
     <pre class="terminal">pathoc hostname request [request ...]</pre>
 
     <p>That is, we specify the hostname to connect to, followed by one or more
     requests. Lets start with a simple example:</p>
-        
+
     <pre class="terminal">&gt; pathoc google.com get:/
 &lt;&lt; 301 Moved Permanently: 219 bytes</pre>
 
@@ -47,7 +47,7 @@ the command-line help:</p>
     <div class="page-header">
        <h1>Multiple Requests</h1>
     </div>
-    
+
     <p>There are two ways to tell pathoc to issue multiple requests. The first
     is to specify them on the command-line, like so:</p>
 
@@ -58,8 +58,8 @@ the command-line help:</p>
     <p> In this case, pathoc issues the specified requests over the same TCP
     connection - so in the above example only one connection is made to
     google.com </p>
-    
-    <p> The other way to issue multiple requets is to use the <b>-n</b> flag:</p> 
+
+    <p> The other way to issue multiple requets is to use the <b>-n</b> flag:</p>
 
     <pre class="terminal">&gt; pathoc -n 2 google.com get:/
 &lt;&lt; 301 Moved Permanently: 219 bytes
@@ -102,7 +102,7 @@ the command-line help:</p>
         enter a state where it's awaiting more input from the client. This is
         where the <b>-t</b> option comes in, which sets a timeout that causes
         pathoc to disconnect after two seconds. </li>
-    
+
         <li> The <b>-n</b> option tells pathoc to repeat the request 1000
         times.</li>
 
@@ -149,4 +149,43 @@ the command-line help:</p>
 </section>
 
 
-{% endblock %}  
+<section>
+    <div class="page-header">
+       <h1>Embedded response specification</h1>
+    </div>
+
+    <p>One interesting feature of the Request sppecification language is that
+    you can embed a response specifcation in it, which is then added to the
+    request path. Here's an example:</p>
+
+    <pre class="terminal">&gt; pathoc localhost:9999 "get:/p/:s'401:ir,@1'" </pre>
+
+    <p> This crafts a request that connects to the pathod server, and which then
+    crafts a response that generates a 401, with one random byte embedded at a
+    random point. The response specification is parsed and expanded by pathoc,
+    so you see syntax errors immediately. This really becomes handy when
+    combined with the <b>-e</b> flag to show the expanded request:
+
+    <pre class="terminal">&gt; > pathoc -e localhost:9999 "get:/p/:s'401:ir,@1'"
+>> Spec: get:/p/:s'401:i15,\'o\':h\'Content-Length\'=\'0\'':h'Content-Length'='0'
+<< 401 Unoauthorized: 0 bytes </pre>
+
+    <p> Note that the embedded response has been resolved <i>before</i> being
+    sent to the server, so that "ir,@1" (embed a random byte at a random
+    location) has become "i15,\'o\'" (embed the character "o" at offset 15). You
+    now have a pathoc request specification that is precisely reproducable, even
+    with random components. This feature comes in terribly handy when testing a
+    proxy, since you can now drive the server repsonse completely from the
+    client, and have a complete log of reproducible requests to analyse
+    afterwards.</p>
+
+</section>
+
+
+
+
+
+
+
+
+{% endblock %}
