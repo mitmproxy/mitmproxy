@@ -297,12 +297,17 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         may include a wildcard, and is equal to "*" if not specified. The file
         at path is a certificate in PEM format. If a private key is included in
         the PEM, it is used, else the default key in the conf dir is used. Can
-        be passed multiple times.'
+        be passed multiple times.
         """
     )
     group.add_argument(
         "--ciphers", dest="ciphers", type=str, default=False,
         help="SSL cipher specification"
+    )
+    group.add_argument(
+        "--sans", dest="sans", type=str, default="",
+        help="""Comma-separated list of subject Altnernate Names to add to
+        the server certificate."""
     )
     group.add_argument(
         "--sslversion", dest="sslversion", type=int, default=4,
@@ -339,6 +344,8 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         help="Log request/response in hexdump format"
     )
     args = parser.parse_args(argv[1:])
+
+    args.sans = args.sans.split(",")
 
     certs = []
     for i in args.ssl_certs:

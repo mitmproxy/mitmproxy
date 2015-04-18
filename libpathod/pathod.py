@@ -400,7 +400,8 @@ def main(args): # pragma: nocover
         not_after_connect = args.ssl_not_after_connect,
         ciphers = args.ciphers,
         sslversion = utils.SSLVERSIONS[args.sslversion],
-        certs = args.ssl_certs
+        certs = args.ssl_certs,
+        sans = args.sans
     )
 
     root = logging.getLogger()
