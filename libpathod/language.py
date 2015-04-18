@@ -15,10 +15,6 @@ BLOCKSIZE = 1024
 TRUNCATE = 1024
 
 
-def escape_backslash(s):
-    return s.replace("\\", "\\\\")
-
-
 def quote(s):
     quotechar = s[0]
     s = s[1:-1]
@@ -852,7 +848,10 @@ class _Message(object):
         tokens = self.tokens[:]
         if not self.raw:
             if not utils.get_header("Content-Length", self.headers):
-                length = 0 if not self.body else len(self.body.value.get_generator(settings))
+                if not self.body:
+                    length = 0
+                else:
+                    length = len(self.body.value.get_generator(settings))
                 tokens.append(
                     Header(
                         ValueLiteral("Content-Length"),

@@ -265,6 +265,7 @@ class TestMisc:
             )
         )
         assert e.freeze({})
+        assert e.values({})
 
     def test_code(self):
         e = language.Code.expr()
@@ -541,6 +542,14 @@ class TestRequest:
         assert len(r) == 2
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "GET"
+
+    def test_pathodspec(self):
+        l = "get:/p:s'200'"
+        r = language.parse_requests(l)
+        assert len(r) == 1
+        assert len(r[0].tokens) == 3
+        assert isinstance(r[0].tokens[2], language.PathodSpec)
+        assert r[0].values({})
 
     def test_render(self):
         s = cStringIO.StringIO()
