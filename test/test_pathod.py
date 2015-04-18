@@ -70,7 +70,7 @@ class TestCustomCert(tutils.DaemonTests):
         r = self.pathoc(r"get:/p/202")
         assert r.status_code == 202
         assert r.sslinfo
-        assert "Widgits" in str(r.sslinfo.certchain[0].get_subject())
+        assert "test.com" in str(r.sslinfo.certchain[0].get_subject())
 
 
 class TestSSLCN(tutils.DaemonTests):
