@@ -74,7 +74,7 @@ class Pathoc(tcp.TCPClient):
             raise PathocError("Proxy CONNECT failed: %s - %s"%(parsed[1], parsed[2]))
         http.read_headers(self.rfile)
 
-    def connect(self, connect_to=None):
+    def connect(self, connect_to=None, showssl=False, fp=sys.stdout):
         """
             connect_to: A (host, port) tuple, which will be connected to with an
             HTTP CONNECT request.
@@ -97,10 +97,12 @@ class Pathoc(tcp.TCPClient):
                 self.connection.get_peer_cert_chain(),
                 self.get_current_cipher()
             )
+            if showssl:
+                self.print_sslinfo(self.sslinfo, fp)
 
     def request(self, spec):
         """
-            Return an (httpversion, code, msg, headers, content) tuple.
+            Return a Response object.
 
             May raise language.ParseException, netlib.http.HttpError or
             language.FileAccessDenied.
@@ -126,13 +128,42 @@ class Pathoc(tcp.TCPClient):
             print >> fp, "%s (unprintables escaped):"%header
             print >> fp, netlib.utils.cleanBin(data)
 
+    def print_sslinfo(self, sslinfo, fp):
+        print >> fp, "Cipher: %s, %s bit, %s"%self.sslinfo.cipher
+        print >> fp, "SSL certificate chain:\n"
+        for i in self.sslinfo.certchain:
+            print >> fp, "\tSubject: ",
+            for cn in i.get_subject().get_components():
+                print >> fp, "%s=%s"%cn,
+            print >> fp
+            print >> fp, "\tIssuer: ",
+            for cn in i.get_issuer().get_components():
+                print >> fp, "%s=%s"%cn,
+            print >> fp
+            print >> fp, "\tVersion: %s"%i.get_version()
+            print >> fp, "\tValidity: %s - %s"%(
+                i.get_notBefore(), i.get_notAfter()
+            )
+            print >> fp, "\tSerial: %s"%i.get_serial_number()
+            print >> fp, "\tAlgorithm: %s"%i.get_signature_algorithm()
+            pk = i.get_pubkey()
+            types = {
+                OpenSSL.crypto.TYPE_RSA: "RSA",
+                OpenSSL.crypto.TYPE_DSA: "DSA"
+            }
+            t = types.get(pk.type(), "Uknown")
+            print >> fp, "\tPubkey: %s bit %s"%(pk.bits(), t)
+            s = certutils.SSLCert(i)
+            if s.altnames:
+                print >> fp, "\tSANs:", " ".join(s.altnames)
+            print >> fp
+
     def print_request(
         self,
         r,
         showreq,
         showresp,
         explain,
-        showssl,
         hexdump,
         ignorecodes,
         ignoretimeout,
@@ -190,36 +221,6 @@ class Pathoc(tcp.TCPClient):
             else:
                 if resp:
                     self._show_summary(fp, *resp)
-
-            if showssl and self.sslinfo:
-                print >> fp, "Cipher: %s, %s bit, %s"%self.sslinfo.cipher
-                print >> fp, "SSL certificate chain:\n"
-                for i in self.sslinfo.certchain:
-                    print >> fp, "\tSubject: ",
-                    for cn in i.get_subject().get_components():
-                        print >> fp, "%s=%s"%cn,
-                    print >> fp
-                    print >> fp, "\tIssuer: ",
-                    for cn in i.get_issuer().get_components():
-                        print >> fp, "%s=%s"%cn,
-                    print >> fp
-                    print >> fp, "\tVersion: %s"%i.get_version()
-                    print >> fp, "\tValidity: %s - %s"%(
-                        i.get_notBefore(), i.get_notAfter()
-                    )
-                    print >> fp, "\tSerial: %s"%i.get_serial_number()
-                    print >> fp, "\tAlgorithm: %s"%i.get_signature_algorithm()
-                    pk = i.get_pubkey()
-                    types = {
-                        OpenSSL.crypto.TYPE_RSA: "RSA",
-                        OpenSSL.crypto.TYPE_DSA: "DSA"
-                    }
-                    t = types.get(pk.type(), "Uknown")
-                    print >> fp, "\tPubkey: %s bit %s"%(pk.bits(), t)
-                    s = certutils.SSLCert(i)
-                    if s.altnames:
-                        print >> fp, "\tSANs:", " ".join(s.altnames)
-                    print >> fp
             return True
 
 
@@ -268,7 +269,7 @@ def main(args): # pragma: nocover
 
             trycount = 0
             try:
-                p.connect(args.connect_to)
+                p.connect(args.connect_to, args.showssl)
             except tcp.NetLibError, v:
                 print >> sys.stderr, str(v)
                 continue
@@ -283,7 +284,6 @@ def main(args): # pragma: nocover
                     showreq=args.showreq,
                     showresp=args.showresp,
                     explain=args.explain,
-                    showssl=args.showssl,
                     hexdump=args.hexdump,
                     ignorecodes=args.ignorecodes,
                     ignoretimeout=args.ignoretimeout

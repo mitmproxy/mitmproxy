@@ -53,11 +53,11 @@ class _TestDaemon:
         ignorecodes=None,
         ignoretimeout=None
     ):
+        s = cStringIO.StringIO()
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl=self.ssl)
-        c.connect()
+        c.connect(showssl=showssl, fp=s)
         if timeout:
             c.settimeout(timeout)
-        s = cStringIO.StringIO()
         for i in requests:
             r = language.parse_requests(i)[0]
             if explain:
@@ -67,7 +67,6 @@ class _TestDaemon:
                 showreq = showreq,
                 showresp = showresp,
                 explain = explain,
-                showssl = showssl,
                 hexdump = hexdump,
                 ignorecodes = ignorecodes,
                 ignoretimeout = ignoretimeout,
