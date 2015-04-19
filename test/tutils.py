@@ -7,7 +7,7 @@ from libpathod import utils, test, pathoc, pathod, language
 import requests
 
 
-class DaemonTests:
+class DaemonTests(object):
     noweb = False
     noapi = False
     nohang = False
@@ -17,24 +17,24 @@ class DaemonTests:
     ssloptions = None
 
     @classmethod
-    def setUpAll(self):
-        opts = self.ssloptions or {}
-        self.confdir = tempfile.mkdtemp()
-        opts["confdir"] = self.confdir
+    def setUpAll(klass):
+        opts = klass.ssloptions or {}
+        klass.confdir = tempfile.mkdtemp()
+        opts["confdir"] = klass.confdir
         so = pathod.SSLOptions(**opts)
-        self.d = test.Daemon(
+        klass.d = test.Daemon(
             staticdir=test_data.path("data"),
             anchors=[
                 (re.compile("/anchor/.*"), language.parse_response("202:da"))
             ],
-            ssl = self.ssl,
+            ssl = klass.ssl,
             ssloptions = so,
             sizelimit=1*1024*1024,
-            noweb = self.noweb,
-            noapi = self.noapi,
-            nohang = self.nohang,
-            timeout = self.timeout,
-            hexdump = self.hexdump,
+            noweb = klass.noweb,
+            noapi = klass.noapi,
+            nohang = klass.nohang,
+            timeout = klass.timeout,
+            hexdump = klass.hexdump,
             logreq = True,
             logresp = True,
             explain = True

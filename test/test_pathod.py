@@ -3,7 +3,7 @@ from netlib import tcp, http
 import tutils
 
 
-class TestPathod:
+class TestPathod(object):
     def test_logging(self):
         p = pathod.Pathod(("127.0.0.1", 0))
         assert len(p.get_log()) == 0

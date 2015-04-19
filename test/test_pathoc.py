@@ -18,10 +18,10 @@ class _TestDaemon:
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
-            ssl=self.ssl,
-            ssloptions=self.ssloptions,
-            staticdir=tutils.test_data.path("data"),
-            anchors=[
+            ssl = self.ssl,
+            ssloptions = self.ssloptions,
+            staticdir = tutils.test_data.path("data"),
+            anchors = [
                 (re.compile("/anchor/.*"), language.parse_response("202"))
             ]
         )

@@ -51,7 +51,7 @@ def send_chunk(fp, val, blocksize, start, end):
     return end-start
 
 
-def write_values(fp, vals, actions, sofar=0, skip=0, blocksize=BLOCKSIZE):
+def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
     """
         vals: A list of values, which may be strings or Value objects.
 
@@ -235,7 +235,7 @@ class _Token(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+    @classmethod
     def expr(klass): # pragma: no cover
         """
             A parse expression.
@@ -709,7 +709,7 @@ class _Action(_Token):
         pass
 
     @abc.abstractmethod
-    def intermediate(self): # pragma: no cover
+    def intermediate(self, settings): # pragma: no cover
         pass
 
 
@@ -791,6 +791,7 @@ class InjectAt(_Action):
 class _Message(object):
     __metaclass__ = abc.ABCMeta
     version = "HTTP/1.1"
+    logattrs = []
 
     def __init__(self, tokens):
         self.tokens = tokens
@@ -873,7 +874,7 @@ class _Message(object):
     def preamble(self, settings): # pragma: no cover
         pass
 
-    @abc.abstractmethod
+    @classmethod
     def expr(klass): # pragma: no cover
         pass
 

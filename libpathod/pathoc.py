@@ -116,6 +116,7 @@ class Pathoc(tcp.TCPClient):
         self.clientcert = clientcert
         self.sslversion = utils.SSLVERSIONS[sslversion]
         self.ciphers = ciphers
+        self.sslinfo = None
 
         self.showreq = showreq
         self.showresp = showresp
@@ -187,6 +188,8 @@ class Pathoc(tcp.TCPClient):
             r: A language.Request object, or a string representing one request.
 
             Returns True if we have a non-ignored response.
+
+            May raise http.HTTPError, tcp.NetLibError
         """
         if isinstance(r, basestring):
             r = language.parse_requests(r)[0]
@@ -203,7 +206,6 @@ class Pathoc(tcp.TCPClient):
                 self.address.host
             )
             self.wfile.flush()
-
             resp = list(http.read_response(self.rfile, r.method.string(), None))
             resp.append(self.sslinfo)
             resp = Response(*resp)
@@ -224,22 +226,25 @@ class Pathoc(tcp.TCPClient):
         finally:
             if req:
                 if self.ignorecodes and resp and resp.status_code in self.ignorecodes:
-                    return None
+                    resp = None
+                else:
+                    if self.explain:
+                        print >> self.fp, ">> Spec:", r.spec()
 
-                if self.explain:
-                    print >> self.fp, ">> Spec:", r.spec()
+                    if self.showreq:
+                        self._show(
+                            self.fp, ">> Request", self.wfile.get_log(), self.hexdump
+                        )
 
-                if self.showreq:
-                    self._show(
-                        self.fp, ">> Request", self.wfile.get_log(), self.hexdump
-                    )
-
-                if self.showsummary and resp:
-                    self._show_summary(self.fp, resp)
-                if self.showresp:
-                    self._show(
-                        self.fp, "<< Response", self.rfile.get_log(), self.hexdump
-                    )
+                    if self.showsummary and resp:
+                        self._show_summary(self.fp, resp)
+                    if self.showresp:
+                        self._show(
+                            self.fp,
+                            "<< Response",
+                            self.rfile.get_log(),
+                            self.hexdump
+                        )
         return resp
 
 
@@ -310,7 +315,7 @@ def main(args): # pragma: nocover
                     sys.stdout.flush()
                     if ret and args.oneshot:
                         return
-                except (http.HttpError, tcp.NetlibError), v:
+                except (http.HttpError, tcp.NetLibError), v:
                     pass
     except KeyboardInterrupt:
         pass

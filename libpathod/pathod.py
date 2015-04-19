@@ -233,7 +233,7 @@ class PathodHandler(tcp.BaseHandler):
     def handle(self):
         if self.server.ssl:
             try:
-                cert, key, chain_file = self.server.ssloptions.get_cert(None)
+                cert, key, _ = self.server.ssloptions.get_cert(None)
                 self.convert_to_ssl(
                     cert, key,
                     handle_sni=self.handle_sni,
@@ -276,7 +276,6 @@ class Pathod(tcp.TCPServer):
     def __init__(
         self,
         addr,
-        confdir=CONFDIR,
         ssl=False,
         ssloptions=None,
         craftanchor="/p/",

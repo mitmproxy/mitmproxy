@@ -4,8 +4,8 @@ import os
 import os.path
 import sys
 import re
-from . import pathoc, pathod, version, utils, language
 from netlib import http_uastrings
+from . import pathoc, pathod, version, utils, language
 
 
 def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
