@@ -2,6 +2,7 @@ import json
 import cStringIO
 import re
 
+from netlib import tcp, http
 from libpathod import pathoc, test, version, pathod, language
 import tutils
 
@@ -38,8 +39,8 @@ class _TestDaemon:
             ssl = self.ssl
         )
         c.connect()
-        r = c.request("get:/api/info")
-        assert tuple(json.loads(r.content)["version"]) == version.IVERSION
+        resp = c.request("get:/api/info")
+        assert tuple(json.loads(resp.content)["version"]) == version.IVERSION
 
     def tval(
         self,
@@ -51,10 +52,22 @@ class _TestDaemon:
         hexdump=False,
         timeout=None,
         ignorecodes=None,
-        ignoretimeout=None
+        ignoretimeout=None,
+        showsummary=True
     ):
         s = cStringIO.StringIO()
-        c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl=self.ssl)
+        c = pathoc.Pathoc(
+            ("127.0.0.1", self.d.port),
+            ssl = self.ssl,
+            showreq = showreq,
+            showresp = showresp,
+            explain = explain,
+            hexdump = hexdump,
+            ignorecodes = ignorecodes,
+            ignoretimeout = ignoretimeout,
+            showsummary = showsummary,
+            fp = s
+        )
         c.connect(showssl=showssl, fp=s)
         if timeout:
             c.settimeout(timeout)
@@ -62,16 +75,10 @@ class _TestDaemon:
             r = language.parse_requests(i)[0]
             if explain:
                 r = r.freeze({})
-            c.print_request(
-                r,
-                showreq = showreq,
-                showresp = showresp,
-                explain = explain,
-                hexdump = hexdump,
-                ignorecodes = ignorecodes,
-                ignoretimeout = ignoretimeout,
-                fp = s
-            )
+            try:
+                c.request(r)
+            except (http.HttpError, tcp.NetLibError), v:
+                pass
         return s.getvalue()
 
 
@@ -122,6 +129,8 @@ class TestDaemon(_TestDaemon):
 
     def test_ignorecodes(self):
         assert "200" in self.tval(["get:'/p/200:b@1'"])
+        assert "200" in self.tval(["get:'/p/200:b@1'"])
+        assert "200" in self.tval(["get:'/p/200:b@1'"])
         assert "200" not in self.tval(["get:'/p/200:b@1'"], ignorecodes=[200])
         assert "200" not in self.tval(["get:'/p/200:b@1'"], ignorecodes=[200, 201])
         assert "202" in self.tval(["get:'/p/202:b@1'"], ignorecodes=[200, 201])
@@ -129,7 +138,7 @@ class TestDaemon(_TestDaemon):
     def test_timeout(self):
         assert "Timeout" in self.tval(["get:'/p/200:p0,10'"], timeout=0.01)
         assert "HTTP" in self.tval(["get:'/p/200:p5,10'"], showresp=True, timeout=0.01)
-        assert not "HTTP" in self.tval(["get:'/p/200:p5,10'"], showresp=True, timeout=0.01, ignoretimeout=True)
+        assert not "HTTP" in self.tval(["get:'/p/200:p3,10'"], showresp=True, timeout=0.01, ignoretimeout=True)
 
     def test_showresp(self):
         reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
@@ -138,7 +147,7 @@ class TestDaemon(_TestDaemon):
         assert self.tval(reqs, showresp=True, hexdump=True).count("hex dump") == 2
 
     def test_showresp_httperr(self):
-        v = self.tval(["get:'/p/200:d20'"], showresp=True)
+        v = self.tval(["get:'/p/200:d20'"], showresp=True, showsummary=True)
         assert "Invalid headers" in v
         assert "HTTP/" in v
 

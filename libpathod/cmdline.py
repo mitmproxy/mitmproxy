@@ -379,7 +379,6 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         if os.path.isfile(spec):
             data = open(spec).read()
             spec = data
-
         try:
             req = language.parse_response(spec)
         except language.ParseException, v:
