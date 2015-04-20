@@ -331,12 +331,15 @@ def read_response(rfile, request_method, body_size_limit, include_body=True):
         Return an (httpversion, code, msg, headers, content) tuple.
 
         By default, both response header and body are read.
-        If include_body=False is specified, content may be one of the following:
+        If include_body=False is specified, content may be one of the
+        following:
         - None, if the response is technically allowed to have a response body
-        - "", if the response must not have a response body (e.g. it's a response to a HEAD request)
+        - "", if the response must not have a response body (e.g. it's a
+        response to a HEAD request)
     """
     line = rfile.readline()
-    if line == "\r\n" or line == "\n":  # Possible leftover from previous message
+    # Possible leftover from previous message
+    if line == "\r\n" or line == "\n":
         line = rfile.readline()
     if not line:
         raise HttpErrorConnClosed(502, "Server disconnect.")
@@ -373,7 +376,15 @@ def read_http_body(*args, **kwargs):
     )
 
 
-def read_http_body_chunked(rfile, headers, limit, request_method, response_code, is_request, max_chunk_size=None):
+def read_http_body_chunked(
+    rfile,
+    headers,
+    limit,
+    request_method,
+    response_code,
+    is_request,
+    max_chunk_size=None
+):
     """
         Read an HTTP message body:
 

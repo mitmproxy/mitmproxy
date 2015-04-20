@@ -8,9 +8,11 @@ def isascii(s):
         return False
     return True
 
+
 # best way to do it in python 2.x
 def bytes_to_int(i):
-  return int(i.encode('hex'), 16)
+    return int(i.encode('hex'), 16)
+
 
 def cleanBin(s, fixspacing=False):
     """
