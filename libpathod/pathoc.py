@@ -205,7 +205,7 @@ class Pathoc(tcp.TCPClient):
                 r,
                 self.wfile,
                 self.settings,
-                requets_host = self.address.host
+                request_host = self.address.host
             )
             self.wfile.flush()
             resp = list(
@@ -290,7 +290,7 @@ def main(args): # pragma: nocover
             )
             if args.explain or args.memo:
                 playlist = [
-                    i.freeze(p.settings, p.address.host) for i in playlist
+                    i.freeze(p.settings, request_host=p.address.host) for i in playlist
                 ]
             if args.memo:
                 newlist = []
