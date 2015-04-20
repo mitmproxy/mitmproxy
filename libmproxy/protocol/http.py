@@ -332,8 +332,7 @@ class HTTPRequest(HTTPMessage):
         Raises:
             HttpError: If the input is invalid.
         """
-        httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end = (
-            None, None, None, None, None, None, None, None, None, None)
+        timestamp_start, timestamp_end = None, None
 
         timestamp_start = utils.timestamp()
         if hasattr(rfile, "reset_timestamps"):
@@ -869,7 +868,6 @@ class HTTPResponse(HTTPMessage):
                 )
             )
         self.headers["Set-Cookie"] = values
-
 
 
 class HTTPFlow(Flow):
