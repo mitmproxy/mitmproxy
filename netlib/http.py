@@ -1,7 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
-import string, urlparse, binascii
+import collections
+import string
+import urlparse
+import binascii
 import sys
-from . import odict, utils
+from . import odict, utils, tcp
 
 
 class HttpError(Exception):
@@ -28,6 +31,19 @@ def _is_valid_host(host):
     if "\0" in host:
         return None
     return True
+
+
+def get_line(fp):
+    """
+        Get a line, possibly preceded by a blank.
+    """
+    line = fp.readline()
+    if line == "\r\n" or line == "\n":
+        # Possible leftover from previous message
+        line = fp.readline()
+    if line == "":
+        raise tcp.NetLibDisconnect()
+    return line
 
 
 def parse_url(url):
@@ -436,3 +452,107 @@ def expected_http_body_size(headers, is_request, request_method, response_code):
     if is_request:
         return 0
     return -1
+
+
+Request = collections.namedtuple(
+    "Request",
+    [
+        "form_in",
+        "method",
+        "scheme",
+        "host",
+        "port",
+        "path",
+        "httpversion",
+        "headers",
+        "content"
+    ]
+)
+
+
+def read_request(rfile, include_body=True, body_size_limit=None, wfile=None):
+    """
+    Parse an HTTP request from a file stream
+
+    Args:
+        rfile (file): Input file to read from
+        include_body (bool): Read response body as well
+        body_size_limit (bool): Maximum body size
+        wfile (file): If specified, HTTP Expect headers are handled
+        automatically, by writing a HTTP 100 CONTINUE response to the stream.
+
+    Returns:
+        Request: The HTTP request
+
+    Raises:
+        HttpError: If the input is invalid.
+    """
+    httpversion, host, port, scheme, method, path, headers, content = (
+        None, None, None, None, None, None, None, None)
+
+    request_line = get_line(rfile)
+
+    request_line_parts = parse_init(request_line)
+    if not request_line_parts:
+        raise HttpError(
+            400,
+            "Bad HTTP request line: %s" % repr(request_line)
+        )
+    method, path, httpversion = request_line_parts
+
+    if path == '*' or path.startswith("/"):
+        form_in = "relative"
+        if not utils.isascii(path):
+            raise HttpError(
+                400,
+                "Bad HTTP request line: %s" % repr(request_line)
+            )
+    elif method.upper() == 'CONNECT':
+        form_in = "authority"
+        r = parse_init_connect(request_line)
+        if not r:
+            raise HttpError(
+                400,
+                "Bad HTTP request line: %s" % repr(request_line)
+            )
+        host, port, _ = r
+        path = None
+    else:
+        form_in = "absolute"
+        r = parse_init_proxy(request_line)
+        if not r:
+            raise HttpError(
+                400,
+                "Bad HTTP request line: %s" % repr(request_line)
+            )
+        _, scheme, host, port, path, _ = r
+
+    headers = read_headers(rfile)
+    if headers is None:
+        raise HttpError(400, "Invalid headers")
+
+    expect_header = headers.get_first("expect")
+    if expect_header and expect_header.lower() == "100-continue" and httpversion >= (1, 1):
+        wfile.write(
+            'HTTP/1.1 100 Continue\r\n'
+            '\r\n'
+        )
+        wfile.flush()
+        del headers['expect']
+
+    if include_body:
+        content = read_http_body(
+            rfile, headers, body_size_limit, method, None, True
+        )
+
+    return Request(
+        form_in,
+        method,
+        scheme,
+        host,
+        port,
+        path,
+        httpversion,
+        headers,
+        content
+    )

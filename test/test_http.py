@@ -366,3 +366,75 @@ def test_parse_http_basic_auth():
     assert not http.parse_http_basic_auth("foo bar")
     v = "basic " + binascii.b2a_base64("foo")
     assert not http.parse_http_basic_auth(v)
+
+
+def test_get_line():
+    r = cStringIO.StringIO("\nfoo")
+    assert http.get_line(r) == "foo"
+    tutils.raises(tcp.NetLibDisconnect, http.get_line, r)
+
+
+class TestReadRequest():
+
+    def tst(self, data, **kwargs):
+        r = cStringIO.StringIO(data)
+        return http.read_request(r, **kwargs)
+
+    def test_invalid(self):
+        tutils.raises(
+            "bad http request",
+            self.tst,
+            "xxx"
+        )
+        tutils.raises(
+            "bad http request line",
+            self.tst,
+            "get /\xff HTTP/1.1"
+        )
+        tutils.raises(
+            "invalid headers",
+            self.tst,
+            "get / HTTP/1.1\r\nfoo"
+        )
+
+    def test_asterisk_form_in(self):
+        v = self.tst("OPTIONS * HTTP/1.1")
+        assert v.form_in == "relative"
+        assert v.method == "OPTIONS"
+
+    def test_absolute_form_in(self):
+        tutils.raises(
+            "Bad HTTP request line",
+            self.tst,
+            "GET oops-no-protocol.com HTTP/1.1"
+        )
+        v = self.tst("GET http://address:22/ HTTP/1.1")
+        assert v.form_in == "absolute"
+        assert v.port == 22
+        assert v.host == "address"
+        assert v.scheme == "http"
+
+    def test_connect(self):
+        tutils.raises(
+            "Bad HTTP request line",
+            self.tst,
+            "CONNECT oops-no-port.com HTTP/1.1"
+        )
+        v = self.tst("CONNECT foo.com:443 HTTP/1.1")
+        assert v.form_in == "authority"
+        assert v.method == "CONNECT"
+        assert v.port == 443
+        assert v.host == "foo.com"
+
+    def test_expect(self):
+        w = cStringIO.StringIO()
+        r = cStringIO.StringIO(
+            "GET / HTTP/1.1\r\n"
+            "Content-Length: 3\r\n"
+            "Expect: 100-continue\r\n\r\n"
+            "foobar",
+        )
+        v = http.read_request(r, wfile=w)
+        assert w.getvalue() == "HTTP/1.1 100 Continue\r\n\r\n"
+        assert v.content == "foo"
+        assert r.read(3) == "bar"
