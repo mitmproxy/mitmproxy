@@ -314,6 +314,18 @@ def parse_response_line(line):
     return (proto, code, msg)
 
 
+Response = collections.namedtuple(
+    "Response",
+    [
+        "httpversion",
+        "code",
+        "msg",
+        "headers",
+        "content"
+    ]
+)
+
+
 def read_response(rfile, request_method, body_size_limit, include_body=True):
     """
         Return an (httpversion, code, msg, headers, content) tuple.
@@ -352,7 +364,7 @@ def read_response(rfile, request_method, body_size_limit, include_body=True):
         # if include_body==False then a None content means the body should be
         # read separately
         content = None
-    return httpversion, code, msg, headers, content
+    return Response(httpversion, code, msg, headers, content)
 
 
 def read_http_body(*args, **kwargs):
@@ -531,8 +543,8 @@ def read_request(rfile, include_body=True, body_size_limit=None, wfile=None):
     if headers is None:
         raise HttpError(400, "Invalid headers")
 
-    expect_header = headers.get_first("expect")
-    if expect_header and expect_header.lower() == "100-continue" and httpversion >= (1, 1):
+    expect_header = headers.get_first("expect", "").lower()
+    if expect_header == "100-continue" and httpversion >= (1, 1):
         wfile.write(
             'HTTP/1.1 100 Continue\r\n'
             '\r\n'
