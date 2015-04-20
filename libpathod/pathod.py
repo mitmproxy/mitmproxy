@@ -77,13 +77,12 @@ class PathodHandler(tcp.BaseHandler):
             return False, log
 
         if self.server.explain and not isinstance(crafted, language.PathodErrorResponse):
-            crafted = crafted.freeze(self.server.request_settings, None)
+            crafted = crafted.freeze(self.server.request_settings)
             self.info(">> Spec: %s" % crafted.spec())
         response_log = language.serve(
             crafted,
             self.wfile,
-            self.server.request_settings,
-            None
+            self.server.request_settings
         )
         if response_log["disconnect"]:
             return False, response_log

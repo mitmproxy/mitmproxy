@@ -124,7 +124,9 @@ class TestValueFile:
             assert v.get_generator(dict(staticdir=t))
 
             v = language.Value.parseString("<path2")[0]
-            tutils.raises(language.FileAccessDenied, v.get_generator, dict(staticdir=t))
+            tutils.raises(
+                language.FileAccessDenied, v.get_generator, dict(staticdir=t)
+            )
             tutils.raises("access disabled", v.get_generator, dict())
 
             v = language.Value.parseString("</outside")[0]
@@ -554,7 +556,7 @@ class TestRequest:
     def test_render(self):
         s = cStringIO.StringIO()
         r = parse_request("GET:'/foo'")
-        assert language.serve(r, s, {}, "foo.com")
+        assert language.serve(r, s, {}, request_host = "foo.com")
 
     def test_multiline(self):
         l = """

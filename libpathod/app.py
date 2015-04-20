@@ -51,7 +51,9 @@ def make_app(noapi):
     @app.route('/download')
     @app.route('/download.html')
     def download():
-        return render("download.html", True, section="download", version=version.VERSION)
+        return render(
+            "download.html", True, section="download", version=version.VERSION
+        )
 
     @app.route('/about')
     @app.route('/about.html')
@@ -60,7 +62,9 @@ def make_app(noapi):
 
     @app.route('/docs/pathod')
     def docs_pathod():
-        return render("docs_pathod.html", True, section="docs", subsection="pathod")
+        return render(
+            "docs_pathod.html", True, section="docs", subsection="pathod"
+        )
 
     @app.route('/docs/language')
     def docs_language():
@@ -72,21 +76,32 @@ def make_app(noapi):
 
     @app.route('/docs/pathoc')
     def docs_pathoc():
-        return render("docs_pathoc.html", True, section="docs", subsection="pathoc")
+        return render(
+            "docs_pathoc.html", True, section="docs", subsection="pathoc"
+        )
 
     @app.route('/docs/libpathod')
     def docs_libpathod():
-        return render("docs_libpathod.html", True, section="docs", subsection="libpathod")
+        return render(
+            "docs_libpathod.html", True, section="docs", subsection="libpathod"
+        )
 
     @app.route('/docs/test')
     def docs_test():
-        return render("docs_test.html", True, section="docs", subsection="test")
+        return render(
+            "docs_test.html", True, section="docs", subsection="test"
+        )
 
     @app.route('/log')
     def log():
         if app.config["pathod"].noapi:
             abort(404)
-        return render("log.html", False, section="log", log=app.config["pathod"].get_log())
+        return render(
+            "log.html",
+            False,
+            section="log",
+            log=app.config["pathod"].get_log()
+        )
 
     @app.route('/log/<int:lid>')
     def onelog(lid):
@@ -127,14 +142,22 @@ def make_app(noapi):
         s = cStringIO.StringIO()
         safe = r.preview_safe()
 
-        c = app.config["pathod"].check_policy(safe, app.config["pathod"].request_settings)
+        c = app.config["pathod"].check_policy(
+            safe,
+            app.config["pathod"].request_settings
+        )
         if c:
             args["error"] = c
             return render(template, False, **args)
         if is_request:
-            language.serve(safe, s, app.config["pathod"].request_settings, "example.com")
+            language.serve(
+                safe,
+                s,
+                app.config["pathod"].request_settings,
+                request_host = "example.com"
+            )
         else:
-            language.serve(safe, s, app.config["pathod"].request_settings, None)
+            language.serve(safe, s, app.config["pathod"].request_settings)
 
         args["output"] = utils.escape_unprintables(s.getvalue())
         return render(template, False, **args)

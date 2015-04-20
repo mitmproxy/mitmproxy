@@ -51,7 +51,7 @@ class _TestDaemon:
         showssl=False,
         hexdump=False,
         timeout=None,
-        ignorecodes=None,
+        ignorecodes=(),
         ignoretimeout=None,
         showsummary=True
     ):

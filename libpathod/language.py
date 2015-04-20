@@ -34,7 +34,7 @@ class ParseException(Exception):
         self.col = col
 
     def marked(self):
-        return "%s\n%s"%(self.s, " "*(self.col - 1) + "^")
+        return "%s\n%s"%(self.s, " " * (self.col - 1) + "^")
 
     def __str__(self):
         return "%s at char %s"%(self.msg, self.col)
@@ -46,9 +46,9 @@ def send_chunk(fp, val, blocksize, start, end):
     """
     for i in range(start, end, blocksize):
         fp.write(
-            val[i:min(i+blocksize, end)]
+            val[i:min(i + blocksize, end)]
         )
-    return end-start
+    return end - start
 
 
 def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
@@ -74,7 +74,7 @@ def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
                     v,
                     blocksize,
                     offset,
-                    a[0]-sofar-offset
+                    a[0] - sofar - offset
                 )
                 if a[1] == "pause":
                     time.sleep(a[2])
@@ -97,7 +97,7 @@ def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
         return True
 
 
-def serve(msg, fp, settings, request_host=None):
+def serve(msg, fp, settings, **kwargs):
     """
         fp: The file pointer to write to.
 
@@ -107,7 +107,7 @@ def serve(msg, fp, settings, request_host=None):
 
         Calling this function may modify the object.
     """
-    msg = msg.resolve(settings, request_host)
+    msg = msg.resolve(settings, **kwargs)
     started = time.time()
 
     vals = msg.values(settings)
@@ -596,6 +596,7 @@ class Path(_Component):
 
 class Method(_Component):
     methods = [
+        "ws",
         "get",
         "head",
         "post",
@@ -845,31 +846,6 @@ class _Message(object):
                 l += len(i.value.get_generator(settings))
         return l
 
-    def resolve(self, settings, request_host):
-        tokens = self.tokens[:]
-        if not self.raw:
-            if not utils.get_header("Content-Length", self.headers):
-                if not self.body:
-                    length = 0
-                else:
-                    length = len(self.body.value.get_generator(settings))
-                tokens.append(
-                    Header(
-                        ValueLiteral("Content-Length"),
-                        ValueLiteral(str(length)),
-                    )
-                )
-            if request_host:
-                if not utils.get_header("Host", self.headers):
-                    tokens.append(
-                        Header(
-                            ValueLiteral("Host"),
-                            ValueLiteral(request_host)
-                        )
-                    )
-        intermediate = self.__class__(tokens)
-        return self.__class__([i.resolve(intermediate, settings) for i in tokens])
-
     @abc.abstractmethod
     def preamble(self, settings): # pragma: no cover
         pass
@@ -907,8 +883,8 @@ class _Message(object):
             vals.append(self.body.value.get_generator(settings))
         return vals
 
-    def freeze(self, settings, request_host=None):
-        r = self.resolve(settings, request_host=None)
+    def freeze(self, settings, **kwargs):
+        r = self.resolve(settings, **kwargs)
         return self.__class__([i.freeze(settings) for i in r.tokens])
 
     def __repr__(self):
@@ -956,6 +932,25 @@ class Response(_Message):
                 )
             )
         return l
+
+    def resolve(self, settings):
+        tokens = self.tokens[:]
+        if not self.raw:
+            if not utils.get_header("Content-Length", self.headers):
+                if not self.body:
+                    length = 0
+                else:
+                    length = len(self.body.value.get_generator(settings))
+                tokens.append(
+                    Header(
+                        ValueLiteral("Content-Length"),
+                        ValueLiteral(str(length)),
+                    )
+                )
+        intermediate = self.__class__(tokens)
+        return self.__class__(
+            [i.resolve(intermediate, settings) for i in tokens]
+        )
 
     @classmethod
     def expr(klass):
@@ -1009,6 +1004,32 @@ class Request(_Message):
         v.append(self.version)
         return v
 
+    def resolve(self, settings, **kwargs):
+        tokens = self.tokens[:]
+        if not self.raw:
+            if not utils.get_header("Content-Length", self.headers):
+                if self.body:
+                    length = len(self.body.value.get_generator(settings))
+                    tokens.append(
+                        Header(
+                            ValueLiteral("Content-Length"),
+                            ValueLiteral(str(length)),
+                        )
+                    )
+            request_host = kwargs.get("request_host")
+            if request_host:
+                if not utils.get_header("Host", self.headers):
+                    tokens.append(
+                        Header(
+                            ValueLiteral("Host"),
+                            ValueLiteral(request_host)
+                        )
+                    )
+        intermediate = self.__class__(tokens)
+        return self.__class__(
+            [i.resolve(intermediate, settings) for i in tokens]
+        )
+
     @classmethod
     def expr(klass):
         parts = [i.expr() for i in klass.comps]
@@ -1018,6 +1039,32 @@ class Request(_Message):
                 Method.expr(),
                 Sep,
                 Path.expr(),
+                pp.ZeroOrMore(Sep + atom)
+            ]
+        )
+        return resp
+
+    def spec(self):
+        return ":".join([i.spec() for i in self.tokens])
+
+
+class WebsocketFrame(_Message):
+    comps = (
+        Body,
+        PauseAt,
+        DisconnectAt,
+        InjectAt
+    )
+    logattrs = ["body"]
+
+    @classmethod
+    def expr(klass):
+        parts = [i.expr() for i in klass.comps]
+        atom = pp.MatchFirst(parts)
+        resp = pp.And(
+            [
+                pp.Literal("ws"),
+                Sep,
                 pp.ZeroOrMore(Sep + atom)
             ]
         )

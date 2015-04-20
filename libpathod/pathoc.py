@@ -92,11 +92,11 @@ class Pathoc(tcp.TCPClient):
             showresp = False,
             explain = False,
             hexdump = False,
-            ignorecodes = False,
+            ignorecodes = (),
             ignoretimeout = False,
             showsummary = False,
             fp = sys.stderr
-        ):
+    ):
         """
             spec: A request specification
             showreq: Print requests
@@ -138,13 +138,15 @@ class Pathoc(tcp.TCPClient):
             raise PathocError("Proxy CONNECT failed")
         parsed = http.parse_response_line(l)
         if not parsed[1] == 200:
-            raise PathocError("Proxy CONNECT failed: %s - %s"%(parsed[1], parsed[2]))
+            raise PathocError(
+                "Proxy CONNECT failed: %s - %s"%(parsed[1], parsed[2])
+            )
         http.read_headers(self.rfile)
 
     def connect(self, connect_to=None, showssl=False, fp=sys.stdout):
         """
-            connect_to: A (host, port) tuple, which will be connected to with an
-            HTTP CONNECT request.
+            connect_to: A (host, port) tuple, which will be connected to with
+            an HTTP CONNECT request.
         """
         tcp.TCPClient.connect(self)
         if connect_to:
@@ -203,10 +205,12 @@ class Pathoc(tcp.TCPClient):
                 r,
                 self.wfile,
                 self.settings,
-                self.address.host
+                requets_host = self.address.host
             )
             self.wfile.flush()
-            resp = list(http.read_response(self.rfile, r.method.string(), None))
+            resp = list(
+                http.read_response(self.rfile, r.method.string(), None)
+            )
             resp.append(self.sslinfo)
             resp = Response(*resp)
         except http.HttpError, v:
@@ -225,7 +229,7 @@ class Pathoc(tcp.TCPClient):
             raise
         finally:
             if req:
-                if self.ignorecodes and resp and resp.status_code in self.ignorecodes:
+                if resp and resp.status_code in self.ignorecodes:
                     resp = None
                 else:
                     if self.explain:
@@ -233,7 +237,9 @@ class Pathoc(tcp.TCPClient):
 
                     if self.showreq:
                         self._show(
-                            self.fp, ">> Request", self.wfile.get_log(), self.hexdump
+                            self.fp, ">> Request",
+                            self.wfile.get_log(),
+                            self.hexdump
                         )
 
                     if self.showsummary and resp:
