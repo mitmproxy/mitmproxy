@@ -165,8 +165,7 @@ class TestWebSockets(test.ServerTestBase):
        empty_stream = io.BytesIO("")
        assert "" == websockets.read_handshake(empty_stream, 1)
 
-
-
+       
 class BadHandshakeHandler(WebSocketsEchoHandler):
     def handshake(self):
         client_hs = websockets.read_handshake(self.rfile, 1)
