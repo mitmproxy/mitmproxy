@@ -25,6 +25,11 @@ from . import utils
 websockets_magic = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 
 
+class CONST(object):
+    MAX_16_BIT_INT = (1 << 16)
+    MAX_64_BIT_INT = (1 << 64)
+
+
 class WebSocketFrameValidationException(Exception):
     pass
 
@@ -82,14 +87,6 @@ class Frame(object):
         self.actual_payload_length = actual_payload_length
 
     @classmethod
-    def from_bytes(cls, bytestring):
-        """
-          Construct a websocket frame from an in-memory bytestring to construct
-          a frame from a stream of bytes, use from_byte_stream() directly
-        """
-        return cls.from_byte_stream(io.BytesIO(bytestring).read)
-
-    @classmethod
     def default(cls, message, from_client = False):
         """
           Construct a basic websocket frame from some default values.
@@ -145,7 +142,7 @@ class Frame(object):
         except AssertionError:
             return False
 
-    def human_readable(self):
+    def human_readable(self): # pragma: nocover
         return "\n".join([
             ("fin                   - " + str(self.fin)),
             ("rsv1                  - " + str(self.rsv1)),
@@ -160,6 +157,14 @@ class Frame(object):
             ("actual_payload_length - " + str(self.actual_payload_length))
         ])
 
+    @classmethod
+    def from_bytes(cls, bytestring):
+        """
+          Construct a websocket frame from an in-memory bytestring
+          to construct a frame from a stream of bytes, use from_file() directly
+        """ 
+        return cls.from_file(io.BytesIO(bytestring))
+
     def safe_to_bytes(self):
         if self.is_valid():
             return self.to_bytes()
@@ -172,8 +177,6 @@ class Frame(object):
             If you haven't checked is_valid_frame() then there's no guarentees
             that the serialized bytes will be correct. see safe_to_bytes()
         """
-        max_16_bit_int = (1 << 16)
-        max_64_bit_int = (1 << 63)
 
         # break down of the bit-math used to construct the first byte from the
         # frame's integer values first shift the significant bit into the
@@ -199,11 +202,11 @@ class Frame(object):
 
         if self.actual_payload_length < 126:
             pass
-        elif self.actual_payload_length < max_16_bit_int:
+        elif self.actual_payload_length < CONST.MAX_16_BIT_INT:
             # '!H' pack as 16 bit unsigned short
             # add 2 byte extended payload length
             bytes += struct.pack('!H', self.actual_payload_length)
-        elif self.actual_payload_length < max_64_bit_int:
+        elif self.actual_payload_length <  CONST.MAX_64_BIT_INT:
             # '!Q' = pack as 64 bit unsigned long long
             # add 8 bytes extended payload length
             bytes += struct.pack('!Q', self.actual_payload_length)
@@ -214,17 +217,20 @@ class Frame(object):
         bytes += self.payload # already will be encoded if neccessary
         return bytes
 
+    def to_file(self, writer):
+        writer.write(self.to_bytes())
+        writer.flush()
+
     @classmethod
-    def from_byte_stream(cls, read_bytes):
+    def from_file(cls, reader):
         """
           read a websockets frame sent by a server or client
-
-          read_bytes is a function that can be backed
-          by sockets or by any byte reader. So this
-          function may be used to read frames from disk/wire/memory
-        """
-        first_byte = utils.bytes_to_int(read_bytes(1))
-        second_byte = utils.bytes_to_int(read_bytes(1))
+      
+          reader is a "file like" object that could be backed by a network stream or a disk 
+          or an in memory stream reader
+        """ 
+        first_byte = utils.bytes_to_int(reader.read(1))
+        second_byte = utils.bytes_to_int(reader.read(1))
 
         # grab the left most bit
         fin = first_byte >> 7
@@ -241,18 +247,18 @@ class Frame(object):
             actual_payload_length = payload_length
 
         elif payload_length == 126:
-            actual_payload_length = utils.bytes_to_int(read_bytes(2))
+            actual_payload_length = utils.bytes_to_int(reader.read(2))
 
         elif payload_length == 127:
-            actual_payload_length = utils.bytes_to_int(read_bytes(8))
+            actual_payload_length = utils.bytes_to_int(reader.read(8))
 
         # masking key only present if mask bit set
         if mask_bit == 1:
-            masking_key = read_bytes(4)
+            masking_key = reader.read(4)
         else:
             masking_key = None
 
-        payload = read_bytes(actual_payload_length)
+        payload = reader.read(actual_payload_length)
 
         if mask_bit == 1:
             decoded_payload = apply_mask(payload, masking_key)
@@ -344,7 +350,7 @@ def build_handshake(headers, request):
     return b'\r\n'.join(handshake)
 
 
-def read_handshake(read_bytes, num_bytes_per_read):
+def read_handshake(reader, num_bytes_per_read):
     """
       From provided function that reads bytes, read in a
       complete HTTP request, which terminates with a CLRF
@@ -352,7 +358,7 @@ def read_handshake(read_bytes, num_bytes_per_read):
     response = b''
     doubleCLRF = b'\r\n\r\n'
     while True:
-        bytes = read_bytes(num_bytes_per_read)
+        bytes = reader.read(num_bytes_per_read)
         if not bytes:
             break
         response += bytes
@@ -386,7 +392,7 @@ def process_handshake_from_client(handshake):
     return key
 
 
-def process_handshake_from_server(handshake, client_nounce):
+def process_handshake_from_server(handshake):
     headers = headers_from_http_message(handshake)
     if headers.get("Upgrade", None) != "websocket":
         return
