@@ -29,10 +29,6 @@ class CONST(object):
     MAX_64_BIT_INT = (1 << 64)
 
 
-class WebSocketFrameValidationException(Exception):
-    pass
-
-
 class Frame(object):
     """
         Represents one websockets frame.
@@ -95,7 +91,8 @@ class Frame(object):
 
         if from_client:
             mask_bit = 1
-            masking_key = random_masking_key()
+            # Random masking key
+            masking_key = os.urandom(4)
             payload = apply_mask(message, masking_key)
         else:
             mask_bit = 0
@@ -163,12 +160,6 @@ class Frame(object):
           to construct a frame from a stream of bytes, use from_file() directly
         """
         return cls.from_file(io.BytesIO(bytestring))
-
-    def safe_to_bytes(self):
-        if self.is_valid():
-            return self.to_bytes()
-        else:
-            raise WebSocketFrameValidationException()
 
     def to_bytes(self):
         """
@@ -306,10 +297,6 @@ def apply_mask(message, masking_key):
     for char in message:
         result += chr(ord(char) ^ masks[len(result) % 4])
     return result
-
-
-def random_masking_key():
-    return os.urandom(4)
 
 
 def client_handshake_headers(key=None, version=VERSION):

@@ -1,5 +1,4 @@
-from netlib import tcp, test, websockets, http, odict
-import io
+from netlib import tcp, test, websockets, http
 import os
 from nose.tools import raises
 
@@ -120,17 +119,11 @@ class TestWebSockets(test.ServerTestBase):
                     self.random_bytes(num_bytes), is_client
                 )
                 assert frame == websockets.Frame.from_bytes(
-                    frame.safe_to_bytes()
+                    frame.to_bytes()
                 )
 
         bytes = b'\x81\x03cba'
-        assert websockets.Frame.from_bytes(bytes).safe_to_bytes() == bytes
-
-    @raises(websockets.WebSocketFrameValidationException)
-    def test_safe_to_bytes(self):
-        frame = websockets.Frame.default(self.random_bytes(8))
-        frame.actual_payload_length = 1 # corrupt the frame
-        frame.safe_to_bytes()
+        assert websockets.Frame.from_bytes(bytes).to_bytes() == bytes
 
     def test_check_server_handshake(self):
         resp = http.Response(
