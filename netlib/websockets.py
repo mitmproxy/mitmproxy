@@ -67,23 +67,23 @@ class Frame(object):
         mask_bit,                     # decimal integer 1 or 0
         payload_length_code,          # decimal integer 1 - 127
         decoded_payload,              # bytestring
-        rsv1                  = 0,    # decimal integer 1 or 0
-        rsv2                  = 0,    # decimal integer 1 or 0
-        rsv3                  = 0,    # decimal integer 1 or 0
-        payload               = None, # bytestring
-        masking_key           = None, # 32 bit byte string
+        rsv1 = 0,                     # decimal integer 1 or 0
+        rsv2 = 0,                     # decimal integer 1 or 0
+        rsv3 = 0,                     # decimal integer 1 or 0
+        payload = None,               # bytestring
+        masking_key = None,           # 32 bit byte string
         actual_payload_length = None, # any decimal integer
     ):
-        self.fin                   = fin
-        self.rsv1                  = rsv1
-        self.rsv2                  = rsv2
-        self.rsv3                  = rsv3
-        self.opcode                = opcode
-        self.mask_bit              = mask_bit
-        self.payload_length_code   = payload_length_code
-        self.masking_key           = masking_key
-        self.payload               = payload
-        self.decoded_payload       = decoded_payload
+        self.fin = fin
+        self.rsv1 = rsv1
+        self.rsv2 = rsv2
+        self.rsv3 = rsv3
+        self.opcode = opcode
+        self.mask_bit = mask_bit
+        self.payload_length_code = payload_length_code
+        self.masking_key = masking_key
+        self.payload = payload
+        self.decoded_payload = decoded_payload
         self.actual_payload_length = actual_payload_length
 
     @classmethod
@@ -162,7 +162,7 @@ class Frame(object):
         """
           Construct a websocket frame from an in-memory bytestring
           to construct a frame from a stream of bytes, use from_file() directly
-        """ 
+        """
         return cls.from_file(io.BytesIO(bytestring))
 
     def safe_to_bytes(self):
@@ -206,7 +206,7 @@ class Frame(object):
             # '!H' pack as 16 bit unsigned short
             # add 2 byte extended payload length
             bytes += struct.pack('!H', self.actual_payload_length)
-        elif self.actual_payload_length <  CONST.MAX_64_BIT_INT:
+        elif self.actual_payload_length < CONST.MAX_64_BIT_INT:
             # '!Q' = pack as 64 bit unsigned long long
             # add 8 bytes extended payload length
             bytes += struct.pack('!Q', self.actual_payload_length)
@@ -225,10 +225,10 @@ class Frame(object):
     def from_file(cls, reader):
         """
           read a websockets frame sent by a server or client
-      
-          reader is a "file like" object that could be backed by a network stream or a disk 
-          or an in memory stream reader
-        """ 
+
+          reader is a "file like" object that could be backed by a network
+          stream or a disk or an in memory stream reader
+        """
         first_byte = utils.bytes_to_int(reader.read(1))
         second_byte = utils.bytes_to_int(reader.read(1))
 
@@ -336,7 +336,7 @@ def create_server_handshake(key):
     headers = [
         ('Connection', 'Upgrade'),
         ('Upgrade', 'websocket'),
-        ('Sec-WebSocket-Accept', create_server_nounce(key))
+        ('Sec-WebSocket-Accept', create_server_nonce(key))
     ]
     request = "HTTP/1.1 101 Switching Protocols"
     return build_handshake(headers, request)
@@ -406,11 +406,11 @@ def headers_from_http_message(http_message):
     )
 
 
-def create_server_nounce(client_nounce):
+def create_server_nonce(client_nonce):
     return base64.b64encode(
-        hashlib.sha1(client_nounce + websockets_magic).hexdigest().decode('hex')
+        hashlib.sha1(client_nonce + websockets_magic).hexdigest().decode('hex')
     )
 
 
-def create_client_nounce():
+def create_client_nonce():
     return base64.b64encode(os.urandom(16)).decode('utf-8')

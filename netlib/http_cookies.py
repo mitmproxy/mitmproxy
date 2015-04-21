@@ -1,18 +1,18 @@
 """
 A flexible module for cookie parsing and manipulation.
 
-This module differs from usual standards-compliant cookie modules in a number of
-ways. We try to be as permissive as possible, and to retain even mal-formed
+This module differs from usual standards-compliant cookie modules in a number
+of ways. We try to be as permissive as possible, and to retain even mal-formed
 information. Duplicate cookies are preserved in parsing, and can be set in
 formatting. We do attempt to escape and quote values where needed, but will not
 reject data that violate the specs.
 
 Parsing accepts the formats in RFC6265 and partially RFC2109 and RFC2965. We do
-not parse the comma-separated variant of Set-Cookie that allows multiple cookies
-to be set in a single header. Technically this should be feasible, but it turns
-out that violations of RFC6265 that makes the parsing problem indeterminate are
-much more common than genuine occurences of the multi-cookie variants.
-Serialization follows RFC6265.
+not parse the comma-separated variant of Set-Cookie that allows multiple
+cookies to be set in a single header. Technically this should be feasible, but
+it turns out that violations of RFC6265 that makes the parsing problem
+indeterminate are much more common than genuine occurences of the multi-cookie
+variants. Serialization follows RFC6265.
 
     http://tools.ietf.org/html/rfc6265
     http://tools.ietf.org/html/rfc2109
@@ -32,11 +32,11 @@ def _read_until(s, start, term):
         Read until one of the characters in term is reached.
     """
     if start == len(s):
-        return "", start+1
+        return "", start + 1
     for i in range(start, len(s)):
         if s[i] in term:
             return s[start:i], i
-    return s[start:i+1], i+1
+    return s[start:i + 1], i + 1
 
 
 def _read_token(s, start):
@@ -59,7 +59,7 @@ def _read_quoted_string(s, start):
     escaping = False
     ret = []
     # Skip the first quote
-    for i in range(start+1, len(s)):
+    for i in range(start + 1, len(s)):
         if escaping:
             ret.append(s[i])
             escaping = False
@@ -70,7 +70,7 @@ def _read_quoted_string(s, start):
             pass
         else:
             ret.append(s[i])
-    return "".join(ret), i+1
+    return "".join(ret), i + 1
 
 
 def _read_value(s, start, delims):
@@ -103,7 +103,7 @@ def _read_pairs(s, off=0, specials=()):
             rhs = None
             if off < len(s):
                 if s[off] == "=":
-                    rhs, off = _read_value(s, off+1, ";")
+                    rhs, off = _read_value(s, off + 1, ";")
             vals.append([lhs, rhs])
         off += 1
         if not off < len(s):

@@ -27,7 +27,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
     def send_message(self, message):
         frame = websockets.Frame.default(message, from_client = False)
         frame.to_file(self.wfile)
- 
+
     def handshake(self):
         client_hs = websockets.read_handshake(self.rfile, 1)
         key = websockets.process_handshake_from_client(client_hs)
@@ -45,7 +45,7 @@ class WebSocketsClient(tcp.TCPClient):
     def __init__(self, address, source_address=None):
         super(WebSocketsClient, self).__init__(address, source_address)
         self.version = "13"
-        self.client_nounce = websockets.create_client_nounce()
+        self.client_nonce = websockets.create_client_nonce()
         self.resource = "/"
 
     def connect(self):
@@ -54,7 +54,7 @@ class WebSocketsClient(tcp.TCPClient):
         handshake = websockets.create_client_handshake(
             self.address.host,
             self.address.port,
-            self.client_nounce,
+            self.client_nonce,
             self.version,
             self.resource
         )
@@ -63,9 +63,11 @@ class WebSocketsClient(tcp.TCPClient):
         self.wfile.flush()
 
         server_handshake = websockets.read_handshake(self.rfile, 1)
-        server_nounce = websockets.process_handshake_from_server(server_handshake)
+        server_nonce = websockets.process_handshake_from_server(
+            server_handshake
+        )
 
-        if not server_nounce == websockets.create_server_nounce(self.client_nounce):
+        if not server_nonce == websockets.create_server_nonce(self.client_nonce):
             self.close()
 
     def read_next_message(self):
@@ -74,6 +76,7 @@ class WebSocketsClient(tcp.TCPClient):
     def send_message(self, message):
         frame = websockets.Frame.default(message, from_client = True)
         frame.to_file(self.wfile)
+
 
 class TestWebSockets(test.ServerTestBase):
     handler = WebSocketsEchoHandler
@@ -124,7 +127,9 @@ class TestWebSockets(test.ServerTestBase):
                 frame = websockets.Frame.default(
                     self.random_bytes(num_bytes), is_client
                 )
-                assert frame == websockets.Frame.from_bytes(frame.safe_to_bytes())
+                assert frame == websockets.Frame.from_bytes(
+                    frame.safe_to_bytes()
+                )
 
         bytes = b'\x81\x03cba'
         assert websockets.Frame.from_bytes(bytes).safe_to_bytes() == bytes
@@ -136,36 +141,44 @@ class TestWebSockets(test.ServerTestBase):
         frame.safe_to_bytes()
 
     def test_handshake(self):
-       bad_upgrade = "not_websockets"
-       bad_header_handshake = websockets.build_handshake([
-         ('Host', '%s:%s' % ("a", "b")),
-         ('Connection', "c"),
-         ('Upgrade', bad_upgrade),
-         ('Sec-WebSocket-Key', "d"),
-         ('Sec-WebSocket-Version', "e")
-       ], "f")
+        bad_upgrade = "not_websockets"
+        bad_header_handshake = websockets.build_handshake([
+            ('Host', '%s:%s' % ("a", "b")),
+            ('Connection', "c"),
+            ('Upgrade', bad_upgrade),
+            ('Sec-WebSocket-Key', "d"),
+            ('Sec-WebSocket-Version', "e")
+        ], "f")
 
-       # check behavior when required header values are missing
-       assert None == websockets.process_handshake_from_server(bad_header_handshake)
-       assert None == websockets.process_handshake_from_client(bad_header_handshake)
+        # check behavior when required header values are missing
+        assert None is websockets.process_handshake_from_server(
+            bad_header_handshake
+        )
+        assert None is websockets.process_handshake_from_client(
+            bad_header_handshake
+        )
 
-       key = "test_key"
+        key = "test_key"
 
-       client_handshake = websockets.create_client_handshake("a","b",key,"d","e") 
-       assert key == websockets.process_handshake_from_client(client_handshake)
+        client_handshake = websockets.create_client_handshake(
+            "a", "b", key, "d", "e"
+        )
+        assert key == websockets.process_handshake_from_client(
+            client_handshake
+        )
 
-       server_handshake = websockets.create_server_handshake(key)
-       assert websockets.create_server_nounce(key) == websockets.process_handshake_from_server(server_handshake)
+        server_handshake = websockets.create_server_handshake(key)
+        assert websockets.create_server_nonce(key) == websockets.process_handshake_from_server(server_handshake)
 
-       handshake = websockets.create_client_handshake("a","b","c","d","e") 
-       stream = io.BytesIO(handshake)
-       assert handshake == websockets.read_handshake(stream, 1)
+        handshake = websockets.create_client_handshake("a", "b", "c", "d", "e")
+        stream = io.BytesIO(handshake)
+        assert handshake == websockets.read_handshake(stream, 1)
 
-       # ensure readhandshake doesn't loop forever on empty stream
-       empty_stream = io.BytesIO("")
-       assert "" == websockets.read_handshake(empty_stream, 1)
+        # ensure readhandshake doesn't loop forever on empty stream
+        empty_stream = io.BytesIO("")
+        assert "" == websockets.read_handshake(empty_stream, 1)
 
-       
+
 class BadHandshakeHandler(WebSocketsEchoHandler):
     def handshake(self):
         client_hs = websockets.read_handshake(self.rfile, 1)
