@@ -129,13 +129,11 @@ class Frame(object):
             1 <= self.opcode <= 4,
             0 <= self.mask_bit <= 1,
             1 <= self.payload_length_code <= 127,
-            self.actual_payload_length == len(self.payload)
+            self.actual_payload_length == len(self.payload),
+            1 <= len(self.masking_key) <= 4 if self.mask_bit else True,
+            self.masking_key is not None if self.mask_bit else True
         ]
         if not all(constraints):
-            return False
-        elif self.mask_bit == 1 and not 1 <= len(self.masking_key) <= 4:
-            return False
-        elif self.mask_bit == 0 and self.masking_key is not None:
             return False
         elif self.payload and self.masking_key:
             decoded = apply_mask(self.payload, self.masking_key)
