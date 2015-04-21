@@ -600,6 +600,11 @@ class TestRequest:
         r = parse_request("GET:@100").freeze({})
         assert len(r.spec()) > 100
 
+    def test_websocket(self):
+        r = parse_request('ws:"/foo"')
+        res = r.resolve({})
+        assert utils.get_header("upgrade", res.headers)
+
 
 class TestWriteValues:
     def test_send_chunk(self):

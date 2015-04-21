@@ -7,7 +7,7 @@ import time
 import copy
 import abc
 import contrib.pyparsing as pp
-from netlib import http_status, tcp, http_uastrings
+from netlib import http_status, tcp, http_uastrings, websockets
 
 import utils
 
@@ -1006,6 +1006,13 @@ class Request(_Message):
 
     def resolve(self, settings, **kwargs):
         tokens = self.tokens[:]
+        if self.method.string().lower() == "ws":
+            tokens[0] = Method("get")
+            for i in websockets.client_handshake_headers().lst:
+                if not utils.get_header(i[0], self.headers):
+                    tokens.append(
+                        Header(ValueLiteral(i[0]), ValueLiteral(i[1]))
+                    )
         if not self.raw:
             if not utils.get_header("Content-Length", self.headers):
                 if self.body:
@@ -1063,7 +1070,7 @@ class WebsocketFrame(_Message):
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
-                pp.Literal("ws"),
+                pp.Literal("wf"),
                 Sep,
                 pp.ZeroOrMore(Sep + atom)
             ]
