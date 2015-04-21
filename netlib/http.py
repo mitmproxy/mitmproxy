@@ -4,7 +4,7 @@ import string
 import urlparse
 import binascii
 import sys
-from . import odict, utils, tcp
+from . import odict, utils, tcp, http_status
 
 
 class HttpError(Exception):
@@ -314,62 +314,6 @@ def parse_response_line(line):
     return (proto, code, msg)
 
 
-Response = collections.namedtuple(
-    "Response",
-    [
-        "httpversion",
-        "code",
-        "msg",
-        "headers",
-        "content"
-    ]
-)
-
-
-def read_response(rfile, request_method, body_size_limit, include_body=True):
-    """
-        Return an (httpversion, code, msg, headers, content) tuple.
-
-        By default, both response header and body are read.
-        If include_body=False is specified, content may be one of the
-        following:
-        - None, if the response is technically allowed to have a response body
-        - "", if the response must not have a response body (e.g. it's a
-        response to a HEAD request)
-    """
-    line = rfile.readline()
-    # Possible leftover from previous message
-    if line == "\r\n" or line == "\n":
-        line = rfile.readline()
-    if not line:
-        raise HttpErrorConnClosed(502, "Server disconnect.")
-    parts = parse_response_line(line)
-    if not parts:
-        raise HttpError(502, "Invalid server response: %s" % repr(line))
-    proto, code, msg = parts
-    httpversion = parse_http_protocol(proto)
-    if httpversion is None:
-        raise HttpError(502, "Invalid HTTP version in line: %s" % repr(proto))
-    headers = read_headers(rfile)
-    if headers is None:
-        raise HttpError(502, "Invalid headers.")
-
-    if include_body:
-        content = read_http_body(
-            rfile,
-            headers,
-            body_size_limit,
-            request_method,
-            code,
-            False
-        )
-    else:
-        # if include_body==False then a None content means the body should be
-        # read separately
-        content = None
-    return Response(httpversion, code, msg, headers, content)
-
-
 def read_http_body(*args, **kwargs):
     return "".join(
         content for _, content, _ in read_http_body_chunked(*args, **kwargs)
@@ -579,3 +523,71 @@ def read_request(rfile, include_body=True, body_size_limit=None, wfile=None):
         headers,
         content
     )
+
+
+Response = collections.namedtuple(
+    "Response",
+    [
+        "httpversion",
+        "code",
+        "msg",
+        "headers",
+        "content"
+    ]
+)
+
+
+def read_response(rfile, request_method, body_size_limit, include_body=True):
+    """
+        Return an (httpversion, code, msg, headers, content) tuple.
+
+        By default, both response header and body are read.
+        If include_body=False is specified, content may be one of the
+        following:
+        - None, if the response is technically allowed to have a response body
+        - "", if the response must not have a response body (e.g. it's a
+        response to a HEAD request)
+    """
+    line = rfile.readline()
+    # Possible leftover from previous message
+    if line == "\r\n" or line == "\n":
+        line = rfile.readline()
+    if not line:
+        raise HttpErrorConnClosed(502, "Server disconnect.")
+    parts = parse_response_line(line)
+    if not parts:
+        raise HttpError(502, "Invalid server response: %s" % repr(line))
+    proto, code, msg = parts
+    httpversion = parse_http_protocol(proto)
+    if httpversion is None:
+        raise HttpError(502, "Invalid HTTP version in line: %s" % repr(proto))
+    headers = read_headers(rfile)
+    if headers is None:
+        raise HttpError(502, "Invalid headers.")
+
+    if include_body:
+        content = read_http_body(
+            rfile,
+            headers,
+            body_size_limit,
+            request_method,
+            code,
+            False
+        )
+    else:
+        # if include_body==False then a None content means the body should be
+        # read separately
+        content = None
+    return Response(httpversion, code, msg, headers, content)
+
+
+def request_preamble(method, resource, http_major="1", http_minor="1"):
+    return '%s %s HTTP/%s.%s' % (
+        method, resource, http_major, http_minor
+    )
+
+
+def response_preamble(code, message=None, http_major="1", http_minor="1"):
+    if message is None:
+        message = http_status.RESPONSES.get(code)
+    return 'HTTP/%s.%s %s %s' % (http_major, http_minor, code, message)
