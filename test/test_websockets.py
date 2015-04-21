@@ -108,6 +108,33 @@ class TestWebSockets(test.ServerTestBase):
         server_frame = websockets.Frame.default(msg, from_client = False)
         assert server_frame.is_valid()
 
+    def test_is_valid(self):
+        def f():
+            return websockets.Frame.default(self.random_bytes(10), True)
+
+        frame = f()
+        assert frame.is_valid()
+
+        frame = f()
+        frame.fin = 2
+        assert not frame.is_valid()
+
+        frame = f()
+        frame.mask_bit = 1
+        frame.masking_key = "foobbarboo"
+        assert not frame.is_valid()
+
+        frame = f()
+        frame.mask_bit = 0
+        frame.masking_key = "foob"
+        assert not frame.is_valid()
+
+        frame = f()
+        frame.masking_key = "foob"
+        frame.decoded_payload = "xxxx"
+        assert not frame.is_valid()
+
+
     def test_serialization_bijection(self):
         """
           Ensure that various frame types can be serialized/deserialized back
