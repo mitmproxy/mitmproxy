@@ -66,7 +66,9 @@ class PathodHandler(tcp.BaseHandler):
         self.sni = connection.get_servername()
 
     def serve_crafted(self, crafted):
-        error, crafted = self.server.check_policy(crafted, self.server.settings)
+        error, crafted = self.server.check_policy(
+            crafted, self.server.settings
+        )
         if error:
             err = language.make_error_response(error)
             language.serve(err, self.wfile, self.server.settings)
@@ -95,10 +97,8 @@ class PathodHandler(tcp.BaseHandler):
             again: True if request handling should continue.
             log: A dictionary, or None
         """
-        line = self.rfile.readline()
-        if line == "\r\n" or line == "\n":  # Possible leftover from previous message
-            line = self.rfile.readline()
-        if line == "":
+        line = http.get_request_line(self.rfile)
+        if not line:
             # Normal termination
             return False, None
 
@@ -113,7 +113,9 @@ class PathodHandler(tcp.BaseHandler):
             self.wfile.flush()
             if not self.server.ssloptions.not_after_connect:
                 try:
-                    cert, key, chain_file = self.server.ssloptions.get_cert(m.v[0])
+                    cert, key, chain_file = self.server.ssloptions.get_cert(
+                        m.v[0]
+                    )
                     self.convert_to_ssl(
                         cert, key,
                         handle_sni=self.handle_sni,
