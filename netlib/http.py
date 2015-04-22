@@ -33,7 +33,7 @@ def _is_valid_host(host):
     return True
 
 
-def get_line(fp):
+def get_request_line(fp):
     """
         Get a line, possibly preceded by a blank.
     """
@@ -41,8 +41,6 @@ def get_line(fp):
     if line == "\r\n" or line == "\n":
         # Possible leftover from previous message
         line = fp.readline()
-    if line == "":
-        raise tcp.NetLibDisconnect()
     return line
 
 
@@ -457,7 +455,9 @@ def read_request(rfile, include_body=True, body_size_limit=None, wfile=None):
     httpversion, host, port, scheme, method, path, headers, content = (
         None, None, None, None, None, None, None, None)
 
-    request_line = get_line(rfile)
+    request_line = get_request_line(rfile)
+    if not request_line:
+        raise tcp.NetLibDisconnect()
 
     request_line_parts = parse_init(request_line)
     if not request_line_parts:

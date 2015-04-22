@@ -412,10 +412,10 @@ def test_parse_http_basic_auth():
     assert not http.parse_http_basic_auth(v)
 
 
-def test_get_line():
+def test_get_request_line():
     r = cStringIO.StringIO("\nfoo")
-    assert http.get_line(r) == "foo"
-    tutils.raises(tcp.NetLibDisconnect, http.get_line, r)
+    assert http.get_request_line(r) == "foo"
+    assert not http.get_request_line(r)
 
 
 class TestReadRequest():

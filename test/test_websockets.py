@@ -27,7 +27,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
 
     def handshake(self):
         req = http.read_request(self.rfile)
-        key = websockets.check_client_handshake(req)
+        key = websockets.check_client_handshake(req.headers)
 
         self.wfile.write(http.response_preamble(101) + "\r\n")
         headers = websockets.server_handshake_headers(key)
@@ -56,7 +56,7 @@ class WebSocketsClient(tcp.TCPClient):
         self.wfile.flush()
 
         resp = http.read_response(self.rfile, "get", None)
-        server_nonce = websockets.check_server_handshake(resp)
+        server_nonce = websockets.check_server_handshake(resp.headers)
 
         if not server_nonce == websockets.create_server_nonce(self.client_nonce):
             self.close()
@@ -153,38 +153,22 @@ class TestWebSockets(test.ServerTestBase):
         assert websockets.Frame.from_bytes(bytes).to_bytes() == bytes
 
     def test_check_server_handshake(self):
-        resp = http.Response(
-            (1, 1),
-            101,
-            "Switching Protocols",
-            websockets.server_handshake_headers("key"),
-            ""
-        )
-        assert websockets.check_server_handshake(resp)
-        resp.headers["Upgrade"] = ["not_websocket"]
-        assert not websockets.check_server_handshake(resp)
+        headers = websockets.server_handshake_headers("key")
+        assert websockets.check_server_handshake(headers)
+        headers["Upgrade"] = ["not_websocket"]
+        assert not websockets.check_server_handshake(headers)
 
     def test_check_client_handshake(self):
-        resp = http.Request(
-            "relative",
-            "get",
-            "http",
-            "host",
-            22,
-            "/",
-            (1, 1),
-            websockets.client_handshake_headers("key"),
-            ""
-        )
-        assert websockets.check_client_handshake(resp) == "key"
-        resp.headers["Upgrade"] = ["not_websocket"]
-        assert not websockets.check_client_handshake(resp)
+        headers = websockets.client_handshake_headers("key")
+        assert websockets.check_client_handshake(headers) == "key"
+        headers["Upgrade"] = ["not_websocket"]
+        assert not websockets.check_client_handshake(headers)
 
 
 class BadHandshakeHandler(WebSocketsEchoHandler):
     def handshake(self):
         client_hs = http.read_request(self.rfile)
-        websockets.check_client_handshake(client_hs)
+        websockets.check_client_handshake(client_hs.headers)
 
         self.wfile.write(http.response_preamble(101) + "\r\n")
         headers = websockets.server_handshake_headers("malformed key")

@@ -350,16 +350,16 @@ def get_payload_length_pair(payload_bytestring):
     return (length_code, actual_length)
 
 
-def check_client_handshake(req):
-    if req.headers.get_first("upgrade", None) != "websocket":
+def check_client_handshake(headers):
+    if headers.get_first("upgrade", None) != "websocket":
         return
-    return req.headers.get_first('sec-websocket-key')
+    return headers.get_first('sec-websocket-key')
 
 
-def check_server_handshake(resp):
-    if resp.headers.get_first("upgrade", None) != "websocket":
+def check_server_handshake(headers):
+    if headers.get_first("upgrade", None) != "websocket":
         return
-    return resp.headers.get_first('sec-websocket-accept')
+    return headers.get_first('sec-websocket-accept')
 
 
 def create_server_nonce(client_nonce):
