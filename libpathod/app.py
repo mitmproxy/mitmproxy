@@ -3,7 +3,7 @@ import pprint
 import cStringIO
 import copy
 from flask import Flask, jsonify, render_template, request, abort, make_response
-import version, language, utils
+from . import version, language, utils
 from netlib import http_uastrings
 
 logging.basicConfig(level="DEBUG")
@@ -143,13 +143,12 @@ def make_app(noapi, debug):
 
         s = cStringIO.StringIO()
         safe = r.preview_safe()
-
-        c = app.config["pathod"].check_policy(
+        err, safe = app.config["pathod"].check_policy(
             safe,
             app.config["pathod"].settings
         )
-        if c:
-            args["error"] = c
+        if err:
+            args["error"] = err
             return render(template, False, **args)
         if is_request:
             set = copy.copy(app.config["pathod"].settings)

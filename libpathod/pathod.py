@@ -66,13 +66,13 @@ class PathodHandler(tcp.BaseHandler):
         self.sni = connection.get_servername()
 
     def serve_crafted(self, crafted):
-        c = self.server.check_policy(crafted, self.server.settings)
-        if c:
-            err = language.make_error_response(c)
+        error, crafted = self.server.check_policy(crafted, self.server.settings)
+        if error:
+            err = language.make_error_response(error)
             language.serve(err, self.wfile, self.server.settings)
             log = dict(
                 type="error",
-                msg=c
+                msg = error
             )
             return False, log
 
@@ -333,14 +333,15 @@ class Pathod(tcp.TCPServer):
             A policy check that verifies the request size is withing limits.
         """
         try:
+            req = req.resolve(settings)
             l = req.maximum_length(settings)
         except language.FileAccessDenied:
-            return "File access denied."
+            return "File access denied.", None
         if self.sizelimit and l > self.sizelimit:
-            return "Response too large."
+            return "Response too large.", None
         if self.nohang and any([isinstance(i, language.PauseAt) for i in req.actions]):
-            return "Pauses have been disabled."
-        return False
+            return "Pauses have been disabled.", None
+        return None, req
 
     def handle_client_connection(self, request, client_address):
         h = PathodHandler(request, client_address, self)
