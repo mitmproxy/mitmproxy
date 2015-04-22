@@ -11,6 +11,7 @@
 <ul class="nav nav-tabs">
   <li class="active"><a href="#specifying_responses" data-toggle="tab">Responses</a></li>
   <li><a href="#specifying_requests" data-toggle="tab">Requests</a></li>
+  <li><a href="#websockets" data-toggle="tab">Websockets</a></li>
 </ul>
 
 <div class="tab-content">
@@ -197,6 +198,43 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <div class="tab-pane" id="websockets">
+
+        <p>Requests and responses can be decorated with the <b>ws</b> prefix to
+        create a websockets client or server handshake. Since the websocket
+        specifier implies a request method (GET) and a response code (102),
+        these can optionally be omitted. All other request and response
+        features can be applied, and websocket-specific headers can be
+        over-ridden explicitly.</p>
+
+        <h2>Request</h2>
+
+        <pre class="example">ws:[method:]path:[colon-separated list of features]</pre></p>
+
+        <p>This will generate a wsocket client handshake with a GET method:</p>
+
+        <pre class="example">ws:/</pre></p>
+
+        <p>This will do the same, but using the (invalid) PUT method:</p>
+
+        <pre class="example">ws:put:/</pre></p>
+
+
+        <h2>Response</h2>
+
+        <pre class="example">ws[:code:][colon-separated list of features]</pre></p>
+
+        <p>This will generate a simple protocol acceptance with a 101 response
+        code:</p>
+
+        <pre class="example">ws</pre></p>
+
+        <p>This will do the same, but using the (invalid) 202 code:</p>
+
+        <pre class="example">ws:202</pre></p>
+
     </div>
 
 </div>

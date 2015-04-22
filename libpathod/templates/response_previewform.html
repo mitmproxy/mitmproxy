@@ -1,5 +1,5 @@
 <form style="margin-bottom: 0" class="form-inline" method="GET" action="/response_preview">
-    <input 
+    <input
         style="width: 18em"
         id="spec"
         name="spec"
@@ -67,6 +67,12 @@
                     <a href="/response_preview?spec=200:b@100:h@1k,ascii_letters='foo'">200:b@100:h@1k,ascii_letters='foo'</a>
                 </td>
                 <td>100 ASCII bytes as the body, randomly generated 100k header name, with the value 'foo'.</td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="/response_preview?spec=ws">ws</a>
+                </td>
+                <td>A websocket connection acceptance handshake.</td>
             </tr>
         </tbody>
     </table>

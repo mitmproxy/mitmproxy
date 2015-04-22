@@ -74,7 +74,7 @@ class _TestDaemon:
         for i in requests:
             r = language.parse_requests(i)[0]
             if explain:
-                r = r.freeze({})
+                r = r.freeze(language.Settings())
             try:
                 c.request(r)
             except (http.HttpError, tcp.NetLibError), v:

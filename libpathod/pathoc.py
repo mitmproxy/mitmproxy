@@ -108,9 +108,10 @@ class Pathoc(tcp.TCPClient):
             ignorecodes: Sequence of return codes to ignore
         """
         tcp.TCPClient.__init__(self, address)
-        self.settings = dict(
+        self.settings = language.Settings(
             staticdir = os.getcwd(),
             unconstrained_file_access = True,
+            request_host = self.address.host
         )
         self.ssl, self.sni = ssl, sni
         self.clientcert = clientcert
@@ -201,15 +202,14 @@ class Pathoc(tcp.TCPClient):
         if self.showresp:
             self.rfile.start_log()
         try:
-            req = language.serve(
-                r,
-                self.wfile,
-                self.settings,
-                request_host = self.address.host
-            )
+            req = language.serve(r, self.wfile, self.settings)
             self.wfile.flush()
             resp = list(
-                http.read_response(self.rfile, r.method.string(), None)
+                http.read_response(
+                    self.rfile,
+                    req["method"],
+                    None
+                )
             )
             resp.append(self.sslinfo)
             resp = Response(*resp)
@@ -290,7 +290,7 @@ def main(args): # pragma: nocover
             )
             if args.explain or args.memo:
                 playlist = [
-                    i.freeze(p.settings, request_host=p.address.host) for i in playlist
+                    i.freeze(p.settings) for i in playlist
                 ]
             if args.memo:
                 newlist = []

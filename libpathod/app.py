@@ -1,6 +1,7 @@
 import logging
 import pprint
 import cStringIO
+import copy
 from flask import Flask, jsonify, render_template, request, abort, make_response
 import version, language, utils
 from netlib import http_uastrings
@@ -10,6 +11,7 @@ logging.basicConfig(level="DEBUG")
 
 def make_app(noapi):
     app = Flask(__name__)
+    # app.debug = True
 
     if not noapi:
         @app.route('/api/info')
@@ -144,20 +146,17 @@ def make_app(noapi):
 
         c = app.config["pathod"].check_policy(
             safe,
-            app.config["pathod"].request_settings
+            app.config["pathod"].settings
         )
         if c:
             args["error"] = c
             return render(template, False, **args)
         if is_request:
-            language.serve(
-                safe,
-                s,
-                app.config["pathod"].request_settings,
-                request_host = "example.com"
-            )
+            set = copy.copy(app.config["pathod"].settings)
+            set.request_host = "example.com"
+            language.serve(safe, s, set)
         else:
-            language.serve(safe, s, app.config["pathod"].request_settings)
+            language.serve(safe, s, app.config["pathod"].settings)
 
         args["output"] = utils.escape_unprintables(s.getvalue())
         return render(template, False, **args)

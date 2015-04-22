@@ -66,10 +66,10 @@ class PathodHandler(tcp.BaseHandler):
         self.sni = connection.get_servername()
 
     def serve_crafted(self, crafted):
-        c = self.server.check_policy(crafted, self.server.request_settings)
+        c = self.server.check_policy(crafted, self.server.settings)
         if c:
             err = language.make_error_response(c)
-            language.serve(err, self.wfile, self.server.request_settings)
+            language.serve(err, self.wfile, self.server.settings)
             log = dict(
                 type="error",
                 msg=c
@@ -77,12 +77,12 @@ class PathodHandler(tcp.BaseHandler):
             return False, log
 
         if self.server.explain and not isinstance(crafted, language.PathodErrorResponse):
-            crafted = crafted.freeze(self.server.request_settings)
+            crafted = crafted.freeze(self.server.settings)
             self.info(">> Spec: %s" % crafted.spec())
         response_log = language.serve(
             crafted,
             self.wfile,
-            self.server.request_settings
+            self.server.settings
         )
         if response_log["disconnect"]:
             return False, response_log
@@ -199,7 +199,7 @@ class PathodHandler(tcp.BaseHandler):
             return again, retlog
         elif self.server.noweb:
             crafted = language.make_error_response("Access Denied")
-            language.serve(crafted, self.wfile, self.server.request_settings)
+            language.serve(crafted, self.wfile, self.server.settings)
             return False, dict(
                 type="error",
                 msg="Access denied: web interface disabled"
@@ -323,6 +323,10 @@ class Pathod(tcp.TCPServer):
         self.logid = 0
         self.anchors = anchors
 
+        self.settings = language.Settings(
+            staticdir = self.staticdir
+        )
+
     def check_policy(self, req, settings):
         """
             A policy check that verifies the request size is withing limits.
@@ -336,12 +340,6 @@ class Pathod(tcp.TCPServer):
         if self.nohang and any([isinstance(i, language.PauseAt) for i in req.actions]):
             return "Pauses have been disabled."
         return False
-
-    @property
-    def request_settings(self):
-        return dict(
-            staticdir=self.staticdir
-        )
 
     def handle_client_connection(self, request, client_address):
         h = PathodHandler(request, client_address, self)

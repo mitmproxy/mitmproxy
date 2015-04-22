@@ -101,7 +101,7 @@ class TestValueGenerate:
 
     def test_freeze(self):
         v = language.ValueGenerate(100, "b", "ascii")
-        f = v.freeze({})
+        f = v.freeze(language.Settings())
         assert len(f.val) == 100
 
 
@@ -121,16 +121,26 @@ class TestValueFile:
             with open(p, "wb") as f:
                 f.write("x" * 10000)
 
-            assert v.get_generator(dict(staticdir=t))
+            assert v.get_generator(language.Settings(staticdir=t))
 
             v = language.Value.parseString("<path2")[0]
             tutils.raises(
-                language.FileAccessDenied, v.get_generator, dict(staticdir=t)
+                language.FileAccessDenied,
+                v.get_generator,
+                language.Settings(staticdir=t)
             )
-            tutils.raises("access disabled", v.get_generator, dict())
+            tutils.raises(
+                "access disabled",
+                v.get_generator,
+                language.Settings()
+            )
 
             v = language.Value.parseString("</outside")[0]
-            tutils.raises("outside", v.get_generator, dict(staticdir=t))
+            tutils.raises(
+                "outside",
+                v.get_generator,
+                language.Settings(staticdir=t)
+            )
 
     def test_spec(self):
         v = language.Value.parseString("<'one two'")[0]
@@ -556,7 +566,12 @@ class TestRequest:
     def test_render(self):
         s = cStringIO.StringIO()
         r = parse_request("GET:'/foo'")
-        assert language.serve(r, s, {}, request_host = "foo.com")
+        assert language.serve(
+            r,
+            s,
+            language.Settings(request_host = "foo.com")
+        )
+
 
     def test_multiline(self):
         l = """
@@ -593,17 +608,28 @@ class TestRequest:
         rt("get:/foo:da")
 
     def test_freeze(self):
-        r = parse_request("GET:/:b@100").freeze({})
+        r = parse_request("GET:/:b@100").freeze(language.Settings())
         assert len(r.spec()) > 100
 
     def test_path_generator(self):
-        r = parse_request("GET:@100").freeze({})
+        r = parse_request("GET:@100").freeze(language.Settings())
         assert len(r.spec()) > 100
 
     def test_websocket(self):
-        r = parse_request('ws:"/foo"')
-        res = r.resolve({})
-        assert utils.get_header("upgrade", res.headers)
+        r = parse_request('ws:/path/')
+        res = r.resolve(language.Settings())
+        assert res.method.string().lower() == "get"
+        assert res.tok(language.Path).value.val == "/path/"
+        assert res.tok(language.Method).value.val.lower() == "get"
+        assert utils.get_header("Upgrade", res.headers).value.val == "websocket"
+
+        r = parse_request('ws:put:/path/')
+        res = r.resolve(language.Settings())
+        assert r.method.string().lower() == "put"
+        assert res.tok(language.Path).value.val == "/path/"
+        assert res.tok(language.Method).value.val.lower() == "put"
+        assert utils.get_header("Upgrade", res.headers).value.val == "websocket"
+
 
 
 class TestWriteValues:
@@ -725,13 +751,13 @@ class TestResponse:
         r = language.parse_response("400:b'foo':r")
         language.serve(r, s, {})
         v = s.getvalue()
-        assert not "Content-Length" in v
+        assert "Content-Length" not in v
 
     def test_length(self):
         def testlen(x):
             s = cStringIO.StringIO()
-            language.serve(x, s, {})
-            assert x.length({}) == len(s.getvalue())
+            language.serve(x, s, language.Settings())
+            assert x.length(language.Settings()) == len(s.getvalue())
         testlen(language.parse_response("400:m'msg':r"))
         testlen(language.parse_response("400:m'msg':h'foo'='bar':r"))
         testlen(language.parse_response("400:m'msg':h'foo'='bar':b@100b:r"))
@@ -796,6 +822,12 @@ class TestResponse:
         rt("400:b@100g")
         rt("400")
         rt("400:da")
+
+    def test_websockets(self):
+        r = language.parse_response("ws")
+        tutils.raises("no websocket key", r.resolve, language.Settings())
+        res = r.resolve(language.Settings(websocket_key="foo"))
+        assert res.code.string() == "101"
 
 
 def test_read_file():

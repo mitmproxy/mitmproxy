@@ -1,5 +1,5 @@
 <form style="margin-bottom: 0" class="form-inline" method="GET" action="/request_preview">
-    <input 
+    <input
         style="width: 18em"
         id="spec"
         name="spec"
@@ -45,6 +45,10 @@
             <tr>
                 <td><a href="/request_preview?spec=get:/:b@100,ascii:ir,@1">get:/:b@100,ascii:ir,@1</a></td>
                 <td>100 ASCII bytes as the body, and randomly inject a random byte</td>
+            </tr>
+            <tr>
+                <td><a href="/request_preview?spec=ws:/">ws:/</a></td>
+                <td>Initiate a websocket handshake.</td>
             </tr>
         </tbody>
     </table>

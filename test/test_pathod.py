@@ -13,7 +13,7 @@ class TestPathod(object):
         p.clear_log()
         assert len(p.get_log()) == 0
 
-        for i in range(p.LOGBUF + 1):
+        for _ in range(p.LOGBUF + 1):
             p.add_log(dict(s="foo"))
         assert len(p.get_log()) <= p.LOGBUF
 
