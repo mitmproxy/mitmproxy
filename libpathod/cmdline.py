@@ -273,6 +273,10 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         "--nocraft", dest='nocraft', default=False, action="store_true",
         help='Disable response crafting. If anchors are specified, they still work.'
     )
+    parser.add_argument(
+        "--webdebug", dest='webdebug', default=False, action="store_true",
+        help='Debugging mode for the web app (dev only).'
+    )
 
     group = parser.add_argument_group(
         'SSL',

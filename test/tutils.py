@@ -29,7 +29,7 @@ class DaemonTests(object):
             ],
             ssl = klass.ssl,
             ssloptions = so,
-            sizelimit=1*1024*1024,
+            sizelimit = 1*1024*1024,
             noweb = klass.noweb,
             noapi = klass.noapi,
             nohang = klass.nohang,
@@ -72,7 +72,6 @@ class DaemonTests(object):
         if timeout:
             c.settimeout(timeout)
         return c.request(spec)
-
 
 
 @contextmanager

@@ -9,9 +9,9 @@ from netlib import http_uastrings
 logging.basicConfig(level="DEBUG")
 
 
-def make_app(noapi):
+def make_app(noapi, debug):
     app = Flask(__name__)
-    # app.debug = True
+    app.debug = debug
 
     if not noapi:
         @app.route('/api/info')

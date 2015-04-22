@@ -289,7 +289,8 @@ class Pathod(tcp.TCPServer):
         logreq=False,
         logresp=False,
         explain=False,
-        hexdump=False
+        hexdump=False,
+        webdebug=False,
     ):
         """
             addr: (address, port) tuple. If port is 0, a free port will be
@@ -317,7 +318,7 @@ class Pathod(tcp.TCPServer):
         self.logresp, self.hexdump = logresp, hexdump
         self.explain = explain
 
-        self.app = app.make_app(noapi)
+        self.app = app.make_app(noapi, webdebug)
         self.app.config["pathod"] = self
         self.log = []
         self.logid = 0
@@ -438,6 +439,7 @@ def main(args): # pragma: nocover
             logresp = args.logresp,
             hexdump = args.hexdump,
             explain = args.explain,
+            webdebug = args.webdebug
         )
     except PathodError, v:
         print >> sys.stderr, "Error: %s"%v
