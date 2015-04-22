@@ -211,14 +211,14 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         dest='port',
         default=9999,
         type=int,
-        help='Port. Specify 0 to pick an arbitrary empty port.'
+        help='Port. Specify 0 to pick an arbitrary empty port. (9999)'
     )
     parser.add_argument(
         "-l",
         dest='address',
         default="127.0.0.1",
         type=str,
-        help='Listening address.'
+        help='Listening address. (127.0.0.1)'
     )
     parser.add_argument(
         "-a",
@@ -234,7 +234,7 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
     )
     parser.add_argument(
         "-c", dest='craftanchor', default="/p/", type=str,
-        help='Anchorpoint for URL crafting commands.'
+        help='Anchorpoint for URL crafting commands. (/p/)'
     )
     parser.add_argument(
         "--confdir",

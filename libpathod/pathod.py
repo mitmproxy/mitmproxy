@@ -97,10 +97,15 @@ class PathodHandler(tcp.BaseHandler):
             again: True if request handling should continue.
             log: A dictionary, or None
         """
+        if self.server.logreq:
+            self.rfile.start_log()
+        if self.server.logresp:
+            self.wfile.start_log()
+
         line = http.get_request_line(self.rfile)
         if not line:
             # Normal termination
-            return False, None
+            return False
 
         m = utils.MemBool()
         if m(http.parse_init_connect(line)):
@@ -126,8 +131,9 @@ class PathodHandler(tcp.BaseHandler):
                 except tcp.NetLibError, v:
                     s = str(v)
                     self.info(s)
-                    return False, dict(type="error", msg=s)
-            return True, None
+                    self.addlog(dict(type="error", msg=s))
+                    return False
+            return True
         elif m(http.parse_init_proxy(line)):
             method, _, _, _, path, httpversion = m.v
         elif m(http.parse_init_http(line)):
@@ -135,13 +141,15 @@ class PathodHandler(tcp.BaseHandler):
         else:
             s = "Invalid first line: %s" % repr(line)
             self.info(s)
-            return False, dict(type="error", msg=s)
+            self.addlog(dict(type="error", msg=s))
+            return False
 
         headers = http.read_headers(self.rfile)
         if headers is None:
             s = "Invalid headers"
             self.info(s)
-            return False, dict(type="error", msg=s)
+            self.addlog(dict(type="error", msg=s))
+            return False
 
         clientcert = None
         if self.clientcert:
@@ -178,13 +186,15 @@ class PathodHandler(tcp.BaseHandler):
         except http.HttpError, s:
             s = str(s)
             self.info(s)
-            return False, dict(type="error", msg=s)
+            self.addlog(dict(type="error", msg=s))
+            return False
 
         for i in self.server.anchors:
             if i[0].match(path):
                 self.info("crafting anchor: %s" % path)
                 again, retlog["response"] = self.serve_crafted(i[1])
-                return again, retlog
+                self.addlog(retlog)
+                return again
 
         if not self.server.nocraft and path.startswith(self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor):]
@@ -198,14 +208,16 @@ class PathodHandler(tcp.BaseHandler):
                     "Error parsing response spec: %s\n" % v.msg + v.marked()
                 )
             again, retlog["response"] = self.serve_crafted(crafted)
-            return again, retlog
+            self.addlog(retlog)
+            return again
         elif self.server.noweb:
             crafted = language.make_error_response("Access Denied")
             language.serve(crafted, self.wfile, self.server.settings)
-            return False, dict(
+            self.addlog(dict(
                 type="error",
                 msg="Access denied: web interface disabled"
-            )
+            ))
+            return False
         else:
             self.info("app: %s %s" % (method, path))
             req = wsgi.Request("http", method, path, headers, content)
@@ -218,7 +230,7 @@ class PathodHandler(tcp.BaseHandler):
                 version.NAMEVERSION
             )
             a.serve(flow, self.wfile)
-            return True, None
+            return True
 
     def _log_bytes(self, header, data, hexdump):
         s = []
@@ -230,6 +242,20 @@ class PathodHandler(tcp.BaseHandler):
             s.append("%s (unprintables escaped):" % header)
             s.append(netlib.utils.cleanBin(data))
         self.info("\n".join(s))
+
+    def addlog(self, log):
+        # FIXME: The bytes in the log should not be escaped. We do this at the
+        # moment because JSON encoding can't handle binary data, and I don't
+        # want to base64 everything.
+        if self.server.logreq:
+            bytes = self.rfile.get_log().encode("string_escape")
+            self._log_bytes("Request", bytes, self.server.hexdump)
+            log["request_bytes"] = bytes
+        if self.server.logresp:
+            bytes = self.wfile.get_log().encode("string_escape")
+            self._log_bytes("Response", bytes, self.server.hexdump)
+            log["response_bytes"] = bytes
+        self.server.add_log(log)
 
     def handle(self):
         if self.server.ssl:
@@ -254,19 +280,7 @@ class PathodHandler(tcp.BaseHandler):
                 return
         self.settimeout(self.server.timeout)
         while not self.finished:
-            if self.server.logreq:
-                self.rfile.start_log()
-            if self.server.logresp:
-                self.wfile.start_log()
-            again, log = self.handle_request()
-            if log:
-                if self.server.logreq:
-                    log["request_bytes"] = self.rfile.get_log().encode("string_escape")
-                    self._log_bytes("Request", log["request_bytes"], self.server.hexdump)
-                if self.server.logresp:
-                    log["response_bytes"] = self.wfile.get_log().encode("string_escape")
-                    self._log_bytes("Response", log["response_bytes"], self.server.hexdump)
-                self.server.add_log(log)
+            again = self.handle_request()
             if not again:
                 return
 
