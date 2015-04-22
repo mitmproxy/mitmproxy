@@ -7,6 +7,8 @@ from . import version, language, utils
 from netlib import http_uastrings
 
 logging.basicConfig(level="DEBUG")
+EXAMPLE_HOST = "example.com"
+EXAMPLE_WEBSOCKET_KEY = "examplekey"
 
 
 def make_app(noapi, debug):
@@ -142,20 +144,25 @@ def make_app(noapi, debug):
             return render(template, False, **args)
 
         s = cStringIO.StringIO()
+
+        set = copy.copy(app.config["pathod"].settings)
+        set.request_host = EXAMPLE_HOST
+        set.websocket_key = EXAMPLE_WEBSOCKET_KEY
+
         safe = r.preview_safe()
         err, safe = app.config["pathod"].check_policy(
             safe,
-            app.config["pathod"].settings
+            set
         )
         if err:
             args["error"] = err
             return render(template, False, **args)
         if is_request:
-            set = copy.copy(app.config["pathod"].settings)
-            set.request_host = "example.com"
+            set.request_host = EXAMPLE_HOST
             language.serve(safe, s, set)
         else:
-            language.serve(safe, s, app.config["pathod"].settings)
+            set.websocket_key = EXAMPLE_WEBSOCKET_KEY
+            language.serve(safe, s, set)
 
         args["output"] = utils.escape_unprintables(s.getvalue())
         return render(template, False, **args)
