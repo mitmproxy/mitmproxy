@@ -3,6 +3,10 @@ import os
 from nose.tools import raises
 
 
+def test_frame_header_bytes():
+    assert websockets.frame_header_bytes()
+
+
 class WebSocketsEchoHandler(tcp.BaseHandler):
     def __init__(self, connection, address, server):
         super(WebSocketsEchoHandler, self).__init__(
