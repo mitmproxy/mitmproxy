@@ -188,6 +188,9 @@ class CommonTests(tutils.DaemonTests):
         r = self.pathoc("ws:/p/")
         assert r.status_code == 101
 
+        r = self.pathoc("ws:/p/ws")
+        assert r.status_code == 101
+
 
 class TestDaemon(CommonTests):
     ssl = False

@@ -619,7 +619,7 @@ class WS(_Component):
 
     @classmethod
     def expr(klass):
-        spec = pp.Literal("ws")
+        spec = pp.CaselessLiteral("ws")
         spec = spec.setParseAction(lambda x: klass(*x))
         return spec
 
@@ -829,7 +829,6 @@ class InjectAt(_Action):
 
 class _Message(object):
     __metaclass__ = abc.ABCMeta
-    version = "HTTP/1.1"
     logattrs = []
 
     def __init__(self, tokens):
@@ -917,16 +916,6 @@ class _Message(object):
         ret["spec"] = self.spec()
         return ret
 
-    def values(self, settings):
-        vals = self.preamble(settings)
-        vals.append("\r\n")
-        for h in self.headers:
-            vals.extend(h.values(settings))
-        vals.append("\r\n")
-        if self.body:
-            vals.append(self.body.value.get_generator(settings))
-        return vals
-
     def freeze(self, settings):
         r = self.resolve(settings)
         return self.__class__([i.freeze(settings) for i in r.tokens])
@@ -938,7 +927,21 @@ class _Message(object):
 Sep = pp.Optional(pp.Literal(":")).suppress()
 
 
-class Response(_Message):
+class _HTTPMessage(_Message):
+    version = "HTTP/1.1"
+
+    def values(self, settings):
+        vals = self.preamble(settings)
+        vals.append("\r\n")
+        for h in self.headers:
+            vals.extend(h.values(settings))
+        vals.append("\r\n")
+        if self.body:
+            vals.append(self.body.value.get_generator(settings))
+        return vals
+
+
+class Response(_HTTPMessage):
     comps = (
         Body,
         Header,
@@ -966,12 +969,8 @@ class Response(_Message):
 
     def preamble(self, settings):
         l = [self.version, " "]
-        if self.code:
-            l.extend(self.code.values(settings))
-            code = int(self.code.code)
-        elif self.ws:
-            l.extend(Code(101).values(settings))
-            code = 101
+        l.extend(self.code.values(settings))
+        code = int(self.code.code)
         l.append(" ")
         if self.reason:
             l.extend(self.reason.values(settings))
@@ -1042,7 +1041,7 @@ class Response(_Message):
         return ":".join([i.spec() for i in self.tokens])
 
 
-class Request(_Message):
+class Request(_HTTPMessage):
     comps = (
         Body,
         Header,
@@ -1222,7 +1221,12 @@ def parse_requests(s):
     try:
         parts = pp.OneOrMore(
             pp.Group(
-                Request.expr()
+                pp.Or(
+                    [
+                        Request.expr(),
+                        WebsocketFrame.expr(),
+                    ]
+                )
             )
         ).parseString(s, parseAll=True)
         return [Request(i) for i in parts]

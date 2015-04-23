@@ -14,6 +14,13 @@ def parse_request(s):
     return language.parse_requests(s)[0]
 
 
+class TestWS:
+    def test_expr(self):
+        v = language.WS("foo")
+        assert v.expr()
+        assert v.values(language.Settings())
+
+
 class TestValueNakedLiteral:
     def test_expr(self):
         v = language.ValueNakedLiteral("foo")
@@ -572,7 +579,6 @@ class TestRequest:
             language.Settings(request_host = "foo.com")
         )
 
-
     def test_multiline(self):
         l = """
             GET
@@ -632,10 +638,18 @@ class TestRequest:
 
 
 
+class TestWebsocketFrame:
+
+    def test_spec(self):
+        e = language.WebsocketFrame.expr()
+        assert e.parseString("wf:foo")
+
+
 class TestWriteValues:
+
     def test_send_chunk(self):
         v = "foobarfoobar"
-        for bs in range(1, len(v)+2):
+        for bs in range(1, len(v) + 2):
             s = cStringIO.StringIO()
             language.send_chunk(s, v, bs, 0, len(v))
             assert s.getvalue() == v
@@ -662,7 +676,7 @@ class TestWriteValues:
 
     def test_write_values_disconnects(self):
         s = cStringIO.StringIO()
-        tst = "foo"*100
+        tst = "foo" * 100
         language.write_values(s, [tst], [(0, "disconnect")], blocksize=5)
         assert not s.getvalue()
 
@@ -675,14 +689,18 @@ class TestWriteValues:
         for bs in range(1, len(tst) + 2):
             for off in range(len(tst)):
                 s = cStringIO.StringIO()
-                language.write_values(s, [tst], [(off, "disconnect")], blocksize=bs)
+                language.write_values(
+                    s, [tst], [(off, "disconnect")], blocksize=bs
+                )
                 assert s.getvalue() == tst[:off]
 
     def test_write_values_pauses(self):
         tst = "".join(str(i) for i in range(10))
         for i in range(2, 10):
             s = cStringIO.StringIO()
-            language.write_values(s, [tst], [(2, "pause", 0), (1, "pause", 0)], blocksize=i)
+            language.write_values(
+                s, [tst], [(2, "pause", 0), (1, "pause", 0)], blocksize=i
+            )
             assert s.getvalue() == tst
 
         for i in range(2, 10):
@@ -690,7 +708,7 @@ class TestWriteValues:
             language.write_values(s, [tst], [(1, "pause", 0)], blocksize=i)
             assert s.getvalue() == tst
 
-        tst = ["".join(str(i) for i in range(10))]*5
+        tst = ["".join(str(i) for i in range(10))] * 5
         for i in range(2, 10):
             s = cStringIO.StringIO()
             language.write_values(s, tst[:], [(1, "pause", 0)], blocksize=i)
