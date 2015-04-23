@@ -184,6 +184,9 @@ class CommonTests(tutils.DaemonTests):
         r = self.pathoc(r"get:'http://foo.com/p/202':da")
         assert r.status_code == 202
 
+    def test_websocket(self):
+        r = self.pathoc("ws:/p/")
+
 
 class TestDaemon(CommonTests):
     ssl = False
