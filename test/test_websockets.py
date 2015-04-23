@@ -23,7 +23,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
 
     def read_next_message(self):
         frame = websockets.Frame.from_file(self.rfile)
-        self.on_message(frame.decoded_payload)
+        self.on_message(frame.payload)
 
     def send_message(self, message):
         frame = websockets.Frame.default(message, from_client = False)
@@ -107,7 +107,6 @@ class TestWebSockets(test.ServerTestBase):
         """
         msg = self.random_bytes()
         client_frame = websockets.Frame.default(msg, from_client = True)
-        assert client_frame.is_valid()
 
         server_frame = websockets.Frame.default(msg, from_client = False)
         assert server_frame.is_valid()
@@ -128,17 +127,6 @@ class TestWebSockets(test.ServerTestBase):
         frame.masking_key = "foobbarboo"
         assert not frame.is_valid()
 
-        frame = f()
-        frame.mask_bit = 0
-        frame.masking_key = "foob"
-        assert not frame.is_valid()
-
-        frame = f()
-        frame.masking_key = "foob"
-        frame.decoded_payload = "xxxx"
-        assert not frame.is_valid()
-
-
     def test_serialization_bijection(self):
         """
           Ensure that various frame types can be serialized/deserialized back
@@ -149,9 +137,10 @@ class TestWebSockets(test.ServerTestBase):
                 frame = websockets.Frame.default(
                     self.random_bytes(num_bytes), is_client
                 )
-                assert frame == websockets.Frame.from_bytes(
+                frame2 = websockets.Frame.from_bytes(
                     frame.to_bytes()
                 )
+                assert frame == frame2
 
         bytes = b'\x81\x03cba'
         assert websockets.Frame.from_bytes(bytes).to_bytes() == bytes
