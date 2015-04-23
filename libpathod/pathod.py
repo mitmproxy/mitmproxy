@@ -201,11 +201,12 @@ class PathodHandler(tcp.BaseHandler):
                 self.addlog(retlog)
                 return again
 
-        if not self.server.nocraft and path.startswith(self.server.craftanchor):
+        if not self.server.nocraft and utils.matchpath(path, self.server.craftanchor):
+            spec = urllib.unquote(path)[len(self.server.craftanchor) + 1:]
             key = websockets.check_client_handshake(headers)
-            if key:
-                self.settings.websocket_key = key
-            spec = urllib.unquote(path)[len(self.server.craftanchor):]
+            self.settings.websocket_key = key
+            if key and not spec:
+                spec = "ws"
             self.info("crafting spec: %s" % spec)
             try:
                 crafted = language.parse_response(spec)
@@ -301,7 +302,7 @@ class Pathod(tcp.TCPServer):
         addr,
         ssl=False,
         ssloptions=None,
-        craftanchor="/p/",
+        craftanchor="/p",
         staticdir=None,
         anchors=(),
         sizelimit=None,

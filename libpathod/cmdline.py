@@ -233,8 +233,8 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         """
     )
     parser.add_argument(
-        "-c", dest='craftanchor', default="/p/", type=str,
-        help='Anchorpoint for URL crafting commands. (/p/)'
+        "-c", dest='craftanchor', default="/p", type=str,
+        help='Anchorpoint for URL crafting commands. (/p)'
     )
     parser.add_argument(
         "--confdir",

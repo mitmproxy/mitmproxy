@@ -186,6 +186,7 @@ class CommonTests(tutils.DaemonTests):
 
     def test_websocket(self):
         r = self.pathoc("ws:/p/")
+        assert r.status_code == 101
 
 
 class TestDaemon(CommonTests):
