@@ -218,6 +218,9 @@ def copy_flow_format_data(part, scope, flow):
     else:
         data = ""
         if scope in ("q", "a"):
+            if flow.request.content == None:
+                signals.status_message.send(message="Please retry, after finishing loading.")
+                return "", True
             with decoded(flow.request):
                 if part == "h":
                     data += flow.request.assemble()
@@ -229,6 +232,9 @@ def copy_flow_format_data(part, scope, flow):
             # Add padding between request and response
             data += "\r\n" * 2
         if scope in ("s", "a") and flow.response:
+            if flow.response.content == None:
+                signals.status_message.send(message="Please retry, after finishing loading.")
+                return "", True
             with decoded(flow.response):
                 if part == "h":
                     data += flow.response.assemble()
@@ -236,17 +242,18 @@ def copy_flow_format_data(part, scope, flow):
                     data += flow.response.content
                 else:
                     raise ValueError("Unknown part: {}".format(part))
-    return data
-
+    return data, False
 
 def copy_flow(part, scope, flow, master, state):
     """
     part: _c_ontent, _a_ll, _u_rl
     scope: _a_ll, re_q_uest, re_s_ponse
     """
-    data = copy_flow_format_data(part, scope, flow)
+    data, err = copy_flow_format_data(part, scope, flow)
 
-    if not data:
+    if err:
+        return
+    elif not data:
         if scope == "q":
             signals.status_message.send(message="No request content to copy.")
         elif scope == "s":
