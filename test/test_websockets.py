@@ -1,10 +1,9 @@
-from netlib import tcp, test, websockets, http
+import cStringIO
 import os
+
 from nose.tools import raises
 
-
-def test_frame_header_bytes():
-    assert websockets.frame_header_bytes()
+from netlib import tcp, test, websockets, http
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):
@@ -119,12 +118,12 @@ class TestWebSockets(test.ServerTestBase):
         assert frame.is_valid()
 
         frame = f()
-        frame.fin = 2
+        frame.header.fin = 2
         assert not frame.is_valid()
 
         frame = f()
-        frame.mask_bit = 1
-        frame.masking_key = "foobbarboo"
+        frame.header.mask_bit = 1
+        frame.header.masking_key = "foobbarboo"
         assert not frame.is_valid()
 
     def test_serialization_bijection(self):
@@ -181,3 +180,39 @@ class TestBadHandshake(test.ServerTestBase):
         client = WebSocketsClient(("127.0.0.1", self.port))
         client.connect()
         client.send_message("hello")
+
+
+class TestFrameHeader:
+    def test_roundtrip(self):
+        def round(*args, **kwargs):
+            f = websockets.FrameHeader(*args, **kwargs)
+            bytes = f.to_bytes()
+            f2 = websockets.FrameHeader.from_file(cStringIO.StringIO(bytes))
+            assert f == f2
+        round()
+        round(fin=1)
+        round(rsv1=1)
+        round(rsv2=1)
+        round(rsv3=1)
+        round(payload_length=1)
+        round(payload_length=100)
+        round(payload_length=1000)
+        round(payload_length=10000)
+        round(opcode=websockets.OPCODE.PING)
+        round(masking_key="test")
+
+    def test_funky(self):
+        f = websockets.FrameHeader(masking_key="test", mask=False)
+        bytes = f.to_bytes()
+        f2 = websockets.FrameHeader.from_file(cStringIO.StringIO(bytes))
+        assert not f2.mask
+
+
+class TestFrame:
+    def test_roundtrip(self):
+        def round(*args, **kwargs):
+            f = websockets.Frame(*args, **kwargs)
+            bytes = f.to_bytes()
+            f2 = websockets.Frame.from_file(cStringIO.StringIO(bytes))
+            assert f == f2
+        round("test")
