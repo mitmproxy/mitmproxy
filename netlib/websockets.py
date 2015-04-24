@@ -126,7 +126,7 @@ class FrameHeader:
         rsv1 = False,
         rsv2 = False,
         rsv3 = False,
-        masking_key = None,
+        masking_key = DEFAULT,
         mask = DEFAULT,
         length_code = DEFAULT
     ):
@@ -138,9 +138,27 @@ class FrameHeader:
         self.rsv1 = rsv1
         self.rsv2 = rsv2
         self.rsv3 = rsv3
-        self.mask = mask
-        self.masking_key = masking_key
-        self.length_code = length_code
+
+        if length_code is DEFAULT:
+            self.length_code = make_length_code(self.payload_length)
+        else:
+            self.length_code = length_code
+
+        if mask is DEFAULT and masking_key is DEFAULT:
+            self.mask = False
+            self.masking_key = ""
+        elif mask is DEFAULT:
+            self.mask = 1
+            self.masking_key = masking_key
+        elif masking_key is DEFAULT:
+            self.mask = mask
+            self.masking_key = os.urandom(4)
+        else:
+            self.mask = mask
+            self.masking_key = masking_key
+
+        if self.masking_key and len(self.masking_key) != 4:
+            raise ValueError("Masking key must be 4 bytes.")
 
     def to_bytes(self):
         first_byte = utils.setbit(0, 7, self.fin)
@@ -149,17 +167,7 @@ class FrameHeader:
         first_byte = utils.setbit(first_byte, 4, self.rsv3)
         first_byte = first_byte | self.opcode
 
-        if self.length_code is DEFAULT:
-            length_code = make_length_code(self.payload_length)
-        else:
-            length_code = self.length_code
-
-        if self.mask is DEFAULT:
-            mask = bool(self.masking_key)
-        else:
-            mask = self.mask
-
-        second_byte = utils.setbit(length_code, 7, mask)
+        second_byte = utils.setbit(self.length_code, 7, self.mask)
 
         b = chr(first_byte) + chr(second_byte)
 

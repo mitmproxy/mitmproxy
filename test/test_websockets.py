@@ -192,6 +192,18 @@ class TestFrameHeader:
 
     def test_violations(self):
         tutils.raises("opcode", websockets.FrameHeader, opcode=17)
+        tutils.raises("masking key", websockets.FrameHeader, masking_key="x")
+
+    def test_automask(self):
+        f = websockets.FrameHeader(mask=True)
+        assert f.masking_key
+
+        f = websockets.FrameHeader(masking_key="foob")
+        assert f.mask
+
+        f = websockets.FrameHeader(masking_key="foob", mask=0)
+        assert not f.mask
+        assert f.masking_key
 
 
 class TestFrame:
