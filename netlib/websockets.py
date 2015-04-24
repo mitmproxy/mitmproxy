@@ -159,7 +159,7 @@ class FrameHeader:
         else:
             mask = self.mask
 
-        second_byte = (mask << 7) | length_code
+        second_byte = utils.setbit(length_code, 7, mask)
 
         b = chr(first_byte) + chr(second_byte)
 
@@ -189,10 +189,9 @@ class FrameHeader:
         rsv1 = utils.getbit(first_byte, 6)
         rsv2 = utils.getbit(first_byte, 5)
         rsv3 = utils.getbit(first_byte, 4)
-        # grab right most 4 bits by and-ing with 00001111
+        # grab right-most 4 bits
         opcode = first_byte & 15
-        # grab left most bit
-        mask_bit = second_byte >> 7
+        mask_bit = utils.getbit(second_byte, 7)
         # grab the next 7 bits
         length_code = second_byte & 127
 
@@ -279,6 +278,14 @@ class Frame(object):
             masking_key = masking_key,
         )
 
+    @classmethod
+    def from_bytes(cls, bytestring):
+        """
+          Construct a websocket frame from an in-memory bytestring
+          to construct a frame from a stream of bytes, use from_file() directly
+        """
+        return cls.from_file(io.BytesIO(bytestring))
+
     def human_readable(self):
         return "\n".join([
             ("fin                   - " + str(self.header.fin)),
@@ -291,14 +298,6 @@ class Frame(object):
             ("masking_key           - " + repr(str(self.header.masking_key))),
             ("payload               - " + repr(str(self.payload))),
         ])
-
-    @classmethod
-    def from_bytes(cls, bytestring):
-        """
-          Construct a websocket frame from an in-memory bytestring
-          to construct a frame from a stream of bytes, use from_file() directly
-        """
-        return cls.from_file(io.BytesIO(bytestring))
 
     def to_bytes(self):
         """
@@ -338,6 +337,10 @@ class Frame(object):
             mask = header.mask,
             payload_length = header.payload_length,
             masking_key = header.masking_key,
+            rsv1 = header.rsv1,
+            rsv2 = header.rsv2,
+            rsv3 = header.rsv3,
+            length_code = header.length_code
         )
 
     def __eq__(self, other):

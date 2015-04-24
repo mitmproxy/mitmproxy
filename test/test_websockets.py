@@ -202,6 +202,10 @@ class TestFrame:
             f2 = websockets.Frame.from_file(cStringIO.StringIO(bytes))
             assert f == f2
         round("test")
+        round("test", fin=1)
+        round("test", rsv1=1)
+        round("test", opcode=websockets.OPCODE.PING)
+        round("test", masking_key="test")
 
     def test_human_readable(self):
         f = websockets.Frame()
