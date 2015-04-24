@@ -4,6 +4,7 @@ import os
 from nose.tools import raises
 
 from netlib import tcp, test, websockets, http
+import tutils
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):
@@ -106,25 +107,7 @@ class TestWebSockets(test.ServerTestBase):
         """
         msg = self.random_bytes()
         client_frame = websockets.Frame.default(msg, from_client = True)
-
         server_frame = websockets.Frame.default(msg, from_client = False)
-        assert server_frame.is_valid()
-
-    def test_is_valid(self):
-        def f():
-            return websockets.Frame.default(self.random_bytes(10), True)
-
-        frame = f()
-        assert frame.is_valid()
-
-        frame = f()
-        frame.header.fin = 2
-        assert not frame.is_valid()
-
-        frame = f()
-        frame.header.mask_bit = 1
-        frame.header.masking_key = "foobbarboo"
-        assert not frame.is_valid()
 
     def test_serialization_bijection(self):
         """
@@ -207,6 +190,9 @@ class TestFrameHeader:
         f2 = websockets.FrameHeader.from_file(cStringIO.StringIO(bytes))
         assert not f2.mask
 
+    def test_violations(self):
+        tutils.raises("opcode", websockets.FrameHeader, opcode=17)
+
 
 class TestFrame:
     def test_roundtrip(self):
@@ -216,3 +202,7 @@ class TestFrame:
             f2 = websockets.Frame.from_file(cStringIO.StringIO(bytes))
             assert f == f2
         round("test")
+
+    def test_human_readable(self):
+        f = websockets.Frame()
+        assert f.human_readable()

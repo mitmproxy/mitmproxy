@@ -115,6 +115,8 @@ def create_server_nonce(client_nonce):
 
 
 DEFAULT = object()
+
+
 class FrameHeader:
     def __init__(
         self,
@@ -128,6 +130,8 @@ class FrameHeader:
         mask = DEFAULT,
         length_code = DEFAULT
     ):
+        if not 0 <= opcode < 2 ** 4:
+            raise ValueError("opcode must be 0-16")
         self.opcode = opcode
         self.payload_length = payload_length
         self.fin = fin
@@ -274,26 +278,6 @@ class Frame(object):
             mask = mask_bit,
             masking_key = masking_key,
         )
-
-    def is_valid(self):
-        """
-            Validate websocket frame invariants, call at anytime to ensure the
-            Frame has not been corrupted.
-        """
-        constraints = [
-            0 <= self.header.fin <= 1,
-            0 <= self.header.rsv1 <= 1,
-            0 <= self.header.rsv2 <= 1,
-            0 <= self.header.rsv3 <= 1,
-            1 <= self.header.opcode <= 4,
-            0 <= self.header.mask <= 1,
-            #1 <= self.payload_length_code <= 127,
-            1 <= len(self.header.masking_key) <= 4 if self.header.mask else True,
-            self.header.masking_key is not None if self.header.mask else True
-        ]
-        if not all(constraints):
-            return False
-        return True
 
     def human_readable(self):
         return "\n".join([
