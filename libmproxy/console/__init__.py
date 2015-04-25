@@ -299,7 +299,10 @@ class ConsoleMaster(flow.FlowMaster):
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
-        self.view_flowlist()
+        if not self.eventlog:
+            signals.pop_view_state.send(self)
+        else:
+            self.view_flowlist()
 
     def _readflows(self, path):
         """
