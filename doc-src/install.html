@@ -1,27 +1,8 @@
 ## On This Page
 
-* [Installation On Mac OS X](#docOSX)
 * [Installation On Ubuntu](#docUbuntu)
+* [Installation On Mac OS X](#docOSX)
 * [Installation On Windows](#docWindows)
-* [Installation From Source](#docSource)
-
-## <a id=docOSX></a>Installation On Mac OS X
-
-The easiest way to get up and running on OSX is to download the pre-built binary packages from [mitmproxy.org](http://mitmproxy.org). If you still want to install using pip, there are a few things to keep in mind:
-
-- If you're running a Python interpreter installed with homebrew (or similar), you may have to install some dependencies by hand. 
-- Make sure that XCode is installed from the App Store, and that the command-line tools have been downloaded (XCode/Preferences/Downloads).
-
-There are a few bits of customization you might want to do to make mitmproxy comfortable to use on OSX. The default color scheme is optimized for a dark background terminal, but you can select a palette for a light terminal background with the --palette option. You can use the OSX <b>open</b> program to create a simple and effective <b>~/.mailcap</b> file to view request and response bodies:
-
-<pre class="terminal">
-application/*; /usr/bin/open -Wn %s
-audio/*; /usr/bin/open -Wn %s
-image/*; /usr/bin/open -Wn %s
-video/*; /usr/bin/open -Wn %s
-</pre>
-
-From now on you can run <a href="mitmproxy.html">mitmproxy</a> or <a href="mitmdump.html">mitmdump</a> from a terminal.
 
 ## <a id=docUbuntu></a>Installation On Ubuntu
 
@@ -33,7 +14,42 @@ $ sudo apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev l
 $ sudo pip install mitmproxy
 </pre>
 
-From now on you can run <a href="mitmproxy.html">mitmproxy</a> or <a href="mitmdump.html">mitmdump</a> from a terminal.
+Once installation is complete you can run <a href="mitmproxy.html">mitmproxy</a> or <a href="mitmdump.html">mitmdump</a> from a terminal.
+
+### Installation From Source
+
+If you would like to install mitmproxy directly from the master branch on GitHub or would like to get set up to contribute to the project, install the dependencies with apt:
+
+<pre class="terminal">
+$ sudo apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev
+</pre>
+
+Then see the <a href="https://github.com/mitmproxy/mitmproxy/blob/master/README.mkd#hacking">Hacking</a> section of the README on GitHub.
+
+
+## <a id=docOSX></a>Installation On Mac OS X
+
+The easiest way to get up and running on OSX is to download the pre-built binary packages from [mitmproxy.org](http://mitmproxy.org).
+
+There are a few bits of customization you might want to do to make mitmproxy comfortable to use on OSX. The default color scheme is optimized for a dark background terminal, but you can select a palette for a light terminal background with the --palette option. You can use the OSX <b>open</b> program to create a simple and effective <b>~/.mailcap</b> file to view request and response bodies:
+
+<pre class="terminal">
+application/*; /usr/bin/open -Wn %s
+audio/*; /usr/bin/open -Wn %s
+image/*; /usr/bin/open -Wn %s
+video/*; /usr/bin/open -Wn %s
+</pre>
+
+Once installation is complete you can run <a href="mitmproxy.html">mitmproxy</a> or <a href="mitmdump.html">mitmdump</a> from a terminal.
+
+### Installation From Source
+
+If you would like to install mitmproxy directly from the master branch on GitHub or would like to get set up to contribute to the project, ithere are a few OS X specific things to keep in mind.
+
+- Make sure that XCode is installed from the App Store, and that the command-line tools have been downloaded (XCode/Preferences/Downloads).
+- If you're running a Python interpreter installed with homebrew (or similar), you may have to install some dependencies by hand. 
+
+Then see the <a href="https://github.com/mitmproxy/mitmproxy/blob/master/README.mkd#hacking">Hacking</a> section of the README on GitHub.
 
 ## <a id=docWindows></a>Installation On Windows
 
@@ -48,22 +64,10 @@ C:\> set PATH = C:\Python27;C:\Python27\Scripts;%PATH%
 C:\> pip install mitmproxy
 </pre>
 
-From now on you can run <a href="mitmdump.html">mitmdump</a> from a Command Prompt.
+Once installation is complete you can run <a href="mitmdump.html">mitmdump</a> from a Command Prompt.
 
-## <a id=docSource></a>Installing From Source
+### Installation From Source
 
-You can install mitmproxy with pip:
+If you would like to install mitmproxy directly from the master branch on GitHub or would like to get set up to contribute to the project, install Python as outlined above, then see the <a href="https://github.com/mitmproxy/mitmproxy/blob/master/README.mkd#hacking">Hacking</a> section of the README on GitHub.
 
-<pre class="terminal">
-$ pip install mitmproxy
-</pre>
-
-If you also want to install the optional packages AMF, protobuf and CSS
-content views, do this:
-
-<pre class="terminal">
-$ pip install "mitmproxy[contentviews]"
-</pre>
-
-If you are looking for a more information on how to install mitmproxy directly from the master branch on GitHub, or are wanting to set up mitmproxy for developement purposes, see the <a href="https://github.com/mitmproxy/mitmproxy/blob/master/README.mkd#hacking">Hacking</a> section of the README on GitHub. 
 
