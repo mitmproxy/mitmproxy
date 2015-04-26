@@ -18,12 +18,8 @@ Once installation is complete you can run <a href="mitmproxy.html">mitmproxy</a>
 
 ### Installation From Source
 
-If you would like to install mitmproxy directly from the master branch on GitHub or would like to get set up to contribute to the project, install the dependencies with apt:
-
-<pre class="terminal">
-$ sudo apt-get install python-pip python-dev libffi-dev libssl-dev libxml2-dev libxslt1-dev
-</pre>
-
+If you would like to install mitmproxy directly from the master branch on GitHub or would like to get set up to contribute to the project,
+install the dependencies as you would for a regular mitmproxy installation (see previous section).
 Then see the <a href="https://github.com/mitmproxy/mitmproxy/blob/master/README.mkd#hacking">Hacking</a> section of the README on GitHub.
 
 
@@ -53,18 +49,28 @@ Then see the <a href="https://github.com/mitmproxy/mitmproxy/blob/master/README.
 
 ## <a id=docWindows></a>Installation On Windows
 
-Please note that mitmdump is the only component of mitmproxy that is supported on Windows.
+Please note that mitmdump is the only component of mitmproxy that is supported on Windows at the moment.
+There is no interactive user interface on Windows.
 
-Install the latest version of Python 2 from the <a href="https://www.python.org/downloads/windows/">Python website</a>.  The Windows MSI installer is fairly straightforward and even includes pip as long as you are installing a version of Python 2 after 2.7.9.  For the most part, you can accept the defaults but one option you should change during installation is "Add python.exe to Path".  This will make it easier to run Python.
-<img src="@!urlTo('winpythoninstaller.jpg')!@"/>
+
+First, install the latest version of Python 2.7 from the <a href="https://www.python.org/downloads/windows/">Python website</a>.
+If you already have an older version of Python 2.7 installed, make sure to install <a href="https://pip.pypa.io/en/latest/installing.html">pip</a>
+(pip is included in Python 2.7.9+ by default).
+
+Next, add Python and the Python Scripts directory to your <strong>PATH</strong> variable. You can do this easily by running the following in powershell:
 
 <pre class="terminal">
-C:\> set PATH = C:\Python27;C:\Python27\Scripts;%PATH%
-
-C:\> pip install mitmproxy
+[Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\Python27\;C:\Python27\Scripts\", "User")
 </pre>
 
-Once installation is complete you can run <a href="mitmdump.html">mitmdump</a> from a Command Prompt.
+
+Now, you can install mitmproxy by running
+
+<pre class="terminal">
+pip install mitmproxy
+</pre>
+
+Once the installation is complete, you can run <a href="mitmdump.html">mitmdump</a> from a command prompt.
 
 ### Installation From Source
 
