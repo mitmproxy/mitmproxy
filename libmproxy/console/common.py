@@ -196,18 +196,36 @@ def raw_format_flow(f, focus, extended, padding):
 def save_data(path, data, master, state):
     if not path:
         return
-    path = os.path.expanduser(path)
     try:
         with file(path, "wb") as f:
             f.write(data)
     except IOError, v:
         signals.status_message.send(message=v.strerror)
 
+def ask_save_overwite(path, data, master, state):
+    if not path:
+        return
+    path = os.path.expanduser(path)
+    if os.path.exists(path):
+        def save_overwite(k):
+            if k == "y":
+                save_data(path, data, master, state)
+
+        signals.status_prompt_onekey.send(
+            prompt = "'"+path+"' already exists. Overwite?",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = save_overwite
+        )
+    else:
+        save_data(path, data, master, state)
 
 def ask_save_path(prompt, data, master, state):
     signals.status_prompt_path.send(
         prompt = prompt,
-        callback = save_data,
+        callback = ask_save_overwite,
         args = (data, master, state)
     )
 

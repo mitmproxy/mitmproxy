@@ -23,19 +23,6 @@ class KillSignal(Exception):
     pass
 
 
-def get_line(fp):
-    """
-    Get a line, possibly preceded by a blank.
-    """
-    line = fp.readline()
-    if line == "\r\n" or line == "\n":
-        # Possible leftover from previous message
-        line = fp.readline()
-    if line == "":
-        raise tcp.NetLibDisconnect()
-    return line
-
-
 def send_connect_request(conn, host, port, update_state=True):
     upstream_request = HTTPRequest(
         "authority",
@@ -345,83 +332,29 @@ class HTTPRequest(HTTPMessage):
         Raises:
             HttpError: If the input is invalid.
         """
-        httpversion, host, port, scheme, method, path, headers, content, timestamp_start, timestamp_end = (
-            None, None, None, None, None, None, None, None, None, None)
+        timestamp_start, timestamp_end = None, None
 
         timestamp_start = utils.timestamp()
-
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        request_line = get_line(rfile)
-
-        if hasattr(rfile, "first_byte_timestamp"):
-            # more accurate timestamp_start
-            timestamp_start = rfile.first_byte_timestamp
-
-        request_line_parts = http.parse_init(request_line)
-        if not request_line_parts:
-            raise http.HttpError(
-                400,
-                "Bad HTTP request line: %s" % repr(request_line)
-            )
-        method, path, httpversion = request_line_parts
-
-        if path == '*' or path.startswith("/"):
-            form_in = "relative"
-            if not netlib.utils.isascii(path):
-                raise http.HttpError(
-                    400,
-                    "Bad HTTP request line: %s" % repr(request_line)
-                )
-        elif method.upper() == 'CONNECT':
-            form_in = "authority"
-            r = http.parse_init_connect(request_line)
-            if not r:
-                raise http.HttpError(
-                    400,
-                    "Bad HTTP request line: %s" % repr(request_line)
-                )
-            host, port, _ = r
-            path = None
-        else:
-            form_in = "absolute"
-            r = http.parse_init_proxy(request_line)
-            if not r:
-                raise http.HttpError(
-                    400,
-                    "Bad HTTP request line: %s" % repr(request_line)
-                )
-            _, scheme, host, port, path, _ = r
-
-        headers = http.read_headers(rfile)
-        if headers is None:
-            raise http.HttpError(400, "Invalid headers")
-
-        expect_header = headers.get_first("expect")
-        if expect_header and expect_header.lower() == "100-continue" and httpversion >= (1, 1):
-            wfile.write(
-                'HTTP/1.1 100 Continue\r\n'
-                '\r\n'
-            )
-            wfile.flush()
-            del headers['expect']
-
-        if include_body:
-            content = http.read_http_body(rfile, headers, body_size_limit,
-                                          method, None, True)
-            timestamp_end = utils.timestamp()
-
+        req = http.read_request(
+            rfile,
+            include_body = include_body,
+            body_size_limit = body_size_limit,
+            wfile = wfile
+        )
+        timestamp_end = utils.timestamp()
         return HTTPRequest(
-            form_in,
-            method,
-            scheme,
-            host,
-            port,
-            path,
-            httpversion,
-            headers,
-            content,
+            req.form_in,
+            req.method,
+            req.scheme,
+            req.host,
+            req.port,
+            req.path,
+            req.httpversion,
+            req.headers,
+            req.content,
             timestamp_start,
             timestamp_end
         )
@@ -937,7 +870,6 @@ class HTTPResponse(HTTPMessage):
         self.headers["Set-Cookie"] = values
 
 
-
 class HTTPFlow(Flow):
     """
     A HTTPFlow is a collection of objects representing a single HTTP
@@ -1377,7 +1309,8 @@ class HTTPHandler(ProtocolHandler):
             )
 
             if needs_server_change:
-                # force create new connection to the proxy server to reset state
+                # force create new connection to the proxy server to reset
+                # state
                 self.live.change_server(self.c.server_conn.address, force=True)
                 if ssl:
                     send_connect_request(
@@ -1387,8 +1320,9 @@ class HTTPHandler(ProtocolHandler):
                     )
                     self.c.establish_ssl(server=True)
         else:
-            # If we're not in upstream mode, we just want to update the host and
-            # possibly establish TLS. This is a no op if the addresses match.
+            # If we're not in upstream mode, we just want to update the host
+            # and possibly establish TLS. This is a no op if the addresses
+            # match.
             self.live.change_server(address, ssl=ssl)
 
         flow.server_conn = self.c.server_conn
@@ -1396,8 +1330,8 @@ class HTTPHandler(ProtocolHandler):
     def send_response_to_client(self, flow):
         if not flow.response.stream:
             # no streaming:
-            # we already received the full response from the server and can send
-            # it to the client straight away.
+            # we already received the full response from the server and can
+            # send it to the client straight away.
             self.c.client_conn.send(flow.response.assemble())
         else:
             # streaming:
@@ -1435,8 +1369,10 @@ class HTTPHandler(ProtocolHandler):
                                          flow.response.code) == -1)
         if close_connection:
             if flow.request.form_in == "authority" and flow.response.code == 200:
-                # Workaround for https://github.com/mitmproxy/mitmproxy/issues/313:
-                # Some proxies (e.g. Charles) send a CONNECT response with HTTP/1.0 and no Content-Length header
+                # Workaround for
+                # https://github.com/mitmproxy/mitmproxy/issues/313: Some
+                # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
+                # and no Content-Length header
                 pass
             else:
                 return True
@@ -1458,14 +1394,16 @@ class HTTPHandler(ProtocolHandler):
             self.expected_form_out = "relative"
             self.skip_authentication = True
 
-            # In practice, nobody issues a CONNECT request to send unencrypted HTTP requests afterwards.
-            # If we don't delegate to TCP mode, we should always negotiate a SSL connection.
+            # In practice, nobody issues a CONNECT request to send unencrypted
+            # HTTP requests afterwards. If we don't delegate to TCP mode, we
+            # should always negotiate a SSL connection.
             #
-            # FIXME:
-            # Turns out the previous statement isn't entirely true. Chrome on Windows CONNECTs to :80
-            # if an explicit proxy is configured and a websocket connection should be established.
-            # We don't support websocket at the moment, so it fails anyway, but we should come up with
-            # a better solution to this if we start to support WebSockets.
+            # FIXME: Turns out the previous statement isn't entirely true.
+            # Chrome on Windows CONNECTs to :80 if an explicit proxy is
+            # configured and a websocket connection should be established. We
+            # don't support websocket at the moment, so it fails anyway, but we
+            # should come up with a better solution to this if we start to
+            # support WebSockets.
             should_establish_ssl = (
                 address.port in self.c.config.ssl_ports
                 or
@@ -1473,12 +1411,18 @@ class HTTPHandler(ProtocolHandler):
             )
 
             if should_establish_ssl:
-                self.c.log("Received CONNECT request to SSL port. Upgrading to SSL...", "debug")
+                self.c.log(
+                    "Received CONNECT request to SSL port. "
+                    "Upgrading to SSL...", "debug"
+                )
                 self.c.establish_ssl(server=True, client=True)
                 self.c.log("Upgrade to SSL completed.", "debug")
 
             if self.c.config.check_tcp(address):
-                self.c.log("Generic TCP mode for host: %s:%s" % address(), "info")
+                self.c.log(
+                    "Generic TCP mode for host: %s:%s" % address(),
+                    "info"
+                )
                 TCPHandler(self.c).handle_messages()
                 return False
 
@@ -1499,7 +1443,8 @@ class RequestReplayThread(threading.Thread):
 
     def __init__(self, config, flow, masterq, should_exit):
         """
-        masterqueue can be a queue or None, if no scripthooks should be processed.
+            masterqueue can be a queue or None, if no scripthooks should be
+            processed.
         """
         self.config, self.flow = config, flow
         if masterq:
@@ -1525,12 +1470,17 @@ class RequestReplayThread(threading.Thread):
             if not self.flow.response:
                 # In all modes, we directly connect to the server displayed
                 if self.config.mode == "upstream":
-                    server_address = self.config.mode.get_upstream_server(self.flow.client_conn)[2:]
+                    server_address = self.config.mode.get_upstream_server(
+                        self.flow.client_conn
+                    )[2:]
                     server = ServerConnection(server_address)
                     server.connect()
                     if r.scheme == "https":
                         send_connect_request(server, r.host, r.port)
-                        server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
+                        server.establish_ssl(
+                            self.config.clientcerts,
+                            sni=self.flow.server_conn.sni
+                        )
                         r.form_out = "relative"
                     else:
                         r.form_out = "absolute"
@@ -1539,12 +1489,18 @@ class RequestReplayThread(threading.Thread):
                     server = ServerConnection(server_address)
                     server.connect()
                     if r.scheme == "https":
-                        server.establish_ssl(self.config.clientcerts, sni=self.flow.server_conn.sni)
+                        server.establish_ssl(
+                            self.config.clientcerts,
+                            sni=self.flow.server_conn.sni
+                        )
                     r.form_out = "relative"
                 server.send(r.assemble())
                 self.flow.server_conn = server
-                self.flow.response = HTTPResponse.from_stream(server.rfile, r.method,
-                                                              body_size_limit=self.config.body_size_limit)
+                self.flow.response = HTTPResponse.from_stream(
+                    server.rfile,
+                    r.method,
+                    body_size_limit=self.config.body_size_limit
+                )
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)
                 if response_reply is None or response_reply == KILL:
@@ -1554,7 +1510,8 @@ class RequestReplayThread(threading.Thread):
             if self.channel:
                 self.channel.ask("error", self.flow)
         except KillSignal:
-            # KillSignal should only be raised if there's a channel in the first place.
+            # KillSignal should only be raised if there's a channel in the
+            # first place.
             self.channel.tell("log", proxy.Log("Connection killed", "info"))
         finally:
             r.form_out = form_out_backup
