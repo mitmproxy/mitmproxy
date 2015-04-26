@@ -233,8 +233,8 @@ class ConnectionItem(urwid.WidgetWrap):
 class FlowListWalker(urwid.ListWalker):
     def __init__(self, master, state):
         self.master, self.state = master, state
-        if self.state.flow_count():
-            self.set_focus(0)
+        _, i = self.state.get_focus()
+        self.set_focus(i)
         signals.flowlist_change.connect(self.sig_flowlist_change)
 
     def sig_flowlist_change(self, sender):
