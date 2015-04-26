@@ -202,6 +202,7 @@ def save_data(path, data, master, state):
     except IOError, v:
         signals.status_message.send(message=v.strerror)
 
+
 def ask_save_overwite(path, data, master, state):
     if not path:
         return
@@ -222,6 +223,7 @@ def ask_save_overwite(path, data, master, state):
     else:
         save_data(path, data, master, state)
 
+
 def ask_save_path(prompt, data, master, state):
     signals.status_prompt_path.send(
         prompt = prompt,
@@ -236,9 +238,8 @@ def copy_flow_format_data(part, scope, flow):
     else:
         data = ""
         if scope in ("q", "a"):
-            if flow.request.content == None:
-                signals.status_message.send(message="Please retry, after finishing loading.")
-                return "", True
+            if flow.request.content is None or flow.request.content == CONTENT_MISSING:
+                return None, "Request content is missing"
             with decoded(flow.request):
                 if part == "h":
                     data += flow.request.assemble()
@@ -250,9 +251,8 @@ def copy_flow_format_data(part, scope, flow):
             # Add padding between request and response
             data += "\r\n" * 2
         if scope in ("s", "a") and flow.response:
-            if flow.response.content == None:
-                signals.status_message.send(message="Please retry, after finishing loading.")
-                return "", True
+            if flow.response.content is None or flow.response.content == CONTENT_MISSING:
+                return None, "Response content is missing"
             with decoded(flow.response):
                 if part == "h":
                     data += flow.response.assemble()
@@ -262,16 +262,19 @@ def copy_flow_format_data(part, scope, flow):
                     raise ValueError("Unknown part: {}".format(part))
     return data, False
 
+
 def copy_flow(part, scope, flow, master, state):
     """
-    part: _c_ontent, _a_ll, _u_rl
+    part: _c_ontent, _h_eaders+content, _u_rl
     scope: _a_ll, re_q_uest, re_s_ponse
     """
     data, err = copy_flow_format_data(part, scope, flow)
 
     if err:
+        signals.status_message.send(message=err)
         return
-    elif not data:
+
+    if not data:
         if scope == "q":
             signals.status_message.send(message="No request content to copy.")
         elif scope == "s":
