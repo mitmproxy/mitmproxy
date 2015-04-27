@@ -8,7 +8,7 @@ if sys.platform == "linux2":
 elif sys.platform == "darwin":
     from . import osx
     resolver = osx.Resolver
-elif sys.platform == "freebsd10":
+elif sys.platform.startswith("freebsd"):
     from . import osx
     resolver = osx.Resolver
 elif sys.platform == "win32":
