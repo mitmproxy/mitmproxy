@@ -267,7 +267,7 @@ class _Token(object):
         """
         return None
 
-    def resolve(self, msg, settings):
+    def resolve(self, settings, msg):
         """
             Resolves this token to ready it for transmission. This means that
             the calculated offsets of actions are fixed.
@@ -371,8 +371,6 @@ class ValueFile(_Token):
     def get_generator(self, settings):
         if not settings.staticdir:
             raise FileAccessDenied("File access disabled.")
-        sd = os.path.normpath(os.path.abspath(settings.staticdir))
-
         s = os.path.expanduser(self.path)
         s = os.path.normpath(
             os.path.abspath(os.path.join(settings.staticdir, s))
@@ -613,24 +611,32 @@ class Path(_Component):
         return Path(self.value.freeze(settings))
 
 
-class WS(_Component):
+class _Token(_Component):
     def __init__(self, value):
         self.value = value
 
     @classmethod
     def expr(klass):
-        spec = pp.CaselessLiteral("ws")
+        spec = pp.CaselessLiteral(klass.TOK)
         spec = spec.setParseAction(lambda x: klass(*x))
         return spec
 
     def values(self, settings):
-        return "ws"
+        return self.TOK
 
     def spec(self):
-        return "ws"
+        return self.TOK
 
     def freeze(self, settings):
         return self
+
+
+class WS(_Token):
+    TOK = "ws"
+
+
+class WF(_Token):
+    TOK = "wf"
 
 
 class Method(_Component):
@@ -724,7 +730,7 @@ class _Action(_Token):
     def __init__(self, offset):
         self.offset = offset
 
-    def resolve(self, msg, settings):
+    def resolve(self, settings, msg):
         """
             Resolves offset specifications to a numeric offset. Returns a copy
             of the action object.
@@ -889,10 +895,6 @@ class _Message(object):
                 l += len(i.value.get_generator(settings))
         return l
 
-    @abc.abstractmethod
-    def preamble(self, settings): # pragma: no cover
-        pass
-
     @classmethod
     def expr(klass): # pragma: no cover
         pass
@@ -929,6 +931,10 @@ Sep = pp.Optional(pp.Literal(":")).suppress()
 
 class _HTTPMessage(_Message):
     version = "HTTP/1.1"
+    @abc.abstractmethod
+    def preamble(self, settings): # pragma: no cover
+        pass
+
 
     def values(self, settings):
         vals = self.preamble(settings)
@@ -985,7 +991,7 @@ class Response(_HTTPMessage):
             )
         return l
 
-    def resolve(self, settings):
+    def resolve(self, settings, msg=None):
         tokens = self.tokens[:]
         if self.ws:
             if not settings.websocket_key:
@@ -1017,7 +1023,7 @@ class Response(_HTTPMessage):
                 )
         intermediate = self.__class__(tokens)
         return self.__class__(
-            [i.resolve(intermediate, settings) for i in tokens]
+            [i.resolve(settings, intermediate) for i in tokens]
         )
 
     @classmethod
@@ -1035,6 +1041,7 @@ class Response(_HTTPMessage):
                 pp.ZeroOrMore(Sep + atom)
             ]
         )
+        resp = resp.setParseAction(klass)
         return resp
 
     def spec(self):
@@ -1081,7 +1088,7 @@ class Request(_HTTPMessage):
         v.append(self.version)
         return v
 
-    def resolve(self, settings):
+    def resolve(self, settings, msg=None):
         tokens = self.tokens[:]
         if self.ws:
             if not self.method:
@@ -1114,7 +1121,7 @@ class Request(_HTTPMessage):
                     )
         intermediate = self.__class__(tokens)
         return self.__class__(
-            [i.resolve(intermediate, settings) for i in tokens]
+            [i.resolve(settings, intermediate) for i in tokens]
         )
 
     @classmethod
@@ -1134,6 +1141,7 @@ class Request(_HTTPMessage):
                 pp.ZeroOrMore(Sep + atom)
             ]
         )
+        resp = resp.setParseAction(klass)
         return resp
 
     def spec(self):
@@ -1155,12 +1163,26 @@ class WebsocketFrame(_Message):
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
-                pp.Literal("wf"),
+                WF.expr(),
                 Sep,
                 pp.ZeroOrMore(Sep + atom)
             ]
         )
+        resp = resp.setParseAction(klass)
         return resp
+
+    def values(self, settings):
+        vals = [
+            websockets.FrameHeader().to_bytes()
+        ]
+        if self.body:
+            vals.append(self.body.value.get_generator(settings))
+        return vals
+
+    def resolve(self, settings, msg=None):
+        return self.__class__(
+            [i.resolve(settings, msg) for i in self.tokens]
+        )
 
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
@@ -1205,7 +1227,7 @@ def parse_response(s):
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        return Response(Response.expr().parseString(s, parseAll=True))
+        return Response.expr().parseString(s, parseAll=True)[0]
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)
 
@@ -1219,16 +1241,13 @@ def parse_requests(s):
     except UnicodeError:
         raise ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        parts = pp.OneOrMore(
-            pp.Group(
-                pp.Or(
-                    [
-                        Request.expr(),
-                        WebsocketFrame.expr(),
-                    ]
-                )
+        return pp.OneOrMore(
+            pp.Or(
+                [
+                    WebsocketFrame.expr(),
+                    Request.expr(),
+                ]
             )
         ).parseString(s, parseAll=True)
-        return [Request(i) for i in parts]
     except pp.ParseException, v:
         raise ParseException(v.msg, v.line, v.col)

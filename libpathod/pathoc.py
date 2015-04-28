@@ -3,10 +3,11 @@ import os
 import hashlib
 import random
 import time
+import threading
 
 import OpenSSL.crypto
 
-from netlib import tcp, http, certutils
+from netlib import tcp, http, certutils, websockets
 import netlib.utils
 
 import language
@@ -73,6 +74,17 @@ class Response:
 
     def __repr__(self):
         return "Response(%s - %s)"%(self.status_code, self.msg)
+
+
+class WebsocketFrameReader(threading.Thread):
+    def __init__(self, rfile, callback):
+        threading.Thread.__init__(self)
+        self.rfile, self.callback = rfile, callback
+        self.daemon = True
+
+    def run(self):
+        while 1:
+            print websockets.Frame.from_file(self.rfile)
 
 
 class Pathoc(tcp.TCPClient):
@@ -184,13 +196,64 @@ class Pathoc(tcp.TCPClient):
             print >> fp, "%s (unprintables escaped):"%header
             print >> fp, netlib.utils.cleanBin(data)
 
-    def request(self, r):
+    def websocket_get_frame(self, frame):
+        """
+            Called when a frame is received from the server.
+        """
+        pass
+
+    def websocket_send_frame(self, r):
+        """
+            Sends a single websocket frame.
+        """
+        req = None
+        if isinstance(r, basestring):
+            r = language.parse_requests(r)[0]
+        if self.showreq:
+            self.wfile.start_log()
+        try:
+            req = language.serve(r, self.wfile, self.settings)
+            self.wfile.flush()
+        except tcp.NetLibTimeout:
+            if self.ignoretimeout:
+                return None
+            if self.showsummary:
+                print >> self.fp, "<<", "Timeout"
+            raise
+        except tcp.NetLibDisconnect: # pragma: nocover
+            if self.showsummary:
+                print >> self.fp, "<<", "Disconnect"
+            raise
+        finally:
+            if req:
+                if self.explain:
+                    print >> self.fp, ">> Spec:", r.spec()
+                if self.showreq:
+                    self._show(
+                        self.fp, ">> Request",
+                        self.wfile.get_log(),
+                        self.hexdump
+                    )
+
+    def websocket_start(self, r, callback=None):
+        """
+            Performs an HTTP request, and attempts to drop into websocket
+            connection.
+        """
+        resp = self.http(r)
+        if resp.status_code == 101:
+            if self.showsummary:
+                print >> self.fp, "Websocket connection established..."
+            WebsocketFrameReader(self.rfile, self.websocket_get_frame).start()
+        return resp
+
+    def http(self, r):
         """
             Performs a single request.
 
             r: A language.Request object, or a string representing one request.
 
-            Returns True if we have a non-ignored response.
+            Returns Response if we have a non-ignored response.
 
             May raise http.HTTPError, tcp.NetLibError
         """
@@ -252,6 +315,26 @@ class Pathoc(tcp.TCPClient):
                             self.hexdump
                         )
         return resp
+
+    def request(self, r):
+        """
+            Performs a single request.
+
+            r: A language.Request object, or a string representing one request.
+
+            Returns Response if we have a non-ignored response.
+
+            May raise http.HTTPError, tcp.NetLibError
+        """
+        if isinstance(r, basestring):
+            r = language.parse_requests(r)[0]
+        if isinstance(r, language.Request):
+            if r.ws:
+                return self.websocket_start(r, self.websocket_get_frame)
+            else:
+                return self.http(r)
+        elif isinstance(r, language.WebsocketFrame):
+            self.websocket_send_frame(r)
 
 
 def main(args): # pragma: nocover

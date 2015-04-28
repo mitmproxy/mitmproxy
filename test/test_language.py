@@ -406,7 +406,7 @@ class Test_Action:
     def test_resolve(self):
         r = parse_request('GET:"/foo"')
         e = language.DisconnectAt("r")
-        ret = e.resolve(r, {})
+        ret = e.resolve({}, r)
         assert isinstance(ret.offset, int)
 
     def test_repr(self):
@@ -637,12 +637,18 @@ class TestRequest:
         assert utils.get_header("Upgrade", res.headers).value.val == "websocket"
 
 
-
 class TestWebsocketFrame:
 
     def test_spec(self):
         e = language.WebsocketFrame.expr()
-        assert e.parseString("wf:foo")
+        wf = e.parseString("wf:b'foo'")
+        assert wf
+
+        assert parse_request("wf:b'foo'")
+
+    def test_values(self):
+        r = parse_request("wf:b'foo'")
+        assert r.values(language.Settings())
 
 
 class TestWriteValues:
