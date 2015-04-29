@@ -440,6 +440,11 @@ class TestReadRequest():
             self.tst,
             "get / HTTP/1.1\r\nfoo"
         )
+        tutils.raises(
+            tcp.NetLibDisconnect,
+            self.tst,
+            "\r\n"
+        )
 
     def test_asterisk_form_in(self):
         v = self.tst("OPTIONS * HTTP/1.1")
