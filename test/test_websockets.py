@@ -184,6 +184,10 @@ class TestFrameHeader:
         round(opcode=websockets.OPCODE.PING)
         round(masking_key="test")
 
+    def test_human_readable(self):
+        f = websockets.FrameHeader(masking_key="test", mask=False)
+        assert f.human_readable()
+
     def test_funky(self):
         f = websockets.FrameHeader(masking_key="test", mask=False)
         bytes = f.to_bytes()

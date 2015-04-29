@@ -1,5 +1,14 @@
 from netlib import utils
-import socket
+import tutils
+
+
+def test_bidi():
+    b = utils.BiDi(a=1, b=2)
+    assert b.a == 1
+    assert b[1] == "a"
+    tutils.raises(AttributeError, getattr, b, "c")
+    tutils.raises(KeyError, b.__getitem__, 5)
+
 
 def test_hexdump():
     assert utils.hexdump("one\0"*10)

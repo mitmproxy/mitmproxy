@@ -25,13 +25,14 @@ MAX_16_BIT_INT = (1 << 16)
 MAX_64_BIT_INT = (1 << 64)
 
 
-class OPCODE:
-    CONTINUE = 0x00
-    TEXT = 0x01
-    BINARY = 0x02
-    CLOSE = 0x08
-    PING = 0x09
+OPCODE = utils.BiDi(
+    CONTINUE = 0x00,
+    TEXT = 0x01,
+    BINARY = 0x02,
+    CLOSE = 0x08,
+    PING = 0x09,
     PONG = 0x0a
+)
 
 
 def apply_mask(message, masking_key):
@@ -159,6 +160,18 @@ class FrameHeader:
 
         if self.masking_key and len(self.masking_key) != 4:
             raise ValueError("Masking key must be 4 bytes.")
+
+    def human_readable(self):
+        return "\n".join([
+            ("fin                   - " + str(self.fin)),
+            ("rsv1                  - " + str(self.rsv1)),
+            ("rsv2                  - " + str(self.rsv2)),
+            ("rsv3                  - " + str(self.rsv3)),
+            ("opcode                - " + str(self.opcode)),
+            ("mask                  - " + str(self.mask)),
+            ("length_code           - " + str(self.length_code)),
+            ("masking_key           - " + repr(str(self.masking_key))),
+        ])
 
     def to_bytes(self):
         first_byte = utils.setbit(0, 7, self.fin)
