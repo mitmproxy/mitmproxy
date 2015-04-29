@@ -185,10 +185,10 @@ class CommonTests(tutils.DaemonTests):
         assert r.status_code == 202
 
     def test_websocket(self):
-        r = self.pathoc("ws:/p/")
+        r = self.pathoc("ws:/p/", ws_read_limit=0)
         assert r.status_code == 101
 
-        r = self.pathoc("ws:/p/ws")
+        r = self.pathoc("ws:/p/ws", ws_read_limit=0)
         assert r.status_code == 101
 
 

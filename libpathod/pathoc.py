@@ -1,7 +1,9 @@
 import sys
 import os
 import hashlib
+import Queue
 import random
+import select
 import time
 import threading
 
@@ -77,14 +79,28 @@ class Response:
 
 
 class WebsocketFrameReader(threading.Thread):
-    def __init__(self, rfile, callback):
+    def __init__(self, rfile, callback, ws_read_limit):
         threading.Thread.__init__(self)
+        self.ws_read_limit = ws_read_limit
         self.rfile, self.callback = rfile, callback
-        self.daemon = True
+        self.terminate = Queue.Queue()
+        self.is_done = Queue.Queue()
 
     def run(self):
         while 1:
-            print websockets.Frame.from_file(self.rfile)
+            if self.ws_read_limit == 0:
+                break
+            r, _, _ = select.select([self.rfile], [], [], 0.05)
+            try:
+                self.terminate.get_nowait()
+                break
+            except Queue.Empty:
+                pass
+            for rfile in r:
+                print websockets.Frame.from_file(self.rfile).human_readable()
+                if self.ws_read_limit is not None:
+                    self.ws_read_limit -= 1
+        self.is_done.put(None)
 
 
 class Pathoc(tcp.TCPClient):
@@ -98,6 +114,9 @@ class Pathoc(tcp.TCPClient):
             sslversion=4,
             clientcert=None,
             ciphers=None,
+
+            # Websockets
+            ws_read_limit = None,
 
             # Output control
             showreq = False,
@@ -131,6 +150,8 @@ class Pathoc(tcp.TCPClient):
         self.ciphers = ciphers
         self.sslinfo = None
 
+        self.ws_read_limit = ws_read_limit
+
         self.showreq = showreq
         self.showresp = showresp
         self.explain = explain
@@ -139,6 +160,8 @@ class Pathoc(tcp.TCPClient):
         self.ignoretimeout = ignoretimeout
         self.showsummary = showsummary
         self.fp = fp
+
+        self.ws_framereader = None
 
     def http_connect(self, connect_to):
         self.wfile.write(
@@ -196,6 +219,19 @@ class Pathoc(tcp.TCPClient):
             print >> fp, "%s (unprintables escaped):"%header
             print >> fp, netlib.utils.cleanBin(data)
 
+    def stop(self):
+        self.ws_framereader.terminate.put(None)
+
+    def wait(self):
+        if self.ws_framereader:
+            while 1:
+                try:
+                    self.ws_framereader.is_done.get(timeout=0.05)
+                    self.ws_framereader.join()
+                    return
+                except Queue.Empty:
+                    pass
+
     def websocket_get_frame(self, frame):
         """
             Called when a frame is received from the server.
@@ -230,21 +266,30 @@ class Pathoc(tcp.TCPClient):
                     print >> self.fp, ">> Spec:", r.spec()
                 if self.showreq:
                     self._show(
-                        self.fp, ">> Request",
+                        self.fp, ">> Websocket Frame",
                         self.wfile.get_log(),
                         self.hexdump
                     )
 
-    def websocket_start(self, r, callback=None):
+    def websocket_start(self, r, callback=None, limit=None):
         """
             Performs an HTTP request, and attempts to drop into websocket
             connection.
+
+            callback: A callback called within the websocket thread for every
+            server frame.
+            limit: Disconnect after receiving N server frames.
         """
         resp = self.http(r)
         if resp.status_code == 101:
             if self.showsummary:
-                print >> self.fp, "Websocket connection established..."
-            WebsocketFrameReader(self.rfile, self.websocket_get_frame).start()
+                print >> self.fp, "<< websocket connection established..."
+            self.ws_framereader = WebsocketFrameReader(
+                self.rfile,
+                self.websocket_get_frame,
+                self.ws_read_limit
+            )
+            self.ws_framereader.start()
         return resp
 
     def http(self, r):
@@ -340,6 +385,7 @@ class Pathoc(tcp.TCPClient):
 def main(args): # pragma: nocover
     memo = set([])
     trycount = 0
+    p = None
     try:
         cnt = 0
         while 1:
@@ -406,5 +452,9 @@ def main(args): # pragma: nocover
                         return
                 except (http.HttpError, tcp.NetLibError), v:
                     pass
+            p.wait()
     except KeyboardInterrupt:
         pass
+    if p:
+        p.stop()
+        p.wait()

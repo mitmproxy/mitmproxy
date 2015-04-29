@@ -638,7 +638,6 @@ class TestRequest:
 
 
 class TestWebsocketFrame:
-
     def test_spec(self):
         e = language.WebsocketFrame.expr()
         wf = e.parseString("wf:b'foo'")

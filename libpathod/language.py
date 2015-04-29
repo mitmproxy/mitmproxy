@@ -1172,9 +1172,16 @@ class WebsocketFrame(_Message):
         return resp
 
     def values(self, settings):
-        vals = [
-            websockets.FrameHeader().to_bytes()
-        ]
+        vals = []
+        if self.body:
+            length = len(self.body.value.get_generator(settings))
+        else:
+            length = 0
+        frame = websockets.FrameHeader(
+            mask = True,
+            payload_length = length
+        )
+        vals = [frame.to_bytes()]
         if self.body:
             vals.append(self.body.value.get_generator(settings))
         return vals
