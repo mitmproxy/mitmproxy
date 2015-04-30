@@ -191,6 +191,33 @@ v_naked_literal = pp.MatchFirst(
 )
 
 
+class TransformGenerator:
+    """
+        Perform a byte-by-byte transform another generator - that is, for each
+        input byte, the transformation must produce one output byte.
+
+        gen: A generator to wrap
+        transform: A function (offset, data) -> transformed
+    """
+    def __init__(self, gen, transform):
+        self.gen = gen
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.gen)
+
+    def __getitem__(self, x):
+        d = self.gen.__getitem__(x)
+        return self.transform(x, d)
+
+    def __getslice__(self, a, b):
+        d = self.gen.__getslice__(a, b)
+        return self.transform(a, d)
+
+    def __repr__(self):
+        return "'%s'"%self.gen
+
+
 class LiteralGenerator:
     def __init__(self, s):
         self.s = s
@@ -935,7 +962,6 @@ class _HTTPMessage(_Message):
     def preamble(self, settings): # pragma: no cover
         pass
 
-
     def values(self, settings):
         vals = self.preamble(settings)
         vals.append("\r\n")
@@ -1174,8 +1200,10 @@ class WebsocketFrame(_Message):
     def values(self, settings):
         vals = []
         if self.body:
+            bodygen = self.body.value.get_generator(settings)
             length = len(self.body.value.get_generator(settings))
         else:
+            bodygen = None
             length = 0
         frame = websockets.FrameHeader(
             mask = True,
@@ -1183,7 +1211,13 @@ class WebsocketFrame(_Message):
         )
         vals = [frame.to_bytes()]
         if self.body:
-            vals.append(self.body.value.get_generator(settings))
+            masker = websockets.Masker(frame.masking_key)
+            vals.append(
+                TransformGenerator(
+                    bodygen,
+                    masker.mask
+                )
+            )
         return vals
 
     def resolve(self, settings, msg=None):
