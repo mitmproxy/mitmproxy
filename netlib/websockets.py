@@ -48,12 +48,17 @@ class Masker:
         self.masks = [utils.bytes_to_int(byte) for byte in key]
         self.offset = 0
 
-    def __call__(self, data):
+    def mask(self, offset, data):
         result = ""
         for c in data:
-            result += chr(ord(c) ^ self.masks[self.offset % 4])
-            self.offset += 1
+            result += chr(ord(c) ^ self.masks[offset % 4])
+            offset += 1
         return result
+
+    def __call__(self, data):
+        ret = self.mask(self.offset, data)
+        self.offset += len(ret)
+        return ret
 
 
 def client_handshake_headers(key=None, version=VERSION):
