@@ -185,7 +185,13 @@ class TestFrameHeader:
         round(masking_key="test")
 
     def test_human_readable(self):
-        f = websockets.FrameHeader(masking_key="test", mask=False)
+        f = websockets.FrameHeader(
+            masking_key="test",
+            fin=True,
+            payload_length=10
+        )
+        assert f.human_readable()
+        f = websockets.FrameHeader()
         assert f.human_readable()
 
     def test_funky(self):

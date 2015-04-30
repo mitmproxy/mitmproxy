@@ -70,11 +70,12 @@ def getbit(byte, offset):
 class BiDi:
     """
         A wee utility class for keeping bi-directional mappings, like field
-        constants in protocols:
+        constants in protocols. Names are attributes on the object, dict-like
+        access maps values to names:
 
         CONST = BiDi(a=1, b=2)
         assert CONST.a == 1
-        assert CONST[1] == "a"
+        assert CONST.get_name(1) == "a"
     """
     def __init__(self, **kwargs):
         self.names = kwargs
@@ -89,5 +90,21 @@ class BiDi:
             return self.names[k]
         raise AttributeError("No such attribute: %s", k)
 
-    def __getitem__(self, k):
-        return self.values[k]
+    def get_name(self, n, default=None):
+        return self.values.get(n, default)
+
+
+def pretty_size(size):
+    suffixes = [
+        ("B", 2**10),
+        ("kB", 2**20),
+        ("MB", 2**30),
+    ]
+    for suf, lim in suffixes:
+        if size >= lim:
+            continue
+        else:
+            x = round(size/float(lim/2**10), 2)
+            if x == int(x):
+                x = int(x)
+            return str(x) + suf

@@ -162,16 +162,21 @@ class FrameHeader:
             raise ValueError("Masking key must be 4 bytes.")
 
     def human_readable(self):
-        return "\n".join([
-            ("fin                   - " + str(self.fin)),
-            ("rsv1                  - " + str(self.rsv1)),
-            ("rsv2                  - " + str(self.rsv2)),
-            ("rsv3                  - " + str(self.rsv3)),
-            ("opcode                - " + str(self.opcode)),
-            ("mask                  - " + str(self.mask)),
-            ("length_code           - " + str(self.length_code)),
-            ("masking_key           - " + repr(str(self.masking_key))),
-        ])
+        vals = [
+            "wf:",
+            OPCODE.get_name(self.opcode, hex(self.opcode)).lower()
+        ]
+        flags = []
+        for i in ["fin", "rsv1", "rsv2", "rsv3", "mask"]:
+            if getattr(self, i):
+                flags.append(i)
+        if flags:
+            vals.extend([":", "|".join(flags)])
+        if self.masking_key:
+            vals.append(":key=%s"%repr(self.masking_key))
+        if self.payload_length:
+            vals.append(" %s"%utils.pretty_size(self.payload_length))
+        return "".join(vals)
 
     def to_bytes(self):
         first_byte = utils.setbit(0, 7, self.fin)
@@ -308,17 +313,8 @@ class Frame(object):
         return cls.from_file(io.BytesIO(bytestring))
 
     def human_readable(self):
-        return "\n".join([
-            ("fin                   - " + str(self.header.fin)),
-            ("rsv1                  - " + str(self.header.rsv1)),
-            ("rsv2                  - " + str(self.header.rsv2)),
-            ("rsv3                  - " + str(self.header.rsv3)),
-            ("opcode                - " + str(self.header.opcode)),
-            ("mask                  - " + str(self.header.mask)),
-            ("length_code           - " + str(self.header.length_code)),
-            ("masking_key           - " + repr(str(self.header.masking_key))),
-            ("payload               - " + repr(str(self.payload))),
-        ])
+        hdr = self.header.human_readable()
+        return hdr + "\n" + repr(self.payload)
 
     def to_bytes(self):
         """
