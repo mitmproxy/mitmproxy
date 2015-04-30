@@ -40,18 +40,18 @@ class Log:
         rlog = self.rfile.get_log() if self.rfile else None
         if self.suppressed or not self.fp:
             return
-        if exc_type == tcp.NetLibTimeout:
-            self("Timeout")
-        elif exc_type == tcp.NetLibDisconnect:
-            self("Disconnect")
-        elif exc_type == http.HttpError:
-            self("HTTP Error: %s"%exc_value.message)
         if wlog:
             self("Bytes written:")
             self.dump(wlog, self.hex)
         if rlog:
             self("Bytes read:")
             self.dump(rlog, self.hex)
+        if exc_type == tcp.NetLibTimeout:
+            self("Timeout")
+        elif exc_type in (tcp.NetLibDisconnect, http.HttpErrorConnClosed):
+            self("Disconnected")
+        elif exc_type == http.HttpError:
+            self("HTTP Error: %s"%exc_value.message)
         self.fp.write("\n".join(self.lines))
         self.fp.write("\n")
         self.fp.flush()
@@ -284,7 +284,8 @@ class Pathoc(tcp.TCPClient):
         )
 
     def stop(self):
-        self.ws_framereader.terminate.put(None)
+        if self.ws_framereader:
+            self.ws_framereader.terminate.put(None)
 
     def wait(self):
         if self.ws_framereader:
@@ -466,11 +467,10 @@ def main(args): # pragma: nocover
             for spec in playlist:
                 try:
                     ret = p.request(spec)
-                    sys.stdout.flush()
                     if ret and args.oneshot:
                         return
                 except (http.HttpError, tcp.NetLibError), v:
-                    pass
+                    break
             p.wait()
     except KeyboardInterrupt:
         pass
