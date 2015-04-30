@@ -96,20 +96,6 @@ def multipartdecode(hdrs, content):
         return r
     return []
 
-def pretty_size(size):
-    suffixes = [
-        ("B",   2**10),
-        ("kB",   2**20),
-        ("MB",   2**30),
-    ]
-    for suf, lim in suffixes:
-        if size >= lim:
-            continue
-        else:
-            x = round(size/float(lim/2**10), 2)
-            if x == int(x):
-                x = int(x)
-            return str(x) + suf
 
 def pretty_duration(secs):
     formatters = [
@@ -123,6 +109,7 @@ def pretty_duration(secs):
             return formatter.format(secs)
     #less than 1 sec
     return "{:.0f}ms".format(secs*1000)
+
 
 class Data:
     def __init__(self, name):

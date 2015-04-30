@@ -691,7 +691,10 @@ class HTTPResponse(HTTPMessage):
         return f
 
     def __repr__(self):
-        size = utils.pretty_size(len(self.content)) if self.content else "content missing"
+        if self.content:
+            size = netlib.utils.pretty_size(len(self.content))
+        else:
+            size = "content missing"
         return "<HTTPResponse: {code} {msg} ({contenttype}, {size})>".format(
             code=self.code,
             msg=self.msg,

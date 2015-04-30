@@ -7,6 +7,7 @@ import os
 from .. import utils
 from ..protocol.http import CONTENT_MISSING, decoded
 from . import signals
+import netlib.utils
 
 try:
     import pyperclip
@@ -379,7 +380,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
     )
     if f.response:
         if f.response.content:
-            contentdesc = utils.pretty_size(len(f.response.content))
+            contentdesc = netlib.utils.pretty_size(len(f.response.content))
         elif f.response.content == CONTENT_MISSING:
             contentdesc = "[content missing]"
         else:

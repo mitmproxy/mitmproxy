@@ -60,7 +60,7 @@ def trailer(clen, txt, limit):
         txt.append(
             urwid.Text(
                 [
-                    ("highlight", "... %s of data not shown. Press "%utils.pretty_size(rem)),
+                    ("highlight", "... %s of data not shown. Press "%netlib.utils.pretty_size(rem)),
                     ("key", "f"),
                     ("highlight", " to load all data.")
                 ]

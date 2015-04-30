@@ -1,5 +1,5 @@
 import json
-from libmproxy import utils, flow
+from libmproxy import utils
 from netlib import odict
 import tutils
 
@@ -9,8 +9,10 @@ utils.CERT_SLEEP_TIME = 0
 def test_format_timestamp():
     assert utils.format_timestamp(utils.timestamp())
 
+
 def test_format_timestamp_with_milli():
     assert utils.format_timestamp_with_milli(utils.timestamp())
+
 
 def test_isBin():
     assert not utils.isBin("testing\n\r")
@@ -29,13 +31,6 @@ def test_clean_hanging_newline():
     s = "foo\n"
     assert utils.clean_hanging_newline(s) == "foo"
     assert utils.clean_hanging_newline("foo") == "foo"
-
-
-def test_pretty_size():
-    assert utils.pretty_size(100) == "100B"
-    assert utils.pretty_size(1024) == "1kB"
-    assert utils.pretty_size(1024 + (1024/2.0)) == "1.5kB"
-    assert utils.pretty_size(1024*1024) == "1MB"
 
 
 def test_pkg_data():
@@ -135,7 +130,7 @@ def test_parse_size():
 def test_parse_content_type():
     p = utils.parse_content_type
     assert p("text/html") == ("text", "html", {})
-    assert p("text") == None
+    assert p("text") is None
 
     v = p("text/html; charset=UTF-8")
     assert v == ('text', 'html', {'charset': 'UTF-8'})
@@ -146,4 +141,4 @@ def test_safe_subn():
 
 
 def test_urlencode():
-    assert utils.urlencode([('foo','bar')])
+    assert utils.urlencode([('foo', 'bar')])
