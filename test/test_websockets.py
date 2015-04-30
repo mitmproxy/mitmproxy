@@ -232,3 +232,19 @@ class TestFrame:
     def test_human_readable(self):
         f = websockets.Frame()
         assert f.human_readable()
+
+
+def test_masker():
+    tests = [
+        ["a"],
+        ["four"],
+        ["fourf"],
+        ["fourfive"],
+        ["a", "aasdfasdfa", "asdf"],
+        ["a"*50, "aasdfasdfa", "asdf"],
+    ]
+    for i in tests:
+        m = websockets.Masker("abcd")
+        data = "".join([m(t) for t in i])
+        data2 = websockets.Masker("abcd")(data)
+        assert data2 == "".join(i)
