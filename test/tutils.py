@@ -77,7 +77,8 @@ class DaemonTests(object):
         c = pathoc.Pathoc(
             ("localhost", self.d.port),
             ssl=ssl,
-            ws_read_limit=ws_read_limit
+            ws_read_limit=ws_read_limit,
+            fp = None
         )
         c.connect(connect_to)
         if timeout:

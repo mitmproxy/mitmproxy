@@ -16,6 +16,43 @@ import language
 import utils
 
 
+class Log:
+    def __init__(self, fp):
+        self.lines = []
+        self.fp = fp
+        self.suppressed = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.suppressed or not self.fp:
+            return
+        if exc_type == tcp.NetLibTimeout:
+            self("Timeout")
+        elif exc_type == tcp.NetLibDisconnect:
+            self("Disconnect")
+        elif exc_type == http.HttpError:
+            self("HTTP Error: %s"%exc_value.message)
+        self.fp.write("\n".join(self.lines))
+        self.fp.write("\n")
+        self.fp.flush()
+
+    def __call__(self, line):
+        self.lines.append(line)
+
+    def suppress(self):
+        self.suppressed = True
+
+    def dump(self, data, hexdump):
+        if hexdump:
+            for line in netlib.utils.hexdump(data):
+                self("\t%s %s %s"%line)
+        else:
+            for i in netlib.utils.cleanBin(data).split("\n"):
+                self("\t%s"%i)
+
+
 class PathocError(Exception):
     pass
 
@@ -79,9 +116,10 @@ class Response:
 
 
 class WebsocketFrameReader(threading.Thread):
-    def __init__(self, rfile, callback, ws_read_limit):
+    def __init__(self, rfile, showresp, callback, ws_read_limit):
         threading.Thread.__init__(self)
         self.ws_read_limit = ws_read_limit
+        self.showresp = showresp
         self.rfile, self.callback = rfile, callback
         self.terminate = Queue.Queue()
         self.is_done = Queue.Queue()
@@ -97,7 +135,12 @@ class WebsocketFrameReader(threading.Thread):
             except Queue.Empty:
                 pass
             for rfile in r:
-                print websockets.Frame.from_file(self.rfile).human_readable()
+                if self.showresp:
+                    rfile.start_log()
+                self.callback(
+                    websockets.Frame.from_file(self.rfile),
+                    rfile.get_log()
+                )
                 if self.ws_read_limit is not None:
                     self.ws_read_limit -= 1
         self.is_done.put(None)
@@ -126,7 +169,7 @@ class Pathoc(tcp.TCPClient):
             ignorecodes = (),
             ignoretimeout = False,
             showsummary = False,
-            fp = sys.stderr
+            fp = sys.stdout
     ):
         """
             spec: A request specification
@@ -162,6 +205,9 @@ class Pathoc(tcp.TCPClient):
         self.fp = fp
 
         self.ws_framereader = None
+
+    def log(self):
+        return Log(self.fp)
 
     def http_connect(self, connect_to):
         self.wfile.write(
@@ -205,19 +251,10 @@ class Pathoc(tcp.TCPClient):
             if showssl:
                 print >> fp, str(self.sslinfo)
 
-    def _show_summary(self, fp, resp):
-        print >> fp, "<< %s %s: %s bytes"%(
+    def _resp_summary(self, resp):
+        return "<< %s %s: %s bytes"%(
             resp.status_code, utils.xrepr(resp.msg), len(resp.content)
         )
-
-    def _show(self, fp, header, data, hexdump):
-        if hexdump:
-            print >> fp, "%s (hex dump):"%header
-            for line in netlib.utils.hexdump(data):
-                print >> fp, "\t%s %s %s"%line
-        else:
-            print >> fp, "%s (unprintables escaped):"%header
-            print >> fp, netlib.utils.cleanBin(data)
 
     def stop(self):
         self.ws_framereader.terminate.put(None)
@@ -232,44 +269,45 @@ class Pathoc(tcp.TCPClient):
                 except Queue.Empty:
                     pass
 
-    def websocket_get_frame(self, frame):
+    def websocket_get_frame(self, frame, wirelog):
         """
             Called when a frame is received from the server.
         """
-        pass
+        with self.log() as log:
+            log("<< %s"%frame.header.human_readable())
+            if self.showresp:
+                log.dump(
+                    wirelog,
+                    self.hexdump
+                )
 
     def websocket_send_frame(self, r):
         """
             Sends a single websocket frame.
         """
-        req = None
-        if isinstance(r, basestring):
-            r = language.parse_requests(r)[0]
-        if self.showreq:
-            self.wfile.start_log()
-        try:
-            req = language.serve(r, self.wfile, self.settings)
-            self.wfile.flush()
-        except tcp.NetLibTimeout:
-            if self.ignoretimeout:
-                return None
-            if self.showsummary:
-                print >> self.fp, "<<", "Timeout"
-            raise
-        except tcp.NetLibDisconnect: # pragma: nocover
-            if self.showsummary:
-                print >> self.fp, "<<", "Disconnect"
-            raise
-        finally:
-            if req:
-                if self.explain:
-                    print >> self.fp, ">> Spec:", r.spec()
-                if self.showreq:
-                    self._show(
-                        self.fp, ">> Websocket Frame",
-                        self.wfile.get_log(),
-                        self.hexdump
-                    )
+        with self.log() as log:
+            req = None
+            if isinstance(r, basestring):
+                r = language.parse_requests(r)[0]
+            log(">> %s"%r)
+
+            if self.showreq:
+                self.wfile.start_log()
+            try:
+                req = language.serve(r, self.wfile, self.settings)
+                self.wfile.flush()
+            except tcp.NetLibTimeout:
+                if self.ignoretimeout:
+                    self.log("Timeout (ignored)")
+                    return None
+                raise
+            finally:
+                if req:
+                    if self.showreq:
+                        log.dump(
+                            self.wfile.get_log(),
+                            self.hexdump
+                        )
 
     def websocket_start(self, r, callback=None, limit=None):
         """
@@ -280,16 +318,17 @@ class Pathoc(tcp.TCPClient):
             server frame.
             limit: Disconnect after receiving N server frames.
         """
-        resp = self.http(r)
-        if resp.status_code == 101:
-            if self.showsummary:
-                print >> self.fp, "<< websocket connection established..."
-            self.ws_framereader = WebsocketFrameReader(
-                self.rfile,
-                self.websocket_get_frame,
-                self.ws_read_limit
-            )
-            self.ws_framereader.start()
+        with self.log() as log:
+            resp = self.http(r)
+            if resp.status_code == 101:
+                log("starting websocket connection...")
+                self.ws_framereader = WebsocketFrameReader(
+                    self.rfile,
+                    self.showresp,
+                    callback,
+                    self.ws_read_limit
+                )
+                self.ws_framereader.start()
         return resp
 
     def http(self, r):
@@ -302,64 +341,49 @@ class Pathoc(tcp.TCPClient):
 
             May raise http.HTTPError, tcp.NetLibError
         """
-        if isinstance(r, basestring):
-            r = language.parse_requests(r)[0]
-        resp, req = None, None
-        if self.showreq:
-            self.wfile.start_log()
-        if self.showresp:
-            self.rfile.start_log()
-        try:
-            req = language.serve(r, self.wfile, self.settings)
-            self.wfile.flush()
-            resp = list(
-                http.read_response(
-                    self.rfile,
-                    req["method"],
-                    None
+        with self.log() as log:
+            if isinstance(r, basestring):
+                r = language.parse_requests(r)[0]
+            log(">> %s"%r)
+            resp, req = None, None
+            if self.showreq:
+                self.wfile.start_log()
+            if self.showresp:
+                self.rfile.start_log()
+            try:
+                req = language.serve(r, self.wfile, self.settings)
+                self.wfile.flush()
+                resp = list(
+                    http.read_response(
+                        self.rfile,
+                        req["method"],
+                        None
+                    )
                 )
-            )
-            resp.append(self.sslinfo)
-            resp = Response(*resp)
-        except http.HttpError, v:
-            if self.showsummary:
-                print >> self.fp, "<< HTTP Error:", v.message
-            raise
-        except tcp.NetLibTimeout:
-            if self.ignoretimeout:
-                return None
-            if self.showsummary:
-                print >> self.fp, "<<", "Timeout"
-            raise
-        except tcp.NetLibDisconnect: # pragma: nocover
-            if self.showsummary:
-                print >> self.fp, "<<", "Disconnect"
-            raise
-        finally:
-            if req:
-                if resp and resp.status_code in self.ignorecodes:
-                    resp = None
-                else:
-                    if self.explain:
-                        print >> self.fp, ">> Spec:", r.spec()
-
+                resp.append(self.sslinfo)
+                resp = Response(*resp)
+            except tcp.NetLibTimeout:
+                if self.ignoretimeout:
+                    log("Timeout (ignored)")
+                    return None
+                raise
+            finally:
+                if req:
                     if self.showreq:
-                        self._show(
-                            self.fp, ">> Request",
+                        log.dump(
                             self.wfile.get_log(),
                             self.hexdump
                         )
-
-                    if self.showsummary and resp:
-                        self._show_summary(self.fp, resp)
+                    if resp:
+                        log(self._resp_summary(resp))
+                        if resp.status_code in self.ignorecodes:
+                            log.suppress()
                     if self.showresp:
-                        self._show(
-                            self.fp,
-                            "<< Response",
+                        log.dump(
                             self.rfile.get_log(),
                             self.hexdump
                         )
-        return resp
+            return resp
 
     def request(self, r):
         """

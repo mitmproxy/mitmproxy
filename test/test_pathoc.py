@@ -36,7 +36,8 @@ class _TestDaemon:
     def test_info(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
-            ssl = self.ssl
+            ssl = self.ssl,
+            fp = None
         )
         c.connect()
         resp = c.request("get:/api/info")
@@ -77,7 +78,7 @@ class _TestDaemon:
                 r = r.freeze(language.Settings())
             try:
                 c.request(r)
-            except (http.HttpError, tcp.NetLibError), v:
+            except (http.HttpError, tcp.NetLibError):
                 pass
         return s.getvalue()
 
@@ -93,7 +94,8 @@ class TestDaemonSSL(_TestDaemon):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             ssl = True,
-            sni = "foobar.com"
+            sni = "foobar.com",
+            fp = None
         )
         c.connect()
         c.request("get:/p/200")
@@ -108,7 +110,8 @@ class TestDaemonSSL(_TestDaemon):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             ssl = True,
-            clientcert = tutils.test_data.path("data/clientcert/client.pem")
+            clientcert = tutils.test_data.path("data/clientcert/client.pem"),
+            fp = None
         )
         c.connect()
         c.request("get:/p/200")
@@ -121,7 +124,7 @@ class TestDaemon(_TestDaemon):
     ssl = False
 
     def test_ssl_error(self):
-        c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl = True)
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl = True, fp=None)
         tutils.raises("ssl handshake", c.connect)
 
     def test_showssl(self):
@@ -143,8 +146,10 @@ class TestDaemon(_TestDaemon):
     def test_showresp(self):
         reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
         assert self.tval(reqs).count("200") == 2
-        assert self.tval(reqs, showresp=True).count("unprintables escaped") == 2
-        assert self.tval(reqs, showresp=True, hexdump=True).count("hex dump") == 2
+        assert self.tval(reqs, showresp=True).count("HTTP/1.1 200 OK") == 2
+        assert self.tval(
+            reqs, showresp=True, hexdump=True
+        ).count("0000000000") == 2
 
     def test_showresp_httperr(self):
         v = self.tval(["get:'/p/200:d20'"], showresp=True, showsummary=True)
@@ -157,15 +162,17 @@ class TestDaemon(_TestDaemon):
 
     def test_showreq(self):
         reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
-        assert self.tval(reqs, showreq=True).count("unprintables escaped") == 2
-        assert self.tval(reqs, showreq=True, hexdump=True).count("hex dump") == 2
+        assert self.tval(reqs, showreq=True).count("GET /api") == 2
+        assert self.tval(
+            reqs, showreq=True, hexdump=True
+        ).count("0000000000") == 2
 
     def test_conn_err(self):
         assert "Invalid server response" in self.tval(["get:'/p/200:d2'"])
 
     def test_connect_fail(self):
         to = ("foobar", 80)
-        c = pathoc.Pathoc(("127.0.0.1", self.d.port))
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
         c.rfile, c.wfile = cStringIO.StringIO(), cStringIO.StringIO()
         tutils.raises("connect failed", c.http_connect, to)
         c.rfile = cStringIO.StringIO(
