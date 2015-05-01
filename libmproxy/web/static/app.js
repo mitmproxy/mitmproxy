@@ -735,8 +735,14 @@ var EditorBase = React.createClass({displayName: "EditorBase",
             onBlur: this._stop, 
             onKeyDown: this.onKeyDown, 
             onInput: this.onInput, 
+            onPaste: this.onPaste, 
             dangerouslySetInnerHTML: html})
         );
+    },
+    onPaste: function(e){
+        e.preventDefault();
+        var content = e.clipboardData.getData("text/plain");
+        document.execCommand("insertHTML", false, content);
     },
     onFocus: function (e) {
         this.setState({editable: true}, function () {
@@ -775,7 +781,7 @@ var EditorBase = React.createClass({displayName: "EditorBase",
                 this.cancel();
                 break;
             case utils.Key.ENTER:
-                if (this.props.submitOnEnter) {
+                if (this.props.submitOnEnter && !e.shiftKey) {
                     e.preventDefault();
                     this.stop();
                 }
@@ -787,7 +793,6 @@ var EditorBase = React.createClass({displayName: "EditorBase",
     onInput: function () {
         var node = React.findDOMNode(this);
         var content = this.props.nodeToContent(node);
-        node.innerHTML = this.props.contentToHtml(content);
         this.props.onInput && this.props.onInput(content);
     }
 });
