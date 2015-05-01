@@ -1,8 +1,8 @@
-import time
 import os.path
 
 import urwid
 
+import netlib.utils
 from . import pathedit, signals, common
 from .. import utils
 
@@ -21,7 +21,6 @@ class ActionBar(urwid.WidgetWrap):
         self.prompting = False
         self.onekey = False
         self.pathprompt = False
-
 
     def sig_message(self, sender, message, expire=None):
         w = urwid.Text(message)
@@ -191,7 +190,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("following")
         if self.master.stream_large_bodies:
             opts.append(
-                "stream:%s" % utils.pretty_size(
+                "stream:%s" % netlib.utils.pretty_size(
                     self.master.stream_large_bodies.max_size
                 )
             )

@@ -207,7 +207,7 @@ class DumpMaster(flow.FlowMaster):
             if f.response.content == http.CONTENT_MISSING:
                 sz = "(content missing)"
             else:
-                sz = utils.pretty_size(len(f.response.content))
+                sz = netlib.utils.pretty_size(len(f.response.content))
             print(" << %s %s" % (str_response(f.response), sz), file=self.outfile)
             self._print_message(f.response)
 
