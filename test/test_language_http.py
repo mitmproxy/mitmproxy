@@ -77,7 +77,7 @@ class TestRequest:
         r = language.parse_requests(l)
         assert len(r) == 1
         assert len(r[0].tokens) == 3
-        assert isinstance(r[0].tokens[2], base.PathodSpec)
+        assert isinstance(r[0].tokens[2], http.PathodResponse)
         assert r[0].values({})
 
     def test_render(self):
@@ -320,3 +320,31 @@ def test_user_agent():
     v2 = v.freeze({})
     v3 = v2.freeze({})
     assert v2.value.val == v3.value.val
+
+
+def test_pathodspec():
+    e = http.PathodResponse.expr()
+    v = e.parseString("s'200'")[0]
+    assert v.value.val == "200"
+    tutils.raises(
+        language.ParseException,
+        e.parseString,
+        "s'foo'"
+    )
+
+    v = e.parseString('s"200:b@1"')[0]
+    assert "@1" in v.spec()
+    f = v.freeze({})
+    assert "@1" not in f.spec()
+
+
+def test_pathodspec_freeze():
+    e = http.PathodResponse(
+        base.ValueLiteral(
+            "200:b'foo':i10,'\\''".encode(
+                "string_escape"
+            )
+        )
+    )
+    assert e.freeze({})
+    assert e.values({})

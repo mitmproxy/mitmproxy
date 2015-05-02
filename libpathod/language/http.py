@@ -88,6 +88,38 @@ class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
         )
 
 
+class PathodResponse(base.Token):
+    def __init__(self, value):
+        self.value = value
+        try:
+            self.parsed = Response(
+                Response.expr().parseString(
+                    value.val,
+                    parseAll=True
+                )
+            )
+        except pp.ParseException, v:
+            raise exceptions.ParseException(v.msg, v.line, v.col)
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("s").suppress()
+        e = e + base.ValueLiteral.expr()
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings),
+        ]
+
+    def spec(self):
+        return "s%s"%(self.value.spec())
+
+    def freeze(self, settings):
+        f = self.parsed.freeze(settings).spec()
+        return PathodResponse(base.ValueLiteral(f.encode("string_escape")))
+
+
 def get_header(val, headers):
     """
         Header keys may be Values, so we have to "generate" them as we try the
@@ -248,7 +280,7 @@ class Request(_HTTPMessage):
         ShortcutContentType,
         ShortcutUserAgent,
         Raw,
-        base.PathodSpec,
+        PathodResponse,
 
         actions.PauseAt,
         actions.DisconnectAt,
@@ -270,7 +302,7 @@ class Request(_HTTPMessage):
 
     @property
     def pathodspec(self):
-        return self.tok(base.PathodSpec)
+        return self.tok(PathodResponse)
 
     def preamble(self, settings):
         v = self.method.values(settings)

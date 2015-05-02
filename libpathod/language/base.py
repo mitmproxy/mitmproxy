@@ -259,39 +259,6 @@ class KeyValue(_Component):
         )
 
 
-class PathodSpec(Token):
-    def __init__(self, value):
-        self.value = value
-        try:
-            import http
-            self.parsed = http.Response(
-                http.Response.expr().parseString(
-                    value.val,
-                    parseAll=True
-                )
-            )
-        except pp.ParseException, v:
-            raise exceptions.ParseException(v.msg, v.line, v.col)
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("s").suppress()
-        e = e + ValueLiteral.expr()
-        return e.setParseAction(lambda x: klass(*x))
-
-    def values(self, settings):
-        return [
-            self.value.get_generator(settings),
-        ]
-
-    def spec(self):
-        return "s%s"%(self.value.spec())
-
-    def freeze(self, settings):
-        f = self.parsed.freeze(settings).spec()
-        return PathodSpec(ValueLiteral(f.encode("string_escape")))
-
-
 class CaselessLiteral(_Component):
     """
         A caseless token that can take only one value.

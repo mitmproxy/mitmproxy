@@ -182,32 +182,6 @@ class TestMisc:
         s = v.spec()
         assert s == v.expr().parseString(s)[0].spec()
 
-    def test_pathodspec(self):
-        e = base.PathodSpec.expr()
-        v = e.parseString("s'200'")[0]
-        assert v.value.val == "200"
-        tutils.raises(
-            language.ParseException,
-            e.parseString,
-            "s'foo'"
-        )
-
-        v = e.parseString('s"200:b@1"')[0]
-        assert "@1" in v.spec()
-        f = v.freeze({})
-        assert "@1" not in f.spec()
-
-    def test_pathodspec_freeze(self):
-        e = base.PathodSpec(
-            base.ValueLiteral(
-                "200:b'foo':i10,'\\''".encode(
-                    "string_escape"
-                )
-            )
-        )
-        assert e.freeze({})
-        assert e.values({})
-
     def test_prevalue(self):
         class TT(base.PreValue):
             preamble = "m"
