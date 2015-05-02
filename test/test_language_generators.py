@@ -14,13 +14,6 @@ def test_randomgenerator():
     assert g[0]
 
 
-def test_literalgenerator():
-    g = generators.LiteralGenerator("one")
-    assert repr(g)
-    assert g[:] == "one"
-    assert g[1] == "n"
-
-
 def test_filegenerator():
     with tutils.tmpdir() as t:
         path = os.path.join(t, "foo")
@@ -41,7 +34,7 @@ def test_filegenerator():
 def test_transform_generator():
     def trans(offset, data):
         return "a" * len(data)
-    g = generators.LiteralGenerator("one")
+    g = "one"
     t = generators.TransformGenerator(g, trans)
     assert len(t) == len(g)
     assert t[0] == "a"

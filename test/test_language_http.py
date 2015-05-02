@@ -309,11 +309,11 @@ def test_shortcuts():
 def test_user_agent():
     e = http.ShortcutUserAgent.expr()
     v = e.parseString("ua")[0]
-    assert "Android" in str(v.values({})[2])
+    assert "Android" in v.string()
 
     e = http.ShortcutUserAgent.expr()
     v = e.parseString("u'a'")[0]
-    assert "Android" not in str(v.values({})[2])
+    assert "Android" not in v.string()
 
     v = e.parseString("u@100'")[0]
     assert len(str(v.freeze({}).value)) > 100

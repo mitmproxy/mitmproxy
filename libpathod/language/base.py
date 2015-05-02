@@ -64,6 +64,9 @@ class Token(object):
         """
             Resolves this token to ready it for transmission. This means that
             the calculated offsets of actions are fixed.
+
+            settings: a language.Settings instance
+            msg: The containing message
         """
         return self
 
@@ -76,7 +79,7 @@ class _ValueLiteral(Token):
         self.val = val.decode("string_escape")
 
     def get_generator(self, settings):
-        return generators.LiteralGenerator(self.val)
+        return self.val
 
     def freeze(self, settings):
         return self
@@ -215,13 +218,14 @@ Offset = pp.MatchFirst(
 class _Component(Token):
     """
         A value component of the primary specification of an message.
+        Components produce byte values desribe the bytes of the message.
     """
     @abc.abstractmethod
     def values(self, settings): # pragma: no cover
         """
-           A sequence of value objects.
+           A sequence of values, which can either be strings or generators.
         """
-        return None
+        pass
 
     def string(self, settings=None):
         """
@@ -361,7 +365,7 @@ class Integer(_Component):
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
-        return [generators.LiteralGenerator(self.value)]
+        return self.value
 
     def spec(self):
         return "%s"%(self.value)

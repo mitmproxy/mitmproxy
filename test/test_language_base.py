@@ -208,7 +208,7 @@ class TestMisc:
         assert e.freeze({})
         assert e.values({})
 
-    def test_value(self):
+    def test_prevalue(self):
         class TT(base.PreValue):
             preamble = "m"
         e = TT.expr()
@@ -226,6 +226,7 @@ class TestMisc:
 
 class TKeyValue(base.KeyValue):
     preamble = "h"
+
     def values(self, settings):
         return [
             self.key.get_generator(settings),

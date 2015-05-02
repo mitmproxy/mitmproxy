@@ -43,23 +43,6 @@ class TransformGenerator:
         return "'transform(%s)'"%self.gen
 
 
-class LiteralGenerator:
-    def __init__(self, s):
-        self.s = s
-
-    def __len__(self):
-        return len(self.s)
-
-    def __getitem__(self, x):
-        return self.s.__getitem__(x)
-
-    def __getslice__(self, a, b):
-        return self.s.__getslice__(a, b)
-
-    def __repr__(self):
-        return "'%s'"%self.s
-
-
 class RandomGenerator:
     def __init__(self, dtype, length):
         self.dtype = dtype

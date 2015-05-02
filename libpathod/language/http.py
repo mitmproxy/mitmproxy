@@ -81,7 +81,7 @@ class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
                 self.value.val.lower()
             )[2]
         else:
-            value = self.value
+            value = self.value.val
         return self.format_header(
             self.key.get_generator(settings),
             value
@@ -129,7 +129,7 @@ class _HTTPMessage(message.Message):
             vals.extend(h.values(settings))
         vals.append("\r\n")
         if self.body:
-            vals.append(self.body.value.get_generator(settings))
+            vals.extend(self.body.values(settings))
         return vals
 
 
@@ -169,11 +169,9 @@ class Response(_HTTPMessage):
             l.extend(self.reason.values(settings))
         else:
             l.append(
-                generators.LiteralGenerator(
-                    http_status.RESPONSES.get(
-                        code,
-                        "Unknown code"
-                    )
+                http_status.RESPONSES.get(
+                    code,
+                    "Unknown code"
                 )
             )
         return l
@@ -205,7 +203,9 @@ class Response(_HTTPMessage):
                 if not self.body:
                     length = 0
                 else:
-                    length = len(self.body.value.get_generator(settings))
+                    length = sum(
+                        len(i) for i in self.body.values(settings)
+                    )
                 tokens.append(
                     Header(
                         base.ValueLiteral("Content-Length"),
@@ -301,7 +301,9 @@ class Request(_HTTPMessage):
         if not self.raw:
             if not get_header("Content-Length", self.headers):
                 if self.body:
-                    length = len(self.body.value.get_generator(settings))
+                    length = sum(
+                        len(i) for i in self.body.values(settings)
+                    )
                     tokens.append(
                         Header(
                             base.ValueLiteral("Content-Length"),
