@@ -129,13 +129,15 @@ class ProxTestBase(object):
 
 class HTTPProxTest(ProxTestBase):
     def pathoc_raw(self):
-        return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port))
+        return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), fp=None)
 
     def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
         if self.ssl:
             p.connect(("127.0.0.1", self.server.port))
         else:
@@ -156,7 +158,9 @@ class HTTPProxTest(ProxTestBase):
 
     def app(self, page):
         if self.ssl:
-            p = libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), True)
+            p = libpathod.pathoc.Pathoc(
+                ("127.0.0.1", self.proxy.port), True, fp=None
+            )
             p.connect((APP_HOST, APP_PORT))
             return p.request("get:'%s'"%page)
         else:
@@ -208,7 +212,9 @@ class TransparentProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
         p.connect()
         return p
 
@@ -231,7 +237,9 @@ class ReverseProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
         p.connect()
         return p
 

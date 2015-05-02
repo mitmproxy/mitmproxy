@@ -6,7 +6,6 @@ import lxml.html
 import lxml.etree
 from PIL import Image
 from PIL.ExifTags import TAGS
-import re
 import subprocess
 import traceback
 import urwid
@@ -15,7 +14,7 @@ import netlib.utils
 from netlib import odict
 
 from . import common
-from .. import utils, encoding, flow
+from .. import utils, encoding
 from ..contrib import jsbeautifier, html2text
 from ..contrib.wbxml.ASCommandResponse import ASCommandResponse
 
