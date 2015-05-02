@@ -119,7 +119,7 @@ var FilterInput = React.createClass({
     },
     blur: function () {
         this.refs.input.getDOMNode().blur();
-        this.context.returnFocus && this.context.returnFocus();
+        this.returnFocus();
     },
     select: function () {
         this.refs.input.getDOMNode().select();

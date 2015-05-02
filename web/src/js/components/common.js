@@ -55,6 +55,11 @@ var SettingsState = {
 var ChildFocus = {
     contextTypes: {
         returnFocus: React.PropTypes.func
+    },
+    returnFocus: function(){
+        React.findDOMNode(this).blur();
+        window.getSelection().removeAllRanges();
+        this.context.returnFocus();
     }
 };
 

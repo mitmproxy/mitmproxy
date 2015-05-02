@@ -6,6 +6,7 @@ var actions = require("../../actions.js");
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
 var ContentView = require("./contentview.js");
+var ValueEditor = require("../editor.js").ValueEditor;
 
 var Headers = React.createClass({
     propTypes: {
@@ -63,16 +64,16 @@ var Headers = React.createClass({
 
         var rows = this.props.message.headers.map(function (header, i) {
 
-            var kEdit = <HeaderInlineInput
+            var kEdit = <HeaderEditor
                 ref={i + "-key"}
                 content={header[0]}
-                onChange={this.onChange.bind(null, i, 0)}
+                onDone={this.onChange.bind(null, i, 0)}
                 onRemove={this.onRemove.bind(null, i, 0)}
                 onTab={this.onTab.bind(null, i, 0)}/>;
-            var vEdit = <HeaderInlineInput
+            var vEdit = <HeaderEditor
                 ref={i + "-value"}
                 content={header[1]}
-                onChange={this.onChange.bind(null, i, 1)}
+                onDone={this.onChange.bind(null, i, 1)}
                 onRemove={this.onRemove.bind(null, i, 1)}
                 onTab={this.onTab.bind(null, i, 1)}/>;
             return (
@@ -92,88 +93,9 @@ var Headers = React.createClass({
     }
 });
 
-
-var InlineInput = React.createClass({
-    mixins: [common.ChildFocus],
-    propTypes: {
-        content: React.PropTypes.string.isRequired, //must be string to match strict equality.
-        onChange: React.PropTypes.func.isRequired,
-    },
-    getInitialState: function () {
-        return {
-            editable: false
-        };
-    },
+var HeaderEditor = React.createClass({
     render: function () {
-        var Tag = this.props.tag || "span";
-        var className = "inline-input " + (this.props.className || "");
-        var html = {__html: _.escape(this.props.content)};
-        return <Tag
-            {...this.props}
-            tabIndex="0"
-            className={className}
-            contentEditable={this.state.editable || undefined}
-            onInput={this.onInput}
-            onFocus={this.onFocus}
-            onBlur={this.onBlur}
-            onKeyDown={this.onKeyDown}
-            dangerouslySetInnerHTML={html}
-        />;
-    },
-    onKeyDown: function (e) {
-        e.stopPropagation();
-        switch (e.keyCode) {
-            case utils.Key.ESC:
-                this.blur();
-                break;
-            case utils.Key.ENTER:
-                e.preventDefault();
-                if (!e.ctrlKey) {
-                    this.blur();
-                } else {
-                    this.props.onDone && this.props.onDone();
-                }
-                break;
-            default:
-                this.props.onKeyDown && this.props.onKeyDown(e);
-                break;
-        }
-    },
-    blur: function () {
-        this.getDOMNode().blur();
-        window.getSelection().removeAllRanges();
-        this.context.returnFocus && this.context.returnFocus();
-    },
-    focus: function () {
-        React.findDOMNode(this).focus();
-        var range = document.createRange();
-        range.selectNodeContents(this.getDOMNode());
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-    },
-    onFocus: function () {
-        this.setState({editable: true}, this.focus);
-    },
-    onBlur: function (e) {
-        this.setState({editable: false});
-        this.handleChange();
-        this.props.onDone && this.props.onDone();
-    },
-    onInput: function () {
-        this.handleChange();
-    },
-    handleChange: function () {
-        var content = this.getDOMNode().textContent;
-        if (content !== this.props.content) {
-            this.props.onChange(content);
-        }
-    }
-});
-
-var HeaderInlineInput = React.createClass({
-    render: function () {
-        return <InlineInput ref="input" {...this.props} onKeyDown={this.onKeyDown}/>;
+        return <ValueEditor ref="input" {...this.props} onKeyDown={this.onKeyDown} inline/>;
     },
     focus: function () {
         this.getDOMNode().focus();
@@ -195,65 +117,6 @@ var HeaderInlineInput = React.createClass({
     }
 });
 
-var ValidateInlineInput = React.createClass({
-    propTypes: {
-        onChange: React.PropTypes.func.isRequired,
-        isValid: React.PropTypes.func.isRequired,
-        immediate: React.PropTypes.bool
-    },
-    getInitialState: function () {
-        return {
-            content: this.props.content,
-            originalContent: this.props.content
-        };
-    },
-    focus: function () {
-        this.getDOMNode().focus();
-    },
-    onChange: function (val) {
-        this.setState({
-            content: val
-        });
-        if (this.props.immediate && val !== this.state.originalContent && this.props.isValid(val)) {
-            this.props.onChange(val);
-        }
-    },
-    onDone: function () {
-        if (this.state.content === this.state.originalContent) {
-            return true;
-        }
-        if (this.props.isValid(this.state.content)) {
-            this.props.onChange(this.state.content);
-        } else {
-            this.setState({
-                content: this.state.originalContent
-            });
-        }
-    },
-    componentWillReceiveProps: function (nextProps) {
-        if (nextProps.content !== this.state.content) {
-            this.setState({
-                content: nextProps.content,
-                originalContent: nextProps.content
-            })
-        }
-    },
-    render: function () {
-        var className = this.props.className || "";
-        if (this.props.isValid(this.state.content)) {
-            className += " has-success";
-        } else {
-            className += " has-warning"
-        }
-        return <InlineInput {...this.props}
-            className={className}
-            content={this.state.content}
-            onChange={this.onChange}
-            onDone={this.onDone}
-        />;
-    }
-});
-
 var RequestLine = React.createClass({
     render: function () {
         var flow = this.props.flow;
@@ -261,11 +124,25 @@ var RequestLine = React.createClass({
         var httpver = "HTTP/" + flow.request.httpversion.join(".");
 
         return <div className="first-line request-line">
-            <InlineInput ref="method" content={flow.request.method} onChange={this.onMethodChange}/>
+            <ValueEditor
+                ref="method"
+                content={flow.request.method}
+                onDone={this.onMethodChange}
+                inline/>
         &nbsp;
-            <ValidateInlineInput ref="url" content={url} onChange={this.onUrlChange} isValid={this.isValidUrl} />
+            <ValueEditor
+                ref="url"
+                content={url}
+                onDone={this.onUrlChange}
+                isValid={this.isValidUrl}
+                inline/>
         &nbsp;
-            <ValidateInlineInput ref="httpVersion" immediate content={httpver} onChange={this.onHttpVersionChange} isValid={flowutils.isValidHttpVersion} />
+            <ValueEditor
+                ref="httpVersion"
+                content={httpver}
+                onDone={this.onHttpVersionChange}
+                isValid={flowutils.isValidHttpVersion}
+                inline/>
         </div>
     },
     isValidUrl: function (url) {
@@ -300,12 +177,25 @@ var ResponseLine = React.createClass({
         var flow = this.props.flow;
         var httpver = "HTTP/" + flow.response.httpversion.join(".");
         return <div className="first-line response-line">
-            <ValidateInlineInput ref="httpVersion" immediate content={httpver} onChange={this.onHttpVersionChange} isValid={flowutils.isValidHttpVersion} />
+            <ValueEditor
+                ref="httpVersion"
+                content={httpver}
+                onDone={this.onHttpVersionChange}
+                isValid={flowutils.isValidHttpVersion}
+                inline/>
         &nbsp;
-            <ValidateInlineInput ref="code" immediate content={flow.response.code + ""} onChange={this.onCodeChange} isValid={this.isValidCode} />
+            <ValueEditor
+                ref="code"
+                content={flow.response.code + ""}
+                onDone={this.onCodeChange}
+                isValid={this.isValidCode}
+                inline/>
         &nbsp;
-            <InlineInput ref="msg" content={flow.response.msg} onChange={this.onMsgChange}/>
-
+            <ValueEditor
+                ref="msg"
+                content={flow.response.msg}
+                onDone={this.onMsgChange}
+                inline/>
         </div>;
     },
     isValidCode: function (code) {
@@ -361,7 +251,7 @@ var Request = React.createClass({
                 this.refs.headers.edit();
                 break;
             default:
-                throw "Unimplemented: "+ k;
+                throw "Unimplemented: " + k;
         }
     },
     onHeaderChange: function (nextHeaders) {
@@ -401,7 +291,7 @@ var Response = React.createClass({
                 this.refs.headers.edit();
                 break;
             default:
-                throw "Unimplemented: "+ k;
+                throw "Unimplemented: " + k;
         }
     },
     onHeaderChange: function (nextHeaders) {

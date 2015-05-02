@@ -440,7 +440,7 @@ module.exports = {
     Query: Query
 };
 
-},{"./dispatcher.js":20,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
+},{"./dispatcher.js":21,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var $ = require("jquery");
@@ -462,7 +462,7 @@ $(function () {
 
 
 
-},{"./actions.js":2,"./components/proxyapp.js":17,"./connection":19,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
+},{"./actions.js":2,"./components/proxyapp.js":18,"./connection":20,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -520,6 +520,11 @@ var SettingsState = {
 var ChildFocus = {
     contextTypes: {
         returnFocus: React.PropTypes.func
+    },
+    returnFocus: function(){
+        React.findDOMNode(this).blur();
+        window.getSelection().removeAllRanges();
+        this.context.returnFocus();
     }
 };
 
@@ -681,6 +686,202 @@ module.exports = {
 },{"lodash":"lodash","react":"react","react-router":"react-router"}],5:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
+var utils = require("../utils.js");
+
+var contentToHtml = function (content) {
+    return _.escape(content);
+};
+var nodeToContent = function (node) {
+    return node.textContent;
+};
+
+/*
+Basic Editor Functionality
+ */
+var EditorBase = React.createClass({displayName: "EditorBase",
+    propTypes: {
+        content: React.PropTypes.string.isRequired,
+        onDone: React.PropTypes.func.isRequired,
+        contentToHtml: React.PropTypes.func,
+        nodeToContent: React.PropTypes.func, // content === nodeToContent( Node<innerHTML=contentToHtml(content)> )
+        submitOnEnter: React.PropTypes.bool,
+        className: React.PropTypes.string,
+        tag: React.PropTypes.string
+    },
+    getDefaultProps: function () {
+        return {
+            contentToHtml: contentToHtml,
+            nodeToContent: nodeToContent,
+            submitOnEnter: true,
+            className: "",
+            tag: "div"
+        };
+    },
+    getInitialState: function () {
+        return {
+            editable: false
+        };
+    },
+    render: function () {
+        var className = "inline-input " + this.props.className;
+        var html = {__html: this.props.contentToHtml(this.props.content)};
+        var Tag = this.props.tag;
+        return React.createElement(Tag, React.__spread({}, 
+            this.props, 
+            {tabIndex: "0", 
+            className: className, 
+            contentEditable: this.state.editable || undefined, // workaround: use undef instead of false to remove attr
+            onFocus: this.onFocus, 
+            onBlur: this._stop, 
+            onKeyDown: this.onKeyDown, 
+            onInput: this.onInput, 
+            onPaste: this.onPaste, 
+            dangerouslySetInnerHTML: html})
+        );
+    },
+    onPaste: function(e){
+        e.preventDefault();
+        var content = e.clipboardData.getData("text/plain");
+        document.execCommand("insertHTML", false, content);
+    },
+    onFocus: function (e) {
+        this.setState({editable: true}, function () {
+            React.findDOMNode(this).focus();
+            var range = document.createRange();
+            range.selectNodeContents(this.getDOMNode());
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        });
+        this.props.onFocus && this.props.onFocus(e);
+    },
+    stop: function () {
+        // a stop would cause a blur as a side-effect.
+        // but a blur event must trigger a stop as well.
+        // to fix this, make stop = blur and do the actual stop in the onBlur handler.
+        React.findDOMNode(this).blur();
+    },
+    _stop: function (e) {
+        window.getSelection().removeAllRanges(); //make sure that selection is cleared on blur
+        var node = React.findDOMNode(this);
+        var content = this.props.nodeToContent(node);
+        this.setState({editable: false});
+        this.props.onDone(content);
+        this.props.onBlur && this.props.onBlur(e);
+    },
+    cancel: function () {
+        React.findDOMNode(this).innerHTML = this.props.contentToHtml(this.props.content);
+        this.stop();
+    },
+    onKeyDown: function (e) {
+        e.stopPropagation();
+        switch (e.keyCode) {
+            case utils.Key.ESC:
+                e.preventDefault();
+                this.cancel();
+                break;
+            case utils.Key.ENTER:
+                if (this.props.submitOnEnter && !e.shiftKey) {
+                    e.preventDefault();
+                    this.stop();
+                }
+                break;
+            default:
+                break;
+        }
+    },
+    onInput: function () {
+        var node = React.findDOMNode(this);
+        var content = this.props.nodeToContent(node);
+        this.props.onInput && this.props.onInput(content);
+    }
+});
+
+/*
+Add Validation to EditorBase
+ */
+var ValidateEditor = React.createClass({displayName: "ValidateEditor",
+    propTypes: {
+        content: React.PropTypes.string.isRequired,
+        onDone: React.PropTypes.func.isRequired,
+        onInput: React.PropTypes.func,
+        isValid: React.PropTypes.func,
+        className: React.PropTypes.string,
+    },
+    getInitialState: function(){
+        return {
+            currentContent: this.props.content
+        };
+    },
+    componentWillReceiveProps: function(){
+        this.setState({currentContent: this.props.content});
+    },
+    onInput: function(content){
+        this.setState({currentContent: content});
+        this.props.onInput && this.props.onInput(content);
+    },
+    render: function () {
+        var className = this.props.className || "";
+        if (this.props.isValid) {
+            if (this.props.isValid(this.state.currentContent)) {
+                className += " has-success";
+            } else {
+                className += " has-warning"
+            }
+        }
+        return React.createElement(EditorBase, React.__spread({}, 
+            this.props, 
+            {ref: "editor", 
+            className: className, 
+            onDone: this.onDone, 
+            onInput: this.onInput})
+        );
+    },
+    onDone: function (content) {
+        if(this.props.isValid && !this.props.isValid(content)){
+            this.refs.editor.cancel();
+            content = this.props.content;
+        }
+        this.props.onDone(content);
+    }
+});
+
+/*
+Text Editor with mitmweb-specific convenience features
+ */
+var ValueEditor = React.createClass({displayName: "ValueEditor",
+    mixins: [common.ChildFocus],
+    propTypes: {
+        content: React.PropTypes.string.isRequired,
+        onDone: React.PropTypes.func.isRequired,
+        inline: React.PropTypes.bool,
+    },
+    render: function () {
+        var tag = this.props.inline ? "span" : "div";
+        return React.createElement(ValidateEditor, React.__spread({}, 
+            this.props, 
+            {onBlur: this.onBlur, 
+            tag: tag})
+        );
+    },
+    focus: function () {
+        React.findDOMNode(this).focus();
+    },
+    onBlur: function(e){
+        if(!e.relatedTarget){
+            this.returnFocus();
+        }
+        this.props.onBlur && this.props.onBlur(e);
+    }
+});
+
+module.exports = {
+    ValueEditor: ValueEditor
+};
+
+},{"../utils.js":26,"./common.js":4,"react":"react"}],6:[function(require,module,exports){
+var React = require("react");
+var common = require("./common.js");
 var Query = require("../actions.js").Query;
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
@@ -829,7 +1030,7 @@ var EventLog = React.createClass({displayName: "EventLog",
 
 module.exports = EventLog;
 
-},{"../actions.js":2,"../store/view.js":24,"./common.js":4,"./virtualscroll.js":18,"lodash":"lodash","react":"react"}],6:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":25,"./common.js":4,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
 var React = require("react");
 var RequestUtils = require("../flow/utils.js").RequestUtils;
 var ResponseUtils = require("../flow/utils.js").ResponseUtils;
@@ -1032,7 +1233,7 @@ var all_columns = [
 
 module.exports = all_columns;
 
-},{"../flow/utils.js":22,"../utils.js":25,"react":"react"}],7:[function(require,module,exports){
+},{"../flow/utils.js":23,"../utils.js":26,"react":"react"}],8:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 var utils = require("../utils.js");
@@ -1222,7 +1423,7 @@ var FlowTable = React.createClass({displayName: "FlowTable",
 module.exports = FlowTable;
 
 
-},{"../utils.js":25,"./common.js":4,"./flowtable-columns.js":6,"./virtualscroll.js":18,"lodash":"lodash","react":"react"}],8:[function(require,module,exports){
+},{"../utils.js":26,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1461,7 +1662,7 @@ var ContentView = React.createClass({displayName: "ContentView",
 
 module.exports = ContentView;
 
-},{"../../flow/utils.js":22,"../../utils.js":25,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
+},{"../../flow/utils.js":23,"../../utils.js":26,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1644,7 +1845,7 @@ var Details = React.createClass({displayName: "Details",
 
 module.exports = Details;
 
-},{"../../utils.js":25,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../utils.js":26,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1773,7 +1974,7 @@ var FlowView = React.createClass({displayName: "FlowView",
 
 module.exports = FlowView;
 
-},{"../common.js":4,"../prompt.js":16,"./details.js":9,"./messages.js":11,"./nav.js":12,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../common.js":4,"../prompt.js":17,"./details.js":10,"./messages.js":12,"./nav.js":13,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1782,6 +1983,7 @@ var actions = require("../../actions.js");
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
 var ContentView = require("./contentview.js");
+var ValueEditor = require("../editor.js").ValueEditor;
 
 var Headers = React.createClass({displayName: "Headers",
     propTypes: {
@@ -1839,16 +2041,16 @@ var Headers = React.createClass({displayName: "Headers",
 
         var rows = this.props.message.headers.map(function (header, i) {
 
-            var kEdit = React.createElement(HeaderInlineInput, {
+            var kEdit = React.createElement(HeaderEditor, {
                 ref: i + "-key", 
                 content: header[0], 
-                onChange: this.onChange.bind(null, i, 0), 
+                onDone: this.onChange.bind(null, i, 0), 
                 onRemove: this.onRemove.bind(null, i, 0), 
                 onTab: this.onTab.bind(null, i, 0)});
-            var vEdit = React.createElement(HeaderInlineInput, {
+            var vEdit = React.createElement(HeaderEditor, {
                 ref: i + "-value", 
                 content: header[1], 
-                onChange: this.onChange.bind(null, i, 1), 
+                onDone: this.onChange.bind(null, i, 1), 
                 onRemove: this.onRemove.bind(null, i, 1), 
                 onTab: this.onTab.bind(null, i, 1)});
             return (
@@ -1868,88 +2070,9 @@ var Headers = React.createClass({displayName: "Headers",
     }
 });
 
-
-var InlineInput = React.createClass({displayName: "InlineInput",
-    mixins: [common.ChildFocus],
-    propTypes: {
-        content: React.PropTypes.string.isRequired, //must be string to match strict equality.
-        onChange: React.PropTypes.func.isRequired,
-    },
-    getInitialState: function () {
-        return {
-            editable: false
-        };
-    },
+var HeaderEditor = React.createClass({displayName: "HeaderEditor",
     render: function () {
-        var Tag = this.props.tag || "span";
-        var className = "inline-input " + (this.props.className || "");
-        var html = {__html: _.escape(this.props.content)};
-        return React.createElement(Tag, React.__spread({}, 
-            this.props, 
-            {tabIndex: "0", 
-            className: className, 
-            contentEditable: this.state.editable || undefined, 
-            onInput: this.onInput, 
-            onFocus: this.onFocus, 
-            onBlur: this.onBlur, 
-            onKeyDown: this.onKeyDown, 
-            dangerouslySetInnerHTML: html})
-        );
-    },
-    onKeyDown: function (e) {
-        e.stopPropagation();
-        switch (e.keyCode) {
-            case utils.Key.ESC:
-                this.blur();
-                break;
-            case utils.Key.ENTER:
-                e.preventDefault();
-                if (!e.ctrlKey) {
-                    this.blur();
-                } else {
-                    this.props.onDone && this.props.onDone();
-                }
-                break;
-            default:
-                this.props.onKeyDown && this.props.onKeyDown(e);
-                break;
-        }
-    },
-    blur: function () {
-        this.getDOMNode().blur();
-        window.getSelection().removeAllRanges();
-        this.context.returnFocus && this.context.returnFocus();
-    },
-    focus: function () {
-        React.findDOMNode(this).focus();
-        var range = document.createRange();
-        range.selectNodeContents(this.getDOMNode());
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-    },
-    onFocus: function () {
-        this.setState({editable: true}, this.focus);
-    },
-    onBlur: function (e) {
-        this.setState({editable: false});
-        this.handleChange();
-        this.props.onDone && this.props.onDone();
-    },
-    onInput: function () {
-        this.handleChange();
-    },
-    handleChange: function () {
-        var content = this.getDOMNode().textContent;
-        if (content !== this.props.content) {
-            this.props.onChange(content);
-        }
-    }
-});
-
-var HeaderInlineInput = React.createClass({displayName: "HeaderInlineInput",
-    render: function () {
-        return React.createElement(InlineInput, React.__spread({ref: "input"},  this.props, {onKeyDown: this.onKeyDown}));
+        return React.createElement(ValueEditor, React.__spread({ref: "input"},  this.props, {onKeyDown: this.onKeyDown, inline: true}));
     },
     focus: function () {
         this.getDOMNode().focus();
@@ -1971,65 +2094,6 @@ var HeaderInlineInput = React.createClass({displayName: "HeaderInlineInput",
     }
 });
 
-var ValidateInlineInput = React.createClass({displayName: "ValidateInlineInput",
-    propTypes: {
-        onChange: React.PropTypes.func.isRequired,
-        isValid: React.PropTypes.func.isRequired,
-        immediate: React.PropTypes.bool
-    },
-    getInitialState: function () {
-        return {
-            content: this.props.content,
-            originalContent: this.props.content
-        };
-    },
-    focus: function () {
-        this.getDOMNode().focus();
-    },
-    onChange: function (val) {
-        this.setState({
-            content: val
-        });
-        if (this.props.immediate && val !== this.state.originalContent && this.props.isValid(val)) {
-            this.props.onChange(val);
-        }
-    },
-    onDone: function () {
-        if (this.state.content === this.state.originalContent) {
-            return true;
-        }
-        if (this.props.isValid(this.state.content)) {
-            this.props.onChange(this.state.content);
-        } else {
-            this.setState({
-                content: this.state.originalContent
-            });
-        }
-    },
-    componentWillReceiveProps: function (nextProps) {
-        if (nextProps.content !== this.state.content) {
-            this.setState({
-                content: nextProps.content,
-                originalContent: nextProps.content
-            })
-        }
-    },
-    render: function () {
-        var className = this.props.className || "";
-        if (this.props.isValid(this.state.content)) {
-            className += " has-success";
-        } else {
-            className += " has-warning"
-        }
-        return React.createElement(InlineInput, React.__spread({},  this.props, 
-            {className: className, 
-            content: this.state.content, 
-            onChange: this.onChange, 
-            onDone: this.onDone})
-        );
-    }
-});
-
 var RequestLine = React.createClass({displayName: "RequestLine",
     render: function () {
         var flow = this.props.flow;
@@ -2037,11 +2101,25 @@ var RequestLine = React.createClass({displayName: "RequestLine",
         var httpver = "HTTP/" + flow.request.httpversion.join(".");
 
         return React.createElement("div", {className: "first-line request-line"}, 
-            React.createElement(InlineInput, {ref: "method", content: flow.request.method, onChange: this.onMethodChange}), 
+            React.createElement(ValueEditor, {
+                ref: "method", 
+                content: flow.request.method, 
+                onDone: this.onMethodChange, 
+                inline: true}), 
         " ", 
-            React.createElement(ValidateInlineInput, {ref: "url", content: url, onChange: this.onUrlChange, isValid: this.isValidUrl}), 
+            React.createElement(ValueEditor, {
+                ref: "url", 
+                content: url, 
+                onDone: this.onUrlChange, 
+                isValid: this.isValidUrl, 
+                inline: true}), 
         " ", 
-            React.createElement(ValidateInlineInput, {ref: "httpVersion", immediate: true, content: httpver, onChange: this.onHttpVersionChange, isValid: flowutils.isValidHttpVersion})
+            React.createElement(ValueEditor, {
+                ref: "httpVersion", 
+                content: httpver, 
+                onDone: this.onHttpVersionChange, 
+                isValid: flowutils.isValidHttpVersion, 
+                inline: true})
         )
     },
     isValidUrl: function (url) {
@@ -2076,12 +2154,25 @@ var ResponseLine = React.createClass({displayName: "ResponseLine",
         var flow = this.props.flow;
         var httpver = "HTTP/" + flow.response.httpversion.join(".");
         return React.createElement("div", {className: "first-line response-line"}, 
-            React.createElement(ValidateInlineInput, {ref: "httpVersion", immediate: true, content: httpver, onChange: this.onHttpVersionChange, isValid: flowutils.isValidHttpVersion}), 
+            React.createElement(ValueEditor, {
+                ref: "httpVersion", 
+                content: httpver, 
+                onDone: this.onHttpVersionChange, 
+                isValid: flowutils.isValidHttpVersion, 
+                inline: true}), 
         " ", 
-            React.createElement(ValidateInlineInput, {ref: "code", immediate: true, content: flow.response.code + "", onChange: this.onCodeChange, isValid: this.isValidCode}), 
+            React.createElement(ValueEditor, {
+                ref: "code", 
+                content: flow.response.code + "", 
+                onDone: this.onCodeChange, 
+                isValid: this.isValidCode, 
+                inline: true}), 
         " ", 
-            React.createElement(InlineInput, {ref: "msg", content: flow.response.msg, onChange: this.onMsgChange})
-
+            React.createElement(ValueEditor, {
+                ref: "msg", 
+                content: flow.response.msg, 
+                onDone: this.onMsgChange, 
+                inline: true})
         );
     },
     isValidCode: function (code) {
@@ -2137,7 +2228,7 @@ var Request = React.createClass({displayName: "Request",
                 this.refs.headers.edit();
                 break;
             default:
-                throw "Unimplemented: "+ k;
+                throw "Unimplemented: " + k;
         }
     },
     onHeaderChange: function (nextHeaders) {
@@ -2177,7 +2268,7 @@ var Response = React.createClass({displayName: "Response",
                 this.refs.headers.edit();
                 break;
             default:
-                throw "Unimplemented: "+ k;
+                throw "Unimplemented: " + k;
         }
     },
     onHeaderChange: function (nextHeaders) {
@@ -2211,7 +2302,7 @@ module.exports = {
     Error: Error
 };
 
-},{"../../actions.js":2,"../../flow/utils.js":22,"../../utils.js":25,"../common.js":4,"./contentview.js":8,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":23,"../../utils.js":26,"../common.js":4,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react"}],13:[function(require,module,exports){
 var React = require("react");
 
 var actions = require("../../actions.js");
@@ -2274,7 +2365,7 @@ var Nav = React.createClass({displayName: "Nav",
 
 module.exports = Nav;
 
-},{"../../actions.js":2,"react":"react"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"react":"react"}],14:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 
@@ -2295,7 +2386,7 @@ var Footer = React.createClass({displayName: "Footer",
 
 module.exports = Footer;
 
-},{"./common.js":4,"react":"react"}],14:[function(require,module,exports){
+},{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
 var React = require("react");
 var $ = require("jquery");
 
@@ -2417,7 +2508,7 @@ var FilterInput = React.createClass({displayName: "FilterInput",
     },
     blur: function () {
         this.refs.input.getDOMNode().blur();
-        this.context.returnFocus && this.context.returnFocus();
+        this.returnFocus();
     },
     select: function () {
         this.refs.input.getDOMNode().select();
@@ -2696,7 +2787,7 @@ module.exports = {
     MainMenu: MainMenu
 };
 
-},{"../actions.js":2,"../filt/filt.js":21,"../utils.js":25,"./common.js":4,"jquery":"jquery","react":"react"}],15:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":22,"../utils.js":26,"./common.js":4,"jquery":"jquery","react":"react"}],16:[function(require,module,exports){
 var React = require("react");
 
 var actions = require("../actions.js");
@@ -2943,7 +3034,7 @@ var MainView = React.createClass({displayName: "MainView",
 module.exports = MainView;
 
 
-},{"../actions.js":2,"../filt/filt.js":21,"../store/view.js":24,"../utils.js":25,"./common.js":4,"./flowtable.js":7,"./flowview/index.js":10,"react":"react"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":22,"../store/view.js":25,"../utils.js":26,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],17:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -2980,7 +3071,7 @@ var Prompt = React.createClass({displayName: "Prompt",
     },
     done: function (ret) {
         this.props.done(ret);
-        this.context.returnFocus && this.context.returnFocus();
+        this.returnFocus();
     },
     getOptions: function () {
         var opts = [];
@@ -3045,7 +3136,7 @@ var Prompt = React.createClass({displayName: "Prompt",
 
 module.exports = Prompt;
 
-},{"../utils.js":25,"./common.js":4,"lodash":"lodash","react":"react"}],17:[function(require,module,exports){
+},{"../utils.js":26,"./common.js":4,"lodash":"lodash","react":"react"}],18:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -3176,7 +3267,7 @@ module.exports = {
     routes: routes
 };
 
-},{"../actions.js":2,"../store/store.js":23,"../utils.js":25,"./common.js":4,"./eventlog.js":5,"./footer.js":13,"./header.js":14,"./mainview.js":15,"lodash":"lodash","react":"react","react-router":"react-router"}],18:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":24,"../utils.js":26,"./common.js":4,"./eventlog.js":6,"./footer.js":14,"./header.js":15,"./mainview.js":16,"lodash":"lodash","react":"react","react-router":"react-router"}],19:[function(require,module,exports){
 var React = require("react");
 
 var VirtualScrollMixin = {
@@ -3263,7 +3354,7 @@ var VirtualScrollMixin = {
 
 module.exports  = VirtualScrollMixin;
 
-},{"react":"react"}],19:[function(require,module,exports){
+},{"react":"react"}],20:[function(require,module,exports){
 
 var actions = require("./actions.js");
 var AppDispatcher = require("./dispatcher.js").AppDispatcher;
@@ -3294,7 +3385,7 @@ function Connection(url) {
 
 module.exports = Connection;
 
-},{"./actions.js":2,"./dispatcher.js":20}],20:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":21}],21:[function(require,module,exports){
 
 var flux = require("flux");
 
@@ -3318,7 +3409,7 @@ module.exports = {
     AppDispatcher: AppDispatcher
 };
 
-},{"flux":"flux"}],21:[function(require,module,exports){
+},{"flux":"flux"}],22:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -5094,7 +5185,7 @@ module.exports = (function() {
   };
 })();
 
-},{"../flow/utils.js":22}],22:[function(require,module,exports){
+},{"../flow/utils.js":23}],23:[function(require,module,exports){
 var _ = require("lodash");
 var $ = require("jquery");
 
@@ -5226,7 +5317,7 @@ module.exports = {
     isValidHttpVersion: isValidHttpVersion
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],23:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],24:[function(require,module,exports){
 
 var _ = require("lodash");
 var $ = require("jquery");
@@ -5409,7 +5500,7 @@ module.exports = {
     FlowStore: FlowStore
 };
 
-},{"../actions.js":2,"../dispatcher.js":20,"../utils.js":25,"events":1,"jquery":"jquery","lodash":"lodash"}],24:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":21,"../utils.js":26,"events":1,"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
 var _ = require("lodash");
 
@@ -5526,7 +5617,7 @@ module.exports = {
     StoreView: StoreView
 };
 
-},{"../utils.js":25,"events":1,"lodash":"lodash"}],25:[function(require,module,exports){
+},{"../utils.js":26,"events":1,"lodash":"lodash"}],26:[function(require,module,exports){
 var $ = require("jquery");
 var _ = require("lodash");
 var actions = require("./actions.js");

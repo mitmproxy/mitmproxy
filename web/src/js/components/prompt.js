@@ -34,7 +34,7 @@ var Prompt = React.createClass({
     },
     done: function (ret) {
         this.props.done(ret);
-        this.context.returnFocus && this.context.returnFocus();
+        this.returnFocus();
     },
     getOptions: function () {
         var opts = [];

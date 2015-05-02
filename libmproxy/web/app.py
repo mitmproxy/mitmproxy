@@ -119,7 +119,7 @@ class FlowHandler(RequestHandler):
 
     def put(self, flow_id):
         flow = self.flow
-        self.state.backup(flow)
+        flow.backup()
         for a, b in self.json.iteritems():
 
             if a == "request":
