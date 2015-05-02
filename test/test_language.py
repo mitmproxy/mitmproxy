@@ -1,7 +1,7 @@
 import os
 import cStringIO
 from libpathod import language
-from libpathod.language import generators, base, http, websockets, writer, exceptions
+from libpathod.language import base, http, websockets, writer, exceptions
 import tutils
 
 language.TESTING = True
@@ -162,35 +162,6 @@ class TestMisc:
         v = base.Value.parseString("'val'")[0]
         g = v.get_generator({})
         assert g[:] == "val"
-
-    def test_randomgenerator(self):
-        g = generators.RandomGenerator("bytes", 100)
-        assert repr(g)
-        assert len(g[:10]) == 10
-        assert len(g[1:10]) == 9
-        assert len(g[:1000]) == 100
-        assert len(g[1000:1001]) == 0
-        assert g[0]
-
-    def test_literalgenerator(self):
-        g = generators.LiteralGenerator("one")
-        assert repr(g)
-        assert g[:] == "one"
-        assert g[1] == "n"
-
-    def test_filegenerator(self):
-        with tutils.tmpdir() as t:
-            path = os.path.join(t, "foo")
-            f = open(path, "wb")
-            f.write("x"*10000)
-            f.close()
-            g = generators.FileGenerator(path)
-            assert len(g) == 10000
-            assert g[0] == "x"
-            assert g[-1] == "x"
-            assert g[0:5] == "xxxxx"
-            assert repr(g)
-            del g  # remove all references to FileGenerator instance to close the file handle.
 
     def test_value(self):
         assert base.Value.parseString("'val'")[0].val == "val"
@@ -848,31 +819,3 @@ class TestResponse:
         tutils.raises("no websocket key", r.resolve, language.Settings())
         res = r.resolve(language.Settings(websocket_key="foo"))
         assert res.code.string() == "101"
-
-
-def test_read_file():
-    tutils.raises(exceptions.FileAccessDenied, base.read_file, {}, "=/foo")
-    p = tutils.test_data.path("data")
-    d = dict(staticdir=p)
-    assert base.read_file(d, "+./file").strip() == "testfile"
-    assert base.read_file(d, "+file").strip() == "testfile"
-    tutils.raises(
-        exceptions.FileAccessDenied,
-        base.read_file,
-        d,
-        "+./nonexistent"
-    )
-    tutils.raises(
-        exceptions.FileAccessDenied,
-        base.read_file,
-        d,
-        "+/nonexistent"
-    )
-    tutils.raises(
-        exceptions.FileAccessDenied,
-        base.read_file,
-        d,
-        "+../test_language.py"
-    )
-    d["unconstrained_file_access"] = True
-    assert base.read_file(d, "+../test_language.py")

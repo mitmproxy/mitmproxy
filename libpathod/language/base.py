@@ -733,19 +733,3 @@ class _Message(object):
 
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
-
-
-def read_file(settings, s):
-    uf = settings.get("unconstrained_file_access")
-    sd = settings.get("staticdir")
-    if not sd:
-        raise exceptions.FileAccessDenied("File access disabled.")
-    sd = os.path.normpath(os.path.abspath(sd))
-    s = s[1:]
-    s = os.path.expanduser(s)
-    s = os.path.normpath(os.path.abspath(os.path.join(sd, s)))
-    if not uf and not s.startswith(sd):
-        raise exceptions.FileAccessDenied("File access outside of configured directory")
-    if not os.path.isfile(s):
-        raise exceptions.FileAccessDenied("File not readable")
-    return file(s, "rb").read()
