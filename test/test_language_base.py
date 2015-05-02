@@ -9,11 +9,12 @@ def parse_request(s):
     return language.parse_requests(s)[0]
 
 
-class TestWS:
-    def test_expr(self):
-        v = base.WS("foo")
-        assert v.expr()
-        assert v.values(language.Settings())
+def test_caseless_literal():
+    class CL(base.CaselessLiteral):
+        TOK = "foo"
+    v = CL("foo")
+    assert v.expr()
+    assert v.values(language.Settings())
 
 
 class TestValueNakedLiteral:
@@ -166,11 +167,11 @@ class TestMisc:
         assert base.Value.parseString('"val"')[0].val == "val"
         assert base.Value.parseString('"\'val\'"')[0].val == "'val'"
 
-    def test_path(self):
-        e = base.Path.expr()
+    def test_simplevalue(self):
+        e = base.SimpleValue.expr()
         assert e.parseString('"/foo"')[0].value.val == "/foo"
 
-        v = base.Path("/foo")
+        v = base.SimpleValue("/foo")
         assert v.value.val == "/foo"
 
         v = e.parseString("@100")[0]
@@ -181,32 +182,6 @@ class TestMisc:
 
         s = v.spec()
         assert s == v.expr().parseString(s)[0].spec()
-
-    def test_method(self):
-        e = base.Method.expr()
-        assert e.parseString("get")[0].value.val == "GET"
-        assert e.parseString("'foo'")[0].value.val == "foo"
-        assert e.parseString("'get'")[0].value.val == "get"
-
-        assert e.parseString("get")[0].spec() == "get"
-        assert e.parseString("'foo'")[0].spec() == "'foo'"
-
-        s = e.parseString("get")[0].spec()
-        assert s == e.parseString(s)[0].spec()
-
-        s = e.parseString("'foo'")[0].spec()
-        assert s == e.parseString(s)[0].spec()
-
-        v = e.parseString("@100")[0]
-        v2 = v.freeze({})
-        v3 = v2.freeze({})
-        assert v2.value.val == v3.value.val
-
-    def test_raw(self):
-        e = base.Raw.expr().parseString("r")[0]
-        assert e
-        assert e.spec() == "r"
-        assert e.freeze({}).spec() == "r"
 
     def test_body(self):
         e = base.Body.expr()
@@ -470,3 +445,30 @@ class TestPauses:
     def test_freeze(self):
         l = base.PauseAt("r", 5)
         assert l.freeze({}).spec() == l.spec()
+
+
+def test_options_or_value():
+    class TT(base.OptionsOrValue):
+        options = [
+            "one",
+            "two",
+            "three"
+        ]
+    e = TT.expr()
+    assert e.parseString("one")[0].value.val == "ONE"
+    assert e.parseString("'foo'")[0].value.val == "foo"
+    assert e.parseString("'get'")[0].value.val == "get"
+
+    assert e.parseString("one")[0].spec() == "one"
+    assert e.parseString("'foo'")[0].spec() == "'foo'"
+
+    s = e.parseString("one")[0].spec()
+    assert s == e.parseString(s)[0].spec()
+
+    s = e.parseString("'foo'")[0].spec()
+    assert s == e.parseString(s)[0].spec()
+
+    v = e.parseString("@100")[0]
+    v2 = v.freeze({})
+    v3 = v2.freeze({})
+    assert v2.value.val == v3.value.val

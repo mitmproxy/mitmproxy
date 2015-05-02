@@ -129,15 +129,15 @@ class TestRequest:
         r = parse_request('ws:/path/')
         res = r.resolve(language.Settings())
         assert res.method.string().lower() == "get"
-        assert res.tok(base.Path).value.val == "/path/"
-        assert res.tok(base.Method).value.val.lower() == "get"
+        assert res.tok(http.Path).value.val == "/path/"
+        assert res.tok(http.Method).value.val.lower() == "get"
         assert http.get_header("Upgrade", res.headers).value.val == "websocket"
 
         r = parse_request('ws:put:/path/')
         res = r.resolve(language.Settings())
         assert r.method.string().lower() == "put"
-        assert res.tok(base.Path).value.val == "/path/"
-        assert res.tok(base.Method).value.val.lower() == "put"
+        assert res.tok(http.Path).value.val == "/path/"
+        assert res.tok(http.Method).value.val.lower() == "put"
         assert http.get_header("Upgrade", res.headers).value.val == "websocket"
 
 

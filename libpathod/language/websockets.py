@@ -3,6 +3,19 @@ import netlib.websockets
 import contrib.pyparsing as pp
 from . import base, generators
 
+"""
+    wf:ctext:b'foo'
+    wf:c15:r'foo'
+    wf:fin:rsv1:rsv2:rsv3:mask
+    wf:-fin:-rsv1:-rsv2:-rsv3:-mask
+    wf:p234
+    wf:m"mask"
+"""
+
+
+class WF(base.CaselessLiteral):
+    TOK = "wf"
+
 
 class WebsocketFrame(base._Message):
     comps = (
@@ -19,7 +32,7 @@ class WebsocketFrame(base._Message):
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
-                base.WF.expr(),
+                WF.expr(),
                 base.Sep,
                 pp.ZeroOrMore(base.Sep + atom)
             ]

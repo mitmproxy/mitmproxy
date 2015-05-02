@@ -8,6 +8,31 @@ from netlib import http_status
 from . import base, generators, exceptions
 
 
+class WS(base.CaselessLiteral):
+    TOK = "ws"
+
+
+class Raw(base.CaselessLiteral):
+    TOK = "r"
+
+
+class Path(base.SimpleValue):
+    pass
+
+
+class Method(base.OptionsOrValue):
+    options = [
+        "get",
+        "head",
+        "post",
+        "put",
+        "delete",
+        "options",
+        "trace",
+        "connect",
+    ]
+
+
 def get_header(val, headers):
     """
         Header keys may be Values, so we have to "generate" them as we try the
@@ -22,6 +47,10 @@ def get_header(val, headers):
 
 class _HTTPMessage(base._Message):
     version = "HTTP/1.1"
+    @property
+    def raw(self):
+        return bool(self.tok(Raw))
+
 
     @abc.abstractmethod
     def preamble(self, settings): # pragma: no cover
@@ -47,14 +76,14 @@ class Response(_HTTPMessage):
         base.InjectAt,
         base.ShortcutContentType,
         base.ShortcutLocation,
-        base.Raw,
+        Raw,
         base.Reason
     )
     logattrs = ["code", "reason", "version", "body"]
 
     @property
     def ws(self):
-        return self.tok(base.WS)
+        return self.tok(WS)
 
     @property
     def code(self):
@@ -129,7 +158,7 @@ class Response(_HTTPMessage):
             [
                 pp.MatchFirst(
                     [
-                        base.WS.expr() + pp.Optional(
+                        WS.expr() + pp.Optional(
                             base.Sep + base.Code.expr()
                         ),
                         base.Code.expr(),
@@ -154,22 +183,22 @@ class Request(_HTTPMessage):
         base.InjectAt,
         base.ShortcutContentType,
         base.ShortcutUserAgent,
-        base.Raw,
+        Raw,
         base.PathodSpec,
     )
     logattrs = ["method", "path", "body"]
 
     @property
     def ws(self):
-        return self.tok(base.WS)
+        return self.tok(WS)
 
     @property
     def method(self):
-        return self.tok(base.Method)
+        return self.tok(Method)
 
     @property
     def path(self):
-        return self.tok(base.Path)
+        return self.tok(Path)
 
     @property
     def pathodspec(self):
@@ -191,7 +220,7 @@ class Request(_HTTPMessage):
             if not self.method:
                 tokens.insert(
                     1,
-                    base.Method("get")
+                    Method("get")
                 )
             for i in netlib.websockets.client_handshake_headers().lst:
                 if not get_header(i[0], self.headers):
@@ -232,14 +261,14 @@ class Request(_HTTPMessage):
             [
                 pp.MatchFirst(
                     [
-                        base.WS.expr() + pp.Optional(
-                            base.Sep + base.Method.expr()
+                        WS.expr() + pp.Optional(
+                            base.Sep + Method.expr()
                         ),
-                        base.Method.expr(),
+                        Method.expr(),
                     ]
                 ),
                 base.Sep,
-                base.Path.expr(),
+                Path.expr(),
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )

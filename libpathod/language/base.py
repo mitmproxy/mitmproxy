@@ -213,19 +213,6 @@ Offset = pp.MatchFirst(
 )
 
 
-class Raw(_Token):
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("r").suppress()
-        return e.setParseAction(lambda x: klass(*x))
-
-    def spec(self):
-        return "r"
-
-    def freeze(self, settings):
-        return self
-
-
 class _Component(_Token):
     """
         A value component of the primary specification of an HTTP message.
@@ -386,7 +373,10 @@ class PathodSpec(_Token):
         return PathodSpec(ValueLiteral(f.encode("string_escape")))
 
 
-class Path(_Component):
+class SimpleValue(_Component):
+    """
+        A simple value - i.e. one without a preface.
+    """
     def __init__(self, value):
         if isinstance(value, basestring):
             value = ValueLiteral(value)
@@ -406,10 +396,13 @@ class Path(_Component):
         return "%s"%(self.value.spec())
 
     def freeze(self, settings):
-        return Path(self.value.freeze(settings))
+        return self.__class__(self.value.freeze(settings))
 
 
-class _Token(_Component):
+class CaselessLiteral(_Component):
+    """
+        A caseless token that can take only one value.
+    """
     def __init__(self, value):
         self.value = value
 
@@ -429,28 +422,12 @@ class _Token(_Component):
         return self
 
 
-class WS(_Token):
-    TOK = "ws"
-
-
-class WF(_Token):
-    TOK = "wf"
-
-
-class Method(_Component):
-    methods = [
-        "get",
-        "head",
-        "post",
-        "put",
-        "delete",
-        "options",
-        "trace",
-        "connect",
-    ]
-
+class OptionsOrValue(_Component):
+    """
+        Can be any of a specified set of options, or a value specifier.
+    """
     def __init__(self, value):
-        # If it's a string, we were passed one of the methods, so we upper-case
+        # If it's a string, we were passed one of the options, so we upper-case
         # it to be canonical. The user can specify a different case by using a
         # string value literal.
         if isinstance(value, basestring):
@@ -459,7 +436,7 @@ class Method(_Component):
 
     @classmethod
     def expr(klass):
-        parts = [pp.CaselessLiteral(i) for i in klass.methods]
+        parts = [pp.CaselessLiteral(i) for i in klass.options]
         m = pp.MatchFirst(parts)
         spec = m | Value.copy()
         spec = spec.setParseAction(lambda x: klass(*x))
@@ -472,12 +449,12 @@ class Method(_Component):
 
     def spec(self):
         s = self.value.spec()
-        if s[1:-1].lower() in self.methods:
+        if s[1:-1].lower() in self.options:
             s = s[1:-1].lower()
         return "%s"%s
 
     def freeze(self, settings):
-        return Method(self.value.freeze(settings))
+        return self.__class__(self.value.freeze(settings))
 
 
 class Code(_Component):
@@ -496,7 +473,7 @@ class Code(_Component):
         return "%s"%(self.code)
 
     def freeze(self, settings):
-        return Code(self.code)
+        return self
 
 
 class Reason(_Component):
@@ -651,10 +628,6 @@ class _Message(object):
         l = self.toks(klass)
         if l:
             return l[0]
-
-    @property
-    def raw(self):
-        return bool(self.tok(Raw))
 
     @property
     def actions(self):
