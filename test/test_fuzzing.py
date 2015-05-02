@@ -27,7 +27,7 @@ class TestFuzzy(tservers.HTTPProxTest):
         assert p.request(req%self.server.port).status_code == 400
 
     def test_invalid_upstream(self):
-        req = r"get:'http://localhost:%s/p/200:i10,\'+\''"
+        req = r"get:'http://localhost:%s/p/200:i10,\x27+\x27'"
         p = self.pathoc()
         assert p.request(req%self.server.port).status_code == 502
 
@@ -35,5 +35,3 @@ class TestFuzzy(tservers.HTTPProxTest):
         req = r'200:d0'
         p = self.pathod(req)
         assert p.status_code == 502
-
-
