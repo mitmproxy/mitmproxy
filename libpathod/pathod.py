@@ -9,6 +9,7 @@ import netlib.utils
 
 from . import version, app, language, utils
 import language.http
+import language.actions
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
@@ -365,7 +366,7 @@ class Pathod(tcp.TCPServer):
             return "File access denied.", None
         if self.sizelimit and l > self.sizelimit:
             return "Response too large.", None
-        pauses = [isinstance(i, language.base.PauseAt) for i in req.actions]
+        pauses = [isinstance(i, language.actions.PauseAt) for i in req.actions]
         if self.nohang and any(pauses):
             return "Pauses have been disabled.", None
         return None, req

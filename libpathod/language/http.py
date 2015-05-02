@@ -5,7 +5,7 @@ import contrib.pyparsing as pp
 
 import netlib.websockets
 from netlib import http_status, http_uastrings
-from . import base, generators, exceptions
+from . import base, generators, exceptions, actions, message
 
 
 class WS(base.CaselessLiteral):
@@ -100,8 +100,11 @@ def get_header(val, headers):
     return None
 
 
-class _HTTPMessage(base._Message):
+class _HTTPMessage(message.Message):
     version = "HTTP/1.1"
+    @property
+    def actions(self):
+        return self.toks(actions._Action)
 
     @property
     def raw(self):
@@ -134,13 +137,14 @@ class Response(_HTTPMessage):
     comps = (
         Body,
         Header,
-        base.PauseAt,
-        base.DisconnectAt,
-        base.InjectAt,
         ShortcutContentType,
         ShortcutLocation,
         Raw,
-        Reason
+        Reason,
+
+        actions.PauseAt,
+        actions.DisconnectAt,
+        actions.InjectAt,
     )
     logattrs = ["code", "reason", "version", "body"]
 
@@ -241,13 +245,14 @@ class Request(_HTTPMessage):
     comps = (
         Body,
         Header,
-        base.PauseAt,
-        base.DisconnectAt,
-        base.InjectAt,
         ShortcutContentType,
         ShortcutUserAgent,
         Raw,
         base.PathodSpec,
+
+        actions.PauseAt,
+        actions.DisconnectAt,
+        actions.InjectAt,
     )
     logattrs = ["method", "path", "body"]
 

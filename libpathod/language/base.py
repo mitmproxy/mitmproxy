@@ -1,14 +1,11 @@
 import operator
-import random
 import os
-import copy
 import abc
 import contrib.pyparsing as pp
 
 from .. import utils
 from . import generators, exceptions
 
-TRUNCATE = 1024
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
 
@@ -43,7 +40,7 @@ v_naked_literal = pp.MatchFirst(
 )
 
 
-class _Token(object):
+class Token(object):
     """
         A specification token. Tokens are immutable.
     """
@@ -74,7 +71,7 @@ class _Token(object):
         return self.spec()
 
 
-class _ValueLiteral(_Token):
+class _ValueLiteral(Token):
     def __init__(self, val):
         self.val = val.decode("string_escape")
 
@@ -111,7 +108,7 @@ class ValueNakedLiteral(_ValueLiteral):
         return self.val.encode("string_escape")
 
 
-class ValueGenerate(_Token):
+class ValueGenerate(Token):
     def __init__(self, usize, unit, datatype):
         if not unit:
             unit = "b"
@@ -154,7 +151,7 @@ class ValueGenerate(_Token):
         return s
 
 
-class ValueFile(_Token):
+class ValueFile(Token):
     def __init__(self, path):
         self.path = str(path)
 
@@ -215,9 +212,9 @@ Offset = pp.MatchFirst(
 )
 
 
-class _Component(_Token):
+class _Component(Token):
     """
-        A value component of the primary specification of an HTTP message.
+        A value component of the primary specification of an message.
     """
     @abc.abstractmethod
     def values(self, settings): # pragma: no cover
@@ -258,7 +255,7 @@ class KeyValue(_Component):
         )
 
 
-class PathodSpec(_Token):
+class PathodSpec(Token):
     def __init__(self, value):
         self.value = value
         try:
@@ -289,32 +286,6 @@ class PathodSpec(_Token):
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()
         return PathodSpec(ValueLiteral(f.encode("string_escape")))
-
-
-class SimpleValue(_Component):
-    """
-        A simple value - i.e. one without a preface.
-    """
-    def __init__(self, value):
-        if isinstance(value, basestring):
-            value = ValueLiteral(value)
-        self.value = value
-
-    @classmethod
-    def expr(klass):
-        e = Value | NakedValue
-        return e.setParseAction(lambda x: klass(*x))
-
-    def values(self, settings):
-        return [
-            self.value.get_generator(settings),
-        ]
-
-    def spec(self):
-        return "%s"%(self.value.spec())
-
-    def freeze(self, settings):
-        return self.__class__(self.value.freeze(settings))
 
 
 class CaselessLiteral(_Component):
@@ -422,194 +393,27 @@ class PreValue(_Component):
         return self.__class__(self.value.freeze(settings))
 
 
-class _Action(_Token):
+class SimpleValue(_Component):
     """
-        An action that operates on the raw data stream of the message. All
-        actions have one thing in common: an offset that specifies where the
-        action should take place.
+        A simple value - i.e. one without a preface.
     """
-    def __init__(self, offset):
-        self.offset = offset
-
-    def resolve(self, settings, msg):
-        """
-            Resolves offset specifications to a numeric offset. Returns a copy
-            of the action object.
-        """
-        c = copy.copy(self)
-        l = msg.length(settings)
-        if c.offset == "r":
-            c.offset = random.randrange(l)
-        elif c.offset == "a":
-            c.offset = l + 1
-        return c
-
-    def __cmp__(self, other):
-        return cmp(self.offset, other.offset)
-
-    def __repr__(self):
-        return self.spec()
-
-    @abc.abstractmethod
-    def spec(self): # pragma: no cover
-        pass
-
-    @abc.abstractmethod
-    def intermediate(self, settings): # pragma: no cover
-        pass
-
-
-class PauseAt(_Action):
-    def __init__(self, offset, seconds):
-        _Action.__init__(self, offset)
-        self.seconds = seconds
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("p").suppress()
-        e += Offset
-        e += pp.Literal(",").suppress()
-        e += pp.MatchFirst(
-            [
-                v_integer,
-                pp.Literal("f")
-            ]
-        )
-        return e.setParseAction(lambda x: klass(*x))
-
-    def spec(self):
-        return "p%s,%s"%(self.offset, self.seconds)
-
-    def intermediate(self, settings):
-        return (self.offset, "pause", self.seconds)
-
-    def freeze(self, settings):
-        return self
-
-
-class DisconnectAt(_Action):
-    def __init__(self, offset):
-        _Action.__init__(self, offset)
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("d").suppress()
-        e += Offset
-        return e.setParseAction(lambda x: klass(*x))
-
-    def spec(self):
-        return "d%s"%self.offset
-
-    def intermediate(self, settings):
-        return (self.offset, "disconnect")
-
-    def freeze(self, settings):
-        return self
-
-
-class InjectAt(_Action):
-    def __init__(self, offset, value):
-        _Action.__init__(self, offset)
+    def __init__(self, value):
+        if isinstance(value, basestring):
+            value = ValueLiteral(value)
         self.value = value
 
     @classmethod
     def expr(klass):
-        e = pp.Literal("i").suppress()
-        e += Offset
-        e += pp.Literal(",").suppress()
-        e += Value
+        e = Value | NakedValue
         return e.setParseAction(lambda x: klass(*x))
 
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings),
+        ]
+
     def spec(self):
-        return "i%s,%s"%(self.offset, self.value.spec())
-
-    def intermediate(self, settings):
-        return (
-            self.offset,
-            "inject",
-            self.value.get_generator(settings)
-        )
+        return "%s"%(self.value.spec())
 
     def freeze(self, settings):
-        return InjectAt(self.offset, self.value.freeze(settings))
-
-
-class _Message(object):
-    __metaclass__ = abc.ABCMeta
-    logattrs = []
-
-    def __init__(self, tokens):
-        self.tokens = tokens
-
-    def toks(self, klass):
-        """
-            Fetch all tokens that are instances of klass
-        """
-        return [i for i in self.tokens if isinstance(i, klass)]
-
-    def tok(self, klass):
-        """
-            Fetch first token that is an instance of klass
-        """
-        l = self.toks(klass)
-        if l:
-            return l[0]
-
-    @property
-    def actions(self):
-        return self.toks(_Action)
-
-    def length(self, settings):
-        """
-            Calculate the length of the base message without any applied
-            actions.
-        """
-        return sum(len(x) for x in self.values(settings))
-
-    def preview_safe(self):
-        """
-            Return a copy of this message that issafe for previews.
-        """
-        tokens = [i for i in self.tokens if not isinstance(i, PauseAt)]
-        return self.__class__(tokens)
-
-    def maximum_length(self, settings):
-        """
-            Calculate the maximum length of the base message with all applied
-            actions.
-        """
-        l = self.length(settings)
-        for i in self.actions:
-            if isinstance(i, InjectAt):
-                l += len(i.value.get_generator(settings))
-        return l
-
-    @classmethod
-    def expr(klass): # pragma: no cover
-        pass
-
-    def log(self, settings):
-        """
-            A dictionary that should be logged if this message is served.
-        """
-        ret = {}
-        for i in self.logattrs:
-            v = getattr(self, i)
-            # Careful not to log any VALUE specs without sanitizing them first.
-            # We truncate at 1k.
-            if hasattr(v, "values"):
-                v = [x[:TRUNCATE] for x in v.values(settings)]
-                v = "".join(v).encode("string_escape")
-            elif hasattr(v, "__len__"):
-                v = v[:TRUNCATE]
-                v = v.encode("string_escape")
-            ret[i] = v
-        ret["spec"] = self.spec()
-        return ret
-
-    def freeze(self, settings):
-        r = self.resolve(settings)
-        return self.__class__([i.freeze(settings) for i in r.tokens])
-
-    def __repr__(self):
-        return self.spec()
+        return self.__class__(self.value.freeze(settings))

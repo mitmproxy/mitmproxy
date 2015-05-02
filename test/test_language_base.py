@@ -1,7 +1,6 @@
 import os
-import cStringIO
 from libpathod import language
-from libpathod.language import base, http, websockets, writer, exceptions
+from libpathod.language import base, exceptions
 import tutils
 
 
@@ -257,126 +256,6 @@ class TestKeyValue:
         v3 = v2.freeze({})
         assert v2.key.val == v3.key.val
         assert v2.value.val == v3.value.val
-
-
-
-class Test_Action:
-    def test_cmp(self):
-        a = base.DisconnectAt(0)
-        b = base.DisconnectAt(1)
-        c = base.DisconnectAt(0)
-        assert a < b
-        assert a == c
-        l = [b, a]
-        l.sort()
-        assert l[0].offset == 0
-
-    def test_resolve(self):
-        r = parse_request('GET:"/foo"')
-        e = base.DisconnectAt("r")
-        ret = e.resolve({}, r)
-        assert isinstance(ret.offset, int)
-
-    def test_repr(self):
-        e = base.DisconnectAt("r")
-        assert repr(e)
-
-    def test_freeze(self):
-        l = base.DisconnectAt(5)
-        assert l.freeze({}).spec() == l.spec()
-
-
-class TestDisconnects:
-    def test_parse_response(self):
-        a = language.parse_response("400:d0").actions[0]
-        assert a.spec() == "d0"
-        a = language.parse_response("400:dr").actions[0]
-        assert a.spec() == "dr"
-
-    def test_at(self):
-        e = base.DisconnectAt.expr()
-        v = e.parseString("d0")[0]
-        assert isinstance(v, base.DisconnectAt)
-        assert v.offset == 0
-
-        v = e.parseString("d100")[0]
-        assert v.offset == 100
-
-        e = base.DisconnectAt.expr()
-        v = e.parseString("dr")[0]
-        assert v.offset == "r"
-
-    def test_spec(self):
-        assert base.DisconnectAt("r").spec() == "dr"
-        assert base.DisconnectAt(10).spec() == "d10"
-
-
-class TestInject:
-    def test_parse_response(self):
-        a = language.parse_response("400:ir,@100").actions[0]
-        assert a.offset == "r"
-        assert a.value.datatype == "bytes"
-        assert a.value.usize == 100
-
-        a = language.parse_response("400:ia,@100").actions[0]
-        assert a.offset == "a"
-
-    def test_at(self):
-        e = base.InjectAt.expr()
-        v = e.parseString("i0,'foo'")[0]
-        assert v.value.val == "foo"
-        assert v.offset == 0
-        assert isinstance(v, base.InjectAt)
-
-        v = e.parseString("ir,'foo'")[0]
-        assert v.offset == "r"
-
-    def test_serve(self):
-        s = cStringIO.StringIO()
-        r = language.parse_response("400:i0,'foo'")
-        assert language.serve(r, s, {})
-
-    def test_spec(self):
-        e = base.InjectAt.expr()
-        v = e.parseString("i0,'foo'")[0]
-        assert v.spec() == 'i0,"foo"'
-
-    def test_spec(self):
-        e = base.InjectAt.expr()
-        v = e.parseString("i0,@100")[0]
-        v2 = v.freeze({})
-        v3 = v2.freeze({})
-        assert v2.value.val == v3.value.val
-
-
-class TestPauses:
-    def test_parse_response(self):
-        e = base.PauseAt.expr()
-        v = e.parseString("p10,10")[0]
-        assert v.seconds == 10
-        assert v.offset == 10
-
-        v = e.parseString("p10,f")[0]
-        assert v.seconds == "f"
-
-        v = e.parseString("pr,f")[0]
-        assert v.offset == "r"
-
-        v = e.parseString("pa,f")[0]
-        assert v.offset == "a"
-
-    def test_request(self):
-        r = language.parse_response('400:p10,10')
-        assert r.actions[0].spec() == "p10,10"
-
-    def test_spec(self):
-        assert base.PauseAt("r", 5).spec() == "pr,5"
-        assert base.PauseAt(0, 5).spec() == "p0,5"
-        assert base.PauseAt(0, "f").spec() == "p0,f"
-
-    def test_freeze(self):
-        l = base.PauseAt("r", 5)
-        assert l.freeze({}).spec() == l.spec()
 
 
 def test_options_or_value():

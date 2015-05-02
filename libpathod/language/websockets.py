@@ -1,7 +1,7 @@
 
 import netlib.websockets
 import contrib.pyparsing as pp
-from . import base, generators
+from . import base, generators, actions, message
 
 """
     wf:ctext:b'foo'
@@ -21,14 +21,17 @@ class Body(base.PreValue):
     preamble = "b"
 
 
-class WebsocketFrame(base._Message):
+class WebsocketFrame(message.Message):
     comps = (
         Body,
-        base.PauseAt,
-        base.DisconnectAt,
-        base.InjectAt
+        actions.PauseAt,
+        actions.DisconnectAt,
+        actions.InjectAt
     )
     logattrs = ["body"]
+    @property
+    def actions(self):
+        return self.toks(actions._Action)
 
     @property
     def body(self):
