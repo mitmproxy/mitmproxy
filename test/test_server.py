@@ -353,7 +353,9 @@ class TestHttps2Http(tservers.ReverseProxTest):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=ssl, sni=sni, fp=None
+        )
         p.connect()
         return p
 
@@ -380,7 +382,7 @@ class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin, TcpMixin):
     ssl = True
 
     def test_sslerr(self):
-        p = pathoc.Pathoc(("localhost", self.proxy.port))
+        p = pathoc.Pathoc(("localhost", self.proxy.port), fp=None)
         p.connect()
         r = p.request("get:/")
         assert r.status_code == 400
