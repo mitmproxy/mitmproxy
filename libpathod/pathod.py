@@ -8,6 +8,7 @@ from netlib import tcp, http, wsgi, certutils, websockets
 import netlib.utils
 
 from . import version, app, language, utils
+import language.http
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
@@ -75,7 +76,7 @@ class PathodHandler(tcp.BaseHandler):
             crafted, self.settings
         )
         if error:
-            err = language.make_error_response(error)
+            err = language.http.make_error_response(error)
             language.serve(err, self.wfile, self.settings)
             log = dict(
                 type="error",
@@ -83,7 +84,7 @@ class PathodHandler(tcp.BaseHandler):
             )
             return False, log
 
-        if self.server.explain and not isinstance(crafted, language.PathodErrorResponse):
+        if self.server.explain and not isinstance(crafted, language.http.PathodErrorResponse):
             crafted = crafted.freeze(self.settings)
             self.info(">> Spec: %s" % crafted.spec())
         response_log = language.serve(
@@ -212,7 +213,7 @@ class PathodHandler(tcp.BaseHandler):
                 crafted = language.parse_response(spec)
             except language.ParseException, v:
                 self.info("Parse error: %s" % v.msg)
-                crafted = language.make_error_response(
+                crafted = language.http.make_error_response(
                     "Parse Error",
                     "Error parsing response spec: %s\n" % v.msg + v.marked()
                 )
@@ -220,7 +221,7 @@ class PathodHandler(tcp.BaseHandler):
             self.addlog(retlog)
             return again
         elif self.server.noweb:
-            crafted = language.make_error_response("Access Denied")
+            crafted = language.http.make_error_response("Access Denied")
             language.serve(crafted, self.wfile, self.settings)
             self.addlog(dict(
                 type="error",
@@ -364,7 +365,8 @@ class Pathod(tcp.TCPServer):
             return "File access denied.", None
         if self.sizelimit and l > self.sizelimit:
             return "Response too large.", None
-        if self.nohang and any([isinstance(i, language.PauseAt) for i in req.actions]):
+        pauses = [isinstance(i, language.base.PauseAt) for i in req.actions]
+        if self.nohang and any(pauses):
             return "Pauses have been disabled.", None
         return None, req
 

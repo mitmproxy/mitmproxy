@@ -44,17 +44,6 @@ def parse_size(s):
     raise ValueError("Invalid size specification.")
 
 
-def get_header(val, headers):
-    """
-        Header keys may be Values, so we have to "generate" them as we try the match.
-    """
-    for h in headers:
-        k = h.key.get_generator({})
-        if len(k) == len(val) and k[:].lower() == val.lower():
-            return h
-    return None
-
-
 def parse_anchor_spec(s):
     """
         Return a tuple, or None on error.

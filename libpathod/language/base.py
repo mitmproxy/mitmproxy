@@ -1,32 +1,15 @@
 import operator
-import string
 import random
-import mmap
 import os
-import time
 import copy
 import abc
 import contrib.pyparsing as pp
-from netlib import http_status, tcp, http_uastrings, websockets
+from netlib import http_uastrings
 
-import utils
+from .. import utils
+from . import generators, exceptions
 
-BLOCKSIZE = 1024
 TRUNCATE = 1024
-
-
-class Settings:
-    def __init__(
-        self,
-        staticdir = None,
-        unconstrained_file_access = False,
-        request_host = None,
-        websocket_key = None
-    ):
-        self.staticdir = staticdir
-        self.unconstrained_file_access = unconstrained_file_access
-        self.request_host = request_host
-        self.websocket_key = websocket_key
 
 
 def quote(s):
@@ -34,131 +17,6 @@ def quote(s):
     s = s[1:-1]
     s = s.replace(quotechar, "\\" + quotechar)
     return quotechar + s + quotechar
-
-
-class RenderError(Exception):
-    pass
-
-
-class FileAccessDenied(RenderError):
-    pass
-
-
-class ParseException(Exception):
-    def __init__(self, msg, s, col):
-        Exception.__init__(self)
-        self.msg = msg
-        self.s = s
-        self.col = col
-
-    def marked(self):
-        return "%s\n%s"%(self.s, " " * (self.col - 1) + "^")
-
-    def __str__(self):
-        return "%s at char %s"%(self.msg, self.col)
-
-
-def send_chunk(fp, val, blocksize, start, end):
-    """
-        (start, end): Inclusive lower bound, exclusive upper bound.
-    """
-    for i in range(start, end, blocksize):
-        fp.write(
-            val[i:min(i + blocksize, end)]
-        )
-    return end - start
-
-
-def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
-    """
-        vals: A list of values, which may be strings or Value objects.
-
-        actions: A list of (offset, action, arg) tuples. Action may be "pause"
-        or "disconnect".
-
-        Both vals and actions are in reverse order, with the first items last.
-
-        Return True if connection should disconnect.
-    """
-    sofar = 0
-    try:
-        while vals:
-            v = vals.pop()
-            offset = 0
-            while actions and actions[-1][0] < (sofar + len(v)):
-                a = actions.pop()
-                offset += send_chunk(
-                    fp,
-                    v,
-                    blocksize,
-                    offset,
-                    a[0] - sofar - offset
-                )
-                if a[1] == "pause":
-                    time.sleep(a[2])
-                elif a[1] == "disconnect":
-                    return True
-                elif a[1] == "inject":
-                    send_chunk(fp, a[2], blocksize, 0, len(a[2]))
-            send_chunk(fp, v, blocksize, offset, len(v))
-            sofar += len(v)
-        # Remainders
-        while actions:
-            a = actions.pop()
-            if a[1] == "pause":
-                time.sleep(a[2])
-            elif a[1] == "disconnect":
-                return True
-            elif a[1] == "inject":
-                send_chunk(fp, a[2], blocksize, 0, len(a[2]))
-    except tcp.NetLibDisconnect: # pragma: no cover
-        return True
-
-
-def serve(msg, fp, settings):
-    """
-        fp: The file pointer to write to.
-
-        request_host: If this a request, this is the connecting host. If
-        None, we assume it's a response. Used to decide what standard
-        modifications to make if raw is not set.
-
-        Calling this function may modify the object.
-    """
-    msg = msg.resolve(settings)
-    started = time.time()
-
-    vals = msg.values(settings)
-    vals.reverse()
-
-    actions = msg.actions[:]
-    actions.sort()
-    actions.reverse()
-    actions = [i.intermediate(settings) for i in actions]
-
-    disconnect = write_values(fp, vals, actions[:])
-    duration = time.time() - started
-    ret = dict(
-        disconnect = disconnect,
-        started = started,
-        duration = duration,
-    )
-    ret.update(msg.log(settings))
-    return ret
-
-
-DATATYPES = dict(
-    ascii_letters = string.ascii_letters,
-    ascii_lowercase = string.ascii_lowercase,
-    ascii_uppercase = string.ascii_uppercase,
-    digits = string.digits,
-    hexdigits = string.hexdigits,
-    octdigits = string.octdigits,
-    punctuation = string.punctuation,
-    whitespace = string.whitespace,
-    ascii = string.printable,
-    bytes = "".join(chr(i) for i in range(256))
-)
 
 
 v_integer = pp.Word(pp.nums)\
@@ -189,89 +47,6 @@ v_naked_literal = pp.MatchFirst(
         pp.Word("".join(i for i in pp.printables if i not in ",:\n@\'\""))
     ]
 )
-
-
-class TransformGenerator:
-    """
-        Perform a byte-by-byte transform another generator - that is, for each
-        input byte, the transformation must produce one output byte.
-
-        gen: A generator to wrap
-        transform: A function (offset, data) -> transformed
-    """
-    def __init__(self, gen, transform):
-        self.gen = gen
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.gen)
-
-    def __getitem__(self, x):
-        d = self.gen.__getitem__(x)
-        return self.transform(x, d)
-
-    def __getslice__(self, a, b):
-        d = self.gen.__getslice__(a, b)
-        return self.transform(a, d)
-
-    def __repr__(self):
-        return "'%s'"%self.gen
-
-
-class LiteralGenerator:
-    def __init__(self, s):
-        self.s = s
-
-    def __len__(self):
-        return len(self.s)
-
-    def __getitem__(self, x):
-        return self.s.__getitem__(x)
-
-    def __getslice__(self, a, b):
-        return self.s.__getslice__(a, b)
-
-    def __repr__(self):
-        return "'%s'"%self.s
-
-
-class RandomGenerator:
-    def __init__(self, dtype, length):
-        self.dtype = dtype
-        self.length = length
-
-    def __len__(self):
-        return self.length
-
-    def __getitem__(self, x):
-        return random.choice(DATATYPES[self.dtype])
-
-    def __getslice__(self, a, b):
-        b = min(b, self.length)
-        chars = DATATYPES[self.dtype]
-        return "".join(random.choice(chars) for x in range(a, b))
-
-    def __repr__(self):
-        return "%s random from %s"%(self.length, self.dtype)
-
-
-class FileGenerator:
-    def __init__(self, path):
-        self.path = path
-        self.fp = file(path, "rb")
-        self.map = mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)
-
-    def __len__(self):
-        return len(self.map)
-
-    def __getitem__(self, x):
-        return self.map.__getitem__(x)
-
-    def __getslice__(self, a, b):
-        return self.map.__getslice__(a, b)
-
-    def __repr__(self):
-        return "<%s"%self.path
 
 
 class _Token(object):
@@ -310,7 +85,7 @@ class _ValueLiteral(_Token):
         self.val = val.decode("string_escape")
 
     def get_generator(self, settings):
-        return LiteralGenerator(self.val)
+        return generators.LiteralGenerator(self.val)
 
     def freeze(self, settings):
         return self
@@ -352,7 +127,7 @@ class ValueGenerate(_Token):
         return self.usize * utils.SIZE_UNITS[self.unit]
 
     def get_generator(self, settings):
-        return RandomGenerator(self.datatype, self.bytes())
+        return generators.RandomGenerator(self.datatype, self.bytes())
 
     def freeze(self, settings):
         g = self.get_generator(settings)
@@ -369,7 +144,10 @@ class ValueGenerate(_Token):
         e = e + pp.Optional(u, default=None)
 
         s = pp.Literal(",").suppress()
-        s += reduce(operator.or_, [pp.Literal(i) for i in DATATYPES.keys()])
+        s += reduce(
+            operator.or_,
+            [pp.Literal(i) for i in generators.DATATYPES.keys()]
+        )
         e += pp.Optional(s, default="bytes")
         return e.setParseAction(lambda x: klass(*x))
 
@@ -397,19 +175,19 @@ class ValueFile(_Token):
 
     def get_generator(self, settings):
         if not settings.staticdir:
-            raise FileAccessDenied("File access disabled.")
+            raise exceptions.FileAccessDenied("File access disabled.")
         s = os.path.expanduser(self.path)
         s = os.path.normpath(
             os.path.abspath(os.path.join(settings.staticdir, s))
         )
         uf = settings.unconstrained_file_access
         if not uf and not s.startswith(settings.staticdir):
-            raise FileAccessDenied(
+            raise exceptions.FileAccessDenied(
                 "File access outside of configured directory"
             )
         if not os.path.isfile(s):
-            raise FileAccessDenied("File not readable")
-        return FileGenerator(s)
+            raise exceptions.FileAccessDenied("File not readable")
+        return generators.FileGenerator(s)
 
     def spec(self):
         return "<'%s'"%self.path.encode("string_escape")
@@ -587,14 +365,15 @@ class PathodSpec(_Token):
     def __init__(self, value):
         self.value = value
         try:
-            self.parsed = Response(
-                Response.expr().parseString(
+            import http
+            self.parsed = http.Response(
+                http.Response.expr().parseString(
                     value.val,
                     parseAll=True
                 )
             )
         except pp.ParseException, v:
-            raise ParseException(v.msg, v.line, v.col)
+            raise exceptions.ParseException(v.msg, v.line, v.col)
 
     @classmethod
     def expr(klass):
@@ -719,7 +498,7 @@ class Code(_Component):
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
-        return [LiteralGenerator(self.code)]
+        return [generators.LiteralGenerator(self.code)]
 
     def spec(self):
         return "%s"%(self.code)
@@ -956,339 +735,17 @@ class _Message(object):
 Sep = pp.Optional(pp.Literal(":")).suppress()
 
 
-class _HTTPMessage(_Message):
-    version = "HTTP/1.1"
-    @abc.abstractmethod
-    def preamble(self, settings): # pragma: no cover
-        pass
-
-    def values(self, settings):
-        vals = self.preamble(settings)
-        vals.append("\r\n")
-        for h in self.headers:
-            vals.extend(h.values(settings))
-        vals.append("\r\n")
-        if self.body:
-            vals.append(self.body.value.get_generator(settings))
-        return vals
-
-
-class Response(_HTTPMessage):
-    comps = (
-        Body,
-        Header,
-        PauseAt,
-        DisconnectAt,
-        InjectAt,
-        ShortcutContentType,
-        ShortcutLocation,
-        Raw,
-        Reason
-    )
-    logattrs = ["code", "reason", "version", "body"]
-
-    @property
-    def ws(self):
-        return self.tok(WS)
-
-    @property
-    def code(self):
-        return self.tok(Code)
-
-    @property
-    def reason(self):
-        return self.tok(Reason)
-
-    def preamble(self, settings):
-        l = [self.version, " "]
-        l.extend(self.code.values(settings))
-        code = int(self.code.code)
-        l.append(" ")
-        if self.reason:
-            l.extend(self.reason.values(settings))
-        else:
-            l.append(
-                LiteralGenerator(
-                    http_status.RESPONSES.get(
-                        code,
-                        "Unknown code"
-                    )
-                )
-            )
-        return l
-
-    def resolve(self, settings, msg=None):
-        tokens = self.tokens[:]
-        if self.ws:
-            if not settings.websocket_key:
-                raise RenderError(
-                    "No websocket key - have we seen a client handshake?"
-                )
-            if not self.code:
-                tokens.insert(
-                    1,
-                    Code(101)
-                )
-            hdrs = websockets.server_handshake_headers(settings.websocket_key)
-            for i in hdrs.lst:
-                if not utils.get_header(i[0], self.headers):
-                    tokens.append(
-                        Header(ValueLiteral(i[0]), ValueLiteral(i[1]))
-                    )
-        if not self.raw:
-            if not utils.get_header("Content-Length", self.headers):
-                if not self.body:
-                    length = 0
-                else:
-                    length = len(self.body.value.get_generator(settings))
-                tokens.append(
-                    Header(
-                        ValueLiteral("Content-Length"),
-                        ValueLiteral(str(length)),
-                    )
-                )
-        intermediate = self.__class__(tokens)
-        return self.__class__(
-            [i.resolve(settings, intermediate) for i in tokens]
-        )
-
-    @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
-        atom = pp.MatchFirst(parts)
-        resp = pp.And(
-            [
-                pp.MatchFirst(
-                    [
-                        WS.expr() + pp.Optional(Sep + Code.expr()),
-                        Code.expr(),
-                    ]
-                ),
-                pp.ZeroOrMore(Sep + atom)
-            ]
-        )
-        resp = resp.setParseAction(klass)
-        return resp
-
-    def spec(self):
-        return ":".join([i.spec() for i in self.tokens])
-
-
-class Request(_HTTPMessage):
-    comps = (
-        Body,
-        Header,
-        PauseAt,
-        DisconnectAt,
-        InjectAt,
-        ShortcutContentType,
-        ShortcutUserAgent,
-        Raw,
-        PathodSpec,
-    )
-    logattrs = ["method", "path", "body"]
-
-    @property
-    def ws(self):
-        return self.tok(WS)
-
-    @property
-    def method(self):
-        return self.tok(Method)
-
-    @property
-    def path(self):
-        return self.tok(Path)
-
-    @property
-    def pathodspec(self):
-        return self.tok(PathodSpec)
-
-    def preamble(self, settings):
-        v = self.method.values(settings)
-        v.append(" ")
-        v.extend(self.path.values(settings))
-        if self.pathodspec:
-            v.append(self.pathodspec.parsed.spec())
-        v.append(" ")
-        v.append(self.version)
-        return v
-
-    def resolve(self, settings, msg=None):
-        tokens = self.tokens[:]
-        if self.ws:
-            if not self.method:
-                tokens.insert(
-                    1,
-                    Method("get")
-                )
-            for i in websockets.client_handshake_headers().lst:
-                if not utils.get_header(i[0], self.headers):
-                    tokens.append(
-                        Header(ValueLiteral(i[0]), ValueLiteral(i[1]))
-                    )
-        if not self.raw:
-            if not utils.get_header("Content-Length", self.headers):
-                if self.body:
-                    length = len(self.body.value.get_generator(settings))
-                    tokens.append(
-                        Header(
-                            ValueLiteral("Content-Length"),
-                            ValueLiteral(str(length)),
-                        )
-                    )
-            if settings.request_host:
-                if not utils.get_header("Host", self.headers):
-                    tokens.append(
-                        Header(
-                            ValueLiteral("Host"),
-                            ValueLiteral(settings.request_host)
-                        )
-                    )
-        intermediate = self.__class__(tokens)
-        return self.__class__(
-            [i.resolve(settings, intermediate) for i in tokens]
-        )
-
-    @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
-        atom = pp.MatchFirst(parts)
-        resp = pp.And(
-            [
-                pp.MatchFirst(
-                    [
-                        WS.expr() + pp.Optional(Sep + Method.expr()),
-                        Method.expr(),
-                    ]
-                ),
-                Sep,
-                Path.expr(),
-                pp.ZeroOrMore(Sep + atom)
-            ]
-        )
-        resp = resp.setParseAction(klass)
-        return resp
-
-    def spec(self):
-        return ":".join([i.spec() for i in self.tokens])
-
-
-class WebsocketFrame(_Message):
-    comps = (
-        Body,
-        PauseAt,
-        DisconnectAt,
-        InjectAt
-    )
-    logattrs = ["body"]
-
-    @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
-        atom = pp.MatchFirst(parts)
-        resp = pp.And(
-            [
-                WF.expr(),
-                Sep,
-                pp.ZeroOrMore(Sep + atom)
-            ]
-        )
-        resp = resp.setParseAction(klass)
-        return resp
-
-    def values(self, settings):
-        vals = []
-        if self.body:
-            bodygen = self.body.value.get_generator(settings)
-            length = len(self.body.value.get_generator(settings))
-        else:
-            bodygen = None
-            length = 0
-        frame = websockets.FrameHeader(
-            mask = True,
-            payload_length = length
-        )
-        vals = [frame.to_bytes()]
-        if self.body:
-            masker = websockets.Masker(frame.masking_key)
-            vals.append(
-                TransformGenerator(
-                    bodygen,
-                    masker.mask
-                )
-            )
-        return vals
-
-    def resolve(self, settings, msg=None):
-        return self.__class__(
-            [i.resolve(settings, msg) for i in self.tokens]
-        )
-
-    def spec(self):
-        return ":".join([i.spec() for i in self.tokens])
-
-
-class PathodErrorResponse(Response):
-    pass
-
-
-def make_error_response(reason, body=None):
-    tokens = [
-        Code("800"),
-        Header(ValueLiteral("Content-Type"), ValueLiteral("text/plain")),
-        Reason(ValueLiteral(reason)),
-        Body(ValueLiteral("pathod error: " + (body or reason))),
-    ]
-    return PathodErrorResponse(tokens)
-
-
 def read_file(settings, s):
     uf = settings.get("unconstrained_file_access")
     sd = settings.get("staticdir")
     if not sd:
-        raise FileAccessDenied("File access disabled.")
+        raise exceptions.FileAccessDenied("File access disabled.")
     sd = os.path.normpath(os.path.abspath(sd))
     s = s[1:]
     s = os.path.expanduser(s)
     s = os.path.normpath(os.path.abspath(os.path.join(sd, s)))
     if not uf and not s.startswith(sd):
-        raise FileAccessDenied("File access outside of configured directory")
+        raise exceptions.FileAccessDenied("File access outside of configured directory")
     if not os.path.isfile(s):
-        raise FileAccessDenied("File not readable")
+        raise exceptions.FileAccessDenied("File not readable")
     return file(s, "rb").read()
-
-
-def parse_response(s):
-    """
-        May raise ParseException
-    """
-    try:
-        s = s.decode("ascii")
-    except UnicodeError:
-        raise ParseException("Spec must be valid ASCII.", 0, 0)
-    try:
-        return Response.expr().parseString(s, parseAll=True)[0]
-    except pp.ParseException, v:
-        raise ParseException(v.msg, v.line, v.col)
-
-
-def parse_requests(s):
-    """
-        May raise ParseException
-    """
-    try:
-        s = s.decode("ascii")
-    except UnicodeError:
-        raise ParseException("Spec must be valid ASCII.", 0, 0)
-    try:
-        return pp.OneOrMore(
-            pp.Or(
-                [
-                    WebsocketFrame.expr(),
-                    Request.expr(),
-                ]
-            )
-        ).parseString(s, parseAll=True)
-    except pp.ParseException, v:
-        raise ParseException(v.msg, v.line, v.col)

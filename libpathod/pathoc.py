@@ -12,7 +12,8 @@ import OpenSSL.crypto
 from netlib import tcp, http, certutils, websockets
 import netlib.utils
 
-import language
+import language.http
+import language.websockets
 import utils
 
 
@@ -346,7 +347,7 @@ class Pathoc(tcp.TCPClient):
         """
             Performs a single request.
 
-            r: A language.Request object, or a string representing one request.
+            r: A language.http.Request object, or a string representing one request.
 
             Returns Response if we have a non-ignored response.
 
@@ -385,7 +386,7 @@ class Pathoc(tcp.TCPClient):
         """
             Performs a single request.
 
-            r: A language.Request object, or a string representing one request.
+            r: A language.http.Request object, or a string representing one request.
 
             Returns Response if we have a non-ignored response.
 
@@ -393,12 +394,12 @@ class Pathoc(tcp.TCPClient):
         """
         if isinstance(r, basestring):
             r = language.parse_requests(r)[0]
-        if isinstance(r, language.Request):
+        if isinstance(r, language.http.Request):
             if r.ws:
                 return self.websocket_start(r, self.websocket_get_frame)
             else:
                 return self.http(r)
-        elif isinstance(r, language.WebsocketFrame):
+        elif isinstance(r, language.websockets.WebsocketFrame):
             self.websocket_send_frame(r)
 
 
