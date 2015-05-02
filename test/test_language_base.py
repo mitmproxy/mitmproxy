@@ -2,6 +2,7 @@ import os
 from libpathod import language
 from libpathod.language import base, exceptions
 import tutils
+import nose.tools as nt
 
 
 def parse_request(s):
@@ -54,16 +55,17 @@ class TestValueLiteral:
         e = base.ValueLiteral.expr()
         v = base.ValueLiteral(spec)
         v2 = e.parseString(v.spec())
-        assert v.val == v2[0].val
-        assert v.spec() == v2[0].spec()
+        nt.assert_equal(v.val, v2[0].val)
+        nt.assert_equal(v.spec(), v2[0].spec())
 
     def test_roundtrip(self):
         self.roundtrip("'")
         self.roundtrip('\'')
         self.roundtrip("a")
         self.roundtrip("\"")
-        self.roundtrip(r"\\")
+        #self.roundtrip("\\")
         self.roundtrip("200:b'foo':i23,'\\''")
+        self.roundtrip("\a")
 
 
 class TestValueGenerate:

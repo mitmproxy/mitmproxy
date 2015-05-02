@@ -1,7 +1,7 @@
 import operator
 import os
 import abc
-import contrib.pyparsing as pp
+import pyparsing as pp
 
 from .. import utils
 from . import generators, exceptions
@@ -19,13 +19,11 @@ v_literal = pp.MatchFirst(
     [
         pp.QuotedString(
             "\"",
-            escChar="\\",
             unquoteResults=True,
             multiline=True
         ),
         pp.QuotedString(
             "'",
-            escChar="\\",
             unquoteResults=True,
             multiline=True
         ),
@@ -86,6 +84,9 @@ class _ValueLiteral(Token):
 
 
 class ValueLiteral(_ValueLiteral):
+    """
+        A literal with Python-style string escaping
+    """
     @classmethod
     def expr(klass):
         e = v_literal.copy()
@@ -97,8 +98,9 @@ class ValueLiteral(_ValueLiteral):
         return v
 
     def spec(self):
-        ret = "'%s'"%self.val.encode("string_escape")
-        return ret
+        inner = self.val.encode("string_escape")
+        inner = inner.replace(r"\'", r"\x27")
+        return "'" + inner + "'"
 
 
 class ValueNakedLiteral(_ValueLiteral):

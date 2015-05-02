@@ -47,7 +47,8 @@ setup(
         # FIXME: Requirement to be removed at next release
         "pip>=1.5.6",
         "requests>=2.4.1",
-        "Flask>=0.10.1"
+        "Flask>=0.10.1",
+        "pyparsing>=2.0.3"
     ],
     extras_require={
         'dev': [

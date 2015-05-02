@@ -2,7 +2,7 @@ import abc
 import copy
 import random
 
-import contrib.pyparsing as pp
+import pyparsing as pp
 
 from . import base
 

@@ -1,6 +1,6 @@
 import time
 
-import contrib.pyparsing as pp
+import pyparsing as pp
 
 from . import base, http, websockets, writer, exceptions
 

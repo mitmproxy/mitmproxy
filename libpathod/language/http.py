@@ -1,7 +1,7 @@
 
 import abc
 
-import contrib.pyparsing as pp
+import pyparsing as pp
 
 import netlib.websockets
 from netlib import http_status, http_uastrings

@@ -1,6 +1,6 @@
 
 import netlib.websockets
-import contrib.pyparsing as pp
+import pyparsing as pp
 from . import base, generators, actions, message
 
 """
