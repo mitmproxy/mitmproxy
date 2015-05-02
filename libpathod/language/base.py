@@ -11,14 +11,6 @@ from . import generators, exceptions
 
 TRUNCATE = 1024
 
-
-def quote(s):
-    quotechar = s[0]
-    s = s[1:-1]
-    s = s.replace(quotechar, "\\" + quotechar)
-    return quotechar + s + quotechar
-
-
 v_integer = pp.Word(pp.nums)\
     .setName("integer")\
     .setParseAction(lambda toks: int(toks[0]))

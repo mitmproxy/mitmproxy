@@ -36,3 +36,14 @@ def test_filegenerator():
         # remove all references to FileGenerator instance to close the file
         # handle.
         del g
+
+
+def test_transform_generator():
+    def trans(offset, data):
+        return "a" * len(data)
+    g = generators.LiteralGenerator("one")
+    t = generators.TransformGenerator(g, trans)
+    assert len(t) == len(g)
+    assert t[0] == "a"
+    assert t[:] == "a" * len(g)
+    assert repr(t)

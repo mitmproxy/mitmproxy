@@ -8,13 +8,18 @@ def parse_request(s):
 
 
 class TestWebsocketFrame:
-    def test_spec(self):
-        e = websockets.WebsocketFrame.expr()
-        wf = e.parseString("wf:b'foo'")
-        assert wf
-
-        assert parse_request("wf:b'foo'")
-
     def test_values(self):
-        r = parse_request("wf:b'foo'")
-        assert r.values(language.Settings())
+        specs = [
+            "wf",
+            "wf:b'foo'"
+        ]
+        for i in specs:
+            wf = parse_request(i)
+            assert isinstance(wf, websockets.WebsocketFrame)
+            assert wf
+            assert wf.values(language.Settings())
+            assert wf.resolve(language.Settings())
+
+            spec = wf.spec()
+            wf2 = parse_request(spec)
+            assert wf2.spec() == spec

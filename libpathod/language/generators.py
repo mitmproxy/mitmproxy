@@ -40,7 +40,7 @@ class TransformGenerator:
         return self.transform(a, d)
 
     def __repr__(self):
-        return "'%s'"%self.gen
+        return "'transform(%s)'"%self.gen
 
 
 class LiteralGenerator:
