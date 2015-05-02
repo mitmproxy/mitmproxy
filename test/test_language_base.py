@@ -225,9 +225,20 @@ class TestMisc:
         assert v2.value.val == v3.value.val
 
 
-class TestHeaders:
-    def test_header(self):
-        e = base.Header.expr()
+class TKeyValue(base.KeyValue):
+    preamble = "h"
+    def values(self, settings):
+        return [
+            self.key.get_generator(settings),
+            ": ",
+            self.value.get_generator(settings),
+            "\r\n",
+        ]
+
+
+class TestKeyValue:
+    def test_simple(self):
+        e = TKeyValue.expr()
         v = e.parseString("h'foo'='bar'")[0]
         assert v.key.val == "foo"
         assert v.value.val == "bar"
@@ -239,69 +250,14 @@ class TestHeaders:
         s = v.spec()
         assert s == e.parseString(s)[0].spec()
 
-    def test_header_freeze(self):
-        e = base.Header.expr()
+    def test_freeze(self):
+        e = TKeyValue.expr()
         v = e.parseString("h@10=@10'")[0]
         v2 = v.freeze({})
         v3 = v2.freeze({})
         assert v2.key.val == v3.key.val
         assert v2.value.val == v3.value.val
 
-    def test_ctype_shortcut(self):
-        e = base.ShortcutContentType.expr()
-        v = e.parseString("c'foo'")[0]
-        assert v.key.val == "Content-Type"
-        assert v.value.val == "foo"
-
-        s = v.spec()
-        assert s == e.parseString(s)[0].spec()
-
-        e = base.ShortcutContentType.expr()
-        v = e.parseString("c@100")[0]
-        v2 = v.freeze({})
-        v3 = v2.freeze({})
-        assert v2.value.val == v3.value.val
-
-    def test_location_shortcut(self):
-        e = base.ShortcutLocation.expr()
-        v = e.parseString("l'foo'")[0]
-        assert v.key.val == "Location"
-        assert v.value.val == "foo"
-
-        s = v.spec()
-        assert s == e.parseString(s)[0].spec()
-
-        e = base.ShortcutLocation.expr()
-        v = e.parseString("l@100")[0]
-        v2 = v.freeze({})
-        v3 = v2.freeze({})
-        assert v2.value.val == v3.value.val
-
-    def test_shortcuts(self):
-        assert language.parse_response("400:c'foo'").headers[0].key.val == "Content-Type"
-        assert language.parse_response("400:l'foo'").headers[0].key.val == "Location"
-
-        assert 'Android' in parse_request("get:/:ua").headers[0].value.val
-        assert parse_request("get:/:ua").headers[0].key.val == "User-Agent"
-
-
-class TestShortcutUserAgent:
-    def test_location_shortcut(self):
-        e = base.ShortcutUserAgent.expr()
-        v = e.parseString("ua")[0]
-        assert "Android" in str(v.value)
-        assert v.spec() == "ua"
-        assert v.key.val == "User-Agent"
-
-        v = e.parseString("u'foo'")[0]
-        assert "foo" in str(v.value)
-        assert "foo" in v.spec()
-
-        v = e.parseString("u@100'")[0]
-        assert len(str(v.freeze({}).value)) > 100
-        v2 = v.freeze({})
-        v3 = v2.freeze({})
-        assert v2.value.val == v3.value.val
 
 
 class Test_Action:

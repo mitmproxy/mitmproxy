@@ -4,7 +4,7 @@ import abc
 import contrib.pyparsing as pp
 
 import netlib.websockets
-from netlib import http_status
+from netlib import http_status, http_uastrings
 from . import base, generators, exceptions
 
 
@@ -45,6 +45,49 @@ class Method(base.OptionsOrValue):
     ]
 
 
+class _HeaderMixin(object):
+    def format_header(self, key, value):
+        return [key, ": ", value, "\r\n"]
+
+    def values(self, settings):
+        return self.format_header(
+            self.key.get_generator(settings),
+            self.value.get_generator(settings),
+        )
+
+
+class Header(_HeaderMixin, base.KeyValue):
+    preamble = "h"
+
+
+class ShortcutContentType(_HeaderMixin, base.PreValue):
+    preamble = "c"
+    key = base.ValueLiteral("Content-Type")
+
+
+class ShortcutLocation(_HeaderMixin, base.PreValue):
+    preamble = "l"
+    key = base.ValueLiteral("Location")
+
+
+class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
+    preamble = "u"
+    options = [i[1] for i in http_uastrings.UASTRINGS]
+    key = base.ValueLiteral("User-Agent")
+
+    def values(self, settings):
+        if self.option_used:
+            value = http_uastrings.get_by_shortcut(
+                self.value.val.lower()
+            )[2]
+        else:
+            value = self.value
+        return self.format_header(
+            self.key.get_generator(settings),
+            value
+        )
+
+
 def get_header(val, headers):
     """
         Header keys may be Values, so we have to "generate" them as we try the
@@ -72,6 +115,10 @@ class _HTTPMessage(base._Message):
     def preamble(self, settings): # pragma: no cover
         pass
 
+    @property
+    def headers(self):
+        return self.toks(_HeaderMixin)
+
     def values(self, settings):
         vals = self.preamble(settings)
         vals.append("\r\n")
@@ -86,12 +133,12 @@ class _HTTPMessage(base._Message):
 class Response(_HTTPMessage):
     comps = (
         Body,
-        base.Header,
+        Header,
         base.PauseAt,
         base.DisconnectAt,
         base.InjectAt,
-        base.ShortcutContentType,
-        base.ShortcutLocation,
+        ShortcutContentType,
+        ShortcutLocation,
         Raw,
         Reason
     )
@@ -145,7 +192,7 @@ class Response(_HTTPMessage):
             for i in hdrs.lst:
                 if not get_header(i[0], self.headers):
                     tokens.append(
-                        base.Header(
+                        Header(
                             base.ValueLiteral(i[0]),
                             base.ValueLiteral(i[1]))
                     )
@@ -156,7 +203,7 @@ class Response(_HTTPMessage):
                 else:
                     length = len(self.body.value.get_generator(settings))
                 tokens.append(
-                    base.Header(
+                    Header(
                         base.ValueLiteral("Content-Length"),
                         base.ValueLiteral(str(length)),
                     )
@@ -193,12 +240,12 @@ class Response(_HTTPMessage):
 class Request(_HTTPMessage):
     comps = (
         Body,
-        base.Header,
+        Header,
         base.PauseAt,
         base.DisconnectAt,
         base.InjectAt,
-        base.ShortcutContentType,
-        base.ShortcutUserAgent,
+        ShortcutContentType,
+        ShortcutUserAgent,
         Raw,
         base.PathodSpec,
     )
@@ -241,7 +288,7 @@ class Request(_HTTPMessage):
             for i in netlib.websockets.client_handshake_headers().lst:
                 if not get_header(i[0], self.headers):
                     tokens.append(
-                        base.Header(
+                        Header(
                             base.ValueLiteral(i[0]),
                             base.ValueLiteral(i[1])
                         )
@@ -251,7 +298,7 @@ class Request(_HTTPMessage):
                 if self.body:
                     length = len(self.body.value.get_generator(settings))
                     tokens.append(
-                        base.Header(
+                        Header(
                             base.ValueLiteral("Content-Length"),
                             base.ValueLiteral(str(length)),
                         )
@@ -259,7 +306,7 @@ class Request(_HTTPMessage):
             if settings.request_host:
                 if not get_header("Host", self.headers):
                     tokens.append(
-                        base.Header(
+                        Header(
                             base.ValueLiteral("Host"),
                             base.ValueLiteral(settings.request_host)
                         )
@@ -302,7 +349,7 @@ class PathodErrorResponse(Response):
 def make_error_response(reason, body=None):
     tokens = [
         Code("800"),
-        base.Header(
+        Header(
             base.ValueLiteral("Content-Type"),
             base.ValueLiteral("text/plain")
         ),

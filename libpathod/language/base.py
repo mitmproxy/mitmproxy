@@ -4,7 +4,6 @@ import os
 import copy
 import abc
 import contrib.pyparsing as pp
-from netlib import http_uastrings
 
 from .. import utils
 from . import generators, exceptions
@@ -234,91 +233,29 @@ class _Component(_Token):
         return "".join(i[:] for i in self.values(settings or {}))
 
 
-class _Header(_Component):
+class KeyValue(_Component):
+    """
+        A key/value pair.
+        klass.preamble: leader
+    """
     def __init__(self, key, value):
         self.key, self.value = key, value
 
-    def values(self, settings):
-        return [
-            self.key.get_generator(settings),
-            ": ",
-            self.value.get_generator(settings),
-            "\r\n",
-        ]
-
-
-class Header(_Header):
     @classmethod
     def expr(klass):
-        e = pp.Literal("h").suppress()
+        e = pp.Literal(klass.preamble).suppress()
         e += Value
         e += pp.Literal("=").suppress()
         e += Value
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
-        return "h%s=%s"%(self.key.spec(), self.value.spec())
+        return "%s%s=%s"%(self.preamble, self.key.spec(), self.value.spec())
 
     def freeze(self, settings):
-        return Header(self.key.freeze(settings), self.value.freeze(settings))
-
-
-class ShortcutContentType(_Header):
-    def __init__(self, value):
-        _Header.__init__(self, ValueLiteral("Content-Type"), value)
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("c").suppress()
-        e = e + Value
-        return e.setParseAction(lambda x: klass(*x))
-
-    def spec(self):
-        return "c%s"%(self.value.spec())
-
-    def freeze(self, settings):
-        return ShortcutContentType(self.value.freeze(settings))
-
-
-class ShortcutLocation(_Header):
-    def __init__(self, value):
-        _Header.__init__(self, ValueLiteral("Location"), value)
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("l").suppress()
-        e = e + Value
-        return e.setParseAction(lambda x: klass(*x))
-
-    def spec(self):
-        return "l%s"%(self.value.spec())
-
-    def freeze(self, settings):
-        return ShortcutLocation(self.value.freeze(settings))
-
-
-class ShortcutUserAgent(_Header):
-    def __init__(self, value):
-        self.specvalue = value
-        if isinstance(value, basestring):
-            value = ValueLiteral(http_uastrings.get_by_shortcut(value)[2])
-        _Header.__init__(self, ValueLiteral("User-Agent"), value)
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("u").suppress()
-        u = reduce(
-            operator.or_,
-            [pp.Literal(i[1]) for i in http_uastrings.UASTRINGS]
+        return self.__class__(
+            self.key.freeze(settings), self.value.freeze(settings)
         )
-        e += u | Value
-        return e.setParseAction(lambda x: klass(*x))
-
-    def spec(self):
-        return "u%s"%self.specvalue
-
-    def freeze(self, settings):
-        return ShortcutUserAgent(self.value.freeze(settings))
 
 
 class PathodSpec(_Token):
@@ -407,12 +344,15 @@ class OptionsOrValue(_Component):
     """
         Can be any of a specified set of options, or a value specifier.
     """
+    preamble = ""
     def __init__(self, value):
         # If it's a string, we were passed one of the options, so we upper-case
         # it to be canonical. The user can specify a different case by using a
         # string value literal.
+        self.option_used = False
         if isinstance(value, basestring):
             value = ValueLiteral(value.upper())
+            self.option_used = True
         self.value = value
 
     @classmethod
@@ -421,6 +361,8 @@ class OptionsOrValue(_Component):
         m = pp.MatchFirst(parts)
         spec = m | Value.copy()
         spec = spec.setParseAction(lambda x: klass(*x))
+        if klass.preamble:
+            spec = pp.Literal(klass.preamble).suppress() + spec
         return spec
 
     def values(self, settings):
@@ -432,7 +374,7 @@ class OptionsOrValue(_Component):
         s = self.value.spec()
         if s[1:-1].lower() in self.options:
             s = s[1:-1].lower()
-        return "%s"%s
+        return "%s%s"%(self.preamble, s)
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
@@ -616,10 +558,6 @@ class _Message(object):
     @property
     def actions(self):
         return self.toks(_Action)
-
-    @property
-    def headers(self):
-        return self.toks(_Header)
 
     def length(self, settings):
         """

@@ -9,6 +9,12 @@ def parse_request(s):
     return language.parse_requests(s)[0]
 
 
+def render(r, settings=language.Settings()):
+    s = cStringIO.StringIO()
+    assert language.serve(r, s, settings)
+    return s.getvalue()
+
+
 def test_make_error_response():
     d = cStringIO.StringIO()
     s = http.make_error_response("foo")
@@ -258,3 +264,59 @@ class TestResponse:
         tutils.raises("no websocket key", r.resolve, language.Settings())
         res = r.resolve(language.Settings(websocket_key="foo"))
         assert res.code.string() == "101"
+
+
+def test_ctype_shortcut():
+    e = http.ShortcutContentType.expr()
+    v = e.parseString("c'foo'")[0]
+    assert v.key.val == "Content-Type"
+    assert v.value.val == "foo"
+
+    s = v.spec()
+    assert s == e.parseString(s)[0].spec()
+
+    e = http.ShortcutContentType.expr()
+    v = e.parseString("c@100")[0]
+    v2 = v.freeze({})
+    v3 = v2.freeze({})
+    assert v2.value.val == v3.value.val
+
+
+def test_location_shortcut():
+    e = http.ShortcutLocation.expr()
+    v = e.parseString("l'foo'")[0]
+    assert v.key.val == "Location"
+    assert v.value.val == "foo"
+
+    s = v.spec()
+    assert s == e.parseString(s)[0].spec()
+
+    e = http.ShortcutLocation.expr()
+    v = e.parseString("l@100")[0]
+    v2 = v.freeze({})
+    v3 = v2.freeze({})
+    assert v2.value.val == v3.value.val
+
+
+def test_shortcuts():
+    assert language.parse_response("400:c'foo'").headers[0].key.val == "Content-Type"
+    assert language.parse_response("400:l'foo'").headers[0].key.val == "Location"
+
+    assert "Android" in render(parse_request("get:/:ua"))
+    assert "User-Agent" in render(parse_request("get:/:ua"))
+
+
+def test_user_agent():
+    e = http.ShortcutUserAgent.expr()
+    v = e.parseString("ua")[0]
+    assert "Android" in str(v.values({})[2])
+
+    e = http.ShortcutUserAgent.expr()
+    v = e.parseString("u'a'")[0]
+    assert "Android" not in str(v.values({})[2])
+
+    v = e.parseString("u@100'")[0]
+    assert len(str(v.freeze({}).value)) > 100
+    v2 = v.freeze({})
+    v3 = v2.freeze({})
+    assert v2.value.val == v3.value.val
