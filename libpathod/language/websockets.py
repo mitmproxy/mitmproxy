@@ -17,14 +17,22 @@ class WF(base.CaselessLiteral):
     TOK = "wf"
 
 
+class Body(base.PreValue):
+    preamble = "b"
+
+
 class WebsocketFrame(base._Message):
     comps = (
-        base.Body,
+        Body,
         base.PauseAt,
         base.DisconnectAt,
         base.InjectAt
     )
     logattrs = ["body"]
+
+    @property
+    def body(self):
+        return self.tok(Body)
 
     @classmethod
     def expr(klass):

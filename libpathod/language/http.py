@@ -20,6 +20,18 @@ class Path(base.SimpleValue):
     pass
 
 
+class Code(base.Integer):
+    pass
+
+
+class Reason(base.PreValue):
+    preamble = "m"
+
+
+class Body(base.PreValue):
+    preamble = "b"
+
+
 class Method(base.OptionsOrValue):
     options = [
         "get",
@@ -47,10 +59,14 @@ def get_header(val, headers):
 
 class _HTTPMessage(base._Message):
     version = "HTTP/1.1"
+
     @property
     def raw(self):
         return bool(self.tok(Raw))
 
+    @property
+    def body(self):
+        return self.tok(Body)
 
     @abc.abstractmethod
     def preamble(self, settings): # pragma: no cover
@@ -69,7 +85,7 @@ class _HTTPMessage(base._Message):
 
 class Response(_HTTPMessage):
     comps = (
-        base.Body,
+        Body,
         base.Header,
         base.PauseAt,
         base.DisconnectAt,
@@ -77,7 +93,7 @@ class Response(_HTTPMessage):
         base.ShortcutContentType,
         base.ShortcutLocation,
         Raw,
-        base.Reason
+        Reason
     )
     logattrs = ["code", "reason", "version", "body"]
 
@@ -87,16 +103,16 @@ class Response(_HTTPMessage):
 
     @property
     def code(self):
-        return self.tok(base.Code)
+        return self.tok(Code)
 
     @property
     def reason(self):
-        return self.tok(base.Reason)
+        return self.tok(Reason)
 
     def preamble(self, settings):
         l = [self.version, " "]
         l.extend(self.code.values(settings))
-        code = int(self.code.code)
+        code = int(self.code.value)
         l.append(" ")
         if self.reason:
             l.extend(self.reason.values(settings))
@@ -121,7 +137,7 @@ class Response(_HTTPMessage):
             if not self.code:
                 tokens.insert(
                     1,
-                    base.Code(101)
+                    Code(101)
                 )
             hdrs = netlib.websockets.server_handshake_headers(
                 settings.websocket_key
@@ -159,9 +175,9 @@ class Response(_HTTPMessage):
                 pp.MatchFirst(
                     [
                         WS.expr() + pp.Optional(
-                            base.Sep + base.Code.expr()
+                            base.Sep + Code.expr()
                         ),
-                        base.Code.expr(),
+                        Code.expr(),
                     ]
                 ),
                 pp.ZeroOrMore(base.Sep + atom)
@@ -176,7 +192,7 @@ class Response(_HTTPMessage):
 
 class Request(_HTTPMessage):
     comps = (
-        base.Body,
+        Body,
         base.Header,
         base.PauseAt,
         base.DisconnectAt,
@@ -285,12 +301,12 @@ class PathodErrorResponse(Response):
 
 def make_error_response(reason, body=None):
     tokens = [
-        base.Code("800"),
+        Code("800"),
         base.Header(
             base.ValueLiteral("Content-Type"),
             base.ValueLiteral("text/plain")
         ),
-        base.Reason(base.ValueLiteral(reason)),
-        base.Body(base.ValueLiteral("pathod error: " + (body or reason))),
+        Reason(base.ValueLiteral(reason)),
+        Body(base.ValueLiteral("pathod error: " + (body or reason))),
     ]
     return PathodErrorResponse(tokens)

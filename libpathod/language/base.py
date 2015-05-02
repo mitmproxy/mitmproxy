@@ -11,6 +11,9 @@ from . import generators, exceptions
 
 TRUNCATE = 1024
 
+Sep = pp.Optional(pp.Literal(":")).suppress()
+
+
 v_integer = pp.Word(pp.nums)\
     .setName("integer")\
     .setParseAction(lambda toks: int(toks[0]))
@@ -318,28 +321,6 @@ class ShortcutUserAgent(_Header):
         return ShortcutUserAgent(self.value.freeze(settings))
 
 
-class Body(_Component):
-    def __init__(self, value):
-        self.value = value
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("b").suppress()
-        e = e + Value
-        return e.setParseAction(lambda x: klass(*x))
-
-    def values(self, settings):
-        return [
-            self.value.get_generator(settings),
-        ]
-
-    def spec(self):
-        return "b%s"%(self.value.spec())
-
-    def freeze(self, settings):
-        return Body(self.value.freeze(settings))
-
-
 class PathodSpec(_Token):
     def __init__(self, value):
         self.value = value
@@ -457,9 +438,9 @@ class OptionsOrValue(_Component):
         return self.__class__(self.value.freeze(settings))
 
 
-class Code(_Component):
-    def __init__(self, code):
-        self.code = str(code)
+class Integer(_Component):
+    def __init__(self, value):
+        self.value = str(value)
 
     @classmethod
     def expr(klass):
@@ -467,22 +448,25 @@ class Code(_Component):
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
-        return [generators.LiteralGenerator(self.code)]
+        return [generators.LiteralGenerator(self.value)]
 
     def spec(self):
-        return "%s"%(self.code)
+        return "%s"%(self.value)
 
     def freeze(self, settings):
         return self
 
 
-class Reason(_Component):
+class PreValue(_Component):
+    """
+        A value lead by self.preamble.
+    """
     def __init__(self, value):
         self.value = value
 
     @classmethod
     def expr(klass):
-        e = pp.Literal("m").suppress()
+        e = pp.Literal(klass.preamble).suppress()
         e = e + Value
         return e.setParseAction(lambda x: klass(*x))
 
@@ -490,10 +474,10 @@ class Reason(_Component):
         return [self.value.get_generator(settings)]
 
     def spec(self):
-        return "m%s"%(self.value.spec())
+        return "%s%s"%(self.preamble, self.value.spec())
 
     def freeze(self, settings):
-        return Reason(self.value.freeze(settings))
+        return self.__class__(self.value.freeze(settings))
 
 
 class _Action(_Token):
@@ -634,10 +618,6 @@ class _Message(object):
         return self.toks(_Action)
 
     @property
-    def body(self):
-        return self.tok(Body)
-
-    @property
     def headers(self):
         return self.toks(_Header)
 
@@ -695,6 +675,3 @@ class _Message(object):
 
     def __repr__(self):
         return self.spec()
-
-
-Sep = pp.Optional(pp.Literal(":")).suppress()

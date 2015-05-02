@@ -183,24 +183,6 @@ class TestMisc:
         s = v.spec()
         assert s == v.expr().parseString(s)[0].spec()
 
-    def test_body(self):
-        e = base.Body.expr()
-        v = e.parseString("b'foo'")[0]
-        assert v.value.val == "foo"
-
-        v = e.parseString("b@100")[0]
-        assert str(v.value) == "@100"
-        v2 = v.freeze({})
-        v3 = v2.freeze({})
-        assert v2.value.val == v3.value.val
-
-        v = e.parseString("b@100g,digits", parseAll=True)[0]
-        assert v.value.datatype == "digits"
-        assert str(v.value) == "@100g,digits"
-
-        s = v.spec()
-        assert s == e.parseString(s)[0].spec()
-
     def test_pathodspec(self):
         e = base.PathodSpec.expr()
         v = e.parseString("s'200'")[0]
@@ -227,16 +209,10 @@ class TestMisc:
         assert e.freeze({})
         assert e.values({})
 
-    def test_code(self):
-        e = base.Code.expr()
-        v = e.parseString("200")[0]
-        assert v.string() == "200"
-        assert v.spec() == "200"
-
-        assert v.freeze({}).code == v.code
-
-    def test_reason(self):
-        e = base.Reason.expr()
+    def test_value(self):
+        class TT(base.PreValue):
+            preamble = "m"
+        e = TT.expr()
         v = e.parseString("m'msg'")[0]
         assert v.value.val == "msg"
 
@@ -472,3 +448,12 @@ def test_options_or_value():
     v2 = v.freeze({})
     v3 = v2.freeze({})
     assert v2.value.val == v3.value.val
+
+
+def test_integer():
+    e = base.Integer.expr()
+    v = e.parseString("200")[0]
+    assert v.string() == "200"
+    assert v.spec() == "200"
+
+    assert v.freeze({}).value == v.value
