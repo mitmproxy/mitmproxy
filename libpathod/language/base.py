@@ -224,7 +224,6 @@ class _Component(Token):
         A value component of the primary specification of an message.
         Components produce byte values desribe the bytes of the message.
     """
-    @abc.abstractmethod
     def values(self, settings): # pragma: no cover
         """
            A sequence of values, which can either be strings or generators.
@@ -374,6 +373,34 @@ class Value(_Component):
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
+
+
+class Boolean(_Component):
+    """
+        A boolean flag.
+            name  = true
+            -name = false
+    """
+    name = ""
+
+    def __init__(self, value):
+        self.value = value
+
+    @classmethod
+    def expr(klass):
+        e = pp.Optional(pp.Literal("-"), default=True)
+        e += pp.Literal(klass.name).suppress()
+
+        def parse(s, loc, toks):
+            val = True
+            if toks[0] == "-":
+                val = False
+            return klass(val)
+
+        return e.setParseAction(parse)
+
+    def spec(self):
+        return "%s%s"%("-" if not self.value else "", self.name)
 
 
 class IntField(_Component):

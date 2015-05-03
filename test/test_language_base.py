@@ -280,3 +280,24 @@ def test_integer():
     assert v.spec() == "200"
 
     assert v.freeze({}).value == v.value
+
+
+class TBoolean(base.Boolean):
+    name = "test"
+
+
+class test_boolean():
+    e = TBoolean.expr()
+    assert e.parseString("test")[0].value
+    assert not e.parseString("-test")[0].value
+
+    def roundtrip(s):
+        e = TBoolean.expr()
+        s2 = e.parseString(s)[0].spec()
+        v1 = e.parseString(s)[0].value
+        v2 = e.parseString(s2)[0].value
+        assert s == s2
+        assert v1 == v2
+
+    roundtrip("test")
+    roundtrip("-test")

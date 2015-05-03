@@ -17,7 +17,7 @@ class WF(base.CaselessLiteral):
     TOK = "wf"
 
 
-class Code(base.IntField):
+class OpCode(base.IntField):
     names = {
         "continue": netlib.websockets.OPCODE.CONTINUE,
         "text": netlib.websockets.OPCODE.TEXT,
@@ -34,13 +34,46 @@ class Body(base.Value):
     preamble = "b"
 
 
+class Raw(base.CaselessLiteral):
+    TOK = "r"
+
+
+class Fin(base.Boolean):
+    name = "fin"
+
+
+class RSV1(base.Boolean):
+    name = "rsv1"
+
+
+class RSV2(base.Boolean):
+    name = "rsv2"
+
+
+class RSV3(base.Boolean):
+    name = "rsv3"
+
+
+class Mask(base.Boolean):
+    name = "mask"
+
+
 class WebsocketFrame(message.Message):
     comps = (
         Body,
-        Code,
+
+        OpCode,
+        # Bit flags
+        Fin,
+        RSV1,
+        RSV2,
+        RSV3,
+        Mask,
         actions.PauseAt,
         actions.DisconnectAt,
-        actions.InjectAt
+        actions.InjectAt,
+
+        Raw,
     )
     logattrs = ["body"]
     @property
@@ -52,8 +85,28 @@ class WebsocketFrame(message.Message):
         return self.tok(Body)
 
     @property
-    def code(self):
-        return self.tok(Code)
+    def opcode(self):
+        return self.tok(OpCode)
+
+    @property
+    def fin(self):
+        return self.tok(Fin)
+
+    @property
+    def rsv1(self):
+        return self.tok(RSV1)
+
+    @property
+    def rsv2(self):
+        return self.tok(RSV2)
+
+    @property
+    def rsv3(self):
+        return self.tok(RSV3)
+
+    @property
+    def mask(self):
+        return self.tok(Mask)
 
     @classmethod
     def expr(klass):
@@ -81,8 +134,10 @@ class WebsocketFrame(message.Message):
             mask = True,
             payload_length = length
         )
-        if self.code:
-            frameparts["opcode"] = self.code.value
+        for i in ["opcode", "fin", "rsv1", "rsv2", "rsv3", "mask"]:
+            v = getattr(self, i, None)
+            if v is not None:
+                frameparts[i] = v.value
         frame = netlib.websockets.FrameHeader(**frameparts)
         vals = [frame.to_bytes()]
         if self.body:
