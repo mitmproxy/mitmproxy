@@ -40,7 +40,9 @@ v_naked_literal = pp.MatchFirst(
 
 class Token(object):
     """
-        A specification token. Tokens are immutable.
+        A token in the specification language. Tokens are immutable. The token
+        classes have no meaning in and of themselves, and are combined into
+        Components and Actions to build the language.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -72,7 +74,7 @@ class Token(object):
         return self.spec()
 
 
-class _ValueLiteral(Token):
+class _TokValueLiteral(Token):
     def __init__(self, val):
         self.val = val.decode("string_escape")
 
@@ -83,7 +85,7 @@ class _ValueLiteral(Token):
         return self
 
 
-class ValueLiteral(_ValueLiteral):
+class TokValueLiteral(_TokValueLiteral):
     """
         A literal with Python-style string escaping
     """
@@ -103,7 +105,7 @@ class ValueLiteral(_ValueLiteral):
         return "'" + inner + "'"
 
 
-class ValueNakedLiteral(_ValueLiteral):
+class TokValueNakedLiteral(_TokValueLiteral):
     @classmethod
     def expr(klass):
         e = v_naked_literal.copy()
@@ -113,7 +115,7 @@ class ValueNakedLiteral(_ValueLiteral):
         return self.val.encode("string_escape")
 
 
-class ValueGenerate(Token):
+class TokValueGenerate(Token):
     def __init__(self, usize, unit, datatype):
         if not unit:
             unit = "b"
@@ -127,7 +129,7 @@ class ValueGenerate(Token):
 
     def freeze(self, settings):
         g = self.get_generator(settings)
-        return ValueLiteral(g[:].encode("string_escape"))
+        return TokValueLiteral(g[:].encode("string_escape"))
 
     @classmethod
     def expr(klass):
@@ -156,7 +158,7 @@ class ValueGenerate(Token):
         return s
 
 
-class ValueFile(Token):
+class TokValueFile(Token):
     def __init__(self, path):
         self.path = str(path)
 
@@ -189,26 +191,26 @@ class ValueFile(Token):
         return "<'%s'"%self.path.encode("string_escape")
 
 
-Value = pp.MatchFirst(
+TokValue = pp.MatchFirst(
     [
-        ValueGenerate.expr(),
-        ValueFile.expr(),
-        ValueLiteral.expr()
+        TokValueGenerate.expr(),
+        TokValueFile.expr(),
+        TokValueLiteral.expr()
     ]
 )
 
 
-NakedValue = pp.MatchFirst(
+TokNakedValue = pp.MatchFirst(
     [
-        ValueGenerate.expr(),
-        ValueFile.expr(),
-        ValueLiteral.expr(),
-        ValueNakedLiteral.expr(),
+        TokValueGenerate.expr(),
+        TokValueFile.expr(),
+        TokValueLiteral.expr(),
+        TokValueNakedLiteral.expr(),
     ]
 )
 
 
-Offset = pp.MatchFirst(
+TokOffset = pp.MatchFirst(
     [
         v_integer,
         pp.Literal("r"),
@@ -247,9 +249,9 @@ class KeyValue(_Component):
     @classmethod
     def expr(klass):
         e = pp.Literal(klass.preamble).suppress()
-        e += Value
+        e += TokValue
         e += pp.Literal("=").suppress()
-        e += Value
+        e += TokValue
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
@@ -295,7 +297,7 @@ class OptionsOrValue(_Component):
         # string value literal.
         self.option_used = False
         if isinstance(value, basestring):
-            value = ValueLiteral(value.upper())
+            value = TokValueLiteral(value.upper())
             self.option_used = True
         self.value = value
 
@@ -303,7 +305,7 @@ class OptionsOrValue(_Component):
     def expr(klass):
         parts = [pp.CaselessLiteral(i) for i in klass.options]
         m = pp.MatchFirst(parts)
-        spec = m | Value.copy()
+        spec = m | TokValue.copy()
         spec = spec.setParseAction(lambda x: klass(*x))
         if klass.preamble:
             spec = pp.Literal(klass.preamble).suppress() + spec
@@ -345,15 +347,18 @@ class Integer(_Component):
 
 class PreValue(_Component):
     """
-        A value lead by self.preamble.
+        A value component lead by an optional preamble.
     """
+    preamble = ""
+
     def __init__(self, value):
         self.value = value
 
     @classmethod
     def expr(klass):
-        e = pp.Literal(klass.preamble).suppress()
-        e = e + Value
+        e = (TokValue | TokNakedValue)
+        if klass.preamble:
+            e = pp.Literal(klass.preamble).suppress() + e
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
@@ -361,32 +366,6 @@ class PreValue(_Component):
 
     def spec(self):
         return "%s%s"%(self.preamble, self.value.spec())
-
-    def freeze(self, settings):
-        return self.__class__(self.value.freeze(settings))
-
-
-class SimpleValue(_Component):
-    """
-        A simple value - i.e. one without a preface.
-    """
-    def __init__(self, value):
-        if isinstance(value, basestring):
-            value = ValueLiteral(value)
-        self.value = value
-
-    @classmethod
-    def expr(klass):
-        e = Value | NakedValue
-        return e.setParseAction(lambda x: klass(*x))
-
-    def values(self, settings):
-        return [
-            self.value.get_generator(settings),
-        ]
-
-    def spec(self):
-        return "%s"%(self.value.spec())
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))

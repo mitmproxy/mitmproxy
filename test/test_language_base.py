@@ -17,43 +17,43 @@ def test_caseless_literal():
     assert v.values(language.Settings())
 
 
-class TestValueNakedLiteral:
+class TestTokValueNakedLiteral:
     def test_expr(self):
-        v = base.ValueNakedLiteral("foo")
+        v = base.TokValueNakedLiteral("foo")
         assert v.expr()
 
     def test_spec(self):
-        v = base.ValueNakedLiteral("foo")
+        v = base.TokValueNakedLiteral("foo")
         assert v.spec() == repr(v) == "foo"
 
-        v = base.ValueNakedLiteral("f\x00oo")
+        v = base.TokValueNakedLiteral("f\x00oo")
         assert v.spec() == repr(v) == r"f\x00oo"
 
 
-class TestValueLiteral:
+class TestTokValueLiteral:
     def test_espr(self):
-        v = base.ValueLiteral("foo")
+        v = base.TokValueLiteral("foo")
         assert v.expr()
         assert v.val == "foo"
 
-        v = base.ValueLiteral("foo\n")
+        v = base.TokValueLiteral("foo\n")
         assert v.expr()
         assert v.val == "foo\n"
         assert repr(v)
 
     def test_spec(self):
-        v = base.ValueLiteral("foo")
+        v = base.TokValueLiteral("foo")
         assert v.spec() == r"'foo'"
 
-        v = base.ValueLiteral("f\x00oo")
+        v = base.TokValueLiteral("f\x00oo")
         assert v.spec() == repr(v) == r"'f\x00oo'"
 
-        v = base.ValueLiteral("\"")
+        v = base.TokValueLiteral("\"")
         assert v.spec() == repr(v) == '\'"\''
 
     def roundtrip(self, spec):
-        e = base.ValueLiteral.expr()
-        v = base.ValueLiteral(spec)
+        e = base.TokValueLiteral.expr()
+        v = base.TokValueLiteral(spec)
         v2 = e.parseString(v.spec())
         nt.assert_equal(v.val, v2[0].val)
         nt.assert_equal(v.spec(), v2[0].spec())
@@ -68,58 +68,58 @@ class TestValueLiteral:
         self.roundtrip("\a")
 
 
-class TestValueGenerate:
+class TestTokValueGenerate:
     def test_basic(self):
-        v = base.Value.parseString("@10b")[0]
+        v = base.TokValue.parseString("@10b")[0]
         assert v.usize == 10
         assert v.unit == "b"
         assert v.bytes() == 10
-        v = base.Value.parseString("@10")[0]
+        v = base.TokValue.parseString("@10")[0]
         assert v.unit == "b"
-        v = base.Value.parseString("@10k")[0]
+        v = base.TokValue.parseString("@10k")[0]
         assert v.bytes() == 10240
-        v = base.Value.parseString("@10g")[0]
+        v = base.TokValue.parseString("@10g")[0]
         assert v.bytes() == 1024**3 * 10
 
-        v = base.Value.parseString("@10g,digits")[0]
+        v = base.TokValue.parseString("@10g,digits")[0]
         assert v.datatype == "digits"
         g = v.get_generator({})
         assert g[:100]
 
-        v = base.Value.parseString("@10,digits")[0]
+        v = base.TokValue.parseString("@10,digits")[0]
         assert v.unit == "b"
         assert v.datatype == "digits"
 
     def test_spec(self):
-        v = base.ValueGenerate(1, "b", "bytes")
+        v = base.TokValueGenerate(1, "b", "bytes")
         assert v.spec() == repr(v) == "@1"
 
-        v = base.ValueGenerate(1, "k", "bytes")
+        v = base.TokValueGenerate(1, "k", "bytes")
         assert v.spec() == repr(v) == "@1k"
 
-        v = base.ValueGenerate(1, "k", "ascii")
+        v = base.TokValueGenerate(1, "k", "ascii")
         assert v.spec() == repr(v) == "@1k,ascii"
 
-        v = base.ValueGenerate(1, "b", "ascii")
+        v = base.TokValueGenerate(1, "b", "ascii")
         assert v.spec() == repr(v) == "@1,ascii"
 
     def test_freeze(self):
-        v = base.ValueGenerate(100, "b", "ascii")
+        v = base.TokValueGenerate(100, "b", "ascii")
         f = v.freeze(language.Settings())
         assert len(f.val) == 100
 
 
-class TestValueFile:
+class TestTokValueFile:
     def test_file_value(self):
-        v = base.Value.parseString("<'one two'")[0]
+        v = base.TokValue.parseString("<'one two'")[0]
         assert str(v)
         assert v.path == "one two"
 
-        v = base.Value.parseString("<path")[0]
+        v = base.TokValue.parseString("<path")[0]
         assert v.path == "path"
 
     def test_access_control(self):
-        v = base.Value.parseString("<path")[0]
+        v = base.TokValue.parseString("<path")[0]
         with tutils.tmpdir() as t:
             p = os.path.join(t, "path")
             with open(p, "wb") as f:
@@ -127,7 +127,7 @@ class TestValueFile:
 
             assert v.get_generator(language.Settings(staticdir=t))
 
-            v = base.Value.parseString("<path2")[0]
+            v = base.TokValue.parseString("<path2")[0]
             tutils.raises(
                 exceptions.FileAccessDenied,
                 v.get_generator,
@@ -139,7 +139,7 @@ class TestValueFile:
                 language.Settings()
             )
 
-            v = base.Value.parseString("</outside")[0]
+            v = base.TokValue.parseString("</outside")[0]
             tutils.raises(
                 "outside",
                 v.get_generator,
@@ -147,42 +147,26 @@ class TestValueFile:
             )
 
     def test_spec(self):
-        v = base.Value.parseString("<'one two'")[0]
-        v2 = base.Value.parseString(v.spec())[0]
+        v = base.TokValue.parseString("<'one two'")[0]
+        v2 = base.TokValue.parseString(v.spec())[0]
         assert v2.path == "one two"
 
     def test_freeze(self):
-        v = base.Value.parseString("<'one two'")[0]
+        v = base.TokValue.parseString("<'one two'")[0]
         v2 = v.freeze({})
         assert v2.path == v.path
 
 
 class TestMisc:
     def test_generators(self):
-        v = base.Value.parseString("'val'")[0]
+        v = base.TokValue.parseString("'val'")[0]
         g = v.get_generator({})
         assert g[:] == "val"
 
     def test_value(self):
-        assert base.Value.parseString("'val'")[0].val == "val"
-        assert base.Value.parseString('"val"')[0].val == "val"
-        assert base.Value.parseString('"\'val\'"')[0].val == "'val'"
-
-    def test_simplevalue(self):
-        e = base.SimpleValue.expr()
-        assert e.parseString('"/foo"')[0].value.val == "/foo"
-
-        v = base.SimpleValue("/foo")
-        assert v.value.val == "/foo"
-
-        v = e.parseString("@100")[0]
-        v2 = v.freeze({})
-        v3 = v2.freeze({})
-        assert v2.value.val == v3.value.val
-        assert len(v2.value.val) == 100
-
-        s = v.spec()
-        assert s == v.expr().parseString(s)[0].spec()
+        assert base.TokValue.parseString("'val'")[0].val == "val"
+        assert base.TokValue.parseString('"val"')[0].val == "val"
+        assert base.TokValue.parseString('"\'val\'"')[0].val == "'val'"
 
     def test_prevalue(self):
         class TT(base.PreValue):

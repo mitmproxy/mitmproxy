@@ -52,7 +52,7 @@ class PauseAt(_Action):
     @classmethod
     def expr(klass):
         e = pp.Literal("p").suppress()
-        e += base.Offset
+        e += base.TokOffset
         e += pp.Literal(",").suppress()
         e += pp.MatchFirst(
             [
@@ -79,7 +79,7 @@ class DisconnectAt(_Action):
     @classmethod
     def expr(klass):
         e = pp.Literal("d").suppress()
-        e += base.Offset
+        e += base.TokOffset
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
@@ -100,9 +100,9 @@ class InjectAt(_Action):
     @classmethod
     def expr(klass):
         e = pp.Literal("i").suppress()
-        e += base.Offset
+        e += base.TokOffset
         e += pp.Literal(",").suppress()
-        e += base.Value
+        e += base.TokValue
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):

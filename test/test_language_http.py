@@ -340,7 +340,7 @@ def test_pathodspec():
 
 def test_pathodspec_freeze():
     e = http.PathodResponse(
-        base.ValueLiteral(
+        base.TokValueLiteral(
             "200:b'foo':i10,'\\x27'".encode(
                 "string_escape"
             )

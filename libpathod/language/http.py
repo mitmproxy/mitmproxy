@@ -16,7 +16,7 @@ class Raw(base.CaselessLiteral):
     TOK = "r"
 
 
-class Path(base.SimpleValue):
+class Path(base.PreValue):
     pass
 
 
@@ -62,18 +62,18 @@ class Header(_HeaderMixin, base.KeyValue):
 
 class ShortcutContentType(_HeaderMixin, base.PreValue):
     preamble = "c"
-    key = base.ValueLiteral("Content-Type")
+    key = base.TokValueLiteral("Content-Type")
 
 
 class ShortcutLocation(_HeaderMixin, base.PreValue):
     preamble = "l"
-    key = base.ValueLiteral("Location")
+    key = base.TokValueLiteral("Location")
 
 
 class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
     preamble = "u"
     options = [i[1] for i in http_uastrings.UASTRINGS]
-    key = base.ValueLiteral("User-Agent")
+    key = base.TokValueLiteral("User-Agent")
 
     def values(self, settings):
         if self.option_used:
@@ -104,7 +104,7 @@ class PathodResponse(base.Token):
     @classmethod
     def expr(klass):
         e = pp.Literal("s").suppress()
-        e = e + base.ValueLiteral.expr()
+        e = e + base.TokValueLiteral.expr()
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
@@ -117,7 +117,7 @@ class PathodResponse(base.Token):
 
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()
-        return PathodResponse(base.ValueLiteral(f.encode("string_escape")))
+        return PathodResponse(base.TokValueLiteral(f.encode("string_escape")))
 
 
 def get_header(val, headers):
@@ -227,8 +227,8 @@ class Response(_HTTPMessage):
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
-                            base.ValueLiteral(i[0]),
-                            base.ValueLiteral(i[1]))
+                            base.TokValueLiteral(i[0]),
+                            base.TokValueLiteral(i[1]))
                     )
         if not self.raw:
             if not get_header("Content-Length", self.headers):
@@ -240,8 +240,8 @@ class Response(_HTTPMessage):
                     )
                 tokens.append(
                     Header(
-                        base.ValueLiteral("Content-Length"),
-                        base.ValueLiteral(str(length)),
+                        base.TokValueLiteral("Content-Length"),
+                        base.TokValueLiteral(str(length)),
                     )
                 )
         intermediate = self.__class__(tokens)
@@ -326,8 +326,8 @@ class Request(_HTTPMessage):
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(
-                            base.ValueLiteral(i[0]),
-                            base.ValueLiteral(i[1])
+                            base.TokValueLiteral(i[0]),
+                            base.TokValueLiteral(i[1])
                         )
                     )
         if not self.raw:
@@ -338,16 +338,16 @@ class Request(_HTTPMessage):
                     )
                     tokens.append(
                         Header(
-                            base.ValueLiteral("Content-Length"),
-                            base.ValueLiteral(str(length)),
+                            base.TokValueLiteral("Content-Length"),
+                            base.TokValueLiteral(str(length)),
                         )
                     )
             if settings.request_host:
                 if not get_header("Host", self.headers):
                     tokens.append(
                         Header(
-                            base.ValueLiteral("Host"),
-                            base.ValueLiteral(settings.request_host)
+                            base.TokValueLiteral("Host"),
+                            base.TokValueLiteral(settings.request_host)
                         )
                     )
         intermediate = self.__class__(tokens)
@@ -389,10 +389,10 @@ def make_error_response(reason, body=None):
     tokens = [
         Code("800"),
         Header(
-            base.ValueLiteral("Content-Type"),
-            base.ValueLiteral("text/plain")
+            base.TokValueLiteral("Content-Type"),
+            base.TokValueLiteral("text/plain")
         ),
-        Reason(base.ValueLiteral(reason)),
-        Body(base.ValueLiteral("pathod error: " + (body or reason))),
+        Reason(base.TokValueLiteral(reason)),
+        Body(base.TokValueLiteral("pathod error: " + (body or reason))),
     ]
     return PathodErrorResponse(tokens)
