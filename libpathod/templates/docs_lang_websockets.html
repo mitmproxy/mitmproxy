@@ -1,0 +1,48 @@
+<pre class="example">wf:[colon-separated list of features]</pre></p>
+
+<table class="table table-bordered">
+    <tbody >
+
+        <tr>
+            <td> b<a href="#valuespec">VALUE</a> </td>
+            <td>
+                Set the frame payload. If a masking key is present, the
+                value is encoded automatically.
+            </td>
+        </tr>
+
+        <tr>
+            <td> c<a href="#valuespec">INTEGER</a> </td>
+            <td>
+
+                Set the op code. This can either be an integer from 0-15, or be
+                one of the following opcode names: <b>continue</b>,
+                <b>text</b>, <b>binary</b>, <b>close</b>, <b>ping</b>,
+                <b>pong</b>.
+            </td>
+        </tr>
+
+        <tr>
+            <td> d<a href="#offsetspec">OFFSET</a> </td>
+            <td>
+                Disconnect after OFFSET bytes.
+            </td>
+        </tr>
+
+        <tr>
+            <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
+            <td>
+                Inject the specified value at the offset.
+            </td>
+        </tr>
+
+        <tr>
+            <td> p<a href="#offsetspec">OFFSET</a>,SECONDS </td>
+            <td>
+                Pause for SECONDS seconds after OFFSET bytes. SECONDS can
+                be an integer or "f" to pause forever.
+            </td>
+        </tr>
+
+    </tbody>
+</table>
