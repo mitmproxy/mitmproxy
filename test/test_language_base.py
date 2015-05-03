@@ -227,7 +227,7 @@ def test_options_or_value():
             "three"
         ]
     e = TT.expr()
-    assert e.parseString("one")[0].value.val == "ONE"
+    assert e.parseString("one")[0].value.val == "one"
     assert e.parseString("'foo'")[0].value.val == "foo"
     assert e.parseString("'get'")[0].value.val == "get"
 

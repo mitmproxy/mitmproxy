@@ -162,7 +162,7 @@ class TestDaemon(_TestDaemon):
 
     def test_showreq(self):
         reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
-        assert self.tval(reqs, showreq=True).count("GET /api") == 2
+        assert self.tval(reqs, showreq=True).count("get /api") == 2
         assert self.tval(
             reqs, showreq=True, hexdump=True
         ).count("0000000000") == 2

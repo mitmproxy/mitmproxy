@@ -292,12 +292,12 @@ class OptionsOrValue(_Component):
     """
     preamble = ""
     def __init__(self, value):
-        # If it's a string, we were passed one of the options, so we upper-case
+        # If it's a string, we were passed one of the options, so we lower-case
         # it to be canonical. The user can specify a different case by using a
         # string value literal.
         self.option_used = False
         if isinstance(value, basestring):
-            value = TokValueLiteral(value.upper())
+            value = TokValueLiteral(value.lower())
             self.option_used = True
         self.value = value
 
