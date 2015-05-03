@@ -219,6 +219,33 @@ class TestKeyValue:
         assert v2.value.val == v3.value.val
 
 
+def test_intfield():
+    class TT(base.IntField):
+        preamble = "t"
+        names = {
+            "one": 1,
+            "two": 2,
+            "three": 3
+        }
+        max = 4
+    e = TT.expr()
+
+    v = e.parseString("tone")[0]
+    assert v.value == 1
+    assert v.spec() == "tone"
+    assert v.values(language.Settings())
+
+    v = e.parseString("t1")[0]
+    assert v.value == 1
+    assert v.spec() == "t1"
+
+    v = e.parseString("t4")[0]
+    assert v.value == 4
+    assert v.spec() == "t4"
+
+    tutils.raises("can't exceed", e.parseString, "t5")
+
+
 def test_options_or_value():
     class TT(base.OptionsOrValue):
         options = [

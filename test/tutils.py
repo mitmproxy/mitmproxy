@@ -2,6 +2,7 @@ import tempfile
 import os
 import re
 import shutil
+import cStringIO
 from contextlib import contextmanager
 from libpathod import utils, test, pathoc, pathod, language
 import requests
@@ -137,3 +138,9 @@ def raises(exc, obj, *args, **kwargs):
     raise AssertionError("No exception raised.")
 
 test_data = utils.Data(__name__)
+
+
+def render(r, settings=language.Settings()):
+    s = cStringIO.StringIO()
+    assert language.serve(r, s, settings)
+    return s.getvalue()

@@ -291,14 +291,19 @@ class OptionsOrValue(_Component):
         Can be any of a specified set of options, or a value specifier.
     """
     preamble = ""
+    options = []
     def __init__(self, value):
         # If it's a string, we were passed one of the options, so we lower-case
         # it to be canonical. The user can specify a different case by using a
         # string value literal.
         self.option_used = False
         if isinstance(value, basestring):
-            value = TokValueLiteral(value.lower())
-            self.option_used = True
+            for i in self.options:
+                # Find the exact option value in a case-insensitive way
+                if i.lower() == value.lower():
+                    self.option_used = True
+                    value = TokValueLiteral(i)
+                    break
         self.value = value
 
     @classmethod
@@ -369,3 +374,36 @@ class Value(_Component):
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
+
+
+class IntField(_Component):
+    """
+        An integer field, where values can optionally specified by name.
+    """
+    names = {}
+    max = 16
+    preamble = ""
+
+    def __init__(self, value):
+        self.origvalue = value
+        self.value = self.names.get(value, value)
+        if self.value > self.max:
+            raise exceptions.ParseException(
+                "Value can't exceed %s"%self.max, 0, 0
+            )
+
+    @classmethod
+    def expr(klass):
+        parts = [pp.CaselessLiteral(i) for i in klass.names.keys()]
+        m = pp.MatchFirst(parts)
+        spec = m | v_integer.copy()
+        spec = spec.setParseAction(lambda x: klass(*x))
+        if klass.preamble:
+            spec = pp.Literal(klass.preamble).suppress() + spec
+        return spec
+
+    def values(self, settings):
+        return [str(self.value)]
+
+    def spec(self):
+        return "%s%s"%(self.preamble, self.origvalue)

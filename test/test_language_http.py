@@ -9,12 +9,6 @@ def parse_request(s):
     return language.parse_requests(s)[0]
 
 
-def render(r, settings=language.Settings()):
-    s = cStringIO.StringIO()
-    assert language.serve(r, s, settings)
-    return s.getvalue()
-
-
 def test_make_error_response():
     d = cStringIO.StringIO()
     s = http.make_error_response("foo")
@@ -30,7 +24,7 @@ class TestRequest:
 
     def test_simple(self):
         r = parse_request('GET:"/foo"')
-        assert r.method.string() == "get"
+        assert r.method.string() == "GET"
         assert r.path.string() == "/foo"
         r = parse_request('GET:/foo')
         assert r.path.string() == "/foo"
@@ -39,8 +33,8 @@ class TestRequest:
 
     def test_multiple(self):
         r = language.parse_requests("GET:/ PUT:/")
-        assert r[0].method.string() == "get"
-        assert r[1].method.string() == "put"
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "PUT"
         assert len(r) == 2
 
         l = """
@@ -60,8 +54,8 @@ class TestRequest:
         """
         r = language.parse_requests(l)
         assert len(r) == 2
-        assert r[0].method.string() == "get"
-        assert r[1].method.string() == "put"
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "PUT"
 
         l = """
             get:"http://localhost:9999/p/200":ir,@1
@@ -69,8 +63,8 @@ class TestRequest:
         """
         r = language.parse_requests(l)
         assert len(r) == 2
-        assert r[0].method.string() == "get"
-        assert r[1].method.string() == "get"
+        assert r[0].method.string() == "GET"
+        assert r[1].method.string() == "GET"
 
     def test_pathodspec(self):
         l = "get:/p:s'200'"
@@ -96,7 +90,7 @@ class TestRequest:
             ir,@1
         """
         r = parse_request(l)
-        assert r.method.string() == "get"
+        assert r.method.string() == "GET"
         assert r.path.string() == "/foo"
         assert r.actions
 
@@ -112,7 +106,7 @@ class TestRequest:
             ir,@1
         """
         r = parse_request(l)
-        assert r.method.string() == "get"
+        assert r.method.string() == "GET"
         assert r.path.string().endswith("bar")
         assert r.actions
 
@@ -302,8 +296,8 @@ def test_shortcuts():
     assert language.parse_response("400:c'foo'").headers[0].key.val == "Content-Type"
     assert language.parse_response("400:l'foo'").headers[0].key.val == "Location"
 
-    assert "Android" in render(parse_request("get:/:ua"))
-    assert "User-Agent" in render(parse_request("get:/:ua"))
+    assert "Android" in tutils.render(parse_request("get:/:ua"))
+    assert "User-Agent" in tutils.render(parse_request("get:/:ua"))
 
 
 def test_user_agent():

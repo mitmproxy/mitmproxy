@@ -34,14 +34,14 @@ class Body(base.Value):
 
 class Method(base.OptionsOrValue):
     options = [
-        "get",
-        "head",
-        "post",
-        "put",
-        "delete",
-        "options",
-        "trace",
-        "connect",
+        "GET",
+        "HEAD",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS",
+        "TRACE",
+        "CONNECT",
     ]
 
 
