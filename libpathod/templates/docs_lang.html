@@ -9,19 +9,31 @@
 </div>
 
 <ul class="nav nav-tabs">
-  <li class="active"><a href="#specifying_responses" data-toggle="tab">Responses</a></li>
-  <li><a href="#specifying_requests" data-toggle="tab">Requests</a></li>
-  <li><a href="#websockets" data-toggle="tab">Websockets</a></li>
+  <li class="active" ><a href="#specifying_requests" data-toggle="tab">HTTP Requests</a></li>
+  <li><a href="#specifying_responses" data-toggle="tab">HTTP Responses</a></li>
+  <li><a href="#websockets" data-toggle="tab">Websocket Frames</a></li>
 </ul>
 
 <div class="tab-content">
-    <div class="tab-pane active" id="specifying_responses">
-        <p>The general form of a response is as follows:</p>
+    <div class="tab-pane" id="specifying_responses">
 
         <pre class="example">code:[colon-separated list of features]</pre></p>
 
         <table class="table table-bordered">
             <tbody >
+                <tr>
+                    <td> code </td>
+                    <td>
+                        <p>An integer specifying the HTTP response code.</p>
+
+                        <p>The special method <b>ws</b> creates a valid
+                        websocket upgrade response (code 101), and moves pathod
+                        to websocket mode. Apart from that, websocket responses
+                        are just like any other, and all aspects of the
+                        response can be over-ridden.</p>
+                    </td>
+                </tr>
+
                 <tr>
                     <td> b<a href="#valuespec">VALUE</a> </td>
                     <td>
@@ -97,8 +109,7 @@
     </div>
 
 
-    <div class="tab-pane" id="specifying_requests">
-        <p>The general form of a request is as follows:</p>
+    <div class="tab-pane active" id="specifying_requests">
 
         <pre class="example">method:path:[colon-separated list of features]</pre></p>
 
@@ -108,10 +119,18 @@
                 <tr>
                     <td> method </td>
                     <td>
-                        A <a href="#valuespec">VALUE</a> specifying the HTTP
+
+                        <p>A <a href="#valuespec">VALUE</a> specifying the HTTP
                         method to use. Standard methods do not need to be
-                        quoted. The special method <b>ws</b> creates a valid
-                        websocket upgrade request.
+                        enclosed in quotes, while non-standard methods can be
+                        specified as quoted strings.</p>
+
+                        <p>The special method <b>ws</b> creates a valid
+                        websocket upgrade GET request, and signals to pathoc to
+                        switch to websocket recieve mode if the server responds
+                        correctly. Apart from that, websocket requests are just
+                        like any other, and all aspects of the request can be
+                        over-ridden.</p>
                     </td>
                 </tr>
 
@@ -202,38 +221,44 @@
 
     <div class="tab-pane" id="websockets">
 
-        <p>Requests and responses can be decorated with the <b>ws</b> prefix to
-        create a websockets client or server handshake. Since the websocket
-        specifier implies a request method (GET) and a response code (102),
-        these can optionally be omitted. All other request and response
-        features can be applied, and websocket-specific headers can be
-        over-ridden explicitly.</p>
+        <pre class="example">wf:[colon-separated list of features]</pre></p>
 
-        <h2>Request</h2>
+        <table class="table table-bordered">
+            <tbody >
 
-        <pre class="example">ws:[method:]path:[colon-separated list of features]</pre></p>
+                <tr>
+                    <td> b<a href="#valuespec">VALUE</a> </td>
+                    <td>
+                        Set the frame payload. If a masking key is present, the
+                        value is encoded automatically.
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td> d<a href="#offsetspec">OFFSET</a> </td>
+                    <td>
+                        Disconnect after OFFSET bytes.
+                    </td>
+                </tr>
 
-        <p>This will generate a wsocket client handshake with a GET method:</p>
+                <tr>
+                    <td> i<a href="#offsetspec">OFFSET</a>,<a href="#valuespec">VALUE</a> </td>
+                    <td>
+                        Inject the specified value at the offset.
+                    </td>
+                </tr>
 
-        <pre class="example">ws:/</pre></p>
+                <tr>
+                    <td> p<a href="#offsetspec">OFFSET</a>,SECONDS </td>
+                    <td>
+                        Pause for SECONDS seconds after OFFSET bytes. SECONDS can
+                        be an integer or "f" to pause forever.
+                    </td>
+                </tr>
 
-        <p>This will do the same, but using the (invalid) PUT method:</p>
+            </tbody>
+        </table>
 
-        <pre class="example">ws:put:/</pre></p>
-
-
-        <h2>Response</h2>
-
-        <pre class="example">ws[:code:][colon-separated list of features]</pre></p>
-
-        <p>This will generate a simple protocol acceptance with a 101 response
-        code:</p>
-
-        <pre class="example">ws</pre></p>
-
-        <p>This will do the same, but using the (invalid) 202 code:</p>
-
-        <pre class="example">ws:202</pre></p>
 
     </div>
 
