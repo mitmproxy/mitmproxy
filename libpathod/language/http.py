@@ -16,7 +16,7 @@ class Raw(base.CaselessLiteral):
     TOK = "r"
 
 
-class Path(base.PreValue):
+class Path(base.Value):
     pass
 
 
@@ -24,11 +24,11 @@ class Code(base.Integer):
     pass
 
 
-class Reason(base.PreValue):
+class Reason(base.Value):
     preamble = "m"
 
 
-class Body(base.PreValue):
+class Body(base.Value):
     preamble = "b"
 
 
@@ -60,12 +60,12 @@ class Header(_HeaderMixin, base.KeyValue):
     preamble = "h"
 
 
-class ShortcutContentType(_HeaderMixin, base.PreValue):
+class ShortcutContentType(_HeaderMixin, base.Value):
     preamble = "c"
     key = base.TokValueLiteral("Content-Type")
 
 
-class ShortcutLocation(_HeaderMixin, base.PreValue):
+class ShortcutLocation(_HeaderMixin, base.Value):
     preamble = "l"
     key = base.TokValueLiteral("Location")
 

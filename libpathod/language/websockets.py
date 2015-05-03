@@ -17,7 +17,7 @@ class WF(base.CaselessLiteral):
     TOK = "wf"
 
 
-class Body(base.PreValue):
+class Body(base.Value):
     preamble = "b"
 
 

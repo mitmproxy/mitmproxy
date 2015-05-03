@@ -345,7 +345,7 @@ class Integer(_Component):
         return self
 
 
-class PreValue(_Component):
+class Value(_Component):
     """
         A value component lead by an optional preamble.
     """

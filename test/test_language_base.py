@@ -169,7 +169,7 @@ class TestMisc:
         assert base.TokValue.parseString('"\'val\'"')[0].val == "'val'"
 
     def test_prevalue(self):
-        class TT(base.PreValue):
+        class TT(base.Value):
             preamble = "m"
         e = TT.expr()
         v = e.parseString("m'msg'")[0]
