@@ -161,7 +161,11 @@ class WebsocketFrameReader(threading.Thread):
                 pass
             for rfile in r:
                 with self.log(rfile) as log:
-                    frm = websockets.Frame.from_file(self.rfile)
+                    try:
+                        frm = websockets.Frame.from_file(self.rfile)
+                    except tcp.NetLibError:
+                        self.ws_read_limit = 0
+                        break
                     log("<< %s"%frm.header.human_readable())
                     self.callback(frm)
                     if self.ws_read_limit is not None:
@@ -479,4 +483,3 @@ def main(args): # pragma: nocover
         pass
     if p:
         p.stop()
-        p.wait()
