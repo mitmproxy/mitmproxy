@@ -1,4 +1,3 @@
-import cStringIO
 import os
 
 from nose.tools import raises
@@ -170,7 +169,7 @@ class TestFrameHeader:
         def round(*args, **kwargs):
             f = websockets.FrameHeader(*args, **kwargs)
             bytes = f.to_bytes()
-            f2 = websockets.FrameHeader.from_file(cStringIO.StringIO(bytes))
+            f2 = websockets.FrameHeader.from_file(tutils.treader(bytes))
             assert f == f2
         round()
         round(fin=1)
@@ -197,7 +196,7 @@ class TestFrameHeader:
     def test_funky(self):
         f = websockets.FrameHeader(masking_key="test", mask=False)
         bytes = f.to_bytes()
-        f2 = websockets.FrameHeader.from_file(cStringIO.StringIO(bytes))
+        f2 = websockets.FrameHeader.from_file(tutils.treader(bytes))
         assert not f2.mask
 
     def test_violations(self):
@@ -221,7 +220,7 @@ class TestFrame:
         def round(*args, **kwargs):
             f = websockets.Frame(*args, **kwargs)
             bytes = f.to_bytes()
-            f2 = websockets.Frame.from_file(cStringIO.StringIO(bytes))
+            f2 = websockets.Frame.from_file(tutils.treader(bytes))
             assert f == f2
         round("test")
         round("test", fin=1)

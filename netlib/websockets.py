@@ -5,7 +5,7 @@ import os
 import struct
 import io
 
-from . import utils, odict
+from . import utils, odict, tcp
 
 # Colleciton of utility functions that implement small portions of the RFC6455
 # WebSockets Protocol Useful for building WebSocket clients and servers.
@@ -217,8 +217,8 @@ class FrameHeader:
         """
           read a websockets frame header
         """
-        first_byte = utils.bytes_to_int(fp.read(1))
-        second_byte = utils.bytes_to_int(fp.read(1))
+        first_byte = utils.bytes_to_int(fp.safe_read(1))
+        second_byte = utils.bytes_to_int(fp.safe_read(1))
 
         fin = utils.getbit(first_byte, 7)
         rsv1 = utils.getbit(first_byte, 6)
@@ -235,13 +235,13 @@ class FrameHeader:
         if length_code <= 125:
             payload_length = length_code
         elif length_code == 126:
-            payload_length = utils.bytes_to_int(fp.read(2))
+            payload_length = utils.bytes_to_int(fp.safe_read(2))
         elif length_code == 127:
-            payload_length = utils.bytes_to_int(fp.read(8))
+            payload_length = utils.bytes_to_int(fp.safe_read(8))
 
         # masking key only present if mask bit set
         if mask_bit == 1:
-            masking_key = fp.read(4)
+            masking_key = fp.safe_read(4)
         else:
             masking_key = None
 
@@ -319,7 +319,7 @@ class Frame(object):
           Construct a websocket frame from an in-memory bytestring
           to construct a frame from a stream of bytes, use from_file() directly
         """
-        return cls.from_file(io.BytesIO(bytestring))
+        return cls.from_file(tcp.Reader(io.BytesIO(bytestring)))
 
     def human_readable(self):
         hdr = self.header.human_readable()
@@ -351,7 +351,7 @@ class Frame(object):
           stream or a disk or an in memory stream reader
         """
         header = FrameHeader.from_file(fp)
-        payload = fp.read(header.payload_length)
+        payload = fp.safe_read(header.payload_length)
 
         if header.mask == 1 and header.masking_key:
             payload = Masker(header.masking_key)(payload)

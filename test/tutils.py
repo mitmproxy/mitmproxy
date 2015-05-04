@@ -1,6 +1,19 @@
-import tempfile, os, shutil
+import cStringIO
+import tempfile
+import os
+import shutil
 from contextlib import contextmanager
 from libpathod import utils
+
+from netlib import tcp
+
+
+def treader(bytes):
+    """
+        Construct a tcp.Read object from bytes.
+    """
+    fp = cStringIO.StringIO(bytes)
+    return tcp.Reader(fp)
 
 
 @contextmanager

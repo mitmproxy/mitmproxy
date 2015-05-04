@@ -91,7 +91,7 @@ def test_read_http_body_request():
 
 def test_read_http_body_response():
     h = odict.ODictCaseless()
-    s = cStringIO.StringIO("testing")
+    s = tcp.Reader(cStringIO.StringIO("testing"))
     assert http.read_http_body(s, h, None, "GET", 200, False) == "testing"
 
 
@@ -135,11 +135,11 @@ def test_read_http_body():
 
     # test no content length: limit > actual content
     h = odict.ODictCaseless()
-    s = cStringIO.StringIO("testing")
+    s = tcp.Reader(cStringIO.StringIO("testing"))
     assert len(http.read_http_body(s, h, 100, "GET", 200, False)) == 7
 
     # test no content length: limit < actual content
-    s = cStringIO.StringIO("testing")
+    s = tcp.Reader(cStringIO.StringIO("testing"))
     tutils.raises(
         http.HttpError,
         http.read_http_body,
@@ -149,7 +149,7 @@ def test_read_http_body():
     # test chunked
     h = odict.ODictCaseless()
     h["transfer-encoding"] = ["chunked"]
-    s = cStringIO.StringIO("5\r\naaaaa\r\n0\r\n\r\n")
+    s = tcp.Reader(cStringIO.StringIO("5\r\naaaaa\r\n0\r\n\r\n"))
     assert http.read_http_body(s, h, 100, "GET", 200, False) == "aaaaa"
 
 

@@ -24,6 +24,7 @@ OP_NO_SSLv3 = SSL.OP_NO_SSLv3
 
 class NetLibError(Exception): pass
 class NetLibDisconnect(NetLibError): pass
+class NetLibIncomplete(NetLibError): pass
 class NetLibTimeout(NetLibError): pass
 class NetLibSSLError(NetLibError): pass
 
@@ -195,10 +196,23 @@ class Reader(_FileLike):
                     break
         return result
 
+    def safe_read(self, length):
+        """
+            Like .read, but is guaranteed to either return length bytes, or
+            raise an exception.
+        """
+        result = self.read(length)
+        if length != -1 and len(result) != length:
+            raise NetLibIncomplete(
+                "Expected %s bytes, got %s"%(length, len(result))
+            )
+        return result
+
 
 class Address(object):
     """
-    This class wraps an IPv4/IPv6 tuple to provide named attributes and ipv6 information.
+        This class wraps an IPv4/IPv6 tuple to provide named attributes and
+        ipv6 information.
     """
     def __init__(self, address, use_ipv6=False):
         self.address = tuple(address)
@@ -247,22 +261,28 @@ def close_socket(sock):
     """
     try:
         # We already indicate that we close our end.
-        sock.shutdown(socket.SHUT_WR)  # may raise "Transport endpoint is not connected" on Linux
+         # may raise "Transport endpoint is not connected" on Linux
+        sock.shutdown(socket.SHUT_WR)
 
-        # Section 4.2.2.13 of RFC 1122 tells us that a close() with any
-        # pending readable data could lead to an immediate RST being sent (which is the case on Windows).
+        # Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending
+        # readable data could lead to an immediate RST being sent (which is the
+        # case on Windows).
         # http://ia600609.us.archive.org/22/items/TheUltimateSo_lingerPageOrWhyIsMyTcpNotReliable/the-ultimate-so_linger-page-or-why-is-my-tcp-not-reliable.html
         #
-        # This in turn results in the following issue: If we send an error page to the client and then close the socket,
-        # the RST may be received by the client before the error page and the users sees a connection error rather than
-        # the error page. Thus, we try to empty the read buffer on Windows first.
-        # (see https://github.com/mitmproxy/mitmproxy/issues/527#issuecomment-93782988)
+        # This in turn results in the following issue: If we send an error page
+        # to the client and then close the socket, the RST may be received by
+        # the client before the error page and the users sees a connection
+        # error rather than the error page. Thus, we try to empty the read
+        # buffer on Windows first. (see
+        # https://github.com/mitmproxy/mitmproxy/issues/527#issuecomment-93782988)
         #
+
         if os.name == "nt":  # pragma: no cover
-            # We cannot rely on the shutdown()-followed-by-read()-eof technique proposed by the page above:
-            # Some remote machines just don't send a TCP FIN, which would leave us in the unfortunate situation that
-            # recv() would block infinitely.
-            # As a workaround, we set a timeout here even if we are in blocking mode.
+            # We cannot rely on the shutdown()-followed-by-read()-eof technique
+            # proposed by the page above: Some remote machines just don't send
+            # a TCP FIN, which would leave us in the unfortunate situation that
+            # recv() would block infinitely. As a workaround, we set a timeout
+            # here even if we are in blocking mode.
             sock.settimeout(sock.gettimeout() or 20)
 
             # limit at a megabyte so that we don't read infinitely
@@ -292,10 +312,10 @@ class _Connection(object):
 
     def finish(self):
         self.finished = True
-
         # If we have an SSL connection, wfile.close == connection.close
         # (We call _FileLike.set_descriptor(conn))
-        # Closing the socket is not our task, therefore we don't call close then.
+        # Closing the socket is not our task, therefore we don't call close
+        # then.
         if type(self.connection) != SSL.Connection:
             if not getattr(self.wfile, "closed", False):
                 try:
