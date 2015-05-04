@@ -13,6 +13,7 @@ class TestWebsocketFrame:
     def test_values(self):
         specs = [
             "wf",
+            "wf:dr",
             "wf:b'foo'",
             "wf:cbinary",
             "wf:c1",

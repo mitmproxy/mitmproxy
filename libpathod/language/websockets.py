@@ -152,7 +152,7 @@ class WebsocketFrame(message.Message):
 
     def resolve(self, settings, msg=None):
         return self.__class__(
-            [i.resolve(settings, msg) for i in self.tokens]
+            [i.resolve(settings, self) for i in self.tokens]
         )
 
     def spec(self):
