@@ -344,6 +344,11 @@ class HTTPRequest(HTTPMessage):
             body_size_limit = body_size_limit,
             wfile = wfile
         )
+
+        if hasattr(rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = rfile.first_byte_timestamp
+
         timestamp_end = utils.timestamp()
         return HTTPRequest(
             req.form_in,
