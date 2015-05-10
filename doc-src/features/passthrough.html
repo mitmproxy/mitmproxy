@@ -62,13 +62,13 @@ Here are some other examples for ignore patterns:
 # Exempt traffic from the iOS App Store (the regex is lax, but usually just works):
 --ignore apple.com:443  
 # "Correct" version without false-positives:
---ignore ^(.+\.)?apple\.com:443$ 
+--ignore "^(.+\.)?apple\.com:443$"
     
 # Ignore example.com, but not its subdomains:
---ignore ^example.com:
+--ignore "^example.com:"
 
 # Ignore everything but example.com and mitmproxy.org:
---ignore ^(?!example\.com)(?!mitmproxy\.org)
+--ignore "^(?!example\.com)(?!mitmproxy\.org)"
     
 # Transparent mode:
 --ignore 17\.178\.96\.59:443
