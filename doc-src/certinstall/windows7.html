@@ -1,5 +1,17 @@
 
-How to install the __mitmproxy__ certificate authority in Windows 7:
+There are two approaches to installing the __mitmproxy__ certificate authortity in Windows 7.
+
+## Installing the certificate using the command line
+
+<ol class="tlist">
+    <li> Copy the ~/.mitmproxy/mitmproxy-ca-cert.p12 file to your Windows 7 machine. </li>
+    <li>
+        Run the following command on the command line:
+        __certutil.exe -importpfx mitmproxy-ca-cert.p12__
+    </li>
+</ol>
+
+## Installing the certificate through the Windows User Interface
 
 <ol class="tlist">
 
