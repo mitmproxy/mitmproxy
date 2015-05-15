@@ -45,6 +45,14 @@
         </tr>
 
         <tr>
+            <td> k<a href="#valuespec">VALUE</a> </td>
+            <td>
+                Set the masking key. The resulting value must be exactly 4
+                bytes long.
+            </td>
+        </tr>
+
+        <tr>
             <td> [-]mask </td>
             <td>
                 Set or un-set the <b>mask</b> bit.
@@ -62,8 +70,12 @@
         <tr>
             <td> r </td>
             <td>
-                Create a "raw" frame - disables auto-generation of the masking
-                key if the mask bit is on.
+                Create a "raw" frame:
+                <ul>
+                    <li> Don't auto-generate the masking key if the mask flag is
+                    set </li>
+
+                    <li> Don't set the mask flag if masking key is set. </li>
             </td>
         </tr>
 

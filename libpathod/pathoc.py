@@ -212,7 +212,8 @@ class Pathoc(tcp.TCPClient):
         self.settings = language.Settings(
             staticdir = os.getcwd(),
             unconstrained_file_access = True,
-            request_host = self.address.host
+            request_host = self.address.host,
+            is_client = True
         )
         self.ssl, self.sni = ssl, sni
         self.clientcert = clientcert

@@ -5,7 +5,7 @@ import pyparsing as pp
 
 import netlib.websockets
 from netlib import http_status, http_uastrings
-from . import base, generators, exceptions, actions, message
+from . import base, exceptions, actions, message
 
 
 class WS(base.CaselessLiteral):

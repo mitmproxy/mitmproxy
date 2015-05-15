@@ -10,6 +10,7 @@ from . import generators, exceptions
 class Settings:
     def __init__(
         self,
+        is_client = False,
         staticdir = None,
         unconstrained_file_access = False,
         request_host = None,
@@ -19,6 +20,7 @@ class Settings:
         self.unconstrained_file_access = unconstrained_file_access
         self.request_host = request_host
         self.websocket_key = websocket_key
+        self.is_client = is_client
 
 
 

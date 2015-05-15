@@ -54,17 +54,48 @@ class TestWebsocketFrame:
         assert not frm.header.rsv2
         assert not frm.header.rsv3
 
-    def test_construction(self):
-        wf = parse_request("wf:c1")
-        frm = netlib.websockets.Frame.from_bytes(tutils.render(wf))
-        assert wf.opcode.value == 1 == frm.header.opcode
+    def fr(self, spec, **kwargs):
+        settings = language.base.Settings(**kwargs)
+        wf = parse_request(spec)
+        return netlib.websockets.Frame.from_bytes(tutils.render(wf, settings))
 
-        wf = parse_request("wf:cbinary")
-        frm = netlib.websockets.Frame.from_bytes(tutils.render(wf))
-        assert wf.opcode.value == frm.header.opcode
-        assert wf.opcode.value == netlib.websockets.OPCODE.BINARY
+    def test_construction(self):
+        assert self.fr("wf:c1").header.opcode == 1
+        assert self.fr("wf:c0").header.opcode == 0
+        assert self.fr("wf:cbinary").header.opcode ==\
+            netlib.websockets.OPCODE.BINARY
+        assert self.fr("wf:ctext").header.opcode ==\
+            netlib.websockets.OPCODE.TEXT
 
     def test_auto_raw(self):
-        wf = parse_request("wf:b'foo':mask")
-        frm = netlib.websockets.Frame.from_bytes(tutils.render(wf))
-        print frm.human_readable()
+        # Simple server frame
+        frm = self.fr("wf:b'foo'")
+        assert not frm.header.mask
+        assert not frm.header.masking_key
+
+        # Simple client frame
+        frm = self.fr("wf:b'foo'", is_client=True)
+        assert frm.header.mask
+        assert frm.header.masking_key
+        frm = self.fr("wf:b'foo':k'abcd'", is_client=True)
+        assert frm.header.mask
+        assert frm.header.masking_key == 'abcd'
+
+        # Server frame, mask explicitly set
+        frm = self.fr("wf:b'foo':mask")
+        assert frm.header.mask
+        assert frm.header.masking_key
+        frm = self.fr("wf:b'foo':k'abcd'")
+        assert frm.header.mask
+        assert frm.header.masking_key == 'abcd'
+
+        # Client frame, mask explicitly unset
+        frm = self.fr("wf:b'foo':-mask", is_client=True)
+        assert not frm.header.mask
+        assert not frm.header.masking_key
+
+        frm = self.fr("wf:b'foo':-mask:k'abcd'", is_client=True)
+        assert not frm.header.mask
+        # We're reading back a corrupted frame - the first 3 characters of the
+        # mask is mis-interpreted as the payload
+        assert frm.payload == "abc"

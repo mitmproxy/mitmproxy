@@ -1,4 +1,4 @@
-
+import os
 import netlib.websockets
 import pyparsing as pp
 from . import base, generators, actions, message
@@ -115,6 +115,10 @@ class WebsocketFrame(message.Message):
     def mask(self):
         return self.tok(Mask)
 
+    @property
+    def key(self):
+        return self.tok(Key)
+
     @classmethod
     def expr(klass):
         parts = [i.expr() for i in klass.comps]
@@ -129,8 +133,21 @@ class WebsocketFrame(message.Message):
         resp = resp.setParseAction(klass)
         return resp
 
+    def resolve(self, settings, msg=None):
+        tokens = self.tokens[:]
+        if not self.mask and settings.is_client:
+            tokens.append(
+                Mask(True)
+            )
+        if self.mask and self.mask.value and not self.key:
+            tokens.append(
+                Key(base.TokValueLiteral(os.urandom(4)))
+            )
+        return self.__class__(
+            [i.resolve(settings, self) for i in tokens]
+        )
+
     def values(self, settings):
-        vals = []
         if self.body:
             bodygen = self.body.value.get_generator(settings)
             length = len(self.body.value.get_generator(settings))
@@ -138,29 +155,31 @@ class WebsocketFrame(message.Message):
             bodygen = None
             length = 0
         frameparts = dict(
-            mask = True,
             payload_length = length
         )
+        if self.mask and self.mask.value:
+            frameparts["mask"] = True
+        if self.key:
+            key = self.key.values(settings)[0][:]
+            frameparts["masking_key"] = key
         for i in ["opcode", "fin", "rsv1", "rsv2", "rsv3", "mask"]:
             v = getattr(self, i, None)
             if v is not None:
                 frameparts[i] = v.value
         frame = netlib.websockets.FrameHeader(**frameparts)
         vals = [frame.to_bytes()]
-        if self.body:
-            masker = netlib.websockets.Masker(frame.masking_key)
-            vals.append(
-                generators.TransformGenerator(
-                    bodygen,
-                    masker.mask
+        if bodygen:
+            if frame.masking_key:
+                masker = netlib.websockets.Masker(frame.masking_key)
+                vals.append(
+                    generators.TransformGenerator(
+                        bodygen,
+                        masker.mask
+                    )
                 )
-            )
+            else:
+                vals.append(bodygen)
         return vals
-
-    def resolve(self, settings, msg=None):
-        return self.__class__(
-            [i.resolve(settings, self) for i in self.tokens]
-        )
 
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])

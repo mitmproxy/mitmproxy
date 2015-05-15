@@ -141,6 +141,7 @@ test_data = utils.Data(__name__)
 
 
 def render(r, settings=language.Settings()):
+    r = r.resolve(settings)
     s = cStringIO.StringIO()
     assert language.serve(r, s, settings)
     return s.getvalue()
