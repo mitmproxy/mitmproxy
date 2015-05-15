@@ -327,9 +327,7 @@ class Frame(object):
 
     def to_bytes(self):
         """
-            Serialize the frame back into the wire format, returns a bytestring
-            If you haven't checked is_valid_frame() then there's no guarentees
-            that the serialized bytes will be correct. see safe_to_bytes()
+            Serialize the frame to wire format. Returns a string.
         """
         b = self.header.to_bytes()
         if self.header.masking_key:
