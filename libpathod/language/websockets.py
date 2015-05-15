@@ -8,8 +8,9 @@ from . import base, generators, actions, message
     wf:c15:r'foo'
     wf:fin:rsv1:rsv2:rsv3:mask
     wf:-fin:-rsv1:-rsv2:-rsv3:-mask
-    wf:p234
-    wf:m"mask"
+
+    wf:k"mask"
+    wf:l234
 """
 
 
@@ -58,6 +59,11 @@ class Mask(base.Boolean):
     name = "mask"
 
 
+class Key(base.FixedLengthValue):
+    preamble = "k"
+    length = 4
+
+
 class WebsocketFrame(message.Message):
     comps = (
         Body,
@@ -72,6 +78,7 @@ class WebsocketFrame(message.Message):
         actions.PauseAt,
         actions.DisconnectAt,
         actions.InjectAt,
+        Key,
 
         Raw,
     )

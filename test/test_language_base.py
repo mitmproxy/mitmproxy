@@ -168,7 +168,7 @@ class TestMisc:
         assert base.TokValue.parseString('"val"')[0].val == "val"
         assert base.TokValue.parseString('"\'val\'"')[0].val == "'val'"
 
-    def test_prevalue(self):
+    def test_value(self):
         class TT(base.Value):
             preamble = "m"
         e = TT.expr()
@@ -182,6 +182,30 @@ class TestMisc:
         v2 = v.freeze({})
         v3 = v2.freeze({})
         assert v2.value.val == v3.value.val
+
+    def test_fixedlengthvalue(self):
+        class TT(base.FixedLengthValue):
+            preamble = "m"
+            length = 4
+
+        e = TT.expr()
+        assert e.parseString("m@4")
+        tutils.raises("invalid value length", e.parseString, "m@100")
+        tutils.raises("invalid value length", e.parseString, "m@1")
+
+        with tutils.tmpdir() as t:
+            p = os.path.join(t, "path")
+            s = base.Settings(staticdir=t)
+            with open(p, "wb") as f:
+                f.write("a" * 20)
+            v = e.parseString("m<path")[0]
+            tutils.raises("invalid value length", v.values, s)
+
+            p = os.path.join(t, "path")
+            with open(p, "wb") as f:
+                f.write("a" * 4)
+            v = e.parseString("m<path")[0]
+            assert v.values(s)
 
 
 class TKeyValue(base.KeyValue):

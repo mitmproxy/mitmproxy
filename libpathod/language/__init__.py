@@ -5,20 +5,7 @@ import pyparsing as pp
 from . import base, http, websockets, writer, exceptions
 
 from exceptions import *
-
-
-class Settings:
-    def __init__(
-        self,
-        staticdir = None,
-        unconstrained_file_access = False,
-        request_host = None,
-        websocket_key = None
-    ):
-        self.staticdir = staticdir
-        self.unconstrained_file_access = unconstrained_file_access
-        self.request_host = request_host
-        self.websocket_key = websocket_key
+from base import Settings
 
 
 def parse_response(s):

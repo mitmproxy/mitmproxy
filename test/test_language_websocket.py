@@ -21,6 +21,7 @@ class TestWebsocketFrame:
             "wf:fin",
             "wf:fin:rsv1:rsv2:rsv3:mask",
             "wf:-fin:-rsv1:-rsv2:-rsv3:-mask",
+            "wf:k@4",
         ]
         for i in specs:
             wf = parse_request(i)
@@ -62,3 +63,8 @@ class TestWebsocketFrame:
         frm = netlib.websockets.Frame.from_bytes(tutils.render(wf))
         assert wf.opcode.value == frm.header.opcode
         assert wf.opcode.value == netlib.websockets.OPCODE.BINARY
+
+    def test_auto_raw(self):
+        wf = parse_request("wf:b'foo':mask")
+        frm = netlib.websockets.Frame.from_bytes(tutils.render(wf))
+        print frm.human_readable()

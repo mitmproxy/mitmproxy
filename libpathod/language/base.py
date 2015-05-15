@@ -7,6 +7,21 @@ from .. import utils
 from . import generators, exceptions
 
 
+class Settings:
+    def __init__(
+        self,
+        staticdir = None,
+        unconstrained_file_access = False,
+        request_host = None,
+        websocket_key = None
+    ):
+        self.staticdir = staticdir
+        self.unconstrained_file_access = unconstrained_file_access
+        self.request_host = request_host
+        self.websocket_key = websocket_key
+
+
+
 Sep = pp.Optional(pp.Literal(":")).suppress()
 
 
@@ -373,6 +388,46 @@ class Value(_Component):
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
+
+
+class FixedLengthValue(Value):
+    """
+        A value component lead by an optional preamble.
+    """
+    preamble = ""
+    length = None
+
+    def __init__(self, value):
+        Value.__init__(self, value)
+        lenguess = None
+        try:
+            lenguess = len(value.get_generator(Settings()))
+        except exceptions.RenderError:
+            pass
+        # This check will fail if we know the length upfront
+        if lenguess is not None and lenguess != self.length:
+            raise exceptions.RenderError(
+                "Invalid value length: '%s' is %s bytes, should be %s."%(
+                    self.spec(),
+                    lenguess,
+                    self.length
+                )
+            )
+
+    def values(self, settings):
+        ret = Value.values(self, settings)
+        l = sum(len(i) for i in ret)
+        # This check will fail if we don't know the length upfront - i.e. for
+        # file inputs
+        if l != self.length:
+            raise exceptions.RenderError(
+                "Invalid value length: '%s' is %s bytes, should be %s."%(
+                    self.spec(),
+                    l,
+                    self.length
+                )
+            )
+        return ret
 
 
 class Boolean(_Component):
