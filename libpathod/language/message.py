@@ -1,5 +1,5 @@
 import abc
-from . import actions
+from . import actions, exceptions
 
 LOG_TRUNCATE = 1024
 
@@ -9,6 +9,17 @@ class Message(object):
     logattrs = []
 
     def __init__(self, tokens):
+        track = set([])
+        for i in tokens:
+            if i.unique_name:
+                if i.unique_name in track:
+                    raise exceptions.ParseException(
+                        "Message has multiple %s clauses, "
+                        "but should only have one." % i.unique_name,
+                        0, 0
+                    )
+                else:
+                    track.add(i.unique_name)
         self.tokens = tokens
 
     def toks(self, klass):

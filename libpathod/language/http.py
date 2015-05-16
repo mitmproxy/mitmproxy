@@ -46,6 +46,8 @@ class Method(base.OptionsOrValue):
 
 
 class _HeaderMixin(object):
+    unique_name = None
+
     def format_header(self, key, value):
         return [key, ": ", value, "\r\n"]
 
@@ -166,6 +168,7 @@ class _HTTPMessage(message.Message):
 
 
 class Response(_HTTPMessage):
+    unique_name = None
     comps = (
         Body,
         Header,

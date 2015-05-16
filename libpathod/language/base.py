@@ -77,6 +77,15 @@ class Token(object):
         """
         return None
 
+    @property
+    def unique_name(self):
+        """
+            Controls uniqueness constraints for tokens. No two tokens with the
+            same name will be allowed. If no uniquness should be applied, this
+            should be None.
+        """
+        return self.__class__.__name__
+
     def resolve(self, settings, msg):
         """
             Resolves this token to ready it for transmission. This means that

@@ -8,6 +8,11 @@ def parse_request(s):
     return language.parse_requests(s)[0]
 
 
+def test_unique_name():
+    assert not actions.PauseAt(0, "f").unique_name
+    assert actions.DisconnectAt(0).unique_name
+
+
 class TestDisconnects:
     def test_parse_response(self):
         a = language.parse_response("400:d0").actions[0]

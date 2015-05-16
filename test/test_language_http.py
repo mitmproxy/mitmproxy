@@ -342,3 +342,11 @@ def test_pathodspec_freeze():
     )
     assert e.freeze({})
     assert e.values({})
+
+
+def test_unique_components():
+    tutils.raises(
+        "multiple body clauses",
+        language.parse_response,
+        "400:b@1:b@1"
+    )

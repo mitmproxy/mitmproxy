@@ -310,6 +310,11 @@ class TBoolean(base.Boolean):
     name = "test"
 
 
+def test_unique_name():
+    b = TBoolean(True)
+    assert b.unique_name
+
+
 class test_boolean():
     e = TBoolean.expr()
     assert e.parseString("test")[0].value
