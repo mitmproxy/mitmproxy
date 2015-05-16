@@ -1248,7 +1248,8 @@ class HTTPHandler(ProtocolHandler):
                 flow.server_conn = self.c.server_conn
                 self.c.establish_server_connection()
                 self.c.client_conn.send(
-                    'HTTP/1.1 200 Connection established\r\n' +
+                    ('HTTP/%s.%s 200 ' % (request.httpversion[0],request.httpversion[1])) +
+		    'Connection established\r\n' +
                     'Content-Length: 0\r\n' +
                     ('Proxy-agent: %s\r\n' % self.c.config.server_version) +
                     '\r\n'
