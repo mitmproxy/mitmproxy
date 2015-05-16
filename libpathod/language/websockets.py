@@ -9,7 +9,6 @@ from . import base, generators, actions, message
     wf:fin:rsv1:rsv2:rsv3:mask
     wf:-fin:-rsv1:-rsv2:-rsv3:-mask
 
-    wf:k"mask"
     wf:l234
 """
 
@@ -33,10 +32,6 @@ class OpCode(base.IntField):
 
 class Body(base.Value):
     preamble = "b"
-
-
-class Raw(base.CaselessLiteral):
-    TOK = "r"
 
 
 class Fin(base.Boolean):
@@ -64,6 +59,11 @@ class Key(base.FixedLengthValue):
     length = 4
 
 
+class KeyNone(base.CaselessLiteral):
+    unique_name = "Key"
+    TOK = "knone"
+
+
 class WebsocketFrame(message.Message):
     comps = (
         Body,
@@ -78,9 +78,8 @@ class WebsocketFrame(message.Message):
         actions.PauseAt,
         actions.DisconnectAt,
         actions.InjectAt,
+        KeyNone,
         Key,
-
-        Raw,
     )
     logattrs = ["body"]
     @property
@@ -119,6 +118,10 @@ class WebsocketFrame(message.Message):
     def key(self):
         return self.tok(Key)
 
+    @property
+    def knone(self):
+        return self.tok(KeyNone)
+
     @classmethod
     def expr(klass):
         parts = [i.expr() for i in klass.comps]
@@ -139,7 +142,7 @@ class WebsocketFrame(message.Message):
             tokens.append(
                 Mask(True)
             )
-        if self.mask and self.mask.value and not self.key:
+        if not self.knone and self.mask and self.mask.value and not self.key:
             tokens.append(
                 Key(base.TokValueLiteral(os.urandom(4)))
             )
@@ -159,7 +162,9 @@ class WebsocketFrame(message.Message):
         )
         if self.mask and self.mask.value:
             frameparts["mask"] = True
-        if self.key:
+        if self.knone:
+            frameparts["masking_key"] = None
+        elif self.key:
             key = self.key.values(settings)[0][:]
             frameparts["masking_key"] = key
         for i in ["opcode", "fin", "rsv1", "rsv2", "rsv3", "mask"]:

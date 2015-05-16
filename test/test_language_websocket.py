@@ -17,7 +17,7 @@ class TestWebsocketFrame:
             "wf:b'foo'",
             "wf:cbinary",
             "wf:c1",
-            "wf:r",
+            "wf:mask:knone",
             "wf:fin",
             "wf:fin:rsv1:rsv2:rsv3:mask",
             "wf:-fin:-rsv1:-rsv2:-rsv3:-mask",
@@ -67,7 +67,7 @@ class TestWebsocketFrame:
         assert self.fr("wf:ctext").header.opcode ==\
             netlib.websockets.OPCODE.TEXT
 
-    def test_auto_raw(self):
+    def test_construction(self):
         # Simple server frame
         frm = self.fr("wf:b'foo'")
         assert not frm.header.mask
@@ -99,3 +99,10 @@ class TestWebsocketFrame:
         # We're reading back a corrupted frame - the first 3 characters of the
         # mask is mis-interpreted as the payload
         assert frm.payload == "abc"
+
+    def test_knone(self):
+        tutils.raises(
+            "expected 4 bytes",
+            self.fr,
+            "wf:b'foo':mask:knone",
+        )
