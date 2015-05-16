@@ -15,6 +15,7 @@ class TestWebsocketFrame:
             "wf",
             "wf:dr",
             "wf:b'foo'",
+            "wf:l1024:b'foo'",
             "wf:cbinary",
             "wf:c1",
             "wf:mask:knone",
@@ -106,3 +107,10 @@ class TestWebsocketFrame:
             self.fr,
             "wf:b'foo':mask:knone",
         )
+
+    def test_length(self):
+        assert self.fr("wf:l3:b'foo'").header.payload_length == 3
+        frm = self.fr("wf:l2:b'foo'")
+        assert frm.header.payload_length == 2
+        assert frm.payload == "fo"
+        tutils.raises("expected 1024 bytes", self.fr, "wf:l1024:b'foo'")

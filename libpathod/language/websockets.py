@@ -10,6 +10,7 @@ from . import base, generators, actions, message
     wf:-fin:-rsv1:-rsv2:-rsv3:-mask
 
     wf:l234
+    wf:mask:r"foo
 """
 
 
@@ -64,11 +65,17 @@ class KeyNone(base.CaselessLiteral):
     TOK = "knone"
 
 
+class Length(base.Integer):
+    bounds = (0, 1<<64)
+    preamble = "l"
+
+
 class WebsocketFrame(message.Message):
     comps = (
         Body,
 
         OpCode,
+        Length,
         # Bit flags
         Fin,
         RSV1,
@@ -122,6 +129,10 @@ class WebsocketFrame(message.Message):
     def knone(self):
         return self.tok(KeyNone)
 
+    @property
+    def toklength(self):
+        return self.tok(Length)
+
     @classmethod
     def expr(klass):
         parts = [i.expr() for i in klass.comps]
@@ -157,6 +168,8 @@ class WebsocketFrame(message.Message):
         else:
             bodygen = None
             length = 0
+        if self.toklength:
+            length = int(self.toklength.value)
         frameparts = dict(
             payload_length = length
         )

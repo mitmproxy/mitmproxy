@@ -305,6 +305,17 @@ def test_integer():
 
     assert v.freeze({}).value == v.value
 
+    class BInt(base.Integer):
+        bounds = (1, 5)
+
+    tutils.raises("must be between", BInt, 0)
+    tutils.raises("must be between", BInt, 6)
+    assert BInt(5)
+    assert BInt(1)
+    assert BInt(3)
+
+
+
 
 class TBoolean(base.Boolean):
     name = "test"

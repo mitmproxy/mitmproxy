@@ -357,19 +357,34 @@ class OptionsOrValue(_Component):
 
 
 class Integer(_Component):
+    bounds = (None, None)
+    preamble = ""
+
     def __init__(self, value):
+        v = int(value)
+        outofbounds = any([
+            self.bounds[0] is not None and v < self.bounds[0],
+            self.bounds[1] is not None and v > self.bounds[1]
+        ])
+        if outofbounds:
+            raise exceptions.ParseException(
+                "Integer value must be between %s and %s."%self.bounds,
+                0, 0
+            )
         self.value = str(value)
 
     @classmethod
     def expr(klass):
         e = v_integer.copy()
+        if klass.preamble:
+            e = pp.Literal(klass.preamble).suppress() + e
         return e.setParseAction(lambda x: klass(*x))
 
     def values(self, settings):
         return self.value
 
     def spec(self):
-        return "%s"%(self.value)
+        return "%s%s"%(self.preamble, self.value)
 
     def freeze(self, settings):
         return self
