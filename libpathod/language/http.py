@@ -32,6 +32,10 @@ class Body(base.Value):
     preamble = "b"
 
 
+class Times(base.Integer):
+    preamble = "x"
+
+
 class Method(base.OptionsOrValue):
     options = [
         "GET",
@@ -284,6 +288,7 @@ class Request(_HTTPMessage):
         ShortcutUserAgent,
         Raw,
         PathodResponse,
+        Times,
 
         actions.PauseAt,
         actions.DisconnectAt,
@@ -302,6 +307,10 @@ class Request(_HTTPMessage):
     @property
     def path(self):
         return self.tok(Path)
+
+    @property
+    def times(self):
+        return self.tok(Times)
 
     @property
     def pathodspec(self):

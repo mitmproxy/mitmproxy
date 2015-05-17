@@ -145,6 +145,10 @@ class WebsocketFrame(message.Message):
         return self.tok(KeyNone)
 
     @property
+    def times(self):
+        return self.tok(Times)
+
+    @property
     def toklength(self):
         return self.tok(Length)
 

@@ -22,6 +22,9 @@ class Message(object):
                     track.add(i.unique_name)
         self.tokens = tokens
 
+    def copy(self):
+        return self.__class__(self.tokens[:])
+
     def toks(self, klass):
         """
             Fetch all tokens that are instances of klass

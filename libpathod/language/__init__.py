@@ -31,7 +31,7 @@ def parse_requests(s):
     except UnicodeError:
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        return pp.OneOrMore(
+        reqs = pp.OneOrMore(
             pp.Or(
                 [
                     websockets.WebsocketFrame.expr(),
@@ -41,6 +41,14 @@ def parse_requests(s):
         ).parseString(s, parseAll=True)
     except pp.ParseException, v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
+    expanded = []
+    for i in reqs:
+        if i.times:
+            for j in range(int(i.times.value)):
+                expanded.append(i.copy())
+        else:
+            expanded.append(i)
+    return expanded
 
 
 def serve(msg, fp, settings):
