@@ -67,7 +67,6 @@ pages = [
     Page("mitmdump.html", "mitmdump"),
     Page("config.html", "configuration"),
 
-    Page("ssl.html", "Overview"),
     Directory("certinstall"),
     Directory("scripting"),
     Directory("tutorials"),
