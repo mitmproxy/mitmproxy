@@ -8,8 +8,8 @@ from . import base, generators, actions, message
     wf:c15:r'foo'
     wf:fin:rsv1:rsv2:rsv3:mask
     wf:-fin:-rsv1:-rsv2:-rsv3:-mask
-
     wf:l234
+
     wf:mask:r"foo
 """
 
@@ -33,6 +33,11 @@ class OpCode(base.IntField):
 
 class Body(base.Value):
     preamble = "b"
+
+
+class RawBody(base.Value):
+    unique_name = "Body"
+    preamble = "r"
 
 
 class Fin(base.Boolean):
@@ -66,14 +71,16 @@ class KeyNone(base.CaselessLiteral):
 
 
 class Length(base.Integer):
-    bounds = (0, 1<<64)
+    bounds = (0, 1 << 64)
     preamble = "l"
+
+
+class Times(base.Integer):
+    preamble = "x"
 
 
 class WebsocketFrame(message.Message):
     comps = (
-        Body,
-
         OpCode,
         Length,
         # Bit flags
@@ -87,6 +94,10 @@ class WebsocketFrame(message.Message):
         actions.InjectAt,
         KeyNone,
         Key,
+        Times,
+
+        Body,
+        RawBody,
     )
     logattrs = ["body"]
     @property
@@ -96,6 +107,10 @@ class WebsocketFrame(message.Message):
     @property
     def body(self):
         return self.tok(Body)
+
+    @property
+    def rawbody(self):
+        return self.tok(RawBody)
 
     @property
     def opcode(self):
@@ -165,6 +180,9 @@ class WebsocketFrame(message.Message):
         if self.body:
             bodygen = self.body.value.get_generator(settings)
             length = len(self.body.value.get_generator(settings))
+        elif self.rawbody:
+            bodygen = self.rawbody.value.get_generator(settings)
+            length = len(self.rawbody.value.get_generator(settings))
         else:
             bodygen = None
             length = 0
@@ -187,7 +205,7 @@ class WebsocketFrame(message.Message):
         frame = netlib.websockets.FrameHeader(**frameparts)
         vals = [frame.to_bytes()]
         if bodygen:
-            if frame.masking_key:
+            if frame.masking_key and not self.rawbody:
                 masker = netlib.websockets.Masker(frame.masking_key)
                 vals.append(
                     generators.TransformGenerator(

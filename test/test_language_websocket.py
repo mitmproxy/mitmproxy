@@ -15,6 +15,7 @@ class TestWebsocketFrame:
             "wf",
             "wf:dr",
             "wf:b'foo'",
+            "wf:mask:r'foo'",
             "wf:l1024:b'foo'",
             "wf:cbinary",
             "wf:c1",
@@ -67,6 +68,13 @@ class TestWebsocketFrame:
             netlib.websockets.OPCODE.BINARY
         assert self.fr("wf:ctext").header.opcode ==\
             netlib.websockets.OPCODE.TEXT
+
+    def test_rawbody(self):
+        frm = self.fr("wf:mask:r'foo'")
+        assert len(frm.payload) == 3
+        assert frm.payload != "foo"
+
+        assert self.fr("wf:r'foo'").payload == "foo"
 
     def test_construction(self):
         # Simple server frame
