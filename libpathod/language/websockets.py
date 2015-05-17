@@ -36,7 +36,7 @@ class Body(base.Value):
 
 
 class RawBody(base.Value):
-    unique_name = "Body"
+    unique_name = "body"
     preamble = "r"
 
 
@@ -66,7 +66,7 @@ class Key(base.FixedLengthValue):
 
 
 class KeyNone(base.CaselessLiteral):
-    unique_name = "Key"
+    unique_name = "key"
     TOK = "knone"
 
 

@@ -84,7 +84,7 @@ class Token(object):
             same name will be allowed. If no uniquness should be applied, this
             should be None.
         """
-        return self.__class__.__name__
+        return self.__class__.__name__.lower()
 
     def resolve(self, settings, msg):
         """

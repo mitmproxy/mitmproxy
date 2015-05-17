@@ -45,7 +45,7 @@ def parse_requests(s):
     for i in reqs:
         if i.times:
             for j in range(int(i.times.value)):
-                expanded.append(i.copy())
+                expanded.append(i.strike_token("times"))
         else:
             expanded.append(i)
     return expanded

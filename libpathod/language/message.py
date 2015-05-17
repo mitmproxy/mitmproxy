@@ -22,8 +22,9 @@ class Message(object):
                     track.add(i.unique_name)
         self.tokens = tokens
 
-    def copy(self):
-        return self.__class__(self.tokens[:])
+    def strike_token(self, name):
+        toks = [i for i in self.tokens if i.unique_name != name]
+        return self.__class__(toks)
 
     def toks(self, klass):
         """

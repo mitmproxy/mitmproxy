@@ -9,6 +9,12 @@ def parse_request(s):
     return language.parse_requests(s)[0]
 
 
+def test_times():
+    reqs = language.parse_requests("get:/:x5")
+    assert len(reqs) == 5
+    assert not reqs[0].times
+
+
 def test_caseless_literal():
     class CL(base.CaselessLiteral):
         TOK = "foo"
