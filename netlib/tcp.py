@@ -245,7 +245,10 @@ class Address(object):
         self.family = socket.AF_INET6 if b else socket.AF_INET
 
     def __repr__(self):
-        return repr(self.address)
+        return "{}:{}".format(self.host, self.port)
+
+    def __str__(self):
+        return str(self.address)
 
     def __eq__(self, other):
         other = Address.wrap(other)
