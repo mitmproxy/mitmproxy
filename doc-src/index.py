@@ -60,6 +60,7 @@ ns.navbar = countershape.template.File(None, "_nav.html")
 pages = [
     Page("index.html", "Introduction"),
     Page("install.html", "Installation"),
+    Page("certinstall.html", "About Certificates"),
     Page("howmitmproxy.html", "How mitmproxy works"),
     Page("modes.html", "Modes of Operation"),
 
@@ -67,7 +68,6 @@ pages = [
     Page("mitmdump.html", "mitmdump"),
     Page("config.html", "configuration"),
 
-    Directory("certinstall"),
     Directory("scripting"),
     Directory("tutorials"),
     Page("transparent.html", "Overview"),
