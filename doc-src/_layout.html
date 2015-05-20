@@ -1,33 +1,38 @@
-<div class="navbar navbar-fixed-top">
-  <div class="navbar-inner">
+
+<div class="nav navbar-default navbar-static-top">
     <div class="container">
-      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </a>
-      <a class="brand" href="@!urlTo(idxpath)!@">mitmproxy $!VERSION!$ docs</a>
-      </div><!--/.nav-collapse -->
+        <div class="navbar-header">
+            <button type="button"
+                    class="navbar-toggle collapsed"
+                    data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1"
+            >
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+             <a class="navbar-brand" href="@!urlTo(idxpath)!@">mitmproxy $!VERSION!$ docs</a>
+        </div>
     </div>
-  </div>
 </div>
+
 
 <div class="container">
   <div class="row">
-    <div class="span3">
-      <div class="well sidebar-nav">
-            $!navbar!$
-      </div>
+    <div class="col-md-3">
+        $!navbar!$
     </div>
-
-    <div class="span9">
+    <div class="col-md-9">
         <div class="page-header">
         <h1>@!this.title!@</h1>
         </div>
         $!body!$
     </div>
   </div>
+</div>
 
+<div class="container">
   <hr>
 
   <footer>

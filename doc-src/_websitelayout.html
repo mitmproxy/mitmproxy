@@ -1,42 +1,56 @@
-<div class="navbar navbar-fixed-top">
-  <div class="navbar-inner">
+<div class="navbar navbar-default navbar-static-top">
     <div class="container">
-      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </a>
-      <a class="brand" href="@!urlTo(idxpath)!@">mitmproxy</a>
-      <div class="nav">
-        <ul class="nav">
-          <li $!'class="active"' if this.match("/index.html", True) else ""!$> <a href="@!top!@/index.html">home</a> </li>
-          <li $!'class="active"' if this.under("/doc") else ""!$><a href="@!top!@/doc/index.html">docs</a></li>
-          <li $!'class="active"' if this.under("/about.html") else ""!$><a href="@!top!@/about.html">about</a></li>
-        </ul>
-      </div>
+        <div class="navbar-header">
+            <button type="button"
+                    class="navbar-toggle collapsed"
+                    data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1"
+            >
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="@!urlTo("/index.html")!@">mitmproxy</a>
+        </div>
+
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li $!'class="active"' if this.under("/index.html") else ""!$> <a href="@!top!@/index.html">home</a> </li>
+                <li $!'class="active"' if this.under("/doc") else ""!$><a href="@!top!@/doc/index.html">docs</a></li>
+                <li $!'class="active"' if this.under("/about.html") else ""!$><a href="@!top!@/about.html">about</a></li>
+            </ul>
+        </div>
     </div>
-  </div>
 </div>
 
 <div class="container">
   <div class="row">
-
-    <div class="span3">
-      <div class="well sidebar-nav">
-            $!navbar!$
-      </div>
+    <div class="col-md-3">
+        $!navbar!$
     </div>
-    <div class="span9">
+    <div class="col-md-9">
         <div class="page-header">
         <h1>@!this.title!@</h1>
         </div>
         $!body!$
     </div>
   </div>
+</div>
 
-  <hr>
-
+<div class="container">
   <footer>
-    <p>@!copyright!@</p>
+    <hr>
+    <p>Copyright 2014 Aldo Cortesi</p>
   </footer>
 </div>
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-4150636-13']);
+  _gaq.push(['_trackPageview']);
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>

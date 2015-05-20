@@ -83,7 +83,8 @@ setup(
             "coveralls>=0.4.1",
             "pathod>=%s, <%s" % (
                 version.MINORVERSION, version.NEXT_MINORVERSION
-            )
+            ),
+            "countershape"
         ],
         'contentviews': [
             "pyamf>=0.6.1",
