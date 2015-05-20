@@ -24,7 +24,7 @@
     * mitmproxy console: Various components of requests and responses can be
       copied to the clipboard from mitmproxy - thanks to @marceloglezer.
 
-    * Support for creating new requests from scratch in mitmproxy console.
+    * Support for creating new requests from scratch in mitmproxy console (@marceloglezer).
 
     * SSLKEYLOGFILE environment variable to specify a logging location for TLS
       master keys. This can be used with tools like Wireshark to allow TLS
