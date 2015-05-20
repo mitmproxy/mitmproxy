@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import os
 import socket
 from OpenSSL import SSL
 
@@ -183,13 +184,23 @@ class ConnectionHandler:
                 raise ProxyError(502, "No server connection.")
             if self.server_conn.ssl_established:
                 raise ProxyError(502, "SSL to Server already established.")
+
+            cipher_list = self.config.ciphers_server
+            if self.config.per_host_ciphers_dir:
+                cipher_path = os.path.join(
+                    self.config.per_host_ciphers_dir,
+                    self.server_conn.address.host.encode("idna")) + ".cipher"
+                if os.path.exists(cipher_path):
+                    cipher_file = open(cipher_path, 'r')
+                    cipher_list = cipher_file.read().strip()
+
             try:
                 self.server_conn.establish_ssl(
                     self.config.clientcerts,
                     sni,
                     method=self.config.openssl_method_server,
                     options=self.config.openssl_options_server,
-                    cipher_list=self.config.ciphers_server,
+                    cipher_list=cipher_list,
                 )
             except tcp.NetLibError as v:
                 e = ProxyError(502, repr(v))

@@ -47,6 +47,7 @@ class ProxyConfig:
             tcp_hosts=[],
             ciphers_client=None,
             ciphers_server=None,
+            per_host_ciphers_dir=None,
             certs=[],
             certforward=False,
             ssl_version_client="secure",
@@ -58,6 +59,7 @@ class ProxyConfig:
         self.server_version = server_version
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
+        self.per_host_ciphers_dir = per_host_ciphers_dir
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
@@ -192,6 +194,7 @@ def process_proxy_options(parser, options):
         authenticator=authenticator,
         ciphers_client=options.ciphers_client,
         ciphers_server=options.ciphers_server,
+        per_host_ciphers_dir=options.per_host_ciphers_dir,
         certs=certs,
         certforward=options.certforward,
         ssl_version_client=options.ssl_version_client,
@@ -226,6 +229,13 @@ def ssl_option_group(parser):
         "--ciphers-server", action="store",
         type=str, dest="ciphers_server", default=None,
         help="Set supported ciphers for server connections. (OpenSSL Syntax)"
+    )
+    group.add_argument(
+        "--per-host-ciphers-dir", action="store",
+        type=str, dest="per_host_ciphers_dir", default=None,
+        help="Location of directory containing per-host ciphers."
+             "Files are named by appending the .cipher extension to the host FQDN "
+             "and contain the respective supported cipher list in OpenSSL syntax."
     )
     group.add_argument(
         "--client-certs", action="store",
