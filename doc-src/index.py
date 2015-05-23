@@ -15,10 +15,9 @@ ns.VERSION = version.VERSION
 
 if ns.options.website:
     ns.idxpath = "doc/index.html"
-    this.layout = countershape.Layout("_websitelayout.html")
 else:
     ns.idxpath = "index.html"
-    this.layout = countershape.Layout("_layout.html")
+this.layout = countershape.Layout("_layout.html")
 
 ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
 this.titlePrefix = "%s - " % version.NAMEVERSION
