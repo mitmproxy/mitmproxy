@@ -2,7 +2,7 @@ import os
 import sys
 import datetime
 import countershape
-from countershape import Page, Directory, markup, model
+from countershape import Page, Directory, markup
 import countershape.template
 
 MITMPROXY_SRC = os.path.abspath(
@@ -17,7 +17,8 @@ if ns.options.website:
     ns.idxpath = "doc/index.html"
 else:
     ns.idxpath = "index.html"
-this.layout = countershape.Layout("_layout.html")
+
+this.layout = countershape.layout.FileLayout("_layout.html")
 
 ns.title = countershape.template.Template(None, "<h1>@!this.title!@</h1>")
 this.titlePrefix = "%s - " % version.NAMEVERSION
@@ -51,7 +52,7 @@ def nav(page, current, state):
     else:
         pre = "<li>"
     p = state.application.getPage(page)
-    return pre + '<a href="%s">%s</a></li>'%(model.UrlTo(page), p.title)
+    return pre + '<a href="%s">%s</a></li>'%(countershape.widgets.UrlTo(page), p.title)
 ns.nav = nav
 ns.navbar = countershape.template.File(None, "_nav.html")
 

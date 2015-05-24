@@ -1,46 +1,54 @@
-
-<div class="nav navbar-default navbar-static-top">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button"
-                    class="navbar-toggle collapsed"
-                    data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1"
-            >
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="@!urlTo("/index.html")!@">
-                <img height="20px" src="@!urlTo("mitmproxy-long.png")!@"/>
-            </a>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>@!pageTitle!@</title>
+        $!header!$
+    </head>
+    <body>
+        <div class="nav navbar-default navbar-static-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button"
+                            class="navbar-toggle collapsed"
+                            data-toggle="collapse"
+                            data-target="#bs-example-navbar-collapse-1"
+                    >
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="@!urlTo("/index.html")!@">
+                        <img height="20px" src="@!urlTo("mitmproxy-long.png")!@"/>
+                    </a>
+                </div>
+                <div class="navbar-header navbar-right">
+                    <a class="navbar-brand" hre="#">$!VERSION!$ docs</a>
+                </div>
+            </div>
         </div>
-        <div class="navbar-header navbar-right">
-            <a class="navbar-brand" hre="#">$!VERSION!$ docs</a>
+
+
+        <div class="container">
+          <div class="row">
+            <div class="col-md-3">
+                $!navbar!$
+            </div>
+            <div class="col-md-9">
+                <div class="page-header">
+                <h1>@!this.title!@</h1>
+                </div>
+                $!body!$
+            </div>
+          </div>
         </div>
-    </div>
-</div>
 
+        <div class="container">
+          <hr>
 
-<div class="container">
-  <div class="row">
-    <div class="col-md-3">
-        $!navbar!$
-    </div>
-    <div class="col-md-9">
-        <div class="page-header">
-        <h1>@!this.title!@</h1>
+          <footer>
+            <p>@!copyright!@</p>
+          </footer>
         </div>
-        $!body!$
-    </div>
-  </div>
-</div>
-
-<div class="container">
-  <hr>
-
-  <footer>
-    <p>@!copyright!@</p>
-  </footer>
-</div>
+    </body>
+</html>
