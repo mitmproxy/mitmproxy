@@ -5,6 +5,9 @@
     netlib/netlib/version.py
     pathod/libpathod/version.py
 
+- Ensure that the website style assets have been compiled for production, and
+synced to the docs.
+
 - Render the docs:
     cshape doc-src doc
 
