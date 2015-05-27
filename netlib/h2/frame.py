@@ -1,4 +1,6 @@
 import struct
+import io
+from hpack.hpack import Encoder, Decoder
 
 from .. import utils
 from functools import reduce
@@ -71,6 +73,7 @@ class Frame(object):
     def __eq__(self, other):
         return self.to_bytes() == other.to_bytes()
 
+
 class DataFrame(Frame):
     TYPE = 0x0
     VALID_FLAGS = [Frame.FLAG_END_STREAM, Frame.FLAG_PADDED]
@@ -110,14 +113,18 @@ class DataFrame(Frame):
     def payload_human_readable(self):
         return "payload: %s" % str(self.payload)
 
+
 class HeadersFrame(Frame):
     TYPE = 0x1
     VALID_FLAGS = [Frame.FLAG_END_STREAM, Frame.FLAG_END_HEADERS, Frame.FLAG_PADDED, Frame.FLAG_PRIORITY]
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, header_block_fragment=b'',
-                 pad_length=0, exclusive=False, stream_dependency=0x0, weight=0):
+    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, headers=None, pad_length=0, exclusive=False, stream_dependency=0x0, weight=0):
         super(HeadersFrame, self).__init__(length, flags, stream_id)
-        self.header_block_fragment = header_block_fragment
+
+        if headers is None:
+            headers = []
+
+        self.headers = headers
         self.pad_length = pad_length
         self.exclusive = exclusive
         self.stream_dependency = stream_dependency
@@ -129,15 +136,18 @@ class HeadersFrame(Frame):
 
         if f.flags & self.FLAG_PADDED:
             f.pad_length = struct.unpack('!B', payload[0])[0]
-            f.header_block_fragment = payload[1:-f.pad_length]
+            header_block_fragment = payload[1:-f.pad_length]
         else:
-            f.header_block_fragment = payload[0:]
+            header_block_fragment = payload[0:]
 
         if f.flags & self.FLAG_PRIORITY:
-            f.stream_dependency, f.weight = struct.unpack('!LB', f.header_block_fragment[:5])
+            f.stream_dependency, f.weight = struct.unpack('!LB', header_block_fragment[:5])
             f.exclusive = bool(f.stream_dependency >> 31)
             f.stream_dependency &= 0x7FFFFFFF
-            f.header_block_fragment = f.header_block_fragment[5:]
+            header_block_fragment = header_block_fragment[5:]
+
+        for header, value in Decoder().decode(header_block_fragment):
+            f.headers.append((header, value))
 
         return f
 
@@ -152,7 +162,7 @@ class HeadersFrame(Frame):
         if self.flags & self.FLAG_PRIORITY:
             b += struct.pack('!LB', (int(self.exclusive) << 31) | self.stream_dependency, self.weight)
 
-        b += bytes(self.header_block_fragment)
+        b += Encoder().encode(self.headers)
 
         if self.flags & self.FLAG_PADDED:
             b += b'\0' * self.pad_length
@@ -170,8 +180,14 @@ class HeadersFrame(Frame):
         if self.flags & self.FLAG_PADDED:
             s.append("padding: %d" % self.pad_length)
 
-        s.append("header_block_fragment:   %s" % str(self.header_block_fragment))
+        if not self.headers:
+            s.append("headers: None")
+        else:
+            for header, value in self.headers:
+                s.append("%s: %s" % (header, value))
+
         return "\n".join(s)
+
 
 class PriorityFrame(Frame):
     TYPE = 0x2
@@ -209,6 +225,7 @@ class PriorityFrame(Frame):
         s.append("weight: %d" % self.weight)
         return "\n".join(s)
 
+
 class RstStreamFrame(Frame):
     TYPE = 0x3
     VALID_FLAGS = []
@@ -231,6 +248,7 @@ class RstStreamFrame(Frame):
 
     def payload_human_readable(self):
         return "error code: %#x" % self.error_code
+
 
 class SettingsFrame(Frame):
     TYPE = 0x4
@@ -283,6 +301,7 @@ class SettingsFrame(Frame):
             return "settings: None"
         else:
             return "\n".join(s)
+
 
 class PushPromiseFrame(Frame):
     TYPE = 0x5
@@ -338,6 +357,7 @@ class PushPromiseFrame(Frame):
         s.append("header_block_fragment: %s" % str(self.header_block_fragment))
         return "\n".join(s)
 
+
 class PingFrame(Frame):
     TYPE = 0x6
     VALID_FLAGS = [Frame.FLAG_ACK]
@@ -362,6 +382,7 @@ class PingFrame(Frame):
 
     def payload_human_readable(self):
         return "opaque data: %s" % str(self.payload)
+
 
 class GoAwayFrame(Frame):
     TYPE = 0x7
@@ -398,6 +419,7 @@ class GoAwayFrame(Frame):
         s.append("debug data: %s" % str(self.data))
         return "\n".join(s)
 
+
 class WindowUpdateFrame(Frame):
     TYPE = 0x8
     VALID_FLAGS = []
@@ -423,6 +445,7 @@ class WindowUpdateFrame(Frame):
 
     def payload_human_readable(self):
         return "window size increment: %#x" % self.window_size_increment
+
 
 class ContinuationFrame(Frame):
     TYPE = 0x9
