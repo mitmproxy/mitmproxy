@@ -245,8 +245,12 @@ class SettingsFrame(Frame):
         SETTINGS_MAX_HEADER_LIST_SIZE=0x6,
     )
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, settings={}):
+    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, settings=None):
         super(SettingsFrame, self).__init__(length, flags, stream_id)
+
+        if settings is None:
+            settings = {}
+
         self.settings = settings
 
     @classmethod
