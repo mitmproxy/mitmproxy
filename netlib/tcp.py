@@ -307,10 +307,10 @@ class _Connection(object):
     def get_current_cipher(self):
         if not self.ssl_established:
             return None
-        c = SSL._lib.SSL_get_current_cipher(self.connection._ssl)
-        name = SSL._native(SSL._ffi.string(SSL._lib.SSL_CIPHER_get_name(c)))
-        bits = SSL._lib.SSL_CIPHER_get_bits(c, SSL._ffi.NULL)
-        version = SSL._native(SSL._ffi.string(SSL._lib.SSL_CIPHER_get_version(c)))
+
+        name = self.connection.get_cipher_name()
+        bits = self.connection.get_cipher_bits()
+        version = self.connection.get_cipher_version()
         return name, bits, version
 
     def finish(self):
@@ -333,10 +333,6 @@ class _Connection(object):
                 self.connection.shutdown()
             except SSL.Error:
                 pass
-            except KeyError as e:  # pragma: no cover
-                # Workaround for https://github.com/pyca/pyopenssl/pull/183
-                if OpenSSL.__version__ != "0.14":
-                    raise e
 
     """
     Creates an SSL Context.
