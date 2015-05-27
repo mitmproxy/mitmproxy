@@ -8,15 +8,25 @@ import OpenSSL
 
 DEFAULT_EXP = 157680000 # = 24 * 60 * 60 * 365 * 5
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
-DEFAULT_DHPARAM = """-----BEGIN DH PARAMETERS-----
-MIGHAoGBAOdPzMbYgoYfO3YBYauCLRlE8X1XypTiAjoeCFD0qWRx8YUsZ6Sj20W5
-zsfQxlZfKovo3f2MftjkDkbI/C/tDgxoe0ZPbjy5CjdOhkzxn0oTbKTs16Rw8DyK
-1LjTR65sQJkJEdgsX8TSi/cicCftJZl9CaZEaObF2bdgSgGK+PezAgEC
------END DH PARAMETERS-----"""
+DEFAULT_DHPARAM = """
+-----BEGIN DH PARAMETERS-----
+MIICCAKCAgEAyT6LzpwVFS3gryIo29J5icvgxCnCebcdSe/NHMkD8dKJf8suFCg3
+O2+dguLakSVif/t6dhImxInJk230HmfC8q93hdcg/j8rLGJYDKu3ik6H//BAHKIv
+j5O9yjU3rXCfmVJQic2Nne39sg3CreAepEts2TvYHhVv3TEAzEqCtOuTjgDv0ntJ
+Gwpj+BJBRQGG9NvprX1YGJ7WOFBP/hWU7d6tgvE6Xa7T/u9QIKpYHMIkcN/l3ZFB
+chZEqVlyrcngtSXCROTPcDOQ6Q8QzhaBJS+Z6rcsd7X+haiQqvoFcmaJ08Ks6LQC
+ZIL2EtYJw8V8z7C0igVEBIADZBI6OTbuuhDwRw//zU1uq52Oc48CIZlGxTYG/Evq
+o9EWAXUYVzWkDSTeBH1r4z/qLPE2cnhtMxbFxuvK53jGB0emy2y1Ei6IhKshJ5qX
+IB/aE7SSHyQ3MDHHkCmQJCsOd4Mo26YX61NZ+n501XjqpCBQ2+DfZCBh8Va2wDyv
+A2Ryg9SUz8j0AXViRNMJgJrr446yro/FuJZwnQcO3WQnXeqSBnURqKjmqkeFP+d8
+6mk2tqJaY507lRNqtGlLnj7f5RNoBFJDCLBNurVgfvq9TCVWKDIFD4vZRjCrnl6I
+rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
+-----END DH PARAMETERS-----
+"""
 
 def create_ca(o, cn, exp):
     key = OpenSSL.crypto.PKey()
-    key.generate_key(OpenSSL.crypto.TYPE_RSA, 1024)
+    key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
     cert = OpenSSL.crypto.X509()
     cert.set_serial_number(int(time.time()*10000))
     cert.set_version(2)
@@ -39,7 +49,7 @@ def create_ca(o, cn, exp):
       OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
                                    subject=cert),
       ])
-    cert.sign(key, "sha1")
+    cert.sign(key, "sha256")
     return key, cert
 
 
@@ -69,7 +79,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
         cert.set_version(2)
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", False, ss)])
     cert.set_pubkey(cacert.get_pubkey())
-    cert.sign(privkey, "sha1")
+    cert.sign(privkey, "sha256")
     return SSLCert(cert)
 
 
@@ -124,7 +134,7 @@ class CertStore(object):
     """
         Implements an in-memory certificate store.
     """
-    def __init__(self, default_privatekey, default_ca, default_chain_file, dhparams=None):
+    def __init__(self, default_privatekey, default_ca, default_chain_file, dhparams):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
@@ -148,7 +158,7 @@ class CertStore(object):
                 )
             dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)
             return dh
-    
+
     @classmethod
     def from_store(cls, path, basename):
         ca_path = os.path.join(path, basename + "-ca.pem")
@@ -296,7 +306,7 @@ class SSLCert(object):
         self.x509 = cert
 
     def __eq__(self, other):
-        return self.digest("sha1") == other.digest("sha1")
+        return self.digest("sha256") == other.digest("sha256")
 
     def __ne__(self, other):
         return not self.__eq__(other)
