@@ -40,7 +40,8 @@ setup(
 
     install_requires=[
         "pyasn1>=0.1.7",
-        "pyOpenSSL>=0.14",
+        "pyOpenSSL>=0.15.1",
+        "cryptography>=0.9",
         "passlib>=1.6.2"
     ],
     extras_require={
