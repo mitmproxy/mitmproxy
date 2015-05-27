@@ -8,6 +8,7 @@ from . import odict, utils, tcp, http_status
 
 
 class HttpError(Exception):
+
     def __init__(self, code, message):
         super(HttpError, self).__init__(message)
         self.code = code
@@ -95,7 +96,7 @@ def read_headers(fp):
     """
     ret = []
     name = ''
-    while 1:
+    while True:
         line = fp.readline()
         if not line or line == '\r\n' or line == '\n':
             break
@@ -337,7 +338,7 @@ def read_http_body_chunked(
             otherwise
     """
     if max_chunk_size is None:
-        max_chunk_size = limit or sys.maxint
+        max_chunk_size = limit or sys.maxsize
 
     expected_size = expected_http_body_size(
         headers, is_request, request_method, response_code
@@ -399,10 +400,10 @@ def expected_http_body_size(headers, is_request, request_method, response_code):
         request_method = request_method.upper()
 
     if (not is_request and (
-                    request_method == "HEAD" or
-                    (request_method == "CONNECT" and response_code == 200) or
-                    response_code in [204, 304] or
-                    100 <= response_code <= 199)):
+            request_method == "HEAD" or
+            (request_method == "CONNECT" and response_code == 200) or
+            response_code in [204, 304] or
+            100 <= response_code <= 199)):
         return 0
     if has_chunked_encoding(headers):
         return None

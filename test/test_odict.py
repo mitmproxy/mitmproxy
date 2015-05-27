@@ -3,6 +3,7 @@ import tutils
 
 
 class TestODict:
+
     def setUp(self):
         self.od = odict.ODict()
 
@@ -106,13 +107,13 @@ class TestODict:
     def test_get(self):
         self.od.add("one", "two")
         assert self.od.get("one") == ["two"]
-        assert self.od.get("two") == None
+        assert self.od.get("two") is None
 
     def test_get_first(self):
         self.od.add("one", "two")
         self.od.add("one", "three")
         assert self.od.get_first("one") == "two"
-        assert self.od.get_first("two") == None
+        assert self.od.get_first("two") is None
 
     def test_extend(self):
         a = odict.ODict([["a", "b"], ["c", "d"]])
@@ -121,7 +122,9 @@ class TestODict:
         assert len(a) == 4
         assert a["a"] == ["b", "b"]
 
+
 class TestODictCaseless:
+
     def setUp(self):
         self.od = odict.ODictCaseless()
 

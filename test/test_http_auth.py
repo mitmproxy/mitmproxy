@@ -1,9 +1,12 @@
-import binascii, cStringIO
+import binascii
+import cStringIO
 from netlib import odict, http_auth, http
 import mock
 import tutils
 
+
 class TestPassManNonAnon:
+
     def test_simple(self):
         p = http_auth.PassManNonAnon()
         assert not p.test("", "")
@@ -11,6 +14,7 @@ class TestPassManNonAnon:
 
 
 class TestPassManHtpasswd:
+
     def test_file_errors(self):
         tutils.raises("malformed htpasswd file", http_auth.PassManHtpasswd, tutils.test_data.path("data/server.crt"))
 
@@ -27,6 +31,7 @@ class TestPassManHtpasswd:
 
 
 class TestPassManSingleUser:
+
     def test_simple(self):
         pm = http_auth.PassManSingleUser("test", "test")
         assert pm.test("test", "test")
@@ -35,6 +40,7 @@ class TestPassManSingleUser:
 
 
 class TestNullProxyAuth:
+
     def test_simple(self):
         na = http_auth.NullProxyAuth(http_auth.PassManNonAnon())
         assert not na.auth_challenge_headers()
@@ -43,6 +49,7 @@ class TestNullProxyAuth:
 
 
 class TestBasicProxyAuth:
+
     def test_simple(self):
         ba = http_auth.BasicProxyAuth(http_auth.PassManNonAnon(), "test")
         h = odict.ODictCaseless()
@@ -60,7 +67,6 @@ class TestBasicProxyAuth:
         ba.clean(hdrs)
         assert not ba.AUTH_HEADER in hdrs
 
-
         hdrs[ba.AUTH_HEADER] = [""]
         assert not ba.authenticate(hdrs)
 
@@ -77,25 +83,27 @@ class TestBasicProxyAuth:
         assert not ba.authenticate(hdrs)
 
 
-class Bunch: pass
+class Bunch:
+    pass
 
 
 class TestAuthAction:
+
     def test_nonanonymous(self):
         m = Bunch()
         aa = http_auth.NonanonymousAuthAction(None, "authenticator")
         aa(None, m, None, None)
-        assert m.authenticator  
+        assert m.authenticator
 
     def test_singleuser(self):
         m = Bunch()
         aa = http_auth.SingleuserAuthAction(None, "authenticator")
         aa(None, m, "foo:bar", None)
-        assert m.authenticator  
+        assert m.authenticator
         tutils.raises("invalid", aa, None, m, "foo", None)
 
     def test_httppasswd(self):
         m = Bunch()
         aa = http_auth.HtpasswdAuthAction(None, "authenticator")
         aa(None, m, tutils.test_data.path("data/htpasswd"), None)
-        assert m.authenticator  
+        assert m.authenticator

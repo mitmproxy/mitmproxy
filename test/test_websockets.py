@@ -7,6 +7,7 @@ import tutils
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):
+
     def __init__(self, connection, address, server):
         super(WebSocketsEchoHandler, self).__init__(
             connection, address, server
@@ -25,7 +26,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         self.on_message(frame.payload)
 
     def send_message(self, message):
-        frame = websockets.Frame.default(message, from_client = False)
+        frame = websockets.Frame.default(message, from_client=False)
         frame.to_file(self.wfile)
 
     def handshake(self):
@@ -44,6 +45,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
 
 
 class WebSocketsClient(tcp.TCPClient):
+
     def __init__(self, address, source_address=None):
         super(WebSocketsClient, self).__init__(address, source_address)
         self.client_nonce = None
@@ -68,14 +70,14 @@ class WebSocketsClient(tcp.TCPClient):
         return websockets.Frame.from_file(self.rfile).payload
 
     def send_message(self, message):
-        frame = websockets.Frame.default(message, from_client = True)
+        frame = websockets.Frame.default(message, from_client=True)
         frame.to_file(self.wfile)
 
 
 class TestWebSockets(test.ServerTestBase):
     handler = WebSocketsEchoHandler
 
-    def random_bytes(self, n = 100):
+    def random_bytes(self, n=100):
         return os.urandom(n)
 
     def echo(self, msg):
@@ -105,8 +107,8 @@ class TestWebSockets(test.ServerTestBase):
           default builder should always generate valid frames
         """
         msg = self.random_bytes()
-        client_frame = websockets.Frame.default(msg, from_client = True)
-        server_frame = websockets.Frame.default(msg, from_client = False)
+        client_frame = websockets.Frame.default(msg, from_client=True)
+        server_frame = websockets.Frame.default(msg, from_client=False)
 
     def test_serialization_bijection(self):
         """
@@ -140,6 +142,7 @@ class TestWebSockets(test.ServerTestBase):
 
 
 class BadHandshakeHandler(WebSocketsEchoHandler):
+
     def handshake(self):
         client_hs = http.read_request(self.rfile)
         websockets.check_client_handshake(client_hs.headers)
@@ -152,6 +155,7 @@ class BadHandshakeHandler(WebSocketsEchoHandler):
 
 
 class TestBadHandshake(test.ServerTestBase):
+
     """
       Ensure that the client disconnects if the server handshake is malformed
     """
@@ -165,6 +169,7 @@ class TestBadHandshake(test.ServerTestBase):
 
 
 class TestFrameHeader:
+
     def test_roundtrip(self):
         def round(*args, **kwargs):
             f = websockets.FrameHeader(*args, **kwargs)
@@ -216,6 +221,7 @@ class TestFrameHeader:
 
 
 class TestFrame:
+
     def test_roundtrip(self):
         def round(*args, **kwargs):
             f = websockets.Frame(*args, **kwargs)
@@ -240,7 +246,7 @@ def test_masker():
         ["fourf"],
         ["fourfive"],
         ["a", "aasdfasdfa", "asdf"],
-        ["a"*50, "aasdfasdfa", "asdf"],
+        ["a" * 50, "aasdfasdfa", "asdf"],
     ]
     for i in tests:
         m = websockets.Masker("abcd")

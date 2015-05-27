@@ -44,14 +44,14 @@ def raises(exc, obj, *args, **kwargs):
         :kwargs Arguments to be passed to the callable.
     """
     try:
-        ret = apply(obj, args, kwargs)
-    except Exception, v:
+        ret = obj(*args, **kwargs)
+    except Exception as v:
         if isinstance(exc, basestring):
             if exc.lower() in str(v).lower():
                 return
             else:
                 raise AssertionError(
-                    "Expected %s, but caught %s"%(
+                    "Expected %s, but caught %s" % (
                         repr(str(exc)), v
                     )
                 )
@@ -60,7 +60,7 @@ def raises(exc, obj, *args, **kwargs):
                 return
             else:
                 raise AssertionError(
-                    "Expected %s, but caught %s %s"%(
+                    "Expected %s, but caught %s %s" % (
                         exc.__name__, v.__class__.__name__, str(v)
                     )
                 )

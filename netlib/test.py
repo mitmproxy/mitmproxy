@@ -1,9 +1,13 @@
 from __future__ import (absolute_import, print_function, division)
-import threading, Queue, cStringIO
+import threading
+import Queue
+import cStringIO
 import OpenSSL
 from . import tcp, certutils
 
+
 class ServerThread(threading.Thread):
+
     def __init__(self, server):
         self.server = server
         threading.Thread.__init__(self)
@@ -19,6 +23,7 @@ class ServerTestBase(object):
     ssl = None
     handler = None
     addr = ("localhost", 0)
+
     @classmethod
     def setupAll(cls):
         cls.q = Queue.Queue()
@@ -41,10 +46,11 @@ class ServerTestBase(object):
 
 
 class TServer(tcp.TCPServer):
+
     def __init__(self, ssl, q, handler_klass, addr):
         """
             ssl: A dictionary of SSL parameters:
-                
+
                     cert, key, request_client_cert, cipher_list,
                     dhparams, v3_only
         """
@@ -70,13 +76,13 @@ class TServer(tcp.TCPServer):
                 options = None
             h.convert_to_ssl(
                 cert, key,
-                method = method,
-                options = options,
-                handle_sni = getattr(h, "handle_sni", None),
-                request_client_cert = self.ssl["request_client_cert"],
-                cipher_list = self.ssl.get("cipher_list", None),
-                dhparams = self.ssl.get("dhparams", None),
-                chain_file = self.ssl.get("chain_file", None)
+                method=method,
+                options=options,
+                handle_sni=getattr(h, "handle_sni", None),
+                request_client_cert=self.ssl["request_client_cert"],
+                cipher_list=self.ssl.get("cipher_list", None),
+                dhparams=self.ssl.get("dhparams", None),
+                chain_file=self.ssl.get("chain_file", None)
             )
         h.handle()
         h.finish()

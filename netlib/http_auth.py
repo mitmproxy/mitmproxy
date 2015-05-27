@@ -4,9 +4,11 @@ from . import http
 
 
 class NullProxyAuth(object):
+
     """
         No proxy auth at all (returns empty challange headers)
     """
+
     def __init__(self, password_manager):
         self.password_manager = password_manager
 
@@ -48,7 +50,7 @@ class BasicProxyAuth(NullProxyAuth):
         if not parts:
             return False
         scheme, username, password = parts
-        if scheme.lower()!='basic':
+        if scheme.lower() != 'basic':
             return False
         if not self.password_manager.test(username, password):
             return False
@@ -56,18 +58,21 @@ class BasicProxyAuth(NullProxyAuth):
         return True
 
     def auth_challenge_headers(self):
-        return {self.CHALLENGE_HEADER:'Basic realm="%s"'%self.realm}
+        return {self.CHALLENGE_HEADER: 'Basic realm="%s"' % self.realm}
 
 
 class PassMan(object):
+
     def test(self, username, password_token):
         return False
 
 
 class PassManNonAnon(PassMan):
+
     """
         Ensure the user specifies a username, accept any password.
     """
+
     def test(self, username, password_token):
         if username:
             return True
@@ -75,9 +80,11 @@ class PassManNonAnon(PassMan):
 
 
 class PassManHtpasswd(PassMan):
+
     """
         Read usernames and passwords from an htpasswd file
     """
+
     def __init__(self, path):
         """
             Raises ValueError if htpasswd file is invalid.
@@ -90,14 +97,16 @@ class PassManHtpasswd(PassMan):
 
 
 class PassManSingleUser(PassMan):
+
     def __init__(self, username, password):
         self.username, self.password = username, password
 
     def test(self, username, password_token):
-        return self.username==username and self.password==password_token
+        return self.username == username and self.password == password_token
 
 
 class AuthAction(Action):
+
     """
     Helper class to allow seamless integration int argparse. Example usage:
     parser.add_argument(
@@ -106,16 +115,18 @@ class AuthAction(Action):
         help="Allow access to any user long as a credentials are specified."
     )
     """
+
     def __call__(self, parser, namespace, values, option_string=None):
         passman = self.getPasswordManager(values)
         authenticator = BasicProxyAuth(passman, "mitmproxy")
         setattr(namespace, self.dest, authenticator)
 
-    def getPasswordManager(self, s): # pragma: nocover
+    def getPasswordManager(self, s):  # pragma: nocover
         raise NotImplementedError()
 
 
 class SingleuserAuthAction(AuthAction):
+
     def getPasswordManager(self, s):
         if len(s.split(':')) != 2:
             raise ArgumentTypeError(
@@ -126,11 +137,12 @@ class SingleuserAuthAction(AuthAction):
 
 
 class NonanonymousAuthAction(AuthAction):
+
     def getPasswordManager(self, s):
         return PassManNonAnon()
 
 
 class HtpasswdAuthAction(AuthAction):
+
     def getPasswordManager(self, s):
         return PassManHtpasswd(s)
-

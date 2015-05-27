@@ -34,6 +34,7 @@ import tutils
 
 
 class TestCertStore:
+
     def test_create_explicit(self):
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
@@ -102,6 +103,7 @@ class TestCertStore:
 
 
 class TestDummyCert:
+
     def test_with_ca(self):
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
@@ -115,6 +117,7 @@ class TestDummyCert:
 
 
 class TestSSLCert:
+
     def test_simple(self):
         with open(tutils.test_data.path("data/text_cert"), "rb") as f:
             d = f.read()
@@ -152,5 +155,3 @@ class TestSSLCert:
             d = f.read()
         s = certutils.SSLCert.from_der(d)
         assert s.cn
-
-

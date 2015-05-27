@@ -96,7 +96,7 @@ def _read_pairs(s, off=0, specials=()):
         specials: a lower-cased list of keys that may contain commas
     """
     vals = []
-    while 1:
+    while True:
         lhs, off = _read_token(s, off)
         lhs = lhs.lstrip()
         if lhs:
@@ -135,15 +135,15 @@ def _format_pairs(lst, specials=(), sep="; "):
         else:
             if k.lower() not in specials and _has_special(v):
                 v = ESCAPE.sub(r"\\\1", v)
-                v = '"%s"'%v
-            vals.append("%s=%s"%(k, v))
+                v = '"%s"' % v
+            vals.append("%s=%s" % (k, v))
     return sep.join(vals)
 
 
 def _format_set_cookie_pairs(lst):
     return _format_pairs(
         lst,
-        specials = ("expires", "path")
+        specials=("expires", "path")
     )
 
 
@@ -154,7 +154,7 @@ def _parse_set_cookie_pairs(s):
     """
     pairs, off = _read_pairs(
         s,
-        specials = ("expires", "path")
+        specials=("expires", "path")
     )
     return pairs
 

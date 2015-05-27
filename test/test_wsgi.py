@@ -1,4 +1,5 @@
-import cStringIO, sys
+import cStringIO
+import sys
 from netlib import wsgi, odict
 
 
@@ -10,6 +11,7 @@ def tflow():
 
 
 class TestApp:
+
     def __init__(self):
         self.called = False
 
@@ -22,6 +24,7 @@ class TestApp:
 
 
 class TestWSGI:
+
     def test_make_environ(self):
         w = wsgi.WSGIAdaptor(None, "foo", 80, "version")
         tf = tflow()

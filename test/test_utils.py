@@ -12,7 +12,7 @@ def test_bidi():
 
 
 def test_hexdump():
-    assert utils.hexdump("one\0"*10)
+    assert utils.hexdump("one\0" * 10)
 
 
 def test_cleanBin():
@@ -25,5 +25,5 @@ def test_cleanBin():
 def test_pretty_size():
     assert utils.pretty_size(100) == "100B"
     assert utils.pretty_size(1024) == "1kB"
-    assert utils.pretty_size(1024 + (1024/2.0)) == "1.5kB"
-    assert utils.pretty_size(1024*1024) == "1MB"
+    assert utils.pretty_size(1024 + (1024 / 2.0)) == "1.5kB"
+    assert utils.pretty_size(1024 * 1024) == "1MB"

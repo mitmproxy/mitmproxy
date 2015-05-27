@@ -1,12 +1,15 @@
 from __future__ import (absolute_import, print_function, division)
-import os, ssl, time, datetime
+import os
+import ssl
+import time
+import datetime
 import itertools
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
 import OpenSSL
 
-DEFAULT_EXP = 157680000 # = 24 * 60 * 60 * 365 * 5
+DEFAULT_EXP = 157680000  # = 24 * 60 * 60 * 365 * 5
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = """-----BEGIN DH PARAMETERS-----
 MIGHAoGBAOdPzMbYgoYfO3YBYauCLRlE8X1XypTiAjoeCFD0qWRx8YUsZ6Sj20W5
@@ -14,31 +17,32 @@ zsfQxlZfKovo3f2MftjkDkbI/C/tDgxoe0ZPbjy5CjdOhkzxn0oTbKTs16Rw8DyK
 1LjTR65sQJkJEdgsX8TSi/cicCftJZl9CaZEaObF2bdgSgGK+PezAgEC
 -----END DH PARAMETERS-----"""
 
+
 def create_ca(o, cn, exp):
     key = OpenSSL.crypto.PKey()
     key.generate_key(OpenSSL.crypto.TYPE_RSA, 1024)
     cert = OpenSSL.crypto.X509()
-    cert.set_serial_number(int(time.time()*10000))
+    cert.set_serial_number(int(time.time() * 10000))
     cert.set_version(2)
     cert.get_subject().CN = cn
     cert.get_subject().O = o
-    cert.gmtime_adj_notBefore(-3600*48)
+    cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(exp)
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(key)
     cert.add_extensions([
-      OpenSSL.crypto.X509Extension("basicConstraints", True,
-                                   "CA:TRUE"),
-      OpenSSL.crypto.X509Extension("nsCertType", False,
-                                   "sslCA"),
-      OpenSSL.crypto.X509Extension("extendedKeyUsage", False,
-                                    "serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
-                                    ),
-      OpenSSL.crypto.X509Extension("keyUsage", True,
-                                   "keyCertSign, cRLSign"),
-      OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
-                                   subject=cert),
-      ])
+        OpenSSL.crypto.X509Extension("basicConstraints", True,
+                                     "CA:TRUE"),
+        OpenSSL.crypto.X509Extension("nsCertType", False,
+                                     "sslCA"),
+        OpenSSL.crypto.X509Extension("extendedKeyUsage", False,
+                                     "serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
+                                     ),
+        OpenSSL.crypto.X509Extension("keyUsage", True,
+                                     "keyCertSign, cRLSign"),
+        OpenSSL.crypto.X509Extension("subjectKeyIdentifier", False, "hash",
+                                     subject=cert),
+    ])
     cert.sign(key, "sha1")
     return key, cert
 
@@ -56,15 +60,15 @@ def dummy_cert(privkey, cacert, commonname, sans):
     """
     ss = []
     for i in sans:
-        ss.append("DNS: %s"%i)
+        ss.append("DNS: %s" % i)
     ss = ", ".join(ss)
 
     cert = OpenSSL.crypto.X509()
-    cert.gmtime_adj_notBefore(-3600*48)
+    cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(DEFAULT_EXP)
     cert.set_issuer(cacert.get_subject())
     cert.get_subject().CN = commonname
-    cert.set_serial_number(int(time.time()*10000))
+    cert.set_serial_number(int(time.time() * 10000))
     if ss:
         cert.set_version(2)
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", False, ss)])
@@ -114,6 +118,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
 
 
 class CertStoreEntry(object):
+
     def __init__(self, cert, privatekey, chain_file):
         self.cert = cert
         self.privatekey = privatekey
@@ -121,9 +126,11 @@ class CertStoreEntry(object):
 
 
 class CertStore(object):
+
     """
         Implements an in-memory certificate store.
     """
+
     def __init__(self, default_privatekey, default_ca, default_chain_file, dhparams=None):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
@@ -144,11 +151,11 @@ class CertStore(object):
         if bio != OpenSSL.SSL._ffi.NULL:
             bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)
             dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(
-                    bio, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL
-                )
+                bio, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL
+            )
             dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)
             return dh
-    
+
     @classmethod
     def from_store(cls, path, basename):
         ca_path = os.path.join(path, basename + "-ca.pem")
@@ -277,8 +284,8 @@ class _GeneralName(univ.Choice):
     # other types.
     componentType = namedtype.NamedTypes(
         namedtype.NamedType('dNSName', char.IA5String().subtype(
-                implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
-            )
+            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
+        )
         ),
     )
 
@@ -289,6 +296,7 @@ class _GeneralNames(univ.SequenceOf):
 
 
 class SSLCert(object):
+
     def __init__(self, cert):
         """
             Returns a (common name, [subject alternative names]) tuple.
