@@ -25,6 +25,7 @@ class Frame(object):
             raise ValueError('invalid flags detected.')
 
         self.length = length
+        self.type = self.TYPE
         self.flags = flags
         self.stream_id = stream_id
 
@@ -49,9 +50,26 @@ class Frame(object):
 
         return b
 
+    def payload_bytes(self):  # pragma: no cover
+        raise NotImplementedError()
+
+    def payload_human_readable(self):  # pragma: no cover
+        raise NotImplementedError()
+
+    def human_readable(self):
+        return "\n".join([
+            "============================================================",
+            "length:    %d bytes" % self.length,
+            "type:      %s (%#x)" % (self.__class__.__name__, self.TYPE),
+            "flags:     %#x" % self.flags,
+            "stream_id: %#x" % self.stream_id,
+            "------------------------------------------------------------",
+            self.payload_human_readable(),
+            "============================================================",
+        ])
+
     def __eq__(self, other):
         return self.to_bytes() == other.to_bytes()
-
 
 class DataFrame(Frame):
     TYPE = 0x0
@@ -89,6 +107,8 @@ class DataFrame(Frame):
 
         return b
 
+    def payload_human_readable(self):
+        return "payload: %s" % str(self.payload)
 
 class HeadersFrame(Frame):
     TYPE = 0x1
@@ -139,6 +159,19 @@ class HeadersFrame(Frame):
 
         return b
 
+    def payload_human_readable(self):
+        s = []
+
+        if self.flags & self.FLAG_PRIORITY:
+            s.append("exclusive: %d" % self.exclusive)
+            s.append("stream dependency: %#x" % self.stream_dependency)
+            s.append("weight: %d" % self.weight)
+
+        if self.flags & self.FLAG_PADDED:
+            s.append("padding: %d" % self.pad_length)
+
+        s.append("header_block_fragment:   %s" % str(self.header_block_fragment))
+        return "\n".join(s)
 
 class PriorityFrame(Frame):
     TYPE = 0x2
@@ -169,6 +202,12 @@ class PriorityFrame(Frame):
 
         return struct.pack('!LB', (int(self.exclusive) << 31) | self.stream_dependency, self.weight)
 
+    def payload_human_readable(self):
+        s = []
+        s.append("exclusive: %d" % self.exclusive)
+        s.append("stream dependency: %#x" % self.stream_dependency)
+        s.append("weight: %d" % self.weight)
+        return "\n".join(s)
 
 class RstStreamFrame(Frame):
     TYPE = 0x3
@@ -190,6 +229,8 @@ class RstStreamFrame(Frame):
 
         return struct.pack('!L', self.error_code)
 
+    def payload_human_readable(self):
+        return "error code: %#x" % self.error_code
 
 class SettingsFrame(Frame):
     TYPE = 0x4
@@ -228,6 +269,16 @@ class SettingsFrame(Frame):
 
         return b
 
+    def payload_human_readable(self):
+        s = []
+
+        for identifier, value in self.settings.items():
+            s.append("%s: %#x" % (self.SETTINGS.get_name(identifier), value))
+
+        if not s:
+            return "settings: None"
+        else:
+            return "\n".join(s)
 
 class PushPromiseFrame(Frame):
     TYPE = 0x5
@@ -273,6 +324,15 @@ class PushPromiseFrame(Frame):
 
         return b
 
+    def payload_human_readable(self):
+        s = []
+
+        if self.flags & self.FLAG_PADDED:
+            s.append("padding: %d" % self.pad_length)
+
+        s.append("promised stream: %#x" % self.promised_stream)
+        s.append("header_block_fragment: %s" % str(self.header_block_fragment))
+        return "\n".join(s)
 
 class PingFrame(Frame):
     TYPE = 0x6
@@ -296,6 +356,8 @@ class PingFrame(Frame):
         b += b'\0' * (8 - len(b))
         return b
 
+    def payload_human_readable(self):
+        return "opaque data: %s" % str(self.payload)
 
 class GoAwayFrame(Frame):
     TYPE = 0x7
@@ -325,6 +387,12 @@ class GoAwayFrame(Frame):
         b += bytes(self.data)
         return b
 
+    def payload_human_readable(self):
+        s = []
+        s.append("last stream: %#x" % self.last_stream)
+        s.append("error code: %d" % self.error_code)
+        s.append("debug data: %s" % str(self.data))
+        return "\n".join(s)
 
 class WindowUpdateFrame(Frame):
     TYPE = 0x8
@@ -349,6 +417,8 @@ class WindowUpdateFrame(Frame):
 
         return struct.pack('!L', self.window_size_increment & 0x7FFFFFFF)
 
+    def payload_human_readable(self):
+        return "window size increment: %#x" % self.window_size_increment
 
 class ContinuationFrame(Frame):
     TYPE = 0x9
@@ -369,6 +439,9 @@ class ContinuationFrame(Frame):
             raise ValueError('CONTINUATION frames MUST be associated with a stream.')
 
         return self.header_block_fragment
+
+    def payload_human_readable(self):
+        return "header_block_fragment: %s" % str(self.header_block_fragment)
 
 _FRAME_CLASSES = [
     DataFrame,
