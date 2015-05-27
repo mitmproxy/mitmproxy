@@ -32,6 +32,23 @@ class Frame(object):
         self.stream_id = stream_id
 
     @classmethod
+    def from_file(self, fp):
+        """
+          read a HTTP/2 frame sent by a server or client
+          fp is a "file like" object that could be backed by a network
+          stream or a disk or an in memory stream reader
+        """
+        raw_header = fp.safe_read(9)
+
+        fields = struct.unpack("!HBBBL", raw_header)
+        length = (fields[0] << 8) + fields[1]
+        flags = fields[3]
+        stream_id = fields[4]
+
+        payload = fp.safe_read(length)
+        return FRAMES[fields[2]].from_bytes(length, flags, stream_id, payload)
+
+    @classmethod
     def from_bytes(self, data):
         fields = struct.unpack("!HBBBL", data[:9])
         length = (fields[0] << 8) + fields[1]
