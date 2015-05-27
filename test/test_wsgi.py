@@ -56,7 +56,7 @@ class TestWSGI:
         f.request.host = "foo"
         f.request.port = 80
         wfile = cStringIO.StringIO()
-        err = w.serve(f, wfile)
+        w.serve(f, wfile)
         return wfile.getvalue()
 
     def test_serve_empty_body(self):
@@ -72,7 +72,7 @@ class TestWSGI:
             try:
                 raise ValueError("foo")
             except:
-                ei = sys.exc_info()
+                sys.exc_info()
             status = '200 OK'
             response_headers = [('Content-type', 'text/plain')]
             start_response(status, response_headers)

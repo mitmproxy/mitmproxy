@@ -7,7 +7,6 @@ import threading
 import time
 import traceback
 from OpenSSL import SSL
-import OpenSSL
 
 from . import certutils
 
@@ -650,4 +649,3 @@ class TCPServer(object):
         """
             Called after server shutdown.
         """
-        pass

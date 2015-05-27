@@ -1,7 +1,4 @@
-import binascii
-import cStringIO
 from netlib import odict, http_auth, http
-import mock
 import tutils
 
 
@@ -22,7 +19,7 @@ class TestPassManHtpasswd:
         pm = http_auth.PassManHtpasswd(tutils.test_data.path("data/htpasswd"))
 
         vals = ("basic", "test", "test")
-        p = http.assemble_http_basic_auth(*vals)
+        http.assemble_http_basic_auth(*vals)
         assert pm.test("test", "test")
         assert not pm.test("test", "foo")
         assert not pm.test("foo", "test")

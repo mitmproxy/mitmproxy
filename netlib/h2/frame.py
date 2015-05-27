@@ -1,10 +1,6 @@
-import base64
-import hashlib
-import os
 import struct
-import io
 
-from .. import utils, odict, tcp
+from .. import utils
 from functools import reduce
 
 

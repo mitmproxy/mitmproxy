@@ -67,7 +67,6 @@ def _read_quoted_string(s, start):
             break
         elif s[i] == "\\":
             escaping = True
-            pass
         else:
             ret.append(s[i])
     return "".join(ret), i + 1

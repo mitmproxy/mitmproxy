@@ -16,7 +16,6 @@ class NullProxyAuth(object):
         """
             Clean up authentication headers, so they're not passed upstream.
         """
-        pass
 
     def authenticate(self, headers):
         """

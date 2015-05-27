@@ -1,8 +1,3 @@
-import base64
-import hashlib
-import os
-import struct
-import io
 
 # "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 CLIENT_CONNECTION_PREFACE = '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'
