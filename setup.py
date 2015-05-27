@@ -50,6 +50,8 @@ setup(
             "nose>=1.3.0",
             "nose-cov>=1.6",
             "coveralls>=0.4.1",
+            "autopep8>=1.0.3",
+            "autoflake>=0.6.6",
             "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION)
         ]
     }
