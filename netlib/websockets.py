@@ -26,16 +26,17 @@ MAX_64_BIT_INT = (1 << 64)
 
 
 OPCODE = utils.BiDi(
-    CONTINUE = 0x00,
-    TEXT = 0x01,
-    BINARY = 0x02,
-    CLOSE = 0x08,
-    PING = 0x09,
-    PONG = 0x0a
+    CONTINUE=0x00,
+    TEXT=0x01,
+    BINARY=0x02,
+    CLOSE=0x08,
+    PING=0x09,
+    PONG=0x0a
 )
 
 
 class Masker:
+
     """
         Data sent from the server must be masked to prevent malicious clients
         from sending data over the wire in predictable patterns
@@ -43,6 +44,7 @@ class Masker:
         Servers do not have to mask data they send to the client.
         https://tools.ietf.org/html/rfc6455#section-5.3
     """
+
     def __init__(self, key):
         self.key = key
         self.masks = [utils.bytes_to_int(byte) for byte in key]
@@ -128,17 +130,18 @@ DEFAULT = object()
 
 
 class FrameHeader:
+
     def __init__(
         self,
-        opcode = OPCODE.TEXT,
-        payload_length = 0,
-        fin = False,
-        rsv1 = False,
-        rsv2 = False,
-        rsv3 = False,
-        masking_key = DEFAULT,
-        mask = DEFAULT,
-        length_code = DEFAULT
+        opcode=OPCODE.TEXT,
+        payload_length=0,
+        fin=False,
+        rsv1=False,
+        rsv2=False,
+        rsv3=False,
+        masking_key=DEFAULT,
+        mask=DEFAULT,
+        length_code=DEFAULT
     ):
         if not 0 <= opcode < 2 ** 4:
             raise ValueError("opcode must be 0-16")
@@ -182,9 +185,9 @@ class FrameHeader:
         if flags:
             vals.extend([":", "|".join(flags)])
         if self.masking_key:
-            vals.append(":key=%s"%repr(self.masking_key))
+            vals.append(":key=%s" % repr(self.masking_key))
         if self.payload_length:
-            vals.append(" %s"%utils.pretty_size(self.payload_length))
+            vals.append(" %s" % utils.pretty_size(self.payload_length))
         return "".join(vals)
 
     def to_bytes(self):
@@ -246,15 +249,15 @@ class FrameHeader:
             masking_key = None
 
         return klass(
-            fin = fin,
-            rsv1 = rsv1,
-            rsv2 = rsv2,
-            rsv3 = rsv3,
-            opcode = opcode,
-            mask = mask_bit,
-            length_code = length_code,
-            payload_length = payload_length,
-            masking_key = masking_key,
+            fin=fin,
+            rsv1=rsv1,
+            rsv2=rsv2,
+            rsv3=rsv3,
+            opcode=opcode,
+            mask=mask_bit,
+            length_code=length_code,
+            payload_length=payload_length,
+            masking_key=masking_key,
         )
 
     def __eq__(self, other):
@@ -262,6 +265,7 @@ class FrameHeader:
 
 
 class Frame(object):
+
     """
         Represents one websockets frame.
         Constructor takes human readable forms of the frame components
@@ -287,13 +291,14 @@ class Frame(object):
          |                     Payload Data continued ...                |
          +---------------------------------------------------------------+
     """
-    def __init__(self, payload = "", **kwargs):
+
+    def __init__(self, payload="", **kwargs):
         self.payload = payload
         kwargs["payload_length"] = kwargs.get("payload_length", len(payload))
         self.header = FrameHeader(**kwargs)
 
     @classmethod
-    def default(cls, message, from_client = False):
+    def default(cls, message, from_client=False):
         """
           Construct a basic websocket frame from some default values.
           Creates a non-fragmented text frame.
@@ -307,10 +312,10 @@ class Frame(object):
 
         return cls(
             message,
-            fin = 1, # final frame
-            opcode = OPCODE.TEXT, # text
-            mask = mask_bit,
-            masking_key = masking_key,
+            fin=1,  # final frame
+            opcode=OPCODE.TEXT,  # text
+            mask=mask_bit,
+            masking_key=masking_key,
         )
 
     @classmethod
@@ -356,15 +361,15 @@ class Frame(object):
 
         return cls(
             payload,
-            fin = header.fin,
-            opcode = header.opcode,
-            mask = header.mask,
-            payload_length = header.payload_length,
-            masking_key = header.masking_key,
-            rsv1 = header.rsv1,
-            rsv2 = header.rsv2,
-            rsv3 = header.rsv3,
-            length_code = header.length_code
+            fin=header.fin,
+            opcode=header.opcode,
+            mask=header.mask,
+            payload_length=header.payload_length,
+            masking_key=header.masking_key,
+            rsv1=header.rsv1,
+            rsv2=header.rsv2,
+            rsv3=header.rsv3,
+            length_code=header.length_code
         )
 
     def __eq__(self, other):

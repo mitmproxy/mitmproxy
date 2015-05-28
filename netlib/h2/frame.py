@@ -1,12 +1,11 @@
-import base64
-import hashlib
-import os
 import struct
-import io
 
-from .. import utils, odict, tcp
+from .. import utils
+from functools import reduce
+
 
 class Frame(object):
+
     """
         Baseclass Frame
         contains header
@@ -53,6 +52,7 @@ class Frame(object):
     def __eq__(self, other):
         return self.to_bytes() == other.to_bytes()
 
+
 class DataFrame(Frame):
     TYPE = 0x0
     VALID_FLAGS = [Frame.FLAG_END_STREAM, Frame.FLAG_PADDED]
@@ -89,11 +89,13 @@ class DataFrame(Frame):
 
         return b
 
+
 class HeadersFrame(Frame):
     TYPE = 0x1
     VALID_FLAGS = [Frame.FLAG_END_STREAM, Frame.FLAG_END_HEADERS, Frame.FLAG_PADDED, Frame.FLAG_PRIORITY]
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, header_block_fragment=b'', pad_length=0, exclusive=False, stream_dependency=0x0, weight=0):
+    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, header_block_fragment=b'',
+                 pad_length=0, exclusive=False, stream_dependency=0x0, weight=0):
         super(HeadersFrame, self).__init__(length, flags, stream_id)
         self.header_block_fragment = header_block_fragment
         self.pad_length = pad_length
@@ -137,6 +139,7 @@ class HeadersFrame(Frame):
 
         return b
 
+
 class PriorityFrame(Frame):
     TYPE = 0x2
     VALID_FLAGS = []
@@ -166,6 +169,7 @@ class PriorityFrame(Frame):
 
         return struct.pack('!LB', (int(self.exclusive) << 31) | self.stream_dependency, self.weight)
 
+
 class RstStreamFrame(Frame):
     TYPE = 0x3
     VALID_FLAGS = []
@@ -186,18 +190,19 @@ class RstStreamFrame(Frame):
 
         return struct.pack('!L', self.error_code)
 
+
 class SettingsFrame(Frame):
     TYPE = 0x4
     VALID_FLAGS = [Frame.FLAG_ACK]
 
     SETTINGS = utils.BiDi(
-        SETTINGS_HEADER_TABLE_SIZE = 0x1,
-        SETTINGS_ENABLE_PUSH = 0x2,
-        SETTINGS_MAX_CONCURRENT_STREAMS = 0x3,
-        SETTINGS_INITIAL_WINDOW_SIZE = 0x4,
-        SETTINGS_MAX_FRAME_SIZE = 0x5,
-        SETTINGS_MAX_HEADER_LIST_SIZE = 0x6,
-        )
+        SETTINGS_HEADER_TABLE_SIZE=0x1,
+        SETTINGS_ENABLE_PUSH=0x2,
+        SETTINGS_MAX_CONCURRENT_STREAMS=0x3,
+        SETTINGS_INITIAL_WINDOW_SIZE=0x4,
+        SETTINGS_MAX_FRAME_SIZE=0x5,
+        SETTINGS_MAX_HEADER_LIST_SIZE=0x6,
+    )
 
     def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, settings={}):
         super(SettingsFrame, self).__init__(length, flags, stream_id)
@@ -208,7 +213,7 @@ class SettingsFrame(Frame):
         f = self(length=length, flags=flags, stream_id=stream_id)
 
         for i in xrange(0, len(payload), 6):
-            identifier, value = struct.unpack("!HL", payload[i:i+6])
+            identifier, value = struct.unpack("!HL", payload[i:i + 6])
             f.settings[identifier] = value
 
         return f
@@ -222,6 +227,7 @@ class SettingsFrame(Frame):
             b += struct.pack("!HL", identifier & 0xFF, value)
 
         return b
+
 
 class PushPromiseFrame(Frame):
     TYPE = 0x5
@@ -267,6 +273,7 @@ class PushPromiseFrame(Frame):
 
         return b
 
+
 class PingFrame(Frame):
     TYPE = 0x6
     VALID_FLAGS = [Frame.FLAG_ACK]
@@ -288,6 +295,7 @@ class PingFrame(Frame):
         b = self.payload[0:8]
         b += b'\0' * (8 - len(b))
         return b
+
 
 class GoAwayFrame(Frame):
     TYPE = 0x7
@@ -317,6 +325,7 @@ class GoAwayFrame(Frame):
         b += bytes(self.data)
         return b
 
+
 class WindowUpdateFrame(Frame):
     TYPE = 0x8
     VALID_FLAGS = []
@@ -335,10 +344,11 @@ class WindowUpdateFrame(Frame):
         return f
 
     def payload_bytes(self):
-        if self.window_size_increment <= 0 or self.window_size_increment >= 2**31:
+        if self.window_size_increment <= 0 or self.window_size_increment >= 2 ** 31:
             raise ValueError('Window Szie Increment MUST be greater than 0 and less than 2^31.')
 
         return struct.pack('!L', self.window_size_increment & 0x7FFFFFFF)
+
 
 class ContinuationFrame(Frame):
     TYPE = 0x9

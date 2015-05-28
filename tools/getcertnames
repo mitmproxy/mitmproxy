@@ -22,6 +22,6 @@ else:
 cert = get_remote_cert(sys.argv[1], port, sni)
 print "CN:", cert.cn
 if cert.altnames:
-    print "SANs:", 
+    print "SANs:",
     for i in cert.altnames:
         print "\t", i

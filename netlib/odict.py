@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
-import re, copy
+import re
+import copy
 
 
 def safe_subn(pattern, repl, target, *args, **kwargs):
@@ -12,10 +13,12 @@ def safe_subn(pattern, repl, target, *args, **kwargs):
 
 
 class ODict(object):
+
     """
         A dictionary-like object for managing ordered (key, value) data. Think
         about it as a convenient interface to a list of (key, value) tuples.
     """
+
     def __init__(self, lst=None):
         self.lst = lst or []
 
@@ -157,7 +160,7 @@ class ODict(object):
             "key: value"
         """
         for k, v in self.lst:
-            s = "%s: %s"%(k, v)
+            s = "%s: %s" % (k, v)
             if re.search(expr, s):
                 return True
         return False
@@ -192,11 +195,12 @@ class ODict(object):
         return klass([list(i) for i in state])
 
 
-
 class ODictCaseless(ODict):
+
     """
         A variant of ODict with "caseless" keys. This version _preserves_ key
         case, but does not consider case when setting or getting items.
     """
+
     def _kconv(self, s):
         return s.lower()

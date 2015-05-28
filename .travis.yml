@@ -7,9 +7,11 @@ python:
 install:
   - "pip install --src . -r requirements.txt"
 # command to run tests, e.g. python setup.py test
-script: 
+script:
   - "nosetests --with-cov --cov-report term-missing"
-after_success: 
+  - "autopep8 -i -r -a -a . && test -z \"$(git status -s)\""
+  - "autoflake -r -i --remove-all-unused-imports --remove-unused-variables . && test -z \"$(git status -s)\""
+after_success:
   - coveralls
 notifications:
   irc:

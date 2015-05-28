@@ -230,6 +230,7 @@ def test_parse_init_http():
 
 
 class TestReadHeaders:
+
     def _read(self, data, verbatim=False):
         if not verbatim:
             data = textwrap.dedent(data)
@@ -277,6 +278,7 @@ class TestReadHeaders:
 
 
 class NoContentLengthHTTPHandler(tcp.BaseHandler):
+
     def handle(self):
         self.wfile.write("HTTP/1.1 200 OK\r\n\r\nbar\r\n\r\n")
         self.wfile.flush()
@@ -297,7 +299,7 @@ def test_read_response():
         data = textwrap.dedent(data)
         r = cStringIO.StringIO(data)
         return http.read_response(
-            r, method, limit, include_body = include_body
+            r, method, limit, include_body=include_body
         )
 
     tutils.raises("server disconnect", tst, "", "GET", None)

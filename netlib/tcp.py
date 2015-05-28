@@ -7,7 +7,6 @@ import threading
 import time
 import traceback
 from OpenSSL import SSL
-import OpenSSL
 
 from . import certutils
 
@@ -22,14 +21,28 @@ OP_NO_SSLv2 = SSL.OP_NO_SSLv2
 OP_NO_SSLv3 = SSL.OP_NO_SSLv3
 
 
-class NetLibError(Exception): pass
-class NetLibDisconnect(NetLibError): pass
-class NetLibIncomplete(NetLibError): pass
-class NetLibTimeout(NetLibError): pass
-class NetLibSSLError(NetLibError): pass
+class NetLibError(Exception):
+    pass
+
+
+class NetLibDisconnect(NetLibError):
+    pass
+
+
+class NetLibIncomplete(NetLibError):
+    pass
+
+
+class NetLibTimeout(NetLibError):
+    pass
+
+
+class NetLibSSLError(NetLibError):
+    pass
 
 
 class SSLKeyLogger(object):
+
     def __init__(self, filename):
         self.filename = filename
         self.f = None
@@ -67,6 +80,7 @@ log_ssl_key = SSLKeyLogger.create_logfun(os.getenv("MITMPROXY_SSLKEYLOGFILE") or
 
 class _FileLike(object):
     BLOCKSIZE = 1024 * 32
+
     def __init__(self, o):
         self.o = o
         self._log = None
@@ -112,6 +126,7 @@ class _FileLike(object):
 
 
 class Writer(_FileLike):
+
     def flush(self):
         """
             May raise NetLibDisconnect
@@ -119,7 +134,7 @@ class Writer(_FileLike):
         if hasattr(self.o, "flush"):
             try:
                 self.o.flush()
-            except (socket.error, IOError), v:
+            except (socket.error, IOError) as v:
                 raise NetLibDisconnect(str(v))
 
     def write(self, v):
@@ -135,11 +150,12 @@ class Writer(_FileLike):
                     r = self.o.write(v)
                     self.add_log(v[:r])
                     return r
-            except (SSL.Error, socket.error) as  e:
+            except (SSL.Error, socket.error) as e:
                 raise NetLibDisconnect(str(e))
 
 
 class Reader(_FileLike):
+
     def read(self, length):
         """
             If length is -1, we read until connection closes.
@@ -180,7 +196,7 @@ class Reader(_FileLike):
         self.add_log(result)
         return result
 
-    def readline(self, size = None):
+    def readline(self, size=None):
         result = ''
         bytes_read = 0
         while True:
@@ -204,16 +220,18 @@ class Reader(_FileLike):
         result = self.read(length)
         if length != -1 and len(result) != length:
             raise NetLibIncomplete(
-                "Expected %s bytes, got %s"%(length, len(result))
+                "Expected %s bytes, got %s" % (length, len(result))
             )
         return result
 
 
 class Address(object):
+
     """
         This class wraps an IPv4/IPv6 tuple to provide named attributes and
         ipv6 information.
     """
+
     def __init__(self, address, use_ipv6=False):
         self.address = tuple(address)
         self.use_ipv6 = use_ipv6
@@ -304,6 +322,7 @@ def close_socket(sock):
 
 
 class _Connection(object):
+
     def get_current_cipher(self):
         if not self.ssl_established:
             return None
@@ -319,7 +338,7 @@ class _Connection(object):
         # (We call _FileLike.set_descriptor(conn))
         # Closing the socket is not our task, therefore we don't call close
         # then.
-        if type(self.connection) != SSL.Connection:
+        if not isinstance(self.connection, SSL.Connection):
             if not getattr(self.wfile, "closed", False):
                 try:
                     self.wfile.flush()
@@ -337,6 +356,7 @@ class _Connection(object):
     """
     Creates an SSL Context.
     """
+
     def _create_ssl_context(self,
                             method=SSLv23_METHOD,
                             options=(OP_NO_SSLv2 | OP_NO_SSLv3),
@@ -362,8 +382,8 @@ class _Connection(object):
         if cipher_list:
             try:
                 context.set_cipher_list(cipher_list)
-            except SSL.Error, v:
-                raise NetLibError("SSL cipher specification error: %s"%str(v))
+            except SSL.Error as v:
+                raise NetLibError("SSL cipher specification error: %s" % str(v))
 
         # SSLKEYLOGFILE
         if log_ssl_key:
@@ -380,7 +400,7 @@ class TCPClient(_Connection):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
         # it tries to renegotiate...
-        if type(self.connection) == SSL.Connection:
+        if isinstance(self.connection, SSL.Connection):
             close_socket(self.connection._socket)
         else:
             close_socket(self.connection)
@@ -400,8 +420,8 @@ class TCPClient(_Connection):
             try:
                 context.use_privatekey_file(cert)
                 context.use_certificate_file(cert)
-            except SSL.Error, v:
-                raise NetLibError("SSL client certificate error: %s"%str(v))
+            except SSL.Error as v:
+                raise NetLibError("SSL client certificate error: %s" % str(v))
         return context
 
     def convert_to_ssl(self, sni=None, **sslctx_kwargs):
@@ -418,8 +438,8 @@ class TCPClient(_Connection):
         self.connection.set_connect_state()
         try:
             self.connection.do_handshake()
-        except SSL.Error, v:
-            raise NetLibError("SSL handshake error: %s"%repr(v))
+        except SSL.Error as v:
+            raise NetLibError("SSL handshake error: %s" % repr(v))
         self.ssl_established = True
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
         self.rfile.set_descriptor(self.connection)
@@ -435,7 +455,7 @@ class TCPClient(_Connection):
                 self.source_address = Address(connection.getsockname())
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
-        except (socket.error, IOError), err:
+        except (socket.error, IOError) as err:
             raise NetLibError('Error connecting to "%s": %s' % (self.address.host, err))
         self.connection = connection
 
@@ -447,6 +467,7 @@ class TCPClient(_Connection):
 
 
 class BaseHandler(_Connection):
+
     """
         The instantiator is expected to call the handle() and finish() methods.
 
@@ -531,8 +552,8 @@ class BaseHandler(_Connection):
         self.connection.set_accept_state()
         try:
             self.connection.do_handshake()
-        except SSL.Error, v:
-            raise NetLibError("SSL handshake error: %s"%repr(v))
+        except SSL.Error as v:
+            raise NetLibError("SSL handshake error: %s" % repr(v))
         self.ssl_established = True
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
@@ -628,4 +649,3 @@ class TCPServer(object):
         """
             Called after server shutdown.
         """
-        pass

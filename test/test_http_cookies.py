@@ -1,7 +1,6 @@
-import pprint
 import nose.tools
 
-from netlib import http_cookies, odict
+from netlib import http_cookies
 
 
 def test_read_token():

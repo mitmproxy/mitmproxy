@@ -1,6 +1,5 @@
 import os
 from netlib import certutils, certffi
-import OpenSSL
 import tutils
 
 # class TestDNTree:
@@ -34,6 +33,7 @@ import tutils
 
 
 class TestCertStore:
+
     def test_create_explicit(self):
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
@@ -56,13 +56,13 @@ class TestCertStore:
 
     def test_add_cert(self):
         with tutils.tmpdir() as d:
-            ca = certutils.CertStore.from_store(d, "test")
+            certutils.CertStore.from_store(d, "test")
 
     def test_sans(self):
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
             c1 = ca.get_cert("foo.com", ["*.bar.com"])
-            c2 = ca.get_cert("foo.bar.com", [])
+            ca.get_cert("foo.bar.com", [])
             # assert c1 == c2
             c3 = ca.get_cert("bar.com", [])
             assert not c1 == c3
@@ -70,7 +70,7 @@ class TestCertStore:
     def test_sans_change(self):
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
-            _ = ca.get_cert("foo.com", ["*.bar.com"])
+            ca.get_cert("foo.com", ["*.bar.com"])
             cert, key, chain_file = ca.get_cert("foo.bar.com", ["*.baz.com"])
             assert "*.baz.com" in cert.altnames
 
@@ -102,6 +102,7 @@ class TestCertStore:
 
 
 class TestDummyCert:
+
     def test_with_ca(self):
         with tutils.tmpdir() as d:
             ca = certutils.CertStore.from_store(d, "test")
@@ -115,6 +116,7 @@ class TestDummyCert:
 
 
 class TestSSLCert:
+
     def test_simple(self):
         with open(tutils.test_data.path("data/text_cert"), "rb") as f:
             d = f.read()
@@ -152,5 +154,3 @@ class TestSSLCert:
             d = f.read()
         s = certutils.SSLCert.from_der(d)
         assert s.cn
-
-
