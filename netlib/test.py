@@ -82,7 +82,8 @@ class TServer(tcp.TCPServer):
                 request_client_cert=self.ssl["request_client_cert"],
                 cipher_list=self.ssl.get("cipher_list", None),
                 dhparams=self.ssl.get("dhparams", None),
-                chain_file=self.ssl.get("chain_file", None)
+                chain_file=self.ssl.get("chain_file", None),
+                alpn_select=self.ssl.get("alpn_select", None)
             )
         h.handle()
         h.finish()
