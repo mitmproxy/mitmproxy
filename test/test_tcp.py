@@ -603,6 +603,7 @@ class TestAddress:
         assert a.use_ipv6
         b = tcp.Address("foo.com", True)
         assert not a == b
+        assert str(b) == str(tuple("foo.com"))
         c = tcp.Address("localhost", True)
         assert a == c
         assert not a != c
