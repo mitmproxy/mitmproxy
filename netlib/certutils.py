@@ -42,7 +42,7 @@ def create_ca(o, cn, exp):
     cert.set_pubkey(key)
     cert.add_extensions([
         OpenSSL.crypto.X509Extension(
-            "basicConstraints", 
+            "basicConstraints",
             True,
             "CA:TRUE"
         ),
@@ -155,6 +155,7 @@ class CertStore(object):
     """
         Implements an in-memory certificate store.
     """
+
     def __init__(self, default_privatekey, default_ca, default_chain_file, dhparams):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
