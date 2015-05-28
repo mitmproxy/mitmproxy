@@ -459,8 +459,9 @@ class FlowStore(FlowList):
         Notifies the state that a flow has been updated.
         The flow must be present in the state.
         """
-        for view in self.views:
-            view._update(f)
+        if f in self:
+            for view in self.views:
+                view._update(f)
 
     def _remove(self, f):
         """
