@@ -38,6 +38,6 @@ The project has the following dependencies:
 
 The project's test suite uses the nose_ unit testing framework.
 
-.. _netlib: http://github.com/cortesi/netlib
+.. _netlib: https://github.com/mitmproxy/netlib
 .. _requests: http://docs.python-requests.org/en/latest/index.html 
 .. _nose: http://nose.readthedocs.org/en/latest/ 
