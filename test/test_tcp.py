@@ -4,11 +4,14 @@ import time
 import socket
 import random
 import os
-from netlib import tcp, certutils, test, certffi
 import threading
 import mock
-import tutils
+
 from OpenSSL import SSL
+import OpenSSL
+
+from netlib import tcp, certutils, test, certffi
+import tutils
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -399,12 +402,14 @@ class TestALPN(test.ServerTestBase):
         alpn_select="h2"
     )
 
-    def test_alpn(self):
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl(alpn_protos=["h2"])
-        print "ALPN: %s" % c.get_alpn_proto_negotiated()
-        assert c.get_alpn_proto_negotiated() == "h2"
+    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+
+        def test_alpn(self):
+            c = tcp.TCPClient(("127.0.0.1", self.port))
+            c.connect()
+            c.convert_to_ssl(alpn_protos=["h2"])
+            print "ALPN: %s" % c.get_alpn_proto_negotiated()
+            assert c.get_alpn_proto_negotiated() == "h2"
 
 
 class TestSSLTimeOut(test.ServerTestBase):
