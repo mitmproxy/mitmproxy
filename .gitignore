@@ -9,5 +9,6 @@ MANIFEST
 .coverage
 .idea/
 __pycache__
+_cffi__*
 netlib.egg-info/
 pathod/

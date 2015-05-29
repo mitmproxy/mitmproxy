@@ -9,8 +9,7 @@ install:
 # command to run tests, e.g. python setup.py test
 script:
   - "nosetests --with-cov --cov-report term-missing"
-  - "autopep8 -i -r -a -a . && test -z \"$(git status -s)\""
-  - "autoflake -r -i --remove-all-unused-imports --remove-unused-variables . && test -z \"$(git status -s)\""
+  - "./check_coding_style.sh"
 after_success:
   - coveralls
 notifications:
