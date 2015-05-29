@@ -1,7 +1,5 @@
-from netlib import tcp
 from netlib.h2.frame import *
 from netlib.h2.h2 import *
-from hpack.hpack import Encoder, Decoder
 
 c = H2Client(("127.0.0.1", 443))
 c.connect()

@@ -1,5 +1,4 @@
 import struct
-import io
 from hpack.hpack import Encoder, Decoder
 
 from .. import utils
