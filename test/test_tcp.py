@@ -4,11 +4,14 @@ import time
 import socket
 import random
 import os
-from netlib import tcp, certutils, test, certffi
 import threading
 import mock
-import tutils
+
 from OpenSSL import SSL
+import OpenSSL
+
+from netlib import tcp, certutils, test, certffi
+import tutils
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -389,6 +392,26 @@ class TestTimeOut(test.ServerTestBase):
         tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
 
 
+class TestALPN(test.ServerTestBase):
+    handler = HangHandler
+    ssl = dict(
+        cert=tutils.test_data.path("data/server.crt"),
+        key=tutils.test_data.path("data/server.key"),
+        request_client_cert=False,
+        v3_only=False,
+        alpn_select="h2"
+    )
+
+    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+
+        def test_alpn(self):
+            c = tcp.TCPClient(("127.0.0.1", self.port))
+            c.connect()
+            c.convert_to_ssl(alpn_protos=["h2"])
+            print "ALPN: %s" % c.get_alpn_proto_negotiated()
+            assert c.get_alpn_proto_negotiated() == "h2"
+
+
 class TestSSLTimeOut(test.ServerTestBase):
     handler = HangHandler
     ssl = dict(
@@ -603,6 +626,7 @@ class TestAddress:
         assert a.use_ipv6
         b = tcp.Address("foo.com", True)
         assert not a == b
+        assert str(b) == str(tuple("foo.com"))
         c = tcp.Address("localhost", True)
         assert a == c
         assert not a != c
