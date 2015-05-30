@@ -15,7 +15,7 @@ class ParseException(Exception):
         self.col = col
 
     def marked(self):
-        return "%s\n%s"%(self.s, " " * (self.col - 1) + "^")
+        return "%s\n%s" % (self.s, " " * (self.col - 1) + "^")
 
     def __str__(self):
-        return "%s at char %s"%(self.msg, self.col)
+        return "%s at char %s" % (self.msg, self.col)

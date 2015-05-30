@@ -100,6 +100,7 @@ class WebsocketFrame(message.Message):
         RawBody,
     )
     logattrs = ["body"]
+
     @property
     def actions(self):
         return self.toks(actions._Action)

@@ -52,7 +52,7 @@ class Log:
         elif exc_type in (tcp.NetLibDisconnect, http.HttpErrorConnClosed):
             self("Disconnected")
         elif exc_type == http.HttpError:
-            self("HTTP Error: %s"%exc_value.message)
+            self("HTTP Error: %s" % exc_value.message)
         self.fp.write("\n".join(self.lines))
         self.fp.write("\n")
         self.fp.flush()
@@ -63,10 +63,10 @@ class Log:
     def dump(self, data, hexdump):
         if hexdump:
             for line in netlib.utils.hexdump(data):
-                self("\t%s %s %s"%line)
+                self("\t%s %s %s" % line)
         else:
             for i in netlib.utils.cleanBin(data).split("\n"):
-                self("\t%s"%i)
+                self("\t%s" % i)
 
     def __call__(self, line):
         self.lines.append(line)
@@ -78,24 +78,24 @@ class SSLInfo:
 
     def __str__(self):
         parts = [
-            "Cipher: %s, %s bit, %s"%self.cipher,
+            "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
         for i in self.certchain:
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
-                parts.append("\t\t%s=%s"%cn)
+                parts.append("\t\t%s=%s" % cn)
             parts.append("\tIssuer: ")
             for cn in i.get_issuer().get_components():
-                parts.append("\t\t%s=%s"%cn)
+                parts.append("\t\t%s=%s" % cn)
             parts.extend(
                 [
-                    "\tVersion: %s"%i.get_version(),
-                    "\tValidity: %s - %s"%(
+                    "\tVersion: %s" % i.get_version(),
+                    "\tValidity: %s - %s" % (
                         i.get_notBefore(), i.get_notAfter()
                     ),
-                    "\tSerial: %s"%i.get_serial_number(),
-                    "\tAlgorithm: %s"%i.get_signature_algorithm()
+                    "\tSerial: %s" % i.get_serial_number(),
+                    "\tAlgorithm: %s" % i.get_signature_algorithm()
                 ]
             )
             pk = i.get_pubkey()
@@ -104,10 +104,10 @@ class SSLInfo:
                 OpenSSL.crypto.TYPE_DSA: "DSA"
             }
             t = types.get(pk.type(), "Uknown")
-            parts.append("\tPubkey: %s bit %s"%(pk.bits(), t))
+            parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
             s = certutils.SSLCert(i)
             if s.altnames:
-                parts.append("\tSANs: %s"%" ".join(s.altnames))
+                parts.append("\tSANs: %s" % " ".join(s.altnames))
             return "\n".join(parts)
 
 
@@ -127,11 +127,18 @@ class Response:
         self.sslinfo = sslinfo
 
     def __repr__(self):
-        return "Response(%s - %s)"%(self.status_code, self.msg)
+        return "Response(%s - %s)" % (self.status_code, self.msg)
 
 
 class WebsocketFrameReader(threading.Thread):
-    def __init__(self, rfile, logfp, showresp, hexdump, callback, ws_read_limit):
+    def __init__(
+            self,
+            rfile,
+            logfp,
+            showresp,
+            hexdump,
+            callback,
+            ws_read_limit):
         threading.Thread.__init__(self)
         self.ws_read_limit = ws_read_limit
         self.logfp = logfp
@@ -150,7 +157,7 @@ class WebsocketFrameReader(threading.Thread):
         )
 
     def run(self):
-        while 1:
+        while True:
             if self.ws_read_limit == 0:
                 break
             r, _, _ = select.select([self.rfile], [], [], 0.05)
@@ -166,7 +173,7 @@ class WebsocketFrameReader(threading.Thread):
                     except tcp.NetLibError:
                         self.ws_read_limit = 0
                         break
-                    log("<< %s"%frm.header.human_readable())
+                    log("<< %s" % frm.header.human_readable())
                     self.callback(frm)
                     if self.ws_read_limit is not None:
                         self.ws_read_limit -= 1
@@ -244,7 +251,7 @@ class Pathoc(tcp.TCPClient):
 
     def http_connect(self, connect_to):
         self.wfile.write(
-            'CONNECT %s:%s HTTP/1.1\r\n'%tuple(connect_to) +
+            'CONNECT %s:%s HTTP/1.1\r\n' % tuple(connect_to) +
             '\r\n'
         )
         self.wfile.flush()
@@ -254,7 +261,7 @@ class Pathoc(tcp.TCPClient):
         parsed = http.parse_response_line(l)
         if not parsed[1] == 200:
             raise PathocError(
-                "Proxy CONNECT failed: %s - %s"%(parsed[1], parsed[2])
+                "Proxy CONNECT failed: %s - %s" % (parsed[1], parsed[2])
             )
         http.read_headers(self.rfile)
 
@@ -275,7 +282,7 @@ class Pathoc(tcp.TCPClient):
                     method=self.sslversion,
                     cipher_list = self.ciphers
                 )
-            except tcp.NetLibError, v:
+            except tcp.NetLibError as v:
                 raise PathocError(str(v))
             self.sslinfo = SSLInfo(
                 self.connection.get_peer_cert_chain(),
@@ -285,7 +292,7 @@ class Pathoc(tcp.TCPClient):
                 print >> fp, str(self.sslinfo)
 
     def _resp_summary(self, resp):
-        return "<< %s %s: %s bytes"%(
+        return "<< %s %s: %s bytes" % (
             resp.status_code, utils.xrepr(resp.msg), len(resp.content)
         )
 
@@ -295,7 +302,7 @@ class Pathoc(tcp.TCPClient):
 
     def wait(self):
         if self.ws_framereader:
-            while 1:
+            while True:
                 try:
                     self.ws_framereader.is_done.get(timeout=0.05)
                     self.ws_framereader.join()
@@ -316,7 +323,7 @@ class Pathoc(tcp.TCPClient):
         with self.log() as log:
             if isinstance(r, basestring):
                 r = language.parse_requests(r)[0]
-            log(">> %s"%r)
+            log(">> %s" % r)
             try:
                 language.serve(r, self.wfile, self.settings)
                 self.wfile.flush()
@@ -362,7 +369,7 @@ class Pathoc(tcp.TCPClient):
         with self.log() as log:
             if isinstance(r, basestring):
                 r = language.parse_requests(r)[0]
-            log(">> %s"%r)
+            log(">> %s" % r)
             resp, req = None, None
             try:
                 req = language.serve(r, self.wfile, self.settings)
@@ -410,13 +417,13 @@ class Pathoc(tcp.TCPClient):
             self.websocket_send_frame(r)
 
 
-def main(args): # pragma: nocover
+def main(args):  # pragma: nocover
     memo = set([])
     trycount = 0
     p = None
     try:
         cnt = 0
-        while 1:
+        while True:
             if cnt == args.repeat and args.repeat != 0:
                 break
             if trycount > args.memolimit:
@@ -464,10 +471,10 @@ def main(args): # pragma: nocover
             trycount = 0
             try:
                 p.connect(args.connect_to, args.showssl)
-            except tcp.NetLibError, v:
+            except tcp.NetLibError as v:
                 print >> sys.stderr, str(v)
                 continue
-            except PathocError, v:
+            except PathocError as v:
                 print >> sys.stderr, str(v)
                 sys.exit(1)
             if args.timeout:
@@ -477,7 +484,7 @@ def main(args): # pragma: nocover
                     ret = p.request(spec)
                     if ret and args.oneshot:
                         return
-                except (http.HttpError, tcp.NetLibError), v:
+                except (http.HttpError, tcp.NetLibError) as v:
                     break
             p.wait()
     except KeyboardInterrupt:

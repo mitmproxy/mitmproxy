@@ -113,8 +113,7 @@ class Test_Action:
         c = actions.DisconnectAt(0)
         assert a < b
         assert a == c
-        l = [b, a]
-        l.sort()
+        l = sorted([b, a])
         assert l[0].offset == 0
 
     def test_resolve(self):

@@ -24,6 +24,7 @@ class TransformGenerator:
         gen: A generator to wrap
         transform: A function (offset, data) -> transformed
     """
+
     def __init__(self, gen, transform):
         self.gen = gen
         self.transform = transform
@@ -40,7 +41,7 @@ class TransformGenerator:
         return self.transform(a, d)
 
     def __repr__(self):
-        return "'transform(%s)'"%self.gen
+        return "'transform(%s)'" % self.gen
 
 
 class RandomGenerator:
@@ -60,7 +61,7 @@ class RandomGenerator:
         return "".join(random.choice(chars) for x in range(a, b))
 
     def __repr__(self):
-        return "%s random from %s"%(self.length, self.dtype)
+        return "%s random from %s" % (self.length, self.dtype)
 
 
 class FileGenerator:
@@ -79,4 +80,4 @@ class FileGenerator:
         return self.map.__getslice__(a, b)
 
     def __repr__(self):
-        return "<%s"%self.path
+        return "<%s" % self.path

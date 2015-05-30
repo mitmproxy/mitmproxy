@@ -9,12 +9,13 @@ requests.packages.urllib3.disable_warnings()
 
 class Daemon:
     IFACE = "127.0.0.1"
+
     def __init__(self, ssl=None, **daemonargs):
         self.q = Queue.Queue()
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()
         self.port = self.q.get(True, 5)
-        self.urlbase = "%s://%s:%s"%(
+        self.urlbase = "%s://%s:%s" % (
             "https" if ssl else "http",
             self.IFACE,
             self.port
@@ -31,13 +32,13 @@ class Daemon:
         """
             Return a URL that will render the response in spec.
         """
-        return "%s/p/%s"%(self.urlbase, spec)
+        return "%s/p/%s" % (self.urlbase, spec)
 
     def info(self):
         """
             Return some basic info about the remote daemon.
         """
-        resp = requests.get("%s/api/info"%self.urlbase, verify=False)
+        resp = requests.get("%s/api/info" % self.urlbase, verify=False)
         return resp.json()
 
     def last_log(self):
@@ -53,14 +54,14 @@ class Daemon:
         """
             Return the log buffer as a list of dictionaries.
         """
-        resp = requests.get("%s/api/log"%self.urlbase, verify=False)
+        resp = requests.get("%s/api/log" % self.urlbase, verify=False)
         return resp.json()["log"]
 
     def clear_log(self):
         """
             Clear the log.
         """
-        resp = requests.get("%s/api/clear_log"%self.urlbase, verify=False)
+        resp = requests.get("%s/api/clear_log" % self.urlbase, verify=False)
         return resp.ok
 
     def shutdown(self):

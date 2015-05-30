@@ -27,7 +27,6 @@ def test_pathod(perror):
     assert perror.called
     perror.reset_mock()
 
-
     a = cmdline.args_pathod(
         [
             "pathod",
@@ -99,7 +98,9 @@ def test_pathod(perror):
 def test_pathoc(perror):
     assert cmdline.args_pathoc(["pathoc", "foo.com", "get:/"])
     s = cStringIO.StringIO()
-    tutils.raises(SystemExit, cmdline.args_pathoc, ["pathoc", "--show-uas"], s, s)
+    tutils.raises(
+        SystemExit, cmdline.args_pathoc, [
+            "pathoc", "--show-uas"], s, s)
 
     a = cmdline.args_pathoc(["pathoc", "foo.com:8888", "get:/"])
     assert a.port == 8888
@@ -122,7 +123,8 @@ def test_pathoc(perror):
     assert perror.called
     perror.reset_mock()
 
-    a = cmdline.args_pathoc(["pathoc", "-c", "foo:bar", "foo.com:8888", "get:/"])
+    a = cmdline.args_pathoc(
+        ["pathoc", "-c", "foo:bar", "foo.com:8888", "get:/"])
     assert perror.called
     perror.reset_mock()
 

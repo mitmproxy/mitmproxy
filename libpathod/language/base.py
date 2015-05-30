@@ -5,6 +5,7 @@ import pyparsing as pp
 
 from .. import utils
 from . import generators, exceptions
+from functools import reduce
 
 
 class Settings:
@@ -21,7 +22,6 @@ class Settings:
         self.request_host = request_host
         self.websocket_key = websocket_key
         self.is_client = is_client
-
 
 
 Sep = pp.Optional(pp.Literal(":")).suppress()
@@ -64,14 +64,14 @@ class Token(object):
     __metaclass__ = abc.ABCMeta
 
     @classmethod
-    def expr(klass): # pragma: no cover
+    def expr(klass):  # pragma: no cover
         """
             A parse expression.
         """
         return None
 
     @abc.abstractmethod
-    def spec(self): # pragma: no cover
+    def spec(self):  # pragma: no cover
         """
             A parseable specification for this token.
         """
@@ -176,11 +176,11 @@ class TokValueGenerate(Token):
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
-        s = "@%s"%self.usize
+        s = "@%s" % self.usize
         if self.unit != "b":
             s += self.unit
         if self.datatype != "bytes":
-            s += ",%s"%self.datatype
+            s += ",%s" % self.datatype
         return s
 
 
@@ -214,7 +214,7 @@ class TokValueFile(Token):
         return generators.FileGenerator(s)
 
     def spec(self):
-        return "<'%s'"%self.path.encode("string_escape")
+        return "<'%s'" % self.path.encode("string_escape")
 
 
 TokValue = pp.MatchFirst(
@@ -250,7 +250,8 @@ class _Component(Token):
         A value component of the primary specification of an message.
         Components produce byte values desribe the bytes of the message.
     """
-    def values(self, settings): # pragma: no cover
+
+    def values(self, settings):  # pragma: no cover
         """
            A sequence of values, which can either be strings or generators.
         """
@@ -268,6 +269,7 @@ class KeyValue(_Component):
         A key/value pair.
         klass.preamble: leader
     """
+
     def __init__(self, key, value):
         self.key, self.value = key, value
 
@@ -280,7 +282,7 @@ class KeyValue(_Component):
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
-        return "%s%s=%s"%(self.preamble, self.key.spec(), self.value.spec())
+        return "%s%s=%s" % (self.preamble, self.key.spec(), self.value.spec())
 
     def freeze(self, settings):
         return self.__class__(
@@ -292,6 +294,7 @@ class CaselessLiteral(_Component):
     """
         A caseless token that can take only one value.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -317,6 +320,7 @@ class OptionsOrValue(_Component):
     """
     preamble = ""
     options = []
+
     def __init__(self, value):
         # If it's a string, we were passed one of the options, so we lower-case
         # it to be canonical. The user can specify a different case by using a
@@ -350,7 +354,7 @@ class OptionsOrValue(_Component):
         s = self.value.spec()
         if s[1:-1].lower() in self.options:
             s = s[1:-1].lower()
-        return "%s%s"%(self.preamble, s)
+        return "%s%s" % (self.preamble, s)
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
@@ -368,7 +372,7 @@ class Integer(_Component):
         ])
         if outofbounds:
             raise exceptions.ParseException(
-                "Integer value must be between %s and %s."%self.bounds,
+                "Integer value must be between %s and %s." % self.bounds,
                 0, 0
             )
         self.value = str(value)
@@ -384,7 +388,7 @@ class Integer(_Component):
         return self.value
 
     def spec(self):
-        return "%s%s"%(self.preamble, self.value)
+        return "%s%s" % (self.preamble, self.value)
 
     def freeze(self, settings):
         return self
@@ -410,7 +414,7 @@ class Value(_Component):
         return [self.value.get_generator(settings)]
 
     def spec(self):
-        return "%s%s"%(self.preamble, self.value.spec())
+        return "%s%s" % (self.preamble, self.value.spec())
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
@@ -433,7 +437,7 @@ class FixedLengthValue(Value):
         # This check will fail if we know the length upfront
         if lenguess is not None and lenguess != self.length:
             raise exceptions.RenderError(
-                "Invalid value length: '%s' is %s bytes, should be %s."%(
+                "Invalid value length: '%s' is %s bytes, should be %s." % (
                     self.spec(),
                     lenguess,
                     self.length
@@ -447,7 +451,7 @@ class FixedLengthValue(Value):
         # file inputs
         if l != self.length:
             raise exceptions.RenderError(
-                "Invalid value length: '%s' is %s bytes, should be %s."%(
+                "Invalid value length: '%s' is %s bytes, should be %s." % (
                     self.spec(),
                     l,
                     self.length
@@ -481,7 +485,7 @@ class Boolean(_Component):
         return e.setParseAction(parse)
 
     def spec(self):
-        return "%s%s"%("-" if not self.value else "", self.name)
+        return "%s%s" % ("-" if not self.value else "", self.name)
 
 
 class IntField(_Component):
@@ -497,7 +501,7 @@ class IntField(_Component):
         self.value = self.names.get(value, value)
         if self.value > self.max:
             raise exceptions.ParseException(
-                "Value can't exceed %s"%self.max, 0, 0
+                "Value can't exceed %s" % self.max, 0, 0
             )
 
     @classmethod
@@ -514,4 +518,4 @@ class IntField(_Component):
         return [str(self.value)]
 
     def spec(self):
-        return "%s%s"%(self.preamble, self.origvalue)
+        return "%s%s" % (self.preamble, self.origvalue)

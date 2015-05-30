@@ -18,7 +18,7 @@ def parse_response(s):
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
         return http.Response.expr().parseString(s, parseAll=True)[0]
-    except pp.ParseException, v:
+    except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
 
 
@@ -39,7 +39,7 @@ def parse_requests(s):
                 ]
             )
         ).parseString(s, parseAll=True)
-    except pp.ParseException, v:
+    except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
     expanded = []
     for i in reqs:
@@ -67,8 +67,7 @@ def serve(msg, fp, settings):
     vals = msg.values(settings)
     vals.reverse()
 
-    actions = msg.actions[:]
-    actions.sort()
+    actions = sorted(msg.actions[:])
     actions.reverse()
     actions = [i.intermediate(settings) for i in actions]
 

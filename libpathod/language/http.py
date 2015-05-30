@@ -104,7 +104,7 @@ class PathodResponse(base.Token):
                     parseAll=True
                 )
             )
-        except pp.ParseException, v:
+        except pp.ParseException as v:
             raise exceptions.ParseException(v.msg, v.line, v.col)
 
     @classmethod
@@ -119,7 +119,7 @@ class PathodResponse(base.Token):
         ]
 
     def spec(self):
-        return "s%s"%(self.value.spec())
+        return "s%s" % (self.value.spec())
 
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()
@@ -140,6 +140,7 @@ def get_header(val, headers):
 
 class _HTTPMessage(message.Message):
     version = "HTTP/1.1"
+
     @property
     def actions(self):
         return self.toks(actions._Action)
@@ -153,7 +154,7 @@ class _HTTPMessage(message.Message):
         return self.tok(Body)
 
     @abc.abstractmethod
-    def preamble(self, settings): # pragma: no cover
+    def preamble(self, settings):  # pragma: no cover
         pass
 
     @property

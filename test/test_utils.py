@@ -14,8 +14,8 @@ def test_membool():
 def test_parse_size():
     assert utils.parse_size("100") == 100
     assert utils.parse_size("100k") == 100 * 1024
-    tutils.raises("invalid size spec",  utils.parse_size, "foo")
-    tutils.raises("invalid size spec",  utils.parse_size, "100kk")
+    tutils.raises("invalid size spec", utils.parse_size, "foo")
+    tutils.raises("invalid size spec", utils.parse_size, "100kk")
 
 
 def test_parse_anchor_spec():
@@ -37,4 +37,3 @@ def test_escape_unprintables():
     e = utils.escape_unprintables(s)
     assert e.encode('ascii')
     assert not "PATHOD_MARKER" in e
-

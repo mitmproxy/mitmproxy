@@ -1,10 +1,11 @@
 import requests
 from libpathod import test
 
+
 class Test:
     """
-        Testing the requests module with 
-        a single pathod instance started 
+        Testing the requests module with
+        a single pathod instance started
         for the test suite.
     """
     @classmethod

@@ -53,6 +53,7 @@ class TestNotAfterConnect(tutils.DaemonTests):
     ssloptions = dict(
         not_after_connect = True
     )
+
     def test_connect(self):
         r = self.pathoc(
             r"get:'http://foo.com/p/202':da",
@@ -66,6 +67,7 @@ class TestCustomCert(tutils.DaemonTests):
     ssloptions = dict(
         certs = [("*", tutils.test_data.path("data/testkey.pem"))],
     )
+
     def test_connect(self):
         r = self.pathoc(r"get:/p/202")
         assert r.status_code == 202
@@ -78,6 +80,7 @@ class TestSSLCN(tutils.DaemonTests):
     ssloptions = dict(
         cn = "foo.com"
     )
+
     def test_connect(self):
         r = self.pathoc(r"get:/p/202")
         assert r.status_code == 202
@@ -87,6 +90,7 @@ class TestSSLCN(tutils.DaemonTests):
 
 class TestNohang(tutils.DaemonTests):
     nohang = True
+
     def test_nohang(self):
         r = self.get("200:p0,0")
         assert r.status_code == 800
@@ -96,6 +100,7 @@ class TestNohang(tutils.DaemonTests):
 
 class TestHexdump(tutils.DaemonTests):
     hexdump = True
+
     def test_hexdump(self):
         r = self.get(r"200:b'\xf0'")
 
@@ -194,6 +199,7 @@ class CommonTests(tutils.DaemonTests):
 
 class TestDaemon(CommonTests):
     ssl = False
+
     def test_connect(self):
         r = self.pathoc(
             r"get:'http://foo.com/p/202':da",

@@ -30,7 +30,7 @@ class DaemonTests(object):
             ],
             ssl = klass.ssl,
             ssloptions = so,
-            sizelimit = 1*1024*1024,
+            sizelimit = 1 * 1024 * 1024,
             noweb = klass.noweb,
             noapi = klass.noapi,
             nohang = klass.nohang,
@@ -53,7 +53,7 @@ class DaemonTests(object):
     def getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
         return requests.get(
-            "%s://localhost:%s/%s"%(
+            "%s://localhost:%s/%s" % (
                 scheme,
                 self.d.port,
                 path
@@ -115,14 +115,14 @@ def raises(exc, obj, *args, **kwargs):
         :kwargs Arguments to be passed to the callable.
     """
     try:
-        apply(obj, args, kwargs)
-    except (Exception, SystemExit), v:
+        obj(*args, **kwargs)
+    except (Exception, SystemExit) as v:
         if isinstance(exc, basestring):
             if exc.lower() in str(v).lower():
                 return
             else:
                 raise AssertionError(
-                    "Expected %s, but caught %s"%(
+                    "Expected %s, but caught %s" % (
                         repr(str(exc)), v
                     )
                 )
@@ -131,7 +131,7 @@ def raises(exc, obj, *args, **kwargs):
                 return
             else:
                 raise AssertionError(
-                    "Expected %s, but caught %s %s"%(
+                    "Expected %s, but caught %s %s" % (
                         exc.__name__, v.__class__.__name__, str(v)
                     )
                 )

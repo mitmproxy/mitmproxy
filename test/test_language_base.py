@@ -69,7 +69,7 @@ class TestTokValueLiteral:
         self.roundtrip('\'')
         self.roundtrip("a")
         self.roundtrip("\"")
-        #self.roundtrip("\\")
+        # self.roundtrip("\\")
         self.roundtrip("200:b'foo':i23,'\\''")
         self.roundtrip("\a")
 
@@ -319,8 +319,6 @@ def test_integer():
     assert BInt(5)
     assert BInt(1)
     assert BInt(3)
-
-
 
 
 class TBoolean(base.Boolean):

@@ -22,6 +22,7 @@ class MemBool:
     """
         Truth-checking with a memory, for use in chained if statements.
     """
+
     def __init__(self):
         self.v = None
 
@@ -95,18 +96,19 @@ class Data:
         """
         fullpath = os.path.join(self.dirname, path)
         if not os.path.exists(fullpath):
-            raise ValueError, "dataPath: %s does not exist."%fullpath
+            raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath
 
 
 data = Data(__name__)
 
-def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'): # pragma: nocover
+
+def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):  # pragma: nocover
     try:
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("fork #1 failed: (%d) %s\n" % (e.errno, e.strerror))
         sys.exit(1)
     os.chdir("/")
@@ -116,7 +118,7 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'): # prag
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
-    except OSError, e:
+    except OSError as e:
         sys.stderr.write("fork #2 failed: (%d) %s\n" % (e.errno, e.strerror))
         sys.exit(1)
     si = open(stdin, 'rb')

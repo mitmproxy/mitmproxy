@@ -163,16 +163,22 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     try:
         args.ignorecodes = [int(i) for i in args.ignorecodes.split(",") if i]
     except ValueError:
-        return parser.error("Invalid return code specification: %s"%args.ignorecodes)
+        return parser.error(
+            "Invalid return code specification: %s" %
+            args.ignorecodes)
 
     if args.connect_to:
         parts = args.connect_to.split(":")
         if len(parts) != 2:
-            return parser.error("Invalid CONNECT specification: %s"%args.connect_to)
+            return parser.error(
+                "Invalid CONNECT specification: %s" %
+                args.connect_to)
         try:
             parts[1] = int(parts[1])
         except ValueError:
-            return parser.error("Invalid CONNECT specification: %s"%args.connect_to)
+            return parser.error(
+                "Invalid CONNECT specification: %s" %
+                args.connect_to)
         args.connect_to = parts
     else:
         args.connect_to = None
@@ -184,15 +190,15 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
             r = data
         try:
             reqs.extend(language.parse_requests(r))
-        except language.ParseException, v:
-            print >> stderr, "Error parsing request spec: %s"%v.msg
+        except language.ParseException as v:
+            print >> stderr, "Error parsing request spec: %s" % v.msg
             print >> stderr, v.marked()
             sys.exit(1)
     args.requests = reqs
     return args
 
 
-def go_pathoc(): #  pragma: nocover
+def go_pathoc():  # pragma: nocover
     args = args_pathoc(sys.argv)
     pathoc.main(args)
 
@@ -254,9 +260,11 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         help="Connection timeout"
     )
     parser.add_argument(
-        "--limit-size", dest='sizelimit', default=None, type=str,
-        help='Size limit of served responses. Understands size suffixes, i.e. 100k.'
-    )
+        "--limit-size",
+        dest='sizelimit',
+        default=None,
+        type=str,
+        help='Size limit of served responses. Understands size suffixes, i.e. 100k.')
     parser.add_argument(
         "--noapi", dest='noapi', default=False, action="store_true",
         help='Disable API.'
@@ -270,9 +278,11 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         help='Disable both web interface and API.'
     )
     parser.add_argument(
-        "--nocraft", dest='nocraft', default=False, action="store_true",
-        help='Disable response crafting. If anchors are specified, they still work.'
-    )
+        "--nocraft",
+        dest='nocraft',
+        default=False,
+        action="store_true",
+        help='Disable response crafting. If anchors are specified, they still work.')
     parser.add_argument(
         "--webdebug", dest='webdebug', default=False, action="store_true",
         help='Debugging mode for the web app (dev only).'
@@ -286,9 +296,12 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         help='Run in HTTPS mode.'
     )
     group.add_argument(
-        "--cn", dest="cn", type=str, default=None,
-        help="CN for generated SSL certs. Default: %s"%pathod.DEFAULT_CERT_DOMAIN
-    )
+        "--cn",
+        dest="cn",
+        type=str,
+        default=None,
+        help="CN for generated SSL certs. Default: %s" %
+        pathod.DEFAULT_CERT_DOMAIN)
     group.add_argument(
         "-C", dest='ssl_not_after_connect', default=False, action="store_true",
         help="Don't expect SSL after a CONNECT request."
@@ -358,7 +371,9 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
             parts = ["*", parts[0]]
         parts[1] = os.path.expanduser(parts[1])
         if not os.path.isfile(parts[1]):
-            return parser.error("Certificate file does not exist: %s"%parts[1])
+            return parser.error(
+                "Certificate file does not exist: %s" %
+                parts[1])
         certs.append(parts)
     args.ssl_certs = certs
 
@@ -366,7 +381,7 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
     for i in args.anchors:
         parts = utils.parse_anchor_spec(i)
         if not parts:
-            return parser.error("Invalid anchor specification: %s"%i)
+            return parser.error("Invalid anchor specification: %s" % i)
         alst.append(parts)
     args.anchors = alst
 
@@ -374,7 +389,7 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
     if args.sizelimit:
         try:
             sizelimit = utils.parse_size(args.sizelimit)
-        except ValueError, v:
+        except ValueError as v:
             return parser.error(v)
     args.sizelimit = sizelimit
 
@@ -385,8 +400,8 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
             spec = data
         try:
             req = language.parse_response(spec)
-        except language.ParseException, v:
-            print >> stderr, "Error parsing anchor spec: %s"%v.msg
+        except language.ParseException as v:
+            print >> stderr, "Error parsing anchor spec: %s" % v.msg
             print >> stderr, v.marked()
             sys.exit(1)
         try:
@@ -398,6 +413,6 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
     return args
 
 
-def go_pathod(): # pragma: nocover
+def go_pathod():  # pragma: nocover
     args = args_pathod(sys.argv)
     pathod.main(args)

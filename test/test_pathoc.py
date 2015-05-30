@@ -128,20 +128,33 @@ class TestDaemon(_TestDaemon):
         tutils.raises("ssl handshake", c.connect)
 
     def test_showssl(self):
-        assert not "certificate chain" in self.tval(["get:/p/200"], showssl=True)
+        assert not "certificate chain" in self.tval(
+            ["get:/p/200"],
+            showssl=True)
 
     def test_ignorecodes(self):
         assert "200" in self.tval(["get:'/p/200:b@1'"])
         assert "200" in self.tval(["get:'/p/200:b@1'"])
         assert "200" in self.tval(["get:'/p/200:b@1'"])
         assert "200" not in self.tval(["get:'/p/200:b@1'"], ignorecodes=[200])
-        assert "200" not in self.tval(["get:'/p/200:b@1'"], ignorecodes=[200, 201])
+        assert "200" not in self.tval(
+            ["get:'/p/200:b@1'"],
+            ignorecodes=[
+                200,
+                201])
         assert "202" in self.tval(["get:'/p/202:b@1'"], ignorecodes=[200, 201])
 
     def test_timeout(self):
         assert "Timeout" in self.tval(["get:'/p/200:p0,10'"], timeout=0.01)
-        assert "HTTP" in self.tval(["get:'/p/200:p5,10'"], showresp=True, timeout=0.01)
-        assert not "HTTP" in self.tval(["get:'/p/200:p3,10'"], showresp=True, timeout=0.01, ignoretimeout=True)
+        assert "HTTP" in self.tval(
+            ["get:'/p/200:p5,10'"],
+            showresp=True,
+            timeout=0.01)
+        assert not "HTTP" in self.tval(
+            ["get:'/p/200:p3,10'"],
+            showresp=True,
+            timeout=0.01,
+            ignoretimeout=True)
 
     def test_showresp(self):
         reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]

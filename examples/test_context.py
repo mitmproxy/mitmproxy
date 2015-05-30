@@ -1,6 +1,7 @@
 import requests
 from libpathod import test
 
+
 def test_simple():
     """
         Testing the requests module with

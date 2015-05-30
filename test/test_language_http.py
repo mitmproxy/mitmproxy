@@ -214,7 +214,7 @@ class TestResponse:
         )
         try:
             language.parse_response("400'msg':b:")
-        except language.ParseException, v:
+        except language.ParseException as v:
             assert v.marked()
             assert str(v)
 
@@ -293,8 +293,10 @@ def test_location_shortcut():
 
 
 def test_shortcuts():
-    assert language.parse_response("400:c'foo'").headers[0].key.val == "Content-Type"
-    assert language.parse_response("400:l'foo'").headers[0].key.val == "Location"
+    assert language.parse_response(
+        "400:c'foo'").headers[0].key.val == "Content-Type"
+    assert language.parse_response(
+        "400:l'foo'").headers[0].key.val == "Location"
 
     assert "Android" in tutils.render(parse_request("get:/:ua"))
     assert "User-Agent" in tutils.render(parse_request("get:/:ua"))

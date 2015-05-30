@@ -13,6 +13,7 @@ class _Action(base.Token):
         actions have one thing in common: an offset that specifies where the
         action should take place.
     """
+
     def __init__(self, offset):
         self.offset = offset
 
@@ -36,11 +37,11 @@ class _Action(base.Token):
         return self.spec()
 
     @abc.abstractmethod
-    def spec(self): # pragma: no cover
+    def spec(self):  # pragma: no cover
         pass
 
     @abc.abstractmethod
-    def intermediate(self, settings): # pragma: no cover
+    def intermediate(self, settings):  # pragma: no cover
         pass
 
 
@@ -65,7 +66,7 @@ class PauseAt(_Action):
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
-        return "p%s,%s"%(self.offset, self.seconds)
+        return "p%s,%s" % (self.offset, self.seconds)
 
     def intermediate(self, settings):
         return (self.offset, "pause", self.seconds)
@@ -85,7 +86,7 @@ class DisconnectAt(_Action):
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
-        return "d%s"%self.offset
+        return "d%s" % self.offset
 
     def intermediate(self, settings):
         return (self.offset, "disconnect")
@@ -110,7 +111,7 @@ class InjectAt(_Action):
         return e.setParseAction(lambda x: klass(*x))
 
     def spec(self):
-        return "i%s,%s"%(self.offset, self.value.spec())
+        return "i%s,%s" % (self.offset, self.value.spec())
 
     def intermediate(self, settings):
         return (

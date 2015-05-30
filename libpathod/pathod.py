@@ -85,7 +85,9 @@ class PathodHandler(tcp.BaseHandler):
             )
             return False, log
 
-        if self.server.explain and not isinstance(crafted, language.http.PathodErrorResponse):
+        if self.server.explain and not isinstance(
+                crafted,
+                language.http.PathodErrorResponse):
             crafted = crafted.freeze(self.settings)
             self.info(">> Spec: %s" % crafted.spec())
         response_log = language.serve(
@@ -129,13 +131,14 @@ class PathodHandler(tcp.BaseHandler):
                         m.v[0]
                     )
                     self.convert_to_ssl(
-                        cert, key,
+                        cert,
+                        key,
                         handle_sni=self.handle_sni,
                         request_client_cert=self.server.ssloptions.request_client_cert,
                         cipher_list=self.server.ssloptions.ciphers,
                         method=self.server.ssloptions.sslversion,
                     )
-                except tcp.NetLibError, v:
+                except tcp.NetLibError as v:
                     s = str(v)
                     self.info(s)
                     self.addlog(dict(type="error", msg=s))
@@ -190,7 +193,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.rfile, headers, None,
                 method, None, True
             )
-        except http.HttpError, s:
+        except http.HttpError as s:
             s = str(s)
             self.info(s)
             self.addlog(dict(type="error", msg=s))
@@ -203,7 +206,9 @@ class PathodHandler(tcp.BaseHandler):
                 self.addlog(retlog)
                 return again
 
-        if not self.server.nocraft and utils.matchpath(path, self.server.craftanchor):
+        if not self.server.nocraft and utils.matchpath(
+                path,
+                self.server.craftanchor):
             spec = urllib.unquote(path)[len(self.server.craftanchor) + 1:]
             key = websockets.check_client_handshake(headers)
             self.settings.websocket_key = key
@@ -212,7 +217,7 @@ class PathodHandler(tcp.BaseHandler):
             self.info("crafting spec: %s" % spec)
             try:
                 crafted = language.parse_response(spec)
-            except language.ParseException, v:
+            except language.ParseException as v:
                 self.info("Parse error: %s" % v.msg)
                 crafted = language.http.make_error_response(
                     "Parse Error",
@@ -273,13 +278,14 @@ class PathodHandler(tcp.BaseHandler):
             try:
                 cert, key, _ = self.server.ssloptions.get_cert(None)
                 self.convert_to_ssl(
-                    cert, key,
+                    cert,
+                    key,
                     handle_sni=self.handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.sslversion,
                 )
-            except tcp.NetLibError, v:
+            except tcp.NetLibError as v:
                 s = str(v)
                 self.server.add_log(
                     dict(
@@ -419,7 +425,7 @@ class Pathod(tcp.TCPServer):
         return self.log
 
 
-def main(args): # pragma: nocover
+def main(args):  # pragma: nocover
     ssloptions = SSLOptions(
         cn = args.cn,
         confdir = args.confdir,
@@ -470,17 +476,17 @@ def main(args): # pragma: nocover
             explain = args.explain,
             webdebug = args.webdebug
         )
-    except PathodError, v:
-        print >> sys.stderr, "Error: %s"%v
+    except PathodError as v:
+        print >> sys.stderr, "Error: %s" % v
         sys.exit(1)
-    except language.FileAccessDenied, v:
-        print >> sys.stderr, "Error: %s"%v
+    except language.FileAccessDenied as v:
+        print >> sys.stderr, "Error: %s" % v
 
     if args.daemonize:
         utils.daemonize()
 
     try:
-        print "%s listening on %s:%s"%(
+        print "%s listening on %s:%s" % (
             version.NAMEVERSION,
             pd.address.host,
             pd.address.port
