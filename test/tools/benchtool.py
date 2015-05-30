@@ -23,7 +23,7 @@ class ApacheBenchThread(Thread):
 		system("ab -n 1024 -c {} -X 127.0.0.1:8080 http://example.com/".format(self.concurrency))
 
 @click.command()
-@click.option('--profiler', default="yappi", type=click.Choice(['yappi']))
+@click.option('--profiler', default="none", type=click.Choice(['none', 'yappi']))
 @click.option('--clock-type', default="cpu", type=click.Choice(['wall', 'cpu']))
 @click.option('--concurrency', default=1, type=click.INT)
 def main(profiler, clock_type, concurrency):
