@@ -40,7 +40,7 @@ Here is a program to parse "Hello, World!" (or any greeting of the form "<saluta
     greet = Word( alphas ) + "," + Word( alphas ) + "!"
 
     hello = "Hello, World!"
-    print hello, "->", greet.parseString( hello )
+    print(hello, "->", greet.parseString( hello ))
 
 The program outputs the following::
 
@@ -651,13 +651,13 @@ def line( loc, strg ):
         return strg[lastCR+1:]
 
 def _defaultStartDebugAction( instring, loc, expr ):
-    print ("Match " + _ustr(expr) + " at loc " + _ustr(loc) + "(%d,%d)" % ( lineno(loc,instring), col(loc,instring) ))
+    print("Match " + _ustr(expr) + " at loc " + _ustr(loc) + "(%d,%d)" % ( lineno(loc,instring), col(loc,instring) ))
 
 def _defaultSuccessDebugAction( instring, startloc, endloc, expr, toks ):
-    print ("Matched " + _ustr(expr) + " -> " + str(toks.asList()))
+    print("Matched " + _ustr(expr) + " -> " + str(toks.asList()))
 
 def _defaultExceptionDebugAction( instring, loc, expr, exc ):
-    print ("Exception raised:" + _ustr(exc))
+    print("Exception raised:" + _ustr(exc))
 
 def nullDebugAction(*args):
     """'Do-nothing' debug action, to suppress debugging output during parsing."""
@@ -804,7 +804,7 @@ class ParserElement(object):
                         numargs -= 1
 
 
-        #~ print ("adding function %s with %d args" % (f.func_name,numargs))
+        #~ print("adding function %s with %d args" % (f.func_name,numargs))
         if numargs == 3:
             return f
         else:
@@ -914,7 +914,7 @@ class ParserElement(object):
         debugging = ( self.debug ) #and doActions )
 
         if debugging or self.failAction:
-            #~ print ("Match",self,"at loc",loc,"(%d,%d)" % ( lineno(loc,instring), col(loc,instring) ))
+            #~ print("Match",self,"at loc",loc,"(%d,%d)" % ( lineno(loc,instring), col(loc,instring) ))
             if (self.debugActions[0] ):
                 self.debugActions[0]( instring, loc, self )
             if callPreParse and self.callPreparse:
@@ -928,7 +928,7 @@ class ParserElement(object):
                 except IndexError:
                     raise ParseException( instring, len(instring), self.errmsg, self )
             except ParseBaseException, err:
-                #~ print ("Exception raised:", err)
+                #~ print("Exception raised:", err)
                 if self.debugActions[2]:
                     self.debugActions[2]( instring, tokensStart, self, err )
                 if self.failAction:
@@ -962,7 +962,7 @@ class ParserElement(object):
                                                       asList=self.saveAsList and isinstance(tokens,(ParseResults,list)),
                                                       modal=self.modalResults )
                 except ParseBaseException, err:
-                    #~ print "Exception raised in user parse action:", err
+                    #~ print("Exception raised in user parse action:", err)
                     if (self.debugActions[2] ):
                         self.debugActions[2]( instring, tokensStart, self, err )
                     raise
@@ -976,7 +976,7 @@ class ParserElement(object):
                                                   modal=self.modalResults )
 
         if debugging:
-            #~ print ("Matched",self,"->",retTokens.asList())
+            #~ print("Matched",self,"->",retTokens.asList())
             if (self.debugActions[1] ):
                 self.debugActions[1]( instring, tokensStart, loc, self, retTokens )
 
@@ -2861,7 +2861,7 @@ class SkipTo(ParseElementEnhance):
                     while 1:
                         try:
                             loc = self.ignoreExpr.tryParse(instring,loc)
-                            print "found ignoreExpr, advance to", loc
+                            print("found ignoreExpr, advance to", loc)
                         except ParseBaseException:
                             break
                 expr._parse( instring, loc, doActions=False, callPreParse=False )
@@ -3239,7 +3239,7 @@ def oneOf( strs, caseless=False, useRegex=True ):
             i += 1
 
     if not caseless and useRegex:
-        #~ print (strs,"->", "|".join( [ _escapeRegexChars(sym) for sym in symbols] ))
+        #~print(strs,"->", "|".join( [ _escapeRegexChars(sym) for sym in symbols] ))
         try:
             if len(symbols)==len("".join(symbols)):
                 return Regex( "[%s]" % "".join( [ _escapeRegexRangeChars(sym) for sym in symbols] ) )
@@ -3669,16 +3669,16 @@ if __name__ == "__main__":
         try:
             tokens = simpleSQL.parseString( teststring )
             tokenlist = tokens.asList()
-            print (teststring + "->"   + str(tokenlist))
-            print ("tokens = "         + str(tokens))
-            print ("tokens.columns = " + str(tokens.columns))
-            print ("tokens.tables = "  + str(tokens.tables))
-            print (tokens.asXML("SQL",True))
+            print(teststring + "->"   + str(tokenlist))
+            print("tokens = "         + str(tokens))
+            print("tokens.columns = " + str(tokens.columns))
+            print("tokens.tables = "  + str(tokens.tables))
+            print(tokens.asXML("SQL",True))
         except ParseBaseException,err:
-            print (teststring + "->")
-            print (err.line)
-            print (" "*(err.column-1) + "^")
-            print (err)
+            print(teststring + "->")
+            print(err.line)
+            print(" "*(err.column-1) + "^")
+            print(err)
         print()
 
     selectToken    = CaselessLiteral( "select" )

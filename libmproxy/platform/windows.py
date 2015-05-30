@@ -354,7 +354,7 @@ class TransparentProxy(object):
             if server:
                 packet.src_addr, packet.src_port = server
             else:
-                print "Warning: Previously unseen connection from proxy to %s:%s." % client
+                print("Warning: Previously unseen connection from proxy to %s:%s." % client)
 
             packet = self.driver.update_packet_checksums(packet)
             self.response_handle.send((packet.raw, metadata))

@@ -231,4 +231,4 @@ def print_attributes(obj, filter_string=None, hide_privates=False):
         if filter_string is not None and filter_string not in attr:
             continue
         value = getattr(obj, attr)
-        print "%s.%s" % ('obj', attr), value, type(value)
+        print("%s.%s" % ('obj', attr), value, type(value))

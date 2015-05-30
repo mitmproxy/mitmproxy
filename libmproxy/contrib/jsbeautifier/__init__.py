@@ -216,7 +216,7 @@ class Beautifier:
         parser_pos = 0
         while True:
             token_text, token_type = self.get_next_token()
-            #print (token_text, token_type, self.flags.mode)
+            #print(token_text, token_type, self.flags.mode)
             if token_type == 'TK_EOF':
                 break
 

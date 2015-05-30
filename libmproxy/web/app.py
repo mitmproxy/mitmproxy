@@ -180,7 +180,7 @@ class Settings(RequestHandler):
         update = {}
         for k, v in self.request.arguments.iteritems():
             if len(v) != 1:
-                print "Warning: Unknown length for setting {}: {}".format(k, v)
+                print("Warning: Unknown length for setting {}: {}".format(k, v))
                 continue
 
             if k == "_xsrf":
@@ -189,7 +189,7 @@ class Settings(RequestHandler):
                 self.state.set_intercept(v[0])
                 update[k] = v[0]
             else:
-                print "Warning: Unknown setting {}: {}".format(k, v)
+                print("Warning: Unknown setting {}: {}".format(k, v))
 
         ClientConnection.broadcast(
             type="settings",
