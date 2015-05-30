@@ -36,7 +36,8 @@ class MyMaster(flow.FlowMaster):
 
 config = proxy.ProxyConfig(
     port=8080,
-    cadir="~/.mitmproxy/"  # use ~/.mitmproxy/mitmproxy-ca.pem as default CA file.
+    # use ~/.mitmproxy/mitmproxy-ca.pem as default CA file.
+    cadir="~/.mitmproxy/"
 )
 state = flow.State()
 server = ProxyServer(config)

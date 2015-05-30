@@ -2,6 +2,7 @@ import cStringIO
 from PIL import Image
 from libmproxy.protocol.http import decoded
 
+
 def response(context, flow):
     if flow.response.headers.get_first("content-type", "").startswith("image"):
         with decoded(flow.response):  # automatically decode gzipped responses.

@@ -48,9 +48,11 @@ def test_urldecode():
     s = "one=two&three=four"
     assert len(utils.urldecode(s)) == 2
 
+
 def test_multipartdecode():
     boundary = 'somefancyboundary'
-    headers = odict.ODict([('content-type', ('multipart/form-data; boundary=%s' % boundary))])
+    headers = odict.ODict(
+        [('content-type', ('multipart/form-data; boundary=%s' % boundary))])
     content = "--{0}\n" \
               "Content-Disposition: form-data; name=\"field1\"\n\n" \
               "value1\n" \
@@ -64,6 +66,7 @@ def test_multipartdecode():
     assert len(form) == 2
     assert form[0] == ('field1', 'value1')
     assert form[1] == ('field2', 'value2')
+
 
 def test_pretty_duration():
     assert utils.pretty_duration(0.00001) == "0ms"
@@ -79,10 +82,13 @@ def test_pretty_duration():
     assert utils.pretty_duration(1.123) == "1.12s"
     assert utils.pretty_duration(0.123) == "123ms"
 
+
 def test_LRUCache():
     cache = utils.LRUCache(2)
+
     class Foo:
         ran = False
+
         def gen(self, x):
             self.ran = True
             return x

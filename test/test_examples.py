@@ -21,7 +21,7 @@ def test_load_scripts():
             f += " foo bar"  # two arguments required
         try:
             s = script.Script(f, tmaster)  # Loads the script file.
-        except Exception, v:
+        except Exception as v:
             if not "ImportError" in str(v):
                 raise
         else:

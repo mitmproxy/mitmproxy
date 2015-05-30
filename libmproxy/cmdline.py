@@ -65,7 +65,7 @@ def parse_replace_hook(s):
     patt, regex, replacement = _parse_hook(s)
     try:
         re.compile(regex)
-    except re.error, e:
+    except re.error as e:
         raise ParseException("Malformed replacement regex: %s" % str(e.message))
     return patt, regex, replacement
 
@@ -127,7 +127,6 @@ def parse_server_spec_special(url):
     return ret
 
 
-
 def get_common_options(options):
     stickycookie, stickyauth = None, None
     if options.stickycookie_filt:
@@ -142,17 +141,17 @@ def get_common_options(options):
     for i in options.replace:
         try:
             p = parse_replace_hook(i)
-        except ParseException, e:
+        except ParseException as e:
             raise configargparse.ArgumentTypeError(e.message)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
-        except ParseException, e:
+        except ParseException as e:
             raise configargparse.ArgumentTypeError(e.message)
         try:
             v = open(path, "rb").read()
-        except IOError, e:
+        except IOError as e:
             raise configargparse.ArgumentTypeError(
                 "Could not read replace file: %s" % path
             )
@@ -162,7 +161,7 @@ def get_common_options(options):
     for i in options.setheader:
         try:
             p = parse_setheader(i)
-        except ParseException, e:
+        except ParseException as e:
             raise configargparse.ArgumentTypeError(e.message)
         setheaders.append(p)
 
@@ -221,7 +220,7 @@ def common_options(parser):
     parser.add_argument(
         "--cadir",
         action="store", type=str, dest="cadir", default=config.CA_DIR,
-        help="Location of the default mitmproxy CA files. (%s)"%config.CA_DIR
+        help="Location of the default mitmproxy CA files. (%s)" % config.CA_DIR
     )
     parser.add_argument(
         "--host",
@@ -482,9 +481,10 @@ def common_options(parser):
     )
     group.add_argument(
         "--replay-ignore-host",
-        action="store_true", dest="replay_ignore_host", default=False,
-        help="Ignore request's destination host while searching for a saved flow to replay"
-    )
+        action="store_true",
+        dest="replay_ignore_host",
+        default=False,
+        help="Ignore request's destination host while searching for a saved flow to replay")
 
     group = parser.add_argument_group(
         "Replacements",

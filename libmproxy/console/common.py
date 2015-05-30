@@ -164,7 +164,7 @@ def raw_format_flow(f, focus, extended, padding):
             4: "code_400",
             5: "code_500",
         }
-        ccol = codes.get(f["resp_code"]/100, "code_other")
+        ccol = codes.get(f["resp_code"] / 100, "code_other")
         resp.append(fcol(SYMBOL_RETURN, ccol))
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
@@ -200,7 +200,7 @@ def save_data(path, data, master, state):
     try:
         with file(path, "wb") as f:
             f.write(data)
-    except IOError, v:
+    except IOError as v:
         signals.status_message.send(message=v.strerror)
 
 
@@ -214,7 +214,7 @@ def ask_save_overwite(path, data, master, state):
                 save_data(path, data, master, state)
 
         signals.status_prompt_onekey.send(
-            prompt = "'"+path+"' already exists. Overwite?",
+            prompt = "'" + path + "' already exists. Overwite?",
             keys = (
                 ("yes", "y"),
                 ("no", "n"),

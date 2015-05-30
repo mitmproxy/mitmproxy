@@ -32,7 +32,7 @@ class _PathCompleter:
                     files = glob.glob(os.path.join(path, "*"))
                     prefix = txt
                 else:
-                    files = glob.glob(path+"*")
+                    files = glob.glob(path + "*")
                     prefix = os.path.dirname(txt)
                 prefix = prefix or "./"
                 for f in files:

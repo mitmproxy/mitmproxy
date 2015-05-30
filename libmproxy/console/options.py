@@ -8,6 +8,7 @@ footer = [
     ('heading_key', "C"), ":clear all ",
 ]
 
+
 def _mkhelp():
     text = []
     keys = [

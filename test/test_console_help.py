@@ -5,9 +5,11 @@ if os.name == "nt":
 
 import libmproxy.console.help as help
 
+
 class DummyLoop:
     def __init__(self):
         self.widget = None
+
 
 class DummyMaster:
     def __init__(self):

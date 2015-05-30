@@ -58,7 +58,7 @@ class ActionBar(urwid.WidgetWrap):
         mkup = []
         for i, e in enumerate(keys):
             mkup.extend(common.highlight_key(e[0], e[1]))
-            if i < len(keys)-1:
+            if i < len(keys) - 1:
                 mkup.append(",")
         prompt.extend(mkup)
         prompt.append(")? ")
@@ -136,14 +136,14 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.client_playback:
             r.append("[")
             r.append(("heading_key", "cplayback"))
-            r.append(":%s to go]"%self.master.client_playback.count())
+            r.append(":%s to go]" % self.master.client_playback.count())
         if self.master.server_playback:
             r.append("[")
             r.append(("heading_key", "splayback"))
             if self.master.nopop:
-                r.append(":%s in file]"%self.master.server_playback.count())
+                r.append(":%s in file]" % self.master.server_playback.count())
             else:
-                r.append(":%s to go]"%self.master.server_playback.count())
+                r.append(":%s to go]" % self.master.server_playback.count())
         if self.master.get_ignore_filter():
             r.append("[")
             r.append(("heading_key", "I"))
@@ -155,23 +155,23 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.state.intercept_txt:
             r.append("[")
             r.append(("heading_key", "i"))
-            r.append(":%s]"%self.master.state.intercept_txt)
+            r.append(":%s]" % self.master.state.intercept_txt)
         if self.master.state.limit_txt:
             r.append("[")
             r.append(("heading_key", "l"))
-            r.append(":%s]"%self.master.state.limit_txt)
+            r.append(":%s]" % self.master.state.limit_txt)
         if self.master.stickycookie_txt:
             r.append("[")
             r.append(("heading_key", "t"))
-            r.append(":%s]"%self.master.stickycookie_txt)
+            r.append(":%s]" % self.master.stickycookie_txt)
         if self.master.stickyauth_txt:
             r.append("[")
             r.append(("heading_key", "u"))
-            r.append(":%s]"%self.master.stickyauth_txt)
+            r.append(":%s]" % self.master.stickyauth_txt)
         if self.master.state.default_body_view.name != "Auto":
             r.append("[")
             r.append(("heading_key", "M"))
-            r.append(":%s]"%self.master.state.default_body_view.name)
+            r.append(":%s]" % self.master.state.default_body_view.name)
 
         opts = []
         if self.master.anticache:
@@ -196,22 +196,22 @@ class StatusBar(urwid.WidgetWrap):
             )
 
         if opts:
-            r.append("[%s]"%(":".join(opts)))
+            r.append("[%s]" % (":".join(opts)))
 
         if self.master.server.config.mode in ["reverse", "upstream"]:
             dst = self.master.server.config.mode.dst
             scheme = "https" if dst[0] else "http"
             if dst[1] != dst[0]:
                 scheme += "2https" if dst[1] else "http"
-            r.append("[dest:%s]"%utils.unparse_url(scheme, *dst[2:]))
+            r.append("[dest:%s]" % utils.unparse_url(scheme, *dst[2:]))
         if self.master.scripts:
             r.append("[")
             r.append(("heading_key", "s"))
-            r.append("cripts:%s]"%len(self.master.scripts))
+            r.append("cripts:%s]" % len(self.master.scripts))
         # r.append("[lt:%0.3f]"%self.master.looptime)
 
         if self.master.stream:
-            r.append("[W:%s]"%self.master.stream_path)
+            r.append("[W:%s]" % self.master.stream_path)
 
         return r
 
@@ -222,14 +222,14 @@ class StatusBar(urwid.WidgetWrap):
         else:
             offset = min(self.master.state.focus + 1, fc)
         t = [
-            ('heading', ("[%s/%s]"%(offset, fc)).ljust(9))
+            ('heading', ("[%s/%s]" % (offset, fc)).ljust(9))
         ]
 
         if self.master.server.bound:
             host = self.master.server.address.host
             if host == "0.0.0.0":
                 host = "*"
-            boundaddr = "[%s:%s]"%(host, self.master.server.address.port)
+            boundaddr = "[%s:%s]" % (host, self.master.server.address.port)
         else:
             boundaddr = ""
         t.extend(self.get_status())

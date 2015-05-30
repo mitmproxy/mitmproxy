@@ -37,7 +37,7 @@ class Searchable(urwid.ListBox):
             self.set_focus(0)
             self.walker._modified()
         elif key == "g":
-            self.set_focus(len(self.walker)-1)
+            self.set_focus(len(self.walker) - 1)
             self.walker._modified()
         else:
             return super(self.__class__, self).keypress(size, key)
@@ -74,11 +74,11 @@ class Searchable(urwid.ListBox):
                 return
         # Start search at focus + 1
         if backwards:
-            rng = xrange(len(self.body)-1, -1, -1)
+            rng = xrange(len(self.body) - 1, -1, -1)
         else:
             rng = xrange(1, len(self.body) + 1)
         for i in rng:
-            off = (self.focus_position + i)%len(self.body)
+            off = (self.focus_position + i) % len(self.body)
             w = self.body[off]
             txt = self.get_text(w)
             if txt and self.search_term in txt:

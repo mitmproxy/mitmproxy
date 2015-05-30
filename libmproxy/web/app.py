@@ -27,7 +27,8 @@ class RequestHandler(tornado.web.RequestHandler):
 
     @property
     def json(self):
-        if not self.request.headers.get("Content-Type").startswith("application/json"):
+        if not self.request.headers.get(
+                "Content-Type").startswith("application/json"):
             return None
         return json.loads(self.request.body)
 
@@ -67,8 +68,10 @@ class FiltHelp(RequestHandler):
             commands=filt.help
         ))
 
+
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
-    connections = None  # raise an error if inherited class doesn't specify its own instance.
+    # raise an error if inherited class doesn't specify its own instance.
+    connections = None
 
     def open(self):
         self.connections.add(self)

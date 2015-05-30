@@ -270,7 +270,7 @@ class SolarizedDark(LowDark):
 
         # Status bar & heading
         heading = (sol_base2, sol_base01),
-        heading_key = (sol_blue+",bold", sol_base01),
+        heading_key = (sol_blue + ",bold", sol_base01),
         heading_inactive = (sol_base1, sol_base02),
 
         # Help

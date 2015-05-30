@@ -85,10 +85,10 @@ class ConsoleState(flow.State):
         return self.view[pos], pos
 
     def get_next(self, pos):
-        return self.get_from_pos(pos+1)
+        return self.get_from_pos(pos + 1)
 
     def get_prev(self, pos):
-        return self.get_from_pos(pos-1)
+        return self.get_from_pos(pos - 1)
 
     def delete_flow(self, f):
         if f in self.view and self.view.index(f) <= self.focus:
@@ -255,7 +255,7 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             f = file(path, mode)
             self.start_stream(f, None)
-        except IOError, v:
+        except IOError as v:
             return str(v)
         self.stream_path = path
 
@@ -263,22 +263,24 @@ class ConsoleMaster(flow.FlowMaster):
         status, val = s.run(method, f)
         if val:
             if status:
-                self.add_event("Method %s return: %s"%(method, val), "debug")
+                self.add_event("Method %s return: %s" % (method, val), "debug")
             else:
-                self.add_event("Method %s error: %s"%(method, val[1]), "error")
+                self.add_event(
+                    "Method %s error: %s" %
+                    (method, val[1]), "error")
 
     def run_script_once(self, command, f):
         if not command:
             return
-        self.add_event("Running script on flow: %s"%command, "debug")
+        self.add_event("Running script on flow: %s" % command, "debug")
 
         try:
             s = script.Script(command, self)
-        except script.ScriptError, v:
+        except script.ScriptError as v:
             signals.status_message.send(
                 message = "Error loading script."
             )
-            self.add_event("Error loading script:\n%s"%v.args[0], "error")
+            self.add_event("Error loading script:\n%s" % v.args[0], "error")
             return
 
         if f.request:
@@ -562,7 +564,7 @@ class ConsoleMaster(flow.FlowMaster):
             for i in flows:
                 fw.add(i)
             f.close()
-        except IOError, v:
+        except IOError as v:
             signals.status_message.send(message=v.strerror)
 
     def save_one_flow(self, path, flow):
@@ -575,13 +577,13 @@ class ConsoleMaster(flow.FlowMaster):
         if not path:
             return
         ret = self.load_flows_path(path)
-        return ret or "Flows loaded from %s"%path
+        return ret or "Flows loaded from %s" % path
 
     def load_flows_path(self, path):
         reterr = None
         try:
             flow.FlowMaster.load_flows_file(self, path)
-        except flow.FlowReadError, v:
+        except flow.FlowReadError as v:
             reterr = str(v)
         signals.flowlist_change.send(self)
         return reterr
@@ -652,7 +654,8 @@ class ConsoleMaster(flow.FlowMaster):
             )
 
     def process_flow(self, f):
-        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
+        if self.state.intercept and f.match(
+                self.state.intercept) and not f.request.is_replay:
             f.intercept(self)
         else:
             f.reply()
@@ -674,7 +677,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:
             self.eventlist.pop(0)
-        self.eventlist.set_focus(len(self.eventlist)-1)
+        self.eventlist.set_focus(len(self.eventlist) - 1)
 
     # Handlers
     def handle_error(self, f):

@@ -32,16 +32,17 @@
         rex         Equivalent to ~u rex
 """
 from __future__ import absolute_import
-import re, sys
+import re
+import sys
 from .contrib import pyparsing as pp
 from .protocol.http import decoded
 
 
 class _Token:
     def dump(self, indent=0, fp=sys.stdout):
-        print >> fp, "\t"*indent, self.__class__.__name__,
+        print >> fp, "\t" * indent, self.__class__.__name__,
         if hasattr(self, "expr"):
-            print >> fp, "(%s)"%self.expr,
+            print >> fp, "(%s)" % self.expr,
         print >> fp
 
 
@@ -54,6 +55,7 @@ class _Action(_Token):
 class FErr(_Action):
     code = "e"
     help = "Match error"
+
     def __call__(self, f):
         return True if f.error else False
 
@@ -61,6 +63,7 @@ class FErr(_Action):
 class FReq(_Action):
     code = "q"
     help = "Match request with no response"
+
     def __call__(self, f):
         if not f.response:
             return True
@@ -69,6 +72,7 @@ class FReq(_Action):
 class FResp(_Action):
     code = "s"
     help = "Match response"
+
     def __call__(self, f):
         return True if f.response else False
 
@@ -79,7 +83,7 @@ class _Rex(_Action):
         try:
             self.re = re.compile(self.expr)
         except:
-            raise ValueError, "Cannot compile expression."
+            raise ValueError("Cannot compile expression.")
 
 
 def _check_content_type(expr, o):
@@ -100,6 +104,7 @@ class FAsset(_Action):
         "image/.*",
         "application/x-shockwave-flash"
     ]
+
     def __call__(self, f):
         if f.response:
             for i in self.ASSET_TYPES:
@@ -111,6 +116,7 @@ class FAsset(_Action):
 class FContentType(_Rex):
     code = "t"
     help = "Content-type header"
+
     def __call__(self, f):
         if _check_content_type(self.expr, f.request):
             return True
@@ -122,6 +128,7 @@ class FContentType(_Rex):
 class FRequestContentType(_Rex):
     code = "tq"
     help = "Request Content-Type header"
+
     def __call__(self, f):
         return _check_content_type(self.expr, f.request)
 
@@ -129,6 +136,7 @@ class FRequestContentType(_Rex):
 class FResponseContentType(_Rex):
     code = "ts"
     help = "Response Content-Type header"
+
     def __call__(self, f):
         if f.response:
             return _check_content_type(self.expr, f.response)
@@ -138,6 +146,7 @@ class FResponseContentType(_Rex):
 class FHead(_Rex):
     code = "h"
     help = "Header"
+
     def __call__(self, f):
         if f.request.headers.match_re(self.expr):
             return True
@@ -149,6 +158,7 @@ class FHead(_Rex):
 class FHeadRequest(_Rex):
     code = "hq"
     help = "Request header"
+
     def __call__(self, f):
         if f.request.headers.match_re(self.expr):
             return True
@@ -157,6 +167,7 @@ class FHeadRequest(_Rex):
 class FHeadResponse(_Rex):
     code = "hs"
     help = "Response header"
+
     def __call__(self, f):
         if f.response and f.response.headers.match_re(self.expr):
             return True
@@ -165,6 +176,7 @@ class FHeadResponse(_Rex):
 class FBod(_Rex):
     code = "b"
     help = "Body"
+
     def __call__(self, f):
         if f.request and f.request.content:
             with decoded(f.request):
@@ -180,6 +192,7 @@ class FBod(_Rex):
 class FBodRequest(_Rex):
     code = "bq"
     help = "Request body"
+
     def __call__(self, f):
         if f.request and f.request.content:
             with decoded(f.request):
@@ -190,6 +203,7 @@ class FBodRequest(_Rex):
 class FBodResponse(_Rex):
     code = "bs"
     help = "Response body"
+
     def __call__(self, f):
         if f.response and f.response.content:
             with decoded(f.response):
@@ -200,6 +214,7 @@ class FBodResponse(_Rex):
 class FMethod(_Rex):
     code = "m"
     help = "Method"
+
     def __call__(self, f):
         return bool(re.search(self.expr, f.request.method, re.IGNORECASE))
 
@@ -207,6 +222,7 @@ class FMethod(_Rex):
 class FDomain(_Rex):
     code = "d"
     help = "Domain"
+
     def __call__(self, f):
         return bool(re.search(self.expr, f.request.host, re.IGNORECASE))
 
@@ -215,6 +231,7 @@ class FUrl(_Rex):
     code = "u"
     help = "URL"
     # FUrl is special, because it can be "naked".
+
     @classmethod
     def make(klass, s, loc, toks):
         if len(toks) > 1:
@@ -233,6 +250,7 @@ class _Int(_Action):
 class FCode(_Int):
     code = "c"
     help = "HTTP response code"
+
     def __call__(self, f):
         if f.response and f.response.code == self.num:
             return True
@@ -243,9 +261,9 @@ class FAnd(_Token):
         self.lst = lst
 
     def dump(self, indent=0, fp=sys.stdout):
-        print >> fp, "\t"*indent, self.__class__.__name__
+        print >> fp, "\t" * indent, self.__class__.__name__
         for i in self.lst:
-            i.dump(indent+1, fp)
+            i.dump(indent + 1, fp)
 
     def __call__(self, f):
         return all(i(f) for i in self.lst)
@@ -256,9 +274,9 @@ class FOr(_Token):
         self.lst = lst
 
     def dump(self, indent=0, fp=sys.stdout):
-        print >> fp, "\t"*indent, self.__class__.__name__
+        print >> fp, "\t" * indent, self.__class__.__name__
         for i in self.lst:
-            i.dump(indent+1, fp)
+            i.dump(indent + 1, fp)
 
     def __call__(self, f):
         return any(i(f) for i in self.lst)
@@ -269,7 +287,7 @@ class FNot(_Token):
         self.itm = itm[0]
 
     def dump(self, indent=0, fp=sys.stdout):
-        print >> fp, "\t"*indent, self.__class__.__name__
+        print >> fp, "\t" * indent, self.__class__.__name__
         self.itm.dump(indent + 1, fp)
 
     def __call__(self, f):
@@ -299,26 +317,28 @@ filt_rex = [
 filt_int = [
     FCode
 ]
+
+
 def _make():
     # Order is important - multi-char expressions need to come before narrow
     # ones.
     parts = []
     for klass in filt_unary:
-        f = pp.Literal("~%s"%klass.code)
+        f = pp.Literal("~%s" % klass.code)
         f.setParseAction(klass.make)
         parts.append(f)
 
-    simplerex = "".join(c for c in pp.printables if c not in  "()~'\"")
+    simplerex = "".join(c for c in pp.printables if c not in "()~'\"")
     rex = pp.Word(simplerex) |\
-          pp.QuotedString("\"", escChar='\\') |\
-          pp.QuotedString("'", escChar='\\')
+        pp.QuotedString("\"", escChar='\\') |\
+        pp.QuotedString("'", escChar='\\')
     for klass in filt_rex:
-        f = pp.Literal("~%s"%klass.code) + rex.copy()
+        f = pp.Literal("~%s" % klass.code) + rex.copy()
         f.setParseAction(klass.make)
         parts.append(f)
 
     for klass in filt_int:
-        f = pp.Literal("~%s"%klass.code) + pp.Word(pp.nums)
+        f = pp.Literal("~%s" % klass.code) + pp.Word(pp.nums)
         f.setParseAction(klass.make)
         parts.append(f)
 
@@ -328,14 +348,20 @@ def _make():
     parts.append(f)
 
     atom = pp.MatchFirst(parts)
-    expr = pp.operatorPrecedence(
-                atom,
-                [
-                    (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
-                    (pp.Literal("&").suppress(), 2, pp.opAssoc.LEFT, lambda x: FAnd(*x)),
-                    (pp.Literal("|").suppress(), 2, pp.opAssoc.LEFT, lambda x: FOr(*x)),
-                ]
-           )
+    expr = pp.operatorPrecedence(atom,
+                                 [(pp.Literal("!").suppress(),
+                                   1,
+                                   pp.opAssoc.RIGHT,
+                                   lambda x: FNot(*x)),
+                                     (pp.Literal("&").suppress(),
+                                      2,
+                                      pp.opAssoc.LEFT,
+                                      lambda x: FAnd(*x)),
+                                     (pp.Literal("|").suppress(),
+                                      2,
+                                      pp.opAssoc.LEFT,
+                                      lambda x: FOr(*x)),
+                                  ])
     expr = pp.OneOrMore(expr)
     return expr.setParseAction(lambda x: FAnd(x) if len(x) != 1 else x)
 bnf = _make()
@@ -355,15 +381,15 @@ def parse(s):
 help = []
 for i in filt_unary:
     help.append(
-        ("~%s"%i.code, i.help)
+        ("~%s" % i.code, i.help)
     )
 for i in filt_rex:
     help.append(
-        ("~%s regex"%i.code, i.help)
+        ("~%s regex" % i.code, i.help)
     )
 for i in filt_int:
     help.append(
-        ("~%s int"%i.code, i.help)
+        ("~%s int" % i.code, i.help)
     )
 help.sort()
 help.extend(

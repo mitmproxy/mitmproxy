@@ -2,12 +2,14 @@ import SocketServer
 from threading import Thread
 from time import sleep
 
+
 class service(SocketServer.BaseRequestHandler):
     def handle(self):
         data = 'dummy'
         print "Client connected with ", self.client_address
         while True:
-            self.request.send("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 7\r\n\r\ncontent")
+            self.request.send(
+                "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 7\r\n\r\ncontent")
             data = self.request.recv(1024)
             if not len(data):
                 print "Connection closed by remote: ", self.client_address
@@ -17,5 +19,5 @@ class service(SocketServer.BaseRequestHandler):
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
-server = ThreadedTCPServer(('',1520), service)
+server = ThreadedTCPServer(('', 1520), service)
 server.serve_forever()

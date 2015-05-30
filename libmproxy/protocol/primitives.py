@@ -24,6 +24,7 @@ class Error(stateobject.StateObject):
             msg: Message describing the error
             timestamp: Seconds since the epoch
     """
+
     def __init__(self, msg, timestamp=None):
         """
         @type msg: str
@@ -59,6 +60,7 @@ class Flow(stateobject.StateObject):
     A Flow is a collection of objects representing a single transaction.
     This class is usually subclassed for each protocol, e.g. HTTPFlow.
     """
+
     def __init__(self, type, client_conn, server_conn, live=None):
         self.type = type
         self.id = str(uuid.uuid4())
@@ -165,12 +167,12 @@ class Flow(stateobject.StateObject):
         master.handle_accept_intercept(self)
 
 
-
 class ProtocolHandler(object):
     """
     A ProtocolHandler implements an application-layer protocol, e.g. HTTP.
     See: libmproxy.protocol.http.HTTPHandler
     """
+
     def __init__(self, c):
         self.c = c
         """@type: libmproxy.proxy.server.ConnectionHandler"""
@@ -209,13 +211,20 @@ class LiveConnection(object):
     interface with a live connection, without exposing the internals
     of the ConnectionHandler.
     """
+
     def __init__(self, c):
         self.c = c
         """@type: libmproxy.proxy.server.ConnectionHandler"""
         self._backup_server_conn = None
         """@type: libmproxy.proxy.connection.ServerConnection"""
 
-    def change_server(self, address, ssl=None, sni=None, force=False, persistent_change=False):
+    def change_server(
+            self,
+            address,
+            ssl=None,
+            sni=None,
+            force=False,
+            persistent_change=False):
         """
         Change the server connection to the specified address.
         @returns:

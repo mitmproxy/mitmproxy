@@ -16,7 +16,12 @@ def response(context, flow):
     with decoded(flow.response):  # Remove content encoding (gzip, ...)
         html = BeautifulSoup(flow.response.content)
         if html.body:
-            iframe = html.new_tag("iframe", src=context.iframe_url, frameborder=0, height=0, width=0)
+            iframe = html.new_tag(
+                "iframe",
+                src=context.iframe_url,
+                frameborder=0,
+                height=0,
+                width=0)
             html.body.insert(0, iframe)
             flow.response.content = str(html)
             context.log("Iframe inserted.")

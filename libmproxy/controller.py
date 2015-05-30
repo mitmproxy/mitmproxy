@@ -1,11 +1,14 @@
 from __future__ import absolute_import
-import Queue, threading
+import Queue
+import threading
+
 
 class DummyReply:
     """
         A reply object that does nothing. Useful when we need an object to seem
         like it has a channel, and during testing.
     """
+
     def __init__(self):
         self.acked = False
 
@@ -19,6 +22,7 @@ class Reply:
         This object is used to respond to the message through the return
         channel.
     """
+
     def __init__(self, obj):
         self.obj = obj
         self.q = Queue.Queue()
@@ -67,11 +71,13 @@ class Slave(threading.Thread):
         Slaves get a channel end-point through which they can send messages to
         the master.
     """
+
     def __init__(self, channel, server):
         self.channel, self.server = channel, server
         self.server.set_channel(channel)
         threading.Thread.__init__(self)
-        self.name = "SlaveThread (%s:%s)" % (self.server.address.host, self.server.address.port)
+        self.name = "SlaveThread (%s:%s)" % (
+            self.server.address.host, self.server.address.port)
 
     def run(self):
         self.server.serve_forever()
@@ -81,6 +87,7 @@ class Master(object):
     """
         Masters get and respond to messages from slaves.
     """
+
     def __init__(self, server):
         """
             server may be None if no server is needed.

@@ -305,7 +305,18 @@ class HTTPRequest(HTTPMessage):
 
     @classmethod
     def from_state(cls, state):
-        f = cls(None, None, None, None, None, None, None, None, None, None, None)
+        f = cls(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None)
         f.load_state(state)
         return f
 
@@ -315,7 +326,12 @@ class HTTPRequest(HTTPMessage):
         )
 
     @classmethod
-    def from_stream(cls, rfile, include_body=True, body_size_limit=None, wfile=None):
+    def from_stream(
+            cls,
+            rfile,
+            include_body=True,
+            body_size_limit=None,
+            wfile=None):
         """
         Parse an HTTP request from a file stream
 
@@ -403,7 +419,8 @@ class HTTPRequest(HTTPMessage):
                                               self.host,
                                               self.port)]
 
-        # If content is defined (i.e. not None or CONTENT_MISSING), we always add a content-length header.
+        # If content is defined (i.e. not None or CONTENT_MISSING), we always
+        # add a content-length header.
         if self.content or self.content == "":
             headers["Content-Length"] = [str(len(self.content))]
 
@@ -460,9 +477,9 @@ class HTTPRequest(HTTPMessage):
             decode appropriately.
         """
         if self.headers["accept-encoding"]:
-            self.headers["accept-encoding"] = [', '.join(
-                e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0]
-            )]
+            self.headers["accept-encoding"] = [
+                ', '.join(
+                    e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0])]
 
     def update_host_header(self):
         """
@@ -489,13 +506,22 @@ class HTTPRequest(HTTPMessage):
             Returns an empty ODict if there is no data or the content-type
             indicates non-form data.
         """
-        if self.content and self.headers.in_any("content-type", HDR_FORM_URLENCODED, True):
-                return odict.ODict(utils.urldecode(self.content))
+        if self.content and self.headers.in_any(
+                "content-type",
+                HDR_FORM_URLENCODED,
+                True):
+            return odict.ODict(utils.urldecode(self.content))
         return odict.ODict([])
 
     def get_form_multipart(self):
-        if self.content and self.headers.in_any("content-type", HDR_FORM_MULTIPART, True):
-                return odict.ODict(utils.multipartdecode(self.headers, self.content))
+        if self.content and self.headers.in_any(
+                "content-type",
+                HDR_FORM_MULTIPART,
+                True):
+            return odict.ODict(
+                utils.multipartdecode(
+                    self.headers,
+                    self.content))
         return odict.ODict([])
 
     def set_form_urlencoded(self, odict):
@@ -664,8 +690,15 @@ class HTTPResponse(HTTPMessage):
         timestamp_end: Timestamp indicating when request transmission ended
     """
 
-    def __init__(self, httpversion, code, msg, headers, content, timestamp_start=None,
-                 timestamp_end=None):
+    def __init__(
+            self,
+            httpversion,
+            code,
+            msg,
+            headers,
+            content,
+            timestamp_start=None,
+            timestamp_end=None):
         assert isinstance(headers, odict.ODictCaseless) or headers is None
         HTTPMessage.__init__(
             self,
@@ -710,7 +743,12 @@ class HTTPResponse(HTTPMessage):
         )
 
     @classmethod
-    def from_stream(cls, rfile, request_method, include_body=True, body_size_limit=None):
+    def from_stream(
+            cls,
+            rfile,
+            request_method,
+            include_body=True,
+            body_size_limit=None):
         """
         Parse an HTTP response from a file stream
         """
@@ -760,7 +798,8 @@ class HTTPResponse(HTTPMessage):
         if not preserve_transfer_encoding:
             del headers['Transfer-Encoding']
 
-        # If content is defined (i.e. not None or CONTENT_MISSING), we always add a content-length header.
+        # If content is defined (i.e. not None or CONTENT_MISSING), we always
+        # add a content-length header.
         if self.content or self.content == "":
             headers["Content-Length"] = [str(len(self.content))]
 
@@ -1008,7 +1047,7 @@ class HTTPHandler(ProtocolHandler):
                     include_body=False
                 )
                 break
-            except (tcp.NetLibError, http.HttpErrorConnClosed), v:
+            except (tcp.NetLibError, http.HttpErrorConnClosed) as v:
                 self.c.log(
                     "error in server communication: %s" % repr(v),
                     level="debug"
@@ -1079,7 +1118,8 @@ class HTTPHandler(ProtocolHandler):
             if request_reply is None or request_reply == KILL:
                 raise KillSignal()
 
-            self.process_server_address(flow)  # The inline script may have changed request.host
+            # The inline script may have changed request.host
+            self.process_server_address(flow)
 
             if isinstance(request_reply, HTTPResponse):
                 flow.response = request_reply
@@ -1090,7 +1130,9 @@ class HTTPHandler(ProtocolHandler):
             # we can safely set it as the final attribute value here.
             flow.server_conn = self.c.server_conn
 
-            self.c.log("response", "debug", [flow.response._assemble_first_line()])
+            self.c.log(
+                "response", "debug", [
+                    flow.response._assemble_first_line()])
             response_reply = self.c.channel.ask("response", flow)
             if response_reply is None or response_reply == KILL:
                 raise KillSignal()
@@ -1117,7 +1159,8 @@ class HTTPHandler(ProtocolHandler):
                         }
                     )
                 )
-                if not self.process_connect_request((flow.request.host, flow.request.port)):
+                if not self.process_connect_request(
+                        (flow.request.host, flow.request.port)):
                     return False
 
             # If the user has changed the target server on this connection,
@@ -1130,7 +1173,7 @@ class HTTPHandler(ProtocolHandler):
                 http.HttpError,
                 proxy.ProxyError,
                 tcp.NetLibError,
-        ), e:
+        ) as e:
             self.handle_error(e, flow)
         except KillSignal:
             self.c.log("Connection killed", "info")
@@ -1226,7 +1269,8 @@ class HTTPHandler(ProtocolHandler):
         # Determine .scheme, .host and .port attributes
         # For absolute-form requests, they are directly given in the request.
         # For authority-form requests, we only need to determine the request scheme.
-        # For relative-form requests, we need to determine host and port as well.
+        # For relative-form requests, we need to determine host and port as
+        # well.
         if not request.scheme:
             request.scheme = "https" if flow.server_conn and flow.server_conn.ssl_established else "http"
         if not request.host:
@@ -1253,8 +1297,8 @@ class HTTPHandler(ProtocolHandler):
                 flow.server_conn = self.c.server_conn
                 self.c.establish_server_connection()
                 self.c.client_conn.send(
-                    ('HTTP/%s.%s 200 ' % (request.httpversion[0],request.httpversion[1])) +
-		    'Connection established\r\n' +
+                    ('HTTP/%s.%s 200 ' % (request.httpversion[0], request.httpversion[1])) +
+                    'Connection established\r\n' +
                     'Content-Length: 0\r\n' +
                     ('Proxy-agent: %s\r\n' % self.c.config.server_version) +
                     '\r\n'
@@ -1372,10 +1416,15 @@ class HTTPHandler(ProtocolHandler):
             semantics. Returns True, if so.
         """
         close_connection = (
-            http.connection_close(flow.request.httpversion, flow.request.headers) or
-            http.connection_close(flow.response.httpversion, flow.response.headers) or
-            http.expected_http_body_size(flow.response.headers, False, flow.request.method,
-                                         flow.response.code) == -1)
+            http.connection_close(
+                flow.request.httpversion,
+                flow.request.headers) or http.connection_close(
+                flow.response.httpversion,
+                flow.response.headers) or http.expected_http_body_size(
+                flow.response.headers,
+                False,
+                flow.request.method,
+                flow.response.code) == -1)
         if close_connection:
             if flow.request.form_in == "authority" and flow.response.code == 200:
                 # Workaround for

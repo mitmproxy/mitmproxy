@@ -70,7 +70,7 @@ def get_server(dummy_server, options):
     else:
         try:
             return ProxyServer(options)
-        except ProxyServerError, v:
+        except ProxyServerError as v:
             print(str(v), file=sys.stderr)
             sys.exit(1)
 
