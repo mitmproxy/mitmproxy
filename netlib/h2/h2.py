@@ -44,7 +44,9 @@ class H2Client(tcp.TCPClient):
 
         alp = self.get_alpn_proto_negotiated()
         if alp != b'h2':
-            raise NotImplementedError("H2Client can not handle unknown protocol: %s" % alp)
+            raise NotImplementedError(
+                "H2Client can not handle unknown protocol: %s" %
+                alp)
         print "-> Successfully negotiated 'h2' application layer protocol."
 
         if send_preface:
@@ -79,7 +81,9 @@ class H2Client(tcp.TCPClient):
 
             self.settings[setting] = value
             print "-> Setting changed: %s to %d (was %s)" %
-                (SettingsFrame.SETTINGS.get_name(setting), value, str(old_value))
+                (SettingsFrame.SETTINGS.get_name(setting),
+                 value,
+                 str(old_value))
 
         self.send_frame(SettingsFrame(flags=Frame.FLAG_ACK))
         print "-> New settings acknowledged."

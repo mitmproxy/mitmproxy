@@ -42,7 +42,8 @@ class TestCertStore:
             ca2 = certutils.CertStore.from_store(d, "test")
             assert ca2.get_cert("foo", [])
 
-            assert ca.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+            assert ca.default_ca.get_serial_number(
+            ) == ca2.default_ca.get_serial_number()
 
     def test_create_tmp(self):
         with tutils.tmpdir() as d:
@@ -78,7 +79,8 @@ class TestCertStore:
         with tutils.tmpdir() as d:
             ca1 = certutils.CertStore.from_store(os.path.join(d, "ca1"), "test")
             ca2 = certutils.CertStore.from_store(os.path.join(d, "ca2"), "test")
-            assert not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+            assert not ca1.default_ca.get_serial_number(
+            ) == ca2.default_ca.get_serial_number()
 
             dc = ca2.get_cert("foo.com", ["sans.example.com"])
             dcp = os.path.join(d, "dc")
@@ -93,8 +95,16 @@ class TestCertStore:
     def test_gen_pkey(self):
         try:
             with tutils.tmpdir() as d:
-                ca1 = certutils.CertStore.from_store(os.path.join(d, "ca1"), "test")
-                ca2 = certutils.CertStore.from_store(os.path.join(d, "ca2"), "test")
+                ca1 = certutils.CertStore.from_store(
+                    os.path.join(
+                        d,
+                        "ca1"),
+                    "test")
+                ca2 = certutils.CertStore.from_store(
+                    os.path.join(
+                        d,
+                        "ca2"),
+                    "test")
                 cert = ca1.get_cert("foo.com", [])
                 assert certffi.get_flags(ca2.gen_pkey(cert[0])) == 1
         finally:

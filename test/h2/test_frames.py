@@ -7,7 +7,12 @@ from nose.tools import assert_equal
 
 
 def test_invalid_flags():
-    tutils.raises(ValueError, DataFrame, ContinuationFrame.FLAG_END_HEADERS, 0x1234567, 'foobar')
+    tutils.raises(
+        ValueError,
+        DataFrame,
+        ContinuationFrame.FLAG_END_HEADERS,
+        0x1234567,
+        'foobar')
 
 
 def test_frame_equality():
@@ -24,8 +29,15 @@ def test_data_frame_to_bytes():
     f = DataFrame(6, Frame.FLAG_END_STREAM, 0x1234567, 'foobar')
     assert_equal(f.to_bytes().encode('hex'), '000006000101234567666f6f626172')
 
-    f = DataFrame(11, Frame.FLAG_END_STREAM | Frame.FLAG_PADDED, 0x1234567, 'foobar', pad_length=3)
-    assert_equal(f.to_bytes().encode('hex'), '00000a00090123456703666f6f626172000000')
+    f = DataFrame(
+        11,
+        Frame.FLAG_END_STREAM | Frame.FLAG_PADDED,
+        0x1234567,
+        'foobar',
+        pad_length=3)
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00000a00090123456703666f6f626172000000')
 
     f = DataFrame(6, Frame.FLAG_NO_FLAGS, 0x0, 'foobar')
     tutils.raises(ValueError, f.to_bytes)
@@ -50,7 +62,12 @@ def test_data_frame_from_bytes():
 
 
 def test_data_frame_human_readable():
-    f = DataFrame(11, Frame.FLAG_END_STREAM | Frame.FLAG_PADDED, 0x1234567, 'foobar', pad_length=3)
+    f = DataFrame(
+        11,
+        Frame.FLAG_END_STREAM | Frame.FLAG_PADDED,
+        0x1234567,
+        'foobar',
+        pad_length=3)
     assert f.human_readable()
 
 
@@ -68,7 +85,9 @@ def test_headers_frame_to_bytes():
         0x1234567,
         headers=[('host', 'foo.bar')],
         pad_length=3)
-    assert_equal(f.to_bytes().encode('hex'), '00000b01080123456703668594e75e31d9000000')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00000b01080123456703668594e75e31d9000000')
 
     f = HeadersFrame(
         10,
@@ -78,7 +97,9 @@ def test_headers_frame_to_bytes():
         exclusive=True,
         stream_dependency=0x7654321,
         weight=42)
-    assert_equal(f.to_bytes().encode('hex'), '00000c012001234567876543212a668594e75e31d9')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00000c012001234567876543212a668594e75e31d9')
 
     f = HeadersFrame(
         14,
@@ -89,7 +110,9 @@ def test_headers_frame_to_bytes():
         exclusive=True,
         stream_dependency=0x7654321,
         weight=42)
-    assert_equal(f.to_bytes().encode('hex'), '00001001280123456703876543212a668594e75e31d9000000')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00001001280123456703876543212a668594e75e31d9000000')
 
     f = HeadersFrame(
         14,
@@ -100,7 +123,9 @@ def test_headers_frame_to_bytes():
         exclusive=False,
         stream_dependency=0x7654321,
         weight=42)
-    assert_equal(f.to_bytes().encode('hex'), '00001001280123456703076543212a668594e75e31d9000000')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00001001280123456703076543212a668594e75e31d9000000')
 
     f = HeadersFrame(6, Frame.FLAG_NO_FLAGS, 0x0, 'foobar')
     tutils.raises(ValueError, f.to_bytes)
@@ -115,7 +140,8 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_id, 0x1234567)
     assert_equal(f.headers, [('host', 'foo.bar')])
 
-    f = Frame.from_bytes('00000b01080123456703668594e75e31d9000000'.decode('hex'))
+    f = Frame.from_bytes(
+        '00000b01080123456703668594e75e31d9000000'.decode('hex'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 11)
     assert_equal(f.TYPE, HeadersFrame.TYPE)
@@ -123,7 +149,8 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_id, 0x1234567)
     assert_equal(f.headers, [('host', 'foo.bar')])
 
-    f = Frame.from_bytes('00000c012001234567876543212a668594e75e31d9'.decode('hex'))
+    f = Frame.from_bytes(
+        '00000c012001234567876543212a668594e75e31d9'.decode('hex'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 12)
     assert_equal(f.TYPE, HeadersFrame.TYPE)
@@ -134,7 +161,8 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_dependency, 0x7654321)
     assert_equal(f.weight, 42)
 
-    f = Frame.from_bytes('00001001280123456703876543212a668594e75e31d9000000'.decode('hex'))
+    f = Frame.from_bytes(
+        '00001001280123456703876543212a668594e75e31d9000000'.decode('hex'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 16)
     assert_equal(f.TYPE, HeadersFrame.TYPE)
@@ -145,7 +173,8 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_dependency, 0x7654321)
     assert_equal(f.weight, 42)
 
-    f = Frame.from_bytes('00001001280123456703076543212a668594e75e31d9000000'.decode('hex'))
+    f = Frame.from_bytes(
+        '00001001280123456703076543212a668594e75e31d9000000'.decode('hex'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 16)
     assert_equal(f.TYPE, HeadersFrame.TYPE)
@@ -182,10 +211,22 @@ def test_headers_frame_human_readable():
 
 
 def test_priority_frame_to_bytes():
-    f = PriorityFrame(5, Frame.FLAG_NO_FLAGS, 0x1234567, exclusive=True, stream_dependency=0x7654321, weight=42)
+    f = PriorityFrame(
+        5,
+        Frame.FLAG_NO_FLAGS,
+        0x1234567,
+        exclusive=True,
+        stream_dependency=0x7654321,
+        weight=42)
     assert_equal(f.to_bytes().encode('hex'), '000005020001234567876543212a')
 
-    f = PriorityFrame(5, Frame.FLAG_NO_FLAGS, 0x1234567, exclusive=False, stream_dependency=0x7654321, weight=21)
+    f = PriorityFrame(
+        5,
+        Frame.FLAG_NO_FLAGS,
+        0x1234567,
+        exclusive=False,
+        stream_dependency=0x7654321,
+        weight=21)
     assert_equal(f.to_bytes().encode('hex'), '0000050200012345670765432115')
 
     f = PriorityFrame(5, Frame.FLAG_NO_FLAGS, 0x0, stream_dependency=0x1234567)
@@ -218,7 +259,13 @@ def test_priority_frame_from_bytes():
 
 
 def test_priority_frame_human_readable():
-    f = PriorityFrame(5, Frame.FLAG_NO_FLAGS, 0x1234567, exclusive=False, stream_dependency=0x7654321, weight=21)
+    f = PriorityFrame(
+        5,
+        Frame.FLAG_NO_FLAGS,
+        0x1234567,
+        exclusive=False,
+        stream_dependency=0x7654321,
+        weight=21)
     assert f.human_readable()
 
 
@@ -266,7 +313,9 @@ def test_settings_frame_to_bytes():
         settings={
             SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH: 1,
             SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS: 0x12345678})
-    assert_equal(f.to_bytes().encode('hex'), '00000c040000000000000200000001000312345678')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00000c040000000000000200000001000312345678')
 
     f = SettingsFrame(0, Frame.FLAG_NO_FLAGS, 0x1234567)
     tutils.raises(ValueError, f.to_bytes)
@@ -296,7 +345,8 @@ def test_settings_frame_from_bytes():
     assert_equal(len(f.settings), 1)
     assert_equal(f.settings[SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH], 1)
 
-    f = Frame.from_bytes('00000c040000000000000200000001000312345678'.decode('hex'))
+    f = Frame.from_bytes(
+        '00000c040000000000000200000001000312345678'.decode('hex'))
     assert isinstance(f, SettingsFrame)
     assert_equal(f.length, 12)
     assert_equal(f.TYPE, SettingsFrame.TYPE)
@@ -304,7 +354,10 @@ def test_settings_frame_from_bytes():
     assert_equal(f.stream_id, 0x0)
     assert_equal(len(f.settings), 2)
     assert_equal(f.settings[SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH], 1)
-    assert_equal(f.settings[SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS], 0x12345678)
+    assert_equal(
+        f.settings[
+            SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS],
+        0x12345678)
 
 
 def test_settings_frame_human_readable():
@@ -322,11 +375,26 @@ def test_settings_frame_human_readable():
 
 
 def test_push_promise_frame_to_bytes():
-    f = PushPromiseFrame(10, Frame.FLAG_NO_FLAGS, 0x1234567, 0x7654321, 'foobar')
-    assert_equal(f.to_bytes().encode('hex'), '00000a05000123456707654321666f6f626172')
+    f = PushPromiseFrame(
+        10,
+        Frame.FLAG_NO_FLAGS,
+        0x1234567,
+        0x7654321,
+        'foobar')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00000a05000123456707654321666f6f626172')
 
-    f = PushPromiseFrame(14, HeadersFrame.FLAG_PADDED, 0x1234567, 0x7654321, 'foobar', pad_length=3)
-    assert_equal(f.to_bytes().encode('hex'), '00000e0508012345670307654321666f6f626172000000')
+    f = PushPromiseFrame(
+        14,
+        HeadersFrame.FLAG_PADDED,
+        0x1234567,
+        0x7654321,
+        'foobar',
+        pad_length=3)
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00000e0508012345670307654321666f6f626172000000')
 
     f = PushPromiseFrame(4, Frame.FLAG_NO_FLAGS, 0x0, 0x1234567)
     tutils.raises(ValueError, f.to_bytes)
@@ -344,7 +412,8 @@ def test_push_promise_frame_from_bytes():
     assert_equal(f.stream_id, 0x1234567)
     assert_equal(f.header_block_fragment, 'foobar')
 
-    f = Frame.from_bytes('00000e0508012345670307654321666f6f626172000000'.decode('hex'))
+    f = Frame.from_bytes(
+        '00000e0508012345670307654321666f6f626172000000'.decode('hex'))
     assert isinstance(f, PushPromiseFrame)
     assert_equal(f.length, 14)
     assert_equal(f.TYPE, PushPromiseFrame.TYPE)
@@ -354,16 +423,26 @@ def test_push_promise_frame_from_bytes():
 
 
 def test_push_promise_frame_human_readable():
-    f = PushPromiseFrame(14, HeadersFrame.FLAG_PADDED, 0x1234567, 0x7654321, 'foobar', pad_length=3)
+    f = PushPromiseFrame(
+        14,
+        HeadersFrame.FLAG_PADDED,
+        0x1234567,
+        0x7654321,
+        'foobar',
+        pad_length=3)
     assert f.human_readable()
 
 
 def test_ping_frame_to_bytes():
     f = PingFrame(8, PingFrame.FLAG_ACK, 0x0, payload=b'foobar')
-    assert_equal(f.to_bytes().encode('hex'), '000008060100000000666f6f6261720000')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '000008060100000000666f6f6261720000')
 
     f = PingFrame(8, Frame.FLAG_NO_FLAGS, 0x0, payload=b'foobardeadbeef')
-    assert_equal(f.to_bytes().encode('hex'), '000008060000000000666f6f6261726465')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '000008060000000000666f6f6261726465')
 
     f = PingFrame(8, Frame.FLAG_NO_FLAGS, 0x1234567)
     tutils.raises(ValueError, f.to_bytes)
@@ -393,13 +472,34 @@ def test_ping_frame_human_readable():
 
 
 def test_goaway_frame_to_bytes():
-    f = GoAwayFrame(8, Frame.FLAG_NO_FLAGS, 0x0, last_stream=0x1234567, error_code=0x87654321, data=b'')
-    assert_equal(f.to_bytes().encode('hex'), '0000080700000000000123456787654321')
+    f = GoAwayFrame(
+        8,
+        Frame.FLAG_NO_FLAGS,
+        0x0,
+        last_stream=0x1234567,
+        error_code=0x87654321,
+        data=b'')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '0000080700000000000123456787654321')
 
-    f = GoAwayFrame(14, Frame.FLAG_NO_FLAGS, 0x0, last_stream=0x1234567, error_code=0x87654321, data=b'foobar')
-    assert_equal(f.to_bytes().encode('hex'), '00000e0700000000000123456787654321666f6f626172')
+    f = GoAwayFrame(
+        14,
+        Frame.FLAG_NO_FLAGS,
+        0x0,
+        last_stream=0x1234567,
+        error_code=0x87654321,
+        data=b'foobar')
+    assert_equal(
+        f.to_bytes().encode('hex'),
+        '00000e0700000000000123456787654321666f6f626172')
 
-    f = GoAwayFrame(8, Frame.FLAG_NO_FLAGS, 0x1234567, last_stream=0x1234567, error_code=0x87654321)
+    f = GoAwayFrame(
+        8,
+        Frame.FLAG_NO_FLAGS,
+        0x1234567,
+        last_stream=0x1234567,
+        error_code=0x87654321)
     tutils.raises(ValueError, f.to_bytes)
 
 
@@ -414,7 +514,8 @@ def test_goaway_frame_from_bytes():
     assert_equal(f.error_code, 0x87654321)
     assert_equal(f.data, b'')
 
-    f = Frame.from_bytes('00000e0700000000000123456787654321666f6f626172'.decode('hex'))
+    f = Frame.from_bytes(
+        '00000e0700000000000123456787654321666f6f626172'.decode('hex'))
     assert isinstance(f, GoAwayFrame)
     assert_equal(f.length, 14)
     assert_equal(f.TYPE, GoAwayFrame.TYPE)
@@ -426,18 +527,36 @@ def test_goaway_frame_from_bytes():
 
 
 def test_go_away_frame_human_readable():
-    f = GoAwayFrame(14, Frame.FLAG_NO_FLAGS, 0x0, last_stream=0x1234567, error_code=0x87654321, data=b'foobar')
+    f = GoAwayFrame(
+        14,
+        Frame.FLAG_NO_FLAGS,
+        0x0,
+        last_stream=0x1234567,
+        error_code=0x87654321,
+        data=b'foobar')
     assert f.human_readable()
 
 
 def test_window_update_frame_to_bytes():
-    f = WindowUpdateFrame(4, Frame.FLAG_NO_FLAGS, 0x0, window_size_increment=0x1234567)
+    f = WindowUpdateFrame(
+        4,
+        Frame.FLAG_NO_FLAGS,
+        0x0,
+        window_size_increment=0x1234567)
     assert_equal(f.to_bytes().encode('hex'), '00000408000000000001234567')
 
-    f = WindowUpdateFrame(4, Frame.FLAG_NO_FLAGS, 0x1234567, window_size_increment=0x7654321)
+    f = WindowUpdateFrame(
+        4,
+        Frame.FLAG_NO_FLAGS,
+        0x1234567,
+        window_size_increment=0x7654321)
     assert_equal(f.to_bytes().encode('hex'), '00000408000123456707654321')
 
-    f = WindowUpdateFrame(4, Frame.FLAG_NO_FLAGS, 0x0, window_size_increment=0xdeadbeef)
+    f = WindowUpdateFrame(
+        4,
+        Frame.FLAG_NO_FLAGS,
+        0x0,
+        window_size_increment=0xdeadbeef)
     tutils.raises(ValueError, f.to_bytes)
 
     f = WindowUpdateFrame(4, Frame.FLAG_NO_FLAGS, 0x0, window_size_increment=0)
@@ -455,12 +574,20 @@ def test_window_update_frame_from_bytes():
 
 
 def test_window_update_frame_human_readable():
-    f = WindowUpdateFrame(4, Frame.FLAG_NO_FLAGS, 0x1234567, window_size_increment=0x7654321)
+    f = WindowUpdateFrame(
+        4,
+        Frame.FLAG_NO_FLAGS,
+        0x1234567,
+        window_size_increment=0x7654321)
     assert f.human_readable()
 
 
 def test_continuation_frame_to_bytes():
-    f = ContinuationFrame(6, ContinuationFrame.FLAG_END_HEADERS, 0x1234567, 'foobar')
+    f = ContinuationFrame(
+        6,
+        ContinuationFrame.FLAG_END_HEADERS,
+        0x1234567,
+        'foobar')
     assert_equal(f.to_bytes().encode('hex'), '000006090401234567666f6f626172')
 
     f = ContinuationFrame(6, ContinuationFrame.FLAG_END_HEADERS, 0x0, 'foobar')
@@ -478,5 +605,9 @@ def test_continuation_frame_from_bytes():
 
 
 def test_continuation_frame_human_readable():
-    f = ContinuationFrame(6, ContinuationFrame.FLAG_END_HEADERS, 0x1234567, 'foobar')
+    f = ContinuationFrame(
+        6,
+        ContinuationFrame.FLAG_END_HEADERS,
+        0x1234567,
+        'foobar')
     assert f.human_readable()

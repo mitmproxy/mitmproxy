@@ -48,7 +48,8 @@ class SSLKeyLogger(object):
         self.f = None
         self.lock = threading.Lock()
 
-    __name__ = "SSLKeyLogger"  # required for functools.wraps, which pyOpenSSL uses.
+    # required for functools.wraps, which pyOpenSSL uses.
+    __name__ = "SSLKeyLogger"
 
     def __call__(self, connection, where, ret):
         if where == SSL.SSL_CB_HANDSHAKE_DONE and ret == 1:
@@ -61,7 +62,10 @@ class SSLKeyLogger(object):
                     self.f.write("\r\n")
                 client_random = connection.client_random().encode("hex")
                 masterkey = connection.master_key().encode("hex")
-                self.f.write("CLIENT_RANDOM {} {}\r\n".format(client_random, masterkey))
+                self.f.write(
+                    "CLIENT_RANDOM {} {}\r\n".format(
+                        client_random,
+                        masterkey))
                 self.f.flush()
 
     def close(self):
@@ -75,7 +79,8 @@ class SSLKeyLogger(object):
             return SSLKeyLogger(filename)
         return False
 
-log_ssl_key = SSLKeyLogger.create_logfun(os.getenv("MITMPROXY_SSLKEYLOGFILE") or os.getenv("SSLKEYLOGFILE"))
+log_ssl_key = SSLKeyLogger.create_logfun(
+    os.getenv("MITMPROXY_SSLKEYLOGFILE") or os.getenv("SSLKEYLOGFILE"))
 
 
 class _FileLike(object):
@@ -378,7 +383,8 @@ class _Connection(object):
         # Workaround for
         # https://github.com/pyca/pyopenssl/issues/190
         # https://github.com/mitmproxy/mitmproxy/issues/472
-        context.set_mode(SSL._lib.SSL_MODE_AUTO_RETRY)  # Options already set before are not cleared.
+        # Options already set before are not cleared.
+        context.set_mode(SSL._lib.SSL_MODE_AUTO_RETRY)
 
         # Cipher List
         if cipher_list:
@@ -420,14 +426,17 @@ class TCPClient(_Connection):
 
     def __init__(self, address, source_address=None):
         self.address = Address.wrap(address)
-        self.source_address = Address.wrap(source_address) if source_address else None
+        self.source_address = Address.wrap(
+            source_address) if source_address else None
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.ssl_established = False
         self.sni = None
 
     def create_ssl_context(self, cert=None, alpn_protos=None, **sslctx_kwargs):
-        context = self._create_ssl_context(alpn_protos=alpn_protos, **sslctx_kwargs)
+        context = self._create_ssl_context(
+            alpn_protos=alpn_protos,
+            **sslctx_kwargs)
         # Client Certs
         if cert:
             try:
@@ -443,7 +452,9 @@ class TCPClient(_Connection):
 
             options: A bit field consisting of OpenSSL.SSL.OP_* values
         """
-        context = self.create_ssl_context(alpn_protos=alpn_protos, **sslctx_kwargs)
+        context = self.create_ssl_context(
+            alpn_protos=alpn_protos,
+            **sslctx_kwargs)
         self.connection = SSL.Connection(context, self.connection)
         if sni:
             self.sni = sni
@@ -469,7 +480,9 @@ class TCPClient(_Connection):
             self.rfile = Reader(connection.makefile('rb', self.rbufsize))
             self.wfile = Writer(connection.makefile('wb', self.wbufsize))
         except (socket.error, IOError) as err:
-            raise NetLibError('Error connecting to "%s": %s' % (self.address.host, err))
+            raise NetLibError(
+                'Error connecting to "%s": %s' %
+                (self.address.host, err))
         self.connection = connection
 
     def settimeout(self, n):
@@ -535,7 +548,9 @@ class BaseHandler(_Connection):
             until then we're conservative.
         """
 
-        context = self._create_ssl_context(alpn_select=alpn_select, **sslctx_kwargs)
+        context = self._create_ssl_context(
+            alpn_select=alpn_select,
+            **sslctx_kwargs)
 
         context.use_privatekey(key)
         context.use_certificate(cert.x509)
@@ -566,7 +581,11 @@ class BaseHandler(_Connection):
         For a list of parameters, see BaseHandler._create_ssl_context(...)
         """
 
-        context = self.create_ssl_context(cert, key, alpn_select=alpn_select, **sslctx_kwargs)
+        context = self.create_ssl_context(
+            cert,
+            key,
+            alpn_select=alpn_select,
+            **sslctx_kwargs)
         self.connection = SSL.Connection(context, self.connection)
         self.connection.set_accept_state()
         try:
@@ -611,7 +630,8 @@ class TCPServer(object):
         try:
             while not self.__shutdown_request:
                 try:
-                    r, w, e = select.select([self.socket], [], [], poll_interval)
+                    r, w, e = select.select(
+                        [self.socket], [], [], poll_interval)
                 except select.error as ex:  # pragma: no cover
                     if ex[0] == EINTR:
                         continue

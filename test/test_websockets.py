@@ -63,7 +63,8 @@ class WebSocketsClient(tcp.TCPClient):
         resp = http.read_response(self.rfile, "get", None)
         server_nonce = websockets.check_server_handshake(resp.headers)
 
-        if not server_nonce == websockets.create_server_nonce(self.client_nonce):
+        if not server_nonce == websockets.create_server_nonce(
+                self.client_nonce):
             self.close()
 
     def read_next_message(self):

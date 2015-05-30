@@ -94,7 +94,13 @@ class DataFrame(Frame):
     TYPE = 0x0
     VALID_FLAGS = [Frame.FLAG_END_STREAM, Frame.FLAG_PADDED]
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, payload=b'', pad_length=0):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            payload=b'',
+            pad_length=0):
         super(DataFrame, self).__init__(length, flags, stream_id)
         self.payload = payload
         self.pad_length = pad_length
@@ -132,9 +138,22 @@ class DataFrame(Frame):
 
 class HeadersFrame(Frame):
     TYPE = 0x1
-    VALID_FLAGS = [Frame.FLAG_END_STREAM, Frame.FLAG_END_HEADERS, Frame.FLAG_PADDED, Frame.FLAG_PRIORITY]
+    VALID_FLAGS = [
+        Frame.FLAG_END_STREAM,
+        Frame.FLAG_END_HEADERS,
+        Frame.FLAG_PADDED,
+        Frame.FLAG_PRIORITY]
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, headers=None, pad_length=0, exclusive=False, stream_dependency=0x0, weight=0):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            headers=None,
+            pad_length=0,
+            exclusive=False,
+            stream_dependency=0x0,
+            weight=0):
         super(HeadersFrame, self).__init__(length, flags, stream_id)
 
         if headers is None:
@@ -157,7 +176,9 @@ class HeadersFrame(Frame):
             header_block_fragment = payload[0:]
 
         if f.flags & self.FLAG_PRIORITY:
-            f.stream_dependency, f.weight = struct.unpack('!LB', header_block_fragment[:5])
+            f.stream_dependency, f.weight = struct.unpack(
+                '!LB', header_block_fragment[
+                    :5])
             f.exclusive = bool(f.stream_dependency >> 31)
             f.stream_dependency &= 0x7FFFFFFF
             header_block_fragment = header_block_fragment[5:]
@@ -176,7 +197,9 @@ class HeadersFrame(Frame):
             b += struct.pack('!B', self.pad_length)
 
         if self.flags & self.FLAG_PRIORITY:
-            b += struct.pack('!LB', (int(self.exclusive) << 31) | self.stream_dependency, self.weight)
+            b += struct.pack('!LB',
+                             (int(self.exclusive) << 31) | self.stream_dependency,
+                             self.weight)
 
         b += Encoder().encode(self.headers)
 
@@ -209,7 +232,14 @@ class PriorityFrame(Frame):
     TYPE = 0x2
     VALID_FLAGS = []
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, exclusive=False, stream_dependency=0x0, weight=0):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            exclusive=False,
+            stream_dependency=0x0,
+            weight=0):
         super(PriorityFrame, self).__init__(length, flags, stream_id)
         self.exclusive = exclusive
         self.stream_dependency = stream_dependency
@@ -227,12 +257,17 @@ class PriorityFrame(Frame):
 
     def payload_bytes(self):
         if self.stream_id == 0x0:
-            raise ValueError('PRIORITY frames MUST be associated with a stream.')
+            raise ValueError(
+                'PRIORITY frames MUST be associated with a stream.')
 
         if self.stream_dependency == 0x0:
             raise ValueError('stream dependency is invalid.')
 
-        return struct.pack('!LB', (int(self.exclusive) << 31) | self.stream_dependency, self.weight)
+        return struct.pack(
+            '!LB',
+            (int(
+                self.exclusive) << 31) | self.stream_dependency,
+            self.weight)
 
     def payload_human_readable(self):
         s = []
@@ -246,7 +281,12 @@ class RstStreamFrame(Frame):
     TYPE = 0x3
     VALID_FLAGS = []
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, error_code=0x0):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            error_code=0x0):
         super(RstStreamFrame, self).__init__(length, flags, stream_id)
         self.error_code = error_code
 
@@ -258,7 +298,8 @@ class RstStreamFrame(Frame):
 
     def payload_bytes(self):
         if self.stream_id == 0x0:
-            raise ValueError('RST_STREAM frames MUST be associated with a stream.')
+            raise ValueError(
+                'RST_STREAM frames MUST be associated with a stream.')
 
         return struct.pack('!L', self.error_code)
 
@@ -279,7 +320,12 @@ class SettingsFrame(Frame):
         SETTINGS_MAX_HEADER_LIST_SIZE=0x6,
     )
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, settings=None):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            settings=None):
         super(SettingsFrame, self).__init__(length, flags, stream_id)
 
         if settings is None:
@@ -299,7 +345,8 @@ class SettingsFrame(Frame):
 
     def payload_bytes(self):
         if self.stream_id != 0x0:
-            raise ValueError('SETTINGS frames MUST NOT be associated with a stream.')
+            raise ValueError(
+                'SETTINGS frames MUST NOT be associated with a stream.')
 
         b = b''
         for identifier, value in self.settings.items():
@@ -323,7 +370,14 @@ class PushPromiseFrame(Frame):
     TYPE = 0x5
     VALID_FLAGS = [Frame.FLAG_END_HEADERS, Frame.FLAG_PADDED]
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, promised_stream=0x0, header_block_fragment=b'', pad_length=0):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            promised_stream=0x0,
+            header_block_fragment=b'',
+            pad_length=0):
         super(PushPromiseFrame, self).__init__(length, flags, stream_id)
         self.pad_length = pad_length
         self.promised_stream = promised_stream
@@ -346,7 +400,8 @@ class PushPromiseFrame(Frame):
 
     def payload_bytes(self):
         if self.stream_id == 0x0:
-            raise ValueError('PUSH_PROMISE frames MUST be associated with a stream.')
+            raise ValueError(
+                'PUSH_PROMISE frames MUST be associated with a stream.')
 
         if self.promised_stream == 0x0:
             raise ValueError('Promised stream id not valid.')
@@ -378,7 +433,12 @@ class PingFrame(Frame):
     TYPE = 0x6
     VALID_FLAGS = [Frame.FLAG_ACK]
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, payload=b''):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            payload=b''):
         super(PingFrame, self).__init__(length, flags, stream_id)
         self.payload = payload
 
@@ -390,7 +450,8 @@ class PingFrame(Frame):
 
     def payload_bytes(self):
         if self.stream_id != 0x0:
-            raise ValueError('PING frames MUST NOT be associated with a stream.')
+            raise ValueError(
+                'PING frames MUST NOT be associated with a stream.')
 
         b = self.payload[0:8]
         b += b'\0' * (8 - len(b))
@@ -404,7 +465,14 @@ class GoAwayFrame(Frame):
     TYPE = 0x7
     VALID_FLAGS = []
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, last_stream=0x0, error_code=0x0, data=b''):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            last_stream=0x0,
+            error_code=0x0,
+            data=b''):
         super(GoAwayFrame, self).__init__(length, flags, stream_id)
         self.last_stream = last_stream
         self.error_code = error_code
@@ -422,7 +490,8 @@ class GoAwayFrame(Frame):
 
     def payload_bytes(self):
         if self.stream_id != 0x0:
-            raise ValueError('GOAWAY frames MUST NOT be associated with a stream.')
+            raise ValueError(
+                'GOAWAY frames MUST NOT be associated with a stream.')
 
         b = struct.pack('!LL', self.last_stream & 0x7FFFFFFF, self.error_code)
         b += bytes(self.data)
@@ -440,7 +509,12 @@ class WindowUpdateFrame(Frame):
     TYPE = 0x8
     VALID_FLAGS = []
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, window_size_increment=0x0):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            window_size_increment=0x0):
         super(WindowUpdateFrame, self).__init__(length, flags, stream_id)
         self.window_size_increment = window_size_increment
 
@@ -455,7 +529,8 @@ class WindowUpdateFrame(Frame):
 
     def payload_bytes(self):
         if self.window_size_increment <= 0 or self.window_size_increment >= 2 ** 31:
-            raise ValueError('Window Szie Increment MUST be greater than 0 and less than 2^31.')
+            raise ValueError(
+                'Window Szie Increment MUST be greater than 0 and less than 2^31.')
 
         return struct.pack('!L', self.window_size_increment & 0x7FFFFFFF)
 
@@ -467,7 +542,12 @@ class ContinuationFrame(Frame):
     TYPE = 0x9
     VALID_FLAGS = [Frame.FLAG_END_HEADERS]
 
-    def __init__(self, length=0, flags=Frame.FLAG_NO_FLAGS, stream_id=0x0, header_block_fragment=b''):
+    def __init__(
+            self,
+            length=0,
+            flags=Frame.FLAG_NO_FLAGS,
+            stream_id=0x0,
+            header_block_fragment=b''):
         super(ContinuationFrame, self).__init__(length, flags, stream_id)
         self.header_block_fragment = header_block_fragment
 
@@ -479,7 +559,8 @@ class ContinuationFrame(Frame):
 
     def payload_bytes(self):
         if self.stream_id == 0x0:
-            raise ValueError('CONTINUATION frames MUST be associated with a stream.')
+            raise ValueError(
+                'CONTINUATION frames MUST be associated with a stream.')
 
         return self.header_block_fragment
 

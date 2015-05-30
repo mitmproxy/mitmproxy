@@ -61,7 +61,12 @@ def test_message_ipv6():
     # Test ATYP=0x04 (IPV6)
     ipv6_addr = "2001:db8:85a3:8d3:1319:8a2e:370:7344"
 
-    raw = tutils.treader("\x05\x01\x00\x04" + socket.inet_pton(socket.AF_INET6, ipv6_addr) + "\xDE\xAD\xBE\xEF")
+    raw = tutils.treader(
+        "\x05\x01\x00\x04" +
+        socket.inet_pton(
+            socket.AF_INET6,
+            ipv6_addr) +
+        "\xDE\xAD\xBE\xEF")
     out = StringIO()
     msg = socks.Message.from_file(raw)
     assert raw.read(2) == "\xBE\xEF"

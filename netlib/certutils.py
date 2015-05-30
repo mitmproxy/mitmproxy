@@ -96,7 +96,8 @@ def dummy_cert(privkey, cacert, commonname, sans):
     cert.set_serial_number(int(time.time() * 10000))
     if ss:
         cert.set_version(2)
-        cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName", False, ss)])
+        cert.add_extensions(
+            [OpenSSL.crypto.X509Extension("subjectAltName", False, ss)])
     cert.set_pubkey(cacert.get_pubkey())
     cert.sign(privkey, "sha256")
     return SSLCert(cert)
@@ -156,7 +157,12 @@ class CertStore(object):
         Implements an in-memory certificate store.
     """
 
-    def __init__(self, default_privatekey, default_ca, default_chain_file, dhparams):
+    def __init__(
+            self,
+            default_privatekey,
+            default_ca,
+            default_chain_file,
+            dhparams):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
@@ -176,8 +182,10 @@ class CertStore(object):
         if bio != OpenSSL.SSL._ffi.NULL:
             bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)
             dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(
-                bio, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL
-            )
+                bio,
+                OpenSSL.SSL._ffi.NULL,
+                OpenSSL.SSL._ffi.NULL,
+                OpenSSL.SSL._ffi.NULL)
             dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)
             return dh
 
@@ -189,8 +197,12 @@ class CertStore(object):
         else:
             with open(ca_path, "rb") as f:
                 raw = f.read()
-            ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
-            key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
+            ca = OpenSSL.crypto.load_certificate(
+                OpenSSL.crypto.FILETYPE_PEM,
+                raw)
+            key = OpenSSL.crypto.load_privatekey(
+                OpenSSL.crypto.FILETYPE_PEM,
+                raw)
         dh_path = os.path.join(path, basename + "-dhparam.pem")
         dh = cls.load_dhparam(dh_path)
         return cls(key, ca, ca_path, dh)
@@ -206,16 +218,28 @@ class CertStore(object):
         key, ca = create_ca(o=o, cn=cn, exp=expiry)
         # Dump the CA plus private key
         with open(os.path.join(path, basename + "-ca.pem"), "wb") as f:
-            f.write(OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key))
-            f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
+            f.write(
+                OpenSSL.crypto.dump_privatekey(
+                    OpenSSL.crypto.FILETYPE_PEM,
+                    key))
+            f.write(
+                OpenSSL.crypto.dump_certificate(
+                    OpenSSL.crypto.FILETYPE_PEM,
+                    ca))
 
         # Dump the certificate in PEM format
         with open(os.path.join(path, basename + "-ca-cert.pem"), "wb") as f:
-            f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
+            f.write(
+                OpenSSL.crypto.dump_certificate(
+                    OpenSSL.crypto.FILETYPE_PEM,
+                    ca))
 
         # Create a .cer file with the same contents for Android
         with open(os.path.join(path, basename + "-ca-cert.cer"), "wb") as f:
-            f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
+            f.write(
+                OpenSSL.crypto.dump_certificate(
+                    OpenSSL.crypto.FILETYPE_PEM,
+                    ca))
 
         # Dump the certificate in PKCS12 format for Windows devices
         with open(os.path.join(path, basename + "-ca-cert.p12"), "wb") as f:
@@ -232,9 +256,14 @@ class CertStore(object):
     def add_cert_file(self, spec, path):
         with open(path, "rb") as f:
             raw = f.read()
-        cert = SSLCert(OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw))
+        cert = SSLCert(
+            OpenSSL.crypto.load_certificate(
+                OpenSSL.crypto.FILETYPE_PEM,
+                raw))
         try:
-            privatekey = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw)
+            privatekey = OpenSSL.crypto.load_privatekey(
+                OpenSSL.crypto.FILETYPE_PEM,
+                raw)
         except Exception:
             privatekey = self.default_privatekey
         self.add_cert(
@@ -284,15 +313,22 @@ class CertStore(object):
             potential_keys.extend(self.asterisk_forms(s))
         potential_keys.append((commonname, tuple(sans)))
 
-        name = next(itertools.ifilter(lambda key: key in self.certs, potential_keys), None)
+        name = next(
+            itertools.ifilter(
+                lambda key: key in self.certs,
+                potential_keys),
+            None)
         if name:
             entry = self.certs[name]
         else:
             entry = CertStoreEntry(
-                cert=dummy_cert(self.default_privatekey, self.default_ca, commonname, sans),
+                cert=dummy_cert(
+                    self.default_privatekey,
+                    self.default_ca,
+                    commonname,
+                    sans),
                 privatekey=self.default_privatekey,
-                chain_file=self.default_chain_file
-            )
+                chain_file=self.default_chain_file)
             self.certs[(commonname, tuple(sans))] = entry
 
         return entry.cert, entry.privatekey, entry.chain_file
@@ -317,7 +353,8 @@ class _GeneralName(univ.Choice):
 
 class _GeneralNames(univ.SequenceOf):
     componentType = _GeneralName()
-    sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
+    sizeSpec = univ.SequenceOf.sizeSpec + \
+        constraint.ValueSizeConstraint(1, 1024)
 
 
 class SSLCert(object):
@@ -345,7 +382,9 @@ class SSLCert(object):
         return klass.from_pem(pem)
 
     def to_pem(self):
-        return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, self.x509)
+        return OpenSSL.crypto.dump_certificate(
+            OpenSSL.crypto.FILETYPE_PEM,
+            self.x509)
 
     def digest(self, name):
         return self.x509.digest(name)

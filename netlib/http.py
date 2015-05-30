@@ -124,7 +124,8 @@ def read_chunked(fp, limit, is_request):
         May raise HttpError.
     """
     # FIXME: Should check if chunked is the final encoding in the headers
-    # http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3 3.3 2.
+    # http://tools.ietf.org/html/draft-ietf-httpbis-p1-messaging-16#section-3.3
+    # 3.3 2.
     total = 0
     code = 400 if is_request else 502
     while True:

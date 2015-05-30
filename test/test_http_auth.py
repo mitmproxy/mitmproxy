@@ -13,7 +13,10 @@ class TestPassManNonAnon:
 class TestPassManHtpasswd:
 
     def test_file_errors(self):
-        tutils.raises("malformed htpasswd file", http_auth.PassManHtpasswd, tutils.test_data.path("data/server.crt"))
+        tutils.raises(
+            "malformed htpasswd file",
+            http_auth.PassManHtpasswd,
+            tutils.test_data.path("data/server.crt"))
 
     def test_simple(self):
         pm = http_auth.PassManHtpasswd(tutils.test_data.path("data/htpasswd"))

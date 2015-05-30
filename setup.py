@@ -34,17 +34,14 @@ setup(
         "Topic :: Software Development :: Testing",
         "Topic :: Software Development :: Testing :: Traffic Generation",
     ],
-
     packages=find_packages(),
     include_package_data=True,
-
     install_requires=[
         "pyasn1>=0.1.7",
         "pyOpenSSL>=0.15.1",
         "cryptography>=0.9",
         "passlib>=1.6.2",
-        "hpack>=1.0.1"
-    ],
+        "hpack>=1.0.1"],
     extras_require={
         'dev': [
             "mock>=1.0.1",
@@ -53,7 +50,6 @@ setup(
             "coveralls>=0.4.1",
             "autopep8>=1.0.3",
             "autoflake>=0.6.6",
-            "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION)
-        ]
-    }
-)
+            "pathod>=%s, <%s" %
+            (version.MINORVERSION,
+             version.NEXT_MINORVERSION)]})

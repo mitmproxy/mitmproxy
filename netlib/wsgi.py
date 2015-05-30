@@ -77,7 +77,8 @@ class WSGIAdaptor(object):
         }
         environ.update(extra)
         if flow.client_conn.address:
-            environ["REMOTE_ADDR"], environ["REMOTE_PORT"] = flow.client_conn.address()
+            environ["REMOTE_ADDR"], environ[
+                "REMOTE_PORT"] = flow.client_conn.address()
 
         for key, value in flow.request.headers.items():
             key = 'HTTP_' + key.upper().replace('-', '_')

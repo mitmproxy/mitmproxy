@@ -75,7 +75,9 @@ class TestServerBind(test.ServerTestBase):
         for i in range(20):
             random_port = random.randrange(1024, 65535)
             try:
-                c = tcp.TCPClient(("127.0.0.1", self.port), source_address=("127.0.0.1", random_port))
+                c = tcp.TCPClient(
+                    ("127.0.0.1", self.port), source_address=(
+                        "127.0.0.1", random_port))
                 c.connect()
                 assert c.rfile.readline() == str(("127.0.0.1", random_port))
                 return
@@ -196,7 +198,8 @@ class TestSSLClientCert(test.ServerTestBase):
     def test_clientcert(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
-        c.convert_to_ssl(cert=tutils.test_data.path("data/clientcert/client.pem"))
+        c.convert_to_ssl(
+            cert=tutils.test_data.path("data/clientcert/client.pem"))
         assert c.rfile.readline().strip() == "1"
 
     def test_clientcert_err(self):
@@ -305,7 +308,11 @@ class TestClientCipherListError(test.ServerTestBase):
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
-        tutils.raises("cipher specification", c.convert_to_ssl, sni="foo.com", cipher_list="bogus")
+        tutils.raises(
+            "cipher specification",
+            c.convert_to_ssl,
+            sni="foo.com",
+            cipher_list="bogus")
 
 
 class TestSSLDisconnect(test.ServerTestBase):
@@ -666,5 +673,7 @@ class TestSSLKeyLogger(test.ServerTestBase):
         tcp.log_ssl_key = _logfun
 
     def test_create_logfun(self):
-        assert isinstance(tcp.SSLKeyLogger.create_logfun("test"), tcp.SSLKeyLogger)
+        assert isinstance(
+            tcp.SSLKeyLogger.create_logfun("test"),
+            tcp.SSLKeyLogger)
         assert not tcp.SSLKeyLogger.create_logfun(False)
