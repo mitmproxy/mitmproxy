@@ -175,6 +175,7 @@ class GridWalker(urwid.ListWalker):
         and errors is a set with an entry of each offset in rows that is an
         error.
     """
+
     def __init__(self, lst, editor):
         self.lst = [(i, set([])) for i in lst]
         self.editor = editor
@@ -225,7 +226,7 @@ class GridWalker(urwid.ListWalker):
     def delete_focus(self):
         if self.lst:
             del self.lst[self.focus]
-            self.focus = min(len(self.lst)-1, self.focus)
+            self.focus = min(len(self.lst) - 1, self.focus)
             self._modified()
 
     def _insert(self, pos):
@@ -266,14 +267,14 @@ class GridWalker(urwid.ListWalker):
         self._modified()
 
     def right(self):
-        self.focus_col = min(self.focus_col + 1, len(self.editor.columns)-1)
+        self.focus_col = min(self.focus_col + 1, len(self.editor.columns) - 1)
         self._modified()
 
     def tab_next(self):
         self.stop_edit()
-        if self.focus_col < len(self.editor.columns)-1:
+        if self.focus_col < len(self.editor.columns) - 1:
             self.focus_col += 1
-        elif self.focus != len(self.lst)-1:
+        elif self.focus != len(self.lst) - 1:
             self.focus_col = 0
             self.focus += 1
         self._modified()
@@ -297,14 +298,14 @@ class GridWalker(urwid.ListWalker):
         self._modified()
 
     def get_next(self, pos):
-        if pos+1 >= len(self.lst):
+        if pos + 1 >= len(self.lst):
             return None, None
-        return GridRow(None, False, self.editor, self.lst[pos+1]), pos+1
+        return GridRow(None, False, self.editor, self.lst[pos + 1]), pos + 1
 
     def get_prev(self, pos):
-        if pos-1 < 0:
+        if pos - 1 < 0:
             return None, None
-        return GridRow(None, False, self.editor, self.lst[pos-1]), pos-1
+        return GridRow(None, False, self.editor, self.lst[pos - 1]), pos - 1
 
 
 class GridListBox(urwid.ListBox):
@@ -387,7 +388,7 @@ class GridEditor(urwid.WidgetWrap):
                 d = file(p, "rb").read()
                 self.walker.set_current_value(d, unescaped)
                 self.walker._modified()
-            except IOError, v:
+            except IOError as v:
                 return str(v)
 
     def set_subeditor_value(self, val, focus, focus_col):
@@ -418,7 +419,7 @@ class GridEditor(urwid.WidgetWrap):
         elif key == "G":
             self.walker.set_focus(0)
         elif key == "g":
-            self.walker.set_focus(len(self.walker.lst)-1)
+            self.walker.set_focus(len(self.walker.lst) - 1)
         elif key in ["h", "left"]:
             self.walker.left()
         elif key in ["l", "right"]:
@@ -633,7 +634,7 @@ class ScriptEditor(GridEditor):
     def is_error(self, col, val):
         try:
             script.Script.parse_command(val)
-        except script.ScriptError, v:
+        except script.ScriptError as v:
             return str(v)
 
 

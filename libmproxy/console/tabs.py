@@ -1,5 +1,6 @@
 import urwid
 
+
 class Tabs(urwid.WidgetWrap):
     def __init__(self, tabs, tab_offset=0):
         urwid.WidgetWrap.__init__(self, "")
@@ -15,10 +16,10 @@ class Tabs(urwid.WidgetWrap):
 
     def keypress(self, size, key):
         if key in ["tab", "l"]:
-            self.tab_offset = (self.tab_offset + 1)%(len(self.tabs))
+            self.tab_offset = (self.tab_offset + 1) % (len(self.tabs))
             self.show()
         elif key == "h":
-            self.tab_offset = (self.tab_offset - 1)%(len(self.tabs))
+            self.tab_offset = (self.tab_offset - 1) % (len(self.tabs))
             self.show()
         return self._w.keypress(size, key)
 

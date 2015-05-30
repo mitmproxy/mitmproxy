@@ -6,7 +6,7 @@ from . import common, signals
 from .. import filt, version
 
 footer = [
-    ("heading", 'mitmproxy v%s '%version.VERSION),
+    ("heading", 'mitmproxy v%s ' % version.VERSION),
     ('heading_key', "q"), ":back ",
 ]
 
@@ -33,7 +33,12 @@ class HelpView(urwid.ListBox):
             ("pg up/down", "page up/down"),
             ("arrows", "up, down, left, right"),
         ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.extend(
+            common.format_keyvals(
+                keys,
+                key="key",
+                val="text",
+                indent=4))
 
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
@@ -52,15 +57,15 @@ class HelpView(urwid.ListBox):
         f = []
         for i in filt.filt_unary:
             f.append(
-                ("~%s"%i.code, i.help)
+                ("~%s" % i.code, i.help)
             )
         for i in filt.filt_rex:
             f.append(
-                ("~%s regex"%i.code, i.help)
+                ("~%s regex" % i.code, i.help)
             )
         for i in filt.filt_int:
             f.append(
-                ("~%s int"%i.code, i.help)
+                ("~%s int" % i.code, i.help)
             )
         f.sort()
         f.extend(
@@ -75,7 +80,7 @@ class HelpView(urwid.ListBox):
 
         text.append(
             urwid.Text(
-               [
+                [
                     "\n",
                     ("text", "    Regexes are Python-style.\n"),
                     ("text", "    Regexes can be specified as quoted strings.\n"),
@@ -83,13 +88,13 @@ class HelpView(urwid.ListBox):
                     ("text", "    Expressions with no operators are regex matches against URL.\n"),
                     ("text", "    Default binary operator is &.\n"),
                     ("head", "\n    Examples:\n"),
-               ]
+                ]
             )
         )
         examples = [
-                ("google\.com", "Url containing \"google.com"),
-                ("~q ~b test", "Requests where body contains \"test\""),
-                ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
+            ("google\.com", "Url containing \"google.com"),
+            ("~q ~b test", "Requests where body contains \"test\""),
+            ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(
             common.format_keyvals(examples, key="key", val="text", indent=4)

@@ -11,7 +11,7 @@ class TestScript:
         s = flow.State()
         fm = flow.FlowMaster(None, s)
         sp = tutils.test_data.path("scripts/a.py")
-        p = script.Script("%s --var 40"%sp, fm)
+        p = script.Script("%s --var 40" % sp, fm)
 
         assert "here" in p.ns
         assert p.run("here") == (True, 41)
@@ -79,7 +79,9 @@ class TestScript:
     def test_concurrent2(self):
         s = flow.State()
         fm = flow.FlowMaster(None, s)
-        s = script.Script(tutils.test_data.path("scripts/concurrent_decorator.py"), fm)
+        s = script.Script(
+            tutils.test_data.path("scripts/concurrent_decorator.py"),
+            fm)
         s.load()
         m = mock.Mock()
 
@@ -110,8 +112,9 @@ class TestScript:
         fm = flow.FlowMaster(None, s)
         tutils.raises(
             "decorator not supported for this method",
-            script.Script, tutils.test_data.path("scripts/concurrent_decorator_err.py"), fm
-        )
+            script.Script,
+            tutils.test_data.path("scripts/concurrent_decorator_err.py"),
+            fm)
 
 
 def test_command_parsing():
@@ -120,5 +123,3 @@ def test_command_parsing():
     absfilepath = os.path.normcase(tutils.test_data.path("scripts/a.py"))
     s = script.Script(absfilepath, fm)
     assert os.path.isfile(s.argv[0])
-
-

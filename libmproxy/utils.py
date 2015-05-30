@@ -1,7 +1,13 @@
 from __future__ import absolute_import
-import os, datetime, urllib, re
-import time, functools, cgi
+import os
+import datetime
+import urllib
+import re
+import time
+import functools
+import cgi
 import json
+
 
 def timestamp():
     """
@@ -91,7 +97,7 @@ def multipartdecode(hdrs, content):
                 match = rx.search(parts[1])
                 if match:
                     key = match.group(1)
-                    value = "".join(parts[3+parts[2:].index(""):])
+                    value = "".join(parts[3 + parts[2:].index(""):])
                     r.append((key, value))
         return r
     return []
@@ -107,8 +113,8 @@ def pretty_duration(secs):
     for limit, formatter in formatters:
         if secs >= limit:
             return formatter.format(secs)
-    #less than 1 sec
-    return "{:.0f}ms".format(secs*1000)
+    # less than 1 sec
+    return "{:.0f}ms".format(secs * 1000)
 
 
 class Data:
@@ -126,7 +132,7 @@ class Data:
         """
         fullpath = os.path.join(self.dirname, path)
         if not os.path.exists(fullpath):
-            raise ValueError, "dataPath: %s does not exist."%fullpath
+            raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath
 pkg_data = Data(__name__)
 
@@ -135,10 +141,11 @@ class LRUCache:
     """
         A simple LRU cache for generated values.
     """
+
     def __init__(self, size=100):
         self.size = size
         self.cache = {}
-        self.cacheList  = []
+        self.cacheList = []
 
     def get(self, gen, *args):
         """
@@ -147,7 +154,7 @@ class LRUCache:
             *args: A list of immutable arguments, used to establish identiy by
             *the cache, and passed to gen to generate values.
         """
-        if self.cache.has_key(args):
+        if args in self.cache:
             self.cacheList.remove(args)
             self.cacheList.insert(0, args)
             return self.cache[args]
@@ -195,14 +202,14 @@ def hostport(scheme, host, port):
     if (port, scheme) in [(80, "http"), (443, "https")]:
         return host
     else:
-        return "%s:%s"%(host, port)
+        return "%s:%s" % (host, port)
 
 
 def unparse_url(scheme, host, port, path=""):
     """
         Returns a URL string, constructed from the specified compnents.
     """
-    return "%s://%s%s"%(scheme, hostport(scheme, host, port), path)
+    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
 def clean_hanging_newline(t):
@@ -243,7 +250,7 @@ def parse_size(s):
     try:
         return int(s) * mult
     except ValueError:
-        raise ValueError("Invalid size specification: %s"%s)
+        raise ValueError("Invalid size specification: %s" % s)
 
 
 def safe_subn(pattern, repl, target, *args, **kwargs):

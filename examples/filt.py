@@ -3,12 +3,14 @@
 
 from libmproxy import filt
 
+
 def start(context, argv):
-	if len(argv) != 2:
-		raise ValueError("Usage: -s 'filt.py FILTER'")
-	context.filter = filt.parse(argv[1])
+    if len(argv) != 2:
+        raise ValueError("Usage: -s 'filt.py FILTER'")
+    context.filter = filt.parse(argv[1])
+
 
 def response(context, flow):
-	if flow.match(context.filter):
-		print("Flow matches filter:")
-		print(flow)
+    if flow.match(context.filter):
+        print("Flow matches filter:")
+        print(flow)

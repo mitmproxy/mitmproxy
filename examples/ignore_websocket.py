@@ -24,6 +24,7 @@ def done(context):
     HTTPRequest._headers_to_strip_off.append("Connection")
     HTTPRequest._headers_to_strip_off.append("Upgrade")
 
+
 @concurrent
 def response(context, flow):
     value = flow.response.headers.get_first("Connection", None)

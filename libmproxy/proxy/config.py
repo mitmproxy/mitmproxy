@@ -81,16 +81,27 @@ class ProxyConfig:
         self.check_tcp = HostMatcher(tcp_hosts)
         self.authenticator = authenticator
         self.cadir = os.path.expanduser(cadir)
-        self.certstore = certutils.CertStore.from_store(self.cadir, CONF_BASENAME)
+        self.certstore = certutils.CertStore.from_store(
+            self.cadir,
+            CONF_BASENAME)
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
-        self.openssl_method_client, self.openssl_options_client = version_to_openssl(ssl_version_client)
-        self.openssl_method_server, self.openssl_options_server = version_to_openssl(ssl_version_server)
+        self.openssl_method_client, self.openssl_options_client = version_to_openssl(
+            ssl_version_client)
+        self.openssl_method_server, self.openssl_options_server = version_to_openssl(
+            ssl_version_server)
         self.ssl_ports = ssl_ports
 
 
-sslversion_choices = ("all", "secure", "SSLv2", "SSLv3", "TLSv1", "TLSv1_1", "TLSv1_2")
+sslversion_choices = (
+    "all",
+    "secure",
+    "SSLv2",
+    "SSLv3",
+    "TLSv1",
+    "TLSv1_1",
+    "TLSv1_2")
 
 
 def version_to_openssl(version):
@@ -119,7 +130,8 @@ def process_proxy_options(parser, options):
     if options.transparent_proxy:
         c += 1
         if not platform.resolver:
-            return parser.error("Transparent mode not supported on this platform.")
+            return parser.error(
+                "Transparent mode not supported on this platform.")
         mode = "transparent"
     if options.socks_proxy:
         c += 1
@@ -133,28 +145,33 @@ def process_proxy_options(parser, options):
         mode = "upstream"
         upstream_server = options.upstream_proxy
     if c > 1:
-        return parser.error("Transparent, SOCKS5, reverse and upstream proxy mode "
-                            "are mutually exclusive.")
+        return parser.error(
+            "Transparent, SOCKS5, reverse and upstream proxy mode "
+            "are mutually exclusive.")
 
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
-        if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
+        if not os.path.exists(
+                options.clientcerts) or not os.path.isdir(
+                options.clientcerts):
             return parser.error(
-                "Client certificate directory does not exist or is not a directory: %s" % options.clientcerts
-            )
+                "Client certificate directory does not exist or is not a directory: %s" %
+                options.clientcerts)
 
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
             if len(options.auth_singleuser.split(':')) != 2:
-                return parser.error("Invalid single-user specification. Please use the format username:password")
+                return parser.error(
+                    "Invalid single-user specification. Please use the format username:password")
             username, password = options.auth_singleuser.split(':')
             password_manager = http_auth.PassManSingleUser(username, password)
         elif options.auth_nonanonymous:
             password_manager = http_auth.PassManNonAnon()
         elif options.auth_htpasswd:
             try:
-                password_manager = http_auth.PassManHtpasswd(options.auth_htpasswd)
-            except ValueError, v:
+                password_manager = http_auth.PassManHtpasswd(
+                    options.auth_htpasswd)
+            except ValueError as v:
                 return parser.error(v.message)
         authenticator = http_auth.BasicProxyAuth(password_manager, "mitmproxy")
     else:
@@ -203,15 +220,18 @@ def process_proxy_options(parser, options):
 def ssl_option_group(parser):
     group = parser.add_argument_group("SSL")
     group.add_argument(
-        "--cert", dest='certs', default=[], type=str,
-        metavar="SPEC", action="append",
+        "--cert",
+        dest='certs',
+        default=[],
+        type=str,
+        metavar="SPEC",
+        action="append",
         help='Add an SSL certificate. SPEC is of the form "[domain=]path". '
-             'The domain may include a wildcard, and is equal to "*" if not specified. '
-             'The file at path is a certificate in PEM format. If a private key is included in the PEM, '
-             'it is used, else the default key in the conf dir is used. '
-             'The PEM file should contain the full certificate chain, with the leaf certificate as the first entry. '
-             'Can be passed multiple times.'
-    )
+        'The domain may include a wildcard, and is equal to "*" if not specified. '
+        'The file at path is a certificate in PEM format. If a private key is included in the PEM, '
+        'it is used, else the default key in the conf dir is used. '
+        'The PEM file should contain the full certificate chain, with the leaf certificate as the first entry. '
+        'Can be passed multiple times.')
     group.add_argument(
         "--cert-forward", action="store_true",
         dest="certforward", default=False,
@@ -238,11 +258,15 @@ def ssl_option_group(parser):
         help="Don't connect to upstream server to look up certificate details."
     )
     group.add_argument(
-        "--ssl-port", action="append", type=int, dest="ssl_ports", default=list(TRANSPARENT_SSL_PORTS),
+        "--ssl-port",
+        action="append",
+        type=int,
+        dest="ssl_ports",
+        default=list(TRANSPARENT_SSL_PORTS),
         metavar="PORT",
         help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
-             "Defaults to %s." % str(TRANSPARENT_SSL_PORTS)
-    )
+        "Defaults to %s." %
+        str(TRANSPARENT_SSL_PORTS))
     group.add_argument(
         "--ssl-version-client", dest="ssl_version_client",
         default="secure", action="store",

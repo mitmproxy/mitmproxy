@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from netlib import socks
 
+
 class ProxyError(Exception):
     def __init__(self, code, message, headers=None):
         super(ProxyError, self).__init__(message)
@@ -61,7 +62,7 @@ class TransparentProxyMode(ProxyMode):
     def get_upstream_server(self, client_conn):
         try:
             dst = self.resolver.original_addr(client_conn.connection)
-        except Exception, e:
+        except Exception as e:
             raise ProxyError(502, "Transparent mode failure: %s" % str(e))
 
         if dst[1] in self.sslports:
@@ -87,7 +88,9 @@ class Socks5ProxyMode(ProxyMode):
                 guess = ""
             raise socks.SocksError(
                 socks.REP.GENERAL_SOCKS_SERVER_FAILURE,
-                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % msg.ver)
+                guess +
+                "Invalid SOCKS version. Expected 0x05, got 0x%x" %
+                msg.ver)
 
     def get_upstream_server(self, client_conn):
         try:
@@ -117,13 +120,15 @@ class Socks5ProxyMode(ProxyMode):
                     "mitmproxy only supports SOCKS5 CONNECT."
                 )
 
-            # We do not connect here yet, as the clientconnect event has not been handled yet.
+            # We do not connect here yet, as the clientconnect event has not
+            # been handled yet.
 
             connect_reply = socks.Message(
                 socks.VERSION.SOCKS5,
                 socks.REP.SUCCEEDED,
                 socks.ATYP.DOMAINNAME,
-                client_conn.address  # dummy value, we don't have an upstream connection yet.
+                # dummy value, we don't have an upstream connection yet.
+                client_conn.address
             )
             connect_reply.to_file(client_conn.wfile)
             client_conn.wfile.flush()

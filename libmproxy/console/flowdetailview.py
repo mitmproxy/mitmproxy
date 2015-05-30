@@ -34,7 +34,7 @@ def flowdetails(state, flow):
         if c:
             text.append(urwid.Text([("head", "Server Certificate:")]))
             parts = [
-                ["Type", "%s, %s bits"%c.keyinfo],
+                ["Type", "%s, %s bits" % c.keyinfo],
                 ["SHA1 digest", c.digest("sha1")],
                 ["Valid to", str(c.notafter)],
                 ["Valid from", str(c.notbefore)],

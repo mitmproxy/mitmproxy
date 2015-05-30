@@ -2,6 +2,7 @@ import urwid
 
 from . import common
 
+
 class _OptionWidget(urwid.WidgetWrap):
     def __init__(self, option, text, shortcut, active, focus):
         self.option = option
@@ -47,14 +48,14 @@ class OptionWalker(urwid.ListWalker):
         return self.options[self.focus].render(True), self.focus
 
     def get_next(self, pos):
-        if pos >= len(self.options)-1:
+        if pos >= len(self.options) - 1:
             return None, None
-        return self.options[pos+1].render(False), pos+1
+        return self.options[pos + 1].render(False), pos + 1
 
     def get_prev(self, pos):
         if pos <= 0:
             return None, None
-        return self.options[pos-1].render(False), pos-1
+        return self.options[pos - 1].render(False), pos - 1
 
 
 class Heading:
@@ -69,6 +70,8 @@ class Heading:
 
 
 _neg = lambda: False
+
+
 class Option:
     def __init__(self, text, shortcut, getstate=None, activate=None):
         self.text = text
@@ -77,7 +80,12 @@ class Option:
         self.activate = activate or _neg
 
     def render(self, focus):
-        return _OptionWidget(self, self.text, self.shortcut, self.getstate(), focus)
+        return _OptionWidget(
+            self,
+            self.text,
+            self.shortcut,
+            self.getstate(),
+            focus)
 
 
 class Select(urwid.ListBox):
@@ -92,7 +100,7 @@ class Select(urwid.ListBox):
         for i in options:
             if hasattr(i, "shortcut") and i.shortcut:
                 if i.shortcut in self.keymap:
-                    raise ValueError("Duplicate shortcut key: %s"%i.shortcut)
+                    raise ValueError("Duplicate shortcut key: %s" % i.shortcut)
                 self.keymap[i.shortcut] = i
 
     def keypress(self, size, key):

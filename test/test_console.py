@@ -1,10 +1,14 @@
-import os, sys, mock, gc
+import os
+import sys
+import mock
+import gc
 from os.path import normpath
 import mock_urwid
 from libmproxy import console
 from libmproxy.console import common
 
 import tutils
+
 
 class TestConsoleState:
     def test_flow(self):

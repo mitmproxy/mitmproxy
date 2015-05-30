@@ -24,42 +24,42 @@ def _mkhelp():
         ("e", "edit request/response"),
         ("f", "load full body data"),
         ("m", "change body display mode for this entity"),
-            (None,
-                common.highlight_key("automatic", "a") +
-                [("text", ": automatic detection")]
-            ),
-            (None,
-                common.highlight_key("hex", "e") +
-                [("text", ": Hex")]
-            ),
-            (None,
-                common.highlight_key("html", "h") +
-                [("text", ": HTML")]
-            ),
-            (None,
-                common.highlight_key("image", "i") +
-                [("text", ": Image")]
-            ),
-            (None,
-                common.highlight_key("javascript", "j") +
-                [("text", ": JavaScript")]
-            ),
-            (None,
-                common.highlight_key("json", "s") +
-                [("text", ": JSON")]
-            ),
-            (None,
-                common.highlight_key("urlencoded", "u") +
-                [("text", ": URL-encoded data")]
-            ),
-            (None,
-                common.highlight_key("raw", "r") +
-                [("text", ": raw data")]
-            ),
-            (None,
-                common.highlight_key("xml", "x") +
-                [("text", ": XML")]
-            ),
+        (None,
+         common.highlight_key("automatic", "a") +
+         [("text", ": automatic detection")]
+         ),
+        (None,
+         common.highlight_key("hex", "e") +
+         [("text", ": Hex")]
+         ),
+        (None,
+         common.highlight_key("html", "h") +
+         [("text", ": HTML")]
+         ),
+        (None,
+         common.highlight_key("image", "i") +
+         [("text", ": Image")]
+         ),
+        (None,
+         common.highlight_key("javascript", "j") +
+         [("text", ": JavaScript")]
+         ),
+        (None,
+         common.highlight_key("json", "s") +
+         [("text", ": JSON")]
+         ),
+        (None,
+         common.highlight_key("urlencoded", "u") +
+         [("text", ": URL-encoded data")]
+         ),
+        (None,
+         common.highlight_key("raw", "r") +
+         [("text", ": raw data")]
+         ),
+        (None,
+         common.highlight_key("xml", "x") +
+         [("text", ": XML")]
+         ),
         ("M", "change default body display mode"),
         ("p", "previous flow"),
         ("P", "copy response(content/headers) to clipboard"),
@@ -123,13 +123,13 @@ class FlowView(tabs.Tabs):
     def __init__(self, master, state, flow, tab_offset):
         self.master, self.state, self.flow = master, state, flow
         tabs.Tabs.__init__(self,
-            [
-                (self.tab_request, self.view_request),
-                (self.tab_response, self.view_response),
-                (self.tab_details, self.view_details),
-            ],
-            tab_offset
-        )
+                           [
+                               (self.tab_request, self.view_request),
+                               (self.tab_response, self.view_response),
+                               (self.tab_details, self.view_details),
+                           ],
+                           tab_offset
+                           )
         self.show()
         self.last_displayed_body = None
         signals.flow_change.connect(self.sig_flow_change)
@@ -173,7 +173,7 @@ class FlowView(tabs.Tabs):
                 False
             )
             if full:
-                limit = sys.maxint
+                limit = sys.maxsize
             else:
                 limit = contentview.VIEW_CUTOFF
             description, text_objects = cache.get(
@@ -197,7 +197,7 @@ class FlowView(tabs.Tabs):
     def conn_text(self, conn):
         if conn:
             txt = common.format_keyvals(
-                [(h+":", v) for (h, v) in conn.headers.lst],
+                [(h + ":", v) for (h, v) in conn.headers.lst],
                 key = "header",
                 val = "text"
             )
@@ -217,7 +217,7 @@ class FlowView(tabs.Tabs):
                         " ",
                         ('heading', "["),
                         ('heading_key', "m"),
-                        ('heading', (":%s]"%viewmode.name)),
+                        ('heading', (":%s]" % viewmode.name)),
                     ],
                     align="right"
                 )
@@ -272,8 +272,9 @@ class FlowView(tabs.Tabs):
         except ValueError:
             return None
         import BaseHTTPServer
-        if BaseHTTPServer.BaseHTTPRequestHandler.responses.has_key(int(code)):
-            response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[int(code)][0]
+        if int(code) in BaseHTTPServer.BaseHTTPRequestHandler.responses:
+            response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[
+                int(code)][0]
         signals.flow_change.send(self, flow = self.flow)
 
     def set_resp_msg(self, msg):
@@ -494,7 +495,7 @@ class FlowView(tabs.Tabs):
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()
-            elif self.state.view.index(self.flow) == len(self.state.view)-1:
+            elif self.state.view.index(self.flow) == len(self.state.view) - 1:
                 self.view_prev_flow(self.flow)
             else:
                 self.view_next_flow(self.flow)
@@ -615,7 +616,7 @@ class FlowView(tabs.Tabs):
                 if conn.content:
                     t = conn.headers["content-type"] or [None]
                     t = t[0]
-                    if os.environ.has_key("EDITOR") or os.environ.has_key("PAGER"):
+                    if "EDITOR" in os.environ or "PAGER" in os.environ:
                         self.master.spawn_external_viewer(conn.content, t)
                     else:
                         signals.status_message.send(

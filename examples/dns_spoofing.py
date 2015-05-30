@@ -25,9 +25,11 @@ mitmproxy -p 443 -R https2http://localhost:8000
 def request(context, flow):
     if flow.client_conn.ssl_established:
         # TLS SNI or Host header
-        flow.request.host = flow.client_conn.connection.get_servername() or flow.request.pretty_host(hostheader=True)
+        flow.request.host = flow.client_conn.connection.get_servername(
+        ) or flow.request.pretty_host(hostheader=True)
 
-        # If you use a https2http location as default destination, these attributes need to be corrected as well:
+        # If you use a https2http location as default destination, these
+        # attributes need to be corrected as well:
         flow.request.port = 443
         flow.request.scheme = "https"
     else:

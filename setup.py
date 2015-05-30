@@ -67,13 +67,11 @@ setup(
         "Topic :: Internet",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: Proxy Servers",
-        "Topic :: Software Development :: Testing"
-    ],
+        "Topic :: Software Development :: Testing"],
     packages=find_packages(),
     include_package_data=True,
     entry_points={
-        'console_scripts': console_scripts
-    },
+        'console_scripts': console_scripts},
     install_requires=list(deps),
     extras_require={
         'dev': [
@@ -81,20 +79,15 @@ setup(
             "nose>=1.3.0",
             "nose-cov>=1.6",
             "coveralls>=0.4.1",
-            "pathod>=%s, <%s" % (
-                version.MINORVERSION, version.NEXT_MINORVERSION
-            ),
-            "countershape"
-        ],
+            "pathod>=%s, <%s" %
+            (version.MINORVERSION,
+             version.NEXT_MINORVERSION),
+            "countershape"],
         'contentviews': [
             "pyamf>=0.6.1",
             "protobuf>=2.5.0",
-            "cssutils>=1.0"
-        ],
+            "cssutils>=1.0"],
         'examples': [
             "pytz",
             "harparser",
-            "beautifulsoup4"
-        ]
-    }
-)
+            "beautifulsoup4"]})

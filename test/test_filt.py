@@ -5,6 +5,7 @@ from libmproxy.protocol import http
 from libmproxy.protocol.primitives import Error
 import tutils
 
+
 class TestParsing:
     def _dump(self, x):
         c = cStringIO.StringIO()
@@ -99,7 +100,15 @@ class TestMatching:
 
         headers = odict.ODictCaseless()
         headers["header_response"] = ["svalue"]
-        f.response = http.HTTPResponse((1, 1), 200, "OK", headers, "content_response", None, None)
+        f.response = http.HTTPResponse(
+            (1,
+             1),
+            200,
+            "OK",
+            headers,
+            "content_response",
+            None,
+            None)
 
         return f
 

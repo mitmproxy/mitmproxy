@@ -21,6 +21,7 @@ class Resolver(object):
         peer = csock.getpeername()
         stxt = subprocess.check_output(self.STATECMD, stderr=subprocess.STDOUT)
         if "sudo: a password is required" in stxt:
-            raise RuntimeError("Insufficient privileges to access pfctl. "
-                               "See http://mitmproxy.org/doc/transparent/osx.html for details.")
+            raise RuntimeError(
+                "Insufficient privileges to access pfctl. "
+                "See http://mitmproxy.org/doc/transparent/osx.html for details.")
         return pf.lookup(peer[0], peer[1], stxt)

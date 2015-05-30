@@ -37,7 +37,7 @@ def mpath(p):
 def example(s):
     d = file(mpath(s)).read().rstrip()
     extemp = """<div class="example">%s<div class="example_legend">(%s)</div></div>"""
-    return extemp%(countershape.template.Syntax("py")(d), s)
+    return extemp % (countershape.template.Syntax("py")(d), s)
 
 
 ns.example = example
@@ -52,7 +52,8 @@ def nav(page, current, state):
     else:
         pre = "<li>"
     p = state.application.getPage(page)
-    return pre + '<a href="%s">%s</a></li>'%(countershape.widgets.UrlTo(page), p.title)
+    return pre + \
+        '<a href="%s">%s</a></li>' % (countershape.widgets.UrlTo(page), p.title)
 ns.nav = nav
 ns.navbar = countershape.template.File(None, "_nav.html")
 

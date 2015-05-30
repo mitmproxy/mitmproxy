@@ -50,7 +50,7 @@ class EventListBox(urwid.ListBox):
         elif key == "G":
             self.set_focus(0)
         elif key == "g":
-            self.set_focus(len(self.master.eventlist)-1)
+            self.set_focus(len(self.master.eventlist) - 1)
         return urwid.ListBox.keypress(self, size, key)
 
 
@@ -76,7 +76,8 @@ class BodyPile(urwid.Pile):
 
     def keypress(self, size, key):
         if key == "tab":
-            self.focus_position = (self.focus_position + 1)%len(self.widget_list)
+            self.focus_position = (
+                self.focus_position + 1) % len(self.widget_list)
             if self.focus_position == 1:
                 self.widget_list[1].header = self.active_header
             else:
@@ -157,7 +158,8 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.master.server_playback_path
             )
 
-    def keypress(self, (maxcol,), key):
+    def keypress(self, xxx_todo_changeme, key):
+        (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
         if key == "a":
             self.flow.accept_intercept(self.master)
