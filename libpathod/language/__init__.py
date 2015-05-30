@@ -6,6 +6,7 @@ from . import base, http, websockets, writer, exceptions
 
 from exceptions import *
 from base import Settings
+assert Settings  # prevent pyflakes from messing with this
 
 
 def parse_response(s):
