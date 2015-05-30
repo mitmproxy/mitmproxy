@@ -85,7 +85,7 @@ class TestTokValueGenerate:
         v = base.TokValue.parseString("@10k")[0]
         assert v.bytes() == 10240
         v = base.TokValue.parseString("@10g")[0]
-        assert v.bytes() == 1024**3 * 10
+        assert v.bytes() == 1024 ** 3 * 10
 
         v = base.TokValue.parseString("@10g,digits")[0]
         assert v.datatype == "digits"

@@ -1,3 +1,4 @@
+import cStringIO
 from libpathod import pathod, version
 from netlib import tcp, http
 import tutils
@@ -5,7 +6,8 @@ import tutils
 
 class TestPathod(object):
     def test_logging(self):
-        p = pathod.Pathod(("127.0.0.1", 0))
+        s = cStringIO.StringIO()
+        p = pathod.Pathod(("127.0.0.1", 0), logfp=s)
         assert len(p.get_log()) == 0
         id = p.add_log(dict(s="foo"))
         assert p.log_by_id(id)

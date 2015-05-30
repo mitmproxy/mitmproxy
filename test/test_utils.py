@@ -20,7 +20,7 @@ def test_parse_size():
 
 def test_parse_anchor_spec():
     assert utils.parse_anchor_spec("foo=200") == ("foo", "200")
-    assert utils.parse_anchor_spec("foo") == None
+    assert utils.parse_anchor_spec("foo") is None
 
 
 def test_data_path():

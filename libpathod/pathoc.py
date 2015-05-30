@@ -10,66 +10,14 @@ import threading
 import OpenSSL.crypto
 
 from netlib import tcp, http, certutils, websockets
-import netlib.utils
 
 import language.http
 import language.websockets
-import utils
+from . import utils, log
 
 
 class PathocError(Exception):
     pass
-
-
-class Log:
-    def __init__(self, fp, hex, rfile, wfile):
-        self.lines = []
-        self.fp = fp
-        self.suppressed = False
-        self.hex = hex
-        self.rfile, self.wfile = rfile, wfile
-
-    def __enter__(self):
-        if self.wfile:
-            self.wfile.start_log()
-        if self.rfile:
-            self.rfile.start_log()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        wlog = self.wfile.get_log() if self.wfile else None
-        rlog = self.rfile.get_log() if self.rfile else None
-        if self.suppressed or not self.fp:
-            return
-        if wlog:
-            self("Bytes written:")
-            self.dump(wlog, self.hex)
-        if rlog:
-            self("Bytes read:")
-            self.dump(rlog, self.hex)
-        if exc_type == tcp.NetLibTimeout:
-            self("Timeout")
-        elif exc_type in (tcp.NetLibDisconnect, http.HttpErrorConnClosed):
-            self("Disconnected")
-        elif exc_type == http.HttpError:
-            self("HTTP Error: %s" % exc_value.message)
-        self.fp.write("\n".join(self.lines))
-        self.fp.write("\n")
-        self.fp.flush()
-
-    def suppress(self):
-        self.suppressed = True
-
-    def dump(self, data, hexdump):
-        if hexdump:
-            for line in netlib.utils.hexdump(data):
-                self("\t%s %s %s" % line)
-        else:
-            for i in netlib.utils.cleanBin(data).split("\n"):
-                self("\t%s" % i)
-
-    def __call__(self, line):
-        self.lines.append(line)
 
 
 class SSLInfo:
@@ -149,7 +97,7 @@ class WebsocketFrameReader(threading.Thread):
         self.is_done = Queue.Queue()
 
     def log(self, rfile):
-        return Log(
+        return log.Log(
             self.logfp,
             self.hexdump,
             rfile if self.showresp else None,
@@ -242,7 +190,7 @@ class Pathoc(tcp.TCPClient):
         self.ws_framereader = None
 
     def log(self):
-        return Log(
+        return log.Log(
             self.fp,
             self.hexdump,
             self.rfile if self.showresp else None,

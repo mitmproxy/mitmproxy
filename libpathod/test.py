@@ -83,6 +83,7 @@ class _PaThread(threading.Thread):
         self.server = pathod.Pathod(
             (self.iface, 0),
             ssl = self.ssl,
+            logfp = None,
             **self.daemonargs
         )
         self.name = "PathodThread (%s:%s)" % (
