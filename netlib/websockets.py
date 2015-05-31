@@ -175,7 +175,7 @@ class FrameHeader:
 
     def human_readable(self):
         vals = [
-            "wf:",
+            "ws frame:",
             OPCODE.get_name(self.opcode, hex(self.opcode)).lower()
         ]
         flags = []
@@ -327,8 +327,10 @@ class Frame(object):
         return cls.from_file(tcp.Reader(io.BytesIO(bytestring)))
 
     def human_readable(self):
-        hdr = self.header.human_readable()
-        return hdr + "\n" + repr(self.payload)
+        ret = self.header.human_readable()
+        if self.payload:
+            ret = ret + "\nPayload:\n" + utils.cleanBin(self.payload)
+        return ret
 
     def to_bytes(self):
         """
