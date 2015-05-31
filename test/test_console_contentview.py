@@ -2,8 +2,9 @@ import os
 from nose.plugins.skip import SkipTest
 if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
-
 import sys
+
+from netlib import odict
 import libmproxy.console.contentview as cv
 from libmproxy import utils, flow, encoding
 import tutils
@@ -30,39 +31,38 @@ class TestContentView:
     def test_view_auto(self):
         v = cv.ViewAuto()
         f = v(
-                flow.ODictCaseless(),
-                "foo",
-                1000
-              )
+            odict.ODictCaseless(),
+            "foo",
+            1000
+        )
         assert f[0] == "Raw"
 
         f = v(
-                flow.ODictCaseless(
-                    [["content-type", "text/html"]],
-                ),
-                "<html></html>",
-                1000
-              )
+            odict.ODictCaseless(
+                [["content-type", "text/html"]],
+            ),
+            "<html></html>",
+            1000
+        )
         assert f[0] == "HTML"
 
         f = v(
-                flow.ODictCaseless(
-                    [["content-type", "text/flibble"]],
-                ),
-                "foo",
-                1000
-              )
+            odict.ODictCaseless(
+                [["content-type", "text/flibble"]],
+            ),
+            "foo",
+            1000
+        )
         assert f[0] == "Raw"
 
         f = v(
-                flow.ODictCaseless(
-                    [["content-type", "text/flibble"]],
-                ),
-                "<xml></xml>",
-                1000
-              )
+            odict.ODictCaseless(
+                [["content-type", "text/flibble"]],
+            ),
+            "<xml></xml>",
+            1000
+        )
         assert f[0].startswith("XML")
-
 
     def test_view_urlencoded(self):
         d = utils.urlencode([("one", "two"), ("three", "four")])
@@ -90,7 +90,7 @@ class TestContentView:
         v = cv.ViewJSON()
         assert v([], "{}", 1000)
         assert not v([], "{", 1000)
-        assert v([], "[" + ",".join(["0"]*cv.VIEW_CUTOFF) + "]", 1000)
+        assert v([], "[" + ",".join(["0"] * cv.VIEW_CUTOFF) + "]", 1000)
         assert v([], "[1, 2, 3, 4, 5]", 5)
 
     def test_view_xml(self):
@@ -144,18 +144,18 @@ class TestContentView:
     def test_view_image(self):
         v = cv.ViewImage()
         p = tutils.test_data.path("data/image.png")
-        assert v([], file(p,"rb").read(), sys.maxint)
+        assert v([], file(p, "rb").read(), sys.maxsize)
 
         p = tutils.test_data.path("data/image.gif")
-        assert v([], file(p,"rb").read(), sys.maxint)
+        assert v([], file(p, "rb").read(), sys.maxsize)
 
         p = tutils.test_data.path("data/image-err1.jpg")
-        assert v([], file(p,"rb").read(), sys.maxint)
+        assert v([], file(p, "rb").read(), sys.maxsize)
 
         p = tutils.test_data.path("data/image.ico")
-        assert v([], file(p,"rb").read(), sys.maxint)
+        assert v([], file(p, "rb").read(), sys.maxsize)
 
-        assert not v([], "flibble", sys.maxint)
+        assert not v([], "flibble", sys.maxsize)
 
     def test_view_multipart(self):
         view = cv.ViewMultipart()
@@ -166,91 +166,90 @@ Content-Disposition: form-data; name="submit-name"
 Larry
 --AaB03x
         """.strip()
-        h = flow.ODictCaseless(
+        h = odict.ODictCaseless(
             [("Content-Type", "multipart/form-data; boundary=AaB03x")]
         )
         assert view(h, v, 1000)
 
-        h = flow.ODictCaseless()
+        h = odict.ODictCaseless()
         assert not view(h, v, 1000)
 
-        h = flow.ODictCaseless(
+        h = odict.ODictCaseless(
             [("Content-Type", "multipart/form-data")]
         )
         assert not view(h, v, 1000)
 
-        h = flow.ODictCaseless(
+        h = odict.ODictCaseless(
             [("Content-Type", "unparseable")]
         )
         assert not view(h, v, 1000)
 
     def test_get_content_view(self):
         r = cv.get_content_view(
-                cv.get("Raw"),
-                [["content-type", "application/json"]],
-                "[1, 2, 3]",
-                1000,
-                lambda x, l: None,
-                False
-              )
+            cv.get("Raw"),
+            [["content-type", "application/json"]],
+            "[1, 2, 3]",
+            1000,
+            lambda x, l: None,
+            False
+        )
         assert "Raw" in r[0]
 
         r = cv.get_content_view(
-                cv.get("Auto"),
-                [["content-type", "application/json"]],
-                "[1, 2, 3]",
-                1000,
-                lambda x, l: None,
-                False
-              )
+            cv.get("Auto"),
+            [["content-type", "application/json"]],
+            "[1, 2, 3]",
+            1000,
+            lambda x, l: None,
+            False
+        )
         assert r[0] == "JSON"
 
         r = cv.get_content_view(
-                cv.get("Auto"),
-                [["content-type", "application/json"]],
-                "[1, 2",
-                1000,
-                lambda x, l: None,
-                False
-              )
+            cv.get("Auto"),
+            [["content-type", "application/json"]],
+            "[1, 2",
+            1000,
+            lambda x, l: None,
+            False
+        )
         assert "Raw" in r[0]
 
         r = cv.get_content_view(
-                cv.get("AMF"),
-                [],
-                "[1, 2",
-                1000,
-                lambda x, l: None,
-                False
-              )
+            cv.get("AMF"),
+            [],
+            "[1, 2",
+            1000,
+            lambda x, l: None,
+            False
+        )
         assert "Raw" in r[0]
 
-
         r = cv.get_content_view(
-                cv.get("Auto"),
-                [
-                    ["content-type", "application/json"],
-                    ["content-encoding", "gzip"]
-                ],
-                encoding.encode('gzip', "[1, 2, 3]"),
-                1000,
-                lambda x, l: None,
-                False
-              )
+            cv.get("Auto"),
+            [
+                ["content-type", "application/json"],
+                ["content-encoding", "gzip"]
+            ],
+            encoding.encode('gzip', "[1, 2, 3]"),
+            1000,
+            lambda x, l: None,
+            False
+        )
         assert "decoded gzip" in r[0]
         assert "JSON" in r[0]
 
         r = cv.get_content_view(
-                cv.get("XML"),
-                [
-                    ["content-type", "application/json"],
-                    ["content-encoding", "gzip"]
-                ],
-                encoding.encode('gzip', "[1, 2, 3]"),
-                1000,
-                lambda x, l: None,
-                False
-              )
+            cv.get("XML"),
+            [
+                ["content-type", "application/json"],
+                ["content-encoding", "gzip"]
+            ],
+            encoding.encode('gzip', "[1, 2, 3]"),
+            1000,
+            lambda x, l: None,
+            False
+        )
         assert "decoded gzip" in r[0]
         assert "Raw" in r[0]
 
@@ -260,25 +259,25 @@ if pyamf:
         v = cv.ViewAMF()
 
         p = tutils.test_data.path("data/amf01")
-        assert v([], file(p,"rb").read(), sys.maxint)
+        assert v([], file(p, "rb").read(), sys.maxsize)
 
         p = tutils.test_data.path("data/amf02")
-        assert v([], file(p,"rb").read(), sys.maxint)
+        assert v([], file(p, "rb").read(), sys.maxsize)
 
     def test_view_amf_response():
         v = cv.ViewAMF()
         p = tutils.test_data.path("data/amf03")
-        assert v([], file(p,"rb").read(), sys.maxint)
+        assert v([], file(p, "rb").read(), sys.maxsize)
 
 if cv.ViewProtobuf.is_available():
     def test_view_protobuf_request():
         v = cv.ViewProtobuf()
 
         p = tutils.test_data.path("data/protobuf01")
-        content_type, output = v([], file(p,"rb").read(), sys.maxint)
+        content_type, output = v([], file(p, "rb").read(), sys.maxsize)
         assert content_type == "Protobuf"
         assert output[0].text == '1: "3bbc333c-e61c-433b-819a-0b9a8cc103b8"'
 
+
 def test_get_by_shortcut():
     assert cv.get_by_shortcut("h")
-

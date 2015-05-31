@@ -3,6 +3,7 @@ var common = require("./common.js");
 var Query = require("../actions.js").Query;
 var VirtualScrollMixin = require("./virtualscroll.js");
 var views = require("../store/view.js");
+var _ = require("lodash");
 
 var LogMessage = React.createClass({
     render: function () {
@@ -30,45 +31,35 @@ var LogMessage = React.createClass({
 });
 
 var EventLogContents = React.createClass({
+    contextTypes: {
+        eventStore: React.PropTypes.object.isRequired
+    },
     mixins: [common.AutoScrollMixin, VirtualScrollMixin],
     getInitialState: function () {
-        return {
-            log: []
-        };
-    },
-    componentWillMount: function () {
-        this.openView(this.props.eventStore);
-    },
-    componentWillUnmount: function () {
-        this.closeView();
-    },
-    openView: function (store) {
-        var view = new views.StoreView(store, function (entry) {
+        var filterFn = function (entry) {
             return this.props.filter[entry.level];
-        }.bind(this));
-        this.setState({
-            view: view
-        });
-
+        };
+        var view = new views.StoreView(this.context.eventStore, filterFn.bind(this));
         view.addListener("add", this.onEventLogChange);
         view.addListener("recalculate", this.onEventLogChange);
+
+        return {
+            view: view
+        };
     },
-    closeView: function () {
+    componentWillUnmount: function () {
         this.state.view.close();
     },
+    filter: function (entry) {
+        return this.props.filter[entry.level];
+    },
     onEventLogChange: function () {
-        this.setState({
-            log: this.state.view.list
-        });
+        this.forceUpdate();
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.filter !== this.props.filter) {
             this.props.filter = nextProps.filter; // Dirty: Make sure that view filter sees the update.
             this.state.view.recalculate();
-        }
-        if (nextProps.eventStore !== this.props.eventStore) {
-            this.closeView();
-            this.openView(nextProps.eventStore);
         }
     },
     getDefaultProps: function () {
@@ -82,12 +73,13 @@ var EventLogContents = React.createClass({
         return <LogMessage key={elem.id} entry={elem}/>;
     },
     render: function () {
-        var rows = this.renderRows(this.state.log);
+        var entries = this.state.view.list;
+        var rows = this.renderRows(entries);
 
         return <pre onScroll={this.onScroll}>
-            { this.getPlaceholderTop(this.state.log.length) }
+            { this.getPlaceholderTop(entries.length) }
             {rows}
-            { this.getPlaceholderBottom(this.state.log.length) }
+            { this.getPlaceholderBottom(entries.length) }
         </pre>;
     }
 });
@@ -148,7 +140,7 @@ var EventLog = React.createClass({
                     </div>
 
                 </div>
-                <EventLogContents filter={this.state.filter} eventStore={this.props.eventStore}/>
+                <EventLogContents filter={this.state.filter}/>
             </div>
         );
     }

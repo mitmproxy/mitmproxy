@@ -1,22 +1,27 @@
 import os.path
-import threading, Queue
-import shutil, tempfile
+import threading
+import Queue
+import shutil
+import tempfile
 import flask
 import mock
 
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
 from libmproxy.proxy.primitives import TransparentProxyMode
-import libpathod.test, libpathod.pathoc
+import libpathod.test
+import libpathod.pathoc
 from libmproxy import flow, controller
 from libmproxy.cmdline import APP_HOST, APP_PORT
 import tutils
 
 testapp = flask.Flask(__name__)
 
+
 @testapp.route("/")
 def hello():
     return "testapp"
+
 
 @testapp.route("/error")
 def error():
@@ -57,7 +62,8 @@ class ProxyThread(threading.Thread):
     def __init__(self, tmaster):
         threading.Thread.__init__(self)
         self.tmaster = tmaster
-        self.name = "ProxyThread (%s:%s)" % (tmaster.server.address.host, tmaster.server.address.port)
+        self.name = "ProxyThread (%s:%s)" % (
+            tmaster.server.address.host, tmaster.server.address.port)
         controller.should_exit = False
 
     @property
@@ -87,8 +93,12 @@ class ProxTestBase(object):
 
     @classmethod
     def setupAll(cls):
-        cls.server = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
-        cls.server2 = libpathod.test.Daemon(ssl=cls.ssl, ssloptions=cls.ssloptions)
+        cls.server = libpathod.test.Daemon(
+            ssl=cls.ssl,
+            ssloptions=cls.ssloptions)
+        cls.server2 = libpathod.test.Daemon(
+            ssl=cls.ssl,
+            ssloptions=cls.ssloptions)
 
         cls.config = ProxyConfig(**cls.get_proxy_config())
 
@@ -129,13 +139,15 @@ class ProxTestBase(object):
 
 class HTTPProxTest(ProxTestBase):
     def pathoc_raw(self):
-        return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port))
+        return libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), fp=None)
 
     def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
         if self.ssl:
             p.connect(("127.0.0.1", self.server.port))
         else:
@@ -149,19 +161,21 @@ class HTTPProxTest(ProxTestBase):
         p = self.pathoc(sni=sni)
         spec = spec.encode("string_escape")
         if self.ssl:
-            q = "get:'/p/%s'"%spec
+            q = "get:'/p/%s'" % spec
         else:
-            q = "get:'%s/p/%s'"%(self.server.urlbase, spec)
+            q = "get:'%s/p/%s'" % (self.server.urlbase, spec)
         return p.request(q)
 
     def app(self, page):
         if self.ssl:
-            p = libpathod.pathoc.Pathoc(("127.0.0.1", self.proxy.port), True)
+            p = libpathod.pathoc.Pathoc(
+                ("127.0.0.1", self.proxy.port), True, fp=None
+            )
             p.connect((APP_HOST, APP_PORT))
-            return p.request("get:'%s'"%page)
+            return p.request("get:'%s'" % page)
         else:
             p = self.pathoc()
-            return p.request("get:'http://%s%s'"%(APP_HOST, page))
+            return p.request("get:'http://%s%s'" % (APP_HOST, page))
 
 
 class TResolver:
@@ -184,7 +198,10 @@ class TransparentProxTest(ProxTestBase):
             ports = [cls.server.port, cls.server2.port]
         else:
             ports = []
-        cls.config.mode = TransparentProxyMode(cls.resolver(cls.server.port), ports)
+        cls.config.mode = TransparentProxyMode(
+            cls.resolver(
+                cls.server.port),
+            ports)
 
     @classmethod
     def get_proxy_config(cls):
@@ -198,23 +215,26 @@ class TransparentProxTest(ProxTestBase):
         """
         if self.ssl:
             p = self.pathoc(sni=sni)
-            q = "get:'/p/%s'"%spec
+            q = "get:'/p/%s'" % spec
         else:
             p = self.pathoc()
-            q = "get:'/p/%s'"%spec
+            q = "get:'/p/%s'" % spec
         return p.request(q)
 
     def pathoc(self, sni=None):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
         p.connect()
         return p
 
 
 class ReverseProxTest(ProxTestBase):
     ssl = None
+
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
@@ -231,7 +251,9 @@ class ReverseProxTest(ProxTestBase):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(("localhost", self.proxy.port), ssl=self.ssl, sni=sni)
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
         p.connect()
         return p
 
@@ -241,10 +263,10 @@ class ReverseProxTest(ProxTestBase):
         """
         if self.ssl:
             p = self.pathoc(sni=sni)
-            q = "get:'/p/%s'"%spec
+            q = "get:'/p/%s'" % spec
         else:
             p = self.pathoc()
-            q = "get:'/p/%s'"%spec
+            q = "get:'/p/%s'" % spec
         return p.request(q)
 
 
@@ -270,8 +292,8 @@ class ChainProxTest(ProxTestBase):
             cls.chain.insert(0, proxy)
 
         # Patch the orginal proxy to upstream mode
-        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(**cls.get_proxy_config())
-
+        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(
+            **cls.get_proxy_config())
 
     @classmethod
     def teardownAll(cls):
@@ -294,6 +316,7 @@ class ChainProxTest(ProxTestBase):
                 upstream_server=(False, False, "127.0.0.1", cls.chain[0].port)
             )
         return d
+
 
 class HTTPUpstreamProxTest(ChainProxTest, HTTPProxTest):
     pass

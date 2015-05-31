@@ -2,30 +2,32 @@
 @import (reference) '../../node_modules/bootstrap/less/mixins/grid.less';
 
 header {
-  padding-top: 0.5em;
-  background-color: white;
-  @separator-color: lighten(grey, 15%);
-  .menu {
-    padding: 10px;
-    border-bottom: solid @separator-color 1px;
-  }
+    padding-top: 0.5em;
+    background-color: white;
+    @separator-color: lighten(grey, 15%);
+    .menu {
+        padding: 10px;
+        border-bottom: solid @separator-color 1px;
+    }
 }
 
 @menu-row-gutter-width: 5px;
 .menu-row {
-  .make-row(@menu-row-gutter-width);
+    .make-row(@menu-row-gutter-width);
 }
 
 .filter-input {
-  .make-md-column(3, @menu-row-gutter-width);
+    .make-sm-column(3, @menu-row-gutter-width);
 }
 
 .filter-input .popover {
-  top: 27px;
-  display: block;
-  max-width: none;
-  .popover-content {
-    max-height: 500px;
-    overflow-y: auto;
-  }
+    top: 27px;
+    display: block;
+    max-width: none;
+    opacity: 0.9;
+
+    .popover-content {
+        max-height: 500px;
+        overflow-y: auto;
+    }
 }

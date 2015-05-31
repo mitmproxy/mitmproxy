@@ -7,13 +7,13 @@ documentation from any __mitmproxy__ screen.
 
 ## Flow list
 
-The flow list shows an index of captured flows in chronological order. 
+The flow list shows an index of captured flows in chronological order.
 
-<img src="@!urlTo('screenshots/mitmproxy.png')!@"/>
+<img class="img-responsive" src="@!urlTo('screenshots/mitmproxy.png')!@"/>
 
 - __1__: A GET request, returning a 302 Redirect response.
 - __2__: A GET request, returning 16.75kb of text/html data.
-- __3__: A replayed request. 
+- __3__: A replayed request.
 - __4__: Intercepted flows are indicated with orange text. The user may edit
 these flows, and then accept them (using the _a_ key) to continue. In this
 case, the request has been intercepted on the way to the server.
@@ -32,7 +32,7 @@ interfaces.
 
 The __Flow View__ lets you inspect and manipulate a single flow:
 
-<img src="@!urlTo('screenshots/mitmproxy-flowview.png')!@"/>
+<img class="img-responsive" src="@!urlTo('screenshots/mitmproxy-flowview.png')!@"/>
 
 - __1__: Flow summary.
 - __2__: The Request/Response tabs, showing you which part of the flow you are
@@ -53,11 +53,11 @@ using the _m_ key.
 Much of the data that we'd like to interact with in mitmproxy is structured.
 For instance, headers, queries and form data can all be thought of as a list of
 key/value pairs. Mitmproxy has a built-in editor that lays this type of data
-out in a grid for easy manipulation. 
+out in a grid for easy manipulation.
 
 At the moment, the Grid Editor is used in four parts of mitmproxy:
 
-- Editing request or response headers (_e_ for edit, then _h_ for headers in flow view) 
+- Editing request or response headers (_e_ for edit, then _h_ for headers in flow view)
 - Editing a query string (_e_ for edit, then _q_ for query in flow view)
 - Editing a URL-encoded form (_e_ for edit, then _f_ for form in flow view)
 - Editing replacement patterns (_R_ globally)
@@ -65,13 +65,13 @@ At the moment, the Grid Editor is used in four parts of mitmproxy:
 If there is is no data, an empty editor will be started to let you add some.
 Here is the editor showing the headers from a request:
 
-<img src="@!urlTo('screenshots/mitmproxy-kveditor.png')!@"/>
+<img class="img-responsive" src="@!urlTo('screenshots/mitmproxy-kveditor.png')!@"/>
 
 To edit, navigate to the key or value you want to modify using the arrow or vi
 navigation keys, and press enter. The background color will change to show that
 you are in edit mode for the specified field:
 
-<img src="@!urlTo('screenshots/mitmproxy-kveditor-editmode.png')!@"/>
+<img class="img-responsive" src="@!urlTo('screenshots/mitmproxy-kveditor-editmode.png')!@"/>
 
 Modify the field as desired, then press escape to exit edit mode when you're
 done. You can also add a row (_a_ key), delete a row (_d_ key), spawn an
@@ -83,12 +83,12 @@ help (_?_ key) for more.
 
 __mitmproxy__'s interception functionality lets you pause an HTTP request or
 response, inspect and modify it, and then accept it to send it on to the server
-or client. 
+or client.
 
 
 ### 1: Set an interception pattern
 
-<img src="@!urlTo('mitmproxy-intercept-filt.png')!@"/>
+<img class="img-responsive" src="@!urlTo('mitmproxy-intercept-filt.png')!@"/>
 
 We press _i_ to set an interception pattern. In this case, the __~q__ filter
 pattern tells __mitmproxy__ to intercept all requests. For complete filter
@@ -97,19 +97,19 @@ document, or the built-in help function in __mitmproxy__.
 
 ### 2: Intercepted connections are indicated with orange text:
 
-<img src="@!urlTo('mitmproxy-intercept-mid.png')!@"/>
+<img class="img-responsive" src="@!urlTo('mitmproxy-intercept-mid.png')!@"/>
 
 ### 3: You can now view and modify the request:
 
-<img src="@!urlTo('mitmproxy-intercept-options.png')!@"/>
+<img class="img-responsive" src="@!urlTo('mitmproxy-intercept-options.png')!@"/>
 
 In this case, we viewed the request by selecting it, pressed _e_ for "edit"
 and _m_ for "method" to change the HTTP request method.
 
 ### 4: Accept the intercept to continue:
 
-<img src="@!urlTo('mitmproxy-intercept-result.png')!@"/>
+<img class="img-responsive" src="@!urlTo('mitmproxy-intercept-result.png')!@"/>
 
 Finally, we press _a_ to accept the modified request, which is then sent on to
 the server. In this case, we changed the request from an HTTP GET to
-OPTIONS, and Google's server has responded with a 405 "Method not allowed". 
+OPTIONS, and Google's server has responded with a 405 "Method not allowed".

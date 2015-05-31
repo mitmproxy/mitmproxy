@@ -1,36 +1,44 @@
-<div class="navbar navbar-fixed-top">
-  <div class="navbar-inner">
-    <div class="container">
-      <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </a>
-      <a class="brand" href="@!urlTo(idxpath)!@">mitmproxy $!VERSION!$ docs</a>
-      </div><!--/.nav-collapse -->
-    </div>
-  </div>
-</div>
-
-<div class="container">
-  <div class="row">
-    <div class="span3">
-      <div class="well sidebar-nav">
-            $!navbar!$
-      </div>
-    </div>
-
-    <div class="span9">
-        <div class="page-header">
-        <h1>@!this.title!@</h1>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>@!pageTitle!@</title>
+        $!header!$
+    </head>
+    <body>
+        <div class="navbar navbar-default navbar-static-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="@!urlTo("/index.html")!@">
+                        <img height="20px" src="@!urlTo("mitmproxy-long.png")!@"/>
+                    </a>
+                </div>
+                <div class="navbar-header navbar-right">
+                    <a class="navbar-brand" hre="#">$!VERSION!$ docs</a>
+                </div>
+            </div>
         </div>
-        $!body!$
-    </div>
-  </div>
 
-  <hr>
 
-  <footer>
-    <p>@!copyright!@</p>
-  </footer>
-</div>
+        <div class="container">
+          <div class="row">
+            <div class="col-md-3">
+                $!navbar!$
+            </div>
+            <div class="col-md-9">
+                <div class="page-header">
+                <h1>@!this.title!@</h1>
+                </div>
+                $!body!$
+            </div>
+          </div>
+        </div>
+
+        <div class="container">
+          <hr>
+
+          <footer>
+            <p>@!copyright!@</p>
+          </footer>
+        </div>
+    </body>
+</html>

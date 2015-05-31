@@ -26,7 +26,7 @@ This is a proxy GET request - an extended form of the vanilla HTTP GET request
 that includes a schema and host specification, and it includes all the
 information mitmproxy needs to proceed.
 
-<img src="explicit.png"/>
+<img class="img-responsive" src="explicit.png"/>
 
 <table class="table">
     <tbody>
@@ -84,7 +84,7 @@ attempts to MITM an SSL connection for analysis. Our answer to this conundrum
 is to become a trusted Certificate Authority ourselves. Mitmproxy includes a
 full CA implementation that generates interception certificates on the fly. To
 get the client to trust these certificates, we [register mitmproxy as a trusted
-CA with the device manually](@!urlTo("ssl.html")!@).
+CA with the device manually](@!urlTo("certinstall.html")!@).
 
 ## Complication 1: What's the remote hostname?
 
@@ -158,7 +158,7 @@ handshake. Luckily, this is almost never an issue in practice.
 
 Lets put all of this together into the complete explicitly proxied HTTPS flow.
 
-<img src="explicit_https.png"/>
+<img class="img-responsive" src="explicit_https.png"/>
 
 <table class="table">
     <tbody>
@@ -250,7 +250,7 @@ mitmproxy, this takes the form of a built-in set of
 that know how to talk to each platform's redirection mechanism.  Once we have
 this information, the process is fairly straight-forward.
 
-<img src="transparent.png"/>
+<img class="img-responsive" src="transparent.png"/>
 
 
 <table class="table">
@@ -296,7 +296,7 @@ transparently proxying HTTP, and explicitly proxying HTTPS. We use the routing
 mechanism to establish the upstream server address, and then proceed as for
 explicit HTTPS connections to establish the CN and SANs, and cope with SNI.
 
-<img src="transparent_https.png"/>
+<img class="img-responsive" src="transparent_https.png"/>
 
 
 <table class="table">

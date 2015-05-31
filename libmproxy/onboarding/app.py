@@ -45,7 +45,10 @@ class PEM(tornado.web.RequestHandler):
     def get(self):
         p = os.path.join(self.request.master.server.config.cadir, self.filename)
         self.set_header("Content-Type", "application/x-x509-ca-cert")
-        self.set_header("Content-Disposition", "inline; filename={}".format(self.filename))
+        self.set_header(
+            "Content-Disposition",
+            "inline; filename={}".format(
+                self.filename))
 
         with open(p, "rb") as f:
             self.write(f.read())
@@ -59,7 +62,10 @@ class P12(tornado.web.RequestHandler):
     def get(self):
         p = os.path.join(self.request.master.server.config.cadir, self.filename)
         self.set_header("Content-Type", "application/x-pkcs12")
-        self.set_header("Content-Disposition", "inline; filename={}".format(self.filename))
+        self.set_header(
+            "Content-Disposition",
+            "inline; filename={}".format(
+                self.filename))
 
         with open(p, "rb") as f:
             self.write(f.read())
@@ -78,7 +84,6 @@ application = tornado.web.Application(
             }
         ),
     ],
-    #debug=True
+    # debug=True
 )
 mapp = Adapter(application)
-

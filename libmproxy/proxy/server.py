@@ -34,7 +34,7 @@ class ProxyServer(tcp.TCPServer):
         self.config = config
         try:
             tcp.TCPServer.__init__(self, (config.host, config.port))
-        except socket.error, v:
+        except socket.error as v:
             raise ProxyServerError('Error starting proxy server: ' + repr(v))
         self.channel = None
 
@@ -46,16 +46,30 @@ class ProxyServer(tcp.TCPServer):
         self.channel = channel
 
     def handle_client_connection(self, conn, client_address):
-        h = ConnectionHandler(self.config, conn, client_address, self, self.channel)
+        h = ConnectionHandler(
+            self.config,
+            conn,
+            client_address,
+            self,
+            self.channel)
         h.handle()
         h.finish()
 
 
 class ConnectionHandler:
-    def __init__(self, config, client_connection, client_address, server, channel):
+    def __init__(
+            self,
+            config,
+            client_connection,
+            client_address,
+            server,
+            channel):
         self.config = config
         """@type: libmproxy.proxy.config.ProxyConfig"""
-        self.client_conn = ClientConnection(client_connection, client_address, server)
+        self.client_conn = ClientConnection(
+            client_connection,
+            client_address,
+            server)
         """@type: libmproxy.proxy.connection.ClientConnection"""
         self.server_conn = None
         """@type: libmproxy.proxy.connection.ServerConnection"""
@@ -70,17 +84,23 @@ class ConnectionHandler:
             # Can we already identify the target server and connect to it?
             client_ssl, server_ssl = False, False
             conn_kwargs = dict()
-            upstream_info = self.config.mode.get_upstream_server(self.client_conn)
+            upstream_info = self.config.mode.get_upstream_server(
+                self.client_conn)
             if upstream_info:
                 self.set_server_address(upstream_info[2:])
                 client_ssl, server_ssl = upstream_info[:2]
                 if self.config.check_ignore(self.server_conn.address):
-                    self.log("Ignore host: %s:%s" % self.server_conn.address(), "info")
+                    self.log(
+                        "Ignore host: %s:%s" %
+                        self.server_conn.address(),
+                        "info")
                     self.conntype = "tcp"
                     conn_kwargs["log"] = False
                     client_ssl, server_ssl = False, False
             else:
-                pass  # No upstream info from the metadata: upstream info in the protocol (e.g. HTTP absolute-form)
+                # No upstream info from the metadata: upstream info in the
+                # protocol (e.g. HTTP absolute-form)
+                pass
 
             self.channel.ask("clientconnect", self)
 
@@ -92,11 +112,17 @@ class ConnectionHandler:
                     self.establish_ssl(client=client_ssl, server=server_ssl)
 
                 if self.config.check_tcp(self.server_conn.address):
-                    self.log("Generic TCP mode for host: %s:%s" % self.server_conn.address(), "info")
+                    self.log(
+                        "Generic TCP mode for host: %s:%s" %
+                        self.server_conn.address(),
+                        "info")
                     self.conntype = "tcp"
 
             # Delegate handling to the protocol handler
-            protocol_handler(self.conntype)(self, **conn_kwargs).handle_messages()
+            protocol_handler(
+                self.conntype)(
+                self,
+                **conn_kwargs).handle_messages()
 
             self.log("clientdisconnect", "info")
             self.channel.tell("clientdisconnect", self)
@@ -104,7 +130,8 @@ class ConnectionHandler:
         except ProxyError as e:
             protocol_handler(self.conntype)(self, **conn_kwargs).handle_error(e)
         except Exception:
-            import traceback, sys
+            import traceback
+            import sys
 
             self.log(traceback.format_exc(), "error")
             print >> sys.stderr, traceback.format_exc()
@@ -112,7 +139,8 @@ class ConnectionHandler:
             print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
         finally:
             # Make sure that we close the server connection in any case.
-            # The client connection is closed by the ProxyServer and does not have be handled here.
+            # The client connection is closed by the ProxyServer and does not
+            # have be handled here.
             self.del_server_connection()
 
     def del_server_connection(self):
@@ -122,8 +150,10 @@ class ConnectionHandler:
         if self.server_conn and self.server_conn.connection:
             self.server_conn.finish()
             self.server_conn.close()
-            self.log("serverdisconnect", "debug", ["%s:%s" % (self.server_conn.address.host,
-                                                              self.server_conn.address.port)])
+            self.log(
+                "serverdisconnect", "debug", [
+                    "%s:%s" %
+                    (self.server_conn.address.host, self.server_conn.address.port)])
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
 
@@ -141,7 +171,9 @@ class ConnectionHandler:
         if self.server_conn:
             self.del_server_connection()
 
-        self.log("Set new server address: %s:%s" % (address.host, address.port), "debug")
+        self.log(
+            "Set new server address: %s:%s" %
+            (address.host, address.port), "debug")
         self.server_conn = ServerConnection(address)
 
     def establish_server_connection(self, ask=True):
@@ -155,12 +187,16 @@ class ConnectionHandler:
         """
         if self.server_conn.connection:
             return
-        self.log("serverconnect", "debug", ["%s:%s" % self.server_conn.address()[:2]])
+        self.log(
+            "serverconnect", "debug", [
+                "%s:%s" %
+                self.server_conn.address()[
+                    :2]])
         if ask:
             self.channel.ask("serverconnect", self)
         try:
             self.server_conn.connect()
-        except tcp.NetLibError, v:
+        except tcp.NetLibError as v:
             raise ProxyError(502, v)
 
     def establish_ssl(self, client=False, server=False, sni=None):
@@ -237,7 +273,8 @@ class ConnectionHandler:
         self.server_conn.state = state
 
         # Receiving new_sni where had_ssl is False is a weird case that happens when the workaround for
-        # https://github.com/mitmproxy/mitmproxy/issues/427 is active. In this case, we want to establish SSL as well.
+        # https://github.com/mitmproxy/mitmproxy/issues/427 is active. In this
+        # case, we want to establish SSL as well.
         if had_ssl or new_sni:
             self.establish_ssl(server=True, sni=sni)
 
@@ -246,8 +283,10 @@ class ConnectionHandler:
 
     def log(self, msg, level, subs=()):
         msg = [
-            "%s:%s: %s" % (self.client_conn.address.host, self.client_conn.address.port, msg)
-        ]
+            "%s:%s: %s" %
+            (self.client_conn.address.host,
+             self.client_conn.address.port,
+             msg)]
         for i in subs:
             msg.append("  -> " + i)
         msg = "\n".join(msg)
@@ -255,11 +294,13 @@ class ConnectionHandler:
 
     def find_cert(self):
         if self.config.certforward and self.server_conn.ssl_established:
-            return self.server_conn.cert, self.config.certstore.gen_pkey(self.server_conn.cert), None
+            return self.server_conn.cert, self.config.certstore.gen_pkey(
+                self.server_conn.cert), None
         else:
             host = self.server_conn.address.host
             sans = []
-            if self.server_conn.ssl_established and (not self.config.no_upstream_cert):
+            if self.server_conn.ssl_established and (
+                    not self.config.no_upstream_cert):
                 upstream_cert = self.server_conn.cert
                 sans.extend(upstream_cert.altnames)
                 if upstream_cert.cn:
@@ -291,8 +332,11 @@ class ConnectionHandler:
                 #   - We established SSL with the server previously
                 #   - We initially wanted to establish SSL with the server,
                 #     but the server refused to negotiate without SNI.
-                if self.server_conn.ssl_established or hasattr(self.server_conn, "may_require_sni"):
-                    self.server_reconnect(sni)  # reconnect to upstream server with SNI
+                if self.server_conn.ssl_established or hasattr(
+                        self.server_conn,
+                        "may_require_sni"):
+                    # reconnect to upstream server with SNI
+                    self.server_reconnect(sni)
                 # Now, change client context to reflect changed certificate:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn.create_ssl_context(
@@ -308,4 +352,7 @@ class ConnectionHandler:
         # make dang sure it doesn't happen.
         except:  # pragma: no cover
             import traceback
-            self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
+            self.log(
+                "Error in handle_sni:\r\n" +
+                traceback.format_exc(),
+                "error")

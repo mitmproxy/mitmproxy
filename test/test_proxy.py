@@ -78,7 +78,6 @@ class TestProcessProxyOptions:
     def test_no_transparent(self):
         self.assert_err("transparent mode not supported", "-T")
 
-
     @mock.patch("libmproxy.platform.resolver")
     def test_modes(self, _):
         self.assert_noerr("-R", "http://localhost")
@@ -96,28 +95,42 @@ class TestProcessProxyOptions:
     def test_client_certs(self):
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--client-certs", cadir)
-            self.assert_err("directory does not exist", "--client-certs", "nonexistent")
+            self.assert_err(
+                "directory does not exist",
+                "--client-certs",
+                "nonexistent")
 
     def test_certs(self):
         with tutils.tmpdir() as cadir:
-            self.assert_noerr("--cert", tutils.test_data.path("data/testkey.pem"))
+            self.assert_noerr(
+                "--cert",
+                tutils.test_data.path("data/testkey.pem"))
             self.assert_err("does not exist", "--cert", "nonexistent")
 
     def test_auth(self):
         p = self.assert_noerr("--nonanonymous")
         assert p.authenticator
 
-        p = self.assert_noerr("--htpasswd", tutils.test_data.path("data/htpasswd"))
+        p = self.assert_noerr(
+            "--htpasswd",
+            tutils.test_data.path("data/htpasswd"))
         assert p.authenticator
-        self.assert_err("malformed htpasswd file", "--htpasswd", tutils.test_data.path("data/htpasswd.invalid"))
+        self.assert_err(
+            "malformed htpasswd file",
+            "--htpasswd",
+            tutils.test_data.path("data/htpasswd.invalid"))
 
         p = self.assert_noerr("--singleuser", "test:test")
         assert p.authenticator
-        self.assert_err("invalid single-user specification", "--singleuser", "test")
+        self.assert_err(
+            "invalid single-user specification",
+            "--singleuser",
+            "test")
 
 
 class TestProxyServer:
-    @tutils.SkipWindows  # binding to 0.0.0.0:1 works without special permissions on Windows
+    # binding to 0.0.0.0:1 works without special permissions on Windows
+    @tutils.SkipWindows
     def test_err(self):
         conf = ProxyConfig(
             port=1
@@ -142,6 +155,12 @@ class TestConnectionHandler:
     def test_fatal_error(self):
         config = mock.Mock()
         config.mode.get_upstream_server.side_effect = RuntimeError
-        c = ConnectionHandler(config, mock.MagicMock(), ("127.0.0.1", 8080), None, mock.MagicMock())
+        c = ConnectionHandler(
+            config,
+            mock.MagicMock(),
+            ("127.0.0.1",
+             8080),
+            None,
+            mock.MagicMock())
         with tutils.capture_stderr(c.handle) as output:
             assert "mitmproxy has crashed" in output

@@ -24,9 +24,11 @@ def done(context):
     HTTPRequest._headers_to_strip_off.append("Connection")
     HTTPRequest._headers_to_strip_off.append("Upgrade")
 
+
 @concurrent
 def response(context, flow):
-    if flow.response.headers.get_first("Connection", None) == "Upgrade":
+    value = flow.response.headers.get_first("Connection", None)
+    if value and value.upper() == "UPGRADE":
         # We need to send the response manually now...
         flow.client_conn.send(flow.response.assemble())
         # ...and then delegate to tcp passthrough.

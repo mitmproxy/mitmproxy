@@ -50,6 +50,7 @@ body,
 #container {
   display: flex;
   flex-direction: column;
+  outline: none;
 }
 #container > header,
 #container > footer,
@@ -60,7 +61,6 @@ body,
   flex: 1 1 auto;
   display: flex;
   flex-direction: row;
-  outline: 0;
 }
 .main-view.vertical {
   flex-direction: column;
@@ -145,7 +145,7 @@ header .menu {
   padding-left: 2.5px;
   padding-right: 2.5px;
 }
-@media (min-width: 992px) {
+@media (min-width: 768px) {
   .filter-input {
     float: left;
     width: 25%;
@@ -155,6 +155,7 @@ header .menu {
   top: 27px;
   display: block;
   max-width: none;
+  opacity: 0.9;
 }
 .filter-input .popover .popover-content {
   max-height: 500px;
@@ -271,7 +272,12 @@ header .menu {
 }
 .flow-detail {
   width: 100%;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
+  /*.request .response-line,
+    .response .request-line {
+        opacity: 0.7;
+    }*/
 }
 .flow-detail nav {
   background-color: #F2F2F2;
@@ -290,6 +296,25 @@ header .menu {
   max-height: 100px;
   overflow-y: auto;
 }
+.flow-detail .request-line {
+  margin-bottom: 2px;
+}
+.flow-detail hr {
+  margin: 0 0 5px;
+}
+.inline-input {
+  margin: 0 -5px;
+  padding: 0 5px;
+}
+.inline-input[contenteditable] {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.inline-input[contenteditable].has-warning {
+  color: #ffb8b8;
+}
+.view-options {
+  margin-top: 10px;
+}
 .flow-detail table {
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
   width: 100%;
@@ -306,6 +331,9 @@ header .menu {
   width: 50%;
   padding-right: 1em;
 }
+.header-table td {
+  line-height: 1.3em;
+}
 .header-table .header-name {
   width: 33%;
   padding-right: 1em;
@@ -315,6 +343,38 @@ header .menu {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.flowview-image {
+  text-align: center;
+}
+.flowview-image img {
+  max-width: 100%;
+  max-height: 100%;
+}
+.prompt-dialog {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.prompt-content {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 25px;
+  padding: 2px 5px;
+  background-color: white;
+  box-shadow: 0 -1px 3px lightgray;
+}
+.prompt-content .option {
+  cursor: pointer;
+}
+.prompt-content .option:not(:last-child)::after {
+  content: ", ";
 }
 .eventlog {
   height: 200px;

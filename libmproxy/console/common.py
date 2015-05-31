@@ -6,14 +6,13 @@ import os
 
 from .. import utils
 from ..protocol.http import CONTENT_MISSING, decoded
+from . import signals
+import netlib.utils
 
 try:
     import pyperclip
 except:
     pyperclip = False
-
-VIEW_LIST = 0
-VIEW_FLOW = 1
 
 
 VIEW_FLOW_REQUEST = 0
@@ -31,14 +30,22 @@ METHOD_OPTIONS = [
 ]
 
 
-def highlight_key(s, k):
+def is_keypress(k):
+    """
+        Is this input event a keypress?
+    """
+    if isinstance(k, basestring):
+        return True
+
+
+def highlight_key(str, key, textattr="text", keyattr="key"):
     l = []
-    parts = s.split(k, 1)
+    parts = str.split(key, 1)
     if parts[0]:
-        l.append(("text", parts[0]))
-    l.append(("key", k))
+        l.append((textattr, parts[0]))
+    l.append((keyattr, key))
     if parts[1]:
-        l.append(("text", parts[1]))
+        l.append((textattr, parts[1]))
     return l
 
 
@@ -60,20 +67,26 @@ def format_keyvals(lst, key="key", val="text", indent=0):
             if kv is None:
                 ret.append(urwid.Text(""))
             else:
-                cols = []
-                # This cumbersome construction process is here for a reason:
-                # Urwid < 1.0 barfs if given a fixed size column of size zero.
-                if indent:
-                    cols.append(("fixed", indent, urwid.Text("")))
-                cols.extend([
-                    (
-                        "fixed",
-                        maxk,
-                        urwid.Text([(key, kv[0] or "")])
-                    ),
-                    kv[1] if isinstance(kv[1], urwid.Widget) else urwid.Text([(val, kv[1])])
-               ])
-                ret.append(urwid.Columns(cols, dividechars = 2))
+                if isinstance(kv[1], urwid.Widget):
+                    v = kv[1]
+                elif kv[1] is None:
+                    v = urwid.Text("")
+                else:
+                    v = urwid.Text([(val, kv[1])])
+                ret.append(
+                    urwid.Columns(
+                        [
+                            ("fixed", indent, urwid.Text("")),
+                            (
+                                "fixed",
+                                maxk,
+                                urwid.Text([(key, kv[0] or "")])
+                            ),
+                            v
+                        ],
+                        dividechars = 2
+                    )
+                )
     return ret
 
 
@@ -151,7 +164,7 @@ def raw_format_flow(f, focus, extended, padding):
             4: "code_400",
             5: "code_500",
         }
-        ccol = codes.get(f["resp_code"]/100, "code_other")
+        ccol = codes.get(f["resp_code"] / 100, "code_other")
         resp.append(fcol(SYMBOL_RETURN, ccol))
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
@@ -184,23 +197,39 @@ def raw_format_flow(f, focus, extended, padding):
 def save_data(path, data, master, state):
     if not path:
         return
-    state.last_saveload = path
-    path = os.path.expanduser(path)
     try:
         with file(path, "wb") as f:
             f.write(data)
-    except IOError, v:
-        master.statusbar.message(v.strerror)
+    except IOError as v:
+        signals.status_message.send(message=v.strerror)
+
+
+def ask_save_overwite(path, data, master, state):
+    if not path:
+        return
+    path = os.path.expanduser(path)
+    if os.path.exists(path):
+        def save_overwite(k):
+            if k == "y":
+                save_data(path, data, master, state)
+
+        signals.status_prompt_onekey.send(
+            prompt = "'" + path + "' already exists. Overwite?",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = save_overwite
+        )
+    else:
+        save_data(path, data, master, state)
 
 
 def ask_save_path(prompt, data, master, state):
-    master.path_prompt(
-        prompt,
-        state.last_saveload,
-        save_data,
-        data,
-        master,
-        state
+    signals.status_prompt_path.send(
+        prompt = prompt,
+        callback = ask_save_overwite,
+        args = (data, master, state)
     )
 
 
@@ -210,6 +239,8 @@ def copy_flow_format_data(part, scope, flow):
     else:
         data = ""
         if scope in ("q", "a"):
+            if flow.request.content is None or flow.request.content == CONTENT_MISSING:
+                return None, "Request content is missing"
             with decoded(flow.request):
                 if part == "h":
                     data += flow.request.assemble()
@@ -221,6 +252,8 @@ def copy_flow_format_data(part, scope, flow):
             # Add padding between request and response
             data += "\r\n" * 2
         if scope in ("s", "a") and flow.response:
+            if flow.response.content is None or flow.response.content == CONTENT_MISSING:
+                return None, "Response content is missing"
             with decoded(flow.response):
                 if part == "h":
                     data += flow.response.assemble()
@@ -228,40 +261,43 @@ def copy_flow_format_data(part, scope, flow):
                     data += flow.response.content
                 else:
                     raise ValueError("Unknown part: {}".format(part))
-    return data
+    return data, False
 
 
 def copy_flow(part, scope, flow, master, state):
     """
-    part: _c_ontent, _a_ll, _u_rl
+    part: _c_ontent, _h_eaders+content, _u_rl
     scope: _a_ll, re_q_uest, re_s_ponse
     """
-    data = copy_flow_format_data(part, scope, flow)
+    data, err = copy_flow_format_data(part, scope, flow)
+
+    if err:
+        signals.status_message.send(message=err)
+        return
 
     if not data:
         if scope == "q":
-            master.statusbar.message("No request content to copy.")
+            signals.status_message.send(message="No request content to copy.")
         elif scope == "s":
-            master.statusbar.message("No response content to copy.")
+            signals.status_message.send(message="No response content to copy.")
         else:
-            master.statusbar.message("No contents to copy.")
+            signals.status_message.send(message="No contents to copy.")
         return
 
     try:
         master.add_event(str(len(data)))
         pyperclip.copy(data)
-    except RuntimeError:
+    except (RuntimeError, UnicodeDecodeError):
         def save(k):
             if k == "y":
-                ask_save_path("Save data: ", data, master, state)
-
-        master.prompt_onekey(
-            "Cannot copy binary data to clipboard. Save as file?",
-            (
+                ask_save_path("Save data", data, master, state)
+        signals.status_prompt_onekey.send(
+            prompt = "Cannot copy binary data to clipboard. Save as file?",
+            keys = (
                 ("yes", "y"),
                 ("no", "n"),
             ),
-            save
+            callback = save
         )
 
 
@@ -273,14 +309,11 @@ def ask_copy_part(scope, flow, master, state):
     if scope != "s":
         choices.append(("url", "u"))
 
-    master.prompt_onekey(
-        "Copy",
-        choices,
-        copy_flow,
-        scope,
-        flow,
-        master,
-        state
+    signals.status_prompt_onekey.send(
+        prompt = "Copy",
+        keys = choices,
+        callback = copy_flow,
+        args = (scope, flow, master, state)
     )
 
 
@@ -297,16 +330,14 @@ def ask_save_body(part, master, state, flow):
         # We first need to determine whether we want to save the request or the
         # response content.
         if request_has_content and response_has_content:
-            master.prompt_onekey(
-                "Save",
-                (
+            signals.status_prompt_onekey.send(
+                prompt = "Save",
+                keys = (
                     ("request", "q"),
                     ("response", "s"),
                 ),
-                ask_save_body,
-                master,
-                state,
-                flow
+                callback = ask_save_body,
+                args = (master, state, flow)
             )
         elif response_has_content:
             ask_save_body("s", master, state, flow)
@@ -315,27 +346,23 @@ def ask_save_body(part, master, state, flow):
 
     elif part == "q" and request_has_content:
         ask_save_path(
-            "Save request content: ",
+            "Save request content",
             flow.request.get_decoded_content(),
             master,
             state
         )
     elif part == "s" and response_has_content:
         ask_save_path(
-            "Save response content: ",
+            "Save response content",
             flow.response.get_decoded_content(),
             master,
             state
         )
     else:
-        master.statusbar.message("No content to save.")
+        signals.status_message.send(message="No content to save.")
 
 
-class FlowCache:
-    @utils.LRUCache(200)
-    def format_flow(self, *args):
-        return raw_format_flow(*args)
-flowcache = FlowCache()
+flowcache = utils.LRUCache(800)
 
 
 def format_flow(f, focus, extended=False, hostheader=False, padding=2):
@@ -353,7 +380,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
     )
     if f.response:
         if f.response.content:
-            contentdesc = utils.pretty_size(len(f.response.content))
+            contentdesc = netlib.utils.pretty_size(len(f.response.content))
         elif f.response.content == CONTENT_MISSING:
             contentdesc = "[content missing]"
         else:
@@ -374,6 +401,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
             d["resp_ctype"] = t[0].split(";")[0]
         else:
             d["resp_ctype"] = ""
-    return flowcache.format_flow(
+    return flowcache.get(
+        raw_format_flow,
         tuple(sorted(d.items())), focus, extended, padding
     )

@@ -70,27 +70,29 @@ def get_server(dummy_server, options):
     else:
         try:
             return ProxyServer(options)
-        except ProxyServerError, v:
+        except ProxyServerError as v:
             print(str(v), file=sys.stderr)
             sys.exit(1)
 
 
-def mitmproxy():  # pragma: nocover
+def mitmproxy(args=None):  # pragma: nocover
     from . import console
 
     check_versions()
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     if options.quiet:
         options.verbose = 0
 
     proxy_config = process_proxy_options(parser, options)
     console_options = console.Options(**cmdline.get_common_options(options))
     console_options.palette = options.palette
+    console_options.palette_transparent = options.palette_transparent
     console_options.eventlog = options.eventlog
     console_options.intercept = options.intercept
+    console_options.limit = options.limit
 
     server = get_server(console_options.no_server, proxy_config)
 
@@ -101,13 +103,13 @@ def mitmproxy():  # pragma: nocover
         pass
 
 
-def mitmdump():  # pragma: nocover
+def mitmdump(args=None):  # pragma: nocover
     from . import dump
 
     check_versions()
 
     parser = cmdline.mitmdump()
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     if options.quiet:
         options.verbose = 0
         options.flow_detail = 0
@@ -135,13 +137,13 @@ def mitmdump():  # pragma: nocover
         pass
 
 
-def mitmweb():  # pragma: nocover
+def mitmweb(args=None):  # pragma: nocover
     from . import web
 
     check_versions()
     parser = cmdline.mitmweb()
 
-    options = parser.parse_args()
+    options = parser.parse_args(args)
     if options.quiet:
         options.verbose = 0
 

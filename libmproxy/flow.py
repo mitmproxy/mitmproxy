@@ -17,9 +17,6 @@ from .proxy.config import HostMatcher
 from .proxy.connection import ClientConnection, ServerConnection
 import urlparse
 
-ODict = odict.ODict
-ODictCaseless = odict.ODictCaseless
-
 
 class AppRegistry:
     def __init__(self):
@@ -165,7 +162,8 @@ class StreamLargeBodies(object):
             r.headers, is_request, flow.request.method, code
         )
         if not (0 <= expected_size <= self.max_size):
-            r.stream = r.stream or True  # r.stream may already be a callable, which we want to preserve.
+            # r.stream may already be a callable, which we want to preserve.
+            r.stream = r.stream or True
 
 
 class ClientPlaybackState:
@@ -203,8 +201,16 @@ class ClientPlaybackState:
 
 
 class ServerPlaybackState:
-    def __init__(self, headers, flows, exit, nopop, ignore_params, ignore_content,
-                 ignore_payload_params, ignore_host):
+    def __init__(
+            self,
+            headers,
+            flows,
+            exit,
+            nopop,
+            ignore_params,
+            ignore_content,
+            ignore_payload_params,
+            ignore_host):
         """
             headers: Case-insensitive list of request headers that should be
             included in request-response matching.
@@ -232,7 +238,7 @@ class ServerPlaybackState:
         r = flow.request
 
         _, _, path, _, query, _ = urlparse.urlparse(r.url)
-        queriesArray = urlparse.parse_qsl(query)
+        queriesArray = urlparse.parse_qsl(query, keep_blank_values=True)
 
         key = [
             str(r.port),
@@ -242,7 +248,7 @@ class ServerPlaybackState:
         ]
 
         if not self.ignore_content:
-            form_contents = r.get_form_urlencoded()
+            form_contents = r.get_form()
             if self.ignore_payload_params and form_contents:
                 key.extend(
                     p for p in form_contents
@@ -271,7 +277,7 @@ class ServerPlaybackState:
                 # to prevent a mismatch between unicode/non-unicode.
                 v = [str(x) for x in v]
                 hdrs.append((i, v))
-            key.append(repr(hdrs))
+            key.append(hdrs)
         return hashlib.sha256(repr(key)).digest()
 
     def next_flow(self, request):
@@ -462,8 +468,9 @@ class FlowStore(FlowList):
         Notifies the state that a flow has been updated.
         The flow must be present in the state.
         """
-        for view in self.views:
-            view._update(f)
+        if f in self:
+            for view in self.views:
+                view._update(f)
 
     def _remove(self, f):
         """
@@ -534,7 +541,8 @@ class State(object):
     def flow_count(self):
         return len(self.flows)
 
-    # TODO: All functions regarding flows that don't cause side-effects should be moved into FlowStore.
+    # TODO: All functions regarding flows that don't cause side-effects should
+    # be moved into FlowStore.
     def index(self, f):
         return self.flows.index(f)
 
@@ -592,6 +600,10 @@ class State(object):
 
     def accept_all(self, master):
         self.flows.accept_all(master)
+
+    def backup(self, f):
+        f.backup()
+        self.update_flow(f)
 
     def revert(self, f):
         f.revert()
@@ -658,7 +670,7 @@ class FlowMaster(controller.Master):
         """
         try:
             s = script.Script(command, self)
-        except script.ScriptError, v:
+        except script.ScriptError as v:
             return v.args[0]
         self.scripts.append(s)
 
@@ -722,8 +734,17 @@ class FlowMaster(controller.Master):
     def stop_client_playback(self):
         self.client_playback = None
 
-    def start_server_playback(self, flows, kill, headers, exit, nopop, ignore_params,
-                              ignore_content, ignore_payload_params, ignore_host):
+    def start_server_playback(
+            self,
+            flows,
+            kill,
+            headers,
+            exit,
+            nopop,
+            ignore_params,
+            ignore_content,
+            ignore_payload_params,
+            ignore_host):
         """
             flows: List of flows.
             kill: Boolean, should we kill requests not part of the replay?
@@ -732,9 +753,15 @@ class FlowMaster(controller.Master):
             ignore_payload_params: list of content params to ignore in server replay
             ignore_host: true if request host should be ignored in server replay
         """
-        self.server_playback = ServerPlaybackState(headers, flows, exit, nopop, 
-                                                   ignore_params, ignore_content,
-                                                   ignore_payload_params, ignore_host)
+        self.server_playback = ServerPlaybackState(
+            headers,
+            flows,
+            exit,
+            nopop,
+            ignore_params,
+            ignore_content,
+            ignore_payload_params,
+            ignore_host)
         self.kill_nonreplay = kill
 
     def stop_server_playback(self):
@@ -771,6 +798,8 @@ class FlowMaster(controller.Master):
             if all(e):
                 self.shutdown()
             self.client_playback.tick(self)
+            if self.client_playback.done():
+                self.client_playback = None
 
         return super(FlowMaster, self).tick(q, timeout)
 
@@ -780,25 +809,38 @@ class FlowMaster(controller.Master):
     def create_request(self, method, scheme, host, port, path):
         """
             this method creates a new artificial and minimalist request also adds it to flowlist
-        """        
+        """
         c = ClientConnection.from_state(dict(
-                address=dict(address=(host, port), use_ipv6=False),
-                clientcert=None
-            ))
+            address=dict(address=(host, port), use_ipv6=False),
+            clientcert=None
+        ))
 
         s = ServerConnection.from_state(dict(
-                address=dict(address=(host, port), use_ipv6=False),
-                state=[],
-                source_address=None, #source_address=dict(address=(host, port), use_ipv6=False),
-                cert=None,
-                sni=host,
-                ssl_established=True
-            ))
-        f = http.HTTPFlow(c,s);
+            address=dict(address=(host, port), use_ipv6=False),
+            state=[],
+            source_address=None,
+            # source_address=dict(address=(host, port), use_ipv6=False),
+            cert=None,
+            sni=host,
+            ssl_established=True
+        ))
+        f = http.HTTPFlow(c, s)
         headers = ODictCaseless()
-        
-        req = http.HTTPRequest("absolute", method, scheme, host, port, path, (1, 1), headers, None,
-                                 None, None, None)
+
+        req = http.HTTPRequest(
+            "absolute",
+            method,
+            scheme,
+            host,
+            port,
+            path,
+            (1,
+             1),
+            headers,
+            None,
+            None,
+            None,
+            None)
         f.request = req
         return self.load_flow(f)
 
@@ -809,7 +851,8 @@ class FlowMaster(controller.Master):
 
         if self.server and self.server.config.mode == "reverse":
             f.request.host, f.request.port = self.server.config.mode.dst[2:]
-            f.request.scheme = "https" if self.server.config.mode.dst[1] else "http"
+            f.request.scheme = "https" if self.server.config.mode.dst[
+                1] else "http"
 
         f.reply = controller.DummyReply()
         if f.request:
@@ -836,7 +879,7 @@ class FlowMaster(controller.Master):
         try:
             f = file(path, "rb")
             freader = FlowReader(f)
-        except IOError, v:
+        except IOError as v:
             raise FlowReadError(v.strerror)
         return self.load_flows(freader)
 
@@ -877,7 +920,8 @@ class FlowMaster(controller.Master):
             f.backup()
             f.request.is_replay = True
             if f.request.content:
-                f.request.headers["Content-Length"] = [str(len(f.request.content))]
+                f.request.headers[
+                    "Content-Length"] = [str(len(f.request.content))]
             f.response = None
             f.error = None
             self.process_new_request(f)
@@ -1028,7 +1072,7 @@ class FlowReader:
         """
         off = 0
         try:
-            while 1:
+            while True:
                 data = tnetstring.load(self.fo)
                 if tuple(data["version"][:2]) != version.IVERSION[:2]:
                     v = ".".join(str(i) for i in data["version"])
@@ -1037,7 +1081,7 @@ class FlowReader:
                     )
                 off = self.fo.tell()
                 yield handle.protocols[data["type"]]["flow"].from_state(data)
-        except ValueError, v:
+        except ValueError as v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':
                 return

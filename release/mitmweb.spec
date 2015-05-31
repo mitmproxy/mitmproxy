@@ -24,6 +24,10 @@ a.datas += Tree(
   "./libmproxy/web/static",
   prefix="libmproxy/web/static"
 )
+a.datas += Tree(
+    "../venv.mitmproxy/lib/python2.7/site-packages/cryptography/hazmat/bindings/openssl/src",
+    prefix = "cryptography/hazmat/bindings/openssl/src"
+)
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,

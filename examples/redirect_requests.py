@@ -8,7 +8,8 @@ This example shows two ways to redirect flows to other destinations.
 
 def request(context, flow):
     # pretty_host(hostheader=True) takes the Host: header of the request into account,
-    # which is useful in transparent mode where we usually only have the IP otherwise.
+    # which is useful in transparent mode where we usually only have the IP
+    # otherwise.
 
     # Method 1: Answer with a locally generated response
     if flow.request.pretty_host(hostheader=True).endswith("example.com"):

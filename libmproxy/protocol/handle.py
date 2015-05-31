@@ -6,6 +6,7 @@ protocols = {
     'tcp': dict(handler=tcp.TCPHandler)
 }
 
+
 def protocol_handler(protocol):
     """
     @type protocol: str
@@ -14,4 +15,6 @@ def protocol_handler(protocol):
     if protocol in protocols:
         return protocols[protocol]["handler"]
 
-    raise NotImplementedError("Unknown Protocol: %s" % protocol)   # pragma: nocover
+    raise NotImplementedError(
+        "Unknown Protocol: %s" %
+        protocol)   # pragma: nocover

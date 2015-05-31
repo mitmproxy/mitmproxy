@@ -2,18 +2,17 @@ from __future__ import absolute_import
 
 import urwid
 
-from . import common
+from . import common, signals
 from .. import filt, version
 
 footer = [
-    ("heading", 'mitmproxy v%s '%version.VERSION),
+    ("heading", 'mitmproxy v%s ' % version.VERSION),
     ('heading_key', "q"), ":back ",
 ]
 
 
 class HelpView(urwid.ListBox):
-    def __init__(self, master, help_context, state):
-        self.master, self.state = master, state
+    def __init__(self, help_context):
         self.help_context = help_context or []
         urwid.ListBox.__init__(
             self,
@@ -29,101 +28,26 @@ class HelpView(urwid.ListBox):
         keys = [
             ("j, k", "down, up"),
             ("h, l", "left, right (in some contexts)"),
+            ("g, G", "go to end, beginning"),
             ("space", "page down"),
             ("pg up/down", "page up/down"),
             ("arrows", "up, down, left, right"),
         ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
+        text.extend(
+            common.format_keyvals(
+                keys,
+                key="key",
+                val="text",
+                indent=4))
 
         text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
         keys = [
             ("c", "client replay"),
-            ("H", "edit global header set patterns"),
-            ("I", "set ignore pattern"),
             ("i", "set interception pattern"),
-            ("M", "change global default display mode"),
-                (None,
-                    common.highlight_key("automatic", "a") +
-                    [("text", ": automatic detection")]
-                ),
-                (None,
-                    common.highlight_key("hex", "e") +
-                    [("text", ": Hex")]
-                ),
-                (None,
-                    common.highlight_key("html", "h") +
-                    [("text", ": HTML")]
-                ),
-                (None,
-                    common.highlight_key("image", "i") +
-                    [("text", ": Image")]
-                ),
-                (None,
-                    common.highlight_key("javascript", "j") +
-                    [("text", ": JavaScript")]
-                ),
-                (None,
-                    common.highlight_key("json", "s") +
-                    [("text", ": JSON")]
-                ),
-                (None,
-                    common.highlight_key("css", "c") +
-                    [("text", ": CSS")]
-                ),
-                (None,
-                    common.highlight_key("urlencoded", "u") +
-                    [("text", ": URL-encoded data")]
-                ),
-                (None,
-                    common.highlight_key("raw", "r") +
-                    [("text", ": raw data")]
-                ),
-                (None,
-                    common.highlight_key("xml", "x") +
-                    [("text", ": XML")]
-                ),
-                (None,
-                    common.highlight_key("wbxml", "w") +
-                    [("text", ": WBXML")]
-                ),
-                (None,
-                    common.highlight_key("amf", "f") +
-                    [("text", ": AMF (requires PyAMF)")]
-                ),
-            ("o", "toggle options:"),
-                (None,
-                    common.highlight_key("anticache", "a") +
-                    [("text", ": prevent cached responses")]
-                ),
-                (None,
-                    common.highlight_key("anticomp", "c") +
-                    [("text", ": prevent compressed responses")]
-                ),
-                (None,
-                    common.highlight_key("showhost", "h") +
-                    [("text", ": use Host header for URL display")]
-                ),
-                (None,
-                    common.highlight_key("killextra", "k") +
-                    [("text", ": kill requests not part of server replay")]
-                ),
-                (None,
-                    common.highlight_key("norefresh", "n") +
-                    [("text", ": disable server replay response refresh")]
-                ),
-                (None,
-                    common.highlight_key("upstream certs", "u") +
-                    [("text", ": sniff cert info from upstream server")]
-                ),
-
-            ("q", "quit / return to flow list"),
+            ("o", "options"),
+            ("q", "quit / return to previous page"),
             ("Q", "quit without confirm prompt"),
-            ("R", "edit replacement patterns"),
-            ("s", "add/remove scripts"),
             ("S", "server replay"),
-            ("t", "set sticky cookie expression"),
-            ("T", "set tcp proxying pattern"),
-            ("u", "set sticky auth expression"),
         ]
         text.extend(
             common.format_keyvals(keys, key="key", val="text", indent=4)
@@ -133,15 +57,15 @@ class HelpView(urwid.ListBox):
         f = []
         for i in filt.filt_unary:
             f.append(
-                ("~%s"%i.code, i.help)
+                ("~%s" % i.code, i.help)
             )
         for i in filt.filt_rex:
             f.append(
-                ("~%s regex"%i.code, i.help)
+                ("~%s regex" % i.code, i.help)
             )
         for i in filt.filt_int:
             f.append(
-                ("~%s int"%i.code, i.help)
+                ("~%s int" % i.code, i.help)
             )
         f.sort()
         f.extend(
@@ -156,7 +80,7 @@ class HelpView(urwid.ListBox):
 
         text.append(
             urwid.Text(
-               [
+                [
                     "\n",
                     ("text", "    Regexes are Python-style.\n"),
                     ("text", "    Regexes can be specified as quoted strings.\n"),
@@ -164,13 +88,13 @@ class HelpView(urwid.ListBox):
                     ("text", "    Expressions with no operators are regex matches against URL.\n"),
                     ("text", "    Default binary operator is &.\n"),
                     ("head", "\n    Examples:\n"),
-               ]
+                ]
             )
         )
         examples = [
-                ("google\.com", "Url containing \"google.com"),
-                ("~q ~b test", "Requests where body contains \"test\""),
-                ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
+            ("google\.com", "Url containing \"google.com"),
+            ("~q ~b test", "Requests where body contains \"test\""),
+            ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(
             common.format_keyvals(examples, key="key", val="text", indent=4)
@@ -180,11 +104,12 @@ class HelpView(urwid.ListBox):
     def keypress(self, size, key):
         key = common.shortcuts(key)
         if key == "q":
-            self.master.statusbar = self.state[0]
-            self.master.body = self.state[1]
-            self.master.header = self.state[2]
-            self.master.loop.widget = self.master.make_view()
+            signals.pop_view_state.send(self)
             return None
         elif key == "?":
             key = None
+        elif key == "G":
+            self.set_focus(0)
+        elif key == "g":
+            self.set_focus(len(self.body.contents))
         return urwid.ListBox.keypress(self, size, key)

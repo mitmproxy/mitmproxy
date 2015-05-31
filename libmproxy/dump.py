@@ -53,7 +53,7 @@ class Options(object):
 
 
 def str_response(resp):
-    r = "%s %s"%(resp.code, resp.msg)
+    r = "%s %s" % (resp.code, resp.msg)
     if resp.is_replay:
         r = "[replay] " + r
     return r
@@ -64,7 +64,7 @@ def str_request(f, showhost):
         c = f.client_conn.address.host
     else:
         c = "[replay]"
-    r = "%s %s %s"%(c, f.request.method, f.request.pretty_url(showhost))
+    r = "%s %s %s" % (c, f.request.method, f.request.pretty_url(showhost))
     if f.request.stickycookie:
         r = "[stickycookie] " + r
     return r
@@ -102,7 +102,7 @@ class DumpMaster(flow.FlowMaster):
             try:
                 f = file(path, options.outfile[1])
                 self.start_stream(f, self.filt)
-            except IOError, v:
+            except IOError as v:
                 raise DumpError(v.strerror)
 
         if options.replacements:
@@ -140,7 +140,7 @@ class DumpMaster(flow.FlowMaster):
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
-            except flow.FlowReadError, v:
+            except flow.FlowReadError as v:
                 self.add_event("Flow file corrupted.", "error")
                 raise DumpError(v)
 
@@ -171,7 +171,7 @@ class DumpMaster(flow.FlowMaster):
 
     def _print_message(self, message):
         if self.o.flow_detail >= 2:
-            print(self.indent(4, message.headers), file=self.outfile)
+            print(self.indent(4, message.headers.format()), file=self.outfile)
         if self.o.flow_detail >= 3:
             if message.content == http.CONTENT_MISSING:
                 print(self.indent(4, "(content missing)"), file=self.outfile)
@@ -181,12 +181,18 @@ class DumpMaster(flow.FlowMaster):
                 if not utils.isBin(content):
                     try:
                         jsn = json.loads(content)
-                        print(self.indent(4, json.dumps(jsn, indent=2)), file=self.outfile)
+                        print(
+                            self.indent(
+                                4,
+                                json.dumps(
+                                    jsn,
+                                    indent=2)),
+                            file=self.outfile)
                     except ValueError:
                         print(self.indent(4, content), file=self.outfile)
                 else:
                     d = netlib.utils.hexdump(content)
-                    d = "\n".join("%s\t%s %s"%i for i in d)
+                    d = "\n".join("%s\t%s %s" % i for i in d)
                     print(self.indent(4, d), file=self.outfile)
         if self.o.flow_detail >= 2:
             print("", file=self.outfile)
@@ -207,8 +213,13 @@ class DumpMaster(flow.FlowMaster):
             if f.response.content == http.CONTENT_MISSING:
                 sz = "(content missing)"
             else:
-                sz = utils.pretty_size(len(f.response.content))
-            print(" << %s %s" % (str_response(f.response), sz), file=self.outfile)
+                sz = netlib.utils.pretty_size(len(f.response.content))
+            print(
+                " << %s %s" %
+                (str_response(
+                    f.response),
+                    sz),
+                file=self.outfile)
             self._print_message(f.response)
 
         if f.error:

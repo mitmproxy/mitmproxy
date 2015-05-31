@@ -1,4 +1,6 @@
-import os, sys, mock
+import os
+import sys
+import mock
 if os.name == "nt":
     m = mock.Mock()
     m.__version__ = "1.1.1"

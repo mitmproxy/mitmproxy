@@ -16,7 +16,7 @@ var TLSColumn = React.createClass({
     },
     render: function () {
         var flow = this.props.flow;
-        var ssl = (flow.request.scheme == "https");
+        var ssl = (flow.request.scheme === "https");
         var classes;
         if (ssl) {
             classes = "col-tls col-tls-https";
@@ -44,7 +44,7 @@ var IconColumn = React.createClass({
             var contentType = ResponseUtils.getContentType(flow.response);
 
             //TODO: We should assign a type to the flow somewhere else.
-            if (flow.response.code == 304) {
+            if (flow.response.code === 304) {
                 icon = "resource-icon-not-modified";
             } else if (300 <= flow.response.code && flow.response.code < 400) {
                 icon = "resource-icon-redirect";

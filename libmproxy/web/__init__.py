@@ -79,6 +79,7 @@ class WebState(flow.State):
             data=[]
         )
 
+
 class Options(object):
     attributes = [
         "app",
@@ -128,11 +129,13 @@ class WebMaster(flow.FlowMaster):
         if options.rfile:
             try:
                 self.load_flows_file(options.rfile)
-            except flow.FlowReadError, v:
+            except flow.FlowReadError as v:
                 self.add_event(
-                    "Could not read flow file: %s"%v,
+                    "Could not read flow file: %s" % v,
                     "error"
                 )
+        if self.options.app:
+            self.start_app(self.options.app_host, self.options.app_port)
 
     def tick(self):
         flow.FlowMaster.tick(self, self.masterq, timeout=0)
@@ -154,7 +157,8 @@ class WebMaster(flow.FlowMaster):
             self.shutdown()
 
     def _process_flow(self, f):
-        if self.state.intercept and self.state.intercept(f) and not f.request.is_replay:
+        if self.state.intercept and self.state.intercept(
+                f) and not f.request.is_replay:
             f.intercept(self)
         else:
             f.reply()

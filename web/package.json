@@ -1,52 +1,52 @@
 {
-    "name": "mitmproxy",
-    "private": true,
-    "scripts": {
-        "test": "jest ./src/js"
-    },
-    "jest": {
-        "testPathDirs": [
-            "./src/js"
-        ],
-        "testPathIgnorePatterns": [
-            "/node_modules/",
-            "testutils.js"
-        ],
-        "testDirectoryName": "tests"
-    },
-    "dependencies": {
-        "jquery": "",
-        "lodash": "",
-        "react": "0.12.x",
-        "react-router": "",
-        "bootstrap": "",
-        "flux": ""
-    },
-    "devDependencies": {
-        "browserify": "=8.0.1",
-        "gulp": "",
-        "gulp-concat": "",
-        "gulp-connect": "",
-        "gulp-jshint": "",
-        "gulp-less": "",
-        "gulp-livereload": "",
-        "gulp-minify-css": "",
-        "gulp-notify": "",
-        "gulp-peg": "",
-        "gulp-plumber": "",
-        "gulp-react": "",
-        "gulp-rename": "",
-        "gulp-replace": "",
-        "gulp-rev": "",
-        "gulp-sourcemaps": "",
-        "gulp-uglify": "",
-        "jest-cli": "^0.1.18",
-        "jshint-stylish": "",
-        "lodash": "",
-        "map-stream": "",
-        "reactify": "",
-        "vinyl-buffer": "",
-        "vinyl-source-stream": "",
-        "vinyl-transform": ""
-    }
+  "name": "mitmproxy",
+  "private": true,
+  "scripts": {
+    "test": "jest ./src/js"
+  },
+  "jest": {
+    "testPathDirs": [
+      "./src/js"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "testutils.js"
+    ],
+    "testDirectoryName": "tests"
+  },
+  "dependencies": {
+    "bootstrap": "^3.3.4",
+    "flux": "",
+    "jquery": "",
+    "lodash": "",
+    "react": "^0.13.1",
+    "react-router": "^0.13.2"
+  },
+  "devDependencies": {
+    "browserify": "=8.0.1",
+    "gulp": "",
+    "gulp-concat": "",
+    "gulp-connect": "",
+    "gulp-jshint": "",
+    "gulp-less": "",
+    "gulp-livereload": "",
+    "gulp-minify-css": "",
+    "gulp-notify": "",
+    "gulp-peg": "",
+    "gulp-plumber": "",
+    "gulp-react": "",
+    "gulp-rename": "",
+    "gulp-replace": "",
+    "gulp-rev": "",
+    "gulp-sourcemaps": "",
+    "gulp-uglify": "",
+    "jest-cli": "^0.1.18",
+    "jshint-stylish": "",
+    "lodash": "",
+    "map-stream": "",
+    "reactify": "",
+    "vinyl-buffer": "",
+    "vinyl-source-stream": "",
+    "vinyl-transform": ""
+  }
 }

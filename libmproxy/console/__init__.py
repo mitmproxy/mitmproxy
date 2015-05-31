@@ -1,266 +1,24 @@
 from __future__ import absolute_import
 
-import glob
 import mailcap
 import mimetypes
 import tempfile
 import os
 import os.path
 import shlex
+import signal
 import stat
 import subprocess
 import sys
-import time
 import traceback
 import urwid
 import weakref
 
-from .. import controller, utils, flow, script
-from . import flowlist, flowview, help, common
-from . import grideditor, palettes, contentview, flowdetailview
+from .. import controller, flow, script
+from . import flowlist, flowview, help, window, signals, options
+from . import grideditor, palettes, contentview, statusbar, palettepicker
 
 EVENTLOG_SIZE = 500
-
-
-class _PathCompleter:
-    def __init__(self, _testing=False):
-        """
-            _testing: disables reloading of the lookup table to make testing possible.
-        """
-        self.lookup, self.offset = None, None
-        self.final = None
-        self._testing = _testing
-
-    def reset(self):
-        self.lookup = None
-        self.offset = -1
-
-    def complete(self, txt):
-        """
-            Returns the next completion for txt, or None if there is no completion.
-        """
-        path = os.path.expanduser(txt)
-        if not self.lookup:
-            if not self._testing:
-                # Lookup is a set of (display value, actual value) tuples.
-                self.lookup = []
-                if os.path.isdir(path):
-                    files = glob.glob(os.path.join(path, "*"))
-                    prefix = txt
-                else:
-                    files = glob.glob(path+"*")
-                    prefix = os.path.dirname(txt)
-                prefix = prefix or "./"
-                for f in files:
-                    display = os.path.join(prefix, os.path.basename(f))
-                    if os.path.isdir(f):
-                        display += "/"
-                    self.lookup.append((display, f))
-            if not self.lookup:
-                self.final = path
-                return path
-            self.lookup.sort()
-            self.offset = -1
-            self.lookup.append((txt, txt))
-        self.offset += 1
-        if self.offset >= len(self.lookup):
-            self.offset = 0
-        ret = self.lookup[self.offset]
-        self.final = ret[1]
-        return ret[0]
-
-
-class PathEdit(urwid.Edit, _PathCompleter):
-    def __init__(self, *args, **kwargs):
-        urwid.Edit.__init__(self, *args, **kwargs)
-        _PathCompleter.__init__(self)
-
-    def keypress(self, size, key):
-        if key == "tab":
-            comp = self.complete(self.get_edit_text())
-            self.set_edit_text(comp)
-            self.set_edit_pos(len(comp))
-        else:
-            self.reset()
-        return urwid.Edit.keypress(self, size, key)
-
-
-class ActionBar(urwid.WidgetWrap):
-    def __init__(self):
-        self.message("")
-
-    def selectable(self):
-        return True
-
-    def path_prompt(self, prompt, text):
-        self.expire = None
-        self._w = PathEdit(prompt, text)
-
-    def prompt(self, prompt, text = ""):
-        self.expire = None
-        # A (partial) workaround for this Urwid issue:
-        # https://github.com/Nic0/tyrs/issues/115
-        # We can remove it once veryone is beyond 1.0.1
-        if isinstance(prompt, basestring):
-            prompt = unicode(prompt)
-        self._w = urwid.Edit(prompt, text or "")
-
-    def message(self, message, expire=None):
-        self.expire = expire
-        self._w = urwid.Text(message)
-
-
-class StatusBar(urwid.WidgetWrap):
-    def __init__(self, master, helptext):
-        self.master, self.helptext = master, helptext
-        self.ab = ActionBar()
-        self.ib = urwid.WidgetWrap(urwid.Text(""))
-        self._w = urwid.Pile([self.ib, self.ab])
-
-    def get_status(self):
-        r = []
-
-        if self.master.setheaders.count():
-            r.append("[")
-            r.append(("heading_key", "H"))
-            r.append("eaders]")
-        if self.master.replacehooks.count():
-            r.append("[")
-            r.append(("heading_key", "R"))
-            r.append("eplacing]")
-        if self.master.client_playback:
-            r.append("[")
-            r.append(("heading_key", "cplayback"))
-            r.append(":%s to go]"%self.master.client_playback.count())
-        if self.master.server_playback:
-            r.append("[")
-            r.append(("heading_key", "splayback"))
-            if self.master.nopop:
-                r.append(":%s in file]"%self.master.server_playback.count())
-            else:
-                r.append(":%s to go]"%self.master.server_playback.count())
-        if self.master.get_ignore_filter():
-            r.append("[")
-            r.append(("heading_key", "I"))
-            r.append("gnore:%d]" % len(self.master.get_ignore_filter()))
-        if self.master.get_tcp_filter():
-            r.append("[")
-            r.append(("heading_key", "T"))
-            r.append("CP:%d]" % len(self.master.get_tcp_filter()))
-        if self.master.state.intercept_txt:
-            r.append("[")
-            r.append(("heading_key", "i"))
-            r.append(":%s]"%self.master.state.intercept_txt)
-        if self.master.state.limit_txt:
-            r.append("[")
-            r.append(("heading_key", "l"))
-            r.append(":%s]"%self.master.state.limit_txt)
-        if self.master.stickycookie_txt:
-            r.append("[")
-            r.append(("heading_key", "t"))
-            r.append(":%s]"%self.master.stickycookie_txt)
-        if self.master.stickyauth_txt:
-            r.append("[")
-            r.append(("heading_key", "u"))
-            r.append(":%s]"%self.master.stickyauth_txt)
-        if self.master.state.default_body_view.name != "Auto":
-            r.append("[")
-            r.append(("heading_key", "M"))
-            r.append(":%s]"%self.master.state.default_body_view.name)
-
-        opts = []
-        if self.master.anticache:
-            opts.append("anticache")
-        if self.master.anticomp:
-            opts.append("anticomp")
-        if self.master.showhost:
-            opts.append("showhost")
-        if not self.master.refresh_server_playback:
-            opts.append("norefresh")
-        if self.master.killextra:
-            opts.append("killextra")
-        if self.master.server.config.no_upstream_cert:
-            opts.append("no-upstream-cert")
-        if self.master.state.follow_focus:
-            opts.append("following")
-        if self.master.stream_large_bodies:
-            opts.append("stream:%s" % utils.pretty_size(self.master.stream_large_bodies.max_size))
-
-        if opts:
-            r.append("[%s]"%(":".join(opts)))
-
-        if self.master.server.config.mode in ["reverse", "upstream"]:
-            dst = self.master.server.config.mode.dst
-            scheme = "https" if dst[0] else "http"
-            if dst[1] != dst[0]:
-                scheme += "2https" if dst[1] else "http"
-            r.append("[dest:%s]"%utils.unparse_url(scheme, *dst[2:]))
-        if self.master.scripts:
-            r.append("[")
-            r.append(("heading_key", "s"))
-            r.append("cripts:%s]"%len(self.master.scripts))
-        # r.append("[lt:%0.3f]"%self.master.looptime)
-
-        if self.master.stream:
-            r.append("[W:%s]"%self.master.stream_path)
-
-        return r
-
-    def redraw(self):
-        if self.ab.expire and time.time() > self.ab.expire:
-            self.message("")
-
-        fc = self.master.state.flow_count()
-        if self.master.state.focus is None:
-            offset = 0
-        else:
-            offset = min(self.master.state.focus + 1, fc)
-        t = [
-            ('heading', ("[%s/%s]"%(offset, fc)).ljust(9))
-        ]
-
-        if self.master.server.bound:
-            host = self.master.server.address.host
-            if host == "0.0.0.0":
-                host = "*"
-            boundaddr = "[%s:%s]"%(host, self.master.server.address.port)
-        else:
-            boundaddr = ""
-        t.extend(self.get_status())
-        status = urwid.AttrWrap(urwid.Columns([
-            urwid.Text(t),
-            urwid.Text(
-                [
-                    self.helptext,
-                    boundaddr
-                ],
-                align="right"
-            ),
-        ]), "heading")
-        self.ib._w = status
-
-    def update(self, text):
-        self.helptext = text
-        self.redraw()
-        self.master.loop.draw_screen()
-
-    def selectable(self):
-        return True
-
-    def get_edit_text(self):
-        return self.ab._w.get_edit_text()
-
-    def path_prompt(self, prompt, text):
-        return self.ab.path_prompt(prompt, text)
-
-    def prompt(self, prompt, text = ""):
-        self.ab.prompt(prompt, text)
-
-    def message(self, msg, expire=None):
-        if expire:
-            expire = time.time() + float(expire)/1000
-        self.ab.message(msg, expire)
-        self.master.loop.draw_screen()
 
 
 class ConsoleState(flow.State):
@@ -269,13 +27,12 @@ class ConsoleState(flow.State):
         self.focus = None
         self.follow_focus = None
         self.default_body_view = contentview.get("Auto")
-
-        self.view_mode = common.VIEW_LIST
-        self.view_flow_mode = common.VIEW_FLOW_REQUEST
-
-        self.last_script = ""
-        self.last_saveload = ""
         self.flowsettings = weakref.WeakKeyDictionary()
+        self.last_search = None
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        signals.update_settings.send(self)
 
     def add_flow_setting(self, flow, key, value):
         d = self.flowsettings.setdefault(flow, {})
@@ -316,6 +73,8 @@ class ConsoleState(flow.State):
             elif idx < 0:
                 idx = 0
             self.focus = idx
+        else:
+            self.focus = None
 
     def set_focus_flow(self, f):
         self.set_focus(self.view.index(f))
@@ -326,10 +85,10 @@ class ConsoleState(flow.State):
         return self.view[pos], pos
 
     def get_next(self, pos):
-        return self.get_from_pos(pos+1)
+        return self.get_from_pos(pos + 1)
 
     def get_prev(self, pos):
-        return self.get_from_pos(pos-1)
+        return self.get_from_pos(pos - 1)
 
     def delete_flow(self, f):
         if f in self.view and self.view.index(f) <= self.focus:
@@ -357,6 +116,7 @@ class Options(object):
         "keepserving",
         "kill",
         "intercept",
+        "limit",
         "no_server",
         "refresh_server_playback",
         "rfile",
@@ -373,6 +133,7 @@ class Options(object):
         "wfile",
         "nopop",
         "palette",
+        "palette_transparent"
     ]
 
     def __init__(self, **kwargs):
@@ -388,7 +149,6 @@ class ConsoleMaster(flow.FlowMaster):
 
     def __init__(self, server, options):
         flow.FlowMaster.__init__(self, server, ConsoleState())
-        self.looptime = 0
         self.stream_path = None
         self.options = options
 
@@ -398,13 +158,13 @@ class ConsoleMaster(flow.FlowMaster):
         for i in options.setheaders:
             self.setheaders.add(*i)
 
-        self.flow_list_walker = None
-        self.set_palette(options.palette)
-
         r = self.set_intercept(options.intercept)
         if r:
             print >> sys.stderr, "Intercept error:", r
             sys.exit(1)
+
+        if options.limit:
+            self.set_limit(options.limit)
 
         r = self.set_stickycookie(options.stickycookie)
         if r:
@@ -425,11 +185,11 @@ class ConsoleMaster(flow.FlowMaster):
         self.rheaders = options.rheaders
         self.nopop = options.nopop
         self.showhost = options.showhost
+        self.palette = options.palette
+        self.palette_transparent = options.palette_transparent
 
         self.eventlog = options.eventlog
         self.eventlist = urwid.SimpleListWalker([])
-
-        self.statusbar = None
 
         if options.client_replay:
             self.client_playback_path(options.client_replay)
@@ -453,15 +213,49 @@ class ConsoleMaster(flow.FlowMaster):
                 print >> sys.stderr, "Stream file error:", err
                 sys.exit(1)
 
+        self.view_stack = []
+
         if options.app:
             self.start_app(self.options.app_host, self.options.app_port)
+        signals.call_in.connect(self.sig_call_in)
+        signals.pop_view_state.connect(self.sig_pop_view_state)
+        signals.push_view_state.connect(self.sig_push_view_state)
+
+    def __setattr__(self, name, value):
+        self.__dict__[name] = value
+        signals.update_settings.send(self)
+
+    def sig_call_in(self, sender, seconds, callback, args=()):
+        def cb(*_):
+            return callback(*args)
+        self.loop.set_alarm_in(seconds, cb)
+
+    def sig_pop_view_state(self, sender):
+        if len(self.view_stack) > 1:
+            self.view_stack.pop()
+            self.loop.widget = self.view_stack[-1]
+        else:
+            signals.status_prompt_onekey.send(
+                self,
+                prompt = "Quit",
+                keys = (
+                    ("yes", "y"),
+                    ("no", "n"),
+                ),
+                callback = self.quit,
+            )
+
+    def sig_push_view_state(self, sender, window):
+        self.view_stack.append(window)
+        self.loop.widget = window
+        self.loop.draw_screen()
 
     def start_stream_to_path(self, path, mode="wb"):
         path = os.path.expanduser(path)
         try:
             f = file(path, mode)
             self.start_stream(f, None)
-        except IOError, v:
+        except IOError as v:
             return str(v)
         self.stream_path = path
 
@@ -469,20 +263,24 @@ class ConsoleMaster(flow.FlowMaster):
         status, val = s.run(method, f)
         if val:
             if status:
-                self.add_event("Method %s return: %s"%(method, val), "debug")
+                self.add_event("Method %s return: %s" % (method, val), "debug")
             else:
-                self.add_event("Method %s error: %s"%(method, val[1]), "error")
+                self.add_event(
+                    "Method %s error: %s" %
+                    (method, val[1]), "error")
 
     def run_script_once(self, command, f):
         if not command:
             return
-        self.add_event("Running script on flow: %s"%command, "debug")
+        self.add_event("Running script on flow: %s" % command, "debug")
 
         try:
             s = script.Script(command, self)
-        except script.ScriptError, v:
-            self.statusbar.message("Error loading script.")
-            self.add_event("Error loading script:\n%s"%v.args[0], "error")
+        except script.ScriptError as v:
+            signals.status_message.send(
+                message = "Error loading script."
+            )
+            self.add_event("Error loading script:\n%s" % v.args[0], "error")
             return
 
         if f.request:
@@ -492,22 +290,21 @@ class ConsoleMaster(flow.FlowMaster):
         if f.error:
             self._run_script_method("error", s, f)
         s.unload()
-        self.refresh_flow(f)
-        self.state.last_script = command
+        signals.flow_change.send(self, flow = f)
 
     def set_script(self, command):
         if not command:
             return
         ret = self.load_script(command)
         if ret:
-            self.statusbar.message(ret)
-        self.state.last_script = command
+            signals.status_message.send(message=ret)
 
     def toggle_eventlog(self):
         self.eventlog = not self.eventlog
+        signals.pop_view_state.send(self)
         self.view_flowlist()
 
-    def _readflow(self, paths):
+    def _readflows(self, path):
         """
         Utitility function that reads a list of flows
         or prints an error to the UI if that fails.
@@ -516,22 +313,21 @@ class ConsoleMaster(flow.FlowMaster):
             - a list of flows, otherwise.
         """
         try:
-            return flow.read_flows_from_paths(paths)
+            return flow.read_flows_from_paths(path)
         except flow.FlowReadError as e:
-            if not self.statusbar:
-                print >> sys.stderr, e.strerror
-                sys.exit(1)
-            else:
-                self.statusbar.message(e.strerror)
-            return None
+            signals.status_message.send(message=e.strerror)
 
     def client_playback_path(self, path):
-        flows = self._readflow(path)
+        if not isinstance(path, list):
+            path = [path]
+        flows = self._readflows(path)
         if flows:
             self.start_client_playback(flows, False)
 
     def server_playback_path(self, path):
-        flows = self._readflow(path)
+        if not isinstance(path, list):
+            path = [path]
+        flows = self._readflows(path)
         if flows:
             self.start_server_playback(
                 flows,
@@ -557,7 +353,9 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             subprocess.call(cmd)
         except:
-            self.statusbar.message("Can't start editor: %s" % " ".join(c))
+            signals.status_message.send(
+                message = "Can't start editor: %s" % " ".join(c)
+            )
         else:
             data = open(name, "rb").read()
         self.ui.start()
@@ -596,191 +394,34 @@ class ConsoleMaster(flow.FlowMaster):
         try:
             subprocess.call(cmd, shell=shell)
         except:
-            self.statusbar.message(
-                "Can't start external viewer: %s" % " ".join(c)
+            signals.status_message.send(
+                message="Can't start external viewer: %s" % " ".join(c)
             )
         self.ui.start()
         os.unlink(name)
 
     def set_palette(self, name):
-        self.palette = palettes.palettes[name]
-
-    def input_filter(self, keys, raw):
-        for k in keys:
-            if self.prompting:
-                if k == "esc":
-                    self.prompt_cancel()
-                elif self.onekey:
-                    if k == "enter":
-                        self.prompt_cancel()
-                    elif k in self.onekey:
-                        self.prompt_execute(k)
-                elif k == "enter":
-                    self.prompt_execute()
-                else:
-                    self.view.keypress(self.loop.screen_size, k)
-            else:
-                k = self.view.keypress(self.loop.screen_size, k)
-                if k:
-                    self.statusbar.message("")
-                    if k == "?":
-                        self.view_help()
-                    elif k == "c":
-                        if not self.client_playback:
-                            self.path_prompt(
-                                "Client replay: ",
-                                self.state.last_saveload,
-                                self.client_playback_path
-                            )
-                        else:
-                            self.prompt_onekey(
-                                "Stop current client replay?",
-                                (
-                                    ("yes", "y"),
-                                    ("no", "n"),
-                                ),
-                                self.stop_client_playback_prompt,
-                            )
-                    elif k == "H":
-                        self.view_grideditor(
-                            grideditor.SetHeadersEditor(
-                                self,
-                                self.setheaders.get_specs(),
-                                self.setheaders.set
-                            )
-                        )
-                    elif k == "I":
-                        self.view_grideditor(
-                            grideditor.HostPatternEditor(
-                                self,
-                                [[x] for x in self.get_ignore_filter()],
-                                self.edit_ignore_filter
-                            )
-                        )
-                    elif k == "T":
-                        self.view_grideditor(
-                            grideditor.HostPatternEditor(
-                                self,
-                                [[x] for x in self.get_tcp_filter()],
-                                self.edit_tcp_filter
-                            )
-                        )
-                    elif k == "i":
-                        self.prompt(
-                            "Intercept filter: ",
-                            self.state.intercept_txt,
-                            self.set_intercept
-                        )
-                    elif k == "Q":
-                        raise urwid.ExitMainLoop
-                    elif k == "q":
-                        self.prompt_onekey(
-                            "Quit",
-                            (
-                                ("yes", "y"),
-                                ("no", "n"),
-                            ),
-                            self.quit,
-                        )
-                    elif k == "M":
-                        self.prompt_onekey(
-                            "Global default display mode",
-                            contentview.view_prompts,
-                            self.change_default_display_mode
-                        )
-                    elif k == "R":
-                        self.view_grideditor(
-                            grideditor.ReplaceEditor(
-                                self,
-                                self.replacehooks.get_specs(),
-                                self.replacehooks.set
-                            )
-                        )
-                    elif k == "s":
-                        self.view_grideditor(
-                            grideditor.ScriptEditor(
-                                self,
-                                [[i.command] for i in self.scripts],
-                                self.edit_scripts
-                            )
-                        )
-                        #if self.scripts:
-                        #    self.load_script(None)
-                        #else:
-                        #    self.path_prompt(
-                        #        "Set script: ",
-                        #        self.state.last_script,
-                        #        self.set_script
-                        #    )
-                    elif k == "S":
-                        if not self.server_playback:
-                            self.path_prompt(
-                                "Server replay path: ",
-                                self.state.last_saveload,
-                                self.server_playback_path
-                            )
-                        else:
-                            self.prompt_onekey(
-                                "Stop current server replay?",
-                                (
-                                    ("yes", "y"),
-                                    ("no", "n"),
-                                ),
-                                self.stop_server_playback_prompt,
-                            )
-                    elif k == "o":
-                        self.prompt_onekey(
-                            "Options",
-                            (
-                                ("anticache", "a"),
-                                ("anticomp", "c"),
-                                ("showhost", "h"),
-                                ("killextra", "k"),
-                                ("norefresh", "n"),
-                                ("no-upstream-certs", "u"),
-                            ),
-                            self._change_options
-                        )
-                    elif k == "t":
-                        self.prompt(
-                            "Sticky cookie filter: ",
-                            self.stickycookie_txt,
-                            self.set_stickycookie
-                        )
-                    elif k == "u":
-                        self.prompt(
-                            "Sticky auth filter: ",
-                            self.stickyauth_txt,
-                            self.set_stickyauth
-                        )
-            self.statusbar.redraw()
+        self.palette = name
+        self.ui.register_palette(
+            palettes.palettes[name].palette(self.palette_transparent)
+        )
+        self.ui.clear()
 
     def ticker(self, *userdata):
         changed = self.tick(self.masterq, timeout=0)
         if changed:
             self.loop.draw_screen()
-            self.statusbar.redraw()
+            signals.update_settings.send()
         self.loop.set_alarm_in(0.01, self.ticker)
 
     def run(self):
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
-        self.ui.register_palette(self.palette.palette())
-        self.flow_list_walker = flowlist.FlowListWalker(self, self.state)
-        self.view = None
-        self.statusbar = None
-        self.header = None
-        self.body = None
-        self.help_context = None
-        self.prompting = False
-        self.onekey = False
+        self.set_palette(self.palette)
         self.loop = urwid.MainLoop(
-            self.view,
+            urwid.SolidFill("x"),
             screen = self.ui,
-            input_filter = self.input_filter
         )
-        self.view_flowlist()
-        self.statusbar.redraw()
 
         self.server.start_slave(
             controller.Slave,
@@ -801,6 +442,19 @@ class ConsoleMaster(flow.FlowMaster):
                 sys.exit(1)
 
         self.loop.set_alarm_in(0.01, self.ticker)
+
+        # It's not clear why we need to handle this explicitly - without this,
+        # mitmproxy hangs on keyboard interrupt. Remove if we ever figure it
+        # out.
+        def exit(s, f):
+            raise urwid.ExitMainLoop
+        signal.signal(signal.SIGINT, exit)
+
+        self.loop.set_alarm_in(
+            0.0001,
+            lambda *args: self.view_flowlist()
+        )
+
         try:
             self.loop.run()
         except Exception:
@@ -814,43 +468,56 @@ class ConsoleMaster(flow.FlowMaster):
         sys.stderr.flush()
         self.shutdown()
 
-    def make_view(self):
-        self.view = urwid.Frame(
-            self.body,
-            header = self.header,
-            footer = self.statusbar
-        )
-        self.view.set_focus("body")
-        return self.view
-
-    def view_help(self):
-        h = help.HelpView(
+    def view_help(self, helpctx):
+        signals.push_view_state.send(
             self,
-            self.help_context,
-            (self.statusbar, self.body, self.header)
+            window = window.Window(
+                self,
+                help.HelpView(helpctx),
+                None,
+                statusbar.StatusBar(self, help.footer),
+                None
+            )
         )
-        self.statusbar = StatusBar(self, help.footer)
-        self.body = h
-        self.header = None
-        self.loop.widget = self.make_view()
 
-    def view_flowdetails(self, flow):
-        h = flowdetailview.FlowDetailsView(
+    def view_options(self):
+        for i in self.view_stack:
+            if isinstance(i["body"], options.Options):
+                return
+        signals.push_view_state.send(
             self,
-            flow,
-            (self.statusbar, self.body, self.header)
+            window = window.Window(
+                self,
+                options.Options(self),
+                None,
+                statusbar.StatusBar(self, options.footer),
+                options.help_context,
+            )
         )
-        self.statusbar = StatusBar(self, flowdetailview.footer)
-        self.body = h
-        self.header = None
-        self.loop.widget = self.make_view()
+
+    def view_palette_picker(self):
+        signals.push_view_state.send(
+            self,
+            window = window.Window(
+                self,
+                palettepicker.PalettePicker(self),
+                None,
+                statusbar.StatusBar(self, palettepicker.footer),
+                palettepicker.help_context,
+            )
+        )
 
     def view_grideditor(self, ge):
-        self.body = ge
-        self.header = None
-        self.help_context = ge.make_help()
-        self.statusbar = StatusBar(self, grideditor.footer)
-        self.loop.widget = self.make_view()
+        signals.push_view_state.send(
+            self,
+            window = window.Window(
+                self,
+                ge,
+                None,
+                statusbar.StatusBar(self, grideditor.FOOTER),
+                ge.make_help()
+            )
+        )
 
     def view_flowlist(self):
         if self.ui.started:
@@ -859,27 +526,35 @@ class ConsoleMaster(flow.FlowMaster):
             self.state.set_focus(self.state.flow_count())
 
         if self.eventlog:
-            self.body = flowlist.BodyPile(self)
+            body = flowlist.BodyPile(self)
         else:
-            self.body = flowlist.FlowListBox(self)
-        self.statusbar = StatusBar(self, flowlist.footer)
-        self.header = None
-        self.state.view_mode = common.VIEW_LIST
+            body = flowlist.FlowListBox(self)
 
-        self.loop.widget = self.make_view()
-        self.help_context = flowlist.help_context
+        signals.push_view_state.send(
+            self,
+            window = window.Window(
+                self,
+                body,
+                None,
+                statusbar.StatusBar(self, flowlist.footer),
+                flowlist.help_context
+            )
+        )
 
-    def view_flow(self, flow):
-        self.body = flowview.FlowView(self, self.state, flow)
-        self.header = flowview.FlowViewHeader(self, flow)
-        self.statusbar = StatusBar(self, flowview.footer)
+    def view_flow(self, flow, tab_offset=0):
         self.state.set_focus_flow(flow)
-        self.state.view_mode = common.VIEW_FLOW
-        self.loop.widget = self.make_view()
-        self.help_context = flowview.help_context
+        signals.push_view_state.send(
+            self,
+            window = window.Window(
+                self,
+                flowview.FlowView(self, self.state, flow, tab_offset),
+                flowview.FlowViewHeader(self, flow),
+                statusbar.StatusBar(self, flowview.footer),
+                flowview.help_context
+            )
+        )
 
     def _write_flows(self, path, flows):
-        self.state.last_saveload = path
         if not path:
             return
         path = os.path.expanduser(path)
@@ -889,8 +564,8 @@ class ConsoleMaster(flow.FlowMaster):
             for i in flows:
                 fw.add(i)
             f.close()
-        except IOError, v:
-            self.statusbar.message(v.strerror)
+        except IOError as v:
+            signals.status_message.send(message=v.strerror)
 
     def save_one_flow(self, path, flow):
         return self._write_flows(path, [flow])
@@ -902,74 +577,23 @@ class ConsoleMaster(flow.FlowMaster):
         if not path:
             return
         ret = self.load_flows_path(path)
-        return ret or "Flows loaded from %s"%path
+        return ret or "Flows loaded from %s" % path
 
     def load_flows_path(self, path):
-        self.state.last_saveload = path
         reterr = None
         try:
             flow.FlowMaster.load_flows_file(self, path)
-        except flow.FlowReadError, v:
+        except flow.FlowReadError as v:
             reterr = str(v)
-        if self.flow_list_walker:
-            self.sync_list_view()
+        signals.flowlist_change.send(self)
         return reterr
-
-    def path_prompt(self, prompt, text, callback, *args):
-        self.statusbar.path_prompt(prompt, text)
-        self.view.set_focus("footer")
-        self.prompting = (callback, args)
-
-    def prompt(self, prompt, text, callback, *args):
-        self.statusbar.prompt(prompt, text)
-        self.view.set_focus("footer")
-        self.prompting = (callback, args)
-
-    def prompt_edit(self, prompt, text, callback):
-        self.statusbar.prompt(prompt + ": ", text)
-        self.view.set_focus("footer")
-        self.prompting = (callback, [])
-
-    def prompt_onekey(self, prompt, keys, callback, *args):
-        """
-            Keys are a set of (word, key) tuples. The appropriate key in the
-            word is highlighted.
-        """
-        prompt = [prompt, " ("]
-        mkup = []
-        for i, e in enumerate(keys):
-            mkup.extend(common.highlight_key(e[0], e[1]))
-            if i < len(keys)-1:
-                mkup.append(",")
-        prompt.extend(mkup)
-        prompt.append(")? ")
-        self.onekey = "".join(i[1] for i in keys)
-        self.prompt(prompt, "", callback, *args)
-
-    def prompt_done(self):
-        self.prompting = False
-        self.onekey = False
-        self.view.set_focus("body")
-        self.statusbar.message("")
-
-    def prompt_execute(self, txt=None):
-        if not txt:
-            txt = self.statusbar.get_edit_text()
-        p, args = self.prompting
-        self.prompt_done()
-        msg = p(txt, *args)
-        if msg:
-            self.statusbar.message(msg, 1000)
-
-    def prompt_cancel(self):
-        self.prompt_done()
 
     def accept_all(self):
         self.state.accept_all(self)
 
     def set_limit(self, txt):
         v = self.state.set_limit(txt)
-        self.sync_list_view()
+        signals.flowlist_change.send(self)
         return v
 
     def set_intercept(self, txt):
@@ -980,12 +604,6 @@ class ConsoleMaster(flow.FlowMaster):
         self.state.default_body_view = v
         self.refresh_focus()
 
-    def pop_view(self):
-        if self.state.view_mode == common.VIEW_FLOW:
-            self.view_flow(self.state.view[self.state.focus])
-        else:
-            self.view_flowlist()
-
     def edit_scripts(self, scripts):
         commands = [x[0] for x in scripts]  # remove outer array
         if commands == [s.command for s in self.scripts]:
@@ -994,14 +612,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.unload_scripts()
         for command in commands:
             self.load_script(command)
-
-    def edit_ignore_filter(self, ignore):
-        patterns = (x[0] for x in ignore)
-        self.set_ignore_filter(patterns)
-
-    def edit_tcp_filter(self, tcp):
-        patterns = (x[0] for x in tcp)
-        self.set_tcp_filter(patterns)
+        signals.update_settings.send(self)
 
     def stop_client_playback_prompt(self, a):
         if a != "n":
@@ -1015,33 +626,13 @@ class ConsoleMaster(flow.FlowMaster):
         if a != "n":
             raise urwid.ExitMainLoop
 
-    def _change_options(self, a):
-        if a == "a":
-            self.anticache = not self.anticache
-        if a == "c":
-            self.anticomp = not self.anticomp
-        if a == "h":
-            self.showhost = not self.showhost
-            self.sync_list_view()
-            self.refresh_focus()
-        elif a == "k":
-            self.killextra = not self.killextra
-        elif a == "n":
-            self.refresh_server_playback = not self.refresh_server_playback
-        elif a == "u":
-            self.server.config.no_upstream_cert =\
-                not self.server.config.no_upstream_cert
-
     def shutdown(self):
         self.state.killall(self)
         flow.FlowMaster.shutdown(self)
 
-    def sync_list_view(self):
-        self.flow_list_walker._modified()
-
     def clear_flows(self):
         self.state.clear()
-        self.sync_list_view()
+        signals.flowlist_change.send(self)
 
     def toggle_follow_flows(self):
         # toggle flow follow
@@ -1049,31 +640,27 @@ class ConsoleMaster(flow.FlowMaster):
         # jump to most recent flow if follow is now on
         if self.state.follow_focus:
             self.state.set_focus(self.state.flow_count())
-            self.sync_list_view()
+            signals.flowlist_change.send(self)
 
     def delete_flow(self, f):
         self.state.delete_flow(f)
-        self.sync_list_view()
+        signals.flowlist_change.send(self)
 
     def refresh_focus(self):
         if self.state.view:
-            self.refresh_flow(self.state.view[self.state.focus])
-
-    def refresh_flow(self, c):
-        if hasattr(self.header, "refresh_flow"):
-            self.header.refresh_flow(c)
-        if hasattr(self.body, "refresh_flow"):
-            self.body.refresh_flow(c)
-        if hasattr(self.statusbar, "refresh_flow"):
-            self.statusbar.refresh_flow(c)
+            signals.flow_change.send(
+                self,
+                flow = self.state.view[self.state.focus]
+            )
 
     def process_flow(self, f):
-        if self.state.intercept and f.match(self.state.intercept) and not f.request.is_replay:
+        if self.state.intercept and f.match(
+                self.state.intercept) and not f.request.is_replay:
             f.intercept(self)
         else:
             f.reply()
-        self.sync_list_view()
-        self.refresh_flow(f)
+        signals.flowlist_change.send(self)
+        signals.flow_change.send(self, flow = f)
 
     def clear_events(self):
         self.eventlist[:] = []
@@ -1090,7 +677,7 @@ class ConsoleMaster(flow.FlowMaster):
         self.eventlist.append(e)
         if len(self.eventlist) > EVENTLOG_SIZE:
             self.eventlist.pop(0)
-        self.eventlist.set_focus(len(self.eventlist)-1)
+        self.eventlist.set_focus(len(self.eventlist) - 1)
 
     # Handlers
     def handle_error(self, f):

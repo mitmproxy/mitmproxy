@@ -1,5 +1,6 @@
 
 var actions = require("./actions.js");
+var AppDispatcher = require("./dispatcher.js").AppDispatcher;
 
 function Connection(url) {
     if (url[0] === "/") {
@@ -16,11 +17,11 @@ function Connection(url) {
     };
     ws.onerror = function () {
         actions.ConnectionActions.error();
-        EventLogActions.add_event("WebSocket connection error.");
+        actions.EventLogActions.add_event("WebSocket connection error.");
     };
     ws.onclose = function () {
         actions.ConnectionActions.close();
-        EventLogActions.add_event("WebSocket connection closed.");
+        actions.EventLogActions.add_event("WebSocket connection closed.");
     };
     return ws;
 }

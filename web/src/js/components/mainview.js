@@ -1,25 +1,48 @@
 var React = require("react");
 
-var common = require("./common.js");
 var actions = require("../actions.js");
 var Query = require("../actions.js").Query;
-var toputils = require("../utils.js");
+var utils = require("../utils.js");
 var views = require("../store/view.js");
 var Filt = require("../filt/filt.js");
-FlowTable = require("./flowtable.js");
-var flowdetail = require("./flowdetail.js");
+
+var common = require("./common.js");
+var FlowTable = require("./flowtable.js");
+var FlowView = require("./flowview/index.js");
 
 var MainView = React.createClass({
-    mixins: [common.Navigation, common.State],
-    getInitialState: function () {
+    mixins: [common.Navigation, common.RouterState],
+    contextTypes: {
+        flowStore: React.PropTypes.object.isRequired,
+    },
+    childContextTypes: {
+        view: React.PropTypes.object.isRequired,
+    },
+    getChildContext: function () {
         return {
-            flows: [],
-            sortKeyFun: false
+            view: this.state.view
         };
+    },
+    getInitialState: function () {
+        var sortKeyFun = false;
+        var view = new views.StoreView(this.context.flowStore, this.getViewFilt(), sortKeyFun);
+        view.addListener("recalculate", this.onRecalculate);
+        view.addListener("add", this.onUpdate);
+        view.addListener("update", this.onUpdate);
+        view.addListener("remove", this.onUpdate);
+        view.addListener("remove", this.onRemove);
+
+        return {
+            view: view,
+            sortKeyFun: sortKeyFun
+        };
+    },
+    componentWillUnmount: function () {
+        this.state.view.close();
     },
     getViewFilt: function () {
         try {
-            var filt = Filt.parse(this.getQuery()[Query.FILTER] || "");
+            var filt = Filt.parse(this.getQuery()[Query.SEARCH] || "");
             var highlightStr = this.getQuery()[Query.HIGHLIGHT];
             var highlight = highlightStr ? Filt.parse(highlightStr) : false;
         } catch (e) {
@@ -35,28 +58,11 @@ var MainView = React.createClass({
         };
     },
     componentWillReceiveProps: function (nextProps) {
-        if (nextProps.flowStore !== this.props.flowStore) {
-            this.closeView();
-            this.openView(nextProps.flowStore);
-        }
-
-        var filterChanged = (this.props.query[Query.FILTER] !== nextProps.query[Query.FILTER]);
+        var filterChanged = (this.props.query[Query.SEARCH] !== nextProps.query[Query.SEARCH]);
         var highlightChanged = (this.props.query[Query.HIGHLIGHT] !== nextProps.query[Query.HIGHLIGHT]);
         if (filterChanged || highlightChanged) {
             this.state.view.recalculate(this.getViewFilt(), this.state.sortKeyFun);
         }
-    },
-    openView: function (store) {
-        var view = new views.StoreView(store, this.getViewFilt(), this.state.sortKeyFun);
-        this.setState({
-            view: view
-        });
-
-        view.addListener("recalculate", this.onRecalculate);
-        view.addListener("add", this.onUpdate);
-        view.addListener("update", this.onUpdate);
-        view.addListener("remove", this.onUpdate);
-        view.addListener("remove", this.onRemove);
     },
     onRecalculate: function () {
         this.forceUpdate();
@@ -76,16 +82,7 @@ var MainView = React.createClass({
             this.selectFlow(flow_to_select);
         }
     },
-    closeView: function () {
-        this.state.view.close();
-    },
-    componentWillMount: function () {
-        this.openView(this.props.flowStore);
-    },
-    componentWillUnmount: function () {
-        this.closeView();
-    },
-    setSortKeyFun: function(sortKeyFun){
+    setSortKeyFun: function (sortKeyFun) {
         this.setState({
             sortKeyFun: sortKeyFun
         });
@@ -109,7 +106,7 @@ var MainView = React.createClass({
         var flows = this.state.view.list;
         var index;
         if (!this.getParams().flowId) {
-            if (shift > 0) {
+            if (shift < 0) {
                 index = flows.length - 1;
             } else {
                 index = 0;
@@ -129,55 +126,55 @@ var MainView = React.createClass({
         }
         this.selectFlow(flows[index]);
     },
-    onKeyDown: function (e) {
+    onMainKeyDown: function (e) {
         var flow = this.getSelected();
         if (e.ctrlKey) {
             return;
         }
         switch (e.keyCode) {
-            case toputils.Key.K:
-            case toputils.Key.UP:
+            case utils.Key.K:
+            case utils.Key.UP:
                 this.selectFlowRelative(-1);
                 break;
-            case toputils.Key.J:
-            case toputils.Key.DOWN:
+            case utils.Key.J:
+            case utils.Key.DOWN:
                 this.selectFlowRelative(+1);
                 break;
-            case toputils.Key.SPACE:
-            case toputils.Key.PAGE_DOWN:
+            case utils.Key.SPACE:
+            case utils.Key.PAGE_DOWN:
                 this.selectFlowRelative(+10);
                 break;
-            case toputils.Key.PAGE_UP:
+            case utils.Key.PAGE_UP:
                 this.selectFlowRelative(-10);
                 break;
-            case toputils.Key.END:
+            case utils.Key.END:
                 this.selectFlowRelative(+1e10);
                 break;
-            case toputils.Key.HOME:
+            case utils.Key.HOME:
                 this.selectFlowRelative(-1e10);
                 break;
-            case toputils.Key.ESC:
+            case utils.Key.ESC:
                 this.selectFlow(null);
                 break;
-            case toputils.Key.H:
-            case toputils.Key.LEFT:
+            case utils.Key.H:
+            case utils.Key.LEFT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(-1);
                 }
                 break;
-            case toputils.Key.L:
-            case toputils.Key.TAB:
-            case toputils.Key.RIGHT:
+            case utils.Key.L:
+            case utils.Key.TAB:
+            case utils.Key.RIGHT:
                 if (this.refs.flowDetails) {
                     this.refs.flowDetails.nextTab(+1);
                 }
                 break;
-            case toputils.Key.C:
+            case utils.Key.C:
                 if (e.shiftKey) {
                     actions.FlowActions.clear();
                 }
                 break;
-            case toputils.Key.D:
+            case utils.Key.D:
                 if (flow) {
                     if (e.shiftKey) {
                         actions.FlowActions.duplicate(flow);
@@ -186,22 +183,29 @@ var MainView = React.createClass({
                     }
                 }
                 break;
-            case toputils.Key.A:
+            case utils.Key.A:
                 if (e.shiftKey) {
                     actions.FlowActions.accept_all();
                 } else if (flow && flow.intercepted) {
                     actions.FlowActions.accept(flow);
                 }
                 break;
-            case toputils.Key.R:
+            case utils.Key.R:
                 if (!e.shiftKey && flow) {
                     actions.FlowActions.replay(flow);
                 }
                 break;
-            case toputils.Key.V:
+            case utils.Key.V:
                 if (e.shiftKey && flow && flow.modified) {
                     actions.FlowActions.revert(flow);
                 }
+                break;
+            case utils.Key.E:
+                if (this.refs.flowDetails) {
+                    this.refs.flowDetails.promptEdit();
+                }
+                break;
+            case utils.Key.SHIFT:
                 break;
             default:
                 console.debug("keydown", e.keyCode);
@@ -210,7 +214,7 @@ var MainView = React.createClass({
         e.preventDefault();
     },
     getSelected: function () {
-        return this.props.flowStore.get(this.getParams().flowId);
+        return this.context.flowStore.get(this.getParams().flowId);
     },
     render: function () {
         var selected = this.getSelected();
@@ -219,16 +223,15 @@ var MainView = React.createClass({
         if (selected) {
             details = [
                 <common.Splitter key="splitter"/>,
-                <flowdetail.FlowDetail key="flowDetails" ref="flowDetails" flow={selected}/>
+                <FlowView key="flowDetails" ref="flowDetails" flow={selected}/>
             ];
         } else {
             details = null;
         }
 
         return (
-            <div className="main-view" onKeyDown={this.onKeyDown} tabIndex="0">
+            <div className="main-view">
                 <FlowTable ref="flowTable"
-                    view={this.state.view}
                     selectFlow={this.selectFlow}
                     setSortKeyFun={this.setSortKeyFun}
                     selected={selected} />

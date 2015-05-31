@@ -1,27 +1,27 @@
 This walkthrough illustrates how to set up transparent proxying with mitmproxy. We use VirtualBox VMs with an Ubuntu proxy machine in this example, but the general principle can be applied to other setups.
 
-1.  **Configure VirtualBox Network Adapters for the proxy machine**  
-    The network setup is simple:  `internet <--> proxy vm <--> (virtual) internal network`.  
-    For the proxy machine, *eth0* represents the outgoing network. *eth1* is connected to the internal network that will be proxified, using a static ip (192.168.3.1).  
+1.  **Configure VirtualBox Network Adapters for the proxy machine**
+    The network setup is simple:  `internet <--> proxy vm <--> (virtual) internal network`.
+    For the proxy machine, *eth0* represents the outgoing network. *eth1* is connected to the internal network that will be proxified, using a static ip (192.168.3.1).
     <hr>VirtualBox configuration:
-    <img src="@!urlTo('tutorials/transparent-dhcp/step1_vbox_eth0.png')!@"/><br><br>
-    <img src="@!urlTo('tutorials/transparent-dhcp/step1_vbox_eth1.png')!@"/>  
+    <img class="img-responsive" src="@!urlTo('tutorials/transparent-dhcp/step1_vbox_eth0.png')!@"/><br><br>
+    <img class="img-responsive" src="@!urlTo('tutorials/transparent-dhcp/step1_vbox_eth1.png')!@"/>
     <br>Proxy VM:
-    <img src="@!urlTo('tutorials/transparent-dhcp/step1_proxy.png')!@"/>  
+    <img class="img-responsive" src="@!urlTo('tutorials/transparent-dhcp/step1_proxy.png')!@"/>
     <hr>
-2.  **Configure DHCP and DNS**  
-    We use dnsmasq to provide DHCP and DNS in our internal network. 
-    Dnsmasq is a lightweight server designed to provide DNS (and optionally DHCP and TFTP) services to a small-scale 
-    network.  
+2.  **Configure DHCP and DNS**
+    We use dnsmasq to provide DHCP and DNS in our internal network.
+    Dnsmasq is a lightweight server designed to provide DNS (and optionally DHCP and TFTP) services to a small-scale
+    network.
 
-    -   Before we get to that, we need to fix some Ubuntu quirks: 
-        **Ubuntu >12.04** runs an internal dnsmasq instance (listening on loopback only) by default 
+    -   Before we get to that, we need to fix some Ubuntu quirks:
+        **Ubuntu >12.04** runs an internal dnsmasq instance (listening on loopback only) by default
         <a href="https://www.stgraber.org/2012/02/24/dns-in-ubuntu-12-04/">[1]</a>. For our use case, this needs to be
-        disabled by changing <br>`dns=dnsmasq` to `#dns=dnsmasq` in */etc/NetworkManager/NetworkManager.conf*  
+        disabled by changing <br>`dns=dnsmasq` to `#dns=dnsmasq` in */etc/NetworkManager/NetworkManager.conf*
         and running `sudo restart network-manager` afterwards.
-    -   Now, dnsmasq can be be installed and configured:  
-        `sudo apt-get install dnsmasq`  
-        Replace */etc/dnsmasq.conf* with the following configuration:  
+    -   Now, dnsmasq can be be installed and configured:
+        `sudo apt-get install dnsmasq`
+        Replace */etc/dnsmasq.conf* with the following configuration:
         <pre>\# Listen for DNS requests on the internal network
         interface=eth1
         \# Act as a DHCP server, assign IP addresses to clients
@@ -30,15 +30,15 @@ This walkthrough illustrates how to set up transparent proxying with mitmproxy. 
         dhcp-option=option:router,192.168.3.1
         dhcp-option=option:dns-server,192.168.3.1
         </pre>
-        Apply changes:  
+        Apply changes:
         `sudo service dnsmasq restart`
         <hr>
         Your proxied machine's network settings should now look similar to this:
-        <img src="@!urlTo('tutorials/transparent-dhcp/step2_proxied_vm.png')!@"/>
+        <img class="img-responsive" src="@!urlTo('tutorials/transparent-dhcp/step2_proxied_vm.png')!@"/>
         <hr>
 
-3.  **Set up traffic redirection to mitmproxy**  
-    To redirect traffic to mitmproxy, we need to add two iptables rules:  
+3.  **Set up traffic redirection to mitmproxy**
+    To redirect traffic to mitmproxy, we need to add two iptables rules:
     <pre class="terminal">
     iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 \
         -j REDIRECT --to-port 8080
@@ -46,9 +46,8 @@ This walkthrough illustrates how to set up transparent proxying with mitmproxy. 
         -j REDIRECT --to-port 8080
     </pre>
 
-4.  If required, <a href="@!urlTo('ssl.html')!@">install the mitmproxy
+4.  If required, <a href="@!urlTo('certinstall.html')!@">install the mitmproxy
     certificates on the test device</a>.
 
-5.  Finally, we can run <code>mitmproxy -T</code>.  
+5.  Finally, we can run <code>mitmproxy -T</code>.
     The proxied machine cannot to leak any data outside of HTTP or DNS requests.
-
