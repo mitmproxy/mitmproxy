@@ -5,7 +5,6 @@ import sys
 import threading
 import urllib
 from netlib import tcp, http, wsgi, certutils, websockets
-import netlib.utils
 
 from . import version, app, language, utils, log
 import language.http
@@ -25,15 +24,17 @@ class PathodError(Exception):
 
 
 class SSLOptions:
-    def __init__(self,
-                 confdir=CONFDIR,
-                 cn=None,
-                 sans=(),
-                 not_after_connect=None,
-                 request_client_cert=False,
-                 sslversion=tcp.SSLv23_METHOD,
-                 ciphers=None,
-                 certs=None):
+    def __init__(
+        self,
+        confdir=CONFDIR,
+        cn=None,
+        sans=(),
+        not_after_connect=None,
+        request_client_cert=False,
+        sslversion=tcp.SSLv23_METHOD,
+        ciphers=None,
+        certs=None
+    ):
         self.confdir = confdir
         self.cn = cn
         self.certstore = certutils.CertStore.from_store(
@@ -84,11 +85,12 @@ class PathodHandler(tcp.BaseHandler):
                 type="error",
                 msg = error
             )
-            return False, log
+            return None, log
 
         if self.server.explain and not isinstance(
                 crafted,
-                language.http.PathodErrorResponse):
+                language.http.PathodErrorResponse
+        ):
             crafted = crafted.freeze(self.settings)
             self.info(">> Spec: %s" % crafted.spec())
         response_log = language.serve(
@@ -97,14 +99,14 @@ class PathodHandler(tcp.BaseHandler):
             self.settings
         )
         if response_log["disconnect"]:
-            return False, response_log
-        return True, response_log
+            return None, response_log
+        return self.handle_http_request, response_log
 
-    def handle_request(self):
+    def handle_http_request(self):
         """
-            Returns a (again, log) tuple.
+            Returns a (handler, log) tuple.
 
-            again: True if request handling should continue.
+            handler: Handler for the next request, or None to disconnect
             log: A dictionary, or None
         """
         lr = self.rfile if self.server.logreq else None
@@ -113,7 +115,7 @@ class PathodHandler(tcp.BaseHandler):
             line = http.get_request_line(self.rfile)
             if not line:
                 # Normal termination
-                return False
+                return None
 
             m = utils.MemBool()
             if m(http.parse_init_connect(line)):
@@ -141,8 +143,8 @@ class PathodHandler(tcp.BaseHandler):
                         s = str(v)
                         lg(s)
                         self.addlog(dict(type="error", msg=s))
-                        return False
-                return True
+                        return None
+                return self.handle_http_request
             elif m(http.parse_init_proxy(line)):
                 method, _, _, _, path, httpversion = m.v
             elif m(http.parse_init_http(line)):
@@ -151,14 +153,14 @@ class PathodHandler(tcp.BaseHandler):
                 s = "Invalid first line: %s" % repr(line)
                 lg(s)
                 self.addlog(dict(type="error", msg=s))
-                return False
+                return None
 
             headers = http.read_headers(self.rfile)
             if headers is None:
                 s = "Invalid headers"
                 lg(s)
                 self.addlog(dict(type="error", msg=s))
-                return False
+                return None
 
             clientcert = None
             if self.clientcert:
@@ -196,14 +198,14 @@ class PathodHandler(tcp.BaseHandler):
                 s = str(s)
                 lg(s)
                 self.addlog(dict(type="error", msg=s))
-                return False
+                return None
 
             for i in self.server.anchors:
                 if i[0].match(path):
                     lg("crafting anchor: %s" % path)
-                    again, retlog["response"] = self.serve_crafted(i[1])
+                    nexthandler, retlog["response"] = self.serve_crafted(i[1])
                     self.addlog(retlog)
-                    return again
+                    return nexthandler
 
             if not self.server.nocraft and utils.matchpath(
                     path,
@@ -222,9 +224,9 @@ class PathodHandler(tcp.BaseHandler):
                         "Parse Error",
                         "Error parsing response spec: %s\n" % v.msg + v.marked()
                     )
-                again, retlog["response"] = self.serve_crafted(crafted)
+                nexthandler, retlog["response"] = self.serve_crafted(crafted)
                 self.addlog(retlog)
-                return again
+                return nexthandler
             elif self.server.noweb:
                 crafted = language.http.make_error_response("Access Denied")
                 language.serve(crafted, self.wfile, self.settings)
@@ -232,7 +234,7 @@ class PathodHandler(tcp.BaseHandler):
                     type="error",
                     msg="Access denied: web interface disabled"
                 ))
-                return False
+                return None
             else:
                 lg("app: %s %s" % (method, path))
                 req = wsgi.Request("http", method, path, headers, content)
@@ -245,7 +247,7 @@ class PathodHandler(tcp.BaseHandler):
                     version.NAMEVERSION
                 )
                 a.serve(flow, self.wfile)
-                return True
+                return self.handle_http_request
 
     def addlog(self, log):
         # FIXME: The bytes in the log should not be escaped. We do this at the
@@ -282,9 +284,10 @@ class PathodHandler(tcp.BaseHandler):
                 self.info(s)
                 return
         self.settimeout(self.server.timeout)
+        handler = self.handle_http_request
         while not self.finished:
-            again = self.handle_request()
-            if not again:
+            handler = handler()
+            if not handler:
                 return
 
 
