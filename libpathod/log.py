@@ -60,6 +60,8 @@ class Log:
                 "\n"
             ]
         )
+        if exc_value:
+            raise exc_value
 
     def suppress(self):
         self.suppressed = True
