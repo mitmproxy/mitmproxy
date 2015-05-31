@@ -102,6 +102,20 @@ class PathodHandler(tcp.BaseHandler):
             return None, response_log
         return self.handle_http_request, response_log
 
+    def handle_websocket(self):
+        lr = self.rfile if self.server.logreq else None
+        lw = self.wfile if self.server.logresp else None
+        with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
+            while 1:
+                try:
+                    frm = websockets.Frame.from_file(self.rfile)
+                    break
+                except tcp.NetLibTimeout:
+                    pass
+            print frm.human_readable()
+        return self.handle_websocket, None
+
+
     def handle_http_request(self):
         """
             Returns a (handler, log) tuple.
@@ -115,7 +129,7 @@ class PathodHandler(tcp.BaseHandler):
             line = http.get_request_line(self.rfile)
             if not line:
                 # Normal termination
-                return None
+                return None, None
 
             m = utils.MemBool()
             if m(http.parse_init_connect(line)):
@@ -142,9 +156,8 @@ class PathodHandler(tcp.BaseHandler):
                     except tcp.NetLibError as v:
                         s = str(v)
                         lg(s)
-                        self.addlog(dict(type="error", msg=s))
-                        return None
-                return self.handle_http_request
+                        return None, dict(type="error", msg=s)
+                return self.handle_http_request, None
             elif m(http.parse_init_proxy(line)):
                 method, _, _, _, path, httpversion = m.v
             elif m(http.parse_init_http(line)):
@@ -152,15 +165,13 @@ class PathodHandler(tcp.BaseHandler):
             else:
                 s = "Invalid first line: %s" % repr(line)
                 lg(s)
-                self.addlog(dict(type="error", msg=s))
-                return None
+                return None, dict(type="error", msg=s)
 
             headers = http.read_headers(self.rfile)
             if headers is None:
                 s = "Invalid headers"
                 lg(s)
-                self.addlog(dict(type="error", msg=s))
-                return None
+                return None, dict(type="error", msg=s)
 
             clientcert = None
             if self.clientcert:
@@ -197,15 +208,13 @@ class PathodHandler(tcp.BaseHandler):
             except http.HttpError as s:
                 s = str(s)
                 lg(s)
-                self.addlog(dict(type="error", msg=s))
-                return None
+                return None, dict(type="error", msg=s)
 
             for i in self.server.anchors:
                 if i[0].match(path):
                     lg("crafting anchor: %s" % path)
                     nexthandler, retlog["response"] = self.serve_crafted(i[1])
-                    self.addlog(retlog)
-                    return nexthandler
+                    return nexthandler, retlog
 
             if not self.server.nocraft and utils.matchpath(
                     path,
@@ -224,17 +233,15 @@ class PathodHandler(tcp.BaseHandler):
                         "Parse Error",
                         "Error parsing response spec: %s\n" % v.msg + v.marked()
                     )
-                nexthandler, retlog["response"] = self.serve_crafted(crafted)
-                self.addlog(retlog)
-                return nexthandler
+                _, retlog["response"] = self.serve_crafted(crafted)
+                return self.handle_websocket, retlog
             elif self.server.noweb:
                 crafted = language.http.make_error_response("Access Denied")
                 language.serve(crafted, self.wfile, self.settings)
-                self.addlog(dict(
+                return None, dict(
                     type="error",
                     msg="Access denied: web interface disabled"
-                ))
-                return None
+                )
             else:
                 lg("app: %s %s" % (method, path))
                 req = wsgi.Request("http", method, path, headers, content)
@@ -247,7 +254,7 @@ class PathodHandler(tcp.BaseHandler):
                     version.NAMEVERSION
                 )
                 a.serve(flow, self.wfile)
-                return self.handle_http_request
+                return self.handle_http_request, None
 
     def addlog(self, log):
         # FIXME: The bytes in the log should not be escaped. We do this at the
@@ -286,7 +293,9 @@ class PathodHandler(tcp.BaseHandler):
         self.settimeout(self.server.timeout)
         handler = self.handle_http_request
         while not self.finished:
-            handler = handler()
+            handler, log = handler()
+            if log:
+                self.addlog(log)
             if not handler:
                 return
 

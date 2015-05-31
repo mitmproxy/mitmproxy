@@ -322,9 +322,12 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         help="SSL cipher specification"
     )
     group.add_argument(
-        "--sans", dest="sans", type=str, default="",
-        help="""Comma-separated list of subject Altnernate Names to add to
-        the server certificate."""
+        "--san", dest="sans", type=str, default=[], action="append",
+        metavar="SAN",
+        help="""
+            Subject Altnernate Name to add to the server certificate.
+            May be passed multiple times.
+        """
     )
     group.add_argument(
         "--sslversion", dest="sslversion", type=int, default=4,
@@ -361,8 +364,6 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         help="Log request/response in hexdump format"
     )
     args = parser.parse_args(argv[1:])
-
-    args.sans = args.sans.split(",")
 
     certs = []
     for i in args.ssl_certs:
