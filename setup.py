@@ -18,7 +18,6 @@ if os.name != "nt":
 deps = {
     "netlib>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "pyasn1>0.1.2",
-    "pyOpenSSL>=0.14",
     "tornado>=4.0.2",
     "configargparse>=0.9.3",
     "pyperclip>=1.5.8",

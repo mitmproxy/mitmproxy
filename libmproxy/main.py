@@ -2,50 +2,10 @@ from __future__ import print_function, absolute_import
 import os
 import signal
 import sys
-import netlib.version
+import netlib.version, netlib.version_check
 from . import version, cmdline
 from .proxy import process_proxy_options, ProxyServerError
 from .proxy.server import DummyServer, ProxyServer
-
-
-# This file is not included in coverage analysis or tests - anything that can be
-# tested should live elsewhere.
-
-def check_versions():
-    """
-    Having installed a wrong version of pyOpenSSL or netlib is unfortunately a
-    very common source of error. Check before every start that both versions are
-    somewhat okay.
-    """
-    # We don't introduce backward-incompatible changes in patch versions. Only
-    # consider major and minor version.
-    if netlib.version.IVERSION[:2] != version.IVERSION[:2]:
-        print(
-            "Warning: You are using mitmdump %s with netlib %s. "
-            "Most likely, that won't work - please upgrade!" % (
-                version.VERSION, netlib.version.VERSION
-            ),
-            file=sys.stderr
-        )
-    import OpenSSL
-    import inspect
-    v = tuple([int(x) for x in OpenSSL.__version__.split(".")][:2])
-    if v < (0, 14):
-        print(
-            "You are using an outdated version of pyOpenSSL:"
-            " mitmproxy requires pyOpenSSL 0.14 or greater.",
-            file=sys.stderr
-        )
-        # Some users apparently have multiple versions of pyOpenSSL installed.
-        # Report which one we got.
-        pyopenssl_path = os.path.dirname(inspect.getfile(OpenSSL))
-        print(
-            "Your pyOpenSSL %s installation is located at %s" % (
-                OpenSSL.__version__, pyopenssl_path
-            ),
-            file=sys.stderr
-        )
-        sys.exit(1)
 
 
 def assert_utf8_env():
@@ -78,7 +38,7 @@ def get_server(dummy_server, options):
 def mitmproxy(args=None):  # pragma: nocover
     from . import console
 
-    check_versions()
+    netlib.version_check.version_check(version.IVERSION)
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
@@ -106,7 +66,7 @@ def mitmproxy(args=None):  # pragma: nocover
 def mitmdump(args=None):  # pragma: nocover
     from . import dump
 
-    check_versions()
+    netlib.version_check.version_check(version.IVERSION)
 
     parser = cmdline.mitmdump()
     options = parser.parse_args(args)
@@ -140,7 +100,7 @@ def mitmdump(args=None):  # pragma: nocover
 def mitmweb(args=None):  # pragma: nocover
     from . import web
 
-    check_versions()
+    netlib.version_check.version_check(version.IVERSION)
     parser = cmdline.mitmweb()
 
     options = parser.parse_args(args)
