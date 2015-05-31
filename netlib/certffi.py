@@ -1,8 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
-import cffi
+from cffi import FFI
 import OpenSSL
 
-xffi = cffi.FFI()
+xffi = FFI()
 xffi.cdef("""
     struct rsa_meth_st {
             int flags;
