@@ -106,15 +106,14 @@ class PathodHandler(tcp.BaseHandler):
         lr = self.rfile if self.server.logreq else None
         lw = self.wfile if self.server.logresp else None
         with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
-            while 1:
+            while True:
                 try:
                     frm = websockets.Frame.from_file(self.rfile)
                     break
                 except tcp.NetLibTimeout:
                     pass
-            print frm.human_readable()
+            lg(frm.human_readable())
         return self.handle_websocket, None
-
 
     def handle_http_request(self):
         """

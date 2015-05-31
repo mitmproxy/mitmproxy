@@ -1,9 +1,13 @@
+import datetime
+
 import netlib.utils
 import netlib.tcp
 import netlib.http
 
 
 class Log:
+    TIMEFMT = '%d-%m-%y %H:%M:%S'
+
     def __init__(self, fp, hex, rfile, wfile):
         self.lines = []
         self.fp = fp
@@ -38,6 +42,9 @@ class Log:
             self("Disconnected")
         elif exc_type == netlib.http.HttpError:
             self("HTTP Error: %s" % exc_value.message)
+        self.fp.write(
+            "%s: "%datetime.datetime.now().strftime(self.TIMEFMT)
+        )
         self.fp.write("\n".join(self.lines))
         self.fp.write("\n")
         self.fp.flush()
