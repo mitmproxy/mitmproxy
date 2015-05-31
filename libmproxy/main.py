@@ -2,7 +2,8 @@ from __future__ import print_function, absolute_import
 import os
 import signal
 import sys
-import netlib.version, netlib.version_check
+import netlib.version
+import netlib.version_check
 from . import version, cmdline
 from .proxy import process_proxy_options, ProxyServerError
 from .proxy.server import DummyServer, ProxyServer
