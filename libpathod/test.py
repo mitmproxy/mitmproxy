@@ -48,7 +48,7 @@ class Daemon:
         l = self.log()
         if not l:
             return None
-        return l[-1]
+        return l[0]
 
     def log(self):
         """

@@ -67,7 +67,7 @@ class DaemonTests(object):
 
     def pathoc(
         self,
-        spec,
+        specs,
         timeout=None,
         connect_to=None,
         ssl=None,
@@ -84,7 +84,10 @@ class DaemonTests(object):
         c.connect(connect_to)
         if timeout:
             c.settimeout(timeout)
-        return c.request(spec)
+        ret = []
+        for i in specs:
+            ret.append(c.request(i))
+        return ret
 
 
 @contextmanager

@@ -103,8 +103,15 @@ class PathodHandler(tcp.BaseHandler):
             while True:
                 try:
                     frm = websockets.Frame.from_file(self.rfile)
+                    retlog = dict(
+                        type="wsframe",
+                        frame=dict(
+                        ),
+                        cipher=None,
+                    )
+                    self.addlog(retlog)
                     break
-                except tcp.NetLibTimeout:
+                except tcp.NetLibTimeout: # pragma: no cover
                     pass
             lg(frm.human_readable())
         return self.handle_websocket, None

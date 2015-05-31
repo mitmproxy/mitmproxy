@@ -36,7 +36,7 @@ class TestTimeout(tutils.DaemonTests):
         # increase test performance
         # This is a bodge - we have some platform difference that causes
         # different exceptions to be raised here.
-        tutils.raises(Exception, self.pathoc, "get:/:p1,1")
+        tutils.raises(Exception, self.pathoc, ["get:/:p1,1"])
         assert self.d.last_log()["type"] == "timeout"
 
 
@@ -58,10 +58,10 @@ class TestNotAfterConnect(tutils.DaemonTests):
 
     def test_connect(self):
         r = self.pathoc(
-            r"get:'http://foo.com/p/202':da",
+            [r"get:'http://foo.com/p/202':da"],
             connect_to=("localhost", self.d.port)
         )
-        assert r.status_code == 202
+        assert r[0].status_code == 202
 
 
 class TestCustomCert(tutils.DaemonTests):
@@ -71,7 +71,7 @@ class TestCustomCert(tutils.DaemonTests):
     )
 
     def test_connect(self):
-        r = self.pathoc(r"get:/p/202")
+        r = self.pathoc([r"get:/p/202"])[0]
         assert r.status_code == 202
         assert r.sslinfo
         assert "test.com" in str(r.sslinfo.certchain[0].get_subject())
@@ -84,7 +84,7 @@ class TestSSLCN(tutils.DaemonTests):
     )
 
     def test_connect(self):
-        r = self.pathoc(r"get:/p/202")
+        r = self.pathoc([r"get:/p/202"])[0]
         assert r.status_code == 202
         assert r.sslinfo
         assert r.sslinfo.certchain[0].get_subject().CN == "foo.com"
@@ -120,7 +120,7 @@ class CommonTests(tutils.DaemonTests):
         assert "too large" in l["response"]["msg"]
 
     def test_preline(self):
-        r = self.pathoc(r"get:'/p/200':i0,'\r\n'")
+        r = self.pathoc([r"get:'/p/200':i0,'\r\n'"])[0]
         assert r.status_code == 200
 
     def test_info(self):
@@ -166,14 +166,14 @@ class CommonTests(tutils.DaemonTests):
         tutils.raises(
             http.HttpError,
             self.pathoc,
-            "get:/:h'content-length'='foo'"
+            ["get:/:h'content-length'='foo'"]
         )
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "Content-Length unknown" in l["msg"]
 
     def test_invalid_headers(self):
-        tutils.raises(http.HttpError, self.pathoc, "get:/:h'\t'='foo'")
+        tutils.raises(http.HttpError, self.pathoc, ["get:/:h'\t'='foo'"])
         l = self.d.last_log()
         assert l["type"] == "error"
         assert "Invalid headers" in l["msg"]
@@ -188,15 +188,19 @@ class CommonTests(tutils.DaemonTests):
         assert "File access denied" in rsp.content
 
     def test_proxy(self):
-        r = self.pathoc(r"get:'http://foo.com/p/202':da")
+        r = self.pathoc([r"get:'http://foo.com/p/202':da"])[0]
         assert r.status_code == 202
 
     def test_websocket(self):
-        r = self.pathoc("ws:/p/", ws_read_limit=0)
+        r = self.pathoc(["ws:/p/"], ws_read_limit=0)[0]
         assert r.status_code == 101
 
-        r = self.pathoc("ws:/p/ws", ws_read_limit=0)
+        r = self.pathoc(["ws:/p/ws"], ws_read_limit=0)[0]
         assert r.status_code == 101
+
+    def test_websocket_frame(self):
+        r = self.pathoc(["ws:/p/", "wf:b@10"], ws_read_limit=0)
+        assert self.d.last_log()["type"] == "wsframe"
 
 
 class TestDaemon(CommonTests):
@@ -204,17 +208,17 @@ class TestDaemon(CommonTests):
 
     def test_connect(self):
         r = self.pathoc(
-            r"get:'http://foo.com/p/202':da",
+            [r"get:'http://foo.com/p/202':da"],
             connect_to=("localhost", self.d.port),
             ssl=True
-        )
+        )[0]
         assert r.status_code == 202
 
     def test_connect_err(self):
         tutils.raises(
             http.HttpError,
             self.pathoc,
-            r"get:'http://foo.com/p/202':da",
+            [r"get:'http://foo.com/p/202':da"],
             connect_to=("localhost", self.d.port)
         )
 
@@ -234,6 +238,6 @@ class TestDaemonSSL(CommonTests):
         assert "SSL" in l["msg"]
 
     def test_ssl_cipher(self):
-        r = self.pathoc(r"get:/p/202")
+        r = self.pathoc([r"get:/p/202"])[0]
         assert r.status_code == 202
         assert self.d.last_log()["cipher"][1] > 0
