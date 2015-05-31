@@ -147,6 +147,7 @@ class Writer(_FileLike):
             May raise NetLibDisconnect
         """
         if v:
+            self.first_byte_timestamp = self.first_byte_timestamp or time.time()
             try:
                 if hasattr(self.o, "sendall"):
                     self.add_log(v)
