@@ -66,11 +66,6 @@ class PathodHandler(tcp.BaseHandler):
         tcp.BaseHandler.__init__(self, connection, address, server)
         self.settings = copy.copy(settings)
 
-    def info(self, s):
-        logger.info(
-            "%s:%s: %s" % (self.address.host, self.address.port, str(s))
-        )
-
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
@@ -81,18 +76,17 @@ class PathodHandler(tcp.BaseHandler):
         if error:
             err = language.http.make_error_response(error)
             language.serve(err, self.wfile, self.settings)
-            log = dict(
+            return None, dict(
                 type="error",
                 msg = error
             )
-            return None, log
 
         if self.server.explain and not isinstance(
                 crafted,
                 language.http.PathodErrorResponse
         ):
             crafted = crafted.freeze(self.settings)
-            self.info(">> Spec: %s" % crafted.spec())
+            log.write(self.logfp, ">> Spec: %s" % crafted.spec())
         response_log = language.serve(
             crafted,
             self.wfile,
@@ -219,9 +213,9 @@ class PathodHandler(tcp.BaseHandler):
                     path,
                     self.server.craftanchor):
                 spec = urllib.unquote(path)[len(self.server.craftanchor) + 1:]
-                key = websockets.check_client_handshake(headers)
-                self.settings.websocket_key = key
-                if key and not spec:
+                websocket_key = websockets.check_client_handshake(headers)
+                self.settings.websocket_key = websocket_key
+                if websocket_key and not spec:
                     spec = "ws"
                 lg("crafting spec: %s" % spec)
                 try:
@@ -232,8 +226,11 @@ class PathodHandler(tcp.BaseHandler):
                         "Parse Error",
                         "Error parsing response spec: %s\n" % v.msg + v.marked()
                     )
-                _, retlog["response"] = self.serve_crafted(crafted)
-                return self.handle_websocket, retlog
+                nexthandler, retlog["response"] = self.serve_crafted(crafted)
+                if nexthandler and websocket_key:
+                    return self.handle_websocket, retlog
+                else:
+                    return nexthandler, retlog
             elif self.server.noweb:
                 crafted = language.http.make_error_response("Access Denied")
                 language.serve(crafted, self.wfile, self.settings)
@@ -287,14 +284,14 @@ class PathodHandler(tcp.BaseHandler):
                         msg=s
                     )
                 )
-                self.info(s)
+                log.write(self.logfp, s)
                 return
         self.settimeout(self.server.timeout)
         handler = self.handle_http_request
         while not self.finished:
-            handler, log = handler()
-            if log:
-                self.addlog(log)
+            handler, l = handler()
+            if l:
+                self.addlog(l)
             if not handler:
                 return
 
@@ -388,7 +385,7 @@ class Pathod(tcp.TCPServer):
             h.handle()
             h.finish()
         except tcp.NetLibDisconnect:  # pragma: no cover
-            h.info("Disconnect")
+            log.write(self.logfp, "Disconnect")
             self.add_log(
                 dict(
                     type="error",
@@ -397,7 +394,7 @@ class Pathod(tcp.TCPServer):
             )
             return
         except tcp.NetLibTimeout:
-            h.info("Timeout")
+            log.write(self.logfp, "Timeout")
             self.add_log(
                 dict(
                     type="timeout",
