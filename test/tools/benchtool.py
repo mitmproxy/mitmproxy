@@ -26,7 +26,7 @@ class ApacheBenchThread(Thread):
 
 
 @click.command()
-@click.option('--profiler', default="yappi", type=click.Choice(['yappi']))
+@click.option('--profiler', default="none", type=click.Choice(['none', 'yappi']))
 @click.option('--clock-type', default="cpu", type=click.Choice(['wall', 'cpu']))
 @click.option('--concurrency', default=1, type=click.INT)
 def main(profiler, clock_type, concurrency):

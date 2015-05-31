@@ -51,10 +51,10 @@ $ mitmdump -v
 127.0.0.1:50588: request
   -> CONNECT example.com:443 HTTP/1.1
 127.0.0.1:50588: Set new server address: example.com:443
-<span style="color: white">127.0.0.1:50588: serverconnect
-  -> example.com:443</span>
+127.0.0.1:50588: serverconnect
+  -> example.com:443
 ^C
-$ <span style="color: white">mitmproxy --ignore ^example\.com:443$</span>    
+$ mitmproxy --ignore ^example\.com:443$
 </pre>
 
 Here are some other examples for ignore patterns:
@@ -62,10 +62,10 @@ Here are some other examples for ignore patterns:
 # Exempt traffic from the iOS App Store (the regex is lax, but usually just works):
 --ignore apple.com:443  
 # "Correct" version without false-positives:
---ignore "^(.+\.)?apple\.com:443$"
+--ignore '^(.+\.)?apple\.com:443$'
     
 # Ignore example.com, but not its subdomains:
---ignore "^example.com:"
+--ignore '^example.com:'
 
 # Ignore everything but example.com and mitmproxy.org:
 --ignore '^(?!example\.com)(?!mitmproxy\.org)'
