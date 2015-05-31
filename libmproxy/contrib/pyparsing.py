@@ -962,7 +962,7 @@ class ParserElement(object):
                                                       asList=self.saveAsList and isinstance(tokens,(ParseResults,list)),
                                                       modal=self.modalResults )
                 except ParseBaseException, err:
-                    #~ print ("Exception raised in user parse action:", err)
+                    #~ print "Exception raised in user parse action:", err
                     if (self.debugActions[2] ):
                         self.debugActions[2]( instring, tokensStart, self, err )
                     raise
