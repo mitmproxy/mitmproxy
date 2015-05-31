@@ -225,9 +225,12 @@ class Reader(_FileLike):
         """
         result = self.read(length)
         if length != -1 and len(result) != length:
-            raise NetLibIncomplete(
-                "Expected %s bytes, got %s" % (length, len(result))
-            )
+            if not result:
+                raise NetLibDisconnect()
+            else:
+                raise NetLibIncomplete(
+                    "Expected %s bytes, got %s" % (length, len(result))
+                )
         return result
 
 
