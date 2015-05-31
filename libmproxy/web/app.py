@@ -232,7 +232,7 @@ class Settings(RequestHandler):
                 self.state.set_intercept(v)
                 update[k] = v
             else:
-                print "Warning: Unknown setting {}: {}".format(k, v)
+                print("Warning: Unknown setting {}: {}".format(k, v))
 
         ClientConnection.broadcast(
             type="settings",
