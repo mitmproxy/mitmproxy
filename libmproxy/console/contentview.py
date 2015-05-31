@@ -9,13 +9,14 @@ from PIL.ExifTags import TAGS
 import subprocess
 import traceback
 import urwid
+import html2text
 
 import netlib.utils
 from netlib import odict
 
 from . import common, signals
 from .. import utils, encoding
-from ..contrib import jsbeautifier, html2text
+from ..contrib import jsbeautifier
 from ..contrib.wbxml.ASCommandResponse import ASCommandResponse
 
 try:

@@ -21,7 +21,9 @@ deps = {
     "tornado>=4.0.2",
     "configargparse>=0.9.3",
     "pyperclip>=1.5.8",
-    "blinker>=1.3"
+    "blinker>=1.3",
+    "pyparsing>=1.5.2",
+    "html2text>=2015.4.14"
 }
 script_deps = {
     "mitmproxy": {
