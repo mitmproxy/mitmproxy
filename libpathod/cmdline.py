@@ -66,6 +66,17 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
         help="Connection timeout"
     )
     parser.add_argument(
+        "--http2", dest="use_http2", action="store_true", default=False,
+        help='Perform all requests over a single HTTP/2 connection.'
+    )
+    parser.add_argument(
+        "--http2-skip-connection-preface",
+        dest="http2_skip_connection_preface",
+        action="store_true",
+        default=False,
+        help='Skips the HTTP/2 connection preface before sending requests.')
+
+    parser.add_argument(
         'host', type=str,
         metavar = "host[:port]",
         help='Host and port to connect to'
@@ -77,6 +88,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
         specifcations
         """
     )
+
     group = parser.add_argument_group(
         'SSL',
     )
@@ -189,7 +201,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
             data = open(r).read()
             r = data
         try:
-            reqs.append(language.parse_pathoc(r))
+            reqs.append(language.parse_pathoc(r, args.use_http2))
         except language.ParseException as v:
             print >> stderr, "Error parsing request spec: %s" % v.msg
             print >> stderr, v.marked()

@@ -150,6 +150,10 @@ class Pathoc(tcp.TCPClient):
             clientcert=None,
             ciphers=None,
 
+            # HTTP/2
+            use_http2=False,
+            http2_skip_connection_preface=False,
+
             # Websockets
             ws_read_limit = None,
 
@@ -188,6 +192,9 @@ class Pathoc(tcp.TCPClient):
         self.sslversion = utils.SSLVERSIONS[sslversion]
         self.ciphers = ciphers
         self.sslinfo = None
+
+        self.use_http2 = use_http2
+        self.http2_skip_connection_preface = http2_skip_connection_preface
 
         self.ws_read_limit = ws_read_limit
 
@@ -407,6 +414,8 @@ def main(args):  # pragma: nocover
                 sslversion = args.sslversion,
                 clientcert = args.clientcert,
                 ciphers = args.ciphers,
+                use_http2 = args.use_http2,
+                http2_skip_connection_preface = args.http2_skip_connection_preface,
                 showreq = args.showreq,
                 showresp = args.showresp,
                 explain = args.explain,
