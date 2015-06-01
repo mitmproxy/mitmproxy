@@ -287,12 +287,12 @@ def copy_flow(part, scope, flow, master, state):
     try:
         master.add_event(str(len(data)))
         pyperclip.copy(data)
-    except (RuntimeError, UnicodeDecodeError):
+    except (RuntimeError, UnicodeDecodeError, AttributeError):
         def save(k):
             if k == "y":
                 ask_save_path("Save data", data, master, state)
         signals.status_prompt_onekey.send(
-            prompt = "Cannot copy binary data to clipboard. Save as file?",
+            prompt = "Cannot copy data to clipboard. Save as file?",
             keys = (
                 ("yes", "y"),
                 ("no", "n"),
