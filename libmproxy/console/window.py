@@ -17,6 +17,16 @@ class Window(urwid.Frame):
     def sig_focus(self, sender, section):
         self.focus_position = section
 
+    def mouse_event(self, *args, **kwargs):
+        # args: (size, event, button, col, row)
+        k = super(self.__class__, self).mouse_event(*args, **kwargs)
+        if args[1] == "mouse drag":
+            signals.status_message.send(
+                message = "Hold down alt or ctrl to select text.",
+                expire = 1
+            )
+        return False
+
     def keypress(self, size, k):
         k = super(self.__class__, self).keypress(size, k)
         if k == "?":

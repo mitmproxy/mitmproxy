@@ -416,6 +416,7 @@ class ConsoleMaster(flow.FlowMaster):
 
     def run(self):
         self.ui = urwid.raw_display.Screen()
+        self.ui.set_mouse_tracking()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.palette)
         self.loop = urwid.MainLoop(
