@@ -80,7 +80,7 @@ class Script:
         if not os.path.exists(args[0]):
             raise ScriptError(
                 ("Script file not found: %s.\r\n"
-                 "If you script path contains spaces, "
+                 "If your script path contains spaces, "
                  "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") %
                 args[0])
         elif not os.path.isfile(args[0]):
