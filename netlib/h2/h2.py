@@ -29,8 +29,8 @@ class H2Client(tcp.TCPClient):
         SettingsFrame.SETTINGS.SETTINGS_HEADER_TABLE_SIZE: 4096,
         SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH: 1,
         SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS: None,
-        SettingsFrame.SETTINGS.SETTINGS_INITIAL_WINDOW_SIZE: 2 ^ 16 - 1,
-        SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE: 2 ^ 14,
+        SettingsFrame.SETTINGS.SETTINGS_INITIAL_WINDOW_SIZE: 2 ** 16 - 1,
+        SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE: 2 ** 14,
         SettingsFrame.SETTINGS.SETTINGS_MAX_HEADER_LIST_SIZE: None,
     }
 
