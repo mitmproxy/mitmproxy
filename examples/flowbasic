@@ -30,7 +30,7 @@ class MyMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_response(self, f)
         if f:
             f.reply()
-        print f
+        print(f)
         return f
 
 
