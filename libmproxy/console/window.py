@@ -20,12 +20,19 @@ class Window(urwid.Frame):
     def mouse_event(self, *args, **kwargs):
         # args: (size, event, button, col, row)
         k = super(self.__class__, self).mouse_event(*args, **kwargs)
-        if args[1] == "mouse drag":
-            signals.status_message.send(
-                message = "Hold down alt or ctrl to select text.",
-                expire = 1
-            )
-        return False
+        if not k:
+            if args[1] == "mouse drag":
+                signals.status_message.send(
+                    message = "Hold down alt or ctrl to select text.",
+                    expire = 1
+                )
+            elif args[1] == "mouse press" and args[2] == 4:
+                self.keypress(args[0], "up")
+            elif args[1] == "mouse press" and args[2] == 5:
+                self.keypress(args[0], "down")
+            else:
+                return False
+            return True
 
     def keypress(self, size, k):
         k = super(self.__class__, self).keypress(size, k)
