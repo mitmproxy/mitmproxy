@@ -3,6 +3,7 @@ import tutils
 
 from nose.tools import assert_equal
 
+
 def test_invalid_flags():
     tutils.raises(
         ValueError,

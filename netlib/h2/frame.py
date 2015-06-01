@@ -20,16 +20,24 @@ class Frame(object):
     FLAG_PADDED = 0x8
     FLAG_PRIORITY = 0x20
 
-    def __init__(self, state=None, length=0, flags=FLAG_NO_FLAGS, stream_id=0x0):
+    def __init__(
+            self,
+            state=None,
+            length=0,
+            flags=FLAG_NO_FLAGS,
+            stream_id=0x0):
         valid_flags = reduce(lambda x, y: x | y, self.VALID_FLAGS, 0x0)
         if flags | valid_flags != valid_flags:
             raise ValueError('invalid flags detected.')
 
         if state is None:
+            from . import HTTP2Protocol
+
             class State(object):
                 pass
 
             state = State()
+            state.http2_settings = HTTP2Protocol.HTTP2_DEFAULT_SETTINGS.copy()
             state.encoder = Encoder()
             state.decoder = Decoder()
 
@@ -39,6 +47,14 @@ class Frame(object):
         self.type = self.TYPE
         self.flags = flags
         self.stream_id = stream_id
+
+    def _check_frame_size(self, length):
+        max_length = self.state.http2_settings[
+            SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        if length > max_length:
+            raise NotImplementedError(
+                "Frame size exceeded: %d, but only %d allowed." % (
+                    length, max_length))
 
     @classmethod
     def from_file(self, fp, state=None):
@@ -54,8 +70,15 @@ class Frame(object):
         flags = fields[3]
         stream_id = fields[4]
 
+        # TODO: check frame size if <= current SETTINGS_MAX_FRAME_SIZE
+
         payload = fp.safe_read(length)
-        return FRAMES[fields[2]].from_bytes(state, length, flags, stream_id, payload)
+        return FRAMES[fields[2]].from_bytes(
+            state,
+            length,
+            flags,
+            stream_id,
+            payload)
 
     @classmethod
     def from_bytes(self, data, state=None):
@@ -64,11 +87,19 @@ class Frame(object):
         # type is already deducted from class
         flags = fields[3]
         stream_id = fields[4]
-        return FRAMES[fields[2]].from_bytes(state, length, flags, stream_id, data[9:])
+
+        return FRAMES[fields[2]].from_bytes(
+            state,
+            length,
+            flags,
+            stream_id,
+            data[9:])
 
     def to_bytes(self):
         payload = self.payload_bytes()
         self.length = len(payload)
+
+        self._check_frame_size(self.length)
 
         b = struct.pack('!HB', self.length & 0xFFFF00, self.length & 0x0000FF)
         b += struct.pack('!B', self.TYPE)
@@ -183,19 +214,20 @@ class HeadersFrame(Frame):
 
         if f.flags & self.FLAG_PADDED:
             f.pad_length = struct.unpack('!B', payload[0])[0]
-            header_block_fragment = payload[1:-f.pad_length]
+            f.header_block_fragment = payload[1:-f.pad_length]
         else:
-            header_block_fragment = payload[0:]
+            f.header_block_fragment = payload[0:]
 
         if f.flags & self.FLAG_PRIORITY:
             f.stream_dependency, f.weight = struct.unpack(
                 '!LB', header_block_fragment[:5])
             f.exclusive = bool(f.stream_dependency >> 31)
             f.stream_dependency &= 0x7FFFFFFF
-            header_block_fragment = header_block_fragment[5:]
+            f.header_block_fragment = f.header_block_fragment[5:]
 
-        for header, value in f.state.decoder.decode(header_block_fragment):
-            f.headers.append((header, value))
+        # TODO only do this if END_HEADERS or something...
+        # for header, value in f.state.decoder.decode(f.header_block_fragment):
+        #     f.headers.append((header, value))
 
         return f
 
@@ -217,6 +249,8 @@ class HeadersFrame(Frame):
                              (int(self.exclusive) << 31) | self.stream_dependency,
                              self.weight)
 
+        # TODO: maybe remove that and only deal with header_block_fragments
+        # inside frames
         b += self.state.encoder.encode(self.headers)
 
         if self.flags & self.FLAG_PADDED:
