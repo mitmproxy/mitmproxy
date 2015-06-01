@@ -158,6 +158,12 @@ class ConnectionItem(urwid.WidgetWrap):
                 callback = self.master.server_playback_path
             )
 
+    def mouse_event(self, size, event, button, col, row, focus):
+        if event == "mouse press" and button == 1:
+            if self.flow.request:
+                self.master.view_flow(self.flow)
+                return True
+
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
