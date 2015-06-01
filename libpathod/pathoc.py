@@ -11,7 +11,7 @@ import threading
 
 import OpenSSL.crypto
 
-from netlib import tcp, http, certutils, websockets
+from netlib import tcp, http, http2, certutils, websockets
 
 import language.http
 import language.websockets
@@ -23,11 +23,17 @@ class PathocError(Exception):
 
 
 class SSLInfo:
-    def __init__(self, certchain, cipher):
-        self.certchain, self.cipher = certchain, cipher
+    def __init__(self, certchain, cipher, alp):
+        self.certchain, self.cipher, self.alp = certchain, cipher, alp
 
     def __str__(self):
+        if self.alp:
+            alp = self.alp
+        else:
+            alp = '<no protocol negotiated>'
+
         parts = [
+            "Application Layer Protocol: %s" % alp,
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
@@ -240,26 +246,44 @@ class Pathoc(tcp.TCPClient):
             connect_to: A (host, port) tuple, which will be connected to with
             an HTTP CONNECT request.
         """
+        if self.use_http2 and not self.ssl:
+            raise ValueError("HTTP2 without SSL is not supported.")
+
         tcp.TCPClient.connect(self)
+
         if connect_to:
             self.http_connect(connect_to)
+
         self.sslinfo = None
         if self.ssl:
             try:
+                alpn_protos=[b'http1.1']
+                if self.use_http2:
+                    alpn_protos.append(HTTP2Protocol.ALPN_PROTO_H2)
+
                 self.convert_to_ssl(
                     sni=self.sni,
                     cert=self.clientcert,
                     method=self.sslversion,
-                    cipher_list = self.ciphers
+                    cipher_list=self.ciphers,
+                    alpn_protos=alpn_protos
                 )
             except tcp.NetLibError as v:
                 raise PathocError(str(v))
+
             self.sslinfo = SSLInfo(
                 self.connection.get_peer_cert_chain(),
-                self.get_current_cipher()
+                self.get_current_cipher(),
+                self.get_alpn_proto_negotiated()
             )
             if showssl:
                 print >> fp, str(self.sslinfo)
+
+            if self.use_http2:
+                h2.HTTP2Protocol.check_alpn(self)
+                if not self.http2_skip_connection_preface:
+                    h2.HTTP2Protocol.send_connection_preface(self)
+
         if self.timeout:
             self.settimeout(self.timeout)
 
