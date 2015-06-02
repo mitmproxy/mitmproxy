@@ -13,7 +13,7 @@ import urwid
 import netlib.utils
 from netlib import odict
 
-from . import common
+from . import common, signals
 from .. import utils, encoding
 from ..contrib import jsbeautifier, html2text
 from ..contrib.wbxml.ASCommandResponse import ASCommandResponse
@@ -507,7 +507,7 @@ def get(name):
             return i
 
 
-def get_content_view(viewmode, hdrItems, content, limit, logfunc, is_request):
+def get_content_view(viewmode, hdrItems, content, limit, is_request):
     """
         Returns a (msg, body) tuple.
     """
@@ -532,7 +532,7 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc, is_request):
     except Exception:
         s = traceback.format_exc()
         s = "Content viewer failed: \n" + s
-        logfunc(s, "error")
+        signals.add_event(s, "error")
         ret = None
     if not ret:
         ret = get("Raw")(hdrs, content, limit)

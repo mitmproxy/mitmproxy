@@ -1,4 +1,5 @@
 import urwid
+import signals
 
 
 class Tabs(urwid.WidgetWrap):

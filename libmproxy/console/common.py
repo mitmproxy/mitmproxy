@@ -285,7 +285,6 @@ def copy_flow(part, scope, flow, master, state):
         return
 
     try:
-        master.add_event(str(len(data)))
         pyperclip.copy(data)
     except (RuntimeError, UnicodeDecodeError, AttributeError):
         def save(k):

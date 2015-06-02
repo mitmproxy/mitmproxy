@@ -190,7 +190,6 @@ Larry
             [["content-type", "application/json"]],
             "[1, 2, 3]",
             1000,
-            lambda x, l: None,
             False
         )
         assert "Raw" in r[0]
@@ -200,7 +199,6 @@ Larry
             [["content-type", "application/json"]],
             "[1, 2, 3]",
             1000,
-            lambda x, l: None,
             False
         )
         assert r[0] == "JSON"
@@ -210,7 +208,6 @@ Larry
             [["content-type", "application/json"]],
             "[1, 2",
             1000,
-            lambda x, l: None,
             False
         )
         assert "Raw" in r[0]
@@ -220,7 +217,6 @@ Larry
             [],
             "[1, 2",
             1000,
-            lambda x, l: None,
             False
         )
         assert "Raw" in r[0]
@@ -233,7 +229,6 @@ Larry
             ],
             encoding.encode('gzip', "[1, 2, 3]"),
             1000,
-            lambda x, l: None,
             False
         )
         assert "decoded gzip" in r[0]
@@ -247,7 +242,6 @@ Larry
             ],
             encoding.encode('gzip', "[1, 2, 3]"),
             1000,
-            lambda x, l: None,
             False
         )
         assert "decoded gzip" in r[0]

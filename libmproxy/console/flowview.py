@@ -182,7 +182,6 @@ class FlowView(tabs.Tabs):
                 tuple(tuple(i) for i in conn.headers.lst),
                 conn.content,
                 limit,
-                self.master.add_event,
                 isinstance(conn, HTTPRequest)
             )
             return (description, text_objects)

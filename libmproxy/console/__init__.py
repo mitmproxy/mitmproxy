@@ -220,10 +220,28 @@ class ConsoleMaster(flow.FlowMaster):
         signals.call_in.connect(self.sig_call_in)
         signals.pop_view_state.connect(self.sig_pop_view_state)
         signals.push_view_state.connect(self.sig_push_view_state)
+        signals.sig_add_event.connect(self.sig_add_event)
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
         signals.update_settings.send(self)
+
+    def sig_add_event(self, sender, e, level):
+        needed = dict(error=0, info=1, debug=2).get(level, 1)
+        if self.options.verbosity < needed:
+            return
+
+        if level == "error":
+            e = urwid.Text(("error", str(e)))
+        else:
+            e = urwid.Text(str(e))
+        self.eventlist.append(e)
+        if len(self.eventlist) > EVENTLOG_SIZE:
+            self.eventlist.pop(0)
+        self.eventlist.set_focus(len(self.eventlist) - 1)
+
+    def add_event(self, e, level):
+        signals.add_event(e, level)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -263,16 +281,16 @@ class ConsoleMaster(flow.FlowMaster):
         status, val = s.run(method, f)
         if val:
             if status:
-                self.add_event("Method %s return: %s" % (method, val), "debug")
+                signals.add_event("Method %s return: %s" % (method, val), "debug")
             else:
-                self.add_event(
+                signals.add_event(
                     "Method %s error: %s" %
                     (method, val[1]), "error")
 
     def run_script_once(self, command, f):
         if not command:
             return
-        self.add_event("Running script on flow: %s" % command, "debug")
+        signals.add_event("Running script on flow: %s" % command, "debug")
 
         try:
             s = script.Script(command, self)
@@ -280,7 +298,7 @@ class ConsoleMaster(flow.FlowMaster):
             signals.status_message.send(
                 message = "Error loading script."
             )
-            self.add_event("Error loading script:\n%s" % v.args[0], "error")
+            signals.add_event("Error loading script:\n%s" % v.args[0], "error")
             return
 
         if f.request:
@@ -432,7 +450,7 @@ class ConsoleMaster(flow.FlowMaster):
         if self.options.rfile:
             ret = self.load_flows_path(self.options.rfile)
             if ret and self.state.flow_count():
-                self.add_event(
+                signals.add_event(
                     "File truncated or corrupted. "
                     "Loaded as many flows as possible.",
                     "error"
@@ -665,20 +683,6 @@ class ConsoleMaster(flow.FlowMaster):
 
     def clear_events(self):
         self.eventlist[:] = []
-
-    def add_event(self, e, level="info"):
-        needed = dict(error=0, info=1, debug=2).get(level, 1)
-        if self.options.verbosity < needed:
-            return
-
-        if level == "error":
-            e = urwid.Text(("error", str(e)))
-        else:
-            e = urwid.Text(str(e))
-        self.eventlist.append(e)
-        if len(self.eventlist) > EVENTLOG_SIZE:
-            self.eventlist.pop(0)
-        self.eventlist.set_focus(len(self.eventlist) - 1)
 
     # Handlers
     def handle_error(self, f):
