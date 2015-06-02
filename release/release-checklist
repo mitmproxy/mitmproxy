@@ -23,14 +23,14 @@ synced to the docs.
     python ./setup.py sdist
     mv ./dist/FILE ~/mitmproxy/www.mitmproxy.org/src/download
 
-- Tag with the version number, and do: 
+- Tag with the version number, and do:
     git push --tags
 
 - Upload to pypi for each project:
 
     python ./setup.py sdist upload
 
-- Now bump the version number to be ready for the next cycle: 
+- Now bump the version number to be ready for the next cycle:
 
     mitmproxy/libmproxy/version.py
     netlib/netlib/version.py

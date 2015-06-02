@@ -1,3 +1,15 @@
+3 June 2015: mitmproxy 0.12.1
+
+    * mitmproxy console: mouse interaction - scroll in the flow list, click on
+      flow to view, click to switch between tabs.
+
+    * Update our crypto defaults: SHA256, 2048 bit RSA, 4096 bit DH parameters.
+
+    * BUGFIX: crash under some circumstances when copying to clipboard.
+
+    * BUGFIX: occasional crash when deleting flows.
+
+
 18 May 2015: mitmproxy 0.12
 
     * mitmproxy console: Significant revamp of the UI. The major changes are
