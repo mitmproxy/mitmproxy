@@ -127,8 +127,3 @@ def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):  # pra
     os.dup2(si.fileno(), sys.stdin.fileno())
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
-
-
-def matchpath(path, spec):
-    if path == spec or path.startswith(spec + "/"):
-        return True

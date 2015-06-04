@@ -1,8 +1,9 @@
 import threading
 import Queue
+
 import requests
 import requests.packages.urllib3
-import pathod
+from . import pathod
 
 requests.packages.urllib3.disable_warnings()
 

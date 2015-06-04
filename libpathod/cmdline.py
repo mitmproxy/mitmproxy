@@ -8,6 +8,7 @@ from netlib import http_uastrings
 from . import pathoc, pathod, version, utils, language
 
 
+
 def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     preparser = argparse.ArgumentParser(add_help=False)
     preparser.add_argument(
@@ -234,13 +235,17 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         action="append",
         metavar="ANCHOR",
         help="""
-        Add an anchor. Specified as a string with the form pattern=pagespec, or
-        pattern=filepath
+            Add an anchor. Specified as a string with the form
+            pattern=spec or pattern=filepath, where pattern is a regular
+            expression.
         """
     )
     parser.add_argument(
-        "-c", dest='craftanchor', default="/p", type=str,
-        help='Anchorpoint for URL crafting commands. (/p)'
+        "-c", dest='craftanchor', default=pathod.DEFAULT_ANCHOR, type=str,
+        help="""
+            Regular expression specifying anchor point for URL crafting
+            commands. (%s)
+        """%pathod.DEFAULT_ANCHOR
     )
     parser.add_argument(
         "--confdir",
@@ -393,6 +398,13 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         except ValueError as v:
             return parser.error(v)
     args.sizelimit = sizelimit
+
+    try:
+        args.craftanchor = re.compile(args.craftanchor)
+    except re.error:
+        return parser.error(
+            "Invalid regex in craft anchor: %s" % args.craftanchor
+        )
 
     anchors = []
     for patt, spec in args.anchors:

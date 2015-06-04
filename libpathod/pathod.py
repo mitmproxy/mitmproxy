@@ -4,6 +4,8 @@ import os
 import sys
 import threading
 import urllib
+import re
+
 from netlib import tcp, http, wsgi, certutils, websockets
 
 from . import version, app, language, utils, log
@@ -15,6 +17,7 @@ DEFAULT_CERT_DOMAIN = "pathod.net"
 CONFDIR = "~/.mitmproxy"
 CERTSTORE_BASENAME = "mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
+DEFAULT_ANCHOR = r"/p/?"
 
 logger = logging.getLogger('pathod')
 
@@ -246,10 +249,9 @@ class PathodHandler(tcp.BaseHandler):
                     nexthandler, retlog["response"] = self.serve_crafted(i[1])
                     return nexthandler, retlog
 
-            if not self.server.nocraft and utils.matchpath(
-                    path,
-                    self.server.craftanchor):
-                spec = urllib.unquote(path)[len(self.server.craftanchor) + 1:]
+            m = utils.MemBool()
+            if m(self.server.craftanchor.match(path)):
+                spec = urllib.unquote(path)[len(m.v.group()):]
                 websocket_key = websockets.check_client_handshake(headers)
                 self.settings.websocket_key = websocket_key
                 if websocket_key and not spec:
@@ -323,7 +325,7 @@ class Pathod(tcp.TCPServer):
         addr,
         ssl=False,
         ssloptions=None,
-        craftanchor="/p",
+        craftanchor=re.compile(DEFAULT_ANCHOR),
         staticdir=None,
         anchors=(),
         sizelimit=None,
@@ -380,6 +382,8 @@ class Pathod(tcp.TCPServer):
         """
             A policy check that verifies the request size is withing limits.
         """
+        if self.nocraft:
+            return "Crafting disabled.", None
         try:
             req = req.resolve(settings)
             l = req.maximum_length(settings)
