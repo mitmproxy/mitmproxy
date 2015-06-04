@@ -226,7 +226,7 @@ class PathodHandler(tcp.BaseHandler):
                     spec = "ws"
                 lg("crafting spec: %s" % spec)
                 try:
-                    crafted = language.parse_response(spec)
+                    crafted = language.parse_pathod(spec)
                 except language.ParseException as v:
                     lg("Parse error: %s" % v.msg)
                     crafted = language.http.make_error_response(

@@ -22,7 +22,7 @@ class _TestDaemon:
             ssloptions = self.ssloptions,
             staticdir = tutils.test_data.path("data"),
             anchors = [
-                (re.compile("/anchor/.*"), language.parse_response("202"))
+                (re.compile("/anchor/.*"), language.parse_pathod("202"))
             ]
         )
 
@@ -73,7 +73,7 @@ class _TestDaemon:
         if timeout:
             c.settimeout(timeout)
         for i in requests:
-            r = language.parse_requests(i)[0]
+            r = language.parse_pathoc(i)[0]
             if explain:
                 r = r.freeze(language.Settings())
             try:

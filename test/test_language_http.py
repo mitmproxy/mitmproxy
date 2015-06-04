@@ -6,7 +6,7 @@ import tutils
 
 
 def parse_request(s):
-    return language.parse_requests(s)[0]
+    return language.parse_pathoc(s)[0]
 
 
 def test_make_error_response():
@@ -32,7 +32,7 @@ class TestRequest:
         assert len(r.path.string()) == 1024
 
     def test_multiple(self):
-        r = language.parse_requests("GET:/ PUT:/")
+        r = language.parse_pathoc("GET:/ PUT:/")
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "PUT"
         assert len(r) == 2
@@ -52,7 +52,7 @@ class TestRequest:
 
             ir,@1
         """
-        r = language.parse_requests(l)
+        r = language.parse_pathoc(l)
         assert len(r) == 2
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "PUT"
@@ -61,14 +61,14 @@ class TestRequest:
             get:"http://localhost:9999/p/200":ir,@1
             get:"http://localhost:9999/p/200":ir,@2
         """
-        r = language.parse_requests(l)
+        r = language.parse_pathoc(l)
         assert len(r) == 2
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "GET"
 
     def test_pathodspec(self):
         l = "get:/p:s'200'"
-        r = language.parse_requests(l)
+        r = language.parse_pathoc(l)
         assert len(r) == 1
         assert len(r[0].tokens) == 3
         assert isinstance(r[0].tokens[2], http.PathodResponse)
@@ -143,42 +143,42 @@ class TestRequest:
 
 class TestResponse:
     def dummy_response(self):
-        return language.parse_response("400'msg'")
+        return language.parse_pathod("400'msg'")
 
     def test_response(self):
-        r = language.parse_response("400:m'msg'")
+        r = language.parse_pathod("400:m'msg'")
         assert r.code.string() == "400"
         assert r.reason.string() == "msg"
 
-        r = language.parse_response("400:m'msg':b@100b")
+        r = language.parse_pathod("400:m'msg':b@100b")
         assert r.reason.string() == "msg"
         assert r.body.values({})
         assert str(r)
 
-        r = language.parse_response("200")
+        r = language.parse_pathod("200")
         assert r.code.string() == "200"
         assert not r.reason
         assert "OK" in [i[:] for i in r.preamble({})]
 
     def test_render(self):
         s = cStringIO.StringIO()
-        r = language.parse_response("400:m'msg'")
+        r = language.parse_pathod("400:m'msg'")
         assert language.serve(r, s, {})
 
-        r = language.parse_response("400:p0,100:dr")
+        r = language.parse_pathod("400:p0,100:dr")
         assert "p0" in r.spec()
         s = r.preview_safe()
         assert "p0" not in s.spec()
 
     def test_raw(self):
         s = cStringIO.StringIO()
-        r = language.parse_response("400:b'foo'")
+        r = language.parse_pathod("400:b'foo'")
         language.serve(r, s, {})
         v = s.getvalue()
         assert "Content-Length" in v
 
         s = cStringIO.StringIO()
-        r = language.parse_response("400:b'foo':r")
+        r = language.parse_pathod("400:b'foo':r")
         language.serve(r, s, {})
         v = s.getvalue()
         assert "Content-Length" not in v
@@ -188,9 +188,9 @@ class TestResponse:
             s = cStringIO.StringIO()
             language.serve(x, s, language.Settings())
             assert x.length(language.Settings()) == len(s.getvalue())
-        testlen(language.parse_response("400:m'msg':r"))
-        testlen(language.parse_response("400:m'msg':h'foo'='bar':r"))
-        testlen(language.parse_response("400:m'msg':h'foo'='bar':b@100b:r"))
+        testlen(language.parse_pathod("400:m'msg':r"))
+        testlen(language.parse_pathod("400:m'msg':h'foo'='bar':r"))
+        testlen(language.parse_pathod("400:m'msg':h'foo'='bar':b@100b:r"))
 
     def test_maximum_length(self):
         def testlen(x):
@@ -199,42 +199,42 @@ class TestResponse:
             language.serve(x, s, {})
             assert m >= len(s.getvalue())
 
-        r = language.parse_response("400:m'msg':b@100:d0")
+        r = language.parse_pathod("400:m'msg':b@100:d0")
         testlen(r)
 
-        r = language.parse_response("400:m'msg':b@100:d0:i0,'foo'")
+        r = language.parse_pathod("400:m'msg':b@100:d0:i0,'foo'")
         testlen(r)
 
-        r = language.parse_response("400:m'msg':b@100:d0:i0,'foo'")
+        r = language.parse_pathod("400:m'msg':b@100:d0:i0,'foo'")
         testlen(r)
 
     def test_parse_err(self):
         tutils.raises(
-            language.ParseException, language.parse_response, "400:msg,b:"
+            language.ParseException, language.parse_pathod, "400:msg,b:"
         )
         try:
-            language.parse_response("400'msg':b:")
+            language.parse_pathod("400'msg':b:")
         except language.ParseException as v:
             assert v.marked()
             assert str(v)
 
     def test_nonascii(self):
-        tutils.raises("ascii", language.parse_response, "foo:b\xf0")
+        tutils.raises("ascii", language.parse_pathod, "foo:b\xf0")
 
     def test_parse_header(self):
-        r = language.parse_response('400:h"foo"="bar"')
+        r = language.parse_pathod('400:h"foo"="bar"')
         assert http.get_header("foo", r.headers)
 
     def test_parse_pause_before(self):
-        r = language.parse_response("400:p0,10")
+        r = language.parse_pathod("400:p0,10")
         assert r.actions[0].spec() == "p0,10"
 
     def test_parse_pause_after(self):
-        r = language.parse_response("400:pa,10")
+        r = language.parse_pathod("400:pa,10")
         assert r.actions[0].spec() == "pa,10"
 
     def test_parse_pause_random(self):
-        r = language.parse_response("400:pr,10")
+        r = language.parse_pathod("400:pr,10")
         assert r.actions[0].spec() == "pr,10"
 
     def test_parse_stress(self):
@@ -242,19 +242,19 @@ class TestResponse:
         # returns an int and a python 2.7 int on windows has 32bit precision.
         # Therefore, we should keep the body length < 2147483647 bytes in our
         # tests.
-        r = language.parse_response("400:b@1g")
+        r = language.parse_pathod("400:b@1g")
         assert r.length({})
 
     def test_spec(self):
         def rt(s):
-            s = language.parse_response(s).spec()
-            assert language.parse_response(s).spec() == s
+            s = language.parse_pathod(s).spec()
+            assert language.parse_pathod(s).spec() == s
         rt("400:b@100g")
         rt("400")
         rt("400:da")
 
     def test_websockets(self):
-        r = language.parse_response("ws")
+        r = language.parse_pathod("ws")
         tutils.raises("no websocket key", r.resolve, language.Settings())
         res = r.resolve(language.Settings(websocket_key="foo"))
         assert res.code.string() == "101"
@@ -293,9 +293,9 @@ def test_location_shortcut():
 
 
 def test_shortcuts():
-    assert language.parse_response(
+    assert language.parse_pathod(
         "400:c'foo'").headers[0].key.val == "Content-Type"
-    assert language.parse_response(
+    assert language.parse_pathod(
         "400:l'foo'").headers[0].key.val == "Location"
 
     assert "Android" in tutils.render(parse_request("get:/:ua"))
@@ -349,6 +349,6 @@ def test_pathodspec_freeze():
 def test_unique_components():
     tutils.raises(
         "multiple body clauses",
-        language.parse_response,
+        language.parse_pathod,
         "400:b@1:b@1"
     )

@@ -189,7 +189,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
             data = open(r).read()
             r = data
         try:
-            reqs.extend(language.parse_requests(r))
+            reqs.extend(language.parse_pathoc(r))
         except language.ParseException as v:
             print >> stderr, "Error parsing request spec: %s" % v.msg
             print >> stderr, v.marked()
@@ -400,7 +400,7 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
             data = open(spec).read()
             spec = data
         try:
-            req = language.parse_response(spec)
+            req = language.parse_pathod(spec)
         except language.ParseException as v:
             print >> stderr, "Error parsing anchor spec: %s" % v.msg
             print >> stderr, v.marked()

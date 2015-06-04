@@ -9,7 +9,7 @@ from base import Settings
 assert Settings  # prevent pyflakes from messing with this
 
 
-def parse_response(s):
+def parse_pathod(s):
     """
         May raise ParseException
     """
@@ -18,12 +18,17 @@ def parse_response(s):
     except UnicodeError:
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        return http.Response.expr().parseString(s, parseAll=True)[0]
+        return pp.Or(
+            [
+                websockets.WebsocketFrame.expr(),
+                http.Response.expr(),
+            ]
+        ).parseString(s, parseAll=True)[0]
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
 
 
-def parse_requests(s):
+def parse_pathoc(s):
     """
         May raise ParseException
     """

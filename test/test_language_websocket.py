@@ -6,7 +6,7 @@ import tutils
 
 
 def parse_request(s):
-    return language.parse_requests(s)[0]
+    return language.parse_pathoc(s)[0]
 
 
 class TestWebsocketFrame:
@@ -35,9 +35,6 @@ class TestWebsocketFrame:
             spec = wf.spec()
             wf2 = parse_request(spec)
             assert wf2.spec() == spec
-
-    def test_raw(self):
-        pass
 
     def test_flags(self):
         wf = parse_request("wf:fin:mask:rsv1:rsv2:rsv3")

@@ -270,7 +270,7 @@ class Pathoc(tcp.TCPClient):
         """
         with self.log() as log:
             if isinstance(r, basestring):
-                r = language.parse_requests(r)[0]
+                r = language.parse_pathoc(r)[0]
             log(">> %s" % r)
             try:
                 language.serve(r, self.wfile, self.settings)
@@ -316,7 +316,7 @@ class Pathoc(tcp.TCPClient):
         """
         with self.log() as log:
             if isinstance(r, basestring):
-                r = language.parse_requests(r)[0]
+                r = language.parse_pathoc(r)[0]
             log(">> %s" % r)
             resp, req = None, None
             try:
@@ -355,7 +355,7 @@ class Pathoc(tcp.TCPClient):
             May raise http.HTTPError, tcp.NetLibError
         """
         if isinstance(r, basestring):
-            r = language.parse_requests(r)[0]
+            r = language.parse_pathoc(r)[0]
         if isinstance(r, language.http.Request):
             if r.ws:
                 return self.websocket_start(r, self.websocket_get_frame)

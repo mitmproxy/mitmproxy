@@ -3,16 +3,6 @@ import netlib.websockets
 import pyparsing as pp
 from . import base, generators, actions, message
 
-"""
-    wf:ctext:b'foo'
-    wf:c15:r'foo'
-    wf:fin:rsv1:rsv2:rsv3:mask
-    wf:-fin:-rsv1:-rsv2:-rsv3:-mask
-    wf:l234
-
-    wf:mask:r"foo
-"""
-
 
 class WF(base.CaselessLiteral):
     TOK = "wf"
@@ -77,6 +67,38 @@ class Length(base.Integer):
 
 class Times(base.Integer):
     preamble = "x"
+
+
+class NestedFrame(base.Token):
+    def __init__(self, value):
+        self.value = value
+        try:
+            self.parsed = WebsocketFrame(
+                Response.expr().parseString(
+                    value.val,
+                    parseAll=True
+                )
+            )
+        except pp.ParseException as v:
+            raise exceptions.ParseException(v.msg, v.line, v.col)
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal("wf").suppress()
+        e = e + base.TokValueLiteral.expr()
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings),
+        ]
+
+    def spec(self):
+        return "s%s" % (self.value.spec())
+
+    def freeze(self, settings):
+        f = self.parsed.freeze(settings).spec()
+        return NestedFrame(base.TokValueLiteral(f.encode("string_escape")))
 
 
 class WebsocketFrame(message.Message):
