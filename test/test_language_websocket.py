@@ -10,7 +10,19 @@ def parse_request(s):
 
 
 class TestWebsocketFrame:
-    def test_values(self):
+    def _test_messages(self, specs, message_klass):
+        for i in specs:
+            wf = parse_request(i)
+            assert isinstance(wf, message_klass)
+            assert wf
+            assert wf.values(language.Settings())
+            assert wf.resolve(language.Settings())
+
+            spec = wf.spec()
+            wf2 = parse_request(spec)
+            assert wf2.spec() == spec
+
+    def test_server_values(self):
         specs = [
             "wf",
             "wf:dr",
@@ -25,16 +37,13 @@ class TestWebsocketFrame:
             "wf:-fin:-rsv1:-rsv2:-rsv3:-mask",
             "wf:k@4",
         ]
-        for i in specs:
-            wf = parse_request(i)
-            assert isinstance(wf, websockets.WebsocketFrame)
-            assert wf
-            assert wf.values(language.Settings())
-            assert wf.resolve(language.Settings())
+        self._test_messages(specs, websockets.WebsocketFrame)
 
-            spec = wf.spec()
-            wf2 = parse_request(spec)
-            assert wf2.spec() == spec
+    def test_client_values(self):
+        specs = [
+            "wf:f'wf'",
+        ]
+        self._test_messages(specs, websockets.WebsocketClientFrame)
 
     def test_flags(self):
         wf = parse_request("wf:fin:mask:rsv1:rsv2:rsv3")

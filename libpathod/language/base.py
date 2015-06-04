@@ -519,3 +519,42 @@ class IntField(_Component):
 
     def spec(self):
         return "%s%s" % (self.preamble, self.origvalue)
+
+
+class NestedMessage(Token):
+    """
+        A nested message, as an escaped string with a preamble.
+    """
+    preamble = ""
+    nest_type = None
+
+    def __init__(self, value):
+        Token.__init__(self)
+        self.value = value
+        try:
+            self.parsed = self.nest_type(
+                self.nest_type.expr().parseString(
+                    value.val,
+                    parseAll=True
+                )
+            )
+        except pp.ParseException as v:
+            raise exceptions.ParseException(v.msg, v.line, v.col)
+
+    @classmethod
+    def expr(klass):
+        e = pp.Literal(klass.preamble).suppress()
+        e = e + TokValueLiteral.expr()
+        return e.setParseAction(lambda x: klass(*x))
+
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings),
+        ]
+
+    def spec(self):
+        return "%s%s" % (self.preamble, self.value.spec())
+
+    def freeze(self, settings):
+        f = self.parsed.freeze(settings).spec()
+        return self.__class__(TokValueLiteral(f.encode("string_escape")))

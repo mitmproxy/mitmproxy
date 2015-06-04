@@ -40,7 +40,7 @@ def parse_pathoc(s):
         reqs = pp.OneOrMore(
             pp.Or(
                 [
-                    websockets.WebsocketFrame.expr(),
+                    websockets.WebsocketClientFrame.expr(),
                     http.Request.expr(),
                 ]
             )

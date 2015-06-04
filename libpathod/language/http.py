@@ -94,38 +94,6 @@ class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
         )
 
 
-class PathodResponse(base.Token):
-    def __init__(self, value):
-        self.value = value
-        try:
-            self.parsed = Response(
-                Response.expr().parseString(
-                    value.val,
-                    parseAll=True
-                )
-            )
-        except pp.ParseException as v:
-            raise exceptions.ParseException(v.msg, v.line, v.col)
-
-    @classmethod
-    def expr(klass):
-        e = pp.Literal("s").suppress()
-        e = e + base.TokValueLiteral.expr()
-        return e.setParseAction(lambda x: klass(*x))
-
-    def values(self, settings):
-        return [
-            self.value.get_generator(settings),
-        ]
-
-    def spec(self):
-        return "s%s" % (self.value.spec())
-
-    def freeze(self, settings):
-        f = self.parsed.freeze(settings).spec()
-        return PathodResponse(base.TokValueLiteral(f.encode("string_escape")))
-
-
 def get_header(val, headers):
     """
         Header keys may be Values, so we have to "generate" them as we try the
@@ -281,6 +249,11 @@ class Response(_HTTPMessage):
         return ":".join([i.spec() for i in self.tokens])
 
 
+class NestedResponse(base.NestedMessage):
+    preamble = "s"
+    nest_type = Response
+
+
 class Request(_HTTPMessage):
     comps = (
         Body,
@@ -288,7 +261,7 @@ class Request(_HTTPMessage):
         ShortcutContentType,
         ShortcutUserAgent,
         Raw,
-        PathodResponse,
+        NestedResponse,
         Times,
 
         actions.PauseAt,
@@ -314,15 +287,15 @@ class Request(_HTTPMessage):
         return self.tok(Times)
 
     @property
-    def pathodspec(self):
-        return self.tok(PathodResponse)
+    def nested_response(self):
+        return self.tok(NestedResponse)
 
     def preamble(self, settings):
         v = self.method.values(settings)
         v.append(" ")
         v.extend(self.path.values(settings))
-        if self.pathodspec:
-            v.append(self.pathodspec.parsed.spec())
+        if self.nested_response:
+            v.append(self.nested_response.parsed.spec())
         v.append(" ")
         v.append(self.version)
         return v

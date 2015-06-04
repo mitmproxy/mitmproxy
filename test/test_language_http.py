@@ -66,12 +66,12 @@ class TestRequest:
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "GET"
 
-    def test_pathodspec(self):
+    def test_nested_response(self):
         l = "get:/p:s'200'"
         r = language.parse_pathoc(l)
         assert len(r) == 1
         assert len(r[0].tokens) == 3
-        assert isinstance(r[0].tokens[2], http.PathodResponse)
+        assert isinstance(r[0].tokens[2], http.NestedResponse)
         assert r[0].values({})
 
     def test_render(self):
@@ -318,8 +318,8 @@ def test_user_agent():
     assert v2.value.val == v3.value.val
 
 
-def test_pathodspec():
-    e = http.PathodResponse.expr()
+def test_nested_response():
+    e = http.NestedResponse.expr()
     v = e.parseString("s'200'")[0]
     assert v.value.val == "200"
     tutils.raises(
@@ -334,8 +334,8 @@ def test_pathodspec():
     assert "@1" not in f.spec()
 
 
-def test_pathodspec_freeze():
-    e = http.PathodResponse(
+def test_nested_response_freeze():
+    e = http.NestedResponse(
         base.TokValueLiteral(
             "200:b'foo':i10,'\\x27'".encode(
                 "string_escape"
