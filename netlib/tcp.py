@@ -126,6 +126,9 @@ class _FileLike(object):
         if self.is_logging():
             self._log.append(v)
 
+    def clear_log(self):
+        self._log = []
+
     def reset_timestamps(self):
         self.first_byte_timestamp = None
 

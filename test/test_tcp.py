@@ -553,6 +553,8 @@ class TestFileLike:
         assert s.get_log() == ""
         s.read(1)
         assert s.get_log() == "o"
+        s.clear_log()
+        assert s.get_log() == ""
         s.stop_log()
         tutils.raises(ValueError, s.get_log)
 
