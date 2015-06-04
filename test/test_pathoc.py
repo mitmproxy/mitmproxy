@@ -147,14 +147,16 @@ class TestDaemon(_TestDaemon):
     def test_timeout(self):
         assert "Timeout" in self.tval(["get:'/p/200:p0,10'"], timeout=0.01)
         assert "HTTP" in self.tval(
-            ["get:'/p/200:p5,10'"],
+            ["get:'/p/200:p5,100'"],
             showresp=True,
-            timeout=0.01)
+            timeout=0.01
+        )
         assert not "HTTP" in self.tval(
             ["get:'/p/200:p3,10'"],
             showresp=True,
             timeout=0.01,
-            ignoretimeout=True)
+            ignoretimeout=True
+        )
 
     def test_showresp(self):
         reqs = ["get:/api/info:p0,0", "get:/api/info:p0,0"]
