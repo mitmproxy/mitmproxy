@@ -48,13 +48,21 @@ class Frame(object):
         self.flags = flags
         self.stream_id = stream_id
 
-    def _check_frame_size(self, length):
-        max_length = self.state.http2_settings[
-            SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
-        if length > max_length:
+    @classmethod
+    def _check_frame_size(self, length, state):
+        from . import HTTP2Protocol
+
+        if state:
+            settings = state.http2_settings
+        else:
+            settings = HTTP2Protocol.HTTP2_DEFAULT_SETTINGS
+
+        max_frame_size = settings[SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+
+        if length > max_frame_size:
             raise NotImplementedError(
                 "Frame size exceeded: %d, but only %d allowed." % (
-                    length, max_length))
+                    length, max_frame_size))
 
     @classmethod
     def from_file(self, fp, state=None):
@@ -70,7 +78,7 @@ class Frame(object):
         flags = fields[3]
         stream_id = fields[4]
 
-        # TODO: check frame size if <= current SETTINGS_MAX_FRAME_SIZE
+        self._check_frame_size(length, state)
 
         payload = fp.safe_read(length)
         return FRAMES[fields[2]].from_bytes(
@@ -80,26 +88,11 @@ class Frame(object):
             stream_id,
             payload)
 
-    @classmethod
-    def from_bytes(self, data, state=None):
-        fields = struct.unpack("!HBBBL", data[:9])
-        length = (fields[0] << 8) + fields[1]
-        # type is already deducted from class
-        flags = fields[3]
-        stream_id = fields[4]
-
-        return FRAMES[fields[2]].from_bytes(
-            state,
-            length,
-            flags,
-            stream_id,
-            data[9:])
-
     def to_bytes(self):
         payload = self.payload_bytes()
         self.length = len(payload)
 
-        self._check_frame_size(self.length)
+        self._check_frame_size(self.length, self.state)
 
         b = struct.pack('!HB', self.length & 0xFFFF00, self.length & 0x0000FF)
         b += struct.pack('!B', self.TYPE)
@@ -192,17 +185,14 @@ class HeadersFrame(Frame):
             length=0,
             flags=Frame.FLAG_NO_FLAGS,
             stream_id=0x0,
-            headers=None,
+            header_block_fragment=b'',
             pad_length=0,
             exclusive=False,
             stream_dependency=0x0,
             weight=0):
         super(HeadersFrame, self).__init__(state, length, flags, stream_id)
 
-        if headers is None:
-            headers = []
-
-        self.headers = headers
+        self.header_block_fragment = header_block_fragment
         self.pad_length = pad_length
         self.exclusive = exclusive
         self.stream_dependency = stream_dependency
@@ -220,23 +210,14 @@ class HeadersFrame(Frame):
 
         if f.flags & self.FLAG_PRIORITY:
             f.stream_dependency, f.weight = struct.unpack(
-                '!LB', header_block_fragment[:5])
+                '!LB', f.header_block_fragment[:5])
             f.exclusive = bool(f.stream_dependency >> 31)
             f.stream_dependency &= 0x7FFFFFFF
             f.header_block_fragment = f.header_block_fragment[5:]
 
-        # TODO only do this if END_HEADERS or something...
-        # for header, value in f.state.decoder.decode(f.header_block_fragment):
-        #     f.headers.append((header, value))
-
         return f
 
     def payload_bytes(self):
-        """
-            This encodes all headers with HPACK
-            Do NOT call this method twice - it will change the encoder state!
-        """
-
         if self.stream_id == 0x0:
             raise ValueError('HEADERS frames MUST be associated with a stream.')
 
@@ -249,9 +230,7 @@ class HeadersFrame(Frame):
                              (int(self.exclusive) << 31) | self.stream_dependency,
                              self.weight)
 
-        # TODO: maybe remove that and only deal with header_block_fragments
-        # inside frames
-        b += self.state.encoder.encode(self.headers)
+        b += self.header_block_fragment
 
         if self.flags & self.FLAG_PADDED:
             b += b'\0' * self.pad_length
@@ -269,11 +248,7 @@ class HeadersFrame(Frame):
         if self.flags & self.FLAG_PADDED:
             s.append("padding: %d" % self.pad_length)
 
-        if not self.headers:
-            s.append("headers: None")
-        else:
-            for header, value in self.headers:
-                s.append("%s: %s" % (header, value))
+        s.append("header_block_fragment: %s" % self.header_block_fragment.encode('hex'))
 
         return "\n".join(s)
 
