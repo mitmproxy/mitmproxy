@@ -1,9 +1,14 @@
 import struct
+import logging
+from functools import reduce
 from hpack.hpack import Encoder, Decoder
 
 from .. import utils
-from functools import reduce
 
+log = logging.getLogger(__name__)
+
+class FrameSizeError(Exception):
+    pass
 
 class Frame(object):
 
@@ -57,10 +62,11 @@ class Frame(object):
         else:
             settings = HTTP2Protocol.HTTP2_DEFAULT_SETTINGS
 
-        max_frame_size = settings[SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        max_frame_size = settings[
+            SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
 
         if length > max_frame_size:
-            raise NotImplementedError(
+            raise FrameSizeError(
                 "Frame size exceeded: %d, but only %d allowed." % (
                     length, max_frame_size))
 
@@ -248,7 +254,9 @@ class HeadersFrame(Frame):
         if self.flags & self.FLAG_PADDED:
             s.append("padding: %d" % self.pad_length)
 
-        s.append("header_block_fragment: %s" % self.header_block_fragment.encode('hex'))
+        s.append(
+            "header_block_fragment: %s" %
+            self.header_block_fragment.encode('hex'))
 
         return "\n".join(s)
 

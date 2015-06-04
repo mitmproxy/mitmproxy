@@ -1,7 +1,7 @@
-from netlib.h2.frame import *
 import tutils
-
 from nose.tools import assert_equal
+from netlib.h2.frame import *
+
 
 class FileAdapter(object):
     def __init__(self, data, is_hex=True):
@@ -41,6 +41,16 @@ def test_frame_equality():
         stream_id=0x1234567,
         payload='foobar')
     assert_equal(a, b)
+
+
+def test_too_large_frames():
+    f = DataFrame(
+        length=9000,
+        flags=Frame.FLAG_END_STREAM,
+        stream_id=0x1234567,
+        payload='foobar' * 3000)
+    tutils.raises(FrameSizeError, f.to_bytes)
+
 
 def test_data_frame_to_bytes():
     f = DataFrame(

@@ -1,8 +1,11 @@
 from __future__ import (absolute_import, print_function, division)
 import itertools
+import logging
 
-from .. import utils
 from .frame import *
+from .. import utils
+
+log = logging.getLogger(__name__)
 
 
 class HTTP2Protocol(object):
@@ -49,7 +52,7 @@ class HTTP2Protocol(object):
         if alp != self.ALPN_PROTO_H2:
             raise NotImplementedError(
                 "H2Client can not handle unknown ALP: %s" % alp)
-        print("-> Successfully negotiated 'h2' application layer protocol.")
+        log.debug("ALP 'h2' successfully negotiated.")
 
     def send_connection_preface(self):
         self.wfile.write(bytes(self.CLIENT_CONNECTION_PREFACE.decode('hex')))
@@ -60,7 +63,7 @@ class HTTP2Protocol(object):
         self._apply_settings(frame.settings)
         self.read_frame()  # read setting ACK frame
 
-        print("-> Connection Preface completed.")
+        log.debug("Connection Preface completed.")
 
     def next_stream_id(self):
         if self.current_stream_id is None:
@@ -88,13 +91,13 @@ class HTTP2Protocol(object):
                 old_value = '-'
 
             self.http2_settings[setting] = value
-            print("-> Setting changed: %s to %d (was %s)" % (
+            log.debug("Setting changed: %s to %d (was %s)" % (
                 SettingsFrame.SETTINGS.get_name(setting),
                 value,
                 str(old_value)))
 
         self.send_frame(SettingsFrame(state=self, flags=Frame.FLAG_ACK))
-        print("-> New settings acknowledged.")
+        log.debug("New settings acknowledged.")
 
     def _create_headers(self, headers, stream_id, end_stream=True):
         # TODO: implement max frame size checks and sending in chunks
@@ -103,11 +106,13 @@ class HTTP2Protocol(object):
         if end_stream:
             flags |= Frame.FLAG_END_STREAM
 
+        header_block_fragment = self.encoder.encode(headers)
+
         bytes = HeadersFrame(
             state=self,
             flags=flags,
             stream_id=stream_id,
-            headers=headers).to_bytes()
+            header_block_fragment=header_block_fragment).to_bytes()
         return [bytes]
 
     def _create_body(self, body, stream_id):
@@ -150,8 +155,8 @@ class HTTP2Protocol(object):
                 if frame.flags | Frame.FLAG_END_HEADERS:
                     break
             else:
-                print("Unexpected frame received:")
-                print(frame.human_readable())
+                log.debug("Unexpected frame received:")
+                log.debug(frame.human_readable())
 
         while True:
             frame = self.read_frame()
@@ -160,11 +165,14 @@ class HTTP2Protocol(object):
                 if frame.flags | Frame.FLAG_END_STREAM:
                     break
             else:
-                print("Unexpected frame received:")
-                print(frame.human_readable())
+                log.debug("Unexpected frame received:")
+                log.debug(frame.human_readable())
 
         headers = {}
         for header, value in self.decoder.decode(header_block_fragment):
             headers[header] = value
+
+        for header, value in headers.items():
+            log.debug("%s: %s" % (header, value))
 
         return headers[':status'], headers, body
