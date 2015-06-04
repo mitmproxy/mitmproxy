@@ -41,24 +41,27 @@ class HTTP2Protocol(object):
         SettingsFrame.SETTINGS.SETTINGS_MAX_HEADER_LIST_SIZE: None,
     }
 
-    def __init__(self):
+    def __init__(self, tcp_client):
+        self.tcp_client = tcp_client
+
         self.http2_settings = self.HTTP2_DEFAULT_SETTINGS.copy()
         self.current_stream_id = None
         self.encoder = Encoder()
         self.decoder = Decoder()
 
     def check_alpn(self):
-        alp = self.get_alpn_proto_negotiated()
+        alp = self.tcp_client.get_alpn_proto_negotiated()
         if alp != self.ALPN_PROTO_H2:
             raise NotImplementedError(
                 "H2Client can not handle unknown ALP: %s" % alp)
         log.debug("ALP 'h2' successfully negotiated.")
 
     def send_connection_preface(self):
-        self.wfile.write(bytes(self.CLIENT_CONNECTION_PREFACE.decode('hex')))
+        self.tcp_client.wfile.write(
+            bytes(self.CLIENT_CONNECTION_PREFACE.decode('hex')))
         self.send_frame(SettingsFrame(state=self))
 
-        frame = Frame.from_file(self.rfile, self)
+        frame = Frame.from_file(self.tcp_client.rfile, self)
         assert isinstance(frame, SettingsFrame)
         self._apply_settings(frame.settings)
         self.read_frame()  # read setting ACK frame
@@ -74,11 +77,11 @@ class HTTP2Protocol(object):
 
     def send_frame(self, frame):
         raw_bytes = frame.to_bytes()
-        self.wfile.write(raw_bytes)
-        self.wfile.flush()
+        self.tcp_client.wfile.write(raw_bytes)
+        self.tcp_client.wfile.flush()
 
     def read_frame(self):
-        frame = Frame.from_file(self.rfile, self)
+        frame = Frame.from_file(self.tcp_client.rfile, self)
         if isinstance(frame, SettingsFrame):
             self._apply_settings(frame.settings)
 

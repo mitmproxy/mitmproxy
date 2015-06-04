@@ -7,8 +7,10 @@ from .. import utils
 
 log = logging.getLogger(__name__)
 
+
 class FrameSizeError(Exception):
     pass
+
 
 class Frame(object):
 

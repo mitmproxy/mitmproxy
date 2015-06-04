@@ -1,6 +1,6 @@
 import tutils
 from nose.tools import assert_equal
-from netlib.h2.frame import *
+from netlib.http2.frame import *
 
 
 class FileAdapter(object):
