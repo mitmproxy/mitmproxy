@@ -200,7 +200,7 @@ class CommonTests(tutils.DaemonTests):
 
     def test_websocket_frame(self):
         r = self.pathoc(["ws:/p/", "wf:b@10"], ws_read_limit=0)
-        assert self.d.last_log()["type"] == "wsframe"
+        assert "wsframe" in [i["type"] for i in self.d.log()]
 
 
 class TestDaemon(CommonTests):
