@@ -116,6 +116,60 @@ class PathodHandler(tcp.BaseHandler):
             lg(frm.human_readable())
         return self.handle_websocket, None
 
+    def handle_http_connect(self, connect, lg):
+        """
+            Handle a CONNECT request.
+        """
+        headers = http.read_headers(self.rfile)
+        self.wfile.write(
+            'HTTP/1.1 200 Connection established\r\n' +
+            ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
+            '\r\n'
+        )
+        self.wfile.flush()
+        if not self.server.ssloptions.not_after_connect:
+            try:
+                cert, key, chain_file = self.server.ssloptions.get_cert(
+                    connect[0]
+                )
+                self.convert_to_ssl(
+                    cert,
+                    key,
+                    handle_sni=self.handle_sni,
+                    request_client_cert=self.server.ssloptions.request_client_cert,
+                    cipher_list=self.server.ssloptions.ciphers,
+                    method=self.server.ssloptions.sslversion,
+                )
+            except tcp.NetLibError as v:
+                s = str(v)
+                lg(s)
+                return None, dict(type="error", msg=s)
+        return self.handle_http_request, None
+
+    def handle_http_app(self, method, path, headers, content, lg):
+        """
+            Handle a request to the built-in app.
+        """
+        if self.server.noweb:
+            crafted = language.http.make_error_response("Access Denied")
+            language.serve(crafted, self.wfile, self.settings)
+            return None, dict(
+                type="error",
+                msg="Access denied: web interface disabled"
+            )
+        lg("app: %s %s" % (method, path))
+        req = wsgi.Request("http", method, path, headers, content)
+        flow = wsgi.Flow(self.address, req)
+        sn = self.connection.getsockname()
+        a = wsgi.WSGIAdaptor(
+            self.server.app,
+            sn[0],
+            self.server.address.port,
+            version.NAMEVERSION
+        )
+        a.serve(flow, self.wfile)
+        return self.handle_http_request, None
+
     def handle_http_request(self):
         """
             Returns a (handler, log) tuple.
@@ -133,31 +187,7 @@ class PathodHandler(tcp.BaseHandler):
 
             m = utils.MemBool()
             if m(http.parse_init_connect(line)):
-                headers = http.read_headers(self.rfile)
-                self.wfile.write(
-                    'HTTP/1.1 200 Connection established\r\n' +
-                    ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
-                    '\r\n'
-                )
-                self.wfile.flush()
-                if not self.server.ssloptions.not_after_connect:
-                    try:
-                        cert, key, chain_file = self.server.ssloptions.get_cert(
-                            m.v[0]
-                        )
-                        self.convert_to_ssl(
-                            cert,
-                            key,
-                            handle_sni=self.handle_sni,
-                            request_client_cert=self.server.ssloptions.request_client_cert,
-                            cipher_list=self.server.ssloptions.ciphers,
-                            method=self.server.ssloptions.sslversion,
-                        )
-                    except tcp.NetLibError as v:
-                        s = str(v)
-                        lg(s)
-                        return None, dict(type="error", msg=s)
-                return self.handle_http_request, None
+                return self.handle_http_connect(m.v, lg)
             elif m(http.parse_init_proxy(line)):
                 method, _, _, _, path, httpversion = m.v
             elif m(http.parse_init_http(line)):
@@ -238,26 +268,8 @@ class PathodHandler(tcp.BaseHandler):
                     return self.handle_websocket, retlog
                 else:
                     return nexthandler, retlog
-            elif self.server.noweb:
-                crafted = language.http.make_error_response("Access Denied")
-                language.serve(crafted, self.wfile, self.settings)
-                return None, dict(
-                    type="error",
-                    msg="Access denied: web interface disabled"
-                )
             else:
-                lg("app: %s %s" % (method, path))
-                req = wsgi.Request("http", method, path, headers, content)
-                flow = wsgi.Flow(self.address, req)
-                sn = self.connection.getsockname()
-                a = wsgi.WSGIAdaptor(
-                    self.server.app,
-                    sn[0],
-                    self.server.address.port,
-                    version.NAMEVERSION
-                )
-                a.serve(flow, self.wfile)
-                return self.handle_http_request, None
+                return self.handle_http_app(method, path, headers, content, lg)
 
     def addlog(self, log):
         # FIXME: The bytes in the log should not be escaped. We do this at the
