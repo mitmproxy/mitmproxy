@@ -109,6 +109,15 @@ class TestHexdump(tutils.DaemonTests):
         r = self.get(r"200:b'\xf0'")
 
 
+class TestNocraft(tutils.DaemonTests):
+    nocraft = True
+
+    def test_nocraft(self):
+        r = self.get(r"200:b'\xf0'")
+        assert r.status_code == 800
+        assert "Crafting disabled" in r.content
+
+
 class CommonTests(tutils.DaemonTests):
     def test_binarydata(self):
         r = self.get(r"200:b'\xf0'")

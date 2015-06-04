@@ -8,7 +8,6 @@ from netlib import http_uastrings
 from . import pathoc, pathod, version, utils, language
 
 
-
 def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     preparser = argparse.ArgumentParser(add_help=False)
     preparser.add_argument(
@@ -43,8 +42,8 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
         "-m", dest='memo', action="store_true", default=False,
         help="""
             Remember specs, and never play the same one twice. Note that this
-            means requests have to be rendered in memory, which means that large
-            generated data can cause issues.
+            means requests have to be rendered in memory, which means that
+            large generated data can cause issues.
         """
     )
     parser.add_argument(

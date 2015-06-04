@@ -137,6 +137,16 @@ def test_pathoc(perror):
     )
     assert len(a.requests) == 1
 
+    a = cmdline.args_pathod(
+        [
+            "pathod",
+            "-c",
+            "?"
+        ]
+    )
+    assert perror.called
+    perror.reset_mock()
+
     tutils.raises(
         SystemExit,
         cmdline.args_pathoc,

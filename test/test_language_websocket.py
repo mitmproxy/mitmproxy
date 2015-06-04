@@ -45,6 +45,10 @@ class TestWebsocketFrame:
         ]
         self._test_messages(specs, websockets.WebsocketClientFrame)
 
+    def test_nested_frame(self):
+        wf = parse_request("wf:f'wf'")
+        assert wf.nested_frame
+
     def test_flags(self):
         wf = parse_request("wf:fin:mask:rsv1:rsv2:rsv3")
         frm = netlib.websockets.Frame.from_bytes(tutils.render(wf))

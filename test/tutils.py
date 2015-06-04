@@ -16,6 +16,7 @@ class DaemonTests(object):
     timeout = None
     hexdump = False
     ssloptions = None
+    nocraft = False
 
     @classmethod
     def setUpAll(klass):
@@ -36,6 +37,7 @@ class DaemonTests(object):
             nohang = klass.nohang,
             timeout = klass.timeout,
             hexdump = klass.hexdump,
+            nocraft = klass.nocraft,
             logreq = True,
             logresp = True,
             explain = True
