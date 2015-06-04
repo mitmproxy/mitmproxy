@@ -57,6 +57,16 @@ def parse_pathoc(s):
     return expanded
 
 
+def parse_websocket_frame(s):
+    try:
+        return websockets.WebsocketFrame.expr().parseString(
+            s,
+            parseAll = True
+        )[0]
+    except pp.ParseException as v:
+        raise exceptions.ParseException(v.msg, v.line, v.col)
+
+
 def serve(msg, fp, settings):
     """
         fp: The file pointer to write to.

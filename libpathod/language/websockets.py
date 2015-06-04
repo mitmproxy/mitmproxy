@@ -3,6 +3,7 @@ import netlib.websockets
 import pyparsing as pp
 from . import base, generators, actions, message
 
+NESTED_LEADER = "pathod!"
 
 class WF(base.CaselessLiteral):
     TOK = "wf"
@@ -160,6 +161,10 @@ class WebsocketFrame(message.Message):
         resp = resp.setParseAction(klass)
         return resp
 
+    @property
+    def nested_frame(self):
+        return self.tok(NestedFrame)
+
     def resolve(self, settings, msg=None):
         tokens = self.tokens[:]
         if not self.mask and settings.is_client:
@@ -181,6 +186,9 @@ class WebsocketFrame(message.Message):
         elif self.rawbody:
             bodygen = self.rawbody.value.get_generator(settings)
             length = len(self.rawbody.value.get_generator(settings))
+        elif self.nested_frame:
+            bodygen = NESTED_LEADER + self.nested_frame.parsed.spec()
+            length = len(bodygen)
         else:
             bodygen = None
             length = 0
@@ -228,7 +236,3 @@ class WebsocketClientFrame(WebsocketFrame):
     components = COMPONENTS + (
         NestedFrame,
     )
-
-    @property
-    def nested_frame(self):
-        return self.tok(NestedFrame)

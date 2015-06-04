@@ -11,6 +11,8 @@ from netlib import tcp, http, wsgi, certutils, websockets
 from . import version, app, language, utils, log
 import language.http
 import language.actions
+import language.exceptions
+import language.websockets
 
 
 DEFAULT_CERT_DOMAIN = "pathod.net"
@@ -102,21 +104,37 @@ class PathodHandler(tcp.BaseHandler):
     def handle_websocket(self):
         lr = self.rfile if self.server.logreq else None
         lw = self.wfile if self.server.logresp else None
-        with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
-            while True:
+        while True:
+            with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
                 try:
                     frm = websockets.Frame.from_file(self.rfile)
-                    retlog = dict(
-                        type="wsframe",
-                        frame=dict(
-                        ),
-                        cipher=None,
-                    )
-                    self.addlog(retlog)
+                except tcp.NetLibIncomplete, e:
+                    lg("Error reading websocket frame: %s"%e)
                     break
-                except tcp.NetLibTimeout: # pragma: no cover
-                    pass
-            lg(frm.human_readable())
+                lg(frm.human_readable())
+                retlog = dict(
+                    type="wsframe",
+                    frame=dict(
+                    ),
+                    cipher=None,
+                )
+                ld = language.websockets.NESTED_LEADER
+                if frm.payload.startswith(ld):
+                    nest = frm.payload[len(ld):]
+                    try:
+                        wf = language.parse_websocket_frame(nest)
+                    except language.exceptions.ParseException, v:
+                        lg(
+                            "Parse error in reflected frame specifcation:"
+                            " %s" % v.msg
+                        )
+                        break
+                    frame_log = language.serve(
+                        wf,
+                        self.wfile,
+                        self.settings
+                    )
+                self.addlog(retlog)
         return self.handle_websocket, None
 
     def handle_http_connect(self, connect, lg):

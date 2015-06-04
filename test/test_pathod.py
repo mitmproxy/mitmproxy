@@ -2,6 +2,7 @@ import cStringIO
 from libpathod import pathod, version
 from netlib import tcp, http
 import time
+import sys
 
 import tutils
 
@@ -211,9 +212,13 @@ class CommonTests(tutils.DaemonTests):
 
     def test_websocket_frame(self):
         r = self.pathoc(["ws:/p/", "wf:b@10"], ws_read_limit=0)
-        print r
-        print self.d.log()
+        print >> sys.stderr, r
+        print >> sys.stderr, self.d.log()
         assert self.d.last_log()["type"] == "wsframe"
+
+    def test_websocket_reflected_frame(self):
+        r = self.pathoc(["ws:/p/", "wf:f'wf'"], ws_read_limit=0)
+        assert r
 
 
 class TestDaemon(CommonTests):
