@@ -1,14 +1,10 @@
 
 Contribs:
 
-
-pyparsing 1.5.2, MIT license
-
 jsbeautifier, git checkout 25/03/12, MIT license
     - Removed test directories
     - Disabled packers through a single-line modification (see "# CORTESI"
     comment)
 
-html2text, git checkout 18/08/12, GPLv3
-
-WinDivert 1.1.4, LGPL license, http://reqrypt.org/windivert.html
+wbxml
+    - https://github.com/davidpshaw/PyWBXMLDecoder
