@@ -332,6 +332,9 @@ class Frame(object):
             ret = ret + "\nPayload:\n" + utils.cleanBin(self.payload)
         return ret
 
+    def __repr__(self):
+        return self.header.human_readable()
+
     def to_bytes(self):
         """
             Serialize the frame to wire format. Returns a string.
