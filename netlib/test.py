@@ -4,6 +4,7 @@ import Queue
 import cStringIO
 import OpenSSL
 from . import tcp, certutils
+from test import tutils
 
 
 class ServerThread(threading.Thread):
@@ -55,22 +56,33 @@ class TServer(tcp.TCPServer):
                     dhparams, v3_only
         """
         tcp.TCPServer.__init__(self, addr)
-        self.ssl, self.q = ssl, q
+
+        if ssl is True:
+            self.ssl = dict()
+        elif isinstance(ssl, dict):
+            self.ssl = ssl
+        else:
+            self.ssl = None
+
+        self.q = q
         self.handler_klass = handler_klass
         self.last_handler = None
 
     def handle_client_connection(self, request, client_address):
         h = self.handler_klass(request, client_address, self)
         self.last_handler = h
-        if self.ssl:
-            cert = certutils.SSLCert.from_pem(
-                file(self.ssl["cert"], "rb").read()
-            )
-            raw = file(self.ssl["key"], "rb").read()
+        if self.ssl is not None:
+            raw_cert = self.ssl.get(
+                "cert",
+                tutils.test_data.path("data/server.crt"))
+            cert = certutils.SSLCert.from_pem(open(raw_cert, "rb").read())
+            raw_key = self.ssl.get(
+                "key",
+                tutils.test_data.path("data/server.key"))
             key = OpenSSL.crypto.load_privatekey(
                 OpenSSL.crypto.FILETYPE_PEM,
-                raw)
-            if self.ssl["v3_only"]:
+                open(raw_key, "rb").read())
+            if self.ssl.get("v3_only", False):
                 method = tcp.SSLv3_METHOD
                 options = OpenSSL.SSL.OP_NO_SSLv2 | OpenSSL.SSL.OP_NO_TLSv1
             else:
@@ -81,7 +93,7 @@ class TServer(tcp.TCPServer):
                 method=method,
                 options=options,
                 handle_sni=getattr(h, "handle_sni", None),
-                request_client_cert=self.ssl["request_client_cert"],
+                request_client_cert=self.ssl.get("request_client_cert", None),
                 cipher_list=self.ssl.get("cipher_list", None),
                 dhparams=self.ssl.get("dhparams", None),
                 chain_file=self.ssl.get("chain_file", None),
