@@ -12,9 +12,10 @@ class EchoHandler(tcp.BaseHandler):
     sni = None
 
     def handle(self):
-        v = self.rfile.readline()
-        self.wfile.write(v)
-        self.wfile.flush()
+        while True:
+            v = self.rfile.safe_read(1)
+            self.wfile.write(v)
+            self.wfile.flush()
 
 
 class TestCheckALPNMatch(test.ServerTestBase):
