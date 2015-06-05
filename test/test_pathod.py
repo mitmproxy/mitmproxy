@@ -210,10 +210,8 @@ class CommonTests(tutils.DaemonTests):
         assert r.status_code == 101
 
     def test_websocket_frame(self):
-        r = self.pathoc(["ws:/p/", "wf:f'wf'"], ws_read_limit=1)
-        #print r
-        #pprint.pprint(r)
-        #pprint.pprint(self.d.log())
+        r = self.pathoc(["ws:/p/", "wf:f'wf:b\"test\"'"], ws_read_limit=1)
+        assert r[1].payload == "test"
 
 
 class TestDaemon(CommonTests):

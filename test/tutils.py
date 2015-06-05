@@ -88,9 +88,12 @@ class DaemonTests(object):
             c.settimeout(timeout)
         ret = []
         for i in specs:
-            ret.append(c.request(i))
-        return ret
-
+            resp = c.request(i)
+            if resp:
+                ret.append(resp)
+        for frm in c.wait():
+            ret.append(frm)
+        return ret 
 
 @contextmanager
 def tmpdir(*args, **kwargs):
