@@ -1,23 +1,13 @@
+import cStringIO
 from test import tutils
 from nose.tools import assert_equal
+from netlib import tcp
 from netlib.http2.frame import *
 
 
-class FileAdapter(object):
-    def __init__(self, data, is_hex=True):
-        self.position = 0
-        if is_hex:
-            self.data = data.decode('hex')
-        else:
-            self.data = data
-
-    def safe_read(self, length):
-        if self.position + length > len(self.data):
-            raise ValueError("not enough bytes to read")
-
-        value = self.data[self.position:self.position + length]
-        self.position += length
-        return value
+def hex_to_file(data):
+    data = data.decode('hex')
+    return tcp.Reader(cStringIO.StringIO(data))
 
 
 def test_invalid_flags():
@@ -79,7 +69,7 @@ def test_data_frame_to_bytes():
 
 
 def test_data_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('000006000101234567666f6f626172'))
+    f = Frame.from_file(hex_to_file('000006000101234567666f6f626172'))
     assert isinstance(f, DataFrame)
     assert_equal(f.length, 6)
     assert_equal(f.TYPE, DataFrame.TYPE)
@@ -87,7 +77,7 @@ def test_data_frame_from_bytes():
     assert_equal(f.stream_id, 0x1234567)
     assert_equal(f.payload, 'foobar')
 
-    f = Frame.from_file(FileAdapter('00000a00090123456703666f6f626172000000'))
+    f = Frame.from_file(hex_to_file('00000a00090123456703666f6f626172000000'))
     assert isinstance(f, DataFrame)
     assert_equal(f.length, 10)
     assert_equal(f.TYPE, DataFrame.TYPE)
@@ -171,7 +161,7 @@ def test_headers_frame_to_bytes():
 
 
 def test_headers_frame_from_bytes():
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '000007010001234567668594e75e31d9'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 7)
@@ -180,7 +170,7 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_id, 0x1234567)
     assert_equal(f.header_block_fragment, '668594e75e31d9'.decode('hex'))
 
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '00000b01080123456703668594e75e31d9000000'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 11)
@@ -189,7 +179,7 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_id, 0x1234567)
     assert_equal(f.header_block_fragment, '668594e75e31d9'.decode('hex'))
 
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '00000c012001234567876543212a668594e75e31d9'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 12)
@@ -201,7 +191,7 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_dependency, 0x7654321)
     assert_equal(f.weight, 42)
 
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '00001001280123456703876543212a668594e75e31d9000000'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 16)
@@ -213,7 +203,7 @@ def test_headers_frame_from_bytes():
     assert_equal(f.stream_dependency, 0x7654321)
     assert_equal(f.weight, 42)
 
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '00001001280123456703076543212a668594e75e31d9000000'))
     assert isinstance(f, HeadersFrame)
     assert_equal(f.length, 16)
@@ -285,7 +275,7 @@ def test_priority_frame_to_bytes():
 
 
 def test_priority_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('000005020001234567876543212a'))
+    f = Frame.from_file(hex_to_file('000005020001234567876543212a'))
     assert isinstance(f, PriorityFrame)
     assert_equal(f.length, 5)
     assert_equal(f.TYPE, PriorityFrame.TYPE)
@@ -295,7 +285,7 @@ def test_priority_frame_from_bytes():
     assert_equal(f.stream_dependency, 0x7654321)
     assert_equal(f.weight, 42)
 
-    f = Frame.from_file(FileAdapter('0000050200012345670765432115'))
+    f = Frame.from_file(hex_to_file('0000050200012345670765432115'))
     assert isinstance(f, PriorityFrame)
     assert_equal(f.length, 5)
     assert_equal(f.TYPE, PriorityFrame.TYPE)
@@ -333,7 +323,7 @@ def test_rst_stream_frame_to_bytes():
 
 
 def test_rst_stream_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('00000403000123456707654321'))
+    f = Frame.from_file(hex_to_file('00000403000123456707654321'))
     assert isinstance(f, RstStreamFrame)
     assert_equal(f.length, 4)
     assert_equal(f.TYPE, RstStreamFrame.TYPE)
@@ -391,21 +381,21 @@ def test_settings_frame_to_bytes():
 
 
 def test_settings_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('000000040000000000'))
+    f = Frame.from_file(hex_to_file('000000040000000000'))
     assert isinstance(f, SettingsFrame)
     assert_equal(f.length, 0)
     assert_equal(f.TYPE, SettingsFrame.TYPE)
     assert_equal(f.flags, Frame.FLAG_NO_FLAGS)
     assert_equal(f.stream_id, 0x0)
 
-    f = Frame.from_file(FileAdapter('000000040100000000'))
+    f = Frame.from_file(hex_to_file('000000040100000000'))
     assert isinstance(f, SettingsFrame)
     assert_equal(f.length, 0)
     assert_equal(f.TYPE, SettingsFrame.TYPE)
     assert_equal(f.flags, SettingsFrame.FLAG_ACK)
     assert_equal(f.stream_id, 0x0)
 
-    f = Frame.from_file(FileAdapter('000006040100000000000200000001'))
+    f = Frame.from_file(hex_to_file('000006040100000000000200000001'))
     assert isinstance(f, SettingsFrame)
     assert_equal(f.length, 6)
     assert_equal(f.TYPE, SettingsFrame.TYPE)
@@ -414,7 +404,7 @@ def test_settings_frame_from_bytes():
     assert_equal(len(f.settings), 1)
     assert_equal(f.settings[SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH], 1)
 
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '00000c040000000000000200000001000312345678'))
     assert isinstance(f, SettingsFrame)
     assert_equal(f.length, 12)
@@ -485,7 +475,7 @@ def test_push_promise_frame_to_bytes():
 
 
 def test_push_promise_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('00000a05000123456707654321666f6f626172'))
+    f = Frame.from_file(hex_to_file('00000a05000123456707654321666f6f626172'))
     assert isinstance(f, PushPromiseFrame)
     assert_equal(f.length, 10)
     assert_equal(f.TYPE, PushPromiseFrame.TYPE)
@@ -493,7 +483,7 @@ def test_push_promise_frame_from_bytes():
     assert_equal(f.stream_id, 0x1234567)
     assert_equal(f.header_block_fragment, 'foobar')
 
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '00000e0508012345670307654321666f6f626172000000'))
     assert isinstance(f, PushPromiseFrame)
     assert_equal(f.length, 14)
@@ -541,7 +531,7 @@ def test_ping_frame_to_bytes():
 
 
 def test_ping_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('000008060100000000666f6f6261720000'))
+    f = Frame.from_file(hex_to_file('000008060100000000666f6f6261720000'))
     assert isinstance(f, PingFrame)
     assert_equal(f.length, 8)
     assert_equal(f.TYPE, PingFrame.TYPE)
@@ -549,7 +539,7 @@ def test_ping_frame_from_bytes():
     assert_equal(f.stream_id, 0x0)
     assert_equal(f.payload, b'foobar\0\0')
 
-    f = Frame.from_file(FileAdapter('000008060000000000666f6f6261726465'))
+    f = Frame.from_file(hex_to_file('000008060000000000666f6f6261726465'))
     assert isinstance(f, PingFrame)
     assert_equal(f.length, 8)
     assert_equal(f.TYPE, PingFrame.TYPE)
@@ -600,7 +590,7 @@ def test_goaway_frame_to_bytes():
 
 
 def test_goaway_frame_from_bytes():
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '0000080700000000000123456787654321'))
     assert isinstance(f, GoAwayFrame)
     assert_equal(f.length, 8)
@@ -611,7 +601,7 @@ def test_goaway_frame_from_bytes():
     assert_equal(f.error_code, 0x87654321)
     assert_equal(f.data, b'')
 
-    f = Frame.from_file(FileAdapter(
+    f = Frame.from_file(hex_to_file(
         '00000e0700000000000123456787654321666f6f626172'))
     assert isinstance(f, GoAwayFrame)
     assert_equal(f.length, 14)
@@ -661,7 +651,7 @@ def test_window_update_frame_to_bytes():
 
 
 def test_window_update_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('00000408000000000001234567'))
+    f = Frame.from_file(hex_to_file('00000408000000000001234567'))
     assert isinstance(f, WindowUpdateFrame)
     assert_equal(f.length, 4)
     assert_equal(f.TYPE, WindowUpdateFrame.TYPE)
@@ -696,7 +686,7 @@ def test_continuation_frame_to_bytes():
 
 
 def test_continuation_frame_from_bytes():
-    f = Frame.from_file(FileAdapter('000006090401234567666f6f626172'))
+    f = Frame.from_file(hex_to_file('000006090401234567666f6f626172'))
     assert isinstance(f, ContinuationFrame)
     assert_equal(f.length, 6)
     assert_equal(f.TYPE, ContinuationFrame.TYPE)
