@@ -75,13 +75,13 @@ class TServer(tcp.TCPServer):
             raw_cert = self.ssl.get(
                 "cert",
                 tutils.test_data.path("data/server.crt"))
-            cert = certutils.SSLCert.from_pem(file(raw_cert, "rb").read())
+            cert = certutils.SSLCert.from_pem(open(raw_cert, "rb").read())
             raw_key = self.ssl.get(
                 "key",
                 tutils.test_data.path("data/server.key"))
             key = OpenSSL.crypto.load_privatekey(
                 OpenSSL.crypto.FILETYPE_PEM,
-                file(raw_key, "rb").read())
+                open(raw_key, "rb").read())
             if self.ssl.get("v3_only", False):
                 method = tcp.SSLv3_METHOD
                 options = OpenSSL.SSL.OP_NO_SSLv2 | OpenSSL.SSL.OP_NO_TLSv1
