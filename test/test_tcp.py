@@ -575,6 +575,11 @@ class TestFileLike:
         s = tcp.Reader(o)
         tutils.raises(tcp.NetLibDisconnect, s.readline, 10)
 
+    def test_reader_incomplete_error(self):
+        s = cStringIO.StringIO("foobar")
+        s = tcp.Reader(s)
+        tutils.raises(tcp.NetLibIncomplete, s.safe_read, 10)
+
 
 class TestAddress:
 
