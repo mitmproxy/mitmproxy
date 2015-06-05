@@ -135,10 +135,6 @@ class TestFinishFail(test.ServerTestBase):
 class TestServerSSL(test.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
         cipher_list="AES256-SHA",
         chain_file=tutils.test_data.path("data/server.crt")
     )
@@ -165,8 +161,6 @@ class TestServerSSL(test.ServerTestBase):
 class TestSSLv3Only(test.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
         request_client_cert=False,
         v3_only=True
     )
@@ -188,9 +182,8 @@ class TestSSLClientCert(test.ServerTestBase):
         def handle(self):
             self.wfile.write("%s\n" % self.clientcert.serial)
             self.wfile.flush()
+
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
         request_client_cert=True,
         v3_only=False
     )
@@ -224,12 +217,7 @@ class TestSNI(test.ServerTestBase):
             self.wfile.write(self.sni)
             self.wfile.flush()
 
-    ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False
-    )
+    ssl = True
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -242,10 +230,6 @@ class TestSNI(test.ServerTestBase):
 class TestServerCipherList(test.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
         cipher_list='RC4-SHA'
     )
 
@@ -264,11 +248,8 @@ class TestServerCurrentCipher(test.ServerTestBase):
         def handle(self):
             self.wfile.write("%s" % str(self.get_current_cipher()))
             self.wfile.flush()
+
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
         cipher_list='RC4-SHA'
     )
 
@@ -282,10 +263,6 @@ class TestServerCurrentCipher(test.ServerTestBase):
 class TestServerCipherListError(test.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
         cipher_list='bogus'
     )
 
@@ -298,10 +275,6 @@ class TestServerCipherListError(test.ServerTestBase):
 class TestClientCipherListError(test.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
         cipher_list='RC4-SHA'
     )
 
@@ -321,12 +294,8 @@ class TestSSLDisconnect(test.ServerTestBase):
 
         def handle(self):
             self.finish()
-    ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False
-    )
+
+    ssl = True
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -341,12 +310,7 @@ class TestSSLDisconnect(test.ServerTestBase):
 
 class TestSSLHardDisconnect(test.ServerTestBase):
     handler = HardDisconnectHandler
-    ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False
-    )
+    ssl = True
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -400,13 +364,9 @@ class TestTimeOut(test.ServerTestBase):
 
 
 class TestALPN(test.ServerTestBase):
-    handler = HangHandler
+    handler = EchoHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
-        alpn_select="h2"
+        alpn_select="foobar"
     )
 
     if OpenSSL._util.lib.Cryptography_HAS_ALPN:
@@ -414,19 +374,13 @@ class TestALPN(test.ServerTestBase):
         def test_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=["h2"])
-            print "ALPN: %s" % c.get_alpn_proto_negotiated()
-            assert c.get_alpn_proto_negotiated() == "h2"
+            c.convert_to_ssl(alpn_protos=["foobar"])
+            assert c.get_alpn_proto_negotiated() == "foobar"
 
 
 class TestSSLTimeOut(test.ServerTestBase):
     handler = HangHandler
-    ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False
-    )
+    ssl = True
 
     def test_timeout_client(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -439,10 +393,6 @@ class TestSSLTimeOut(test.ServerTestBase):
 class TestDHParams(test.ServerTestBase):
     handler = HangHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
         dhparams=certutils.CertStore.load_dhparam(
             tutils.test_data.path("data/dhparam.pem"),
         ),
@@ -643,10 +593,6 @@ class TestAddress:
 class TestSSLKeyLogger(test.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt"),
-        key=tutils.test_data.path("data/server.key"),
-        request_client_cert=False,
-        v3_only=False,
         cipher_list="AES256-SHA"
     )
 
