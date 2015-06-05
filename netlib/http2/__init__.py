@@ -30,7 +30,7 @@ class HTTP2Protocol(object):
     # "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
     CLIENT_CONNECTION_PREFACE = '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'
 
-    ALPN_PROTO_H2 = b'h2'
+    ALPN_PROTO_H2 = 'h2'
 
     HTTP2_DEFAULT_SETTINGS = {
         SettingsFrame.SETTINGS.SETTINGS_HEADER_TABLE_SIZE: 4096,
@@ -53,18 +53,25 @@ class HTTP2Protocol(object):
         alp = self.tcp_client.get_alpn_proto_negotiated()
         if alp != self.ALPN_PROTO_H2:
             raise NotImplementedError(
-                "H2Client can not handle unknown ALP: %s" % alp)
+                "HTTP2Protocol can not handle unknown ALP: %s" % alp)
         log.debug("ALP 'h2' successfully negotiated.")
+        return True
 
-    def send_connection_preface(self):
+    def perform_connection_preface(self):
         self.tcp_client.wfile.write(
             bytes(self.CLIENT_CONNECTION_PREFACE.decode('hex')))
         self.send_frame(SettingsFrame(state=self))
 
+        # read server settings frame
         frame = Frame.from_file(self.tcp_client.rfile, self)
         assert isinstance(frame, SettingsFrame)
         self._apply_settings(frame.settings)
-        self.read_frame()  # read setting ACK frame
+
+        # read setting ACK frame
+        settings_ack_frame = self.read_frame()
+        assert isinstance(settings_ack_frame, SettingsFrame)
+        assert settings_ack_frame.flags & Frame.FLAG_ACK
+        assert len(settings_ack_frame.settings) == 0
 
         log.debug("Connection Preface completed.")
 
@@ -94,9 +101,9 @@ class HTTP2Protocol(object):
                 old_value = '-'
 
             self.http2_settings[setting] = value
-            log.debug("Setting changed: %s to %d (was %s)" % (
+            log.debug("Setting changed: %s to %s (was %s)" % (
                 SettingsFrame.SETTINGS.get_name(setting),
-                value,
+                str(value),
                 str(old_value)))
 
         self.send_frame(SettingsFrame(state=self, flags=Frame.FLAG_ACK))
@@ -157,9 +164,6 @@ class HTTP2Protocol(object):
                 header_block_fragment += frame.header_block_fragment
                 if frame.flags | Frame.FLAG_END_HEADERS:
                     break
-            else:
-                log.debug("Unexpected frame received:")
-                log.debug(frame.human_readable())
 
         while True:
             frame = self.read_frame()
@@ -167,9 +171,6 @@ class HTTP2Protocol(object):
                 body += frame.payload
                 if frame.flags | Frame.FLAG_END_STREAM:
                     break
-            else:
-                log.debug("Unexpected frame received:")
-                log.debug(frame.human_readable())
 
         headers = {}
         for header, value in self.decoder.decode(header_block_fragment):

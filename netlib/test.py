@@ -4,7 +4,7 @@ import Queue
 import cStringIO
 import OpenSSL
 from . import tcp, certutils
-import tutils
+from test import tutils
 
 
 class ServerThread(threading.Thread):

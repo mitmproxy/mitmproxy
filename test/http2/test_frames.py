@@ -1,4 +1,4 @@
-import tutils
+from test import tutils
 from nose.tools import assert_equal
 from netlib.http2.frame import *
 
