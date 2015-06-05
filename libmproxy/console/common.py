@@ -284,8 +284,15 @@ def copy_flow(part, scope, flow, master, state):
             signals.status_message.send(message="No contents to copy.")
         return
 
+    # this is because pyperclip does an encode('utf-8') without checking if data is already encoded or not
+    toclip = ""
     try:
-        pyperclip.copy(data)
+        toclip = data.decode('utf-8')
+    except (UnicodeDecodeError):        
+        toclip = data
+
+    try:
+        pyperclip.copy(toclip)
     except (RuntimeError, UnicodeDecodeError, AttributeError):
         def save(k):
             if k == "y":
