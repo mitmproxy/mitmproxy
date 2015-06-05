@@ -93,6 +93,7 @@ COMPONENTS = (
 class WebsocketFrame(message.Message):
     components = COMPONENTS
     logattrs = ["body"]
+    # Used for nested frames
     unique_name = "body"
 
     @property

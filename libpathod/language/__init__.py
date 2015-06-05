@@ -2,7 +2,7 @@ import time
 
 import pyparsing as pp
 
-from . import base, http, websockets, writer, exceptions
+from . import http, websockets, writer, exceptions
 
 from exceptions import *
 from base import Settings

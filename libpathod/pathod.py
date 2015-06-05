@@ -5,6 +5,7 @@ import sys
 import threading
 import urllib
 import re
+import time
 
 from netlib import tcp, http, wsgi, certutils, websockets
 
@@ -106,42 +107,52 @@ class PathodHandler(tcp.BaseHandler):
         lw = self.wfile if self.server.logresp else None
         while True:
             with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
+                started = time.time()
                 try:
                     frm = websockets.Frame.from_file(self.rfile)
                 except tcp.NetLibIncomplete, e:
                     lg("Error reading websocket frame: %s"%e)
                     break
+                ended = time.time()
                 lg(frm.human_readable())
-                retlog = dict(
-                    type="wsframe",
-                    frame=dict(
-                    ),
-                    cipher=None,
-                )
-                ld = language.websockets.NESTED_LEADER
-                if frm.payload.startswith(ld):
-                    nest = frm.payload[len(ld):]
-                    try:
-                        wf = language.parse_websocket_frame(nest)
-                    except language.exceptions.ParseException, v:
-                        lg(
-                            "Parse error in reflected frame specifcation:"
-                            " %s" % v.msg
-                        )
-                        break
+            retlog = dict(
+                type = "inbound",
+                protocol = "websockets",
+                started = started,
+                duration = ended - started,
+                frame = dict(
+                ),
+                cipher=None,
+            )
+            if self.ssl_established:
+                retlog["cipher"] = self.get_current_cipher()
+            self.addlog(retlog)
+            ld = language.websockets.NESTED_LEADER
+            if frm.payload.startswith(ld):
+                nest = frm.payload[len(ld):]
+                try:
+                    wf = language.parse_websocket_frame(nest)
+                except language.exceptions.ParseException, v:
+                    lg(
+                        "Parse error in reflected frame specifcation:"
+                        " %s" % v.msg
+                    )
+                    break
+                with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
                     frame_log = language.serve(
                         wf,
                         self.wfile,
                         self.settings
                     )
-                self.addlog(retlog)
+                    lg("crafting websocket spec: %s" % frame_log["spec"])
+                    self.addlog(frame_log)
         return self.handle_websocket, None
 
     def handle_http_connect(self, connect, lg):
         """
             Handle a CONNECT request.
         """
-        headers = http.read_headers(self.rfile)
+        http.read_headers(self.rfile)
         self.wfile.write(
             'HTTP/1.1 200 Connection established\r\n' +
             ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
@@ -237,6 +248,7 @@ class PathodHandler(tcp.BaseHandler):
 
             retlog = dict(
                 type="crafted",
+                protocol="http",
                 request=dict(
                     path=path,
                     method=method,

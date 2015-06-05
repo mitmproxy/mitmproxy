@@ -347,8 +347,8 @@ class Pathoc(tcp.TCPClient):
         """
             Performs a single request.
 
-            r: A language.http.Request object, or a string representing one
-            request.
+            r: A language.message.Messsage object, or a string representing
+            one.
 
             Returns Response if we have a non-ignored response.
 
