@@ -1,12 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 import itertools
-import logging
 
 from hpack.hpack import Encoder, Decoder
 from .. import utils
 from . import frame
-
-log = logging.getLogger(__name__)
 
 
 class HTTP2Protocol(object):
@@ -46,7 +43,6 @@ class HTTP2Protocol(object):
         if alp != self.ALPN_PROTO_H2:
             raise NotImplementedError(
                 "HTTP2Protocol can not handle unknown ALP: %s" % alp)
-        log.debug("ALP 'h2' successfully negotiated.")
         return True
 
     def perform_connection_preface(self):
@@ -65,7 +61,6 @@ class HTTP2Protocol(object):
         assert settings_ack_frame.flags & frame.Frame.FLAG_ACK
         assert len(settings_ack_frame.settings) == 0
 
-        log.debug("Connection Preface completed.")
 
     def next_stream_id(self):
         if self.current_stream_id is None:
@@ -93,13 +88,8 @@ class HTTP2Protocol(object):
                 old_value = '-'
 
             self.http2_settings[setting] = value
-            log.debug("Setting changed: %s to %s (was %s)" % (
-                frame.SettingsFrame.SETTINGS.get_name(setting),
-                str(value),
-                str(old_value)))
 
         self.send_frame(frame.SettingsFrame(state=self, flags=frame.Frame.FLAG_ACK))
-        log.debug("New settings acknowledged.")
 
     def _create_headers(self, headers, stream_id, end_stream=True):
         # TODO: implement max frame size checks and sending in chunks
@@ -167,8 +157,5 @@ class HTTP2Protocol(object):
         headers = {}
         for header, value in self.decoder.decode(header_block_fragment):
             headers[header] = value
-
-        for header, value in headers.items():
-            log.debug("%s: %s" % (header, value))
 
         return headers[':status'], headers, body

@@ -1,11 +1,8 @@
 import struct
-import logging
 from functools import reduce
 from hpack.hpack import Encoder, Decoder
 
 from .. import utils
-
-log = logging.getLogger(__name__)
 
 
 class FrameSizeError(Exception):
