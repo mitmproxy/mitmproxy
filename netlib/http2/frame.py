@@ -38,13 +38,11 @@ class Frame(object):
             raise ValueError('invalid flags detected.')
 
         if state is None:
-            from . import HTTP2Protocol
-
             class State(object):
                 pass
 
             state = State()
-            state.http2_settings = HTTP2Protocol.HTTP2_DEFAULT_SETTINGS.copy()
+            state.http2_settings = HTTP2_DEFAULT_SETTINGS.copy()
             state.encoder = Encoder()
             state.decoder = Decoder()
 
@@ -57,12 +55,10 @@ class Frame(object):
 
     @classmethod
     def _check_frame_size(self, length, state):
-        from . import HTTP2Protocol
-
         if state:
             settings = state.http2_settings
         else:
-            settings = HTTP2Protocol.HTTP2_DEFAULT_SETTINGS
+            settings = HTTP2_DEFAULT_SETTINGS.copy()
 
         max_frame_size = settings[
             SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
@@ -623,3 +619,13 @@ _FRAME_CLASSES = [
     ContinuationFrame
 ]
 FRAMES = {cls.TYPE: cls for cls in _FRAME_CLASSES}
+
+
+HTTP2_DEFAULT_SETTINGS = {
+    SettingsFrame.SETTINGS.SETTINGS_HEADER_TABLE_SIZE: 4096,
+    SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH: 1,
+    SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS: None,
+    SettingsFrame.SETTINGS.SETTINGS_INITIAL_WINDOW_SIZE: 2 ** 16 - 1,
+    SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE: 2 ** 14,
+    SettingsFrame.SETTINGS.SETTINGS_MAX_HEADER_LIST_SIZE: None,
+}
