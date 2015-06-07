@@ -1,3 +1,4 @@
+import itertools
 import time
 
 import pyparsing as pp
@@ -28,6 +29,14 @@ def parse_pathod(s):
         raise exceptions.ParseException(v.msg, v.line, v.col)
 
 
+def expand(req):
+    if req.times:
+        for j in xrange(int(req.times.value)):
+            yield req.strike_token("times")
+    else:
+        yield req
+
+
 def parse_pathoc(s):
     """
         May raise ParseException
@@ -47,14 +56,7 @@ def parse_pathoc(s):
         ).parseString(s, parseAll=True)
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
-    expanded = []
-    for i in reqs:
-        if i.times:
-            for j in range(int(i.times.value)):
-                expanded.append(i.strike_token("times"))
-        else:
-            expanded.append(i)
-    return expanded
+    return itertools.chain(*[expand(i) for i in reqs])
 
 
 def parse_websocket_frame(s):

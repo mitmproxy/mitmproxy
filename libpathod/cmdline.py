@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import itertools
 import argparse
 import os
 import os.path
@@ -189,7 +190,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
             data = open(r).read()
             r = data
         try:
-            reqs.extend(language.parse_pathoc(r))
+            reqs.append(language.parse_pathoc(r))
         except language.ParseException as v:
             print >> stderr, "Error parsing request spec: %s" % v.msg
             print >> stderr, v.marked()

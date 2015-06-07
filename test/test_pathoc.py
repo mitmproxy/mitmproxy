@@ -73,7 +73,7 @@ class _TestDaemon:
         if timeout:
             c.settimeout(timeout)
         for i in requests:
-            r = language.parse_pathoc(i)[0]
+            r = language.parse_pathoc(i).next()
             if explain:
                 r = r.freeze(language.Settings())
             try:

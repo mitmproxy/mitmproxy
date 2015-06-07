@@ -6,11 +6,11 @@ import nose.tools as nt
 
 
 def parse_request(s):
-    return language.parse_pathoc(s)[0]
+    return language.parse_pathoc(s).next()
 
 
 def test_times():
-    reqs = language.parse_pathoc("get:/:x5")
+    reqs = list(language.parse_pathoc("get:/:x5"))
     assert len(reqs) == 5
     assert not reqs[0].times
 

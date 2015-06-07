@@ -135,7 +135,7 @@ def test_pathoc(perror):
             tutils.test_data.path("data/request")
         ]
     )
-    assert len(a.requests) == 1
+    assert len(list(a.requests)) == 1
 
     a = cmdline.args_pathod(
         [

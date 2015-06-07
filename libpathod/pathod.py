@@ -75,7 +75,7 @@ class PathodHandler(tcp.BaseHandler):
     def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
-    def serve_crafted(self, crafted):
+    def http_serve_crafted(self, crafted):
         error, crafted = self.server.check_policy(
             crafted, self.settings
         )
@@ -304,7 +304,7 @@ class PathodHandler(tcp.BaseHandler):
 
             if anchor_spec:
                 lg("crafting spec: %s" % anchor_spec)
-                nexthandler, retlog["response"] = self.serve_crafted(
+                nexthandler, retlog["response"] = self.http_serve_crafted(
                     anchor_spec
                 )
                 if nexthandler and websocket_key:

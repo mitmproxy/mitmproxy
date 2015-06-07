@@ -6,7 +6,7 @@ import tutils
 
 
 def parse_request(s):
-    return language.parse_pathoc(s)[0]
+    return language.parse_pathoc(s).next()
 
 
 def test_make_error_response():
@@ -32,7 +32,7 @@ class TestRequest:
         assert len(r.path.string()) == 1024
 
     def test_multiple(self):
-        r = language.parse_pathoc("GET:/ PUT:/")
+        r = list(language.parse_pathoc("GET:/ PUT:/"))
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "PUT"
         assert len(r) == 2
@@ -52,7 +52,7 @@ class TestRequest:
 
             ir,@1
         """
-        r = language.parse_pathoc(l)
+        r = list(language.parse_pathoc(l))
         assert len(r) == 2
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "PUT"
@@ -61,14 +61,14 @@ class TestRequest:
             get:"http://localhost:9999/p/200":ir,@1
             get:"http://localhost:9999/p/200":ir,@2
         """
-        r = language.parse_pathoc(l)
+        r = list(language.parse_pathoc(l))
         assert len(r) == 2
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "GET"
 
     def test_nested_response(self):
         l = "get:/p:s'200'"
-        r = language.parse_pathoc(l)
+        r = list(language.parse_pathoc(l))
         assert len(r) == 1
         assert len(r[0].tokens) == 3
         assert isinstance(r[0].tokens[2], http.NestedResponse)

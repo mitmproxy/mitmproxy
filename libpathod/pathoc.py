@@ -1,5 +1,6 @@
 import sys
 import os
+import itertools
 import hashlib
 import Queue
 import random
@@ -287,7 +288,7 @@ class Pathoc(tcp.TCPClient):
         """
         with self.log() as log:
             if isinstance(r, basestring):
-                r = language.parse_pathoc(r)[0]
+                r = language.parse_pathoc(r).next()
             log(">> %s" % r)
             try:
                 language.serve(r, self.wfile, self.settings)
@@ -330,7 +331,7 @@ class Pathoc(tcp.TCPClient):
         """
         with self.log() as log:
             if isinstance(r, basestring):
-                r = language.parse_pathoc(r)[0]
+                r = language.parse_pathoc(r).next()
             log(">> %s" % r)
             resp, req = None, None
             try:
@@ -369,7 +370,7 @@ class Pathoc(tcp.TCPClient):
             May raise http.HTTPError, tcp.NetLibError
         """
         if isinstance(r, basestring):
-            r = language.parse_pathoc(r)[0]
+            r = language.parse_pathoc(r).next()
         if isinstance(r, language.http.Request):
             if r.ws:
                 return self.websocket_start(r, self.websocket_get_frame)
@@ -388,17 +389,13 @@ def main(args):  # pragma: nocover
         while True:
             if cnt == args.repeat and args.repeat != 0:
                 break
-            if trycount > args.memolimit:
-                print >> sys.stderr, "Memo limit exceeded..."
-                return
             if args.wait and cnt != 0:
                 time.sleep(args.wait)
 
             cnt += 1
+            playlist = itertools.chain(*args.requests)
             if args.random:
-                playlist = [random.choice(args.requests)]
-            else:
-                playlist = args.requests
+                playlist = random.choice(args.requests)
             p = Pathoc(
                 (args.host, args.port),
                 ssl = args.ssl,
@@ -414,22 +411,6 @@ def main(args):  # pragma: nocover
                 ignoretimeout = args.ignoretimeout,
                 showsummary = True
             )
-            if args.explain or args.memo:
-                playlist = [
-                    i.freeze(p.settings) for i in playlist
-                ]
-            if args.memo:
-                newlist = []
-                for spec in playlist:
-                    h = hashlib.sha256(spec.spec()).digest()
-                    if h not in memo:
-                        memo.add(h)
-                        newlist.append(spec)
-                playlist = newlist
-            if not playlist:
-                trycount += 1
-                continue
-
             trycount = 0
             try:
                 p.connect(args.connect_to, args.showssl)
@@ -442,6 +423,20 @@ def main(args):  # pragma: nocover
             if args.timeout:
                 p.settimeout(args.timeout)
             for spec in playlist:
+                if args.explain or args.memo:
+                    spec = spec.freeze(p.settings)
+                if args.memo:
+                    h = hashlib.sha256(spec.spec()).digest()
+                    if h not in memo:
+                        trycount = 0
+                        memo.add(h)
+                    else:
+                        trycount += 1
+                        if trycount > args.memolimit:
+                            print >> sys.stderr, "Memo limit exceeded..."
+                            return
+                        else:
+                            continue
                 try:
                     ret = p.request(spec)
                     if ret and args.oneshot:

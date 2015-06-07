@@ -135,7 +135,7 @@ def make_app(noapi, debug):
 
         try:
             if is_request:
-                r = language.parse_pathoc(spec)[0]
+                r = language.parse_pathoc(spec).next()
             else:
                 r = language.parse_pathod(spec)
         except language.ParseException as v:

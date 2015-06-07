@@ -5,7 +5,7 @@ from libpathod import language
 
 
 def parse_request(s):
-    return language.parse_pathoc(s)[0]
+    return language.parse_pathoc(s).next()
 
 
 def test_unique_name():
