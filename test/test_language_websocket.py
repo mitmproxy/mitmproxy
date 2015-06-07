@@ -36,8 +36,18 @@ class TestWebsocketFrame:
             "wf:fin:rsv1:rsv2:rsv3:mask",
             "wf:-fin:-rsv1:-rsv2:-rsv3:-mask",
             "wf:k@4",
+            "wf:x10",
         ]
         self._test_messages(specs, websockets.WebsocketFrame)
+
+    def test_parse_websocket_frames(self):
+        wf = language.parse_websocket_frame("wf:x10")
+        assert len(list(wf)) == 10
+        tutils.raises(
+            language.ParseException,
+            language.parse_websocket_frame,
+            "wf:x"
+        )
 
     def test_client_values(self):
         specs = [

@@ -131,21 +131,22 @@ class PathodHandler(tcp.BaseHandler):
             if frm.payload.startswith(ld):
                 nest = frm.payload[len(ld):]
                 try:
-                    wf = language.parse_websocket_frame(nest)
+                    wf_gen = language.parse_websocket_frame(nest)
                 except language.exceptions.ParseException, v:
                     lg(
                         "Parse error in reflected frame specifcation:"
                         " %s" % v.msg
                     )
                     break
-                with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
-                    frame_log = language.serve(
-                        wf,
-                        self.wfile,
-                        self.settings
-                    )
-                    lg("crafting websocket spec: %s" % frame_log["spec"])
-                    self.addlog(frame_log)
+                for frm in wf_gen:
+                    with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
+                        frame_log = language.serve(
+                            frm,
+                            self.wfile,
+                            self.settings
+                        )
+                        lg("crafting websocket spec: %s" % frame_log["spec"])
+                        self.addlog(frame_log)
         return self.handle_websocket, None
 
     def handle_http_connect(self, connect, lg):
@@ -280,32 +281,32 @@ class PathodHandler(tcp.BaseHandler):
             # If this is a websocket initiation, we respond with a proper
             # server response, unless over-ridden.
             if websocket_key:
-                anchor_spec = language.parse_pathod("ws")
+                anchor_gen = language.parse_pathod("ws")
             else:
-                anchor_spec = None
+                anchor_gen = None
             for i in self.server.anchors:
                 if i[0].match(path):
-                    anchor_spec = i[1]
+                    anchor_gen = i[1]
                     break
             else:
                 if m(self.server.craftanchor.match(path)):
                     spec = urllib.unquote(path)[len(m.v.group()):]
                     if spec:
                         try:
-                            anchor_spec = language.parse_pathod(spec)
+                            anchor_gen = language.parse_pathod(spec)
                         except language.ParseException as v:
                             lg("Parse error: %s" % v.msg)
-                            anchor_spec = iter([language.http.make_error_response(
+                            anchor_gen = iter([language.http.make_error_response(
                                 "Parse Error",
                                 "Error parsing response spec: %s\n" % (
                                     v.msg + v.marked()
                                 )
                             )])
 
-            if anchor_spec:
-                lg("crafting spec: %s" % anchor_spec)
+            if anchor_gen:
+                lg("crafting spec: %s" % anchor_gen)
                 nexthandler, retlog["response"] = self.http_serve_crafted(
-                    anchor_spec.next()
+                    anchor_gen.next()
                 )
                 if nexthandler and websocket_key:
                     return self.handle_websocket, retlog

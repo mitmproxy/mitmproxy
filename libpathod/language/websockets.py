@@ -69,6 +69,7 @@ class Length(base.Integer):
 class Times(base.Integer):
     preamble = "x"
 
+
 COMPONENTS = (
     OpCode,
     Length,

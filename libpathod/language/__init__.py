@@ -63,12 +63,15 @@ def parse_websocket_frame(s):
         May raise ParseException
     """
     try:
-        return websockets.WebsocketFrame.expr().parseString(
+        reqs = pp.OneOrMore(
+            websockets.WebsocketFrame.expr()
+        ).parseString(
             s,
             parseAll = True
-        )[0]
+        )
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
+    return itertools.chain(*[expand(i) for i in reqs])
 
 
 def serve(msg, fp, settings):
