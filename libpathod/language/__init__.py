@@ -10,6 +10,15 @@ from base import Settings
 assert Settings  # prevent pyflakes from messing with this
 
 
+def expand(msg):
+    times = getattr(msg, "times", None)
+    if times:
+        for j in xrange(int(times.value)):
+            yield msg.strike_token("times")
+    else:
+        yield msg
+
+
 def parse_pathod(s):
     """
         May raise ParseException
@@ -19,28 +28,18 @@ def parse_pathod(s):
     except UnicodeError:
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        return pp.Or(
+        reqs = pp.Or(
             [
                 websockets.WebsocketFrame.expr(),
                 http.Response.expr(),
             ]
-        ).parseString(s, parseAll=True)[0]
+        ).parseString(s, parseAll=True)
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
-
-
-def expand(req):
-    if req.times:
-        for j in xrange(int(req.times.value)):
-            yield req.strike_token("times")
-    else:
-        yield req
+    return itertools.chain(*[expand(i) for i in reqs])
 
 
 def parse_pathoc(s):
-    """
-        May raise ParseException
-    """
     try:
         s = s.decode("ascii")
     except UnicodeError:
@@ -60,6 +59,9 @@ def parse_pathoc(s):
 
 
 def parse_websocket_frame(s):
+    """
+        May raise ParseException
+    """
     try:
         return websockets.WebsocketFrame.expr().parseString(
             s,

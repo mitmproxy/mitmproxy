@@ -295,17 +295,17 @@ class PathodHandler(tcp.BaseHandler):
                             anchor_spec = language.parse_pathod(spec)
                         except language.ParseException as v:
                             lg("Parse error: %s" % v.msg)
-                            anchor_spec = language.http.make_error_response(
+                            anchor_spec = iter([language.http.make_error_response(
                                 "Parse Error",
                                 "Error parsing response spec: %s\n" % (
                                     v.msg + v.marked()
                                 )
-                            )
+                            )])
 
             if anchor_spec:
                 lg("crafting spec: %s" % anchor_spec)
                 nexthandler, retlog["response"] = self.http_serve_crafted(
-                    anchor_spec
+                    anchor_spec.next()
                 )
                 if nexthandler and websocket_key:
                     return self.handle_websocket, retlog

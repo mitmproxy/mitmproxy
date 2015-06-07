@@ -78,14 +78,14 @@ def test_write_values_pauses():
 
 def test_write_values_after():
     s = cStringIO.StringIO()
-    r = language.parse_pathod("400:da")
+    r = language.parse_pathod("400:da").next()
     language.serve(r, s, {})
 
     s = cStringIO.StringIO()
-    r = language.parse_pathod("400:pa,0")
+    r = language.parse_pathod("400:pa,0").next()
     language.serve(r, s, {})
 
     s = cStringIO.StringIO()
-    r = language.parse_pathod("400:ia,'xx'")
+    r = language.parse_pathod("400:ia,'xx'").next()
     language.serve(r, s, {})
     assert s.getvalue().endswith('xx')
