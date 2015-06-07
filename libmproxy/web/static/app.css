@@ -61,6 +61,7 @@ body,
   flex: 1 1 auto;
   display: flex;
   flex-direction: row;
+  height: 0px;
 }
 .main-view.vertical {
   flex-direction: column;
