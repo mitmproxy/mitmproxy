@@ -293,35 +293,19 @@ class Pathoc(tcp.TCPClient):
                     return
                 yield frm
 
-    def websocket_get_frame(self, frame):
-        """
-            Called when a frame is received from the server.
-        """
-        pass
-
     def websocket_send_frame(self, r):
         """
             Sends a single websocket frame.
         """
         with self.log() as log:
-            if isinstance(r, basestring):
-                r = language.parse_pathoc(r).next()
             log(">> %s" % r)
-            try:
-                language.serve(r, self.wfile, self.settings)
-                self.wfile.flush()
-            except tcp.NetLibTimeout:
-                if self.ignoretimeout:
-                    self.log("Timeout (ignored)")
-                    return None
-                raise
+            language.serve(r, self.wfile, self.settings)
+            self.wfile.flush()
 
-    def websocket_start(self, r, limit=None):
+    def websocket_start(self, r):
         """
             Performs an HTTP request, and attempts to drop into websocket
             connection.
-
-            limit: Disconnect after receiving N server frames.
         """
         resp = self.http(r)
         if resp.status_code == 101:
@@ -348,8 +332,6 @@ class Pathoc(tcp.TCPClient):
             May raise http.HTTPError, tcp.NetLibError
         """
         with self.log() as log:
-            if isinstance(r, basestring):
-                r = language.parse_pathoc(r).next()
             log(">> %s" % r)
             resp, req = None, None
             try:
@@ -395,7 +377,7 @@ class Pathoc(tcp.TCPClient):
             r = language.parse_pathoc(r).next()
         if isinstance(r, language.http.Request):
             if r.ws:
-                return self.websocket_start(r, self.websocket_get_frame)
+                return self.websocket_start(r)
             else:
                 return self.http(r)
         elif isinstance(r, language.websockets.WebsocketFrame):

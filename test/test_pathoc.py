@@ -185,6 +185,24 @@ class TestDaemon(_TestDaemon):
     def test_conn_err(self):
         assert "Invalid server response" in self.tval(["get:'/p/200:d2'"])
 
+    def test_websocket_shutdown(self):
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
+        c.connect()
+        c.request("ws:/")
+        c.stop()
+
+    def test_wait_finish(self):
+        c = pathoc.Pathoc(
+            ("127.0.0.1", self.d.port),
+            fp=None,
+            ws_read_limit = 1
+        )
+        c.connect()
+        c.request("ws:/")
+        c.request("wf:f'wf:x100'")
+        [i for i in c.wait(timeout=0, finish=False)]
+        [i for i in c.wait(timeout=0)]
+
     def test_connect_fail(self):
         to = ("foobar", 80)
         c = pathoc.Pathoc(("127.0.0.1", self.d.port), fp=None)
