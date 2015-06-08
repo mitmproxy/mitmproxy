@@ -149,12 +149,12 @@ class TestDaemon(_TestDaemon):
         assert "HTTP" in self.tval(
             ["get:'/p/200:p5,100'"],
             showresp=True,
-            timeout=0.01
+            timeout=1
         )
         assert not "HTTP" in self.tval(
-            ["get:'/p/200:p3,10'"],
+            ["get:'/p/200:p3,100'"],
             showresp=True,
-            timeout=0.01,
+            timeout=1,
             ignoretimeout=True
         )
 
