@@ -1,7 +1,7 @@
+import sys
 import cStringIO
 from libpathod import pathod, version
 from netlib import tcp, http
-import pprint
 
 import tutils
 
@@ -212,7 +212,11 @@ class CommonTests(tutils.DaemonTests):
         assert r[0].status_code == 101
 
     def test_websocket_frame(self):
-        r, _ = self.pathoc(["ws:/p/", "wf:f'wf:b\"test\"'"], ws_read_limit=1)
+        r, _ = self.pathoc(
+            ["ws:/p/", "wf:f'wf:b\"test\"'"],
+            ws_read_limit=1
+        )
+        print >> sys.stderr, r
         assert r[1].payload == "test"
 
     def test_websocket_frame_reflect_error(self):
