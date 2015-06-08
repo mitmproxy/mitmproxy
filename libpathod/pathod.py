@@ -39,21 +39,23 @@ class SSLOptions:
         request_client_cert=False,
         sslversion=tcp.SSLv23_METHOD,
         ciphers=None,
-        certs=None
+        certs=None,
+        alpn_select=None,
     ):
         self.confdir = confdir
         self.cn = cn
+        self.sans = sans
+        self.not_after_connect = not_after_connect
+        self.request_client_cert = request_client_cert
+        self.sslversion = sslversion
+        self.ciphers = ciphers
+        self.alpn_select = alpn_select
         self.certstore = certutils.CertStore.from_store(
             os.path.expanduser(confdir),
             CERTSTORE_BASENAME
         )
         for i in certs or []:
             self.certstore.add_cert_file(*i)
-        self.not_after_connect = not_after_connect
-        self.request_client_cert = request_client_cert
-        self.ciphers = ciphers
-        self.sslversion = sslversion
-        self.sans = sans
 
     def get_cert(self, name):
         if self.cn:
@@ -173,6 +175,7 @@ class PathodHandler(tcp.BaseHandler):
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.sslversion,
+                    alpn_select=self.server.ssloptions.alpn_select,
                 )
             except tcp.NetLibError as v:
                 s = str(v)
@@ -340,6 +343,7 @@ class PathodHandler(tcp.BaseHandler):
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.sslversion,
+                    alpn_select=self.server.ssloptions.alpn_select,
                 )
             except tcp.NetLibError as v:
                 s = str(v)
@@ -502,7 +506,8 @@ def main(args):  # pragma: nocover
         ciphers = args.ciphers,
         sslversion = utils.SSLVERSIONS[args.sslversion],
         certs = args.ssl_certs,
-        sans = args.sans
+        sans = args.sans,
+        alpn_select = args.alpn_select,
     )
 
     root = logging.getLogger()
