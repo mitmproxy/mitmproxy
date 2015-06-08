@@ -37,8 +37,8 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            "pathod = libpathod.cmdline:go_pathod",
-            "pathoc = libpathod.cmdline:go_pathoc"
+            "pathod = libpathod.pathod_cmdline:go_pathod",
+            "pathoc = libpathod.pathoc_cmdline:go_pathoc"
         ]
     },
     install_requires=[
