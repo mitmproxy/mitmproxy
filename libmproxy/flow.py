@@ -825,7 +825,7 @@ class FlowMaster(controller.Master):
             ssl_established=True
         ))
         f = http.HTTPFlow(c, s)
-        headers = ODictCaseless()
+        headers = odict.ODictCaseless()
 
         req = http.HTTPRequest(
             "absolute",
