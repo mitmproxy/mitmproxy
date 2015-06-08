@@ -120,7 +120,8 @@ class WebsocketFrameReader(threading.Thread):
                 if self.ws_read_limit == 0:
                     return
                 r, _, x = select.select([self.rfile], [], [], 0.05)
-                if not r and time.time() - starttime > self.timeout:
+                delta = time.time() - starttime
+                if not r and self.timeout and delta > self.timeout:
                     return
                 try:
                     self.terminate.get_nowait()
@@ -233,8 +234,6 @@ class Pathoc(tcp.TCPClient):
             an HTTP CONNECT request.
         """
         tcp.TCPClient.connect(self)
-        if self.timeout:
-            self.settimeout(self.timeout)
         if connect_to:
             self.http_connect(connect_to)
         self.sslinfo = None
@@ -254,6 +253,8 @@ class Pathoc(tcp.TCPClient):
             )
             if showssl:
                 print >> fp, str(self.sslinfo)
+        if self.timeout:
+            self.settimeout(self.timeout)
 
     def _resp_summary(self, resp):
         return "<< %s %s: %s bytes" % (

@@ -85,11 +85,10 @@ class DaemonTests(object):
             ("localhost", self.d.port),
             ssl=ssl,
             ws_read_limit=ws_read_limit,
+            timeout = timeout,
             fp = logfp
         )
         c.connect(connect_to)
-        if timeout:
-            c.settimeout(timeout)
         ret = []
         for i in specs:
             resp = c.request(i)

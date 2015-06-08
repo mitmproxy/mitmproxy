@@ -213,10 +213,9 @@ class CommonTests(tutils.DaemonTests):
 
     def test_websocket_frame(self):
         r, _ = self.pathoc(
-            ["ws:/p/", "wf:f'wf:b\"test\"'"],
+            ["ws:/p/", "wf:f'wf:b\"test\"':pa,1"],
             ws_read_limit=1
         )
-        print >> sys.stderr, r
         assert r[1].payload == "test"
 
     def test_websocket_frame_reflect_error(self):
