@@ -3,7 +3,7 @@ import time
 
 import pyparsing as pp
 
-from . import http, websockets, writer, exceptions
+from . import http, http2, websockets, writer, exceptions
 
 from exceptions import *
 from base import Settings
@@ -39,20 +39,24 @@ def parse_pathod(s):
     return itertools.chain(*[expand(i) for i in reqs])
 
 
-def parse_pathoc(s):
+def parse_pathoc(s, use_http2=False):
     try:
         s = s.decode("ascii")
     except UnicodeError:
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        reqs = pp.OneOrMore(
-            pp.Or(
-                [
-                    websockets.WebsocketClientFrame.expr(),
-                    http.Request.expr(),
-                ]
-            )
-        ).parseString(s, parseAll=True)
+        if use_http2:
+            expressions = [
+                # http2.Frame.expr(),
+                http2.Request.expr(),
+            ]
+        else:
+            expressions = [
+                websockets.WebsocketClientFrame.expr(),
+                http.Request.expr(),
+            ]
+
+        reqs = pp.OneOrMore(pp.Or(expressions)).parseString(s, parseAll=True)
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
     return itertools.chain(*[expand(i) for i in reqs])
