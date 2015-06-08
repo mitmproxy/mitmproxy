@@ -1,3 +1,4 @@
+import cStringIO
 import threading
 import Queue
 
@@ -13,6 +14,8 @@ class Daemon:
 
     def __init__(self, ssl=None, **daemonargs):
         self.q = Queue.Queue()
+        self.logfp = cStringIO.StringIO()
+        daemonargs["logfp"] = self.logfp
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()
         self.port = self.q.get(True, 5)
@@ -26,6 +29,7 @@ class Daemon:
         return self
 
     def __exit__(self, type, value, traceback):
+        self.logfp.truncate(0)
         self.shutdown()
         return False
 
@@ -41,6 +45,9 @@ class Daemon:
         """
         resp = requests.get("%s/api/info" % self.urlbase, verify=False)
         return resp.json()
+
+    def text_log(self):
+        return self.logfp.getvalue()
 
     def last_log(self):
         """
@@ -62,6 +69,7 @@ class Daemon:
         """
             Clear the log.
         """
+        self.logfp.truncate(0)
         resp = requests.get("%s/api/clear_log" % self.urlbase, verify=False)
         return resp.ok
 
@@ -84,7 +92,6 @@ class _PaThread(threading.Thread):
         self.server = pathod.Pathod(
             (self.iface, 0),
             ssl = self.ssl,
-            logfp = None,
             **self.daemonargs
         )
         self.name = "PathodThread (%s:%s)" % (

@@ -133,7 +133,8 @@ class PathodHandler(tcp.BaseHandler):
                 try:
                     wf_gen = language.parse_websocket_frame(nest)
                 except language.exceptions.ParseException, v:
-                    lg(
+                    log.write(
+                        self.logfp,
                         "Parse error in reflected frame specifcation:"
                         " %s" % v.msg
                     )

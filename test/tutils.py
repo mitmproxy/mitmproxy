@@ -75,13 +75,17 @@ class DaemonTests(object):
         ssl=None,
         ws_read_limit=None
     ):
+        """
+            Returns a (messages, text log) tuple.
+        """
         if ssl is None:
             ssl = self.ssl
+        logfp = cStringIO.StringIO()
         c = pathoc.Pathoc(
             ("localhost", self.d.port),
             ssl=ssl,
             ws_read_limit=ws_read_limit,
-            fp = None
+            fp = logfp
         )
         c.connect(connect_to)
         if timeout:
@@ -93,7 +97,7 @@ class DaemonTests(object):
                 ret.append(resp)
         for frm in c.wait():
             ret.append(frm)
-        return ret 
+        return ret, logfp.getvalue()
 
 @contextmanager
 def tmpdir(*args, **kwargs):

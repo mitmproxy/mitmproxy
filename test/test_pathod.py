@@ -59,7 +59,7 @@ class TestNotAfterConnect(tutils.DaemonTests):
     )
 
     def test_connect(self):
-        r = self.pathoc(
+        r, _ = self.pathoc(
             [r"get:'http://foo.com/p/202':da"],
             connect_to=("localhost", self.d.port)
         )
@@ -73,7 +73,8 @@ class TestCustomCert(tutils.DaemonTests):
     )
 
     def test_connect(self):
-        r = self.pathoc([r"get:/p/202"])[0]
+        r, _ = self.pathoc([r"get:/p/202"])
+        r = r[0]
         assert r.status_code == 202
         assert r.sslinfo
         assert "test.com" in str(r.sslinfo.certchain[0].get_subject())
@@ -86,7 +87,8 @@ class TestSSLCN(tutils.DaemonTests):
     )
 
     def test_connect(self):
-        r = self.pathoc([r"get:/p/202"])[0]
+        r, _ = self.pathoc([r"get:/p/202"])
+        r = r[0]
         assert r.status_code == 202
         assert r.sslinfo
         assert r.sslinfo.certchain[0].get_subject().CN == "foo.com"
@@ -131,8 +133,8 @@ class CommonTests(tutils.DaemonTests):
         assert "too large" in l["response"]["msg"]
 
     def test_preline(self):
-        r = self.pathoc([r"get:'/p/200':i0,'\r\n'"])[0]
-        assert r.status_code == 200
+        r, _ = self.pathoc([r"get:'/p/200':i0,'\r\n'"])
+        assert r[0].status_code == 200
 
     def test_info(self):
         assert tuple(self.d.info()["version"]) == version.IVERSION
@@ -199,31 +201,43 @@ class CommonTests(tutils.DaemonTests):
         assert "File access denied" in rsp.content
 
     def test_proxy(self):
-        r = self.pathoc([r"get:'http://foo.com/p/202':da"])[0]
-        assert r.status_code == 202
+        r, _ = self.pathoc([r"get:'http://foo.com/p/202':da"])
+        assert r[0].status_code == 202
 
     def test_websocket(self):
-        r = self.pathoc(["ws:/p/"], ws_read_limit=0)[0]
-        assert r.status_code == 101
+        r, _ = self.pathoc(["ws:/p/"], ws_read_limit=0)
+        assert r[0].status_code == 101
 
-        r = self.pathoc(["ws:/p/ws"], ws_read_limit=0)[0]
-        assert r.status_code == 101
+        r, _ = self.pathoc(["ws:/p/ws"], ws_read_limit=0)
+        assert r[0].status_code == 101
 
     def test_websocket_frame(self):
-        r = self.pathoc(["ws:/p/", "wf:f'wf:b\"test\"'"], ws_read_limit=1)
+        r, _ = self.pathoc(["ws:/p/", "wf:f'wf:b\"test\"'"], ws_read_limit=1)
         assert r[1].payload == "test"
+
+    def test_websocket_frame_reflect_error(self):
+        r, _ = self.pathoc(
+            ["ws:/p/", "wf:-mask:knone:f'wf:b@10':i13,'a'"],
+            ws_read_limit = 1,
+            timeout = 1
+        )
+        assert "Parse error" in self.d.text_log()
+
+    def test_websocket_frame_disconnect_error(self):
+        self.pathoc(["ws:/p/", "wf:b@10:d3"], ws_read_limit=0)
+        assert self.d.last_log()
 
 
 class TestDaemon(CommonTests):
     ssl = False
 
     def test_connect(self):
-        r = self.pathoc(
+        r, _ = self.pathoc(
             [r"get:'http://foo.com/p/202':da"],
             connect_to=("localhost", self.d.port),
             ssl=True
-        )[0]
-        assert r.status_code == 202
+        )
+        assert r[0].status_code == 202
 
     def test_connect_err(self):
         tutils.raises(
@@ -249,6 +263,6 @@ class TestDaemonSSL(CommonTests):
         assert "SSL" in l["msg"]
 
     def test_ssl_cipher(self):
-        r = self.pathoc([r"get:/p/202"])[0]
-        assert r.status_code == 202
+        r, _ = self.pathoc([r"get:/p/202"])
+        assert r[0].status_code == 202
         assert self.d.last_log()["cipher"][1] > 0

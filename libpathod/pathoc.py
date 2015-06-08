@@ -1,3 +1,4 @@
+import contextlib
 import sys
 import os
 import itertools
@@ -86,8 +87,11 @@ class WebsocketFrameReader(threading.Thread):
             logfp,
             showresp,
             hexdump,
-            ws_read_limit):
+            ws_read_limit,
+            timeout
+    ):
         threading.Thread.__init__(self)
+        self.timeout = timeout
         self.ws_read_limit = ws_read_limit
         self.logfp = logfp
         self.showresp = showresp
@@ -104,28 +108,33 @@ class WebsocketFrameReader(threading.Thread):
             None
         )
 
-    def run(self):
-        while True:
-            if self.ws_read_limit == 0:
-                break
-            r, _, _ = select.select([self.rfile], [], [], 0.05)
-            try:
-                self.terminate.get_nowait()
-                break
-            except Queue.Empty:
-                pass
-            for rfile in r:
-                with self.log(rfile) as log:
-                    try:
-                        frm = websockets.Frame.from_file(self.rfile)
-                    except tcp.NetLibError:
-                        self.ws_read_limit = 0
-                        break
-                    self.frames_queue.put(frm)
-                    log("<< %s" % frm.header.human_readable())
-                    if self.ws_read_limit is not None:
-                        self.ws_read_limit -= 1
+    @contextlib.contextmanager
+    def terminator(self):
+        yield
         self.frames_queue.put(None)
+
+    def run(self):
+        starttime = time.time()
+        with self.terminator():
+            while True:
+                if self.ws_read_limit == 0:
+                    return
+                r, _, x = select.select([self.rfile], [], [], 0.05)
+                if not r and time.time() - starttime > self.timeout:
+                    return
+                try:
+                    self.terminate.get_nowait()
+                    return
+                except Queue.Empty:
+                    pass
+                for rfile in r:
+                    with self.log(rfile) as log:
+                        frm = websockets.Frame.from_file(self.rfile)
+                        self.frames_queue.put(frm)
+                        log("<< %s" % frm.header.human_readable())
+                        if self.ws_read_limit is not None:
+                            self.ws_read_limit -= 1
+                        starttime = time.time()
 
 
 class Pathoc(tcp.TCPClient):
@@ -142,6 +151,9 @@ class Pathoc(tcp.TCPClient):
 
             # Websockets
             ws_read_limit = None,
+
+            # Network
+            timeout = None,
 
             # Output control
             showreq = False,
@@ -177,6 +189,8 @@ class Pathoc(tcp.TCPClient):
         self.sslinfo = None
 
         self.ws_read_limit = ws_read_limit
+
+        self.timeout = timeout
 
         self.showreq = showreq
         self.showresp = showresp
@@ -219,6 +233,8 @@ class Pathoc(tcp.TCPClient):
             an HTTP CONNECT request.
         """
         tcp.TCPClient.connect(self)
+        if self.timeout:
+            self.settimeout(self.timeout)
         if connect_to:
             self.http_connect(connect_to)
         self.sslinfo = None
@@ -313,7 +329,8 @@ class Pathoc(tcp.TCPClient):
                 self.fp,
                 self.showresp,
                 self.hexdump,
-                self.ws_read_limit
+                self.ws_read_limit,
+                self.timeout
             )
             self.ws_framereader.start()
         return resp
@@ -412,6 +429,7 @@ def main(args):  # pragma: nocover
                 explain = args.explain,
                 hexdump = args.hexdump,
                 ignorecodes = args.ignorecodes,
+                timeout = args.timeout,
                 ignoretimeout = args.ignoretimeout,
                 showsummary = True
             )
@@ -424,8 +442,6 @@ def main(args):  # pragma: nocover
             except PathocError as v:
                 print >> sys.stderr, str(v)
                 sys.exit(1)
-            if args.timeout:
-                p.settimeout(args.timeout)
             for spec in playlist:
                 if args.explain or args.memo:
                     spec = spec.freeze(p.settings)
