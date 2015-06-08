@@ -31,9 +31,11 @@ def test_pathoc(perror):
 
     a = cmdline.args_pathoc(["pathoc", "foo.com", "get:/", "--http2"])
     assert a.use_http2 == True
+    assert a.ssl == True
 
     a = cmdline.args_pathoc(["pathoc", "foo.com", "get:/", "--http2-skip-connection-preface"])
     assert a.use_http2 == True
+    assert a.ssl == True
     assert a.http2_skip_connection_preface == True
 
     a = cmdline.args_pathoc(["pathoc", "-c", "foo", "foo.com:8888", "get:/"])

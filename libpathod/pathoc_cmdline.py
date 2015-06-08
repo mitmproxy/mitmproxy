@@ -198,6 +198,9 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     if args.http2_skip_connection_preface:
         args.use_http2 = True
 
+    if args.use_http2:
+        args.ssl = True
+
     reqs = []
     for r in args.requests:
         if os.path.isfile(r):
