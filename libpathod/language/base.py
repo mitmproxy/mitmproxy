@@ -15,13 +15,15 @@ class Settings:
         staticdir = None,
         unconstrained_file_access = False,
         request_host = None,
-        websocket_key = None
+        websocket_key = None,
+        protocol = None,
     ):
+        self.is_client = is_client
         self.staticdir = staticdir
         self.unconstrained_file_access = unconstrained_file_access
         self.request_host = request_host
-        self.websocket_key = websocket_key
-        self.is_client = is_client
+        self.websocket_key = websocket_key  # TODO: refactor this into the protocol
+        self.protocol = protocol
 
 
 Sep = pp.Optional(pp.Literal(":")).suppress()

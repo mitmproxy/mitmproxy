@@ -17,6 +17,9 @@ import language.http
 import language.websockets
 from . import utils, log
 
+import logging
+logging.getLogger("hpack").setLevel(logging.WARNING)
+
 
 class PathocError(Exception):
     pass
@@ -187,12 +190,7 @@ class Pathoc(tcp.TCPClient):
             ignorecodes: Sequence of return codes to ignore
         """
         tcp.TCPClient.__init__(self, address)
-        self.settings = language.Settings(
-            staticdir = os.getcwd(),
-            unconstrained_file_access = True,
-            request_host = self.address.host,
-            is_client = True
-        )
+
         self.ssl, self.sni = ssl, sni
         self.clientcert = clientcert
         self.sslversion = utils.SSLVERSIONS[sslversion]
@@ -216,6 +214,20 @@ class Pathoc(tcp.TCPClient):
         self.fp = fp
 
         self.ws_framereader = None
+
+        if self.use_http2:
+            self.protocol = http2.HTTP2Protocol(self)
+        else:
+            # TODO: create HTTP or Websockets protocol
+            self.protocol = None
+
+        self.settings = language.Settings(
+            is_client = True,
+            staticdir = os.getcwd(),
+            unconstrained_file_access = True,
+            request_host = self.address.host,
+            protocol = self.protocol,
+        )
 
     def log(self):
         return log.Log(
@@ -257,9 +269,9 @@ class Pathoc(tcp.TCPClient):
         self.sslinfo = None
         if self.ssl:
             try:
-                alpn_protos=[b'http1.1']
+                alpn_protos = [b'http1.1']  # TODO: move to a new HTTP1 protocol
                 if self.use_http2:
-                    alpn_protos.append(HTTP2Protocol.ALPN_PROTO_H2)
+                    alpn_protos.append(http2.HTTP2Protocol.ALPN_PROTO_H2)
 
                 self.convert_to_ssl(
                     sni=self.sni,
@@ -280,9 +292,9 @@ class Pathoc(tcp.TCPClient):
                 print >> fp, str(self.sslinfo)
 
             if self.use_http2:
-                h2.HTTP2Protocol.check_alpn(self)
+                self.protocol.check_alpn()
                 if not self.http2_skip_connection_preface:
-                    h2.HTTP2Protocol.send_connection_preface(self)
+                    self.protocol.perform_connection_preface()
 
         if self.timeout:
             self.settimeout(self.timeout)
@@ -368,15 +380,20 @@ class Pathoc(tcp.TCPClient):
             try:
                 req = language.serve(r, self.wfile, self.settings)
                 self.wfile.flush()
-                resp = list(
-                    http.read_response(
-                        self.rfile,
-                        req["method"],
-                        None
+
+                if self.use_http2:
+                    status_code, headers, body = self.protocol.read_response()
+                    resp = Response("HTTP/2", status_code, "", headers, body, self.sslinfo)
+                else:
+                    resp = list(
+                        http.read_response(
+                            self.rfile,
+                            req["method"],
+                            None
+                        )
                     )
-                )
-                resp.append(self.sslinfo)
-                resp = Response(*resp)
+                    resp.append(self.sslinfo)
+                    resp = Response(*resp)
             except http.HttpError, v:
                 log("Invalid server response: %s" % v)
                 raise
@@ -405,7 +422,8 @@ class Pathoc(tcp.TCPClient):
             May raise http.HTTPError, tcp.NetLibError
         """
         if isinstance(r, basestring):
-            r = language.parse_pathoc(r).next()
+            r = language.parse_pathoc(r, self.use_http2).next()
+
         if isinstance(r, language.http.Request):
             if r.ws:
                 return self.websocket_start(r)
@@ -413,6 +431,10 @@ class Pathoc(tcp.TCPClient):
                 return self.http(r)
         elif isinstance(r, language.websockets.WebsocketFrame):
             self.websocket_send_frame(r)
+        elif isinstance(r, language.http2.Request):
+            return self.http(r)
+        # elif isinstance(r, language.http2.Frame):
+            # TODO: do something
 
 
 def main(args):  # pragma: nocover
