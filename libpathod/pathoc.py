@@ -346,10 +346,14 @@ class Pathoc(tcp.TCPClient):
                 )
                 resp.append(self.sslinfo)
                 resp = Response(*resp)
+            except http.HttpError, v:
+                log("Invalid server response: %s" % v)
+                raise
             except tcp.NetLibTimeout:
                 if self.ignoretimeout:
                     log("Timeout (ignored)")
                     return None
+                log("Timeout")
                 raise
             finally:
                 if resp:

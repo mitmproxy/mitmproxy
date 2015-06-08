@@ -145,7 +145,7 @@ class TestDaemon(_TestDaemon):
         assert "202" in self.tval(["get:'/p/202:b@1'"], ignorecodes=[200, 201])
 
     def test_timeout(self):
-        assert "Timeout" in self.tval(["get:'/p/200:p0,10'"], timeout=0.01)
+        assert "Timeout" in self.tval(["get:'/p/200:p0,100'"], timeout=0.01)
         assert "HTTP" in self.tval(
             ["get:'/p/200:p5,100'"],
             showresp=True,

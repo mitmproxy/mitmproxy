@@ -14,6 +14,7 @@ def write(fp, lines):
         )
         for i in lines:
             fp.write(i)
+        fp.write("\n")
         fp.flush()
 
 
@@ -44,22 +45,13 @@ class Log:
         if rlog:
             self("Bytes read:")
             self.dump(rlog, self.hex)
-        if exc_type == netlib.tcp.NetLibTimeout:
-            self("Timeout")
-        elif exc_type in (
-            netlib.tcp.NetLibDisconnect,
-            netlib.http.HttpErrorConnClosed
-        ):
-            self("Disconnected")
-        elif exc_type == netlib.http.HttpError:
-            self("HTTP Error: %s" % exc_value.message)
-        write(
-            self.fp,
-            [
-                "\n".join(self.lines),
-                "\n"
-            ]
-        )
+        if self.lines:
+            write(
+                self.fp,
+                [
+                    "\n".join(self.lines),
+                ]
+            )
         if exc_value:
             raise exc_value
 

@@ -304,9 +304,10 @@ class PathodHandler(tcp.BaseHandler):
                             )])
 
             if anchor_gen:
-                lg("crafting spec: %s" % anchor_gen)
+                spec = anchor_gen.next()
+                lg("crafting spec: %s" % spec)
                 nexthandler, retlog["response"] = self.http_serve_crafted(
-                    anchor_gen.next()
+                    spec
                 )
                 if nexthandler and websocket_key:
                     return self.handle_websocket, retlog

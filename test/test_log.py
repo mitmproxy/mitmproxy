@@ -16,7 +16,7 @@ def test_disconnect():
     rw = DummyIO()
     try:
         with log.Log(outf, False, rw, rw) as lg:
-            raise netlib.tcp.NetLibDisconnect()
+            lg("Test")
     except netlib.tcp.NetLibDisconnect:
         pass
-    assert "Disconnected" in outf.getvalue()
+    assert "Test" in outf.getvalue()

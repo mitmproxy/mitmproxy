@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-import itertools
+import sys
 import argparse
 import os
 import os.path
-import sys
 import re
 from netlib import http_uastrings
 from . import pathoc, pathod, version, utils, language
