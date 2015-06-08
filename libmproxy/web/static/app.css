@@ -59,6 +59,7 @@ body,
 }
 .main-view {
   flex: 1 1 auto;
+  height: 0;
   display: flex;
   flex-direction: row;
 }

@@ -18,6 +18,11 @@ html, body, #container {
 .main-view {
     flex: 1 1 auto;
 
+    // All children of #container need an explicit height
+    // If we don't set this, the scrollbars disappear
+    // (https://github.com/mitmproxy/mitmproxy/issues/615)
+    height: 0;
+
     display: flex;
     flex-direction: row;
 
