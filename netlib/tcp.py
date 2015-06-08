@@ -6,6 +6,8 @@ import sys
 import threading
 import time
 import traceback
+
+import OpenSSL
 from OpenSSL import SSL
 
 from . import certutils
@@ -401,16 +403,17 @@ class _Connection(object):
         if log_ssl_key:
             context.set_info_callback(log_ssl_key)
 
-        # advertise application layer protocols
-        if alpn_protos is not None:
-            context.set_alpn_protos(alpn_protos)
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+            # advertise application layer protocols
+            if alpn_protos is not None:
+                context.set_alpn_protos(alpn_protos)
 
-        # select application layer protocol
-        if alpn_select is not None:
-            def alpn_select_f(conn, options):
-                return bytes(alpn_select)
+            # select application layer protocol
+            if alpn_select is not None:
+                def alpn_select_f(conn, options):
+                    return bytes(alpn_select)
 
-            context.set_alpn_select_callback(alpn_select_f)
+                context.set_alpn_select_callback(alpn_select_f)
 
         return context
 
