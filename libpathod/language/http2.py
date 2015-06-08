@@ -102,7 +102,7 @@ class Request(message.Message):
 
     def values(self, settings):
         return settings.protocol.create_request(
-            self.method.value.get_generator(settings),
+            self.method.string(),
             self.path,
             self.headers,
             self.body)
@@ -111,9 +111,5 @@ class Request(message.Message):
         return ":".join([i.spec() for i in self.tokens])
 
 
-# class H2F(base.CaselessLiteral):
-#     TOK = "h2f"
-#
-#
-# class WebsocketFrame(message.Message):
+# class Frame(message.Message):
 #     pass
