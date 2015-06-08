@@ -370,12 +370,18 @@ class TestALPN(test.ServerTestBase):
     )
 
     if OpenSSL._util.lib.Cryptography_HAS_ALPN:
-
         def test_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
             c.convert_to_ssl(alpn_protos=["foobar"])
             assert c.get_alpn_proto_negotiated() == "foobar"
+
+    else:
+        def test_none_alpn(self):
+            c = tcp.TCPClient(("127.0.0.1", self.port))
+            c.connect()
+            c.convert_to_ssl(alpn_protos=["foobar"])
+            assert c.get_alpn_proto_negotiated() == None
 
 
 class TestSSLTimeOut(test.ServerTestBase):

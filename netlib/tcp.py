@@ -499,7 +499,10 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        return self.connection.get_alpn_proto_negotiated()
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+            return self.connection.get_alpn_proto_negotiated()
+        else:
+            return None
 
 
 class BaseHandler(_Connection):
