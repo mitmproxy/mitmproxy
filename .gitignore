@@ -10,5 +10,6 @@ MANIFEST
 .idea/
 __pycache__
 _cffi__*
+.eggs/
 netlib.egg-info/
 pathod/

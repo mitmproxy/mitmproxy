@@ -61,7 +61,6 @@ class HTTP2Protocol(object):
         assert settings_ack_frame.flags & frame.Frame.FLAG_ACK
         assert len(settings_ack_frame.settings) == 0
 
-
     def next_stream_id(self):
         if self.current_stream_id is None:
             self.current_stream_id = 1
@@ -89,7 +88,10 @@ class HTTP2Protocol(object):
 
             self.http2_settings[setting] = value
 
-        self.send_frame(frame.SettingsFrame(state=self, flags=frame.Frame.FLAG_ACK))
+        self.send_frame(
+            frame.SettingsFrame(
+                state=self,
+                flags=frame.Frame.FLAG_ACK))
 
     def _create_headers(self, headers, stream_id, end_stream=True):
         # TODO: implement max frame size checks and sending in chunks
