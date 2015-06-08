@@ -1,3 +1,4 @@
+import sys
 import struct
 from functools import reduce
 from hpack.hpack import Encoder, Decoder
@@ -78,6 +79,9 @@ class Frame(object):
         length = (fields[0] << 8) + fields[1]
         flags = fields[3]
         stream_id = fields[4]
+
+        if raw_header[:4] == b'HTTP':  # pragma no cover
+            print >> sys.stderr, "WARNING: This looks like an HTTP/1 connection!"
 
         self._check_frame_size(length, state)
 

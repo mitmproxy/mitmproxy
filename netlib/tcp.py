@@ -501,7 +501,7 @@ class TCPClient(_Connection):
     def get_alpn_proto_negotiated(self):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN:
             return self.connection.get_alpn_proto_negotiated()
-        else:
+        else: # pragma no cover
             return None
 
 
