@@ -216,6 +216,10 @@ class Pathoc(tcp.TCPClient):
         self.ws_framereader = None
 
         if self.use_http2:
+            if not OpenSSL._util.lib.Cryptography_HAS_ALPN:  # pragma: nocover
+                print >> sys.stderr, "HTTP/2 requires ALPN support. Please use OpenSSL >= 1.0.2."
+                print >> sys.stderr, "Pathoc might not be working as expected without ALPN."
+
             self.protocol = http2.HTTP2Protocol(self)
         else:
             # TODO: create HTTP or Websockets protocol
@@ -259,7 +263,7 @@ class Pathoc(tcp.TCPClient):
             an HTTP CONNECT request.
         """
         if self.use_http2 and not self.ssl:
-            raise ValueError("HTTP2 without SSL is not supported.")
+            raise NotImplementedError("HTTP2 without SSL is not supported.")
 
         tcp.TCPClient.connect(self)
 
