@@ -37,7 +37,6 @@ before_script:
 
 script:
   - "nosetests --with-cov --cov-report term-missing"
-  - "./check_coding_style.sh"
 
 after_success:
   - coveralls
