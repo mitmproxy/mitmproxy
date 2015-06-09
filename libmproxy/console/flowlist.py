@@ -10,6 +10,7 @@ def _mkhelp():
         ("A", "accept all intercepted flows"),
         ("a", "accept this intercepted flow"),
         ("b", "save request/response body"),
+        ("Z", "copy request as curl command"),
         ("C", "clear flow list or eventlog"),
         ("d", "delete flow"),
         ("D", "duplicate flow"),
@@ -232,6 +233,8 @@ class ConnectionItem(urwid.WidgetWrap):
             )
         elif key == "P":
             common.ask_copy_part("a", self.flow, self.master, self.state)
+        elif key == "Z":
+            common.copy_as_curl_command(self.flow)
         elif key == "b":
             common.ask_save_body(None, self.master, self.state, self.flow)
         else:

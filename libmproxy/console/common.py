@@ -263,6 +263,52 @@ def copy_flow_format_data(part, scope, flow):
                     raise ValueError("Unknown part: {}".format(part))
     return data, False
 
+def copy_as_curl_command(flow):
+
+    if flow.request.content is None or flow.request.content == CONTENT_MISSING:
+        return None, "Request content is missing"
+
+    headerString = ""
+    for k,v in flow.request.headers:
+      headerString += " -H \"" + k + ":" + v + "\" "
+
+    data = "curl"
+
+    if flow.request.method != "GET":
+      data += " -X " + flow.request.method
+
+    full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
+    data += headerString + " \"" + full_url + "\""
+
+    if flow.request.content != None and flow.request.content != "":
+      data += " --data-binary " + "'" + flow.request.content + "'"
+
+    copy_to_clipboard_or_prompt(data)
+
+
+def copy_to_clipboard_or_prompt(data):
+    # pyperclip calls encode('utf-8') on data to be copied without checking.
+    # if data are already encoded that way UnicodeDecodeError is thrown.
+    toclip = ""
+    try:
+        toclip = data.decode('utf-8')
+    except (UnicodeDecodeError):
+        toclip = data
+
+    try:
+        pyperclip.copy(toclip)
+    except (RuntimeError, UnicodeDecodeError, AttributeError):
+        def save(k):
+            if k == "y":
+                ask_save_path("Save data", data, master, state)
+        signals.status_prompt_onekey.send(
+            prompt = "Cannot copy data to clipboard. Save as file?",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = save
+        )
 
 def copy_flow(part, scope, flow, master, state):
     """
@@ -284,28 +330,7 @@ def copy_flow(part, scope, flow, master, state):
             signals.status_message.send(message="No contents to copy.")
         return
 
-    # pyperclip calls encode('utf-8') on data to be copied without checking.
-    # if data are already encoded that way UnicodeDecodeError is thrown.
-    toclip = ""
-    try:
-        toclip = data.decode('utf-8')
-    except (UnicodeDecodeError):        
-        toclip = data
-
-    try:
-        pyperclip.copy(toclip)
-    except (RuntimeError, UnicodeDecodeError, AttributeError):
-        def save(k):
-            if k == "y":
-                ask_save_path("Save data", data, master, state)
-        signals.status_prompt_onekey.send(
-            prompt = "Cannot copy data to clipboard. Save as file?",
-            keys = (
-                ("yes", "y"),
-                ("no", "n"),
-            ),
-            callback = save
-        )
+    copy_to_clipboard_or_prompt(data)
 
 
 def ask_copy_part(scope, flow, master, state):
