@@ -194,7 +194,7 @@ def raw_format_flow(f, focus, extended, padding):
 
 
 # Save file to disk
-def save_data(path, data, master, state):
+def save_data(path, data):
     if not path:
         return
     try:
@@ -204,32 +204,32 @@ def save_data(path, data, master, state):
         signals.status_message.send(message=v.strerror)
 
 
-def ask_save_overwite(path, data, master, state):
+def ask_save_overwrite(path, data):
     if not path:
         return
     path = os.path.expanduser(path)
     if os.path.exists(path):
-        def save_overwite(k):
+        def save_overwrite(k):
             if k == "y":
-                save_data(path, data, master, state)
+                save_data(path, data)
 
         signals.status_prompt_onekey.send(
-            prompt = "'" + path + "' already exists. Overwite?",
+            prompt = "'" + path + "' already exists. Overwrite?",
             keys = (
                 ("yes", "y"),
                 ("no", "n"),
             ),
-            callback = save_overwite
+            callback = save_overwrite
         )
     else:
-        save_data(path, data, master, state)
+        save_data(path, data)
 
 
-def ask_save_path(prompt, data, master, state):
+def ask_save_path(prompt, data):
     signals.status_prompt_path.send(
         prompt = prompt,
-        callback = ask_save_overwite,
-        args = (data, master, state)
+        callback = ask_save_overwrite,
+        args = (data)
     )
 
 
@@ -300,7 +300,7 @@ def copy_to_clipboard_or_prompt(data):
     except (RuntimeError, UnicodeDecodeError, AttributeError):
         def save(k):
             if k == "y":
-                ask_save_path("Save data", data, master, state)
+                ask_save_path("Save data", data)
         signals.status_prompt_onekey.send(
             prompt = "Cannot copy data to clipboard. Save as file?",
             keys = (
@@ -379,16 +379,12 @@ def ask_save_body(part, master, state, flow):
     elif part == "q" and request_has_content:
         ask_save_path(
             "Save request content",
-            flow.request.get_decoded_content(),
-            master,
-            state
+            flow.request.get_decoded_content()
         )
     elif part == "s" and response_has_content:
         ask_save_path(
             "Save response content",
-            flow.response.get_decoded_content(),
-            master,
-            state
+            flow.response.get_decoded_content()
         )
     else:
         signals.status_message.send(message="No content to save.")
