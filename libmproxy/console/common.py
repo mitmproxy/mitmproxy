@@ -283,7 +283,7 @@ def copy_as_curl_command(flow):
 
     headerString = ""
     for k,v in flow.request.headers:
-      headerString += " -H \"" + k + ":" + v + "\" "
+      headerString += " -H '" + k + ":" + v + "' "
 
     data = "curl"
 
@@ -291,7 +291,7 @@ def copy_as_curl_command(flow):
       data += " -X " + flow.request.method
 
     full_url = flow.request.scheme + "://" + flow.request.host + flow.request.path
-    data += headerString + " \"" + full_url + "\""
+    data += " " + headerString + "'" + full_url + "'"
 
     if flow.request.content != None and flow.request.content != "":
       data += " --data-binary " + "'" + flow.request.content + "'"
