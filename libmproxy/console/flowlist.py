@@ -121,6 +121,11 @@ class ConnectionItem(urwid.WidgetWrap):
                 prompt = "Save all flows to",
                 callback = self.master.save_flows
             )
+        if k == "m":
+            signals.status_prompt_path.send(
+                prompt = "Save marked flows to",
+                callback = self.master.save_marked_flows
+            )
         else:
             signals.status_prompt_path.send(
                 prompt = "Save this flow to",
@@ -220,6 +225,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 keys = (
                     ("all flows", "a"),
                     ("this flow", "t"),
+                    ("marked flows", "m"),
                 ),
                 callback = self.save_flows_prompt,
             )
