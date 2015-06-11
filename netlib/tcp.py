@@ -404,16 +404,17 @@ class _Connection(object):
             context.set_info_callback(log_ssl_key)
 
         if OpenSSL._util.lib.Cryptography_HAS_ALPN:
-            # advertise application layer protocols
             if alpn_protos is not None:
+                # advertise application layer protocols
                 context.set_alpn_protos(alpn_protos)
-
-            # select application layer protocol
-            if alpn_select is not None:
-                def alpn_select_f(conn, options):
-                    return bytes(alpn_select)
-
-                context.set_alpn_select_callback(alpn_select_f)
+            elif alpn_select is not None:
+                # select application layer protocol
+                def alpn_select_callback(conn, options):
+                    if alpn_select in options:
+                        return bytes(alpn_select)
+                    else:
+                        return options[0]
+                context.set_alpn_select_callback(alpn_select_callback)
 
         return context
 
@@ -611,6 +612,12 @@ class BaseHandler(_Connection):
 
     def settimeout(self, n):
         self.connection.settimeout(n)
+
+    def get_alpn_proto_negotiated(self):
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
+            return self.connection.get_alpn_proto_negotiated()
+        else:  # pragma no cover
+            return None
 
 
 class TCPServer(object):
