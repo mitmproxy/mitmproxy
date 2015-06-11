@@ -24,7 +24,7 @@ class Palette:
         'method', 'focus',
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
         'error',
-        'header', 'highlight', 'intercept', 'replay',
+        'header', 'highlight', 'intercept', 'replay', 'mark',
 
         # Hex view
         'offset',
@@ -104,6 +104,7 @@ class LowDark(Palette):
         highlight = ('white,bold', 'default'),
         intercept = ('brown', 'default'),
         replay = ('light green', 'default'),
+        mark = ('light red', 'default'),
 
         # Hex view
         offset = ('dark cyan', 'default'),
@@ -167,6 +168,7 @@ class LowLight(Palette):
         highlight = ('black,bold', 'default'),
         intercept = ('brown', 'default'),
         replay = ('dark green', 'default'),
+        mark = ('dark red', 'default'),
 
         # Hex view
         offset = ('dark blue', 'default'),
