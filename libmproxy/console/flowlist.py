@@ -181,10 +181,6 @@ class ConnectionItem(urwid.WidgetWrap):
         elif key == "m":
             self.flow.toggle_mark()
             signals.flowlist_change.send(self)
-            if self.flow.marked:
-                signals.status_message.send(message="Flow is now marked")
-            else:
-                signals.status_message.send(message="Flow is now not marked")
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:

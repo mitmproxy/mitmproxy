@@ -494,8 +494,19 @@ class FlowStore(FlowList):
         self._recalculate_views()
 
     def _clear(self):
+        marked_flows = []
+        for f in self._list:
+            if f.marked:
+                marked_flows.append(f)
+        if len(marked_flows) == len(self._list):
+            marked_flows = []
+                
         self._list = []
         self._set = set()
+        
+        for f in marked_flows:
+            self._add(f)
+            
         self._recalculate_views()
 
     def _recalculate_views(self):
