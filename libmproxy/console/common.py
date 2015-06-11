@@ -115,6 +115,7 @@ def fcol(s, attr):
 if urwid.util.detected_encoding:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
+    SYMBOL_MARK = "==="
 else:
     SYMBOL_REPLAY = u"[r]"
     SYMBOL_RETURN = u"<-"
@@ -133,6 +134,10 @@ def raw_format_flow(f, focus, extended, padding):
         )
     else:
         req.append(fcol(">>" if focus else "  ", "focus"))
+        
+    if f["marked"]:
+        req.append(fcol(SYMBOL_MARK, "mark"))
+
     if f["req_is_replay"]:
         req.append(fcol(SYMBOL_REPLAY, "replay"))
     req.append(fcol(f["req_method"], "method"))
@@ -384,6 +389,8 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
 
         err_msg = f.error.msg if f.error else None,
         resp_code = f.response.code if f.response else None,
+        
+        marked = f.marked,
     )
     if f.response:
         if f.response.content:

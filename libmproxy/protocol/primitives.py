@@ -77,6 +77,7 @@ class Flow(stateobject.StateObject):
         """@type: bool"""
         self._backup = None
         self.reply = None
+        self.marked = False
 
     _stateobject_attributes = dict(
         id=str,
@@ -165,6 +166,12 @@ class Flow(stateobject.StateObject):
         self.intercepted = False
         self.reply()
         master.handle_accept_intercept(self)
+        
+    def toggle_mark(self):
+        if self.marked:
+            self.marked = False
+        else:
+            self.marked = True
 
 
 class ProtocolHandler(object):
