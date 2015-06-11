@@ -115,11 +115,11 @@ def fcol(s, attr):
 if urwid.util.detected_encoding:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
-    SYMBOL_MARK = u"[M] \u2192"
+    SYMBOL_MARK = u"\u25cf"
 else:
     SYMBOL_REPLAY = u"[r]"
     SYMBOL_RETURN = u"<-"
-    SYMBOL_MARK = "[M] ==>"
+    SYMBOL_MARK = "[m]"
 
 
 def raw_format_flow(f, focus, extended, padding):
