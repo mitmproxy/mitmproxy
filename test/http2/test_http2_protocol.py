@@ -50,7 +50,39 @@ class TestCheckALPNMismatch(test.ServerTestBase):
             tutils.raises(NotImplementedError, protocol.check_alpn)
 
 
-class TestPerformConnectionPreface(test.ServerTestBase):
+class TestPerformServerConnectionPreface(test.ServerTestBase):
+    class handler(tcp.BaseHandler):
+
+        def handle(self):
+            # send magic
+            self.wfile.write(\
+                '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'.decode('hex'))
+            self.wfile.flush()
+
+            # send empty settings frame
+            self.wfile.write('000000040000000000'.decode('hex'))
+            self.wfile.flush()
+
+            # check empty settings frame
+            assert self.rfile.read(9) ==\
+                '000000040000000000'.decode('hex')
+
+            # check settings acknowledgement
+            assert self.rfile.read(9) == \
+                '000000040100000000'.decode('hex')
+
+            # send settings acknowledgement
+            self.wfile.write('000000040100000000'.decode('hex'))
+            self.wfile.flush()
+
+    def test_perform_server_connection_preface(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        protocol = http2.HTTP2Protocol(c)
+        protocol.perform_server_connection_preface()
+
+
+class TestPerformClientConnectionPreface(test.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -74,14 +106,11 @@ class TestPerformConnectionPreface(test.ServerTestBase):
             self.wfile.write('000000040100000000'.decode('hex'))
             self.wfile.flush()
 
-    ssl = True
-
-    def test_perform_connection_preface(self):
+    def test_perform_client_connection_preface(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
-        c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c)
-        protocol.perform_connection_preface()
+        protocol.perform_client_connection_preface()
 
 
 class TestStreamIds():
