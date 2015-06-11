@@ -367,10 +367,6 @@ class Request(_HTTPMessage):
         return ":".join([i.spec() for i in self.tokens])
 
 
-class PathodErrorResponse(Response):
-    pass
-
-
 def make_error_response(reason, body=None):
     tokens = [
         Code("800"),
@@ -381,4 +377,4 @@ def make_error_response(reason, body=None):
         Reason(base.TokValueLiteral(reason)),
         Body(base.TokValueLiteral("pathod error: " + (body or reason))),
     ]
-    return PathodErrorResponse(tokens)
+    return Response(tokens)

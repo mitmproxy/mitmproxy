@@ -109,12 +109,11 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
         help="SSL cipher specification"
     )
     group.add_argument(
-        "--sslversion", dest="sslversion", type=int, default=4,
-        choices=[1, 2, 3, 4],
-        help="""
-            Use a specified protocol - TLSv1, SSLv2, SSLv3, SSLv23. Default
-            to SSLv23.
-        """
+        "--sslversion", dest="sslversion", type=str, default='SSLv23',
+        choices=utils.SSLVERSIONS.keys(),
+        help=""""
+            Use a specified protocol - TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
+            Default to SSLv23."""
     )
 
     group = parser.add_argument_group(
@@ -155,6 +154,10 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     group.add_argument(
         "-x", dest="hexdump", action="store_true", default=False,
         help="Output in hexdump format"
+    )
+    group.add_argument(
+        "--http2-framedump", dest="http2_framedump", action="store_true", default=False,
+        help="Output all received & sent HTTP/2 frames"
     )
 
     args = parser.parse_args(argv[1:])

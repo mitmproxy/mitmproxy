@@ -230,9 +230,6 @@ class TestDaemon(_TestDaemon):
 
 class TestDaemonHTTP2(_TestDaemon):
     ssl = True
-    ssloptions = pathod.SSLOptions(
-        alpn_select = http2.HTTP2Protocol.ALPN_PROTO_H2,
-    )
 
     def test_http2(self):
         c = pathoc.Pathoc(
@@ -270,5 +267,5 @@ class TestDaemonHTTP2(_TestDaemon):
             use_http2 = True,
         )
         c.connect()
-        resp = c.request("get:/api/info")
-        assert tuple(json.loads(resp.content)["version"]) == version.IVERSION
+        resp = c.request("get:/p/200")
+        assert resp.status_code == "200"

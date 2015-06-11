@@ -1,5 +1,6 @@
 import cStringIO
 
+from netlib import tcp
 from libpathod import language
 from libpathod.language import http2, base
 import netlib
@@ -64,7 +65,7 @@ class TestRequest:
             s,
             language.Settings(
                 request_host = "foo.com",
-                protocol = netlib.http2.HTTP2Protocol(None)
+                protocol = netlib.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
             )
         )
 

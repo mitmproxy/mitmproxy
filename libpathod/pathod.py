@@ -7,7 +7,7 @@ import urllib
 import re
 import time
 
-from netlib import tcp, http, wsgi, certutils, websockets
+from netlib import tcp, http, http2, wsgi, certutils, websockets, odict
 
 from . import version, app, language, utils, log
 import language.http
@@ -40,7 +40,7 @@ class SSLOptions:
         sslversion=tcp.SSLv23_METHOD,
         ciphers=None,
         certs=None,
-        alpn_select=None,
+        alpn_select=http2.HTTP2Protocol.ALPN_PROTO_H2,
     ):
         self.confdir = confdir
         self.cn = cn
@@ -69,32 +69,37 @@ class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
 
-    def __init__(self, connection, address, server, logfp, settings):
-        self.logfp = logfp
+    def __init__(self, connection, address, server, logfp, settings, http2_framedump=False):
         tcp.BaseHandler.__init__(self, connection, address, server)
+        self.logfp = logfp
         self.settings = copy.copy(settings)
+        self.protocol = None
+        self.use_http2 = False
+        self.http2_framedump = http2_framedump
 
-    def handle_sni(self, connection):
+    def _handle_sni(self, connection):
         self.sni = connection.get_servername()
 
     def http_serve_crafted(self, crafted):
+        """
+            This method is HTTP/1 and HTTP/2 capable.
+        """
+
         error, crafted = self.server.check_policy(
             crafted, self.settings
         )
         if error:
-            err = language.http.make_error_response(error)
+            err = self.make_http_error_response(error)
             language.serve(err, self.wfile, self.settings)
             return None, dict(
                 type="error",
                 msg = error
             )
 
-        if self.server.explain and not isinstance(
-                crafted,
-                language.http.PathodErrorResponse
-        ):
+        if self.server.explain and not hasattr(crafted, 'is_error_response'):
             crafted = crafted.freeze(self.settings)
             log.write(self.logfp, ">> Spec: %s" % crafted.spec())
+
         response_log = language.serve(
             crafted,
             self.wfile,
@@ -154,6 +159,8 @@ class PathodHandler(tcp.BaseHandler):
 
     def handle_http_connect(self, connect, lg):
         """
+            This method is HTTP/1 only.
+
             Handle a CONNECT request.
         """
         http.read_headers(self.rfile)
@@ -171,7 +178,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.convert_to_ssl(
                     cert,
                     key,
-                    handle_sni=self.handle_sni,
+                    handle_sni=self._handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.sslversion,
@@ -185,10 +192,12 @@ class PathodHandler(tcp.BaseHandler):
 
     def handle_http_app(self, method, path, headers, content, lg):
         """
+            This method is HTTP/1 only.
+
             Handle a request to the built-in app.
         """
         if self.server.noweb:
-            crafted = language.http.make_error_response("Access Denied")
+            crafted = self.make_http_error_response("Access Denied")
             language.serve(crafted, self.wfile, self.settings)
             return None, dict(
                 type="error",
@@ -209,6 +218,8 @@ class PathodHandler(tcp.BaseHandler):
 
     def handle_http_request(self):
         """
+            This method is HTTP/1 and HTTP/2 capable.
+
             Returns a (handler, log) tuple.
 
             handler: Handler for the next request, or None to disconnect
@@ -217,28 +228,24 @@ class PathodHandler(tcp.BaseHandler):
         lr = self.rfile if self.server.logreq else None
         lw = self.wfile if self.server.logresp else None
         with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
-            line = http.get_request_line(self.rfile)
-            if not line:
-                # Normal termination
-                return None, None
-
-            m = utils.MemBool()
-            if m(http.parse_init_connect(line)):
-                return self.handle_http_connect(m.v, lg)
-            elif m(http.parse_init_proxy(line)):
-                method, _, _, _, path, httpversion = m.v
-            elif m(http.parse_init_http(line)):
-                method, path, httpversion = m.v
+            if self.use_http2:
+                self.protocol.perform_server_connection_preface()
+                stream_id, headers, body = self.protocol.read_request()
+                method = headers[':method']
+                path = headers[':path']
+                headers = odict.ODict(headers)
             else:
-                s = "Invalid first line: %s" % repr(line)
-                lg(s)
-                return None, dict(type="error", msg=s)
-
-            headers = http.read_headers(self.rfile)
-            if headers is None:
-                s = "Invalid headers"
-                lg(s)
-                return None, dict(type="error", msg=s)
+                req = self.read_http_request(lg)
+                if 'next_handle' in req:
+                    return req['next_handle']
+                if 'errors' in req:
+                    return None, req['errors']
+                if not 'method' in req or not 'path' in req:
+                    return None, None
+                method = req['method']
+                path = req['path']
+                headers = req['headers']
+                body = req['body']
 
             clientcert = None
             if self.clientcert:
@@ -258,7 +265,7 @@ class PathodHandler(tcp.BaseHandler):
                     path=path,
                     method=method,
                     headers=headers.lst,
-                    httpversion=httpversion,
+                    # httpversion=httpversion,
                     sni=self.sni,
                     remote_address=self.address(),
                     clientcert=clientcert,
@@ -267,16 +274,6 @@ class PathodHandler(tcp.BaseHandler):
             )
             if self.ssl_established:
                 retlog["cipher"] = self.get_current_cipher()
-
-            try:
-                content = http.read_http_body(
-                    self.rfile, headers, None,
-                    method, None, True
-                )
-            except http.HttpError as s:
-                s = str(s)
-                lg(s)
-                return None, dict(type="error", msg=s)
 
             m = utils.MemBool()
             websocket_key = websockets.check_client_handshake(headers)
@@ -288,28 +285,37 @@ class PathodHandler(tcp.BaseHandler):
                 anchor_gen = language.parse_pathod("ws")
             else:
                 anchor_gen = None
-            for i in self.server.anchors:
-                if i[0].match(path):
-                    anchor_gen = i[1]
+
+            for regex, spec in self.server.anchors:
+                if regex.match(path):
+                    anchor_gen = language.parse_pathod(spec, self.use_http2)
                     break
             else:
-                print(self.server.craftanchor)
                 if m(path.startswith(self.server.craftanchor)):
                     spec = urllib.unquote(path)[len(self.server.craftanchor):]
                     if spec:
                         try:
-                            anchor_gen = language.parse_pathod(spec)
+                            anchor_gen = language.parse_pathod(spec, self.use_http2)
                         except language.ParseException as v:
                             lg("Parse error: %s" % v.msg)
-                            anchor_gen = iter([language.http.make_error_response(
+                            anchor_gen = iter([self.make_http_error_response(
                                 "Parse Error",
                                 "Error parsing response spec: %s\n" % (
                                     v.msg + v.marked()
                                 )
                             )])
+                else:
+                    if self.use_http2:
+                        raise NotImplementedError(\
+                            "HTTP/2 only supports request/response with the craft anchor point.")
+
 
             if anchor_gen:
                 spec = anchor_gen.next()
+
+                if self.use_http2 and isinstance(spec, language.http2.Response):
+                    spec.stream_id = stream_id
+
                 lg("crafting spec: %s" % spec)
                 nexthandler, retlog["response"] = self.http_serve_crafted(
                     spec
@@ -319,28 +325,77 @@ class PathodHandler(tcp.BaseHandler):
                 else:
                     return nexthandler, retlog
             else:
-                return self.handle_http_app(method, path, headers, content, lg)
+                return self.handle_http_app(method, path, headers, body, lg)
 
-    def addlog(self, log):
-        # FIXME: The bytes in the log should not be escaped. We do this at the
-        # moment because JSON encoding can't handle binary data, and I don't
-        # want to base64 everything.
-        if self.server.logreq:
-            bytes = self.rfile.get_log().encode("string_escape")
-            log["request_bytes"] = bytes
-        if self.server.logresp:
-            bytes = self.wfile.get_log().encode("string_escape")
-            log["response_bytes"] = bytes
-        self.server.add_log(log)
+    def read_http_request(self, lg):
+        """
+            This method is HTTP/1 only.
+        """
+        line = http.get_request_line(self.rfile)
+        if not line:
+            # Normal termination
+            return dict()
+
+        m = utils.MemBool()
+        if m(http.parse_init_connect(line)):
+            return dict(next_handle=self.handle_http_connect(m.v, lg))
+        elif m(http.parse_init_proxy(line)):
+            method, _, _, _, path, httpversion = m.v
+        elif m(http.parse_init_http(line)):
+            method, path, httpversion = m.v
+        else:
+            s = "Invalid first line: %s" % repr(line)
+            lg(s)
+            return dict(errors=dict(type="error", msg=s))
+
+        headers = http.read_headers(self.rfile)
+        if headers is None:
+            s = "Invalid headers"
+            lg(s)
+            return dict(errors=dict(type="error", msg=s))
+
+        try:
+            body = http.read_http_body(
+                self.rfile,
+                headers,
+                None,
+                method,
+                None,
+                True,
+            )
+        except http.HttpError as s:
+            s = str(s)
+            lg(s)
+            return dict(errors=dict(type="error", msg=s))
+
+        return dict(
+            method=method,
+            path=path,
+            headers=headers,
+            body=body)
+
+    def make_http_error_response(self, reason, body=None):
+        """
+            This method is HTTP/1 and HTTP/2 capable.
+        """
+        if self.use_http2:
+            resp = language.http2.make_error_response(reason, body)
+        else:
+            resp = language.http.make_error_response(reason, body)
+        resp.is_error_response = True
+        return resp
 
     def handle(self):
+        self.settimeout(self.server.timeout)
+
         if self.server.ssl:
             try:
                 cert, key, _ = self.server.ssloptions.get_cert(None)
                 self.convert_to_ssl(
                     cert,
                     key,
-                    handle_sni=self.handle_sni,
+                    dhparams=self.server.ssloptions.certstore.dhparams,
+                    handle_sni=self._handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.sslversion,
@@ -356,14 +411,38 @@ class PathodHandler(tcp.BaseHandler):
                 )
                 log.write(self.logfp, s)
                 return
-        self.settimeout(self.server.timeout)
+
+            alp = self.get_alpn_proto_negotiated()
+            if alp == http2.HTTP2Protocol.ALPN_PROTO_H2:
+                self.protocol = http2.HTTP2Protocol(self, is_server=True, dump_frames=self.http2_framedump)
+                self.use_http2 = True
+
+        # if not self.protocol:
+        #     # TODO: create HTTP or Websockets protocol
+        #     self.protocol = None
+
+        self.settings.protocol = self.protocol
+
         handler = self.handle_http_request
+
         while not self.finished:
             handler, l = handler()
             if l:
                 self.addlog(l)
             if not handler:
                 return
+
+    def addlog(self, log):
+        # FIXME: The bytes in the log should not be escaped. We do this at the
+        # moment because JSON encoding can't handle binary data, and I don't
+        # want to base64 everything.
+        if self.server.logreq:
+            bytes = self.rfile.get_log().encode("string_escape")
+            log["request_bytes"] = bytes
+        if self.server.logresp:
+            bytes = self.wfile.get_log().encode("string_escape")
+            log["response_bytes"] = bytes
+        self.server.add_log(log)
 
 
 class Pathod(tcp.TCPServer):
@@ -387,6 +466,7 @@ class Pathod(tcp.TCPServer):
         logresp=False,
         explain=False,
         hexdump=False,
+        http2_framedump=False,
         webdebug=False,
         logfp=sys.stdout,
     ):
@@ -414,6 +494,7 @@ class Pathod(tcp.TCPServer):
         self.noapi, self.nohang = noapi, nohang
         self.timeout, self.logreq = timeout, logreq
         self.logresp, self.hexdump = logresp, hexdump
+        self.http2_framedump = http2_framedump
         self.explain = explain
         self.logfp = logfp
 
@@ -451,7 +532,8 @@ class Pathod(tcp.TCPServer):
             client_address,
             self,
             self.logfp,
-            self.settings
+            self.settings,
+            self.http2_framedump,
         )
         try:
             h.handle()
@@ -508,7 +590,6 @@ def main(args):  # pragma: nocover
         sslversion = utils.SSLVERSIONS[args.sslversion],
         certs = args.ssl_certs,
         sans = args.sans,
-        alpn_select = args.alpn_select,
     )
 
     root = logging.getLogger()
@@ -548,6 +629,7 @@ def main(args):  # pragma: nocover
             logreq = args.logreq,
             logresp = args.logresp,
             hexdump = args.hexdump,
+            http2_framedump = args.http2_framedump,
             explain = args.explain,
             webdebug = args.webdebug
         )
