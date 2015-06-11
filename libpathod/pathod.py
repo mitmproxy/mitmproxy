@@ -20,7 +20,7 @@ DEFAULT_CERT_DOMAIN = "pathod.net"
 CONFDIR = "~/.mitmproxy"
 CERTSTORE_BASENAME = "mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
-DEFAULT_ANCHOR = r"/p/?"
+DEFAULT_CRAFT_ANCHOR = "/p/"
 
 logger = logging.getLogger('pathod')
 
@@ -293,8 +293,9 @@ class PathodHandler(tcp.BaseHandler):
                     anchor_gen = i[1]
                     break
             else:
-                if m(self.server.craftanchor.match(path)):
-                    spec = urllib.unquote(path)[len(m.v.group()):]
+                print(self.server.craftanchor)
+                if m(path.startswith(self.server.craftanchor)):
+                    spec = urllib.unquote(path)[len(self.server.craftanchor):]
                     if spec:
                         try:
                             anchor_gen = language.parse_pathod(spec)
@@ -373,7 +374,7 @@ class Pathod(tcp.TCPServer):
         addr,
         ssl=False,
         ssloptions=None,
-        craftanchor=re.compile(DEFAULT_ANCHOR),
+        craftanchor=DEFAULT_CRAFT_ANCHOR,
         staticdir=None,
         anchors=(),
         sizelimit=None,
@@ -393,7 +394,7 @@ class Pathod(tcp.TCPServer):
             addr: (address, port) tuple. If port is 0, a free port will be
             automatically chosen.
             ssloptions: an SSLOptions object.
-            craftanchor: string specifying the path under which to anchor
+            craftanchor: URL prefix specifying the path under which to anchor
             response generation.
             staticdir: path to a directory of static resources, or None.
             anchors: List of (regex object, language.Request object) tuples, or

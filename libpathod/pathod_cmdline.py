@@ -45,11 +45,11 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         """
     )
     parser.add_argument(
-        "-c", dest='craftanchor', default=pathod.DEFAULT_ANCHOR, type=str,
+        "-c", dest='craftanchor', default=pathod.DEFAULT_CRAFT_ANCHOR, type=str,
         help="""
-            Regular expression specifying anchor point for URL crafting
+            URL path specifying prefix for URL crafting
             commands. (%s)
-        """%pathod.DEFAULT_ANCHOR
+        """%pathod.DEFAULT_CRAFT_ANCHOR
     )
     parser.add_argument(
         "--confdir",
@@ -202,13 +202,6 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
         except ValueError as v:
             return parser.error(v)
     args.sizelimit = sizelimit
-
-    try:
-        args.craftanchor = re.compile(args.craftanchor)
-    except re.error:
-        return parser.error(
-            "Invalid regex in craft anchor: %s" % args.craftanchor
-        )
 
     anchors = []
     for patt, spec in args.anchors:
