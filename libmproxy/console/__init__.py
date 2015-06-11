@@ -100,9 +100,12 @@ class ConsoleState(flow.State):
         return ret
 
     def clear(self):
-        self.focus = None
         super(ConsoleState, self).clear()
-
+        if len(self.flows.views) == 0:
+            self.focus = None
+        else:
+            self.focus = 0
+        self.set_focus(self.focus)
 
 class Options(object):
     attributes = [
