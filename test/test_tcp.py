@@ -376,6 +376,11 @@ class TestALPN(test.ServerTestBase):
             c.convert_to_ssl(alpn_protos=["foobar"])
             assert c.get_alpn_proto_negotiated() == "foobar"
 
+        def test_no_alpn(self):
+            c = tcp.TCPClient(("127.0.0.1", self.port))
+            c.connect()
+            assert c.get_alpn_proto_negotiated() == None
+
     else:
         def test_none_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))

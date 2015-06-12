@@ -412,7 +412,7 @@ class _Connection(object):
                 def alpn_select_callback(conn, options):
                     if alpn_select in options:
                         return bytes(alpn_select)
-                    else:
+                    else:  # pragma no cover
                         return options[0]
                 context.set_alpn_select_callback(alpn_select_callback)
 
@@ -500,9 +500,9 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
-        else:  # pragma no cover
+        else:
             return None
 
 
@@ -616,7 +616,7 @@ class BaseHandler(_Connection):
     def get_alpn_proto_negotiated(self):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
-        else:  # pragma no cover
+        else:
             return None
 
 
