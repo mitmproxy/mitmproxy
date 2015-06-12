@@ -142,6 +142,10 @@ class TestHTTPRequest:
         assert r.pretty_host(True) is None
         assert r.pretty_host(False) is None
 
+        # Invalid IDNA
+        r.headers["host"] = [".disqus.com"]
+        assert r.pretty_host(True) == ".disqus.com"
+
     def test_get_form_for_urlencoded(self):
         r = tutils.treq()
         r.headers.add("content-type", "application/x-www-form-urlencoded")

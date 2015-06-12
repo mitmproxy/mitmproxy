@@ -584,11 +584,10 @@ class HTTPRequest(HTTPMessage):
             of the request, e.g. if an upstream proxy is in place
 
             If hostheader is set to True, the Host: header will be used as
-            additional (and preferred) data source. This is handy in transparent
-            mode, where only the ip of the destination is known, but not the
-            resolved name. This is disabled by default, as an attacker may spoof
-            the host header to confuse an analyst.
-
+            additional (and preferred) data source. This is handy in
+            transparent mode, where only the IO of the destination is known,
+            but not the resolved name. This is disabled by default, as an
+            attacker may spoof the host header to confuse an analyst.
         """
         host = None
         if hostheader:
@@ -596,7 +595,10 @@ class HTTPRequest(HTTPMessage):
         if not host:
             host = self.host
         if host:
-            return host.encode("idna")
+            try:
+                return host.encode("idna")
+            except ValueError:
+                return host
         else:
             return None
 
