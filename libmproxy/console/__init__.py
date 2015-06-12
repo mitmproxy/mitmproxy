@@ -48,6 +48,7 @@ class ConsoleState(flow.State):
             self.set_focus(0)
         elif self.follow_focus:
             self.set_focus(len(self.view) - 1)
+        self.set_flow_marked(f, False)
         return f
 
     def update_flow(self, f):
@@ -100,9 +101,29 @@ class ConsoleState(flow.State):
         return ret
 
     def clear(self):
-        self.focus = None
+        marked_flows = []
+        for f in self.flows:
+            if self.flow_marked(f):
+                marked_flows.append(f)
+                
         super(ConsoleState, self).clear()
-
+        
+        for f in marked_flows:
+            self.add_flow(f)
+            self.set_flow_marked(f, True)
+        
+        if len(self.flows.views) == 0:
+            self.focus = None
+        else:
+            self.focus = 0
+        self.set_focus(self.focus)
+        
+    def flow_marked(self, flow):
+        return self.get_flow_setting(flow, "marked", False)
+    
+    def set_flow_marked(self, flow, marked):
+        self.add_flow_setting(flow, "marked", marked)
+        
 
 class Options(object):
     attributes = [
@@ -591,6 +612,13 @@ class ConsoleMaster(flow.FlowMaster):
 
     def save_flows(self, path):
         return self._write_flows(path, self.state.view)
+    
+    def save_marked_flows(self, path):
+        marked_flows = []
+        for f in self.state.view:
+            if self.state.flow_marked(f):
+                marked_flows.append(f)
+        return self._write_flows(path, marked_flows)
 
     def load_flows_callback(self, path):
         if not path:

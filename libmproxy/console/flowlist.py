@@ -17,9 +17,11 @@ def _mkhelp():
         ("F", "toggle follow flow list"),
         ("l", "set limit filter pattern"),
         ("L", "load saved flows"),
+        ("m", "toggle flow mark"),
         ("n", "create a new request"),
         ("P", "copy flow to clipboard"),
         ("r", "replay request"),
+        ("U", "unmark all marked flows"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
         ("W", "stream flows to file"),
@@ -108,7 +110,8 @@ class ConnectionItem(urwid.WidgetWrap):
         return common.format_flow(
             self.flow,
             self.f,
-            hostheader = self.master.showhost
+            hostheader = self.master.showhost,
+            marked=self.state.flow_marked(self.flow)
         )
 
     def selectable(self):
@@ -119,6 +122,11 @@ class ConnectionItem(urwid.WidgetWrap):
             signals.status_prompt_path.send(
                 prompt = "Save all flows to",
                 callback = self.master.save_flows
+            )
+        elif k == "m":
+            signals.status_prompt_path.send(
+                prompt = "Save marked flows to",
+                callback = self.master.save_marked_flows
             )
         else:
             signals.status_prompt_path.send(
@@ -177,6 +185,12 @@ class ConnectionItem(urwid.WidgetWrap):
         elif key == "D":
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
+        elif key == "m":
+            if self.state.flow_marked(self.flow):
+                self.state.set_flow_marked(self.flow, False)
+            else:
+                self.state.set_flow_marked(self.flow, True)
+            signals.flowlist_change.send(self)
         elif key == "r":
             r = self.master.replay_request(self.flow)
             if r:
@@ -202,6 +216,10 @@ class ConnectionItem(urwid.WidgetWrap):
                     ),
                     callback = self.stop_server_playback_prompt,
                 )
+        elif key == "U":
+            for f in self.state.flows:
+                self.state.set_flow_marked(f, False)
+            signals.flowlist_change.send(self)       
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
@@ -216,6 +234,7 @@ class ConnectionItem(urwid.WidgetWrap):
                 keys = (
                     ("all flows", "a"),
                     ("this flow", "t"),
+                    ("marked flows", "m"),
                 ),
                 callback = self.save_flows_prompt,
             )
