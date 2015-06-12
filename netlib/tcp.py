@@ -19,6 +19,9 @@ SSLv2_METHOD = SSL.SSLv2_METHOD
 SSLv3_METHOD = SSL.SSLv3_METHOD
 SSLv23_METHOD = SSL.SSLv23_METHOD
 TLSv1_METHOD = SSL.TLSv1_METHOD
+TLSv1_1_METHOD = SSL.TLSv1_1_METHOD
+TLSv1_2_METHOD = SSL.TLSv1_2_METHOD
+
 OP_NO_SSLv2 = SSL.OP_NO_SSLv2
 OP_NO_SSLv3 = SSL.OP_NO_SSLv3
 
@@ -376,7 +379,7 @@ class _Connection(object):
                             alpn_select=None,
                             ):
         """
-        :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD or TLSv1_1_METHOD
+        :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD, TLSv1_1_METHOD, or TLSv1_2_METHOD
         :param options: A bit field consisting of OpenSSL.SSL.OP_* values
         :param cipher_list: A textual OpenSSL cipher list, see https://www.openssl.org/docs/apps/ciphers.html
         :rtype : SSL.Context
