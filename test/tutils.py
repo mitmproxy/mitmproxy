@@ -27,7 +27,7 @@ class DaemonTests(object):
         klass.d = test.Daemon(
             staticdir=test_data.path("data"),
             anchors=[
-                (re.compile("/anchor/.*"), language.parse_pathod("202:da"))
+                (re.compile("/anchor/.*"), "202:da")
             ],
             ssl = klass.ssl,
             ssloptions = so,

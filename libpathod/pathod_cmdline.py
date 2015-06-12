@@ -209,16 +209,10 @@ def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
             data = open(spec).read()
             spec = data
         try:
-            req = language.parse_pathod(spec)
-        except language.ParseException as v:
-            print >> stderr, "Error parsing anchor spec: %s" % v.msg
-            print >> stderr, v.marked()
-            sys.exit(1)
-        try:
             arex = re.compile(patt)
         except re.error:
             return parser.error("Invalid regex in anchor: %s" % patt)
-        anchors.append((arex, req))
+        anchors.append((arex, spec))
     args.anchors = anchors
     return args
 

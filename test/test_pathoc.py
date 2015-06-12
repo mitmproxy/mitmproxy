@@ -23,7 +23,7 @@ class _TestDaemon:
             ssloptions = self.ssloptions,
             staticdir = tutils.test_data.path("data"),
             anchors = [
-                (re.compile("/anchor/.*"), language.parse_pathod("202"))
+                (re.compile("/anchor/.*"), "202")
             ]
         )
 

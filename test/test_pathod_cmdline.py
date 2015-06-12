@@ -65,15 +65,6 @@ def test_pathod(perror):
     assert perror.called
     perror.reset_mock()
 
-    s = cStringIO.StringIO()
-    tutils.raises(
-        SystemExit,
-        cmdline.args_pathod,
-        ["pathod", "-a", "foo=."],
-        s,
-        s
-    )
-
     a = cmdline.args_pathod(
         [
             "pathod",
@@ -88,16 +79,6 @@ def test_pathod(perror):
             "pathod",
             "--limit-size",
             "q"
-        ]
-    )
-    assert perror.called
-    perror.reset_mock()
-
-    a = cmdline.args_pathod(
-        [
-            "pathod",
-            "-c",
-            "?"
         ]
     )
     assert perror.called
