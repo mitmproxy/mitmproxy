@@ -26,7 +26,8 @@ class HTTP2Protocol(object):
     )
 
     # "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-    CLIENT_CONNECTION_PREFACE = '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'.decode('hex')
+    CLIENT_CONNECTION_PREFACE =\
+        '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'.decode('hex')
 
     ALPN_PROTO_H2 = 'h2'
 
@@ -38,6 +39,7 @@ class HTTP2Protocol(object):
         self.current_stream_id = None
         self.encoder = Encoder()
         self.decoder = Decoder()
+        self.connection_preface_performed = False
 
     def check_alpn(self):
         alp = self.tcp_handler.get_alpn_proto_negotiated()
@@ -57,25 +59,36 @@ class HTTP2Protocol(object):
         assert settings_ack_frame.flags & frame.Frame.FLAG_ACK
         assert len(settings_ack_frame.settings) == 0
 
-    def perform_server_connection_preface(self):
-        magic_length = len(self.CLIENT_CONNECTION_PREFACE)
-        magic = self.tcp_handler.rfile.safe_read(magic_length)
-        assert magic == self.CLIENT_CONNECTION_PREFACE
+    def perform_server_connection_preface(self, force=False):
+        if force or not self.connection_preface_performed:
+            self.connection_preface_performed = True
 
-        self.send_frame(frame.SettingsFrame(state=self))
-        self._receive_settings()
-        self._read_settings_ack()
+            magic_length = len(self.CLIENT_CONNECTION_PREFACE)
+            magic = self.tcp_handler.rfile.safe_read(magic_length)
+            assert magic == self.CLIENT_CONNECTION_PREFACE
 
-    def perform_client_connection_preface(self):
-        self.tcp_handler.wfile.write(self.CLIENT_CONNECTION_PREFACE)
+            self.send_frame(frame.SettingsFrame(state=self))
+            self._receive_settings()
+            self._read_settings_ack()
 
-        self.send_frame(frame.SettingsFrame(state=self))
-        self._receive_settings()
-        self._read_settings_ack()
+    def perform_client_connection_preface(self, force=False):
+        if force or not self.connection_preface_performed:
+            self.connection_preface_performed = True
+
+            self.tcp_handler.wfile.write(self.CLIENT_CONNECTION_PREFACE)
+
+            self.send_frame(frame.SettingsFrame(state=self))
+            self._receive_settings()
+            self._read_settings_ack()
 
     def next_stream_id(self):
         if self.current_stream_id is None:
-            self.current_stream_id = 1
+            if self.is_server:
+                # servers must use even stream ids
+                self.current_stream_id = 2
+            else:
+                # clients must use odd stream ids
+                self.current_stream_id = 1
         else:
             self.current_stream_id += 2
         return self.current_stream_id
@@ -165,7 +178,8 @@ class HTTP2Protocol(object):
 
         while True:
             frm = self.read_frame()
-            if isinstance(frm, frame.HeadersFrame) or isinstance(frm, frame.ContinuationFrame):
+            if isinstance(frm, frame.HeadersFrame)\
+                    or isinstance(frm, frame.ContinuationFrame):
                 header_block_fragment += frm.header_block_fragment
                 if frm.flags & frame.Frame.FLAG_END_HEADERS:
                     if frm.flags & frame.Frame.FLAG_END_STREAM:
@@ -184,3 +198,15 @@ class HTTP2Protocol(object):
             headers[header] = value
 
         return headers, body
+
+    def create_response(self, code, headers=None, body=None):
+        if headers is None:
+            headers = []
+
+        headers = [(b':status', bytes(str(code)))] + headers
+
+        stream_id = self.next_stream_id()
+
+        return list(itertools.chain(
+            self._create_headers(headers, stream_id, end_stream=(body is None)),
+            self._create_body(body, stream_id)))

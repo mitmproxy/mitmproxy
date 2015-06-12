@@ -55,7 +55,7 @@ class TestPerformServerConnectionPreface(test.ServerTestBase):
 
         def handle(self):
             # send magic
-            self.wfile.write(\
+            self.wfile.write(
                 '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'.decode('hex'))
             self.wfile.flush()
 
