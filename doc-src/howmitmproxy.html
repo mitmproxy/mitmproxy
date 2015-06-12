@@ -120,8 +120,8 @@ Name](http://en.wikipedia.org/wiki/SubjectAltName) field in the SSL certificate
 that allows an arbitrary number of alternative domains to be specified. If the
 expected domain matches any of these, the client will proceed, even though the
 domain doesn't match the certificate Common Name. The answer here is simple:
-when extract the CN from the upstream cert, we also extract the SANs, and add
-them to the generated dummy certificate.
+when we extract the CN from the upstream cert, we also extract the SANs, and
+add them to the generated dummy certificate.
 
 
 ## Complication 3: Server Name Indication
