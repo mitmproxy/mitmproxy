@@ -109,7 +109,8 @@ class ConnectionItem(urwid.WidgetWrap):
         return common.format_flow(
             self.flow,
             self.f,
-            hostheader = self.master.showhost
+            hostheader = self.master.showhost,
+            marked=self.state.flow_marked(self.flow)
         )
 
     def selectable(self):
@@ -184,7 +185,10 @@ class ConnectionItem(urwid.WidgetWrap):
             f = self.master.duplicate_flow(self.flow)
             self.master.view_flow(f)
         elif key == "m":
-            self.flow.toggle_mark()
+            if self.state.flow_marked(self.flow):
+                self.state.set_flow_marked(self.flow, False)
+            else:
+                self.state.set_flow_marked(self.flow, True)
             signals.flowlist_change.send(self)
         elif key == "r":
             r = self.master.replay_request(self.flow)

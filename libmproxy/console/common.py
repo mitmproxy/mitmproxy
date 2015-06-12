@@ -378,7 +378,8 @@ def ask_save_body(part, master, state, flow):
 flowcache = utils.LRUCache(800)
 
 
-def format_flow(f, focus, extended=False, hostheader=False, padding=2):
+def format_flow(f, focus, extended=False, hostheader=False, padding=2,
+        marked=False):
     d = dict(
         intercepted = f.intercepted,
         acked = f.reply.acked,
@@ -391,7 +392,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2):
         err_msg = f.error.msg if f.error else None,
         resp_code = f.response.code if f.response else None,
         
-        marked = f.marked,
+        marked = marked,
     )
     if f.response:
         if f.response.content:
