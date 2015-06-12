@@ -21,6 +21,7 @@ def _mkhelp():
         ("n", "create a new request"),
         ("P", "copy flow to clipboard"),
         ("r", "replay request"),
+        ("U", "unmark all marked flows"),
         ("V", "revert changes to request"),
         ("w", "save flows "),
         ("W", "stream flows to file"),
@@ -215,6 +216,10 @@ class ConnectionItem(urwid.WidgetWrap):
                     ),
                     callback = self.stop_server_playback_prompt,
                 )
+        elif key == "U":
+            for f in self.state.flows:
+                self.state.set_flow_marked(f, False)
+            signals.flowlist_change.send(self)       
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
