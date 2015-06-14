@@ -19,6 +19,9 @@ SSLv2_METHOD = SSL.SSLv2_METHOD
 SSLv3_METHOD = SSL.SSLv3_METHOD
 SSLv23_METHOD = SSL.SSLv23_METHOD
 TLSv1_METHOD = SSL.TLSv1_METHOD
+TLSv1_1_METHOD = SSL.TLSv1_1_METHOD
+TLSv1_2_METHOD = SSL.TLSv1_2_METHOD
+
 OP_NO_SSLv2 = SSL.OP_NO_SSLv2
 OP_NO_SSLv3 = SSL.OP_NO_SSLv3
 
@@ -376,7 +379,7 @@ class _Connection(object):
                             alpn_select=None,
                             ):
         """
-        :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD or TLSv1_1_METHOD
+        :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD, TLSv1_1_METHOD, or TLSv1_2_METHOD
         :param options: A bit field consisting of OpenSSL.SSL.OP_* values
         :param cipher_list: A textual OpenSSL cipher list, see https://www.openssl.org/docs/apps/ciphers.html
         :rtype : SSL.Context
@@ -404,16 +407,17 @@ class _Connection(object):
             context.set_info_callback(log_ssl_key)
 
         if OpenSSL._util.lib.Cryptography_HAS_ALPN:
-            # advertise application layer protocols
             if alpn_protos is not None:
+                # advertise application layer protocols
                 context.set_alpn_protos(alpn_protos)
-
-            # select application layer protocol
-            if alpn_select is not None:
-                def alpn_select_f(conn, options):
-                    return bytes(alpn_select)
-
-                context.set_alpn_select_callback(alpn_select_f)
+            elif alpn_select is not None:
+                # select application layer protocol
+                def alpn_select_callback(conn, options):
+                    if alpn_select in options:
+                        return bytes(alpn_select)
+                    else:  # pragma no cover
+                        return options[0]
+                context.set_alpn_select_callback(alpn_select_callback)
 
         return context
 
@@ -499,9 +503,9 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
-        else:  # pragma no cover
+        else:
             return None
 
 
@@ -531,7 +535,6 @@ class BaseHandler(_Connection):
                            request_client_cert=None,
                            chain_file=None,
                            dhparams=None,
-                           alpn_select=None,
                            **sslctx_kwargs):
         """
             cert: A certutils.SSLCert object.
@@ -558,9 +561,7 @@ class BaseHandler(_Connection):
             until then we're conservative.
         """
 
-        context = self._create_ssl_context(
-            alpn_select=alpn_select,
-            **sslctx_kwargs)
+        context = self._create_ssl_context(**sslctx_kwargs)
 
         context.use_privatekey(key)
         context.use_certificate(cert.x509)
@@ -585,7 +586,7 @@ class BaseHandler(_Connection):
 
         return context
 
-    def convert_to_ssl(self, cert, key, alpn_select=None, **sslctx_kwargs):
+    def convert_to_ssl(self, cert, key, **sslctx_kwargs):
         """
         Convert connection to SSL.
         For a list of parameters, see BaseHandler._create_ssl_context(...)
@@ -594,7 +595,6 @@ class BaseHandler(_Connection):
         context = self.create_ssl_context(
             cert,
             key,
-            alpn_select=alpn_select,
             **sslctx_kwargs)
         self.connection = SSL.Connection(context, self.connection)
         self.connection.set_accept_state()
@@ -611,6 +611,12 @@ class BaseHandler(_Connection):
 
     def settimeout(self, n):
         self.connection.settimeout(n)
+
+    def get_alpn_proto_negotiated(self):
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
+            return self.connection.get_alpn_proto_negotiated()
+        else:
+            return None
 
 
 class TCPServer(object):
