@@ -152,10 +152,13 @@ class HTTP2Protocol(object):
         if headers is None:
             headers = []
 
+        authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
         headers = [
             (b':method', bytes(method)),
             (b':path', bytes(path)),
-            (b':scheme', b'https')] + headers
+            (b':scheme', b'https'),
+            (b':authority', authority),
+        ] + headers
 
         stream_id = self.next_stream_id()
 
@@ -192,6 +195,7 @@ class HTTP2Protocol(object):
                 body += frm.payload
                 if frm.flags & frame.Frame.FLAG_END_STREAM:
                     break
+            # TODO: implement window update & flow
 
         headers = {}
         for header, value in self.decoder.decode(header_block_fragment):

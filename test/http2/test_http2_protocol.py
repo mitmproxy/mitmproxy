@@ -222,14 +222,14 @@ class TestCreateRequest():
     def test_create_request_simple(self):
         bytes = http2.HTTP2Protocol(self.c).create_request('GET', '/')
         assert len(bytes) == 1
-        assert bytes[0] == '000003010500000001828487'.decode('hex')
+        assert bytes[0] == '00000c0105000000018284874187089d5c0b8170ff'.decode('hex')
 
     def test_create_request_with_body(self):
         bytes = http2.HTTP2Protocol(self.c).create_request(
             'GET', '/', [(b'foo', b'bar')], 'foobar')
         assert len(bytes) == 2
         assert bytes[0] ==\
-            '00000b010400000001828487408294e7838c767f'.decode('hex')
+            '0000140104000000018284874187089d5c0b8170ff408294e7838c767f'.decode('hex')
         assert bytes[1] ==\
             '000006000100000001666f6f626172'.decode('hex')
 
