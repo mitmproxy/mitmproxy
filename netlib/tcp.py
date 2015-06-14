@@ -535,7 +535,6 @@ class BaseHandler(_Connection):
                            request_client_cert=None,
                            chain_file=None,
                            dhparams=None,
-                           alpn_select=None,
                            **sslctx_kwargs):
         """
             cert: A certutils.SSLCert object.
@@ -562,9 +561,7 @@ class BaseHandler(_Connection):
             until then we're conservative.
         """
 
-        context = self._create_ssl_context(
-            alpn_select=alpn_select,
-            **sslctx_kwargs)
+        context = self._create_ssl_context(**sslctx_kwargs)
 
         context.use_privatekey(key)
         context.use_certificate(cert.x509)
@@ -589,7 +586,7 @@ class BaseHandler(_Connection):
 
         return context
 
-    def convert_to_ssl(self, cert, key, alpn_select=None, **sslctx_kwargs):
+    def convert_to_ssl(self, cert, key, **sslctx_kwargs):
         """
         Convert connection to SSL.
         For a list of parameters, see BaseHandler._create_ssl_context(...)
@@ -598,7 +595,6 @@ class BaseHandler(_Connection):
         context = self.create_ssl_context(
             cert,
             key,
-            alpn_select=alpn_select,
             **sslctx_kwargs)
         self.connection = SSL.Connection(context, self.connection)
         self.connection.set_accept_state()
