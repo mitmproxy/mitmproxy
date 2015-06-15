@@ -196,9 +196,9 @@ class HTTP2Protocol(object):
             if isinstance(frm, frame.HeadersFrame)\
                     or isinstance(frm, frame.ContinuationFrame):
                 header_block_fragment += frm.header_block_fragment
+                if frm.flags & frame.Frame.FLAG_END_STREAM:
+                    body_expected = False
                 if frm.flags & frame.Frame.FLAG_END_HEADERS:
-                    if frm.flags & frame.Frame.FLAG_END_STREAM:
-                        body_expected = False
                     break
 
         while body_expected:
