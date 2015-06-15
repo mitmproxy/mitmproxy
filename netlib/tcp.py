@@ -414,14 +414,15 @@ class _Connection(object):
         if cipher_list:
             try:
                 context.set_cipher_list(cipher_list)
+
+                # TODO: maybe change this to with newer pyOpenSSL APIs
+                context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
                 raise NetLibError("SSL cipher specification error: %s" % str(v))
 
         # SSLKEYLOGFILE
         if log_ssl_key:
             context.set_info_callback(log_ssl_key)
-
-        context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
 
         if OpenSSL._util.lib.Cryptography_HAS_ALPN:
             if alpn_protos is not None:
@@ -526,7 +527,7 @@ class TCPClient(_Connection):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
-            return None
+            return ""
 
 
 class BaseHandler(_Connection):
@@ -636,7 +637,7 @@ class BaseHandler(_Connection):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
-            return None
+            return ""
 
 
 class TCPServer(object):

@@ -55,7 +55,7 @@ class HTTP2Protocol(object):
             if isinstance(frm, frame.SettingsFrame):
                 break
 
-    def _read_settings_ack(self, hide=False):
+    def _read_settings_ack(self, hide=False):  # pragma no cover
         while True:
             frm = self.read_frame(hide)
             if isinstance(frm, frame.SettingsFrame):
@@ -99,12 +99,12 @@ class HTTP2Protocol(object):
         raw_bytes = frm.to_bytes()
         self.tcp_handler.wfile.write(raw_bytes)
         self.tcp_handler.wfile.flush()
-        if not hide and self.dump_frames:
+        if not hide and self.dump_frames:  # pragma no cover
             print(frm.human_readable(">>"))
 
     def read_frame(self, hide=False):
         frm = frame.Frame.from_file(self.tcp_handler.rfile, self)
-        if not hide and self.dump_frames:
+        if not hide and self.dump_frames:  # pragma no cover
             print(frm.human_readable("<<"))
         if isinstance(frm, frame.SettingsFrame) and not frm.flags & frame.Frame.FLAG_ACK:
             self._apply_settings(frm.settings, hide)
@@ -123,7 +123,9 @@ class HTTP2Protocol(object):
                 state=self,
                 flags=frame.Frame.FLAG_ACK),
                 hide)
-        # self._read_settings_ack(hide)
+
+        # be liberal in what we expect from the other end
+        # to be more strict use: self._read_settings_ack(hide)
 
     def _create_headers(self, headers, stream_id, end_stream=True):
         # TODO: implement max frame size checks and sending in chunks
@@ -140,7 +142,7 @@ class HTTP2Protocol(object):
             stream_id=stream_id,
             header_block_fragment=header_block_fragment)
 
-        if self.dump_frames:
+        if self.dump_frames:  # pragma no cover
             print(frm.human_readable(">>"))
 
         return [frm.to_bytes()]
@@ -158,7 +160,7 @@ class HTTP2Protocol(object):
             stream_id=stream_id,
             payload=body)
 
-        if self.dump_frames:
+        if self.dump_frames:  # pragma no cover
             print(frm.human_readable(">>"))
 
         return [frm.to_bytes()]
@@ -224,8 +226,6 @@ class HTTP2Protocol(object):
     def create_response(self, code, stream_id=None, headers=None, body=None):
         if headers is None:
             headers = []
-
-        body='foobar'
 
         headers = [(b':status', bytes(str(code)))] + headers
 
