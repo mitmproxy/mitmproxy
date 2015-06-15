@@ -24,6 +24,7 @@ TLSv1_2_METHOD = SSL.TLSv1_2_METHOD
 
 OP_NO_SSLv2 = SSL.OP_NO_SSLv2
 OP_NO_SSLv3 = SSL.OP_NO_SSLv3
+VERIFY_NONE = SSL.VERIFY_NONE
 
 
 class NetLibError(Exception):
@@ -374,6 +375,9 @@ class _Connection(object):
     def _create_ssl_context(self,
                             method=SSLv23_METHOD,
                             options=(OP_NO_SSLv2 | OP_NO_SSLv3),
+                            verify_options=VERIFY_NONE,
+                            ca_path=None,
+                            ca_pemfile=None,
                             cipher_list=None,
                             alpn_protos=None,
                             alpn_select=None,
@@ -381,6 +385,9 @@ class _Connection(object):
         """
         :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD, TLSv1_1_METHOD, or TLSv1_2_METHOD
         :param options: A bit field consisting of OpenSSL.SSL.OP_* values
+        :param verify_options: A bit field consisting of OpenSSL.SSL.VERIFY_* values
+        :param ca_path: Path to a directory of trusted CA certificates prepared using the c_rehash tool
+        :param ca_pemfile: Path to a PEM formatted trusted CA certificate
         :param cipher_list: A textual OpenSSL cipher list, see https://www.openssl.org/docs/apps/ciphers.html
         :rtype : SSL.Context
         """
@@ -388,6 +395,19 @@ class _Connection(object):
         # Options (NO_SSLv2/3)
         if options is not None:
             context.set_options(options)
+
+        # Verify Options (NONE/PEER/PEER|FAIL_IF_... and trusted CAs)
+        if verify_options is not None and verify_options is not VERIFY_NONE:
+            def verify_cert(conn, cert, errno, err_depth, is_cert_verified):
+                if is_cert_verified:
+                    return True
+                raise NetLibError(
+                    "Upstream certificate validation failed at depth: %s with error number: %s" %
+                    (err_depth, errno))
+
+            context.set_verify(verify_options, verify_cert)
+            if ca_path is not None or ca_pemfile is not None:
+                context.load_verify_locations(ca_pemfile, ca_path)
 
         # Workaround for
         # https://github.com/pyca/pyopenssl/issues/190
@@ -462,6 +482,9 @@ class TCPClient(_Connection):
             cert: Path to a file containing both client cert and private key.
 
             options: A bit field consisting of OpenSSL.SSL.OP_* values
+            verify_options: A bit field consisting of OpenSSL.SSL.VERIFY_* values
+            ca_path: Path to a directory of trusted CA certificates prepared using the c_rehash tool
+            ca_pemfile: Path to a PEM formatted trusted CA certificate
         """
         context = self.create_ssl_context(
             alpn_protos=alpn_protos,
