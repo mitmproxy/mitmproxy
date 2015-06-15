@@ -183,7 +183,7 @@ class HTTP2Protocol(object):
             self._create_body(body, stream_id)))
 
     def read_response(self):
-        headers, body = self._receive_transmission()
+        stream_id, headers, body = self._receive_transmission()
         return headers[':status'], headers, body
 
     def read_request(self):
@@ -192,6 +192,7 @@ class HTTP2Protocol(object):
     def _receive_transmission(self):
         body_expected = True
 
+        stream_id = 0
         header_block_fragment = b''
         body = b''
 
@@ -199,6 +200,7 @@ class HTTP2Protocol(object):
             frm = self.read_frame()
             if isinstance(frm, frame.HeadersFrame)\
                     or isinstance(frm, frame.ContinuationFrame):
+                stream_id = frm.stream_id
                 header_block_fragment += frm.header_block_fragment
                 if frm.flags & frame.Frame.FLAG_END_STREAM:
                     body_expected = False
@@ -217,9 +219,9 @@ class HTTP2Protocol(object):
         for header, value in self.decoder.decode(header_block_fragment):
             headers[header] = value
 
-        return headers, body
+        return stream_id, headers, body
 
-    def create_response(self, code, headers=None, body=None):
+    def create_response(self, code, stream_id=None, headers=None, body=None):
         if headers is None:
             headers = []
 
@@ -227,7 +229,8 @@ class HTTP2Protocol(object):
 
         headers = [(b':status', bytes(str(code)))] + headers
 
-        stream_id = self.next_stream_id()
+        if not stream_id:
+            stream_id = self.next_stream_id()
 
         return list(itertools.chain(
             self._create_headers(headers, stream_id, end_stream=(body is None)),
