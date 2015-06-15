@@ -113,16 +113,11 @@ class Frame(object):
     def payload_human_readable(self):  # pragma: no cover
         raise NotImplementedError()
 
-    def human_readable(self):
+    def human_readable(self, direction="-"):
         return "\n".join([
-            "============================================================",
-            "length:    %d bytes" % self.length,
-            "type:      %s (%#x)" % (self.__class__.__name__, self.TYPE),
-            "flags:     %#x" % self.flags,
-            "stream_id: %#x" % self.stream_id,
-            "------------------------------------------------------------",
+            "%s: %s | length: %d | flags: %#x | stream_id: %d" % (direction, self.__class__.__name__, self.length, self.flags, self.stream_id),
             self.payload_human_readable(),
-            "============================================================",
+            "===============================================================",
         ])
 
     def __eq__(self, other):

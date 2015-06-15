@@ -48,13 +48,12 @@ class HTTP2Protocol(object):
                 "HTTP2Protocol can not handle unknown ALP: %s" % alp)
         return True
 
-    def _receive_settings(self):
-        frm = frame.Frame.from_file(self.tcp_handler.rfile, self)
+    def _receive_settings(self, hide=False):
+        frm = self.read_frame(hide)
         assert isinstance(frm, frame.SettingsFrame)
-        self._apply_settings(frm.settings)
 
-    def _read_settings_ack(self):
-        settings_ack_frame = self.read_frame()
+    def _read_settings_ack(self, hide=False):
+        settings_ack_frame = self.read_frame(hide)
         assert isinstance(settings_ack_frame, frame.SettingsFrame)
         assert settings_ack_frame.flags & frame.Frame.FLAG_ACK
         assert len(settings_ack_frame.settings) == 0
@@ -67,9 +66,8 @@ class HTTP2Protocol(object):
             magic = self.tcp_handler.rfile.safe_read(magic_length)
             assert magic == self.CLIENT_CONNECTION_PREFACE
 
-            self.send_frame(frame.SettingsFrame(state=self))
-            self._receive_settings()
-            self._read_settings_ack()
+            self.send_frame(frame.SettingsFrame(state=self), hide=True)
+            self._receive_settings(hide=True)
 
     def perform_client_connection_preface(self, force=False):
         if force or not self.connection_preface_performed:
@@ -77,9 +75,8 @@ class HTTP2Protocol(object):
 
             self.tcp_handler.wfile.write(self.CLIENT_CONNECTION_PREFACE)
 
-            self.send_frame(frame.SettingsFrame(state=self))
-            self._receive_settings()
-            self._read_settings_ack()
+            self.send_frame(frame.SettingsFrame(state=self), hide=True)
+            self._receive_settings(hide=True)
 
     def next_stream_id(self):
         if self.current_stream_id is None:
@@ -93,30 +90,35 @@ class HTTP2Protocol(object):
             self.current_stream_id += 2
         return self.current_stream_id
 
-    def send_frame(self, frame):
-        raw_bytes = frame.to_bytes()
+    def send_frame(self, frm, hide=False):
+        raw_bytes = frm.to_bytes()
         self.tcp_handler.wfile.write(raw_bytes)
         self.tcp_handler.wfile.flush()
+        if not hide and self.tcp_handler.http2_framedump:
+            print(frm.human_readable(">>"))
 
-    def read_frame(self):
+    def read_frame(self, hide=False):
         frm = frame.Frame.from_file(self.tcp_handler.rfile, self)
-        if isinstance(frm, frame.SettingsFrame):
-            self._apply_settings(frm.settings)
+        if not hide and self.tcp_handler.http2_framedump:
+            print(frm.human_readable("<<"))
+        if isinstance(frm, frame.SettingsFrame) and not frm.flags & frame.Frame.FLAG_ACK:
+            self._apply_settings(frm.settings, hide)
 
         return frm
 
-    def _apply_settings(self, settings):
+    def _apply_settings(self, settings, hide=False):
         for setting, value in settings.items():
             old_value = self.http2_settings[setting]
             if not old_value:
                 old_value = '-'
-
             self.http2_settings[setting] = value
 
         self.send_frame(
             frame.SettingsFrame(
                 state=self,
-                flags=frame.Frame.FLAG_ACK))
+                flags=frame.Frame.FLAG_ACK),
+                hide)
+        self._read_settings_ack(hide)
 
     def _create_headers(self, headers, stream_id, end_stream=True):
         # TODO: implement max frame size checks and sending in chunks
@@ -127,12 +129,16 @@ class HTTP2Protocol(object):
 
         header_block_fragment = self.encoder.encode(headers)
 
-        bytes = frame.HeadersFrame(
+        frm = frame.HeadersFrame(
             state=self,
             flags=flags,
             stream_id=stream_id,
-            header_block_fragment=header_block_fragment).to_bytes()
-        return [bytes]
+            header_block_fragment=header_block_fragment)
+
+        if self.tcp_handler.http2_framedump:
+            print(frm.human_readable(">>"))
+
+        return [frm.to_bytes()]
 
     def _create_body(self, body, stream_id):
         if body is None or len(body) == 0:
@@ -141,12 +147,17 @@ class HTTP2Protocol(object):
         # TODO: implement max frame size checks and sending in chunks
         # TODO: implement flow-control window
 
-        bytes = frame.DataFrame(
+        frm = frame.DataFrame(
             state=self,
             flags=frame.Frame.FLAG_END_STREAM,
             stream_id=stream_id,
-            payload=body).to_bytes()
-        return [bytes]
+            payload=body)
+
+        if self.tcp_handler.http2_framedump:
+            print(frm.human_readable(">>"))
+
+        return [frm.to_bytes()]
+
 
     def create_request(self, method, path, headers=None, body=None):
         if headers is None:
