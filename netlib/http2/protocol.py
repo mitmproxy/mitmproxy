@@ -50,14 +50,18 @@ class HTTP2Protocol(object):
         return True
 
     def _receive_settings(self, hide=False):
-        frm = self.read_frame(hide)
-        assert isinstance(frm, frame.SettingsFrame)
+        while True:
+            frm = self.read_frame(hide)
+            if isinstance(frm, frame.SettingsFrame):
+                break
 
     def _read_settings_ack(self, hide=False):
-        settings_ack_frame = self.read_frame(hide)
-        assert isinstance(settings_ack_frame, frame.SettingsFrame)
-        assert settings_ack_frame.flags & frame.Frame.FLAG_ACK
-        assert len(settings_ack_frame.settings) == 0
+        while True:
+            frm = self.read_frame(hide)
+            if isinstance(frm, frame.SettingsFrame):
+                assert settings_ack_frame.flags & frame.Frame.FLAG_ACK
+                assert len(settings_ack_frame.settings) == 0
+                break
 
     def perform_server_connection_preface(self, force=False):
         if force or not self.connection_preface_performed:
@@ -119,7 +123,7 @@ class HTTP2Protocol(object):
                 state=self,
                 flags=frame.Frame.FLAG_ACK),
                 hide)
-        self._read_settings_ack(hide)
+        # self._read_settings_ack(hide)
 
     def _create_headers(self, headers, stream_id, end_stream=True):
         # TODO: implement max frame size checks and sending in chunks
@@ -219,10 +223,13 @@ class HTTP2Protocol(object):
         if headers is None:
             headers = []
 
+        body='foobar'
+
         headers = [(b':status', bytes(str(code)))] + headers
 
         stream_id = self.next_stream_id()
 
         return list(itertools.chain(
             self._create_headers(headers, stream_id, end_stream=(body is None)),
-            self._create_body(body, stream_id)))
+            self._create_body(body, stream_id),
+        ))
