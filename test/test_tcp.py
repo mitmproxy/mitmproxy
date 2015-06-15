@@ -171,6 +171,59 @@ class TestSSLv3Only(test.ServerTestBase):
         tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com")
 
 
+class TestSSLUpstreamCertVerification(test.ServerTestBase):
+    handler = EchoHandler
+
+    ssl = dict(
+        cert=tutils.test_data.path("data/server.crt")
+    )
+
+    def test_mode_default(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        c.convert_to_ssl()
+
+        testval = "echo!\n"
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
+    def test_mode_none(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        c.convert_to_ssl(verify_options=SSL.VERIFY_NONE)
+
+        testval = "echo!\n"
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
+    def test_mode_strict_w_bad_cert(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        tutils.raises(
+            tcp.NetLibError,
+            c.convert_to_ssl,
+            verify_options=SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+            ca_pemfile=tutils.test_data.path("data/not-server.crt"))
+
+    def test_mode_strict_w_cert(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        c.convert_to_ssl(
+            verify_options=SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+            ca_pemfile=tutils.test_data.path("data/server.crt"))
+
+        testval = "echo!\n"
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
+
 class TestSSLClientCert(test.ServerTestBase):
 
     class handler(tcp.BaseHandler):
