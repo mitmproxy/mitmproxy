@@ -171,6 +171,9 @@ class HTTP2Protocol(object):
             headers = []
 
         authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
+        if self.tcp_handler.address.port != 443:
+            authority += ":%d" % self.tcp_handler.address.port
+
         headers = [
             (b':method', bytes(method)),
             (b':path', bytes(path)),
