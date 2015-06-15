@@ -31,7 +31,7 @@ class HTTP2Protocol(object):
 
     ALPN_PROTO_H2 = 'h2'
 
-    def __init__(self, tcp_handler, is_server=False):
+    def __init__(self, tcp_handler, is_server=False, dump_frames=False):
         self.tcp_handler = tcp_handler
         self.is_server = is_server
 
@@ -40,6 +40,7 @@ class HTTP2Protocol(object):
         self.encoder = Encoder()
         self.decoder = Decoder()
         self.connection_preface_performed = False
+        self.dump_frames = dump_frames
 
     def check_alpn(self):
         alp = self.tcp_handler.get_alpn_proto_negotiated()
@@ -94,12 +95,12 @@ class HTTP2Protocol(object):
         raw_bytes = frm.to_bytes()
         self.tcp_handler.wfile.write(raw_bytes)
         self.tcp_handler.wfile.flush()
-        if not hide and self.tcp_handler.http2_framedump:
+        if not hide and self.dump_frames:
             print(frm.human_readable(">>"))
 
     def read_frame(self, hide=False):
         frm = frame.Frame.from_file(self.tcp_handler.rfile, self)
-        if not hide and self.tcp_handler.http2_framedump:
+        if not hide and self.dump_frames:
             print(frm.human_readable("<<"))
         if isinstance(frm, frame.SettingsFrame) and not frm.flags & frame.Frame.FLAG_ACK:
             self._apply_settings(frm.settings, hide)
@@ -135,7 +136,7 @@ class HTTP2Protocol(object):
             stream_id=stream_id,
             header_block_fragment=header_block_fragment)
 
-        if self.tcp_handler.http2_framedump:
+        if self.dump_frames:
             print(frm.human_readable(">>"))
 
         return [frm.to_bytes()]
@@ -153,7 +154,7 @@ class HTTP2Protocol(object):
             stream_id=stream_id,
             payload=body)
 
-        if self.tcp_handler.http2_framedump:
+        if self.dump_frames:
             print(frm.human_readable(">>"))
 
         return [frm.to_bytes()]
