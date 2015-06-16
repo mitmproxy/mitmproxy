@@ -17,3 +17,8 @@ Requirements
 
 * [Python](http://www.python.org) 2.7.x.
 * Third-party packages listed in [setup.py](https://github.com/mitmproxy/netlib/blob/master/setup.py)
+
+Hacking
+-------
+
+If you'd like to work on netlib, check out the instructions in mitmproxy's [README](https://github.com/mitmproxy/mitmproxy#hacking).
