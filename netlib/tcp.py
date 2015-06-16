@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 
+import certifi
 import OpenSSL
 from OpenSSL import SSL
 
@@ -373,7 +374,7 @@ class _Connection(object):
                             method=SSLv23_METHOD,
                             options=(OP_NO_SSLv2 | OP_NO_SSLv3),
                             verify_options=VERIFY_NONE,
-                            ca_path=None,
+                            ca_path=certifi.where(),
                             ca_pemfile=None,
                             cipher_list=None,
                             alpn_protos=None,
@@ -403,8 +404,7 @@ class _Connection(object):
                     (err_depth, errno))
 
             context.set_verify(verify_options, verify_cert)
-            if ca_path is not None or ca_pemfile is not None:
-                context.load_verify_locations(ca_pemfile, ca_path)
+            context.load_verify_locations(ca_pemfile, ca_path)
 
         # Workaround for
         # https://github.com/pyca/pyopenssl/issues/190
