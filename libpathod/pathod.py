@@ -306,8 +306,11 @@ class PathodHandler(tcp.BaseHandler):
                             )])
                 else:
                     if self.use_http2:
-                        raise NotImplementedError(\
-                            "HTTP/2 only supports request/response with the craft anchor point.")
+                        anchor_gen = iter([self.make_http_error_response(
+                            "Spec Error",
+                            "HTTP/2 only supports request/response with the craft anchor point: %s" %
+                                self.server.craftanchor
+                        )])
 
 
             if anchor_gen:

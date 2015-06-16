@@ -179,7 +179,7 @@ class Response(message.Message):
 
             body = self.body
             if body:
-                body = body.values(settings)
+                body = body.string()
 
             self.rendered_values = settings.protocol.create_response(
                 self.code.string(),
@@ -192,17 +192,11 @@ class Response(message.Message):
         return ":".join([i.spec() for i in self.tokens])
 
 def make_error_response(reason, body=None):
-    raise NotImplementedError
-    # tokens = [
-    #     Code("800"),
-    #     Header(
-    #         base.TokValueLiteral("Content-Type"),
-    #         base.TokValueLiteral("text/plain")
-    #     ),
-    #     Reason(base.TokValueLiteral(reason)),
-    #     Body(base.TokValueLiteral("pathod error: " + (body or reason))),
-    # ]
-    # return Response(tokens)
+    tokens = [
+        Code("800"),
+        Body(base.TokValueLiteral("pathod error: " + (body or reason))),
+    ]
+    return Response(tokens)
 
 # class Frame(message.Message):
 #     pass
