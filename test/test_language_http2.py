@@ -10,8 +10,29 @@ import tutils
 def parse_request(s):
     return language.parse_pathoc(s, True).next()
 
+def parse_response(s):
+    return language.parse_pathod(s, True).next()
+
+def default_settings():
+    return language.Settings(
+        request_host = "foo.com",
+        protocol = netlib.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
+    )
+
+
+def test_make_error_response():
+    d = cStringIO.StringIO()
+    s = http2.make_error_response("foo", "bar")
+    language.serve(s, d, default_settings())
+
 
 class TestRequest:
+    def test_cached_values(self):
+        req = parse_request("get:/")
+        req_id = id(req)
+        assert req_id == id(req.resolve(default_settings()))
+        assert req.values(default_settings()) == req.values(default_settings())
+
     def test_nonascii(self):
         tutils.raises("ascii", parse_request, "get:\xf0")
 
@@ -57,16 +78,31 @@ class TestRequest:
         assert r[0].method.string() == "GET"
         assert r[1].method.string() == "GET"
 
-    def test_render(self):
+    def test_render_simple(self):
         s = cStringIO.StringIO()
         r = parse_request("GET:'/foo'")
         assert language.serve(
             r,
             s,
-            language.Settings(
-                request_host = "foo.com",
-                protocol = netlib.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
-            )
+            default_settings(),
+        )
+
+    def test_render_with_headers(self):
+        s = cStringIO.StringIO()
+        r = parse_request('GET:/foo:h"foo"="bar"')
+        assert language.serve(
+            r,
+            s,
+            default_settings(),
+        )
+
+    def test_render_with_body(self):
+        s = cStringIO.StringIO()
+        r = parse_request("GET:'/foo':bfoobar")
+        assert language.serve(
+            r,
+            s,
+            default_settings(),
         )
 
     def test_spec(self):
@@ -74,3 +110,68 @@ class TestRequest:
             s = parse_request(s).spec()
             assert parse_request(s).spec() == s
         rt("get:/foo")
+
+
+class TestResponse:
+    def test_cached_values(self):
+        res = parse_response("200")
+        res_id = id(res)
+        assert res_id == id(res.resolve(default_settings()))
+        assert res.values(default_settings()) == res.values(default_settings())
+
+    def test_nonascii(self):
+        tutils.raises("ascii", parse_response, "200:\xf0")
+
+    def test_err(self):
+        tutils.raises(language.ParseException, parse_response, 'GET:/')
+
+    def test_simple(self):
+        r = parse_response('200')
+        assert r.code.string() == "200"
+        assert len(r.headers) == 0
+
+        r = parse_response('200:h"foo"="bar"')
+        assert r.code.string() == "200"
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("foo", "bar")
+        assert r.body == None
+
+        r = parse_response('200:h"foo"="bar":bfoobar:h"bla"="fasel"')
+        assert r.code.string() == "200"
+        assert len(r.headers) == 2
+        assert r.headers[0].values(default_settings()) == ("foo", "bar")
+        assert r.headers[1].values(default_settings()) == ("bla", "fasel")
+        assert r.body.string() == "foobar"
+
+    def test_render_simple(self):
+        s = cStringIO.StringIO()
+        r = parse_response('200')
+        assert language.serve(
+            r,
+            s,
+            default_settings(),
+        )
+
+    def test_render_with_headers(self):
+        s = cStringIO.StringIO()
+        r = parse_response('200:h"foo"="bar"')
+        assert language.serve(
+            r,
+            s,
+            default_settings(),
+        )
+
+    def test_render_with_body(self):
+        s = cStringIO.StringIO()
+        r = parse_response('200:bfoobar')
+        assert language.serve(
+            r,
+            s,
+            default_settings(),
+        )
+
+    def test_spec(self):
+        def rt(s):
+            s = parse_response(s).spec()
+            assert parse_response(s).spec() == s
+        rt("200:bfoobar")

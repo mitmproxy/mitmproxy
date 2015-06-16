@@ -35,7 +35,14 @@ class Path(base.Value):
 
 
 class Header(base.KeyValue):
+    unique_name = None
     preamble = "h"
+
+    def values(self, settings):
+        return (
+            self.key.get_generator(settings),
+            self.value.get_generator(settings),
+        )
 
 
 class Body(base.Value):
@@ -45,8 +52,10 @@ class Body(base.Value):
 class Times(base.Integer):
     preamble = "x"
 
+
 class Code(base.Integer):
     pass
+
 
 class Request(message.Message):
     comps = (
@@ -57,7 +66,7 @@ class Request(message.Message):
     logattrs = ["method", "path"]
 
     def __init__(self, tokens):
-        super(Response, self).__init__(tokens)
+        super(Request, self).__init__(tokens)
         self.rendered_values = None
 
     @property
@@ -106,9 +115,7 @@ class Request(message.Message):
         if self.rendered_values:
             return self.rendered_values
         else:
-            headers = self.headers
-            if headers:
-                headers = headers.values(settings)
+            headers = [header.values(settings) for header in self.headers]
 
             body = self.body
             if body:
@@ -173,9 +180,7 @@ class Response(message.Message):
         if self.rendered_values:
             return self.rendered_values
         else:
-            headers = self.headers
-            if headers:
-                headers = headers.values(settings)
+            headers = [header.values(settings) for header in self.headers]
 
             body = self.body
             if body:

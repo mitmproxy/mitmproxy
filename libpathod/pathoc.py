@@ -30,13 +30,8 @@ class SSLInfo:
         self.certchain, self.cipher, self.alp = certchain, cipher, alp
 
     def __str__(self):
-        if self.alp:
-            alp = self.alp
-        else:
-            alp = '<no protocol negotiated>'
-
         parts = [
-            "Application Layer Protocol: %s" % alp,
+            "Application Layer Protocol: %s" % self.alp,
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]

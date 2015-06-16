@@ -234,6 +234,7 @@ class PathodHandler(tcp.BaseHandler):
                 method = headers[':method']
                 path = headers[':path']
                 headers = odict.ODict(headers)
+                httpversion = ""
             else:
                 req = self.read_http_request(lg)
                 if 'next_handle' in req:
@@ -246,6 +247,7 @@ class PathodHandler(tcp.BaseHandler):
                 path = req['path']
                 headers = req['headers']
                 body = req['body']
+                httpversion = req['httpversion']
 
             clientcert = None
             if self.clientcert:
@@ -265,7 +267,7 @@ class PathodHandler(tcp.BaseHandler):
                     path=path,
                     method=method,
                     headers=headers.lst,
-                    # httpversion=httpversion,
+                    httpversion=httpversion,
                     sni=self.sni,
                     remote_address=self.address(),
                     clientcert=clientcert,
@@ -375,7 +377,8 @@ class PathodHandler(tcp.BaseHandler):
             method=method,
             path=path,
             headers=headers,
-            body=body)
+            body=body,
+            httpversion=httpversion)
 
     def make_http_error_response(self, reason, body=None):
         """
