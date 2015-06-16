@@ -1,0 +1,3 @@
+pylint:
+  disable:
+    - unpacking-non-sequence
