@@ -158,7 +158,7 @@ def _parse_set_cookie_pairs(s):
     return pairs
 
 
-def parse_set_cookie_header(str):
+def parse_set_cookie_header(line):
     """
         Parse a Set-Cookie header value
 
@@ -166,7 +166,7 @@ def parse_set_cookie_header(str):
         ODictCaseless set of attributes. No attempt is made to parse attribute
         values - they are treated purely as strings.
     """
-    pairs = _parse_set_cookie_pairs(str)
+    pairs = _parse_set_cookie_pairs(line)
     if pairs:
         return pairs[0][0], pairs[0][1], odict.ODictCaseless(pairs[1:])
 
@@ -180,12 +180,12 @@ def format_set_cookie_header(name, value, attrs):
     return _format_set_cookie_pairs(pairs)
 
 
-def parse_cookie_header(str):
+def parse_cookie_header(line):
     """
         Parse a Cookie header value.
         Returns a (possibly empty) ODict object.
     """
-    pairs, off = _read_pairs(str)
+    pairs, off = _read_pairs(line)
     return odict.ODict(pairs)
 
 

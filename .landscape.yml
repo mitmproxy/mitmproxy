@@ -1,3 +1,13 @@
+max-line-length: 120
 pylint:
   disable:
+    - missing-docstring
+    - protected-access
+    - too-few-public-methods
+    - too-many-arguments
+    - too-many-instance-attributes
+    - too-many-locals
+    - too-many-public-methods
+    - too-many-return-statements
+    - too-many-statements
     - unpacking-non-sequence

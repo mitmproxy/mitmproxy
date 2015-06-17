@@ -1,6 +1,5 @@
 import sys
 import struct
-from functools import reduce
 from hpack.hpack import Encoder, Decoder
 
 from .. import utils
@@ -52,7 +51,7 @@ class Frame(object):
         self.stream_id = stream_id
 
     @classmethod
-    def _check_frame_size(self, length, state):
+    def _check_frame_size(cls, length, state):
         if state:
             settings = state.http2_settings
         else:
@@ -67,7 +66,7 @@ class Frame(object):
                     length, max_frame_size))
 
     @classmethod
-    def from_file(self, fp, state=None):
+    def from_file(cls, fp, state=None):
         """
           read a HTTP/2 frame sent by a server or client
           fp is a "file like" object that could be backed by a network
@@ -83,7 +82,7 @@ class Frame(object):
         if raw_header[:4] == b'HTTP':  # pragma no cover
             print >> sys.stderr, "WARNING: This looks like an HTTP/1 connection!"
 
-        self._check_frame_size(length, state)
+        cls._check_frame_size(length, state)
 
         payload = fp.safe_read(length)
         return FRAMES[fields[2]].from_bytes(
@@ -146,10 +145,10 @@ class DataFrame(Frame):
         self.pad_length = pad_length
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
-        if f.flags & self.FLAG_PADDED:
+        if f.flags & Frame.FLAG_PADDED:
             f.pad_length = struct.unpack('!B', payload[0])[0]
             f.payload = payload[1:-f.pad_length]
         else:
@@ -204,16 +203,16 @@ class HeadersFrame(Frame):
         self.weight = weight
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
-        if f.flags & self.FLAG_PADDED:
+        if f.flags & Frame.FLAG_PADDED:
             f.pad_length = struct.unpack('!B', payload[0])[0]
             f.header_block_fragment = payload[1:-f.pad_length]
         else:
             f.header_block_fragment = payload[0:]
 
-        if f.flags & self.FLAG_PRIORITY:
+        if f.flags & Frame.FLAG_PRIORITY:
             f.stream_dependency, f.weight = struct.unpack(
                 '!LB', f.header_block_fragment[:5])
             f.exclusive = bool(f.stream_dependency >> 31)
@@ -279,8 +278,8 @@ class PriorityFrame(Frame):
         self.weight = weight
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
         f.stream_dependency, f.weight = struct.unpack('!LB', payload)
         f.exclusive = bool(f.stream_dependency >> 31)
@@ -325,8 +324,8 @@ class RstStreamFrame(Frame):
         self.error_code = error_code
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
         f.error_code = struct.unpack('!L', payload)[0]
         return f
 
@@ -369,8 +368,8 @@ class SettingsFrame(Frame):
         self.settings = settings
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
         for i in xrange(0, len(payload), 6):
             identifier, value = struct.unpack("!HL", payload[i:i + 6])
@@ -420,10 +419,10 @@ class PushPromiseFrame(Frame):
         self.header_block_fragment = header_block_fragment
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
-        if f.flags & self.FLAG_PADDED:
+        if f.flags & Frame.FLAG_PADDED:
             f.pad_length, f.promised_stream = struct.unpack('!BL', payload[:5])
             f.header_block_fragment = payload[5:-f.pad_length]
         else:
@@ -480,8 +479,8 @@ class PingFrame(Frame):
         self.payload = payload
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
         f.payload = payload
         return f
 
@@ -517,8 +516,8 @@ class GoAwayFrame(Frame):
         self.data = data
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
         f.last_stream, f.error_code = struct.unpack("!LL", payload[:8])
         f.last_stream &= 0x7FFFFFFF
@@ -558,8 +557,8 @@ class WindowUpdateFrame(Frame):
         self.window_size_increment = window_size_increment
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
 
         f.window_size_increment = struct.unpack("!L", payload)[0]
         f.window_size_increment &= 0x7FFFFFFF
@@ -592,8 +591,8 @@ class ContinuationFrame(Frame):
         self.header_block_fragment = header_block_fragment
 
     @classmethod
-    def from_bytes(self, state, length, flags, stream_id, payload):
-        f = self(state=state, length=length, flags=flags, stream_id=stream_id)
+    def from_bytes(cls, state, length, flags, stream_id, payload):
+        f = cls(state=state, length=length, flags=flags, stream_id=stream_id)
         f.header_block_fragment = payload
         return f
 
