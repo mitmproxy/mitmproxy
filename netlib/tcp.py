@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 
+import certifi
 import OpenSSL
 from OpenSSL import SSL
 
@@ -19,8 +20,18 @@ SSLv2_METHOD = SSL.SSLv2_METHOD
 SSLv3_METHOD = SSL.SSLv3_METHOD
 SSLv23_METHOD = SSL.SSLv23_METHOD
 TLSv1_METHOD = SSL.TLSv1_METHOD
-OP_NO_SSLv2 = SSL.OP_NO_SSLv2
-OP_NO_SSLv3 = SSL.OP_NO_SSLv3
+TLSv1_1_METHOD = SSL.TLSv1_1_METHOD
+TLSv1_2_METHOD = SSL.TLSv1_2_METHOD
+
+
+SSL_DEFAULT_OPTIONS = (
+    SSL.OP_NO_SSLv2 |
+    SSL.OP_NO_SSLv3 |
+    SSL.OP_CIPHER_SERVER_PREFERENCE
+)
+
+if hasattr(SSL, "OP_NO_COMPRESSION"):
+    SSL_DEFAULT_OPTIONS |= SSL.OP_NO_COMPRESSION
 
 
 class NetLibError(Exception):
@@ -293,7 +304,7 @@ def close_socket(sock):
     """
     try:
         # We already indicate that we close our end.
-         # may raise "Transport endpoint is not connected" on Linux
+        # may raise "Transport endpoint is not connected" on Linux
         sock.shutdown(socket.SHUT_WR)
 
         # Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending
@@ -364,20 +375,24 @@ class _Connection(object):
             except SSL.Error:
                 pass
 
-    """
-    Creates an SSL Context.
-    """
-
     def _create_ssl_context(self,
                             method=SSLv23_METHOD,
-                            options=(OP_NO_SSLv2 | OP_NO_SSLv3),
+                            options=SSL_DEFAULT_OPTIONS,
+                            verify_options=SSL.VERIFY_NONE,
+                            ca_path=certifi.where(),
+                            ca_pemfile=None,
                             cipher_list=None,
                             alpn_protos=None,
                             alpn_select=None,
                             ):
         """
-        :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD or TLSv1_1_METHOD
+        Creates an SSL Context.
+
+        :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD, TLSv1_1_METHOD, or TLSv1_2_METHOD
         :param options: A bit field consisting of OpenSSL.SSL.OP_* values
+        :param verify_options: A bit field consisting of OpenSSL.SSL.VERIFY_* values
+        :param ca_path: Path to a directory of trusted CA certificates prepared using the c_rehash tool
+        :param ca_pemfile: Path to a PEM formatted trusted CA certificate
         :param cipher_list: A textual OpenSSL cipher list, see https://www.openssl.org/docs/apps/ciphers.html
         :rtype : SSL.Context
         """
@@ -385,6 +400,18 @@ class _Connection(object):
         # Options (NO_SSLv2/3)
         if options is not None:
             context.set_options(options)
+
+        # Verify Options (NONE/PEER/PEER|FAIL_IF_... and trusted CAs)
+        if verify_options is not None and verify_options is not SSL.VERIFY_NONE:
+            def verify_cert(conn, cert, errno, err_depth, is_cert_verified):
+                if is_cert_verified:
+                    return True
+                raise NetLibError(
+                    "Upstream certificate validation failed at depth: %s with error number: %s" %
+                    (err_depth, errno))
+
+            context.set_verify(verify_options, verify_cert)
+            context.load_verify_locations(ca_pemfile, ca_path)
 
         # Workaround for
         # https://github.com/pyca/pyopenssl/issues/190
@@ -396,6 +423,9 @@ class _Connection(object):
         if cipher_list:
             try:
                 context.set_cipher_list(cipher_list)
+
+                # TODO: maybe change this to with newer pyOpenSSL APIs
+                context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
                 raise NetLibError("SSL cipher specification error: %s" % str(v))
 
@@ -404,16 +434,17 @@ class _Connection(object):
             context.set_info_callback(log_ssl_key)
 
         if OpenSSL._util.lib.Cryptography_HAS_ALPN:
-            # advertise application layer protocols
             if alpn_protos is not None:
+                # advertise application layer protocols
                 context.set_alpn_protos(alpn_protos)
-
-            # select application layer protocol
-            if alpn_select is not None:
-                def alpn_select_f(conn, options):
-                    return bytes(alpn_select)
-
-                context.set_alpn_select_callback(alpn_select_f)
+            elif alpn_select is not None:
+                # select application layer protocol
+                def alpn_select_callback(conn, options):
+                    if alpn_select in options:
+                        return bytes(alpn_select)
+                    else:  # pragma no cover
+                        return options[0]
+                context.set_alpn_select_callback(alpn_select_callback)
 
         return context
 
@@ -458,6 +489,9 @@ class TCPClient(_Connection):
             cert: Path to a file containing both client cert and private key.
 
             options: A bit field consisting of OpenSSL.SSL.OP_* values
+            verify_options: A bit field consisting of OpenSSL.SSL.VERIFY_* values
+            ca_path: Path to a directory of trusted CA certificates prepared using the c_rehash tool
+            ca_pemfile: Path to a PEM formatted trusted CA certificate
         """
         context = self.create_ssl_context(
             alpn_protos=alpn_protos,
@@ -499,10 +533,10 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
-        else:  # pragma no cover
-            return None
+        else:
+            return ""
 
 
 class BaseHandler(_Connection):
@@ -531,7 +565,6 @@ class BaseHandler(_Connection):
                            request_client_cert=None,
                            chain_file=None,
                            dhparams=None,
-                           alpn_select=None,
                            **sslctx_kwargs):
         """
             cert: A certutils.SSLCert object.
@@ -558,9 +591,7 @@ class BaseHandler(_Connection):
             until then we're conservative.
         """
 
-        context = self._create_ssl_context(
-            alpn_select=alpn_select,
-            **sslctx_kwargs)
+        context = self._create_ssl_context(**sslctx_kwargs)
 
         context.use_privatekey(key)
         context.use_certificate(cert.x509)
@@ -585,7 +616,7 @@ class BaseHandler(_Connection):
 
         return context
 
-    def convert_to_ssl(self, cert, key, alpn_select=None, **sslctx_kwargs):
+    def convert_to_ssl(self, cert, key, **sslctx_kwargs):
         """
         Convert connection to SSL.
         For a list of parameters, see BaseHandler._create_ssl_context(...)
@@ -594,7 +625,6 @@ class BaseHandler(_Connection):
         context = self.create_ssl_context(
             cert,
             key,
-            alpn_select=alpn_select,
             **sslctx_kwargs)
         self.connection = SSL.Connection(context, self.connection)
         self.connection.set_accept_state()
@@ -611,6 +641,12 @@ class BaseHandler(_Connection):
 
     def settimeout(self, n):
         self.connection.settimeout(n)
+
+    def get_alpn_proto_negotiated(self):
+        if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
+            return self.connection.get_alpn_proto_negotiated()
+        else:
+            return ""
 
 
 class TCPServer(object):

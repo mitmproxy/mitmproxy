@@ -41,6 +41,18 @@ class HangHandler(tcp.BaseHandler):
             time.sleep(1)
 
 
+class ALPNHandler(tcp.BaseHandler):
+    sni = None
+
+    def handle(self):
+        alp = self.get_alpn_proto_negotiated()
+        if alp:
+            self.wfile.write("%s" % alp)
+        else:
+            self.wfile.write("NONE")
+        self.wfile.flush()
+
+
 class TestServer(test.ServerTestBase):
     handler = EchoHandler
 
@@ -169,6 +181,59 @@ class TestSSLv3Only(test.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com")
+
+
+class TestSSLUpstreamCertVerification(test.ServerTestBase):
+    handler = EchoHandler
+
+    ssl = dict(
+        cert=tutils.test_data.path("data/server.crt")
+    )
+
+    def test_mode_default(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        c.convert_to_ssl()
+
+        testval = "echo!\n"
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
+    def test_mode_none(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        c.convert_to_ssl(verify_options=SSL.VERIFY_NONE)
+
+        testval = "echo!\n"
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
+    def test_mode_strict_w_bad_cert(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        tutils.raises(
+            tcp.NetLibError,
+            c.convert_to_ssl,
+            verify_options=SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+            ca_pemfile=tutils.test_data.path("data/not-server.crt"))
+
+    def test_mode_strict_w_cert(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        c.convert_to_ssl(
+            verify_options=SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+            ca_pemfile=tutils.test_data.path("data/server.crt"))
+
+        testval = "echo!\n"
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
 
 
 class TestSSLClientCert(test.ServerTestBase):
@@ -363,25 +428,43 @@ class TestTimeOut(test.ServerTestBase):
         tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
 
 
-class TestALPN(test.ServerTestBase):
-    handler = EchoHandler
+class TestALPNClient(test.ServerTestBase):
+    handler = ALPNHandler
     ssl = dict(
-        alpn_select="foobar"
+        alpn_select="bar"
     )
 
     if OpenSSL._util.lib.Cryptography_HAS_ALPN:
         def test_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=["foobar"])
-            assert c.get_alpn_proto_negotiated() == "foobar"
+            c.convert_to_ssl(alpn_protos=["foo", "bar", "fasel"])
+            assert c.get_alpn_proto_negotiated() == "bar"
+            assert c.rfile.readline().strip() == "bar"
+
+        def test_no_alpn(self):
+            c = tcp.TCPClient(("127.0.0.1", self.port))
+            c.connect()
+            c.convert_to_ssl()
+            assert c.get_alpn_proto_negotiated() == ""
+            assert c.rfile.readline().strip() == "NONE"
 
     else:
         def test_none_alpn(self):
             c = tcp.TCPClient(("127.0.0.1", self.port))
             c.connect()
-            c.convert_to_ssl(alpn_protos=["foobar"])
-            assert c.get_alpn_proto_negotiated() == None
+            c.convert_to_ssl(alpn_protos=["foo", "bar", "fasel"])
+            assert c.get_alpn_proto_negotiated() == ""
+            assert c.rfile.readline() == "NONE"
+
+class TestNoSSLNoALPNClient(test.ServerTestBase):
+    handler = ALPNHandler
+
+    def test_no_ssl_no_alpn(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        assert c.get_alpn_proto_negotiated() == ""
+        assert c.rfile.readline().strip() == "NONE"
 
 
 class TestSSLTimeOut(test.ServerTestBase):

@@ -49,6 +49,7 @@ setup(
         "Operating System :: POSIX",
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Topic :: Internet",
@@ -66,7 +67,8 @@ setup(
         "pyOpenSSL>=0.15.1",
         "cryptography>=0.9",
         "passlib>=1.6.2",
-        "hpack>=1.0.1"],
+        "hpack>=1.0.1",
+        "certifi"],
     setup_requires=[
         "cffi",
         "pyOpenSSL>=0.15.1",
