@@ -10,6 +10,7 @@ logging.basicConfig(level="DEBUG")
 EXAMPLE_HOST = "example.com"
 EXAMPLE_WEBSOCKET_KEY = "examplekey"
 
+# pylint: disable=unused-variable
 
 def make_app(noapi, debug):
     app = Flask(__name__)
@@ -145,24 +146,24 @@ def make_app(noapi, debug):
 
         s = cStringIO.StringIO()
 
-        set = copy.copy(app.config["pathod"].settings)
-        set.request_host = EXAMPLE_HOST
-        set.websocket_key = EXAMPLE_WEBSOCKET_KEY
+        settings = copy.copy(app.config["pathod"].settings)
+        settings.request_host = EXAMPLE_HOST
+        settings.websocket_key = EXAMPLE_WEBSOCKET_KEY
 
         safe = r.preview_safe()
         err, safe = app.config["pathod"].check_policy(
             safe,
-            set
+            settings
         )
         if err:
             args["error"] = err
             return render(template, False, **args)
         if is_request:
-            set.request_host = EXAMPLE_HOST
-            language.serve(safe, s, set)
+            settings.request_host = EXAMPLE_HOST
+            language.serve(safe, s, settings)
         else:
-            set.websocket_key = EXAMPLE_WEBSOCKET_KEY
-            language.serve(safe, s, set)
+            settings.websocket_key = EXAMPLE_WEBSOCKET_KEY
+            language.serve(safe, s, settings)
 
         args["output"] = utils.escape_unprintables(s.getvalue())
         return render(template, False, **args)

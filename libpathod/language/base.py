@@ -86,7 +86,7 @@ class Token(object):
         """
         return self.__class__.__name__.lower()
 
-    def resolve(self, settings, msg):
+    def resolve(self, settings_, msg_):
         """
             Resolves this token to ready it for transmission. This means that
             the calculated offsets of actions are fixed.
@@ -104,10 +104,10 @@ class _TokValueLiteral(Token):
     def __init__(self, val):
         self.val = val.decode("string_escape")
 
-    def get_generator(self, settings):
+    def get_generator(self, settings_):
         return self.val
 
-    def freeze(self, settings):
+    def freeze(self, settings_):
         return self
 
 
@@ -150,7 +150,7 @@ class TokValueGenerate(Token):
     def bytes(self):
         return self.usize * utils.SIZE_UNITS[self.unit]
 
-    def get_generator(self, settings):
+    def get_generator(self, settings_):
         return generators.RandomGenerator(self.datatype, self.bytes())
 
     def freeze(self, settings):
@@ -194,7 +194,7 @@ class TokValueFile(Token):
         e = e + v_naked_literal
         return e.setParseAction(lambda x: cls(*x))
 
-    def freeze(self, settings):
+    def freeze(self, settings_):
         return self
 
     def get_generator(self, settings):
@@ -310,7 +310,7 @@ class CaselessLiteral(_Component):
     def spec(self):
         return self.TOK
 
-    def freeze(self, settings):
+    def freeze(self, settings_):
         return self
 
 
@@ -390,7 +390,7 @@ class Integer(_Component):
     def spec(self):
         return "%s%s" % (self.preamble, self.value)
 
-    def freeze(self, settings):
+    def freeze(self, settings_):
         return self
 
 
@@ -476,7 +476,7 @@ class Boolean(_Component):
         e = pp.Optional(pp.Literal("-"), default=True)
         e += pp.Literal(cls.name).suppress()
 
-        def parse(s, loc, toks):
+        def parse(s_, loc_, toks):
             val = True
             if toks[0] == "-":
                 val = False

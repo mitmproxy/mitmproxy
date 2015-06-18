@@ -123,7 +123,7 @@ class WebsocketFrameReader(threading.Thread):
             while True:
                 if self.ws_read_limit == 0:
                     return
-                r, _, x = select.select([self.rfile], [], [], 0.05)
+                r, _, _ = select.select([self.rfile], [], [], 0.05)
                 delta = time.time() - starttime
                 if not r and self.timeout and delta > self.timeout:
                     return
@@ -501,11 +501,11 @@ def main(args):  # pragma: nocover
                     if ret and args.oneshot:
                         return
                     # We consume the queue when we can, so it doesn't build up.
-                    for i in p.wait(timeout=0, finish=False):
+                    for i_ in p.wait(timeout=0, finish=False):
                         pass
                 except (http.HttpError, tcp.NetLibError) as v:
                     break
-            for i in p.wait(timeout=0.01, finish=True):
+            for i_ in p.wait(timeout=0.01, finish=True):
                 pass
     except KeyboardInterrupt:
         pass

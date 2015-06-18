@@ -71,7 +71,7 @@ class PauseAt(_Action):
     def intermediate(self, settings):
         return (self.offset, "pause", self.seconds)
 
-    def freeze(self, settings):
+    def freeze(self, settings_):
         return self
 
 
@@ -91,7 +91,7 @@ class DisconnectAt(_Action):
     def intermediate(self, settings):
         return (self.offset, "disconnect")
 
-    def freeze(self, settings):
+    def freeze(self, settings_):
         return self
 
 

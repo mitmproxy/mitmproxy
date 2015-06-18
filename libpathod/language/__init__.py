@@ -13,7 +13,7 @@ assert Settings  # prevent pyflakes from messing with this
 def expand(msg):
     times = getattr(msg, "times", None)
     if times:
-        for j in xrange(int(times.value)):
+        for j_ in xrange(int(times.value)):
             yield msg.strike_token("times")
     else:
         yield msg

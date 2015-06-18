@@ -1,5 +1,5 @@
 import pyparsing as pp
-from . import base, actions, message
+from . import base, message
 
 """
     Normal HTTP requests:

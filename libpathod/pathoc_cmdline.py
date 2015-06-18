@@ -3,9 +3,8 @@ import sys
 import argparse
 import os
 import os.path
-import re
 from netlib import http_uastrings
-from . import pathoc, pathod, version, utils, language
+from . import pathoc, version, utils, language
 
 
 def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):

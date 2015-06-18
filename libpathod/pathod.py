@@ -171,7 +171,7 @@ class PathodHandler(tcp.BaseHandler):
         self.wfile.flush()
         if not self.server.ssloptions.not_after_connect:
             try:
-                cert, key, chain_file = self.server.ssloptions.get_cert(
+                cert, key, chain_file_ = self.server.ssloptions.get_cert(
                     connect[0]
                 )
                 self.convert_to_ssl(
@@ -310,7 +310,7 @@ class PathodHandler(tcp.BaseHandler):
                         anchor_gen = iter([self.make_http_error_response(
                             "Spec Error",
                             "HTTP/2 only supports request/response with the craft anchor point: %s" %
-                                self.server.craftanchor
+                            self.server.craftanchor
                         )])
 
 
@@ -576,9 +576,9 @@ class Pathod(tcp.TCPServer):
         with lock:
             self.log = []
 
-    def log_by_id(self, id):
+    def log_by_id(self, identifier):
         for i in self.log:
-            if i["id"] == id:
+            if i["id"] == identifier:
                 return i
 
     def get_log(self):

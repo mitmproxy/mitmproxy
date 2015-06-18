@@ -4,10 +4,10 @@ import argparse
 import os
 import os.path
 import re
-from . import pathod, version, utils, language
+from . import pathod, version, utils
 
 
-def args_pathod(argv, stdout=sys.stdout, stderr=sys.stderr):
+def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
     parser = argparse.ArgumentParser(
         description='A pathological HTTP/S daemon.'
     )
