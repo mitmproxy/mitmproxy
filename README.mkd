@@ -4,7 +4,6 @@
 [![Downloads](https://img.shields.io/pypi/dm/pathod.svg?color=orange)](https://pypi.python.org/pypi/pathod)
 [![Latest Version](https://img.shields.io/pypi/v/pathod.svg)](https://pypi.python.org/pypi/pathod)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/pathod.svg)](https://pypi.python.org/pypi/pathod)
-[![Supported Python implementations](https://img.shields.io/pypi/implementation/pathod.svg)](https://pypi.python.org/pypi/pathod)
 
 __pathod__ is a collection of pathological tools for testing and torturing HTTP
 clients and servers. The project has three components:
