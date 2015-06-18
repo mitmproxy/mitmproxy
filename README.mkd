@@ -4,7 +4,6 @@
 [![Downloads](https://img.shields.io/pypi/dm/netlib.svg?color=orange)](https://pypi.python.org/pypi/netlib)
 [![Latest Version](https://img.shields.io/pypi/v/netlib.svg)](https://pypi.python.org/pypi/netlib)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/netlib.svg)](https://pypi.python.org/pypi/netlib)
-[![Supported Python implementations](https://img.shields.io/pypi/implementation/netlib.svg)](https://pypi.python.org/pypi/netlib)
 
 Netlib is a collection of network utility classes, used by the pathod and
 mitmproxy projects. It differs from other projects in some fundamental
@@ -16,7 +15,7 @@ functions, and are designed to allow misbehaviour when needed.
 Requirements
 ------------
 
-* [Python](http://www.python.org) 2.7.x.
+* [Python](http://www.python.org) 2.7.x or a compatible version of pypy.
 * Third-party packages listed in [setup.py](https://github.com/mitmproxy/netlib/blob/master/setup.py)
 
 Hacking
