@@ -403,7 +403,7 @@ class _Connection(object):
 
         # Verify Options (NONE/PEER/PEER|FAIL_IF_... and trusted CAs)
         if verify_options is not None and verify_options is not SSL.VERIFY_NONE:
-            def verify_cert(conn, cert, errno, err_depth, is_cert_verified):
+            def verify_cert(conn_, cert_, errno, err_depth, is_cert_verified):
                 if is_cert_verified:
                     return True
                 raise NetLibError(
@@ -439,7 +439,7 @@ class _Connection(object):
                 context.set_alpn_protos(alpn_protos)
             elif alpn_select is not None:
                 # select application layer protocol
-                def alpn_select_callback(conn, options):
+                def alpn_select_callback(conn_, options):
                     if alpn_select in options:
                         return bytes(alpn_select)
                     else:  # pragma no cover
@@ -601,7 +601,7 @@ class BaseHandler(_Connection):
             context.set_tlsext_servername_callback(handle_sni)
 
         if request_client_cert:
-            def save_cert(conn, cert, errno, depth, preverify_ok):
+            def save_cert(conn_, cert, errno_, depth_, preverify_ok_):
                 self.clientcert = certutils.SSLCert(cert)
                 # Return true to prevent cert verification error
                 return True
@@ -676,7 +676,7 @@ class TCPServer(object):
         try:
             while not self.__shutdown_request:
                 try:
-                    r, w, e = select.select(
+                    r, w_, e_ = select.select(
                         [self.socket], [], [], poll_interval)
                 except select.error as ex:  # pragma: no cover
                     if ex[0] == EINTR:
@@ -708,7 +708,7 @@ class TCPServer(object):
         self.socket.close()
         self.handle_shutdown()
 
-    def handle_error(self, connection, client_address, fp=sys.stderr):
+    def handle_error(self, connection_, client_address, fp=sys.stderr):
         """
             Called when handle_client_connection raises an exception.
         """

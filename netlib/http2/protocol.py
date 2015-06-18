@@ -59,8 +59,8 @@ class HTTP2Protocol(object):
         while True:
             frm = self.read_frame(hide)
             if isinstance(frm, frame.SettingsFrame):
-                assert settings_ack_frame.flags & frame.Frame.FLAG_ACK
-                assert len(settings_ack_frame.settings) == 0
+                assert frm.flags & frame.Frame.FLAG_ACK
+                assert len(frm.settings) == 0
                 break
 
     def perform_server_connection_preface(self, force=False):
@@ -118,11 +118,10 @@ class HTTP2Protocol(object):
                 old_value = '-'
             self.http2_settings[setting] = value
 
-        self.send_frame(
-            frame.SettingsFrame(
-                state=self,
-                flags=frame.Frame.FLAG_ACK),
-                hide)
+        frm = frame.SettingsFrame(
+            state=self,
+            flags=frame.Frame.FLAG_ACK)
+        self.send_frame(frm, hide)
 
         # be liberal in what we expect from the other end
         # to be more strict use: self._read_settings_ack(hide)
@@ -188,7 +187,7 @@ class HTTP2Protocol(object):
             self._create_body(body, stream_id)))
 
     def read_response(self):
-        stream_id, headers, body = self._receive_transmission()
+        stream_id_, headers, body = self._receive_transmission()
         return headers[':status'], headers, body
 
     def read_request(self):

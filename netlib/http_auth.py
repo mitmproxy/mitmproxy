@@ -12,12 +12,13 @@ class NullProxyAuth(object):
     def __init__(self, password_manager):
         self.password_manager = password_manager
 
-    def clean(self, headers):
+    def clean(self, headers_):
         """
             Clean up authentication headers, so they're not passed upstream.
         """
+        pass
 
-    def authenticate(self, headers):
+    def authenticate(self, headers_):
         """
             Tests that the user is allowed to use the proxy
         """
@@ -62,7 +63,7 @@ class BasicProxyAuth(NullProxyAuth):
 
 class PassMan(object):
 
-    def test(self, username, password_token):
+    def test(self, username_, password_token_):
         return False
 
 
@@ -72,7 +73,7 @@ class PassManNonAnon(PassMan):
         Ensure the user specifies a username, accept any password.
     """
 
-    def test(self, username, password_token):
+    def test(self, username, password_token_):
         if username:
             return True
         return False

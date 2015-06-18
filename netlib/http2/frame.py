@@ -116,7 +116,8 @@ class Frame(object):
         self.length = len(self.payload_bytes())
 
         return "\n".join([
-            "%s: %s | length: %d | flags: %#x | stream_id: %d" % (direction, self.__class__.__name__, self.length, self.flags, self.stream_id),
+            "%s: %s | length: %d | flags: %#x | stream_id: %d" % (
+            direction, self.__class__.__name__, self.length, self.flags, self.stream_id),
             self.payload_human_readable(),
             "===============================================================",
         ])

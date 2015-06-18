@@ -87,7 +87,7 @@ def _read_value(s, start, delims):
         return _read_until(s, start, delims)
 
 
-def _read_pairs(s, off=0, specials=()):
+def _read_pairs(s, off=0):
     """
         Read pairs of lhs=rhs values.
 
@@ -151,10 +151,7 @@ def _parse_set_cookie_pairs(s):
         For Set-Cookie, we support multiple cookies as described in RFC2109.
         This function therefore returns a list of lists.
     """
-    pairs, off = _read_pairs(
-        s,
-        specials=("expires", "path")
-    )
+    pairs, off_ = _read_pairs(s)
     return pairs
 
 
@@ -185,7 +182,7 @@ def parse_cookie_header(line):
         Parse a Cookie header value.
         Returns a (possibly empty) ODict object.
     """
-    pairs, off = _read_pairs(line)
+    pairs, off_ = _read_pairs(line)
     return odict.ODict(pairs)
 
 

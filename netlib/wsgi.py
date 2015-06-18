@@ -35,7 +35,7 @@ def date_time_string():
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ]
     now = time.time()
-    year, month, day, hh, mm, ss, wd, y, z = time.gmtime(now)
+    year, month, day, hh, mm, ss, wd, y_, z_ = time.gmtime(now)
     s = "%s, %02d %3s %4d %02d:%02d:%02d GMT" % (
         WEEKS[wd],
         day, MONTHS[month], year,
