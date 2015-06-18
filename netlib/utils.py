@@ -67,7 +67,7 @@ def getbit(byte, offset):
         return True
 
 
-class BiDi:
+class BiDi(object):
 
     """
         A wee utility class for keeping bi-directional mappings, like field

@@ -1,4 +1,5 @@
-[![Build Status](https://img.shields.io/travis/mitmproxy/netlib/master.svg)](https://travis-ci.org/mitmproxy/netlib) 
+[![Build Status](https://img.shields.io/travis/mitmproxy/netlib/master.svg)](https://travis-ci.org/mitmproxy/netlib)
+[![Code Health](https://landscape.io/github/mitmproxy/netlib/master/landscape.svg?style=flat)](https://landscape.io/github/mitmproxy/netlib/master)
 [![Coverage Status](https://img.shields.io/coveralls/mitmproxy/netlib/master.svg)](https://coveralls.io/r/mitmproxy/netlib)
 [![Downloads](https://img.shields.io/pypi/dm/netlib.svg?color=orange)](https://pypi.python.org/pypi/netlib)
 [![Latest Version](https://img.shields.io/pypi/v/netlib.svg)](https://pypi.python.org/pypi/netlib)

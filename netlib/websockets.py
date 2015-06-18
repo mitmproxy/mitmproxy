@@ -35,7 +35,7 @@ OPCODE = utils.BiDi(
 )
 
 
-class Masker:
+class Masker(object):
 
     """
         Data sent from the server must be masked to prevent malicious clients
@@ -94,15 +94,15 @@ def server_handshake_headers(key):
     )
 
 
-def make_length_code(len):
+def make_length_code(length):
     """
      A websockets frame contains an initial length_code, and an optional
      extended length code to represent the actual length if length code is
      larger than 125
     """
-    if len <= 125:
-        return len
-    elif len >= 126 and len <= 65535:
+    if length <= 125:
+        return length
+    elif length >= 126 and length <= 65535:
         return 126
     else:
         return 127
@@ -129,7 +129,7 @@ def create_server_nonce(client_nonce):
 DEFAULT = object()
 
 
-class FrameHeader:
+class FrameHeader(object):
 
     def __init__(
         self,
@@ -216,7 +216,7 @@ class FrameHeader:
         return b
 
     @classmethod
-    def from_file(klass, fp):
+    def from_file(cls, fp):
         """
           read a websockets frame header
         """
@@ -248,7 +248,7 @@ class FrameHeader:
         else:
             masking_key = None
 
-        return klass(
+        return cls(
             fin=fin,
             rsv1=rsv1,
             rsv2=rsv2,

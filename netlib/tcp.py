@@ -292,7 +292,7 @@ def close_socket(sock):
     """
     try:
         # We already indicate that we close our end.
-         # may raise "Transport endpoint is not connected" on Linux
+        # may raise "Transport endpoint is not connected" on Linux
         sock.shutdown(socket.SHUT_WR)
 
         # Section 4.2.2.13 of RFC 1122 tells us that a close() with any pending
@@ -363,10 +363,6 @@ class _Connection(object):
             except SSL.Error:
                 pass
 
-    """
-    Creates an SSL Context.
-    """
-
     def _create_ssl_context(self,
                             method=SSLv23_METHOD,
                             options=(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION),
@@ -378,6 +374,8 @@ class _Connection(object):
                             alpn_select=None,
                             ):
         """
+        Creates an SSL Context.
+
         :param method: One of SSLv2_METHOD, SSLv3_METHOD, SSLv23_METHOD, TLSv1_METHOD, TLSv1_1_METHOD, or TLSv1_2_METHOD
         :param options: A bit field consisting of OpenSSL.SSL.OP_* values
         :param verify_options: A bit field consisting of OpenSSL.SSL.VERIFY_* values
