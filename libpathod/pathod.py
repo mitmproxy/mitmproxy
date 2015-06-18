@@ -399,7 +399,6 @@ class PathodHandler(tcp.BaseHandler):
                 self.convert_to_ssl(
                     cert,
                     key,
-                    dhparams=self.server.ssloptions.certstore.dhparams,
                     handle_sni=self._handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
