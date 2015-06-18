@@ -113,16 +113,13 @@ class Frame(object):
     def payload_human_readable(self):  # pragma: no cover
         raise NotImplementedError()
 
-    def human_readable(self):
+    def human_readable(self, direction="-"):
+        self.length = len(self.payload_bytes())
+
         return "\n".join([
-            "============================================================",
-            "length:    %d bytes" % self.length,
-            "type:      %s (%#x)" % (self.__class__.__name__, self.TYPE),
-            "flags:     %#x" % self.flags,
-            "stream_id: %#x" % self.stream_id,
-            "------------------------------------------------------------",
+            "%s: %s | length: %d | flags: %#x | stream_id: %d" % (direction, self.__class__.__name__, self.length, self.flags, self.stream_id),
             self.payload_human_readable(),
-            "============================================================",
+            "===============================================================",
         ])
 
     def __eq__(self, other):
@@ -461,7 +458,10 @@ class PushPromiseFrame(Frame):
             s.append("padding: %d" % self.pad_length)
 
         s.append("promised stream: %#x" % self.promised_stream)
-        s.append("header_block_fragment: %s" % str(self.header_block_fragment))
+        s.append(
+            "header_block_fragment: %s" %
+            self.header_block_fragment.encode('hex'))
+
         return "\n".join(s)
 
 
@@ -605,7 +605,11 @@ class ContinuationFrame(Frame):
         return self.header_block_fragment
 
     def payload_human_readable(self):
-        return "header_block_fragment: %s" % str(self.header_block_fragment)
+        s = []
+        s.append(
+            "header_block_fragment: %s" %
+            self.header_block_fragment.encode('hex'))
+        return "\n".join(s)
 
 _FRAME_CLASSES = [
     DataFrame,

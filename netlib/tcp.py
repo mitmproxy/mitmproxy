@@ -22,11 +22,6 @@ TLSv1_METHOD = SSL.TLSv1_METHOD
 TLSv1_1_METHOD = SSL.TLSv1_1_METHOD
 TLSv1_2_METHOD = SSL.TLSv1_2_METHOD
 
-OP_NO_SSLv2 = SSL.OP_NO_SSLv2
-OP_NO_SSLv3 = SSL.OP_NO_SSLv3
-VERIFY_NONE = SSL.VERIFY_NONE
-
-
 class NetLibError(Exception):
     pass
 
@@ -374,8 +369,8 @@ class _Connection(object):
 
     def _create_ssl_context(self,
                             method=SSLv23_METHOD,
-                            options=(OP_NO_SSLv2 | OP_NO_SSLv3),
-                            verify_options=VERIFY_NONE,
+                            options=(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION),
+                            verify_options=SSL.VERIFY_NONE,
                             ca_path=None,
                             ca_pemfile=None,
                             cipher_list=None,
@@ -397,7 +392,7 @@ class _Connection(object):
             context.set_options(options)
 
         # Verify Options (NONE/PEER/PEER|FAIL_IF_... and trusted CAs)
-        if verify_options is not None and verify_options is not VERIFY_NONE:
+        if verify_options is not None and verify_options is not SSL.VERIFY_NONE:
             def verify_cert(conn, cert, errno, err_depth, is_cert_verified):
                 if is_cert_verified:
                     return True
@@ -419,6 +414,9 @@ class _Connection(object):
         if cipher_list:
             try:
                 context.set_cipher_list(cipher_list)
+
+                # TODO: maybe change this to with newer pyOpenSSL APIs
+                context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
                 raise NetLibError("SSL cipher specification error: %s" % str(v))
 
@@ -529,7 +527,7 @@ class TCPClient(_Connection):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
-            return None
+            return ""
 
 
 class BaseHandler(_Connection):
@@ -639,7 +637,7 @@ class BaseHandler(_Connection):
         if OpenSSL._util.lib.Cryptography_HAS_ALPN and self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
-            return None
+            return ""
 
 
 class TCPServer(object):

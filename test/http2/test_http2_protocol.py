@@ -222,14 +222,14 @@ class TestCreateRequest():
     def test_create_request_simple(self):
         bytes = http2.HTTP2Protocol(self.c).create_request('GET', '/')
         assert len(bytes) == 1
-        assert bytes[0] == '00000c0105000000018284874187089d5c0b8170ff'.decode('hex')
+        assert bytes[0] == '00000d0105000000018284874188089d5c0b8170dc07'.decode('hex')
 
     def test_create_request_with_body(self):
         bytes = http2.HTTP2Protocol(self.c).create_request(
             'GET', '/', [(b'foo', b'bar')], 'foobar')
         assert len(bytes) == 2
         assert bytes[0] ==\
-            '0000140104000000018284874187089d5c0b8170ff408294e7838c767f'.decode('hex')
+            '0000150104000000018284874188089d5c0b8170dc07408294e7838c767f'.decode('hex')
         assert bytes[1] ==\
             '000006000100000001666f6f626172'.decode('hex')
 
@@ -300,8 +300,9 @@ class TestReadRequest(test.ServerTestBase):
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c, is_server=True)
 
-        headers, body = protocol.read_request()
+        stream_id, headers, body = protocol.read_request()
 
+        assert stream_id
         assert headers == {':method': 'GET', ':path': '/', ':scheme': 'https'}
         assert body == b'foobar'
 
@@ -309,17 +310,17 @@ class TestReadRequest(test.ServerTestBase):
 class TestCreateResponse():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
-    def test_create_request_simple(self):
+    def test_create_response_simple(self):
         bytes = http2.HTTP2Protocol(self.c, is_server=True).create_response(200)
         assert len(bytes) == 1
         assert bytes[0] ==\
             '00000101050000000288'.decode('hex')
 
-    def test_create_request_with_body(self):
+    def test_create_response_with_body(self):
         bytes = http2.HTTP2Protocol(self.c, is_server=True).create_response(
-            200, [(b'foo', b'bar')], 'foobar')
+            200, 1, [(b'foo', b'bar')], 'foobar')
         assert len(bytes) == 2
         assert bytes[0] ==\
-            '00000901040000000288408294e7838c767f'.decode('hex')
+            '00000901040000000188408294e7838c767f'.decode('hex')
         assert bytes[1] ==\
-            '000006000100000002666f6f626172'.decode('hex')
+            '000006000100000001666f6f626172'.decode('hex')
