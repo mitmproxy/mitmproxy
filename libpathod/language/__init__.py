@@ -19,7 +19,7 @@ def expand(msg):
         yield msg
 
 
-def parse_pathod(s):
+def parse_pathod(s, use_http2=False):
     """
         May raise ParseException
     """
@@ -28,12 +28,17 @@ def parse_pathod(s):
     except UnicodeError:
         raise exceptions.ParseException("Spec must be valid ASCII.", 0, 0)
     try:
-        reqs = pp.Or(
-            [
+        if use_http2:
+            expressions = [
+                # http2.Frame.expr(),
+                http2.Response.expr(),
+            ]
+        else:
+            expressions = [
                 websockets.WebsocketFrame.expr(),
                 http.Response.expr(),
             ]
-        ).parseString(s, parseAll=True)
+        reqs = pp.Or(expressions).parseString(s, parseAll=True)
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
     return itertools.chain(*[expand(i) for i in reqs])
@@ -55,7 +60,6 @@ def parse_pathoc(s, use_http2=False):
                 websockets.WebsocketClientFrame.expr(),
                 http.Request.expr(),
             ]
-
         reqs = pp.OneOrMore(pp.Or(expressions)).parseString(s, parseAll=True)
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)

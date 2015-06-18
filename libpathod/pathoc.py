@@ -30,13 +30,8 @@ class SSLInfo:
         self.certchain, self.cipher, self.alp = certchain, cipher, alp
 
     def __str__(self):
-        if self.alp:
-            alp = self.alp
-        else:
-            alp = '<no protocol negotiated>'
-
         parts = [
-            "Application Layer Protocol: %s" % alp,
+            "Application Layer Protocol: %s" % self.alp,
             "Cipher: %s, %s bit, %s" % self.cipher,
             "SSL certificate chain:"
         ]
@@ -155,13 +150,14 @@ class Pathoc(tcp.TCPClient):
             # SSL
             ssl=None,
             sni=None,
-            sslversion=4,
+            sslversion='SSLv23',
             clientcert=None,
             ciphers=None,
 
             # HTTP/2
             use_http2=False,
             http2_skip_connection_preface=False,
+            http2_framedump = False,
 
             # Websockets
             ws_read_limit = None,
@@ -199,6 +195,7 @@ class Pathoc(tcp.TCPClient):
 
         self.use_http2 = use_http2
         self.http2_skip_connection_preface = http2_skip_connection_preface
+        self.http2_framedump = http2_framedump
 
         self.ws_read_limit = ws_read_limit
 
@@ -216,6 +213,9 @@ class Pathoc(tcp.TCPClient):
         self.ws_framereader = None
 
         if self.use_http2:
+            if not OpenSSL._util.lib.Cryptography_HAS_ALPN:  # pragma: nocover
+                print >> sys.stderr, "HTTP/2 requires ALPN support. Please use OpenSSL >= 1.0.2."
+                print >> sys.stderr, "Pathoc might not be working as expected without ALPN."
             self.protocol = http2.HTTP2Protocol(self)
         else:
             # TODO: create HTTP or Websockets protocol
@@ -259,7 +259,7 @@ class Pathoc(tcp.TCPClient):
             an HTTP CONNECT request.
         """
         if self.use_http2 and not self.ssl:
-            raise ValueError("HTTP2 without SSL is not supported.")
+            raise NotImplementedError("HTTP2 without SSL is not supported.")
 
         tcp.TCPClient.connect(self)
 
@@ -294,7 +294,7 @@ class Pathoc(tcp.TCPClient):
             if self.use_http2:
                 self.protocol.check_alpn()
                 if not self.http2_skip_connection_preface:
-                    self.protocol.perform_connection_preface()
+                    self.protocol.perform_client_connection_preface()
 
         if self.timeout:
             self.settimeout(self.timeout)
@@ -462,6 +462,7 @@ def main(args):  # pragma: nocover
                 ciphers = args.ciphers,
                 use_http2 = args.use_http2,
                 http2_skip_connection_preface = args.http2_skip_connection_preface,
+                http2_framedump = args.http2_framedump,
                 showreq = args.showreq,
                 showresp = args.showresp,
                 explain = args.explain,

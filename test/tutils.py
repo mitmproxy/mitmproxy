@@ -27,7 +27,7 @@ class DaemonTests(object):
         klass.d = test.Daemon(
             staticdir=test_data.path("data"),
             anchors=[
-                (re.compile("/anchor/.*"), language.parse_pathod("202:da"))
+                (re.compile("/anchor/.*"), "202:da")
             ],
             ssl = klass.ssl,
             ssloptions = so,
@@ -73,7 +73,8 @@ class DaemonTests(object):
         timeout=None,
         connect_to=None,
         ssl=None,
-        ws_read_limit=None
+        ws_read_limit=None,
+        use_http2=False,
     ):
         """
             Returns a (messages, text log) tuple.
@@ -86,7 +87,8 @@ class DaemonTests(object):
             ssl=ssl,
             ws_read_limit=ws_read_limit,
             timeout = timeout,
-            fp = logfp
+            fp = logfp,
+            use_http2 = use_http2,
         )
         c.connect(connect_to)
         ret = []

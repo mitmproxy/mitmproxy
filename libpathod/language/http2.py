@@ -35,7 +35,14 @@ class Path(base.Value):
 
 
 class Header(base.KeyValue):
+    unique_name = None
     preamble = "h"
+
+    def values(self, settings):
+        return (
+            self.key.get_generator(settings),
+            self.value.get_generator(settings),
+        )
 
 
 class Body(base.Value):
@@ -46,13 +53,21 @@ class Times(base.Integer):
     preamble = "x"
 
 
+class Code(base.Integer):
+    pass
+
+
 class Request(message.Message):
     comps = (
         Header,
         Body,
-
         Times,
     )
+    logattrs = ["method", "path"]
+
+    def __init__(self, tokens):
+        super(Request, self).__init__(tokens)
+        self.rendered_values = None
 
     @property
     def method(self):
@@ -87,7 +102,6 @@ class Request(message.Message):
                 Method.expr(),
                 base.Sep,
                 Path.expr(),
-                base.Sep,
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )
@@ -95,25 +109,99 @@ class Request(message.Message):
         return resp
 
     def resolve(self, settings, msg=None):
-        tokens = self.tokens[:]
-        return self.__class__(
-            [i.resolve(settings, self) for i in tokens]
-        )
+        return self
 
     def values(self, settings):
-        return settings.protocol.create_request(
-            self.method.value.get_generator(settings),
-            self.path,
-            self.headers,
-            self.body)
+        if self.rendered_values:
+            return self.rendered_values
+        else:
+            headers = [header.values(settings) for header in self.headers]
+
+            body = self.body
+            if body:
+                body = body.string()
+
+            self.rendered_values = settings.protocol.create_request(
+                self.method.string(),
+                self.path.string(),
+                headers,  # TODO: parse that into a dict?!
+                body)
+            return self.rendered_values
 
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
 
-# class H2F(base.CaselessLiteral):
-#     TOK = "h2f"
-#
-#
-# class WebsocketFrame(message.Message):
+class Response(message.Message):
+    unique_name = None
+    comps = (
+        Header,
+        Body,
+    )
+
+    def __init__(self, tokens):
+        super(Response, self).__init__(tokens)
+        self.rendered_values = None
+        self.stream_id = 0
+
+    @property
+    def code(self):
+        return self.tok(Code)
+
+    @property
+    def headers(self):
+        return self.toks(Header)
+
+    @property
+    def body(self):
+        return self.tok(Body)
+
+    @property
+    def actions(self):
+        return []
+
+    def resolve(self, settings, msg=None):
+        return self
+
+    @classmethod
+    def expr(klass):
+        parts = [i.expr() for i in klass.comps]
+        atom = pp.MatchFirst(parts)
+        resp = pp.And(
+            [
+                Code.expr(),
+                pp.ZeroOrMore(base.Sep + atom)
+            ]
+        )
+        resp = resp.setParseAction(klass)
+        return resp
+
+    def values(self, settings):
+        if self.rendered_values:
+            return self.rendered_values
+        else:
+            headers = [header.values(settings) for header in self.headers]
+
+            body = self.body
+            if body:
+                body = body.string()
+
+            self.rendered_values = settings.protocol.create_response(
+                self.code.string(),
+                self.stream_id,
+                headers,  # TODO: parse that into a dict?!
+                body)
+            return self.rendered_values
+
+    def spec(self):
+        return ":".join([i.spec() for i in self.tokens])
+
+def make_error_response(reason, body=None):
+    tokens = [
+        Code("800"),
+        Body(base.TokValueLiteral("pathod error: " + (body or reason))),
+    ]
+    return Response(tokens)
+
+# class Frame(message.Message):
 #     pass
