@@ -20,7 +20,7 @@ SIZE_UNITS = dict(
 )
 
 
-class MemBool:
+class MemBool(object):
     """
         Truth-checking with a memory, for use in chained if statements.
     """
@@ -51,7 +51,7 @@ def parse_anchor_spec(s):
     """
         Return a tuple, or None on error.
     """
-    if not "=" in s:
+    if "=" not in s:
         return None
     return tuple(s.split("=", 1))
 
@@ -83,7 +83,7 @@ def escape_unprintables(s):
     return s
 
 
-class Data:
+class Data(object):
     def __init__(self, name):
         m = __import__(name)
         dirname, _ = os.path.split(m.__file__)

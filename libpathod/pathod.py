@@ -4,7 +4,6 @@ import os
 import sys
 import threading
 import urllib
-import re
 import time
 
 from netlib import tcp, http, http2, wsgi, certutils, websockets, odict
@@ -29,7 +28,7 @@ class PathodError(Exception):
     pass
 
 
-class SSLOptions:
+class SSLOptions(object):
     def __init__(
         self,
         confdir=CONFDIR,
@@ -241,7 +240,7 @@ class PathodHandler(tcp.BaseHandler):
                     return req['next_handle']
                 if 'errors' in req:
                     return None, req['errors']
-                if not 'method' in req or not 'path' in req:
+                if 'method' not in req or 'path' not in req:
                     return None, None
                 method = req['method']
                 path = req['path']
@@ -443,11 +442,11 @@ class PathodHandler(tcp.BaseHandler):
         # moment because JSON encoding can't handle binary data, and I don't
         # want to base64 everything.
         if self.server.logreq:
-            bytes = self.rfile.get_log().encode("string_escape")
-            log["request_bytes"] = bytes
+            encoded_bytes = self.rfile.get_log().encode("string_escape")
+            log["request_bytes"] = encoded_bytes
         if self.server.logresp:
-            bytes = self.wfile.get_log().encode("string_escape")
-            log["response_bytes"] = bytes
+            encoded_bytes = self.wfile.get_log().encode("string_escape")
+            log["response_bytes"] = encoded_bytes
         self.server.add_log(log)
 
 

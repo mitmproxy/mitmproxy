@@ -25,7 +25,7 @@ class PathocError(Exception):
     pass
 
 
-class SSLInfo:
+class SSLInfo(object):
     def __init__(self, certchain, cipher, alp):
         self.certchain, self.cipher, self.alp = certchain, cipher, alp
 
@@ -65,7 +65,7 @@ class SSLInfo:
             return "\n".join(parts)
 
 
-class Response:
+class Response(object):
     def __init__(
         self,
         httpversion,

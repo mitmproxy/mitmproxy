@@ -226,8 +226,8 @@ class Response(_HTTPMessage):
         )
 
     @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
+    def expr(cls):
+        parts = [i.expr() for i in cls.comps]
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
@@ -242,7 +242,7 @@ class Response(_HTTPMessage):
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )
-        resp = resp.setParseAction(klass)
+        resp = resp.setParseAction(cls)
         return resp
 
     def spec(self):
@@ -342,8 +342,8 @@ class Request(_HTTPMessage):
         )
 
     @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
+    def expr(cls):
+        parts = [i.expr() for i in cls.comps]
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
@@ -360,7 +360,7 @@ class Request(_HTTPMessage):
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )
-        resp = resp.setParseAction(klass)
+        resp = resp.setParseAction(cls)
         return resp
 
     def spec(self):

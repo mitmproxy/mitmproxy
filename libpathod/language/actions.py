@@ -53,7 +53,7 @@ class PauseAt(_Action):
         self.seconds = seconds
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = pp.Literal("p").suppress()
         e += base.TokOffset
         e += pp.Literal(",").suppress()
@@ -63,7 +63,7 @@ class PauseAt(_Action):
                 pp.Literal("f")
             ]
         )
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
         return "p%s,%s" % (self.offset, self.seconds)
@@ -80,10 +80,10 @@ class DisconnectAt(_Action):
         _Action.__init__(self, offset)
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = pp.Literal("d").suppress()
         e += base.TokOffset
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
         return "d%s" % self.offset
@@ -103,12 +103,12 @@ class InjectAt(_Action):
         self.value = value
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = pp.Literal("i").suppress()
         e += base.TokOffset
         e += pp.Literal(",").suppress()
         e += base.TokValue
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
         return "i%s,%s" % (self.offset, self.value.spec())

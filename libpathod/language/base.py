@@ -5,10 +5,8 @@ import pyparsing as pp
 
 from .. import utils
 from . import generators, exceptions
-from functools import reduce
 
-
-class Settings:
+class Settings(object):
     def __init__(
         self,
         is_client = False,
@@ -66,7 +64,7 @@ class Token(object):
     __metaclass__ = abc.ABCMeta
 
     @classmethod
-    def expr(klass):  # pragma: no cover
+    def expr(cls):  # pragma: no cover
         """
             A parse expression.
         """
@@ -118,13 +116,13 @@ class TokValueLiteral(_TokValueLiteral):
         A literal with Python-style string escaping
     """
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = v_literal.copy()
-        return e.setParseAction(klass.parseAction)
+        return e.setParseAction(cls.parseAction)
 
     @classmethod
-    def parseAction(klass, x):
-        v = klass(*x)
+    def parseAction(cls, x):
+        v = cls(*x)
         return v
 
     def spec(self):
@@ -135,9 +133,9 @@ class TokValueLiteral(_TokValueLiteral):
 
 class TokValueNakedLiteral(_TokValueLiteral):
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = v_naked_literal.copy()
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
         return self.val.encode("string_escape")
@@ -160,7 +158,7 @@ class TokValueGenerate(Token):
         return TokValueLiteral(g[:].encode("string_escape"))
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = pp.Literal("@").suppress() + v_integer
 
         u = reduce(
@@ -175,7 +173,7 @@ class TokValueGenerate(Token):
             [pp.Literal(i) for i in generators.DATATYPES.keys()]
         )
         e += pp.Optional(s, default="bytes")
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
         s = "@%s" % self.usize
@@ -191,10 +189,10 @@ class TokValueFile(Token):
         self.path = str(path)
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = pp.Literal("<").suppress()
         e = e + v_naked_literal
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def freeze(self, settings):
         return self
@@ -269,19 +267,19 @@ class _Component(Token):
 class KeyValue(_Component):
     """
         A key/value pair.
-        klass.preamble: leader
+        cls.preamble: leader
     """
 
     def __init__(self, key, value):
         self.key, self.value = key, value
 
     @classmethod
-    def expr(klass):
-        e = pp.Literal(klass.preamble).suppress()
+    def expr(cls):
+        e = pp.Literal(cls.preamble).suppress()
         e += TokValue
         e += pp.Literal("=").suppress()
         e += TokValue
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
         return "%s%s=%s" % (self.preamble, self.key.spec(), self.value.spec())
@@ -301,9 +299,9 @@ class CaselessLiteral(_Component):
         self.value = value
 
     @classmethod
-    def expr(klass):
-        spec = pp.CaselessLiteral(klass.TOK)
-        spec = spec.setParseAction(lambda x: klass(*x))
+    def expr(cls):
+        spec = pp.CaselessLiteral(cls.TOK)
+        spec = spec.setParseAction(lambda x: cls(*x))
         return spec
 
     def values(self, settings):
@@ -338,13 +336,13 @@ class OptionsOrValue(_Component):
         self.value = value
 
     @classmethod
-    def expr(klass):
-        parts = [pp.CaselessLiteral(i) for i in klass.options]
+    def expr(cls):
+        parts = [pp.CaselessLiteral(i) for i in cls.options]
         m = pp.MatchFirst(parts)
         spec = m | TokValue.copy()
-        spec = spec.setParseAction(lambda x: klass(*x))
-        if klass.preamble:
-            spec = pp.Literal(klass.preamble).suppress() + spec
+        spec = spec.setParseAction(lambda x: cls(*x))
+        if cls.preamble:
+            spec = pp.Literal(cls.preamble).suppress() + spec
         return spec
 
     def values(self, settings):
@@ -380,11 +378,11 @@ class Integer(_Component):
         self.value = str(value)
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = v_integer.copy()
-        if klass.preamble:
-            e = pp.Literal(klass.preamble).suppress() + e
-        return e.setParseAction(lambda x: klass(*x))
+        if cls.preamble:
+            e = pp.Literal(cls.preamble).suppress() + e
+        return e.setParseAction(lambda x: cls(*x))
 
     def values(self, settings):
         return self.value
@@ -406,11 +404,11 @@ class Value(_Component):
         self.value = value
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = (TokValue | TokNakedValue)
-        if klass.preamble:
-            e = pp.Literal(klass.preamble).suppress() + e
-        return e.setParseAction(lambda x: klass(*x))
+        if cls.preamble:
+            e = pp.Literal(cls.preamble).suppress() + e
+        return e.setParseAction(lambda x: cls(*x))
 
     def values(self, settings):
         return [self.value.get_generator(settings)]
@@ -474,15 +472,15 @@ class Boolean(_Component):
         self.value = value
 
     @classmethod
-    def expr(klass):
+    def expr(cls):
         e = pp.Optional(pp.Literal("-"), default=True)
-        e += pp.Literal(klass.name).suppress()
+        e += pp.Literal(cls.name).suppress()
 
         def parse(s, loc, toks):
             val = True
             if toks[0] == "-":
                 val = False
-            return klass(val)
+            return cls(val)
 
         return e.setParseAction(parse)
 
@@ -507,13 +505,13 @@ class IntField(_Component):
             )
 
     @classmethod
-    def expr(klass):
-        parts = [pp.CaselessLiteral(i) for i in klass.names.keys()]
+    def expr(cls):
+        parts = [pp.CaselessLiteral(i) for i in cls.names.keys()]
         m = pp.MatchFirst(parts)
         spec = m | v_integer.copy()
-        spec = spec.setParseAction(lambda x: klass(*x))
-        if klass.preamble:
-            spec = pp.Literal(klass.preamble).suppress() + spec
+        spec = spec.setParseAction(lambda x: cls(*x))
+        if cls.preamble:
+            spec = pp.Literal(cls.preamble).suppress() + spec
         return spec
 
     def values(self, settings):
@@ -544,10 +542,10 @@ class NestedMessage(Token):
             raise exceptions.ParseException(v.msg, v.line, v.col)
 
     @classmethod
-    def expr(klass):
-        e = pp.Literal(klass.preamble).suppress()
+    def expr(cls):
+        e = pp.Literal(cls.preamble).suppress()
         e = e + TokValueLiteral.expr()
-        return e.setParseAction(lambda x: klass(*x))
+        return e.setParseAction(lambda x: cls(*x))
 
     def values(self, settings):
         return [

@@ -66,7 +66,7 @@ class Message(object):
         return l
 
     @classmethod
-    def expr(klass):  # pragma: no cover
+    def expr(cls):  # pragma: no cover
         pass
 
     def log(self, settings):

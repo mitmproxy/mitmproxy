@@ -150,8 +150,8 @@ class WebsocketFrame(message.Message):
         return self.tok(Length)
 
     @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.components]
+    def expr(cls):
+        parts = [i.expr() for i in cls.components]
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
@@ -160,7 +160,7 @@ class WebsocketFrame(message.Message):
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )
-        resp = resp.setParseAction(klass)
+        resp = resp.setParseAction(cls)
         return resp
 
     @property

@@ -18,7 +18,7 @@ def write(fp, lines):
         fp.flush()
 
 
-class Log:
+class Log(object):
 
     def __init__(self, fp, hex, rfile, wfile):
         self.lines = []

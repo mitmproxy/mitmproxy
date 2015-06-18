@@ -1,15 +1,20 @@
-import os
-import netlib.http2
 import pyparsing as pp
-from . import base, generators, actions, message
+from . import base, actions, message
 
 """
     Normal HTTP requests:
         <method>:<path>:<header>:<body>
     e.g.:
         GET:/
-        GET:/:foo=bar
-        POST:/:foo=bar:'content body payload'
+        GET:/:h"foo"="bar"
+        POST:/:h"foo"="bar":b'content body payload'
+
+    Normal HTTP responses:
+        <code>:<header>:<body>
+    e.g.:
+        200
+        302:h"foo"="bar"
+        404:h"foo"="bar":b'content body payload'
 
     Individual HTTP/2 frames:
         h2f:<payload_length>:<type>:<flags>:<stream_id>:<payload>
@@ -94,8 +99,8 @@ class Request(message.Message):
         return []
 
     @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
+    def expr(cls):
+        parts = [i.expr() for i in cls.comps]
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
@@ -105,7 +110,7 @@ class Request(message.Message):
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )
-        resp = resp.setParseAction(klass)
+        resp = resp.setParseAction(cls)
         return resp
 
     def resolve(self, settings, msg=None):
@@ -164,8 +169,8 @@ class Response(message.Message):
         return self
 
     @classmethod
-    def expr(klass):
-        parts = [i.expr() for i in klass.comps]
+    def expr(cls):
+        parts = [i.expr() for i in cls.comps]
         atom = pp.MatchFirst(parts)
         resp = pp.And(
             [
@@ -173,7 +178,7 @@ class Response(message.Message):
                 pp.ZeroOrMore(base.Sep + atom)
             ]
         )
-        resp = resp.setParseAction(klass)
+        resp = resp.setParseAction(cls)
         return resp
 
     def values(self, settings):
@@ -196,12 +201,14 @@ class Response(message.Message):
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
+
 def make_error_response(reason, body=None):
     tokens = [
         Code("800"),
         Body(base.TokValueLiteral("pathod error: " + (body or reason))),
     ]
     return Response(tokens)
+
 
 # class Frame(message.Message):
 #     pass
