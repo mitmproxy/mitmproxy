@@ -22,6 +22,17 @@ TLSv1_METHOD = SSL.TLSv1_METHOD
 TLSv1_1_METHOD = SSL.TLSv1_1_METHOD
 TLSv1_2_METHOD = SSL.TLSv1_2_METHOD
 
+
+SSL_DEFAULT_OPTIONS = (
+    SSL.OP_NO_SSLv2 |
+    SSL.OP_NO_SSLv3 |
+    SSL.OP_CIPHER_SERVER_PREFERENCE
+)
+
+if hasattr(SSL, "OP_NO_COMPRESSION"):
+    SSL_DEFAULT_OPTIONS |= SSL.OP_NO_COMPRESSION
+
+
 class NetLibError(Exception):
     pass
 
@@ -365,7 +376,7 @@ class _Connection(object):
 
     def _create_ssl_context(self,
                             method=SSLv23_METHOD,
-                            options=(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_CIPHER_SERVER_PREFERENCE | SSL.OP_NO_COMPRESSION),
+                            options=SSL_DEFAULT_OPTIONS,
                             verify_options=SSL.VERIFY_NONE,
                             ca_path=None,
                             ca_pemfile=None,
