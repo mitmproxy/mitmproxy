@@ -1,4 +1,5 @@
-[![Build Status](https://img.shields.io/travis/mitmproxy/mitmproxy/master.svg)](https://travis-ci.org/mitmproxy/mitmproxy) 
+[![Build Status](https://img.shields.io/travis/mitmproxy/mitmproxy/master.svg)](https://travis-ci.org/mitmproxy/mitmproxy)
+[![Code Health](https://landscape.io/github/mitmproxy/mitmproxy/master/landscape.svg?style=flat)](https://landscape.io/github/mitmproxy/mitmproxy/master)
 [![Coverage Status](https://img.shields.io/coveralls/mitmproxy/mitmproxy/master.svg)](https://coveralls.io/r/mitmproxy/mitmproxy)
 [![Downloads](https://img.shields.io/pypi/dm/mitmproxy.svg?color=orange)](https://pypi.python.org/pypi/mitmproxy)
 [![Latest Version](https://img.shields.io/pypi/v/mitmproxy.svg)](https://pypi.python.org/pypi/mitmproxy)
