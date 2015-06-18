@@ -6,6 +6,7 @@ logging.disable(logging.CRITICAL)
 
 
 class TestDaemonManual:
+
     def test_simple(self):
         with test.Daemon() as d:
             rsp = requests.get("http://localhost:%s/p/202:da" % d.port)
@@ -34,9 +35,9 @@ class TestDaemonManual:
 
     def test_startstop_ssl_explicit(self):
         ssloptions = dict(
-            certfile = tutils.test_data.path("data/testkey.pem"),
-            cacert = tutils.test_data.path("data/testkey.pem"),
-            ssl_after_connect = False
+            certfile=tutils.test_data.path("data/testkey.pem"),
+            cacert=tutils.test_data.path("data/testkey.pem"),
+            ssl_after_connect=False
         )
         d = test.Daemon(ssl=ssloptions)
         rsp = requests.get(

@@ -10,13 +10,15 @@ import tutils
 def parse_request(s):
     return language.parse_pathoc(s, True).next()
 
+
 def parse_response(s):
     return language.parse_pathod(s, True).next()
 
+
 def default_settings():
     return language.Settings(
-        request_host = "foo.com",
-        protocol = netlib.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
+        request_host="foo.com",
+        protocol=netlib.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
     )
 
 
@@ -27,6 +29,7 @@ def test_make_error_response():
 
 
 class TestRequest:
+
     def test_cached_values(self):
         req = parse_request("get:/")
         req_id = id(req)
@@ -113,6 +116,7 @@ class TestRequest:
 
 
 class TestResponse:
+
     def test_cached_values(self):
         res = parse_response("200")
         res_id = id(res)
@@ -134,7 +138,7 @@ class TestResponse:
         assert r.code.string() == "200"
         assert len(r.headers) == 1
         assert r.headers[0].values(default_settings()) == ("foo", "bar")
-        assert r.body == None
+        assert r.body is None
 
         r = parse_response('200:h"foo"="bar":bfoobar:h"bla"="fasel"')
         assert r.code.string() == "200"

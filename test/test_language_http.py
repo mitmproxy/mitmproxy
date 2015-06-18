@@ -16,6 +16,7 @@ def test_make_error_response():
 
 
 class TestRequest:
+
     def test_nonascii(self):
         tutils.raises("ascii", parse_request, "get:\xf0")
 
@@ -80,7 +81,7 @@ class TestRequest:
         assert language.serve(
             r,
             s,
-            language.Settings(request_host = "foo.com")
+            language.Settings(request_host="foo.com")
         )
 
     def test_multiline(self):
@@ -142,6 +143,7 @@ class TestRequest:
 
 
 class TestResponse:
+
     def dummy_response(self):
         return language.parse_pathod("400'msg'").next()
 

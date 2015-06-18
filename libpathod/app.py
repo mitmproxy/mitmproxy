@@ -12,6 +12,7 @@ EXAMPLE_WEBSOCKET_KEY = "examplekey"
 
 # pylint: disable=unused-variable
 
+
 def make_app(noapi, debug):
     app = Flask(__name__)
     app.debug = debug
@@ -20,13 +21,13 @@ def make_app(noapi, debug):
         @app.route('/api/info')
         def api_info():
             return jsonify(
-                version = version.IVERSION
+                version=version.IVERSION
             )
 
     @app.route('/api/log')
     def api_log():
         return jsonify(
-            log = app.config["pathod"].get_log()
+            log=app.config["pathod"].get_log()
         )
 
     @app.route('/api/clear_log')
@@ -125,10 +126,10 @@ def make_app(noapi, debug):
         spec = request.args["spec"]
 
         args = dict(
-            spec = spec,
-            section = "main",
-            syntaxerror = None,
-            error = None,
+            spec=spec,
+            section="main",
+            syntaxerror=None,
+            error=None,
         )
         if not spec.strip():
             args["error"] = "Can't parse an empty spec."

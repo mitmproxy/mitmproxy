@@ -29,18 +29,18 @@ class DaemonTests(object):
             anchors=[
                 (re.compile("/anchor/.*"), "202:da")
             ],
-            ssl = klass.ssl,
-            ssloptions = so,
-            sizelimit = 1 * 1024 * 1024,
-            noweb = klass.noweb,
-            noapi = klass.noapi,
-            nohang = klass.nohang,
-            timeout = klass.timeout,
-            hexdump = klass.hexdump,
-            nocraft = klass.nocraft,
-            logreq = True,
-            logresp = True,
-            explain = True
+            ssl=klass.ssl,
+            ssloptions=so,
+            sizelimit=1 * 1024 * 1024,
+            noweb=klass.noweb,
+            noapi=klass.noapi,
+            nohang=klass.nohang,
+            timeout=klass.timeout,
+            hexdump=klass.hexdump,
+            nocraft=klass.nocraft,
+            logreq=True,
+            logresp=True,
+            explain=True
         )
 
     @classmethod
@@ -86,9 +86,9 @@ class DaemonTests(object):
             ("localhost", self.d.port),
             ssl=ssl,
             ws_read_limit=ws_read_limit,
-            timeout = timeout,
-            fp = logfp,
-            use_http2 = use_http2,
+            timeout=timeout,
+            fp=logfp,
+            use_http2=use_http2,
         )
         c.connect(connect_to)
         ret = []
@@ -99,6 +99,7 @@ class DaemonTests(object):
         for frm in c.wait():
             ret.append(frm)
         return ret, logfp.getvalue()
+
 
 @contextmanager
 def tmpdir(*args, **kwargs):

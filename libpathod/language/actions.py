@@ -8,6 +8,7 @@ from . import base
 
 
 class _Action(base.Token):
+
     """
         An action that operates on the raw data stream of the message. All
         actions have one thing in common: an offset that specifies where the
@@ -76,6 +77,7 @@ class PauseAt(_Action):
 
 
 class DisconnectAt(_Action):
+
     def __init__(self, offset):
         _Action.__init__(self, offset)
 

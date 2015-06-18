@@ -26,6 +26,7 @@ class PathocError(Exception):
 
 
 class SSLInfo(object):
+
     def __init__(self, certchain, cipher, alp):
         self.certchain, self.cipher, self.alp = certchain, cipher, alp
 
@@ -66,6 +67,7 @@ class SSLInfo(object):
 
 
 class Response(object):
+
     def __init__(
         self,
         httpversion,
@@ -85,6 +87,7 @@ class Response(object):
 
 
 class WebsocketFrameReader(threading.Thread):
+
     def __init__(
             self,
             rfile,
@@ -143,6 +146,7 @@ class WebsocketFrameReader(threading.Thread):
 
 
 class Pathoc(tcp.TCPClient):
+
     def __init__(
             self,
             address,
@@ -157,23 +161,23 @@ class Pathoc(tcp.TCPClient):
             # HTTP/2
             use_http2=False,
             http2_skip_connection_preface=False,
-            http2_framedump = False,
+            http2_framedump=False,
 
             # Websockets
-            ws_read_limit = None,
+            ws_read_limit=None,
 
             # Network
-            timeout = None,
+            timeout=None,
 
             # Output control
-            showreq = False,
-            showresp = False,
-            explain = False,
-            hexdump = False,
-            ignorecodes = (),
-            ignoretimeout = False,
-            showsummary = False,
-            fp = sys.stdout
+            showreq=False,
+            showresp=False,
+            explain=False,
+            hexdump=False,
+            ignorecodes=(),
+            ignoretimeout=False,
+            showsummary=False,
+            fp=sys.stdout
     ):
         """
             spec: A request specification
@@ -222,11 +226,11 @@ class Pathoc(tcp.TCPClient):
             self.protocol = None
 
         self.settings = language.Settings(
-            is_client = True,
-            staticdir = os.getcwd(),
-            unconstrained_file_access = True,
-            request_host = self.address.host,
-            protocol = self.protocol,
+            is_client=True,
+            staticdir=os.getcwd(),
+            unconstrained_file_access=True,
+            request_host=self.address.host,
+            protocol=self.protocol,
         )
 
     def log(self):
@@ -323,8 +327,8 @@ class Pathoc(tcp.TCPClient):
             while True:
                 try:
                     frm = self.ws_framereader.frames_queue.get(
-                        timeout = timeout,
-                        block = True if timeout != 0 else False
+                        timeout=timeout,
+                        block=True if timeout != 0 else False
                     )
                 except Queue.Empty:
                     if finish:
@@ -394,7 +398,7 @@ class Pathoc(tcp.TCPClient):
                     )
                     resp.append(self.sslinfo)
                     resp = Response(*resp)
-            except http.HttpError, v:
+            except http.HttpError as v:
                 log("Invalid server response: %s" % v)
                 raise
             except tcp.NetLibTimeout:
@@ -455,22 +459,22 @@ def main(args):  # pragma: nocover
                 playlist = random.choice(args.requests)
             p = Pathoc(
                 (args.host, args.port),
-                ssl = args.ssl,
-                sni = args.sni,
-                sslversion = args.sslversion,
-                clientcert = args.clientcert,
-                ciphers = args.ciphers,
-                use_http2 = args.use_http2,
-                http2_skip_connection_preface = args.http2_skip_connection_preface,
-                http2_framedump = args.http2_framedump,
-                showreq = args.showreq,
-                showresp = args.showresp,
-                explain = args.explain,
-                hexdump = args.hexdump,
-                ignorecodes = args.ignorecodes,
-                timeout = args.timeout,
-                ignoretimeout = args.ignoretimeout,
-                showsummary = True
+                ssl=args.ssl,
+                sni=args.sni,
+                sslversion=args.sslversion,
+                clientcert=args.clientcert,
+                ciphers=args.ciphers,
+                use_http2=args.use_http2,
+                http2_skip_connection_preface=args.http2_skip_connection_preface,
+                http2_framedump=args.http2_framedump,
+                showreq=args.showreq,
+                showresp=args.showresp,
+                explain=args.explain,
+                hexdump=args.hexdump,
+                ignorecodes=args.ignorecodes,
+                timeout=args.timeout,
+                ignoretimeout=args.ignoretimeout,
+                showsummary=True
             )
             trycount = 0
             try:

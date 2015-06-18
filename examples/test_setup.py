@@ -3,6 +3,7 @@ from libpathod import test
 
 
 class Test:
+
     """
         Testing the requests module with
         a pathod instance started for

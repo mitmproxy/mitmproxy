@@ -3,20 +3,21 @@ import random
 import mmap
 
 DATATYPES = dict(
-    ascii_letters = string.ascii_letters,
-    ascii_lowercase = string.ascii_lowercase,
-    ascii_uppercase = string.ascii_uppercase,
-    digits = string.digits,
-    hexdigits = string.hexdigits,
-    octdigits = string.octdigits,
-    punctuation = string.punctuation,
-    whitespace = string.whitespace,
-    ascii = string.printable,
-    bytes = "".join(chr(i) for i in range(256))
+    ascii_letters=string.ascii_letters,
+    ascii_lowercase=string.ascii_lowercase,
+    ascii_uppercase=string.ascii_uppercase,
+    digits=string.digits,
+    hexdigits=string.hexdigits,
+    octdigits=string.octdigits,
+    punctuation=string.punctuation,
+    whitespace=string.whitespace,
+    ascii=string.printable,
+    bytes="".join(chr(i) for i in range(256))
 )
 
 
 class TransformGenerator(object):
+
     """
         Perform a byte-by-byte transform another generator - that is, for each
         input byte, the transformation must produce one output byte.
@@ -45,6 +46,7 @@ class TransformGenerator(object):
 
 
 class RandomGenerator(object):
+
     def __init__(self, dtype, length):
         self.dtype = dtype
         self.length = length
@@ -65,6 +67,7 @@ class RandomGenerator(object):
 
 
 class FileGenerator(object):
+
     def __init__(self, path):
         self.path = path
         self.fp = file(path, "rb")

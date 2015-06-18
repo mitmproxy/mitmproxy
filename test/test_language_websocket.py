@@ -10,6 +10,7 @@ def parse_request(s):
 
 
 class TestWebsocketFrame:
+
     def _test_messages(self, specs, message_klass):
         for i in specs:
             wf = parse_request(i)

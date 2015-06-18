@@ -5,22 +5,23 @@ from netlib import tcp
 SSLVERSIONS = {
     'TLSv1.2': tcp.TLSv1_2_METHOD,
     'TLSv1.1': tcp.TLSv1_1_METHOD,
-    'TLSv1':   tcp.TLSv1_METHOD,
-    'SSLv3':   tcp.SSLv3_METHOD,
-    'SSLv2':   tcp.SSLv2_METHOD,
-    'SSLv23':  tcp.SSLv23_METHOD,
+    'TLSv1': tcp.TLSv1_METHOD,
+    'SSLv3': tcp.SSLv3_METHOD,
+    'SSLv2': tcp.SSLv2_METHOD,
+    'SSLv23': tcp.SSLv23_METHOD,
 }
 
 SIZE_UNITS = dict(
-    b = 1024 ** 0,
-    k = 1024 ** 1,
-    m = 1024 ** 2,
-    g = 1024 ** 3,
-    t = 1024 ** 4,
+    b=1024 ** 0,
+    k=1024 ** 1,
+    m=1024 ** 2,
+    g=1024 ** 3,
+    t=1024 ** 4,
 )
 
 
 class MemBool(object):
+
     """
         Truth-checking with a memory, for use in chained if statements.
     """
@@ -84,6 +85,7 @@ def escape_unprintables(s):
 
 
 class Data(object):
+
     def __init__(self, name):
         m = __import__(name)
         dirname, _ = os.path.split(m.__file__)

@@ -14,6 +14,7 @@ def test_unique_name():
 
 
 class TestDisconnects:
+
     def test_parse_pathod(self):
         a = language.parse_pathod("400:d0").next().actions[0]
         assert a.spec() == "d0"
@@ -39,6 +40,7 @@ class TestDisconnects:
 
 
 class TestInject:
+
     def test_parse_pathod(self):
         a = language.parse_pathod("400:ir,@100").next().actions[0]
         assert a.offset == "r"
@@ -77,6 +79,7 @@ class TestInject:
 
 
 class TestPauses:
+
     def test_parse_pathod(self):
         e = actions.PauseAt.expr()
         v = e.parseString("p10,10")[0]
@@ -107,6 +110,7 @@ class TestPauses:
 
 
 class Test_Action:
+
     def test_cmp(self):
         a = actions.DisconnectAt(0)
         b = actions.DisconnectAt(1)

@@ -8,6 +8,7 @@ import tutils
 
 
 class TestPathod(object):
+
     def test_logging(self):
         s = cStringIO.StringIO()
         p = pathod.Pathod(("127.0.0.1", 0), logfp=s)
@@ -56,7 +57,7 @@ class TestNoApi(tutils.DaemonTests):
 class TestNotAfterConnect(tutils.DaemonTests):
     ssl = False
     ssloptions = dict(
-        not_after_connect = True
+        not_after_connect=True
     )
 
     def test_connect(self):
@@ -70,7 +71,7 @@ class TestNotAfterConnect(tutils.DaemonTests):
 class TestCustomCert(tutils.DaemonTests):
     ssl = True
     ssloptions = dict(
-        certs = [("*", tutils.test_data.path("data/testkey.pem"))],
+        certs=[("*", tutils.test_data.path("data/testkey.pem"))],
     )
 
     def test_connect(self):
@@ -84,7 +85,7 @@ class TestCustomCert(tutils.DaemonTests):
 class TestSSLCN(tutils.DaemonTests):
     ssl = True
     ssloptions = dict(
-        cn = "foo.com"
+        cn="foo.com"
     )
 
     def test_connect(self):
@@ -122,6 +123,7 @@ class TestNocraft(tutils.DaemonTests):
 
 
 class CommonTests(tutils.DaemonTests):
+
     def test_binarydata(self):
         r = self.get(r"200:b'\xf0'")
         l = self.d.last_log()
@@ -222,8 +224,8 @@ class CommonTests(tutils.DaemonTests):
     def test_websocket_frame_reflect_error(self):
         r, _ = self.pathoc(
             ["ws:/p/", "wf:-mask:knone:f'wf:b@10':i13,'a'"],
-            ws_read_limit = 1,
-            timeout = 1
+            ws_read_limit=1,
+            timeout=1
         )
         assert "Parse error" in self.d.text_log()
 
@@ -270,6 +272,7 @@ class TestDaemonSSL(CommonTests):
         r, _ = self.pathoc([r"get:/p/202"])
         assert r[0].status_code == 202
         assert self.d.last_log()["cipher"][1] > 0
+
 
 class TestHTTP2(tutils.DaemonTests):
     ssl = True

@@ -7,14 +7,15 @@ from .. import utils
 from . import generators, exceptions
 
 class Settings(object):
+
     def __init__(
         self,
-        is_client = False,
-        staticdir = None,
-        unconstrained_file_access = False,
-        request_host = None,
-        websocket_key = None,
-        protocol = None,
+        is_client=False,
+        staticdir=None,
+        unconstrained_file_access=False,
+        request_host=None,
+        websocket_key=None,
+        protocol=None,
     ):
         self.is_client = is_client
         self.staticdir = staticdir
@@ -56,6 +57,7 @@ v_naked_literal = pp.MatchFirst(
 
 
 class Token(object):
+
     """
         A token in the specification language. Tokens are immutable. The token
         classes have no meaning in and of themselves, and are combined into
@@ -101,6 +103,7 @@ class Token(object):
 
 
 class _TokValueLiteral(Token):
+
     def __init__(self, val):
         self.val = val.decode("string_escape")
 
@@ -112,6 +115,7 @@ class _TokValueLiteral(Token):
 
 
 class TokValueLiteral(_TokValueLiteral):
+
     """
         A literal with Python-style string escaping
     """
@@ -132,6 +136,7 @@ class TokValueLiteral(_TokValueLiteral):
 
 
 class TokValueNakedLiteral(_TokValueLiteral):
+
     @classmethod
     def expr(cls):
         e = v_naked_literal.copy()
@@ -142,6 +147,7 @@ class TokValueNakedLiteral(_TokValueLiteral):
 
 
 class TokValueGenerate(Token):
+
     def __init__(self, usize, unit, datatype):
         if not unit:
             unit = "b"
@@ -185,6 +191,7 @@ class TokValueGenerate(Token):
 
 
 class TokValueFile(Token):
+
     def __init__(self, path):
         self.path = str(path)
 
@@ -246,6 +253,7 @@ TokOffset = pp.MatchFirst(
 
 
 class _Component(Token):
+
     """
         A value component of the primary specification of an message.
         Components produce byte values desribe the bytes of the message.
@@ -265,6 +273,7 @@ class _Component(Token):
 
 
 class KeyValue(_Component):
+
     """
         A key/value pair.
         cls.preamble: leader
@@ -291,6 +300,7 @@ class KeyValue(_Component):
 
 
 class CaselessLiteral(_Component):
+
     """
         A caseless token that can take only one value.
     """
@@ -315,6 +325,7 @@ class CaselessLiteral(_Component):
 
 
 class OptionsOrValue(_Component):
+
     """
         Can be any of a specified set of options, or a value specifier.
     """
@@ -395,6 +406,7 @@ class Integer(_Component):
 
 
 class Value(_Component):
+
     """
         A value component lead by an optional preamble.
     """
@@ -421,6 +433,7 @@ class Value(_Component):
 
 
 class FixedLengthValue(Value):
+
     """
         A value component lead by an optional preamble.
     """
@@ -461,6 +474,7 @@ class FixedLengthValue(Value):
 
 
 class Boolean(_Component):
+
     """
         A boolean flag.
             name  = true
@@ -489,6 +503,7 @@ class Boolean(_Component):
 
 
 class IntField(_Component):
+
     """
         An integer field, where values can optionally specified by name.
     """
@@ -522,6 +537,7 @@ class IntField(_Component):
 
 
 class NestedMessage(Token):
+
     """
         A nested message, as an escaped string with a preamble.
     """

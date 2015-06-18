@@ -20,10 +20,10 @@ class _TestDaemon:
     @classmethod
     def setUpAll(self):
         self.d = test.Daemon(
-            ssl = self.ssl,
-            ssloptions = self.ssloptions,
-            staticdir = tutils.test_data.path("data"),
-            anchors = [
+            ssl=self.ssl,
+            ssloptions=self.ssloptions,
+            staticdir=tutils.test_data.path("data"),
+            anchors=[
                 (re.compile("/anchor/.*"), "202")
             ]
         )
@@ -38,8 +38,8 @@ class _TestDaemon:
     def test_info(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
-            ssl = self.ssl,
-            fp = None
+            ssl=self.ssl,
+            fp=None
         )
         c.connect()
         resp = c.request("get:/api/info")
@@ -61,15 +61,15 @@ class _TestDaemon:
         s = cStringIO.StringIO()
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
-            ssl = self.ssl,
-            showreq = showreq,
-            showresp = showresp,
-            explain = explain,
-            hexdump = hexdump,
-            ignorecodes = ignorecodes,
-            ignoretimeout = ignoretimeout,
-            showsummary = showsummary,
-            fp = s
+            ssl=self.ssl,
+            showreq=showreq,
+            showresp=showresp,
+            explain=explain,
+            hexdump=hexdump,
+            ignorecodes=ignorecodes,
+            ignoretimeout=ignoretimeout,
+            showsummary=showsummary,
+            fp=s
         )
         c.connect(showssl=showssl, fp=s)
         if timeout:
@@ -88,17 +88,17 @@ class _TestDaemon:
 class TestDaemonSSL(_TestDaemon):
     ssl = True
     ssloptions = pathod.SSLOptions(
-        request_client_cert = True,
-        sans = ["test1.com", "test2.com"],
-        alpn_select = http2.HTTP2Protocol.ALPN_PROTO_H2,
+        request_client_cert=True,
+        sans=["test1.com", "test2.com"],
+        alpn_select=http2.HTTP2Protocol.ALPN_PROTO_H2,
     )
 
     def test_sni(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
-            ssl = True,
-            sni = "foobar.com",
-            fp = None
+            ssl=True,
+            sni="foobar.com",
+            fp=None
         )
         c.connect()
         c.request("get:/p/200")
@@ -112,9 +112,9 @@ class TestDaemonSSL(_TestDaemon):
     def test_clientcert(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
-            ssl = True,
-            clientcert = tutils.test_data.path("data/clientcert/client.pem"),
-            fp = None
+            ssl=True,
+            clientcert=tutils.test_data.path("data/clientcert/client.pem"),
+            fp=None
         )
         c.connect()
         c.request("get:/p/200")
@@ -125,8 +125,8 @@ class TestDaemonSSL(_TestDaemon):
     def test_http2_without_ssl(self):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
-            use_http2 = True,
-            ssl = False,
+            use_http2=True,
+            ssl=False,
         )
         tutils.raises(NotImplementedError, c.connect)
 
@@ -135,7 +135,7 @@ class TestDaemon(_TestDaemon):
     ssl = False
 
     def test_ssl_error(self):
-        c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl = True, fp=None)
+        c = pathoc.Pathoc(("127.0.0.1", self.d.port), ssl=True, fp=None)
         tutils.raises("ssl handshake", c.connect)
 
     def test_showssl(self):
@@ -206,7 +206,7 @@ class TestDaemon(_TestDaemon):
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             fp=None,
-            ws_read_limit = 1
+            ws_read_limit=1
         )
         c.connect()
         c.request("ws:/")
@@ -237,22 +237,23 @@ class TestDaemonHTTP2(_TestDaemon):
         def test_http2(self):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
-                use_http2 = True,
-                ssl = True,
+                use_http2=True,
+                ssl=True,
             )
             assert isinstance(c.protocol, http2.HTTP2Protocol)
 
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
             )
-            assert c.protocol == None  # TODO: change if other protocols get implemented
+            # TODO: change if other protocols get implemented
+            assert c.protocol is None
 
         def test_http2_alpn(self):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
-                ssl = True,
-                use_http2 = True,
-                http2_skip_connection_preface = True,
+                ssl=True,
+                use_http2=True,
+                http2_skip_connection_preface=True,
             )
 
             tmp_convert_to_ssl = c.convert_to_ssl
@@ -266,8 +267,8 @@ class TestDaemonHTTP2(_TestDaemon):
         def test_request(self):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
-                ssl = True,
-                use_http2 = True,
+                ssl=True,
+                use_http2=True,
             )
             c.connect()
             resp = c.request("get:/p/200")

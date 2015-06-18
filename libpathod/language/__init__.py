@@ -75,7 +75,7 @@ def parse_websocket_frame(s):
             websockets.WebsocketFrame.expr()
         ).parseString(
             s,
-            parseAll = True
+            parseAll=True
         )
     except pp.ParseException as v:
         raise exceptions.ParseException(v.msg, v.line, v.col)
@@ -105,9 +105,9 @@ def serve(msg, fp, settings):
     disconnect = writer.write_values(fp, vals, actions[:])
     duration = time.time() - started
     ret = dict(
-        disconnect = disconnect,
-        started = started,
-        duration = duration,
+        disconnect=disconnect,
+        started=started,
+        duration=duration,
     )
     ret.update(msg.log(settings))
     return ret

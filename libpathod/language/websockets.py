@@ -5,6 +5,7 @@ from . import base, generators, actions, message
 
 NESTED_LEADER = "pathod!"
 
+
 class WF(base.CaselessLiteral):
     TOK = "wf"
 
@@ -197,7 +198,7 @@ class WebsocketFrame(message.Message):
         if self.toklength:
             length = int(self.toklength.value)
         frameparts = dict(
-            payload_length = length
+            payload_length=length
         )
         if self.mask and self.mask.value:
             frameparts["mask"] = True

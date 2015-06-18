@@ -4,6 +4,7 @@ import netlib.tcp
 
 
 class DummyIO(StringIO.StringIO):
+
     def start_log(self, *args, **kwargs):
         pass
 

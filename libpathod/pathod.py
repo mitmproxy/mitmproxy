@@ -29,6 +29,7 @@ class PathodError(Exception):
 
 
 class SSLOptions(object):
+
     def __init__(
         self,
         confdir=CONFDIR,
@@ -92,7 +93,7 @@ class PathodHandler(tcp.BaseHandler):
             language.serve(err, self.wfile, self.settings)
             return None, dict(
                 type="error",
-                msg = error
+                msg=error
             )
 
         if self.server.explain and not hasattr(crafted, 'is_error_response'):
@@ -116,17 +117,17 @@ class PathodHandler(tcp.BaseHandler):
                 started = time.time()
                 try:
                     frm = websockets.Frame.from_file(self.rfile)
-                except tcp.NetLibIncomplete, e:
-                    lg("Error reading websocket frame: %s"%e)
+                except tcp.NetLibIncomplete as e:
+                    lg("Error reading websocket frame: %s" % e)
                     break
                 ended = time.time()
                 lg(frm.human_readable())
             retlog = dict(
-                type = "inbound",
-                protocol = "websockets",
-                started = started,
-                duration = ended - started,
-                frame = dict(
+                type="inbound",
+                protocol="websockets",
+                started=started,
+                duration=ended - started,
+                frame=dict(
                 ),
                 cipher=None,
             )
@@ -138,7 +139,7 @@ class PathodHandler(tcp.BaseHandler):
                 nest = frm.payload[len(ld):]
                 try:
                     wf_gen = language.parse_websocket_frame(nest)
-                except language.exceptions.ParseException, v:
+                except language.exceptions.ParseException as v:
                     log.write(
                         self.logfp,
                         "Parse error in reflected frame specifcation:"
@@ -509,7 +510,7 @@ class Pathod(tcp.TCPServer):
         self.anchors = anchors
 
         self.settings = language.Settings(
-            staticdir = self.staticdir
+            staticdir=self.staticdir
         )
 
     def check_policy(self, req, settings):
@@ -587,13 +588,13 @@ class Pathod(tcp.TCPServer):
 
 def main(args):  # pragma: nocover
     ssloptions = SSLOptions(
-        cn = args.cn,
-        confdir = args.confdir,
-        not_after_connect = args.ssl_not_after_connect,
-        ciphers = args.ciphers,
-        sslversion = utils.SSLVERSIONS[args.sslversion],
-        certs = args.ssl_certs,
-        sans = args.sans,
+        cn=args.cn,
+        confdir=args.confdir,
+        not_after_connect=args.ssl_not_after_connect,
+        ciphers=args.ciphers,
+        sslversion=utils.SSLVERSIONS[args.sslversion],
+        certs=args.ssl_certs,
+        sans=args.sans,
     )
 
     root = logging.getLogger()
@@ -619,23 +620,23 @@ def main(args):  # pragma: nocover
     try:
         pd = Pathod(
             (args.address, args.port),
-            craftanchor = args.craftanchor,
-            ssl = args.ssl,
-            ssloptions = ssloptions,
-            staticdir = args.staticdir,
-            anchors = args.anchors,
-            sizelimit = args.sizelimit,
-            noweb = args.noweb,
-            nocraft = args.nocraft,
-            noapi = args.noapi,
-            nohang = args.nohang,
-            timeout = args.timeout,
-            logreq = args.logreq,
-            logresp = args.logresp,
-            hexdump = args.hexdump,
-            http2_framedump = args.http2_framedump,
-            explain = args.explain,
-            webdebug = args.webdebug
+            craftanchor=args.craftanchor,
+            ssl=args.ssl,
+            ssloptions=ssloptions,
+            staticdir=args.staticdir,
+            anchors=args.anchors,
+            sizelimit=args.sizelimit,
+            noweb=args.noweb,
+            nocraft=args.nocraft,
+            noapi=args.noapi,
+            nohang=args.nohang,
+            timeout=args.timeout,
+            logreq=args.logreq,
+            logresp=args.logresp,
+            hexdump=args.hexdump,
+            http2_framedump=args.http2_framedump,
+            explain=args.explain,
+            webdebug=args.webdebug
         )
     except PathodError as v:
         print >> sys.stderr, "Error: %s" % v

@@ -8,6 +8,7 @@ class FileAccessDenied(RenderError):
 
 
 class ParseException(Exception):
+
     def __init__(self, msg, s, col):
         Exception.__init__(self)
         self.msg = msg

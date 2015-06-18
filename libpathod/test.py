@@ -82,6 +82,7 @@ class Daemon:
 
 
 class _PaThread(threading.Thread):
+
     def __init__(self, iface, q, ssl, daemonargs):
         threading.Thread.__init__(self)
         self.name = "PathodThread"
@@ -91,7 +92,7 @@ class _PaThread(threading.Thread):
     def run(self):
         self.server = pathod.Pathod(
             (self.iface, 0),
-            ssl = self.ssl,
+            ssl=self.ssl,
             **self.daemonargs
         )
         self.name = "PathodThread (%s:%s)" % (

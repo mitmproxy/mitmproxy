@@ -30,7 +30,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     )
     parser.add_argument(
         "-c", dest="connect_to", type=str, default=False,
-        metavar = "HOST:PORT",
+        metavar="HOST:PORT",
         help="Issue an HTTP CONNECT to connect to the specified host."
     )
     parser.add_argument(
@@ -77,7 +77,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
 
     parser.add_argument(
         'host', type=str,
-        metavar = "host[:port]",
+        metavar="host[:port]",
         help='Host and port to connect to'
     )
     parser.add_argument(

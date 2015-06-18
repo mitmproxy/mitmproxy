@@ -24,6 +24,7 @@ def test_caseless_literal():
 
 
 class TestTokValueNakedLiteral:
+
     def test_expr(self):
         v = base.TokValueNakedLiteral("foo")
         assert v.expr()
@@ -37,6 +38,7 @@ class TestTokValueNakedLiteral:
 
 
 class TestTokValueLiteral:
+
     def test_espr(self):
         v = base.TokValueLiteral("foo")
         assert v.expr()
@@ -75,6 +77,7 @@ class TestTokValueLiteral:
 
 
 class TestTokValueGenerate:
+
     def test_basic(self):
         v = base.TokValue.parseString("@10b")[0]
         assert v.usize == 10
@@ -116,6 +119,7 @@ class TestTokValueGenerate:
 
 
 class TestTokValueFile:
+
     def test_file_value(self):
         v = base.TokValue.parseString("<'one two'")[0]
         assert str(v)
@@ -164,6 +168,7 @@ class TestTokValueFile:
 
 
 class TestMisc:
+
     def test_generators(self):
         v = base.TokValue.parseString("'val'")[0]
         g = v.get_generator({})
@@ -227,6 +232,7 @@ class TKeyValue(base.KeyValue):
 
 
 class TestKeyValue:
+
     def test_simple(self):
         e = TKeyValue.expr()
         v = e.parseString("h'foo'='bar'")[0]
