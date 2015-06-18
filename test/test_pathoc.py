@@ -1,6 +1,7 @@
 import json
 import cStringIO
 import re
+import OpenSSL
 from mock import Mock
 
 from netlib import tcp, http, http2
@@ -231,41 +232,43 @@ class TestDaemon(_TestDaemon):
 class TestDaemonHTTP2(_TestDaemon):
     ssl = True
 
-    def test_http2(self):
-        c = pathoc.Pathoc(
-            ("127.0.0.1", self.d.port),
-            use_http2 = True,
-            ssl = True,
-        )
-        assert isinstance(c.protocol, http2.HTTP2Protocol)
+    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
 
-        c = pathoc.Pathoc(
-            ("127.0.0.1", self.d.port),
-        )
-        assert c.protocol == None  # TODO: change if other protocols get implemented
+        def test_http2(self):
+            c = pathoc.Pathoc(
+                ("127.0.0.1", self.d.port),
+                use_http2 = True,
+                ssl = True,
+            )
+            assert isinstance(c.protocol, http2.HTTP2Protocol)
 
-    def test_http2_alpn(self):
-        c = pathoc.Pathoc(
-            ("127.0.0.1", self.d.port),
-            ssl = True,
-            use_http2 = True,
-            http2_skip_connection_preface = True,
-        )
+            c = pathoc.Pathoc(
+                ("127.0.0.1", self.d.port),
+            )
+            assert c.protocol == None  # TODO: change if other protocols get implemented
 
-        tmp_convert_to_ssl = c.convert_to_ssl
-        c.convert_to_ssl = Mock()
-        c.convert_to_ssl.side_effect = tmp_convert_to_ssl
-        c.connect()
+        def test_http2_alpn(self):
+            c = pathoc.Pathoc(
+                ("127.0.0.1", self.d.port),
+                ssl = True,
+                use_http2 = True,
+                http2_skip_connection_preface = True,
+            )
 
-        _, kwargs = c.convert_to_ssl.call_args
-        assert set(kwargs['alpn_protos']) == set([b'http1.1', b'h2'])
+            tmp_convert_to_ssl = c.convert_to_ssl
+            c.convert_to_ssl = Mock()
+            c.convert_to_ssl.side_effect = tmp_convert_to_ssl
+            c.connect()
 
-    def test_request(self):
-        c = pathoc.Pathoc(
-            ("127.0.0.1", self.d.port),
-            ssl = True,
-            use_http2 = True,
-        )
-        c.connect()
-        resp = c.request("get:/p/200")
-        assert resp.status_code == "200"
+            _, kwargs = c.convert_to_ssl.call_args
+            assert set(kwargs['alpn_protos']) == set([b'http1.1', b'h2'])
+
+        def test_request(self):
+            c = pathoc.Pathoc(
+                ("127.0.0.1", self.d.port),
+                ssl = True,
+                use_http2 = True,
+            )
+            c.connect()
+            resp = c.request("get:/p/200")
+            assert resp.status_code == "200"

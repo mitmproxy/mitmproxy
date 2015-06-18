@@ -1,8 +1,9 @@
 import sys
 import cStringIO
+import OpenSSL
+
 from libpathod import pathod, version
 from netlib import tcp, http, http2
-
 import tutils
 
 
@@ -271,13 +272,14 @@ class TestDaemonSSL(CommonTests):
         assert self.d.last_log()["cipher"][1] > 0
 
 class TestHTTP2(tutils.DaemonTests):
-    force_http2 = True
     ssl = True
     noweb = True
     noapi = True
     nohang = True
 
-    def test_http2(self):
-        r, _ = self.pathoc(["GET:/"], ssl=True, use_http2=True)
-        print(r)
-        assert r[0].status_code == "800"
+    if OpenSSL._util.lib.Cryptography_HAS_ALPN:
+
+        def test_http2(self):
+            r, _ = self.pathoc(["GET:/"], ssl=True, use_http2=True)
+            print(r)
+            assert r[0].status_code == "800"
