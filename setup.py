@@ -79,6 +79,7 @@ setup(
             "coveralls>=0.4.1",
             "autopep8>=1.0.3",
             "autoflake>=0.6.6",
+            "wheel>=0.24.0"
             "pathod>=%s, <%s" %
             (version.MINORVERSION,
              version.NEXT_MINORVERSION)]},
