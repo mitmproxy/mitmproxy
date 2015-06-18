@@ -30,10 +30,10 @@ UASTRINGS = [
      "Googlebot/2.1 (+http://www.googlebot.com/bot.html)"),  # noqa
     ("ie9",
      "i",
-     "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US))"),  # noqa
+     "Mozilla/5.0 (Windows; U; MSIE 9.0; WIndows NT 9.0; en-US)"),  # noqa
     ("ipad",
      "p",
-     "Mozilla/5.0 (iPad; CPU OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko ) Version/5.1 Mobile/9B176 Safari/7534.48.3"),  # noqa
+     "Mozilla/5.0 (iPad; CPU OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B176 Safari/7534.48.3"),  # noqa
     ("iphone",
      "h",
      "Mozilla/5.0 (iPhone; CPU iPhone OS 4_2_1 like Mac OS X) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8C148a Safari/6533.18.5"),  # noqa
