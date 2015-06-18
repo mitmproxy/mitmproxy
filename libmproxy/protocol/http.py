@@ -1328,7 +1328,20 @@ class HTTPHandler(ProtocolHandler):
                     # value at flow.server_conn
                     self.c.set_server_address((request.host, request.port))
                     flow.server_conn = self.c.server_conn
-
+            
+            elif request.form_in == "relative":
+                if self.c.config.mode == "httptransparent":
+                    h = request.headers.get_first("host")
+                    if h is None:
+                        raise http.HttpError(
+                            400,
+                            "Invalid request: No Host header"
+                        )
+                    p = http.parse_url("http://" + h)
+                    request.host, request.port = p[1], p[2]
+                    self.c.set_server_address((request.host, request.port))
+                    flow.server_conn = self.c.server_conn
+            
             return None
         raise http.HttpError(
             400, "Invalid HTTP request form (expected: %s, got: %s)" % (

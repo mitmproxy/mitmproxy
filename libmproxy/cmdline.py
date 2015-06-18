@@ -363,6 +363,11 @@ def common_options(parser):
         help="Set transparent proxy mode."
     )
     group.add_argument(
+        "-H", "--http-transparent",
+        action="store_true", dest="http_transparent_proxy", default=False,
+        help="Use the Host header to connect to server."
+    )
+    group.add_argument(
         "-U", "--upstream",
         action="store",
         type=parse_server_spec,
