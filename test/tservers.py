@@ -72,10 +72,9 @@ class TServer(tcp.TCPServer):
         h = self.handler_klass(request, client_address, self)
         self.last_handler = h
         if self.ssl is not None:
-            raw_cert = self.ssl.get(
+            cert = self.ssl.get(
                 "cert",
                 tutils.test_data.path("data/server.crt"))
-            cert = certutils.SSLCert.from_pem(open(raw_cert, "rb").read())
             raw_key = self.ssl.get(
                 "key",
                 tutils.test_data.path("data/server.key"))

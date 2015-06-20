@@ -567,7 +567,8 @@ class BaseHandler(_Connection):
                            dhparams=None,
                            **sslctx_kwargs):
         """
-            cert: A certutils.SSLCert object.
+            cert: A certutils.SSLCert object or the path to a certificate
+            chain file.
 
             handle_sni: SNI handler, should take a connection object. Server
             name can be retrieved like this:
@@ -594,7 +595,10 @@ class BaseHandler(_Connection):
         context = self._create_ssl_context(**sslctx_kwargs)
 
         context.use_privatekey(key)
-        context.use_certificate(cert.x509)
+        if isinstance(cert, certutils.SSLCert):
+            context.use_certificate(cert.x509)
+        else:
+            context.use_certificate_chain_file(cert)
 
         if handle_sni:
             # SNI callback happens during do_handshake()
