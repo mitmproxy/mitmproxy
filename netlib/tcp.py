@@ -401,14 +401,13 @@ class _Connection(object):
         if options is not None:
             context.set_options(options)
 
-        # Verify Options (NONE/PEER/PEER|FAIL_IF_... and trusted CAs)
-        if verify_options is not None and verify_options is not SSL.VERIFY_NONE:
-            def verify_cert(conn_, cert_, errno, err_depth, is_cert_verified):
-                if is_cert_verified:
-                    return True
-                raise NetLibError(
-                    "Upstream certificate validation failed at depth: %s with error number: %s" %
-                    (err_depth, errno))
+        # Verify Options (NONE/PEER and trusted CAs)
+        if verify_options is not None:
+            def verify_cert(conn, x509, errno, err_depth, is_cert_verified):
+                if not is_cert_verified:
+                    self.ssl_verification_error = dict(errno=errno,
+                                                       depth=err_depth)
+                return is_cert_verified
 
             context.set_verify(verify_options, verify_cert)
             context.load_verify_locations(ca_pemfile, ca_path)
@@ -469,6 +468,7 @@ class TCPClient(_Connection):
         self.connection, self.rfile, self.wfile = None, None, None
         self.cert = None
         self.ssl_established = False
+        self.ssl_verification_error = None
         self.sni = None
 
     def create_ssl_context(self, cert=None, alpn_protos=None, **sslctx_kwargs):

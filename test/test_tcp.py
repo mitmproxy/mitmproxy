@@ -183,52 +183,115 @@ class TestSSLv3Only(tservers.ServerTestBase):
         tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com")
 
 
-class TestSSLUpstreamCertVerification(tservers.ServerTestBase):
+class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
-        cert=tutils.test_data.path("data/server.crt")
-    )
+        cert=tutils.test_data.path("data/verificationcerts/untrusted.crt"),
+        key=tutils.test_data.path("data/verificationcerts/verification-server.key"))
 
-    def test_mode_default(self):
+    def test_mode_default_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
 
         c.convert_to_ssl()
 
+        # Verification errors should be saved even if connection isn't aborted
+        # aborted
+        assert c.ssl_verification_error is not None
+
         testval = "echo!\n"
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
 
-    def test_mode_none(self):
+    def test_mode_none_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
 
         c.convert_to_ssl(verify_options=SSL.VERIFY_NONE)
 
+        # Verification errors should be saved even if connection isn't aborted
+        assert c.ssl_verification_error is not None
+
         testval = "echo!\n"
         c.wfile.write(testval)
         c.wfile.flush()
         assert c.rfile.readline() == testval
 
-    def test_mode_strict_w_bad_cert(self):
+    def test_mode_strict_should_fail(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
 
         tutils.raises(
             tcp.NetLibError,
             c.convert_to_ssl,
-            verify_options=SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
-            ca_pemfile=tutils.test_data.path("data/not-server.crt"))
+            verify_options=SSL.VERIFY_PEER,
+            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))
 
-    def test_mode_strict_w_cert(self):
+        assert c.ssl_verification_error is not None
+
+        # Unknown issuing certificate authority for first certificate
+        assert c.ssl_verification_error['errno'] == 20
+        assert c.ssl_verification_error['depth'] == 0
+
+
+class TestSSLUpstreamCertVerificationWBadCertChain(tservers.ServerTestBase):
+    handler = EchoHandler
+
+    ssl = dict(
+        cert=tutils.test_data.path("data/verificationcerts/untrusted-chain.crt"),
+        key=tutils.test_data.path("data/verificationcerts/verification-server.key"))
+
+    def test_mode_strict_should_fail(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        tutils.raises(
+            "certificate verify failed",
+            c.convert_to_ssl,
+            verify_options=SSL.VERIFY_PEER,
+            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))
+
+        assert c.ssl_verification_error is not None
+
+        # Untrusted self-signed certificate at second position in certificate
+        # chain
+        assert c.ssl_verification_error['errno'] == 19
+        assert c.ssl_verification_error['depth'] == 1
+
+
+class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
+    handler = EchoHandler
+
+    ssl = dict(
+        cert=tutils.test_data.path("data/verificationcerts/trusted-chain.crt"),
+        key=tutils.test_data.path("data/verificationcerts/verification-server.key"))
+
+    def test_mode_strict_w_pemfile_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
 
         c.convert_to_ssl(
-            verify_options=SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
-            ca_pemfile=tutils.test_data.path("data/server.crt"))
+            verify_options=SSL.VERIFY_PEER,
+            ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))
+
+        assert c.ssl_verification_error is None
+
+        testval = "echo!\n"
+        c.wfile.write(testval)
+        c.wfile.flush()
+        assert c.rfile.readline() == testval
+
+    def test_mode_strict_w_cadir_should_pass(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+
+        c.convert_to_ssl(
+            verify_options=SSL.VERIFY_PEER,
+            ca_path=tutils.test_data.path("data/verificationcerts/"))
+
+        assert c.ssl_verification_error is None
 
         testval = "echo!\n"
         c.wfile.write(testval)
@@ -456,6 +519,7 @@ class TestALPNClient(tservers.ServerTestBase):
             c.convert_to_ssl(alpn_protos=["foo", "bar", "fasel"])
             assert c.get_alpn_proto_negotiated() == ""
             assert c.rfile.readline() == "NONE"
+
 
 class TestNoSSLNoALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
