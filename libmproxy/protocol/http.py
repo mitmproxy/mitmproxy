@@ -1336,13 +1336,18 @@ class HTTPHandler(ProtocolHandler):
                     if h is None:
                         raise http.HttpError(
                             400,
-                            "Invalid request: No Host header"
+                            "Invalid request: No host information"
                         )
                     p = http.parse_url("http://" + h)
-                    request.host = p[1]
-                    request.port = p[2]
+                    request.scheme = p[0]
+                    request.host   = p[1]
+                    request.port   = p[2]
                     self.c.set_server_address((request.host, request.port))
                     flow.server_conn = self.c.server_conn
+                
+                if self.c.config.mode == "sslspoof":
+                    # SNI is processed in server.py
+                    return None
             
             return None
         

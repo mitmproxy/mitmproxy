@@ -117,6 +117,20 @@ class ConnectionHandler:
                         self.server_conn.address(),
                         "info")
                     self.conntype = "tcp"
+                
+            elif not self.server_conn and self.config.mode == "sslspoof":
+                port = self.config.mode.sslport
+                self.set_server_address(("-", port))
+                self.establish_ssl(client=True)
+                host = self.client_conn.connection.get_servername()
+                if host is None:
+                    raise ProxyError(
+                        400,
+                        "Invalid request: No host information"
+                    )
+                self.set_server_address((host, port))
+                self.establish_server_connection()
+                self.establish_ssl(server=True, sni=host)
 
             # Delegate handling to the protocol handler
             protocol_handler(
@@ -308,6 +322,9 @@ class ConnectionHandler:
                     host = upstream_cert.cn.decode("utf8").encode("idna")
             if self.server_conn.sni:
                 sans.append(self.server_conn.sni)
+            # for ssl spoof mode
+            if hasattr(self.client_conn, "sni"):
+                sans.append(self.client_conn.sni)
 
             ret = self.config.certstore.get_cert(host, sans)
             if not ret:
@@ -325,6 +342,8 @@ class ConnectionHandler:
             if not sn:
                 return
             sni = sn.decode("utf8").encode("idna")
+            # for ssl spoof mode
+            self.client_conn.sni = sni
 
             if sni != self.server_conn.sni:
                 self.log("SNI received: %s" % sni, "debug")

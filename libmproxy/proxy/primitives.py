@@ -63,6 +63,21 @@ class SpoofMode(ProxyMode):
         return "spoof"
 
 
+class SSLSpoofMode(ProxyMode):
+    http_form_in = "relative"
+    http_form_out = "relative"
+
+    def __init__(self,  sslport):
+        self.sslport = sslport
+
+    def get_upstream_server(self, client_conn):
+        return None
+
+    @property
+    def name(self):
+        return "sslspoof"
+
+
 class TransparentProxyMode(ProxyMode):
     http_form_in = "relative"
     http_form_out = "relative"
