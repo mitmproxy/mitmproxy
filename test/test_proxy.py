@@ -90,6 +90,12 @@ class TestProcessProxyOptions:
         self.assert_err("expected one argument", "-U")
         self.assert_err("Invalid server specification", "-U", "upstream")
 
+        self.assert_noerr("--spoof")
+        self.assert_noerr("--ssl-spoof")
+
+        self.assert_noerr("--spoofed-port", "443")
+        self.assert_err("expected one argument", "--spoofed-port")
+
         self.assert_err("mutually exclusive", "-R", "http://localhost", "-T")
 
     def test_client_certs(self):

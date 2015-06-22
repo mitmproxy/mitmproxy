@@ -4,7 +4,7 @@ import re
 from OpenSSL import SSL
 from netlib import http_auth, certutils, tcp
 from .. import utils, platform, version
-from .primitives import RegularProxyMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
+from .primitives import RegularProxyMode, SpoofMode, SSLSpoofMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
@@ -51,7 +51,8 @@ class ProxyConfig:
             certforward=False,
             ssl_version_client="secure",
             ssl_version_server="secure",
-            ssl_ports=TRANSPARENT_SSL_PORTS
+            ssl_ports=TRANSPARENT_SSL_PORTS,
+            spoofed_ssl_port=None
     ):
         self.host = host
         self.port = port
@@ -70,6 +71,10 @@ class ProxyConfig:
             self.mode = ReverseProxyMode(upstream_server)
         elif mode == "upstream":
             self.mode = UpstreamProxyMode(upstream_server)
+        elif mode == "spoof":
+            self.mode = SpoofMode()
+        elif mode == "sslspoof":
+            self.mode = SSLSpoofMode(spoofed_ssl_port)
         else:
             self.mode = RegularProxyMode()
 
@@ -126,7 +131,7 @@ def process_proxy_options(parser, options):
     body_size_limit = utils.parse_size(options.body_size_limit)
 
     c = 0
-    mode, upstream_server = None, None
+    mode, upstream_server, spoofed_ssl_port = None, None, None
     if options.transparent_proxy:
         c += 1
         if not platform.resolver:
@@ -144,6 +149,13 @@ def process_proxy_options(parser, options):
         c += 1
         mode = "upstream"
         upstream_server = options.upstream_proxy
+    if options.spoof_mode:
+        c += 1
+        mode = "spoof"
+    if options.ssl_spoof_mode:
+        c += 1
+        mode = "sslspoof"
+        spoofed_ssl_port = options.spoofed_ssl_port
     if c > 1:
         return parser.error(
             "Transparent, SOCKS5, reverse and upstream proxy mode "
@@ -213,7 +225,8 @@ def process_proxy_options(parser, options):
         certforward=options.certforward,
         ssl_version_client=options.ssl_version_client,
         ssl_version_server=options.ssl_version_server,
-        ssl_ports=ssl_ports
+        ssl_ports=ssl_ports,
+        spoofed_ssl_port=spoofed_ssl_port
     )
 
 
