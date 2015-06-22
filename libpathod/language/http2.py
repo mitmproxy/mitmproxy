@@ -104,7 +104,6 @@ class Header(_HeaderMixin, base.KeyValue):
     preamble = "h"
 
 
-
 class ShortcutContentType(_HeaderMixin, base.Value):
     preamble = "c"
     key = base.TokValueLiteral("content-type")
@@ -141,70 +140,6 @@ class Body(base.Value):
 
 class Times(base.Integer):
     preamble = "x"
-
-
-class Request(_HTTP2Message):
-    comps = (
-        Header,
-        ShortcutContentType,
-        ShortcutUserAgent,
-        Raw,
-        # NestedResponse,
-        Body,
-        Times,
-    )
-    logattrs = ["method", "path"]
-
-    def __init__(self, tokens):
-        super(Request, self).__init__(tokens)
-        self.rendered_values = None
-
-    @property
-    def method(self):
-        return self.tok(Method)
-
-    @property
-    def path(self):
-        return self.tok(Path)
-
-    @property
-    def times(self):
-        return self.tok(Times)
-
-    @classmethod
-    def expr(cls):
-        parts = [i.expr() for i in cls.comps]
-        atom = pp.MatchFirst(parts)
-        resp = pp.And(
-            [
-                Method.expr(),
-                base.Sep,
-                Path.expr(),
-                pp.ZeroOrMore(base.Sep + atom)
-            ]
-        )
-        resp = resp.setParseAction(cls)
-        return resp
-
-    def values(self, settings):
-        if self.rendered_values:
-            return self.rendered_values
-        else:
-            headers = [header.values(settings) for header in self.headers]
-
-            body = self.body
-            if body:
-                body = body.string()
-
-            self.rendered_values = settings.protocol.create_request(
-                self.method.string(),
-                self.path.string(),
-                headers,
-                body)
-            return self.rendered_values
-
-    def spec(self):
-        return ":".join([i.spec() for i in self.tokens])
 
 
 class Response(_HTTP2Message):
@@ -259,6 +194,82 @@ class Response(_HTTP2Message):
     def spec(self):
         return ":".join([i.spec() for i in self.tokens])
 
+
+class NestedResponse(base.NestedMessage):
+    preamble = "s"
+    nest_type = Response
+
+
+class Request(_HTTP2Message):
+    comps = (
+        Header,
+        ShortcutContentType,
+        ShortcutUserAgent,
+        Raw,
+        NestedResponse,
+        Body,
+        Times,
+    )
+    logattrs = ["method", "path"]
+
+    def __init__(self, tokens):
+        super(Request, self).__init__(tokens)
+        self.rendered_values = None
+
+    @property
+    def method(self):
+        return self.tok(Method)
+
+    @property
+    def path(self):
+        return self.tok(Path)
+
+    @property
+    def nested_response(self):
+        return self.tok(NestedResponse)
+
+    @property
+    def times(self):
+        return self.tok(Times)
+
+    @classmethod
+    def expr(cls):
+        parts = [i.expr() for i in cls.comps]
+        atom = pp.MatchFirst(parts)
+        resp = pp.And(
+            [
+                Method.expr(),
+                base.Sep,
+                Path.expr(),
+                pp.ZeroOrMore(base.Sep + atom)
+            ]
+        )
+        resp = resp.setParseAction(cls)
+        return resp
+
+    def values(self, settings):
+        if self.rendered_values:
+            return self.rendered_values
+        else:
+            path = self.path.string()
+            if self.nested_response:
+                path += self.nested_response.parsed.spec()
+
+            headers = [header.values(settings) for header in self.headers]
+
+            body = self.body
+            if body:
+                body = body.string()
+
+            self.rendered_values = settings.protocol.create_request(
+                self.method.string(),
+                path,
+                headers,
+                body)
+            return self.rendered_values
+
+    def spec(self):
+        return ":".join([i.spec() for i in self.tokens])
 
 def make_error_response(reason, body=None):
     tokens = [

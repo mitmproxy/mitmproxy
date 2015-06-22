@@ -132,6 +132,14 @@ class TestRequest:
             default_settings(),
         )
 
+    def test_nested_response(self):
+        l = "get:/p/:s'200'"
+        r = parse_request(l)
+        assert len(r.tokens) == 3
+        assert isinstance(r.tokens[2], http2.NestedResponse)
+        assert r.values(default_settings())
+
+
     def test_render_with_body(self):
         s = cStringIO.StringIO()
         r = parse_request("GET:'/foo':bfoobar")
