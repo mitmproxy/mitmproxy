@@ -1,8 +1,6 @@
-{% extends "docframe.html" %}
-{% block body %}  
-
+{% extends "docframe.html" %} {% block body %}
 <div class="page-header">
-   <h1>
+    <h1>
         libpathod
         <small>Using pathod and pathoc in code.</small>
     </h1>
@@ -10,18 +8,16 @@
 
 <div class="row">
     <div class="span6">
-
-        <p> Behind the pathod and pathoc command-line tools lurks
-        <b>libpathod</b>, a powerful library for manipulating and serving HTTP
-        requests and responses. The canonical documentation for the library is
-        in the code, and can be accessed using pydoc.</p>
-
+        <p>
+            Behind the pathod and pathoc command-line tools lurks <b>libpathod</b>, a
+            powerful library for manipulating and serving HTTP requests and responses.
+            The canonical documentation for the library is in the code, and can be accessed
+            using pydoc.
+        </p>
     </div>
     <div class="span6">
-        <h1> pathoc </h1>
-
+        <h1>pathoc</h1>
         {% include "libpathod_pathoc.html" %}
     </div>
 </div>
-
-{% endblock %}  
+{% endblock %}

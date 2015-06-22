@@ -1,26 +1,26 @@
 {% extends "layout.html" %}
 
 {% macro subs(s) %}
-{% if subsection == s %} class="active" {% endif %}
+    {% if subsection == s %}
+        class="active"
+    {% endif %}
 {% endmacro %}
 
-
-{% block content %}  
+{% block content %}
 <div class="row">
     <div class="span3">
         <div class="well sidebar-nav">
             <ul class="nav nav-list">
-                <li {{subs("pathod")}}><a href="/docs/pathod">pathod</a></li>
-                <li {{subs("pathoc")}}><a href="/docs/pathoc">pathoc</a></li>
-                <li {{subs("lang")}}><a href="/docs/language">language</a></li>
-                <li {{subs("libpathod")}}><a href="/docs/libpathod">libpathod</a></li>
-                <li {{subs("test")}}><a href="/docs/test">libpathod.test</a></li>
+                <li {{subs( "pathod")}}><a href="/docs/pathod">pathod</a></li>
+                <li {{subs( "pathoc")}}><a href="/docs/pathoc">pathoc</a></li>
+                <li {{subs( "lang")}}><a href="/docs/language">language</a></li>
+                <li {{subs( "libpathod")}}><a href="/docs/libpathod">libpathod</a></li>
+                <li {{subs( "test")}}><a href="/docs/test">libpathod.test</a></li>
             </ul>
         </div>
     </div>
     <div class="span9">
-        {% block body %}  
-        {% endblock %}  
+        {% block body %} {% endblock %}
     </div>
 </div>
-{% endblock %}  
+{% endblock %}

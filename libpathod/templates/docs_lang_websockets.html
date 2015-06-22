@@ -1,13 +1,13 @@
-<pre class="example">wf:[colon-separated list of features]</pre></p>
+<pre class="example">wf:[colon-separated list of features]</pre>
+</p>
 
 <table class="table table-bordered">
-    <tbody >
+    <tbody>
 
         <tr>
             <td> b<a href="#valuespec">VALUE</a> </td>
             <td>
-                Set the frame payload. If a masking key is present, the
-                value is encoded automatically.
+                Set the frame payload. If a masking key is present, the value is encoded automatically.
             </td>
         </tr>
 
@@ -15,8 +15,8 @@
             <td> c<a href="#valuespec">INTEGER</a> </td>
             <td>
 
-                Set the op code. This can either be an integer from 0-15, or be
-                one of the following opcode names: <b>text</b> (the default),
+                Set the op code. This can either be an integer from 0-15, or be one of the following opcode
+                names: <b>text</b> (the default),
                 <b>continue</b>, <b>binary</b>, <b>close</b>, <b>ping</b>,
                 <b>pong</b>.
 
@@ -47,17 +47,16 @@
         <tr>
             <td> k<a href="#valuespec">VALUE</a> </td>
             <td>
-                Set the masking key. The resulting value must be exactly 4
-                bytes long. The special form <b>knone</b> specifies that no key
-                should be set, even if the mask bit is on.
+                Set the masking key. The resulting value must be exactly 4 bytes long. The special form
+                <b>knone</b> specifies that no key should be set, even
+                if the mask bit is on.
             </td>
         </tr>
 
         <tr>
             <td> l<a href="#valuespec">INTEGER</a> </td>
             <td>
-                Set the payload length in the frame header, regardless of the
-                actual body length.
+                Set the payload length in the frame header, regardless of the actual body length.
             </td>
         </tr>
 
@@ -71,16 +70,15 @@
         <tr>
             <td> p<a href="#offsetspec">OFFSET</a>,SECONDS </td>
             <td>
-                Pause for SECONDS seconds after OFFSET bytes. SECONDS can
-                be an integer or "f" to pause forever.
+                Pause for SECONDS seconds after OFFSET bytes. SECONDS can be an integer or "f" to pause
+                forever.
             </td>
         </tr>
 
         <tr>
             <td> r<a href="#valuespec">VALUE</a> </td>
             <td>
-                Set the raw frame payload. This disables masking, even if the
-                key is present.
+                Set the raw frame payload. This disables masking, even if the key is present.
             </td>
         </tr>
 

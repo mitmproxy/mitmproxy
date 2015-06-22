@@ -1,52 +1,50 @@
-{% extends "docframe.html" %}
-{% block body %}  
+{% extends "docframe.html" %} {% block body %}
 <div class="page-header">
-   <h1>
+    <h1>
         libpathod.test
-        <small>Using pathod and pathoc in your unit tests.</small>
+        <small>Using libpathod in unit tests.</small>
     </h1>
 </div>
 
-<div class="row">
-    <div class="span6">
+<p>The <b>libpathod.test</b> module is a light, flexible testing layer for HTTP clients.
+    It works by firing up a Pathod instance in a separate thread, letting you use Pathod's
+    full abilities to generate responses, and then query Pathod's internal logs to establish
+    what happened. All the mechanics of startup, shutdown, finding free ports and so forth
+    are taken care of for you.
+</p>
 
-        <p> The <b>libpathod.test</b> module is a light, flexible testing layer
-        for HTTP clients. It works by firing up a Pathod instance in a separate
-        thread, letting you use Pathod's full abilities to generate responses,
-        and then query Pathod's internal logs to establish what happened. All
-        the mechanics of startup, shutdown, finding free ports and so forth are
-        taken care of for you. </p>
+<p>The canonical docs can be accessed using pydoc: </p>
 
-        <p> The canonical docs can be accessed using pydoc: </p>
+<pre class="terminal">pydoc libpathod.test</pre>
 
-        <pre class="terminal">pydoc libpathod.test</pre>
+<p>
+    The remainder of this page demonstrates some common interaction patterns using
+    <a
+    href="http://nose.readthedocs.org/en/latest/">nose</a>. These examples are also applicable with only minor modification to most
+        commonly used Python testing engines.
+</p>
 
-        <p> The remainder of this page demonstrates some common interaction
-        patterns using <a
-        href="http://nose.readthedocs.org/en/latest/">nose</a>. These examples
-        are also applicable with only minor modification to most commonly used
-        Python testing engines.</p>
-
+<section>
+    <div class="page-header">
+        <h1>Context Manager</h1>
     </div>
-    <div class="span6">
-        <h1> Context Manager </h1>
 
-        {% include "examples_context.html" %}
+    {% include "examples_context.html" %}
+</section>
+
+<section>
+    <div class="page-header">
+        <h1>One instance per test</h1>
     </div>
-</div>
 
-<div class="row">
-    <div class="span6">
-        <h1> One instance per test </h1>
+    {% include "examples_setup.html" %}
+</section>
 
-        {% include "examples_setup.html" %}
+<section>
+    <div class="page-header">
+        <h1>One instance per suite</h1>
     </div>
-    <div class="span6">
-        <h1> One instance per suite </h1>
 
-        {% include "examples_setupall.html" %}
-    </div>
-</div>
-
-
-{% endblock %}  
+    {% include "examples_setupall.html" %}
+</section>
+{% endblock %}
