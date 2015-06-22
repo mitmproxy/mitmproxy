@@ -2,9 +2,9 @@ import OpenSSL
 
 from netlib import http2
 from netlib import tcp
-from netlib import test
 from netlib.http2.frame import *
 from test import tutils
+from .. import tservers
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -17,7 +17,7 @@ class EchoHandler(tcp.BaseHandler):
             self.wfile.flush()
 
 
-class TestCheckALPNMatch(test.ServerTestBase):
+class TestCheckALPNMatch(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         alpn_select=http2.HTTP2Protocol.ALPN_PROTO_H2,
@@ -33,7 +33,7 @@ class TestCheckALPNMatch(test.ServerTestBase):
             assert protocol.check_alpn()
 
 
-class TestCheckALPNMismatch(test.ServerTestBase):
+class TestCheckALPNMismatch(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         alpn_select=None,
@@ -49,7 +49,7 @@ class TestCheckALPNMismatch(test.ServerTestBase):
             tutils.raises(NotImplementedError, protocol.check_alpn)
 
 
-class TestPerformServerConnectionPreface(test.ServerTestBase):
+class TestPerformServerConnectionPreface(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -81,7 +81,7 @@ class TestPerformServerConnectionPreface(test.ServerTestBase):
         protocol.perform_server_connection_preface()
 
 
-class TestPerformClientConnectionPreface(test.ServerTestBase):
+class TestPerformClientConnectionPreface(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -140,7 +140,7 @@ class TestServerStreamIds():
         assert self.protocol.current_stream_id == 6
 
 
-class TestApplySettings(test.ServerTestBase):
+class TestApplySettings(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -234,7 +234,7 @@ class TestCreateRequest():
             '000006000100000001666f6f626172'.decode('hex')
 
 
-class TestReadResponse(test.ServerTestBase):
+class TestReadResponse(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -259,7 +259,7 @@ class TestReadResponse(test.ServerTestBase):
         assert body == b'foobar'
 
 
-class TestReadEmptyResponse(test.ServerTestBase):
+class TestReadEmptyResponse(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -282,7 +282,7 @@ class TestReadEmptyResponse(test.ServerTestBase):
         assert body == b''
 
 
-class TestReadRequest(test.ServerTestBase):
+class TestReadRequest(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):

@@ -2,8 +2,8 @@ import os
 
 from nose.tools import raises
 
-from netlib import tcp, test, websockets, http
-import tutils
+from netlib import tcp, websockets, http
+from . import tutils, tservers
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):
@@ -75,7 +75,7 @@ class WebSocketsClient(tcp.TCPClient):
         frame.to_file(self.wfile)
 
 
-class TestWebSockets(test.ServerTestBase):
+class TestWebSockets(tservers.ServerTestBase):
     handler = WebSocketsEchoHandler
 
     def random_bytes(self, n=100):
@@ -155,7 +155,7 @@ class BadHandshakeHandler(WebSocketsEchoHandler):
         self.handshake_done = True
 
 
-class TestBadHandshake(test.ServerTestBase):
+class TestBadHandshake(tservers.ServerTestBase):
 
     """
       Ensure that the client disconnects if the server handshake is malformed

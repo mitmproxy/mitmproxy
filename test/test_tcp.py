@@ -10,8 +10,8 @@ import mock
 from OpenSSL import SSL
 import OpenSSL
 
-from netlib import tcp, certutils, test, certffi
-import tutils
+from netlib import tcp, certutils, certffi
+from . import tutils, tservers
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -53,7 +53,7 @@ class ALPNHandler(tcp.BaseHandler):
         self.wfile.flush()
 
 
-class TestServer(test.ServerTestBase):
+class TestServer(tservers.ServerTestBase):
     handler = EchoHandler
 
     def test_echo(self):
@@ -74,7 +74,7 @@ class TestServer(test.ServerTestBase):
         self.test_echo()
 
 
-class TestServerBind(test.ServerTestBase):
+class TestServerBind(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
 
@@ -97,7 +97,7 @@ class TestServerBind(test.ServerTestBase):
                 pass
 
 
-class TestServerIPv6(test.ServerTestBase):
+class TestServerIPv6(tservers.ServerTestBase):
     handler = EchoHandler
     addr = tcp.Address(("localhost", 0), use_ipv6=True)
 
@@ -110,7 +110,7 @@ class TestServerIPv6(test.ServerTestBase):
         assert c.rfile.readline() == testval
 
 
-class TestEcho(test.ServerTestBase):
+class TestEcho(tservers.ServerTestBase):
     handler = EchoHandler
 
     def test_echo(self):
@@ -128,7 +128,7 @@ class HardDisconnectHandler(tcp.BaseHandler):
         self.connection.close()
 
 
-class TestFinishFail(test.ServerTestBase):
+class TestFinishFail(tservers.ServerTestBase):
 
     """
         This tests a difficult-to-trigger exception in the .finish() method of
@@ -144,7 +144,7 @@ class TestFinishFail(test.ServerTestBase):
         c.finish()
 
 
-class TestServerSSL(test.ServerTestBase):
+class TestServerSSL(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         cipher_list="AES256-SHA",
@@ -170,7 +170,7 @@ class TestServerSSL(test.ServerTestBase):
         assert "AES" in ret[0]
 
 
-class TestSSLv3Only(test.ServerTestBase):
+class TestSSLv3Only(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         request_client_cert=False,
@@ -183,7 +183,7 @@ class TestSSLv3Only(test.ServerTestBase):
         tutils.raises(tcp.NetLibError, c.convert_to_ssl, sni="foo.com")
 
 
-class TestSSLUpstreamCertVerification(test.ServerTestBase):
+class TestSSLUpstreamCertVerification(tservers.ServerTestBase):
     handler = EchoHandler
 
     ssl = dict(
@@ -236,7 +236,7 @@ class TestSSLUpstreamCertVerification(test.ServerTestBase):
         assert c.rfile.readline() == testval
 
 
-class TestSSLClientCert(test.ServerTestBase):
+class TestSSLClientCert(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
         sni = None
@@ -270,7 +270,7 @@ class TestSSLClientCert(test.ServerTestBase):
         )
 
 
-class TestSNI(test.ServerTestBase):
+class TestSNI(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
         sni = None
@@ -292,7 +292,7 @@ class TestSNI(test.ServerTestBase):
         assert c.rfile.readline() == "foo.com"
 
 
-class TestServerCipherList(test.ServerTestBase):
+class TestServerCipherList(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
         cipher_list='RC4-SHA'
@@ -305,7 +305,7 @@ class TestServerCipherList(test.ServerTestBase):
         assert c.rfile.readline() == "['RC4-SHA']"
 
 
-class TestServerCurrentCipher(test.ServerTestBase):
+class TestServerCurrentCipher(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
         sni = None
@@ -325,7 +325,7 @@ class TestServerCurrentCipher(test.ServerTestBase):
         assert "RC4-SHA" in c.rfile.readline()
 
 
-class TestServerCipherListError(test.ServerTestBase):
+class TestServerCipherListError(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
         cipher_list='bogus'
@@ -337,7 +337,7 @@ class TestServerCipherListError(test.ServerTestBase):
         tutils.raises("handshake error", c.convert_to_ssl, sni="foo.com")
 
 
-class TestClientCipherListError(test.ServerTestBase):
+class TestClientCipherListError(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
         cipher_list='RC4-SHA'
@@ -353,7 +353,7 @@ class TestClientCipherListError(test.ServerTestBase):
             cipher_list="bogus")
 
 
-class TestSSLDisconnect(test.ServerTestBase):
+class TestSSLDisconnect(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
 
@@ -373,7 +373,7 @@ class TestSSLDisconnect(test.ServerTestBase):
         tutils.raises(Queue.Empty, self.q.get_nowait)
 
 
-class TestSSLHardDisconnect(test.ServerTestBase):
+class TestSSLHardDisconnect(tservers.ServerTestBase):
     handler = HardDisconnectHandler
     ssl = True
 
@@ -387,7 +387,7 @@ class TestSSLHardDisconnect(test.ServerTestBase):
         tutils.raises(tcp.NetLibDisconnect, c.wfile.write, "foo")
 
 
-class TestDisconnect(test.ServerTestBase):
+class TestDisconnect(tservers.ServerTestBase):
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -398,7 +398,7 @@ class TestDisconnect(test.ServerTestBase):
         c.close()
 
 
-class TestServerTimeOut(test.ServerTestBase):
+class TestServerTimeOut(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
 
@@ -417,7 +417,7 @@ class TestServerTimeOut(test.ServerTestBase):
         assert self.last_handler.timeout
 
 
-class TestTimeOut(test.ServerTestBase):
+class TestTimeOut(tservers.ServerTestBase):
     handler = HangHandler
 
     def test_timeout(self):
@@ -428,7 +428,7 @@ class TestTimeOut(test.ServerTestBase):
         tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
 
 
-class TestALPNClient(test.ServerTestBase):
+class TestALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
     ssl = dict(
         alpn_select="bar"
@@ -457,7 +457,7 @@ class TestALPNClient(test.ServerTestBase):
             assert c.get_alpn_proto_negotiated() == ""
             assert c.rfile.readline() == "NONE"
 
-class TestNoSSLNoALPNClient(test.ServerTestBase):
+class TestNoSSLNoALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
 
     def test_no_ssl_no_alpn(self):
@@ -467,7 +467,7 @@ class TestNoSSLNoALPNClient(test.ServerTestBase):
         assert c.rfile.readline().strip() == "NONE"
 
 
-class TestSSLTimeOut(test.ServerTestBase):
+class TestSSLTimeOut(tservers.ServerTestBase):
     handler = HangHandler
     ssl = True
 
@@ -479,7 +479,7 @@ class TestSSLTimeOut(test.ServerTestBase):
         tutils.raises(tcp.NetLibTimeout, c.rfile.read, 10)
 
 
-class TestDHParams(test.ServerTestBase):
+class TestDHParams(tservers.ServerTestBase):
     handler = HangHandler
     ssl = dict(
         dhparams=certutils.CertStore.load_dhparam(
@@ -502,7 +502,7 @@ class TestDHParams(test.ServerTestBase):
             assert os.path.exists(filename)
 
 
-class TestPrivkeyGen(test.ServerTestBase):
+class TestPrivkeyGen(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
 
@@ -520,7 +520,7 @@ class TestPrivkeyGen(test.ServerTestBase):
         tutils.raises("bad record mac", c.convert_to_ssl)
 
 
-class TestPrivkeyGenNoFlags(test.ServerTestBase):
+class TestPrivkeyGenNoFlags(tservers.ServerTestBase):
 
     class handler(tcp.BaseHandler):
 
@@ -684,7 +684,7 @@ class TestAddress:
         assert repr(a)
 
 
-class TestSSLKeyLogger(test.ServerTestBase):
+class TestSSLKeyLogger(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
         cipher_list="AES256-SHA"

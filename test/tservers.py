@@ -3,8 +3,8 @@ import threading
 import Queue
 import cStringIO
 import OpenSSL
-from . import tcp, certutils
-from test import tutils
+from netlib import tcp, certutils
+from . import tutils
 
 
 class ServerThread(threading.Thread):

@@ -1,8 +1,8 @@
 import cStringIO
 import textwrap
 import binascii
-from netlib import http, odict, tcp, test
-import tutils
+from netlib import http, odict, tcp
+from . import tutils, tservers
 
 
 def test_httperror():
@@ -284,7 +284,7 @@ class NoContentLengthHTTPHandler(tcp.BaseHandler):
         self.wfile.flush()
 
 
-class TestReadResponseNoContentLength(test.ServerTestBase):
+class TestReadResponseNoContentLength(tservers.ServerTestBase):
     handler = NoContentLengthHTTPHandler
 
     def test_no_content_length(self):
