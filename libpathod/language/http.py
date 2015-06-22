@@ -82,12 +82,10 @@ class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
     key = base.TokValueLiteral("User-Agent")
 
     def values(self, settings):
+        value = self.value.val
         if self.option_used:
-            value = http_uastrings.get_by_shortcut(
-                self.value.val.lower()
-            )[2]
-        else:
-            value = self.value.val
+            value = http_uastrings.get_by_shortcut(value.lower())[2]
+
         return self.format_header(
             self.key.get_generator(settings),
             value
@@ -143,12 +141,12 @@ class _HTTPMessage(message.Message):
 class Response(_HTTPMessage):
     unique_name = None
     comps = (
-        Body,
         Header,
         ShortcutContentType,
         ShortcutLocation,
         Raw,
         Reason,
+        Body,
 
         actions.PauseAt,
         actions.DisconnectAt,
@@ -256,12 +254,12 @@ class NestedResponse(base.NestedMessage):
 
 class Request(_HTTPMessage):
     comps = (
-        Body,
         Header,
         ShortcutContentType,
         ShortcutUserAgent,
         Raw,
         NestedResponse,
+        Body,
         Times,
 
         actions.PauseAt,

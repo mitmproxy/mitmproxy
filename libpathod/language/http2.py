@@ -1,4 +1,6 @@
 import pyparsing as pp
+
+from netlib import http_status, http_uastrings
 from . import base, message
 
 """
@@ -24,6 +26,65 @@ from . import base, message
         h2f:42:DATA:END_STREAM,PADDED:0x1234567:'content body payload'
 """
 
+def get_header(val, headers):
+    """
+        Header keys may be Values, so we have to "generate" them as we try the
+        match.
+    """
+    for h in headers:
+        k = h.key.get_generator({})
+        if len(k) == len(val) and k[:].lower() == val.lower():
+            return h
+    return None
+
+
+class _HeaderMixin(object):
+    unique_name = None
+
+    def values(self, settings):
+        return (
+            self.key.get_generator(settings),
+            self.value.get_generator(settings),
+        )
+
+class _HTTP2Message(message.Message):
+    @property
+    def actions(self):
+        return []  # self.toks(actions._Action)
+
+    @property
+    def headers(self):
+        headers = self.toks(_HeaderMixin)
+
+        if not self.raw:
+            if not get_header("content-length", headers):
+                if not self.body:
+                    length = 0
+                else:
+                    length = len(self.body.string())
+                headers.append(
+                    Header(
+                        base.TokValueLiteral("content-length"),
+                        base.TokValueLiteral(str(length)),
+                    )
+                )
+        return headers
+
+    @property
+    def raw(self):
+        return bool(self.tok(Raw))
+
+    @property
+    def body(self):
+        return self.tok(Body)
+
+    def resolve(self, settings):
+        return self
+
+
+class Code(base.Integer):
+    pass
+
 
 class Method(base.OptionsOrValue):
     options = [
@@ -39,15 +100,39 @@ class Path(base.Value):
     pass
 
 
-class Header(base.KeyValue):
-    unique_name = None
+class Header(_HeaderMixin, base.KeyValue):
     preamble = "h"
 
+
+
+class ShortcutContentType(_HeaderMixin, base.Value):
+    preamble = "c"
+    key = base.TokValueLiteral("content-type")
+
+
+class ShortcutLocation(_HeaderMixin, base.Value):
+    preamble = "l"
+    key = base.TokValueLiteral("location")
+
+
+class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
+    preamble = "u"
+    options = [i[1] for i in http_uastrings.UASTRINGS]
+    key = base.TokValueLiteral("user-agent")
+
     def values(self, settings):
+        value = self.value.val
+        if self.option_used:
+            value = http_uastrings.get_by_shortcut(value.lower())[2]
+
         return (
             self.key.get_generator(settings),
-            self.value.get_generator(settings),
+            value
         )
+
+
+class Raw(base.CaselessLiteral):
+    TOK = "r"
 
 
 class Body(base.Value):
@@ -58,13 +143,13 @@ class Times(base.Integer):
     preamble = "x"
 
 
-class Code(base.Integer):
-    pass
-
-
-class Request(message.Message):
+class Request(_HTTP2Message):
     comps = (
         Header,
+        ShortcutContentType,
+        ShortcutUserAgent,
+        Raw,
+        # NestedResponse,
         Body,
         Times,
     )
@@ -83,20 +168,8 @@ class Request(message.Message):
         return self.tok(Path)
 
     @property
-    def headers(self):
-        return self.toks(Header)
-
-    @property
-    def body(self):
-        return self.tok(Body)
-
-    @property
     def times(self):
         return self.tok(Times)
-
-    @property
-    def actions(self):
-        return []
 
     @classmethod
     def expr(cls):
@@ -113,9 +186,6 @@ class Request(message.Message):
         resp = resp.setParseAction(cls)
         return resp
 
-    def resolve(self, settings, msg=None):
-        return self
-
     def values(self, settings):
         if self.rendered_values:
             return self.rendered_values
@@ -129,7 +199,7 @@ class Request(message.Message):
             self.rendered_values = settings.protocol.create_request(
                 self.method.string(),
                 self.path.string(),
-                headers,  # TODO: parse that into a dict?!
+                headers,
                 body)
             return self.rendered_values
 
@@ -137,11 +207,14 @@ class Request(message.Message):
         return ":".join([i.spec() for i in self.tokens])
 
 
-class Response(message.Message):
+class Response(_HTTP2Message):
     unique_name = None
     comps = (
         Header,
         Body,
+        ShortcutContentType,
+        ShortcutLocation,
+        Raw,
     )
 
     def __init__(self, tokens):
@@ -152,21 +225,6 @@ class Response(message.Message):
     @property
     def code(self):
         return self.tok(Code)
-
-    @property
-    def headers(self):
-        return self.toks(Header)
-
-    @property
-    def body(self):
-        return self.tok(Body)
-
-    @property
-    def actions(self):
-        return []
-
-    def resolve(self, settings, msg=None):
-        return self
 
     @classmethod
     def expr(cls):
@@ -194,7 +252,7 @@ class Response(message.Message):
             self.rendered_values = settings.protocol.create_response(
                 self.code.string(),
                 self.stream_id,
-                headers,  # TODO: parse that into a dict?!
+                headers,
                 body)
             return self.rendered_values
 
