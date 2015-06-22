@@ -123,14 +123,10 @@ class ConnectionHandler:
                 self.set_server_address(("-", port))
                 self.establish_ssl(client=True)
                 host = self.client_conn.connection.get_servername()
-                if host is None:
-                    raise ProxyError(
-                        400,
-                        "Invalid request: No host information"
-                    )
-                self.set_server_address((host, port))
-                self.establish_server_connection()
-                self.establish_ssl(server=True, sni=host)
+                if host:
+                    self.set_server_address((host, port))
+                    self.establish_server_connection()
+                    self.establish_ssl(server=True, sni=host)
 
             # Delegate handling to the protocol handler
             protocol_handler(

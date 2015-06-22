@@ -1347,7 +1347,12 @@ class HTTPHandler(ProtocolHandler):
                 
                 if self.c.config.mode == "sslspoof":
                     # SNI is processed in server.py
-                    return None
+                    if not (flow.server_conn and flow.server_conn.ssl_established):
+                        print ":::::::::::::::"
+                        raise http.HttpError(
+                            400,
+                            "Invalid request: No host information"
+                        )
             
             return None
         

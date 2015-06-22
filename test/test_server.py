@@ -413,13 +413,8 @@ class TestSSLSpoof(tservers.SSLSpoofModeTest):
         a = ("localhost", self.server.port)
         self.config.mode.sslport = a[1]
         p = self.pathoc(sni=None)
-        #assert p.ssl_established == False
-        try:
-            f = p.request("get:/p/304")
-            #assert f.status_code == 400
-            assert False
-        except tcp.NetLibSSLError as v:
-            assert True
+        f = p.request("get:/p/304")
+        assert f.status_code == 400
 
 
 class TestHttps2Http(tservers.ReverseProxTest):
