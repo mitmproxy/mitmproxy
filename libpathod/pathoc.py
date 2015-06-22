@@ -224,7 +224,7 @@ class Pathoc(tcp.TCPClient):
                     "Please use OpenSSL >= 1.0.2. "
                     "Pathoc might not be working as expected without ALPN."
                 )
-            self.protocol = http2.HTTP2Protocol(self)
+            self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
         else:
             # TODO: create HTTP or Websockets protocol
             self.protocol = None
