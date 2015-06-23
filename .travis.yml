@@ -48,7 +48,10 @@ notifications:
       - "irc.oftc.net#mitmproxy"
     on_success: change
     on_failure: always
-  slack: mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+  slack: 
+    mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+    on_success: :change
+    on_failure: always
 
 # exclude cryptography from cache
 # it depends on libssl-dev version
