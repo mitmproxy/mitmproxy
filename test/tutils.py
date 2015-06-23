@@ -3,9 +3,8 @@ import tempfile
 import os
 import shutil
 from contextlib import contextmanager
-from libpathod import utils
 
-from netlib import tcp
+from netlib import tcp, utils
 
 
 def treader(bytes):
