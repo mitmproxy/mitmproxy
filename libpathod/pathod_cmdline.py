@@ -1,9 +1,10 @@
-#!/usr/bin/env python
 import sys
 import argparse
 import os
 import os.path
 import re
+
+from netlib import tcp
 from . import pathod, version, utils
 
 
@@ -138,10 +139,11 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
         """
     )
     group.add_argument(
-        "--sslversion", dest="sslversion", type=str, default='SSLv23',
-        choices=utils.SSLVERSIONS.keys(),
+        "--ssl-version", dest="ssl_version", type=str, default=tcp.SSL_DEFAULT_VERSION,
+        choices=tcp.SSL_VERSIONS.keys(),
         help=""""
-            Use a specified protocol - TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
+            Use a specified protocol:
+            TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
             Default to SSLv23."""
     )
 
@@ -179,6 +181,8 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
 
 
     args = parser.parse_args(argv[1:])
+
+    args.ssl_version = tcp.SSL_VERSIONS[args.ssl_version]
 
     certs = []
     for i in args.ssl_certs:
@@ -220,6 +224,7 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
             return parser.error("Invalid regex in anchor: %s" % patt)
         anchors.append((arex, spec))
     args.anchors = anchors
+
     return args
 
 

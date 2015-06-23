@@ -37,7 +37,7 @@ class SSLOptions(object):
         sans=(),
         not_after_connect=None,
         request_client_cert=False,
-        sslversion=tcp.SSLv23_METHOD,
+        ssl_version=tcp.SSL_DEFAULT_METHOD,
         ciphers=None,
         certs=None,
         alpn_select=http2.HTTP2Protocol.ALPN_PROTO_H2,
@@ -47,7 +47,7 @@ class SSLOptions(object):
         self.sans = sans
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
-        self.sslversion = sslversion
+        self.ssl_version = ssl_version
         self.ciphers = ciphers
         self.alpn_select = alpn_select
         self.certstore = certutils.CertStore.from_store(
@@ -181,7 +181,7 @@ class PathodHandler(tcp.BaseHandler):
                     handle_sni=self._handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
-                    method=self.server.ssloptions.sslversion,
+                    method=self.server.ssloptions.ssl_version,
                     alpn_select=self.server.ssloptions.alpn_select,
                 )
             except tcp.NetLibError as v:
@@ -403,7 +403,7 @@ class PathodHandler(tcp.BaseHandler):
                     handle_sni=self._handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
-                    method=self.server.ssloptions.sslversion,
+                    method=self.server.ssloptions.ssl_version,
                     alpn_select=self.server.ssloptions.alpn_select,
                 )
             except tcp.NetLibError as v:
@@ -592,7 +592,7 @@ def main(args):  # pragma: nocover
         confdir=args.confdir,
         not_after_connect=args.ssl_not_after_connect,
         ciphers=args.ciphers,
-        sslversion=utils.SSLVERSIONS[args.sslversion],
+        ssl_version=args.ssl_version,
         certs=args.ssl_certs,
         sans=args.sans,
     )

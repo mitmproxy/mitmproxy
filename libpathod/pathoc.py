@@ -154,7 +154,7 @@ class Pathoc(tcp.TCPClient):
             # SSL
             ssl=None,
             sni=None,
-            sslversion='SSLv23',
+            ssl_version=tcp.SSL_DEFAULT_METHOD,
             clientcert=None,
             ciphers=None,
 
@@ -193,7 +193,7 @@ class Pathoc(tcp.TCPClient):
 
         self.ssl, self.sni = ssl, sni
         self.clientcert = clientcert
-        self.sslversion = utils.SSLVERSIONS[sslversion]
+        self.ssl_version = ssl_version
         self.ciphers = ciphers
         self.sslinfo = None
 
@@ -280,7 +280,7 @@ class Pathoc(tcp.TCPClient):
                 self.convert_to_ssl(
                     sni=self.sni,
                     cert=self.clientcert,
-                    method=self.sslversion,
+                    method=self.ssl_version,
                     cipher_list=self.ciphers,
                     alpn_protos=alpn_protos
                 )
@@ -461,7 +461,7 @@ def main(args):  # pragma: nocover
                 (args.host, args.port),
                 ssl=args.ssl,
                 sni=args.sni,
-                sslversion=args.sslversion,
+                ssl_version=args.ssl_version,
                 clientcert=args.clientcert,
                 ciphers=args.ciphers,
                 use_http2=args.use_http2,
