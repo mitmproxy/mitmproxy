@@ -83,10 +83,10 @@ class TServer(tcp.TCPServer):
                 OpenSSL.crypto.FILETYPE_PEM,
                 open(raw_key, "rb").read())
             if self.ssl.get("v3_only", False):
-                method = tcp.SSLv3_METHOD
+                method = OpenSSL.SSL.SSLv3_METHOD
                 options = OpenSSL.SSL.OP_NO_SSLv2 | OpenSSL.SSL.OP_NO_TLSv1
             else:
-                method = tcp.SSLv23_METHOD
+                method = OpenSSL.SSL.SSLv23_METHOD
                 options = None
             h.convert_to_ssl(
                 cert, key,
