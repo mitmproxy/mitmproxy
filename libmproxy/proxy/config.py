@@ -49,10 +49,10 @@ class ProxyConfig:
             ciphers_server=None,
             certs=[],
             certforward=False,
-            ssl_version_client="secure",
-            ssl_version_server="secure",
+            ssl_version_client=tcp.SSL_DEFAULT_METHOD,
+            ssl_version_server=tcp.SSL_DEFAULT_METHOD,
             ssl_ports=TRANSPARENT_SSL_PORTS,
-            spoofed_ssl_port=None
+            spoofed_ssl_port=None,
     ):
         self.host = host
         self.port = port
@@ -92,39 +92,19 @@ class ProxyConfig:
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
         self.certforward = certforward
-        self.openssl_method_client, self.openssl_options_client = version_to_openssl(
-            ssl_version_client)
-        self.openssl_method_server, self.openssl_options_server = version_to_openssl(
-            ssl_version_server)
         self.ssl_ports = ssl_ports
 
+        if isinstance(ssl_version_client, int):
+            self.openssl_method_client = ssl_version_client
+        else:
+            self.openssl_method_client = tcp.SSL_VERSIONS[ssl_version_client]
+        if isinstance(ssl_version_server, int):
+            self.openssl_method_server = ssl_version_server
+        else:
+            self.openssl_method_server = tcp.SSL_VERSIONS[ssl_version_server]
 
-sslversion_choices = (
-    "all",
-    "secure",
-    "SSLv2",
-    "SSLv3",
-    "TLSv1",
-    "TLSv1_1",
-    "TLSv1_2")
-
-
-def version_to_openssl(version):
-    """
-    Convert a reasonable SSL version specification into the format OpenSSL expects.
-    Don't ask...
-    https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
-    """
-    if version == "all":
-        return SSL.SSLv23_METHOD, None
-    elif version == "secure":
-        # SSLv23_METHOD + NO_SSLv2 + NO_SSLv3 == TLS 1.0+
-        # TLSv1_METHOD would be TLS 1.0 only
-        return SSL.SSLv23_METHOD, (SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3)
-    elif version in sslversion_choices:
-        return getattr(SSL, "%s_METHOD" % version), None
-    else:
-        raise ValueError("Invalid SSL version: %s" % version)
+        self.openssl_options_client = tcp.SSL_DEFAULT_OPTIONS
+        self.openssl_options_server = tcp.SSL_DEFAULT_OPTIONS
 
 
 def process_proxy_options(parser, options):
@@ -281,16 +261,18 @@ def ssl_option_group(parser):
         "Defaults to %s." %
         str(TRANSPARENT_SSL_PORTS))
     group.add_argument(
-        "--ssl-version-client", dest="ssl_version_client",
-        default="secure", action="store",
-        choices=sslversion_choices,
-        help="Set supported SSL/TLS version for client connections. "
-             "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure."
+        "--ssl-version-client", dest="ssl_version_client", type=str, default=tcp.SSL_DEFAULT_VERSION,
+        choices=tcp.SSL_VERSIONS.keys(),
+        help=""""
+            Use a specified protocol for client connections:
+            TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
+            Default to SSLv23."""
     )
     group.add_argument(
-        "--ssl-version-server", dest="ssl_version_server",
-        default="secure", action="store",
-        choices=sslversion_choices,
-        help="Set supported SSL/TLS version for server connections. "
-             "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure."
+        "--ssl-version-server", dest="ssl_version_server", type=str, default=tcp.SSL_DEFAULT_VERSION,
+        choices=tcp.SSL_VERSIONS.keys(),
+        help=""""
+            Use a specified protocol for server connections:
+            TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
+            Default to SSLv23."""
     )
