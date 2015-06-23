@@ -49,7 +49,8 @@ notifications:
     on_success: change
     on_failure: always
   slack: 
-    mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+    rooms:
+        - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
     on_success: :change
     on_failure: always
 
