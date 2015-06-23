@@ -270,6 +270,49 @@ class ReverseProxTest(ProxTestBase):
         return p.request(q)
 
 
+class SpoofModeTest(ProxTestBase):
+    ssl = None
+
+    @classmethod
+    def get_proxy_config(cls):
+        d = ProxTestBase.get_proxy_config()
+        d["upstream_server"] = None
+        d["mode"] = "spoof"
+        return d
+
+    def pathoc(self, sni=None):
+        """
+            Returns a connected Pathoc instance.
+        """
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
+        p.connect()
+        return p
+
+
+class SSLSpoofModeTest(ProxTestBase):
+    ssl = True
+
+    @classmethod
+    def get_proxy_config(cls):
+        d = ProxTestBase.get_proxy_config()
+        d["upstream_server"] = None
+        d["mode"] = "sslspoof"
+        d["spoofed_ssl_port"] = 443
+        return d
+
+    def pathoc(self, sni=None):
+        """
+            Returns a connected Pathoc instance.
+        """
+        p = libpathod.pathoc.Pathoc(
+            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
+        )
+        p.connect()
+        return p
+
+
 class ChainProxTest(ProxTestBase):
     """
     Chain three instances of mitmproxy in a row to test upstream mode.

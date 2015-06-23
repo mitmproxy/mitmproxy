@@ -370,6 +370,21 @@ def common_options(parser):
         default=None,
         help="Forward all requests to upstream proxy server: http://host[:port]"
     )
+    group.add_argument(
+        "--spoof",
+        action="store_true", dest="spoof_mode", default=False,
+        help="Use Host header to connect to HTTP servers."
+    )
+    group.add_argument(
+        "--ssl-spoof",
+        action="store_true", dest="ssl_spoof_mode", default=False,
+        help="Use TLS SNI to connect to HTTPS servers."
+    )
+    group.add_argument(
+        "--spoofed-port",
+        action="store", dest="spoofed_ssl_port", type=int, default=443,
+        help="Port number of upstream HTTPS servers in SSL spoof mode."
+    )
 
     group = parser.add_argument_group(
         "Advanced Proxy Options",
