@@ -16,13 +16,24 @@ from . import certutils
 
 EINTR = 4
 
-SSLv2_METHOD = SSL.SSLv2_METHOD
-SSLv3_METHOD = SSL.SSLv3_METHOD
-SSLv23_METHOD = SSL.SSLv23_METHOD
-TLSv1_METHOD = SSL.TLSv1_METHOD
-TLSv1_1_METHOD = SSL.TLSv1_1_METHOD
-TLSv1_2_METHOD = SSL.TLSv1_2_METHOD
+# To enable all SSL methods use: SSLv23
+# then add options to disable certain methods
+# https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
 
+# Use ONLY for parsing of CLI arguments!
+# All code internals should use OpenSSL constants directly!
+SSL_VERSIONS = {
+    'TLSv1.2': SSL.TLSv1_2_METHOD,
+    'TLSv1.1': SSL.TLSv1_1_METHOD,
+    'TLSv1': SSL.TLSv1_METHOD,
+    'SSLv3': SSL.SSLv3_METHOD,
+    'SSLv2': SSL.SSLv2_METHOD,
+    'SSLv23': SSL.SSLv23_METHOD,
+}
+
+SSL_DEFAULT_VERSION = 'SSLv23'
+
+SSL_DEFAULT_METHOD = SSL_VERSIONS[SSL_DEFAULT_VERSION]
 
 SSL_DEFAULT_OPTIONS = (
     SSL.OP_NO_SSLv2 |
@@ -376,7 +387,7 @@ class _Connection(object):
                 pass
 
     def _create_ssl_context(self,
-                            method=SSLv23_METHOD,
+                            method=SSL_DEFAULT_METHOD,
                             options=SSL_DEFAULT_OPTIONS,
                             verify_options=SSL.VERIFY_NONE,
                             ca_path=certifi.where(),
