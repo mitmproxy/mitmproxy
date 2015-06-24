@@ -1314,9 +1314,7 @@ class HTTPHandler(ProtocolHandler):
                 pass
 
         elif request.form_in == self.expected_form_in:
-
             request.form_out = self.expected_form_out
-
             if request.form_in == "absolute":
                 if request.scheme != "http":
                     raise http.HttpError(
@@ -1328,7 +1326,7 @@ class HTTPHandler(ProtocolHandler):
                     # value at flow.server_conn
                     self.c.set_server_address((request.host, request.port))
                     flow.server_conn = self.c.server_conn
-            
+
             elif request.form_in == "relative":
                 if self.c.config.mode == "spoof":
                     # Host header
@@ -1340,22 +1338,21 @@ class HTTPHandler(ProtocolHandler):
                         )
                     p = http.parse_url("http://" + h)
                     request.scheme = p[0]
-                    request.host   = p[1]
-                    request.port   = p[2]
+                    request.host = p[1]
+                    request.port = p[2]
                     self.c.set_server_address((request.host, request.port))
                     flow.server_conn = self.c.server_conn
-                
+
                 if self.c.config.mode == "sslspoof":
                     # SNI is processed in server.py
                     if not (flow.server_conn and flow.server_conn.ssl_established):
-                        print ":::::::::::::::"
                         raise http.HttpError(
                             400,
                             "Invalid request: No host information"
                         )
-            
+
             return None
-        
+
         raise http.HttpError(
             400, "Invalid HTTP request form (expected: %s, got: %s)" % (
                 self.expected_form_in, request.form_in
