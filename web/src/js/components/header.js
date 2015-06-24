@@ -50,6 +50,7 @@ var FilterDocs = React.createClass({
     }
 });
 var FilterInput = React.createClass({
+    mixins: [common.ChildFocus],
     getInitialState: function () {
         // Consider both focus and mouseover for showing/hiding the tooltip,
         // because onBlur of the input is triggered before the click on the tooltip
@@ -114,11 +115,13 @@ var FilterInput = React.createClass({
             // If closed using ESC/ENTER, hide the tooltip.
             this.setState({mousefocus: false});
         }
+        e.stopPropagation();
     },
     blur: function () {
         this.refs.input.getDOMNode().blur();
+        this.returnFocus();
     },
-    focus: function () {
+    select: function () {
         this.refs.input.getDOMNode().select();
     },
     render: function () {
@@ -157,14 +160,14 @@ var FilterInput = React.createClass({
 });
 
 var MainMenu = React.createClass({
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState, common.SettingsState],
     statics: {
         title: "Start",
         route: "flows"
     },
-    onFilterChange: function (val) {
+    onSearchChange: function (val) {
         var d = {};
-        d[Query.FILTER] = val;
+        d[Query.SEARCH] = val;
         this.setQuery(d);
     },
     onHighlightChange: function (val) {
@@ -173,29 +176,32 @@ var MainMenu = React.createClass({
         this.setQuery(d);
     },
     onInterceptChange: function (val) {
-        SettingsActions.update({intercept: val});
+        actions.SettingsActions.update({intercept: val});
     },
     render: function () {
-        var filter = this.getQuery()[Query.FILTER] || "";
+        var search = this.getQuery()[Query.SEARCH] || "";
         var highlight = this.getQuery()[Query.HIGHLIGHT] || "";
-        var intercept = this.props.settings.intercept || "";
+        var intercept = this.state.settings.intercept || "";
 
         return (
             <div>
                 <div className="menu-row">
                     <FilterInput
-                        placeholder="Filter"
-                        type="filter"
+                        ref="search"
+                        placeholder="Search"
+                        type="search"
                         color="black"
-                        value={filter}
-                        onChange={this.onFilterChange} />
+                        value={search}
+                        onChange={this.onSearchChange} />
                     <FilterInput
+                        ref="highlight"
                         placeholder="Highlight"
                         type="tag"
                         color="hsl(48, 100%, 50%)"
                         value={highlight}
                         onChange={this.onHighlightChange}/>
                     <FilterInput
+                        ref="intercept"
                         placeholder="Intercept"
                         type="pause"
                         color="hsl(208, 56%, 53%)"
@@ -214,7 +220,7 @@ var ViewMenu = React.createClass({
         title: "View",
         route: "flows"
     },
-    mixins: [common.Navigation, common.State],
+    mixins: [common.Navigation, common.RouterState],
     toggleEventLog: function () {
         var d = {};
 
@@ -356,15 +362,17 @@ var Header = React.createClass({
     },
     render: function () {
         var header = header_entries.map(function (entry, i) {
-            var classes = React.addons.classSet({
-                active: entry == this.state.active
-            });
+            var className;
+            if (entry === this.state.active) {
+                className = "active";
+            } else {
+                className = "";
+            }
             return (
                 <a key={i}
                     href="#"
-                    className={classes}
-                    onClick={this.handleClick.bind(this, entry)}
-                >
+                    className={className}
+                    onClick={this.handleClick.bind(this, entry)}>
                     { entry.title}
                 </a>
             );
@@ -377,7 +385,7 @@ var Header = React.createClass({
                     {header}
                 </nav>
                 <div className="menu">
-                    <this.state.active settings={this.props.settings}/>
+                    <this.state.active ref="active"/>
                 </div>
             </header>
         );
@@ -386,5 +394,6 @@ var Header = React.createClass({
 
 
 module.exports = {
-    Header: Header
-}
+    Header: Header,
+    MainMenu: MainMenu
+};

@@ -5,6 +5,9 @@
     netlib/netlib/version.py
     pathod/libpathod/version.py
 
+- Ensure that the website style assets have been compiled for production, and
+synced to the docs.
+
 - Render the docs:
     cshape doc-src doc
 
@@ -20,14 +23,14 @@
     python ./setup.py sdist
     mv ./dist/FILE ~/mitmproxy/www.mitmproxy.org/src/download
 
-- Tag with the version number, and do: 
+- Tag with the version number, and do:
     git push --tags
 
 - Upload to pypi for each project:
 
     python ./setup.py sdist upload
 
-- Now bump the version number to be ready for the next cycle: 
+- Now bump the version number to be ready for the next cycle:
 
     mitmproxy/libmproxy/version.py
     netlib/netlib/version.py

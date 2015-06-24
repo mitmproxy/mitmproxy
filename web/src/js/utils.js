@@ -1,5 +1,10 @@
 var $ = require("jquery");
 var _ = require("lodash");
+var actions = require("./actions.js");
+
+window.$ = $;
+window._ = _;
+window.React = require("react");
 
 var Key = {
     UP: 38,
@@ -15,6 +20,7 @@ var Key = {
     TAB: 9,
     SPACE: 32,
     BACKSPACE: 8,
+    SHIFT: 16
 };
 // Add A-Z
 for (var i = 65; i <= 90; i++) {
@@ -26,17 +32,17 @@ var formatSize = function (bytes) {
     if (bytes === 0)
         return "0";
     var prefix = ["b", "kb", "mb", "gb", "tb"];
-    for (var i = 0; i < prefix.length; i++){
-        if (Math.pow(1024, i + 1) > bytes){
+    for (var i = 0; i < prefix.length; i++) {
+        if (Math.pow(1024, i + 1) > bytes) {
             break;
         }
     }
     var precision;
-    if (bytes%Math.pow(1024, i) === 0)
+    if (bytes % Math.pow(1024, i) === 0)
         precision = 0;
     else
         precision = 1;
-    return (bytes/Math.pow(1024, i)).toFixed(precision) + prefix[i];
+    return (bytes / Math.pow(1024, i)).toFixed(precision) + prefix[i];
 };
 
 
@@ -58,21 +64,20 @@ var formatTimeStamp = function (seconds) {
     return ts.replace("T", " ").replace("Z", "");
 };
 
-
 // At some places, we need to sort strings alphabetically descending,
 // but we can only provide a key function.
 // This beauty "reverses" a JS string.
 var end = String.fromCharCode(0xffff);
-function reverseString(s){
+function reverseString(s) {
     return String.fromCharCode.apply(String,
-        _.map(s.split(""), function (c) {
-            return 0xffff - c.charCodeAt();
-        })
-    ) + end;
+            _.map(s.split(""), function (c) {
+                return 0xffff - c.charCodeAt(0);
+            })
+        ) + end;
 }
 
 function getCookie(name) {
-    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    var r = document.cookie.match(new RegExp("\\b" + name + "=([^;]*)\\b"));
     return r ? r[1] : undefined;
 }
 var xsrf = $.param({_xsrf: getCookie("_xsrf")});
@@ -80,19 +85,22 @@ var xsrf = $.param({_xsrf: getCookie("_xsrf")});
 //Tornado XSRF Protection.
 $.ajaxPrefilter(function (options) {
     if (["post", "put", "delete"].indexOf(options.type.toLowerCase()) >= 0 && options.url[0] === "/") {
-        if (options.data) {
-            options.data += ("&" + xsrf);
+        if(options.url.indexOf("?") === -1){
+            options.url += "?" + xsrf;
         } else {
-            options.data = xsrf;
+            options.url += "&" + xsrf;
         }
     }
 });
 // Log AJAX Errors
 $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
+    if (thrownError === "abort") {
+        return;
+    }
     var message = jqXHR.responseText;
-    console.error(message, arguments);
-    EventLogActions.add_event(thrownError + ": " + message);
-    window.alert(message);
+    console.error(thrownError, message, arguments);
+    actions.EventLogActions.add_event(thrownError + ": " + message);
+    alert(message);
 });
 
 module.exports = {
@@ -100,5 +108,5 @@ module.exports = {
     formatTimeDelta: formatTimeDelta,
     formatTimeStamp: formatTimeStamp,
     reverseString: reverseString,
-    Key: Key
+    Key: Key,
 };

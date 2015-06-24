@@ -79,7 +79,8 @@ class TCPHandler(ProtocolHandler):
                                 ),
                                 "info"
                             )
-                        # Do not use dst.connection.send here, which may raise OpenSSL-specific errors.
+                        # Do not use dst.connection.send here, which may raise
+                        # OpenSSL-specific errors.
                         dst.send(contents)
                     else:
                         # socket.socket.send supports raw bytearrays/memoryviews

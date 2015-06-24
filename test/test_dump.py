@@ -116,7 +116,6 @@ class TestDumpMaster:
                 0, None, "", verbosity=1, rfile="test_dump.py"
             )
 
-
     def test_options(self):
         o = dump.Options(verbosity = 2)
         assert o.verbosity == 2
@@ -147,21 +146,25 @@ class TestDumpMaster:
     def test_basic(self):
         for i in (1, 2, 3):
             assert "GET" in self._dummy_cycle(1, "~s", "", flow_detail=i)
-            assert "GET" in self._dummy_cycle(1, "~s", "\x00\x00\x00", flow_detail=i)
+            assert "GET" in self._dummy_cycle(
+                1,
+                "~s",
+                "\x00\x00\x00",
+                flow_detail=i)
             assert "GET" in self._dummy_cycle(1, "~s", "ascii", flow_detail=i)
 
     def test_write(self):
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a")
-            self._dummy_cycle(1, None, "", outfile=(p,"wb"), verbosity=0)
-            assert len(list(flow.FlowReader(open(p,"rb")).stream())) == 1
+            self._dummy_cycle(1, None, "", outfile=(p, "wb"), verbosity=0)
+            assert len(list(flow.FlowReader(open(p, "rb")).stream())) == 1
 
     def test_write_append(self):
         with tutils.tmpdir() as d:
             p = os.path.join(d, "a.append")
-            self._dummy_cycle(1, None, "", outfile=(p,"wb"), verbosity=0)
-            self._dummy_cycle(1, None, "", outfile=(p,"ab"), verbosity=0)
-            assert len(list(flow.FlowReader(open(p,"rb")).stream())) == 2
+            self._dummy_cycle(1, None, "", outfile=(p, "wb"), verbosity=0)
+            self._dummy_cycle(1, None, "", outfile=(p, "ab"), verbosity=0)
+            assert len(list(flow.FlowReader(open(p, "rb")).stream())) == 2
 
     def test_write_err(self):
         tutils.raises(

@@ -1,7 +1,13 @@
 from __future__ import absolute_import
-import os, datetime, urllib, re
-import time, functools, cgi
+import os
+import datetime
+import urllib
+import re
+import time
+import functools
+import cgi
 import json
+
 
 def timestamp():
     """
@@ -69,20 +75,33 @@ def urlencode(s):
     return urllib.urlencode(s, False)
 
 
-def pretty_size(size):
-    suffixes = [
-        ("B",   2**10),
-        ("kB",   2**20),
-        ("MB",   2**30),
-    ]
-    for suf, lim in suffixes:
-        if size >= lim:
-            continue
-        else:
-            x = round(size/float(lim/2**10), 2)
-            if x == int(x):
-                x = int(x)
-            return str(x) + suf
+def multipartdecode(hdrs, content):
+    """
+        Takes a multipart boundary encoded string and returns list of (key, value) tuples.
+    """
+    v = hdrs.get_first("content-type")
+    if v:
+        v = parse_content_type(v)
+        if not v:
+            return []
+        boundary = v[2].get("boundary")
+        if not boundary:
+            return []
+
+        rx = re.compile(r'\bname="([^"]+)"')
+        r = []
+
+        for i in content.split("--" + boundary):
+            parts = i.splitlines()
+            if len(parts) > 1 and parts[0][0:2] != "--":
+                match = rx.search(parts[1])
+                if match:
+                    key = match.group(1)
+                    value = "".join(parts[3 + parts[2:].index(""):])
+                    r.append((key, value))
+        return r
+    return []
+
 
 def pretty_duration(secs):
     formatters = [
@@ -94,8 +113,9 @@ def pretty_duration(secs):
     for limit, formatter in formatters:
         if secs >= limit:
             return formatter.format(secs)
-    #less than 1 sec
-    return "{:.0f}ms".format(secs*1000)
+    # less than 1 sec
+    return "{:.0f}ms".format(secs * 1000)
+
 
 class Data:
     def __init__(self, name):
@@ -112,47 +132,41 @@ class Data:
         """
         fullpath = os.path.join(self.dirname, path)
         if not os.path.exists(fullpath):
-            raise ValueError, "dataPath: %s does not exist."%fullpath
+            raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath
 pkg_data = Data(__name__)
 
 
 class LRUCache:
     """
-        A decorator that implements a self-expiring LRU cache for class
-        methods (not functions!).
-
-        Cache data is tracked as attributes on the object itself. There is
-        therefore a separate cache for each object instance.
+        A simple LRU cache for generated values.
     """
+
     def __init__(self, size=100):
         self.size = size
+        self.cache = {}
+        self.cacheList = []
 
-    def __call__(self, f):
-        cacheName = "_cached_%s"%f.__name__
-        cacheListName = "_cachelist_%s"%f.__name__
-        size = self.size
+    def get(self, gen, *args):
+        """
+            gen: A (presumably expensive) generator function. The identity of
+            gen is NOT taken into account by the cache.
+            *args: A list of immutable arguments, used to establish identiy by
+            *the cache, and passed to gen to generate values.
+        """
+        if args in self.cache:
+            self.cacheList.remove(args)
+            self.cacheList.insert(0, args)
+            return self.cache[args]
+        else:
+            ret = gen(*args)
+            self.cacheList.insert(0, args)
+            self.cache[args] = ret
+            if len(self.cacheList) > self.size:
+                d = self.cacheList.pop()
+                self.cache.pop(d)
+            return ret
 
-        @functools.wraps(f)
-        def wrap(self, *args):
-            if not hasattr(self, cacheName):
-                setattr(self, cacheName, {})
-                setattr(self, cacheListName, [])
-            cache = getattr(self, cacheName)
-            cacheList = getattr(self, cacheListName)
-            if cache.has_key(args):
-                cacheList.remove(args)
-                cacheList.insert(0, args)
-                return cache[args]
-            else:
-                ret = f(self, *args)
-                cacheList.insert(0, args)
-                cache[args] = ret
-                if len(cacheList) > size:
-                    d = cacheList.pop()
-                    cache.pop(d)
-                return ret
-        return wrap
 
 def parse_content_type(c):
     """
@@ -188,14 +202,14 @@ def hostport(scheme, host, port):
     if (port, scheme) in [(80, "http"), (443, "https")]:
         return host
     else:
-        return "%s:%s"%(host, port)
+        return "%s:%s" % (host, port)
 
 
 def unparse_url(scheme, host, port, path=""):
     """
         Returns a URL string, constructed from the specified compnents.
     """
-    return "%s://%s%s"%(scheme, hostport(scheme, host, port), path)
+    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
 def clean_hanging_newline(t):
@@ -236,7 +250,7 @@ def parse_size(s):
     try:
         return int(s) * mult
     except ValueError:
-        raise ValueError("Invalid size specification: %s"%s)
+        raise ValueError("Invalid size specification: %s" % s)
 
 
 def safe_subn(pattern, repl, target, *args, **kwargs):

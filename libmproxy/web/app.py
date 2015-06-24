@@ -26,6 +26,13 @@ class RequestHandler(tornado.web.RequestHandler):
         )
 
     @property
+    def json(self):
+        if not self.request.headers.get(
+                "Content-Type").startswith("application/json"):
+            return None
+        return json.loads(self.request.body)
+
+    @property
     def state(self):
         return self.application.master.state
 
@@ -61,8 +68,10 @@ class FiltHelp(RequestHandler):
             commands=filt.help
         ))
 
+
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
-    connections = None  # raise an error if inherited class doesn't specify its own instance.
+    # raise an error if inherited class doesn't specify its own instance.
+    connections = None
 
     def open(self):
         self.connections.add(self)
@@ -111,6 +120,42 @@ class FlowHandler(RequestHandler):
         self.flow.kill(self.master)
         self.state.delete_flow(self.flow)
 
+    def put(self, flow_id):
+        flow = self.flow
+        flow.backup()
+        for a, b in self.json.iteritems():
+
+            if a == "request":
+                request = flow.request
+                for k, v in b.iteritems():
+                    if k in ["method", "scheme", "host", "path"]:
+                        setattr(request, k, str(v))
+                    elif k == "port":
+                        request.port = int(v)
+                    elif k == "httpversion":
+                        request.httpversion = tuple(int(x) for x in v)
+                    elif k == "headers":
+                        request.headers.load_state(v)
+                    else:
+                        print "Warning: Unknown update {}.{}: {}".format(a, k, v)
+
+            elif a == "response":
+                response = flow.response
+                for k, v in b.iteritems():
+                    if k == "msg":
+                        response.msg = str(v)
+                    elif k == "code":
+                        response.code = int(v)
+                    elif k == "httpversion":
+                        response.httpversion = tuple(int(x) for x in v)
+                    elif k == "headers":
+                        response.headers.load_state(v)
+                    else:
+                        print "Warning: Unknown update {}.{}: {}".format(a, k, v)
+            else:
+                print "Warning: Unknown update {}: {}".format(a, b)
+        self.state.update_flow(flow)
+
 
 class DuplicateFlow(RequestHandler):
     def post(self, flow_id):
@@ -124,6 +169,10 @@ class RevertFlow(RequestHandler):
 
 class ReplayFlow(RequestHandler):
     def post(self, flow_id):
+        self.flow.backup()
+        self.flow.response = None
+        self.state.update_flow(self.flow)
+
         r = self.master.replay_request(self.flow)
         if r:
             raise APIError(400, r)
@@ -176,20 +225,14 @@ class Settings(RequestHandler):
             )
         ))
 
-    def put(self, *update, **kwargs):
+    def put(self):
         update = {}
-        for k, v in self.request.arguments.iteritems():
-            if len(v) != 1:
-                print "Warning: Unknown length for setting {}: {}".format(k, v)
-                continue
-
-            if k == "_xsrf":
-                continue
-            elif k == "intercept":
-                self.state.set_intercept(v[0])
-                update[k] = v[0]
+        for k, v in self.json.iteritems():
+            if k == "intercept":
+                self.state.set_intercept(v)
+                update[k] = v
             else:
-                print "Warning: Unknown setting {}: {}".format(k, v)
+                print("Warning: Unknown setting {}: {}".format(k, v))
 
         ClientConnection.broadcast(
             type="settings",

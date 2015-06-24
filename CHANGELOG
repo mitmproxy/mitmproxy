@@ -1,3 +1,55 @@
+3 June 2015: mitmproxy 0.12.1
+
+    * mitmproxy console: mouse interaction - scroll in the flow list, click on
+      flow to view, click to switch between tabs.
+
+    * Update our crypto defaults: SHA256, 2048 bit RSA, 4096 bit DH parameters.
+
+    * BUGFIX: crash under some circumstances when copying to clipboard.
+
+    * BUGFIX: occasional crash when deleting flows.
+
+
+18 May 2015: mitmproxy 0.12
+
+    * mitmproxy console: Significant revamp of the UI. The major changes are
+      listed below, and in addition almost every aspect of the UI has
+      been tweaked, and performance has improved significantly.
+
+    * mitmproxy console: A new options screen has been created ("o" shortcut),
+      and many options that were previously manipulated directly via a
+      keybinding have been moved there.
+
+    * mitmproxy console: Big improvement in palettes. This includes improvements
+      to all colour schemes. Palettes now set the terminal background colour by
+      default, and a new --palette-transparent option has been added to disable
+      this.
+
+    * mitmproxy console: g/G shortcuts throughout mitmproxy console to jump
+      to the beginning/end of the current view.
+
+    * mitmproxy console: switch  palettes on the fly from the options screen.
+
+    * mitmproxy console: A cookie editor has been added for mitmproxy console
+      at long last.
+
+    * mitmproxy console: Various components of requests and responses can be
+      copied to the clipboard from mitmproxy - thanks to @marceloglezer.
+
+    * Support for creating new requests from scratch in mitmproxy console (@marceloglezer).
+
+    * SSLKEYLOGFILE environment variable to specify a logging location for TLS
+      master keys. This can be used with tools like Wireshark to allow TLS
+      decoding.
+
+    * Server facing SSL cipher suite specification (thanks to Jim Shaver).
+
+    * Official support for transparent proxying on FreeBSD - thanks to Mike C
+      (http://github.com/mike-pt).
+
+    * Many other small bugfixes and improvemenets throughout the project.
+
+
 29 Dec 2014: mitmproxy 0.11.2:
 
     * Configuration files - mitmproxy.conf, mitmdump.conf, common.conf in the
@@ -8,11 +60,11 @@
 
 15 November 2014: mitmproxy 0.11.1:
 
-    * Bug fixes: connection leaks some crashes 
+    * Bug fixes: connection leaks some crashes
 
 
 7 November 2014: mitmproxy 0.11:
-    
+
     * Performance improvements for mitmproxy console
 
     * SOCKS5 proxy mode allows mitmproxy to act as a SOCKS5 proxy server
@@ -26,7 +78,7 @@
     * Finer-grained control of traffic replay, including options to ignore
       contents or parameters when matching flows (marcelo.glezer@gmail.com)
 
-    * Pass arguments to inline scripts 
+    * Pass arguments to inline scripts
 
     * Configurable size limit on HTTP request and response bodies
 
@@ -56,7 +108,7 @@
 
 
 28 January 2014: mitmproxy 0.10:
-	
+
     * Support for multiple scripts and multiple script arguments
 
     * Easy certificate install through the in-proxy web app, which is now
@@ -76,7 +128,7 @@
 25 August 2013: mitmproxy 0.9.2:
 
     * Improvements to the mitmproxywrapper.py helper script for OSX.
-    
+
     * Don't take minor version into account when checking for serialized file
       compatibility.
 
@@ -90,38 +142,38 @@
       valid IDNA-encoded names.
 
     * Display transfer rates for responses in the flow list.
-    
+
     * Many other small bugfixes and improvements.
-    
+
 
 
 
 16 June 2013: mitmproxy 0.9.1:
 
     * Use "correct" case for Content-Type headers added by mitmproxy.
-    
-    * Make UTF environment detection more robust. 
+
+    * Make UTF environment detection more robust.
 
     * Improved MIME-type detection for viewers.
-    
+
     * Always read files in binary mode (Windows compatibility fix).
-    
+
     * Some developer documentation.
-    
+
 
 15 May 2013: mitmproxy 0.9:
 
     * Upstream certs mode is now the default.
 
     * Add a WSGI container that lets you host in-proxy web applications.
-    
+
     * Full transparent proxy support for Linux and OSX.
-    
+
     * Introduce netlib, a common codebase for mitmproxy and pathod
       (http://github.com/cortesi/netlib).
 
     * Full support for SNI.
-    
+
     * Color palettes for mitmproxy, tailored for light and dark terminal
       backgrounds.
 
@@ -132,12 +184,12 @@
       match asset flows (js, images, css).
 
     * Follow mode in mitmproxy ("F" shortcut) to "tail" flows as they arrive.
-    
+
     * --dummy-certs option to specify and preserve the dummy certificate
       directory.
 
     * Server replay from the current captured buffer.
-    
+
     * Huge improvements in content views. We now have viewers for AMF, HTML,
       JSON, Javascript, images, XML, URL-encoded forms, as well as hexadecimal
       and raw views.
@@ -146,7 +198,7 @@
       on flows, based on a matching pattern.
 
     * A graphical editor for path components in mitmproxy.
-    
+
     * A small set of standard user-agent strings, which can be used easily in
       the header editor.
 

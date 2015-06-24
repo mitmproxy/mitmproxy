@@ -197,9 +197,12 @@ class TransparentProxy(object):
         self.driver = WinDivert()
         self.driver.register()
 
-        self.request_filter = custom_filter or " or ".join(("tcp.DstPort == %d" % p) for p in redirect_ports)
+        self.request_filter = custom_filter or " or ".join(
+            ("tcp.DstPort == %d" %
+             p) for p in redirect_ports)
         self.request_forward_handle = None
-        self.request_forward_thread = threading.Thread(target=self.request_forward)
+        self.request_forward_thread = threading.Thread(
+            target=self.request_forward)
         self.request_forward_thread.daemon = True
 
         self.addr_pid_map = dict()
@@ -235,17 +238,25 @@ class TransparentProxy(object):
         # Block all ICMP requests (which are sent on Windows by default).
         # In layman's terms: If we don't do this, our proxy machine tells the client that it can directly connect to the
         # real gateway if they are on the same network.
-        self.icmp_handle = self.driver.open_handle(filter="icmp", layer=Layer.NETWORK, flags=Flag.DROP)
+        self.icmp_handle = self.driver.open_handle(
+            filter="icmp",
+            layer=Layer.NETWORK,
+            flags=Flag.DROP)
 
-        self.response_handle = self.driver.open_handle(filter=self.response_filter, layer=Layer.NETWORK)
+        self.response_handle = self.driver.open_handle(
+            filter=self.response_filter,
+            layer=Layer.NETWORK)
         self.response_thread.start()
 
         if self.mode == "forward" or self.mode == "both":
-            self.request_forward_handle = self.driver.open_handle(filter=self.request_filter,
-                                                                  layer=Layer.NETWORK_FORWARD)
+            self.request_forward_handle = self.driver.open_handle(
+                filter=self.request_filter,
+                layer=Layer.NETWORK_FORWARD)
             self.request_forward_thread.start()
         if self.mode == "local" or self.mode == "both":
-            self.request_local_handle = self.driver.open_handle(filter=self.request_filter, layer=Layer.NETWORK)
+            self.request_local_handle = self.driver.open_handle(
+                filter=self.request_filter,
+                layer=Layer.NETWORK)
             self.request_local_thread.start()
 
     def shutdown(self):
@@ -266,14 +277,17 @@ class TransparentProxy(object):
         try:
             raw_packet, metadata = handle.recv()
             return self.driver.parse_packet(raw_packet), metadata
-        except WindowsError, e:
+        except WindowsError as e:
             if e.winerror == 995:
                 return None, None
             else:
                 raise
 
     def fetch_pids(self):
-        ret = windll.iphlpapi.GetTcpTable2(byref(self.tcptable2), byref(self.tcptable2_size), 0)
+        ret = windll.iphlpapi.GetTcpTable2(
+            byref(
+                self.tcptable2), byref(
+                self.tcptable2_size), 0)
         if ret == ERROR_INSUFFICIENT_BUFFER:
             self.tcptable2 = MIB_TCPTABLE2(self.tcptable2_size.value)
             self.fetch_pids()
@@ -299,7 +313,8 @@ class TransparentProxy(object):
                 self.fetch_pids()
 
             # If this fails, we most likely have a connection from an external client to
-            # a local server on 80/443. In this, case we always want to proxy the request.
+            # a local server on 80/443. In this, case we always want to proxy
+            # the request.
             pid = self.addr_pid_map.get(client, None)
 
             if pid not in self.trusted_pids:
@@ -325,7 +340,8 @@ class TransparentProxy(object):
         server = (packet.dst_addr, packet.dst_port)
 
         if client in self.client_server_map:
-            del self.client_server_map[client]  # Force re-add to mark as "newest" entry in the dict.
+            # Force re-add to mark as "newest" entry in the dict.
+            del self.client_server_map[client]
         while len(self.client_server_map) > self.connection_cache_size:
             self.client_server_map.popitem(False)
 
@@ -335,7 +351,8 @@ class TransparentProxy(object):
         metadata.direction = Direction.INBOUND
 
         packet = self.driver.update_packet_checksums(packet)
-        # Use any handle thats on the NETWORK layer - request_local may be unavailable.
+        # Use any handle thats on the NETWORK layer - request_local may be
+        # unavailable.
         self.response_handle.send((packet.raw, metadata))
 
     def response(self):
@@ -354,22 +371,39 @@ class TransparentProxy(object):
             if server:
                 packet.src_addr, packet.src_port = server
             else:
-                print "Warning: Previously unseen connection from proxy to %s:%s." % client
+                print("Warning: Previously unseen connection from proxy to %s:%s." % client)
 
             packet = self.driver.update_packet_checksums(packet)
             self.response_handle.send((packet.raw, metadata))
 
 
 if __name__ == "__main__":
-    parser = configargparse.ArgumentParser(description="Windows Transparent Proxy")
-    parser.add_argument('--mode', choices=['forward', 'local', 'both'], default="both",
-                        help='redirection operation mode: "forward" to only redirect forwarded packets, '
-                             '"local" to only redirect packets originating from the local machine')
+    parser = configargparse.ArgumentParser(
+        description="Windows Transparent Proxy")
+    parser.add_argument(
+        '--mode',
+        choices=[
+            'forward',
+            'local',
+            'both'],
+        default="both",
+        help='redirection operation mode: "forward" to only redirect forwarded packets, '
+        '"local" to only redirect packets originating from the local machine')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("--redirect-ports", nargs="+", type=int, default=[80, 443], metavar="80",
-                       help="ports that should be forwarded to the proxy")
-    group.add_argument("--custom-filter", default=None, metavar="WINDIVERT_FILTER",
-                       help="Custom WinDivert interception rule.")
+    group.add_argument(
+        "--redirect-ports",
+        nargs="+",
+        type=int,
+        default=[
+            80,
+            443],
+        metavar="80",
+        help="ports that should be forwarded to the proxy")
+    group.add_argument(
+        "--custom-filter",
+        default=None,
+        metavar="WINDIVERT_FILTER",
+        help="Custom WinDivert interception rule.")
     parser.add_argument("--proxy-addr", default=False,
                         help="Proxy Server Address")
     parser.add_argument("--proxy-port", type=int, default=8080,

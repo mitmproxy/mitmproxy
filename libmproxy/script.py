@@ -1,6 +1,10 @@
 from __future__ import absolute_import
-import os, traceback, threading, shlex
+import os
+import traceback
+import threading
+import shlex
 from . import controller
+
 
 class ScriptError(Exception):
     pass
@@ -56,6 +60,7 @@ class Script:
             s = Script(argv, master)
             s.load()
     """
+
     def __init__(self, command, master):
         self.command = command
         self.argv = self.parse_command(command)
@@ -73,9 +78,11 @@ class Script:
         args = shlex.split(command)
         args[0] = os.path.expanduser(args[0])
         if not os.path.exists(args[0]):
-            raise ScriptError(("Script file not found: %s.\r\n"
-                               "If you script path contains spaces, "
-                               "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") % args[0])
+            raise ScriptError(
+                ("Script file not found: %s.\r\n"
+                 "If your script path contains spaces, "
+                 "make sure to wrap it in additional quotes, e.g. -s \"'./foo bar/baz.py' --args\".") %
+                args[0])
         elif not os.path.isfile(args[0]):
             raise ScriptError("Not a file: %s" % args[0])
         return args
@@ -90,7 +97,7 @@ class Script:
         ns = {}
         try:
             execfile(self.argv[0], ns, ns)
-        except Exception, v:
+        except Exception as v:
             raise ScriptError(traceback.format_exc(v))
         self.ns = ns
         r = self.run("start", self.argv)
@@ -114,7 +121,7 @@ class Script:
         if f:
             try:
                 return (True, f(self.ctx, *args, **kwargs))
-            except Exception, v:
+            except Exception as v:
                 return (False, (v, traceback.format_exc(v)))
         else:
             return (False, None)
@@ -133,7 +140,7 @@ class ReplyProxy(object):
                 return
         self.original_reply(*args, **kwargs)
 
-    def __getattr__ (self, k):
+    def __getattr__(self, k):
         return getattr(self.original_reply, k)
 
 
@@ -145,7 +152,8 @@ def _handle_concurrent_reply(fn, o, *args, **kwargs):
 
     def run():
         fn(*args, **kwargs)
-        reply_proxy()  # If the script did not call .reply(), we have to do it now.
+        # If the script did not call .reply(), we have to do it now.
+        reply_proxy()
     ScriptThread(target=run).start()
 
 
@@ -154,8 +162,15 @@ class ScriptThread(threading.Thread):
 
 
 def concurrent(fn):
-    if fn.func_name in ("request", "response", "error", "clientconnect", "serverconnect", "clientdisconnect"):
+    if fn.func_name in (
+            "request",
+            "response",
+            "error",
+            "clientconnect",
+            "serverconnect",
+            "clientdisconnect"):
         def _concurrent(ctx, obj):
             _handle_concurrent_reply(fn, obj, ctx, obj)
         return _concurrent
-    raise NotImplementedError("Concurrent decorator not supported for this method.")
+    raise NotImplementedError(
+        "Concurrent decorator not supported for this method.")

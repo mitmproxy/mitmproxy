@@ -6,27 +6,28 @@ import lxml.html
 import lxml.etree
 from PIL import Image
 from PIL.ExifTags import TAGS
-import re
 import subprocess
 import traceback
 import urwid
+import html2text
 
 import netlib.utils
+from netlib import odict
 
-from . import common
-from .. import utils, encoding, flow
-from ..contrib import jsbeautifier, html2text
+from . import common, signals
+from .. import utils, encoding
+from ..contrib import jsbeautifier
 from ..contrib.wbxml.ASCommandResponse import ASCommandResponse
 
 try:
     import pyamf
     from pyamf import remoting, flex
-except ImportError: # pragma nocover
+except ImportError:  # pragma nocover
     pyamf = None
 
 try:
     import cssutils
-except ImportError: # pragma nocover
+except ImportError:  # pragma nocover
     cssutils = None
 else:
     cssutils.log.setLevel(logging.CRITICAL)
@@ -36,7 +37,7 @@ else:
     cssutils.ser.prefs.indentClosingBrace = False
     cssutils.ser.prefs.validOnly = False
 
-VIEW_CUTOFF = 1024*50
+VIEW_CUTOFF = 1024 * 50
 
 
 def _view_text(content, total, limit):
@@ -59,7 +60,7 @@ def trailer(clen, txt, limit):
         txt.append(
             urwid.Text(
                 [
-                    ("highlight", "... %s of data not shown. Press "%utils.pretty_size(rem)),
+                    ("highlight", "... %s of data not shown. Press " % netlib.utils.pretty_size(rem)),
                     ("key", "f"),
                     ("highlight", " to load all data.")
                 ]
@@ -76,7 +77,7 @@ class ViewAuto:
         ctype = hdrs.get_first("content-type")
         if ctype:
             ct = utils.parse_content_type(ctype) if ctype else None
-            ct = "%s/%s"%(ct[0], ct[1])
+            ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](hdrs, content, limit)
             elif utils.isXML(content):
@@ -227,7 +228,7 @@ class ViewURLEncoded:
         lines = utils.urldecode(content)
         if lines:
             body = common.format_keyvals(
-                [(k+":", v) for (k, v) in lines],
+                [(k + ":", v) for (k, v) in lines],
                 key = "header",
                 val = "text"
             )
@@ -240,33 +241,13 @@ class ViewMultipart:
     content_types = ["multipart/form-data"]
 
     def __call__(self, hdrs, content, limit):
-        v = hdrs.get_first("content-type")
+        v = utils.multipartdecode(hdrs, content)
         if v:
-            v = utils.parse_content_type(v)
-            if not v:
-                return
-            boundary = v[2].get("boundary")
-            if not boundary:
-                return
-
-            rx = re.compile(r'\bname="([^"]+)"')
-            keys = []
-            vals = []
-
-            for i in content.split("--" + boundary):
-                parts = i.splitlines()
-                if len(parts) > 1 and parts[0][0:2] != "--":
-                    match = rx.search(parts[1])
-                    if match:
-                        keys.append(match.group(1) + ":")
-                        vals.append(netlib.utils.cleanBin(
-                            "\n".join(parts[3+parts[2:].index(""):])
-                        ))
             r = [
                 urwid.Text(("highlight", "Form data:\n")),
             ]
             r.extend(common.format_keyvals(
-                zip(keys, vals),
+                v,
                 key = "header",
                 val = "text"
             ))
@@ -324,7 +305,6 @@ if pyamf:
             if not envelope:
                 return None
 
-
             txt = []
             for target, message in iter(envelope):
                 if isinstance(message, pyamf.remoting.Request):
@@ -335,13 +315,13 @@ if pyamf:
                 else:
                     txt.append(urwid.Text([
                         ("header", "Response: "),
-                        ("text", "%s, code %s"%(target, message.status)),
+                        ("text", "%s, code %s" % (target, message.status)),
                     ]))
 
                 s = json.dumps(self.unpack(message), indent=4)
                 txt.extend(_view_text(s[:limit], len(s), limit))
 
-            return "AMF v%s"%envelope.amfVersion, txt
+            return "AMF v%s" % envelope.amfVersion, txt
 
 
 class ViewJavaScript:
@@ -395,7 +375,7 @@ class ViewImage:
             return None
         parts = [
             ("Format", str(img.format_description)),
-            ("Size", "%s x %s px"%img.size),
+            ("Size", "%s x %s px" % img.size),
             ("Mode", str(img.mode)),
         ]
         for i in sorted(img.info.keys()):
@@ -421,7 +401,7 @@ class ViewImage:
             key = "header",
             val = "text"
         )
-        return "%s image"%img.format, fmt
+        return "%s image" % img.format, fmt
 
 
 class ViewProtobuf:
@@ -528,7 +508,7 @@ def get(name):
             return i
 
 
-def get_content_view(viewmode, hdrItems, content, limit, logfunc, is_request):
+def get_content_view(viewmode, hdrItems, content, limit, is_request):
     """
         Returns a (msg, body) tuple.
     """
@@ -539,21 +519,21 @@ def get_content_view(viewmode, hdrItems, content, limit, logfunc, is_request):
             return "No content", ""
     msg = []
 
-    hdrs = flow.ODictCaseless([list(i) for i in hdrItems])
+    hdrs = odict.ODictCaseless([list(i) for i in hdrItems])
 
     enc = hdrs.get_first("content-encoding")
     if enc and enc != "identity":
         decoded = encoding.decode(enc, content)
         if decoded:
             content = decoded
-            msg.append("[decoded %s]"%enc)
+            msg.append("[decoded %s]" % enc)
     try:
         ret = viewmode(hdrs, content, limit)
     # Third-party viewers can fail in unexpected ways...
     except Exception:
         s = traceback.format_exc()
         s = "Content viewer failed: \n" + s
-        logfunc(s, "error")
+        signals.add_event(s, "error")
         ret = None
     if not ret:
         ret = get("Raw")(hdrs, content, limit)

@@ -1,5 +1,8 @@
 from cStringIO import StringIO
-import os, shutil, tempfile, argparse
+import os
+import shutil
+import tempfile
+import argparse
 from contextlib import contextmanager
 import sys
 from libmproxy import flow, utils, controller
@@ -9,13 +12,16 @@ import mock_urwid
 from libmproxy.console.flowview import FlowView
 from libmproxy.console import ConsoleState
 from libmproxy.protocol.primitives import Error
-from netlib import certutils
+from netlib import certutils, odict
 from nose.plugins.skip import SkipTest
 from mock import Mock
 from time import time
 
+
 def _SkipWindows():
     raise SkipTest("Skipped on Windows.")
+
+
 def SkipWindows(fn):
     if os.name == "nt":
         return _SkipWindows
@@ -81,11 +87,24 @@ def treq(content="content", scheme="http", host="address", port=22):
     """
     @return: libmproxy.protocol.http.HTTPRequest
     """
-    headers = flow.ODictCaseless()
+    headers = odict.ODictCaseless()
     headers["header"] = ["qvalue"]
-    req = http.HTTPRequest("relative", "GET", scheme, host, port, "/path", (1, 1), headers, content,
-                                 None, None, None)
+    req = http.HTTPRequest(
+        "relative",
+        "GET",
+        scheme,
+        host,
+        port,
+        "/path",
+        (1,
+         1),
+        headers,
+        content,
+        None,
+        None,
+        None)
     return req
+
 
 def treq_absolute(content="content"):
     """
@@ -104,10 +123,18 @@ def tresp(content="message"):
     @return: libmproxy.protocol.http.HTTPResponse
     """
 
-    headers = flow.ODictCaseless()
+    headers = odict.ODictCaseless()
     headers["header_response"] = ["svalue"]
 
-    resp = http.HTTPResponse((1, 1), 200, "OK", headers, content, time(), time())
+    resp = http.HTTPResponse(
+        (1,
+         1),
+        200,
+        "OK",
+        headers,
+        content,
+        time(),
+        time())
     return resp
 
 
@@ -118,10 +145,11 @@ def terr(content="error"):
     err = Error(content)
     return err
 
+
 def tflowview(request_contents=None):
     m = Mock()
     cs = ConsoleState()
-    if request_contents == None:
+    if request_contents is None:
         flow = tflow()
     else:
         flow = tflow(req=treq(request_contents))
@@ -129,8 +157,10 @@ def tflowview(request_contents=None):
     fv = FlowView(m, cs, flow)
     return fv
 
+
 def get_body_line(last_displayed_body, line_nb):
     return last_displayed_body.contents()[line_nb + 2]
+
 
 @contextmanager
 def tmpdir(*args, **kwargs):
@@ -149,6 +179,7 @@ class MockParser(argparse.ArgumentParser):
     argparse.ArgumentParser sys.exits() by default.
     Make it more testable by throwing an exception instead.
     """
+
     def error(self, message):
         raise Exception(message)
 
@@ -169,14 +200,14 @@ def raises(exc, obj, *args, **kwargs):
         :kwargs Arguments to be passed to the callable.
     """
     try:
-        apply(obj, args, kwargs)
-    except Exception, v:
+        obj(*args, **kwargs)
+    except Exception as v:
         if isinstance(exc, basestring):
             if exc.lower() in str(v).lower():
                 return
             else:
                 raise AssertionError(
-                    "Expected %s, but caught %s"%(
+                    "Expected %s, but caught %s" % (
                         repr(str(exc)), v
                     )
                 )
@@ -185,7 +216,7 @@ def raises(exc, obj, *args, **kwargs):
                 return
             else:
                 raise AssertionError(
-                    "Expected %s, but caught %s %s"%(
+                    "Expected %s, but caught %s %s" % (
                         exc.__name__, v.__class__.__name__, str(v)
                     )
                 )

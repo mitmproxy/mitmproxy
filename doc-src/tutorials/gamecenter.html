@@ -2,11 +2,9 @@
 ## The setup
 
 In this tutorial, I'm going to show you how simple it is to creatively
-interfere with Apple Game Center traffic using mitmproxy. To set things up, I
-registered my mitmproxy CA certificate with my iPhone - there's a [step by step
-set of instructions](@!urlTo("certinstall/ios.html")!@) elsewhere in this manual. I then
-started mitmproxy on my desktop, and configured the iPhone to use it as a
-proxy. 
+interfere with Apple Game Center traffic using mitmproxy. To set things up,
+install the [mitmproxy root certificate](@!urlTo("certinstall.html")!@). Then
+start mitmproxy on your desktop, and confige the iPhone to use it as a proxy.
 
 
 ## Taking a look at the Game Center traffic
@@ -14,17 +12,17 @@ proxy.
 Lets take a first look at the Game Center traffic. The game I'll use in this
 tutorial is [Super Mega
 Worm](http://itunes.apple.com/us/app/super-mega-worm/id388541990?mt=8) - a
-great little retro-apocalyptic sidescroller for the iPhone: 
+great little retro-apocalyptic sidescroller for the iPhone:
 
 <center>
-    <img src="@!urlTo('tutorials/supermega.png')!@"/>
+    <img class="img-responsive" src="@!urlTo('tutorials/supermega.png')!@"/>
 </center>
 
 After finishing a game (take your time), watch the traffic flowing through
 mitmproxy:
 
 <center>
-    <img src="@!urlTo('tutorials/one.png')!@"/>
+    <img class="img-responsive" src="@!urlTo('tutorials/one.png')!@"/>
 </center>
 
 We see a bunch of things we might expect - initialisation, the retrieval of
@@ -91,7 +89,7 @@ now fire up. Lets bump the score up to something a bit more ambitious:
 </plist>
 <!--(end)-->
 
-Save the file and exit your editor. 
+Save the file and exit your editor.
 
 The final step is to replay this modified request. Simply press __r__ for
 replay.
@@ -99,11 +97,11 @@ replay.
 ## The glorious result and some intrigue
 
 <center>
-    <img src="@!urlTo('tutorials/leaderboard.png')!@"/>
+    <img class="img-responsive" src="@!urlTo('tutorials/leaderboard.png')!@"/>
 </center>
 
 And that's it - according to the records, I am the greatest Super Mega Worm
-player of all time. 
+player of all time.
 
 There's a curious addendum to this tale. When I first wrote this tutorial, all
 the top competitors' scores were the same: 2,147,483,647 (this is no longer the
@@ -119,4 +117,3 @@ phone, then 2^31-1 might well be the maximum score you could get. Then again,
 if the game itself stores its score in a signed 32-bit int, you could get the
 same score through perfect play, effectively beating the game. So, which is it
 in this case? I'll leave that for you to decide.
-

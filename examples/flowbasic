@@ -30,13 +30,14 @@ class MyMaster(flow.FlowMaster):
         f = flow.FlowMaster.handle_response(self, f)
         if f:
             f.reply()
-        print f
+        print(f)
         return f
 
 
 config = proxy.ProxyConfig(
     port=8080,
-    cadir="~/.mitmproxy/"  # use ~/.mitmproxy/mitmproxy-ca.pem as default CA file.
+    # use ~/.mitmproxy/mitmproxy-ca.pem as default CA file.
+    cadir="~/.mitmproxy/"
 )
 state = flow.State()
 server = ProxyServer(config)

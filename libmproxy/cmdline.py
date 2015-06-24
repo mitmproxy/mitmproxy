@@ -65,7 +65,7 @@ def parse_replace_hook(s):
     patt, regex, replacement = _parse_hook(s)
     try:
         re.compile(regex)
-    except re.error, e:
+    except re.error as e:
         raise ParseException("Malformed replacement regex: %s" % str(e.message))
     return patt, regex, replacement
 
@@ -127,7 +127,6 @@ def parse_server_spec_special(url):
     return ret
 
 
-
 def get_common_options(options):
     stickycookie, stickyauth = None, None
     if options.stickycookie_filt:
@@ -142,17 +141,17 @@ def get_common_options(options):
     for i in options.replace:
         try:
             p = parse_replace_hook(i)
-        except ParseException, e:
+        except ParseException as e:
             raise configargparse.ArgumentTypeError(e.message)
         reps.append(p)
     for i in options.replace_file:
         try:
             patt, rex, path = parse_replace_hook(i)
-        except ParseException, e:
+        except ParseException as e:
             raise configargparse.ArgumentTypeError(e.message)
         try:
             v = open(path, "rb").read()
-        except IOError, e:
+        except IOError as e:
             raise configargparse.ArgumentTypeError(
                 "Could not read replace file: %s" % path
             )
@@ -162,7 +161,7 @@ def get_common_options(options):
     for i in options.setheader:
         try:
             p = parse_setheader(i)
-        except ParseException, e:
+        except ParseException as e:
             raise configargparse.ArgumentTypeError(e.message)
         setheaders.append(p)
 
@@ -221,7 +220,7 @@ def common_options(parser):
     parser.add_argument(
         "--cadir",
         action="store", type=str, dest="cadir", default=config.CA_DIR,
-        help="Location of the default mitmproxy CA files. (%s)"%config.CA_DIR
+        help="Location of the default mitmproxy CA files. (%s)" % config.CA_DIR
     )
     parser.add_argument(
         "--host",
@@ -371,6 +370,21 @@ def common_options(parser):
         default=None,
         help="Forward all requests to upstream proxy server: http://host[:port]"
     )
+    group.add_argument(
+        "--spoof",
+        action="store_true", dest="spoof_mode", default=False,
+        help="Use Host header to connect to HTTP servers."
+    )
+    group.add_argument(
+        "--ssl-spoof",
+        action="store_true", dest="ssl_spoof_mode", default=False,
+        help="Use TLS SNI to connect to HTTPS servers."
+    )
+    group.add_argument(
+        "--spoofed-port",
+        action="store", dest="spoofed_ssl_port", type=int, default=443,
+        help="Port number of upstream HTTPS servers in SSL spoof mode."
+    )
 
     group = parser.add_argument_group(
         "Advanced Proxy Options",
@@ -466,7 +480,7 @@ def common_options(parser):
         "--replay-ignore-payload-param",
         action="append", dest="replay_ignore_payload_params", type=str,
         help="""
-            Request's payload parameters (application/x-www-form-urlencoded) to
+            Request's payload parameters (application/x-www-form-urlencoded or multipart/form-data) to
             be ignored while searching for a saved flow to replay.
             Can be passed multiple times.
         """
@@ -482,9 +496,10 @@ def common_options(parser):
     )
     group.add_argument(
         "--replay-ignore-host",
-        action="store_true", dest="replay_ignore_host", default=False,
-        help="Ignore request's destination host while searching for a saved flow to replay"
-    )
+        action="store_true",
+        dest="replay_ignore_host",
+        default=False,
+        help="Ignore request's destination host while searching for a saved flow to replay")
 
     group = parser.add_argument_group(
         "Replacements",
@@ -575,10 +590,15 @@ def mitmproxy():
     )
     common_options(parser)
     parser.add_argument(
-        "--palette", type=str, default="dark",
+        "--palette", type=str, default=palettes.DEFAULT,
         action="store", dest="palette",
         choices=sorted(palettes.palettes.keys()),
         help="Select color palette: " + ", ".join(palettes.palettes.keys())
+    )
+    parser.add_argument(
+        "--palette-transparent",
+        action="store_true", dest="palette_transparent", default=False,
+        help="Set transparent background for palette."
     )
     parser.add_argument(
         "-e", "--eventlog",
@@ -593,6 +613,11 @@ def mitmproxy():
         "-i", "--intercept", action="store",
         type=str, dest="intercept", default=None,
         help="Intercept filter expression."
+    )
+    group.add_argument(
+        "-l", "--limit", action="store",
+        type=str, dest="limit", default=None,
+        help="Limit filter expression."
     )
     return parser
 

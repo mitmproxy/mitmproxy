@@ -9,7 +9,7 @@ variety of scenarios:
 
 Now, which one should you pick? Use this flow chart:
 
-<img src="@!urlTo('schematics/proxy-modes-flowchart.png')!@"/>
+<img class="img-responsive" src="@!urlTo('schematics/proxy-modes-flowchart.png')!@"/>
 
 <div class="page-header">
     <h1>Regular Proxy</h1>
@@ -31,7 +31,7 @@ these cases, you need to use mitmproxy's transparent mode.
 
 If you are proxying an external device, your network will probably look like this:
 
-<img src="@!urlTo('schematics/proxy-modes-regular.png')!@">
+<img class="img-responsive" src="@!urlTo('schematics/proxy-modes-regular.png')!@">
 
 The square brackets signify the source and destination IP addresses. Your
 client explicitly connects to mitmproxy and mitmproxy explicitly connects
@@ -48,7 +48,7 @@ below, a machine running mitmproxy has been inserted between the router and
 the internet:
 
 <a href="@!urlTo('schematics/proxy-modes-transparent-1.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-transparent-1.png')!@">
+    <img class="img-responsive" src="@!urlTo('schematics/proxy-modes-transparent-1.png')!@">
 </a>
 
 The square brackets signify the source and destination IP addresses. Round
@@ -60,7 +60,7 @@ remove the target information, leaving mitmproxy unable to determine the real
 destination.
 
 <a href="@!urlTo('schematics/proxy-modes-transparent-wrong.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-transparent-wrong.png')!@"></a>
+    <img class="img-responsive" src="@!urlTo('schematics/proxy-modes-transparent-wrong.png')!@"></a>
 
 <h2>Common Configurations</h2>
 
@@ -79,7 +79,7 @@ intact, is to simply configure the client with the mitmproxy box as the
 default gateway.
 
 <a href="@!urlTo('schematics/proxy-modes-transparent-2.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-transparent-2.png')!@"></a>
+    <img class="img-responsive" src="@!urlTo('schematics/proxy-modes-transparent-2.png')!@"></a>
 
 In this scenario, we would:
 
@@ -98,7 +98,7 @@ for your device.
 
 Setting the custom gateway on clients can be automated by serving the settings
 out to clients over DHCP. This lets set up an interception network where all
-clients are proxied automatically, which can save time and effort. 
+clients are proxied automatically, which can save time and effort.
 
 
 <div class="well">
@@ -141,7 +141,7 @@ packet filter you're using. In most cases, the configuration will look like
 this:
 
 <a href="@!urlTo('schematics/proxy-modes-transparent-3.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-transparent-3.png')!@">
+    <img class="img-responsive" src="@!urlTo('schematics/proxy-modes-transparent-3.png')!@">
 </a>
 
 
@@ -154,7 +154,7 @@ Internet. Using reverse proxy mode, you can use mitmproxy to act like a normal
 HTTP server:
 
 <a href="@!urlTo('schematics/proxy-modes-reverse.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-reverse.png')!@">
+    <img class="img-responsive" src="@!urlTo('schematics/proxy-modes-reverse.png')!@">
 </a>
 
 There are various use-cases:
@@ -215,8 +215,8 @@ appliance, you can use mitmproxy's upstream mode. In upstream mode, all
 requests are unconditionally transferred to an upstream proxy of your choice.
 
 <a href="@!urlTo('schematics/proxy-modes-upstream.png')!@">
-    <img src="@!urlTo('schematics/proxy-modes-upstream.png')!@"></a>
+    <img class="img-responsive" src="@!urlTo('schematics/proxy-modes-upstream.png')!@"></a>
 
 mitmproxy supports both explicit HTTP and explicit HTTPS in upstream proxy
 mode. You could in theory chain multiple mitmproxy instances in a row, but
-that doesn't make any sense in practice (i.e. outside of our tests). 
+that doesn't make any sense in practice (i.e. outside of our tests).

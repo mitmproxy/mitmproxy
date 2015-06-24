@@ -1,25 +1,71 @@
 language: python
+
 sudo: false
+
 python:
   - "2.7"
   - pypy
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+
+matrix:
+  include:
+    - python: 2.7
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+    - python: pypy
+      env: OPENSSL=1.0.2
+      addons:
+        apt:
+          sources:
+            # Debian sid currently holds OpenSSL 1.0.2
+            # change this with future releases!
+            - debian-sid
+          packages:
+            - libssl-dev
+
 install:
   - "pip install --src . -r requirements.txt"
-# command to run tests, e.g. python setup.py test
-script: 
+
+before_script:
+  - "openssl version -a"
+
+script:
   - "nosetests --with-cov --cov-report term-missing"
-after_success: 
+
+after_success:
   - coveralls
+
 notifications:
   irc:
     channels:
       - "irc.oftc.net#mitmproxy"
     on_success: change
     on_failure: always
+  slack:
+    rooms:
+        - mitmproxy:YaDGC9Gt9TEM7o8zkC2OLNsu
+    on_success: :change
+    on_failure: always
+
+# exclude cryptography from cache
+# it depends on libssl-dev version
+# which needs to be compiled specifically to each version
+before_cache:
+  - pip uninstall -y cryptography
+  - rm -rf /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages/cryptography/
+  - rm -rf /home/travis/virtualenv/pypy-2.5.0/site-packages/cryptography/
+  - rm /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages/pip/_vendor/requests/packages/urllib3/contrib/pyopenssl.py
+  - rm /home/travis/virtualenv/pypy-2.5.0/site-packages/pip/_vendor/requests/packages/urllib3/contrib/pyopenssl.py
+
 cache:
   directories:
-  - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
-  - /home/travis/virtualenv/python2.7.9/bin
-  - /home/travis/virtualenv/pypy-2.5.0/site-packages
-  - /home/travis/virtualenv/pypy-2.5.0/bin
+    - /home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages
+    - /home/travis/virtualenv/python2.7.9/bin
+    - /home/travis/virtualenv/pypy-2.5.0/site-packages
+    - /home/travis/virtualenv/pypy-2.5.0/bin

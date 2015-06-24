@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Generate a test pattern with pathoc
-PATHOD=http://localhost:9999
-pathoc localhost:8080 "get:'$PATHOD/p/200:p0,1:b@200b'"
-pathoc localhost:8080 "get:'$PATHOD/p/300:p0,1:b@200b'"
-pathoc localhost:8080 "get:'$PATHOD/p/400:p0,1:b@200b'"
-pathoc localhost:8080 "get:'$PATHOD/p/500:p0,1:b@200b'"
-pathoc localhost:8080 "get:'$PATHOD/p/600:p0,1:b@200b'"
+PATHOD=localhost:9999
+pathoc -s -c $PATHOD localhost:8080 "get:'/p/200:p0,1:b@2048b':b@2048b"
+pathoc -s -c $PATHOD localhost:8080 "get:'/p/300:p0,1:b@2048b':b@2048b"
+pathoc -s -c $PATHOD localhost:8080 "get:'/p/400:p0,1:b@2048b':b@2048b"
+pathoc -s -c $PATHOD localhost:8080 "get:'/p/500:p0,1:b@2048b':b@2048b"
+pathoc -s -c $PATHOD localhost:8080 "get:'/p/600:p0,1:b@2048b':b@2048b"

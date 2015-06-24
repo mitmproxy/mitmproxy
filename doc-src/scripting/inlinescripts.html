@@ -122,12 +122,11 @@ The main classes you will deal with in writing mitmproxy scripts are:
         <td> A handle for interacting with mitmproxy's from within scripts.</td>
     </tr>
     <tr>
-        <th>libmproxy.flow.ODict</th>
+        <th>netlib.odict.ODict</th>
 
         <td>A dictionary-like object for managing sets of key/value data. There
-            is also a variant called CaselessODict that ignores key case for some
-            calls (used mainly for headers).
-        </td>
+        is also a variant called ODictCaseless that ignores key case for some
+        calls (used mainly for headers).</td>
     </tr>
     <tr>
         <th>netlib.certutils.SSLCert</th>

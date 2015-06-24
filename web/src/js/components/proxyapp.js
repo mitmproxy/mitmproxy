@@ -9,6 +9,7 @@ var header = require("./header.js");
 var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
+var Key = require("../utils.js").Key;
 
 
 //TODO: Move out of here, just a stub.
@@ -20,52 +21,87 @@ var Reports = React.createClass({
 
 
 var ProxyAppMain = React.createClass({
-    mixins: [common.State],
+    mixins: [common.RouterState],
+    childContextTypes: {
+        settingsStore: React.PropTypes.object.isRequired,
+        flowStore: React.PropTypes.object.isRequired,
+        eventStore: React.PropTypes.object.isRequired,
+        returnFocus: React.PropTypes.func.isRequired,
+    },
+    componentDidMount: function () {
+        this.focus();
+    },
+    getChildContext: function () {
+        return {
+            settingsStore: this.state.settingsStore,
+            flowStore: this.state.flowStore,
+            eventStore: this.state.eventStore,
+            returnFocus: this.focus,
+        };
+    },
     getInitialState: function () {
         var eventStore = new store.EventLogStore();
         var flowStore = new store.FlowStore();
-        var settings = new store.SettingsStore();
+        var settingsStore = new store.SettingsStore();
 
         // Default Settings before fetch
-        _.extend(settings.dict,{
-        });
+        _.extend(settingsStore.dict, {});
         return {
-            settings: settings,
+            settingsStore: settingsStore,
             flowStore: flowStore,
             eventStore: eventStore
         };
     },
-    componentDidMount: function () {
-        this.state.settings.addListener("recalculate", this.onSettingsChange);
-        window.app = this;
+    focus: function () {
+        React.findDOMNode(this).focus();
     },
-    componentWillUnmount: function () {
-        this.state.settings.removeListener("recalculate", this.onSettingsChange);
+    getMainComponent: function () {
+        return this.refs.view.refs.__routeHandler__;
     },
-    onSettingsChange: function(){
-        this.setState({
-            settings: this.state.settings
-        });
+    onKeydown: function (e) {
+
+        var selectFilterInput = function (name) {
+            var headerComponent = this.refs.header;
+            headerComponent.setState({active: header.MainMenu}, function () {
+                headerComponent.refs.active.refs[name].select();
+            });
+        }.bind(this);
+
+        switch (e.keyCode) {
+            case Key.I:
+                selectFilterInput("intercept");
+                break;
+            case Key.L:
+                selectFilterInput("search");
+                break;
+            case Key.H:
+                selectFilterInput("highlight");
+                break;
+            default:
+                var main = this.getMainComponent();
+                if (main.onMainKeyDown) {
+                    main.onMainKeyDown(e);
+                }
+                return; // don't prevent default then
+        }
+        e.preventDefault();
     },
     render: function () {
         var eventlog;
         if (this.getQuery()[Query.SHOW_EVENTLOG]) {
             eventlog = [
                 <common.Splitter key="splitter" axis="y"/>,
-                <EventLog key="eventlog" eventStore={this.state.eventStore}/>
+                <EventLog key="eventlog"/>
             ];
         } else {
             eventlog = null;
         }
         return (
-            <div id="container">
-                <header.Header settings={this.state.settings.dict}/>
-                <RouteHandler
-                    settings={this.state.settings.dict}
-                    flowStore={this.state.flowStore}
-                    query={this.getQuery()}/>
+            <div id="container" tabIndex="0" onKeyDown={this.onKeydown}>
+                <header.Header ref="header"/>
+                <RouteHandler ref="view" query={this.getQuery()}/>
                 {eventlog}
-                <Footer settings={this.state.settings.dict}/>
+                <Footer/>
             </div>
         );
     }

@@ -7,8 +7,8 @@ var AutoScrollMixin = {
     componentWillUpdate: function () {
         var node = this.getDOMNode();
         this._shouldScrollBottom = (
-            node.scrollTop !== 0 &&
-            node.scrollTop + node.clientHeight === node.scrollHeight
+        node.scrollTop !== 0 &&
+        node.scrollTop + node.clientHeight === node.scrollHeight
         );
     },
     componentDidUpdate: function () {
@@ -29,34 +29,79 @@ var StickyHeadMixin = {
     }
 };
 
+var SettingsState = {
+    contextTypes: {
+        settingsStore: React.PropTypes.object.isRequired
+    },
+    getInitialState: function () {
+        return {
+            settings: this.context.settingsStore.dict
+        };
+    },
+    componentDidMount: function () {
+        this.context.settingsStore.addListener("recalculate", this.onSettingsChange);
+    },
+    componentWillUnmount: function () {
+        this.context.settingsStore.removeListener("recalculate", this.onSettingsChange);
+    },
+    onSettingsChange: function () {
+        this.setState({
+            settings: this.context.settingsStore.dict
+        });
+    },
+};
+
+
+var ChildFocus = {
+    contextTypes: {
+        returnFocus: React.PropTypes.func
+    },
+    returnFocus: function(){
+        React.findDOMNode(this).blur();
+        window.getSelection().removeAllRanges();
+        this.context.returnFocus();
+    }
+};
+
 
 var Navigation = _.extend({}, ReactRouter.Navigation, {
     setQuery: function (dict) {
-        var q = this.context.getCurrentQuery();
-        for(var i in dict){
-            if(dict.hasOwnProperty(i)){
+        var q = this.context.router.getCurrentQuery();
+        for (var i in dict) {
+            if (dict.hasOwnProperty(i)) {
                 q[i] = dict[i] || undefined; //falsey values shall be removed.
             }
         }
-        q._ = "_"; // workaround for https://github.com/rackt/react-router/pull/957
-        this.replaceWith(this.context.getCurrentPath(), this.context.getCurrentParams(), q);
+        this.replaceWith(this.context.router.getCurrentPath(), this.context.router.getCurrentParams(), q);
     },
-    replaceWith: function(routeNameOrPath, params, query) {
-        if(routeNameOrPath === undefined){
-            routeNameOrPath = this.context.getCurrentPath();
+    replaceWith: function (routeNameOrPath, params, query) {
+        if (routeNameOrPath === undefined) {
+            routeNameOrPath = this.context.router.getCurrentPath();
         }
-        if(params === undefined){
-            params = this.context.getCurrentParams();
+        if (params === undefined) {
+            params = this.context.router.getCurrentParams();
         }
-        if(query === undefined) {
-            query = this.context.getCurrentQuery();
+        if (query === undefined) {
+            query = this.context.router.getCurrentQuery();
         }
 
-        // FIXME: react-router is just broken.
-        ReactRouter.Navigation.replaceWith.call(this, routeNameOrPath, params, query);
+        this.context.router.replaceWith(routeNameOrPath, params, query);
     }
 });
-_.extend(Navigation.contextTypes, ReactRouter.State.contextTypes);
+
+// react-router is fairly good at changing its API regularly.
+// We keep the old method for now - if it should turn out that their changes are permanent,
+// we may remove this mixin and access react-router directly again.
+var RouterState = _.extend({}, ReactRouter.State, {
+    getQuery: function () {
+        // For whatever reason, react-router always returns the same object, which makes comparing
+        // the current props with nextProps impossible. As a workaround, we just clone the query object.
+        return _.clone(this.context.router.getCurrentQuery());
+    },
+    getParams: function () {
+        return _.clone(this.context.router.getCurrentParams());
+    }
+});
 
 var Splitter = React.createClass({
     getDefaultProps: function () {
@@ -164,9 +209,11 @@ var Splitter = React.createClass({
 });
 
 module.exports = {
-    State: ReactRouter.State, // keep here - react-router is pretty buggy, we may need workarounds in the future.
+    ChildFocus: ChildFocus,
+    RouterState: RouterState,
     Navigation: Navigation,
     StickyHeadMixin: StickyHeadMixin,
     AutoScrollMixin: AutoScrollMixin,
-    Splitter: Splitter
+    Splitter: Splitter,
+    SettingsState: SettingsState
 };

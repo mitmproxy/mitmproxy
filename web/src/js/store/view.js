@@ -14,8 +14,6 @@ var default_filt = function (elem) {
 
 function StoreView(store, filt, sortfun) {
     EventEmitter.call(this);
-    filt = filt || default_filt;
-    sortfun = sortfun || default_sort;
 
     this.store = store;
 
@@ -37,12 +35,13 @@ _.extend(StoreView.prototype, EventEmitter.prototype, {
         this.store.removeListener("update", this.update);
         this.store.removeListener("remove", this.remove);
         this.store.removeListener("recalculate", this.recalculate);
+        this.removeAllListeners();
     },
     recalculate: function (filt, sortfun) {
-        filt = filt || default_filt;
-        sortfun = sortfun || default_sort;
+        filt = filt || this.filt || default_filt;
+        sortfun = sortfun || this.sortfun || default_sort;
         filt = filt.bind(this);
-        sortfun = sortfun.bind(this)
+        sortfun = sortfun.bind(this);
         this.filt = filt;
         this.sortfun = sortfun;
 

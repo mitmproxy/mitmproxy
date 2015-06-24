@@ -8,5 +8,3 @@ class TestMaster:
         msg = mock.MagicMock()
         m.handle("type", msg)
         assert msg.reply.call_count == 1
-
-

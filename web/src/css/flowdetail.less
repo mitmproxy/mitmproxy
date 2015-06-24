@@ -1,13 +1,13 @@
 //TODO: Move into some utils
-.monospace(){
+.monospace() {
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-
 .flow-detail {
     width: 100%;
-    overflow: auto;
-    
+    overflow-x: auto;
+    overflow-y: scroll;
+
     nav {
         background-color: #F2F2F2;
     }
@@ -27,18 +27,50 @@
         max-height: 100px;
         overflow-y: auto;
     }
+    .request-line {
+        margin-bottom: 2px;
+    }
+    /*.request .response-line,
+    .response .request-line {
+        opacity: 0.7;
+    }*/
+
+    hr {
+        margin: 0 0 5px;
+    }
+
 }
 
+.inline-input {
+    margin: 0 -5px;
+    padding: 0 5px;
+
+    &[contenteditable] {
+
+        background-color: rgba(255, 255, 255, 0.2);
+
+        &.has-warning {
+            color: rgb(255, 184, 184);
+        }
+        &.has-success {
+            //color: green;
+        }
+    }
+}
+
+.view-options {
+    margin-top: 10px;
+}
 
 .flow-detail table {
     .monospace();
     width: 100%;
     table-layout: fixed;
     word-break: break-all;
-    
+
     tr {
-        &:not(:first-child){
-        border-top: 1px solid #f7f7f7;
+        &:not(:first-child) {
+            border-top: 1px solid #f7f7f7;
         }
     }
 
@@ -59,12 +91,15 @@
 }
 
 .header-table {
+    td {
+        line-height: 1.3em;
+    }
     .header-name {
         width: 33%;
         padding-right: 1em;
     }
     .header-value {
-        
+
     }
 }
 
