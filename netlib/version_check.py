@@ -33,7 +33,7 @@ def version_check(
     if v < pyopenssl_min_version:
         print(
             "You are using an outdated version of pyOpenSSL:"
-            " mitmproxy requires pyOpenSSL %x or greater." %
+            " mitmproxy requires pyOpenSSL %s or greater." %
             pyopenssl_min_version,
             file=fp
         )
