@@ -123,10 +123,12 @@ class TestDaemonSSL(_TestDaemon):
         assert d["log"][0]["request"]["clientcert"]["keyinfo"]
 
     def test_http2_without_ssl(self):
+        fp = cStringIO.StringIO()
         c = pathoc.Pathoc(
             ("127.0.0.1", self.d.port),
             use_http2=True,
             ssl=False,
+            fp = fp
         )
         tutils.raises(NotImplementedError, c.connect)
 

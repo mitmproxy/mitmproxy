@@ -314,7 +314,6 @@ class PathodHandler(tcp.BaseHandler):
                             self.server.craftanchor
                         )])
 
-
             if anchor_gen:
                 spec = anchor_gen.next()
 
