@@ -1,7 +1,7 @@
 #!/bin/sh
 VENV=../venv.mitmproxy
 
-virtualenv $VENV
+virtualenv $VENV || { echo 'virtualenv is not installed. Exiting.' ; exit 1; }
 source $VENV/bin/activate
 pip install --src .. -r requirements.txt
 
