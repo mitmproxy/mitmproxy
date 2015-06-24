@@ -1,7 +1,7 @@
 @echo off
 set VENV=..\venv.mitmproxy
 
-virtualenv %VENV% || echo virtualenv is not installed.  Exiting.
+virtualenv %VENV%
 call %VENV%\Scripts\activate.bat
 pip install --src .. -r requirements.txt
 
