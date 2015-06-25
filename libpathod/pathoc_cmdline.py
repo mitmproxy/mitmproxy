@@ -4,7 +4,7 @@ import os
 import os.path
 
 from netlib import http_uastrings, tcp
-from . import pathoc, version, utils, language
+from . import pathoc, version, language
 
 
 def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
