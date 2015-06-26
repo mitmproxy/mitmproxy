@@ -757,14 +757,6 @@ class TestIncompleteResponse(tservers.HTTPProxTest):
         assert self.pathod("200").status_code == 502
 
 
-class TestCertForward(tservers.HTTPProxTest):
-    certforward = True
-    ssl = True
-
-    def test_app_err(self):
-        tutils.raises("handshake error", self.pathod, "200:b@100")
-
-
 class TestUpstreamProxy(tservers.HTTPUpstreamProxTest, CommonMixin, AppMixin):
     ssl = False
 
