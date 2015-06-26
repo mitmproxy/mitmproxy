@@ -1,7 +1,10 @@
 shallow_clone: true
+environment:
+  matrix:
+    - PYTHON: "C:\\Python27"
 install:
-  - ps: "pip install --src . -r requirements.txt"
-  - ps: "python -c 'from OpenSSL import SSL; print SSL.SSLeay_version(SSL.SSLEAY_VERSION)'"
+  - "%PYTHON%\\Scripts\\pip install --src . -r requirements.txt"
+  - "%PYTHON%\\python -c \"from OpenSSL import SSL; print SSL.SSLeay_version(SSL.SSLEAY_VERSION)\""
 build: off  # Not a C# project
 test_script:
-  - ps: "nosetests --with-cov --cov-report term-missing"
+  - "%PYTHON%\\Scripts\nosetests --with-cov --cov-report term-missing"
