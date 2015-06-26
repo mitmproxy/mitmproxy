@@ -333,12 +333,6 @@ class CertStore(object):
 
         return entry.cert, entry.privatekey, entry.chain_file
 
-    def gen_pkey(self, cert_):
-        # FIXME: We should do something with cert here?
-        from . import certffi
-        certffi.set_flags(self.default_privatekey, 1)
-        return self.default_privatekey
-
 
 class _GeneralName(univ.Choice):
     # We are only interested in dNSNames. We use a default handler to ignore
