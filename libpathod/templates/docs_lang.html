@@ -33,8 +33,8 @@
     <h2>OFFSET</h2>
 
     <p>
-        Offsets are calculated relative to the base message, before any injections or other transforms
-        are applied. They have 3 flavors:
+        Offsets are calculated relative to the base message, before any injections or other
+        transforms are applied. They have 3 flavors:
     </p>
 
     <ul>
@@ -66,8 +66,8 @@
     <h3>Files</h3>
 
     <p>
-        You can load a value from a specified file path. To do so, you have to specify a _staticdir_
-        option to pathod on the command-line, like so:
+        You can load a value from a specified file path. To do so, you have to specify a
+        _staticdir_ option to pathod on the command-line, like so:
     </p>
 
     <pre class="example">pathod -d ~/myassets</pre>
@@ -88,8 +88,8 @@
 
     <p>
         An @-symbol lead-in specifies that generated data should be used. There are two components
-        to a generator specification - a size, and a data type. By default pathod assumes
-        a data type of "bytes".
+        to a generator specification - a size, and a data type. By default pathod
+        assumes a data type of "bytes".
     </p>
 
     <p>Here's a value specifier for generating 100 bytes:
@@ -98,15 +98,15 @@
     </p>
 
     <p>
-        You can use standard suffixes to indicate larger values. Here, for instance, is a specifier
-        for generating 100 megabytes:
+        You can use standard suffixes to indicate larger values. Here, for instance, is a
+        specifier for generating 100 megabytes:
     </p>
 
     <pre class="example">@100m</pre>
 
     <p>
-        Data is generated and served efficiently - if you really want to send a terabyte of data
-        to a client, pathod can do it. The supported suffixes are:
+        Data is generated and served efficiently - if you really want to send a terabyte
+        of data to a client, pathod can do it. The supported suffixes are:
     </p>
 
     <table class="table table-bordered">
@@ -135,8 +135,8 @@
     </table>
 
     <p>
-        Data types are separated from the size specification by a comma. This specification generates
-        100mb of ASCII:
+        Data types are separated from the size specification by a comma. This specification
+        generates 100mb of ASCII:
     </p>
 
     <pre class="example">@100m,ascii</pre>
