@@ -1,0 +1,7 @@
+shallow_clone: true
+install:
+  - ps: "pip install --src . -r requirements.txt"
+  - ps: "python -c 'from OpenSSL import SSL; print SSL.SSLeay_version(SSL.SSLEAY_VERSION)'"
+build: off  # Not a C# project
+test_script:
+  - ps: "nosetests --with-cov --cov-report term-missing"
