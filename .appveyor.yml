@@ -1,0 +1,11 @@
+version: '{build}'
+shallow_clone: true
+environment:
+  matrix:
+    - PYTHON: "C:\\Python27"
+install:
+  - "%PYTHON%\\Scripts\\pip install --src . -r requirements.txt"
+  - "%PYTHON%\\python -c \"from OpenSSL import SSL; print(SSL.SSLeay_version(SSL.SSLEAY_VERSION))\""
+build: off  # Not a C# project
+test_script:
+  - "%PYTHON%\\Scripts\\nosetests"
