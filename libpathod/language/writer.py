@@ -2,6 +2,9 @@ import time
 import netlib.tcp
 
 BLOCKSIZE = 1024
+# It's not clear what the upper limit for time.sleep is. It's lower than the
+# maximum int or float. 1 year should do.
+FOREVER = 60 * 60 * 24 * 365
 
 
 def send_chunk(fp, val, blocksize, start, end):
@@ -41,7 +44,9 @@ def write_values(fp, vals, actions, sofar=0, blocksize=BLOCKSIZE):
                     a[0] - sofar - offset
                 )
                 if a[1] == "pause":
-                    time.sleep(a[2])
+                    time.sleep(
+                        FOREVER if a[2] == "f" else a[2]
+                    )
                 elif a[1] == "disconnect":
                     return True
                 elif a[1] == "inject":
