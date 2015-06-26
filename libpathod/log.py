@@ -53,7 +53,7 @@ class Log(object):
                 ]
             )
         if exc_value:
-            raise exc_value
+            raise exc_type, exc_value, traceback
 
     def suppress(self):
         self.suppressed = True

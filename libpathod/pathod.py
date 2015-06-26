@@ -29,7 +29,6 @@ class PathodError(Exception):
 
 
 class SSLOptions(object):
-
     def __init__(
         self,
         confdir=CONFDIR,
@@ -69,7 +68,15 @@ class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
     sni = None
 
-    def __init__(self, connection, address, server, logfp, settings, http2_framedump=False):
+    def __init__(
+        self,
+        connection,
+        address,
+        server,
+        logfp,
+        settings,
+        http2_framedump=False
+    ):
         tcp.BaseHandler.__init__(self, connection, address, server)
         self.logfp = logfp
         self.settings = copy.copy(settings)
@@ -418,7 +425,9 @@ class PathodHandler(tcp.BaseHandler):
 
             alp = self.get_alpn_proto_negotiated()
             if alp == http2.HTTP2Protocol.ALPN_PROTO_H2:
-                self.protocol = http2.HTTP2Protocol(self, is_server=True, dump_frames=self.http2_framedump)
+                self.protocol = http2.HTTP2Protocol(
+                    self, is_server=True, dump_frames=self.http2_framedump
+                )
                 self.use_http2 = True
 
         # if not self.protocol:
@@ -514,7 +523,7 @@ class Pathod(tcp.TCPServer):
 
     def check_policy(self, req, settings):
         """
-            A policy check that verifies the request size is withing limits.
+            A policy check that verifies the request size is within limits.
         """
         if self.nocraft:
             return "Crafting disabled.", None
