@@ -90,6 +90,39 @@ class TestRequest:
             default_settings(),
         )
 
+    def test_raw_content_length(self):
+        r = parse_request('GET:/:r')
+        assert len(r.headers) == 0
+
+        r = parse_request('GET:/:r:b"foobar"')
+        assert len(r.headers) == 0
+
+        r = parse_request('GET:/')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("content-length", "0")
+
+        r = parse_request('GET:/:b"foobar"')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("content-length", "6")
+
+        r = parse_request('GET:/:b"foobar":h"content-length"="42"')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("content-length", "42")
+
+        r = parse_request('GET:/:r:b"foobar":h"content-length"="42"')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("content-length", "42")
+
+    def test_content_type(self):
+        r = parse_request('GET:/:r:c"foobar"')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("content-type", "foobar")
+
+    def test_user_agent(self):
+        r = parse_request('GET:/:r:ua')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("user-agent", netlib.http_uastrings.get_by_shortcut('a')[2])
+
     def test_render_with_headers(self):
         s = cStringIO.StringIO()
         r = parse_request('GET:/foo:h"foo"="bar"')
@@ -98,6 +131,14 @@ class TestRequest:
             s,
             default_settings(),
         )
+
+    def test_nested_response(self):
+        l = "get:/p/:s'200'"
+        r = parse_request(l)
+        assert len(r.tokens) == 3
+        assert isinstance(r.tokens[2], http2.NestedResponse)
+        assert r.values(default_settings())
+
 
     def test_render_with_body(self):
         s = cStringIO.StringIO()
@@ -129,18 +170,27 @@ class TestResponse:
     def test_err(self):
         tutils.raises(language.ParseException, parse_response, 'GET:/')
 
-    def test_simple(self):
-        r = parse_response('200')
-        assert r.code.string() == "200"
+    def test_raw_content_length(self):
+        r = parse_response('200:r')
         assert len(r.headers) == 0
 
-        r = parse_response('200:h"foo"="bar"')
+        r = parse_response('200')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("content-length", "0")
+
+    def test_content_type(self):
+        r = parse_response('200:r:c"foobar"')
+        assert len(r.headers) == 1
+        assert r.headers[0].values(default_settings()) == ("content-type", "foobar")
+
+    def test_simple(self):
+        r = parse_response('200:r:h"foo"="bar"')
         assert r.code.string() == "200"
         assert len(r.headers) == 1
         assert r.headers[0].values(default_settings()) == ("foo", "bar")
         assert r.body is None
 
-        r = parse_response('200:h"foo"="bar":bfoobar:h"bla"="fasel"')
+        r = parse_response('200:r:h"foo"="bar":bfoobar:h"bla"="fasel"')
         assert r.code.string() == "200"
         assert len(r.headers) == 2
         assert r.headers[0].values(default_settings()) == ("foo", "bar")
