@@ -10,7 +10,7 @@ import mock
 from OpenSSL import SSL
 import OpenSSL
 
-from netlib import tcp, certutils, certffi
+from netlib import tcp, certutils
 from . import tutils, tservers
 
 
@@ -564,42 +564,6 @@ class TestDHParams(tservers.ServerTestBase):
             filename = os.path.join(d, "dhparam.pem")
             certutils.CertStore.load_dhparam(filename)
             assert os.path.exists(filename)
-
-
-class TestPrivkeyGen(tservers.ServerTestBase):
-
-    class handler(tcp.BaseHandler):
-
-        def handle(self):
-            with tutils.tmpdir() as d:
-                ca1 = certutils.CertStore.from_store(d, "test2")
-                ca2 = certutils.CertStore.from_store(d, "test3")
-                cert, _, _ = ca1.get_cert("foo.com", [])
-                key = ca2.gen_pkey(cert)
-                self.convert_to_ssl(cert, key)
-
-    def test_privkey(self):
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        tutils.raises("bad record mac", c.convert_to_ssl)
-
-
-class TestPrivkeyGenNoFlags(tservers.ServerTestBase):
-
-    class handler(tcp.BaseHandler):
-
-        def handle(self):
-            with tutils.tmpdir() as d:
-                ca1 = certutils.CertStore.from_store(d, "test2")
-                ca2 = certutils.CertStore.from_store(d, "test3")
-                cert, _, _ = ca1.get_cert("foo.com", [])
-                certffi.set_flags(ca2.default_privatekey, 0)
-                self.convert_to_ssl(cert, ca2.default_privatekey)
-
-    def test_privkey(self):
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        tutils.raises("sslv3 alert handshake failure", c.convert_to_ssl)
 
 
 class TestTCPClient:

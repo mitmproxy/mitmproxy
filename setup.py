@@ -1,5 +1,3 @@
-from distutils.command.build import build
-from setuptools.command.install import install
 from setuptools import setup, find_packages
 from codecs import open
 import os
@@ -14,25 +12,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, 'README.mkd'), encoding='utf-8') as f:
     long_description = f.read()
-
-
-def get_ext_modules():
-    from netlib import certffi
-    return [certffi.xffi.verifier.get_extension()]
-
-
-class CFFIBuild(build):
-
-    def finalize_options(self):
-        self.distribution.ext_modules = get_ext_modules()
-        build.finalize_options(self)
-
-
-class CFFIInstall(install):
-
-    def finalize_options(self):
-        self.distribution.ext_modules = get_ext_modules()
-        install.finalize_options(self)
 
 setup(
     name="netlib",
@@ -62,16 +41,12 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        "cffi",
         "pyasn1>=0.1.7",
         "pyOpenSSL>=0.15.1",
         "cryptography>=0.9",
         "passlib>=1.6.2",
         "hpack>=1.0.1",
-        "certifi"],
-    setup_requires=[
-        "cffi",
-        "pyOpenSSL>=0.15.1",
+        "certifi"
     ],
     extras_require={
         'dev': [
@@ -84,9 +59,7 @@ setup(
             "wheel>=0.24.0",
             "pathod>=%s, <%s" %
             (version.MINORVERSION,
-             version.NEXT_MINORVERSION)]},
-    cmdclass={
-        "build": CFFIBuild,
-        "install": CFFIInstall,
+             version.NEXT_MINORVERSION)
+        ]
     },
 )
