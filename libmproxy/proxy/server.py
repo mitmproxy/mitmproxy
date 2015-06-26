@@ -303,29 +303,25 @@ class ConnectionHandler:
         self.channel.tell("log", Log(msg, level))
 
     def find_cert(self):
-        if self.config.certforward and self.server_conn.ssl_established:
-            return self.server_conn.cert, self.config.certstore.gen_pkey(
-                self.server_conn.cert), None
-        else:
-            host = self.server_conn.address.host
-            sans = []
-            if self.server_conn.ssl_established and (
-                    not self.config.no_upstream_cert):
-                upstream_cert = self.server_conn.cert
-                sans.extend(upstream_cert.altnames)
-                if upstream_cert.cn:
-                    sans.append(host)
-                    host = upstream_cert.cn.decode("utf8").encode("idna")
-            if self.server_conn.sni:
-                sans.append(self.server_conn.sni)
-            # for ssl spoof mode
-            if hasattr(self.client_conn, "sni"):
-                sans.append(self.client_conn.sni)
+        host = self.server_conn.address.host
+        sans = []
+        if self.server_conn.ssl_established and (
+                not self.config.no_upstream_cert):
+            upstream_cert = self.server_conn.cert
+            sans.extend(upstream_cert.altnames)
+            if upstream_cert.cn:
+                sans.append(host)
+                host = upstream_cert.cn.decode("utf8").encode("idna")
+        if self.server_conn.sni:
+            sans.append(self.server_conn.sni)
+        # for ssl spoof mode
+        if hasattr(self.client_conn, "sni"):
+            sans.append(self.client_conn.sni)
 
-            ret = self.config.certstore.get_cert(host, sans)
-            if not ret:
-                raise ProxyError(502, "Unable to generate dummy cert.")
-            return ret
+        ret = self.config.certstore.get_cert(host, sans)
+        if not ret:
+            raise ProxyError(502, "Unable to generate dummy cert.")
+        return ret
 
     def handle_sni(self, connection):
         """

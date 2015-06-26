@@ -48,7 +48,6 @@ class ProxyConfig:
             ciphers_client=None,
             ciphers_server=None,
             certs=[],
-            certforward=False,
             ssl_version_client=tcp.SSL_DEFAULT_METHOD,
             ssl_version_server=tcp.SSL_DEFAULT_METHOD,
             ssl_ports=TRANSPARENT_SSL_PORTS,
@@ -91,7 +90,6 @@ class ProxyConfig:
             CONF_BASENAME)
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
-        self.certforward = certforward
         self.ssl_ports = ssl_ports
 
         if isinstance(ssl_version_client, int):
@@ -202,7 +200,6 @@ def process_proxy_options(parser, options):
         ciphers_client=options.ciphers_client,
         ciphers_server=options.ciphers_server,
         certs=certs,
-        certforward=options.certforward,
         ssl_version_client=options.ssl_version_client,
         ssl_version_server=options.ssl_version_server,
         ssl_ports=ssl_ports,
@@ -225,11 +222,6 @@ def ssl_option_group(parser):
         'it is used, else the default key in the conf dir is used. '
         'The PEM file should contain the full certificate chain, with the leaf certificate as the first entry. '
         'Can be passed multiple times.')
-    group.add_argument(
-        "--cert-forward", action="store_true",
-        dest="certforward", default=False,
-        help="Simply forward SSL certificates from upstream."
-    )
     group.add_argument(
         "--ciphers-client", action="store",
         type=str, dest="ciphers_client", default=None,

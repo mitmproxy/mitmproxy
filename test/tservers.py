@@ -89,7 +89,6 @@ class ProxTestBase(object):
     no_upstream_cert = False
     authenticator = None
     masterclass = TestMaster
-    certforward = False
 
     @classmethod
     def setupAll(cls):
@@ -131,7 +130,6 @@ class ProxTestBase(object):
             no_upstream_cert = cls.no_upstream_cert,
             cadir = cls.cadir,
             authenticator = cls.authenticator,
-            certforward = cls.certforward,
             ssl_ports=([cls.server.port, cls.server2.port] if cls.ssl else []),
             clientcerts = tutils.test_data.path("data/clientcert") if cls.clientcerts else None
         )
