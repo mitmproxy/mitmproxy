@@ -106,12 +106,10 @@ class WebsocketFrameReader(threading.Thread):
         self.rfile = rfile
         self.terminate = Queue.Queue()
         self.frames_queue = Queue.Queue()
-
-    def log(self, rfile):
-        return log.Log(
+        self.logger = log.ConnectionLogger(
             self.logfp,
             self.hexdump,
-            rfile if self.showresp else None,
+            rfile if showresp else None,
             None
         )
 
@@ -136,8 +134,11 @@ class WebsocketFrameReader(threading.Thread):
                 except Queue.Empty:
                     pass
                 for rfile in r:
-                    with self.log(rfile) as log:
-                        frm = websockets.Frame.from_file(self.rfile)
+                    with self.logger.ctx() as log:
+                        try:
+                            frm = websockets.Frame.from_file(self.rfile)
+                        except tcp.NetLibDisconnect:
+                            return
                         self.frames_queue.put(frm)
                         log("<< %s" % frm.header.human_readable())
                         if self.ws_read_limit is not None:
@@ -218,7 +219,7 @@ class Pathoc(tcp.TCPClient):
 
         if self.use_http2:
             if not OpenSSL._util.lib.Cryptography_HAS_ALPN:  # pragma: nocover
-                log.write(
+                log.write_raw(
                     self.fp,
                     "HTTP/2 requires ALPN support. "
                     "Please use OpenSSL >= 1.0.2. "
@@ -235,14 +236,6 @@ class Pathoc(tcp.TCPClient):
             unconstrained_file_access=True,
             request_host=self.address.host,
             protocol=self.protocol,
-        )
-
-    def log(self):
-        return log.Log(
-            self.fp,
-            self.hexdump,
-            self.rfile if self.showresp else None,
-            self.wfile if self.showreq else None,
         )
 
     def http_connect(self, connect_to):
@@ -348,8 +341,14 @@ class Pathoc(tcp.TCPClient):
         """
             Sends a single websocket frame.
         """
-        with self.log() as log:
-            log(">> %s" % r)
+        logger = log.ConnectionLogger(
+            self.fp,
+            self.hexdump,
+            None,
+            self.wfile if self.showreq else None,
+        )
+        with logger.ctx() as lg:
+            lg(">> %s" % r)
             language.serve(r, self.wfile, self.settings)
             self.wfile.flush()
 
@@ -382,8 +381,14 @@ class Pathoc(tcp.TCPClient):
 
             May raise http.HTTPError, tcp.NetLibError
         """
-        with self.log() as log:
-            log(">> %s" % r)
+        logger = log.ConnectionLogger(
+            self.fp,
+            self.hexdump,
+            self.rfile if self.showresp else None,
+            self.wfile if self.showreq else None,
+        )
+        with logger.ctx() as lg:
+            lg(">> %s" % r)
             resp, req = None, None
             try:
                 req = language.serve(r, self.wfile, self.settings)
@@ -403,19 +408,19 @@ class Pathoc(tcp.TCPClient):
                     resp.append(self.sslinfo)
                     resp = Response(*resp)
             except http.HttpError as v:
-                log("Invalid server response: %s" % v)
+                lg("Invalid server response: %s" % v)
                 raise
             except tcp.NetLibTimeout:
                 if self.ignoretimeout:
-                    log("Timeout (ignored)")
+                    lg("Timeout (ignored)")
                     return None
-                log("Timeout")
+                lg("Timeout")
                 raise
             finally:
                 if resp:
-                    log(self._resp_summary(resp))
+                    lg(self._resp_summary(resp))
                     if resp.status_code in self.ignorecodes:
-                        log.suppress()
+                        lg.suppress()
             return resp
 
     def request(self, r):

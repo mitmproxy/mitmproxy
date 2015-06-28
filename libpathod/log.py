@@ -7,7 +7,7 @@ import netlib.http
 TIMEFMT = '%d-%m-%y %H:%M:%S'
 
 
-def write(fp, lines):
+def write_raw(fp, lines):
     if fp:
         fp.write(
             "%s: " % datetime.datetime.now().strftime(TIMEFMT)
@@ -18,7 +18,7 @@ def write(fp, lines):
         fp.flush()
 
 
-class Log(object):
+class LogCtx(object):
 
     def __init__(self, fp, hex, rfile, wfile):
         self.lines = []
@@ -46,7 +46,7 @@ class Log(object):
             self("Bytes read:")
             self.dump(rlog, self.hex)
         if self.lines:
-            write(
+            write_raw(
                 self.fp,
                 [
                     "\n".join(self.lines),
@@ -68,3 +68,16 @@ class Log(object):
 
     def __call__(self, line):
         self.lines.append(line)
+
+
+class ConnectionLogger:
+    def __init__(self, fp, hex, rfile, wfile):
+        self.fp = fp
+        self.hex = hex
+        self.rfile, self.wfile = rfile, wfile
+
+    def ctx(self):
+        return LogCtx(self.fp, self.hex, self.rfile, self.wfile)
+
+    def write(self, lines):
+        write_raw(self.fp, lines)

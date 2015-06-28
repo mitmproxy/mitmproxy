@@ -98,6 +98,7 @@ class DaemonTests(object):
                 ret.append(resp)
         for frm in c.wait():
             ret.append(frm)
+        c.stop()
         return ret, logfp.getvalue()
 
 

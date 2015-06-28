@@ -87,7 +87,7 @@ class PathodHandler(tcp.BaseHandler):
     def _handle_sni(self, connection):
         self.sni = connection.get_servername()
 
-    def http_serve_crafted(self, crafted):
+    def http_serve_crafted(self, crafted, logctx):
         """
             This method is HTTP/1 and HTTP/2 capable.
         """
@@ -105,7 +105,7 @@ class PathodHandler(tcp.BaseHandler):
 
         if self.server.explain and not hasattr(crafted, 'is_error_response'):
             crafted = crafted.freeze(self.settings)
-            log.write(self.logfp, ">> Spec: %s" % crafted.spec())
+            logctx(">> Spec: %s" % crafted.spec())
 
         response_log = language.serve(
             crafted,
@@ -116,11 +116,9 @@ class PathodHandler(tcp.BaseHandler):
             return None, response_log
         return self.handle_http_request, response_log
 
-    def handle_websocket(self):
-        lr = self.rfile if self.server.logreq else None
-        lw = self.wfile if self.server.logresp else None
+    def handle_websocket(self, logger):
         while True:
-            with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
+            with logger.ctx() as lg:
                 started = time.time()
                 try:
                     frm = websockets.Frame.from_file(self.rfile)
@@ -147,14 +145,13 @@ class PathodHandler(tcp.BaseHandler):
                 try:
                     wf_gen = language.parse_websocket_frame(nest)
                 except language.exceptions.ParseException as v:
-                    log.write(
-                        self.logfp,
+                    logger.write(
                         "Parse error in reflected frame specifcation:"
                         " %s" % v.msg
                     )
-                    break
+                    return None, None
                 for frm in wf_gen:
-                    with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
+                    with logger.ctx() as lg:
                         frame_log = language.serve(
                             frm,
                             self.wfile,
@@ -223,7 +220,7 @@ class PathodHandler(tcp.BaseHandler):
         a.serve(flow, self.wfile)
         return self.handle_http_request, None
 
-    def handle_http_request(self):
+    def handle_http_request(self, logger):
         """
             This method is HTTP/1 and HTTP/2 capable.
 
@@ -232,9 +229,7 @@ class PathodHandler(tcp.BaseHandler):
             handler: Handler for the next request, or None to disconnect
             log: A dictionary, or None
         """
-        lr = self.rfile if self.server.logreq else None
-        lw = self.wfile if self.server.logresp else None
-        with log.Log(self.logfp, self.server.hexdump, lr, lw) as lg:
+        with logger.ctx() as lg:
             if self.use_http2:
                 self.protocol.perform_server_connection_preface()
                 stream_id, headers, body = self.protocol.read_request()
@@ -329,7 +324,8 @@ class PathodHandler(tcp.BaseHandler):
 
                 lg("crafting spec: %s" % spec)
                 nexthandler, retlog["response"] = self.http_serve_crafted(
-                    spec
+                    spec,
+                    lg
                 )
                 if nexthandler and websocket_key:
                     return self.handle_websocket, retlog
@@ -420,7 +416,7 @@ class PathodHandler(tcp.BaseHandler):
                         msg=s
                     )
                 )
-                log.write(self.logfp, s)
+                log.write_raw(self.logfp, s)
                 return
 
             alp = self.get_alpn_proto_negotiated()
@@ -433,13 +429,16 @@ class PathodHandler(tcp.BaseHandler):
         # if not self.protocol:
         #     # TODO: create HTTP or Websockets protocol
         #     self.protocol = None
+        lr = self.rfile if self.server.logreq else None
+        lw = self.wfile if self.server.logresp else None
+        logger = log.ConnectionLogger(self.logfp, self.server.hexdump, lr, lw)
 
         self.settings.protocol = self.protocol
 
         handler = self.handle_http_request
 
         while not self.finished:
-            handler, l = handler()
+            handler, l = handler(logger)
             if l:
                 self.addlog(l)
             if not handler:
@@ -552,7 +551,7 @@ class Pathod(tcp.TCPServer):
             h.handle()
             h.finish()
         except tcp.NetLibDisconnect:  # pragma: no cover
-            log.write(self.logfp, "Disconnect")
+            log.write_raw(self.logfp, "Disconnect")
             self.add_log(
                 dict(
                     type="error",
@@ -561,7 +560,7 @@ class Pathod(tcp.TCPServer):
             )
             return
         except tcp.NetLibTimeout:
-            log.write(self.logfp, "Timeout")
+            log.write_raw(self.logfp, "Timeout")
             self.add_log(
                 dict(
                     type="timeout",

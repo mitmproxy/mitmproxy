@@ -15,8 +15,9 @@ class DummyIO(StringIO.StringIO):
 def test_disconnect():
     outf = DummyIO()
     rw = DummyIO()
+    l = log.ConnectionLogger(outf, False, rw, rw)
     try:
-        with log.Log(outf, False, rw, rw) as lg:
+        with l.ctx() as lg:
             lg("Test")
     except netlib.tcp.NetLibDisconnect:
         pass
