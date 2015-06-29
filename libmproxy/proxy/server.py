@@ -235,8 +235,18 @@ class ConnectionHandler:
                     sni,
                     method=self.config.openssl_method_server,
                     options=self.config.openssl_options_server,
+                    verify_options=self.config.openssl_verification_mode_server,
+                    ca_path=self.config.openssl_trusted_cadir_server,
+                    ca_pemfile=self.config.openssl_trusted_ca_server,
                     cipher_list=self.config.ciphers_server,
                 )
+                ssl_cert_err = self.server_conn.ssl_verification_error
+                if ssl_cert_err is not None:
+                    self.log(
+                        "SSL verification failed for upstream server at depth %s with error: %s" % 
+                            (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                        "error")
+                    self.log("Ignoring server verification error, continuing with connection", "error")
             except tcp.NetLibError as v:
                 e = ProxyError(502, repr(v))
                 # Workaround for https://github.com/mitmproxy/mitmproxy/issues/427
@@ -246,6 +256,13 @@ class ConnectionHandler:
                 if client and "handshake failure" in e.message:
                     self.server_conn.may_require_sni = e
                 else:
+                    ssl_cert_err = self.server_conn.ssl_verification_error
+                    if ssl_cert_err is not None:
+                        self.log(
+                            "SSL verification failed for upstream server at depth %s with error: %s" % 
+                                (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                            "error")
+                        self.log("Aborting connection attempt", "error")
                     raise e
         if client:
             if self.client_conn.ssl_established:

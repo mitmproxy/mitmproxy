@@ -9,6 +9,7 @@ import tutils
 import tservers
 from libmproxy.protocol import KILL, Error
 from libmproxy.protocol.http import CONTENT_MISSING
+from OpenSSL import SSL
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -346,6 +347,65 @@ class TestHTTPSCertfile(tservers.HTTPProxTest, CommonMixin):
 
     def test_certfile(self):
         assert self.pathod("304")
+
+
+class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxTest):
+    """
+    Test upstream server certificate verification with a trusted server cert.
+    """
+    ssl = True
+    ssloptions = pathod.SSLOptions(
+        cn = "trusted-cert",
+        certs = [
+            ("trusted-cert", tutils.test_data.path("data/trusted-server.crt"))
+        ])
+
+    def test_verification_w_cadir(self):
+        self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
+        self.config.openssl_trusted_cadir_server = tutils.test_data.path(
+            "data/trusted-cadir/")
+        
+        self.pathoc()
+
+    def test_verification_w_pemfile(self):
+        self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
+        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+            "data/trusted-cadir/trusted-ca.pem")
+
+        self.pathoc()
+
+
+class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxTest):
+    """
+    Test upstream server certificate verification with an untrusted server cert.
+    """
+    ssl = True
+    ssloptions = pathod.SSLOptions(
+        cn = "untrusted-cert",
+        certs = [
+             ("untrusted-cert", tutils.test_data.path("data/untrusted-server.crt"))
+        ])
+
+    def test_default_verification_w_bad_cert(self):
+        """Should use no verification."""
+        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+            "data/trusted-cadir/trusted-ca.pem")
+
+        self.pathoc()
+
+    def test_no_verification_w_bad_cert(self):
+        self.config.openssl_verification_mode_server = SSL.VERIFY_NONE
+        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+            "data/trusted-cadir/trusted-ca.pem")
+
+        self.pathoc()
+
+    def test_verification_w_bad_cert(self):
+        self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
+        self.config.openssl_trusted_ca_server = tutils.test_data.path(
+            "data/trusted-cadir/trusted-ca.pem")
+
+        tutils.raises("SSL handshake error", self.pathoc)
 
 
 class TestHTTPSNoCommonName(tservers.HTTPProxTest):

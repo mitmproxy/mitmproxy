@@ -9,6 +9,8 @@ from libpathod import test
 from netlib import http, tcp
 import mock
 
+from OpenSSL import SSL
+
 
 def test_proxy_error():
     p = ProxyError(111, "msg")
@@ -132,6 +134,20 @@ class TestProcessProxyOptions:
             "invalid single-user specification",
             "--singleuser",
             "test")
+
+    def test_verify_upstream_cert(self):
+        p = self.assert_noerr("--verify-upstream-cert")
+        assert p.openssl_verification_mode_server == SSL.VERIFY_PEER
+
+    def test_upstream_trusted_cadir(self):
+        expected_dir = "/path/to/a/ca/dir"
+        p = self.assert_noerr("--upstream-trusted-cadir", expected_dir)
+        assert p.openssl_trusted_cadir_server == expected_dir
+
+    def test_upstream_trusted_ca(self):
+        expected_file = "/path/to/a/cert/file"
+        p = self.assert_noerr("--upstream-trusted-ca", expected_file)
+        assert p.openssl_trusted_ca_server == expected_file
 
 
 class TestProxyServer:
