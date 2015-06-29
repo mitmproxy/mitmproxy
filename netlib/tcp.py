@@ -390,7 +390,7 @@ class _Connection(object):
                             method=SSL_DEFAULT_METHOD,
                             options=SSL_DEFAULT_OPTIONS,
                             verify_options=SSL.VERIFY_NONE,
-                            ca_path=certifi.where(),
+                            ca_path=None,
                             ca_pemfile=None,
                             cipher_list=None,
                             alpn_protos=None,
@@ -421,6 +421,8 @@ class _Connection(object):
                 return is_cert_verified
 
             context.set_verify(verify_options, verify_cert)
+            if ca_path is None and ca_pemfile is None:
+                ca_path = certifi.where()
             context.load_verify_locations(ca_pemfile, ca_path)
 
         # Workaround for
