@@ -52,6 +52,9 @@ class ProxyConfig:
             ssl_version_server=tcp.SSL_DEFAULT_METHOD,
             ssl_ports=TRANSPARENT_SSL_PORTS,
             spoofed_ssl_port=None,
+            ssl_verify_upstream_cert=False,
+            ssl_upstream_trusted_cadir=None,
+            ssl_upstream_trusted_ca=None
     ):
         self.host = host
         self.port = port
@@ -100,6 +103,13 @@ class ProxyConfig:
             self.openssl_method_server = ssl_version_server
         else:
             self.openssl_method_server = tcp.SSL_VERSIONS[ssl_version_server]
+        
+        if ssl_verify_upstream_cert:
+            self.openssl_verification_mode_server = SSL.VERIFY_PEER
+        else:
+            self.openssl_verification_mode_server = SSL.VERIFY_NONE
+        self.openssl_trusted_cadir_server = ssl_upstream_trusted_cadir
+        self.openssl_trusted_ca_server = ssl_upstream_trusted_ca
 
         self.openssl_options_client = tcp.SSL_DEFAULT_OPTIONS
         self.openssl_options_server = tcp.SSL_DEFAULT_OPTIONS
@@ -203,7 +213,10 @@ def process_proxy_options(parser, options):
         ssl_version_client=options.ssl_version_client,
         ssl_version_server=options.ssl_version_server,
         ssl_ports=ssl_ports,
-        spoofed_ssl_port=spoofed_ssl_port
+        spoofed_ssl_port=spoofed_ssl_port,
+        ssl_verify_upstream_cert=options.ssl_verify_upstream_cert,
+        ssl_upstream_trusted_cadir=options.ssl_upstream_trusted_cadir,
+        ssl_upstream_trusted_ca=options.ssl_upstream_trusted_ca
     )
 
 
@@ -241,6 +254,23 @@ def ssl_option_group(parser):
         "--no-upstream-cert", default=False,
         action="store_true", dest="no_upstream_cert",
         help="Don't connect to upstream server to look up certificate details."
+    )
+    group.add_argument(
+        "--verify-upstream-cert", default=False,
+        action="store_true", dest="ssl_verify_upstream_cert",
+        help="Verify upstream server SSL/TLS certificates and fail if invalid "
+             "or not present."
+    )
+    group.add_argument(
+        "--upstream-trusted-cadir", default=None, action="store",
+        dest="ssl_upstream_trusted_cadir",
+        help="Path to a directory of trusted CA certificates for upstream "
+             "server verification prepared using the c_rehash tool."
+    )
+    group.add_argument(
+        "--upstream-trusted-ca", default=None, action="store",
+        dest="ssl_upstream_trusted_ca",
+        help="Path to a PEM formatted trusted CA certificate."
     )
     group.add_argument(
         "--ssl-port",
