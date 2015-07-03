@@ -268,6 +268,13 @@ class ReverseProxTest(ProxTestBase):
         return p.request(q)
 
 
+class SocksModeTest(HTTPProxTest):
+    @classmethod
+    def get_proxy_config(cls):
+        d = ProxTestBase.get_proxy_config()
+        d["mode"] = "socks5"
+        return d
+
 class SpoofModeTest(ProxTestBase):
     ssl = None
 
