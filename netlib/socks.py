@@ -69,11 +69,16 @@ class ClientGreeting(object):
             )
 
     @classmethod
-    def from_file(cls, f):
+    def from_file(cls, f, fail_early=False):
+        """
+        :param fail_early: If true, a SocksError will be raised if the first byte does not indicate socks5.
+        """
         ver, nmethods = struct.unpack("!BB", f.safe_read(2))
-        methods = array.array("B")
-        methods.fromstring(f.safe_read(nmethods))
-        return cls(ver, methods.tolist())
+        client_greeting = cls(ver, [])
+        if fail_early:
+            client_greeting.assert_socks5()
+        client_greeting.methods.fromstring(f.safe_read(nmethods))
+        return client_greeting
 
     def to_file(self, f):
         f.write(struct.pack("!BB", self.ver, len(self.methods)))
@@ -115,7 +120,7 @@ class Message(object):
         self.ver = ver
         self.msg = msg
         self.atyp = atyp
-        self.addr = addr
+        self.addr = tcp.Address.wrap(addr)
 
     def assert_socks5(self):
         if self.ver != VERSION.SOCKS5:
