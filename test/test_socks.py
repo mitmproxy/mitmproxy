@@ -9,6 +9,7 @@ def test_client_greeting():
     raw = tutils.treader("\x05\x02\x00\xBE\xEF")
     out = StringIO()
     msg = socks.ClientGreeting.from_file(raw)
+    msg.assert_socks5()
     msg.to_file(out)
 
     assert out.getvalue() == raw.getvalue()[:-1]
@@ -18,10 +19,37 @@ def test_client_greeting():
     assert 0xEF not in msg.methods
 
 
+def test_client_greeting_assert_socks5():
+    raw = tutils.treader("\x00\x00")
+    msg = socks.ClientGreeting.from_file(raw)
+    tutils.raises(socks.SocksError, msg.assert_socks5)
+
+    raw = tutils.treader("HTTP/1.1 200 OK" + " " * 100)
+    msg = socks.ClientGreeting.from_file(raw)
+    try:
+        msg.assert_socks5()
+    except socks.SocksError as e:
+        assert "Invalid SOCKS version" in str(e)
+        assert "HTTP" not in str(e)
+    else:
+        assert False
+
+    raw = tutils.treader("GET / HTTP/1.1" + " " * 100)
+    msg = socks.ClientGreeting.from_file(raw)
+    try:
+        msg.assert_socks5()
+    except socks.SocksError as e:
+        assert "Invalid SOCKS version" in str(e)
+        assert "HTTP" in str(e)
+    else:
+        assert False
+
+
 def test_server_greeting():
     raw = tutils.treader("\x05\x02")
     out = StringIO()
     msg = socks.ServerGreeting.from_file(raw)
+    msg.assert_socks5()
     msg.to_file(out)
 
     assert out.getvalue() == raw.getvalue()
@@ -29,10 +57,33 @@ def test_server_greeting():
     assert msg.method == 0x02
 
 
+def test_server_greeting_assert_socks5():
+    raw = tutils.treader("HTTP/1.1 200 OK" + " " * 100)
+    msg = socks.ServerGreeting.from_file(raw)
+    try:
+        msg.assert_socks5()
+    except socks.SocksError as e:
+        assert "Invalid SOCKS version" in str(e)
+        assert "HTTP" in str(e)
+    else:
+        assert False
+
+    raw = tutils.treader("GET / HTTP/1.1" + " " * 100)
+    msg = socks.ServerGreeting.from_file(raw)
+    try:
+        msg.assert_socks5()
+    except socks.SocksError as e:
+        assert "Invalid SOCKS version" in str(e)
+        assert "HTTP" not in str(e)
+    else:
+        assert False
+
+
 def test_message():
     raw = tutils.treader("\x05\x01\x00\x03\x0bexample.com\xDE\xAD\xBE\xEF")
     out = StringIO()
     msg = socks.Message.from_file(raw)
+    msg.assert_socks5()
     assert raw.read(2) == "\xBE\xEF"
     msg.to_file(out)
 
@@ -41,6 +92,12 @@ def test_message():
     assert msg.msg == 0x01
     assert msg.atyp == 0x03
     assert msg.addr == ("example.com", 0xDEAD)
+
+
+def test_message_assert_socks5():
+    raw = tutils.treader("\xEE\x01\x00\x03\x0bexample.com\xDE\xAD\xBE\xEF")
+    msg = socks.Message.from_file(raw)
+    tutils.raises(socks.SocksError, msg.assert_socks5)
 
 
 def test_message_ipv4():

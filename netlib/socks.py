@@ -6,7 +6,6 @@ from . import tcp, utils
 
 
 class SocksError(Exception):
-
     def __init__(self, code, message):
         super(SocksError, self).__init__(message)
         self.code = code
@@ -17,20 +16,17 @@ VERSION = utils.BiDi(
     SOCKS5=0x05
 )
 
-
 CMD = utils.BiDi(
     CONNECT=0x01,
     BIND=0x02,
     UDP_ASSOCIATE=0x03
 )
 
-
 ATYP = utils.BiDi(
     IPV4_ADDRESS=0x01,
     DOMAINNAME=0x03,
     IPV6_ADDRESS=0x04
 )
-
 
 REP = utils.BiDi(
     SUCCEEDED=0x00,
@@ -43,7 +39,6 @@ REP = utils.BiDi(
     COMMAND_NOT_SUPPORTED=0x07,
     ADDRESS_TYPE_NOT_SUPPORTED=0x08,
 )
-
 
 METHOD = utils.BiDi(
     NO_AUTHENTICATION_REQUIRED=0x00,
@@ -58,14 +53,27 @@ class ClientGreeting(object):
 
     def __init__(self, ver, methods):
         self.ver = ver
-        self.methods = methods
+        self.methods = array.array("B")
+        self.methods.extend(methods)
+
+    def assert_socks5(self):
+        if self.ver != VERSION.SOCKS5:
+            if self.ver == ord("G") and len(self.methods) == ord("E"):
+                guess = "Probably not a SOCKS request but a regular HTTP request. "
+            else:
+                guess = ""
+
+            raise SocksError(
+                REP.GENERAL_SOCKS_SERVER_FAILURE,
+                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver
+            )
 
     @classmethod
     def from_file(cls, f):
         ver, nmethods = struct.unpack("!BB", f.safe_read(2))
         methods = array.array("B")
         methods.fromstring(f.safe_read(nmethods))
-        return cls(ver, methods)
+        return cls(ver, methods.tolist())
 
     def to_file(self, f):
         f.write(struct.pack("!BB", self.ver, len(self.methods)))
@@ -78,6 +86,18 @@ class ServerGreeting(object):
     def __init__(self, ver, method):
         self.ver = ver
         self.method = method
+
+    def assert_socks5(self):
+        if self.ver != VERSION.SOCKS5:
+            if self.ver == ord("H") and self.method == ord("T"):
+                guess = "Probably not a SOCKS request but a regular HTTP response. "
+            else:
+                guess = ""
+
+            raise SocksError(
+                REP.GENERAL_SOCKS_SERVER_FAILURE,
+                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver
+            )
 
     @classmethod
     def from_file(cls, f):
@@ -96,6 +116,13 @@ class Message(object):
         self.msg = msg
         self.atyp = atyp
         self.addr = addr
+
+    def assert_socks5(self):
+        if self.ver != VERSION.SOCKS5:
+            raise SocksError(
+                REP.GENERAL_SOCKS_SERVER_FAILURE,
+                "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver
+            )
 
     @classmethod
     def from_file(cls, f):
