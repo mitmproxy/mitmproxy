@@ -11,7 +11,7 @@ import threading
 
 import OpenSSL.crypto
 
-from netlib import tcp, http, http2, certutils, websockets
+from netlib import tcp, http, http2, certutils, websockets, socks
 
 import language.http
 import language.websockets
@@ -253,6 +253,39 @@ class Pathoc(tcp.TCPClient):
                 "Proxy CONNECT failed: %s - %s" % (parsed[1], parsed[2])
             )
         http.read_headers(self.rfile)
+
+    def socks_connect(self, connect_to):
+        try:
+            client_greet = socks.ClientGreeting(socks.VERSION.SOCKS5, [socks.METHOD.NO_AUTHENTICATION_REQUIRED])
+            client_greet.to_file(self.wfile)
+            self.wfile.flush()
+
+            server_greet = socks.ServerGreeting.from_file(self.rfile)
+            server_greet.assert_socks5()
+            if server_greet.method != socks.METHOD.NO_AUTHENTICATION_REQUIRED:
+                raise socks.SocksError(
+                    socks.METHOD.NO_ACCEPTABLE_METHODS,
+                    "pathoc only supports SOCKS without authentication"
+                )
+
+            connect_request = socks.Message(
+                socks.VERSION.SOCKS5,
+                socks.CMD.CONNECT,
+                socks.ATYP.DOMAINNAME,
+                tcp.Address.wrap(connect_to)
+            )
+            connect_request.to_file(self.wfile)
+            self.wfile.flush()
+
+            connect_reply = socks.Message.from_file(self.rfile)
+            connect_reply.assert_socks5()
+            if connect_reply.msg != socks.REP.SUCCEEDED:
+                raise socks.SocksError(
+                    connect_reply.msg,
+                    "SOCKS server error"
+                )
+        except (socks.SocksError, tcp.NetLibDisconnect) as e:
+            raise PathocError(str(e))
 
     def connect(self, connect_to=None, showssl=False, fp=sys.stdout):
         """

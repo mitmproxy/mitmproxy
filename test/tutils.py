@@ -5,7 +5,15 @@ import shutil
 import cStringIO
 from contextlib import contextmanager
 from libpathod import utils, test, pathoc, pathod, language
+from netlib import tcp
 import requests
+
+def treader(bytes):
+    """
+        Construct a tcp.Read object from bytes.
+    """
+    fp = cStringIO.StringIO(bytes)
+    return tcp.Reader(fp)
 
 
 class DaemonTests(object):
