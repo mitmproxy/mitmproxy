@@ -145,8 +145,9 @@ You can view the API documentation using pydoc (which is installed with Python b
 
 ## Running scripts in parallel
 
-We have a single flow primitive, so when a script is handling something, other requests block.
-While that's a very desirable behaviour under some circumstances, scripts can be run threaded by using the <code>libmproxy.script.concurrent</code> decorator.
+We have a single flow primitive, so when a script is blocking, other requests are not processed.
+While that's usually a very desirable behaviour, blocking scripts can be run threaded by using the <code>libmproxy.script.concurrent</code> decorator.
+If your script does not block, you should avoid the overhead of the decorator.
 
 $!example("examples/nonblocking.py")!$
 
