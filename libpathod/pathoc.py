@@ -11,7 +11,7 @@ import threading
 
 import OpenSSL.crypto
 
-from netlib import tcp, http, http2, certutils, websockets, socks
+from netlib import tcp, http, http2, http_semantics, certutils, websockets, socks
 
 import language.http
 import language.websockets
@@ -65,25 +65,6 @@ class SSLInfo(object):
                 parts.append("\tSANs: %s" % " ".join(s.altnames))
             return "\n".join(parts)
 
-
-class Response(object):
-
-    def __init__(
-        self,
-        httpversion,
-        status_code,
-        msg,
-        headers,
-        content,
-        sslinfo
-    ):
-        self.httpversion, self.status_code = httpversion, status_code
-        self.msg = msg
-        self.headers, self.content = headers, content
-        self.sslinfo = sslinfo
-
-    def __repr__(self):
-        return "Response(%s - %s)" % (self.status_code, self.msg)
 
 
 class WebsocketFrameReader(threading.Thread):
@@ -429,17 +410,14 @@ class Pathoc(tcp.TCPClient):
 
                 if self.use_http2:
                     status_code, headers, body = self.protocol.read_response()
-                    resp = Response("HTTP/2", status_code, "", headers, body, self.sslinfo)
+                    resp = http_semantics.Response("HTTP/2", status_code, "", headers, body, self.sslinfo)
                 else:
-                    resp = list(
-                        http.read_response(
+                    resp = http.read_response(
                             self.rfile,
                             req["method"],
                             None
                         )
-                    )
-                    resp.append(self.sslinfo)
-                    resp = Response(*resp)
+                    resp.sslinfo = self.sslinfo
             except http.HttpError as v:
                 lg("Invalid server response: %s" % v)
                 raise
