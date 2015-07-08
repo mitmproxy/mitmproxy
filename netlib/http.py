@@ -4,7 +4,7 @@ import string
 import urlparse
 import binascii
 import sys
-from . import odict, utils, tcp, http_status
+from . import odict, utils, tcp, http_semantics, http_status
 
 
 class HttpError(Exception):
@@ -527,18 +527,6 @@ def read_request(rfile, include_body=True, body_size_limit=None, wfile=None):
     )
 
 
-Response = collections.namedtuple(
-    "Response",
-    [
-        "httpversion",
-        "code",
-        "msg",
-        "headers",
-        "content"
-    ]
-)
-
-
 def read_response(rfile, request_method, body_size_limit, include_body=True):
     """
         Return an (httpversion, code, msg, headers, content) tuple.
@@ -580,7 +568,7 @@ def read_response(rfile, request_method, body_size_limit, include_body=True):
         # if include_body==False then a None content means the body should be
         # read separately
         content = None
-    return Response(httpversion, code, msg, headers, content)
+    return http_semantics.Response(httpversion, code, msg, headers, content)
 
 
 def request_preamble(method, resource, http_major="1", http_minor="1"):

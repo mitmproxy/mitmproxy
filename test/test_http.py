@@ -1,7 +1,7 @@
 import cStringIO
 import textwrap
 import binascii
-from netlib import http, odict, tcp
+from netlib import http, http_semantics, odict, tcp
 from . import tutils, tservers
 
 
@@ -307,13 +307,13 @@ def test_read_response():
     data = """
         HTTP/1.1 200 OK
     """
-    assert tst(data, "GET", None) == (
+    assert tst(data, "GET", None) == http_semantics.Response(
         (1, 1), 200, 'OK', odict.ODictCaseless(), ''
     )
     data = """
         HTTP/1.1 200
     """
-    assert tst(data, "GET", None) == (
+    assert tst(data, "GET", None) == http_semantics.Response(
         (1, 1), 200, '', odict.ODictCaseless(), ''
     )
     data = """
@@ -330,7 +330,7 @@ def test_read_response():
 
         HTTP/1.1 200 OK
     """
-    assert tst(data, "GET", None) == (
+    assert tst(data, "GET", None) == http_semantics.Response(
         (1, 1), 100, 'CONTINUE', odict.ODictCaseless(), ''
     )
 
@@ -340,8 +340,8 @@ def test_read_response():
 
         foo
     """
-    assert tst(data, "GET", None)[4] == 'foo'
-    assert tst(data, "HEAD", None)[4] == ''
+    assert tst(data, "GET", None).content == 'foo'
+    assert tst(data, "HEAD", None).content == ''
 
     data = """
         HTTP/1.1 200 OK
@@ -357,7 +357,7 @@ def test_read_response():
 
         foo
     """
-    assert tst(data, "GET", None, include_body=False)[4] is None
+    assert tst(data, "GET", None, include_body=False).content is None
 
 
 def test_parse_url():
