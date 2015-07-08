@@ -280,7 +280,7 @@ class PathodHandler(tcp.BaseHandler):
                 retlog["cipher"] = self.get_current_cipher()
 
             m = utils.MemBool()
-            websocket_key = websockets.check_client_handshake(headers)
+            websocket_key = websockets.WebsocketsProtocol.check_client_handshake(headers)
             self.settings.websocket_key = websocket_key
 
             # If this is a websocket initiation, we respond with a proper
