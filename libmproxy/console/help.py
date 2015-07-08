@@ -28,7 +28,7 @@ class HelpView(urwid.ListBox):
         keys = [
             ("j, k", "down, up"),
             ("h, l", "left, right (in some contexts)"),
-            ("g, G", "go to end, beginning"),
+            ("g, G", "go to beginning, end"),
             ("space", "page down"),
             ("pg up/down", "page up/down"),
             ("arrows", "up, down, left, right"),
@@ -108,8 +108,8 @@ class HelpView(urwid.ListBox):
             return None
         elif key == "?":
             key = None
-        elif key == "G":
-            self.set_focus(0)
         elif key == "g":
+            self.set_focus(0)
+        elif key == "G":
             self.set_focus(len(self.body.contents))
         return urwid.ListBox.keypress(self, size, key)

@@ -416,9 +416,9 @@ class GridEditor(urwid.WidgetWrap):
                     res.append(i[0])
             self.callback(self.data_out(res), *self.cb_args, **self.cb_kwargs)
             signals.pop_view_state.send(self)
-        elif key == "G":
-            self.walker.set_focus(0)
         elif key == "g":
+            self.walker.set_focus(0)
+        elif key == "G":
             self.walker.set_focus(len(self.walker.lst) - 1)
         elif key in ["h", "left"]:
             self.walker.left()
