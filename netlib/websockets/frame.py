@@ -5,25 +5,13 @@ import os
 import struct
 import io
 
-from . import utils, odict, tcp
+from .protocol import Masker
+from .. import utils, odict, tcp
 
-# Colleciton of utility functions that implement small portions of the RFC6455
-# WebSockets Protocol Useful for building WebSocket clients and servers.
-#
-# Emphassis is on readabilty, simplicity and modularity, not performance or
-# completeness
-#
-# This is a work in progress and does not yet contain all the utilites need to
-# create fully complient client/servers #
-# Spec: https://tools.ietf.org/html/rfc6455
+DEFAULT = object()
 
-# The magic sha that websocket servers must know to prove they understand
-# RFC6455
-websockets_magic = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-VERSION = "13"
 MAX_16_BIT_INT = (1 << 16)
 MAX_64_BIT_INT = (1 << 64)
-
 
 OPCODE = utils.BiDi(
     CONTINUE=0x00,
@@ -33,101 +21,6 @@ OPCODE = utils.BiDi(
     PING=0x09,
     PONG=0x0a
 )
-
-
-class Masker(object):
-
-    """
-        Data sent from the server must be masked to prevent malicious clients
-        from sending data over the wire in predictable patterns
-
-        Servers do not have to mask data they send to the client.
-        https://tools.ietf.org/html/rfc6455#section-5.3
-    """
-
-    def __init__(self, key):
-        self.key = key
-        self.masks = [utils.bytes_to_int(byte) for byte in key]
-        self.offset = 0
-
-    def mask(self, offset, data):
-        result = ""
-        for c in data:
-            result += chr(ord(c) ^ self.masks[offset % 4])
-            offset += 1
-        return result
-
-    def __call__(self, data):
-        ret = self.mask(self.offset, data)
-        self.offset += len(ret)
-        return ret
-
-
-def client_handshake_headers(key=None, version=VERSION):
-    """
-        Create the headers for a valid HTTP upgrade request. If Key is not
-        specified, it is generated, and can be found in sec-websocket-key in
-        the returned header set.
-
-        Returns an instance of ODictCaseless
-    """
-    if not key:
-        key = base64.b64encode(os.urandom(16)).decode('utf-8')
-    return odict.ODictCaseless([
-        ('Connection', 'Upgrade'),
-        ('Upgrade', 'websocket'),
-        ('Sec-WebSocket-Key', key),
-        ('Sec-WebSocket-Version', version)
-    ])
-
-
-def server_handshake_headers(key):
-    """
-      The server response is a valid HTTP 101 response.
-    """
-    return odict.ODictCaseless(
-        [
-            ('Connection', 'Upgrade'),
-            ('Upgrade', 'websocket'),
-            ('Sec-WebSocket-Accept', create_server_nonce(key))
-        ]
-    )
-
-
-def make_length_code(length):
-    """
-     A websockets frame contains an initial length_code, and an optional
-     extended length code to represent the actual length if length code is
-     larger than 125
-    """
-    if length <= 125:
-        return length
-    elif length >= 126 and length <= 65535:
-        return 126
-    else:
-        return 127
-
-
-def check_client_handshake(headers):
-    if headers.get_first("upgrade", None) != "websocket":
-        return
-    return headers.get_first('sec-websocket-key')
-
-
-def check_server_handshake(headers):
-    if headers.get_first("upgrade", None) != "websocket":
-        return
-    return headers.get_first('sec-websocket-accept')
-
-
-def create_server_nonce(client_nonce):
-    return base64.b64encode(
-        hashlib.sha1(client_nonce + websockets_magic).hexdigest().decode('hex')
-    )
-
-
-DEFAULT = object()
-
 
 class FrameHeader(object):
 
@@ -153,7 +46,7 @@ class FrameHeader(object):
         self.rsv3 = rsv3
 
         if length_code is DEFAULT:
-            self.length_code = make_length_code(self.payload_length)
+            self.length_code = self._make_length_code(self.payload_length)
         else:
             self.length_code = length_code
 
@@ -172,6 +65,20 @@ class FrameHeader(object):
 
         if self.masking_key and len(self.masking_key) != 4:
             raise ValueError("Masking key must be 4 bytes.")
+
+    @classmethod
+    def _make_length_code(self, length):
+        """
+         A websockets frame contains an initial length_code, and an optional
+         extended length code to represent the actual length if length code is
+         larger than 125
+        """
+        if length <= 125:
+            return length
+        elif length >= 126 and length <= 65535:
+            return 126
+        else:
+            return 127
 
     def human_readable(self):
         vals = [
