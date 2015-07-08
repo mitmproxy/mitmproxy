@@ -50,9 +50,9 @@ class EventListBox(urwid.ListBox):
             self.master.clear_events()
             key = None
         elif key == "G":
-            self.set_focus(0)
-        elif key == "g":
             self.set_focus(len(self.master.eventlist) - 1)
+        elif key == "g":
+            self.set_focus(0)
         return urwid.ListBox.keypress(self, size, key)
 
 
@@ -338,10 +338,10 @@ class FlowListBox(urwid.ListBox):
             self.master.clear_flows()
         elif key == "e":
             self.master.toggle_eventlog()
-        elif key == "G":
+        elif key == "g":
             self.master.state.set_focus(0)
             signals.flowlist_change.send(self)
-        elif key == "g":
+        elif key == "G":
             self.master.state.set_focus(self.master.state.flow_count())
             signals.flowlist_change.send(self)
         elif key == "l":
