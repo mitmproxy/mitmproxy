@@ -765,22 +765,16 @@ class TestStreamRequest(tservers.HTTPProxTest):
             (self.server.urlbase, spec))
         connection.send("\r\n")
 
-        httpversion, code, msg, headers, content = http.read_response(
-            fconn, "GET", None, include_body=False)
+        resp = http.read_response(fconn, "GET", None, include_body=False)
 
-        assert headers["Transfer-Encoding"][0] == 'chunked'
-        assert code == 200
+        assert resp.headers["Transfer-Encoding"][0] == 'chunked'
+        assert resp.status_code == 200
 
         chunks = list(
             content for _,
                         content,
                         _ in http.read_http_body_chunked(
-                fconn,
-                headers,
-                None,
-                "GET",
-                200,
-                False))
+                fconn, resp.headers, None, "GET", 200, False))
         assert chunks == ["this", "isatest", ""]
 
         connection.close()

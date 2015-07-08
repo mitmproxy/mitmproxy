@@ -760,7 +760,7 @@ class HTTPResponse(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        httpversion, code, msg, headers, content = http.read_response(
+        resp = http.read_response(
             rfile,
             request_method,
             body_size_limit,
@@ -776,11 +776,11 @@ class HTTPResponse(HTTPMessage):
             timestamp_end = None
 
         return HTTPResponse(
-            httpversion,
-            code,
-            msg,
-            headers,
-            content,
+            resp.httpversion,
+            resp.status_code,
+            resp.msg,
+            resp.headers,
+            resp.content,
             timestamp_start,
             timestamp_end
         )
