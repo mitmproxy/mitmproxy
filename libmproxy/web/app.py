@@ -81,7 +81,8 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def broadcast(cls, **kwargs):
-        message = json.dumps(kwargs)
+        message = json.dumps(kwargs, ensure_ascii=False)
+
         for conn in cls.connections:
             try:
                 conn.write_message(message)
