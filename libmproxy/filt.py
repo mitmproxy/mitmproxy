@@ -241,6 +241,19 @@ class FUrl(_Rex):
     def __call__(self, f):
         return re.search(self.expr, f.request.url)
 
+class FSrc(_Rex):
+    code = "src"
+    help = "Match source address"
+
+    def __call__(self, f):
+        return f.client_conn and re.search(self.expr, repr(f.client_conn.address))
+
+class FDst(_Rex):
+    code = "dst"
+    help = "Match destination address"
+
+    def __call__(self, f):
+        return f.server_conn and re.search(self.expr, repr(f.server_conn.address))
 
 class _Int(_Action):
     def __init__(self, num):
@@ -313,6 +326,8 @@ filt_rex = [
     FRequestContentType,
     FResponseContentType,
     FContentType,
+    FSrc,
+    FDst,
 ]
 filt_int = [
     FCode
@@ -324,7 +339,7 @@ def _make():
     # ones.
     parts = []
     for klass in filt_unary:
-        f = pp.Literal("~%s" % klass.code)
+        f = pp.Literal("~%s" % klass.code) + pp.WordEnd()
         f.setParseAction(klass.make)
         parts.append(f)
 
@@ -333,12 +348,12 @@ def _make():
         pp.QuotedString("\"", escChar='\\') |\
         pp.QuotedString("'", escChar='\\')
     for klass in filt_rex:
-        f = pp.Literal("~%s" % klass.code) + rex.copy()
+        f = pp.Literal("~%s" % klass.code) + pp.WordEnd() + rex.copy()
         f.setParseAction(klass.make)
         parts.append(f)
 
     for klass in filt_int:
-        f = pp.Literal("~%s" % klass.code) + pp.Word(pp.nums)
+        f = pp.Literal("~%s" % klass.code) + pp.WordEnd() + pp.Word(pp.nums)
         f.setParseAction(klass.make)
         parts.append(f)
 
