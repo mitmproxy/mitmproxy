@@ -241,6 +241,23 @@ class TestMatching:
         assert self.q("~c 200", s)
         assert not self.q("~c 201", s)
 
+    def test_src(self):
+        q = self.req()
+        assert self.q("~src address", q)
+        assert not self.q("~src foobar", q)
+        assert self.q("~src :22", q)
+        assert not self.q("~src :99", q)
+        assert self.q("~src address:22", q)
+
+    def test_dst(self):
+        q = self.req()
+        q.server_conn = tutils.tserver_conn()
+        assert self.q("~dst address", q)
+        assert not self.q("~dst foobar", q)
+        assert self.q("~dst :22", q)
+        assert not self.q("~dst :99", q)
+        assert self.q("~dst address:22", q)
+
     def test_and(self):
         s = self.resp()
         assert self.q("~c 200 & ~h head", s)
