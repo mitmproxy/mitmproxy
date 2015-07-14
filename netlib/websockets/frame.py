@@ -6,7 +6,7 @@ import struct
 import io
 
 from .protocol import Masker
-from .. import utils, odict, tcp
+from netlib import utils, odict, tcp
 
 DEFAULT = object()
 

@@ -1,37 +1,13 @@
 from __future__ import (absolute_import, print_function, division)
+import binascii
 import collections
 import string
-import urlparse
-import binascii
 import sys
-from . import odict, utils, tcp, http_semantics, http_status
+import urlparse
 
-
-class HttpError(Exception):
-
-    def __init__(self, code, message):
-        super(HttpError, self).__init__(message)
-        self.code = code
-
-
-class HttpErrorConnClosed(HttpError):
-    pass
-
-
-def _is_valid_port(port):
-    if not 0 <= port <= 65535:
-        return False
-    return True
-
-
-def _is_valid_host(host):
-    try:
-        host.decode("idna")
-    except ValueError:
-        return False
-    if "\0" in host:
-        return None
-    return True
+from netlib import odict, utils, tcp, http
+from .. import status_codes
+from ..exceptions import *
 
 
 def get_request_line(fp):
@@ -43,51 +19,6 @@ def get_request_line(fp):
         # Possible leftover from previous message
         line = fp.readline()
     return line
-
-
-def parse_url(url):
-    """
-        Returns a (scheme, host, port, path) tuple, or None on error.
-
-        Checks that:
-            port is an integer 0-65535
-            host is a valid IDNA-encoded hostname with no null-bytes
-            path is valid ASCII
-    """
-    try:
-        scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
-    except ValueError:
-        return None
-    if not scheme:
-        return None
-    if '@' in netloc:
-        # FIXME: Consider what to do with the discarded credentials here Most
-        # probably we should extend the signature to return these as a separate
-        # value.
-        _, netloc = string.rsplit(netloc, '@', maxsplit=1)
-    if ':' in netloc:
-        host, port = string.rsplit(netloc, ':', maxsplit=1)
-        try:
-            port = int(port)
-        except ValueError:
-            return None
-    else:
-        host = netloc
-        if scheme == "https":
-            port = 443
-        else:
-            port = 80
-    path = urlparse.urlunparse(('', '', path, params, query, fragment))
-    if not path.startswith("/"):
-        path = "/" + path
-    if not _is_valid_host(host):
-        return None
-    if not utils.isascii(path):
-        return None
-    if not _is_valid_port(port):
-        return None
-    return scheme, host, port, path
-
 
 def read_headers(fp):
     """
@@ -193,6 +124,7 @@ def parse_http_protocol(s):
 
 
 def parse_http_basic_auth(s):
+    # TODO: check if this is HTTP/1 only - otherwise move it to netlib.http.semantics
     words = s.split()
     if len(words) != 2:
         return None
@@ -208,6 +140,7 @@ def parse_http_basic_auth(s):
 
 
 def assemble_http_basic_auth(scheme, username, password):
+    # TODO: check if this is HTTP/1 only - otherwise move it to netlib.http.semantics
     v = binascii.b2a_base64(username + ":" + password)
     return scheme + " " + v
 
@@ -245,9 +178,9 @@ def parse_init_connect(line):
         port = int(port)
     except ValueError:
         return None
-    if not _is_valid_port(port):
+    if not http.is_valid_port(port):
         return None
-    if not _is_valid_host(host):
+    if not http.is_valid_host(host):
         return None
     return host, port, httpversion
 
@@ -258,7 +191,7 @@ def parse_init_proxy(line):
         return None
     method, url, httpversion = v
 
-    parts = parse_url(url)
+    parts = http.parse_url(url)
     if not parts:
         return None
     scheme, host, port, path = parts
@@ -421,6 +354,7 @@ def expected_http_body_size(headers, is_request, request_method, response_code):
     return -1
 
 
+# TODO: make this a regular class - just like Response
 Request = collections.namedtuple(
     "Request",
     [
@@ -529,7 +463,7 @@ def read_request(rfile, include_body=True, body_size_limit=None, wfile=None):
 
 def read_response(rfile, request_method, body_size_limit, include_body=True):
     """
-        Return an (httpversion, code, msg, headers, content) tuple.
+        Returns an http.Response
 
         By default, both response header and body are read.
         If include_body=False is specified, content may be one of the
@@ -538,6 +472,7 @@ def read_response(rfile, request_method, body_size_limit, include_body=True):
         - "", if the response must not have a response body (e.g. it's a
         response to a HEAD request)
     """
+
     line = rfile.readline()
     # Possible leftover from previous message
     if line == "\r\n" or line == "\n":
@@ -568,7 +503,7 @@ def read_response(rfile, request_method, body_size_limit, include_body=True):
         # if include_body==False then a None content means the body should be
         # read separately
         content = None
-    return http_semantics.Response(httpversion, code, msg, headers, content)
+    return http.Response(httpversion, code, msg, headers, content)
 
 
 def request_preamble(method, resource, http_major="1", http_minor="1"):
@@ -579,5 +514,5 @@ def request_preamble(method, resource, http_major="1", http_minor="1"):
 
 def response_preamble(code, message=None, http_major="1", http_minor="1"):
     if message is None:
-        message = http_status.RESPONSES.get(code)
+        message = status_codes.RESPONSES.get(code)
     return 'HTTP/%s.%s %s %s' % (http_major, http_minor, code, message)

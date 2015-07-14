@@ -2,7 +2,7 @@ import cStringIO
 from test import tutils
 from nose.tools import assert_equal
 from netlib import tcp
-from netlib.http2.frame import *
+from netlib.http.http2.frame import *
 
 
 def hex_to_file(data):

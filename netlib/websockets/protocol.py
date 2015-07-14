@@ -5,7 +5,7 @@ import os
 import struct
 import io
 
-from .. import utils, odict, tcp
+from netlib import utils, odict, tcp
 
 # Colleciton of utility functions that implement small portions of the RFC6455
 # WebSockets Protocol Useful for building WebSocket clients and servers.

@@ -2,8 +2,9 @@ import os
 
 from nose.tools import raises
 
-from netlib import tcp, websockets, http
-from . import tutils, tservers
+from netlib import tcp, http, websockets
+from netlib.http.exceptions import *
+from .. import tutils, tservers
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):
@@ -31,10 +32,10 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         frame.to_file(self.wfile)
 
     def handshake(self):
-        req = http.read_request(self.rfile)
+        req = http.http1.read_request(self.rfile)
         key = self.protocol.check_client_handshake(req.headers)
 
-        self.wfile.write(http.response_preamble(101) + "\r\n")
+        self.wfile.write(http.http1.response_preamble(101) + "\r\n")
         headers = self.protocol.server_handshake_headers(key)
         self.wfile.write(headers.format() + "\r\n")
         self.wfile.flush()
@@ -55,14 +56,14 @@ class WebSocketsClient(tcp.TCPClient):
     def connect(self):
         super(WebSocketsClient, self).connect()
 
-        preamble = http.request_preamble("GET", "/")
+        preamble = http.http1.protocol.request_preamble("GET", "/")
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.client_handshake_headers()
         self.client_nonce = headers.get_first("sec-websocket-key")
         self.wfile.write(headers.format() + "\r\n")
         self.wfile.flush()
 
-        resp = http.read_response(self.rfile, "get", None)
+        resp = http.http1.protocol.read_response(self.rfile, "get", None)
         server_nonce = self.protocol.check_server_handshake(resp.headers)
 
         if not server_nonce == self.protocol.create_server_nonce(
@@ -150,10 +151,10 @@ class TestWebSockets(tservers.ServerTestBase):
 class BadHandshakeHandler(WebSocketsEchoHandler):
 
     def handshake(self):
-        client_hs = http.read_request(self.rfile)
+        client_hs = http.http1.protocol.read_request(self.rfile)
         self.protocol.check_client_handshake(client_hs.headers)
 
-        self.wfile.write(http.response_preamble(101) + "\r\n")
+        self.wfile.write(http.http1.protocol.response_preamble(101) + "\r\n")
         headers = self.protocol.server_handshake_headers("malformed key")
         self.wfile.write(headers.format() + "\r\n")
         self.wfile.flush()

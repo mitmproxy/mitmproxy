@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 from argparse import Action, ArgumentTypeError
-from . import http
+
+from .. import http
 
 
 class NullProxyAuth(object):
@@ -46,7 +47,7 @@ class BasicProxyAuth(NullProxyAuth):
         auth_value = headers.get(self.AUTH_HEADER, [])
         if not auth_value:
             return False
-        parts = http.parse_http_basic_auth(auth_value[0])
+        parts = http.http1.parse_http_basic_auth(auth_value[0])
         if not parts:
             return False
         scheme, username, password = parts
