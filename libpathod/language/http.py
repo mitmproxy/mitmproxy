@@ -4,7 +4,7 @@ import abc
 import pyparsing as pp
 
 import netlib.websockets
-from netlib import http_status, http_uastrings
+from netlib.http import status_codes, user_agents
 from . import base, exceptions, actions, message
 
 
@@ -78,13 +78,13 @@ class ShortcutLocation(_HeaderMixin, base.Value):
 
 class ShortcutUserAgent(_HeaderMixin, base.OptionsOrValue):
     preamble = "u"
-    options = [i[1] for i in http_uastrings.UASTRINGS]
+    options = [i[1] for i in user_agents.UASTRINGS]
     key = base.TokValueLiteral("User-Agent")
 
     def values(self, settings):
         value = self.value.val
         if self.option_used:
-            value = http_uastrings.get_by_shortcut(value.lower())[2]
+            value = user_agents.get_by_shortcut(value.lower())[2]
 
         return self.format_header(
             self.key.get_generator(settings),
@@ -175,7 +175,7 @@ class Response(_HTTPMessage):
             l.extend(self.reason.values(settings))
         else:
             l.append(
-                http_status.RESPONSES.get(
+                status_codes.RESPONSES.get(
                     code,
                     "Unknown code"
                 )

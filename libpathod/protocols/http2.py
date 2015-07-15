@@ -1,4 +1,4 @@
-from netlib import tcp, http, http2, wsgi, certutils, websockets, odict
+from netlib.http import http2
 from .. import version, app, language, utils, log
 
 class HTTP2Protocol:

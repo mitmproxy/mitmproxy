@@ -6,7 +6,8 @@ import threading
 import urllib
 import time
 
-from netlib import tcp, http, http2, wsgi, certutils, websockets, odict
+from netlib import tcp, http, wsgi, certutils, websockets, odict
+from netlib.http import http1, http2
 
 from . import version, app, language, utils, log, protocols
 import language.http

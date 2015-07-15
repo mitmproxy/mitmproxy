@@ -3,7 +3,8 @@ import argparse
 import os
 import os.path
 
-from netlib import http_uastrings, tcp
+from netlib import tcp
+from netlib.http import user_agents
 from . import pathoc, version, language
 
 
@@ -16,7 +17,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     pa = preparser.parse_known_args(argv)[0]
     if pa.showua:
         print >> stdout, "User agent strings:"
-        for i in http_uastrings.UASTRINGS:
+        for i in user_agents.UASTRINGS:
             print >> stdout, "  ", i[1], i[0]
         sys.exit(0)
 

@@ -1,4 +1,5 @@
-from netlib import tcp, http, http2, wsgi, certutils, websockets, odict
+from netlib import tcp, http, wsgi
+from netlib.http import http1
 from .. import version, app, language, utils, log
 
 class HTTPProtocol:
@@ -37,7 +38,7 @@ class HTTPProtocol:
         """
             Handle a CONNECT request.
         """
-        http.read_headers(self.pathod_handler.rfile)
+        http1.read_headers(self.pathod_handler.rfile)
         self.pathod_handler.wfile.write(
             'HTTP/1.1 200 Connection established\r\n' +
             ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
@@ -65,31 +66,31 @@ class HTTPProtocol:
         return self.pathod_handler.handle_http_request, None
 
     def read_request(self, lg):
-        line = http.get_request_line(self.pathod_handler.rfile)
+        line = http1.get_request_line(self.pathod_handler.rfile)
         if not line:
             # Normal termination
             return dict()
 
         m = utils.MemBool()
-        if m(http.parse_init_connect(line)):
+        if m(http1.parse_init_connect(line)):
             return dict(next_handle=self.handle_http_connect(m.v, lg))
-        elif m(http.parse_init_proxy(line)):
+        elif m(http1.parse_init_proxy(line)):
             method, _, _, _, path, httpversion = m.v
-        elif m(http.parse_init_http(line)):
+        elif m(http1.parse_init_http(line)):
             method, path, httpversion = m.v
         else:
             s = "Invalid first line: %s" % repr(line)
             lg(s)
             return dict(errors=dict(type="error", msg=s))
 
-        headers = http.read_headers(self.pathod_handler.rfile)
+        headers = http1.read_headers(self.pathod_handler.rfile)
         if headers is None:
             s = "Invalid headers"
             lg(s)
             return dict(errors=dict(type="error", msg=s))
 
         try:
-            body = http.read_http_body(
+            body = http1.read_http_body(
                 self.pathod_handler.rfile,
                 headers,
                 None,

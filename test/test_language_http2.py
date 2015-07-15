@@ -1,9 +1,11 @@
 import cStringIO
 
+import netlib
 from netlib import tcp
+from netlib.http import user_agents
+
 from libpathod import language
 from libpathod.language import http2, base
-import netlib
 import tutils
 
 
@@ -18,7 +20,7 @@ def parse_response(s):
 def default_settings():
     return language.Settings(
         request_host="foo.com",
-        protocol=netlib.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
+        protocol=netlib.http.http2.HTTP2Protocol(tcp.TCPClient(('localhost', 1234)))
     )
 
 
@@ -121,7 +123,7 @@ class TestRequest:
     def test_user_agent(self):
         r = parse_request('GET:/:r:ua')
         assert len(r.headers) == 1
-        assert r.headers[0].values(default_settings()) == ("user-agent", netlib.http_uastrings.get_by_shortcut('a')[2])
+        assert r.headers[0].values(default_settings()) == ("user-agent", user_agents.get_by_shortcut('a')[2])
 
     def test_render_with_headers(self):
         s = cStringIO.StringIO()

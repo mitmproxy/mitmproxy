@@ -4,13 +4,15 @@ import re
 import OpenSSL
 from mock import Mock
 
-from netlib import tcp, http, http2, http_semantics, socks
+from netlib import tcp, http, socks
+from netlib.http import http2
+
 from libpathod import pathoc, test, version, pathod, language
 import tutils
 
 
 def test_response():
-    r = http_semantics.Response("1.1", 200, "Message", {}, None, None)
+    r = http.Response("1.1", 200, "Message", {}, None, None)
     assert repr(r)
 
 

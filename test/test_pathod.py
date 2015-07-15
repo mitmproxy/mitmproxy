@@ -3,7 +3,7 @@ import cStringIO
 import OpenSSL
 
 from libpathod import pathod, version
-from netlib import tcp, http, http2
+from netlib import tcp, http
 import tutils
 
 

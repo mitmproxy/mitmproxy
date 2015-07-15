@@ -1,6 +1,6 @@
 import time
 
-from netlib import tcp, http, http2, wsgi, certutils, websockets, odict
+from netlib import tcp, http, wsgi, certutils, websockets, odict
 from .. import version, app, language, utils, log
 
 class WebsocketsProtocol:

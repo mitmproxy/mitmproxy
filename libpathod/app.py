@@ -4,7 +4,7 @@ import cStringIO
 import copy
 from flask import Flask, jsonify, render_template, request, abort, make_response
 from . import version, language, utils
-from netlib import http_uastrings
+from netlib.http import user_agents
 
 logging.basicConfig(level="DEBUG")
 EXAMPLE_HOST = "example.com"
@@ -76,7 +76,7 @@ def make_app(noapi, debug):
     def docs_language():
         return render(
             "docs_lang.html", True,
-            section="docs", uastrings=http_uastrings.UASTRINGS,
+            section="docs", uastrings=user_agents.UASTRINGS,
             subsection="lang"
         )
 

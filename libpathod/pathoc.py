@@ -11,7 +11,8 @@ import threading
 
 import OpenSSL.crypto
 
-from netlib import tcp, http, http2, http_semantics, certutils, websockets, socks
+from netlib import tcp, http, certutils, websockets, socks
+from netlib.http import http1, http2
 
 import language.http
 import language.websockets
@@ -228,12 +229,12 @@ class Pathoc(tcp.TCPClient):
         l = self.rfile.readline()
         if not l:
             raise PathocError("Proxy CONNECT failed")
-        parsed = http.parse_response_line(l)
+        parsed = http.http1.parse_response_line(l)
         if not parsed[1] == 200:
             raise PathocError(
                 "Proxy CONNECT failed: %s - %s" % (parsed[1], parsed[2])
             )
-        http.read_headers(self.rfile)
+        http.http1.read_headers(self.rfile)
 
     def socks_connect(self, connect_to):
         try:
@@ -410,9 +411,9 @@ class Pathoc(tcp.TCPClient):
 
                 if self.use_http2:
                     status_code, headers, body = self.protocol.read_response()
-                    resp = http_semantics.Response("HTTP/2", status_code, "", headers, body, self.sslinfo)
+                    resp = http.Response("HTTP/2", status_code, "", headers, body, self.sslinfo)
                 else:
-                    resp = http.read_response(
+                    resp = http.http1.read_response(
                             self.rfile,
                             req["method"],
                             None
