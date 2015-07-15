@@ -14,11 +14,14 @@ __mitmdump__ is the command-line version of mitmproxy. Think tcpdump for HTTP.
 __libmproxy__ is the library that mitmproxy and mitmdump are built on.
 
 Documentation, tutorials and distribution packages can be found on the
-mitmproxy.org website:
-
+mitmproxy.org website:  
 [mitmproxy.org](http://mitmproxy.org).
 
-You can find complete directions for installing mitmproxy [here](http://mitmproxy.org/doc/install.html).
+Installation Instructions are available at [mitmproxy.org/doc/install.html](http://mitmproxy.org/doc/install.html).
+
+You can join our developer chat on Slack:  
+![Slack](https://mitmproxy-slack.herokuapp.com/badge.svg)
+
 
 
 Features
