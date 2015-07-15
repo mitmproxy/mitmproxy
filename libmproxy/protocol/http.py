@@ -1,14 +1,16 @@
 from __future__ import absolute_import
 import Cookie
+import copy
+import threading
+import time
 import urllib
 import urlparse
-import time
-import copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-import threading
-from netlib import http, tcp, http_status, http_cookies
-import netlib.utils
-from netlib import odict
+
+import netlib
+from netlib import http, tcp, odict, utils
+from netlib.http import cookies
+
 from .tcp import TCPHandler
 from .primitives import KILL, ProtocolHandler, Flow, Error
 from ..proxy.connection import ServerConnection
@@ -354,7 +356,7 @@ class HTTPRequest(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        req = http.read_request(
+        req = http.http1.read_request(
             rfile,
             include_body = include_body,
             body_size_limit = body_size_limit,
@@ -642,7 +644,7 @@ class HTTPRequest(HTTPMessage):
         """
         ret = odict.ODict()
         for i in self.headers["cookie"]:
-            ret.extend(http_cookies.parse_cookie_header(i))
+            ret.extend(cookies.parse_cookie_header(i))
         return ret
 
     def set_cookies(self, odict):
@@ -650,7 +652,7 @@ class HTTPRequest(HTTPMessage):
             Takes an netlib.odict.ODict object. Over-writes any existing Cookie
             headers.
         """
-        v = http_cookies.format_cookie_header(odict)
+        v = cookies.format_cookie_header(odict)
         self.headers["Cookie"] = [v]
 
     def replace(self, pattern, repl, *args, **kwargs):
@@ -760,7 +762,7 @@ class HTTPResponse(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        resp = http.read_response(
+        resp = http.http1.read_response(
             rfile,
             request_method,
             body_size_limit,
@@ -894,7 +896,7 @@ class HTTPResponse(HTTPMessage):
         """
         ret = []
         for header in self.headers["set-cookie"]:
-            v = http_cookies.parse_set_cookie_header(header)
+            v = http.cookies.parse_set_cookie_header(header)
             if v:
                 name, value, attrs = v
                 ret.append([name, [value, attrs]])
@@ -910,7 +912,7 @@ class HTTPResponse(HTTPMessage):
         values = []
         for i in odict.lst:
             values.append(
-                http_cookies.format_set_cookie_header(
+                http.cookies.format_set_cookie_header(
                     i[0],
                     i[1][0],
                     i[1][1]
@@ -1081,7 +1083,7 @@ class HTTPHandler(ProtocolHandler):
             if flow.response.stream:
                 flow.response.content = CONTENT_MISSING
             else:
-                flow.response.content = http.read_http_body(
+                flow.response.content = http.http1.read_http_body(
                     self.c.server_conn.rfile, flow.response.headers,
                     self.c.config.body_size_limit,
                     flow.request.method, flow.response.code, False
@@ -1231,7 +1233,7 @@ class HTTPHandler(ProtocolHandler):
             pass
 
     def send_error(self, code, message, headers):
-        response = http_status.RESPONSES.get(code, "Unknown")
+        response = http.status_codes.RESPONSES.get(code, "Unknown")
         html_content = """
             <html>
                 <head>
@@ -1364,7 +1366,7 @@ class HTTPHandler(ProtocolHandler):
         # We provide a mostly unified API to the user, which needs to be
         # unfiddled here
         # ( See also: https://github.com/mitmproxy/mitmproxy/issues/337 )
-        address = netlib.tcp.Address((flow.request.host, flow.request.port))
+        address = tcp.Address((flow.request.host, flow.request.port))
 
         ssl = (flow.request.scheme == "https")
 
@@ -1418,7 +1420,7 @@ class HTTPHandler(ProtocolHandler):
             h = flow.response._assemble_head(preserve_transfer_encoding=True)
             self.c.client_conn.send(h)
 
-            chunks = http.read_http_body_chunked(
+            chunks = http.http1.read_http_body_chunked(
                 self.c.server_conn.rfile,
                 flow.response.headers,
                 self.c.config.body_size_limit,
@@ -1441,11 +1443,11 @@ class HTTPHandler(ProtocolHandler):
             semantics. Returns True, if so.
         """
         close_connection = (
-            http.connection_close(
+            http.http1.connection_close(
                 flow.request.httpversion,
-                flow.request.headers) or http.connection_close(
+                flow.request.headers) or http.http1.connection_close(
                 flow.response.httpversion,
-                flow.response.headers) or http.expected_http_body_size(
+                flow.response.headers) or http.http1.expected_http_body_size(
                 flow.response.headers,
                 False,
                 flow.request.method,

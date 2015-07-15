@@ -2,7 +2,11 @@ from __future__ import absolute_import
 import os
 import re
 from OpenSSL import SSL
-from netlib import http_auth, certutils, tcp
+
+import netlib
+from netlib import http, certutils, tcp
+from netlib.http import authentication
+
 from .. import utils, platform, version
 from .primitives import RegularProxyMode, SpoofMode, SSLSpoofMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
 
@@ -103,7 +107,7 @@ class ProxyConfig:
             self.openssl_method_server = ssl_version_server
         else:
             self.openssl_method_server = tcp.SSL_VERSIONS[ssl_version_server]
-        
+
         if ssl_verify_upstream_cert:
             self.openssl_verification_mode_server = SSL.VERIFY_PEER
         else:
@@ -164,18 +168,18 @@ def process_proxy_options(parser, options):
                 return parser.error(
                     "Invalid single-user specification. Please use the format username:password")
             username, password = options.auth_singleuser.split(':')
-            password_manager = http_auth.PassManSingleUser(username, password)
+            password_manager = authentication.PassManSingleUser(username, password)
         elif options.auth_nonanonymous:
-            password_manager = http_auth.PassManNonAnon()
+            password_manager = authentication.PassManNonAnon()
         elif options.auth_htpasswd:
             try:
-                password_manager = http_auth.PassManHtpasswd(
+                password_manager = authentication.PassManHtpasswd(
                     options.auth_htpasswd)
             except ValueError as v:
                 return parser.error(v.message)
-        authenticator = http_auth.BasicProxyAuth(password_manager, "mitmproxy")
+        authenticator = authentication.BasicProxyAuth(password_manager, "mitmproxy")
     else:
-        authenticator = http_auth.NullProxyAuth(None)
+        authenticator = authentication.NullProxyAuth(None)
 
     certs = []
     for i in options.certs:

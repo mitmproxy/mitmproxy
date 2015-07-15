@@ -158,7 +158,7 @@ class StreamLargeBodies(object):
     def run(self, flow, is_request):
         r = flow.request if is_request else flow.response
         code = flow.response.code if flow.response else None
-        expected_size = netlib.http.expected_http_body_size(
+        expected_size = netlib.http.http1.expected_http_body_size(
             r.headers, is_request, flow.request.method, code
         )
         if not (0 <= expected_size <= self.max_size):

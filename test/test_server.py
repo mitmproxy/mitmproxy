@@ -1,15 +1,17 @@
 import socket
 import time
-from libmproxy.proxy.config import HostMatcher
-import libpathod
-from netlib import tcp, http_auth, http, socks
-from libpathod import pathoc, pathod
+from OpenSSL import SSL
+
+from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
-import tutils
-import tservers
+from netlib.http import authentication
+from libpathod import pathoc, pathod
+
+from libmproxy.proxy.config import HostMatcher
 from libmproxy.protocol import KILL, Error
 from libmproxy.protocol.http import CONTENT_MISSING
-from OpenSSL import SSL
+import tutils
+import tservers
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -295,8 +297,8 @@ class TestHTTP(tservers.HTTPProxTest, CommonMixin, AppMixin):
 
 
 class TestHTTPAuth(tservers.HTTPProxTest):
-    authenticator = http_auth.BasicProxyAuth(
-        http_auth.PassManSingleUser(
+    authenticator = http.authentication.BasicProxyAuth(
+        http.authentication.PassManSingleUser(
             "test",
             "test"),
         "realm")
@@ -310,8 +312,8 @@ class TestHTTPAuth(tservers.HTTPProxTest):
             h'%s'='%s'
         """ % (
             self.server.port,
-            http_auth.BasicProxyAuth.AUTH_HEADER,
-            http.assemble_http_basic_auth("basic", "test", "test")
+            http.authentication.BasicProxyAuth.AUTH_HEADER,
+            authentication.assemble_http_basic_auth("basic", "test", "test")
         ))
         assert ret.status_code == 202
 
@@ -526,7 +528,7 @@ class TestHttps2Http(tservers.ReverseProxTest):
         """
             Returns a connected Pathoc instance.
         """
-        p = libpathod.pathoc.Pathoc(
+        p = pathoc.Pathoc(
             ("localhost", self.proxy.port), ssl=ssl, sni=sni, fp=None
         )
         p.connect()
@@ -765,7 +767,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
             (self.server.urlbase, spec))
         connection.send("\r\n")
 
-        resp = http.read_response(fconn, "GET", None, include_body=False)
+        resp = http.http1.read_response(fconn, "GET", None, include_body=False)
 
         assert resp.headers["Transfer-Encoding"][0] == 'chunked'
         assert resp.status_code == 200
@@ -773,7 +775,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
         chunks = list(
             content for _,
                         content,
-                        _ in http.read_http_body_chunked(
+                        _ in http.http1.read_http_body_chunked(
                 fconn, resp.headers, None, "GET", 200, False))
         assert chunks == ["this", "isatest", ""]
 

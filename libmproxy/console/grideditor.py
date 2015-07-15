@@ -5,9 +5,11 @@ import re
 import os
 import urwid
 
+from netlib import odict
+from netlib.http import user_agents
+
 from . import common, signals
 from .. import utils, filt, script
-from netlib import http_uastrings, http_cookies, odict
 
 
 FOOTER = [
@@ -516,7 +518,7 @@ class HeaderEditor(GridEditor):
         return text
 
     def set_user_agent(self, k):
-        ua = http_uastrings.get_by_shortcut(k)
+        ua = user_agents.get_by_shortcut(k)
         if ua:
             self.walker.add_value(
                 [
@@ -529,7 +531,7 @@ class HeaderEditor(GridEditor):
         if key == "U":
             signals.status_prompt_onekey.send(
                 prompt = "Add User-Agent header:",
-                keys = [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                keys = [(i[0], i[1]) for i in user_agents.UASTRINGS],
                 callback = self.set_user_agent,
             )
             return True
@@ -592,7 +594,7 @@ class SetHeadersEditor(GridEditor):
         return text
 
     def set_user_agent(self, k):
-        ua = http_uastrings.get_by_shortcut(k)
+        ua = user_agents.get_by_shortcut(k)
         if ua:
             self.walker.add_value(
                 [
@@ -606,7 +608,7 @@ class SetHeadersEditor(GridEditor):
         if key == "U":
             signals.status_prompt_onekey.send(
                 prompt = "Add User-Agent header:",
-                keys = [(i[0], i[1]) for i in http_uastrings.UASTRINGS],
+                keys = [(i[0], i[1]) for i in user_agents.UASTRINGS],
                 callback = self.set_user_agent,
             )
             return True
