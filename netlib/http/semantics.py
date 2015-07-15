@@ -49,7 +49,6 @@ def is_valid_host(host):
     return True
 
 
-
 def parse_url(url):
     """
         Returns a (scheme, host, port, path) tuple, or None on error.
@@ -92,3 +91,16 @@ def parse_url(url):
     if not is_valid_port(port):
         return None
     return scheme, host, port, path
+
+
+def get_header_tokens(headers, key):
+    """
+        Retrieve all tokens for a header key. A number of different headers
+        follow a pattern where each header line can containe comma-separated
+        tokens, and headers can be set multiple times.
+    """
+    toks = []
+    for i in headers[key]:
+        for j in i.split(","):
+            toks.append(j.strip())
+    return toks

@@ -85,22 +85,9 @@ def read_chunked(fp, limit, is_request):
                 return
 
 
-def get_header_tokens(headers, key):
-    """
-        Retrieve all tokens for a header key. A number of different headers
-        follow a pattern where each header line can containe comma-separated
-        tokens, and headers can be set multiple times.
-    """
-    toks = []
-    for i in headers[key]:
-        for j in i.split(","):
-            toks.append(j.strip())
-    return toks
-
-
 def has_chunked_encoding(headers):
     return "chunked" in [
-        i.lower() for i in get_header_tokens(headers, "transfer-encoding")
+        i.lower() for i in http.get_header_tokens(headers, "transfer-encoding")
     ]
 
 
@@ -121,28 +108,6 @@ def parse_http_protocol(s):
     except ValueError:
         return None
     return major, minor
-
-
-def parse_http_basic_auth(s):
-    # TODO: check if this is HTTP/1 only - otherwise move it to netlib.http.semantics
-    words = s.split()
-    if len(words) != 2:
-        return None
-    scheme = words[0]
-    try:
-        user = binascii.a2b_base64(words[1])
-    except binascii.Error:
-        return None
-    parts = user.split(':')
-    if len(parts) != 2:
-        return None
-    return scheme, parts[0], parts[1]
-
-
-def assemble_http_basic_auth(scheme, username, password):
-    # TODO: check if this is HTTP/1 only - otherwise move it to netlib.http.semantics
-    v = binascii.b2a_base64(username + ":" + password)
-    return scheme + " " + v
 
 
 def parse_init(line):
@@ -221,7 +186,7 @@ def connection_close(httpversion, headers):
     """
     # At first, check if we have an explicit Connection header.
     if "connection" in headers:
-        toks = get_header_tokens(headers, "connection")
+        toks = http.get_header_tokens(headers, "connection")
         if "close" in toks:
             return True
         elif "keep-alive" in toks:

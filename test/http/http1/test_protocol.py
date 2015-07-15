@@ -71,13 +71,13 @@ def test_connection_close():
 
 def test_get_header_tokens():
     h = odict.ODictCaseless()
-    assert protocol.get_header_tokens(h, "foo") == []
+    assert http.get_header_tokens(h, "foo") == []
     h["foo"] = ["bar"]
-    assert protocol.get_header_tokens(h, "foo") == ["bar"]
+    assert http.get_header_tokens(h, "foo") == ["bar"]
     h["foo"] = ["bar, voing"]
-    assert protocol.get_header_tokens(h, "foo") == ["bar", "voing"]
+    assert http.get_header_tokens(h, "foo") == ["bar", "voing"]
     h["foo"] = ["bar, voing", "oink"]
-    assert protocol.get_header_tokens(h, "foo") == ["bar", "voing", "oink"]
+    assert http.get_header_tokens(h, "foo") == ["bar", "voing", "oink"]
 
 
 def test_read_http_body_request():
@@ -355,17 +355,6 @@ def test_read_response():
         foo
     """
     assert tst(data, "GET", None, include_body=False).content is None
-
-
-def test_parse_http_basic_auth():
-    vals = ("basic", "foo", "bar")
-    assert protocol.parse_http_basic_auth(
-        protocol.assemble_http_basic_auth(*vals)
-    ) == vals
-    assert not protocol.parse_http_basic_auth("")
-    assert not protocol.parse_http_basic_auth("foo bar")
-    v = "basic " + binascii.b2a_base64("foo")
-    assert not protocol.parse_http_basic_auth(v)
 
 
 def test_get_request_line():

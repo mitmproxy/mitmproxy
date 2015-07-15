@@ -1,7 +1,27 @@
 from __future__ import (absolute_import, print_function, division)
 from argparse import Action, ArgumentTypeError
+import binascii
 
 from .. import http
+
+def parse_http_basic_auth(s):
+    words = s.split()
+    if len(words) != 2:
+        return None
+    scheme = words[0]
+    try:
+        user = binascii.a2b_base64(words[1])
+    except binascii.Error:
+        return None
+    parts = user.split(':')
+    if len(parts) != 2:
+        return None
+    return scheme, parts[0], parts[1]
+
+
+def assemble_http_basic_auth(scheme, username, password):
+    v = binascii.b2a_base64(username + ":" + password)
+    return scheme + " " + v
 
 
 class NullProxyAuth(object):
@@ -47,7 +67,7 @@ class BasicProxyAuth(NullProxyAuth):
         auth_value = headers.get(self.AUTH_HEADER, [])
         if not auth_value:
             return False
-        parts = http.http1.parse_http_basic_auth(auth_value[0])
+        parts = parse_http_basic_auth(auth_value[0])
         if not parts:
             return False
         scheme, username, password = parts

@@ -1,6 +1,19 @@
+import binascii
+
 from netlib import odict, http
 from netlib.http import authentication
 from .. import tutils
+
+
+def test_parse_http_basic_auth():
+    vals = ("basic", "foo", "bar")
+    assert http.authentication.parse_http_basic_auth(
+        http.authentication.assemble_http_basic_auth(*vals)
+    ) == vals
+    assert not http.authentication.parse_http_basic_auth("")
+    assert not http.authentication.parse_http_basic_auth("foo bar")
+    v = "basic " + binascii.b2a_base64("foo")
+    assert not http.authentication.parse_http_basic_auth(v)
 
 
 class TestPassManNonAnon:
@@ -23,7 +36,7 @@ class TestPassManHtpasswd:
         pm = authentication.PassManHtpasswd(tutils.test_data.path("data/htpasswd"))
 
         vals = ("basic", "test", "test")
-        http.http1.assemble_http_basic_auth(*vals)
+        authentication.assemble_http_basic_auth(*vals)
         assert pm.test("test", "test")
         assert not pm.test("test", "foo")
         assert not pm.test("foo", "test")
@@ -62,7 +75,7 @@ class TestBasicProxyAuth:
 
         hdrs = odict.ODictCaseless()
         vals = ("basic", "foo", "bar")
-        hdrs[ba.AUTH_HEADER] = [http.http1.assemble_http_basic_auth(*vals)]
+        hdrs[ba.AUTH_HEADER] = [authentication.assemble_http_basic_auth(*vals)]
         assert ba.authenticate(hdrs)
 
         ba.clean(hdrs)
@@ -75,12 +88,12 @@ class TestBasicProxyAuth:
         assert not ba.authenticate(hdrs)
 
         vals = ("foo", "foo", "bar")
-        hdrs[ba.AUTH_HEADER] = [http.http1.assemble_http_basic_auth(*vals)]
+        hdrs[ba.AUTH_HEADER] = [authentication.assemble_http_basic_auth(*vals)]
         assert not ba.authenticate(hdrs)
 
         ba = authentication.BasicProxyAuth(authentication.PassMan(), "test")
         vals = ("basic", "foo", "bar")
-        hdrs[ba.AUTH_HEADER] = [http.http1.assemble_http_basic_auth(*vals)]
+        hdrs[ba.AUTH_HEADER] = [authentication.assemble_http_basic_auth(*vals)]
         assert not ba.authenticate(hdrs)
 
 
