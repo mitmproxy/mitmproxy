@@ -209,8 +209,7 @@ class Pathoc(tcp.TCPClient):
                 )
             self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
         else:
-            # TODO: create HTTP or Websockets protocol
-            self.protocol = None
+            self.protocol = http1.HTTP1Protocol(self)
 
         self.settings = language.Settings(
             is_client=True,
@@ -409,16 +408,8 @@ class Pathoc(tcp.TCPClient):
                 req = language.serve(r, self.wfile, self.settings)
                 self.wfile.flush()
 
-                if self.use_http2:
-                    status_code, headers, body = self.protocol.read_response()
-                    resp = http.Response("HTTP/2", status_code, "", headers, body, self.sslinfo)
-                else:
-                    resp = http.http1.read_response(
-                            self.rfile,
-                            req["method"],
-                            None
-                        )
-                    resp.sslinfo = self.sslinfo
+                resp = self.protocol.read_response(req["method"], None)
+                resp.sslinfo = self.sslinfo
             except http.HttpError as v:
                 lg("Invalid server response: %s" % v)
                 raise
