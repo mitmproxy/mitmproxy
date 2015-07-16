@@ -314,11 +314,6 @@ class Pathoc(tcp.TCPClient):
         if self.timeout:
             self.settimeout(self.timeout)
 
-    def _resp_summary(self, resp):
-        return "<< %s %s: %s bytes" % (
-            resp.status_code, utils.xrepr(resp.msg), len(resp.content)
-        )
-
     def stop(self):
         if self.ws_framereader:
             self.ws_framereader.terminate.put(None)
@@ -421,7 +416,9 @@ class Pathoc(tcp.TCPClient):
                 raise
             finally:
                 if resp:
-                    lg(self._resp_summary(resp))
+                    lg("<< %s %s: %s bytes" % (
+                        resp.status_code, utils.xrepr(resp.msg), len(resp.content)
+                    ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()
             return resp
