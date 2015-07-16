@@ -2,7 +2,7 @@ from __future__ import (absolute_import, print_function, division)
 import itertools
 
 from hpack.hpack import Encoder, Decoder
-from .. import utils
+from netlib import http, utils
 from . import frame
 
 
@@ -186,9 +186,9 @@ class HTTP2Protocol(object):
             self._create_headers(headers, stream_id, end_stream=(body is None)),
             self._create_body(body, stream_id)))
 
-    def read_response(self):
+    def read_response(self, *args):
         stream_id_, headers, body = self._receive_transmission()
-        return headers[':status'], headers, body
+        return http.Response("HTTP/2", headers[':status'], "", headers, body)
 
     def read_request(self):
         return self._receive_transmission()

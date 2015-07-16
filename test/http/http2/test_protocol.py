@@ -251,11 +251,13 @@ class TestReadResponse(tservers.ServerTestBase):
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c)
 
-        status, headers, body = protocol.read_response()
+        resp = protocol.read_response()
 
-        assert headers == {':status': '200', 'etag': 'foobar'}
-        assert status == "200"
-        assert body == b'foobar'
+        assert resp.httpversion == "HTTP/2"
+        assert resp.status_code == "200"
+        assert resp.msg == ""
+        assert resp.headers == {':status': '200', 'etag': 'foobar'}
+        assert resp.content == b'foobar'
 
 
 class TestReadEmptyResponse(tservers.ServerTestBase):
@@ -274,11 +276,13 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c)
 
-        status, headers, body = protocol.read_response()
+        resp = protocol.read_response()
 
-        assert headers == {':status': '200', 'etag': 'foobar'}
-        assert status == "200"
-        assert body == b''
+        assert resp.httpversion == "HTTP/2"
+        assert resp.status_code == "200"
+        assert resp.msg == ""
+        assert resp.headers == {':status': '200', 'etag': 'foobar'}
+        assert resp.content == b''
 
 
 class TestReadRequest(tservers.ServerTestBase):
