@@ -187,11 +187,25 @@ class HTTP2Protocol(object):
             self._create_body(body, stream_id)))
 
     def read_response(self, *args):
-        stream_id_, headers, body = self._receive_transmission()
-        return http.Response("HTTP/2", headers[':status'], "", headers, body)
+        stream_id, headers, body = self._receive_transmission()
+
+        response = http.Response("HTTP/2", headers[':status'], "", headers, body)
+        response.stream_id = stream_id
+        return response
 
     def read_request(self):
-        return self._receive_transmission()
+        stream_id, headers, body = self._receive_transmission()
+
+        form_in = ""
+        method = headers.get(':method', '')
+        scheme = headers.get(':scheme', '')
+        host = headers.get(':host', '')
+        port = ''  # TODO: parse port number?
+        path = headers.get(':path', '')
+
+        request = http.Request(form_in, method, scheme, host, port, path, "HTTP/2", headers, body)
+        request.stream_id = stream_id
+        return request
 
     def _receive_transmission(self):
         body_expected = True

@@ -11,24 +11,9 @@ from ..exceptions import *
 
 class HTTP1Protocol(object):
 
-    # TODO: make this a regular class - just like Response
-    Request = collections.namedtuple(
-        "Request",
-        [
-            "form_in",
-            "method",
-            "scheme",
-            "host",
-            "port",
-            "path",
-            "httpversion",
-            "headers",
-            "content"
-        ]
-    )
-
     def __init__(self, tcp_handler):
         self.tcp_handler = tcp_handler
+
 
     def get_request_line(self):
         """
@@ -39,6 +24,7 @@ class HTTP1Protocol(object):
             # Possible leftover from previous message
             line = self.tcp_handler.rfile.readline()
         return line
+
 
     def read_headers(self):
         """
@@ -175,6 +161,7 @@ class HTTP1Protocol(object):
             return None
         return host, port, httpversion
 
+
     @classmethod
     def parse_init_proxy(self, line):
         v = self.parse_init(line)
@@ -187,6 +174,7 @@ class HTTP1Protocol(object):
             return None
         scheme, host, port, path = parts
         return method, scheme, host, port, path, httpversion
+
 
     @classmethod
     def parse_init_http(self, line):
@@ -425,7 +413,7 @@ class HTTP1Protocol(object):
                 True
             )
 
-        return self.Request(
+        return http.Request(
             form_in,
             method,
             scheme,

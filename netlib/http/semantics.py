@@ -7,6 +7,37 @@ import urlparse
 
 from .. import utils
 
+class Request(object):
+
+    def __init__(
+        self,
+        form_in,
+        method,
+        scheme,
+        host,
+        port,
+        path,
+        httpversion,
+        headers,
+        content,
+    ):
+        self.form_in = form_in
+        self.method = method
+        self.scheme = scheme
+        self.host = host
+        self.port = port
+        self.path = path
+        self.httpversion = httpversion
+        self.headers = headers
+        self.content = content
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __repr__(self):
+        return "Request(%s - %s, %s)" % (self.method, self.host, self.path)
+
+
 class Response(object):
 
     def __init__(

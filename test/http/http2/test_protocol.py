@@ -278,6 +278,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
 
         resp = protocol.read_response()
 
+        assert resp.stream_id
         assert resp.httpversion == "HTTP/2"
         assert resp.status_code == "200"
         assert resp.msg == ""
@@ -303,11 +304,11 @@ class TestReadRequest(tservers.ServerTestBase):
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c, is_server=True)
 
-        stream_id, headers, body = protocol.read_request()
+        resp = protocol.read_request()
 
-        assert stream_id
-        assert headers == {':method': 'GET', ':path': '/', ':scheme': 'https'}
-        assert body == b'foobar'
+        assert resp.stream_id
+        assert resp.headers == {':method': 'GET', ':path': '/', ':scheme': 'https'}
+        assert resp.content == b'foobar'
 
 
 class TestCreateResponse():
