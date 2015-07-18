@@ -6,6 +6,9 @@ class HTTPProtocol:
 
     def __init__(self, pathod_handler):
         self.pathod_handler = pathod_handler
+        self.wire_protocol = http1.HTTP1Protocol(
+            self.pathod_handler
+        )
 
     def make_error_response(self, reason, body):
         return language.http.make_error_response(reason, body)
@@ -38,7 +41,7 @@ class HTTPProtocol:
         """
             Handle a CONNECT request.
         """
-        http1.read_headers(self.pathod_handler.rfile)
+        self.wire_protocol.read_headers()
         self.pathod_handler.wfile.write(
             'HTTP/1.1 200 Connection established\r\n' +
             ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
@@ -66,32 +69,31 @@ class HTTPProtocol:
         return self.pathod_handler.handle_http_request, None
 
     def read_request(self, lg):
-        line = http1.get_request_line(self.pathod_handler.rfile)
+        line = self.wire_protocol.get_request_line()
         if not line:
             # Normal termination
             return dict()
 
         m = utils.MemBool()
-        if m(http1.parse_init_connect(line)):
+        if m(self.wire_protocol.parse_init_connect(line)):
             return dict(next_handle=self.handle_http_connect(m.v, lg))
-        elif m(http1.parse_init_proxy(line)):
+        elif m(self.wire_protocol.parse_init_proxy(line)):
             method, _, _, _, path, httpversion = m.v
-        elif m(http1.parse_init_http(line)):
+        elif m(self.wire_protocol.parse_init_http(line)):
             method, path, httpversion = m.v
         else:
             s = "Invalid first line: %s" % repr(line)
             lg(s)
             return dict(errors=dict(type="error", msg=s))
 
-        headers = http1.read_headers(self.pathod_handler.rfile)
+        headers = self.wire_protocol.read_headers()
         if headers is None:
             s = "Invalid headers"
             lg(s)
             return dict(errors=dict(type="error", msg=s))
 
         try:
-            body = http1.read_http_body(
-                self.pathod_handler.rfile,
+            body = self.wire_protocol.read_http_body(
                 headers,
                 None,
                 method,

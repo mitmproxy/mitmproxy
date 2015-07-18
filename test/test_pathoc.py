@@ -5,7 +5,7 @@ import OpenSSL
 from mock import Mock
 
 from netlib import tcp, http, socks
-from netlib.http import http2
+from netlib.http import http1, http2
 
 from libpathod import pathoc, test, version, pathod, language
 import tutils
@@ -272,8 +272,7 @@ class TestDaemonHTTP2(_TestDaemon):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
             )
-            # TODO: change if other protocols get implemented
-            assert c.protocol is None
+            assert isinstance(c.protocol, http1.HTTP1Protocol)
 
         def test_http2_alpn(self):
             c = pathoc.Pathoc(

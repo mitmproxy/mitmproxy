@@ -12,7 +12,7 @@ class HTTP2Protocol:
     def make_error_response(self, reason, body):
         return language.http2.make_error_response(reason, body)
 
-    def read_request(self):
+    def read_request(self, lg=None):
         self.wire_protocol.perform_server_connection_preface()
         return self.wire_protocol.read_request()
 

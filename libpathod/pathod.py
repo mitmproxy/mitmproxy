@@ -123,11 +123,12 @@ class PathodHandler(tcp.BaseHandler):
         """
         with logger.ctx() as lg:
             if self.use_http2:
-                stream_id, headers, body = self.protocol.read_request()
-                method = headers[':method']
-                path = headers[':path']
-                headers = odict.ODict(headers)
-                httpversion = ""
+                req = self.protocol.read_request()
+                method = req.method
+                path = req.path
+                headers = odict.ODictCaseless(req.headers)
+                httpversion = req.httpversion
+                stream_id = req.stream_id
             else:
                 req = self.protocol.read_request(lg)
                 if 'next_handle' in req:

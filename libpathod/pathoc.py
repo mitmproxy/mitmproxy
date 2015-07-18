@@ -228,12 +228,12 @@ class Pathoc(tcp.TCPClient):
         l = self.rfile.readline()
         if not l:
             raise PathocError("Proxy CONNECT failed")
-        parsed = http.http1.parse_response_line(l)
+        parsed = self.protocol.parse_response_line(l)
         if not parsed[1] == 200:
             raise PathocError(
                 "Proxy CONNECT failed: %s - %s" % (parsed[1], parsed[2])
             )
-        http.http1.read_headers(self.rfile)
+        self.protocol.read_headers()
 
     def socks_connect(self, connect_to):
         try:
