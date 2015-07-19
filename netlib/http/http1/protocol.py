@@ -333,7 +333,7 @@ class HTTP1Protocol(object):
         return -1
 
 
-    def read_request(self, include_body=True, body_size_limit=None):
+    def read_request(self, include_body=True, body_size_limit=None, allow_empty=False):
         """
         Parse an HTTP request from a file stream
 
@@ -354,7 +354,10 @@ class HTTP1Protocol(object):
 
         request_line = self.get_request_line()
         if not request_line:
-            raise tcp.NetLibDisconnect()
+            if allow_empty:
+                return http.EmptyRequest()
+            else:
+                raise tcp.NetLibDisconnect()
 
         request_line_parts = self.parse_init(request_line)
         if not request_line_parts:

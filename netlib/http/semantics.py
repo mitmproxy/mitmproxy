@@ -38,6 +38,20 @@ class Request(object):
         return "Request(%s - %s, %s)" % (self.method, self.host, self.path)
 
 
+class EmptyRequest(Request):
+    def __init__(self):
+        super(EmptyRequest, self).__init__(
+            form_in="",
+            method="",
+            scheme="",
+            host="",
+            port="",
+            path="",
+            httpversion="",
+            headers="",
+            body="",
+            )
+
 class ConnectRequest(Request):
     def __init__(self, host, port):
         super(ConnectRequest, self).__init__(
