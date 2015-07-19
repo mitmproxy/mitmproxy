@@ -21,9 +21,9 @@ class Flow(object):
 
 class Request(object):
 
-    def __init__(self, scheme, method, path, headers, content):
+    def __init__(self, scheme, method, path, headers, body):
         self.scheme, self.method, self.path = scheme, method, path
-        self.headers, self.content = headers, content
+        self.headers, self.body = headers, body
 
 
 def date_time_string():
@@ -58,7 +58,7 @@ class WSGIAdaptor(object):
         environ = {
             'wsgi.version': (1, 0),
             'wsgi.url_scheme': flow.request.scheme,
-            'wsgi.input': cStringIO.StringIO(flow.request.content),
+            'wsgi.input': cStringIO.StringIO(flow.request.body or ""),
             'wsgi.errors': errsoc,
             'wsgi.multithread': True,
             'wsgi.multiprocess': False,

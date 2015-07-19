@@ -257,7 +257,7 @@ class TestReadResponse(tservers.ServerTestBase):
         assert resp.status_code == "200"
         assert resp.msg == ""
         assert resp.headers == {':status': '200', 'etag': 'foobar'}
-        assert resp.content == b'foobar'
+        assert resp.body == b'foobar'
 
 
 class TestReadEmptyResponse(tservers.ServerTestBase):
@@ -283,7 +283,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.status_code == "200"
         assert resp.msg == ""
         assert resp.headers == {':status': '200', 'etag': 'foobar'}
-        assert resp.content == b''
+        assert resp.body == b''
 
 
 class TestReadRequest(tservers.ServerTestBase):
@@ -308,7 +308,7 @@ class TestReadRequest(tservers.ServerTestBase):
 
         assert resp.stream_id
         assert resp.headers == {':method': 'GET', ':path': '/', ':scheme': 'https'}
-        assert resp.content == b'foobar'
+        assert resp.body == b'foobar'
 
 
 class TestCreateResponse():

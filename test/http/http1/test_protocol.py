@@ -296,7 +296,7 @@ class TestReadResponseNoContentLength(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
         resp = HTTP1Protocol(c).read_response("GET", None)
-        assert resp.content == "bar\r\n\r\n"
+        assert resp.body == "bar\r\n\r\n"
 
 
 def test_read_response():
@@ -344,8 +344,8 @@ def test_read_response():
 
         foo
     """
-    assert tst(data, "GET", None).content == 'foo'
-    assert tst(data, "HEAD", None).content == ''
+    assert tst(data, "GET", None).body == 'foo'
+    assert tst(data, "HEAD", None).body == ''
 
     data = """
         HTTP/1.1 200 OK
@@ -361,7 +361,7 @@ def test_read_response():
 
         foo
     """
-    assert tst(data, "GET", None, include_body=False).content is None
+    assert tst(data, "GET", None, include_body=False).body is None
 
 
 def test_get_request_line():
@@ -438,5 +438,5 @@ class TestReadRequest():
         p = mock_protocol(data)
         v = p.read_request()
         assert p.tcp_handler.wfile.getvalue() == "HTTP/1.1 100 Continue\r\n\r\n"
-        assert v.content == "foo"
+        assert v.body == "foo"
         assert p.tcp_handler.rfile.read(3) == "bar"
