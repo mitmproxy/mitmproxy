@@ -133,7 +133,6 @@ class PathodHandler(tcp.BaseHandler):
                 return None, None
 
             if isinstance(req, http.ConnectRequest):
-                print([req.host, req.port, req.path])
                 return self.protocol.handle_http_connect([req.host, req.port, req.path], lg)
 
             method = req.method

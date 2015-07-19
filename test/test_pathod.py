@@ -284,5 +284,4 @@ class TestHTTP2(tutils.DaemonTests):
 
         def test_http2(self):
             r, _ = self.pathoc(["GET:/"], ssl=True, use_http2=True)
-            print(r)
             assert r[0].status_code == "800"
