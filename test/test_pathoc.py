@@ -45,7 +45,7 @@ class _TestDaemon:
         )
         c.connect()
         resp = c.request("get:/api/info")
-        assert tuple(json.loads(resp.content)["version"]) == version.IVERSION
+        assert tuple(json.loads(resp.body)["version"]) == version.IVERSION
 
     def tval(
         self,
@@ -105,7 +105,7 @@ class TestDaemonSSL(_TestDaemon):
         c.connect()
         c.request("get:/p/200")
         r = c.request("get:/api/log")
-        d = json.loads(r.content)
+        d = json.loads(r.body)
         assert d["log"][0]["request"]["sni"] == "foobar.com"
 
     def test_showssl(self):
@@ -121,7 +121,7 @@ class TestDaemonSSL(_TestDaemon):
         c.connect()
         c.request("get:/p/200")
         r = c.request("get:/api/log")
-        d = json.loads(r.content)
+        d = json.loads(r.body)
         assert d["log"][0]["request"]["clientcert"]["keyinfo"]
 
     def test_http2_without_ssl(self):

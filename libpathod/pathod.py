@@ -212,7 +212,7 @@ class PathodHandler(tcp.BaseHandler):
                 spec = anchor_gen.next()
 
                 if self.use_http2 and isinstance(spec, language.http2.Response):
-                    spec.stream_id = stream_id
+                    spec.stream_id = req.stream_id
 
                 lg("crafting spec: %s" % spec)
                 nexthandler, retlog["response"] = self.http_serve_crafted(

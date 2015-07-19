@@ -62,7 +62,7 @@ class DaemonTests(object):
 
     def getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
-        return requests.get(
+        resp = requests.get(
             "%s://localhost:%s/%s" % (
                 scheme,
                 self.d.port,
@@ -71,9 +71,13 @@ class DaemonTests(object):
             verify=False,
             params=params
         )
+        resp.body = resp.content
+        return resp
 
     def get(self, spec):
-        return requests.get(self.d.p(spec), verify=False)
+        resp = requests.get(self.d.p(spec), verify=False)
+        resp.body = resp.content
+        return resp
 
     def pathoc(
         self,

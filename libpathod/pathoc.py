@@ -417,7 +417,7 @@ class Pathoc(tcp.TCPClient):
             finally:
                 if resp:
                     lg("<< %s %s: %s bytes" % (
-                        resp.status_code, utils.xrepr(resp.msg), len(resp.content)
+                        resp.status_code, utils.xrepr(resp.msg), len(resp.body)
                     ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()

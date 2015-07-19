@@ -29,7 +29,7 @@ class Test:
 
         # Check the returned data
         assert r.status_code == 200
-        assert len(r.content) == 100
+        assert len(r.body) == 100
 
         # Check pathod's internal log
         log = self.d.last_log()["request"]

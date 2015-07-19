@@ -7,7 +7,7 @@ class TestApp(tutils.DaemonTests):
     def test_index(self):
         r = self.getpath("/")
         assert r.status_code == 200
-        assert r.content
+        assert r.body
 
     def test_about(self):
         r = self.getpath("/about")
@@ -38,48 +38,48 @@ class TestApp(tutils.DaemonTests):
     def test_response_preview(self):
         r = self.getpath("/response_preview", params=dict(spec="200"))
         assert r.status_code == 200
-        assert 'Response' in r.content
+        assert 'Response' in r.body
 
         r = self.getpath("/response_preview", params=dict(spec="foo"))
         assert r.status_code == 200
-        assert 'Error' in r.content
+        assert 'Error' in r.body
 
         r = self.getpath("/response_preview", params=dict(spec="200:b@100m"))
         assert r.status_code == 200
-        assert "too large" in r.content
+        assert "too large" in r.body
 
         r = self.getpath("/response_preview", params=dict(spec="200:b@5k"))
         assert r.status_code == 200
-        assert 'Response' in r.content
+        assert 'Response' in r.body
 
         r = self.getpath(
             "/response_preview",
             params=dict(
                 spec="200:b<nonexistent"))
         assert r.status_code == 200
-        assert 'File access denied' in r.content
+        assert 'File access denied' in r.body
 
         r = self.getpath("/response_preview", params=dict(spec="200:b<file"))
         assert r.status_code == 200
-        assert 'testfile' in r.content
+        assert 'testfile' in r.body
 
     def test_request_preview(self):
         r = self.getpath("/request_preview", params=dict(spec="get:/"))
         assert r.status_code == 200
-        assert 'Request' in r.content
+        assert 'Request' in r.body
 
         r = self.getpath("/request_preview", params=dict(spec="foo"))
         assert r.status_code == 200
-        assert 'Error' in r.content
+        assert 'Error' in r.body
 
         r = self.getpath("/request_preview", params=dict(spec="get:/:b@100m"))
         assert r.status_code == 200
-        assert "too large" in r.content
+        assert "too large" in r.body
 
         r = self.getpath("/request_preview", params=dict(spec="get:/:b@5k"))
         assert r.status_code == 200
-        assert 'Request' in r.content
+        assert 'Request' in r.body
 
         r = self.getpath("/request_preview", params=dict(spec=""))
         assert r.status_code == 200
-        assert 'empty spec' in r.content
+        assert 'empty spec' in r.body

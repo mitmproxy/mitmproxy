@@ -13,7 +13,7 @@ class HTTPProtocol:
     def make_error_response(self, reason, body):
         return language.http.make_error_response(reason, body)
 
-    def handle_http_app(self, method, path, headers, content, lg):
+    def handle_http_app(self, method, path, headers, body, lg):
         """
             Handle a request to the built-in app.
         """
@@ -25,7 +25,7 @@ class HTTPProtocol:
                 msg="Access denied: web interface disabled"
             )
         lg("app: %s %s" % (method, path))
-        req = wsgi.Request("http", method, path, headers, content)
+        req = wsgi.Request("http", method, path, headers, body)
         flow = wsgi.Flow(self.pathod_handler.address, req)
         sn = self.pathod_handler.connection.getsockname()
         a = wsgi.WSGIAdaptor(
