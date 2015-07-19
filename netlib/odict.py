@@ -20,6 +20,8 @@ class ODict(object):
     """
 
     def __init__(self, lst=None):
+        if isinstance(lst, ODict):
+            lst = lst.items()
         self.lst = lst or []
 
     def _kconv(self, s):

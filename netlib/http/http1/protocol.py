@@ -380,7 +380,7 @@ class HTTP1Protocol(object):
                     "Bad HTTP request line: %s" % repr(request_line)
                 )
             host, port, _ = r
-            path = None
+            return http.ConnectRequest(host, port)
         else:
             form_in = "absolute"
             r = self.parse_init_proxy(request_line)

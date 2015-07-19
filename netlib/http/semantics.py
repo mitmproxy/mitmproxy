@@ -19,7 +19,7 @@ class Request(object):
         path,
         httpversion,
         headers,
-        content,
+        body,
     ):
         self.form_in = form_in
         self.method = method
@@ -29,13 +29,28 @@ class Request(object):
         self.path = path
         self.httpversion = httpversion
         self.headers = headers
-        self.content = content
+        self.body = body
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
     def __repr__(self):
         return "Request(%s - %s, %s)" % (self.method, self.host, self.path)
+
+
+class ConnectRequest(Request):
+    def __init__(self, host, port):
+        super(ConnectRequest, self).__init__(
+            form_in="authority",
+            method="CONNECT",
+            scheme="",
+            host=host,
+            port=port,
+            path="",
+            httpversion="",
+            headers="",
+            body="",
+            )
 
 
 class Response(object):
@@ -46,14 +61,14 @@ class Response(object):
         status_code,
         msg,
         headers,
-        content,
+        body,
         sslinfo=None,
     ):
         self.httpversion = httpversion
         self.status_code = status_code
         self.msg = msg
         self.headers = headers
-        self.content = content
+        self.body = body
         self.sslinfo = sslinfo
 
     def __eq__(self, other):
@@ -61,7 +76,6 @@ class Response(object):
 
     def __repr__(self):
         return "Response(%s - %s)" % (self.status_code, self.msg)
-
 
 
 def is_valid_port(port):
