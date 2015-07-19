@@ -181,29 +181,29 @@ def test_expected_http_body_size():
 
 
 def test_parse_http_protocol():
-    assert HTTP1Protocol.parse_http_protocol("HTTP/1.1") == (1, 1)
-    assert HTTP1Protocol.parse_http_protocol("HTTP/0.0") == (0, 0)
-    assert not HTTP1Protocol.parse_http_protocol("HTTP/a.1")
-    assert not HTTP1Protocol.parse_http_protocol("HTTP/1.a")
-    assert not HTTP1Protocol.parse_http_protocol("foo/0.0")
-    assert not HTTP1Protocol.parse_http_protocol("HTTP/x")
+    assert HTTP1Protocol._parse_http_protocol("HTTP/1.1") == (1, 1)
+    assert HTTP1Protocol._parse_http_protocol("HTTP/0.0") == (0, 0)
+    assert not HTTP1Protocol._parse_http_protocol("HTTP/a.1")
+    assert not HTTP1Protocol._parse_http_protocol("HTTP/1.a")
+    assert not HTTP1Protocol._parse_http_protocol("foo/0.0")
+    assert not HTTP1Protocol._parse_http_protocol("HTTP/x")
 
 
 def test_parse_init_connect():
-    assert HTTP1Protocol.parse_init_connect("CONNECT host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol.parse_init_connect("C\xfeONNECT host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol.parse_init_connect("CONNECT \0host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol.parse_init_connect("CONNECT host.com:444444 HTTP/1.0")
-    assert not HTTP1Protocol.parse_init_connect("bogus")
-    assert not HTTP1Protocol.parse_init_connect("GET host.com:443 HTTP/1.0")
-    assert not HTTP1Protocol.parse_init_connect("CONNECT host.com443 HTTP/1.0")
-    assert not HTTP1Protocol.parse_init_connect("CONNECT host.com:443 foo/1.0")
-    assert not HTTP1Protocol.parse_init_connect("CONNECT host.com:foo HTTP/1.0")
+    assert HTTP1Protocol._parse_init_connect("CONNECT host.com:443 HTTP/1.0")
+    assert not HTTP1Protocol._parse_init_connect("C\xfeONNECT host.com:443 HTTP/1.0")
+    assert not HTTP1Protocol._parse_init_connect("CONNECT \0host.com:443 HTTP/1.0")
+    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com:444444 HTTP/1.0")
+    assert not HTTP1Protocol._parse_init_connect("bogus")
+    assert not HTTP1Protocol._parse_init_connect("GET host.com:443 HTTP/1.0")
+    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com443 HTTP/1.0")
+    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com:443 foo/1.0")
+    assert not HTTP1Protocol._parse_init_connect("CONNECT host.com:foo HTTP/1.0")
 
 
 def test_parse_init_proxy():
     u = "GET http://foo.com:8888/test HTTP/1.1"
-    m, s, h, po, pa, httpversion = HTTP1Protocol.parse_init_proxy(u)
+    m, s, h, po, pa, httpversion = HTTP1Protocol._parse_init_proxy(u)
     assert m == "GET"
     assert s == "http"
     assert h == "foo.com"
@@ -212,27 +212,27 @@ def test_parse_init_proxy():
     assert httpversion == (1, 1)
 
     u = "G\xfeET http://foo.com:8888/test HTTP/1.1"
-    assert not HTTP1Protocol.parse_init_proxy(u)
+    assert not HTTP1Protocol._parse_init_proxy(u)
 
-    assert not HTTP1Protocol.parse_init_proxy("invalid")
-    assert not HTTP1Protocol.parse_init_proxy("GET invalid HTTP/1.1")
-    assert not HTTP1Protocol.parse_init_proxy("GET http://foo.com:8888/test foo/1.1")
+    assert not HTTP1Protocol._parse_init_proxy("invalid")
+    assert not HTTP1Protocol._parse_init_proxy("GET invalid HTTP/1.1")
+    assert not HTTP1Protocol._parse_init_proxy("GET http://foo.com:8888/test foo/1.1")
 
 
 def test_parse_init_http():
     u = "GET /test HTTP/1.1"
-    m, u, httpversion = HTTP1Protocol.parse_init_http(u)
+    m, u, httpversion = HTTP1Protocol._parse_init_http(u)
     assert m == "GET"
     assert u == "/test"
     assert httpversion == (1, 1)
 
     u = "G\xfeET /test HTTP/1.1"
-    assert not HTTP1Protocol.parse_init_http(u)
+    assert not HTTP1Protocol._parse_init_http(u)
 
-    assert not HTTP1Protocol.parse_init_http("invalid")
-    assert not HTTP1Protocol.parse_init_http("GET invalid HTTP/1.1")
-    assert not HTTP1Protocol.parse_init_http("GET /test foo/1.1")
-    assert not HTTP1Protocol.parse_init_http("GET /test\xc0 HTTP/1.1")
+    assert not HTTP1Protocol._parse_init_http("invalid")
+    assert not HTTP1Protocol._parse_init_http("GET invalid HTTP/1.1")
+    assert not HTTP1Protocol._parse_init_http("GET /test foo/1.1")
+    assert not HTTP1Protocol._parse_init_http("GET /test\xc0 HTTP/1.1")
 
 
 class TestReadHeaders:
@@ -367,8 +367,8 @@ def test_read_response():
 def test_get_request_line():
     data = "\nfoo"
     p = mock_protocol(data)
-    assert p.get_request_line() == "foo"
-    assert not p.get_request_line()
+    assert p._get_request_line() == "foo"
+    assert not p._get_request_line()
 
 
 class TestReadRequest():
