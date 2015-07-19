@@ -122,26 +122,25 @@ class PathodHandler(tcp.BaseHandler):
             log: A dictionary, or None
         """
         with logger.ctx() as lg:
-            if self.use_http2:
+            try:
                 req = self.protocol.read_request()
-                method = req.method
-                path = req.path
-                headers = odict.ODictCaseless(req.headers)
-                httpversion = req.httpversion
-                stream_id = req.stream_id
-            else:
-                req = self.protocol.read_request(lg)
-                if 'next_handle' in req:
-                    return req['next_handle']
-                if 'errors' in req:
-                    return None, req['errors']
-                if 'method' not in req or 'path' not in req:
-                    return None, None
-                method = req['method']
-                path = req['path']
-                headers = req['headers']
-                body = req['body']
-                httpversion = req['httpversion']
+            except http.HttpError as s:
+                s = str(s)
+                lg(s)
+                return None, dict(type="error", msg=s)
+
+            if isinstance(req, http.EmptyRequest):
+                return None, None
+
+            if isinstance(req, http.ConnectRequest):
+                print([req.host, req.port, req.path])
+                return self.protocol.handle_http_connect([req.host, req.port, req.path], lg)
+
+            method = req.method
+            path = req.path
+            httpversion = req.httpversion
+            headers = odict.ODictCaseless(req.headers)
+            body = req.body
 
             clientcert = None
             if self.clientcert:

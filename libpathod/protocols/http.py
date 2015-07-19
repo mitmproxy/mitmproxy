@@ -68,46 +68,5 @@ class HTTPProtocol:
                 return None, dict(type="error", msg=s)
         return self.pathod_handler.handle_http_request, None
 
-    def read_request(self, lg):
-        line = self.wire_protocol.get_request_line()
-        if not line:
-            # Normal termination
-            return dict()
-
-        m = utils.MemBool()
-        if m(self.wire_protocol.parse_init_connect(line)):
-            return dict(next_handle=self.handle_http_connect(m.v, lg))
-        elif m(self.wire_protocol.parse_init_proxy(line)):
-            method, _, _, _, path, httpversion = m.v
-        elif m(self.wire_protocol.parse_init_http(line)):
-            method, path, httpversion = m.v
-        else:
-            s = "Invalid first line: %s" % repr(line)
-            lg(s)
-            return dict(errors=dict(type="error", msg=s))
-
-        headers = self.wire_protocol.read_headers()
-        if headers is None:
-            s = "Invalid headers"
-            lg(s)
-            return dict(errors=dict(type="error", msg=s))
-
-        try:
-            body = self.wire_protocol.read_http_body(
-                headers,
-                None,
-                method,
-                None,
-                True,
-            )
-        except http.HttpError as s:
-            s = str(s)
-            lg(s)
-            return dict(errors=dict(type="error", msg=s))
-
-        return dict(
-            method=method,
-            path=path,
-            headers=headers,
-            body=body,
-            httpversion=httpversion)
+    def read_request(self, lg=None):
+        return self.wire_protocol.read_request(allow_empty=True)
