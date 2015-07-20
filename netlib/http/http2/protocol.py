@@ -2,7 +2,7 @@ from __future__ import (absolute_import, print_function, division)
 import itertools
 
 from hpack.hpack import Encoder, Decoder
-from netlib import http, utils
+from netlib import http, utils, odict
 from . import frame
 
 
@@ -189,7 +189,8 @@ class HTTP2Protocol(object):
     def read_response(self, *args):
         stream_id, headers, body = self._receive_transmission()
 
-        response = http.Response("HTTP/2", headers[':status'], "", headers, body)
+        status = headers[':status'][0]
+        response = http.Response("HTTP/2", status, "", headers, body)
         response.stream_id = stream_id
         return response
 
@@ -197,11 +198,11 @@ class HTTP2Protocol(object):
         stream_id, headers, body = self._receive_transmission()
 
         form_in = ""
-        method = headers.get(':method', '')
-        scheme = headers.get(':scheme', '')
-        host = headers.get(':host', '')
+        method = headers.get(':method', [''])[0]
+        scheme = headers.get(':scheme', [''])[0]
+        host = headers.get(':host', [''])[0]
         port = ''  # TODO: parse port number?
-        path = headers.get(':path', '')
+        path = headers.get(':path', [''])[0]
 
         request = http.Request(form_in, method, scheme, host, port, path, "HTTP/2", headers, body)
         request.stream_id = stream_id
@@ -233,15 +234,17 @@ class HTTP2Protocol(object):
                     break
             # TODO: implement window update & flow
 
-        headers = {}
+        headers = odict.ODictCaseless()
         for header, value in self.decoder.decode(header_block_fragment):
-            headers[header] = value
+            headers.add(header, value)
 
         return stream_id, headers, body
 
     def create_response(self, code, stream_id=None, headers=None, body=None):
         if headers is None:
             headers = []
+        if isinstance(headers, odict.ODict):
+            headers = headers.items()
 
         headers = [(b':status', bytes(str(code)))] + headers
 

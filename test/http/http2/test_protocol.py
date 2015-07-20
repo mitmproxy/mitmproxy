@@ -1,6 +1,6 @@
 import OpenSSL
 
-from netlib import tcp
+from netlib import tcp, odict
 from netlib.http import http2
 from netlib.http.http2.frame import *
 from ... import tutils, tservers
@@ -256,7 +256,7 @@ class TestReadResponse(tservers.ServerTestBase):
         assert resp.httpversion == "HTTP/2"
         assert resp.status_code == "200"
         assert resp.msg == ""
-        assert resp.headers == {':status': '200', 'etag': 'foobar'}
+        assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
         assert resp.body == b'foobar'
 
 
@@ -282,7 +282,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         assert resp.httpversion == "HTTP/2"
         assert resp.status_code == "200"
         assert resp.msg == ""
-        assert resp.headers == {':status': '200', 'etag': 'foobar'}
+        assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
         assert resp.body == b''
 
 
@@ -307,7 +307,7 @@ class TestReadRequest(tservers.ServerTestBase):
         resp = protocol.read_request()
 
         assert resp.stream_id
-        assert resp.headers == {':method': 'GET', ':path': '/', ':scheme': 'https'}
+        assert resp.headers.lst == [[u':method', u'GET'], [u':path', u'/'], [u':scheme', u'https']]
         assert resp.body == b'foobar'
 
 
