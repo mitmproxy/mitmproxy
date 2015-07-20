@@ -138,7 +138,7 @@ class PathodHandler(tcp.BaseHandler):
             method = req.method
             path = req.path
             httpversion = req.httpversion
-            headers = odict.ODictCaseless(req.headers)
+            headers = req.headers
             body = req.body
 
             clientcert = None
