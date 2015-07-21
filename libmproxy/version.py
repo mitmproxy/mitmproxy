@@ -1,4 +1,6 @@
-IVERSION = (0, 12, 2)
+from __future__ import (absolute_import, print_function, division)
+
+IVERSION = (0, 13)
 VERSION = ".".join(str(i) for i in IVERSION)
 MINORVERSION = ".".join(str(i) for i in IVERSION[:2])
 NAME = "mitmproxy"
