@@ -1,2 +1,0 @@
-#!/bin/sh
-git shortlog -n -s

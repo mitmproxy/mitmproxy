@@ -8,14 +8,14 @@
 - Ensure that the website style assets have been compiled for production, and
 synced to the docs.
 
-- Render the docs:
-    cshape doc-src doc
+- Render the docs, update CONTRIBUTORS file:
+    ./release/build.py docs contributors
 
 - Run the test release, make sure the output is sensible
-    ./release/test-release
+    ./release/build.py release
 
 - Build the OSX binaries
-    - Follow instructions in osxbinaries
+    - Follow instructions in osx-binaries
     - Move to download dir:
         mv ./tmp/osx-mitmproxy-VERSION.tar.gz ~/mitmproxy/www.mitmproxy.org/src/download
 
@@ -28,9 +28,11 @@ synced to the docs.
 
 - Upload to pypi for each project:
 
-    python ./setup.py sdist upload
+    ./release/build.py upload
 
 - Now bump the version number to be ready for the next cycle:
+
+    TODO: We just shipped 0.12 - do we bump to 0.12.1 or 0.13 now?
 
     mitmproxy/libmproxy/version.py
     netlib/netlib/version.py
