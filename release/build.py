@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from os.path import dirname, realpath, join
+from os.path import dirname, realpath, join, exists, normpath
 from os import chdir, mkdir, getcwd
 import os
 import shutil
 import subprocess
 import tempfile
 import glob
+import re
 from shlex import split
 from contextlib import contextmanager
 import click
@@ -18,26 +19,21 @@ if os.name == "nt":
 else:
     venv_bin = "bin"
 
-_root_dir = join(dirname(realpath(__file__)), "..", "..")
-projects = ("netlib", "pathod", "mitmproxy")
-dirs = {x: join(_root_dir, x) for x in projects}
-dirs["root"] = _root_dir
-dirs["dist"] = join(dirs["mitmproxy"], "dist")
+root_dir = join(dirname(realpath(__file__)), "..", "..")
+mitmproxy_dir = join(root_dir, "mitmproxy")
+dist_dir = join(mitmproxy_dir, "dist")
+test_venv_dir = join(root_dir, "venv.mitmproxy-release")
 
+projects = ("netlib", "pathod", "mitmproxy")
 tools = ["mitmweb", "mitmdump", "pathod", "pathoc"]
 if os.name != "nt":
     tools.append("mitmproxy")
 
-
-# Python 3: replace with tempfile.TemporaryDirectory
-@contextmanager
-def tmpdir(*args, **kwargs):
-    orig_workdir = os.getcwd()
-    temp_workdir = tempfile.mkdtemp(*args, **kwargs)
-    yield temp_workdir
-    os.chdir(orig_workdir)
-    shutil.rmtree(temp_workdir)
-
+version_files = (join(root_dir, x) for x in (
+    "mitmproxy/libmproxy/version.py",
+    "pathod/libpathod/version.py",
+    "netlib/netlib/version.py"
+))
 
 @click.group(chain=True)
 def cli():
@@ -51,7 +47,7 @@ def cli():
 def update_contributors():
     print("Updating CONTRIBUTORS.md...")
     contributors = subprocess.check_output(split("git shortlog -n -s"))
-    with open(join(dirs["mitmproxy"], "CONTRIBUTORS"), "w") as f:
+    with open(join(mitmproxy_dir, "CONTRIBUTORS"), "w") as f:
         f.write(contributors)
 
 
@@ -60,50 +56,83 @@ def render_docs():
     print("Rendering the docs...")
     subprocess.check_call([
         "cshape",
-        join(dirs["mitmproxy"], "doc-src"),
-        join(dirs["mitmproxy"], "doc")
+        join(mitmproxy_dir, "doc-src"),
+        join(mitmproxy_dir, "doc")
     ])
 
 
-@cli.command("release")
-def build_release():
+@cli.command("test")
+@click.pass_context
+def test(ctx):
+    if not exists(dist_dir):
+        ctx.invoke(release)
+
     # Make sure that the regular python installation is not on the python path!
     os.environ["PYTHONPATH"] = ""
 
-    with tmpdir("mitmproxy_release") as tmp:
+    print("Creating virtualenv for test install...")
+    if exists(test_venv_dir):
+        shutil.rmtree(test_venv_dir)
+    subprocess.check_call(["virtualenv", "-q", test_venv_dir])
 
-        print("Building release...")
-        print("Temp directory: %s" % tmp)
+    pip = join(test_venv_dir, venv_bin, "pip")
+    chdir(dist_dir)
+    for project in projects:
+        print("Installing %s..." % project)
+        dist = glob.glob("./%s*" % project)[0]
+        subprocess.check_call([pip, "install", "-q", dist])
 
-        for project in projects:
-            print("Creating %s source distribution..." % project)
-            print(dirs[project])
-            subprocess.check_call(["python", "./setup.py", "-q", "sdist", "--dist-dir", tmp, "--formats=gztar"], cwd=dirs[project])
+    print("Running binaries...")
+    for tool in tools:
+        tool = join(test_venv_dir, venv_bin, tool)
+        print(tool)
+        print(subprocess.check_output([tool, "--version"]))
 
-        print("Creating virtualenv for test install...")
-        venv_dir = join(tmp, "venv")
-        subprocess.check_call(["virtualenv", "-q", venv_dir])
+    print("Virtualenv available for further testing:")
+    print(normpath(join(test_venv_dir, venv_bin, "activate")))
 
-        pip = join(venv_dir, venv_bin, "pip")
-        chdir(tmp)
-        for project in projects:
-            print("Installing %s..." % project)
-            dist = glob.glob("./%s*" % project)[0]
-            subprocess.check_call([pip, "install", "-q", dist])
 
-        print("Running binaries...")
-        for tool in tools:
-            tool = join(venv_dir, venv_bin, tool)
-            print(tool)
-            print(subprocess.check_output([tool, "--version"]))
+@cli.command("release")
+def release():
+    os.environ["PYTHONPATH"] = ""
 
-        shutil.rmtree(venv_dir)
-        shutil.rmtree(dirs["dist"])
-        shutil.copytree(tmp, dirs["dist"])
+    print("Building release...")
 
-        # TODO: Use the output of this step for further processing, i.e. test and then uplaod using twine
-        # https://packaging.python.org/en/latest/distributing.html#upload-your-distributions
-        # https://github.com/pypa/twine/issues/116
+    if exists(dist_dir):
+        shutil.rmtree(dist_dir)
+    for project in projects:
+        print("Creating %s source distribution..." % project)
+        subprocess.check_call(
+            ["python", "./setup.py", "-q", "sdist", "--dist-dir", dist_dir, "--formats=gztar"],
+            cwd=join(root_dir, project)
+        )
+
+
+@cli.command("set-version")
+@click.argument('version')
+def set_version(version):
+    version = ", ".join(version.split("."))
+    for version_file in version_files:
+        with open(version_file, "rb") as f:
+            content = f.read()
+        new_content = re.sub(r"IVERSION\s*=\s*\([\d,\s]+\)", "IVERSION = (%s)" % version, content)
+        with open(version_file, "wb") as f:
+            f.write(new_content)
+
+
+@cli.command("add-tag")
+@click.argument('version')
+def git_tag(version):
+    for project in projects:
+        print("Tagging %s..." % project)
+        subprocess.check_call(
+            ["git", "tag", version],
+            cwd=join(root_dir, project)
+        )
+        subprocess.check_call(
+            ["git", "push", "--tags"],
+            cwd=join(root_dir, project)
+        )
 
 
 @cli.command("upload")
@@ -118,8 +147,9 @@ def upload_release(username, password, repository):
         "-u", username,
         "-p", password,
         "-r", repository,
-        "%s/*" % dirs["dist"]
+        "%s/*" % dist_dir
     ])
+
 
 if __name__ == "__main__":
     cli()

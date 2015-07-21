@@ -19,16 +19,19 @@ synced to the docs.
     - Move to download dir:
         mv ./tmp/osx-mitmproxy-VERSION.tar.gz ~/mitmproxy/www.mitmproxy.org/src/download
 
-- Build the sources for each project:
-    python ./setup.py sdist
-    mv ./dist/FILE ~/mitmproxy/www.mitmproxy.org/src/download
+- Move all source distributions from mitmproxy's dist folder to the server:
+    mv ./dist/* ~/mitmproxy/www.mitmproxy.org/src/download
 
 - Tag with the version number, and do:
     git push --tags
+  Tag and push v0.12 for all projects:
+    ./release/build.py tag v0.12
 
-- Upload to pypi for each project:
+- Upload to pypi:
 
     ./release/build.py upload
+
+  Be careful: Pypi requires you to bump the version number if you want to do any further changes.
 
 - Now bump the version number to be ready for the next cycle:
 
