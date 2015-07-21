@@ -34,7 +34,7 @@ def version_check(
         print(
             "You are using an outdated version of pyOpenSSL:"
             " mitmproxy requires pyOpenSSL %s or greater." %
-            pyopenssl_min_version,
+            str(pyopenssl_min_version),
             file=fp
         )
         # Some users apparently have multiple versions of pyOpenSSL installed.
