@@ -85,7 +85,7 @@ class PathodHandler(tcp.BaseHandler):
         self.use_http2 = False
         self.http2_framedump = http2_framedump
 
-    def _handle_sni(self, connection):
+    def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
     def http_serve_crafted(self, crafted, logctx):
@@ -132,8 +132,8 @@ class PathodHandler(tcp.BaseHandler):
             if isinstance(req, http.EmptyRequest):
                 return None, None
 
-            if isinstance(req, http.ConnectRequest):
-                return self.protocol.handle_http_connect([req.host, req.port, req.path], lg)
+            if req.method == 'CONNECT':
+                return self.protocol.handle_http_connect([req.host, req.port, req.httpversion], lg)
 
             method = req.method
             path = req.path
@@ -239,7 +239,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.convert_to_ssl(
                     cert,
                     key,
-                    handle_sni=self._handle_sni,
+                    handle_sni=self.handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.ssl_version,

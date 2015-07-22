@@ -56,7 +56,7 @@ class HTTPProtocol:
                 self.pathod_handler.convert_to_ssl(
                     cert,
                     key,
-                    handle_sni=self.pathod_handler._handle_sni,
+                    handle_sni=self.pathod_handler.handle_sni,
                     request_client_cert=self.pathod_handler.server.ssloptions.request_client_cert,
                     cipher_list=self.pathod_handler.server.ssloptions.ciphers,
                     method=self.pathod_handler.server.ssloptions.ssl_version,
