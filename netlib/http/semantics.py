@@ -5,7 +5,7 @@ import string
 import sys
 import urlparse
 
-from .. import utils
+from .. import utils, odict
 
 class Request(object):
 
@@ -37,6 +37,10 @@ class Request(object):
     def __repr__(self):
         return "Request(%s - %s, %s)" % (self.method, self.host, self.path)
 
+    @property
+    def content(self):
+        return self.body
+
 
 class EmptyRequest(Request):
     def __init__(self):
@@ -47,22 +51,8 @@ class EmptyRequest(Request):
             host="",
             port="",
             path="",
-            httpversion="",
-            headers="",
-            body="",
-            )
-
-class ConnectRequest(Request):
-    def __init__(self, host, port):
-        super(ConnectRequest, self).__init__(
-            form_in="authority",
-            method="CONNECT",
-            scheme="",
-            host=host,
-            port=port,
-            path="",
-            httpversion="",
-            headers="",
+            httpversion=(0, 0),
+            headers=odict.ODictCaseless(),
             body="",
             )
 
@@ -90,6 +80,10 @@ class Response(object):
 
     def __repr__(self):
         return "Response(%s - %s)" % (self.status_code, self.msg)
+
+    @property
+    def content(self):
+        return self.body
 
 
 def is_valid_port(port):

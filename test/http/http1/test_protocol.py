@@ -8,12 +8,9 @@ from ... import tutils, tservers
 
 
 def mock_protocol(data='', chunked=False):
-    class TCPHandlerMock(object):
-        pass
-    tcp_handler = TCPHandlerMock()
-    tcp_handler.rfile = cStringIO.StringIO(data)
-    tcp_handler.wfile = cStringIO.StringIO()
-    return HTTP1Protocol(tcp_handler)
+    rfile = cStringIO.StringIO(data)
+    wfile = cStringIO.StringIO()
+    return HTTP1Protocol(rfile=rfile, wfile=wfile)
 
 
 

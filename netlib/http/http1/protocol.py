@@ -9,10 +9,18 @@ from netlib import odict, utils, tcp, http
 from .. import status_codes
 from ..exceptions import *
 
+class TCPHandler(object):
+    def __init__(self, rfile, wfile=None):
+        self.rfile = rfile
+        self.wfile = wfile
+
 class HTTP1Protocol(object):
 
-    def __init__(self, tcp_handler):
-        self.tcp_handler = tcp_handler
+    def __init__(self, tcp_handler=None, rfile=None, wfile=None):
+        if tcp_handler:
+            self.tcp_handler = tcp_handler
+        else:
+            self.tcp_handler = TCPHandler(rfile, wfile)
 
 
     def read_request(self, include_body=True, body_size_limit=None, allow_empty=False):
@@ -31,7 +39,7 @@ class HTTP1Protocol(object):
         Raises:
             HttpError: If the input is invalid.
         """
-        httpversion, host, port, scheme, method, path, headers, content = (
+        httpversion, host, port, scheme, method, path, headers, body = (
             None, None, None, None, None, None, None, None)
 
         request_line = self._get_request_line()
@@ -56,7 +64,7 @@ class HTTP1Protocol(object):
                     400,
                     "Bad HTTP request line: %s" % repr(request_line)
                 )
-        elif method.upper() == 'CONNECT':
+        elif method == 'CONNECT':
             form_in = "authority"
             r = self._parse_init_connect(request_line)
             if not r:
@@ -64,8 +72,8 @@ class HTTP1Protocol(object):
                     400,
                     "Bad HTTP request line: %s" % repr(request_line)
                 )
-            host, port, _ = r
-            return http.ConnectRequest(host, port)
+            host, port, httpversion = r
+            path = None
         else:
             form_in = "absolute"
             r = self._parse_init_proxy(request_line)
@@ -81,7 +89,7 @@ class HTTP1Protocol(object):
             raise HttpError(400, "Invalid headers")
 
         expect_header = headers.get_first("expect", "").lower()
-        if expect_header == "100-continue" and httpversion >= (1, 1):
+        if expect_header == "100-continue" and httpversion == (1, 1):
             self.tcp_handler.wfile.write(
                 'HTTP/1.1 100 Continue\r\n'
                 '\r\n'
@@ -90,7 +98,7 @@ class HTTP1Protocol(object):
             del headers['expect']
 
         if include_body:
-            content = self.read_http_body(
+            body = self.read_http_body(
                 headers,
                 body_size_limit,
                 method,
@@ -107,7 +115,7 @@ class HTTP1Protocol(object):
             path,
             httpversion,
             headers,
-            content
+            body
         )
 
 
