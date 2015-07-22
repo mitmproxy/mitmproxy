@@ -167,12 +167,12 @@ class ConnectionHandler:
             self.channel.tell("serverdisconnect", self)
         self.server_conn = None
 
-    def set_server_address(self, address):
+    def set_server_address(self, addr):
         """
         Sets a new server address with the given priority.
         Does not re-establish either connection or SSL handshake.
         """
-        address = tcp.Address.wrap(address)
+        address = tcp.Address.wrap(addr)
 
         # Don't reconnect to the same destination.
         if self.server_conn and self.server_conn.address == address:
@@ -309,15 +309,15 @@ class ConnectionHandler:
         self.client_conn.finish()
 
     def log(self, msg, level, subs=()):
-        msg = [
+        full_msg = [
             "%s:%s: %s" %
             (self.client_conn.address.host,
              self.client_conn.address.port,
              msg)]
         for i in subs:
-            msg.append("  -> " + i)
-        msg = "\n".join(msg)
-        self.channel.tell("log", Log(msg, level))
+            full_msg.append("  -> " + i)
+        full_msg = "\n".join(full_msg)
+        self.channel.tell("log", Log(full_msg, level))
 
     def find_cert(self):
         host = self.server_conn.address.host
