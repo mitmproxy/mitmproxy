@@ -305,6 +305,10 @@ class HTTPRequest(HTTPMessage):
         is_replay=bool
     )
 
+    @property
+    def body(self):
+        return self.content
+
     @classmethod
     def from_state(cls, state):
         f = cls(
@@ -356,11 +360,10 @@ class HTTPRequest(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        req = http.http1.read_request(
-            rfile,
+        protocol = http.http1.HTTP1Protocol(rfile=rfile, wfile=wfile)
+        req = protocol.read_request(
             include_body = include_body,
             body_size_limit = body_size_limit,
-            wfile = wfile
         )
 
         if hasattr(rfile, "first_byte_timestamp"):
@@ -377,7 +380,7 @@ class HTTPRequest(HTTPMessage):
             req.path,
             req.httpversion,
             req.headers,
-            req.content,
+            req.body,
             timestamp_start,
             timestamp_end
         )
@@ -726,6 +729,12 @@ class HTTPResponse(HTTPMessage):
         msg=str
     )
 
+
+    @property
+    def body(self):
+        return self.content
+
+
     @classmethod
     def from_state(cls, state):
         f = cls(None, None, None, None, None)
@@ -762,11 +771,12 @@ class HTTPResponse(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        resp = http.http1.read_response(
-            rfile,
+        protocol = http.http1.HTTP1Protocol(rfile=rfile)
+        resp = protocol.read_response(
             request_method,
             body_size_limit,
-            include_body=include_body)
+            include_body=include_body
+        )
 
         if hasattr(rfile, "first_byte_timestamp"):
             # more accurate timestamp_start
@@ -782,7 +792,7 @@ class HTTPResponse(HTTPMessage):
             resp.status_code,
             resp.msg,
             resp.headers,
-            resp.content,
+            resp.body,
             timestamp_start,
             timestamp_end
         )
@@ -1046,7 +1056,8 @@ class HTTPHandler(ProtocolHandler):
                 self.c.server_conn.send(request_raw)
                 # Only get the headers at first...
                 flow.response = HTTPResponse.from_stream(
-                    self.c.server_conn.rfile, flow.request.method,
+                    self.c.server_conn.rfile,
+                    flow.request.method,
                     body_size_limit=self.c.config.body_size_limit,
                     include_body=False
                 )
@@ -1083,10 +1094,13 @@ class HTTPHandler(ProtocolHandler):
             if flow.response.stream:
                 flow.response.content = CONTENT_MISSING
             else:
-                flow.response.content = http.http1.read_http_body(
-                    self.c.server_conn.rfile, flow.response.headers,
+                protocol = http.http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
+                flow.response.content = protocol.read_http_body(
+                    flow.response.headers,
                     self.c.config.body_size_limit,
-                    flow.request.method, flow.response.code, False
+                    flow.request.method,
+                    flow.response.code,
+                    False
                 )
         flow.response.timestamp_end = utils.timestamp()
 
@@ -1287,6 +1301,7 @@ class HTTPHandler(ProtocolHandler):
             if not request.host and flow.server_conn:
                 request.host, request.port = flow.server_conn.address.host, flow.server_conn.address.port
 
+
         # Now we can process the request.
         if request.form_in == "authority":
             if self.c.client_conn.ssl_established:
@@ -1420,8 +1435,8 @@ class HTTPHandler(ProtocolHandler):
             h = flow.response._assemble_head(preserve_transfer_encoding=True)
             self.c.client_conn.send(h)
 
-            chunks = http.http1.read_http_body_chunked(
-                self.c.server_conn.rfile,
+            protocol = http.http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
+            chunks = protocol.read_http_body_chunked(
                 flow.response.headers,
                 self.c.config.body_size_limit,
                 flow.request.method,
@@ -1443,15 +1458,18 @@ class HTTPHandler(ProtocolHandler):
             semantics. Returns True, if so.
         """
         close_connection = (
-            http.http1.connection_close(
+            http.http1.HTTP1Protocol.connection_close(
                 flow.request.httpversion,
-                flow.request.headers) or http.http1.connection_close(
+                flow.request.headers
+            ) or http.http1.HTTP1Protocol.connection_close(
                 flow.response.httpversion,
-                flow.response.headers) or http.http1.expected_http_body_size(
+                flow.response.headers
+            ) or http.http1.HTTP1Protocol.expected_http_body_size(
                 flow.response.headers,
                 False,
                 flow.request.method,
-                flow.response.code) == -1)
+                flow.response.code) == -1
+            )
         if close_connection:
             if flow.request.form_in == "authority" and flow.response.code == 200:
                 # Workaround for

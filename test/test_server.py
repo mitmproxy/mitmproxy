@@ -184,6 +184,9 @@ class TcpMixin:
 class AppMixin:
     def test_app(self):
         ret = self.app("/")
+        print(ret)
+        print(ret.status_code)
+        print(ret.content)
         assert ret.status_code == 200
         assert "mitmproxy" in ret.content
 
@@ -767,16 +770,15 @@ class TestStreamRequest(tservers.HTTPProxTest):
             (self.server.urlbase, spec))
         connection.send("\r\n")
 
-        resp = http.http1.read_response(fconn, "GET", None, include_body=False)
+        protocol = http.http1.HTTP1Protocol(rfile=fconn)
+        resp = protocol.read_response("GET", None, include_body=False)
 
         assert resp.headers["Transfer-Encoding"][0] == 'chunked'
         assert resp.status_code == 200
 
         chunks = list(
-            content for _,
-                        content,
-                        _ in http.http1.read_http_body_chunked(
-                fconn, resp.headers, None, "GET", 200, False))
+            content for _, content, _ in protocol.read_http_body_chunked(
+                resp.headers, None, "GET", 200, False))
         assert chunks == ["this", "isatest", ""]
 
         connection.close()
