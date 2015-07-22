@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 
 from os.path import dirname, realpath, join, exists, normpath
-from os import chdir, mkdir, getcwd
+from os import chdir
 import os
 import shutil
 import subprocess
-import tempfile
 import glob
 import re
 from shlex import split
-from contextlib import contextmanager
 import click
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -25,15 +23,16 @@ dist_dir = join(mitmproxy_dir, "dist")
 test_venv_dir = join(root_dir, "venv.mitmproxy-release")
 
 projects = ("netlib", "pathod", "mitmproxy")
-tools = ["mitmweb", "mitmdump", "pathod", "pathoc"]
-if os.name != "nt":
-    tools.append("mitmproxy")
+tools = ["mitmproxy", "mitmdump", "mitmweb", "pathod", "pathoc"]
+if os.name == "nt":
+    tools.remove("mitmproxy")
 
 version_files = (join(root_dir, x) for x in (
     "mitmproxy/libmproxy/version.py",
     "pathod/libpathod/version.py",
     "netlib/netlib/version.py"
 ))
+
 
 @click.group(chain=True)
 def cli():
@@ -44,15 +43,21 @@ def cli():
 
 
 @cli.command("contributors")
-def update_contributors():
+def contributors():
+    """
+    Update CONTRIBUTORS.md
+    """
     print("Updating CONTRIBUTORS.md...")
-    contributors = subprocess.check_output(split("git shortlog -n -s"))
+    contributors_data = subprocess.check_output(split("git shortlog -n -s"))
     with open(join(mitmproxy_dir, "CONTRIBUTORS"), "w") as f:
-        f.write(contributors)
+        f.write(contributors_data)
 
 
 @cli.command("docs")
-def render_docs():
+def docs():
+    """
+    Render the docs
+    """
     print("Rendering the docs...")
     subprocess.check_call([
         "cshape",
@@ -61,11 +66,65 @@ def render_docs():
     ])
 
 
+@cli.command("set-version")
+@click.argument('version')
+def set_version(version):
+    """
+    Update version information
+    """
+    print("Update versions...")
+    version = ", ".join(version.split("."))
+    for version_file in version_files:
+        print("Update %s..." % version_file)
+        with open(version_file, "rb") as f:
+            content = f.read()
+        new_content = re.sub(r"IVERSION\s*=\s*\([\d,\s]+\)", "IVERSION = (%s)" % version, content)
+        with open(version_file, "wb") as f:
+            f.write(new_content)
+
+
+@cli.command("git")
+@click.argument('args', nargs=-1, required=True)
+def git(args):
+    """
+    Run a git command on every project
+    """
+    args = ["git"] + list(args)
+    for project in projects:
+        print("%s> %s..." % (project, " ".join(args)))
+        subprocess.check_call(
+            args,
+            cwd=join(root_dir, project)
+        )
+
+
+@cli.command("sdist")
+def sdist():
+    """
+    Build a source distribution
+    """
+    # Make sure that the regular python installation is not on the python path!
+    os.environ["PYTHONPATH"] = ""
+
+    print("Building release...")
+    if exists(dist_dir):
+        shutil.rmtree(dist_dir)
+    for project in projects:
+        print("Creating %s source distribution..." % project)
+        subprocess.check_call(
+            ["python", "./setup.py", "-q", "sdist", "--dist-dir", dist_dir, "--formats=gztar"],
+            cwd=join(root_dir, project)
+        )
+
+
 @cli.command("test")
 @click.pass_context
 def test(ctx):
+    """
+    Test the source distribution
+    """
     if not exists(dist_dir):
-        ctx.invoke(release)
+        ctx.invoke(sdist)
 
     # Make sure that the regular python installation is not on the python path!
     os.environ["PYTHONPATH"] = ""
@@ -89,50 +148,7 @@ def test(ctx):
         print(subprocess.check_output([tool, "--version"]))
 
     print("Virtualenv available for further testing:")
-    print(normpath(join(test_venv_dir, venv_bin, "activate")))
-
-
-@cli.command("release")
-def release():
-    os.environ["PYTHONPATH"] = ""
-
-    print("Building release...")
-
-    if exists(dist_dir):
-        shutil.rmtree(dist_dir)
-    for project in projects:
-        print("Creating %s source distribution..." % project)
-        subprocess.check_call(
-            ["python", "./setup.py", "-q", "sdist", "--dist-dir", dist_dir, "--formats=gztar"],
-            cwd=join(root_dir, project)
-        )
-
-
-@cli.command("set-version")
-@click.argument('version')
-def set_version(version):
-    version = ", ".join(version.split("."))
-    for version_file in version_files:
-        with open(version_file, "rb") as f:
-            content = f.read()
-        new_content = re.sub(r"IVERSION\s*=\s*\([\d,\s]+\)", "IVERSION = (%s)" % version, content)
-        with open(version_file, "wb") as f:
-            f.write(new_content)
-
-
-@cli.command("add-tag")
-@click.argument('version')
-def git_tag(version):
-    for project in projects:
-        print("Tagging %s..." % project)
-        subprocess.check_call(
-            ["git", "tag", version],
-            cwd=join(root_dir, project)
-        )
-        subprocess.check_call(
-            ["git", "push", "--tags"],
-            cwd=join(root_dir, project)
-        )
+    print("source %s" % normpath(join(test_venv_dir, venv_bin, "activate")))
 
 
 @cli.command("upload")
@@ -140,6 +156,9 @@ def git_tag(version):
 @click.password_option(confirmation_prompt=False)
 @click.option('--repository', default="pypi")
 def upload_release(username, password, repository):
+    """
+    Upload source distributions to PyPI
+    """
     print("Uploading distributions...")
     subprocess.check_call([
         "twine",
@@ -150,6 +169,45 @@ def upload_release(username, password, repository):
         "%s/*" % dist_dir
     ])
 
+
+"""
+
+TODO: Fully automate build process.
+This skeleton is missing OSX builds and updating mitmproxy.org.
+
+
+@cli.command("wizard")
+@click.option('--version', prompt=True)
+@click.option('--username', prompt=True)
+@click.password_option(confirmation_prompt=False)
+@click.option('--repository', default="pypi")
+@click.option('--test/--no-test', default=True)
+@click.pass_context
+def wizard(ctx, version, username, password, repository, test):
+    ""
+    Interactive Release Wizard
+    ""
+
+    for project in projects:
+        if subprocess.check_output(["git", "status", "--porcelain"], cwd=join(root_dir, project)):
+            raise RuntimeError("%s repository is not clean." % project)
+
+    if test:
+        ctx.invoke(sdist)
+        ctx.invoke(test)
+        click.confirm("Please test the release now. Is it ok?", abort=True)
+
+    ctx.invoke(set_version, version=version)
+    ctx.invoke(docs)
+    ctx.invoke(contributors)
+
+    ctx.invoke(git, args=["commit", "-a", "-m", "bump version"])
+    ctx.invoke(git, args=["tag", "v" + version])
+    ctx.invoke(git, args=["push", "--tags"])
+    ctx.invoke(sdist)
+    ctx.invoke(upload_release, username=username, password=password, repository=repository)
+    click.echo("All done!")
+"""
 
 if __name__ == "__main__":
     cli()
