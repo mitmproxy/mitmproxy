@@ -422,7 +422,7 @@ class _Connection(object):
 
             context.set_verify(verify_options, verify_cert)
             if ca_path is None and ca_pemfile is None:
-                ca_path = certifi.where()
+                ca_pemfile = certifi.where()
             context.load_verify_locations(ca_pemfile, ca_path)
 
         # Workaround for
