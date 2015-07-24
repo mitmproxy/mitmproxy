@@ -184,9 +184,6 @@ class TcpMixin:
 class AppMixin:
     def test_app(self):
         ret = self.app("/")
-        print(ret)
-        print(ret.status_code)
-        print(ret.content)
         assert ret.status_code == 200
         assert "mitmproxy" in ret.content
 
