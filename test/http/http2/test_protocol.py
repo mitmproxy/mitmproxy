@@ -1,10 +1,9 @@
 import OpenSSL
 
-from netlib import http2
-from netlib import tcp
-from netlib.http2.frame import *
-from test import tutils
-from .. import tservers
+from netlib import tcp, odict
+from netlib.http import http2
+from netlib.http.http2.frame import *
+from ... import tutils, tservers
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -252,11 +251,13 @@ class TestReadResponse(tservers.ServerTestBase):
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c)
 
-        status, headers, body = protocol.read_response()
+        resp = protocol.read_response()
 
-        assert headers == {':status': '200', 'etag': 'foobar'}
-        assert status == "200"
-        assert body == b'foobar'
+        assert resp.httpversion == "HTTP/2"
+        assert resp.status_code == "200"
+        assert resp.msg == ""
+        assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
+        assert resp.body == b'foobar'
 
 
 class TestReadEmptyResponse(tservers.ServerTestBase):
@@ -275,11 +276,14 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c)
 
-        status, headers, body = protocol.read_response()
+        resp = protocol.read_response()
 
-        assert headers == {':status': '200', 'etag': 'foobar'}
-        assert status == "200"
-        assert body == b''
+        assert resp.stream_id
+        assert resp.httpversion == "HTTP/2"
+        assert resp.status_code == "200"
+        assert resp.msg == ""
+        assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
+        assert resp.body == b''
 
 
 class TestReadRequest(tservers.ServerTestBase):
@@ -300,11 +304,11 @@ class TestReadRequest(tservers.ServerTestBase):
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c, is_server=True)
 
-        stream_id, headers, body = protocol.read_request()
+        resp = protocol.read_request()
 
-        assert stream_id
-        assert headers == {':method': 'GET', ':path': '/', ':scheme': 'https'}
-        assert body == b'foobar'
+        assert resp.stream_id
+        assert resp.headers.lst == [[u':method', u'GET'], [u':path', u'/'], [u':scheme', u'https']]
+        assert resp.body == b'foobar'
 
 
 class TestCreateResponse():

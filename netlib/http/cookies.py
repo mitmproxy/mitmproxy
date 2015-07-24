@@ -1,3 +1,7 @@
+import re
+
+from .. import odict
+
 """
 A flexible module for cookie parsing and manipulation.
 
@@ -21,10 +25,6 @@ variants. Serialization follows RFC6265.
 
 # TODO
 # - Disallow LHS-only Cookie values
-
-import re
-
-import odict
 
 
 def _read_until(s, start, term):

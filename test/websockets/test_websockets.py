@@ -2,8 +2,10 @@ import os
 
 from nose.tools import raises
 
-from netlib import tcp, websockets, http
-from . import tutils, tservers
+from netlib import tcp, http, websockets
+from netlib.http.exceptions import *
+from netlib.http.http1 import HTTP1Protocol
+from .. import tutils, tservers
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):
@@ -12,6 +14,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         super(WebSocketsEchoHandler, self).__init__(
             connection, address, server
         )
+        self.protocol = websockets.WebsocketsProtocol()
         self.handshake_done = False
 
     def handle(self):
@@ -30,11 +33,14 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         frame.to_file(self.wfile)
 
     def handshake(self):
-        req = http.read_request(self.rfile)
-        key = websockets.check_client_handshake(req.headers)
+        http1_protocol = HTTP1Protocol(self)
 
-        self.wfile.write(http.response_preamble(101) + "\r\n")
-        headers = websockets.server_handshake_headers(key)
+        req = http1_protocol.read_request()
+        key = self.protocol.check_client_handshake(req.headers)
+
+        preamble = http1_protocol.response_preamble(101)
+        self.wfile.write(preamble + "\r\n")
+        headers = self.protocol.server_handshake_headers(key)
         self.wfile.write(headers.format() + "\r\n")
         self.wfile.flush()
         self.handshake_done = True
@@ -48,22 +54,25 @@ class WebSocketsClient(tcp.TCPClient):
 
     def __init__(self, address, source_address=None):
         super(WebSocketsClient, self).__init__(address, source_address)
+        self.protocol = websockets.WebsocketsProtocol()
         self.client_nonce = None
 
     def connect(self):
         super(WebSocketsClient, self).connect()
 
-        preamble = http.request_preamble("GET", "/")
+        http1_protocol = HTTP1Protocol(self)
+
+        preamble = http1_protocol.request_preamble("GET", "/")
         self.wfile.write(preamble + "\r\n")
-        headers = websockets.client_handshake_headers()
+        headers = self.protocol.client_handshake_headers()
         self.client_nonce = headers.get_first("sec-websocket-key")
         self.wfile.write(headers.format() + "\r\n")
         self.wfile.flush()
 
-        resp = http.read_response(self.rfile, "get", None)
-        server_nonce = websockets.check_server_handshake(resp.headers)
+        resp = http1_protocol.read_response("get", None)
+        server_nonce = self.protocol.check_server_handshake(resp.headers)
 
-        if not server_nonce == websockets.create_server_nonce(
+        if not server_nonce == self.protocol.create_server_nonce(
                 self.client_nonce):
             self.close()
 
@@ -77,6 +86,9 @@ class WebSocketsClient(tcp.TCPClient):
 
 class TestWebSockets(tservers.ServerTestBase):
     handler = WebSocketsEchoHandler
+
+    def __init__(self):
+        self.protocol = websockets.WebsocketsProtocol()
 
     def random_bytes(self, n=100):
         return os.urandom(n)
@@ -130,26 +142,29 @@ class TestWebSockets(tservers.ServerTestBase):
         assert websockets.Frame.from_bytes(bytes).to_bytes() == bytes
 
     def test_check_server_handshake(self):
-        headers = websockets.server_handshake_headers("key")
-        assert websockets.check_server_handshake(headers)
+        headers = self.protocol.server_handshake_headers("key")
+        assert self.protocol.check_server_handshake(headers)
         headers["Upgrade"] = ["not_websocket"]
-        assert not websockets.check_server_handshake(headers)
+        assert not self.protocol.check_server_handshake(headers)
 
     def test_check_client_handshake(self):
-        headers = websockets.client_handshake_headers("key")
-        assert websockets.check_client_handshake(headers) == "key"
+        headers = self.protocol.client_handshake_headers("key")
+        assert self.protocol.check_client_handshake(headers) == "key"
         headers["Upgrade"] = ["not_websocket"]
-        assert not websockets.check_client_handshake(headers)
+        assert not self.protocol.check_client_handshake(headers)
 
 
 class BadHandshakeHandler(WebSocketsEchoHandler):
 
     def handshake(self):
-        client_hs = http.read_request(self.rfile)
-        websockets.check_client_handshake(client_hs.headers)
+        http1_protocol = HTTP1Protocol(self)
 
-        self.wfile.write(http.response_preamble(101) + "\r\n")
-        headers = websockets.server_handshake_headers("malformed key")
+        client_hs = http1_protocol.read_request()
+        self.protocol.check_client_handshake(client_hs.headers)
+
+        preamble = http1_protocol.response_preamble(101)
+        self.wfile.write(preamble + "\r\n")
+        headers = self.protocol.server_handshake_headers("malformed key")
         self.wfile.write(headers.format() + "\r\n")
         self.wfile.flush()
         self.handshake_done = True

@@ -2,7 +2,7 @@ from __future__ import (absolute_import, print_function, division)
 import itertools
 
 from hpack.hpack import Encoder, Decoder
-from .. import utils
+from netlib import http, utils, odict
 from . import frame
 
 
@@ -186,12 +186,27 @@ class HTTP2Protocol(object):
             self._create_headers(headers, stream_id, end_stream=(body is None)),
             self._create_body(body, stream_id)))
 
-    def read_response(self):
-        stream_id_, headers, body = self._receive_transmission()
-        return headers[':status'], headers, body
+    def read_response(self, *args):
+        stream_id, headers, body = self._receive_transmission()
+
+        status = headers[':status'][0]
+        response = http.Response("HTTP/2", status, "", headers, body)
+        response.stream_id = stream_id
+        return response
 
     def read_request(self):
-        return self._receive_transmission()
+        stream_id, headers, body = self._receive_transmission()
+
+        form_in = ""
+        method = headers.get(':method', [''])[0]
+        scheme = headers.get(':scheme', [''])[0]
+        host = headers.get(':host', [''])[0]
+        port = ''  # TODO: parse port number?
+        path = headers.get(':path', [''])[0]
+
+        request = http.Request(form_in, method, scheme, host, port, path, "HTTP/2", headers, body)
+        request.stream_id = stream_id
+        return request
 
     def _receive_transmission(self):
         body_expected = True
@@ -219,15 +234,17 @@ class HTTP2Protocol(object):
                     break
             # TODO: implement window update & flow
 
-        headers = {}
+        headers = odict.ODictCaseless()
         for header, value in self.decoder.decode(header_block_fragment):
-            headers[header] = value
+            headers.add(header, value)
 
         return stream_id, headers, body
 
     def create_response(self, code, stream_id=None, headers=None, body=None):
         if headers is None:
             headers = []
+        if isinstance(headers, odict.ODict):
+            headers = headers.items()
 
         headers = [(b':status', bytes(str(code)))] + headers
 
