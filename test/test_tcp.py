@@ -224,7 +224,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
         c.connect()
 
         tutils.raises(
-            tcp.NetLibError,
+            tcp.NetLibInvalidCertificateError,
             c.convert_to_ssl,
             verify_options=SSL.VERIFY_PEER,
             ca_pemfile=tutils.test_data.path("data/verificationcerts/trusted.pem"))

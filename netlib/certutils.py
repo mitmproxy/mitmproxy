@@ -304,8 +304,6 @@ class CertStore(object):
             valid, plain-ASCII, IDNA-encoded domain name.
 
             sans: A list of Subject Alternate Names.
-
-            Return None if the certificate could not be found or generated.
         """
 
         potential_keys = self.asterisk_forms(commonname)

@@ -65,6 +65,10 @@ class NetLibSSLError(NetLibError):
     pass
 
 
+class NetLibInvalidCertificateError(NetLibSSLError):
+    pass
+
+
 class SSLKeyLogger(object):
 
     def __init__(self, filename):
@@ -517,13 +521,16 @@ class TCPClient(_Connection):
         try:
             self.connection.do_handshake()
         except SSL.Error as v:
-            raise NetLibError("SSL handshake error: %s" % repr(v))
+            if self.ssl_verification_error:
+                raise NetLibInvalidCertificateError("SSL handshake error: %s" % repr(v))
+            else:
+                raise NetLibError("SSL handshake error: %s" % repr(v))
 
         # Fix for pre v1.0 OpenSSL, which doesn't throw an exception on
         # certificate validation failure
         verification_mode = sslctx_kwargs.get('verify_options', None)
         if self.ssl_verification_error is not None and verification_mode == SSL.VERIFY_PEER:
-            raise NetLibError("SSL handshake error: certificate verify failed")
+            raise NetLibInvalidCertificateError("SSL handshake error: certificate verify failed")
 
         self.ssl_established = True
         self.cert = certutils.SSLCert(self.connection.get_peer_certificate())
