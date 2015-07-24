@@ -3,7 +3,7 @@ import os
 import traceback
 import threading
 import shlex
-from . import controller
+import sys
 
 
 class ScriptError(Exception):
@@ -55,21 +55,17 @@ class ScriptContext:
 
 class Script:
     """
-        The instantiator should do something along this vein:
-
-            s = Script(argv, master)
-            s.load()
+        Script object representing an inline script.
     """
 
     def __init__(self, command, master):
-        self.command = command
-        self.argv = self.parse_command(command)
+        self.args = self.parse_command(command)
         self.ctx = ScriptContext(master)
         self.ns = None
         self.load()
 
     @classmethod
-    def parse_command(klass, command):
+    def parse_command(cls, command):
         if not command or not command.strip():
             raise ScriptError("Empty script command.")
         if os.name == "nt":  # Windows: escape all backslashes in the path.
@@ -89,42 +85,52 @@ class Script:
 
     def load(self):
         """
-            Loads a module.
+            Loads an inline script.
 
-            Raises ScriptError on failure, with argument equal to an error
-            message that may be a formatted traceback.
+            Returns:
+                The return value of self.run("start", ...)
+
+            Raises:
+                ScriptError on failure
         """
+        if self.ns is not None:
+            self.unload()
         ns = {}
+        script_dir = os.path.dirname(os.path.abspath(self.args[0]))
+        sys.path.append(script_dir)
         try:
-            execfile(self.argv[0], ns, ns)
-        except Exception as v:
-            raise ScriptError(traceback.format_exc(v))
+            execfile(self.args[0], ns, ns)
+        except Exception as e:
+            # Python 3: use exception chaining, https://www.python.org/dev/peps/pep-3134/
+            raise ScriptError(traceback.format_exc(e))
+        sys.path.pop()
         self.ns = ns
-        r = self.run("start", self.argv)
-        if not r[0] and r[1]:
-            raise ScriptError(r[1][1])
+        return self.run("start", self.args)
 
     def unload(self):
-        return self.run("done")
+        ret = self.run("done")
+        self.ns = None
+        return ret
 
     def run(self, name, *args, **kwargs):
         """
-            Runs a plugin method.
+            Runs an inline script hook.
 
             Returns:
+                The return value of the method.
+                None, if the script does not provide the method.
 
-                (True, retval) on success.
-                (False, None) on nonexistent method.
-                (False, (exc, traceback string)) if there was an exception.
+            Raises:
+                ScriptError if there was an exception.
         """
         f = self.ns.get(name)
         if f:
             try:
-                return (True, f(self.ctx, *args, **kwargs))
-            except Exception as v:
-                return (False, (v, traceback.format_exc(v)))
+                return f(self.ctx, *args, **kwargs)
+            except Exception as e:
+                raise ScriptError(traceback.format_exc(e))
         else:
-            return (False, None)
+            return None
 
 
 class ReplyProxy(object):
@@ -176,6 +182,7 @@ def concurrent(fn):
             "clientdisconnect"):
         def _concurrent(ctx, obj):
             _handle_concurrent_reply(fn, obj, ctx, obj)
+
         return _concurrent
     raise NotImplementedError(
-        "Concurrent decorator not supported for this method.")
+        "Concurrent decorator not supported for '%s' method." % fn.func_name)

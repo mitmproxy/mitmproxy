@@ -1,7 +1,4 @@
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--var', type=int)
+from a_helper import parser
 
 var = 0
 

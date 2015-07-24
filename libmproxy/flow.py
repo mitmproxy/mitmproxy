@@ -659,9 +659,12 @@ class FlowMaster(controller.Master):
         for s in self.scripts[:]:
             self.unload_script(s)
 
-    def unload_script(self, script):
-        script.unload()
-        self.scripts.remove(script)
+    def unload_script(self, script_obj):
+        try:
+            script_obj.unload()
+        except script.ScriptError as e:
+            self.add_event("Script error:\n" + str(e), "error")
+        self.scripts.remove(script_obj)
 
     def load_script(self, command):
         """
@@ -674,16 +677,16 @@ class FlowMaster(controller.Master):
             return v.args[0]
         self.scripts.append(s)
 
-    def run_single_script_hook(self, script, name, *args, **kwargs):
-        if script and not self.pause_scripts:
-            ret = script.run(name, *args, **kwargs)
-            if not ret[0] and ret[1]:
-                e = "Script error:\n" + ret[1][1]
-                self.add_event(e, "error")
+    def _run_single_script_hook(self, script_obj, name, *args, **kwargs):
+        if script_obj and not self.pause_scripts:
+            try:
+                script_obj.run(name, *args, **kwargs)
+            except script.ScriptError as e:
+                self.add_event("Script error:\n" + str(e), "error")
 
     def run_script_hook(self, name, *args, **kwargs):
-        for script in self.scripts:
-            self.run_single_script_hook(script, name, *args, **kwargs)
+        for script_obj in self.scripts:
+            self._run_single_script_hook(script_obj, name, *args, **kwargs)
 
     def get_ignore_filter(self):
         return self.server.config.check_ignore.patterns

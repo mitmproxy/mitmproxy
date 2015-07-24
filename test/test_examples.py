@@ -22,7 +22,7 @@ def test_load_scripts():
         try:
             s = script.Script(f, tmaster)  # Loads the script file.
         except Exception as v:
-            if not "ImportError" in str(v):
+            if "ImportError" not in str(v):
                 raise
         else:
             s.unload()
