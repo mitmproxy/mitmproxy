@@ -6,10 +6,12 @@ This module contains all valid messages layers can send to the underlying layers
 class _Message(object):
     def __eq__(self, other):
         # Allow message == Connect checks.
-        # FIXME: make Connect == message work.
         if isinstance(self, other):
             return True
         return self is other
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Connect(_Message):
