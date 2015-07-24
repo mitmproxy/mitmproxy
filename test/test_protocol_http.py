@@ -327,11 +327,11 @@ class TestInvalidRequests(tservers.HTTPProxTest):
         p = self.pathoc()
         r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
         assert r.status_code == 400
-        assert "Must not CONNECT on already encrypted connection" in r.content
+        assert "Must not CONNECT on already encrypted connection" in r.body
 
     def test_relative_request(self):
         p = self.pathoc_raw()
         p.connect()
         r = p.request("get:/p/200")
         assert r.status_code == 400
-        assert "Invalid HTTP request form" in r.content
+        assert "Invalid HTTP request form" in r.body

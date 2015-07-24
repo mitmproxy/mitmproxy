@@ -1,14 +1,16 @@
 from __future__ import absolute_import
 import Cookie
+import copy
+import threading
+import time
 import urllib
 import urlparse
-import time
-import copy
 from email.utils import parsedate_tz, formatdate, mktime_tz
-import threading
-from netlib import http, tcp, http_status, http_cookies
-import netlib.utils
-from netlib import odict
+
+import netlib
+from netlib import http, tcp, odict, utils
+from netlib.http import cookies
+
 from .tcp import TCPHandler
 from .primitives import KILL, ProtocolHandler, Flow, Error
 from ..proxy.connection import ServerConnection
@@ -303,6 +305,10 @@ class HTTPRequest(HTTPMessage):
         is_replay=bool
     )
 
+    @property
+    def body(self):
+        return self.content
+
     @classmethod
     def from_state(cls, state):
         f = cls(
@@ -354,11 +360,10 @@ class HTTPRequest(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        req = http.read_request(
-            rfile,
+        protocol = http.http1.HTTP1Protocol(rfile=rfile, wfile=wfile)
+        req = protocol.read_request(
             include_body = include_body,
             body_size_limit = body_size_limit,
-            wfile = wfile
         )
 
         if hasattr(rfile, "first_byte_timestamp"):
@@ -375,7 +380,7 @@ class HTTPRequest(HTTPMessage):
             req.path,
             req.httpversion,
             req.headers,
-            req.content,
+            req.body,
             timestamp_start,
             timestamp_end
         )
@@ -642,7 +647,7 @@ class HTTPRequest(HTTPMessage):
         """
         ret = odict.ODict()
         for i in self.headers["cookie"]:
-            ret.extend(http_cookies.parse_cookie_header(i))
+            ret.extend(cookies.parse_cookie_header(i))
         return ret
 
     def set_cookies(self, odict):
@@ -650,7 +655,7 @@ class HTTPRequest(HTTPMessage):
             Takes an netlib.odict.ODict object. Over-writes any existing Cookie
             headers.
         """
-        v = http_cookies.format_cookie_header(odict)
+        v = cookies.format_cookie_header(odict)
         self.headers["Cookie"] = [v]
 
     def replace(self, pattern, repl, *args, **kwargs):
@@ -724,6 +729,12 @@ class HTTPResponse(HTTPMessage):
         msg=str
     )
 
+
+    @property
+    def body(self):
+        return self.content
+
+
     @classmethod
     def from_state(cls, state):
         f = cls(None, None, None, None, None)
@@ -760,11 +771,12 @@ class HTTPResponse(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        httpversion, code, msg, headers, content = http.read_response(
-            rfile,
+        protocol = http.http1.HTTP1Protocol(rfile=rfile)
+        resp = protocol.read_response(
             request_method,
             body_size_limit,
-            include_body=include_body)
+            include_body=include_body
+        )
 
         if hasattr(rfile, "first_byte_timestamp"):
             # more accurate timestamp_start
@@ -776,11 +788,11 @@ class HTTPResponse(HTTPMessage):
             timestamp_end = None
 
         return HTTPResponse(
-            httpversion,
-            code,
-            msg,
-            headers,
-            content,
+            resp.httpversion,
+            resp.status_code,
+            resp.msg,
+            resp.headers,
+            resp.body,
             timestamp_start,
             timestamp_end
         )
@@ -894,7 +906,7 @@ class HTTPResponse(HTTPMessage):
         """
         ret = []
         for header in self.headers["set-cookie"]:
-            v = http_cookies.parse_set_cookie_header(header)
+            v = http.cookies.parse_set_cookie_header(header)
             if v:
                 name, value, attrs = v
                 ret.append([name, [value, attrs]])
@@ -910,7 +922,7 @@ class HTTPResponse(HTTPMessage):
         values = []
         for i in odict.lst:
             values.append(
-                http_cookies.format_set_cookie_header(
+                http.cookies.format_set_cookie_header(
                     i[0],
                     i[1][0],
                     i[1][1]
@@ -1044,7 +1056,8 @@ class HTTPHandler(ProtocolHandler):
                 self.c.server_conn.send(request_raw)
                 # Only get the headers at first...
                 flow.response = HTTPResponse.from_stream(
-                    self.c.server_conn.rfile, flow.request.method,
+                    self.c.server_conn.rfile,
+                    flow.request.method,
                     body_size_limit=self.c.config.body_size_limit,
                     include_body=False
                 )
@@ -1081,10 +1094,13 @@ class HTTPHandler(ProtocolHandler):
             if flow.response.stream:
                 flow.response.content = CONTENT_MISSING
             else:
-                flow.response.content = http.read_http_body(
-                    self.c.server_conn.rfile, flow.response.headers,
+                protocol = http.http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
+                flow.response.content = protocol.read_http_body(
+                    flow.response.headers,
                     self.c.config.body_size_limit,
-                    flow.request.method, flow.response.code, False
+                    flow.request.method,
+                    flow.response.code,
+                    False
                 )
         flow.response.timestamp_end = utils.timestamp()
 
@@ -1231,7 +1247,7 @@ class HTTPHandler(ProtocolHandler):
             pass
 
     def send_error(self, code, message, headers):
-        response = http_status.RESPONSES.get(code, "Unknown")
+        response = http.status_codes.RESPONSES.get(code, "Unknown")
         html_content = """
             <html>
                 <head>
@@ -1284,6 +1300,7 @@ class HTTPHandler(ProtocolHandler):
                         request.host, request.port = s[1]["host"], s[1]["port"]
             if not request.host and flow.server_conn:
                 request.host, request.port = flow.server_conn.address.host, flow.server_conn.address.port
+
 
         # Now we can process the request.
         if request.form_in == "authority":
@@ -1364,7 +1381,7 @@ class HTTPHandler(ProtocolHandler):
         # We provide a mostly unified API to the user, which needs to be
         # unfiddled here
         # ( See also: https://github.com/mitmproxy/mitmproxy/issues/337 )
-        address = netlib.tcp.Address((flow.request.host, flow.request.port))
+        address = tcp.Address((flow.request.host, flow.request.port))
 
         ssl = (flow.request.scheme == "https")
 
@@ -1418,8 +1435,8 @@ class HTTPHandler(ProtocolHandler):
             h = flow.response._assemble_head(preserve_transfer_encoding=True)
             self.c.client_conn.send(h)
 
-            chunks = http.read_http_body_chunked(
-                self.c.server_conn.rfile,
+            protocol = http.http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
+            chunks = protocol.read_http_body_chunked(
                 flow.response.headers,
                 self.c.config.body_size_limit,
                 flow.request.method,
@@ -1441,15 +1458,18 @@ class HTTPHandler(ProtocolHandler):
             semantics. Returns True, if so.
         """
         close_connection = (
-            http.connection_close(
+            http.http1.HTTP1Protocol.connection_close(
                 flow.request.httpversion,
-                flow.request.headers) or http.connection_close(
+                flow.request.headers
+            ) or http.http1.HTTP1Protocol.connection_close(
                 flow.response.httpversion,
-                flow.response.headers) or http.expected_http_body_size(
+                flow.response.headers
+            ) or http.http1.HTTP1Protocol.expected_http_body_size(
                 flow.response.headers,
                 False,
                 flow.request.method,
-                flow.response.code) == -1)
+                flow.response.code) == -1
+            )
         if close_connection:
             if flow.request.form_in == "authority" and flow.response.code == 200:
                 # Workaround for
