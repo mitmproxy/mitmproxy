@@ -11,7 +11,8 @@ import threading
 
 import OpenSSL.crypto
 
-from netlib import tcp, http, http2, certutils, websockets, socks
+from netlib import tcp, http, certutils, websockets, socks
+from netlib.http import http1, http2
 
 import language.http
 import language.websockets
@@ -65,25 +66,6 @@ class SSLInfo(object):
                 parts.append("\tSANs: %s" % " ".join(s.altnames))
             return "\n".join(parts)
 
-
-class Response(object):
-
-    def __init__(
-        self,
-        httpversion,
-        status_code,
-        msg,
-        headers,
-        content,
-        sslinfo
-    ):
-        self.httpversion, self.status_code = httpversion, status_code
-        self.msg = msg
-        self.headers, self.content = headers, content
-        self.sslinfo = sslinfo
-
-    def __repr__(self):
-        return "Response(%s - %s)" % (self.status_code, self.msg)
 
 
 class WebsocketFrameReader(threading.Thread):
@@ -227,8 +209,7 @@ class Pathoc(tcp.TCPClient):
                 )
             self.protocol = http2.HTTP2Protocol(self, dump_frames=self.http2_framedump)
         else:
-            # TODO: create HTTP or Websockets protocol
-            self.protocol = None
+            self.protocol = http1.HTTP1Protocol(self)
 
         self.settings = language.Settings(
             is_client=True,
@@ -247,12 +228,12 @@ class Pathoc(tcp.TCPClient):
         l = self.rfile.readline()
         if not l:
             raise PathocError("Proxy CONNECT failed")
-        parsed = http.parse_response_line(l)
+        parsed = self.protocol.parse_response_line(l)
         if not parsed[1] == 200:
             raise PathocError(
                 "Proxy CONNECT failed: %s - %s" % (parsed[1], parsed[2])
             )
-        http.read_headers(self.rfile)
+        self.protocol.read_headers()
 
     def socks_connect(self, connect_to):
         try:
@@ -332,11 +313,6 @@ class Pathoc(tcp.TCPClient):
 
         if self.timeout:
             self.settimeout(self.timeout)
-
-    def _resp_summary(self, resp):
-        return "<< %s %s: %s bytes" % (
-            resp.status_code, utils.xrepr(resp.msg), len(resp.content)
-        )
 
     def stop(self):
         if self.ws_framereader:
@@ -427,19 +403,8 @@ class Pathoc(tcp.TCPClient):
                 req = language.serve(r, self.wfile, self.settings)
                 self.wfile.flush()
 
-                if self.use_http2:
-                    status_code, headers, body = self.protocol.read_response()
-                    resp = Response("HTTP/2", status_code, "", headers, body, self.sslinfo)
-                else:
-                    resp = list(
-                        http.read_response(
-                            self.rfile,
-                            req["method"],
-                            None
-                        )
-                    )
-                    resp.append(self.sslinfo)
-                    resp = Response(*resp)
+                resp = self.protocol.read_response(req["method"], None)
+                resp.sslinfo = self.sslinfo
             except http.HttpError as v:
                 lg("Invalid server response: %s" % v)
                 raise
@@ -451,7 +416,9 @@ class Pathoc(tcp.TCPClient):
                 raise
             finally:
                 if resp:
-                    lg(self._resp_summary(resp))
+                    lg("<< %s %s: %s bytes" % (
+                        resp.status_code, utils.xrepr(resp.msg), len(resp.body)
+                    ))
                     if resp.status_code in self.ignorecodes:
                         lg.suppress()
             return resp

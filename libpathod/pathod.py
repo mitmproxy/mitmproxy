@@ -6,9 +6,10 @@ import threading
 import urllib
 import time
 
-from netlib import tcp, http, http2, wsgi, certutils, websockets, odict
+from netlib import tcp, http, wsgi, certutils, websockets, odict
+from netlib.http import http1, http2
 
-from . import version, app, language, utils, log
+from . import version, app, language, utils, log, protocols
 import language.http
 import language.actions
 import language.exceptions
@@ -84,14 +85,10 @@ class PathodHandler(tcp.BaseHandler):
         self.use_http2 = False
         self.http2_framedump = http2_framedump
 
-    def _handle_sni(self, connection):
+    def handle_sni(self, connection):
         self.sni = connection.get_servername()
 
     def http_serve_crafted(self, crafted, logctx):
-        """
-            This method is HTTP/1 and HTTP/2 capable.
-        """
-
         error, crafted = self.server.check_policy(
             crafted, self.settings
         )
@@ -116,140 +113,33 @@ class PathodHandler(tcp.BaseHandler):
             return None, response_log
         return self.handle_http_request, response_log
 
-    def handle_websocket(self, logger):
-        while True:
-            with logger.ctx() as lg:
-                started = time.time()
-                try:
-                    frm = websockets.Frame.from_file(self.rfile)
-                except tcp.NetLibIncomplete as e:
-                    lg("Error reading websocket frame: %s" % e)
-                    break
-                ended = time.time()
-                lg(frm.human_readable())
-            retlog = dict(
-                type="inbound",
-                protocol="websockets",
-                started=started,
-                duration=ended - started,
-                frame=dict(
-                ),
-                cipher=None,
-            )
-            if self.ssl_established:
-                retlog["cipher"] = self.get_current_cipher()
-            self.addlog(retlog)
-            ld = language.websockets.NESTED_LEADER
-            if frm.payload.startswith(ld):
-                nest = frm.payload[len(ld):]
-                try:
-                    wf_gen = language.parse_websocket_frame(nest)
-                except language.exceptions.ParseException as v:
-                    logger.write(
-                        "Parse error in reflected frame specifcation:"
-                        " %s" % v.msg
-                    )
-                    return None, None
-                for frm in wf_gen:
-                    with logger.ctx() as lg:
-                        frame_log = language.serve(
-                            frm,
-                            self.wfile,
-                            self.settings
-                        )
-                        lg("crafting websocket spec: %s" % frame_log["spec"])
-                        self.addlog(frame_log)
-        return self.handle_websocket, None
-
-    def handle_http_connect(self, connect, lg):
-        """
-            This method is HTTP/1 only.
-
-            Handle a CONNECT request.
-        """
-        http.read_headers(self.rfile)
-        self.wfile.write(
-            'HTTP/1.1 200 Connection established\r\n' +
-            ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
-            '\r\n'
-        )
-        self.wfile.flush()
-        if not self.server.ssloptions.not_after_connect:
-            try:
-                cert, key, chain_file_ = self.server.ssloptions.get_cert(
-                    connect[0]
-                )
-                self.convert_to_ssl(
-                    cert,
-                    key,
-                    handle_sni=self._handle_sni,
-                    request_client_cert=self.server.ssloptions.request_client_cert,
-                    cipher_list=self.server.ssloptions.ciphers,
-                    method=self.server.ssloptions.ssl_version,
-                    alpn_select=self.server.ssloptions.alpn_select,
-                )
-            except tcp.NetLibError as v:
-                s = str(v)
-                lg(s)
-                return None, dict(type="error", msg=s)
-        return self.handle_http_request, None
-
-    def handle_http_app(self, method, path, headers, content, lg):
-        """
-            This method is HTTP/1 only.
-
-            Handle a request to the built-in app.
-        """
-        if self.server.noweb:
-            crafted = self.make_http_error_response("Access Denied")
-            language.serve(crafted, self.wfile, self.settings)
-            return None, dict(
-                type="error",
-                msg="Access denied: web interface disabled"
-            )
-        lg("app: %s %s" % (method, path))
-        req = wsgi.Request("http", method, path, headers, content)
-        flow = wsgi.Flow(self.address, req)
-        sn = self.connection.getsockname()
-        a = wsgi.WSGIAdaptor(
-            self.server.app,
-            sn[0],
-            self.server.address.port,
-            version.NAMEVERSION
-        )
-        a.serve(flow, self.wfile)
-        return self.handle_http_request, None
 
     def handle_http_request(self, logger):
         """
-            This method is HTTP/1 and HTTP/2 capable.
-
             Returns a (handler, log) tuple.
 
             handler: Handler for the next request, or None to disconnect
             log: A dictionary, or None
         """
         with logger.ctx() as lg:
-            if self.use_http2:
-                self.protocol.perform_server_connection_preface()
-                stream_id, headers, body = self.protocol.read_request()
-                method = headers[':method']
-                path = headers[':path']
-                headers = odict.ODict(headers)
-                httpversion = ""
-            else:
-                req = self.read_http_request(lg)
-                if 'next_handle' in req:
-                    return req['next_handle']
-                if 'errors' in req:
-                    return None, req['errors']
-                if 'method' not in req or 'path' not in req:
-                    return None, None
-                method = req['method']
-                path = req['path']
-                headers = req['headers']
-                body = req['body']
-                httpversion = req['httpversion']
+            try:
+                req = self.protocol.read_request()
+            except http.HttpError as s:
+                s = str(s)
+                lg(s)
+                return None, dict(type="error", msg=s)
+
+            if isinstance(req, http.EmptyRequest):
+                return None, None
+
+            if req.method == 'CONNECT':
+                return self.protocol.handle_http_connect([req.host, req.port, req.httpversion], lg)
+
+            method = req.method
+            path = req.path
+            httpversion = req.httpversion
+            headers = req.headers
+            body = req.body
 
             clientcert = None
             if self.clientcert:
@@ -280,7 +170,7 @@ class PathodHandler(tcp.BaseHandler):
                 retlog["cipher"] = self.get_current_cipher()
 
             m = utils.MemBool()
-            websocket_key = websockets.check_client_handshake(headers)
+            websocket_key = websockets.WebsocketsProtocol.check_client_handshake(headers)
             self.settings.websocket_key = websocket_key
 
             # If this is a websocket initiation, we respond with a proper
@@ -320,7 +210,7 @@ class PathodHandler(tcp.BaseHandler):
                 spec = anchor_gen.next()
 
                 if self.use_http2 and isinstance(spec, language.http2.Response):
-                    spec.stream_id = stream_id
+                    spec.stream_id = req.stream_id
 
                 lg("crafting spec: %s" % spec)
                 nexthandler, retlog["response"] = self.http_serve_crafted(
@@ -328,68 +218,15 @@ class PathodHandler(tcp.BaseHandler):
                     lg
                 )
                 if nexthandler and websocket_key:
-                    return self.handle_websocket, retlog
+                    self.protocol = protocols.websockets.WebsocketsProtocol(self)
+                    return self.protocol.handle_websocket, retlog
                 else:
                     return nexthandler, retlog
             else:
-                return self.handle_http_app(method, path, headers, body, lg)
-
-    def read_http_request(self, lg):
-        """
-            This method is HTTP/1 only.
-        """
-        line = http.get_request_line(self.rfile)
-        if not line:
-            # Normal termination
-            return dict()
-
-        m = utils.MemBool()
-        if m(http.parse_init_connect(line)):
-            return dict(next_handle=self.handle_http_connect(m.v, lg))
-        elif m(http.parse_init_proxy(line)):
-            method, _, _, _, path, httpversion = m.v
-        elif m(http.parse_init_http(line)):
-            method, path, httpversion = m.v
-        else:
-            s = "Invalid first line: %s" % repr(line)
-            lg(s)
-            return dict(errors=dict(type="error", msg=s))
-
-        headers = http.read_headers(self.rfile)
-        if headers is None:
-            s = "Invalid headers"
-            lg(s)
-            return dict(errors=dict(type="error", msg=s))
-
-        try:
-            body = http.read_http_body(
-                self.rfile,
-                headers,
-                None,
-                method,
-                None,
-                True,
-            )
-        except http.HttpError as s:
-            s = str(s)
-            lg(s)
-            return dict(errors=dict(type="error", msg=s))
-
-        return dict(
-            method=method,
-            path=path,
-            headers=headers,
-            body=body,
-            httpversion=httpversion)
+                return self.protocol.handle_http_app(method, path, headers, body, lg)
 
     def make_http_error_response(self, reason, body=None):
-        """
-            This method is HTTP/1 and HTTP/2 capable.
-        """
-        if self.use_http2:
-            resp = language.http2.make_error_response(reason, body)
-        else:
-            resp = language.http.make_error_response(reason, body)
+        resp = self.protocol.make_error_response(reason, body)
         resp.is_error_response = True
         return resp
 
@@ -402,7 +239,7 @@ class PathodHandler(tcp.BaseHandler):
                 self.convert_to_ssl(
                     cert,
                     key,
-                    handle_sni=self._handle_sni,
+                    handle_sni=self.handle_sni,
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.ssl_version,
@@ -421,14 +258,12 @@ class PathodHandler(tcp.BaseHandler):
 
             alp = self.get_alpn_proto_negotiated()
             if alp == http2.HTTP2Protocol.ALPN_PROTO_H2:
-                self.protocol = http2.HTTP2Protocol(
-                    self, is_server=True, dump_frames=self.http2_framedump
-                )
+                self.protocol = protocols.http2.HTTP2Protocol(self)
                 self.use_http2 = True
 
-        # if not self.protocol:
-        #     # TODO: create HTTP or Websockets protocol
-        #     self.protocol = None
+        if not self.protocol:
+            self.protocol = protocols.http.HTTPProtocol(self)
+
         lr = self.rfile if self.server.logreq else None
         lw = self.wfile if self.server.logresp else None
         logger = log.ConnectionLogger(self.logfp, self.server.hexdump, lr, lw)

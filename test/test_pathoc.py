@@ -4,13 +4,15 @@ import re
 import OpenSSL
 from mock import Mock
 
-from netlib import tcp, http, http2, socks
+from netlib import tcp, http, socks
+from netlib.http import http1, http2
+
 from libpathod import pathoc, test, version, pathod, language
 import tutils
 
 
 def test_response():
-    r = pathoc.Response("1.1", 200, "Message", {}, None, None)
+    r = http.Response("1.1", 200, "Message", {}, None, None)
     assert repr(r)
 
 
@@ -43,7 +45,7 @@ class _TestDaemon:
         )
         c.connect()
         resp = c.request("get:/api/info")
-        assert tuple(json.loads(resp.content)["version"]) == version.IVERSION
+        assert tuple(json.loads(resp.body)["version"]) == version.IVERSION
 
     def tval(
         self,
@@ -103,7 +105,7 @@ class TestDaemonSSL(_TestDaemon):
         c.connect()
         c.request("get:/p/200")
         r = c.request("get:/api/log")
-        d = json.loads(r.content)
+        d = json.loads(r.body)
         assert d["log"][0]["request"]["sni"] == "foobar.com"
 
     def test_showssl(self):
@@ -119,7 +121,7 @@ class TestDaemonSSL(_TestDaemon):
         c.connect()
         c.request("get:/p/200")
         r = c.request("get:/api/log")
-        d = json.loads(r.content)
+        d = json.loads(r.body)
         assert d["log"][0]["request"]["clientcert"]["keyinfo"]
 
     def test_http2_without_ssl(self):
@@ -270,8 +272,7 @@ class TestDaemonHTTP2(_TestDaemon):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
             )
-            # TODO: change if other protocols get implemented
-            assert c.protocol is None
+            assert isinstance(c.protocol, http1.HTTP1Protocol)
 
         def test_http2_alpn(self):
             c = pathoc.Pathoc(
