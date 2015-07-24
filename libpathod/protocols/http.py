@@ -41,7 +41,7 @@ class HTTPProtocol:
         """
             Handle a CONNECT request.
         """
-        self.wire_protocol.read_headers()
+
         self.pathod_handler.wfile.write(
             'HTTP/1.1 200 Connection established\r\n' +
             ('Proxy-agent: %s\r\n' % version.NAMEVERSION) +
