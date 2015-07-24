@@ -264,8 +264,9 @@ class TestDaemonHTTP2(_TestDaemon):
         def test_http2(self):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
-                use_http2=True,
+                fp=None,
                 ssl=True,
+                use_http2=True,
             )
             assert isinstance(c.protocol, http2.HTTP2Protocol)
 
@@ -277,6 +278,7 @@ class TestDaemonHTTP2(_TestDaemon):
         def test_http2_alpn(self):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
+                fp=None,
                 ssl=True,
                 use_http2=True,
                 http2_skip_connection_preface=True,
@@ -293,6 +295,7 @@ class TestDaemonHTTP2(_TestDaemon):
         def test_request(self):
             c = pathoc.Pathoc(
                 ("127.0.0.1", self.d.port),
+                fp=None,
                 ssl=True,
                 use_http2=True,
             )
