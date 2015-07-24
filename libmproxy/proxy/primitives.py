@@ -2,6 +2,12 @@ from __future__ import absolute_import
 from netlib import socks, tcp
 
 
+class ProxyError2(Exception):
+    def __init__(self, message, cause=None):
+        super(ProxyError2, self).__init__(message)
+        self.cause = cause
+
+
 class ProxyError(Exception):
     def __init__(self, code, message, headers=None):
         super(ProxyError, self).__init__(message)

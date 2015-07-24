@@ -3,12 +3,12 @@ from __future__ import absolute_import, print_function
 import traceback
 import sys
 import socket
-
 from netlib import tcp
-from . import layer
-from .primitives import ProxyServerError, Log, ProxyError
-from .connection import ClientConnection, ServerConnection
+
 from ..protocol.handle import protocol_handler
+from .. import protocol2
+from .primitives import ProxyServerError, Log, ProxyError, ProxyError2
+from .connection import ClientConnection, ServerConnection
 
 
 class DummyServer:
@@ -74,17 +74,17 @@ class ConnectionHandler2:
     def handle(self):
         self.log("clientconnect", "info")
 
-        root_context = layer.RootContext(
+        root_context = protocol2.RootContext(
             self.client_conn,
             self.config,
             self.channel
         )
-        root_layer = layer.Socks5IncomingLayer(root_context)
+        root_layer = protocol2.Socks5IncomingLayer(root_context)
 
         try:
             for message in root_layer():
                 print("Root layer receveived: %s" % message)
-        except layer.ProxyError2 as e:
+        except ProxyError2 as e:
             self.log(e, "info")
         except Exception:
             self.log(traceback.format_exc(), "error")
