@@ -29,7 +29,7 @@ def version_check(
             file=fp
         )
         sys.exit(1)
-    v = tuple([int(x) for x in OpenSSL.__version__.split(".")][:2])
+    v = tuple(int(x) for x in OpenSSL.__version__.split(".")[:2])
     if v < pyopenssl_min_version:
         print(
             "You are using an outdated version of pyOpenSSL:"
