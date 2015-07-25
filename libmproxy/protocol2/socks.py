@@ -1,9 +1,7 @@
 from __future__ import (absolute_import, print_function, division, unicode_literals)
 
 from ..proxy import ProxyError, Socks5ProxyMode, ProxyError2
-from . import Layer, ServerConnectionMixin
-from .rawtcp import TcpLayer
-from .ssl import SslLayer
+from .layer import Layer, ServerConnectionMixin
 
 
 class Socks5IncomingLayer(Layer, ServerConnectionMixin):
@@ -18,9 +16,11 @@ class Socks5IncomingLayer(Layer, ServerConnectionMixin):
         self._set_address(address)
 
         if address[1] == 443:
-            layer = SslLayer(self, True, True)
+            layer = AutoLayer(self)
         else:
-            layer = TcpLayer(self)
+            layer = AutoLayer(self)
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
+
+from .auto import AutoLayer

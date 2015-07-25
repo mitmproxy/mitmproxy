@@ -5,9 +5,9 @@ import traceback
 from netlib import tcp
 
 from ..proxy import ProxyError2
-from . import Layer
+from .layer import Layer
 from .messages import Connect, Reconnect, ChangeServer
-from .rawtcp import TcpLayer
+from .auto import AutoLayer
 
 
 class ReconnectRequest(object):
@@ -61,7 +61,7 @@ class SslLayer(Layer):
         elif self.client_ssl:
             self._establish_ssl_with_client()
 
-        layer = TcpLayer(self)
+        layer = AutoLayer(self)
         for message in layer():
             if message != Connect or not self._connected:
                 yield message

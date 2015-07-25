@@ -1,5 +1,7 @@
-from . import Layer, Connect
+from __future__ import (absolute_import, print_function, division, unicode_literals)
 from ..protocol.tcp import TCPHandler
+from .layer import Layer
+from .messages import Connect
 
 
 class TcpLayer(Layer):
