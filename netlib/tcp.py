@@ -265,6 +265,24 @@ class Reader(_FileLike):
                 )
         return result
 
+    def peek(self, length):
+        """
+        Tries to peek into the underlying file object.
+
+        Returns:
+            Up to the next N bytes if peeking is successful.
+            None, otherwise.
+
+        Raises:
+            NetLibSSLError if there was an error with pyOpenSSL.
+        """
+        if isinstance(self.o, SSL.Connection) or isinstance(self.o, socket._fileobject):
+            try:
+                return self.o._sock.recv(length, socket.MSG_PEEK)
+            except SSL.Error as e:
+                raise NetLibSSLError(str(e))
+
+
 
 class Address(object):
 
