@@ -9,7 +9,7 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 
 import netlib
 from netlib import http, tcp, odict, utils
-from netlib.http import cookies
+from netlib.http import cookies, http1
 
 from .tcp import TCPHandler
 from .primitives import KILL, ProtocolHandler, Flow, Error
@@ -360,7 +360,7 @@ class HTTPRequest(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        protocol = http.http1.HTTP1Protocol(rfile=rfile, wfile=wfile)
+        protocol = http1.HTTP1Protocol(rfile=rfile, wfile=wfile)
         req = protocol.read_request(
             include_body = include_body,
             body_size_limit = body_size_limit,
@@ -771,7 +771,7 @@ class HTTPResponse(HTTPMessage):
         if hasattr(rfile, "reset_timestamps"):
             rfile.reset_timestamps()
 
-        protocol = http.http1.HTTP1Protocol(rfile=rfile)
+        protocol = http1.HTTP1Protocol(rfile=rfile)
         resp = protocol.read_response(
             request_method,
             body_size_limit,
@@ -1094,7 +1094,7 @@ class HTTPHandler(ProtocolHandler):
             if flow.response.stream:
                 flow.response.content = CONTENT_MISSING
             else:
-                protocol = http.http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
+                protocol = http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
                 flow.response.content = protocol.read_http_body(
                     flow.response.headers,
                     self.c.config.body_size_limit,
@@ -1435,7 +1435,7 @@ class HTTPHandler(ProtocolHandler):
             h = flow.response._assemble_head(preserve_transfer_encoding=True)
             self.c.client_conn.send(h)
 
-            protocol = http.http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
+            protocol = http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
             chunks = protocol.read_http_body_chunked(
                 flow.response.headers,
                 self.c.config.body_size_limit,
@@ -1458,13 +1458,13 @@ class HTTPHandler(ProtocolHandler):
             semantics. Returns True, if so.
         """
         close_connection = (
-            http.http1.HTTP1Protocol.connection_close(
+            http1.HTTP1Protocol.connection_close(
                 flow.request.httpversion,
                 flow.request.headers
-            ) or http.http1.HTTP1Protocol.connection_close(
+            ) or http1.HTTP1Protocol.connection_close(
                 flow.response.httpversion,
                 flow.response.headers
-            ) or http.http1.HTTP1Protocol.expected_http_body_size(
+            ) or http1.HTTP1Protocol.expected_http_body_size(
                 flow.response.headers,
                 False,
                 flow.request.method,
