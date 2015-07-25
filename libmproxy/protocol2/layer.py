@@ -37,6 +37,7 @@ from ..proxy import ProxyError2, Log
 from ..proxy.connection import ServerConnection
 from .messages import Connect, Reconnect, ChangeServer
 
+
 class RootContext(object):
     """
     The outmost context provided to the root layer.
