@@ -1314,7 +1314,6 @@ class HTTPHandler(ProtocolHandler):
                 self.c.set_server_address((request.host, request.port))
                 # Update server_conn attribute on the flow
                 flow.server_conn = self.c.server_conn
-                self.c.establish_server_connection()
                 self.c.client_conn.send(
                     ('HTTP/%s.%s 200 ' % (request.httpversion[0], request.httpversion[1])) +
                     'Connection established\r\n' +
@@ -1518,7 +1517,10 @@ class HTTPHandler(ProtocolHandler):
                     "Received CONNECT request to SSL port. "
                     "Upgrading to SSL...", "debug"
                 )
-                self.c.establish_ssl(server=True, client=True)
+                server_ssl = not self.c.config.no_upstream_cert
+                if server_ssl:
+                    self.c.establish_server_connection()
+                self.c.establish_ssl(server=server_ssl, client=True)
                 self.c.log("Upgrade to SSL completed.", "debug")
 
             if self.c.config.check_tcp(address):

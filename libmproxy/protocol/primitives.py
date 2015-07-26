@@ -236,7 +236,7 @@ class LiveConnection(object):
         ssl_mismatch = (
             ssl is not None and
             (
-                ssl != self.c.server_conn.ssl_established
+                (self.c.server_conn.connection and ssl != self.c.server_conn.ssl_established)
                 or
                 (sni is not None and sni != self.c.server_conn.sni)
             )
