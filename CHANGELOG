@@ -1,3 +1,33 @@
+24 July 2015: mitmproxy 0.13
+
+    * Upstream certificate validation. See the --verify-upstream-cert,
+      --upstream-trusted-cadir and --upstream-trusted-ca parameters. Thanks to
+      Kyle Morton (github.com/kyle-m) for his work on this.
+
+    * Add HTTP transparent proxy mode. This uses the host headers from HTTP
+      traffic (rather than SNI and IP address information from the OS) to
+      implement perform transparent proxying. Thanks to github.com/ijiro123 for
+      this feature.
+
+    * Add ~src and ~dst REGEX filters, allowing matching on source and
+      destination addresses in the form of <IP>:<Port>
+
+    * mitmproxy console: change g/G keyboard shortcuts to match less. Thanks to
+      Jose Luis Honorato (github.com/jlhonora).
+
+    * mitmproxy console: Flow marking and unmarking. Marked flows are not
+      deleted when the flow list is cleared. Thanks to Jake Drahos
+      (github.com/drahosj).
+
+    * mitmproxy console: add marking of flows
+
+    * Remove the certforward feature. It was added to allow exploitation of
+      #gotofail, which is no longer a common vulnerability. Permitting this
+      hugely increased the complexity of packaging and distributing mitmproxy.
+
+
+
+
 3 June 2015: mitmproxy 0.12.1
 
     * mitmproxy console: mouse interaction - scroll in the flow list, click on
