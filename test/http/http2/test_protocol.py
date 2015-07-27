@@ -253,7 +253,7 @@ class TestReadResponse(tservers.ServerTestBase):
 
         resp = protocol.read_response()
 
-        assert resp.httpversion == "HTTP/2"
+        assert resp.httpversion == (2, 0)
         assert resp.status_code == "200"
         assert resp.msg == ""
         assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
@@ -279,7 +279,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         resp = protocol.read_response()
 
         assert resp.stream_id
-        assert resp.httpversion == "HTTP/2"
+        assert resp.httpversion == (2, 0)
         assert resp.status_code == "200"
         assert resp.msg == ""
         assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]

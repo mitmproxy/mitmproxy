@@ -4,6 +4,7 @@ import collections
 import string
 import sys
 import urlparse
+import time
 
 from netlib import odict, utils, tcp, http
 from .. import status_codes
@@ -17,10 +18,7 @@ class TCPHandler(object):
 class HTTP1Protocol(object):
 
     def __init__(self, tcp_handler=None, rfile=None, wfile=None):
-        if tcp_handler:
-            self.tcp_handler = tcp_handler
-        else:
-            self.tcp_handler = TCPHandler(rfile, wfile)
+        self.tcp_handler = tcp_handler or TCPHandler(rfile, wfile)
 
 
     def read_request(self, include_body=True, body_size_limit=None, allow_empty=False):
@@ -39,6 +37,10 @@ class HTTP1Protocol(object):
         Raises:
             HttpError: If the input is invalid.
         """
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
+
         httpversion, host, port, scheme, method, path, headers, body = (
             None, None, None, None, None, None, None, None)
 
@@ -106,6 +108,12 @@ class HTTP1Protocol(object):
                 True
             )
 
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        timestamp_end = time.time()
+
         return http.Request(
             form_in,
             method,
@@ -115,7 +123,9 @@ class HTTP1Protocol(object):
             path,
             httpversion,
             headers,
-            body
+            body,
+            timestamp_start,
+            timestamp_end,
         )
 
 
@@ -124,12 +134,15 @@ class HTTP1Protocol(object):
             Returns an http.Response
 
             By default, both response header and body are read.
-            If include_body=False is specified, content may be one of the
+            If include_body=False is specified, body may be one of the
             following:
             - None, if the response is technically allowed to have a response body
             - "", if the response must not have a response body (e.g. it's a
             response to a HEAD request)
         """
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
 
         line = self.tcp_handler.rfile.readline()
         # Possible leftover from previous message
@@ -149,7 +162,7 @@ class HTTP1Protocol(object):
             raise HttpError(502, "Invalid headers.")
 
         if include_body:
-            content = self.read_http_body(
+            body = self.read_http_body(
                 headers,
                 body_size_limit,
                 request_method,
@@ -157,10 +170,29 @@ class HTTP1Protocol(object):
                 False
             )
         else:
-            # if include_body==False then a None content means the body should be
+            # if include_body==False then a None body means the body should be
             # read separately
-            content = None
-        return http.Response(httpversion, code, msg, headers, content)
+            body = None
+
+
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        if include_body:
+            timestamp_end = time.time()
+        else:
+            timestamp_end = None
+
+        return http.Response(
+            httpversion,
+            code,
+            msg,
+            headers,
+            body,
+            timestamp_start=timestamp_start,
+            timestamp_end=timestamp_end,
+        )
 
 
     def read_headers(self):

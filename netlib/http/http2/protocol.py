@@ -1,9 +1,16 @@
 from __future__ import (absolute_import, print_function, division)
 import itertools
+import time
 
 from hpack.hpack import Encoder, Decoder
 from netlib import http, utils, odict
 from . import frame
+
+
+class TCPHandler(object):
+    def __init__(self, rfile, wfile=None):
+        self.rfile = rfile
+        self.wfile = wfile
 
 
 class HTTP2Protocol(object):
@@ -31,16 +38,26 @@ class HTTP2Protocol(object):
 
     ALPN_PROTO_H2 = 'h2'
 
-    def __init__(self, tcp_handler, is_server=False, dump_frames=False):
-        self.tcp_handler = tcp_handler
+
+    def __init__(
+        self,
+        tcp_handler=None,
+        rfile=None,
+        wfile=None,
+        is_server=False,
+        dump_frames=False,
+        encoder=None,
+        decoder=None,
+    ):
+        self.tcp_handler = tcp_handler or TCPHandler(rfile, wfile)
         self.is_server = is_server
+        self.dump_frames = dump_frames
+        self.encoder = encoder or Encoder()
+        self.decoder = decoder or Decoder()
 
         self.http2_settings = frame.HTTP2_DEFAULT_SETTINGS.copy()
         self.current_stream_id = None
-        self.encoder = Encoder()
-        self.decoder = Decoder()
         self.connection_preface_performed = False
-        self.dump_frames = dump_frames
 
     def check_alpn(self):
         alp = self.tcp_handler.get_alpn_proto_negotiated()
@@ -186,29 +203,68 @@ class HTTP2Protocol(object):
             self._create_headers(headers, stream_id, end_stream=(body is None)),
             self._create_body(body, stream_id)))
 
-    def read_response(self, *args):
-        stream_id, headers, body = self._receive_transmission()
+    def read_response(self, request_method_='', body_size_limit_=None, include_body=True):
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
 
-        status = headers[':status'][0]
-        response = http.Response("HTTP/2", status, "", headers, body)
+        stream_id, headers, body = self._receive_transmission(include_body)
+
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        if include_body:
+            timestamp_end = time.time()
+        else:
+            timestamp_end = None
+
+        response = http.Response(
+            (2, 0),
+            headers[':status'][0],
+            "",
+            headers,
+            body,
+            timestamp_start=timestamp_start,
+            timestamp_end=timestamp_end,
+        )
         response.stream_id = stream_id
+
         return response
 
-    def read_request(self):
-        stream_id, headers, body = self._receive_transmission()
+    def read_request(self, include_body=True, body_size_limit_=None, allow_empty_=False):
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
 
-        form_in = ""
-        method = headers.get(':method', [''])[0]
-        scheme = headers.get(':scheme', [''])[0]
-        host = headers.get(':host', [''])[0]
+        stream_id, headers, body = self._receive_transmission(include_body)
+
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        timestamp_end = time.time()
+
         port = ''  # TODO: parse port number?
-        path = headers.get(':path', [''])[0]
 
-        request = http.Request(form_in, method, scheme, host, port, path, "HTTP/2", headers, body)
+        request = http.Request(
+            "",
+            headers.get_first(':method', ['']),
+            headers.get_first(':scheme', ['']),
+            headers.get_first(':host', ['']),
+            port,
+            headers.get_first(':path', ['']),
+            (2, 0),
+            headers,
+            body,
+            timestamp_start,
+            timestamp_end,
+        )
         request.stream_id = stream_id
+
         return request
 
-    def _receive_transmission(self):
+    def _receive_transmission(self, include_body=True):
         body_expected = True
 
         stream_id = 0

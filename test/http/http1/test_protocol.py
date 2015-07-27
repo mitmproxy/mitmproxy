@@ -297,10 +297,10 @@ class TestReadResponseNoContentLength(tservers.ServerTestBase):
 
 
 def test_read_response():
-    def tst(data, method, limit, include_body=True):
+    def tst(data, method, body_size_limit, include_body=True):
         data = textwrap.dedent(data)
         return mock_protocol(data).read_response(
-            method, limit, include_body=include_body
+            method, body_size_limit, include_body=include_body
         )
 
     tutils.raises("server disconnect", tst, "", "GET", None)

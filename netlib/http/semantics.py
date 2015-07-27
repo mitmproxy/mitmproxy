@@ -20,7 +20,11 @@ class Request(object):
         httpversion,
         headers,
         body,
+        timestamp_start=None,
+        timestamp_end=None,
     ):
+        assert isinstance(headers, odict.ODictCaseless) or not headers
+
         self.form_in = form_in
         self.method = method
         self.scheme = scheme
@@ -30,16 +34,29 @@ class Request(object):
         self.httpversion = httpversion
         self.headers = headers
         self.body = body
+        self.timestamp_start = timestamp_start
+        self.timestamp_end = timestamp_end
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        try:
+            self_d = [self.__dict__[k] for k in self.__dict__ if k not in ('timestamp_start', 'timestamp_end')]
+            other_d = [other.__dict__[k] for k in other.__dict__ if k not in ('timestamp_start', 'timestamp_end')]
+            return self_d == other_d
+        except:
+            return False
 
     def __repr__(self):
         return "Request(%s - %s, %s)" % (self.method, self.host, self.path)
 
     @property
     def content(self):
+        # TODO: remove deprecated getter
         return self.body
+
+    @content.setter
+    def content(self, content):
+        # TODO: remove deprecated setter
+        self.body = content
 
 
 class EmptyRequest(Request):
@@ -67,23 +84,51 @@ class Response(object):
         headers,
         body,
         sslinfo=None,
+        timestamp_start=None,
+        timestamp_end=None,
     ):
+        assert isinstance(headers, odict.ODictCaseless) or not headers
+
         self.httpversion = httpversion
         self.status_code = status_code
         self.msg = msg
         self.headers = headers
         self.body = body
         self.sslinfo = sslinfo
+        self.timestamp_start = timestamp_start
+        self.timestamp_end = timestamp_end
 
     def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+        try:
+            self_d = [self.__dict__[k] for k in self.__dict__ if k not in ('timestamp_start', 'timestamp_end')]
+            other_d = [other.__dict__[k] for k in other.__dict__ if k not in ('timestamp_start', 'timestamp_end')]
+            return self_d == other_d
+        except:
+            return False
 
     def __repr__(self):
         return "Response(%s - %s)" % (self.status_code, self.msg)
 
     @property
     def content(self):
+        # TODO: remove deprecated getter
         return self.body
+
+    @content.setter
+    def content(self, content):
+        # TODO: remove deprecated setter
+        self.body = content
+
+    @property
+    def code(self):
+        # TODO: remove deprecated getter
+        return self.status_code
+
+    @code.setter
+    def code(self, code):
+        # TODO: remove deprecated setter
+        self.status_code = code
+
 
 
 def is_valid_port(port):
