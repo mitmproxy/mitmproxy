@@ -82,6 +82,57 @@ var ViewRaw = React.createClass({
     }
 });
 
+var PluginMixin = {
+    getInitialState: function () {
+        return {
+            content: undefined,
+            request: undefined
+        }
+    },
+    requestContent: function (nextProps) {
+        if (this.state.request) {
+            this.state.request.abort();
+        }
+        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        this.setState({
+            content: undefined,
+            request: request
+        });
+        request.done(function (data) {
+            this.setState({content: data});
+        }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
+            if (textStatus === "abort") {
+                return;
+            }
+            this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
+        }.bind(this)).always(function () {
+            this.setState({request: undefined});
+        }.bind(this));
+
+    },
+    componentWillMount: function () {
+        this.requestContent(this.props);
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.message !== this.props.message) {
+            this.requestContent(nextProps);
+        }
+    },
+    componentWillUnmount: function () {
+        if (this.state.request) {
+            this.state.request.abort();
+        }
+    },
+    render: function () {
+        if (!this.state.content) {
+            return <div className="text-center">
+                <i className="fa fa-spinner fa-spin"></i>
+            </div>;
+        }
+        return this.renderContent();
+    }
+};
+
 var json_regex = /^application\/json$/i;
 var ViewJSON = React.createClass({
     mixins: [RawMixin],
@@ -234,4 +285,4 @@ var ContentView = React.createClass({
     }
 });
 
-module.exports = ContentView;
+module.exports = {ContentView: ContentView, PluginMixin: PluginMixin, all: all};

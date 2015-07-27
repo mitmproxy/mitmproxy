@@ -10,6 +10,8 @@ var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
+var ContentViewAll = require("./flowview/contentview.js").all;
+var PluginMixin = require("./flowview/contentview.js").PluginMixin;
 
 
 //TODO: Move out of here, just a stub.
@@ -43,6 +45,37 @@ var ProxyAppMain = React.createClass({
         var eventStore = new store.EventLogStore();
         var flowStore = new store.FlowStore();
         var settingsStore = new store.SettingsStore();
+
+        // get the view plugin list and append to ContentView's `all`
+        // so buttons will be available on the UI
+        var pluginList;
+        $.getJSON("/plugins")
+                .done(function (message) {
+                    console.log("Retrieved plugins: " +
+                        JSON.stringify(message.data));
+                    _.each(message.data, function(plugin){
+                        if (plugin.type === 'view_plugins') {
+                            var ViewPlugin = React.createClass({
+                                displayName: plugin.id,
+                                mixins: [PluginMixin],
+                                statics: {
+                                    matches: function (message) {
+                                        return true;
+                                    }
+                                },
+                                renderContent: function () {
+                                    return <pre>{this.state.content}</pre>;
+                                }
+                            });
+
+                            ContentViewAll.push(ViewPlugin);
+                        }
+                    });
+                }.bind(this))
+                .fail(function () {
+                    console.log("Could not fetch plugins");
+                }.bind(this));
+
 
         // Default Settings before fetch
         _.extend(settingsStore.dict, {});

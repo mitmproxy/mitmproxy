@@ -5,7 +5,7 @@ var common = require("../common.js");
 var actions = require("../../actions.js");
 var flowutils = require("../../flow/utils.js");
 var utils = require("../../utils.js");
-var ContentView = require("./contentview.js");
+var ContentView = require("./contentview.js").ContentView;
 var ValueEditor = require("../editor.js").ValueEditor;
 
 var Headers = React.createClass({

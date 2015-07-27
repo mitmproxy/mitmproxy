@@ -11,6 +11,10 @@ class Stop(Exception):
     pass
 
 
+class WebError(Exception):
+    pass
+
+
 class WebFlowView(flow.FlowView):
     def __init__(self, store):
         super(WebFlowView, self).__init__(store, None)
@@ -55,6 +59,8 @@ class WebState(flow.State):
 
         self._last_event_id = 0
         self.events = collections.deque(maxlen=1000)
+
+        self.plugins = [{'foo': 'bar'}]
 
     def add_event(self, e, level):
         self._last_event_id += 1
@@ -121,6 +127,26 @@ class Options(object):
                 setattr(self, i, None)
 
 
+class WebPlugins(object):
+    def __init__(self):
+        self._view_plugins = {}
+
+    def __iter__(self):
+        for plugin_type in ('view_plugins',):
+            yield (plugin_type, getattr(self, '_' + plugin_type))
+
+    def register_view(self, id, **kwargs):
+        if self._view_plugins.get(id):
+            raise WebError("Duplicate view registration for %s" % (id, ))
+
+        self._view_plugins[id] = {}
+
+        if kwargs.get('title'):
+            self._view_plugins[id]['title'] = kwargs['title']
+        else:
+            self._view_plugins[id]['title'] = id
+
+
 class WebMaster(flow.FlowMaster):
     def __init__(self, server, options):
         self.options = options
@@ -134,6 +160,15 @@ class WebMaster(flow.FlowMaster):
                     "Could not read flow file: %s" % v,
                     "error"
                 )
+
+        self.plugins = WebPlugins()
+
+        scripts = options.scripts or []
+        for command in scripts:
+            err = self.load_script(command)
+            if err:
+                raise WebError(err)
+
         if self.options.app:
             self.start_app(self.options.app_host, self.options.app_port)
 

@@ -242,6 +242,22 @@ class Settings(RequestHandler):
         )
 
 
+class Plugins(RequestHandler):
+    def get(self):
+        def _flatten(plugin_list):
+            ret_arr = []
+            for plugin_type, plugin_dicts in dict(plugin_list).items():
+                for plugin_id, plugin_dict in plugin_dicts.items():
+                    plugin_dict['id'] = plugin_id
+                    plugin_dict['type'] = plugin_type
+                    ret_arr.append(plugin_dict)
+            return ret_arr
+
+        self.write(dict(
+            data=list(_flatten(self.master.plugins))
+        ))
+
+
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
@@ -260,6 +276,7 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
+            (r"/plugins", Plugins),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

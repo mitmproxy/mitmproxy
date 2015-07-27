@@ -52,6 +52,10 @@ class ScriptContext:
     def app_registry(self):
         return self._master.apps
 
+    @property
+    def plugins(self):
+        return self._master.plugins
+
 
 class Script:
     """
