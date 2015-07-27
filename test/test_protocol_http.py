@@ -1,12 +1,20 @@
+import cStringIO
 from cStringIO import StringIO
 
 from mock import MagicMock
 
 from libmproxy.protocol.http import *
 from netlib import odict
+from netlib.http import http1
 
 import tutils
 import tservers
+
+def mock_protocol(data='', chunked=False):
+    rfile = cStringIO.StringIO(data)
+    wfile = cStringIO.StringIO()
+    return http1.HTTP1Protocol(rfile=rfile, wfile=wfile)
+
 
 
 def test_HttpAuthenticationError():
@@ -30,9 +38,10 @@ def test_stripped_chunked_encoding_no_content():
 
 class TestHTTPRequest:
     def test_asterisk_form_in(self):
-        s = StringIO("OPTIONS * HTTP/1.1")
         f = tutils.tflow(req=None)
-        f.request = HTTPRequest.from_stream(s)
+        protocol = mock_protocol("OPTIONS * HTTP/1.1")
+        f.request = HTTPRequest.from_protocol(protocol)
+
         assert f.request.form_in == "relative"
         f.request.host = f.server_conn.address.host
         f.request.port = f.server_conn.address.port
@@ -42,10 +51,11 @@ class TestHTTPRequest:
                                         "Content-Length: 0\r\n\r\n")
 
     def test_relative_form_in(self):
-        s = StringIO("GET /foo\xff HTTP/1.1")
-        tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
-        s = StringIO("GET /foo HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: h2c")
-        r = HTTPRequest.from_stream(s)
+        protocol = mock_protocol("GET /foo\xff HTTP/1.1")
+        tutils.raises("Bad HTTP request line", HTTPRequest.from_protocol, protocol)
+
+        protocol = mock_protocol("GET /foo HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: h2c")
+        r = HTTPRequest.from_protocol(protocol)
         assert r.headers["Upgrade"] == ["h2c"]
 
         raw = r._assemble_headers()
@@ -61,19 +71,19 @@ class TestHTTPRequest:
         assert "Host" in r.headers
 
     def test_expect_header(self):
-        s = StringIO(
+        protocol = mock_protocol(
             "GET / HTTP/1.1\r\nContent-Length: 3\r\nExpect: 100-continue\r\n\r\nfoobar")
-        w = StringIO()
-        r = HTTPRequest.from_stream(s, wfile=w)
-        assert w.getvalue() == "HTTP/1.1 100 Continue\r\n\r\n"
+        r = HTTPRequest.from_protocol(protocol)
+        assert protocol.tcp_handler.wfile.getvalue() == "HTTP/1.1 100 Continue\r\n\r\n"
         assert r.content == "foo"
-        assert s.read(3) == "bar"
+        assert protocol.tcp_handler.rfile.read(3) == "bar"
 
     def test_authority_form_in(self):
-        s = StringIO("CONNECT oops-no-port.com HTTP/1.1")
-        tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
-        s = StringIO("CONNECT address:22 HTTP/1.1")
-        r = HTTPRequest.from_stream(s)
+        protocol = mock_protocol("CONNECT oops-no-port.com HTTP/1.1")
+        tutils.raises("Bad HTTP request line", HTTPRequest.from_protocol, protocol)
+
+        protocol = mock_protocol("CONNECT address:22 HTTP/1.1")
+        r = HTTPRequest.from_protocol(protocol)
         r.scheme, r.host, r.port = "http", "address", 22
         assert r.assemble() == ("CONNECT address:22 HTTP/1.1\r\n"
                                 "Host: address:22\r\n"
@@ -81,10 +91,11 @@ class TestHTTPRequest:
         assert r.pretty_url(False) == "address:22"
 
     def test_absolute_form_in(self):
-        s = StringIO("GET oops-no-protocol.com HTTP/1.1")
-        tutils.raises("Bad HTTP request line", HTTPRequest.from_stream, s)
-        s = StringIO("GET http://address:22/ HTTP/1.1")
-        r = HTTPRequest.from_stream(s)
+        protocol = mock_protocol("GET oops-no-protocol.com HTTP/1.1")
+        tutils.raises("Bad HTTP request line", HTTPRequest.from_protocol, protocol)
+
+        protocol = mock_protocol("GET http://address:22/ HTTP/1.1")
+        r = HTTPRequest.from_protocol(protocol)
         assert r.assemble(
         ) == "GET http://address:22/ HTTP/1.1\r\nHost: address:22\r\nContent-Length: 0\r\n\r\n"
 
@@ -92,8 +103,8 @@ class TestHTTPRequest:
         """
         Exercises fix for Issue #392.
         """
-        s = StringIO("OPTIONS /secret/resource HTTP/1.1")
-        r = HTTPRequest.from_stream(s)
+        protocol = mock_protocol("OPTIONS /secret/resource HTTP/1.1")
+        r = HTTPRequest.from_protocol(protocol)
         r.host = 'address'
         r.port = 80
         r.scheme = "http"
@@ -102,8 +113,8 @@ class TestHTTPRequest:
                                 "Content-Length: 0\r\n\r\n")
 
     def test_http_options_absolute_form_in(self):
-        s = StringIO("OPTIONS http://address/secret/resource HTTP/1.1")
-        r = HTTPRequest.from_stream(s)
+        protocol = mock_protocol("OPTIONS http://address/secret/resource HTTP/1.1")
+        r = HTTPRequest.from_protocol(protocol)
         r.host = 'address'
         r.port = 80
         r.scheme = "http"
@@ -216,26 +227,27 @@ class TestHTTPRequest:
 
 class TestHTTPResponse:
     def test_read_from_stringio(self):
-        _s = "HTTP/1.1 200 OK\r\n" \
+        s = "HTTP/1.1 200 OK\r\n" \
              "Content-Length: 7\r\n" \
              "\r\n"\
              "content\r\n" \
              "HTTP/1.1 204 OK\r\n" \
              "\r\n"
-        s = StringIO(_s)
-        r = HTTPResponse.from_stream(s, "GET")
-        assert r.code == 200
-        assert r.content == "content"
-        assert HTTPResponse.from_stream(s, "GET").code == 204
 
-        s = StringIO(_s)
+        protocol = mock_protocol(s)
+        r = HTTPResponse.from_protocol(protocol, "GET")
+        assert r.status_code == 200
+        assert r.content == "content"
+        assert HTTPResponse.from_protocol(protocol, "GET").status_code == 204
+
+        protocol = mock_protocol(s)
         # HEAD must not have content by spec. We should leave it on the pipe.
-        r = HTTPResponse.from_stream(s, "HEAD")
-        assert r.code == 200
+        r = HTTPResponse.from_protocol(protocol, "HEAD")
+        assert r.status_code == 200
         assert r.content == ""
         tutils.raises(
             "Invalid server response: 'content",
-            HTTPResponse.from_stream, s, "GET"
+            HTTPResponse.from_protocol, protocol, "GET"
         )
 
     def test_repr(self):
