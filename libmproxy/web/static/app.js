@@ -315,8 +315,7 @@ var ActionTypes = {
     // Stores
     SETTINGS_STORE: "settings",
     EVENT_STORE: "events",
-    FLOW_STORE: "flows",
-    PLUGIN_STORE: "plugins",
+    FLOW_STORE: "flows"
 };
 
 var StoreCmds = {
@@ -425,18 +424,6 @@ var FlowActions = {
     }
 };
 
-var PluginActions = {
-    update: function (plugins) {
-
-        $.ajax({
-            type: "PUT",
-            url: "/plugins",
-            contentType: 'application/json',
-            data: JSON.stringify(plugins)
-        }); 
-    }
-};
-
 var Query = {
     SEARCH: "s",
     HIGHLIGHT: "h",
@@ -450,11 +437,10 @@ module.exports = {
     StoreCmds: StoreCmds,
     SettingsActions: SettingsActions,
     EventLogActions: EventLogActions,
-    Query: Query,
-    PluginActions: PluginActions
+    Query: Query
 };
 
-},{"./dispatcher.js":21,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
+},{"./dispatcher.js":22,"jquery":"jquery","lodash":"lodash"}],3:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var $ = require("jquery");
@@ -476,7 +462,7 @@ $(function () {
 
 
 
-},{"./actions.js":2,"./components/proxyapp.js":18,"./connection":20,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
+},{"./actions.js":2,"./components/proxyapp.js":19,"./connection":21,"jquery":"jquery","react":"react","react-router":"react-router"}],4:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -939,7 +925,7 @@ module.exports = {
     ValueEditor: ValueEditor
 };
 
-},{"../utils.js":26,"./common.js":4,"react":"react"}],6:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"react":"react"}],6:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 var Query = require("../actions.js").Query;
@@ -1090,7 +1076,7 @@ var EventLog = React.createClass({displayName: "EventLog",
 
 module.exports = EventLog;
 
-},{"../actions.js":2,"../store/view.js":25,"./common.js":4,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
+},{"../actions.js":2,"../store/view.js":26,"./common.js":4,"./virtualscroll.js":20,"lodash":"lodash","react":"react"}],7:[function(require,module,exports){
 var React = require("react");
 var RequestUtils = require("../flow/utils.js").RequestUtils;
 var ResponseUtils = require("../flow/utils.js").ResponseUtils;
@@ -1293,7 +1279,7 @@ var all_columns = [
 
 module.exports = all_columns;
 
-},{"../flow/utils.js":23,"../utils.js":26,"react":"react"}],8:[function(require,module,exports){
+},{"../flow/utils.js":24,"../utils.js":27,"react":"react"}],8:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 var utils = require("../utils.js");
@@ -1483,7 +1469,7 @@ var FlowTable = React.createClass({displayName: "FlowTable",
 module.exports = FlowTable;
 
 
-},{"../utils.js":26,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":19,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"./flowtable-columns.js":7,"./virtualscroll.js":20,"lodash":"lodash","react":"react"}],9:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1579,7 +1565,8 @@ var PluginMixin = {
         if (this.state.request) {
             this.state.request.abort();
         }
-        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        var request = MessageUtils.getContent(nextProps.flow,
+            nextProps.message, this.constructor.displayName);
         this.setState({
             content: undefined,
             request: request
@@ -1773,7 +1760,7 @@ var ContentView = React.createClass({displayName: "ContentView",
 
 module.exports = {ContentView: ContentView, PluginMixin: PluginMixin, all: all};
 
-},{"../../flow/utils.js":23,"../../utils.js":26,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
+},{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1956,7 +1943,7 @@ var Details = React.createClass({displayName: "Details",
 
 module.exports = Details;
 
-},{"../../utils.js":26,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":27,"lodash":"lodash","react":"react"}],11:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -1965,13 +1952,15 @@ var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
 var Prompt = require("../prompt.js");
+var Plugins = require("./plugins.js").Plugins;
 
 
 var allTabs = {
     request: Messages.Request,
     response: Messages.Response,
     error: Messages.Error,
-    details: Details
+    details: Details,
+    plugins: Plugins
 };
 
 var FlowView = React.createClass({displayName: "FlowView",
@@ -1989,6 +1978,9 @@ var FlowView = React.createClass({displayName: "FlowView",
             }
         });
         tabs.push("details");
+        // replace w/
+        // if length(available actions for flow) >= 1
+        tabs.push("plugins");
         return tabs;
     },
     nextTab: function (i) {
@@ -2047,9 +2039,13 @@ var FlowView = React.createClass({displayName: "FlowView",
             }
         });
     },
+    getPluginActions: function (flow) {
+        return ['Reverse contents (all)'];
+    },
     render: function () {
         var flow = this.props.flow;
         var tabs = this.getTabs(flow);
+        var pluginActions = this.getPluginActions(flow);
         var active = this.getActive();
 
         if (!_.contains(tabs, active)) {
@@ -2085,7 +2081,7 @@ var FlowView = React.createClass({displayName: "FlowView",
 
 module.exports = FlowView;
 
-},{"../common.js":4,"../prompt.js":17,"./details.js":10,"./messages.js":12,"./nav.js":13,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
+},{"../common.js":4,"../prompt.js":18,"./details.js":10,"./messages.js":12,"./nav.js":13,"./plugins.js":14,"lodash":"lodash","react":"react"}],12:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -2413,7 +2409,7 @@ module.exports = {
     Error: Error
 };
 
-},{"../../actions.js":2,"../../flow/utils.js":23,"../../utils.js":26,"../common.js":4,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react"}],13:[function(require,module,exports){
+},{"../../actions.js":2,"../../flow/utils.js":24,"../../utils.js":27,"../common.js":4,"../editor.js":5,"./contentview.js":9,"lodash":"lodash","react":"react"}],13:[function(require,module,exports){
 var React = require("react");
 
 var actions = require("../../actions.js");
@@ -2478,6 +2474,94 @@ module.exports = Nav;
 
 },{"../../actions.js":2,"react":"react"}],14:[function(require,module,exports){
 var React = require("react");
+var _ = require("lodash");
+
+var utils = require("../../utils.js");
+
+var PluginList = [];
+
+var PluginActionOptions = React.createClass({displayName: "PluginActionOptions",
+    triggerClick: function (event) {
+        var flow = this.props.flow;
+        console.log(flow);
+        var el = event.target;
+        $.ajax({
+            type: "POST",
+            url: "/flows/" + flow.id + "/plugins/" + this.props.plugin.id,
+            contentType: 'application/json',
+            data: JSON.stringify(_.find(this.props.plugin.options, function(o){return (o.id === el.getAttribute('id'))}))
+        });
+    },
+
+    render: function () {
+        var plugin = this.props.plugin; 
+
+        var ret = [];
+        _.forEach(plugin.options, function (option) {
+            if (option.type === 'button') {
+                ret.push(React.createElement("div", null, React.createElement("input", {type: "button", id: option.id, "data-action": option.action, onClick: this.triggerClick, value: option.title})));
+            } else if (option.type === 'checkbox') {
+                ret.push(React.createElement("div", null, React.createElement("label", {for: option.id}, option.title), 
+                         React.createElement("input", {type: "checkbox", id: option.id, "data-action": option.action})));
+            }
+        }.bind(this));
+
+        return (React.createElement("span", null, ret));
+    }
+});
+
+
+var PluginActions = React.createClass({displayName: "PluginActions",
+    render: function () {
+        var flow = this.props.flow;
+        var sc = flow.server_conn;
+        var cc = flow.client_conn;
+        var req = flow.request;
+        var resp = flow.response;
+
+        var rows = [];
+        _.forEach(PluginList, function (plugin) {
+            rows.push(React.createElement("tr", null, 
+                        React.createElement("td", null, plugin.title), 
+                        React.createElement("td", null, React.createElement(PluginActionOptions, {plugin: plugin, flow: flow}))
+                      ));
+        });
+
+        return (
+            React.createElement("table", {className: "plugins-table"}, 
+                React.createElement("thead", null, 
+                    React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Options"))
+                ), 
+
+                React.createElement("tbody", null, 
+                rows
+                )
+            )
+        );
+    }
+});
+
+var Plugins = React.createClass({displayName: "Plugins",
+    render: function () {
+        var flow = this.props.flow;
+        var client_conn = flow.client_conn;
+        var server_conn = flow.server_conn;
+        return (
+            React.createElement("section", null, 
+
+                React.createElement("h4", null, "Plugin Actions"), 
+
+                React.createElement(PluginActions, {flow: flow})
+
+            )
+        );
+    }
+});
+
+module.exports = {'Plugins': Plugins, 'PluginList': PluginList, 'PluginActions': PluginActions};
+
+},{"../../utils.js":27,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
+var React = require("react");
 var common = require("./common.js");
 
 var Footer = React.createClass({displayName: "Footer",
@@ -2497,7 +2581,7 @@ var Footer = React.createClass({displayName: "Footer",
 
 module.exports = Footer;
 
-},{"./common.js":4,"react":"react"}],15:[function(require,module,exports){
+},{"./common.js":4,"react":"react"}],16:[function(require,module,exports){
 var React = require("react");
 var $ = require("jquery");
 
@@ -2898,7 +2982,7 @@ module.exports = {
     MainMenu: MainMenu
 };
 
-},{"../actions.js":2,"../filt/filt.js":22,"../utils.js":26,"./common.js":4,"jquery":"jquery","react":"react"}],16:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../utils.js":27,"./common.js":4,"jquery":"jquery","react":"react"}],17:[function(require,module,exports){
 var React = require("react");
 
 var actions = require("../actions.js");
@@ -3145,7 +3229,7 @@ var MainView = React.createClass({displayName: "MainView",
 module.exports = MainView;
 
 
-},{"../actions.js":2,"../filt/filt.js":22,"../store/view.js":25,"../utils.js":26,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],17:[function(require,module,exports){
+},{"../actions.js":2,"../filt/filt.js":23,"../store/view.js":26,"../utils.js":27,"./common.js":4,"./flowtable.js":8,"./flowview/index.js":11,"react":"react"}],18:[function(require,module,exports){
 var React = require("react");
 var _ = require("lodash");
 
@@ -3247,7 +3331,7 @@ var Prompt = React.createClass({displayName: "Prompt",
 
 module.exports = Prompt;
 
-},{"../utils.js":26,"./common.js":4,"lodash":"lodash","react":"react"}],18:[function(require,module,exports){
+},{"../utils.js":27,"./common.js":4,"lodash":"lodash","react":"react"}],19:[function(require,module,exports){
 var React = require("react");
 var ReactRouter = require("react-router");
 var _ = require("lodash");
@@ -3262,6 +3346,7 @@ var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
 var ContentViewAll = require("./flowview/contentview.js").all;
 var PluginMixin = require("./flowview/contentview.js").PluginMixin;
+var PluginList = require("./flowview/plugins.js").PluginList;
 
 
 //TODO: Move out of here, just a stub.
@@ -3319,6 +3404,10 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
                             });
 
                             ContentViewAll.push(ViewPlugin);
+                        }
+
+                        if (plugin.type === 'action_plugins') {
+                            PluginList.push(plugin);
                         }
                     });
                 }.bind(this))
@@ -3411,7 +3500,7 @@ module.exports = {
     routes: routes
 };
 
-},{"../actions.js":2,"../store/store.js":24,"../utils.js":26,"./common.js":4,"./eventlog.js":6,"./flowview/contentview.js":9,"./footer.js":14,"./header.js":15,"./mainview.js":16,"lodash":"lodash","react":"react","react-router":"react-router"}],19:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":25,"../utils.js":27,"./common.js":4,"./eventlog.js":6,"./flowview/contentview.js":9,"./flowview/plugins.js":14,"./footer.js":15,"./header.js":16,"./mainview.js":17,"lodash":"lodash","react":"react","react-router":"react-router"}],20:[function(require,module,exports){
 var React = require("react");
 
 var VirtualScrollMixin = {
@@ -3498,7 +3587,7 @@ var VirtualScrollMixin = {
 
 module.exports  = VirtualScrollMixin;
 
-},{"react":"react"}],20:[function(require,module,exports){
+},{"react":"react"}],21:[function(require,module,exports){
 
 var actions = require("./actions.js");
 var AppDispatcher = require("./dispatcher.js").AppDispatcher;
@@ -3529,7 +3618,7 @@ function Connection(url) {
 
 module.exports = Connection;
 
-},{"./actions.js":2,"./dispatcher.js":21}],21:[function(require,module,exports){
+},{"./actions.js":2,"./dispatcher.js":22}],22:[function(require,module,exports){
 
 var flux = require("flux");
 
@@ -3553,7 +3642,7 @@ module.exports = {
     AppDispatcher: AppDispatcher
 };
 
-},{"flux":"flux"}],22:[function(require,module,exports){
+},{"flux":"flux"}],23:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -5329,7 +5418,7 @@ module.exports = (function() {
   };
 })();
 
-},{"../flow/utils.js":23}],23:[function(require,module,exports){
+},{"../flow/utils.js":24}],24:[function(require,module,exports){
 var _ = require("lodash");
 var $ = require("jquery");
 
@@ -5376,16 +5465,24 @@ var MessageUtils = {
         }
         return false;
     },
-    getContentURL: function (flow, message) {
+    getContentURL: function (flow, message, viewType) {
         if (message === flow.request) {
             message = "request";
         } else if (message === flow.response) {
             message = "response";
         }
-        return "/flows/" + flow.id + "/" + message + "/content";
+
+        if (viewType !== undefined)
+            return "/flows/" + flow.id + "/" + message + "/content/" + viewType;
+        else
+            return "/flows/" + flow.id + "/" + message + "/content";
     },
-    getContent: function (flow, message) {
-        var url = MessageUtils.getContentURL(flow, message);
+    getContent: function (flow, message, viewType) {
+        var url;
+        if (viewType !== undefined)
+            url = MessageUtils.getContentURL(flow, message, viewType);
+        else
+            url = MessageUtils.getContentURL(flow, message);
         return $.get(url);
     }
 };
@@ -5461,7 +5558,7 @@ module.exports = {
     isValidHttpVersion: isValidHttpVersion
 };
 
-},{"jquery":"jquery","lodash":"lodash"}],24:[function(require,module,exports){
+},{"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
 
 var _ = require("lodash");
 var $ = require("jquery");
@@ -5643,7 +5740,7 @@ module.exports = {
     FlowStore: FlowStore
 };
 
-},{"../actions.js":2,"../dispatcher.js":21,"../utils.js":26,"events":1,"jquery":"jquery","lodash":"lodash"}],25:[function(require,module,exports){
+},{"../actions.js":2,"../dispatcher.js":22,"../utils.js":27,"events":1,"jquery":"jquery","lodash":"lodash"}],26:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
 var _ = require("lodash");
 
@@ -5760,7 +5857,7 @@ module.exports = {
     StoreView: StoreView
 };
 
-},{"../utils.js":26,"events":1,"lodash":"lodash"}],26:[function(require,module,exports){
+},{"../utils.js":27,"events":1,"lodash":"lodash"}],27:[function(require,module,exports){
 var $ = require("jquery");
 var _ = require("lodash");
 var actions = require("./actions.js");

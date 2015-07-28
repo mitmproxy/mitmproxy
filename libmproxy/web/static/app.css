@@ -340,10 +340,21 @@ header .menu {
   padding-right: 1em;
 }
 .connection-table td,
-.timing-table td {
+.timing-table td,
+.plugins-table td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.plugins-table div {
+  width: 100%;
+}
+.plugins-table div label,
+.plugins-table div input {
+  width: 50%;
+}
+.plugins-table thead {
+  border-bottom: 1px solid grey;
 }
 .flowview-image {
   text-align: center;
