@@ -12,6 +12,7 @@ var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
 var ContentViewAll = require("./flowview/contentview.js").all;
 var PluginMixin = require("./flowview/contentview.js").PluginMixin;
+var PluginList = require("./flowview/plugins.js").PluginList;
 
 
 //TODO: Move out of here, just a stub.

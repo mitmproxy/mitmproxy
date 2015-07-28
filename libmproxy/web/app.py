@@ -179,7 +179,7 @@ class ReplayFlow(RequestHandler):
             raise APIError(400, r)
 
 
-class PluginFlowContent(RequestHandler):
+class ViewPluginFlowContent(RequestHandler):
     def get(self, flow_id, message, plugin_id):
         message = getattr(self.flow, message)
 
@@ -208,16 +208,12 @@ class PluginFlowContent(RequestHandler):
         self.set_header("X-Frame-Options", "DENY")
 
         transformed_content = message.content
-        print "Master plugins..."
-        print repr(self.master.plugins._view_plugins)
         for plugin_type, plugin_list in self.master.plugins:
             if plugin_type != 'view_plugins':
                 continue
 
             for found_plugin_id, plugin in plugin_list.items():
                 if found_plugin_id == plugin_id:
-                    print "FOUND PLUGIN..."
-                    print repr(plugin)
                     transformed_content = plugin['transformer'](message.content)
                     break
         self.write(transformed_content)
@@ -286,7 +282,7 @@ class Settings(RequestHandler):
         )
 
 
-class Plugins(RequestHandler):
+class PluginList(RequestHandler):
     def get(self):
         def _flatten(plugin_list):
             ret_arr = []
@@ -296,9 +292,14 @@ class Plugins(RequestHandler):
                     new_dict['id'] = plugin_id
                     new_dict['type'] = plugin_type
 
-                    for k, v in new_dict.items():
-                        if callable(v):
-                            del new_dict[k]
+                    def _check_dict_for_callables(_dict):
+                        for k, v in _dict.items():
+                            if callable(v):
+                                _dict[k] = repr(v)
+                            if isinstance(v, dict):
+                                _check_dict_for_callables(v)
+
+                    _check_dict_for_callables(new_dict)
                     ret_arr.append(new_dict)
             return ret_arr
 
@@ -323,10 +324,10 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<plugin_id>[\w]+)", PluginFlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<plugin_id>[\w]+)", ViewPluginFlowContent),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
-            (r"/plugins", Plugins),
+            (r"/plugins", PluginList),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

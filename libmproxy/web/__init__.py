@@ -4,6 +4,7 @@ import tornado.ioloop
 import tornado.httpserver
 import os
 import sys
+import inspect
 from .. import controller, flow, filt
 from . import app
 
@@ -60,8 +61,6 @@ class WebState(flow.State):
 
         self._last_event_id = 0
         self.events = collections.deque(maxlen=1000)
-
-        self.plugins = [{'foo': 'bar'}]
 
     def add_event(self, e, level):
         self._last_event_id += 1
@@ -139,6 +138,7 @@ class WebPlugins(object):
             yield (plugin_type, getattr(self, '_' + plugin_type))
 
     def register_view(self, id, **kwargs):
+        script_path = inspect.stack()[1][1]
         if self._view_plugins.get(id):
             raise WebError("Duplicate view registration for %s" % (id, ))
 
@@ -152,7 +152,9 @@ class WebPlugins(object):
 
         self._view_plugins[id]['transformer'] = kwargs['transformer']
 
-        print("Registered view plugin %s" % (kwargs['title'], ))
+        self._view_plugins[id]['script_path'] = script_path
+
+        print("Registered view plugin %s form script %s" % (kwargs['title'], script_path))
 
     def register_action(self, id, **kwargs):
         if self._action_plugins.get(id):

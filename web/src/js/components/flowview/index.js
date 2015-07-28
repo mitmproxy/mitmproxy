@@ -6,7 +6,7 @@ var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
 var Prompt = require("../prompt.js");
-var Plugins = require("./plugins.js");
+var Plugins = require("./plugins.js").Plugins;
 
 
 var allTabs = {

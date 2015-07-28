@@ -11,8 +11,7 @@ var ActionTypes = {
     // Stores
     SETTINGS_STORE: "settings",
     EVENT_STORE: "events",
-    FLOW_STORE: "flows",
-    PLUGIN_STORE: "plugins",
+    FLOW_STORE: "flows"
 };
 
 var StoreCmds = {
@@ -121,18 +120,6 @@ var FlowActions = {
     }
 };
 
-var PluginActions = {
-    update: function (plugins) {
-
-        $.ajax({
-            type: "PUT",
-            url: "/plugins",
-            contentType: 'application/json',
-            data: JSON.stringify(plugins)
-        }); 
-    }
-};
-
 var Query = {
     SEARCH: "s",
     HIGHLIGHT: "h",
@@ -146,6 +133,5 @@ module.exports = {
     StoreCmds: StoreCmds,
     SettingsActions: SettingsActions,
     EventLogActions: EventLogActions,
-    Query: Query,
-    PluginActions: PluginActions
+    Query: Query
 };
