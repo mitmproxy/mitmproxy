@@ -3,6 +3,7 @@ import collections
 import tornado.ioloop
 import tornado.httpserver
 import os
+import sys
 from .. import controller, flow, filt
 from . import app
 
@@ -141,7 +142,8 @@ class WebPlugins(object):
         if self._view_plugins.get(id):
             raise WebError("Duplicate view registration for %s" % (id, ))
 
-        if not kwargs.get('transformer') or not callable(kwargs['transformer']):
+        if not kwargs.get('transformer') or not \
+                callable(kwargs['transformer']):
             raise WebError("No transformer method passed for view %s" % (id, ))
 
         self._view_plugins[id] = {}
@@ -176,7 +178,8 @@ class WebPlugins(object):
 
 
 class WebMaster(flow.FlowMaster):
-    def __init__(self, server, options):
+    def __init__(self, server, options, outfile=sys.stdout):
+        self.outfile = outfile
         self.options = options
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self, self.options.wdebug)
