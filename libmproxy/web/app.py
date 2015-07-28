@@ -293,15 +293,15 @@ class PluginOptions(RequestHandler):
                 if plugin_id != _plugin_id:
                     continue
 
-                for option in plugin_dict['options']:
-                    if option['id'] != self.json['id']:
+                for action in plugin_dict['actions']:
+                    if action['id'] != self.json['id']:
                         continue
 
                     found = True
                     plugin = plugin_dict
 
         if not found:
-            raise APIError(500, 'No option %s for plugin %s' % (self.json['id'], plugin_id))
+            raise APIError(500, 'No action %s for plugin %s' % (self.json['id'], plugin_id))
 
         #self.master.run_script_once
         self.master.add_event("Running plugin %s action %s on flow" % (plugin_id, self.json['id']), "debug")

@@ -5,7 +5,7 @@ var utils = require("../../utils.js");
 
 var PluginList = [];
 
-var PluginActionOptions = React.createClass({
+var PluginAction = React.createClass({
     triggerClick: function (event) {
         var flow = this.props.flow;
         console.log(flow);
@@ -14,7 +14,7 @@ var PluginActionOptions = React.createClass({
             type: "POST",
             url: "/flows/" + flow.id + "/plugins/" + this.props.plugin.id,
             contentType: 'application/json',
-            data: JSON.stringify(_.find(this.props.plugin.options, function(o){return (o.id === el.getAttribute('id'))}))
+            data: JSON.stringify(_.find(this.props.plugin.actions, function(o){return (o.id === el.getAttribute('id'))}))
         });
     },
 
@@ -22,12 +22,12 @@ var PluginActionOptions = React.createClass({
         var plugin = this.props.plugin; 
 
         var ret = [];
-        _.forEach(plugin.options, function (option) {
-            if (option.type === 'button') {
-                ret.push(<div><input type="button" id={option.id} data-action={option.action} onClick={this.triggerClick} value={option.title}/></div>);
-            } else if (option.type === 'checkbox') {
-                ret.push(<div><label for={option.id}>{option.title}</label>
-                         <input type="checkbox" id={option.id} data-action={option.action}/></div>);
+        _.forEach(plugin.actions, function (action) {
+            if (action.type === 'button') {
+                ret.push(<div><input type="button" id={action.id} data-action={action.action} onClick={this.triggerClick} value={action.title}/></div>);
+            } else if (action.type === 'checkbox') {
+                ret.push(<div><label for={action.id}>{action.title}</label>
+                         <input type="checkbox" id={action.id} data-action={action.action}/></div>);
             }
         }.bind(this));
 
@@ -48,7 +48,7 @@ var PluginActions = React.createClass({
         _.forEach(PluginList, function (plugin) {
             rows.push(<tr>
                         <td>{plugin.title}</td>
-                        <td><PluginActionOptions plugin={plugin} flow={flow}/></td>
+                        <td><PluginAction plugin={plugin} flow={flow}/></td>
                       </tr>);
         });
 

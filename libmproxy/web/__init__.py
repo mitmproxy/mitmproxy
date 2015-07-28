@@ -167,8 +167,8 @@ class WebPlugins(object):
 
         self._action_plugins[id]['script_path'] = script_path
 
-        if kwargs.get('options'):
-            self._action_plugins[id]['options'] = kwargs['options']
+        if kwargs.get('actions'):
+            self._action_plugins[id]['actions'] = kwargs['actions']
 
         print("Registered action plugin %s from script %s" % (kwargs['title'], script_path))
 
