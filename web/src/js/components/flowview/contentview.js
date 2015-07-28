@@ -93,7 +93,8 @@ var PluginMixin = {
         if (this.state.request) {
             this.state.request.abort();
         }
-        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        var request = MessageUtils.getContent(nextProps.flow,
+            nextProps.message, this.constructor.displayName);
         this.setState({
             content: undefined,
             request: request

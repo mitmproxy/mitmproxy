@@ -179,6 +179,50 @@ class ReplayFlow(RequestHandler):
             raise APIError(400, r)
 
 
+class PluginFlowContent(RequestHandler):
+    def get(self, flow_id, message, plugin_id):
+        message = getattr(self.flow, message)
+
+        if not message.content:
+            raise APIError(400, "No content.")
+
+        content_encoding = message.headers.get_first("Content-Encoding", None)
+        if content_encoding:
+            content_encoding = re.sub(r"[^\w]", "", content_encoding)
+            self.set_header("Content-Encoding", content_encoding)
+
+        original_cd = message.headers.get_first("Content-Disposition", None)
+        filename = None
+        if original_cd:
+            filename = re.search("filename=([\w\" \.\-\(\)]+)", original_cd)
+            if filename:
+                filename = filename.group(1)
+        if not filename:
+            filename = self.flow.request.path.split("?")[0].split("/")[-1]
+
+        filename = re.sub(r"[^\w\" \.\-\(\)]", "", filename)
+        cd = "attachment; filename={}".format(filename)
+        self.set_header("Content-Disposition", cd)
+        self.set_header("Content-Type", "application/text")
+        self.set_header("X-Content-Type-Options", "nosniff")
+        self.set_header("X-Frame-Options", "DENY")
+
+        transformed_content = message.content
+        print "Master plugins..."
+        print repr(self.master.plugins._view_plugins)
+        for plugin_type, plugin_list in self.master.plugins:
+            if plugin_type != 'view_plugins':
+                continue
+
+            for found_plugin_id, plugin in plugin_list.items():
+                if found_plugin_id == plugin_id:
+                    print "FOUND PLUGIN..."
+                    print repr(plugin)
+                    transformed_content = plugin['transformer'](message.content)
+                    break
+        self.write(transformed_content)
+
+
 class FlowContent(RequestHandler):
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
@@ -248,9 +292,14 @@ class Plugins(RequestHandler):
             ret_arr = []
             for plugin_type, plugin_dicts in dict(plugin_list).items():
                 for plugin_id, plugin_dict in plugin_dicts.items():
-                    plugin_dict['id'] = plugin_id
-                    plugin_dict['type'] = plugin_type
-                    ret_arr.append(plugin_dict)
+                    new_dict = plugin_dict.copy()
+                    new_dict['id'] = plugin_id
+                    new_dict['type'] = plugin_type
+
+                    for k, v in new_dict.items():
+                        if callable(v):
+                            del new_dict[k]
+                    ret_arr.append(new_dict)
             return ret_arr
 
         self.write(dict(
@@ -274,6 +323,7 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<plugin_id>[\w]+)", PluginFlowContent),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
             (r"/plugins", Plugins),

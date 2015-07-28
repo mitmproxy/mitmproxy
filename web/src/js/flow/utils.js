@@ -44,16 +44,24 @@ var MessageUtils = {
         }
         return false;
     },
-    getContentURL: function (flow, message) {
+    getContentURL: function (flow, message, viewType) {
         if (message === flow.request) {
             message = "request";
         } else if (message === flow.response) {
             message = "response";
         }
-        return "/flows/" + flow.id + "/" + message + "/content";
+
+        if (viewType !== undefined)
+            return "/flows/" + flow.id + "/" + message + "/content/" + viewType;
+        else
+            return "/flows/" + flow.id + "/" + message + "/content";
     },
-    getContent: function (flow, message) {
-        var url = MessageUtils.getContentURL(flow, message);
+    getContent: function (flow, message, viewType) {
+        var url;
+        if (viewType !== undefined)
+            url = MessageUtils.getContentURL(flow, message, viewType);
+        else
+            url = MessageUtils.getContentURL(flow, message);
         return $.get(url);
     }
 };

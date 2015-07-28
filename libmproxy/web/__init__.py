@@ -140,12 +140,16 @@ class WebPlugins(object):
         if self._view_plugins.get(id):
             raise WebError("Duplicate view registration for %s" % (id, ))
 
+        if not kwargs.get('transformer') or not callable(kwargs['transformer']):
+            raise WebError("No transformer method passed for view %s" % (id, ))
+
         self._view_plugins[id] = {}
 
-        if kwargs.get('title'):
-            self._view_plugins[id]['title'] = kwargs['title']
-        else:
-            self._view_plugins[id]['title'] = id
+        self._view_plugins[id]['title'] = kwargs.get('title') or id
+
+        self._view_plugins[id]['transformer'] = kwargs['transformer']
+
+        print("Registered view plugin %s" % (kwargs['title'], ))
 
     def register_action(self, id, **kwargs):
         if self._action_plugins.get(id):
