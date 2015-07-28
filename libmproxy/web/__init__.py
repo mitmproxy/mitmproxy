@@ -3,7 +3,7 @@ import collections
 import tornado.ioloop
 import tornado.httpserver
 import os
-from .. import controller, flow
+from .. import controller, flow, filt
 from . import app
 
 
@@ -113,6 +113,7 @@ class Options(object):
         "verbosity",
         "wfile",
         "nopop",
+        "filtstr",
 
         "wdebug",
         "wport",
@@ -188,6 +189,19 @@ class WebMaster(flow.FlowMaster):
                     "error"
                 )
 
+        if options.filtstr:
+            self.filt = filt.parse(options.filtstr)
+        else:
+            self.filt = None
+
+        if options.outfile:
+            path = os.path.expanduser(options.outfile[0])
+            try:
+                f = file(path, options.outfile[1])
+                self.start_stream(f, self.filt)
+            except IOError as v:
+                raise WebError(v.strerror)
+
         self.plugins = WebPlugins()
 
         scripts = options.scripts or []
@@ -195,6 +209,13 @@ class WebMaster(flow.FlowMaster):
             err = self.load_script(command)
             if err:
                 raise WebError(err)
+
+        if options.rfile:
+            try:
+                self.load_flows_file(options.rfile)
+            except flow.FlowReadError as v:
+                self.add_event("Flow file corrupted.", "error")
+                raise WebError(v)
 
         if self.options.app:
             self.start_app(self.options.app_host, self.options.app_port)
