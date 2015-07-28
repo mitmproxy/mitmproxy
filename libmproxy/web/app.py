@@ -5,6 +5,7 @@ import tornado.websocket
 import logging
 import json
 from .. import version, filt
+from ..script import ScriptError
 
 
 class APIError(tornado.web.HTTPError):
@@ -282,6 +283,52 @@ class Settings(RequestHandler):
         )
 
 
+class PluginOptions(RequestHandler):
+    def post(self, flow_id, plugin_id):
+        found = False
+        plugin = None
+        plugin_list = self.master.plugins
+        for plugin_type, plugin_dicts in dict(plugin_list).items():
+            for _plugin_id, plugin_dict in plugin_dicts.items():
+                if plugin_id != _plugin_id:
+                    continue
+
+                for option in plugin_dict['options']:
+                    if option['id'] != self.json['id']:
+                        continue
+
+                    found = True
+                    plugin = plugin_dict
+
+        if not found:
+            raise APIError(500, 'No option %s for plugin %s' % (self.json['id'], plugin_id))
+
+        #self.master.run_script_once
+        self.master.add_event("Running plugin %s action %s on flow" % (plugin_id, self.json['id']), "debug")
+
+        found = False
+        script = None
+        for _script in self.master.scripts:
+            if _script.args[0] != plugin['script_path']:
+                continue
+
+            found = True
+            script = _script
+
+        if not found:
+            raise APIError(500, 'No script %s found on master.scripts' % plugin['script_path'])
+
+        try:
+            script.run(self.json['id'], self.flow)
+        except ScriptError as e:
+            self.master.add_event("Error running script:\n%s" % repr(e), "error")
+            raise APIError(500, 'Error running script:\n%s' % repr(e))
+
+        self.write(dict(
+            data=self.json
+        ))
+
+
 class PluginList(RequestHandler):
     def get(self):
         def _flatten(plugin_list):
@@ -325,6 +372,7 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<plugin_id>[\w]+)", ViewPluginFlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/plugins/(?P<plugin_id>[\w]+)", PluginOptions),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
             (r"/plugins", PluginList),

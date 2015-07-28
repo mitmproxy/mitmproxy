@@ -5,6 +5,36 @@ var utils = require("../../utils.js");
 
 var PluginList = [];
 
+var PluginActionOptions = React.createClass({
+    triggerClick: function (event) {
+        var flow = this.props.flow;
+        console.log(flow);
+        var el = event.target;
+        $.ajax({
+            type: "POST",
+            url: "/flows/" + flow.id + "/plugins/" + this.props.plugin.id,
+            contentType: 'application/json',
+            data: JSON.stringify(_.find(this.props.plugin.options, function(o){return (o.id === el.getAttribute('id'))}))
+        });
+    },
+
+    render: function () {
+        var plugin = this.props.plugin; 
+
+        var ret = [];
+        _.forEach(plugin.options, function (option) {
+            if (option.type === 'button') {
+                ret.push(<div><input type="button" id={option.id} data-action={option.action} onClick={this.triggerClick} value={option.title}/></div>);
+            } else if (option.type === 'checkbox') {
+                ret.push(<div><label for={option.id}>{option.title}</label>
+                         <input type="checkbox" id={option.id} data-action={option.action}/></div>);
+            }
+        }.bind(this));
+
+        return (<span>{ret}</span>);
+    }
+});
+
 
 var PluginActions = React.createClass({
     render: function () {
@@ -53,4 +83,4 @@ var Plugins = React.createClass({
     }
 });
 
-module.exports = {'Plugins': Plugins, 'PluginList': PluginList};
+module.exports = {'Plugins': Plugins, 'PluginList': PluginList, 'PluginActions': PluginActions};

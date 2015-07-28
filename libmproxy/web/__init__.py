@@ -134,7 +134,7 @@ class WebPlugins(object):
         self._action_plugins = {}
 
     def __iter__(self):
-        for plugin_type in ('view_plugins',):
+        for plugin_type in ('view_plugins', 'action_plugins'):
             yield (plugin_type, getattr(self, '_' + plugin_type))
 
     def register_view(self, id, **kwargs):
@@ -157,26 +157,20 @@ class WebPlugins(object):
         print("Registered view plugin %s form script %s" % (kwargs['title'], script_path))
 
     def register_action(self, id, **kwargs):
+        script_path = inspect.stack()[1][1]
         if self._action_plugins.get(id):
             raise WebError("Duplicate action registration for %s" % (id, ))
-
-        if not kwargs.get('transformer') or \
-                not isinstance(kwargs['transformer'], dict):
-            raise WebError("No transformer method passed for action %s"
-                           % (id, ))
-
-        if not ('request' in kwargs['transformer'] or
-                'response' in kwargs['transformer']):
-            raise WebError("No request/response transforms for action %s"
-                           % (id, ))
 
         self._action_plugins[id] = {}
 
         self._action_plugins[id]['title'] = kwargs.get('title') or id
 
-        self._action_plugins[id]['transformer'] = kwargs['transformer']
+        self._action_plugins[id]['script_path'] = script_path
 
-        print("Registered action plugin %s" % (kwargs['title'], ))
+        if kwargs.get('options'):
+            self._action_plugins[id]['options'] = kwargs['options']
+
+        print("Registered action plugin %s from script %s" % (kwargs['title'], script_path))
 
 
 class WebMaster(flow.FlowMaster):

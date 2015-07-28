@@ -71,6 +71,10 @@ var ProxyAppMain = React.createClass({
 
                             ContentViewAll.push(ViewPlugin);
                         }
+
+                        if (plugin.type === 'action_plugins') {
+                            PluginList.push(plugin);
+                        }
                     });
                 }.bind(this))
                 .fail(function () {
