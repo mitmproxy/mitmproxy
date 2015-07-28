@@ -6,13 +6,15 @@ var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
 var Prompt = require("../prompt.js");
+var Plugins = require("./plugins.js");
 
 
 var allTabs = {
     request: Messages.Request,
     response: Messages.Response,
     error: Messages.Error,
-    details: Details
+    details: Details,
+    plugins: Plugins
 };
 
 var FlowView = React.createClass({
@@ -30,6 +32,9 @@ var FlowView = React.createClass({
             }
         });
         tabs.push("details");
+        // replace w/
+        // if length(available actions for flow) >= 1
+        tabs.push("plugins");
         return tabs;
     },
     nextTab: function (i) {
@@ -88,9 +93,13 @@ var FlowView = React.createClass({
             }
         });
     },
+    getPluginActions: function (flow) {
+        return ['Reverse contents (all)'];
+    },
     render: function () {
         var flow = this.props.flow;
         var tabs = this.getTabs(flow);
+        var pluginActions = this.getPluginActions(flow);
         var active = this.getActive();
 
         if (!_.contains(tabs, active)) {

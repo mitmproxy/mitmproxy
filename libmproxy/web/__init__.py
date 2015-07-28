@@ -130,6 +130,7 @@ class Options(object):
 class WebPlugins(object):
     def __init__(self):
         self._view_plugins = {}
+        self._action_plugins = {}
 
     def __iter__(self):
         for plugin_type in ('view_plugins',):
@@ -145,6 +146,28 @@ class WebPlugins(object):
             self._view_plugins[id]['title'] = kwargs['title']
         else:
             self._view_plugins[id]['title'] = id
+
+    def register_action(self, id, **kwargs):
+        if self._action_plugins.get(id):
+            raise WebError("Duplicate action registration for %s" % (id, ))
+
+        if not kwargs.get('transformer') or \
+                not isinstance(kwargs['transformer'], dict):
+            raise WebError("No transformer method passed for action %s"
+                           % (id, ))
+
+        if not ('request' in kwargs['transformer'] or
+                'response' in kwargs['transformer']):
+            raise WebError("No request/response transforms for action %s"
+                           % (id, ))
+
+        self._action_plugins[id] = {}
+
+        self._action_plugins[id]['title'] = kwargs.get('title') or id
+
+        self._action_plugins[id]['transformer'] = kwargs['transformer']
+
+        print("Registered action plugin %s" % (kwargs['title'], ))
 
 
 class WebMaster(flow.FlowMaster):
