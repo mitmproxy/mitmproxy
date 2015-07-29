@@ -301,4 +301,4 @@ class TestDaemonHTTP2(_TestDaemon):
             )
             c.connect()
             resp = c.request("get:/p/200")
-            assert resp.status_code == "200"
+            assert resp.status_code == 200
