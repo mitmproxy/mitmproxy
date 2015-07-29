@@ -7,6 +7,32 @@ import urlparse
 
 from .. import utils, odict
 
+CONTENT_MISSING = 0
+
+
+class ProtocolMixin(object):
+
+    def read_request(self):
+        raise NotImplemented
+
+    def read_response(self):
+        raise NotImplemented
+
+    def assemble(self, message):
+        if isinstance(message, Request):
+            return self.assemble_request(message)
+        elif isinstance(message, Response):
+            return self.assemble_response(message)
+        else:
+            raise ValueError("HTTP message not supported.")
+
+    def assemble_request(self, request):
+        raise NotImplemented
+
+    def assemble_response(self, response):
+        raise NotImplemented
+
+
 class Request(object):
 
     def __init__(
@@ -18,12 +44,14 @@ class Request(object):
         port,
         path,
         httpversion,
-        headers,
-        body,
+        headers=None,
+        body=None,
         timestamp_start=None,
         timestamp_end=None,
     ):
-        assert isinstance(headers, odict.ODictCaseless) or not headers
+        if not headers:
+            headers = odict.ODictCaseless()
+        assert isinstance(headers, odict.ODictCaseless)
 
         self.form_in = form_in
         self.method = method
@@ -36,6 +64,7 @@ class Request(object):
         self.body = body
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
+
 
     def __eq__(self, other):
         try:
@@ -80,14 +109,16 @@ class Response(object):
         self,
         httpversion,
         status_code,
-        msg,
-        headers,
-        body,
+        msg=None,
+        headers=None,
+        body=None,
         sslinfo=None,
         timestamp_start=None,
         timestamp_end=None,
     ):
-        assert isinstance(headers, odict.ODictCaseless) or not headers
+        if not headers:
+            headers = odict.ODictCaseless()
+        assert isinstance(headers, odict.ODictCaseless)
 
         self.httpversion = httpversion
         self.status_code = status_code
@@ -97,6 +128,7 @@ class Response(object):
         self.sslinfo = sslinfo
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
+
 
     def __eq__(self, other):
         try:

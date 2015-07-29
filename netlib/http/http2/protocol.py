@@ -4,6 +4,7 @@ import time
 
 from hpack.hpack import Encoder, Decoder
 from netlib import http, utils, odict
+from netlib.http import semantics
 from . import frame
 
 
@@ -13,7 +14,7 @@ class TCPHandler(object):
         self.wfile = wfile
 
 
-class HTTP2Protocol(object):
+class HTTP2Protocol(semantics.ProtocolMixin):
 
     ERROR_CODES = utils.BiDi(
         NO_ERROR=0x0,
@@ -59,26 +60,104 @@ class HTTP2Protocol(object):
         self.current_stream_id = None
         self.connection_preface_performed = False
 
-    def check_alpn(self):
-        alp = self.tcp_handler.get_alpn_proto_negotiated()
-        if alp != self.ALPN_PROTO_H2:
-            raise NotImplementedError(
-                "HTTP2Protocol can not handle unknown ALP: %s" % alp)
-        return True
+    def read_request(self, include_body=True, body_size_limit_=None, allow_empty_=False):
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
 
-    def _receive_settings(self, hide=False):
-        while True:
-            frm = self.read_frame(hide)
-            if isinstance(frm, frame.SettingsFrame):
-                break
+        stream_id, headers, body = self._receive_transmission(include_body)
 
-    def _read_settings_ack(self, hide=False):  # pragma no cover
-        while True:
-            frm = self.read_frame(hide)
-            if isinstance(frm, frame.SettingsFrame):
-                assert frm.flags & frame.Frame.FLAG_ACK
-                assert len(frm.settings) == 0
-                break
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        timestamp_end = time.time()
+
+        port = ''  # TODO: parse port number?
+
+        request = http.Request(
+            "",
+            headers.get_first(':method', ['']),
+            headers.get_first(':scheme', ['']),
+            headers.get_first(':host', ['']),
+            port,
+            headers.get_first(':path', ['']),
+            (2, 0),
+            headers,
+            body,
+            timestamp_start,
+            timestamp_end,
+        )
+        request.stream_id = stream_id
+
+        return request
+
+    def read_response(self, request_method_='', body_size_limit_=None, include_body=True):
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
+
+        stream_id, headers, body = self._receive_transmission(include_body)
+
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        if include_body:
+            timestamp_end = time.time()
+        else:
+            timestamp_end = None
+
+        response = http.Response(
+            (2, 0),
+            headers[':status'][0],
+            "",
+            headers,
+            body,
+            timestamp_start=timestamp_start,
+            timestamp_end=timestamp_end,
+        )
+        response.stream_id = stream_id
+
+        return response
+
+    def assemble_request(self, request):
+        assert isinstance(request, semantics.Request)
+
+        authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
+        if self.tcp_handler.address.port != 443:
+            authority += ":%d" % self.tcp_handler.address.port
+
+        headers = [
+            (b':method', bytes(request.method)),
+            (b':path', bytes(request.path)),
+            (b':scheme', b'https'),
+            (b':authority', authority),
+        ] + request.headers.items()
+
+        if hasattr(request, 'stream_id'):
+            stream_id = request.stream_id
+        else:
+            stream_id = self._next_stream_id()
+
+        return list(itertools.chain(
+            self._create_headers(headers, stream_id, end_stream=(request.body is None)),
+            self._create_body(request.body, stream_id)))
+
+    def assemble_response(self, response):
+        assert isinstance(response, semantics.Response)
+
+        headers = [(b':status', bytes(str(response.status_code)))] + response.headers.items()
+
+        if hasattr(response, 'stream_id'):
+            stream_id = response.stream_id
+        else:
+            stream_id = self._next_stream_id()
+
+        return list(itertools.chain(
+            self._create_headers(headers, stream_id, end_stream=(response.body is None)),
+            self._create_body(response.body, stream_id),
+        ))
 
     def perform_server_connection_preface(self, force=False):
         if force or not self.connection_preface_performed:
@@ -100,18 +179,6 @@ class HTTP2Protocol(object):
             self.send_frame(frame.SettingsFrame(state=self), hide=True)
             self._receive_settings(hide=True)
 
-    def next_stream_id(self):
-        if self.current_stream_id is None:
-            if self.is_server:
-                # servers must use even stream ids
-                self.current_stream_id = 2
-            else:
-                # clients must use odd stream ids
-                self.current_stream_id = 1
-        else:
-            self.current_stream_id += 2
-        return self.current_stream_id
-
     def send_frame(self, frm, hide=False):
         raw_bytes = frm.to_bytes()
         self.tcp_handler.wfile.write(raw_bytes)
@@ -127,6 +194,39 @@ class HTTP2Protocol(object):
             self._apply_settings(frm.settings, hide)
 
         return frm
+
+    def check_alpn(self):
+        alp = self.tcp_handler.get_alpn_proto_negotiated()
+        if alp != self.ALPN_PROTO_H2:
+            raise NotImplementedError(
+                "HTTP2Protocol can not handle unknown ALP: %s" % alp)
+        return True
+
+    def _receive_settings(self, hide=False):
+        while True:
+            frm = self.read_frame(hide)
+            if isinstance(frm, frame.SettingsFrame):
+                break
+
+    def _read_settings_ack(self, hide=False):  # pragma no cover
+        while True:
+            frm = self.read_frame(hide)
+            if isinstance(frm, frame.SettingsFrame):
+                assert frm.flags & frame.Frame.FLAG_ACK
+                assert len(frm.settings) == 0
+                break
+
+    def _next_stream_id(self):
+        if self.current_stream_id is None:
+            if self.is_server:
+                # servers must use even stream ids
+                self.current_stream_id = 2
+            else:
+                # clients must use odd stream ids
+                self.current_stream_id = 1
+        else:
+            self.current_stream_id += 2
+        return self.current_stream_id
 
     def _apply_settings(self, settings, hide=False):
         for setting, value in settings.items():
@@ -181,89 +281,6 @@ class HTTP2Protocol(object):
 
         return [frm.to_bytes()]
 
-
-    def create_request(self, method, path, headers=None, body=None):
-        if headers is None:
-            headers = []
-
-        authority = self.tcp_handler.sni if self.tcp_handler.sni else self.tcp_handler.address.host
-        if self.tcp_handler.address.port != 443:
-            authority += ":%d" % self.tcp_handler.address.port
-
-        headers = [
-            (b':method', bytes(method)),
-            (b':path', bytes(path)),
-            (b':scheme', b'https'),
-            (b':authority', authority),
-        ] + headers
-
-        stream_id = self.next_stream_id()
-
-        return list(itertools.chain(
-            self._create_headers(headers, stream_id, end_stream=(body is None)),
-            self._create_body(body, stream_id)))
-
-    def read_response(self, request_method_='', body_size_limit_=None, include_body=True):
-        timestamp_start = time.time()
-        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
-            self.tcp_handler.rfile.reset_timestamps()
-
-        stream_id, headers, body = self._receive_transmission(include_body)
-
-        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
-            # more accurate timestamp_start
-            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
-
-        if include_body:
-            timestamp_end = time.time()
-        else:
-            timestamp_end = None
-
-        response = http.Response(
-            (2, 0),
-            headers[':status'][0],
-            "",
-            headers,
-            body,
-            timestamp_start=timestamp_start,
-            timestamp_end=timestamp_end,
-        )
-        response.stream_id = stream_id
-
-        return response
-
-    def read_request(self, include_body=True, body_size_limit_=None, allow_empty_=False):
-        timestamp_start = time.time()
-        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
-            self.tcp_handler.rfile.reset_timestamps()
-
-        stream_id, headers, body = self._receive_transmission(include_body)
-
-        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
-            # more accurate timestamp_start
-            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
-
-        timestamp_end = time.time()
-
-        port = ''  # TODO: parse port number?
-
-        request = http.Request(
-            "",
-            headers.get_first(':method', ['']),
-            headers.get_first(':scheme', ['']),
-            headers.get_first(':host', ['']),
-            port,
-            headers.get_first(':path', ['']),
-            (2, 0),
-            headers,
-            body,
-            timestamp_start,
-            timestamp_end,
-        )
-        request.stream_id = stream_id
-
-        return request
-
     def _receive_transmission(self, include_body=True):
         body_expected = True
 
@@ -295,19 +312,3 @@ class HTTP2Protocol(object):
             headers.add(header, value)
 
         return stream_id, headers, body
-
-    def create_response(self, code, stream_id=None, headers=None, body=None):
-        if headers is None:
-            headers = []
-        if isinstance(headers, odict.ODict):
-            headers = headers.items()
-
-        headers = [(b':status', bytes(str(code)))] + headers
-
-        if not stream_id:
-            stream_id = self.next_stream_id()
-
-        return list(itertools.chain(
-            self._create_headers(headers, stream_id, end_stream=(body is None)),
-            self._create_body(body, stream_id),
-        ))

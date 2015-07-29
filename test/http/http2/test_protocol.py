@@ -1,6 +1,6 @@
 import OpenSSL
 
-from netlib import tcp, odict
+from netlib import tcp, odict, http
 from netlib.http import http2
 from netlib.http.http2.frame import *
 from ... import tutils, tservers
@@ -117,11 +117,11 @@ class TestClientStreamIds():
 
     def test_client_stream_ids(self):
         assert self.protocol.current_stream_id is None
-        assert self.protocol.next_stream_id() == 1
+        assert self.protocol._next_stream_id() == 1
         assert self.protocol.current_stream_id == 1
-        assert self.protocol.next_stream_id() == 3
+        assert self.protocol._next_stream_id() == 3
         assert self.protocol.current_stream_id == 3
-        assert self.protocol.next_stream_id() == 5
+        assert self.protocol._next_stream_id() == 5
         assert self.protocol.current_stream_id == 5
 
 
@@ -131,11 +131,11 @@ class TestServerStreamIds():
 
     def test_server_stream_ids(self):
         assert self.protocol.current_stream_id is None
-        assert self.protocol.next_stream_id() == 2
+        assert self.protocol._next_stream_id() == 2
         assert self.protocol.current_stream_id == 2
-        assert self.protocol.next_stream_id() == 4
+        assert self.protocol._next_stream_id() == 4
         assert self.protocol.current_stream_id == 4
-        assert self.protocol.next_stream_id() == 6
+        assert self.protocol._next_stream_id() == 6
         assert self.protocol.current_stream_id == 6
 
 
@@ -215,17 +215,36 @@ class TestCreateBody():
         # TODO: add test for too large frames
 
 
-class TestCreateRequest():
+class TestAssembleRequest():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
-    def test_create_request_simple(self):
-        bytes = http2.HTTP2Protocol(self.c).create_request('GET', '/')
+    def test_assemble_request_simple(self):
+        bytes = http2.HTTP2Protocol(self.c).assemble_request(http.Request(
+            '',
+            'GET',
+            '',
+            '',
+            '',
+            '/',
+            (2, 0),
+            None,
+            None,
+        ))
         assert len(bytes) == 1
         assert bytes[0] == '00000d0105000000018284874188089d5c0b8170dc07'.decode('hex')
 
-    def test_create_request_with_body(self):
-        bytes = http2.HTTP2Protocol(self.c).create_request(
-            'GET', '/', [(b'foo', b'bar')], 'foobar')
+    def test_assemble_request_with_body(self):
+        bytes = http2.HTTP2Protocol(self.c).assemble_request(http.Request(
+            '',
+            'GET',
+            '',
+            '',
+            '',
+            '/',
+            (2, 0),
+            odict.ODictCaseless([('foo', 'bar')]),
+            'foobar',
+        ))
         assert len(bytes) == 2
         assert bytes[0] ==\
             '0000150104000000018284874188089d5c0b8170dc07408294e7838c767f'.decode('hex')
@@ -315,16 +334,24 @@ class TestCreateResponse():
     c = tcp.TCPClient(("127.0.0.1", 0))
 
     def test_create_response_simple(self):
-        bytes = http2.HTTP2Protocol(self.c, is_server=True).create_response(200)
+        bytes = http2.HTTP2Protocol(self.c, is_server=True).assemble_response(http.Response(
+            (2, 0),
+            200,
+        ))
         assert len(bytes) == 1
         assert bytes[0] ==\
             '00000101050000000288'.decode('hex')
 
     def test_create_response_with_body(self):
-        bytes = http2.HTTP2Protocol(self.c, is_server=True).create_response(
-            200, 1, [(b'foo', b'bar')], 'foobar')
+        bytes = http2.HTTP2Protocol(self.c, is_server=True).assemble_response(http.Response(
+            (2, 0),
+            200,
+            '',
+            odict.ODictCaseless([('foo', 'bar')]),
+            'foobar'
+        ))
         assert len(bytes) == 2
         assert bytes[0] ==\
-            '00000901040000000188408294e7838c767f'.decode('hex')
+            '00000901040000000288408294e7838c767f'.decode('hex')
         assert bytes[1] ==\
-            '000006000100000001666f6f626172'.decode('hex')
+            '000006000100000002666f6f626172'.decode('hex')
