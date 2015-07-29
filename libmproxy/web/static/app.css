@@ -346,6 +346,9 @@ header .menu {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.plugins-table {
+  width: 100%;
+}
 .plugins-table div {
   width: 100%;
 }

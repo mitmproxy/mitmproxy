@@ -1952,7 +1952,7 @@ var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
 var Prompt = require("../prompt.js");
-var Plugins = require("./plugins.js").Plugins;
+var PluginsFlowLevel = require("./plugins.js").PluginsFlowLevel;
 
 
 var allTabs = {
@@ -1960,7 +1960,7 @@ var allTabs = {
     response: Messages.Response,
     error: Messages.Error,
     details: Details,
-    plugins: Plugins
+    plugins: PluginsFlowLevel
 };
 
 var FlowView = React.createClass({displayName: "FlowView",
@@ -2480,7 +2480,7 @@ var utils = require("../../utils.js");
 
 var PluginList = [];
 
-var PluginActionOptions = React.createClass({displayName: "PluginActionOptions",
+var PluginAction = React.createClass({displayName: "PluginAction",
     triggerClick: function (event) {
         var flow = this.props.flow;
         console.log(flow);
@@ -2489,7 +2489,7 @@ var PluginActionOptions = React.createClass({displayName: "PluginActionOptions",
             type: "POST",
             url: "/flows/" + flow.id + "/plugins/" + this.props.plugin.id,
             contentType: 'application/json',
-            data: JSON.stringify(_.find(this.props.plugin.options, function(o){return (o.id === el.getAttribute('id'))}))
+            data: JSON.stringify(_.find(this.props.plugin.actions, function(o){return ('action-' + o.id === el.getAttribute('id'))}))
         });
     },
 
@@ -2497,13 +2497,8 @@ var PluginActionOptions = React.createClass({displayName: "PluginActionOptions",
         var plugin = this.props.plugin; 
 
         var ret = [];
-        _.forEach(plugin.options, function (option) {
-            if (option.type === 'button') {
-                ret.push(React.createElement("div", null, React.createElement("input", {type: "button", id: option.id, "data-action": option.action, onClick: this.triggerClick, value: option.title})));
-            } else if (option.type === 'checkbox') {
-                ret.push(React.createElement("div", null, React.createElement("label", {for: option.id}, option.title), 
-                         React.createElement("input", {type: "checkbox", id: option.id, "data-action": option.action})));
-            }
+        _.forEach(plugin.actions, function (action) {
+            ret.push(React.createElement("div", null, React.createElement("input", {type: "button", id: 'action-' + action.id, "data-action": action.action, onClick: this.triggerClick, value: action.title})));
         }.bind(this));
 
         return (React.createElement("span", null, ret));
@@ -2523,14 +2518,14 @@ var PluginActions = React.createClass({displayName: "PluginActions",
         _.forEach(PluginList, function (plugin) {
             rows.push(React.createElement("tr", null, 
                         React.createElement("td", null, plugin.title), 
-                        React.createElement("td", null, React.createElement(PluginActionOptions, {plugin: plugin, flow: flow}))
+                        React.createElement("td", null, React.createElement(PluginAction, {plugin: plugin, flow: flow}))
                       ));
         });
 
         return (
             React.createElement("table", {className: "plugins-table"}, 
                 React.createElement("thead", null, 
-                    React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Options"))
+                    React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Actions"))
                 ), 
 
                 React.createElement("tbody", null, 
@@ -2541,7 +2536,93 @@ var PluginActions = React.createClass({displayName: "PluginActions",
     }
 });
 
-var Plugins = React.createClass({displayName: "Plugins",
+var PluginOption = React.createClass({displayName: "PluginOption",
+    triggerChange: function() {
+        $.ajax({
+            type: "POST",
+            url: "/plugins/" + this.props.plugin.id + "/options/" + this.props.option.id,
+            contentType: 'application/json',
+            data: JSON.stringify({'every_flow': !this.state.every_flow})
+        }).done(function(data){
+            if (data.data.success)
+                this.setState({every_flow: !this.state.every_flow});
+            else
+                console.log("Something went wrong trying to change option");
+        }.bind(this));
+    },
+
+    getInitialState: function () {
+        return {every_flow: this.props.initial_every_flow};
+    },
+
+    render: function () {
+        var option = this.props.option;
+        return (
+            React.createElement("div", null, 
+                React.createElement("label", {for: option.id}, option.title, "s"), 
+                React.createElement("input", {type: "checkbox", 
+                       id: 'option-' + option.id, 
+                       "data-action": option.action, 
+                       onChange: this.triggerChange, 
+                       checked: this.state.every_flow})
+            ));
+    }
+});
+
+var PluginOptionList = React.createClass({displayName: "PluginOptionList",
+    render: function () {
+        var plugin = this.props.plugin; 
+
+        var ret = [];
+        _.forEach(plugin.actions, function (action) {
+            ret.push(React.createElement(PluginOption, {option: action, plugin: plugin, initial_every_flow: action.state.every_flow}));
+        }.bind(this));
+
+        return (React.createElement("span", null, ret));
+    }
+});
+
+var PluginOptionsPane = React.createClass({displayName: "PluginOptionsPane",
+    getInitialState: function() {
+        return { plugins: PluginList };
+    },
+
+    render: function () {
+
+        var rows = [];
+        // there's a race condition here if the page is loaded w/ url
+        // /plugins. will result in empty options list, we should probably
+        // have the pluginList somewhere in state so it can trigger re-render
+        console.log("plugin list...");
+        console.log(PluginList);
+        _.forEach(PluginList, function (plugin) {
+            rows.push(React.createElement("tr", null, 
+                        React.createElement("td", null, plugin.title), 
+                        React.createElement("td", null, React.createElement(PluginOptionList, {plugin: plugin}))
+                      ));
+        });
+
+        return (
+            React.createElement("table", {className: "plugins-table"}, 
+                React.createElement("thead", null, 
+                    React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Run Action on Every Flow"))
+                ), 
+
+                React.createElement("tbody", null, 
+                rows
+                )
+            )
+        );
+    }
+});
+
+var PluginsTopLevel = React.createClass({displayName: "PluginsTopLevel",
+    render: function () {
+        return (React.createElement("div", null, React.createElement("section", null, React.createElement(PluginOptionsPane, null))));
+    }
+});
+
+var PluginsFlowLevel = React.createClass({displayName: "PluginsFlowLevel",
     render: function () {
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
@@ -2558,7 +2639,12 @@ var Plugins = React.createClass({displayName: "Plugins",
     }
 });
 
-module.exports = {'Plugins': Plugins, 'PluginList': PluginList, 'PluginActions': PluginActions};
+module.exports = {
+    'PluginsFlowLevel': PluginsFlowLevel,
+    'PluginList': PluginList,
+    'PluginActions': PluginActions,
+    'PluginsTopLevel': PluginsTopLevel
+};
 
 },{"../../utils.js":27,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
 var React = require("react");
@@ -2843,6 +2929,16 @@ var ReportsMenu = React.createClass({displayName: "ReportsMenu",
     }
 });
 
+var PluginsMenu = React.createClass({displayName: "PluginsMenu",
+    statics: {
+        title: "Plugins",
+        route: "plugins"
+    },
+    render: function () {
+        return React.createElement("div", null, "Plugins Menu");
+    }
+});
+
 var FileMenu = React.createClass({displayName: "FileMenu",
     getInitialState: function () {
         return {
@@ -2929,7 +3025,7 @@ var FileMenu = React.createClass({displayName: "FileMenu",
 });
 
 
-var header_entries = [MainMenu, ViewMenu /*, ReportsMenu */];
+var header_entries = [MainMenu, ViewMenu, PluginsMenu /*, ReportsMenu */];
 
 
 var Header = React.createClass({displayName: "Header",
@@ -3347,6 +3443,7 @@ var Key = require("../utils.js").Key;
 var ContentViewAll = require("./flowview/contentview.js").all;
 var PluginMixin = require("./flowview/contentview.js").PluginMixin;
 var PluginList = require("./flowview/plugins.js").PluginList;
+var PluginsTopLevel = require('./flowview/plugins.js').PluginsTopLevel;
 
 
 //TODO: Move out of here, just a stub.
@@ -3410,6 +3507,14 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
                             PluginList.push(plugin);
                         }
                     });
+
+                    // trigger rerender of plugin options -- this is necessary
+                    // if page is loaded w/ "/plugins" url because of a race
+                    // condition regarding PluginList
+
+                    // i think i want to setState but not sure how to get ref to
+                    // right object
+                    console.log("XXX: I should trigger a re-render of the PluginOptions now, but I don't know how");
                 }.bind(this))
                 .fail(function () {
                     console.log("Could not fetch plugins");
@@ -3492,6 +3597,7 @@ var routes = (
         React.createElement(Route, {name: "flows", path: "flows", handler: MainView}), 
         React.createElement(Route, {name: "flow", path: "flows/:flowId/:detailTab", handler: MainView}), 
         React.createElement(Route, {name: "reports", handler: Reports}), 
+        React.createElement(Route, {name: "plugins", handler: PluginsTopLevel}), 
         React.createElement(Redirect, {path: "/", to: "flows"})
     )
 );
