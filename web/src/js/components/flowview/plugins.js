@@ -137,7 +137,7 @@ var PluginActionEveryFlowOption = React.createClass({
         var action = this.props.action;
         return (
             <div>
-                <label htmlFor={action.id}>{action.title}</label>
+                <label htmlFor={action.id}><span className="light">Run on Every Flow: </span>{action.title}</label>
                 <input type="checkbox"
                        id={'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id}
                        data-action={action.action}
@@ -177,6 +177,12 @@ var PluginOption = React.createClass({
                         id={'plugin-' + this.props.plugin.id + '-option-' + option.id + '-input'}
                         onChange={this.triggerChange}
                         value={this.state.value}/>
+                </div>
+            );
+        } else if (option.type === 'display_only') {
+            return (
+                <div>
+                    <pre>{this.state.value}</pre>
                 </div>
             );
         }
@@ -221,7 +227,7 @@ var PluginOptionsPane = React.createClass({
         return (
             <table className="plugins-table">
                 <thead>
-                    <tr><td>Name</td><td>Run Action on Every Flow</td></tr>
+                    <tr><td>Name</td><td>Plugin Options</td></tr>
                 </thead>
 
                 <tbody>

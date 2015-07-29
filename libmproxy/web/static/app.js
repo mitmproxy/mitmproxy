@@ -2556,7 +2556,7 @@ var PluginActionEveryFlowOption = React.createClass({displayName: "PluginActionE
         var action = this.props.action;
         return (
             React.createElement("div", null, 
-                React.createElement("label", {htmlFor: action.id}, action.title), 
+                React.createElement("label", {htmlFor: action.id}, React.createElement("span", {className: "light"}, "Run on Every Flow: "), action.title), 
                 React.createElement("input", {type: "checkbox", 
                        id: 'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id, 
                        "data-action": action.action, 
@@ -2596,6 +2596,12 @@ var PluginOption = React.createClass({displayName: "PluginOption",
                         id: 'plugin-' + this.props.plugin.id + '-option-' + option.id + '-input', 
                         onChange: this.triggerChange, 
                         value: this.state.value})
+                )
+            );
+        } else if (option.type === 'display_only') {
+            return (
+                React.createElement("div", null, 
+                    React.createElement("pre", null, this.state.value)
                 )
             );
         }
@@ -2640,7 +2646,7 @@ var PluginOptionsPane = React.createClass({displayName: "PluginOptionsPane",
         return (
             React.createElement("table", {className: "plugins-table"}, 
                 React.createElement("thead", null, 
-                    React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Run Action on Every Flow"))
+                    React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Plugin Options"))
                 ), 
 
                 React.createElement("tbody", null, 

@@ -366,6 +366,9 @@ header .menu {
 .plugins-table tr:not(:first-child) {
   border-top: 1px solid #f7f7f7;
 }
+.plugins-table label span.light {
+  font-weight: normal;
+}
 .flowview-image {
   text-align: center;
 }

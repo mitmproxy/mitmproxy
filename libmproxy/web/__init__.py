@@ -137,17 +137,38 @@ class WebPlugins(object):
         for plugin_type in ('view_plugins', 'action_plugins'):
             yield (plugin_type, getattr(self, '_' + plugin_type))
 
+    def get_option(self, plugin_id, option_id):
+        for plugin_type, plugin_dicts in dict(self).items():
+            for _plugin_id, plugin_dict in plugin_dicts.items():
+                if plugin_id != _plugin_id:
+                    continue
+
+                for _option in plugin_dict['options']:
+                    if _option['id'] != option_id:
+                        continue
+
+                    return _option
+
+        return None
+
+    def get_action(self, plugin_id, action_id):
+        for plugin_type, plugin_dicts in dict(self).items():
+            for _plugin_id, plugin_dict in plugin_dicts.items():
+                if plugin_id != _plugin_id:
+                    continue
+
+                for _action in plugin_dict['actions']:
+                    if _action['id'] != action_id:
+                        continue
+
+                    return _action
+
+        return None
+
     def get_option_value(self, action_plugin_id, option_id):
-        plugin = self._action_plugins.get(action_plugin_id)
-        if not plugin:
-            raise WebError("No action plugin %s" % action_plugin_id)
-
-        if not plugin.get('options'):
-            raise WebError("No action plugin %s with option %s" % (action_plugin_id, option_id))
-
-        for option in plugin['options']:
-            if option.get('id') == option_id:
-                return str(option['state']['value'].encode('utf-8'))
+        option = self.get_option(action_plugin_id, option_id)
+        if option:
+            return str(option['state']['value'].encode('utf-8'))
 
         raise WebError("No action plugin %s with option %s" % (action_plugin_id, option_id))
 

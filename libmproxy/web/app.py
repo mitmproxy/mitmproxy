@@ -291,29 +291,9 @@ class PluginActionEveryFlow(RequestHandler):
     def post(self, plugin_id, action_id):
         found = False
         plugin = None
-        action = None
-        plugin_list = self.master.plugins
-        class GetOutOfLoop(Exception):
-            pass
+        action = self.master.plugins.get_action(plugin_id, action_id)
 
-        try:
-            for plugin_type, plugin_dicts in dict(plugin_list).items():
-                for _plugin_id, plugin_dict in plugin_dicts.items():
-                    if plugin_id != _plugin_id:
-                        continue
-
-                    for _action in plugin_dict['actions']:
-                        if _action['id'] != action_id:
-                            continue
-
-                        found = True
-                        plugin = plugin_dict
-                        action = _action
-                        raise GetOutOfLoop
-        except GetOutOfLoop:
-            pass
-
-        if not found:
+        if not action:
             raise APIError(500, 'No action %s for plugin %s' % (action_id, plugin_id))
 
         if self.json.get('every_flow'):
@@ -332,29 +312,9 @@ class PluginOption(RequestHandler):
     def post(self, plugin_id, option_id):
         found = False
         plugin = None
-        option = None
-        plugin_list = self.master.plugins
-        class GetOutOfLoop(Exception):
-            pass
+        option = self.master.plugins.get_option(plugin_id, option_id)
 
-        try:
-            for plugin_type, plugin_dicts in dict(plugin_list).items():
-                for _plugin_id, plugin_dict in plugin_dicts.items():
-                    if plugin_id != _plugin_id:
-                        continue
-
-                    for _option in plugin_dict['options']:
-                        if _option['id'] != option_id:
-                            continue
-
-                        found = True
-                        plugin = plugin_dict
-                        option = _option
-                        raise GetOutOfLoop
-        except GetOutOfLoop:
-            pass
-
-        if not found:
+        if not option:
             raise APIError(500, 'No option %s for plugin %s' % (option_id, plugin_id))
 
         if self.json.get('value'):
