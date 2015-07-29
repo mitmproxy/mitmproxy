@@ -10,9 +10,6 @@ var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
-var ContentViewAll = require("./flowview/contentview.js").all;
-var PluginMixin = require("./flowview/contentview.js").PluginMixin;
-var PluginList = require("./flowview/plugins.js").PluginList;
 var PluginsTopLevel = require('./flowview/plugins.js').PluginsTopLevel;
 
 
@@ -50,45 +47,6 @@ var ProxyAppMain = React.createClass({
 
         // get the view plugin list and append to ContentView's `all`
         // so buttons will be available on the UI
-        var pluginList;
-        $.getJSON("/plugins")
-                .done(function (message) {
-                    console.log("Retrieved plugins: " +
-                        JSON.stringify(message.data));
-                    _.each(message.data, function(plugin){
-                        if (plugin.type === 'view_plugins') {
-                            var ViewPlugin = React.createClass({
-                                displayName: plugin.id,
-                                mixins: [PluginMixin],
-                                statics: {
-                                    matches: function (message) {
-                                        return true;
-                                    }
-                                },
-                                renderContent: function () {
-                                    return <pre>{this.state.content}</pre>;
-                                }
-                            });
-
-                            ContentViewAll.push(ViewPlugin);
-                        }
-
-                        if (plugin.type === 'action_plugins') {
-                            PluginList.push(plugin);
-                        }
-                    });
-
-                    // trigger rerender of plugin options -- this is necessary
-                    // if page is loaded w/ "/plugins" url because of a race
-                    // condition regarding PluginList
-
-                    // i think i want to setState but not sure how to get ref to
-                    // right object
-                    console.log("XXX: I should trigger a re-render of the PluginOptions now, but I don't know how");
-                }.bind(this))
-                .fail(function () {
-                    console.log("Could not fetch plugins");
-                }.bind(this));
 
 
         // Default Settings before fetch

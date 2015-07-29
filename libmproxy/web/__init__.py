@@ -164,6 +164,7 @@ class WebPlugins(object):
         self._action_plugins[id]['title'] = kwargs.get('title') or id
         self._action_plugins[id]['script_path'] = script_path
         self._action_plugins[id]['actions'] = kwargs.get('actions')
+        self._action_plugins[id]['options'] = kwargs.get('options')
 
         for action in self._action_plugins[id]['actions']:
             if not action.get('state'):
@@ -281,16 +282,16 @@ class WebMaster(flow.FlowMaster):
                                 self._run_single_script_hook(script, action['id'], f)
 
     def handle_request(self, f):
-        super(WebMaster, self).handle_request(f)
-
         self._handle_plugin_hooks(f, 'request')
+
+        super(WebMaster, self).handle_request(f)
 
         self._process_flow(f)
 
     def handle_response(self, f):
-        super(WebMaster, self).handle_response(f)
-
         self._handle_plugin_hooks(f, 'response')
+
+        super(WebMaster, self).handle_response(f)
 
         self._process_flow(f)
 
