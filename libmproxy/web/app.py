@@ -369,7 +369,6 @@ class PluginFlowActions(RequestHandler):
 
         try:
             self.master._run_single_script_hook(script, self.json['id'], self.flow)
-            #script.run(self.json['id'], self.flow)
         except ScriptError as e:
             self.master.add_event("Error running script:\n%s" % repr(e), "error")
             raise APIError(500, 'Error running script:\n%s' % repr(e))

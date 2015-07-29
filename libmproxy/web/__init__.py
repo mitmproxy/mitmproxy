@@ -164,13 +164,16 @@ class WebPlugins(object):
         self._action_plugins[id]['title'] = kwargs.get('title') or id
         self._action_plugins[id]['script_path'] = script_path
         self._action_plugins[id]['actions'] = kwargs.get('actions')
-        self._action_plugins[id]['options'] = kwargs.get('options')
+
         for action in self._action_plugins[id]['actions']:
             if not action.get('state'):
                 action['state'] = {}
 
             if not action['state'].get('every_flow'):
                 action['state']['every_flow'] = False
+
+            if not action.get('possible_hooks'):
+                action['possible_hooks'] = []
 
         print("Registered action plugin %s from script %s" % (kwargs['title'], script_path))
 
@@ -179,6 +182,7 @@ class WebMaster(flow.FlowMaster):
     def __init__(self, server, options, outfile=sys.stdout):
         self.outfile = outfile
         self.options = options
+        self.plugins = None
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self, self.options.wdebug)
         if options.rfile:
@@ -247,12 +251,47 @@ class WebMaster(flow.FlowMaster):
         else:
             f.reply()
 
+    def _handle_plugin_hooks(self, f, hook):
+        if self.plugins:
+            for plugin_type, plugin_dicts in dict(self.plugins).items():
+                if plugin_type != 'action_plugins':
+                    continue
+
+                for _plugin_id, plugin_dict in plugin_dicts.items():
+                    plugin = plugin_dict
+
+                    for action in plugin_dict['actions']:
+                        if hook in action['possible_hooks']:
+                            if action['state']['every_flow']:
+                                found = False
+                                script = None
+                                for _script in self.scripts:
+                                    if _script.args[0] != plugin['script_path']:
+                                        continue
+
+                                    found = True
+                                    script = _script
+                                    break
+
+                                if not found:
+                                    self._process_flow(f)
+                                    return
+
+                                self.add_event("Running on every %s: %s" % (hook, action['id']), "debug")
+                                self._run_single_script_hook(script, action['id'], f)
+
     def handle_request(self, f):
         super(WebMaster, self).handle_request(f)
+
+        self._handle_plugin_hooks(f, 'request')
+
         self._process_flow(f)
 
     def handle_response(self, f):
         super(WebMaster, self).handle_response(f)
+
+        self._handle_plugin_hooks(f, 'response')
+
         self._process_flow(f)
 
     def handle_error(self, f):
