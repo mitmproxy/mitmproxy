@@ -54,7 +54,10 @@ class ScriptContext:
 
     @property
     def plugins(self):
-        return self._master.plugins
+        if hasattr(self._master, 'plugins'):
+            return self._master.plugins
+
+        return None
 
 
 class Script:
