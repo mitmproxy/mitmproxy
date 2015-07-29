@@ -138,7 +138,6 @@ class WebPlugins(object):
             yield (plugin_type, getattr(self, '_' + plugin_type))
 
     def register_view(self, id, **kwargs):
-        script_path = inspect.stack()[1][1]
         if self._view_plugins.get(id):
             raise WebError("Duplicate view registration for %s" % (id, ))
 
@@ -146,32 +145,32 @@ class WebPlugins(object):
                 callable(kwargs['transformer']):
             raise WebError("No transformer method passed for view %s" % (id, ))
 
+        script_path = inspect.stack()[1][1]
+
         self._view_plugins[id] = {}
-
         self._view_plugins[id]['title'] = kwargs.get('title') or id
-
         self._view_plugins[id]['transformer'] = kwargs['transformer']
-
         self._view_plugins[id]['script_path'] = script_path
 
         print("Registered view plugin %s form script %s" % (kwargs['title'], script_path))
 
     def register_action(self, id, **kwargs):
-        script_path = inspect.stack()[1][1]
         if self._action_plugins.get(id):
             raise WebError("Duplicate action registration for %s" % (id, ))
 
+        script_path = inspect.stack()[1][1]
+
         self._action_plugins[id] = {}
-
         self._action_plugins[id]['title'] = kwargs.get('title') or id
-
         self._action_plugins[id]['script_path'] = script_path
+        self._action_plugins[id]['actions'] = kwargs.get('actions')
+        self._action_plugins[id]['options'] = kwargs.get('options')
+        for action in self._action_plugins[id]['actions']:
+            if not action.get('state'):
+                action['state'] = {}
 
-        if kwargs.get('actions'):
-            self._action_plugins[id]['actions'] = kwargs['actions']
-
-        if kwargs.get('options'):
-            self._action_plugins[id]['options'] = kwargs['options']
+            if not action['state'].get('every_flow'):
+                action['state']['every_flow'] = False
 
         print("Registered action plugin %s from script %s" % (kwargs['title'], script_path))
 

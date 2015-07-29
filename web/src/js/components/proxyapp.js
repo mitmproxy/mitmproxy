@@ -32,8 +32,13 @@ var PluginOption = React.createClass({
 
         var ret = [];
         _.forEach(plugin.actions, function (action) {
+            if (action.state.every_flow) {
+                ret.push(<div><label for={action.id}>{action.title}s</label>
+                         <input type="checkbox" id={action.id} data-action={action.action} checked="checked"/></div>);
+            } else {
                 ret.push(<div><label for={action.id}>{action.title}s</label>
                          <input type="checkbox" id={action.id} data-action={action.action}/></div>);
+            }
         }.bind(this));
 
         return (<span>{ret}</span>);
