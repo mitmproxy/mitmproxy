@@ -2,7 +2,10 @@ from __future__ import absolute_import, print_function
 import json
 import sys
 import os
+
+from netlib.http.semantics import CONTENT_MISSING
 import netlib.utils
+
 from . import flow, filt, utils
 from .protocol import http
 
@@ -173,7 +176,7 @@ class DumpMaster(flow.FlowMaster):
         if self.o.flow_detail >= 2:
             print(self.indent(4, message.headers.format()), file=self.outfile)
         if self.o.flow_detail >= 3:
-            if message.content == http.CONTENT_MISSING:
+            if message.content == CONTENT_MISSING:
                 print(self.indent(4, "(content missing)"), file=self.outfile)
             elif message.content:
                 print("", file=self.outfile)
@@ -210,7 +213,7 @@ class DumpMaster(flow.FlowMaster):
             self._print_message(f.request)
 
         if f.response:
-            if f.response.content == http.CONTENT_MISSING:
+            if f.response.content == CONTENT_MISSING:
                 sz = "(content missing)"
             else:
                 sz = netlib.utils.pretty_size(len(f.response.content))

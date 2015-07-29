@@ -108,17 +108,6 @@ class MessageMixin(stateobject.StateObject):
         self.body = encoding.encode(e, self.body)
         self.headers["content-encoding"] = [e]
 
-    def size(self, **kwargs):
-        """
-            Size in bytes of a fully rendered message, including headers and
-            HTTP lead-in.
-        """
-        hl = len(self._assemble_head(**kwargs))
-        if self.body:
-            return hl + len(self.body)
-        else:
-            return hl
-
     def copy(self):
         c = copy.copy(self)
         c.headers = self.headers.copy()
@@ -138,30 +127,6 @@ class MessageMixin(stateobject.StateObject):
             )
         c += self.headers.replace(pattern, repl, *args, **kwargs)
         return c
-
-    def _assemble_first_line(self):
-        """
-        Returns the assembled request/response line
-        """
-        raise NotImplementedError()  # pragma: nocover
-
-    def _assemble_headers(self):
-        """
-        Returns the assembled headers
-        """
-        raise NotImplementedError()  # pragma: nocover
-
-    def _assemble_head(self):
-        """
-        Returns the assembled request/response line plus headers
-        """
-        raise NotImplementedError()  # pragma: nocover
-
-    def assemble(self):
-        """
-        Returns the assembled request/response
-        """
-        raise NotImplementedError()  # pragma: nocover
 
 
 class HTTPRequest(MessageMixin, semantics.Request):
@@ -286,7 +251,8 @@ class HTTPRequest(MessageMixin, semantics.Request):
 
     def __repr__(self):
         return "<HTTPRequest: {0}>".format(
-            self._assemble_first_line(self.form_in)[:-9]
+            # just for visualisation purposes we use HTTP/1 protocol here
+            http.http1.HTTP1Protocol._assemble_request_first_line(self)[:-9]
         )
 
     @classmethod
@@ -315,66 +281,6 @@ class HTTPRequest(MessageMixin, semantics.Request):
             req.timestamp_end,
         )
 
-    def _assemble_first_line(self, form=None):
-        form = form or self.form_out
-
-        if form == "relative":
-            request_line = '%s %s HTTP/%s.%s' % (
-                self.method, self.path, self.httpversion[0], self.httpversion[1]
-            )
-        elif form == "authority":
-            request_line = '%s %s:%s HTTP/%s.%s' % (
-                self.method, self.host, self.port, self.httpversion[0],
-                self.httpversion[1]
-            )
-        elif form == "absolute":
-            request_line = '%s %s://%s:%s%s HTTP/%s.%s' % (
-                self.method, self.scheme, self.host,
-                self.port, self.path, self.httpversion[0],
-                self.httpversion[1]
-            )
-        else:
-            raise http.HttpError(400, "Invalid request form")
-        return request_line
-
-    def _assemble_headers(self):
-        headers = self.headers.copy()
-        for k in self._headers_to_strip_off:
-            del headers[k]
-        if 'host' not in headers and self.scheme and self.host and self.port:
-            headers["Host"] = [utils.hostport(self.scheme,
-                                              self.host,
-                                              self.port)]
-
-        # If content is defined (i.e. not None or CONTENT_MISSING), we always
-        # add a content-length header.
-        if self.body or self.body == "":
-            headers["Content-Length"] = [str(len(self.body))]
-
-        return headers.format()
-
-    def _assemble_head(self, form=None):
-        return "%s\r\n%s\r\n" % (
-            self._assemble_first_line(form), self._assemble_headers()
-        )
-
-    def assemble(self, form=None):
-        """
-            Assembles the request for transmission to the server. We make some
-            modifications to make sure interception works properly.
-
-            Raises an Exception if the request cannot be assembled.
-        """
-        if self.body == CONTENT_MISSING:
-            raise proxy.ProxyError(
-                502,
-                "Cannot assemble flow with CONTENT_MISSING"
-            )
-        head = self._assemble_head(form)
-        if self.body:
-            return head + self.body
-        else:
-            return head
 
     def __hash__(self):
         return id(self)
@@ -698,50 +604,6 @@ class HTTPResponse(MessageMixin, semantics.Response):
             resp.timestamp_start,
             resp.timestamp_end,
         )
-
-    def _assemble_first_line(self):
-        return 'HTTP/%s.%s %s %s' % \
-               (self.httpversion[0], self.httpversion[1], self.code, self.msg)
-
-    def _assemble_headers(self, preserve_transfer_encoding=False):
-        headers = self.headers.copy()
-        for k in self._headers_to_strip_off:
-            del headers[k]
-        if not preserve_transfer_encoding:
-            del headers['Transfer-Encoding']
-
-        # If body is defined (i.e. not None or CONTENT_MISSING), we always
-        # add a content-length header.
-        if self.body or self.body == "":
-            headers["Content-Length"] = [str(len(self.body))]
-
-        return headers.format()
-
-    def _assemble_head(self, preserve_transfer_encoding=False):
-        return '%s\r\n%s\r\n' % (
-            self._assemble_first_line(),
-            self._assemble_headers(
-                preserve_transfer_encoding=preserve_transfer_encoding
-            )
-        )
-
-    def assemble(self):
-        """
-            Assembles the response for transmission to the client. We make some
-            modifications to make sure interception works properly.
-
-            Raises an Exception if the request cannot be assembled.
-        """
-        if self.body == CONTENT_MISSING:
-            raise proxy.ProxyError(
-                502,
-                "Cannot assemble flow with CONTENT_MISSING"
-            )
-        head = self._assemble_head()
-        if self.body:
-            return head + self.body
-        else:
-            return head
 
     def _refresh_cookie(self, c, delta):
         """

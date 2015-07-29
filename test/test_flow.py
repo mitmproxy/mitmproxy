@@ -3,15 +3,18 @@ import time
 import os.path
 from cStringIO import StringIO
 import email.utils
-import mock
+
 from netlib import odict
+from netlib.http.semantics import CONTENT_MISSING
+
 from libmproxy import filt, protocol, controller, utils, tnetstring, flow
 from libmproxy.protocol.primitives import Error, Flow
-from libmproxy.protocol.http import decoded, CONTENT_MISSING
+from libmproxy.protocol.http import decoded
 from libmproxy.proxy.config import HostMatcher
 from libmproxy.proxy import ProxyConfig
 from libmproxy.proxy.server import DummyServer
 from libmproxy.proxy.connection import ClientConnection
+import mock
 import tutils
 
 
@@ -653,7 +656,7 @@ class TestSerialize:
 
         f2 = l[0]
         assert f2.get_state() == f.get_state()
-        assert f2.request.assemble() == f.request.assemble()
+        assert f2.request == f.request
 
     def test_load_flows(self):
         r = self._treader()
@@ -1002,18 +1005,8 @@ class TestRequest:
         r.url = u
         tutils.raises(ValueError, setattr, r, "url", "")
         assert r.url == u
-        assert r.assemble()
-        assert r.size() == len(r.assemble())
-
         r2 = r.copy()
         assert r.get_state() == r2.get_state()
-
-        r.content = None
-        assert r.assemble()
-        assert r.size() == len(r.assemble())
-
-        r.content = CONTENT_MISSING
-        tutils.raises("Cannot assemble flow with CONTENT_MISSING", r.assemble)
 
     def test_get_url(self):
         r = tutils.treq()
@@ -1157,14 +1150,6 @@ class TestRequest:
         r.encode("gzip")
         assert r.get_decoded_content() == "falafel"
 
-    def test_header_size(self):
-        h = odict.ODictCaseless()
-        h["headername"] = ["headervalue"]
-        r = tutils.treq()
-        r.headers = h
-        raw = r._assemble_headers()
-        assert len(raw) == 62
-
     def test_get_content_type(self):
         h = odict.ODictCaseless()
         h["Content-Type"] = ["text/plain"]
@@ -1177,20 +1162,8 @@ class TestResponse:
     def test_simple(self):
         f = tutils.tflow(resp=True)
         resp = f.response
-        assert resp.assemble()
-        assert resp.size() == len(resp.assemble())
-
         resp2 = resp.copy()
         assert resp2.get_state() == resp.get_state()
-
-        resp.content = None
-        assert resp.assemble()
-        assert resp.size() == len(resp.assemble())
-
-        resp.content = CONTENT_MISSING
-        tutils.raises(
-            "Cannot assemble flow with CONTENT_MISSING",
-            resp.assemble)
 
     def test_refresh(self):
         r = tutils.tresp()
@@ -1256,11 +1229,6 @@ class TestResponse:
         r.headers["content-encoding"] = ["gzip"]
         assert not r.decode()
         assert r.content == "falafel"
-
-    def test_header_size(self):
-        r = tutils.tresp()
-        result = len(r._assemble_headers())
-        assert result == 44
 
     def test_get_content_type(self):
         h = odict.ODictCaseless()

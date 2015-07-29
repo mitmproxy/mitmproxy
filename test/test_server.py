@@ -5,11 +5,11 @@ from OpenSSL import SSL
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
 from netlib.http import authentication
+from netlib.http.semantics import CONTENT_MISSING
 from libpathod import pathoc, pathod
 
 from libmproxy.proxy.config import HostMatcher
 from libmproxy.protocol import KILL, Error
-from libmproxy.protocol.http import CONTENT_MISSING
 import tutils
 import tservers
 

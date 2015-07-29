@@ -6,6 +6,7 @@ from mock import MagicMock
 from libmproxy.protocol.http import *
 from netlib import odict
 from netlib.http import http1
+from netlib.http.semantics import CONTENT_MISSING
 
 import tutils
 import tservers
@@ -23,18 +24,19 @@ def test_HttpAuthenticationError():
     assert "foo" in x.headers
 
 
-def test_stripped_chunked_encoding_no_content():
-    """
-    https://github.com/mitmproxy/mitmproxy/issues/186
-    """
-    r = tutils.tresp(content="")
-    r.headers["Transfer-Encoding"] = ["chunked"]
-    assert "Content-Length" in r._assemble_headers()
-
-    r = tutils.treq(content="")
-    r.headers["Transfer-Encoding"] = ["chunked"]
-    assert "Content-Length" in r._assemble_headers()
-
+# TODO: move test to netlib
+# def test_stripped_chunked_encoding_no_content():
+#     """
+#     https://github.com/mitmproxy/mitmproxy/issues/186
+#     """
+#     r = tutils.tresp(content="")
+#     r.headers["Transfer-Encoding"] = ["chunked"]
+#     assert "Content-Length" in r._assemble_headers()
+#
+#     r = tutils.treq(content="")
+#     r.headers["Transfer-Encoding"] = ["chunked"]
+#     assert "Content-Length" in r._assemble_headers()
+#
 
 class TestHTTPRequest:
     def test_asterisk_form_in(self):
@@ -46,9 +48,10 @@ class TestHTTPRequest:
         f.request.host = f.server_conn.address.host
         f.request.port = f.server_conn.address.port
         f.request.scheme = "http"
-        assert f.request.assemble() == ("OPTIONS * HTTP/1.1\r\n"
-                                        "Host: address:22\r\n"
-                                        "Content-Length: 0\r\n\r\n")
+        assert protocol.assemble(f.request) == (
+            "OPTIONS * HTTP/1.1\r\n"
+            "Host: address:22\r\n"
+            "Content-Length: 0\r\n\r\n")
 
     def test_relative_form_in(self):
         protocol = mock_protocol("GET /foo\xff HTTP/1.1")
@@ -57,18 +60,6 @@ class TestHTTPRequest:
         protocol = mock_protocol("GET /foo HTTP/1.1\r\nConnection: Upgrade\r\nUpgrade: h2c")
         r = HTTPRequest.from_protocol(protocol)
         assert r.headers["Upgrade"] == ["h2c"]
-
-        raw = r._assemble_headers()
-        assert "Upgrade" not in raw
-        assert "Host" not in raw
-
-        r.url = "http://example.com/foo"
-
-        raw = r._assemble_headers()
-        assert "Host" in raw
-        assert not "Host" in r.headers
-        r.update_host_header()
-        assert "Host" in r.headers
 
     def test_expect_header(self):
         protocol = mock_protocol(
@@ -85,9 +76,10 @@ class TestHTTPRequest:
         protocol = mock_protocol("CONNECT address:22 HTTP/1.1")
         r = HTTPRequest.from_protocol(protocol)
         r.scheme, r.host, r.port = "http", "address", 22
-        assert r.assemble() == ("CONNECT address:22 HTTP/1.1\r\n"
-                                "Host: address:22\r\n"
-                                "Content-Length: 0\r\n\r\n")
+        assert protocol.assemble(r) == (
+            "CONNECT address:22 HTTP/1.1\r\n"
+            "Host: address:22\r\n"
+            "Content-Length: 0\r\n\r\n")
         assert r.pretty_url(False) == "address:22"
 
     def test_absolute_form_in(self):
@@ -96,8 +88,10 @@ class TestHTTPRequest:
 
         protocol = mock_protocol("GET http://address:22/ HTTP/1.1")
         r = HTTPRequest.from_protocol(protocol)
-        assert r.assemble(
-        ) == "GET http://address:22/ HTTP/1.1\r\nHost: address:22\r\nContent-Length: 0\r\n\r\n"
+        assert protocol.assemble(r) == (
+            "GET http://address:22/ HTTP/1.1\r\n"
+            "Host: address:22\r\n"
+            "Content-Length: 0\r\n\r\n")
 
     def test_http_options_relative_form_in(self):
         """
@@ -108,9 +102,10 @@ class TestHTTPRequest:
         r.host = 'address'
         r.port = 80
         r.scheme = "http"
-        assert r.assemble() == ("OPTIONS /secret/resource HTTP/1.1\r\n"
-                                "Host: address\r\n"
-                                "Content-Length: 0\r\n\r\n")
+        assert protocol.assemble(r) == (
+            "OPTIONS /secret/resource HTTP/1.1\r\n"
+            "Host: address\r\n"
+            "Content-Length: 0\r\n\r\n")
 
     def test_http_options_absolute_form_in(self):
         protocol = mock_protocol("OPTIONS http://address/secret/resource HTTP/1.1")
@@ -118,14 +113,10 @@ class TestHTTPRequest:
         r.host = 'address'
         r.port = 80
         r.scheme = "http"
-        assert r.assemble() == (
+        assert protocol.assemble(r) == (
             "OPTIONS http://address:80/secret/resource HTTP/1.1\r\n"
             "Host: address\r\n"
             "Content-Length: 0\r\n\r\n")
-
-    def test_assemble_unknown_form(self):
-        r = tutils.treq()
-        tutils.raises("Invalid request form", r.assemble, "antiauthority")
 
     def test_set_url(self):
         r = tutils.treq_absolute()

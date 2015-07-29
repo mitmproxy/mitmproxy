@@ -10,6 +10,7 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 import netlib
 from netlib import http, tcp, odict, utils
 from netlib.http import cookies, http1
+from netlib.http.semantics import CONTENT_MISSING
 
 from .tcp import TCPHandler
 from .primitives import KILL, ProtocolHandler, Flow, Error
@@ -20,7 +21,6 @@ from .http_wrappers import decoded, HTTPRequest, HTTPResponse
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 HDR_FORM_MULTIPART = "multipart/form-data"
-CONTENT_MISSING = 0
 
 
 class KillSignal(Exception):
@@ -39,14 +39,14 @@ def send_connect_request(conn, host, port, update_state=True):
         odict.ODictCaseless(),
         ""
     )
-    conn.send(upstream_request.assemble())
     protocol = http.http1.HTTP1Protocol(conn)
+    conn.send(protocol.assemble(upstream_request))
     resp = HTTPResponse.from_protocol(protocol, upstream_request.method)
     if resp.status_code != 200:
         raise proxy.ProxyError(resp.status_code,
                                "Cannot establish SSL " +
                                "connection with upstream proxy: \r\n" +
-                               str(resp.assemble()))
+                               repr(resp))
     if update_state:
         conn.state.append(("http", {
             "state": "connect",
@@ -174,16 +174,15 @@ class HTTPHandler(ProtocolHandler):
 
     def get_response_from_server(self, flow):
         self.c.establish_server_connection()
-        request_raw = flow.request.assemble()
 
         for attempt in (0, 1):
             try:
-                self.c.server_conn.send(request_raw)
+                flow.server_protocol = http.http1.HTTP1Protocol(self.c.server_conn)
+                self.c.server_conn.send(flow.server_protocol.assemble(flow.request))
 
                 # Only get the headers at first...
-                protocol = http.http1.HTTP1Protocol(self.c.server_conn)
                 flow.response = HTTPResponse.from_protocol(
-                    protocol,
+                    flow.server_protocol,
                     flow.request.method,
                     body_size_limit=self.c.config.body_size_limit,
                     include_body=False
@@ -221,8 +220,8 @@ class HTTPHandler(ProtocolHandler):
             if flow.response.stream:
                 flow.response.content = CONTENT_MISSING
             else:
-                protocol = http1.HTTP1Protocol(self.c.server_conn)
-                flow.response.content = protocol.read_http_body(
+                flow.server_protocol = http1.HTTP1Protocol(self.c.server_conn)
+                flow.response.content = flow.server_protocol.read_http_body(
                     flow.response.headers,
                     self.c.config.body_size_limit,
                     flow.request.method,
@@ -235,9 +234,9 @@ class HTTPHandler(ProtocolHandler):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
         try:
             try:
-                protocol = http.http1.HTTP1Protocol(self.c.client_conn)
+                flow.client_protocol = http.http1.HTTP1Protocol(self.c.client_conn)
                 req = HTTPRequest.from_protocol(
-                    protocol,
+                    flow.client_protocol,
                     body_size_limit=self.c.config.body_size_limit
                 )
             except tcp.NetLibError:
@@ -247,7 +246,7 @@ class HTTPHandler(ProtocolHandler):
             self.c.log(
                 "request",
                 "debug",
-                [req._assemble_first_line(req.form_in)]
+                [repr(req)]
             )
             ret = self.process_request(flow, req)
             if ret is not None:
@@ -276,8 +275,10 @@ class HTTPHandler(ProtocolHandler):
             flow.server_conn = self.c.server_conn
 
             self.c.log(
-                "response", "debug", [
-                    flow.response._assemble_first_line()])
+                "response",
+                "debug",
+                [repr(flow.response)]
+            )
             response_reply = self.c.channel.ask("response", flow)
             if response_reply is None or response_reply == KILL:
                 raise KillSignal()
@@ -553,30 +554,33 @@ class HTTPHandler(ProtocolHandler):
             # no streaming:
             # we already received the full response from the server and can
             # send it to the client straight away.
-            self.c.client_conn.send(flow.response.assemble())
+            self.c.client_conn.send(flow.client_protocol.assemble(flow.response))
         else:
+            raise NotImplementedError("HTTP streaming is currently not supported.")
+            # TODO: implement it according to new protocols and messages
+
             # streaming:
             # First send the headers and then transfer the response
             # incrementally:
-            h = flow.response._assemble_head(preserve_transfer_encoding=True)
-            self.c.client_conn.send(h)
-
-            protocol = http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
-            chunks = protocol.read_http_body_chunked(
-                flow.response.headers,
-                self.c.config.body_size_limit,
-                flow.request.method,
-                flow.response.code,
-                False,
-                4096
-            )
-            if callable(flow.response.stream):
-                chunks = flow.response.stream(chunks)
-            for chunk in chunks:
-                for part in chunk:
-                    self.c.client_conn.wfile.write(part)
-                self.c.client_conn.wfile.flush()
-            flow.response.timestamp_end = utils.timestamp()
+            # h = flow.response._assemble_head(preserve_transfer_encoding=True)
+            # self.c.client_conn.send(h)
+            #
+            # protocol = http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
+            # chunks = protocol.read_http_body_chunked(
+            #     flow.response.headers,
+            #     self.c.config.body_size_limit,
+            #     flow.request.method,
+            #     flow.response.code,
+            #     False,
+            #     4096
+            # )
+            # if callable(flow.response.stream):
+            #     chunks = flow.response.stream(chunks)
+            # for chunk in chunks:
+            #     for part in chunk:
+            #         self.c.client_conn.wfile.write(part)
+            #     self.c.client_conn.wfile.flush()
+            # flow.response.timestamp_end = utils.timestamp()
 
     def check_close_connection(self, flow):
         """
@@ -726,12 +730,13 @@ class RequestReplayThread(threading.Thread):
                             sni=self.flow.server_conn.sni
                         )
                     r.form_out = "relative"
-                server.send(r.assemble())
+
+                server.send(self.flow.server_protocol.assemble(r))
                 self.flow.server_conn = server
 
-                protocol = http.http1.HTTP1Protocol(server)
+                self.flow.server_protocol = http.http1.HTTP1Protocol(self.flow.server_conn)
                 self.flow.response = HTTPResponse.from_protocol(
-                    protocol,
+                    self.flow.server_protocol,
                     r.method,
                     body_size_limit=self.config.body_size_limit,
                 )

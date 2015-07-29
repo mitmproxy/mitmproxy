@@ -30,7 +30,7 @@ def response(context, flow):
     value = flow.response.headers.get_first("Connection", None)
     if value and value.upper() == "UPGRADE":
         # We need to send the response manually now...
-        flow.client_conn.send(flow.response.assemble())
+        flow.client_conn.send(flow.client_protocol.assemble(flow.response))
         # ...and then delegate to tcp passthrough.
         TCPHandler(flow.live.c, log=False).handle_messages()
         flow.reply(KILL)

@@ -8,6 +8,7 @@ import functools
 import cgi
 import json
 
+import netlib.utils
 
 def timestamp():
     """
@@ -195,21 +196,12 @@ def parse_content_type(c):
     return ts[0].lower(), ts[1].lower(), d
 
 
-def hostport(scheme, host, port):
-    """
-        Returns the host component, with a port specifcation if needed.
-    """
-    if (port, scheme) in [(80, "http"), (443, "https")]:
-        return host
-    else:
-        return "%s:%s" % (host, port)
-
 
 def unparse_url(scheme, host, port, path=""):
     """
         Returns a URL string, constructed from the specified compnents.
     """
-    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
+    return "%s://%s%s" % (scheme, netlib.utils.hostport(scheme, host, port), path)
 
 
 def clean_hanging_newline(t):
