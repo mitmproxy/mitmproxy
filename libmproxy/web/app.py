@@ -315,10 +315,8 @@ class PluginOption(RequestHandler):
 
         if self.json.get('every_flow'):
             self.master.add_event("Setting plugin %s action %s to run on every flow" % (plugin_id, option_id), "debug")
-            print option
             option['state']['every_flow'] = True
         else:
-            print option
             self.master.add_event("Setting plugin %s action %s not to run on every flow" % (plugin_id, option_id), "debug")
             option['state']['every_flow'] = False
 
@@ -370,7 +368,8 @@ class PluginFlowActions(RequestHandler):
             raise APIError(500, 'No script %s found on master.scripts' % plugin['script_path'])
 
         try:
-            script.run(self.json['id'], self.flow)
+            self.master._run_single_script_hook(script, self.json['id'], self.flow)
+            #script.run(self.json['id'], self.flow)
         except ScriptError as e:
             self.master.add_event("Error running script:\n%s" % repr(e), "error")
             raise APIError(500, 'Error running script:\n%s' % repr(e))
