@@ -288,6 +288,7 @@ class PluginOption(RequestHandler):
     def post(self, plugin_id, option_id):
         found = False
         plugin = None
+        option = None
         plugin_list = self.master.plugins
         class GetOutOfLoop(Exception):
             pass
@@ -304,6 +305,7 @@ class PluginOption(RequestHandler):
 
                         found = True
                         plugin = plugin_dict
+                        option = action
                         raise GetOutOfLoop
         except GetOutOfLoop:
             pass
@@ -313,8 +315,12 @@ class PluginOption(RequestHandler):
 
         if self.json.get('every_flow'):
             self.master.add_event("Setting plugin %s action %s to run on every flow" % (plugin_id, option_id), "debug")
+            print option
+            option['state']['every_flow'] = True
         else:
+            print option
             self.master.add_event("Setting plugin %s action %s not to run on every flow" % (plugin_id, option_id), "debug")
+            option['state']['every_flow'] = False
 
         self.write(dict(
             data={'success': True}
