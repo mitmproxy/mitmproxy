@@ -288,22 +288,28 @@ class PluginOptions(RequestHandler):
         found = False
         plugin = None
         plugin_list = self.master.plugins
-        for plugin_type, plugin_dicts in dict(plugin_list).items():
-            for _plugin_id, plugin_dict in plugin_dicts.items():
-                if plugin_id != _plugin_id:
-                    continue
+        class GetOutOfLoop(Exception):
+            pass
 
-                for action in plugin_dict['actions']:
-                    if action['id'] != self.json['id']:
+        try:
+            for plugin_type, plugin_dicts in dict(plugin_list).items():
+                for _plugin_id, plugin_dict in plugin_dicts.items():
+                    if plugin_id != _plugin_id:
                         continue
 
-                    found = True
-                    plugin = plugin_dict
+                    for action in plugin_dict['actions']:
+                        if action['id'] != self.json['id']:
+                            continue
+
+                        found = True
+                        plugin = plugin_dict
+                        raise GetOutOfLoop
+        except GetOutOfLoop:
+            pass
 
         if not found:
             raise APIError(500, 'No action %s for plugin %s' % (self.json['id'], plugin_id))
 
-        #self.master.run_script_once
         self.master.add_event("Running plugin %s action %s on flow" % (plugin_id, self.json['id']), "debug")
 
         found = False
@@ -314,6 +320,7 @@ class PluginOptions(RequestHandler):
 
             found = True
             script = _script
+            break
 
         if not found:
             raise APIError(500, 'No script %s found on master.scripts' % plugin['script_path'])
@@ -325,7 +332,7 @@ class PluginOptions(RequestHandler):
             raise APIError(500, 'Error running script:\n%s' % repr(e))
 
         self.write(dict(
-            data=self.json
+            data={'success': True}
         ))
 
 

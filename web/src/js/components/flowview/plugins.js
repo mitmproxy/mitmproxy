@@ -23,12 +23,7 @@ var PluginAction = React.createClass({
 
         var ret = [];
         _.forEach(plugin.actions, function (action) {
-            if (action.type === 'button') {
-                ret.push(<div><input type="button" id={action.id} data-action={action.action} onClick={this.triggerClick} value={action.title}/></div>);
-            } else if (action.type === 'checkbox') {
-                ret.push(<div><label for={action.id}>{action.title}</label>
-                         <input type="checkbox" id={action.id} data-action={action.action}/></div>);
-            }
+            ret.push(<div><input type="button" id={action.id} data-action={action.action} onClick={this.triggerClick} value={action.title}/></div>);
         }.bind(this));
 
         return (<span>{ret}</span>);
@@ -55,7 +50,7 @@ var PluginActions = React.createClass({
         return (
             <table className="plugins-table">
                 <thead>
-                    <tr><td>Name</td><td>Options</td></tr>
+                    <tr><td>Name</td><td>Actions</td></tr>
                 </thead>
 
                 <tbody>

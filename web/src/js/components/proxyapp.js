@@ -16,6 +16,70 @@ var PluginList = require("./flowview/plugins.js").PluginList;
 
 
 //TODO: Move out of here, just a stub.
+var PluginOption = React.createClass({
+    triggerClick: function (event) {
+        var el = event.target;
+        $.ajax({
+            type: "POST",
+            url: "/plugins/" + this.props.plugin.id,
+            contentType: 'application/json',
+            data: JSON.stringify(_.find(this.props.plugin.actions, function(o){return (o.id === el.getAttribute('id'))}))
+        });
+    },
+
+    render: function () {
+        var plugin = this.props.plugin; 
+
+        var ret = [];
+        _.forEach(plugin.actions, function (action) {
+                ret.push(<div><label for={action.id}>{action.title}s</label>
+                         <input type="checkbox" id={action.id} data-action={action.action}/></div>);
+        }.bind(this));
+
+        return (<span>{ret}</span>);
+    }
+});
+
+var PluginOptions = React.createClass({
+    getInitialState: function() {
+        return { plugins: PluginList };
+    },
+
+    render: function () {
+
+        var rows = [];
+        console.log("plugin list...");
+        console.log(PluginList);
+        _.forEach(PluginList, function (plugin) {
+            rows.push(<tr>
+                        <td>{plugin.title}</td>
+                        <td><PluginOption plugin={plugin}/></td>
+                      </tr>);
+        });
+
+        return (
+            <table className="plugins-table">
+                <thead>
+                    <tr><td>Name</td><td>Options</td></tr>
+                </thead>
+
+                <tbody>
+                {rows}
+                </tbody>
+            </table>
+        );
+    }
+});
+
+var Plugins = React.createClass({
+    render: function () {
+        return (<div><section>Plugin Settings
+                            <PluginOptions/>
+                            </section>
+</div>);
+    }
+});
+
 var Reports = React.createClass({
     render: function () {
         return <div>ReportEditor</div>;
@@ -76,6 +140,14 @@ var ProxyAppMain = React.createClass({
                             PluginList.push(plugin);
                         }
                     });
+
+                    // trigger rerender of plugin options -- this is necessary
+                    // if page is loaded w/ "/plugins" url because of a race
+                    // condition regarding PluginList
+
+                    // i think i want to setState but not sure how to get ref to
+                    // right object
+                    console.log("XXX: I should trigger a re-render of the PluginOptions now, but I don't know how");
                 }.bind(this))
                 .fail(function () {
                     console.log("Could not fetch plugins");
@@ -158,10 +230,12 @@ var routes = (
         <Route name="flows" path="flows" handler={MainView}/>
         <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
         <Route name="reports" handler={Reports}/>
+        <Route name="plugins" handler={Plugins}/>
         <Redirect path="/" to="flows" />
     </Route>
 );
 
 module.exports = {
-    routes: routes
+    routes: routes,
+    PluginOptions: PluginOptions
 };
