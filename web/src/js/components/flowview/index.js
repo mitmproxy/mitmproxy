@@ -6,7 +6,7 @@ var Nav = require("./nav.js");
 var Messages = require("./messages.js");
 var Details = require("./details.js");
 var Prompt = require("../prompt.js");
-var Plugins = require("./plugins.js").Plugins;
+var PluginsFlowLevel = require("./plugins.js").PluginsFlowLevel;
 
 
 var allTabs = {
@@ -14,7 +14,7 @@ var allTabs = {
     response: Messages.Response,
     error: Messages.Error,
     details: Details,
-    plugins: Plugins
+    plugins: PluginsFlowLevel
 };
 
 var FlowView = React.createClass({

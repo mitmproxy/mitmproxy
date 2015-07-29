@@ -13,78 +13,10 @@ var Key = require("../utils.js").Key;
 var ContentViewAll = require("./flowview/contentview.js").all;
 var PluginMixin = require("./flowview/contentview.js").PluginMixin;
 var PluginList = require("./flowview/plugins.js").PluginList;
+var PluginsTopLevel = require('./flowview/plugins.js').PluginsTopLevel;
 
 
 //TODO: Move out of here, just a stub.
-var PluginOption = React.createClass({
-    triggerClick: function (event) {
-        var el = event.target;
-        $.ajax({
-            type: "POST",
-            url: "/plugins/" + this.props.plugin.id,
-            contentType: 'application/json',
-            data: JSON.stringify(_.find(this.props.plugin.actions, function(o){return (o.id === el.getAttribute('id'))}))
-        });
-    },
-
-    render: function () {
-        var plugin = this.props.plugin; 
-
-        var ret = [];
-        _.forEach(plugin.actions, function (action) {
-            if (action.state.every_flow) {
-                ret.push(<div><label for={action.id}>{action.title}s</label>
-                         <input type="checkbox" id={action.id} data-action={action.action} checked="checked"/></div>);
-            } else {
-                ret.push(<div><label for={action.id}>{action.title}s</label>
-                         <input type="checkbox" id={action.id} data-action={action.action}/></div>);
-            }
-        }.bind(this));
-
-        return (<span>{ret}</span>);
-    }
-});
-
-var PluginOptions = React.createClass({
-    getInitialState: function() {
-        return { plugins: PluginList };
-    },
-
-    render: function () {
-
-        var rows = [];
-        console.log("plugin list...");
-        console.log(PluginList);
-        _.forEach(PluginList, function (plugin) {
-            rows.push(<tr>
-                        <td>{plugin.title}</td>
-                        <td><PluginOption plugin={plugin}/></td>
-                      </tr>);
-        });
-
-        return (
-            <table className="plugins-table">
-                <thead>
-                    <tr><td>Name</td><td>Options</td></tr>
-                </thead>
-
-                <tbody>
-                {rows}
-                </tbody>
-            </table>
-        );
-    }
-});
-
-var Plugins = React.createClass({
-    render: function () {
-        return (<div><section>Plugin Settings
-                            <PluginOptions/>
-                            </section>
-</div>);
-    }
-});
-
 var Reports = React.createClass({
     render: function () {
         return <div>ReportEditor</div>;
@@ -235,12 +167,11 @@ var routes = (
         <Route name="flows" path="flows" handler={MainView}/>
         <Route name="flow" path="flows/:flowId/:detailTab" handler={MainView}/>
         <Route name="reports" handler={Reports}/>
-        <Route name="plugins" handler={Plugins}/>
+        <Route name="plugins" handler={PluginsTopLevel}/>
         <Redirect path="/" to="flows" />
     </Route>
 );
 
 module.exports = {
-    routes: routes,
-    PluginOptions: PluginOptions
+    routes: routes
 };

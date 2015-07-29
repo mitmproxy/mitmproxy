@@ -283,7 +283,45 @@ class Settings(RequestHandler):
         )
 
 
-class PluginOptions(RequestHandler):
+# right now the only option available is to run an action on every flow
+class PluginOption(RequestHandler):
+    def post(self, plugin_id, option_id):
+        found = False
+        plugin = None
+        plugin_list = self.master.plugins
+        class GetOutOfLoop(Exception):
+            pass
+
+        try:
+            for plugin_type, plugin_dicts in dict(plugin_list).items():
+                for _plugin_id, plugin_dict in plugin_dicts.items():
+                    if plugin_id != _plugin_id:
+                        continue
+
+                    for action in plugin_dict['actions']:
+                        if action['id'] != option_id:
+                            continue
+
+                        found = True
+                        plugin = plugin_dict
+                        raise GetOutOfLoop
+        except GetOutOfLoop:
+            pass
+
+        if not found:
+            raise APIError(500, 'No action %s for plugin %s' % (option_id, plugin_id))
+
+        if self.json.get('every_flow'):
+            self.master.add_event("Setting plugin %s action %s to run on every flow" % (plugin_id, option_id), "debug")
+        else:
+            self.master.add_event("Setting plugin %s action %s not to run on every flow" % (plugin_id, option_id), "debug")
+
+        self.write(dict(
+            data={'success': True}
+        ))
+
+
+class PluginFlowActions(RequestHandler):
     def post(self, flow_id, plugin_id):
         found = False
         plugin = None
@@ -379,10 +417,11 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<plugin_id>[\w]+)", ViewPluginFlowContent),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/plugins/(?P<plugin_id>[\w]+)", PluginOptions),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/plugins/(?P<plugin_id>[\w]+)", PluginFlowActions),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
             (r"/plugins", PluginList),
+            (r"/plugins/(?P<plugin_id>[\w]+)/options/(?P<option_id>[\w]+)", PluginOption),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
