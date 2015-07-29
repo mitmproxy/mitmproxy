@@ -135,7 +135,7 @@ var PluginActionEveryFlowOption = React.createClass({
     render: function () {
         var action = this.props.action;
         return (
-            <div key={'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id}>
+            <div>
                 <label htmlFor={action.id}>{action.title}</label>
                 <input type="checkbox"
                        id={'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id}
@@ -152,10 +152,10 @@ var PluginOption = React.createClass({
             type: "POST",
             url: "/plugins/" + this.props.plugin.id + "/options/" + this.props.option.id,
             contentType: 'application/json',
-            data: JSON.stringify({'every_flow': !this.state.every_flow})
+            data: JSON.stringify({'value': event.target.value})
         }).done(function(data){
             if (data.data.success) {
-                this.setState({every_flow: !this.state.every_flow});
+                this.setState({value: event.target.value});
             }
             else
                 console.log("Something went wrong trying to change option");
@@ -170,7 +170,7 @@ var PluginOption = React.createClass({
         var option = this.props.option;
         if (option.type === 'text') {
             return (
-                <div key={'plugin-' + this.props.plugin.id + '-option-' + option.id}>
+                <div>
                 <label htmlFor={'plugin-' + this.props.plugin.id + '-option-' + option.id + '-input'}>{option.title}</label>
                 <input type="text"
                         id={'plugin-' + this.props.plugin.id + '-option-' + option.id + '-input'}

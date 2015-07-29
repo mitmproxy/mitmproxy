@@ -324,6 +324,47 @@ class PluginActionEveryFlow(RequestHandler):
         ))
 
 
+class PluginOption(RequestHandler):
+    def post(self, plugin_id, option_id):
+        found = False
+        plugin = None
+        option = None
+        plugin_list = self.master.plugins
+        class GetOutOfLoop(Exception):
+            pass
+
+        try:
+            for plugin_type, plugin_dicts in dict(plugin_list).items():
+                for _plugin_id, plugin_dict in plugin_dicts.items():
+                    if plugin_id != _plugin_id:
+                        continue
+
+                    for _option in plugin_dict['options']:
+                        if _option['id'] != option_id:
+                            continue
+
+                        found = True
+                        plugin = plugin_dict
+                        option = _option
+                        raise GetOutOfLoop
+        except GetOutOfLoop:
+            pass
+
+        if not found:
+            raise APIError(500, 'No option %s for plugin %s' % (option_id, plugin_id))
+
+        if self.json.get('value'):
+            self.master.add_event("Setting plugin %s option %s value to %s" % (plugin_id, option_id, self.json.get('value')), "debug")
+            option['state']['value'] = self.json.get('value')
+        else:
+            self.master.add_event("Setting plugin %s option %s value to empty" % (plugin_id, option_id), "debug")
+            option['state']['value'] = ''
+
+        self.write(dict(
+            data={'success': True}
+        ))
+
+
 class PluginFlowActions(RequestHandler):
     def post(self, flow_id, plugin_id):
         found = False
@@ -425,6 +466,7 @@ class Application(tornado.web.Application):
             (r"/clear", ClearAll),
             (r"/plugins", PluginList),
             (r"/plugins/(?P<plugin_id>[\w]+)/actions/(?P<action_id>[\w]+)", PluginActionEveryFlow),
+            (r"/plugins/(?P<plugin_id>[\w]+)/options/(?P<option_id>[\w]+)", PluginOption),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

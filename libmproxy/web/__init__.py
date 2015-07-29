@@ -137,6 +137,20 @@ class WebPlugins(object):
         for plugin_type in ('view_plugins', 'action_plugins'):
             yield (plugin_type, getattr(self, '_' + plugin_type))
 
+    def get_option_value(self, action_plugin_id, option_id):
+        plugin = self._action_plugins.get(action_plugin_id)
+        if not plugin:
+            raise WebError("No action plugin %s" % action_plugin_id)
+
+        if not plugin.get('options'):
+            raise WebError("No action plugin %s with option %s" % (action_plugin_id, option_id))
+
+        for option in plugin['options']:
+            if option.get('id') == option_id:
+                return str(option['state']['value'].encode('utf-8'))
+
+        raise WebError("No action plugin %s with option %s" % (action_plugin_id, option_id))
+
     def register_view(self, id, **kwargs):
         if self._view_plugins.get(id):
             raise WebError("Duplicate view registration for %s" % (id, ))
