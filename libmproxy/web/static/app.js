@@ -1554,58 +1554,6 @@ var ViewRaw = React.createClass({displayName: "ViewRaw",
     }
 });
 
-var PluginMixin = {
-    getInitialState: function () {
-        return {
-            content: undefined,
-            request: undefined
-        }
-    },
-    requestContent: function (nextProps) {
-        if (this.state.request) {
-            this.state.request.abort();
-        }
-        var request = MessageUtils.getContent(nextProps.flow,
-            nextProps.message, this.constructor.displayName);
-        this.setState({
-            content: undefined,
-            request: request
-        });
-        request.done(function (data) {
-            this.setState({content: data});
-        }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
-            if (textStatus === "abort") {
-                return;
-            }
-            this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
-        }.bind(this)).always(function () {
-            this.setState({request: undefined});
-        }.bind(this));
-
-    },
-    componentWillMount: function () {
-        this.requestContent(this.props);
-    },
-    componentWillReceiveProps: function (nextProps) {
-        if (nextProps.message !== this.props.message) {
-            this.requestContent(nextProps);
-        }
-    },
-    componentWillUnmount: function () {
-        if (this.state.request) {
-            this.state.request.abort();
-        }
-    },
-    render: function () {
-        if (!this.state.content) {
-            return React.createElement("div", {className: "text-center"}, 
-                React.createElement("i", {className: "fa fa-spinner fa-spin"})
-            );
-        }
-        return this.renderContent();
-    }
-};
-
 var json_regex = /^application\/json$/i;
 var ViewJSON = React.createClass({displayName: "ViewJSON",
     mixins: [RawMixin],
@@ -1758,7 +1706,7 @@ var ContentView = React.createClass({displayName: "ContentView",
     }
 });
 
-module.exports = {ContentView: ContentView, PluginMixin: PluginMixin, all: all};
+module.exports = {ContentView: ContentView, all: all};
 
 },{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],10:[function(require,module,exports){
 var React = require("react");
@@ -2039,13 +1987,9 @@ var FlowView = React.createClass({displayName: "FlowView",
             }
         });
     },
-    getPluginActions: function (flow) {
-        return ['Reverse contents (all)'];
-    },
     render: function () {
         var flow = this.props.flow;
         var tabs = this.getTabs(flow);
-        var pluginActions = this.getPluginActions(flow);
         var active = this.getActive();
 
         if (!_.contains(tabs, active)) {
@@ -2477,8 +2421,59 @@ var React = require("react");
 var _ = require("lodash");
 
 var utils = require("../../utils.js");
+var ContentViewAll = require("../flowview/contentview.js").all;
 
-var PluginList = [];
+var PluginMixin = {
+    getInitialState: function () {
+        return {
+            content: undefined,
+            request: undefined
+        }
+    },
+    requestContent: function (nextProps) {
+        if (this.state.request) {
+            this.state.request.abort();
+        }
+        var request = MessageUtils.getContent(nextProps.flow,
+            nextProps.message, this.constructor.displayName);
+        this.setState({
+            content: undefined,
+            request: request
+        });
+        request.done(function (data) {
+            this.setState({content: data});
+        }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
+            if (textStatus === "abort") {
+                return;
+            }
+            this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
+        }.bind(this)).always(function () {
+            this.setState({request: undefined});
+        }.bind(this));
+
+    },
+    componentWillMount: function () {
+        this.requestContent(this.props);
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.message !== this.props.message) {
+            this.requestContent(nextProps);
+        }
+    },
+    componentWillUnmount: function () {
+        if (this.state.request) {
+            this.state.request.abort();
+        }
+    },
+    render: function () {
+        if (!this.state.content) {
+            return React.createElement("div", {className: "text-center"}, 
+                React.createElement("i", {className: "fa fa-spinner fa-spin"})
+            );
+        }
+        return this.renderContent();
+    }
+};
 
 var PluginAction = React.createClass({displayName: "PluginAction",
     triggerClick: function (event) {
@@ -2489,7 +2484,7 @@ var PluginAction = React.createClass({displayName: "PluginAction",
             type: "POST",
             url: "/flows/" + flow.id + "/plugins/" + this.props.plugin.id,
             contentType: 'application/json',
-            data: JSON.stringify(_.find(this.props.plugin.actions, function(o){return ('action-' + o.id === el.getAttribute('id'))}))
+            data: JSON.stringify(_.find(this.props.plugin.actions, function(o){return ('flow-' + flow.id + '-action-' + o.id === el.getAttribute('id'))}))
         });
     },
 
@@ -2498,7 +2493,7 @@ var PluginAction = React.createClass({displayName: "PluginAction",
 
         var ret = [];
         _.forEach(plugin.actions, function (action) {
-            ret.push(React.createElement("div", null, React.createElement("input", {type: "button", id: 'action-' + action.id, "data-action": action.action, onClick: this.triggerClick, value: action.title})));
+            ret.push(React.createElement("div", null, React.createElement("input", {type: "button", id: 'flow-' + this.props.flow.id + '-action-' + action.id, "data-action": action.action, onClick: this.triggerClick, value: action.title})));
         }.bind(this));
 
         return (React.createElement("span", null, ret));
@@ -2515,7 +2510,7 @@ var PluginActions = React.createClass({displayName: "PluginActions",
         var resp = flow.response;
 
         var rows = [];
-        _.forEach(PluginList, function (plugin) {
+        _.forEach(this.props.plugin_list, function (plugin) {
             rows.push(React.createElement("tr", null, 
                         React.createElement("td", null, plugin.title), 
                         React.createElement("td", null, React.createElement(PluginAction, {plugin: plugin, flow: flow}))
@@ -2536,18 +2531,19 @@ var PluginActions = React.createClass({displayName: "PluginActions",
     }
 });
 
-var PluginOption = React.createClass({displayName: "PluginOption",
+var PluginActionEveryFlowOption = React.createClass({displayName: "PluginActionEveryFlowOption",
     triggerChange: function() {
         $.ajax({
             type: "POST",
-            url: "/plugins/" + this.props.plugin.id + "/options/" + this.props.option.id,
+            url: "/plugins/" + this.props.plugin.id + "/actions/" + this.props.action.id,
             contentType: 'application/json',
             data: JSON.stringify({'every_flow': !this.state.every_flow})
         }).done(function(data){
-            if (data.data.success)
+            if (data.data.success){
                 this.setState({every_flow: !this.state.every_flow});
+            }
             else
-                console.log("Something went wrong trying to change option");
+                console.log("Something went wrong trying to change action");
         }.bind(this));
     },
 
@@ -2556,16 +2552,52 @@ var PluginOption = React.createClass({displayName: "PluginOption",
     },
 
     render: function () {
-        var option = this.props.option;
+        var action = this.props.action;
         return (
-            React.createElement("div", null, 
-                React.createElement("label", {for: option.id}, option.title, "s"), 
+            React.createElement("div", {key: 'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id}, 
+                React.createElement("label", {htmlFor: action.id}, action.title), 
                 React.createElement("input", {type: "checkbox", 
-                       id: 'option-' + option.id, 
-                       "data-action": option.action, 
+                       id: 'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id, 
+                       "data-action": action.action, 
                        onChange: this.triggerChange, 
                        checked: this.state.every_flow})
             ));
+    }
+});
+
+var PluginOption = React.createClass({displayName: "PluginOption",
+    triggerChange: function() {
+        $.ajax({
+            type: "POST",
+            url: "/plugins/" + this.props.plugin.id + "/options/" + this.props.option.id,
+            contentType: 'application/json',
+            data: JSON.stringify({'every_flow': !this.state.every_flow})
+        }).done(function(data){
+            if (data.data.success) {
+                this.setState({every_flow: !this.state.every_flow});
+            }
+            else
+                console.log("Something went wrong trying to change option");
+        }.bind(this));
+    },
+
+    getInitialState: function () {
+        return {'value': this.props.option.state.value};
+    },
+
+    render: function () {
+        var option = this.props.option;
+        if (option.type === 'text') {
+            return (
+                React.createElement("div", {key: 'plugin-' + this.props.plugin.id + '-option-' + option.id}, 
+                React.createElement("label", {htmlFor: 'plugin-' + this.props.plugin.id + '-option-' + option.id + '-input'}, option.title), 
+                React.createElement("input", {type: "text", 
+                        id: 'plugin-' + this.props.plugin.id + '-option-' + option.id + '-input', 
+                        onChange: this.triggerChange, 
+                        value: this.state.value})
+                )
+            );
+        }
     }
 });
 
@@ -2575,7 +2607,11 @@ var PluginOptionList = React.createClass({displayName: "PluginOptionList",
 
         var ret = [];
         _.forEach(plugin.actions, function (action) {
-            ret.push(React.createElement(PluginOption, {option: action, plugin: plugin, initial_every_flow: action.state.every_flow}));
+            ret.push(React.createElement(PluginActionEveryFlowOption, {key: 'plugin-' + plugin.id + '-everyflow-action-' + action.id, action: action, plugin: plugin, initial_every_flow: action.state.every_flow}));
+        }.bind(this));
+
+        _.forEach(plugin.options, function (option) {
+            ret.push(React.createElement(PluginOption, {key: 'plugin-' + plugin.id + '-option-' + option.id, option: option, plugin: plugin}));
         }.bind(this));
 
         return (React.createElement("span", null, ret));
@@ -2584,7 +2620,7 @@ var PluginOptionList = React.createClass({displayName: "PluginOptionList",
 
 var PluginOptionsPane = React.createClass({displayName: "PluginOptionsPane",
     getInitialState: function() {
-        return { plugins: PluginList };
+        return {};
     },
 
     render: function () {
@@ -2593,10 +2629,8 @@ var PluginOptionsPane = React.createClass({displayName: "PluginOptionsPane",
         // there's a race condition here if the page is loaded w/ url
         // /plugins. will result in empty options list, we should probably
         // have the pluginList somewhere in state so it can trigger re-render
-        console.log("plugin list...");
-        console.log(PluginList);
-        _.forEach(PluginList, function (plugin) {
-            rows.push(React.createElement("tr", null, 
+        _.forEach(this.props.plugin_list, function (plugin) {
+            rows.push(React.createElement("tr", {key: plugin.id}, 
                         React.createElement("td", null, plugin.title), 
                         React.createElement("td", null, React.createElement(PluginOptionList, {plugin: plugin}))
                       ));
@@ -2617,12 +2651,84 @@ var PluginOptionsPane = React.createClass({displayName: "PluginOptionsPane",
 });
 
 var PluginsTopLevel = React.createClass({displayName: "PluginsTopLevel",
+    getInitialState: function () {
+        var pluginList = [];
+        $.getJSON("/plugins")
+                .done(function (message) {
+                    _.each(message.data, function(plugin){
+                        if (plugin.type === 'view_plugins') {
+                            var ViewPlugin = React.createClass({
+                                displayName: plugin.id,
+                                mixins: [PluginMixin],
+                                statics: {
+                                    matches: function (message) {
+                                        return true;
+                                    }
+                                },
+                                renderContent: function () {
+                                    return React.createElement("pre", null, this.state.content);
+                                }
+                            });
+
+                            ContentViewAll.push(ViewPlugin);
+                        }
+
+                        if (plugin.type === 'action_plugins') {
+                            pluginList.push(plugin);
+                        }
+                    });
+
+                    this.setState({'plugin_list': pluginList});
+                }.bind(this))
+                .fail(function () {
+                    console.log("Could not fetch plugins");
+                }.bind(this));
+
+        return {'plugin_list': pluginList};
+    },
+
     render: function () {
-        return (React.createElement("div", null, React.createElement("section", null, React.createElement(PluginOptionsPane, null))));
+        return (React.createElement("div", null, React.createElement("section", null, React.createElement(PluginOptionsPane, {plugin_list: this.state.plugin_list}))));
     }
 });
 
 var PluginsFlowLevel = React.createClass({displayName: "PluginsFlowLevel",
+    getInitialState: function () {
+        var pluginList = [];
+        $.getJSON("/plugins")
+                .done(function (message) {
+                    _.each(message.data, function(plugin){
+                        if (plugin.type === 'view_plugins') {
+                            var ViewPlugin = React.createClass({
+                                displayName: plugin.id,
+                                mixins: [PluginMixin],
+                                statics: {
+                                    matches: function (message) {
+                                        return true;
+                                    }
+                                },
+                                renderContent: function () {
+                                    return React.createElement("pre", null, this.state.content);
+                                }
+                            });
+
+                            ContentViewAll.push(ViewPlugin);
+                        }
+
+                        if (plugin.type === 'action_plugins') {
+                            pluginList.push(plugin);
+                        }
+                    });
+
+                    this.setState({'plugin_list': pluginList});
+                }.bind(this))
+                .fail(function () {
+                    console.log("Could not fetch plugins");
+                }.bind(this));
+
+        return {'plugin_list': pluginList};
+    },
+
     render: function () {
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
@@ -2632,7 +2738,7 @@ var PluginsFlowLevel = React.createClass({displayName: "PluginsFlowLevel",
 
                 React.createElement("h4", null, "Plugin Actions"), 
 
-                React.createElement(PluginActions, {flow: flow})
+                React.createElement(PluginActions, {plugin_list: this.state.plugin_list, flow: flow})
 
             )
         );
@@ -2641,12 +2747,11 @@ var PluginsFlowLevel = React.createClass({displayName: "PluginsFlowLevel",
 
 module.exports = {
     'PluginsFlowLevel': PluginsFlowLevel,
-    'PluginList': PluginList,
     'PluginActions': PluginActions,
     'PluginsTopLevel': PluginsTopLevel
 };
 
-},{"../../utils.js":27,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
+},{"../../utils.js":27,"../flowview/contentview.js":9,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 
@@ -3440,9 +3545,6 @@ var EventLog = require("./eventlog.js");
 var store = require("../store/store.js");
 var Query = require("../actions.js").Query;
 var Key = require("../utils.js").Key;
-var ContentViewAll = require("./flowview/contentview.js").all;
-var PluginMixin = require("./flowview/contentview.js").PluginMixin;
-var PluginList = require("./flowview/plugins.js").PluginList;
 var PluginsTopLevel = require('./flowview/plugins.js').PluginsTopLevel;
 
 
@@ -3480,45 +3582,6 @@ var ProxyAppMain = React.createClass({displayName: "ProxyAppMain",
 
         // get the view plugin list and append to ContentView's `all`
         // so buttons will be available on the UI
-        var pluginList;
-        $.getJSON("/plugins")
-                .done(function (message) {
-                    console.log("Retrieved plugins: " +
-                        JSON.stringify(message.data));
-                    _.each(message.data, function(plugin){
-                        if (plugin.type === 'view_plugins') {
-                            var ViewPlugin = React.createClass({
-                                displayName: plugin.id,
-                                mixins: [PluginMixin],
-                                statics: {
-                                    matches: function (message) {
-                                        return true;
-                                    }
-                                },
-                                renderContent: function () {
-                                    return React.createElement("pre", null, this.state.content);
-                                }
-                            });
-
-                            ContentViewAll.push(ViewPlugin);
-                        }
-
-                        if (plugin.type === 'action_plugins') {
-                            PluginList.push(plugin);
-                        }
-                    });
-
-                    // trigger rerender of plugin options -- this is necessary
-                    // if page is loaded w/ "/plugins" url because of a race
-                    // condition regarding PluginList
-
-                    // i think i want to setState but not sure how to get ref to
-                    // right object
-                    console.log("XXX: I should trigger a re-render of the PluginOptions now, but I don't know how");
-                }.bind(this))
-                .fail(function () {
-                    console.log("Could not fetch plugins");
-                }.bind(this));
 
 
         // Default Settings before fetch
@@ -3606,7 +3669,7 @@ module.exports = {
     routes: routes
 };
 
-},{"../actions.js":2,"../store/store.js":25,"../utils.js":27,"./common.js":4,"./eventlog.js":6,"./flowview/contentview.js":9,"./flowview/plugins.js":14,"./footer.js":15,"./header.js":16,"./mainview.js":17,"lodash":"lodash","react":"react","react-router":"react-router"}],20:[function(require,module,exports){
+},{"../actions.js":2,"../store/store.js":25,"../utils.js":27,"./common.js":4,"./eventlog.js":6,"./flowview/plugins.js":14,"./footer.js":15,"./header.js":16,"./mainview.js":17,"lodash":"lodash","react":"react","react-router":"react-router"}],20:[function(require,module,exports){
 var React = require("react");
 
 var VirtualScrollMixin = {

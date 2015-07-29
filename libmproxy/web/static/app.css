@@ -359,6 +359,13 @@ header .menu {
 .plugins-table thead {
   border-bottom: 1px solid grey;
 }
+.plugins-table td {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.plugins-table tr:not(:first-child) {
+  border-top: 1px solid #f7f7f7;
+}
 .flowview-image {
   text-align: center;
 }
