@@ -3,6 +3,7 @@ var _ = require("lodash");
 
 var utils = require("../../utils.js");
 var ContentViewAll = require("../flowview/contentview.js").all;
+var MessageUtils = require("../../flow/utils.js").MessageUtils;
 
 var PluginMixin = {
     getInitialState: function () {

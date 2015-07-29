@@ -2422,6 +2422,7 @@ var _ = require("lodash");
 
 var utils = require("../../utils.js");
 var ContentViewAll = require("../flowview/contentview.js").all;
+var MessageUtils = require("../../flow/utils.js").MessageUtils;
 
 var PluginMixin = {
     getInitialState: function () {
@@ -2751,7 +2752,7 @@ module.exports = {
     'PluginsTopLevel': PluginsTopLevel
 };
 
-},{"../../utils.js":27,"../flowview/contentview.js":9,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
+},{"../../flow/utils.js":24,"../../utils.js":27,"../flowview/contentview.js":9,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 

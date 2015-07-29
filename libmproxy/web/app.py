@@ -4,6 +4,7 @@ import tornado.web
 import tornado.websocket
 import logging
 import json
+from libmproxy.protocol.http import HTTPRequest, HTTPResponse
 from .. import version, filt
 from ..script import ScriptError
 
@@ -215,7 +216,10 @@ class ViewPluginFlowContent(RequestHandler):
 
             for found_plugin_id, plugin in plugin_list.items():
                 if found_plugin_id == plugin_id:
-                    transformed_content = plugin['transformer'](message.content)
+                    if isinstance(message, HTTPRequest):
+                        transformed_content = plugin['transformer'](self.flow, target='request')
+                    elif isinstance(message, HTTPResponse):
+                        transformed_content = plugin['transformer'](self.flow, target='response')
                     break
         self.write(transformed_content)
 
