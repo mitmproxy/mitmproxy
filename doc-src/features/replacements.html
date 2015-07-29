@@ -9,14 +9,14 @@ replace hook is triggered on server response, the replacement is only run on
 the Response object leaving the Request intact. You control whether the hook
 triggers on the request, response or both using the filter pattern. If you need
 finer-grained control than this, it's simple to create a script using the
-replacement API on Flow components. 
+replacement API on Flow components.
 
 Replacement hooks are extremely handy in interactive testing of applications.
 For instance you can use a replace hook to replace the text "XSS" with a
 complicated XSS exploit, and then "inject" the exploit simply by interacting
 with the application through the browser. When used with tools like Firebug and
 mitmproxy's own interception abilities, replacement hooks can be an amazingly
-flexible and powerful feature. 
+flexible and powerful feature.
 
 
 ## On the command-line
@@ -52,9 +52,9 @@ times.
 
 ## Interactively
 
-The _R_ shortcut key in mitmproxy lets you add and edit replacement hooks using
-a built-in editor. The context-sensitive help (_h_) has complete usage
-information.
+The _R_ shortcut key in the mitmproxy options menu (_o_) lets you add and edit
+replacement hooks using a built-in editor. The context-sensitive help (_?_) has
+complete usage information.
 
 <table class="table">
     <tbody>
@@ -68,7 +68,7 @@ information.
             </td>
         </tr>
         <tr>
-            <th>mitmproxy shortcut</th> <td><b>R</b></td>
+            <th>mitmproxy shortcut</th> <td><b>o</b> then <b>R</b></td>
         </tr>
     </tbody>
 </table>
