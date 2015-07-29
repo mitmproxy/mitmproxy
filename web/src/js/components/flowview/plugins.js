@@ -274,17 +274,52 @@ var PluginsTopLevel = React.createClass({
 });
 
 var PluginsFlowLevel = React.createClass({
+    getInitialState: function () {
+        var pluginList = [];
+        $.getJSON("/plugins")
+                .done(function (message) {
+                    _.each(message.data, function(plugin){
+                        if (plugin.type === 'view_plugins') {
+                            var ViewPlugin = React.createClass({
+                                displayName: plugin.id,
+                                mixins: [PluginMixin],
+                                statics: {
+                                    matches: function (message) {
+                                        return true;
+                                    }
+                                },
+                                renderContent: function () {
+                                    return <pre>{this.state.content}</pre>;
+                                }
+                            });
+
+                            ContentViewAll.push(ViewPlugin);
+                        }
+
+                        if (plugin.type === 'action_plugins') {
+                            pluginList.push(plugin);
+                        }
+                    });
+
+                    this.setState({'plugin_list': pluginList});
+                }.bind(this))
+                .fail(function () {
+                    console.log("Could not fetch plugins");
+                }.bind(this));
+
+        return {'plugin_list': pluginList};
+    },
+
     render: function () {
         var flow = this.props.flow;
         var client_conn = flow.client_conn;
         var server_conn = flow.server_conn;
-        console.log(this.props);
         return (
             <section>
 
                 <h4>Plugin Actions</h4>
 
-                <PluginActions plugin_list={this.props.plugin_list} flow={flow}/>
+                <PluginActions plugin_list={this.state.plugin_list} flow={flow}/>
 
             </section>
         );

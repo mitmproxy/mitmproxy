@@ -93,13 +93,9 @@ var FlowView = React.createClass({
             }
         });
     },
-    getPluginActions: function (flow) {
-        return ['Reverse contents (all)'];
-    },
     render: function () {
         var flow = this.props.flow;
         var tabs = this.getTabs(flow);
-        var pluginActions = this.getPluginActions(flow);
         var active = this.getActive();
 
         if (!_.contains(tabs, active)) {
