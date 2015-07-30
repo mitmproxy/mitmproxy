@@ -106,7 +106,7 @@ var ViewAuto = React.createClass({
             return false; // don't match itself
         },
         findView: function (message) {
-            for (var i = 0; i < all.length; i++) {
+            for (var i = all.length - 1; i >= 0; i--) {
                 if (all[i].matches(message)) {
                     return all[i];
                 }
