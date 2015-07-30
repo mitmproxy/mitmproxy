@@ -75,7 +75,7 @@ var PluginAction = React.createClass({
 
         var ret = [];
         _.forEach(plugin.actions, function (action) {
-            ret.push(<div><input type="button" id={'flow-' + this.props.flow.id + '-action-' + action.id} data-action={action.action} onClick={this.triggerClick} value={action.title}/></div>);
+            ret.push(<div key={'flow-' + this.props.flow.id + '-action-' + action.id}><input type="button" id={'flow-' + this.props.flow.id + '-action-' + action.id} data-action={action.action} onClick={this.triggerClick} value={action.title}/></div>);
         }.bind(this));
 
         return (<span>{ret}</span>);
@@ -93,14 +93,14 @@ var PluginActions = React.createClass({
 
         var rows = [];
         _.forEach(this.props.plugin_list, function (plugin) {
-            rows.push(<tr>
+            rows.push(<tr key={'flow-' + flow.id + "-plugin-" + plugin.id + '-actions'}>
                         <td>{plugin.title}</td>
                         <td><PluginAction plugin={plugin} flow={flow}/></td>
                       </tr>);
         });
 
         return (
-            <table className="plugins-table">
+            <table className="plugins-table flow">
                 <thead>
                     <tr><td>Name</td><td>Actions</td></tr>
                 </thead>
@@ -137,7 +137,7 @@ var PluginActionEveryFlowOption = React.createClass({
         var action = this.props.action;
         return (
             <div>
-                <label htmlFor={action.id}><span className="light">Run on Every Flow: </span>{action.title}</label>
+                <label htmlFor={action.id}><span className="light">Run on Every Flow: </span><br/>{action.title}</label>
                 <input type="checkbox"
                        id={'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id}
                        data-action={action.action}
@@ -180,9 +180,14 @@ var PluginOption = React.createClass({
                 </div>
             );
         } else if (option.type === 'display_only') {
+            var json = this.state.value;
+            try {
+                json = JSON.stringify(JSON.parse(json), null, 2);
+            } catch (e) {
+            }
             return (
                 <div>
-                    <pre>{this.state.value}</pre>
+                    <pre>{json}</pre>
                 </div>
             );
         }
@@ -225,7 +230,7 @@ var PluginOptionsPane = React.createClass({
         });
 
         return (
-            <table className="plugins-table">
+            <table className="plugins-table main">
                 <thead>
                     <tr><td>Name</td><td>Plugin Options</td></tr>
                 </thead>
@@ -244,23 +249,6 @@ var PluginsTopLevel = React.createClass({
         $.getJSON("/plugins")
                 .done(function (message) {
                     _.each(message.data, function(plugin){
-                        if (plugin.type === 'view_plugins') {
-                            var ViewPlugin = React.createClass({
-                                displayName: plugin.id,
-                                mixins: [PluginMixin],
-                                statics: {
-                                    matches: function (message) {
-                                        return true;
-                                    }
-                                },
-                                renderContent: function () {
-                                    return <pre>{this.state.content}</pre>;
-                                }
-                            });
-
-                            ContentViewAll.push(ViewPlugin);
-                        }
-
                         if (plugin.type === 'action_plugins') {
                             pluginList.push(plugin);
                         }

@@ -112,13 +112,35 @@
 }
 
 .plugins-table {
-    width: 100%;
+    width: 50%;
+    margin: auto;
+    table-layout: fixed;
 
     div {
-        width: 100%;
+        clear: both;
 
         label, input {
-            width: 50%;
+            float: left;
+        }
+    }
+
+    &.flow {
+        div {
+            width: 100%;
+
+            label, input {
+                width: 50%;
+            }
+        }
+    }
+
+    &.main {
+        div {
+            width: 100%;
+
+            input {
+                margin-left: 35px;
+            }
         }
     }
 

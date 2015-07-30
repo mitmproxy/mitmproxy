@@ -165,6 +165,14 @@ class WebPlugins(object):
 
         return None
 
+    def set_option_value(self, action_plugin_id, option_id, option_value):
+        option = self.get_option(action_plugin_id, option_id)
+        if option:
+            option['state']['value'] = str(option_value.encode('utf-8'))
+            return
+
+        raise WebError("No action plugin %s with option %s" % (action_plugin_id, option_id))
+
     def get_option_value(self, action_plugin_id, option_id):
         option = self.get_option(action_plugin_id, option_id)
         if option:
