@@ -347,14 +347,29 @@ header .menu {
   white-space: nowrap;
 }
 .plugins-table {
-  width: 100%;
+  width: 50%;
+  margin: auto;
+  table-layout: fixed;
 }
 .plugins-table div {
-  width: 100%;
+  clear: both;
 }
 .plugins-table div label,
 .plugins-table div input {
+  float: left;
+}
+.plugins-table.flow div {
+  width: 100%;
+}
+.plugins-table.flow div label,
+.plugins-table.flow div input {
   width: 50%;
+}
+.plugins-table.main div {
+  width: 100%;
+}
+.plugins-table.main div input {
+  margin-left: 35px;
 }
 .plugins-table thead {
   border-bottom: 1px solid grey;

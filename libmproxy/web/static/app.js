@@ -1578,7 +1578,7 @@ var ViewAuto = React.createClass({displayName: "ViewAuto",
             return false; // don't match itself
         },
         findView: function (message) {
-            for (var i = 0; i < all.length; i++) {
+            for (var i = all.length - 1; i >= 0; i--) {
                 if (all[i].matches(message)) {
                     return all[i];
                 }
@@ -2494,7 +2494,7 @@ var PluginAction = React.createClass({displayName: "PluginAction",
 
         var ret = [];
         _.forEach(plugin.actions, function (action) {
-            ret.push(React.createElement("div", null, React.createElement("input", {type: "button", id: 'flow-' + this.props.flow.id + '-action-' + action.id, "data-action": action.action, onClick: this.triggerClick, value: action.title})));
+            ret.push(React.createElement("div", {key: 'flow-' + this.props.flow.id + '-action-' + action.id}, React.createElement("input", {type: "button", id: 'flow-' + this.props.flow.id + '-action-' + action.id, "data-action": action.action, onClick: this.triggerClick, value: action.title})));
         }.bind(this));
 
         return (React.createElement("span", null, ret));
@@ -2512,14 +2512,14 @@ var PluginActions = React.createClass({displayName: "PluginActions",
 
         var rows = [];
         _.forEach(this.props.plugin_list, function (plugin) {
-            rows.push(React.createElement("tr", null, 
+            rows.push(React.createElement("tr", {key: 'flow-' + flow.id + "-plugin-" + plugin.id + '-actions'}, 
                         React.createElement("td", null, plugin.title), 
                         React.createElement("td", null, React.createElement(PluginAction, {plugin: plugin, flow: flow}))
                       ));
         });
 
         return (
-            React.createElement("table", {className: "plugins-table"}, 
+            React.createElement("table", {className: "plugins-table flow"}, 
                 React.createElement("thead", null, 
                     React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Actions"))
                 ), 
@@ -2556,7 +2556,7 @@ var PluginActionEveryFlowOption = React.createClass({displayName: "PluginActionE
         var action = this.props.action;
         return (
             React.createElement("div", null, 
-                React.createElement("label", {htmlFor: action.id}, React.createElement("span", {className: "light"}, "Run on Every Flow: "), action.title), 
+                React.createElement("label", {htmlFor: action.id}, React.createElement("span", {className: "light"}, "Run on Every Flow: "), React.createElement("br", null), action.title), 
                 React.createElement("input", {type: "checkbox", 
                        id: 'plugin-' + this.props.plugin.id + '-everyflow-action-' + action.id, 
                        "data-action": action.action, 
@@ -2599,9 +2599,14 @@ var PluginOption = React.createClass({displayName: "PluginOption",
                 )
             );
         } else if (option.type === 'display_only') {
+            var json = this.state.value;
+            try {
+                json = JSON.stringify(JSON.parse(json), null, 2);
+            } catch (e) {
+            }
             return (
                 React.createElement("div", null, 
-                    React.createElement("pre", null, this.state.value)
+                    React.createElement("pre", null, json)
                 )
             );
         }
@@ -2644,7 +2649,7 @@ var PluginOptionsPane = React.createClass({displayName: "PluginOptionsPane",
         });
 
         return (
-            React.createElement("table", {className: "plugins-table"}, 
+            React.createElement("table", {className: "plugins-table main"}, 
                 React.createElement("thead", null, 
                     React.createElement("tr", null, React.createElement("td", null, "Name"), React.createElement("td", null, "Plugin Options"))
                 ), 
@@ -2663,23 +2668,6 @@ var PluginsTopLevel = React.createClass({displayName: "PluginsTopLevel",
         $.getJSON("/plugins")
                 .done(function (message) {
                     _.each(message.data, function(plugin){
-                        if (plugin.type === 'view_plugins') {
-                            var ViewPlugin = React.createClass({
-                                displayName: plugin.id,
-                                mixins: [PluginMixin],
-                                statics: {
-                                    matches: function (message) {
-                                        return true;
-                                    }
-                                },
-                                renderContent: function () {
-                                    return React.createElement("pre", null, this.state.content);
-                                }
-                            });
-
-                            ContentViewAll.push(ViewPlugin);
-                        }
-
                         if (plugin.type === 'action_plugins') {
                             pluginList.push(plugin);
                         }
