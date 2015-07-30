@@ -23,6 +23,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.timestamp_start = utils.timestamp()
         self.timestamp_end = None
         self.timestamp_ssl_setup = None
+        self.protocol = None
 
     def __repr__(self):
         return "<ClientConnection: {ssl}{host}:{port}>".format(
@@ -58,6 +59,8 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return copy.copy(self)
 
     def send(self, message):
+        if isinstance(message, list):
+            message = b''.join(message)
         self.wfile.write(message)
         self.wfile.flush()
 
@@ -93,6 +96,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_end = None
         self.timestamp_tcp_setup = None
         self.timestamp_ssl_setup = None
+        self.protocol = None
 
     def __repr__(self):
         if self.ssl_established and self.sni:
@@ -157,6 +161,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_tcp_setup = utils.timestamp()
 
     def send(self, message):
+        if isinstance(message, list):
+            message = b''.join(message)
         self.wfile.write(message)
         self.wfile.flush()
 

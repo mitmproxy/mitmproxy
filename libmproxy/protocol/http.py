@@ -9,7 +9,7 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 
 import netlib
 from netlib import http, tcp, odict, utils
-from netlib.http import cookies, http1
+from netlib.http import cookies, http1, http2
 from netlib.http.semantics import CONTENT_MISSING
 
 from .tcp import TCPHandler
@@ -39,7 +39,7 @@ def send_connect_request(conn, host, port, update_state=True):
         odict.ODictCaseless(),
         ""
     )
-    protocol = http.http1.HTTP1Protocol(conn)
+    protocol = http1.HTTP1Protocol(conn)
     conn.send(protocol.assemble(upstream_request))
     resp = HTTPResponse.from_protocol(protocol, upstream_request.method)
     if resp.status_code != 200:
@@ -177,12 +177,16 @@ class HTTPHandler(ProtocolHandler):
 
         for attempt in (0, 1):
             try:
-                flow.server_protocol = http.http1.HTTP1Protocol(self.c.server_conn)
-                self.c.server_conn.send(flow.server_protocol.assemble(flow.request))
+                if not self.c.server_conn.protocol:
+                    # instantiate new protocol if connection does not have one yet
+                    self.c.server_conn.protocol = http2.HTTP2Protocol(self.c.server_conn)
+                    self.c.server_conn.protocol.perform_connection_preface()
+
+                self.c.server_conn.send(self.c.server_conn.protocol.assemble(flow.request))
 
                 # Only get the headers at first...
                 flow.response = HTTPResponse.from_protocol(
-                    flow.server_protocol,
+                    flow.server_conn.protocol,
                     flow.request.method,
                     body_size_limit=self.c.config.body_size_limit,
                     include_body=False
@@ -220,23 +224,27 @@ class HTTPHandler(ProtocolHandler):
             if flow.response.stream:
                 flow.response.content = CONTENT_MISSING
             else:
-                flow.server_protocol = http1.HTTP1Protocol(self.c.server_conn)
-                flow.response.content = flow.server_protocol.read_http_body(
-                    flow.response.headers,
-                    self.c.config.body_size_limit,
-                    flow.request.method,
-                    flow.response.code,
-                    False
-                )
+                if isinstance(flow.server_conn.protocol, http1.HTTP1Protocol):
+                    flow.response.content = flow.server_conn.protocol.read_http_body(
+                        flow.response.headers,
+                        self.c.config.body_size_limit,
+                        flow.request.method,
+                        flow.response.code,
+                        False
+                    )
         flow.response.timestamp_end = utils.timestamp()
 
     def handle_flow(self):
         flow = HTTPFlow(self.c.client_conn, self.c.server_conn, self.live)
+
         try:
             try:
-                flow.client_protocol = http.http1.HTTP1Protocol(self.c.client_conn)
+                if not flow.client_conn.protocol:
+                    # instantiate new protocol if connection does not have one yet
+                    flow.client_conn.protocol = http1.HTTP1Protocol(self.c.client_conn)
+
                 req = HTTPRequest.from_protocol(
-                    flow.client_protocol,
+                    flow.client_conn.protocol,
                     body_size_limit=self.c.config.body_size_limit
                 )
             except tcp.NetLibError:
@@ -249,8 +257,14 @@ class HTTPHandler(ProtocolHandler):
                 [repr(req)]
             )
             ret = self.process_request(flow, req)
+            if ret:
+                # CONNECT successful - upgrade to HTTP/2
+                # instantiate new protocol if connection does not have one yet
+                flow.client_conn.protocol = http2.HTTP2Protocol(self.c.client_conn, is_server=True)
             if ret is not None:
                 return ret
+
+            print("still here: %s" % flow.client_conn.protocol.__class__)
 
             # Be careful NOT to assign the request to the flow before
             # process_request completes. This is because the call can raise an
@@ -375,30 +389,31 @@ class HTTPHandler(ProtocolHandler):
             pass
 
     def send_error(self, code, message, headers):
-        response = http.status_codes.RESPONSES.get(code, "Unknown")
-        html_content = """
-            <html>
-                <head>
-                    <title>%d %s</title>
-                </head>
-                <body>%s</body>
-            </html>
-        """ % (code, response, message)
-        self.c.client_conn.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-        self.c.client_conn.wfile.write(
-            "Server: %s\r\n" % self.c.config.server_version
-        )
-        self.c.client_conn.wfile.write("Content-type: text/html\r\n")
-        self.c.client_conn.wfile.write(
-            "Content-Length: %d\r\n" % len(html_content)
-        )
-        if headers:
-            for key, value in headers.items():
-                self.c.client_conn.wfile.write("%s: %s\r\n" % (key, value))
-        self.c.client_conn.wfile.write("Connection: close\r\n")
-        self.c.client_conn.wfile.write("\r\n")
-        self.c.client_conn.wfile.write(html_content)
-        self.c.client_conn.wfile.flush()
+        raise NotImplementedError("todo - adapt for HTTP/2 - make use of make_error_reponse from pathod")
+        # response = http.status_codes.RESPONSES.get(code, "Unknown")
+        # html_content = """
+        #     <html>
+        #         <head>
+        #             <title>%d %s</title>
+        #         </head>
+        #         <body>%s</body>
+        #     </html>
+        # """ % (code, response, message)
+        # self.c.client_conn.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
+        # self.c.client_conn.wfile.write(
+        #     "Server: %s\r\n" % self.c.config.server_version
+        # )
+        # self.c.client_conn.wfile.write("Content-type: text/html\r\n")
+        # self.c.client_conn.wfile.write(
+        #     "Content-Length: %d\r\n" % len(html_content)
+        # )
+        # if headers:
+        #     for key, value in headers.items():
+        #         self.c.client_conn.wfile.write("%s: %s\r\n" % (key, value))
+        # self.c.client_conn.wfile.write("Connection: close\r\n")
+        # self.c.client_conn.wfile.write("\r\n")
+        # self.c.client_conn.wfile.write(html_content)
+        # self.c.client_conn.wfile.flush()
 
     def process_request(self, flow, request):
         """
@@ -554,7 +569,7 @@ class HTTPHandler(ProtocolHandler):
             # no streaming:
             # we already received the full response from the server and can
             # send it to the client straight away.
-            self.c.client_conn.send(flow.client_protocol.assemble(flow.response))
+            self.c.client_conn.send(self.c.client_conn.protocol.assemble(flow.response))
         else:
             raise NotImplementedError("HTTP streaming is currently not supported.")
             # TODO: implement it according to new protocols and messages
@@ -731,12 +746,11 @@ class RequestReplayThread(threading.Thread):
                         )
                     r.form_out = "relative"
 
-                server.send(self.flow.server_protocol.assemble(r))
+                server.send(self.flow.server_conn.protocol.assemble(r))
                 self.flow.server_conn = server
 
-                self.flow.server_protocol = http.http1.HTTP1Protocol(self.flow.server_conn)
                 self.flow.response = HTTPResponse.from_protocol(
-                    self.flow.server_protocol,
+                    self.flow.server_conn.protocol,
                     r.method,
                     body_size_limit=self.config.body_size_limit,
                 )
