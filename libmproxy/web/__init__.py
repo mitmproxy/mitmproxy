@@ -99,6 +99,7 @@ class Options(object):
         "kill",
         "intercept",
         "no_server",
+        "outfile",
         "refresh_server_playback",
         "rfile",
         "scripts",
