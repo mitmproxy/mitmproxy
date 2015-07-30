@@ -221,14 +221,6 @@ class WebMaster(flow.FlowMaster):
         self.plugins = None
         super(WebMaster, self).__init__(server, WebState())
         self.app = app.Application(self, self.options.wdebug)
-        if options.rfile:
-            try:
-                self.load_flows_file(options.rfile)
-            except flow.FlowReadError as v:
-                self.add_event(
-                    "Could not read flow file: %s" % v,
-                    "error"
-                )
 
         if options.filtstr:
             self.filt = filt.parse(options.filtstr)
