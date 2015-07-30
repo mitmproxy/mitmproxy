@@ -222,7 +222,7 @@ class TestAssembleRequest():
         bytes = http2.HTTP2Protocol(self.c).assemble_request(http.Request(
             '',
             'GET',
-            '',
+            'https',
             '',
             '',
             '/',
@@ -237,7 +237,7 @@ class TestAssembleRequest():
         bytes = http2.HTTP2Protocol(self.c).assemble_request(http.Request(
             '',
             'GET',
-            '',
+            'https',
             '',
             '',
             '/',
@@ -269,11 +269,12 @@ class TestReadResponse(tservers.ServerTestBase):
         c.connect()
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c)
+        protocol.connection_preface_performed = True
 
         resp = protocol.read_response()
 
         assert resp.httpversion == (2, 0)
-        assert resp.status_code == "200"
+        assert resp.status_code == 200
         assert resp.msg == ""
         assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
         assert resp.body == b'foobar'
@@ -294,12 +295,13 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         c.connect()
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c)
+        protocol.connection_preface_performed = True
 
         resp = protocol.read_response()
 
         assert resp.stream_id
         assert resp.httpversion == (2, 0)
-        assert resp.status_code == "200"
+        assert resp.status_code == 200
         assert resp.msg == ""
         assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
         assert resp.body == b''
@@ -322,6 +324,7 @@ class TestReadRequest(tservers.ServerTestBase):
         c.connect()
         c.convert_to_ssl()
         protocol = http2.HTTP2Protocol(c, is_server=True)
+        protocol.connection_preface_performed = True
 
         resp = protocol.read_request()
 

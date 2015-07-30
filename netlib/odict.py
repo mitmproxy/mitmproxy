@@ -96,8 +96,11 @@ class ODict(object):
                 return True
         return False
 
-    def add(self, key, value):
-        self.lst.append([key, value])
+    def add(self, key, value, prepend=False):
+        if prepend:
+            self.lst.insert(0, [key, value])
+        else:
+            self.lst.append([key, value])
 
     def get(self, k, d=None):
         if k in self:
