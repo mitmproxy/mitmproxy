@@ -224,6 +224,15 @@ var ResponseLine = React.createClass({
 });
 
 var Request = React.createClass({
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function () {
+        return {pluginStore: this.context.pluginStore};
+    },
     render: function () {
         var flow = this.props.flow;
         return (

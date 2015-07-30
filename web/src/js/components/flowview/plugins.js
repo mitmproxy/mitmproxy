@@ -2,60 +2,7 @@ var React = require("react");
 var _ = require("lodash");
 
 var utils = require("../../utils.js");
-var ContentViewAll = require("../flowview/contentview.js").all;
 var MessageUtils = require("../../flow/utils.js").MessageUtils;
-
-var PluginMixin = {
-    getInitialState: function () {
-        return {
-            content: undefined,
-            request: undefined
-        }
-    },
-    requestContent: function (nextProps) {
-        if (this.state.request) {
-            this.state.request.abort();
-        }
-        var request = MessageUtils.getContent(nextProps.flow,
-            nextProps.message, this.constructor.displayName);
-        this.setState({
-            content: undefined,
-            request: request
-        });
-        request.done(function (data) {
-            this.setState({content: data});
-        }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
-            if (textStatus === "abort") {
-                return;
-            }
-            this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
-        }.bind(this)).always(function () {
-            this.setState({request: undefined});
-        }.bind(this));
-
-    },
-    componentWillMount: function () {
-        this.requestContent(this.props);
-    },
-    componentWillReceiveProps: function (nextProps) {
-        if (nextProps.message !== this.props.message) {
-            this.requestContent(nextProps);
-        }
-    },
-    componentWillUnmount: function () {
-        if (this.state.request) {
-            this.state.request.abort();
-        }
-    },
-    render: function () {
-        if (!this.state.content) {
-            return <div className="text-center">
-                <i className="fa fa-spinner fa-spin"></i>
-            </div>;
-        }
-        return this.renderContent();
-    }
-};
 
 var PluginAction = React.createClass({
     triggerClick: function (event) {
@@ -274,23 +221,6 @@ var PluginsFlowLevel = React.createClass({
         $.getJSON("/plugins")
                 .done(function (message) {
                     _.each(message.data, function(plugin){
-                        if (plugin.type === 'view_plugins') {
-                            var ViewPlugin = React.createClass({
-                                displayName: plugin.id,
-                                mixins: [PluginMixin],
-                                statics: {
-                                    matches: function (message) {
-                                        return true;
-                                    }
-                                },
-                                renderContent: function () {
-                                    return <pre>{this.state.content}</pre>;
-                                }
-                            });
-
-                            ContentViewAll.push(ViewPlugin);
-                        }
-
                         if (plugin.type === 'action_plugins') {
                             pluginList.push(plugin);
                         }

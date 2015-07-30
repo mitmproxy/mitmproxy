@@ -1476,6 +1476,8 @@ var _ = require("lodash");
 var MessageUtils = require("../../flow/utils.js").MessageUtils;
 var utils = require("../../utils.js");
 
+var allNames;
+
 var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
 var ViewImage = React.createClass({displayName: "ViewImage",
     statics: {
@@ -1502,7 +1504,14 @@ var RawMixin = {
         if (this.state.request) {
             this.state.request.abort();
         }
-        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+
+        var request;
+        if (_.contains(allNames, this.constructor.displayName))
+            request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        else
+            request = MessageUtils.getContent(nextProps.flow, nextProps.message,
+                                              this.constructor.displayName);
+
         this.setState({
             content: undefined,
             request: request
@@ -1577,23 +1586,43 @@ var ViewAuto = React.createClass({displayName: "ViewAuto",
         matches: function () {
             return false; // don't match itself
         },
-        findView: function (message) {
-            for (var i = all.length - 1; i >= 0; i--) {
-                if (all[i].matches(message)) {
-                    return all[i];
+        findView: function (message, pluginStore) {
+            var all_views = all.slice();
+            if (pluginStore) {
+                _.each(pluginStore, function(plugin){
+                    if (plugin.type === 'view_plugins') {
+                        all_views.push(React.createClass({
+                            displayName: plugin.id,
+                            mixins: [RawMixin],
+                            statics: {
+                                matches: function (message) {
+                                    return true;
+                                }
+                            },
+                            renderContent: function () {
+                                return React.createElement("pre", null, this.state.content);
+                            }
+                        }));
+                    }
+                })
+            }
+
+            for (var i = all_views.length - 1; i >= 0; i--) {
+                if (all_views[i].matches(message)) {
+                    return all_views[i];
                 }
             }
-            return all[all.length - 1];
+            return all_views[all_views.length - 1];
         }
     },
     render: function () {
-        var View = ViewAuto.findView(this.props.message);
-        return React.createElement(View, React.__spread({},  this.props));
+        var View = ViewAuto.findView(this.props.message, this.props.pluginStore);
+        return React.createElement(View, React.__spread({},  this.props, {pluginStore: this.props.pluginStore}));
     }
 });
 
 var all = [ViewAuto, ViewImage, ViewJSON, ViewRaw];
-
+allNames = _.map(all, function(v){ return v.displayName });
 
 var ContentEmpty = React.createClass({displayName: "ContentEmpty",
     render: function () {
@@ -1626,17 +1655,39 @@ var TooLarge = React.createClass({displayName: "TooLarge",
 });
 
 var ViewSelector = React.createClass({displayName: "ViewSelector",
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
     render: function () {
+        var all_views = all.slice();
         var views = [];
-        for (var i = 0; i < all.length; i++) {
-            var view = all[i];
+
+        _.each(this.context.pluginStore, function(plugin){
+            if (plugin.type === 'view_plugins') {
+                all_views.push(React.createClass({
+                    displayName: plugin.id,
+                    mixins: [RawMixin],
+                    statics: {
+                        matches: function (message) {
+                            return true;
+                        }
+                    },
+                    renderContent: function () {
+                        return React.createElement("pre", null, this.state.content);
+                    }
+                }));
+            }
+        })
+
+        for (var i = 0; i < all_views.length; i++) {
+            var view = all_views[i];
             var className = "btn btn-default";
             if (view === this.props.active) {
                 className += " active";
             }
             var text;
             if (view === ViewAuto) {
-                text = "auto: " + ViewAuto.findView(this.props.message).displayName.toLowerCase().replace("view", "");
+                text = "auto: " + ViewAuto.findView(this.props.message, this.context.pluginStore).displayName.toLowerCase().replace("view", "");
             } else {
                 text = view.displayName.toLowerCase().replace("view", "");
             }
@@ -1655,6 +1706,9 @@ var ViewSelector = React.createClass({displayName: "ViewSelector",
 });
 
 var ContentView = React.createClass({displayName: "ContentView",
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
     getInitialState: function () {
         return {
             displayLarge: false,
@@ -1694,7 +1748,7 @@ var ContentView = React.createClass({displayName: "ContentView",
         var downloadUrl = MessageUtils.getContentURL(this.props.flow, message);
 
         return React.createElement("div", null, 
-            React.createElement(this.state.View, React.__spread({},  this.props)), 
+            React.createElement(this.state.View, React.__spread({pluginStore: this.context.pluginStore},  this.props)), 
             React.createElement("div", {className: "view-options text-center"}, 
                 React.createElement(ViewSelector, {selectView: this.selectView, active: this.state.View, message: message}), 
             " ", 
@@ -1913,9 +1967,29 @@ var allTabs = {
 
 var FlowView = React.createClass({displayName: "FlowView",
     mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function () {
+        return {pluginStore: this.state.pluginStore};
+    },
     getInitialState: function () {
+        $.getJSON("/plugins")
+            .done(function (message) {
+                var pluginList = [];
+                _.each(message.data, function(plugin){
+                        pluginList.push(plugin);
+                });
+
+                this.setState({pluginStore: pluginList});
+            }.bind(this))
+            .fail(function () {
+                console.log("Could not fetch plugins");
+            }.bind(this));
+
         return {
-            prompt: false
+            prompt: false,
+            pluginStore: []
         };
     },
     getTabs: function (flow) {
@@ -2252,6 +2326,15 @@ var ResponseLine = React.createClass({displayName: "ResponseLine",
 });
 
 var Request = React.createClass({displayName: "Request",
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function () {
+        return {pluginStore: this.context.pluginStore};
+    },
     render: function () {
         var flow = this.props.flow;
         return (
@@ -2421,60 +2504,7 @@ var React = require("react");
 var _ = require("lodash");
 
 var utils = require("../../utils.js");
-var ContentViewAll = require("../flowview/contentview.js").all;
 var MessageUtils = require("../../flow/utils.js").MessageUtils;
-
-var PluginMixin = {
-    getInitialState: function () {
-        return {
-            content: undefined,
-            request: undefined
-        }
-    },
-    requestContent: function (nextProps) {
-        if (this.state.request) {
-            this.state.request.abort();
-        }
-        var request = MessageUtils.getContent(nextProps.flow,
-            nextProps.message, this.constructor.displayName);
-        this.setState({
-            content: undefined,
-            request: request
-        });
-        request.done(function (data) {
-            this.setState({content: data});
-        }.bind(this)).fail(function (jqXHR, textStatus, errorThrown) {
-            if (textStatus === "abort") {
-                return;
-            }
-            this.setState({content: "AJAX Error: " + textStatus + "\r\n" + errorThrown});
-        }.bind(this)).always(function () {
-            this.setState({request: undefined});
-        }.bind(this));
-
-    },
-    componentWillMount: function () {
-        this.requestContent(this.props);
-    },
-    componentWillReceiveProps: function (nextProps) {
-        if (nextProps.message !== this.props.message) {
-            this.requestContent(nextProps);
-        }
-    },
-    componentWillUnmount: function () {
-        if (this.state.request) {
-            this.state.request.abort();
-        }
-    },
-    render: function () {
-        if (!this.state.content) {
-            return React.createElement("div", {className: "text-center"}, 
-                React.createElement("i", {className: "fa fa-spinner fa-spin"})
-            );
-        }
-        return this.renderContent();
-    }
-};
 
 var PluginAction = React.createClass({displayName: "PluginAction",
     triggerClick: function (event) {
@@ -2693,23 +2723,6 @@ var PluginsFlowLevel = React.createClass({displayName: "PluginsFlowLevel",
         $.getJSON("/plugins")
                 .done(function (message) {
                     _.each(message.data, function(plugin){
-                        if (plugin.type === 'view_plugins') {
-                            var ViewPlugin = React.createClass({
-                                displayName: plugin.id,
-                                mixins: [PluginMixin],
-                                statics: {
-                                    matches: function (message) {
-                                        return true;
-                                    }
-                                },
-                                renderContent: function () {
-                                    return React.createElement("pre", null, this.state.content);
-                                }
-                            });
-
-                            ContentViewAll.push(ViewPlugin);
-                        }
-
                         if (plugin.type === 'action_plugins') {
                             pluginList.push(plugin);
                         }
@@ -2746,7 +2759,7 @@ module.exports = {
     'PluginsTopLevel': PluginsTopLevel
 };
 
-},{"../../flow/utils.js":24,"../../utils.js":27,"../flowview/contentview.js":9,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
+},{"../../flow/utils.js":24,"../../utils.js":27,"lodash":"lodash","react":"react"}],15:[function(require,module,exports){
 var React = require("react");
 var common = require("./common.js");
 

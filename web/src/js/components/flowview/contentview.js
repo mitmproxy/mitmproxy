@@ -4,6 +4,8 @@ var _ = require("lodash");
 var MessageUtils = require("../../flow/utils.js").MessageUtils;
 var utils = require("../../utils.js");
 
+var allNames;
+
 var image_regex = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i;
 var ViewImage = React.createClass({
     statics: {
@@ -30,7 +32,14 @@ var RawMixin = {
         if (this.state.request) {
             this.state.request.abort();
         }
-        var request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+
+        var request;
+        if (_.contains(allNames, this.constructor.displayName))
+            request = MessageUtils.getContent(nextProps.flow, nextProps.message);
+        else
+            request = MessageUtils.getContent(nextProps.flow, nextProps.message,
+                                              this.constructor.displayName);
+
         this.setState({
             content: undefined,
             request: request
@@ -105,23 +114,43 @@ var ViewAuto = React.createClass({
         matches: function () {
             return false; // don't match itself
         },
-        findView: function (message) {
-            for (var i = all.length - 1; i >= 0; i--) {
-                if (all[i].matches(message)) {
-                    return all[i];
+        findView: function (message, pluginStore) {
+            var all_views = all.slice();
+            if (pluginStore) {
+                _.each(pluginStore, function(plugin){
+                    if (plugin.type === 'view_plugins') {
+                        all_views.push(React.createClass({
+                            displayName: plugin.id,
+                            mixins: [RawMixin],
+                            statics: {
+                                matches: function (message) {
+                                    return true;
+                                }
+                            },
+                            renderContent: function () {
+                                return <pre>{this.state.content}</pre>;
+                            }
+                        }));
+                    }
+                })
+            }
+
+            for (var i = all_views.length - 1; i >= 0; i--) {
+                if (all_views[i].matches(message)) {
+                    return all_views[i];
                 }
             }
-            return all[all.length - 1];
+            return all_views[all_views.length - 1];
         }
     },
     render: function () {
-        var View = ViewAuto.findView(this.props.message);
-        return <View {...this.props}/>;
+        var View = ViewAuto.findView(this.props.message, this.props.pluginStore);
+        return <View {...this.props} pluginStore={this.props.pluginStore} />;
     }
 });
 
 var all = [ViewAuto, ViewImage, ViewJSON, ViewRaw];
-
+allNames = _.map(all, function(v){ return v.displayName });
 
 var ContentEmpty = React.createClass({
     render: function () {
@@ -154,17 +183,39 @@ var TooLarge = React.createClass({
 });
 
 var ViewSelector = React.createClass({
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
     render: function () {
+        var all_views = all.slice();
         var views = [];
-        for (var i = 0; i < all.length; i++) {
-            var view = all[i];
+
+        _.each(this.context.pluginStore, function(plugin){
+            if (plugin.type === 'view_plugins') {
+                all_views.push(React.createClass({
+                    displayName: plugin.id,
+                    mixins: [RawMixin],
+                    statics: {
+                        matches: function (message) {
+                            return true;
+                        }
+                    },
+                    renderContent: function () {
+                        return <pre>{this.state.content}</pre>;
+                    }
+                }));
+            }
+        })
+
+        for (var i = 0; i < all_views.length; i++) {
+            var view = all_views[i];
             var className = "btn btn-default";
             if (view === this.props.active) {
                 className += " active";
             }
             var text;
             if (view === ViewAuto) {
-                text = "auto: " + ViewAuto.findView(this.props.message).displayName.toLowerCase().replace("view", "");
+                text = "auto: " + ViewAuto.findView(this.props.message, this.context.pluginStore).displayName.toLowerCase().replace("view", "");
             } else {
                 text = view.displayName.toLowerCase().replace("view", "");
             }
@@ -183,6 +234,9 @@ var ViewSelector = React.createClass({
 });
 
 var ContentView = React.createClass({
+    contextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
     getInitialState: function () {
         return {
             displayLarge: false,
@@ -222,7 +276,7 @@ var ContentView = React.createClass({
         var downloadUrl = MessageUtils.getContentURL(this.props.flow, message);
 
         return <div>
-            <this.state.View {...this.props} />
+            <this.state.View pluginStore={this.context.pluginStore} {...this.props} />
             <div className="view-options text-center">
                 <ViewSelector selectView={this.selectView} active={this.state.View} message={message}/>
             &nbsp;

@@ -19,9 +19,29 @@ var allTabs = {
 
 var FlowView = React.createClass({
     mixins: [common.StickyHeadMixin, common.Navigation, common.RouterState],
+    childContextTypes: {
+        pluginStore: React.PropTypes.array.isRequired
+    },
+    getChildContext: function () {
+        return {pluginStore: this.state.pluginStore};
+    },
     getInitialState: function () {
+        $.getJSON("/plugins")
+            .done(function (message) {
+                var pluginList = [];
+                _.each(message.data, function(plugin){
+                        pluginList.push(plugin);
+                });
+
+                this.setState({pluginStore: pluginList});
+            }.bind(this))
+            .fail(function () {
+                console.log("Could not fetch plugins");
+            }.bind(this));
+
         return {
-            prompt: false
+            prompt: false,
+            pluginStore: []
         };
     },
     getTabs: function (flow) {
