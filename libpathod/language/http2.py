@@ -1,6 +1,7 @@
 import pyparsing as pp
 
-from netlib.http import user_agents
+from netlib import odict
+from netlib.http import user_agents, semantics
 from . import base, message
 
 """
@@ -155,7 +156,7 @@ class Response(_HTTP2Message):
     def __init__(self, tokens):
         super(Response, self).__init__(tokens)
         self.rendered_values = None
-        self.stream_id = 0
+        self.stream_id = 2
 
     @property
     def code(self):
@@ -178,17 +179,22 @@ class Response(_HTTP2Message):
         if self.rendered_values:
             return self.rendered_values
         else:
-            headers = [header.values(settings) for header in self.headers]
+            headers = odict.ODictCaseless([header.values(settings) for header in self.headers])
 
             body = self.body
             if body:
                 body = body.string()
 
-            self.rendered_values = settings.protocol.create_response(
+            resp = semantics.Response(
+                (2, 0),
                 self.code.string(),
-                self.stream_id,
+                '',
                 headers,
-                body)
+                body,
+            )
+            resp.stream_id = self.stream_id
+
+            self.rendered_values = settings.protocol.assemble(resp)
             return self.rendered_values
 
     def spec(self):
@@ -215,6 +221,7 @@ class Request(_HTTP2Message):
     def __init__(self, tokens):
         super(Request, self).__init__(tokens)
         self.rendered_values = None
+        self.stream_id = 1
 
     @property
     def method(self):
@@ -255,17 +262,26 @@ class Request(_HTTP2Message):
             if self.nested_response:
                 path += self.nested_response.parsed.spec()
 
-            headers = [header.values(settings) for header in self.headers]
+            headers = odict.ODictCaseless([header.values(settings) for header in self.headers])
 
             body = self.body
             if body:
                 body = body.string()
 
-            self.rendered_values = settings.protocol.create_request(
+            req = semantics.Request(
+                '',
                 self.method.string(),
+                '',
+                '',
+                '',
                 path,
+                (2, 0),
                 headers,
-                body)
+                body,
+            )
+            req.stream_id = self.stream_id
+
+            self.rendered_values = settings.protocol.assemble(req)
             return self.rendered_values
 
     def spec(self):

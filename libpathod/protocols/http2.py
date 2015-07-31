@@ -16,5 +16,5 @@ class HTTP2Protocol:
         self.wire_protocol.perform_server_connection_preface()
         return self.wire_protocol.read_request()
 
-    def create_response(self, code, stream_id, headers, body):
-        return self.wire_protocol.create_response(code, stream_id, headers, body)
+    def assemble(self, message):
+        return self.wire_protocol.assemble(message)

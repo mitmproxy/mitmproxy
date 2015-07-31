@@ -7,6 +7,9 @@ import netlib.websockets
 from netlib.http import status_codes, user_agents
 from . import base, exceptions, actions, message
 
+# TODO: use netlib.semantics.protocol assemble method,
+# instead of duplicating the HTTP on-the-wire representation here.
+# see http2 language for an example
 
 class WS(base.CaselessLiteral):
     TOK = "ws"
