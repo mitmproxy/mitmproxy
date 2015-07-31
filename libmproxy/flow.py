@@ -8,8 +8,11 @@ import Cookie
 import cookielib
 import os
 import re
+
 from netlib import odict, wsgi, tcp
+from netlib.http.semantics import CONTENT_MISSING
 import netlib.http
+
 from . import controller, protocol, tnetstring, filt, script, version
 from .onboarding import app
 from .protocol import http, handle
@@ -921,7 +924,7 @@ class FlowMaster(controller.Master):
             return "Can't replay live request."
         if f.intercepted:
             return "Can't replay while intercepting..."
-        if f.request.content == http.CONTENT_MISSING:
+        if f.request.content == CONTENT_MISSING:
             return "Can't replay request with missing content..."
         if f.request:
             f.backup()

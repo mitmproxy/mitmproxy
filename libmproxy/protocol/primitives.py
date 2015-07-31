@@ -167,6 +167,7 @@ class Flow(stateobject.StateObject):
         master.handle_accept_intercept(self)
 
 
+
 class ProtocolHandler(object):
     """
     A ProtocolHandler implements an application-layer protocol, e.g. HTTP.

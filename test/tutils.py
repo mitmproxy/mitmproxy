@@ -96,13 +96,13 @@ def treq(content="content", scheme="http", host="address", port=22):
         host,
         port,
         "/path",
-        (1,
-         1),
+        (1, 1),
         headers,
         content,
         None,
         None,
-        None)
+        None,
+    )
     return req
 
 
@@ -127,14 +127,14 @@ def tresp(content="message"):
     headers["header_response"] = ["svalue"]
 
     resp = http.HTTPResponse(
-        (1,
-         1),
+        (1, 1),
         200,
         "OK",
         headers,
         content,
         time(),
-        time())
+        time(),
+    )
     return resp
 
 

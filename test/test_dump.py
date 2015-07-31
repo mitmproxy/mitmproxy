@@ -1,5 +1,8 @@
 import os
 from cStringIO import StringIO
+
+from netlib.http.semantics import CONTENT_MISSING
+
 from libmproxy import dump, flow
 from libmproxy.protocol import http
 from libmproxy.proxy.primitives import Log
@@ -65,10 +68,10 @@ class TestDumpMaster:
         o = dump.Options(flow_detail=3)
         m = dump.DumpMaster(None, o, outfile=cs)
         f = tutils.tflow()
-        f.request.content = http.CONTENT_MISSING
+        f.request.content = CONTENT_MISSING
         m.handle_request(f)
         f.response = tutils.tresp()
-        f.response.content = http.CONTENT_MISSING
+        f.response.content = CONTENT_MISSING
         m.handle_response(f)
         assert "content missing" in cs.getvalue()
 

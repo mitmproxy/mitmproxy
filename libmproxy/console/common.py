@@ -4,10 +4,13 @@ import urwid
 import urwid.util
 import os
 
-from .. import utils
-from ..protocol.http import CONTENT_MISSING, decoded
-from . import signals
+from netlib.http.semantics import CONTENT_MISSING
 import netlib.utils
+
+from .. import utils
+from ..protocol.http import decoded
+from . import signals
+
 
 try:
     import pyperclip
@@ -135,7 +138,7 @@ def raw_format_flow(f, focus, extended, padding):
         )
     else:
         req.append(fcol(">>" if focus else "  ", "focus"))
-        
+
     if f["marked"]:
         req.append(fcol(SYMBOL_MARK, "mark"))
 
@@ -249,7 +252,7 @@ def copy_flow_format_data(part, scope, flow):
                 return None, "Request content is missing"
             with decoded(flow.request):
                 if part == "h":
-                    data += flow.request.assemble()
+                    data += flow.client_conn.protocol.assemble(flow.request)
                 elif part == "c":
                     data += flow.request.content
                 else:
@@ -262,7 +265,7 @@ def copy_flow_format_data(part, scope, flow):
                 return None, "Response content is missing"
             with decoded(flow.response):
                 if part == "h":
-                    data += flow.response.assemble()
+                    data += flow.client_conn.protocol.assemble(flow.response)
                 elif part == "c":
                     data += flow.response.content
                 else:
@@ -295,7 +298,7 @@ def copy_flow(part, scope, flow, master, state):
     toclip = ""
     try:
         toclip = data.decode('utf-8')
-    except (UnicodeDecodeError):        
+    except (UnicodeDecodeError):
         toclip = data
 
     try:
@@ -391,7 +394,7 @@ def format_flow(f, focus, extended=False, hostheader=False, padding=2,
 
         err_msg = f.error.msg if f.error else None,
         resp_code = f.response.code if f.response else None,
-        
+
         marked = marked,
     )
     if f.response:
