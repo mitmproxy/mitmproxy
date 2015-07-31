@@ -129,3 +129,13 @@ class Data(object):
         if not os.path.exists(fullpath):
             raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath
+
+
+def hostport(scheme, host, port):
+    """
+        Returns the host component, with a port specifcation if needed.
+    """
+    if (port, scheme) in [(80, "http"), (443, "https")]:
+        return host
+    else:
+        return "%s:%s" % (host, port)

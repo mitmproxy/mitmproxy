@@ -4,8 +4,10 @@ import collections
 import string
 import sys
 import urlparse
+import time
 
 from netlib import odict, utils, tcp, http
+from netlib.http import semantics
 from .. import status_codes
 from ..exceptions import *
 
@@ -14,13 +16,10 @@ class TCPHandler(object):
         self.rfile = rfile
         self.wfile = wfile
 
-class HTTP1Protocol(object):
+class HTTP1Protocol(semantics.ProtocolMixin):
 
     def __init__(self, tcp_handler=None, rfile=None, wfile=None):
-        if tcp_handler:
-            self.tcp_handler = tcp_handler
-        else:
-            self.tcp_handler = TCPHandler(rfile, wfile)
+        self.tcp_handler = tcp_handler or TCPHandler(rfile, wfile)
 
 
     def read_request(self, include_body=True, body_size_limit=None, allow_empty=False):
@@ -39,6 +38,10 @@ class HTTP1Protocol(object):
         Raises:
             HttpError: If the input is invalid.
         """
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
+
         httpversion, host, port, scheme, method, path, headers, body = (
             None, None, None, None, None, None, None, None)
 
@@ -106,6 +109,12 @@ class HTTP1Protocol(object):
                 True
             )
 
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        timestamp_end = time.time()
+
         return http.Request(
             form_in,
             method,
@@ -115,7 +124,9 @@ class HTTP1Protocol(object):
             path,
             httpversion,
             headers,
-            body
+            body,
+            timestamp_start,
+            timestamp_end,
         )
 
 
@@ -124,12 +135,15 @@ class HTTP1Protocol(object):
             Returns an http.Response
 
             By default, both response header and body are read.
-            If include_body=False is specified, content may be one of the
+            If include_body=False is specified, body may be one of the
             following:
             - None, if the response is technically allowed to have a response body
             - "", if the response must not have a response body (e.g. it's a
             response to a HEAD request)
         """
+        timestamp_start = time.time()
+        if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
+            self.tcp_handler.rfile.reset_timestamps()
 
         line = self.tcp_handler.rfile.readline()
         # Possible leftover from previous message
@@ -149,7 +163,7 @@ class HTTP1Protocol(object):
             raise HttpError(502, "Invalid headers.")
 
         if include_body:
-            content = self.read_http_body(
+            body = self.read_http_body(
                 headers,
                 body_size_limit,
                 request_method,
@@ -157,10 +171,55 @@ class HTTP1Protocol(object):
                 False
             )
         else:
-            # if include_body==False then a None content means the body should be
+            # if include_body==False then a None body means the body should be
             # read separately
-            content = None
-        return http.Response(httpversion, code, msg, headers, content)
+            body = None
+
+
+        if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
+            # more accurate timestamp_start
+            timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
+
+        if include_body:
+            timestamp_end = time.time()
+        else:
+            timestamp_end = None
+
+        return http.Response(
+            httpversion,
+            code,
+            msg,
+            headers,
+            body,
+            timestamp_start=timestamp_start,
+            timestamp_end=timestamp_end,
+        )
+
+
+    def assemble_request(self, request):
+        assert isinstance(request, semantics.Request)
+
+        if request.body == semantics.CONTENT_MISSING:
+            raise http.HttpError(
+                502,
+                "Cannot assemble flow with CONTENT_MISSING"
+            )
+        first_line = self._assemble_request_first_line(request)
+        headers = self._assemble_request_headers(request)
+        return "%s\r\n%s\r\n%s" % (first_line, headers, request.body)
+
+
+    def assemble_response(self, response):
+        assert isinstance(response, semantics.Response)
+
+        if response.body == semantics.CONTENT_MISSING:
+            raise http.HttpError(
+                502,
+                "Cannot assemble flow with CONTENT_MISSING"
+            )
+        first_line = self._assemble_response_first_line(response)
+        headers = self._assemble_response_headers(response)
+        return "%s\r\n%s\r\n%s" % (first_line, headers, response.body)
 
 
     def read_headers(self):
@@ -331,7 +390,6 @@ class HTTP1Protocol(object):
         return line
 
 
-
     def _read_chunked(self, limit, is_request):
         """
             Read a chunked HTTP body.
@@ -494,3 +552,74 @@ class HTTP1Protocol(object):
         except ValueError:
             return None
         return (proto, code, msg)
+
+
+    @classmethod
+    def _assemble_request_first_line(self, request):
+        if request.form_in == "relative":
+            request_line = '%s %s HTTP/%s.%s' % (
+                request.method,
+                request.path,
+                request.httpversion[0],
+                request.httpversion[1],
+            )
+        elif request.form_in == "authority":
+            request_line = '%s %s:%s HTTP/%s.%s' % (
+                request.method,
+                request.host,
+                request.port,
+                request.httpversion[0],
+                request.httpversion[1],
+            )
+        elif request.form_in == "absolute":
+            request_line = '%s %s://%s:%s%s HTTP/%s.%s' % (
+                request.method,
+                request.scheme,
+                request.host,
+                request.port,
+                request.path,
+                request.httpversion[0],
+                request.httpversion[1],
+            )
+        else:
+            raise http.HttpError(400, "Invalid request form")
+        return request_line
+
+    def _assemble_request_headers(self, request):
+        headers = request.headers.copy()
+        for k in request._headers_to_strip_off:
+            del headers[k]
+        if 'host' not in headers and request.scheme and request.host and request.port:
+            headers["Host"] = [utils.hostport(request.scheme,
+                                              request.host,
+                                              request.port)]
+
+        # If content is defined (i.e. not None or CONTENT_MISSING), we always
+        # add a content-length header.
+        if request.body or request.body == "":
+            headers["Content-Length"] = [str(len(request.body))]
+
+        return headers.format()
+
+
+    def _assemble_response_first_line(self, response):
+        return 'HTTP/%s.%s %s %s' % (
+            response.httpversion[0],
+            response.httpversion[1],
+            response.status_code,
+            response.msg,
+        )
+
+    def _assemble_response_headers(self, response, preserve_transfer_encoding=False):
+        headers = response.headers.copy()
+        for k in response._headers_to_strip_off:
+            del headers[k]
+        if not preserve_transfer_encoding:
+            del headers['Transfer-Encoding']
+
+        # If body is defined (i.e. not None or CONTENT_MISSING), we always
+        # add a content-length header.
+        if response.body or response.body == "":
+            headers["Content-Length"] = [str(len(response.body))]
+
+        return headers.format()
