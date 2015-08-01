@@ -130,7 +130,7 @@ class Data(object):
 
             This function will raise ValueError if the path does not exist.
         """
-        fullpath = os.path.join(self.dirname, path)
+        fullpath = os.path.join(self.dirname, '../test/', path)
         if not os.path.exists(fullpath):
             raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath

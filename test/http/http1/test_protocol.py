@@ -2,9 +2,9 @@ import cStringIO
 import textwrap
 import binascii
 
-from netlib import http, odict, tcp
+from netlib import http, odict, tcp, tutils
 from netlib.http.http1 import HTTP1Protocol
-from ... import tutils, tservers
+from ... import tservers
 
 
 def mock_protocol(data='', chunked=False):

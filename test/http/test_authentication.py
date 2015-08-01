@@ -1,8 +1,7 @@
 import binascii
 
-from netlib import odict, http
+from netlib import odict, http, tutils
 from netlib.http import authentication
-from .. import tutils
 
 
 def test_parse_http_basic_auth():

@@ -1,5 +1,4 @@
-from netlib import odict
-import tutils
+from netlib import odict, tutils
 
 
 class TestODict:

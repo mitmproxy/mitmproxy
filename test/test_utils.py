@@ -1,7 +1,6 @@
 import urlparse
 
-from netlib import utils, odict
-import tutils
+from netlib import utils, odict, tutils
 
 
 def test_bidi():

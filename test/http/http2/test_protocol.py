@@ -1,9 +1,9 @@
 import OpenSSL
 
-from netlib import tcp, odict, http
+from netlib import tcp, odict, http, tutils
 from netlib.http import http2
 from netlib.http.http2.frame import *
-from ... import tutils, tservers
+from ... import tservers
 
 
 class EchoHandler(tcp.BaseHandler):

@@ -3,10 +3,10 @@ import textwrap
 import binascii
 from mock import MagicMock
 
-from netlib import http, odict, tcp
+from netlib import http, odict, tcp, tutils
 from netlib.http import http1
 from netlib.http.semantics import CONTENT_MISSING
-from .. import tutils, tservers
+from .. import tservers
 
 def test_httperror():
     e = http.exceptions.HttpError(404, "Not found")

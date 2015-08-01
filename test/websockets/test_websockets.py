@@ -2,10 +2,10 @@ import os
 
 from nose.tools import raises
 
-from netlib import tcp, http, websockets
+from netlib import tcp, http, websockets, tutils
 from netlib.http.exceptions import *
 from netlib.http.http1 import HTTP1Protocol
-from .. import tutils, tservers
+from .. import tservers
 
 
 class WebSocketsEchoHandler(tcp.BaseHandler):

@@ -1,7 +1,7 @@
 import cStringIO
-from test import tutils
 from nose.tools import assert_equal
-from netlib import tcp
+
+from netlib import tcp, tutils
 from netlib.http.http2.frame import *
 
 

@@ -10,8 +10,8 @@ import mock
 from OpenSSL import SSL
 import OpenSSL
 
-from netlib import tcp, certutils
-from . import tutils, tservers
+from netlib import tcp, certutils, tutils
+from . import tservers
 
 
 class EchoHandler(tcp.BaseHandler):
