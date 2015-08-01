@@ -71,15 +71,16 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return f
 
     def convert_to_ssl(self, *args, **kwargs):
-        def alpn_select_callback(conn_, options):
-            if alpn_select in options:
-                return bytes(alpn_select)
-            else:  # pragma no cover
-                return options[0]
-
         # TODO: read ALPN from server and select same proto for client conn
+        # alpn_select = 'h2'
+        # def alpn_select_callback(conn_, options):
+        #     if alpn_select in options:
+        #         return bytes(alpn_select)
+        #     else:  # pragma no cover
+        #         return options[0]
+        # tcp.BaseHandler.convert_to_ssl(self, alpn_select=alpn_select_callback, *args, **kwargs)
 
-        tcp.BaseHandler.convert_to_ssl(self, alpn_select=alpn_select_callback, *args, **kwargs)
+        tcp.BaseHandler.convert_to_ssl(self, *args, **kwargs)
         self.timestamp_ssl_setup = utils.timestamp()
 
     def finish(self):
@@ -176,8 +177,9 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
                 clientcert = path
 
         # TODO: read ALPN from client and use same list for server conn
+        # self.convert_to_ssl(cert=clientcert, sni=sni, alpn_protos=[netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2], **kwargs)
 
-        self.convert_to_ssl(cert=clientcert, sni=sni, alpn_protos=['h2'], **kwargs)
+        self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni
         self.timestamp_ssl_setup = utils.timestamp()
 
