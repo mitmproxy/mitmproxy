@@ -1,17 +1,18 @@
 import os
 from cStringIO import StringIO
 
+import netlib.tutils
 from netlib.http.semantics import CONTENT_MISSING
 
 from libmproxy import dump, flow
-from libmproxy.protocol import http
+from libmproxy.protocol import http, http_wrappers
 from libmproxy.proxy.primitives import Log
 import tutils
 import mock
 
 
 def test_strfuncs():
-    t = tutils.tresp()
+    t = http_wrappers.HTTPResponse.wrap(netlib.tutils.tresp())
     t.is_replay = True
     dump.str_response(t)
 
@@ -26,14 +27,14 @@ def test_strfuncs():
 
 class TestDumpMaster:
     def _cycle(self, m, content):
-        f = tutils.tflow(req=tutils.treq(content))
+        f = tutils.tflow(req=netlib.tutils.treq(content))
         l = Log("connect")
         l.reply = mock.MagicMock()
         m.handle_log(l)
         m.handle_clientconnect(f.client_conn)
         m.handle_serverconnect(f.server_conn)
         m.handle_request(f)
-        f.response = tutils.tresp(content)
+        f.response = http_wrappers.HTTPResponse.wrap(netlib.tutils.tresp(content))
         f = m.handle_response(f)
         m.handle_clientdisconnect(f.client_conn)
         return f
@@ -70,7 +71,7 @@ class TestDumpMaster:
         f = tutils.tflow()
         f.request.content = CONTENT_MISSING
         m.handle_request(f)
-        f.response = tutils.tresp()
+        f.response = http_wrappers.HTTPResponse.wrap(netlib.tutils.tresp())
         f.response.content = CONTENT_MISSING
         m.handle_response(f)
         assert "content missing" in cs.getvalue()

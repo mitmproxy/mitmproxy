@@ -4,6 +4,8 @@ import mock
 import gc
 from os.path import normpath
 import mock_urwid
+
+import netlib.tutils
 from libmproxy import console
 from libmproxy.console import common
 
@@ -60,13 +62,13 @@ class TestConsoleState:
 
     def _add_response(self, state):
         f = self._add_request(state)
-        f.response = tutils.tresp()
+        f.response = netlib.tutils.tresp()
         state.update_flow(f)
 
     def test_add_response(self):
         c = console.ConsoleState()
         f = self._add_request(c)
-        f.response = tutils.tresp()
+        f.response = netlib.tutils.tresp()
         c.focus = None
         c.update_flow(f)
 

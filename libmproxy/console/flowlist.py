@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 import urwid
+
 from netlib import http
+import netlib.utils
+
 from . import common, signals
 
 
@@ -219,7 +222,7 @@ class ConnectionItem(urwid.WidgetWrap):
         elif key == "U":
             for f in self.state.flows:
                 self.state.set_flow_marked(f, False)
-            signals.flowlist_change.send(self)       
+            signals.flowlist_change.send(self)
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
@@ -321,7 +324,7 @@ class FlowListBox(urwid.ListBox):
         )
 
     def new_request(self, url, method):
-        parts = http.parse_url(str(url))
+        parts = netlib.utils.parse_url(str(url))
         if not parts:
             signals.status_message.send(message="Invalid Url")
             return

@@ -4,7 +4,9 @@ if os.name == "nt":
     raise SkipTest("Skipped on Windows.")
 import sys
 
+import netlib.utils
 from netlib import odict
+
 import libmproxy.console.contentview as cv
 from libmproxy import utils, flow, encoding
 import tutils
@@ -65,10 +67,10 @@ class TestContentView:
         assert f[0].startswith("XML")
 
     def test_view_urlencoded(self):
-        d = utils.urlencode([("one", "two"), ("three", "four")])
+        d = netlib.utils.urlencode([("one", "two"), ("three", "four")])
         v = cv.ViewURLEncoded()
         assert v([], d, 100)
-        d = utils.urlencode([("adsfa", "")])
+        d = netlib.utils.urlencode([("adsfa", "")])
         v = cv.ViewURLEncoded()
         assert v([], d, 100)
 

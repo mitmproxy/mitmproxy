@@ -2,7 +2,10 @@ from __future__ import absolute_import
 import os
 import re
 import configargparse
+
 from netlib import http
+import netlib.utils
+
 from . import filt, utils, version
 from .proxy import config
 
@@ -100,7 +103,7 @@ def parse_setheader(s):
 
 
 def parse_server_spec(url):
-    p = http.parse_url(url)
+    p = netlib.utils.parse_url(url)
     if not p or not p[1] or p[0] not in ("http", "https"):
         raise configargparse.ArgumentTypeError(
             "Invalid server specification: %s" % url

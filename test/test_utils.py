@@ -44,11 +44,6 @@ def test_pretty_json():
     assert not utils.pretty_json("moo")
 
 
-def test_urldecode():
-    s = "one=two&three=four"
-    assert len(utils.urldecode(s)) == 2
-
-
 def test_multipartdecode():
     boundary = 'somefancyboundary'
     headers = odict.ODict(
@@ -116,13 +111,6 @@ def test_LRUCache():
     assert len(cache.cache) == 2
 
 
-def test_unparse_url():
-    assert utils.unparse_url("http", "foo.com", 99, "") == "http://foo.com:99"
-    assert utils.unparse_url("http", "foo.com", 80, "") == "http://foo.com"
-    assert utils.unparse_url("https", "foo.com", 80, "") == "https://foo.com:80"
-    assert utils.unparse_url("https", "foo.com", 443, "") == "https://foo.com"
-
-
 def test_parse_size():
     assert not utils.parse_size("")
     assert utils.parse_size("1") == 1
@@ -144,7 +132,3 @@ def test_parse_content_type():
 
 def test_safe_subn():
     assert utils.safe_subn("foo", u"bar", "\xc2foo")
-
-
-def test_urlencode():
-    assert utils.urlencode([('foo', 'bar')])

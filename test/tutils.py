@@ -1,21 +1,24 @@
-from cStringIO import StringIO
 import os
 import shutil
 import tempfile
 import argparse
-from contextlib import contextmanager
 import sys
-from libmproxy import flow, utils, controller
-from libmproxy.protocol import http
-from libmproxy.proxy.connection import ClientConnection, ServerConnection
 import mock_urwid
-from libmproxy.console.flowview import FlowView
-from libmproxy.console import ConsoleState
-from libmproxy.protocol.primitives import Error
-from netlib import certutils, odict
+from cStringIO import StringIO
+from contextlib import contextmanager
 from nose.plugins.skip import SkipTest
 from mock import Mock
 from time import time
+
+from netlib import certutils, odict
+import netlib.tutils
+
+from libmproxy import flow, utils, controller
+from libmproxy.protocol import http, http_wrappers
+from libmproxy.proxy.connection import ClientConnection, ServerConnection
+from libmproxy.console.flowview import FlowView
+from libmproxy.console import ConsoleState
+from libmproxy.protocol.primitives import Error
 
 
 def _SkipWindows():
@@ -43,11 +46,16 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     if server_conn is True:
         server_conn = tserver_conn()
     if req is True:
-        req = treq()
+        req = netlib.tutils.treq()
     if resp is True:
-        resp = tresp()
+        resp = netlib.tutils.tresp()
     if err is True:
         err = terr()
+
+    if req:
+        req = http_wrappers.HTTPRequest.wrap(req)
+    if resp:
+        resp = http_wrappers.HTTPResponse.wrap(resp)
 
     f = http.HTTPFlow(client_conn, server_conn)
     f.request = req
@@ -82,60 +90,6 @@ def tserver_conn():
     c.reply = controller.DummyReply()
     return c
 
-
-def treq(content="content", scheme="http", host="address", port=22):
-    """
-    @return: libmproxy.protocol.http.HTTPRequest
-    """
-    headers = odict.ODictCaseless()
-    headers["header"] = ["qvalue"]
-    req = http.HTTPRequest(
-        "relative",
-        "GET",
-        scheme,
-        host,
-        port,
-        "/path",
-        (1, 1),
-        headers,
-        content,
-        None,
-        None,
-        None,
-    )
-    return req
-
-
-def treq_absolute(content="content"):
-    """
-    @return: libmproxy.protocol.http.HTTPRequest
-    """
-    r = treq(content)
-    r.form_in = r.form_out = "absolute"
-    r.host = "address"
-    r.port = 22
-    r.scheme = "http"
-    return r
-
-
-def tresp(content="message"):
-    """
-    @return: libmproxy.protocol.http.HTTPResponse
-    """
-
-    headers = odict.ODictCaseless()
-    headers["header_response"] = ["svalue"]
-
-    resp = http.HTTPResponse(
-        (1, 1),
-        200,
-        "OK",
-        headers,
-        content,
-        time(),
-        time(),
-    )
-    return resp
 
 
 def terr(content="error"):

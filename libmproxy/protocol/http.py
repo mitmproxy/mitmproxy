@@ -19,9 +19,6 @@ from .. import encoding, utils, controller, stateobject, proxy
 
 from .http_wrappers import decoded, HTTPRequest, HTTPResponse
 
-HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
-HDR_FORM_MULTIPART = "multipart/form-data"
-
 
 class KillSignal(Exception):
     pass
@@ -39,7 +36,10 @@ def send_connect_request(conn, host, port, update_state=True):
         odict.ODictCaseless(),
         ""
     )
+
+    # we currently only support HTTP/1 CONNECT requests
     protocol = http1.HTTP1Protocol(conn)
+
     conn.send(protocol.assemble(upstream_request))
     resp = HTTPResponse.from_protocol(protocol, upstream_request.method)
     if resp.status_code != 200:
@@ -144,18 +144,6 @@ class HTTPFlow(Flow):
         return c
 
 
-class HttpAuthenticationError(Exception):
-    def __init__(self, auth_headers=None):
-        super(HttpAuthenticationError, self).__init__(
-            "Proxy Authentication Required"
-        )
-        self.headers = auth_headers
-        self.code = 407
-
-    def __repr__(self):
-        return "Proxy Authentication Required"
-
-
 class HTTPHandler(ProtocolHandler):
     """
     HTTPHandler implements mitmproxys understanding of the HTTP protocol.
@@ -179,7 +167,7 @@ class HTTPHandler(ProtocolHandler):
             try:
                 if not self.c.server_conn.protocol:
                     # instantiate new protocol if connection does not have one yet
-                    self.c.server_conn.protocol = http2.HTTP2Protocol(self.c.server_conn)
+                    self.c.server_conn.protocol = http2.HTTP2Protocol(self.c.server_conn)  # TODO: select correct protocol
                     self.c.server_conn.protocol.perform_connection_preface()
 
                 self.c.server_conn.send(self.c.server_conn.protocol.assemble(flow.request))
@@ -225,6 +213,7 @@ class HTTPHandler(ProtocolHandler):
                 flow.response.content = CONTENT_MISSING
             else:
                 if isinstance(flow.server_conn.protocol, http1.HTTP1Protocol):
+                    # streaming is only supported with HTTP/1 at the moment
                     flow.response.content = flow.server_conn.protocol.read_http_body(
                         flow.response.headers,
                         self.c.config.body_size_limit,
@@ -241,6 +230,7 @@ class HTTPHandler(ProtocolHandler):
             try:
                 if not flow.client_conn.protocol:
                     # instantiate new protocol if connection does not have one yet
+                    # the first request might be a CONNECT - which is currently only supported with HTTP/1
                     flow.client_conn.protocol = http1.HTTP1Protocol(self.c.client_conn)
 
                 req = HTTPRequest.from_protocol(
@@ -258,8 +248,8 @@ class HTTPHandler(ProtocolHandler):
             )
             ret = self.process_request(flow, req)
             if ret:
-                # CONNECT successful - upgrade to HTTP/2
                 # instantiate new protocol if connection does not have one yet
+                # TODO: select correct protocol
                 flow.client_conn.protocol = http2.HTTP2Protocol(self.c.client_conn, is_server=True)
             if ret is not None:
                 return ret
@@ -329,7 +319,7 @@ class HTTPHandler(ProtocolHandler):
 
             return True  # Next flow please.
         except (
-                HttpAuthenticationError,
+                http.HttpAuthenticationError,
                 http.HttpError,
                 proxy.ProxyError,
                 tcp.NetLibError,
@@ -389,6 +379,7 @@ class HTTPHandler(ProtocolHandler):
             pass
 
     def send_error(self, code, message, headers):
+        # TODO: implement this again
         raise NotImplementedError("todo - adapt for HTTP/2 - make use of make_error_reponse from pathod")
         # response = http.status_codes.RESPONSES.get(code, "Unknown")
         # html_content = """
@@ -457,6 +448,9 @@ class HTTPHandler(ProtocolHandler):
                 self.c.set_server_address((request.host, request.port))
                 # Update server_conn attribute on the flow
                 flow.server_conn = self.c.server_conn
+
+                # since we currently only support HTTP/1 CONNECT requests
+                # the response must be HTTP/1 as well
                 self.c.client_conn.send(
                     ('HTTP/%s.%s 200 ' % (request.httpversion[0], request.httpversion[1])) +
                     'Connection established\r\n' +
@@ -495,7 +489,7 @@ class HTTPHandler(ProtocolHandler):
                             400,
                             "Invalid request: No host information"
                         )
-                    p = http.parse_url("http://" + h)
+                    p = netlib.utils.parse_url("http://" + h)
                     request.scheme = p[0]
                     request.host = p[1]
                     request.port = p[2]
@@ -602,6 +596,9 @@ class HTTPHandler(ProtocolHandler):
             Checks if the connection should be closed depending on the HTTP
             semantics. Returns True, if so.
         """
+
+        # TODO: add logic for HTTP/2
+
         close_connection = (
             http1.HTTP1Protocol.connection_close(
                 flow.request.httpversion,
@@ -684,7 +681,7 @@ class HTTPHandler(ProtocolHandler):
             if self.c.config.authenticator.authenticate(request.headers):
                 self.c.config.authenticator.clean(request.headers)
             else:
-                raise HttpAuthenticationError(
+                raise http.HttpAuthenticationError(
                     self.c.config.authenticator.auth_challenge_headers())
         return request.headers
 

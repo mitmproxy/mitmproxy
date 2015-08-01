@@ -2,6 +2,7 @@ import socket
 import time
 from OpenSSL import SSL
 
+import netlib.tutils
 from netlib import tcp, http, socks
 from netlib.certutils import SSLCert
 from netlib.http import authentication
@@ -9,7 +10,7 @@ from netlib.http.semantics import CONTENT_MISSING
 from libpathod import pathoc, pathod
 
 from libmproxy.proxy.config import HostMatcher
-from libmproxy.protocol import KILL, Error
+from libmproxy.protocol import KILL, Error, http_wrappers
 import tutils
 import tservers
 
@@ -783,7 +784,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
 
 class MasterFakeResponse(tservers.TestMaster):
     def handle_request(self, f):
-        resp = tutils.tresp()
+        resp = http_wrappers.HTTPResponse.wrap(netlib.tutils.tresp())
         f.reply(resp)
 
 
@@ -848,7 +849,7 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
 
 class MasterIncomplete(tservers.TestMaster):
     def handle_request(self, f):
-        resp = tutils.tresp()
+        resp = http_wrappers.HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = CONTENT_MISSING
         f.reply(resp)
 

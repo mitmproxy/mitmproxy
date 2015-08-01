@@ -61,21 +61,6 @@ def pretty_json(s):
     return json.dumps(p, sort_keys=True, indent=4).split("\n")
 
 
-def urldecode(s):
-    """
-        Takes a urlencoded string and returns a list of (key, value) tuples.
-    """
-    return cgi.parse_qsl(s, keep_blank_values=True)
-
-
-def urlencode(s):
-    """
-        Takes a list of (key, value) tuples and returns a urlencoded string.
-    """
-    s = [tuple(i) for i in s]
-    return urllib.urlencode(s, False)
-
-
 def multipartdecode(hdrs, content):
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
@@ -195,13 +180,6 @@ def parse_content_type(c):
                 d[clause[0].strip()] = clause[1].strip()
     return ts[0].lower(), ts[1].lower(), d
 
-
-
-def unparse_url(scheme, host, port, path=""):
-    """
-        Returns a URL string, constructed from the specified compnents.
-    """
-    return "%s://%s%s" % (scheme, netlib.utils.hostport(scheme, host, port), path)
 
 
 def clean_hanging_newline(t):

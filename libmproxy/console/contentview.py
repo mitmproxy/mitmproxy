@@ -225,7 +225,7 @@ class ViewURLEncoded:
     content_types = ["application/x-www-form-urlencoded"]
 
     def __call__(self, hdrs, content, limit):
-        lines = utils.urldecode(content)
+        lines = netlib.utils.urldecode(content)
         if lines:
             body = common.format_keyvals(
                 [(k + ":", v) for (k, v) in lines],
