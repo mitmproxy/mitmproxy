@@ -8,14 +8,14 @@ import urlparse
 from email.utils import parsedate_tz, formatdate, mktime_tz
 
 import netlib
-from netlib import http, tcp, odict, utils
+from netlib import http, tcp, odict, utils, encoding
 from netlib.http import cookies, http1, http2
 from netlib.http.semantics import CONTENT_MISSING
 
 from .tcp import TCPHandler
 from .primitives import KILL, ProtocolHandler, Flow, Error
 from ..proxy.connection import ServerConnection
-from .. import encoding, utils, controller, stateobject, proxy
+from .. import utils, controller, stateobject, proxy
 
 from .http_wrappers import decoded, HTTPRequest, HTTPResponse
 

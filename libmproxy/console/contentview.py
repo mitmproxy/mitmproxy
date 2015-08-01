@@ -12,10 +12,10 @@ import urwid
 import html2text
 
 import netlib.utils
-from netlib import odict
+from netlib import odict, encoding
 
 from . import common, signals
-from .. import utils, encoding
+from .. import utils
 from ..contrib import jsbeautifier
 from ..contrib.wbxml.ASCommandResponse import ASCommandResponse
 

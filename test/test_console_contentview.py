@@ -5,10 +5,10 @@ if os.name == "nt":
 import sys
 
 import netlib.utils
-from netlib import odict
+from netlib import odict, encoding
 
 import libmproxy.console.contentview as cv
-from libmproxy import utils, flow, encoding
+from libmproxy import utils, flow
 import tutils
 
 try:
