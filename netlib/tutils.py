@@ -1,10 +1,11 @@
 import cStringIO
 import tempfile
 import os
+import time
 import shutil
 from contextlib import contextmanager
 
-from netlib import tcp, utils
+from netlib import tcp, utils, odict, http
 
 
 def treader(bytes):
@@ -66,3 +67,59 @@ def raises(exc, obj, *args, **kwargs):
     raise AssertionError("No exception raised. Return value: {}".format(ret))
 
 test_data = utils.Data(__name__)
+
+
+
+
+def treq(content="content", scheme="http", host="address", port=22):
+    """
+    @return: libmproxy.protocol.http.HTTPRequest
+    """
+    headers = odict.ODictCaseless()
+    headers["header"] = ["qvalue"]
+    req = http.Request(
+        "relative",
+        "GET",
+        scheme,
+        host,
+        port,
+        "/path",
+        (1, 1),
+        headers,
+        content,
+        None,
+        None,
+    )
+    return req
+
+
+def treq_absolute(content="content"):
+    """
+    @return: libmproxy.protocol.http.HTTPRequest
+    """
+    r = treq(content)
+    r.form_in = r.form_out = "absolute"
+    r.host = "address"
+    r.port = 22
+    r.scheme = "http"
+    return r
+
+
+def tresp(content="message"):
+    """
+    @return: libmproxy.protocol.http.HTTPResponse
+    """
+
+    headers = odict.ODictCaseless()
+    headers["header_response"] = ["svalue"]
+
+    resp = http.semantics.Response(
+        (1, 1),
+        200,
+        "OK",
+        headers,
+        content,
+        time.time(),
+        time.time(),
+    )
+    return resp

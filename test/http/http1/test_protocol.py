@@ -75,16 +75,6 @@ def test_connection_close():
     assert HTTP1Protocol.connection_close((1, 1), h)
 
 
-def test_get_header_tokens():
-    h = odict.ODictCaseless()
-    assert http.get_header_tokens(h, "foo") == []
-    h["foo"] = ["bar"]
-    assert http.get_header_tokens(h, "foo") == ["bar"]
-    h["foo"] = ["bar, voing"]
-    assert http.get_header_tokens(h, "foo") == ["bar", "voing"]
-    h["foo"] = ["bar, voing", "oink"]
-    assert http.get_header_tokens(h, "foo") == ["bar", "voing", "oink"]
-
 
 def test_read_http_body_request():
     h = odict.ODictCaseless()

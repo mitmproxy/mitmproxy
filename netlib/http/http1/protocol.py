@@ -375,7 +375,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
     @classmethod
     def has_chunked_encoding(self, headers):
         return "chunked" in [
-            i.lower() for i in http.get_header_tokens(headers, "transfer-encoding")
+            i.lower() for i in utils.get_header_tokens(headers, "transfer-encoding")
         ]
 
 
@@ -482,9 +482,9 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             port = int(port)
         except ValueError:
             return None
-        if not http.is_valid_port(port):
+        if not utils.is_valid_port(port):
             return None
-        if not http.is_valid_host(host):
+        if not utils.is_valid_host(host):
             return None
         return host, port, httpversion
 
@@ -496,7 +496,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             return None
         method, url, httpversion = v
 
-        parts = http.parse_url(url)
+        parts = utils.parse_url(url)
         if not parts:
             return None
         scheme, host, port, path = parts
@@ -528,7 +528,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         """
         # At first, check if we have an explicit Connection header.
         if "connection" in headers:
-            toks = http.get_header_tokens(headers, "connection")
+            toks = utils.get_header_tokens(headers, "connection")
             if "close" in toks:
                 return True
             elif "keep-alive" in toks:
@@ -556,34 +556,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
 
     @classmethod
     def _assemble_request_first_line(self, request):
-        if request.form_in == "relative":
-            request_line = '%s %s HTTP/%s.%s' % (
-                request.method,
-                request.path,
-                request.httpversion[0],
-                request.httpversion[1],
-            )
-        elif request.form_in == "authority":
-            request_line = '%s %s:%s HTTP/%s.%s' % (
-                request.method,
-                request.host,
-                request.port,
-                request.httpversion[0],
-                request.httpversion[1],
-            )
-        elif request.form_in == "absolute":
-            request_line = '%s %s://%s:%s%s HTTP/%s.%s' % (
-                request.method,
-                request.scheme,
-                request.host,
-                request.port,
-                request.path,
-                request.httpversion[0],
-                request.httpversion[1],
-            )
-        else:
-            raise http.HttpError(400, "Invalid request form")
-        return request_line
+        return request.legacy_first_line()
 
     def _assemble_request_headers(self, request):
         headers = request.headers.copy()
