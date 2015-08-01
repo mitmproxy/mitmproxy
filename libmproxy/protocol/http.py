@@ -167,8 +167,10 @@ class HTTPHandler(ProtocolHandler):
             try:
                 if not self.c.server_conn.protocol:
                     # instantiate new protocol if connection does not have one yet
-                    self.c.server_conn.protocol = http2.HTTP2Protocol(self.c.server_conn)  # TODO: select correct protocol
-                    self.c.server_conn.protocol.perform_connection_preface()
+                    # TODO: select correct protocol based on ALPN (?)
+                    self.c.server_conn.protocol = http1.HTTP1Protocol(self.c.server_conn)
+                    # self.c.server_conn.protocol = http2.HTTP2Protocol(self.c.server_conn)
+                    # self.c.server_conn.protocol.perform_connection_preface()
 
                 self.c.server_conn.send(self.c.server_conn.protocol.assemble(flow.request))
 
@@ -249,12 +251,11 @@ class HTTPHandler(ProtocolHandler):
             ret = self.process_request(flow, req)
             if ret:
                 # instantiate new protocol if connection does not have one yet
-                # TODO: select correct protocol
-                flow.client_conn.protocol = http2.HTTP2Protocol(self.c.client_conn, is_server=True)
+                # TODO: select correct protocol based on ALPN (?)
+                flow.client_conn.protocol = http1.HTTP1Protocol(self.c.client_conn)
+                # flow.client_conn.protocol = http2.HTTP2Protocol(self.c.client_conn, is_server=True)
             if ret is not None:
                 return ret
-
-            print("still here: %s" % flow.client_conn.protocol.__class__)
 
             # Be careful NOT to assign the request to the flow before
             # process_request completes. This is because the call can raise an
@@ -745,7 +746,7 @@ class RequestReplayThread(threading.Thread):
 
                 server.send(self.flow.server_conn.protocol.assemble(r))
                 self.flow.server_conn = server
-
+                self.flow.server_conn.protocol = http1.HTTP1Protocol(self.flow.server_conn)
                 self.flow.response = HTTPResponse.from_protocol(
                     self.flow.server_conn.protocol,
                     r.method,
