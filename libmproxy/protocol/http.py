@@ -176,10 +176,10 @@ class HTTPHandler(ProtocolHandler):
 
                 # Only get the headers at first...
                 flow.response = HTTPResponse.from_protocol(
-                    flow.server_conn.protocol,
+                    self.c.server_conn.protocol,
                     flow.request.method,
                     body_size_limit=self.c.config.body_size_limit,
-                    include_body=False
+                    include_body=False,
                 )
                 break
             except (tcp.NetLibError, http.HttpErrorConnClosed) as v:
@@ -214,9 +214,9 @@ class HTTPHandler(ProtocolHandler):
             if flow.response.stream:
                 flow.response.content = CONTENT_MISSING
             else:
-                if isinstance(flow.server_conn.protocol, http1.HTTP1Protocol):
+                if isinstance(self.c.server_conn.protocol, http1.HTTP1Protocol):
                     # streaming is only supported with HTTP/1 at the moment
-                    flow.response.content = flow.server_conn.protocol.read_http_body(
+                    flow.response.content = self.c.server_conn.protocol.read_http_body(
                         flow.response.headers,
                         self.c.config.body_size_limit,
                         flow.request.method,
@@ -369,43 +369,42 @@ class HTTPHandler(ProtocolHandler):
                 flow.error = Error(message or message_debug)
                 self.c.channel.ask("error", flow)
         try:
-            code = getattr(error, "code", 502)
+            status_code = getattr(error, "code", 502)
             headers = getattr(error, "headers", None)
 
             html_message = message or ""
             if message_debug:
                 html_message += "<pre>%s</pre>" % message_debug
-            self.send_error(code, html_message, headers)
+            self.send_error(status_code, html_message, headers)
         except:
             pass
 
-    def send_error(self, code, message, headers):
-        # TODO: implement this again
-        raise NotImplementedError("todo - adapt for HTTP/2 - make use of make_error_reponse from pathod")
-        # response = http.status_codes.RESPONSES.get(code, "Unknown")
-        # html_content = """
-        #     <html>
-        #         <head>
-        #             <title>%d %s</title>
-        #         </head>
-        #         <body>%s</body>
-        #     </html>
-        # """ % (code, response, message)
-        # self.c.client_conn.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-        # self.c.client_conn.wfile.write(
-        #     "Server: %s\r\n" % self.c.config.server_version
-        # )
-        # self.c.client_conn.wfile.write("Content-type: text/html\r\n")
-        # self.c.client_conn.wfile.write(
-        #     "Content-Length: %d\r\n" % len(html_content)
-        # )
-        # if headers:
-        #     for key, value in headers.items():
-        #         self.c.client_conn.wfile.write("%s: %s\r\n" % (key, value))
-        # self.c.client_conn.wfile.write("Connection: close\r\n")
-        # self.c.client_conn.wfile.write("\r\n")
-        # self.c.client_conn.wfile.write(html_content)
-        # self.c.client_conn.wfile.flush()
+    def send_error(self, status_code, message, headers):
+        response = http.status_codes.RESPONSES.get(status_code, "Unknown")
+        body = """
+            <html>
+                <head>
+                    <title>%d %s</title>
+                </head>
+                <body>%s</body>
+            </html>
+        """ % (status_code, response, message)
+
+        if not headers:
+            headers = odict.ODictCaseless()
+        headers["Server"] = [self.c.config.server_version]
+        headers["Connection"] = ["close"]
+        headers["Content-Length"] = [len(body)]
+        headers["Content-Type"] = ["text/html"]
+
+        resp = HTTPResponse(
+            (1, 1),
+            status_code,
+            '',
+            headers,
+            body,
+        )
+        self.c.client_conn.send(self.c.client_conn.protocol.assemble(resp))
 
     def process_request(self, flow, request):
         """
@@ -566,31 +565,33 @@ class HTTPHandler(ProtocolHandler):
             # send it to the client straight away.
             self.c.client_conn.send(self.c.client_conn.protocol.assemble(flow.response))
         else:
-            raise NotImplementedError("HTTP streaming is currently not supported.")
-            # TODO: implement it according to new protocols and messages
+            if isinstance(self.c.client_conn.protocol, http2.HTTP2Protocol):
+                raise NotImplementedError("HTTP streaming with HTTP/2 is currently not supported.")
+
 
             # streaming:
             # First send the headers and then transfer the response
             # incrementally:
-            # h = flow.response._assemble_head(preserve_transfer_encoding=True)
-            # self.c.client_conn.send(h)
-            #
-            # protocol = http1.HTTP1Protocol(rfile=self.c.server_conn.rfile)
-            # chunks = protocol.read_http_body_chunked(
-            #     flow.response.headers,
-            #     self.c.config.body_size_limit,
-            #     flow.request.method,
-            #     flow.response.code,
-            #     False,
-            #     4096
-            # )
-            # if callable(flow.response.stream):
-            #     chunks = flow.response.stream(chunks)
-            # for chunk in chunks:
-            #     for part in chunk:
-            #         self.c.client_conn.wfile.write(part)
-            #     self.c.client_conn.wfile.flush()
-            # flow.response.timestamp_end = utils.timestamp()
+            h = self.c.client_conn.protocol._assemble_response_first_line(flow.response)
+            self.c.client_conn.send(h + "\r\n")
+            h = self.c.client_conn.protocol._assemble_response_headers(flow.response, preserve_transfer_encoding=True)
+            self.c.client_conn.send(h + "\r\n\r\n")
+
+            chunks = self.c.server_conn.protocol.read_http_body_chunked(
+                flow.response.headers,
+                self.c.config.body_size_limit,
+                flow.request.method,
+                flow.response.code,
+                False,
+                4096
+            )
+            if callable(flow.response.stream):
+                chunks = flow.response.stream(chunks)
+            for chunk in chunks:
+                for part in chunk:
+                    self.c.client_conn.wfile.write(part)
+                self.c.client_conn.wfile.flush()
+            flow.response.timestamp_end = utils.timestamp()
 
     def check_close_connection(self, flow):
         """

@@ -117,7 +117,7 @@ class ConnectionHandler:
                         self.server_conn.address(),
                         "info")
                     self.conntype = "tcp"
-                
+
             elif not self.server_conn and self.config.mode == "sslspoof":
                 port = self.config.mode.sslport
                 self.set_server_address(("-", port))
@@ -243,7 +243,7 @@ class ConnectionHandler:
                 ssl_cert_err = self.server_conn.ssl_verification_error
                 if ssl_cert_err is not None:
                     self.log(
-                        "SSL verification failed for upstream server at depth %s with error: %s" % 
+                        "SSL verification failed for upstream server at depth %s with error: %s" %
                             (ssl_cert_err['depth'], ssl_cert_err['errno']),
                         "error")
                     self.log("Ignoring server verification error, continuing with connection", "error")
@@ -259,7 +259,7 @@ class ConnectionHandler:
                     ssl_cert_err = self.server_conn.ssl_verification_error
                     if ssl_cert_err is not None:
                         self.log(
-                            "SSL verification failed for upstream server at depth %s with error: %s" % 
+                            "SSL verification failed for upstream server at depth %s with error: %s" %
                                 (ssl_cert_err['depth'], ssl_cert_err['errno']),
                             "error")
                         self.log("Aborting connection attempt", "error")
