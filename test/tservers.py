@@ -197,8 +197,7 @@ class TransparentProxTest(ProxTestBase):
         else:
             ports = []
         cls.config.mode = TransparentProxyMode(
-            cls.resolver(
-                cls.server.port),
+            cls.resolver(cls.server.port),
             ports)
 
     @classmethod

@@ -243,6 +243,7 @@ class HTTPHandler(ProtocolHandler):
                 # don't throw an error for disconnects that happen
                 # before/between requests.
                 return False
+
             self.c.log(
                 "request",
                 "debug",
@@ -344,7 +345,6 @@ class HTTPHandler(ProtocolHandler):
             raise RuntimeError("Unknown State: %s" % state["state"])
 
     def handle_error(self, error, flow=None):
-
         message = repr(error)
         message_debug = None
 
@@ -392,19 +392,25 @@ class HTTPHandler(ProtocolHandler):
 
         if not headers:
             headers = odict.ODictCaseless()
+        assert isinstance(headers, odict.ODictCaseless)
+
         headers["Server"] = [self.c.config.server_version]
         headers["Connection"] = ["close"]
         headers["Content-Length"] = [len(body)]
         headers["Content-Type"] = ["text/html"]
 
         resp = HTTPResponse(
-            (1, 1),
+            (1, 1),  # if HTTP/2 is used, this value is ignored anyway
             status_code,
-            '',
+            response,
             headers,
             body,
         )
-        self.c.client_conn.send(self.c.client_conn.protocol.assemble(resp))
+
+        # if no protocol is assigned yet - just assume HTTP/1
+        # TODO: maybe check ALPN and use HTTP/2 if required?
+        protocol = self.c.client_conn.protocol or http1.HTTP1Protocol(self.c.client_conn)
+        self.c.client_conn.send(protocol.assemble(resp))
 
     def process_request(self, flow, request):
         """
@@ -575,7 +581,7 @@ class HTTPHandler(ProtocolHandler):
             h = self.c.client_conn.protocol._assemble_response_first_line(flow.response)
             self.c.client_conn.send(h + "\r\n")
             h = self.c.client_conn.protocol._assemble_response_headers(flow.response, preserve_transfer_encoding=True)
-            self.c.client_conn.send(h + "\r\n\r\n")
+            self.c.client_conn.send(h + "\r\n")
 
             chunks = self.c.server_conn.protocol.read_http_body_chunked(
                 flow.response.headers,
@@ -585,12 +591,15 @@ class HTTPHandler(ProtocolHandler):
                 False,
                 4096
             )
+
             if callable(flow.response.stream):
                 chunks = flow.response.stream(chunks)
+
             for chunk in chunks:
                 for part in chunk:
                     self.c.client_conn.wfile.write(part)
                 self.c.client_conn.wfile.flush()
+
             flow.response.timestamp_end = utils.timestamp()
 
     def check_close_connection(self, flow):
