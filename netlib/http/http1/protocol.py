@@ -302,7 +302,8 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             bytes_left = expected_size
             while bytes_left:
                 chunk_size = min(bytes_left, max_chunk_size)
-                yield "", self.tcp_handler.rfile.read(chunk_size), ""
+                content = self.tcp_handler.rfile.read(chunk_size)
+                yield "", content, ""
                 bytes_left -= chunk_size
         else:
             bytes_left = limit or -1
