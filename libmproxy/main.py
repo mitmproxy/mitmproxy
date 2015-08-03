@@ -3,7 +3,7 @@ import os
 import signal
 import sys
 import netlib.version
-import netlib.version_check
+from netlib.version_check import check_pyopenssl_version, check_mitmproxy_version
 from . import version, cmdline
 from .proxy import process_proxy_options, ProxyServerError
 from .proxy.server import DummyServer, ProxyServer
@@ -39,7 +39,8 @@ def get_server(dummy_server, options):
 def mitmproxy(args=None):  # pragma: nocover
     from . import console
 
-    netlib.version_check.version_check(version.IVERSION)
+    check_pyopenssl_version()
+    check_mitmproxy_version(version.IVERSION)
     assert_utf8_env()
 
     parser = cmdline.mitmproxy()
@@ -67,7 +68,8 @@ def mitmproxy(args=None):  # pragma: nocover
 def mitmdump(args=None):  # pragma: nocover
     from . import dump
 
-    netlib.version_check.version_check(version.IVERSION)
+    check_pyopenssl_version()
+    check_mitmproxy_version(version.IVERSION)
 
     parser = cmdline.mitmdump()
     options = parser.parse_args(args)
@@ -101,7 +103,9 @@ def mitmdump(args=None):  # pragma: nocover
 def mitmweb(args=None):  # pragma: nocover
     from . import web
 
-    netlib.version_check.version_check(version.IVERSION)
+    check_pyopenssl_version()
+    check_mitmproxy_version(version.IVERSION)
+
     parser = cmdline.mitmweb()
 
     options = parser.parse_args(args)
