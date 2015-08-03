@@ -1,23 +1,19 @@
-from __future__ import print_function, absolute_import
+"""
+Having installed a wrong version of pyOpenSSL or netlib is unfortunately a
+very common source of error. Check before every start that both versions
+are somewhat okay.
+"""
+from __future__ import division, absolute_import, print_function, unicode_literals
 import sys
 import inspect
 import os.path
-
 import OpenSSL
 from . import version
 
 PYOPENSSL_MIN_VERSION = (0, 15)
 
 
-def version_check(
-        mitmproxy_version,
-        pyopenssl_min_version=PYOPENSSL_MIN_VERSION,
-        fp=sys.stderr):
-    """
-    Having installed a wrong version of pyOpenSSL or netlib is unfortunately a
-    very common source of error. Check before every start that both versions
-    are somewhat okay.
-    """
+def check_mitmproxy_version(mitmproxy_version, fp=sys.stderr):
     # We don't introduce backward-incompatible changes in patch versions. Only
     # consider major and minor version.
     if version.IVERSION[:2] != mitmproxy_version[:2]:
@@ -29,12 +25,15 @@ def version_check(
             file=fp
         )
         sys.exit(1)
+
+
+def check_pyopenssl_version(min_version=PYOPENSSL_MIN_VERSION, fp=sys.stderr):
     v = tuple(int(x) for x in OpenSSL.__version__.split(".")[:2])
-    if v < pyopenssl_min_version:
+    if v < min_version:
         print(
             "You are using an outdated version of pyOpenSSL:"
             " mitmproxy requires pyOpenSSL %s or greater." %
-            str(pyopenssl_min_version),
+            str(min_version),
             file=fp
         )
         # Some users apparently have multiple versions of pyOpenSSL installed.

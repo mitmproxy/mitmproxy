@@ -11,7 +11,11 @@ import certifi
 import OpenSSL
 from OpenSSL import SSL
 
-from . import certutils
+from . import certutils, version_check
+
+# This is a rather hackish way to make sure that
+# the latest version of pyOpenSSL is actually installed.
+version_check.check_pyopenssl_version()
 
 
 EINTR = 4
