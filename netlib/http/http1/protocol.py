@@ -360,20 +360,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
 
 
     @classmethod
-    def request_preamble(self, method, resource, http_major="1", http_minor="1"):
-        return '%s %s HTTP/%s.%s' % (
-            method, resource, http_major, http_minor
-        )
-
-
-    @classmethod
-    def response_preamble(self, code, message=None, http_major="1", http_minor="1"):
-        if message is None:
-            message = status_codes.RESPONSES.get(code)
-        return 'HTTP/%s.%s %s %s' % (http_major, http_minor, code, message)
-
-
-    @classmethod
     def has_chunked_encoding(self, headers):
         return "chunked" in [
             i.lower() for i in utils.get_header_tokens(headers, "transfer-encoding")

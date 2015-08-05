@@ -91,8 +91,9 @@ class ODict(object):
         self.lst = self._filter_lst(k, self.lst)
 
     def __contains__(self, k):
+        k = self._kconv(k)
         for i in self.lst:
-            if self._kconv(i[0]) == self._kconv(k):
+            if self._kconv(i[0]) == k:
                 return True
         return False
 

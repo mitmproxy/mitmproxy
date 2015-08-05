@@ -3,6 +3,7 @@ import os
 from nose.tools import raises
 
 from netlib import tcp, http, websockets, tutils
+from netlib.http import status_codes
 from netlib.http.exceptions import *
 from netlib.http.http1 import HTTP1Protocol
 from .. import tservers
@@ -38,7 +39,7 @@ class WebSocketsEchoHandler(tcp.BaseHandler):
         req = http1_protocol.read_request()
         key = self.protocol.check_client_handshake(req.headers)
 
-        preamble = http1_protocol.response_preamble(101)
+        preamble = 'HTTP/1.1 101 %s' % status_codes.RESPONSES.get(101)
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.server_handshake_headers(key)
         self.wfile.write(headers.format() + "\r\n")
@@ -62,7 +63,7 @@ class WebSocketsClient(tcp.TCPClient):
 
         http1_protocol = HTTP1Protocol(self)
 
-        preamble = http1_protocol.request_preamble("GET", "/")
+        preamble = 'GET / HTTP/1.1'
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.client_handshake_headers()
         self.client_nonce = headers.get_first("sec-websocket-key")
@@ -162,7 +163,7 @@ class BadHandshakeHandler(WebSocketsEchoHandler):
         client_hs = http1_protocol.read_request()
         self.protocol.check_client_handshake(client_hs.headers)
 
-        preamble = http1_protocol.response_preamble(101)
+        preamble = 'HTTP/1.1 101 %s' % status_codes.RESPONSES.get(101)
         self.wfile.write(preamble + "\r\n")
         headers = self.protocol.server_handshake_headers("malformed key")
         self.wfile.write(headers.format() + "\r\n")
