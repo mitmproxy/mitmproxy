@@ -1,7 +1,7 @@
 """
 This module contains all valid messages layers can send to the underlying layers.
 """
-from __future__ import (absolute_import, print_function, division, unicode_literals)
+from __future__ import (absolute_import, print_function, division)
 
 
 class _Message(object):

@@ -1,4 +1,4 @@
-from __future__ import (absolute_import, print_function, division, unicode_literals)
+from __future__ import (absolute_import, print_function, division)
 
 from ..proxy import ProxyError, Socks5ProxyMode, ProxyError2
 from .layer import Layer, ServerConnectionMixin
@@ -14,7 +14,7 @@ class Socks5IncomingLayer(Layer, ServerConnectionMixin):
             # TODO: Unmonkeypatch
             raise ProxyError2(str(e), e)
 
-        self._set_address(address)
+        self.server_address = address
 
         layer = AutoLayer(self)
         for message in layer():

@@ -31,7 +31,7 @@ Further goals:
   - Upstream connections should be established as late as possible;
     inline scripts shall have a chance to handle everything locally.
 """
-from __future__ import (absolute_import, print_function, division, unicode_literals)
+from __future__ import (absolute_import, print_function, division)
 from netlib import tcp
 from ..proxy import ProxyError2, Log
 from ..proxy.connection import ServerConnection
@@ -48,12 +48,6 @@ class RootContext(object):
         self.client_conn = client_conn  # Client Connection
         self.channel = channel  # provides .ask() method to communicate with FlowMaster
         self.config = config  # Proxy Configuration
-
-    def __getattr__(self, name):
-        """
-        Accessing a nonexisting attribute does not throw an error but returns None instead.
-        """
-        return None
 
 
 class _LayerCodeCompletion(object):
@@ -113,7 +107,7 @@ class ServerConnectionMixin(object):
     """
 
     def __init__(self):
-        self.server_address = None
+        self._server_address = None
         self.server_conn = None
 
     def _handle_server_message(self, message):
@@ -127,6 +121,16 @@ class ServerConnectionMixin(object):
         elif message == ChangeServer:
             raise NotImplementedError
         return False
+
+    @property
+    def server_address(self):
+        return self._server_address
+
+    @server_address.setter
+    def server_address(self, address):
+        self._server_address = tcp.Address.wrap(address)
+        self.log("Set new server address: " + repr(self.server_address), "debug")
+
 
     def _disconnect(self):
         """
@@ -145,8 +149,3 @@ class ServerConnectionMixin(object):
             self.server_conn.connect()
         except tcp.NetLibError as e:
             raise ProxyError2("Server connection to '%s' failed: %s" % (self.server_address, e), e)
-
-    def _set_address(self, address):
-        a = tcp.Address.wrap(address)
-        self.log("Set new server address: " + repr(a), "debug")
-        self.server_address = address

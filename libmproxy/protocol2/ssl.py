@@ -1,4 +1,4 @@
-from __future__ import (absolute_import, print_function, division, unicode_literals)
+from __future__ import (absolute_import, print_function, division)
 import Queue
 import threading
 import traceback
@@ -76,7 +76,7 @@ class SslLayer(Layer):
                     self._establish_ssl_with_server()
 
     @property
-    def sni(self):
+    def sni_for_upstream_connection(self):
         if self._sni_from_server_change is False:
             return None
         else:
@@ -132,21 +132,22 @@ class SslLayer(Layer):
         The client has just sent the Sever Name Indication (SNI).
         """
         try:
+            old_upstream_sni = self.sni_for_upstream_connection
+
             sn = connection.get_servername()
             if not sn:
                 return
-            sni = sn.decode("utf8").encode("idna")
+            self._sni_from_handshake = sn.decode("utf8").encode("idna")
 
-            if sni != self.sni:
-                self._sni_from_handshake = sni
-
+            if old_upstream_sni != self.sni_for_upstream_connection:
                 # Perform reconnect
                 if self.server_ssl:
                     reconnect = ReconnectRequest()
-                    self.__client_ssl_queue.put()
+                    self.__client_ssl_queue.put(reconnect)
                     reconnect.done.wait()
 
-                # Now, change client context to reflect changed certificate:
+            if self._sni_from_handshake:
+                # Now, change client context to reflect possibly changed certificate:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn.create_ssl_context(
                     cert, key,
@@ -183,7 +184,7 @@ class SslLayer(Layer):
         try:
             self.server_conn.establish_ssl(
                 self.config.clientcerts,
-                self.sni,
+                self.sni_for_upstream_connection,
                 method=self.config.openssl_method_server,
                 options=self.config.openssl_options_server,
                 verify_options=self.config.openssl_verification_mode_server,
@@ -206,23 +207,24 @@ class SslLayer(Layer):
                 "error")
             self.log("Aborting connection attempt", "error")
             raise ProxyError2(repr(e), e)
-        except Exception as e:
+        except tcp.NetLibError as e:
             raise ProxyError2(repr(e), e)
 
     def find_cert(self):
         host = self.server_conn.address.host
-        sans = []
+        # TODO: Better use an OrderedSet here
+        sans = set()
         # Incorporate upstream certificate
         if self.server_conn.ssl_established and (not self.config.no_upstream_cert):
             upstream_cert = self.server_conn.cert
-            sans.extend(upstream_cert.altnames)
+            sans.update(upstream_cert.altnames)
             if upstream_cert.cn:
-                sans.append(host)
+                sans.add(host)
                 host = upstream_cert.cn.decode("utf8").encode("idna")
         # Also add SNI values.
         if self._sni_from_handshake:
-            sans.append(self._sni_from_handshake)
+            sans.add(self._sni_from_handshake)
         if self._sni_from_server_change:
-            sans.append(self._sni_from_server_change)
+            sans.add(self._sni_from_server_change)
 
-        return self.config.certstore.get_cert(host, sans)
+        return self.config.certstore.get_cert(host, list(sans))
