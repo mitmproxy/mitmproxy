@@ -14,7 +14,7 @@ class SslLayer(Layer):
         self._client_ssl = client_ssl
         self._server_ssl = server_ssl
         self._connected = False
-        self._sni_from_handshake = None
+        self.client_sni = None
         self._sni_from_server_change = None
 
     def __call__(self):
@@ -74,7 +74,7 @@ class SslLayer(Layer):
         if self._sni_from_server_change is False:
             return None
         else:
-            return self._sni_from_server_change or self._sni_from_handshake
+            return self._sni_from_server_change or self.client_sni
 
     def _establish_ssl_with_client_and_server(self):
         """
@@ -97,7 +97,7 @@ class SslLayer(Layer):
             else:
                 raise RuntimeError("Unexpected Message: %s" % message)
 
-        if server_err and not self._sni_from_handshake:
+        if server_err and not self.client_sni:
             raise server_err
 
     def handle_sni(self, connection):
@@ -111,14 +111,14 @@ class SslLayer(Layer):
             sn = connection.get_servername()
             if not sn:
                 return
-            self._sni_from_handshake = sn.decode("utf8").encode("idna")
+            self.client_sni = sn.decode("utf8").encode("idna")
 
             if old_upstream_sni != self.sni_for_upstream_connection:
                 # Perform reconnect
                 if self.server_ssl:
                     self.yield_from_callback(Reconnect())
 
-            if self._sni_from_handshake:
+            if self.client_sni:
                 # Now, change client context to reflect possibly changed certificate:
                 cert, key, chain_file = self.find_cert()
                 new_context = self.client_conn.create_ssl_context(
@@ -195,8 +195,8 @@ class SslLayer(Layer):
                 sans.add(host)
                 host = upstream_cert.cn.decode("utf8").encode("idna")
         # Also add SNI values.
-        if self._sni_from_handshake:
-            sans.add(self._sni_from_handshake)
+        if self.client_sni:
+            sans.add(self.client_sni)
         if self._sni_from_server_change:
             sans.add(self._sni_from_server_change)
 

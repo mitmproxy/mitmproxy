@@ -79,7 +79,7 @@ class ConnectionHandler2:
             self.config,
             self.channel
         )
-        root_layer = protocol2.Socks5IncomingLayer(root_context)
+        root_layer = protocol2.ReverseProxy(root_context, ("localhost", 5000), True, True)
 
         try:
             for message in root_layer():

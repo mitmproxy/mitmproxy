@@ -176,7 +176,7 @@ def yield_from_callback(fun):
     """
     yield_queue = Queue.Queue()
 
-    def do_yield(self, msg):
+    def do_yield(msg):
         yield_queue.put(msg)
         yield_queue.get()
 
@@ -192,14 +192,14 @@ def yield_from_callback(fun):
 
         threading.Thread(target=run, name="YieldFromCallbackThread").start()
         while True:
-            e = yield_queue.get()
-            if e is True:
+            msg = yield_queue.get()
+            if msg is True:
                 break
-            elif isinstance(e, Exception):
+            elif isinstance(msg, Exception):
                 # TODO: Include func name?
-                raise ProxyError2("Error from callback: " + repr(e), e)
+                raise ProxyError2("Error in %s: %s" % (fun.__name__, repr(msg)), msg)
             else:
-                yield e
+                yield msg
                 yield_queue.put(None)
 
         self.yield_from_callback = None
