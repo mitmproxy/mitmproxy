@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import (absolute_import, print_function, division, unicode_literals)
+from __future__ import (absolute_import, print_function, division)
 from contextlib import contextmanager
 from os.path import dirname, realpath, join, exists, normpath
 import os
