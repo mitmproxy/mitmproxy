@@ -1,18 +1,11 @@
 from __future__ import (absolute_import, print_function, division)
-import Queue
-import threading
 import traceback
 from netlib import tcp
 
 from ..proxy import ProxyError2
-from .layer import Layer
+from .layer import Layer, yield_from_callback
 from .messages import Connect, Reconnect, ChangeServer
 from .auto import AutoLayer
-
-
-class ReconnectRequest(object):
-    def __init__(self):
-        self.done = threading.Event()
 
 
 class SslLayer(Layer):
@@ -59,7 +52,8 @@ class SslLayer(Layer):
             for m in self._establish_ssl_with_client_and_server():
                 yield m
         elif self.client_ssl:
-            self._establish_ssl_with_client()
+            for m in self._establish_ssl_with_client():
+                yield m
 
         layer = AutoLayer(self)
         for message in layer():
@@ -96,32 +90,12 @@ class SslLayer(Layer):
         except ProxyError2 as e:
             server_err = e
 
-        # The part below is a bit ugly as we cannot yield from the handle_sni callback.
-        # The workaround is to do that in a separate thread and yield from the main thread.
-
-        # client_ssl_queue may contain the following elements
-        # - True, if ssl was successfully established
-        # - An Exception thrown by self._establish_ssl_with_client()
-        # - A threading.Event, which singnifies a request for a reconnect from the sni callback
-        self.__client_ssl_queue = Queue.Queue()
-
-        def establish_client_ssl():
-            try:
-                self._establish_ssl_with_client()
-                self.__client_ssl_queue.put(True)
-            except Exception as client_err:
-                self.__client_ssl_queue.put(client_err)
-
-        threading.Thread(target=establish_client_ssl, name="ClientSSLThread").start()
-        e = self.__client_ssl_queue.get()
-        if isinstance(e, ReconnectRequest):
-            yield Reconnect()
-            self._establish_ssl_with_server()
-            e.done.set()
-            e = self.__client_ssl_queue.get()
-        if e is not True:
-            raise ProxyError2("Error when establish client SSL: " + repr(e), e)
-        self.__client_ssl_queue = None
+        for message in self._establish_ssl_with_client():
+            if message == Reconnect:
+                yield message
+                self._establish_ssl_with_server()
+            else:
+                raise RuntimeError("Unexpected Message: %s" % message)
 
         if server_err and not self._sni_from_handshake:
             raise server_err
@@ -142,9 +116,7 @@ class SslLayer(Layer):
             if old_upstream_sni != self.sni_for_upstream_connection:
                 # Perform reconnect
                 if self.server_ssl:
-                    reconnect = ReconnectRequest()
-                    self.__client_ssl_queue.put(reconnect)
-                    reconnect.done.wait()
+                    self.yield_from_callback(Reconnect())
 
             if self._sni_from_handshake:
                 # Now, change client context to reflect possibly changed certificate:
@@ -163,6 +135,7 @@ class SslLayer(Layer):
         except:  # pragma: no cover
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
 
+    @yield_from_callback
     def _establish_ssl_with_client(self):
         self.log("Establish SSL with client", "debug")
         cert, key, chain_file = self.find_cert()

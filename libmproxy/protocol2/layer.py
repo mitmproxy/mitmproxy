@@ -32,6 +32,8 @@ Further goals:
     inline scripts shall have a chance to handle everything locally.
 """
 from __future__ import (absolute_import, print_function, division)
+import Queue
+import threading
 from netlib import tcp
 from ..proxy import ProxyError2, Log
 from ..proxy.connection import ServerConnection
@@ -131,7 +133,6 @@ class ServerConnectionMixin(object):
         self._server_address = tcp.Address.wrap(address)
         self.log("Set new server address: " + repr(self.server_address), "debug")
 
-
     def _disconnect(self):
         """
         Deletes (and closes) an existing server connection.
@@ -149,3 +150,58 @@ class ServerConnectionMixin(object):
             self.server_conn.connect()
         except tcp.NetLibError as e:
             raise ProxyError2("Server connection to '%s' failed: %s" % (self.server_address, e), e)
+
+
+def yield_from_callback(fun):
+    """
+    Decorator which makes it possible to yield from callbacks in the original thread.
+    As a use case, take the pyOpenSSL handle_sni callback: If we receive a new SNI from the client,
+    we need to reconnect to the server with the new SNI. Reconnecting would normally be done using "yield Reconnect()",
+    but we're in a pyOpenSSL callback here, outside of the main program flow. With this decorator, it looks as follows:
+
+    def handle_sni(self):
+        # ...
+        self.yield_from_callback(Reconnect())
+
+    @yield_from_callback
+    def establish_ssl_with_client():
+        self.client_conn.convert_to_ssl(...)
+
+    for message in self.establish_ssl_with_client():  # will yield Reconnect at some point
+        yield message
+
+
+    Limitations:
+        - You cannot yield True.
+    """
+    yield_queue = Queue.Queue()
+
+    def do_yield(self, msg):
+        yield_queue.put(msg)
+        yield_queue.get()
+
+    def wrapper(self, *args, **kwargs):
+        self.yield_from_callback = do_yield
+
+        def run():
+            try:
+                fun(self, *args, **kwargs)
+                yield_queue.put(True)
+            except Exception as e:
+                yield_queue.put(e)
+
+        threading.Thread(target=run, name="YieldFromCallbackThread").start()
+        while True:
+            e = yield_queue.get()
+            if e is True:
+                break
+            elif isinstance(e, Exception):
+                # TODO: Include func name?
+                raise ProxyError2("Error from callback: " + repr(e), e)
+            else:
+                yield e
+                yield_queue.put(None)
+
+        self.yield_from_callback = None
+
+    return wrapper
