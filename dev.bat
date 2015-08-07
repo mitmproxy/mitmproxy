@@ -1,7 +1,7 @@
 @echo off
 set VENV=..\venv.mitmproxy
 
-virtualenv %VENV%
+virtualenv %VENV% --always-copy
 if %errorlevel% neq 0 exit /b %errorlevel%
 call %VENV%\Scripts\activate.bat
 if %errorlevel% neq 0 exit /b %errorlevel%
