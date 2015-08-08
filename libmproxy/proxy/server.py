@@ -7,7 +7,7 @@ from netlib import tcp
 
 from ..protocol.handle import protocol_handler
 from .. import protocol2
-from .primitives import ProxyServerError, Log, ProxyError, ProxyError2
+from .primitives import ProxyServerError, Log, ProxyError
 from .connection import ClientConnection, ServerConnection
 
 
@@ -79,12 +79,12 @@ class ConnectionHandler2:
             self.config,
             self.channel
         )
-        root_layer = protocol2.ReverseProxy(root_context, ("localhost", 5000), True, True)
+        root_layer = protocol2.Socks5IncomingLayer(root_context)
 
         try:
             for message in root_layer():
                 print("Root layer receveived: %s" % message)
-        except ProxyError2 as e:
+        except protocol2.ProtocolException as e:
             self.log(e, "info")
         except Exception:
             self.log(traceback.format_exc(), "error")

@@ -10,11 +10,11 @@ class AutoLayer(Layer):
             return
         # TLS ClientHello magic, see http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
         if d[0] == "\x16":
-            layer = SslLayer(self, True, True)
+            layer = TlsLayer(self, True, True)
         else:
             layer = TcpLayer(self)
         for m in layer():
             yield m
 
 from .rawtcp import TcpLayer
-from .ssl import SslLayer
+from .tls import TlsLayer

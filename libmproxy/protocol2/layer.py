@@ -35,9 +35,10 @@ from __future__ import (absolute_import, print_function, division)
 import Queue
 import threading
 from netlib import tcp
-from ..proxy import ProxyError2, Log
+from ..proxy import Log
 from ..proxy.connection import ServerConnection
 from .messages import Connect, Reconnect, ChangeServer
+from ..exceptions import ProtocolException
 
 
 class RootContext(object):
@@ -50,6 +51,9 @@ class RootContext(object):
         self.client_conn = client_conn  # Client Connection
         self.channel = channel  # provides .ask() method to communicate with FlowMaster
         self.config = config  # Proxy Configuration
+
+    def next_layer(self):
+        print(type(self))
 
 
 class _LayerCodeCompletion(object):
@@ -149,7 +153,7 @@ class ServerConnectionMixin(object):
         try:
             self.server_conn.connect()
         except tcp.NetLibError as e:
-            raise ProxyError2("Server connection to '%s' failed: %s" % (self.server_address, e), e)
+            raise ProtocolException("Server connection to '%s' failed: %s" % (self.server_address, e), e)
 
 
 def yield_from_callback(fun):
@@ -197,7 +201,7 @@ def yield_from_callback(fun):
                 break
             elif isinstance(msg, Exception):
                 # TODO: Include func name?
-                raise ProxyError2("Error in %s: %s" % (fun.__name__, repr(msg)), msg)
+                raise ProtocolException("Error in %s: %s" % (fun.__name__, repr(msg)), msg)
             else:
                 yield msg
                 yield_queue.put(None)

@@ -1,19 +1,19 @@
 from __future__ import (absolute_import, print_function, division)
 
 from .layer import Layer, ServerConnectionMixin
-from .ssl import SslLayer
+from .tls import TlsLayer
 
 
 class ReverseProxy(Layer, ServerConnectionMixin):
 
-    def __init__(self, ctx, server_address, client_ssl, server_ssl):
+    def __init__(self, ctx, server_address, client_tls, server_tls):
         super(ReverseProxy, self).__init__(ctx)
         self.server_address = server_address
-        self.client_ssl = client_ssl
-        self.server_ssl = server_ssl
+        self._client_tls = client_tls
+        self._server_tls = server_tls
 
     def __call__(self):
-        layer = SslLayer(self, self.client_ssl, self.server_ssl)
+        layer = TlsLayer(self, self._client_tls, self._server_tls)
         for message in layer():
             if not self._handle_server_message(message):
                 yield message

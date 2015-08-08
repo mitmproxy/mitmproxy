@@ -1,9 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 
-from ..proxy import ProxyError, Socks5ProxyMode, ProxyError2
+from ..exceptions import ProtocolException
+from ..proxy import ProxyError, Socks5ProxyMode
 from .layer import Layer, ServerConnectionMixin
 from .auto import AutoLayer
-
 
 class Socks5IncomingLayer(Layer, ServerConnectionMixin):
     def __call__(self):
@@ -12,7 +12,7 @@ class Socks5IncomingLayer(Layer, ServerConnectionMixin):
             address = s5mode.get_upstream_server(self.client_conn)[2:]
         except ProxyError as e:
             # TODO: Unmonkeypatch
-            raise ProxyError2(str(e), e)
+            raise ProtocolException(str(e), e)
 
         self.server_address = address
 

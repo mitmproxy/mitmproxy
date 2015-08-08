@@ -2,17 +2,17 @@ from __future__ import (absolute_import, print_function, division)
 import traceback
 from netlib import tcp
 
-from ..proxy import ProxyError2
+from ..exceptions import ProtocolException
 from .layer import Layer, yield_from_callback
 from .messages import Connect, Reconnect, ChangeServer
 from .auto import AutoLayer
 
 
-class SslLayer(Layer):
-    def __init__(self, ctx, client_ssl, server_ssl):
-        super(SslLayer, self).__init__(ctx)
-        self._client_ssl = client_ssl
-        self._server_ssl = server_ssl
+class TlsLayer(Layer):
+    def __init__(self, ctx, client_tls, server_tls):
+        super(TlsLayer, self).__init__(ctx)
+        self._client_tls = client_tls
+        self._server_tls = server_tls
         self._connected = False
         self.client_sni = None
         self._sni_from_server_change = None
@@ -41,33 +41,34 @@ class SslLayer(Layer):
               https://www.openssl.org/docs/ssl/SSL_CTX_set_cert_cb.html
             - The original mitmproxy issue is https://github.com/mitmproxy/mitmproxy/issues/427
         """
-        client_ssl_requires_server_cert = (
-            self._client_ssl and self._server_ssl and not self.config.no_upstream_cert
+        client_tls_requires_server_cert = (
+            self._client_tls and self._server_tls and not self.config.no_upstream_cert
         )
-        lazy_server_ssl = (
-            self._server_ssl and not client_ssl_requires_server_cert
+        lazy_server_tls = (
+            self._server_tls and not client_tls_requires_server_cert
         )
 
-        if client_ssl_requires_server_cert:
-            for m in self._establish_ssl_with_client_and_server():
+        if client_tls_requires_server_cert:
+            for m in self._establish_tls_with_client_and_server():
                 yield m
-        elif self.client_ssl:
-            for m in self._establish_ssl_with_client():
+        elif self._client_tls:
+            for m in self._establish_tls_with_client():
                 yield m
 
+        self.next_layer()
         layer = AutoLayer(self)
         for message in layer():
             if message != Connect or not self._connected:
                 yield message
             if message == Connect:
-                if lazy_server_ssl:
-                    self._establish_ssl_with_server()
+                if lazy_server_tls:
+                    self._establish_tls_with_server()
             if message == ChangeServer and message.depth == 1:
-                self.server_ssl = message.server_ssl
+                self._server_tls = message.server_tls
                 self._sni_from_server_change = message.sni
             if message == Reconnect or message == ChangeServer:
-                if self.server_ssl:
-                    self._establish_ssl_with_server()
+                if self._server_tls:
+                    self._establish_tls_with_server()
 
     @property
     def sni_for_upstream_connection(self):
@@ -76,7 +77,7 @@ class SslLayer(Layer):
         else:
             return self._sni_from_server_change or self.client_sni
 
-    def _establish_ssl_with_client_and_server(self):
+    def _establish_tls_with_client_and_server(self):
         """
         This function deals with the problem that the server may require a SNI value from the client.
         """
@@ -86,14 +87,14 @@ class SslLayer(Layer):
         self._connected = True
         server_err = None
         try:
-            self._establish_ssl_with_server()
-        except ProxyError2 as e:
+            self._establish_tls_with_server()
+        except ProtocolException as e:
             server_err = e
 
-        for message in self._establish_ssl_with_client():
+        for message in self._establish_tls_with_client():
             if message == Reconnect:
                 yield message
-                self._establish_ssl_with_server()
+                self._establish_tls_with_server()
             else:
                 raise RuntimeError("Unexpected Message: %s" % message)
 
@@ -102,7 +103,7 @@ class SslLayer(Layer):
 
     def handle_sni(self, connection):
         """
-        This callback gets called during the SSL handshake with the client.
+        This callback gets called during the TLS handshake with the client.
         The client has just sent the Sever Name Indication (SNI).
         """
         try:
@@ -115,7 +116,7 @@ class SslLayer(Layer):
 
             if old_upstream_sni != self.sni_for_upstream_connection:
                 # Perform reconnect
-                if self.server_ssl:
+                if self._server_tls:
                     self.yield_from_callback(Reconnect())
 
             if self.client_sni:
@@ -136,8 +137,8 @@ class SslLayer(Layer):
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
 
     @yield_from_callback
-    def _establish_ssl_with_client(self):
-        self.log("Establish SSL with client", "debug")
+    def _establish_tls_with_client(self):
+        self.log("Establish TLS with client", "debug")
         cert, key, chain_file = self.find_cert()
         try:
             self.client_conn.convert_to_ssl(
@@ -150,10 +151,10 @@ class SslLayer(Layer):
                 chain_file=chain_file
             )
         except tcp.NetLibError as e:
-            raise ProxyError2(repr(e), e)
+            raise ProtocolException(repr(e), e)
 
-    def _establish_ssl_with_server(self):
-        self.log("Establish SSL with server", "debug")
+    def _establish_tls_with_server(self):
+        self.log("Establish TLS with server", "debug")
         try:
             self.server_conn.establish_ssl(
                 self.config.clientcerts,
@@ -165,30 +166,29 @@ class SslLayer(Layer):
                 ca_pemfile=self.config.openssl_trusted_ca_server,
                 cipher_list=self.config.ciphers_server,
             )
-            ssl_cert_err = self.server_conn.ssl_verification_error
-            if ssl_cert_err is not None:
+            tls_cert_err = self.server_conn.ssl_verification_error
+            if tls_cert_err is not None:
                 self.log(
-                    "SSL verification failed for upstream server at depth %s with error: %s" %
-                    (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                    "TLS verification failed for upstream server at depth %s with error: %s" %
+                    (tls_cert_err['depth'], tls_cert_err['errno']),
                     "error")
                 self.log("Ignoring server verification error, continuing with connection", "error")
         except tcp.NetLibInvalidCertificateError as e:
-            ssl_cert_err = self.server_conn.ssl_verification_error
+            tls_cert_err = self.server_conn.ssl_verification_error
             self.log(
-                "SSL verification failed for upstream server at depth %s with error: %s" %
-                (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                "TLS verification failed for upstream server at depth %s with error: %s" %
+                (tls_cert_err['depth'], tls_cert_err['errno']),
                 "error")
             self.log("Aborting connection attempt", "error")
-            raise ProxyError2(repr(e), e)
+            raise ProtocolException(repr(e), e)
         except tcp.NetLibError as e:
-            raise ProxyError2(repr(e), e)
+            raise ProtocolException(repr(e), e)
 
     def find_cert(self):
         host = self.server_conn.address.host
-        # TODO: Better use an OrderedSet here
         sans = set()
         # Incorporate upstream certificate
-        if self.server_conn.ssl_established and (not self.config.no_upstream_cert):
+        if self.server_conn.tls_established and (not self.config.no_upstream_cert):
             upstream_cert = self.server_conn.cert
             sans.update(upstream_cert.altnames)
             if upstream_cert.cn:

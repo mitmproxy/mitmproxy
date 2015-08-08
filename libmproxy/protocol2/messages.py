@@ -32,9 +32,9 @@ class ChangeServer(_Message):
     Change the upstream server.
     """
 
-    def __init__(self, address, server_ssl, sni, depth=1):
+    def __init__(self, address, server_tls, sni, depth=1):
         self.address = address
-        self.server_ssl = server_ssl
+        self.server_tls = server_tls
         self.sni = sni
 
         # upstream proxy scenario: you may want to change either the final target or the upstream proxy.

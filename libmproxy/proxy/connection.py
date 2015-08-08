@@ -32,6 +32,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             port=self.address.port
         )
 
+    @property
+    def tls_established(self):
+        return self.ssl_established
+
     _stateobject_attributes = dict(
         ssl_established=bool,
         timestamp_start=float,
@@ -111,6 +115,10 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             host=self.address.host,
             port=self.address.port
         )
+
+    @property
+    def tls_established(self):
+        return self.ssl_established
 
     _stateobject_attributes = dict(
         state=list,
