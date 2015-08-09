@@ -9,20 +9,21 @@
 # `--ignore :80$` as an additional parameter.
 # (see http://mitmproxy.org/doc/features/passthrough.html)
 
-from libmproxy.protocol.http import HTTPRequest
+import netlib.http.semantics
+
 from libmproxy.protocol.tcp import TCPHandler
 from libmproxy.protocol import KILL
 from libmproxy.script import concurrent
 
 
 def start(context, argv):
-    HTTPRequest._headers_to_strip_off.remove("Connection")
-    HTTPRequest._headers_to_strip_off.remove("Upgrade")
+    netlib.http.semantics.Request._headers_to_strip_off.remove("Connection")
+    netlib.http.semantics.Request._headers_to_strip_off.remove("Upgrade")
 
 
 def done(context):
-    HTTPRequest._headers_to_strip_off.append("Connection")
-    HTTPRequest._headers_to_strip_off.append("Upgrade")
+    netlib.http.semantics.Request._headers_to_strip_off.append("Connection")
+    netlib.http.semantics.Request._headers_to_strip_off.append("Upgrade")
 
 
 @concurrent

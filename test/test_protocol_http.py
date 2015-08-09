@@ -11,25 +11,10 @@ from netlib.http.semantics import CONTENT_MISSING
 import tutils
 import tservers
 
-def mock_protocol(data='', chunked=False):
+def mock_protocol(data=''):
     rfile = cStringIO.StringIO(data)
     wfile = cStringIO.StringIO()
     return http1.HTTP1Protocol(rfile=rfile, wfile=wfile)
-
-
-# TODO: move test to netlib http1 protocol
-# def test_stripped_chunked_encoding_no_content():
-#     """
-#     https://github.com/mitmproxy/mitmproxy/issues/186
-#     """
-#     r = tutils.tresp(content="")
-#     r.headers["Transfer-Encoding"] = ["chunked"]
-#     assert "Content-Length" in r._assemble_headers()
-#
-#     r = tutils.treq(content="")
-#     r.headers["Transfer-Encoding"] = ["chunked"]
-#     assert "Content-Length" in r._assemble_headers()
-#
 
 
 class TestHTTPResponse:
@@ -56,8 +41,6 @@ class TestHTTPResponse:
             "Invalid server response: 'content",
             HTTPResponse.from_protocol, protocol, "GET"
         )
-
-
 
 
 class TestHTTPFlow(object):
