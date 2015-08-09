@@ -219,14 +219,6 @@ class HTTPRequest(MessageMixin, semantics.Request):
         is_replay=bool
     )
 
-    # This list is adopted legacy code.
-    # We probably don't need to strip off keep-alive.
-    _headers_to_strip_off = ['Proxy-Connection',
-                             'Keep-Alive',
-                             'Connection',
-                             'Transfer-Encoding',
-                             'Upgrade']
-
     @classmethod
     def from_state(cls, state):
         f = cls(
@@ -359,11 +351,6 @@ class HTTPResponse(MessageMixin, semantics.Response):
         status_code=int,
         msg=str
     )
-
-    _headers_to_strip_off = ['Proxy-Connection',
-                             'Alternate-Protocol',
-                             'Alt-Svc']
-
 
     @classmethod
     def from_state(cls, state):
