@@ -21,6 +21,7 @@ OPCODE = utils.BiDi(
     PONG=0x0a
 )
 
+
 class FrameHeader(object):
 
     def __init__(

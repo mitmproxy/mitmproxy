@@ -332,6 +332,7 @@ class Request(object):
 
 
 class EmptyRequest(Request):
+
     def __init__(self):
         super(EmptyRequest, self).__init__(
             form_in="",
@@ -343,7 +344,7 @@ class EmptyRequest(Request):
             httpversion=(0, 0),
             headers=odict.ODictCaseless(),
             body="",
-            )
+        )
 
 
 class Response(object):
@@ -396,10 +397,9 @@ class Response(object):
             status_code=self.status_code,
             msg=self.msg,
             contenttype=self.headers.get_first(
-                "content-type", "unknown content type"
-            ),
-            size=size
-        )
+                "content-type",
+                "unknown content type"),
+            size=size)
 
     def get_cookies(self):
         """

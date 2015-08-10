@@ -44,7 +44,11 @@ def test_client_greeting_assert_socks5():
         assert False
 
     raw = tutils.treader("XX")
-    tutils.raises(socks.SocksError, socks.ClientGreeting.from_file, raw, fail_early=True)
+    tutils.raises(
+        socks.SocksError,
+        socks.ClientGreeting.from_file,
+        raw,
+        fail_early=True)
 
 
 def test_server_greeting():

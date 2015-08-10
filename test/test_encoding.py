@@ -1,5 +1,6 @@
 from netlib import encoding
 
+
 def test_identity():
     assert "string" == encoding.decode("identity", "string")
     assert "string" == encoding.encode("identity", "string")

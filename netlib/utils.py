@@ -119,6 +119,7 @@ def pretty_size(size):
 
 
 class Data(object):
+
     def __init__(self, name):
         m = __import__(name)
         dirname, _ = os.path.split(m.__file__)
@@ -135,8 +136,6 @@ class Data(object):
         if not os.path.exists(fullpath):
             raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath
-
-
 
 
 def is_valid_port(port):
@@ -221,6 +220,7 @@ def hostport(scheme, host, port):
     else:
         return "%s:%s" % (host, port)
 
+
 def unparse_url(scheme, host, port, path=""):
     """
         Returns a URL string, constructed from the specified compnents.
@@ -234,6 +234,7 @@ def urlencode(s):
     """
     s = [tuple(i) for i in s]
     return urllib.urlencode(s, False)
+
 
 def urldecode(s):
     """

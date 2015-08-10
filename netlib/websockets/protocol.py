@@ -25,6 +25,7 @@ HEADER_WEBSOCKET_KEY = 'sec-websocket-key'
 HEADER_WEBSOCKET_ACCEPT = 'sec-websocket-accept'
 HEADER_WEBSOCKET_VERSION = 'sec-websocket-version'
 
+
 class Masker(object):
 
     """
@@ -51,6 +52,7 @@ class Masker(object):
         ret = self.mask(self.offset, data)
         self.offset += len(ret)
         return ret
+
 
 class WebsocketsProtocol(object):
 

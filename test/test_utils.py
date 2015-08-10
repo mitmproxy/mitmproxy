@@ -29,8 +29,6 @@ def test_pretty_size():
     assert utils.pretty_size(1024 * 1024) == "1MB"
 
 
-
-
 def test_parse_url():
     assert not utils.parse_url("")
 
@@ -85,7 +83,6 @@ def test_urlencode():
     assert utils.urlencode([('foo', 'bar')])
 
 
-
 def test_urldecode():
     s = "one=two&three=four"
     assert len(utils.urldecode(s)) == 2
@@ -100,9 +97,6 @@ def test_get_header_tokens():
     assert utils.get_header_tokens(h, "foo") == ["bar", "voing"]
     h["foo"] = ["bar, voing", "oink"]
     assert utils.get_header_tokens(h, "foo") == ["bar", "voing", "oink"]
-
-
-
 
 
 def test_multipartdecode():

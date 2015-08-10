@@ -117,7 +117,7 @@ class Frame(object):
 
         return "\n".join([
             "%s: %s | length: %d | flags: %#x | stream_id: %d" % (
-            direction, self.__class__.__name__, self.length, self.flags, self.stream_id),
+                direction, self.__class__.__name__, self.length, self.flags, self.stream_id),
             self.payload_human_readable(),
             "===============================================================",
         ])
