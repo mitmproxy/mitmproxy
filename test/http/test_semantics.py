@@ -1,13 +1,11 @@
-import cStringIO
-import textwrap
-import binascii
 import mock
-from mock import MagicMock
 
-from netlib import http, odict, tcp, tutils, utils
+from netlib import http
+from netlib import odict
+from netlib import tutils
+from netlib import utils
 from netlib.http import semantics
 from netlib.http.semantics import CONTENT_MISSING
-from .. import tservers
 
 class TestProtocolMixin(object):
     @mock.patch("netlib.http.semantics.ProtocolMixin.assemble_response")

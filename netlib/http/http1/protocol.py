@@ -1,14 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
-import binascii
-import collections
 import string
 import sys
-import urlparse
 import time
 
 from netlib import odict, utils, tcp, http
 from netlib.http import semantics
-from .. import status_codes
 from ..exceptions import *
 
 class TCPHandler(object):

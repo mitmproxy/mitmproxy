@@ -2,10 +2,9 @@ from __future__ import absolute_import
 import base64
 import hashlib
 import os
-import struct
-import io
 
-from netlib import utils, odict, tcp
+from netlib import odict
+from netlib import utils
 
 # Colleciton of utility functions that implement small portions of the RFC6455
 # WebSockets Protocol Useful for building WebSocket clients and servers.

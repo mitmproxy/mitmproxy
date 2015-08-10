@@ -2,7 +2,6 @@ from __future__ import (absolute_import, print_function, division)
 from argparse import Action, ArgumentTypeError
 import binascii
 
-from .. import http
 
 def parse_http_basic_auth(s):
     words = s.split()
@@ -37,7 +36,6 @@ class NullProxyAuth(object):
         """
             Clean up authentication headers, so they're not passed upstream.
         """
-        pass
 
     def authenticate(self, headers_):
         """

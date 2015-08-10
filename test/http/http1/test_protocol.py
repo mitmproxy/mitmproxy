@@ -1,6 +1,5 @@
 import cStringIO
 import textwrap
-import binascii
 
 from netlib import http, odict, tcp, tutils
 from netlib.http import semantics

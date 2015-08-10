@@ -1,8 +1,4 @@
 from __future__ import (absolute_import, print_function, division)
-import binascii
-import collections
-import string
-import sys
 import urllib
 import urlparse
 

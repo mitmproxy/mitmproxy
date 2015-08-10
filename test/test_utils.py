@@ -1,4 +1,3 @@
-import urlparse
 
 from netlib import utils, odict, tutils
 

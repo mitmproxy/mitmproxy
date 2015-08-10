@@ -2,7 +2,9 @@ import os
 
 from nose.tools import raises
 
-from netlib import tcp, http, websockets, tutils
+from netlib import tcp
+from netlib import tutils
+from netlib import websockets
 from netlib.http import status_codes
 from netlib.http.exceptions import *
 from netlib.http.http1 import HTTP1Protocol
