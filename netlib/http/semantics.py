@@ -15,10 +15,10 @@ CONTENT_MISSING = 0
 class ProtocolMixin(object):
 
     def read_request(self, *args, **kwargs):  # pragma: no cover
-        raise NotImplemented
+        raise NotImplementedError
 
     def read_response(self, *args, **kwargs):  # pragma: no cover
-        raise NotImplemented
+        raise NotImplementedError
 
     def assemble(self, message):
         if isinstance(message, Request):
@@ -28,11 +28,11 @@ class ProtocolMixin(object):
         else:
             raise ValueError("HTTP message not supported.")
 
-    def assemble_request(self, request):  # pragma: no cover
-        raise NotImplemented
+    def assemble_request(self, *args, **kwargs):  # pragma: no cover
+        raise NotImplementedError
 
-    def assemble_response(self, response):  # pragma: no cover
-        raise NotImplemented
+    def assemble_response(self, *args, **kwargs):  # pragma: no cover
+        raise NotImplementedError
 
 
 class Request(object):

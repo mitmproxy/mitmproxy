@@ -142,13 +142,13 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         headers = request.headers.copy()
 
-        if not ':authority' in headers.keys():
+        if ':authority' not in headers.keys():
             headers.add(':authority', bytes(authority), prepend=True)
-        if not ':scheme' in headers.keys():
+        if ':scheme' not in headers.keys():
             headers.add(':scheme', bytes(request.scheme), prepend=True)
-        if not ':path' in headers.keys():
+        if ':path' not in headers.keys():
             headers.add(':path', bytes(request.path), prepend=True)
-        if not ':method' in headers.keys():
+        if ':method' not in headers.keys():
             headers.add(':method', bytes(request.method), prepend=True)
 
         headers = headers.items()
@@ -167,7 +167,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         headers = response.headers.copy()
 
-        if not ':status' in headers.keys():
+        if ':status' not in headers.keys():
             headers.add(':status', bytes(str(response.status_code)), prepend=True)
 
         headers = headers.items()
