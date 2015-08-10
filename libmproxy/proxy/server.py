@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import socket
+import time
 from OpenSSL import SSL
 
 from netlib import tcp
@@ -257,7 +258,7 @@ class ConnectionHandler:
 
     def log(self, msg, level, subs=()):
         msg = [
-            "%s:%s: %s" % (self.client_conn.address.host, self.client_conn.address.port, msg)
+            "%s %s:%s: %s" % (time.strftime('%H:%M:%S', time.gmtime()), self.client_conn.address.host, self.client_conn.address.port, msg)
         ]
         for i in subs:
             msg.append("  -> " + i)
