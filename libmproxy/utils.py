@@ -61,34 +61,6 @@ def pretty_json(s):
     return json.dumps(p, sort_keys=True, indent=4).split("\n")
 
 
-def multipartdecode(hdrs, content):
-    """
-        Takes a multipart boundary encoded string and returns list of (key, value) tuples.
-    """
-    v = hdrs.get_first("content-type")
-    if v:
-        v = parse_content_type(v)
-        if not v:
-            return []
-        boundary = v[2].get("boundary")
-        if not boundary:
-            return []
-
-        rx = re.compile(r'\bname="([^"]+)"')
-        r = []
-
-        for i in content.split("--" + boundary):
-            parts = i.splitlines()
-            if len(parts) > 1 and parts[0][0:2] != "--":
-                match = rx.search(parts[1])
-                if match:
-                    key = match.group(1)
-                    value = "".join(parts[3 + parts[2:].index(""):])
-                    r.append((key, value))
-        return r
-    return []
-
-
 def pretty_duration(secs):
     formatters = [
         (100, "{:.0f}s"),
@@ -152,34 +124,6 @@ class LRUCache:
                 d = self.cacheList.pop()
                 self.cache.pop(d)
             return ret
-
-
-def parse_content_type(c):
-    """
-        A simple parser for content-type values. Returns a (type, subtype,
-        parameters) tuple, where type and subtype are strings, and parameters
-        is a dict. If the string could not be parsed, return None.
-
-        E.g. the following string:
-
-            text/html; charset=UTF-8
-
-        Returns:
-
-            ("text", "html", {"charset": "UTF-8"})
-    """
-    parts = c.split(";", 1)
-    ts = parts[0].split("/", 1)
-    if len(ts) != 2:
-        return None
-    d = {}
-    if len(parts) == 2:
-        for i in parts[1].split(";"):
-            clause = i.split("=", 1)
-            if len(clause) == 2:
-                d[clause[0].strip()] = clause[1].strip()
-    return ts[0].lower(), ts[1].lower(), d
-
 
 
 def clean_hanging_newline(t):
