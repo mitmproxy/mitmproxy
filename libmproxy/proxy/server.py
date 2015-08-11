@@ -7,6 +7,7 @@ from netlib import tcp
 
 from ..protocol.handle import protocol_handler
 from .. import protocol2
+from ..exceptions import ProtocolException
 from .primitives import ProxyServerError, Log, ProxyError
 from .connection import ClientConnection, ServerConnection
 
@@ -79,12 +80,12 @@ class ConnectionHandler2:
             self.config,
             self.channel
         )
-        root_layer = protocol2.Socks5IncomingLayer(root_context)
+        root_layer = protocol2.Socks5Proxy(root_context)
 
         try:
             for message in root_layer():
                 print("Root layer receveived: %s" % message)
-        except protocol2.ProtocolException as e:
+        except ProtocolException as e:
             self.log(e, "info")
         except Exception:
             self.log(traceback.format_exc(), "error")

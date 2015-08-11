@@ -3,7 +3,6 @@ from __future__ import (absolute_import, print_function, division)
 from ..exceptions import ProtocolException
 from .. import platform
 from .layer import Layer, ServerConnectionMixin
-from .auto import AutoLayer
 
 
 class TransparentProxy(Layer, ServerConnectionMixin):
@@ -18,7 +17,7 @@ class TransparentProxy(Layer, ServerConnectionMixin):
         except Exception as e:
             raise ProtocolException("Transparent mode failure: %s" % repr(e), e)
 
-        layer = AutoLayer(self)
+        layer = self.ctx.next_layer(self)
         for message in layer():
             if not self._handle_server_message(message):
                 yield message

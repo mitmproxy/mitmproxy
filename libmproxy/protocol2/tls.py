@@ -5,7 +5,6 @@ from netlib import tcp
 from ..exceptions import ProtocolException
 from .layer import Layer, yield_from_callback
 from .messages import Connect, Reconnect, ChangeServer
-from .auto import AutoLayer
 
 
 class TlsLayer(Layer):
@@ -55,8 +54,7 @@ class TlsLayer(Layer):
             for m in self._establish_tls_with_client():
                 yield m
 
-        self.next_layer()
-        layer = AutoLayer(self)
+        layer = self.ctx.next_layer(self)
         for message in layer():
             if message != Connect or not self._connected:
                 yield message

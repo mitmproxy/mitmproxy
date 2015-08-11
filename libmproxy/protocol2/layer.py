@@ -41,21 +41,6 @@ from .messages import Connect, Reconnect, ChangeServer
 from ..exceptions import ProtocolException
 
 
-class RootContext(object):
-    """
-    The outmost context provided to the root layer.
-    As a consequence, every layer has .client_conn, .channel and .config.
-    """
-
-    def __init__(self, client_conn, config, channel):
-        self.client_conn = client_conn  # Client Connection
-        self.channel = channel  # provides .ask() method to communicate with FlowMaster
-        self.config = config  # Proxy Configuration
-
-    def next_layer(self):
-        print(type(self))
-
-
 class _LayerCodeCompletion(object):
     """
     Dummy class that provides type hinting in PyCharm, which simplifies development a lot.

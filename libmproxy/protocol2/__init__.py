@@ -1,8 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
-from .layer import RootContext
-from .socks import Socks5IncomingLayer
+from .root_context import RootContext
+from .socks_proxy import Socks5Proxy
 from .reverse_proxy import ReverseProxy
-from .upstream_proxy import UpstreamProxy
+from .http_proxy import HttpProxy, HttpUpstreamProxy
 from .rawtcp import TcpLayer
-from .auto import AutoLayer
-__all__ = ["Socks5IncomingLayer", "TcpLayer", "AutoLayer", "RootContext", "ReverseProxy", "UpstreamProxy"]
+
+__all__ = [
+    "Socks5Proxy", "TcpLayer", "RootContext", "ReverseProxy", "HttpProxy", "HttpUpstreamProxy"
+]

@@ -18,5 +18,13 @@ class ProtocolException(ProxyException):
     pass
 
 
+class HttpException(ProtocolException):
+    pass
+
+
+class InvalidCredentials(HttpException):
+    pass
+
+
 class ServerException(ProxyException):
     pass

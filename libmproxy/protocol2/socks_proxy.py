@@ -3,9 +3,9 @@ from __future__ import (absolute_import, print_function, division)
 from ..exceptions import ProtocolException
 from ..proxy import ProxyError, Socks5ProxyMode
 from .layer import Layer, ServerConnectionMixin
-from .auto import AutoLayer
 
-class Socks5IncomingLayer(Layer, ServerConnectionMixin):
+
+class Socks5Proxy(Layer, ServerConnectionMixin):
     def __call__(self):
         try:
             s5mode = Socks5ProxyMode(self.config.ssl_ports)
@@ -16,7 +16,7 @@ class Socks5IncomingLayer(Layer, ServerConnectionMixin):
 
         self.server_address = address
 
-        layer = AutoLayer(self)
+        layer = self.ctx.next_layer(self)
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
