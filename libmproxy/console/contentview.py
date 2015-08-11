@@ -76,7 +76,7 @@ class ViewAuto:
     def __call__(self, hdrs, content, limit):
         ctype = hdrs.get_first("content-type")
         if ctype:
-            ct = utils.parse_content_type(ctype) if ctype else None
+            ct = netlib.utils.parse_content_type(ctype) if ctype else None
             ct = "%s/%s" % (ct[0], ct[1])
             if ct in content_types_map:
                 return content_types_map[ct][0](hdrs, content, limit)
@@ -241,7 +241,7 @@ class ViewMultipart:
     content_types = ["multipart/form-data"]
 
     def __call__(self, hdrs, content, limit):
-        v = utils.multipartdecode(hdrs, content)
+        v = netlib.utils.multipartdecode(hdrs, content)
         if v:
             r = [
                 urwid.Text(("highlight", "Form data:\n")),

@@ -44,25 +44,6 @@ def test_pretty_json():
     assert not utils.pretty_json("moo")
 
 
-def test_multipartdecode():
-    boundary = 'somefancyboundary'
-    headers = odict.ODict(
-        [('content-type', ('multipart/form-data; boundary=%s' % boundary))])
-    content = "--{0}\n" \
-              "Content-Disposition: form-data; name=\"field1\"\n\n" \
-              "value1\n" \
-              "--{0}\n" \
-              "Content-Disposition: form-data; name=\"field2\"\n\n" \
-              "value2\n" \
-              "--{0}--".format(boundary)
-
-    form = utils.multipartdecode(headers, content)
-
-    assert len(form) == 2
-    assert form[0] == ('field1', 'value1')
-    assert form[1] == ('field2', 'value2')
-
-
 def test_pretty_duration():
     assert utils.pretty_duration(0.00001) == "0ms"
     assert utils.pretty_duration(0.0001) == "0ms"
@@ -119,15 +100,6 @@ def test_parse_size():
     assert utils.parse_size("1g") == 1024**3
     tutils.raises(ValueError, utils.parse_size, "1f")
     tutils.raises(ValueError, utils.parse_size, "ak")
-
-
-def test_parse_content_type():
-    p = utils.parse_content_type
-    assert p("text/html") == ("text", "html", {})
-    assert p("text") is None
-
-    v = p("text/html; charset=UTF-8")
-    assert v == ('text', 'html', {'charset': 'UTF-8'})
 
 
 def test_safe_subn():
