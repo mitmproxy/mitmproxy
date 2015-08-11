@@ -1,28 +1,31 @@
 from __future__ import (absolute_import, print_function, division)
-import binascii
-import collections
 import string
 import sys
-import urlparse
 import time
 
 from netlib import odict, utils, tcp, http
 from netlib.http import semantics
-from .. import status_codes
 from ..exceptions import *
 
+
 class TCPHandler(object):
+
     def __init__(self, rfile, wfile=None):
         self.rfile = rfile
         self.wfile = wfile
+
 
 class HTTP1Protocol(semantics.ProtocolMixin):
 
     def __init__(self, tcp_handler=None, rfile=None, wfile=None):
         self.tcp_handler = tcp_handler or TCPHandler(rfile, wfile)
 
-
-    def read_request(self, include_body=True, body_size_limit=None, allow_empty=False):
+    def read_request(
+        self,
+        include_body=True,
+        body_size_limit=None,
+        allow_empty=False,
+    ):
         """
         Parse an HTTP request from a file stream
 
@@ -129,8 +132,12 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             timestamp_end,
         )
 
-
-    def read_response(self, request_method, body_size_limit, include_body=True):
+    def read_response(
+        self,
+        request_method,
+        body_size_limit,
+        include_body=True,
+    ):
         """
             Returns an http.Response
 
@@ -175,7 +182,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             # read separately
             body = None
 
-
         if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
             # more accurate timestamp_start
             timestamp_start = self.tcp_handler.rfile.first_byte_timestamp
@@ -195,7 +201,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             timestamp_end=timestamp_end,
         )
 
-
     def assemble_request(self, request):
         assert isinstance(request, semantics.Request)
 
@@ -208,7 +213,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         headers = self._assemble_request_headers(request)
         return "%s\r\n%s\r\n%s" % (first_line, headers, request.body)
 
-
     def assemble_response(self, response):
         assert isinstance(response, semantics.Response)
 
@@ -220,7 +224,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         first_line = self._assemble_response_first_line(response)
         headers = self._assemble_response_headers(response)
         return "%s\r\n%s\r\n%s" % (first_line, headers, response.body)
-
 
     def read_headers(self):
         """
@@ -266,7 +269,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         response_code,
         is_request,
         max_chunk_size=None
-        ):
+    ):
         """
             Read an HTTP message body:
                 headers: An ODictCaseless object
@@ -321,9 +324,14 @@ class HTTP1Protocol(semantics.ProtocolMixin):
                     "HTTP Body too large. Limit is %s," % limit
                 )
 
-
     @classmethod
-    def expected_http_body_size(self, headers, is_request, request_method, response_code):
+    def expected_http_body_size(
+        self,
+        headers,
+        is_request,
+        request_method,
+        response_code,
+    ):
         """
             Returns the expected body length:
              - a positive integer, if the size is known in advance
@@ -360,20 +368,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
 
 
     @classmethod
-    def request_preamble(self, method, resource, http_major="1", http_minor="1"):
-        return '%s %s HTTP/%s.%s' % (
-            method, resource, http_major, http_minor
-        )
-
-
-    @classmethod
-    def response_preamble(self, code, message=None, http_major="1", http_minor="1"):
-        if message is None:
-            message = status_codes.RESPONSES.get(code)
-        return 'HTTP/%s.%s %s %s' % (http_major, http_minor, code, message)
-
-
-    @classmethod
     def has_chunked_encoding(self, headers):
         return "chunked" in [
             i.lower() for i in utils.get_header_tokens(headers, "transfer-encoding")
@@ -389,7 +383,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             # Possible leftover from previous message
             line = self.tcp_handler.rfile.readline()
         return line
-
 
     def _read_chunked(self, limit, is_request):
         """
@@ -427,7 +420,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
                 if length == 0:
                     return
 
-
     @classmethod
     def _parse_http_protocol(self, line):
         """
@@ -447,7 +439,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             return None
         return major, minor
 
-
     @classmethod
     def _parse_init(self, line):
         try:
@@ -460,7 +451,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         if not utils.isascii(method):
             return None
         return method, url, httpversion
-
 
     @classmethod
     def _parse_init_connect(self, line):
@@ -489,7 +479,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             return None
         return host, port, httpversion
 
-
     @classmethod
     def _parse_init_proxy(self, line):
         v = self._parse_init(line)
@@ -502,7 +491,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             return None
         scheme, host, port, path = parts
         return method, scheme, host, port, path, httpversion
-
 
     @classmethod
     def _parse_init_http(self, line):
@@ -518,7 +506,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         if not (url.startswith("/") or url == "*"):
             return None
         return method, url, httpversion
-
 
     @classmethod
     def connection_close(self, httpversion, headers):
@@ -539,7 +526,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         # be persistent
         return httpversion != (1, 1)
 
-
     @classmethod
     def parse_response_line(self, line):
         parts = line.strip().split(" ", 2)
@@ -553,7 +539,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
         except ValueError:
             return None
         return (proto, code, msg)
-
 
     @classmethod
     def _assemble_request_first_line(self, request):
@@ -575,7 +560,6 @@ class HTTP1Protocol(semantics.ProtocolMixin):
 
         return headers.format()
 
-
     def _assemble_response_first_line(self, response):
         return 'HTTP/%s.%s %s %s' % (
             response.httpversion[0],
@@ -584,7 +568,11 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             response.msg,
         )
 
-    def _assemble_response_headers(self, response, preserve_transfer_encoding=False):
+    def _assemble_response_headers(
+        self,
+        response,
+        preserve_transfer_encoding=False,
+    ):
         headers = response.headers.copy()
         for k in response._headers_to_strip_off:
             del headers[k]

@@ -69,8 +69,6 @@ def raises(exc, obj, *args, **kwargs):
 test_data = utils.Data(__name__)
 
 
-
-
 def treq(content="content", scheme="http", host="address", port=22):
     """
     @return: libmproxy.protocol.http.HTTPRequest
@@ -119,7 +117,7 @@ def tresp(content="message"):
         "OK",
         headers,
         content,
-        time.time(),
-        time.time(),
+        timestamp_start=time.time(),
+        timestamp_end=time.time(),
     )
     return resp

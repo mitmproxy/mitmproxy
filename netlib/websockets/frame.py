@@ -1,12 +1,11 @@
 from __future__ import absolute_import
-import base64
-import hashlib
 import os
 import struct
 import io
 
 from .protocol import Masker
-from netlib import utils, odict, tcp
+from netlib import tcp
+from netlib import utils
 
 DEFAULT = object()
 
@@ -21,6 +20,7 @@ OPCODE = utils.BiDi(
     PING=0x09,
     PONG=0x0a
 )
+
 
 class FrameHeader(object):
 

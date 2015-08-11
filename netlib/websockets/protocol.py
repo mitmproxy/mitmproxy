@@ -2,10 +2,9 @@ from __future__ import absolute_import
 import base64
 import hashlib
 import os
-import struct
-import io
 
-from netlib import utils, odict, tcp
+from netlib import odict
+from netlib import utils
 
 # Colleciton of utility functions that implement small portions of the RFC6455
 # WebSockets Protocol Useful for building WebSocket clients and servers.
@@ -25,6 +24,7 @@ VERSION = "13"
 HEADER_WEBSOCKET_KEY = 'sec-websocket-key'
 HEADER_WEBSOCKET_ACCEPT = 'sec-websocket-accept'
 HEADER_WEBSOCKET_VERSION = 'sec-websocket-version'
+
 
 class Masker(object):
 
@@ -52,6 +52,7 @@ class Masker(object):
         ret = self.mask(self.offset, data)
         self.offset += len(ret)
         return ret
+
 
 class WebsocketsProtocol(object):
 

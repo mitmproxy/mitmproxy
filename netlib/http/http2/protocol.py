@@ -9,6 +9,7 @@ from . import frame
 
 
 class TCPHandler(object):
+
     def __init__(self, rfile, wfile=None):
         self.rfile = rfile
         self.wfile = wfile
@@ -39,7 +40,6 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
     ALPN_PROTO_H2 = 'h2'
 
-
     def __init__(
         self,
         tcp_handler=None,
@@ -60,7 +60,12 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         self.current_stream_id = None
         self.connection_preface_performed = False
 
-    def read_request(self, include_body=True, body_size_limit=None, allow_empty=False):
+    def read_request(
+        self,
+        include_body=True,
+        body_size_limit=None,
+        allow_empty=False,
+    ):
         self.perform_connection_preface()
 
         timestamp_start = time.time()
@@ -92,7 +97,12 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         return request
 
-    def read_response(self, request_method='', body_size_limit=None, include_body=True):
+    def read_response(
+        self,
+        request_method='',
+        body_size_limit=None,
+        include_body=True,
+    ):
         self.perform_connection_preface()
 
         timestamp_start = time.time()
@@ -123,7 +133,6 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         return response
 
-
     def assemble_request(self, request):
         assert isinstance(request, semantics.Request)
 
@@ -133,13 +142,13 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         headers = request.headers.copy()
 
-        if not ':authority' in headers.keys():
+        if ':authority' not in headers.keys():
             headers.add(':authority', bytes(authority), prepend=True)
-        if not ':scheme' in headers.keys():
+        if ':scheme' not in headers.keys():
             headers.add(':scheme', bytes(request.scheme), prepend=True)
-        if not ':path' in headers.keys():
+        if ':path' not in headers.keys():
             headers.add(':path', bytes(request.path), prepend=True)
-        if not ':method' in headers.keys():
+        if ':method' not in headers.keys():
             headers.add(':method', bytes(request.method), prepend=True)
 
         headers = headers.items()
@@ -158,7 +167,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         headers = response.headers.copy()
 
-        if not ':status' in headers.keys():
+        if ':status' not in headers.keys():
             headers.add(':status', bytes(str(response.status_code)), prepend=True)
 
         headers = headers.items()

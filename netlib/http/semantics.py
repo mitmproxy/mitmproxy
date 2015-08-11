@@ -1,13 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
-import binascii
-import collections
-import string
-import sys
 import urllib
 import urlparse
 
 from .. import utils, odict
-from . import cookies
+from . import cookies, exceptions
 from netlib import utils, encoding
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
@@ -18,11 +14,11 @@ CONTENT_MISSING = 0
 
 class ProtocolMixin(object):
 
-    def read_request(self):
-        raise NotImplemented
+    def read_request(self, *args, **kwargs):  # pragma: no cover
+        raise NotImplementedError
 
-    def read_response(self):
-        raise NotImplemented
+    def read_response(self, *args, **kwargs):  # pragma: no cover
+        raise NotImplementedError
 
     def assemble(self, message):
         if isinstance(message, Request):
@@ -32,14 +28,23 @@ class ProtocolMixin(object):
         else:
             raise ValueError("HTTP message not supported.")
 
-    def assemble_request(self, request):
-        raise NotImplemented
+    def assemble_request(self, *args, **kwargs):  # pragma: no cover
+        raise NotImplementedError
 
-    def assemble_response(self, response):
-        raise NotImplemented
+    def assemble_response(self, *args, **kwargs):  # pragma: no cover
+        raise NotImplementedError
 
 
 class Request(object):
+    # This list is adopted legacy code.
+    # We probably don't need to strip off keep-alive.
+    _headers_to_strip_off = [
+        'Proxy-Connection',
+        'Keep-Alive',
+        'Connection',
+        'Transfer-Encoding',
+        'Upgrade',
+    ]
 
     def __init__(
         self,
@@ -70,7 +75,6 @@ class Request(object):
         self.body = body
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
-
 
     def __eq__(self, other):
         try:
@@ -114,7 +118,7 @@ class Request(object):
                 self.httpversion[1],
             )
         else:
-            raise http.HttpError(400, "Invalid request form")
+            raise exceptions.HttpError(400, "Invalid request form")
 
     def anticache(self):
         """
@@ -143,7 +147,7 @@ class Request(object):
         if self.headers["accept-encoding"]:
             self.headers["accept-encoding"] = [
                 ', '.join(
-                    e for e in encoding.ENCODINGS if e in self.headers["accept-encoding"][0])]
+                    e for e in encoding.ENCODINGS if e in self.headers.get_first("accept-encoding"))]
 
     def update_host_header(self):
         """
@@ -317,17 +321,18 @@ class Request(object):
         self.scheme, self.host, self.port, self.path = parts
 
     @property
-    def content(self):
+    def content(self):  # pragma: no cover
         # TODO: remove deprecated getter
         return self.body
 
     @content.setter
-    def content(self, content):
+    def content(self, content):  # pragma: no cover
         # TODO: remove deprecated setter
         self.body = content
 
 
 class EmptyRequest(Request):
+
     def __init__(self):
         super(EmptyRequest, self).__init__(
             form_in="",
@@ -339,10 +344,15 @@ class EmptyRequest(Request):
             httpversion=(0, 0),
             headers=odict.ODictCaseless(),
             body="",
-            )
+        )
 
 
 class Response(object):
+    _headers_to_strip_off = [
+        'Proxy-Connection',
+        'Alternate-Protocol',
+        'Alt-Svc',
+    ]
 
     def __init__(
         self,
@@ -368,7 +378,6 @@ class Response(object):
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 
-
     def __eq__(self, other):
         try:
             self_d = [self.__dict__[k] for k in self.__dict__ if k not in ('timestamp_start', 'timestamp_end')]
@@ -388,11 +397,9 @@ class Response(object):
             status_code=self.status_code,
             msg=self.msg,
             contenttype=self.headers.get_first(
-                "content-type", "unknown content type"
-            ),
-            size=size
-        )
-
+                "content-type",
+                "unknown content type"),
+            size=size)
 
     def get_cookies(self):
         """
@@ -430,21 +437,21 @@ class Response(object):
         self.headers["Set-Cookie"] = values
 
     @property
-    def content(self):
+    def content(self):  # pragma: no cover
         # TODO: remove deprecated getter
         return self.body
 
     @content.setter
-    def content(self, content):
+    def content(self, content):  # pragma: no cover
         # TODO: remove deprecated setter
         self.body = content
 
     @property
-    def code(self):
+    def code(self):  # pragma: no cover
         # TODO: remove deprecated getter
         return self.status_code
 
     @code.setter
-    def code(self, code):
+    def code(self, code):  # pragma: no cover
         # TODO: remove deprecated setter
         self.status_code = code

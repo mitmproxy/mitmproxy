@@ -1,6 +1,8 @@
 from netlib import odict
 
+
 class HttpError(Exception):
+
     def __init__(self, code, message):
         super(HttpError, self).__init__(message)
         self.code = code
@@ -11,6 +13,7 @@ class HttpErrorConnClosed(HttpError):
 
 
 class HttpAuthenticationError(Exception):
+
     def __init__(self, auth_headers=None):
         super(HttpAuthenticationError, self).__init__(
             "Proxy Authentication Required"

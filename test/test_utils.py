@@ -1,5 +1,3 @@
-import urlparse
-
 from netlib import utils, odict, tutils
 
 
@@ -28,8 +26,6 @@ def test_pretty_size():
     assert utils.pretty_size(1024) == "1kB"
     assert utils.pretty_size(1024 + (1024 / 2.0)) == "1.5kB"
     assert utils.pretty_size(1024 * 1024) == "1MB"
-
-
 
 
 def test_parse_url():
@@ -86,7 +82,6 @@ def test_urlencode():
     assert utils.urlencode([('foo', 'bar')])
 
 
-
 def test_urldecode():
     s = "one=two&three=four"
     assert len(utils.urldecode(s)) == 2
@@ -101,3 +96,31 @@ def test_get_header_tokens():
     assert utils.get_header_tokens(h, "foo") == ["bar", "voing"]
     h["foo"] = ["bar, voing", "oink"]
     assert utils.get_header_tokens(h, "foo") == ["bar", "voing", "oink"]
+
+
+def test_multipartdecode():
+    boundary = 'somefancyboundary'
+    headers = odict.ODict(
+        [('content-type', ('multipart/form-data; boundary=%s' % boundary))])
+    content = "--{0}\n" \
+              "Content-Disposition: form-data; name=\"field1\"\n\n" \
+              "value1\n" \
+              "--{0}\n" \
+              "Content-Disposition: form-data; name=\"field2\"\n\n" \
+              "value2\n" \
+              "--{0}--".format(boundary)
+
+    form = utils.multipartdecode(headers, content)
+
+    assert len(form) == 2
+    assert form[0] == ('field1', 'value1')
+    assert form[1] == ('field2', 'value2')
+
+
+def test_parse_content_type():
+    p = utils.parse_content_type
+    assert p("text/html") == ("text", "html", {})
+    assert p("text") is None
+
+    v = p("text/html; charset=UTF-8")
+    assert v == ('text', 'html', {'charset': 'UTF-8'})
