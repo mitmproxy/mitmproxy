@@ -1,4 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
+
 import traceback
 from netlib import tcp
 
@@ -99,7 +100,7 @@ class TlsLayer(Layer):
         if server_err and not self.client_sni:
             raise server_err
 
-    def handle_sni(self, connection):
+    def __handle_sni(self, connection):
         """
         This callback gets called during the TLS handshake with the client.
         The client has just sent the Sever Name Indication (SNI).
@@ -119,7 +120,7 @@ class TlsLayer(Layer):
 
             if self.client_sni:
                 # Now, change client context to reflect possibly changed certificate:
-                cert, key, chain_file = self.find_cert()
+                cert, key, chain_file = self._find_cert()
                 new_context = self.client_conn.create_ssl_context(
                     cert, key,
                     method=self.config.openssl_method_client,
@@ -137,13 +138,13 @@ class TlsLayer(Layer):
     @yield_from_callback
     def _establish_tls_with_client(self):
         self.log("Establish TLS with client", "debug")
-        cert, key, chain_file = self.find_cert()
+        cert, key, chain_file = self._find_cert()
         try:
             self.client_conn.convert_to_ssl(
                 cert, key,
                 method=self.config.openssl_method_client,
                 options=self.config.openssl_options_client,
-                handle_sni=self.handle_sni,
+                handle_sni=self.__handle_sni,
                 cipher_list=self.config.ciphers_client,
                 dhparams=self.config.certstore.dhparams,
                 chain_file=chain_file
@@ -182,7 +183,7 @@ class TlsLayer(Layer):
         except tcp.NetLibError as e:
             raise ProtocolException(repr(e), e)
 
-    def find_cert(self):
+    def _find_cert(self):
         host = self.server_conn.address.host
         sans = set()
         # Incorporate upstream certificate

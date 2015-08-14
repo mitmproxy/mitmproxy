@@ -1,4 +1,6 @@
-from .rawtcp import TcpLayer
+from __future__ import (absolute_import, print_function, division)
+
+from .rawtcp import RawTcpLayer
 from .tls import TlsLayer
 
 
@@ -20,13 +22,30 @@ class RootContext(object):
         :return: The next layer.
         """
 
-        d = top_layer.client_conn.rfile.peek(1)
+        d = top_layer.client_conn.rfile.peek(3)
+
+        # TODO: Handle ignore and tcp passthrough
+
+        # TLS ClientHello magic, see http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
+        is_tls_client_hello = (
+            len(d) == 3 and
+            d[0] == '\x16' and
+            d[1] == '\x03' and
+            d[2] in ('\x00', '\x01', '\x02', '\x03')
+        )
 
         if not d:
             return
-        # TLS ClientHello magic, see http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
-        if d[0] == "\x16":
+
+        if is_tls_client_hello:
             layer = TlsLayer(top_layer, True, True)
         else:
-            layer = TcpLayer(top_layer)
+            layer = RawTcpLayer(top_layer)
         return layer
+
+    @property
+    def layers(self):
+        return []
+
+    def __repr__(self):
+        return "RootContext"

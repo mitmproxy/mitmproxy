@@ -1,4 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
+
 import OpenSSL
 from ..exceptions import ProtocolException
 from ..protocol.tcp import TCPHandler
@@ -6,7 +7,7 @@ from .layer import Layer
 from .messages import Connect
 
 
-class TcpLayer(Layer):
+class RawTcpLayer(Layer):
     def __call__(self):
         yield Connect()
         tcp_handler = TCPHandler(self)

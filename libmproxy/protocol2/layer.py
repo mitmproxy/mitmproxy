@@ -16,9 +16,7 @@ Regular proxy, CONNECT request with WebSockets over SSL:
 
 Automated protocol detection by peeking into the buffer:
     TransparentModeLayer
-    AutoLayer
     SslLayer
-    AutoLayer
     Http2Layer
 
 Communication between layers is done as follows:
@@ -91,6 +89,13 @@ class Layer(_LayerCodeCompletion):
         full_msg = "\n".join(full_msg)
         self.channel.tell("log", Log(full_msg, level))
 
+    @property
+    def layers(self):
+        return [self] + self.ctx.layers
+
+    def __repr__(self):
+        return "%s\r\n  %s" % (self.__class__.name__, repr(self.ctx))
+
 
 class ServerConnectionMixin(object):
     """
@@ -133,6 +138,8 @@ class ServerConnectionMixin(object):
         self.server_conn = None
 
     def _connect(self):
+        if not self.server_address:
+            raise ProtocolException("Cannot connect to server, no server address given.")
         self.log("serverconnect", "debug", [repr(self.server_address)])
         self.server_conn = ServerConnection(self.server_address)
         try:
