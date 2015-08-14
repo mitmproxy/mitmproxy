@@ -4,7 +4,8 @@ from .socks_proxy import Socks5Proxy
 from .reverse_proxy import ReverseProxy
 from .http_proxy import HttpProxy, HttpUpstreamProxy
 from .rawtcp import RawTcpLayer
+from . import messages
 
 __all__ = [
-    "Socks5Proxy", "RawTcpLayer", "RootContext", "ReverseProxy", "HttpProxy", "HttpUpstreamProxy"
+    "Socks5Proxy", "RawTcpLayer", "RootContext", "ReverseProxy", "HttpProxy", "HttpUpstreamProxy", "messages"
 ]

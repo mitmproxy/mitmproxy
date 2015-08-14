@@ -3,7 +3,8 @@ from __future__ import (absolute_import, print_function, division)
 from .. import version
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
 from .layer import Layer, ServerConnectionMixin
-from .messages import ChangeServer, Connect, Reconnect
+from libmproxy import utils
+from .messages import ChangeServer, Connect, Reconnect, Kill
 from .http_proxy import HttpProxy, HttpUpstreamProxy
 from libmproxy.protocol import KILL
 
@@ -12,7 +13,8 @@ from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 from libmproxy.protocol2.http_protocol_mock import HTTP1
 from libmproxy.protocol2.tls import TlsLayer
 from netlib import tcp
-from netlib.http import status_codes
+from netlib.http import status_codes, http1
+from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
 
 
@@ -42,11 +44,13 @@ def make_error_response(status_code, message, headers=None):
         body,
     )
 
+
 def make_connect_request(address):
     return HTTPRequest(
-        "authority", "CONNECT", None, address.host, address.port, None, (1,1),
+        "authority", "CONNECT", None, address.host, address.port, None, (1, 1),
         odict.ODictCaseless(), ""
     )
+
 
 def make_connect_response(httpversion):
     headers = odict.ODictCaseless([
@@ -82,14 +86,14 @@ class HttpLayer(Layer, ServerConnectionMixin):
             try:
                 request = HTTP1.read_request(
                     self.client_conn,
-                    body_size_limit=self.c.config.body_size_limit
+                    body_size_limit=self.config.body_size_limit
                 )
             except tcp.NetLibError:
                 # don't throw an error for disconnects that happen
                 # before/between requests.
                 return
 
-            self.c.log("request", "debug", [repr(request)])
+            self.log("request", "debug", [repr(request)])
 
             # Handle Proxy Authentication
             self.authenticate(request)
@@ -109,12 +113,128 @@ class HttpLayer(Layer, ServerConnectionMixin):
 
             flow = HTTPFlow(self.client_conn, self.server_conn)
             flow.request = request
-            if not self.process_request_hook(flow):
-                self.log("Connection killed", "info")
-                return
+            for message in self.process_request_hook(flow):
+                yield message
 
             if not flow.response:
-                self.establish_server_connection(flow)
+                for message in self.establish_server_connection(flow):
+                    yield message
+                for message in self.get_response_from_server(flow):
+                    yield message
+
+            self.send_response_to_client(flow)
+
+            if self.check_close_connection(flow):
+                return
+
+            if flow.request.form_in == "authority" and flow.response.code == 200:
+                raise NotImplementedError("Upstream mode CONNECT not implemented")
+
+    def check_close_connection(self, flow):
+        """
+            Checks if the connection should be closed depending on the HTTP
+            semantics. Returns True, if so.
+        """
+
+        # TODO: add logic for HTTP/2
+
+        close_connection = (
+            http1.HTTP1Protocol.connection_close(
+                flow.request.httpversion,
+                flow.request.headers
+            ) or http1.HTTP1Protocol.connection_close(
+                flow.response.httpversion,
+                flow.response.headers
+            ) or http1.HTTP1Protocol.expected_http_body_size(
+                flow.response.headers,
+                False,
+                flow.request.method,
+                flow.response.code) == -1
+            )
+        if flow.request.form_in == "authority" and flow.response.code == 200:
+            # Workaround for
+            # https://github.com/mitmproxy/mitmproxy/issues/313: Some
+            # proxies (e.g. Charles) send a CONNECT response with HTTP/1.0
+            # and no Content-Length header
+
+            return False
+        return close_connection
+
+    def send_response_to_client(self, flow):
+        if not flow.response.stream:
+            # no streaming:
+            # we already received the full response from the server and can
+            # send it to the client straight away.
+            self.send_to_client(flow.response)
+        else:
+            # streaming:
+            # First send the headers and then transfer the response
+            # incrementally:
+            h = HTTP1._assemble_response_first_line(flow.response)
+            self.send_to_client(h + "\r\n")
+            h = HTTP1._assemble_response_headers(flow.response, preserve_transfer_encoding=True)
+            self.send_to_client(h + "\r\n")
+
+            chunks = HTTP1.read_http_body_chunked(
+                flow.response.headers,
+                self.config.body_size_limit,
+                flow.request.method,
+                flow.response.code,
+                False,
+                4096
+            )
+
+            if callable(flow.response.stream):
+                chunks = flow.response.stream(chunks)
+
+            for chunk in chunks:
+                for part in chunk:
+                    self.send_to_client(part)
+                self.client_conn.wfile.flush()
+
+            flow.response.timestamp_end = utils.timestamp()
+
+    def get_response_from_server(self, flow):
+
+        self.send_to_server(flow.request)
+
+        flow.response = HTTP1.read_response(
+            self.server_conn.protocol,
+            flow.request.method,
+            body_size_limit=self.config.body_size_limit,
+            include_body=False,
+        )
+
+        # call the appropriate script hook - this is an opportunity for an
+        # inline script to set flow.stream = True
+        flow = self.channel.ask("responseheaders", flow)
+        if flow is None or flow == KILL:
+            yield Kill()
+
+        if flow.response.stream:
+            flow.response.content = CONTENT_MISSING
+        else:
+            flow.response.content = HTTP1.read_http_body(
+                flow.response.headers,
+                self.config.body_size_limit,
+                flow.request.method,
+                flow.response.code,
+                False
+            )
+            flow.response.timestamp_end = utils.timestamp()
+
+        # no further manipulation of self.server_conn beyond this point
+        # we can safely set it as the final attribute value here.
+        flow.server_conn = self.server_conn
+
+        self.log(
+            "response",
+            "debug",
+            [repr(flow.response)]
+        )
+        response_reply = self.channel.ask("response", flow)
+        if response_reply is None or response_reply == KILL:
+            yield Kill()
 
     def process_request_hook(self, flow):
         # Determine .scheme, .host and .port attributes for inline scripts.
@@ -133,9 +253,9 @@ class HttpLayer(Layer, ServerConnectionMixin):
             flow.request.scheme = self.server_conn.tls_established
 
         # TODO: Expose ChangeServer functionality to inline scripts somehow? (yield_from_callback?)
-        request_reply = self.c.channel.ask("request", flow)
+        request_reply = self.channel.ask("request", flow)
         if request_reply is None or request_reply == KILL:
-            return False
+            yield Kill()
         if isinstance(request_reply, HTTPResponse):
             flow.response = request_reply
             return
@@ -181,7 +301,7 @@ class HttpLayer(Layer, ServerConnectionMixin):
             raise HttpException("Invalid request scheme: %s" % request.scheme)
 
         expected_request_forms = {
-            "regular": ("absolute",), # an authority request would already be handled.
+            "regular": ("absolute",),  # an authority request would already be handled.
             "upstream": ("authority", "absolute"),
             "transparent": ("regular",)
         }

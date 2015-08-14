@@ -35,7 +35,7 @@ import threading
 from netlib import tcp
 from ..proxy import Log
 from ..proxy.connection import ServerConnection
-from .messages import Connect, Reconnect, ChangeServer
+from .messages import Connect, Reconnect, ChangeServer, Kill
 from ..exceptions import ProtocolException
 
 
@@ -116,6 +116,9 @@ class ServerConnectionMixin(object):
             return True
         elif message == ChangeServer:
             raise NotImplementedError
+        elif message == Kill:
+            self._disconnect()
+
         return False
 
     @property

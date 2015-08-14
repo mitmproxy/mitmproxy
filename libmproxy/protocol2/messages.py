@@ -41,3 +41,9 @@ class ChangeServer(_Message):
         # We can express this neatly as the "nth-server-providing-layer"
         # ServerConnection could get a `via` attribute.
         self.depth = depth
+
+
+class Kill(_Message):
+    """
+    Kill a connection.
+    """

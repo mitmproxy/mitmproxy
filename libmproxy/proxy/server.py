@@ -84,6 +84,10 @@ class ConnectionHandler2:
 
         try:
             for message in root_layer():
+                if message == protocol2.messages.Kill:
+                    self.log("Connection killed", "info")
+                    break
+
                 print("Root layer receveived: %s" % message)
         except ProtocolException as e:
             self.log(e, "info")
