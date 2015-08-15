@@ -35,7 +35,7 @@ import threading
 from netlib import tcp
 from ..proxy import Log
 from ..proxy.connection import ServerConnection
-from .messages import Connect, Reconnect, ChangeServer, Kill
+from .messages import Connect, Reconnect, SetServer, Kill
 from ..exceptions import ProtocolException
 
 
@@ -116,7 +116,7 @@ class ServerConnectionMixin(object):
         elif message == Connect:
             self._connect()
             return True
-        elif message == ChangeServer and message.depth == 1:
+        elif message == SetServer and message.depth == 1:
             if self.server_conn:
                 self._disconnect()
             self.server_address = message.address

@@ -5,7 +5,7 @@ from netlib import tcp
 
 from ..exceptions import ProtocolException
 from .layer import Layer, yield_from_callback
-from .messages import Connect, Reconnect, ChangeServer
+from .messages import Connect, Reconnect, SetServer
 
 
 class TlsLayer(Layer):
@@ -13,7 +13,6 @@ class TlsLayer(Layer):
         super(TlsLayer, self).__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
-        self._connected = False
         self.client_sni = None
         self._sni_from_server_change = None
 
@@ -44,9 +43,6 @@ class TlsLayer(Layer):
         client_tls_requires_server_cert = (
             self._client_tls and self._server_tls and not self.config.no_upstream_cert
         )
-        lazy_server_tls = (
-            self._server_tls and not client_tls_requires_server_cert
-        )
 
         if client_tls_requires_server_cert:
             for m in self._establish_tls_with_client_and_server():
@@ -56,18 +52,27 @@ class TlsLayer(Layer):
                 yield m
 
         layer = self.ctx.next_layer(self)
+
         for message in layer():
-            if message != Connect or not self._connected:
+            self.log("TlsLayer: %s" % message,"debug")
+            if not (message == Connect and self._connected):
                 yield message
-            if message == Connect:
-                if lazy_server_tls:
+
+            if message == Connect or message == Reconnect:
+                if self._server_tls and not self._server_tls_established:
                     self._establish_tls_with_server()
-            if message == ChangeServer and message.depth == 1:
-                self._server_tls = message.server_tls
-                self._sni_from_server_change = message.sni
-            if message == Reconnect or message == ChangeServer:
-                if self._server_tls:
-                    self._establish_tls_with_server()
+            if message == SetServer and message.depth == 1:
+                if message.server_tls is not None:
+                    self._sni_from_server_change = message.sni
+                    self._server_tls = message.server_tls
+
+    @property
+    def _server_tls_established(self):
+        return self.server_conn and self.server_conn.tls_established
+
+    @property
+    def _connected(self):
+        return bool(self.server_conn)
 
     @property
     def sni_for_upstream_connection(self):
@@ -83,7 +88,6 @@ class TlsLayer(Layer):
 
         # First, try to connect to the server.
         yield Connect()
-        self._connected = True
         server_err = None
         try:
             self._establish_tls_with_server()

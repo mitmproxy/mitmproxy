@@ -4,7 +4,7 @@ from .. import version
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
 from .layer import Layer, ServerConnectionMixin
 from libmproxy import utils
-from .messages import ChangeServer, Connect, Reconnect, Kill
+from .messages import SetServer, Connect, Reconnect, Kill
 from libmproxy.protocol import KILL
 
 from libmproxy.protocol.http import HTTPFlow
@@ -71,19 +71,9 @@ class HttpLayer(Layer):
     HTTP 1 Layer
     """
 
-    def __init__(self, ctx):
+    def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)
-
-        # FIXME: Imports
-        from .http_proxy import HttpProxy, HttpUpstreamProxy
-
-        if any(isinstance(l, HttpProxy) for l in self.layers):
-            self.mode = "regular"
-        elif any(isinstance(l, HttpUpstreamProxy) for l in self.layers):
-            self.mode = "upstream"
-        else:
-            # also includes socks or reverse mode, which are handled similarly on this layer.
-            self.mode = "transparent"
+        self.mode = mode
 
     def __call__(self):
         while True:
@@ -104,7 +94,7 @@ class HttpLayer(Layer):
 
             # Regular Proxy Mode: Handle CONNECT
             if self.mode == "regular" and request.form_in == "authority":
-                self.server_address = (request.host, request.port)
+                yield SetServer((request.host, request.port), False, None)
                 self.send_to_client(make_connect_response(request.httpversion))
                 layer = self.ctx.next_layer(self)
                 for message in layer():
@@ -255,7 +245,7 @@ class HttpLayer(Layer):
         else:
             flow.request.host = self.ctx.server_address.host
             flow.request.port = self.ctx.server_address.port
-            flow.request.scheme = self.server_conn.tls_established
+            flow.request.scheme = "https" if self.server_conn.tls_established else "http"
 
         # TODO: Expose ChangeServer functionality to inline scripts somehow? (yield_from_callback?)
         request_reply = self.channel.ask("request", flow)
@@ -271,8 +261,8 @@ class HttpLayer(Layer):
         tls = (flow.request.scheme == "https")
         if self.mode == "regular" or self.mode == "transparent":
             # If there's an existing connection that doesn't match our expectations, kill it.
-            if self.server_address != address or tls != self.server_address.ssl_established:
-                yield ChangeServer(address, tls, address.host)
+            if self.server_address != address or tls != self.server_conn.ssl_established:
+                yield SetServer(address, tls, address.host)
             # Establish connection is neccessary.
             if not self.server_conn:
                 yield Connect()

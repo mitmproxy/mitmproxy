@@ -6,7 +6,7 @@ from .http import HttpLayer
 
 class HttpProxy(Layer, ServerConnectionMixin):
     def __call__(self):
-        layer = HttpLayer(self)
+        layer = HttpLayer(self, "regular")
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
@@ -18,7 +18,7 @@ class HttpUpstreamProxy(Layer, ServerConnectionMixin):
         self.server_address = server_address
 
     def __call__(self):
-        layer = HttpLayer(self)
+        layer = HttpLayer(self, "upstream")
         for message in layer():
             if not self._handle_server_message(message):
                 yield message

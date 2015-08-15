@@ -27,7 +27,7 @@ class Reconnect(_Message):
     """
 
 
-class ChangeServer(_Message):
+class SetServer(_Message):
     """
     Change the upstream server.
     """
