@@ -1,6 +1,7 @@
 """
 Temporary mock to sort out API discrepancies
 """
+from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 from netlib.http.http1 import HTTP1Protocol
 
 
@@ -10,14 +11,14 @@ class HTTP1(object):
         """
         :type connection: object
         """
-        return HTTP1Protocol(connection).read_request(*args, **kwargs)
+        return HTTPRequest.wrap(HTTP1Protocol(connection).read_request(*args, **kwargs))
 
     @staticmethod
     def read_response(connection, *args, **kwargs):
         """
         :type connection: object
         """
-        return HTTP1Protocol(connection).read_response(*args, **kwargs)
+        return HTTPResponse.wrap(HTTP1Protocol(connection).read_response(*args, **kwargs))
 
     @staticmethod
     def read_http_body(connection, *args, **kwargs):
@@ -28,19 +29,13 @@ class HTTP1(object):
 
 
     @staticmethod
-    def _assemble_response_first_line(connection, *args, **kwargs):
-        """
-        :type connection: object
-        """
-        return HTTP1Protocol(connection)._assemble_response_first_line(*args, **kwargs)
+    def _assemble_response_first_line(*args, **kwargs):
+        return HTTP1Protocol()._assemble_response_first_line(*args, **kwargs)
 
 
     @staticmethod
-    def _assemble_response_headers(connection, *args, **kwargs):
-        """
-        :type connection: object
-        """
-        return HTTP1Protocol(connection)._assemble_response_headers(*args, **kwargs)
+    def _assemble_response_headers(*args, **kwargs):
+        return HTTP1Protocol()._assemble_response_headers(*args, **kwargs)
 
 
     @staticmethod
@@ -49,3 +44,7 @@ class HTTP1(object):
         :type connection: object
         """
         return HTTP1Protocol(connection).read_http_body_chunked(*args, **kwargs)
+
+    @staticmethod
+    def assemble(*args, **kwargs):
+        return HTTP1Protocol().assemble(*args, **kwargs)

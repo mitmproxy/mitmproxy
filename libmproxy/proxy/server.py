@@ -80,7 +80,7 @@ class ConnectionHandler2:
             self.config,
             self.channel
         )
-        root_layer = protocol2.Socks5Proxy(root_context)
+        root_layer = protocol2.HttpProxy(root_context)
 
         try:
             for message in root_layer():

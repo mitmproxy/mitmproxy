@@ -5,7 +5,6 @@ from ..exceptions import InvalidCredentials, HttpException, ProtocolException
 from .layer import Layer, ServerConnectionMixin
 from libmproxy import utils
 from .messages import ChangeServer, Connect, Reconnect, Kill
-from .http_proxy import HttpProxy, HttpUpstreamProxy
 from libmproxy.protocol import KILL
 
 from libmproxy.protocol.http import HTTPFlow
@@ -66,13 +65,18 @@ def make_connect_response(httpversion):
     )
 
 
-class HttpLayer(Layer, ServerConnectionMixin):
+class HttpLayer(Layer):
+
     """
     HTTP 1 Layer
     """
 
     def __init__(self, ctx):
         super(HttpLayer, self).__init__(ctx)
+
+        # FIXME: Imports
+        from .http_proxy import HttpProxy, HttpUpstreamProxy
+
         if any(isinstance(l, HttpProxy) for l in self.layers):
             self.mode = "regular"
         elif any(isinstance(l, HttpUpstreamProxy) for l in self.layers):
@@ -199,7 +203,7 @@ class HttpLayer(Layer, ServerConnectionMixin):
         self.send_to_server(flow.request)
 
         flow.response = HTTP1.read_response(
-            self.server_conn.protocol,
+            self.server_conn,
             flow.request.method,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
@@ -215,6 +219,7 @@ class HttpLayer(Layer, ServerConnectionMixin):
             flow.response.content = CONTENT_MISSING
         else:
             flow.response.content = HTTP1.read_http_body(
+                self.server_conn,
                 flow.response.headers,
                 self.config.body_size_limit,
                 flow.request.method,
@@ -303,7 +308,7 @@ class HttpLayer(Layer, ServerConnectionMixin):
         expected_request_forms = {
             "regular": ("absolute",),  # an authority request would already be handled.
             "upstream": ("authority", "absolute"),
-            "transparent": ("regular",)
+            "transparent": ("relative",)
         }
 
         allowed_request_forms = expected_request_forms[self.mode]
@@ -313,6 +318,9 @@ class HttpLayer(Layer, ServerConnectionMixin):
             )
             self.send_to_client(make_error_response(400, err_message))
             raise HttpException(err_message)
+
+        if self.mode == "regular":
+            request.form_out = "relative"
 
     def authenticate(self, request):
         if self.config.authenticator:
@@ -327,10 +335,10 @@ class HttpLayer(Layer, ServerConnectionMixin):
                 raise InvalidCredentials("Proxy Authentication Required")
 
     def send_to_server(self, message):
-        self.server_conn.wfile.wrie(message)
+        self.server_conn.send(HTTP1.assemble(message))
+
 
     def send_to_client(self, message):
         # FIXME
         # - possibly do some http2 stuff here
-        # - fix message assembly.
-        self.client_conn.wfile.write(message)
+        self.client_conn.send(HTTP1.assemble(message))

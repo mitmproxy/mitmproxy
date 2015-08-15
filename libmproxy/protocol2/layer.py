@@ -45,6 +45,7 @@ class _LayerCodeCompletion(object):
     """
 
     def __init__(self):
+        super(_LayerCodeCompletion, self).__init__()
         if True:
             return
         self.config = None
@@ -94,7 +95,7 @@ class Layer(_LayerCodeCompletion):
         return [self] + self.ctx.layers
 
     def __repr__(self):
-        return "%s\r\n  %s" % (self.__class__.name__, repr(self.ctx))
+        return type(self).__name__
 
 
 class ServerConnectionMixin(object):
@@ -103,6 +104,7 @@ class ServerConnectionMixin(object):
     """
 
     def __init__(self):
+        super(ServerConnectionMixin, self).__init__()
         self._server_address = None
         self.server_conn = None
 
@@ -114,8 +116,11 @@ class ServerConnectionMixin(object):
         elif message == Connect:
             self._connect()
             return True
-        elif message == ChangeServer:
-            raise NotImplementedError
+        elif message == ChangeServer and message.depth == 1:
+            if self.server_conn:
+                self._disconnect()
+            self.server_address = message.address
+            return True
         elif message == Kill:
             self._disconnect()
 
