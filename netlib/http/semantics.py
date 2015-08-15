@@ -59,6 +59,7 @@ class Request(object):
         body=None,
         timestamp_start=None,
         timestamp_end=None,
+        form_out=None
     ):
         if not headers:
             headers = odict.ODictCaseless()
@@ -75,6 +76,7 @@ class Request(object):
         self.body = body
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
+        self.form_out = form_out or form_in
 
     def __eq__(self, other):
         try:
@@ -91,15 +93,17 @@ class Request(object):
             self.legacy_first_line()[:-9]
         )
 
-    def legacy_first_line(self):
-        if self.form_in == "relative":
+    def legacy_first_line(self, form=None):
+        if form is None:
+            form = self.form_out
+        if form == "relative":
             return '%s %s HTTP/%s.%s' % (
                 self.method,
                 self.path,
                 self.httpversion[0],
                 self.httpversion[1],
             )
-        elif self.form_in == "authority":
+        elif form == "authority":
             return '%s %s:%s HTTP/%s.%s' % (
                 self.method,
                 self.host,
@@ -107,7 +111,7 @@ class Request(object):
                 self.httpversion[0],
                 self.httpversion[1],
             )
-        elif self.form_in == "absolute":
+        elif form == "absolute":
             return '%s %s://%s:%s%s HTTP/%s.%s' % (
                 self.method,
                 self.scheme,

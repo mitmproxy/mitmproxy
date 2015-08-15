@@ -310,6 +310,8 @@ class Address(object):
         return str(self.address)
 
     def __eq__(self, other):
+        if not other:
+            return False
         other = Address.wrap(other)
         return (self.address, self.family) == (other.address, other.family)
 
