@@ -1,7 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 
 import traceback
+
 from netlib import tcp
+import netlib.http.http2
 
 from ..exceptions import ProtocolException
 from .layer import Layer, yield_from_callback
@@ -15,6 +17,9 @@ class TlsLayer(Layer):
         self._server_tls = server_tls
         self.client_sni = None
         self._sni_from_server_change = None
+        self.client_alpn_protos = None
+
+        # foo alpn protos = [netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1, netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2],  # TODO: read this from client_conn first
 
     def __call__(self):
         """
@@ -131,7 +136,8 @@ class TlsLayer(Layer):
                     options=self.config.openssl_options_client,
                     cipher_list=self.config.ciphers_client,
                     dhparams=self.config.certstore.dhparams,
-                    chain_file=chain_file
+                    chain_file=chain_file,
+                    alpn_select_callback=self.__handle_alpn_select,
                 )
                 connection.set_context(new_context)
         # An unhandled exception in this method will core dump PyOpenSSL, so
@@ -139,10 +145,30 @@ class TlsLayer(Layer):
         except:  # pragma: no cover
             self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
 
+    def __handle_alpn_select(self, conn_, options):
+        # TODO: change to something meaningful?
+        alpn_preference = netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1
+        alpn_preference = netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2
+        ###
+
+        if self.client_alpn_protos != options:
+            # Perform reconnect
+            if self._server_tls:
+                self.yield_from_callback(Reconnect())
+
+        self.client_alpn_protos = options
+        print("foo: %s" % options)
+
+        if alpn_preference in options:
+            return bytes(alpn_preference)
+        else:  # pragma no cover
+            return options[0]
+
     @yield_from_callback
     def _establish_tls_with_client(self):
         self.log("Establish TLS with client", "debug")
         cert, key, chain_file = self._find_cert()
+
         try:
             self.client_conn.convert_to_ssl(
                 cert, key,
@@ -151,9 +177,11 @@ class TlsLayer(Layer):
                 handle_sni=self.__handle_sni,
                 cipher_list=self.config.ciphers_client,
                 dhparams=self.config.certstore.dhparams,
-                chain_file=chain_file
+                chain_file=chain_file,
+                alpn_select_callback=self.__handle_alpn_select,
             )
         except tcp.NetLibError as e:
+            print("alpn: %s" % self.client_alpn_protos)
             raise ProtocolException(repr(e), e)
 
     def _establish_tls_with_server(self):
@@ -168,6 +196,7 @@ class TlsLayer(Layer):
                 ca_path=self.config.openssl_trusted_cadir_server,
                 ca_pemfile=self.config.openssl_trusted_ca_server,
                 cipher_list=self.config.ciphers_server,
+                alpn_protos=self.client_alpn_protos,
             )
             tls_cert_err = self.server_conn.ssl_verification_error
             if tls_cert_err is not None:
