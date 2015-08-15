@@ -1,7 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 
 import traceback
+
 from netlib import tcp
+import netlib.http.http2
 
 from ..exceptions import ProtocolException
 from .layer import Layer, yield_from_callback
@@ -151,7 +153,8 @@ class TlsLayer(Layer):
                 handle_sni=self.__handle_sni,
                 cipher_list=self.config.ciphers_client,
                 dhparams=self.config.certstore.dhparams,
-                chain_file=chain_file
+                chain_file=chain_file,
+                alpn_select=netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2,  # TODO: check if server is capable of h2 first
             )
         except tcp.NetLibError as e:
             raise ProtocolException(repr(e), e)
@@ -168,6 +171,9 @@ class TlsLayer(Layer):
                 ca_path=self.config.openssl_trusted_cadir_server,
                 ca_pemfile=self.config.openssl_trusted_ca_server,
                 cipher_list=self.config.ciphers_server,
+                alpn_protos=[
+                    netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1,
+                    netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2],  # TODO: read this from client_conn first
             )
             tls_cert_err = self.server_conn.ssl_verification_error
             if tls_cert_err is not None:

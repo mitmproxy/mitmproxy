@@ -1,7 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
 from .layer import Layer, ServerConnectionMixin
-from .http import HttpLayer
 
 
 class HttpProxy(Layer, ServerConnectionMixin):
@@ -22,3 +21,5 @@ class HttpUpstreamProxy(Layer, ServerConnectionMixin):
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
+
+from .http import HttpLayer
