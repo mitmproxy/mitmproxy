@@ -17,6 +17,8 @@ class TCPHandler(object):
 
 class HTTP1Protocol(semantics.ProtocolMixin):
 
+    ALPN_PROTO_HTTP1 = 'http/1.1'
+
     def __init__(self, tcp_handler=None, rfile=None, wfile=None):
         self.tcp_handler = tcp_handler or TCPHandler(rfile, wfile)
 
