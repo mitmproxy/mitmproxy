@@ -11,6 +11,8 @@ import subprocess
 import glob
 import re
 import shlex
+import runpy
+
 import click
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -19,7 +21,6 @@ if os.name == "nt":
     VENV_BIN = "Scripts"
 else:
     VENV_BIN = "bin"
-
 
 
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
@@ -38,19 +39,36 @@ VENV_DIR = join(RELEASE_DIR, "venv")
 VENV_PIP = join(VENV_DIR, VENV_BIN, "pip")
 VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 
-PROJECTS = ("netlib", "pathod", "mitmproxy")
-TOOLS = {
-    "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-    "pathod": ["pathod", "pathoc"],
-    "netlib": []
+PROJECTS = {
+    "netlib": {
+        "tools": [],
+        "vfile": join(ROOT_DIR, "netlib/netlib/version.py")
+    },
+    "pathod": {
+        "tools": ["pathod", "pathoc"],
+        "vfile": join(ROOT_DIR, "pathod/libpathod/version.py")
+    },
+    "mitmproxy": {
+        "tools": ["mitmproxy", "mitmdump", "mitmweb"],
+        "vfile": join(ROOT_DIR, "mitmproxy/libmproxy/version.py")
+    }
 }
 if os.name == "nt":
-    TOOLS["mitmproxy"].remove("mitmproxy")
-VERSION_FILES = {
-    "mitmproxy": join(ROOT_DIR, "mitmproxy/libmproxy/version.py"),
-    "pathod": join(ROOT_DIR, "pathod/libpathod/version.py"),
-    "netlib": join(ROOT_DIR, "netlib/netlib/version.py"),
-}
+    PROJECTS["mitmproxy"]["tools"].remove("mitmproxy")
+
+for project, settings in PROJECTS.items():
+    settings["version"] = runpy.run_path(settings["vfile"])["VERSION"]
+    settings["dir"] = join(ROOT_DIR, project)
+
+
+def proj(spec):
+    """
+        A small helper to iterate over filtered projects.
+    """
+    for k, v in PROJECTS.items():
+        if k not in spec:
+            continue
+        yield k, v
 
 
 @contextlib.contextmanager
@@ -84,16 +102,14 @@ def cli():
 @cli.command("contributors")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
 )
 def contributors(projects):
     """
         Update CONTRIBUTORS.md
     """
-    for project in PROJECTS:
-        if project not in projects:
-            continue
-        with chdir(os.path.join(ROOT_DIR, project)):
+    for project, conf in proj(projects):
+        with chdir(conf["dir"]):
             print("Updating %s/CONTRIBUTORS..."%project)
             contributors_data = subprocess.check_output(
                 shlex.split("git shortlog -n -s")
@@ -118,7 +134,7 @@ def docs():
 @cli.command("set-version")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
 )
 @click.argument('version')
 def set_version(projects, version):
@@ -127,24 +143,22 @@ def set_version(projects, version):
     """
     print("Update versions...")
     version = ", ".join(version.split("."))
-    for project, version_file in VERSION_FILES.items():
-        if project not in projects:
-            continue
-        print("Update %s..." % version_file)
-        with open(version_file, "rb") as f:
+    for p, conf in proj(projects):
+        print("Update %s..." % conf["vfile"])
+        with open(conf["vfile"], "rb") as f:
             content = f.read()
         new_content = re.sub(
             r"IVERSION\s*=\s*\([\d,\s]+\)", "IVERSION = (%s)" % version,
             content
         )
-        with open(version_file, "wb") as f:
+        with open(conf["vfile"], "wb") as f:
             f.write(new_content)
 
 
 @cli.command("git")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
 )
 @click.argument('args', nargs=-1, required=True)
 def git(projects, args):
@@ -152,18 +166,18 @@ def git(projects, args):
     Run a git command on every project
     """
     args = ["git"] + list(args)
-    for project in projects:
+    for project, conf in proj(projects):
         print("%s> %s..." % (project, " ".join(args)))
         subprocess.check_call(
             args,
-            cwd=join(ROOT_DIR, project)
+            cwd=conf["dir"]
         )
 
 
 @cli.command("sdist")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
 )
 def sdist(projects):
     """
@@ -173,21 +187,21 @@ def sdist(projects):
         print("Building release...")
         if os.path.exists(DIST_DIR):
             shutil.rmtree(DIST_DIR)
-        for project in projects:
+        for project, conf in proj(projects):
             print("Creating %s source distribution..." % project)
             subprocess.check_call(
                 [
                     "python", "./setup.py",
                     "-q", "sdist", "--dist-dir", DIST_DIR, "--formats=gztar"
                 ],
-                cwd=join(ROOT_DIR, project)
+                cwd=conf["dir"]
             )
 
 
 @cli.command("osxbin")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
 )
 @click.pass_context
 def osxbin(ctx, projects):
@@ -203,8 +217,8 @@ def osxbin(ctx, projects):
     shutil.rmtree(PYINSTALLER_CACHE, ignore_errors=True)
     shutil.rmtree("./build", ignore_errors=True)
     shutil.rmtree(PYINSTALLER_DIST, ignore_errors=True)
-    for p in projects:
-        specs = glob.glob(os.path.join(ROOT_DIR, p, "release/*.spec"))
+    for p, conf in proj(projects):
+        specs = glob.glob(os.path.join(conf["dir"], "release/*.spec"))
         for spec in specs:
             subprocess.check_call(
                 [
@@ -225,12 +239,10 @@ def osxbin(ctx, projects):
 
 
 
-
-
 @cli.command("mkvenv")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
 )
 @click.pass_context
 def mkvenv(ctx, projects):
@@ -245,14 +257,13 @@ def mkvenv(ctx, projects):
         subprocess.check_call(["virtualenv", "-q", VENV_DIR])
 
         with chdir(DIST_DIR):
-            for project in projects:
+            for project, conf in proj(projects):
                 print("Installing %s..." % project)
-                dist = join(ROOT_DIR, project)
-                subprocess.check_call([VENV_PIP, "install", "-q", dist])
+                subprocess.check_call([VENV_PIP, "install", "-q", conf["dir"]])
 
             print("Running binaries...")
-            for project in projects:
-                for tool in TOOLS[project]:
+            for project, conf in proj(projects):
+                for tool in PROJECTS[project]["tools"]:
                     tool = join(VENV_DIR, VENV_BIN, tool)
                     print(tool)
                     print(subprocess.check_output([tool, "--version"]))
@@ -293,16 +304,17 @@ def upload_release(username, password, repository):
 @click.option('--repository', default="pypi")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
 )
 @click.pass_context
 def wizard(ctx, version, username, password, repository, projects):
     """
     Interactive Release Wizard
     """
-    for project in projects:
+    for project, conf in proj(projects):
         if subprocess.check_output(
-            ["git", "status", "--porcelain"], cwd=join(ROOT_DIR, project)
+            ["git", "status", "--porcelain"],
+            cwd=conf["dir"]
         ):
             raise RuntimeError("%s repository is not clean." % project)
 
