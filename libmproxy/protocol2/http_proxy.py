@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 
 from .layer import Layer, ServerConnectionMixin
+from .http import HttpLayer
 
 
 class HttpProxy(Layer, ServerConnectionMixin):

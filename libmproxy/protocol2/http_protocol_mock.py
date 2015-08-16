@@ -11,14 +11,14 @@ class HTTP1(object):
         """
         :type connection: object
         """
-        return HTTPRequest.wrap(HTTP1Protocol(connection).read_request(*args, **kwargs))
+        return HTTPRequest.from_protocol(HTTP1Protocol(connection), *args, **kwargs)
 
     @staticmethod
     def read_response(connection, *args, **kwargs):
         """
         :type connection: object
         """
-        return HTTPResponse.wrap(HTTP1Protocol(connection).read_response(*args, **kwargs))
+        return HTTPResponse.from_protocol(HTTP1Protocol(connection), *args, **kwargs)
 
     @staticmethod
     def read_http_body(connection, *args, **kwargs):
