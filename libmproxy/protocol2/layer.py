@@ -200,7 +200,6 @@ def yield_from_callback(fun):
             if msg is True:
                 break
             elif isinstance(msg, Exception):
-                # TODO: Include func name?
                 raise ProtocolException("Error in %s: %s" % (fun.__name__, repr(msg)), msg)
             else:
                 yield msg

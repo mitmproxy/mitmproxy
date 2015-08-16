@@ -12,9 +12,10 @@ from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 from libmproxy.protocol2.http_protocol_mock import HTTP1
 from libmproxy.protocol2.tls import TlsLayer
 from netlib import tcp
-from netlib.http import status_codes, http1
+from netlib.http import status_codes, http1, HttpErrorConnClosed
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
+from netlib.tcp import NetLibError
 
 
 def make_error_response(status_code, message, headers=None):
@@ -66,7 +67,6 @@ def make_connect_response(httpversion):
 
 
 class HttpLayer(Layer):
-
     """
     HTTP 1 Layer
     """
@@ -78,51 +78,55 @@ class HttpLayer(Layer):
     def __call__(self):
         while True:
             try:
-                request = HTTP1.read_request(
-                    self.client_conn,
-                    body_size_limit=self.config.body_size_limit
-                )
-            except tcp.NetLibError:
-                # don't throw an error for disconnects that happen
-                # before/between requests.
-                return
+                try:
+                    request = HTTP1.read_request(
+                        self.client_conn,
+                        body_size_limit=self.config.body_size_limit
+                    )
+                except tcp.NetLibError:
+                    # don't throw an error for disconnects that happen
+                    # before/between requests.
+                    return
 
-            self.log("request", "debug", [repr(request)])
+                self.log("request", "debug", [repr(request)])
 
-            # Handle Proxy Authentication
-            self.authenticate(request)
+                # Handle Proxy Authentication
+                self.authenticate(request)
 
-            # Regular Proxy Mode: Handle CONNECT
-            if self.mode == "regular" and request.form_in == "authority":
-                yield SetServer((request.host, request.port), False, None)
-                self.send_to_client(make_connect_response(request.httpversion))
-                layer = self.ctx.next_layer(self)
-                for message in layer():
-                    if not self._handle_server_message(message):
+                # Regular Proxy Mode: Handle CONNECT
+                if self.mode == "regular" and request.form_in == "authority":
+                    yield SetServer((request.host, request.port), False, None)
+                    self.send_to_client(make_connect_response(request.httpversion))
+                    layer = self.ctx.next_layer(self)
+                    for message in layer():
+                        if not self._handle_server_message(message):
+                            yield message
+                    return
+
+                # Make sure that the incoming request matches our expectations
+                self.validate_request(request)
+
+                flow = HTTPFlow(self.client_conn, self.server_conn)
+                flow.request = request
+                for message in self.process_request_hook(flow):
+                    yield message
+
+                if not flow.response:
+                    for message in self.establish_server_connection(flow):
                         yield message
-                return
+                    for message in self.get_response_from_server(flow):
+                        yield message
 
-            # Make sure that the incoming request matches our expectations
-            self.validate_request(request)
+                self.send_response_to_client(flow)
 
-            flow = HTTPFlow(self.client_conn, self.server_conn)
-            flow.request = request
-            for message in self.process_request_hook(flow):
-                yield message
+                if self.check_close_connection(flow):
+                    return
 
-            if not flow.response:
-                for message in self.establish_server_connection(flow):
-                    yield message
-                for message in self.get_response_from_server(flow):
-                    yield message
-
-            self.send_response_to_client(flow)
-
-            if self.check_close_connection(flow):
-                return
-
-            if flow.request.form_in == "authority" and flow.response.code == 200:
-                raise NotImplementedError("Upstream mode CONNECT not implemented")
+                if flow.request.form_in == "authority" and flow.response.code == 200:
+                    raise NotImplementedError("Upstream mode CONNECT not implemented")
+            except (HttpErrorConnClosed, NetLibError) as e:
+                make_error_response(502, repr(e))
+                raise ProtocolException(repr(e), e)
 
     def check_close_connection(self, flow):
         """
@@ -144,7 +148,7 @@ class HttpLayer(Layer):
                 False,
                 flow.request.method,
                 flow.response.code) == -1
-            )
+        )
         if flow.request.form_in == "authority" and flow.response.code == 200:
             # Workaround for
             # https://github.com/mitmproxy/mitmproxy/issues/313: Some
@@ -189,7 +193,7 @@ class HttpLayer(Layer):
             flow.response.timestamp_end = utils.timestamp()
 
     def get_response_from_server(self, flow):
-
+        # TODO: Add second attempt.
         self.send_to_server(flow.request)
 
         flow.response = HTTP1.read_response(
@@ -326,7 +330,6 @@ class HttpLayer(Layer):
 
     def send_to_server(self, message):
         self.server_conn.send(HTTP1.assemble(message))
-
 
     def send_to_client(self, message):
         # FIXME
