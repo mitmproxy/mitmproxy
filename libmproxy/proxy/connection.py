@@ -77,15 +77,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return f
 
     def convert_to_ssl(self, *args, **kwargs):
-        if 'alpn_select' in kwargs:
-            alpn_select = kwargs['alpn_select']
-            def alpn_select_callback(conn_, options):
-                if alpn_select in options:
-                    return bytes(alpn_select)
-                else:  # pragma no cover
-                    return options[0]
-            kwargs['alpn_select'] = alpn_select_callback
-
         tcp.BaseHandler.convert_to_ssl(self, *args, **kwargs)
         self.timestamp_ssl_setup = utils.timestamp()
 
