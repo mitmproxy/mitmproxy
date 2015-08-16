@@ -15,28 +15,28 @@ import click
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
 # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
 if os.name == "nt":
-    venv_bin = "Scripts"
+    VENV_BIN = "Scripts"
 else:
-    venv_bin = "bin"
+    VENV_BIN = "bin"
 
-release_dir = join(dirname(realpath(__file__)))
-root_dir = join(release_dir, "..")
-mitmproxy_dir = join(root_dir, "mitmproxy")
-dist_dir = join(mitmproxy_dir, "dist")
-test_venv_dir = join(release_dir, "venv")
+RELEASE_DIR = join(dirname(realpath(__file__)))
+ROOT_DIR = join(RELEASE_DIR, "..")
+MITMPROXY_DIR = join(ROOT_DIR, "mitmproxy")
+DIST_DIR = join(MITMPROXY_DIR, "dist")
+TEST_VENV_DIR = join(RELEASE_DIR, "venv")
 
-all_projects = ("netlib", "pathod", "mitmproxy")
-tools = {
+PROJECTS = ("netlib", "pathod", "mitmproxy")
+TOOLS = {
     "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
     "pathod": ["pathod", "pathoc"],
     "netlib": []
 }
 if os.name == "nt":
-    tools["mitmproxy"].remove("mitmproxy")
-version_files = {
-    "mitmproxy": normpath(join(root_dir, "mitmproxy/libmproxy/version.py")),
-    "pathod": normpath(join(root_dir, "pathod/libpathod/version.py")),
-    "netlib": normpath(join(root_dir, "netlib/netlib/version.py")),
+    TOOLS["mitmproxy"].remove("mitmproxy")
+VERSION_FILES = {
+    "mitmproxy": normpath(join(ROOT_DIR, "mitmproxy/libmproxy/version.py")),
+    "pathod": normpath(join(ROOT_DIR, "pathod/libpathod/version.py")),
+    "netlib": normpath(join(ROOT_DIR, "netlib/netlib/version.py")),
 }
 
 
@@ -71,16 +71,16 @@ def cli():
 @cli.command("contributors")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(all_projects), default=all_projects
+    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
 )
 def contributors(projects):
     """
         Update CONTRIBUTORS.md
     """
-    for project in all_projects:
+    for project in PROJECTS:
         if project not in projects:
             continue
-        with chdir(os.path.join(root_dir, project)):
+        with chdir(os.path.join(ROOT_DIR, project)):
             print("Updating %s/CONTRIBUTORS..."%project)
             contributors_data = subprocess.check_output(
                 shlex.split("git shortlog -n -s")
@@ -97,15 +97,15 @@ def docs():
     print("Rendering the docs...")
     subprocess.check_call([
         "cshape",
-        join(mitmproxy_dir, "doc-src"),
-        join(mitmproxy_dir, "doc")
+        join(MITMPROXY_DIR, "doc-src"),
+        join(MITMPROXY_DIR, "doc")
     ])
 
 
 @cli.command("set-version")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(all_projects), default=all_projects
+    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
 )
 @click.argument('version')
 def set_version(projects, version):
@@ -114,7 +114,7 @@ def set_version(projects, version):
     """
     print("Update versions...")
     version = ", ".join(version.split("."))
-    for project, version_file in version_files.items():
+    for project, version_file in VERSION_FILES.items():
         if project not in projects:
             continue
         print("Update %s..." % version_file)
@@ -131,7 +131,7 @@ def set_version(projects, version):
 @cli.command("git")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(all_projects), default=all_projects
+    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
 )
 @click.argument('args', nargs=-1, required=True)
 def git(projects, args):
@@ -143,14 +143,14 @@ def git(projects, args):
         print("%s> %s..." % (project, " ".join(args)))
         subprocess.check_call(
             args,
-            cwd=join(root_dir, project)
+            cwd=join(ROOT_DIR, project)
         )
 
 
 @cli.command("sdist")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(all_projects), default=all_projects
+    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
 )
 def sdist(projects):
     """
@@ -158,56 +158,56 @@ def sdist(projects):
     """
     with empty_pythonpath():
         print("Building release...")
-        if exists(dist_dir):
-            shutil.rmtree(dist_dir)
+        if exists(DIST_DIR):
+            shutil.rmtree(DIST_DIR)
         for project in projects:
             print("Creating %s source distribution..." % project)
             subprocess.check_call(
                 [
                     "python", "./setup.py",
-                    "-q", "sdist", "--dist-dir", dist_dir, "--formats=gztar"
+                    "-q", "sdist", "--dist-dir", DIST_DIR, "--formats=gztar"
                 ],
-                cwd=join(root_dir, project)
+                cwd=join(ROOT_DIR, project)
             )
 
 
 @cli.command("test")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(all_projects), default=all_projects
+    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
 )
 @click.pass_context
 def test(ctx, projects):
     """
     Test the source distribution
     """
-    if not exists(dist_dir):
+    if not exists(DIST_DIR):
         ctx.invoke(sdist)
 
     with empty_pythonpath():
         print("Creating virtualenv for test install...")
-        if exists(test_venv_dir):
-            shutil.rmtree(test_venv_dir)
-        subprocess.check_call(["virtualenv", "-q", test_venv_dir])
+        if exists(TEST_VENV_DIR):
+            shutil.rmtree(TEST_VENV_DIR)
+        subprocess.check_call(["virtualenv", "-q", TEST_VENV_DIR])
 
-        pip = join(test_venv_dir, venv_bin, "pip")
-        with chdir(dist_dir):
+        pip = join(TEST_VENV_DIR, VENV_BIN, "pip")
+        with chdir(DIST_DIR):
             for project in projects:
                 print("Installing %s..." % project)
-                dist = join(root_dir, project)
+                dist = join(ROOT_DIR, project)
                 subprocess.check_call([pip, "install", "-q", dist])
 
             print("Running binaries...")
             for project in projects:
-                for tool in tools[project]:
-                    tool = join(test_venv_dir, venv_bin, tool)
+                for tool in TOOLS[project]:
+                    tool = join(TEST_VENV_DIR, VENV_BIN, tool)
                     print(tool)
                     print(subprocess.check_output([tool, "--version"]))
 
             print("Virtualenv available for further testing:")
             print(
                 "source %s" % normpath(
-                    join(test_venv_dir, venv_bin, "activate")
+                    join(TEST_VENV_DIR, VENV_BIN, "activate")
                 )
             )
 
@@ -227,7 +227,7 @@ def upload_release(username, password, repository):
         "-u", username,
         "-p", password,
         "-r", repository,
-        "%s/*" % dist_dir
+        "%s/*" % DIST_DIR
     ])
 
 
@@ -240,7 +240,7 @@ def upload_release(username, password, repository):
 @click.option('--repository', default="pypi")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(all_projects), default=all_projects
+    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
 )
 @click.pass_context
 def wizard(ctx, version, username, password, repository, projects):
@@ -249,7 +249,7 @@ def wizard(ctx, version, username, password, repository, projects):
     """
     for project in projects:
         if subprocess.check_output(
-            ["git", "status", "--porcelain"], cwd=join(root_dir, project)
+            ["git", "status", "--porcelain"], cwd=join(ROOT_DIR, project)
         ):
             raise RuntimeError("%s repository is not clean." % project)
 
