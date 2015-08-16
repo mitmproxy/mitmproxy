@@ -399,7 +399,6 @@ class TestAssembleRequest(object):
         req.stream_id = 0x42
         bytes = HTTP2Protocol(self.c).assemble_request(req)
         assert len(bytes) == 1
-        print(bytes[0].encode('hex'))
         assert bytes[0] == '00000d0105000000428284874188089d5c0b8170dc07'.decode('hex')
 
     def test_request_with_body(self):

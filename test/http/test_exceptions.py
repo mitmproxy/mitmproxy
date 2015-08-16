@@ -14,7 +14,6 @@ class TestHttpAuthenticationError:
         assert isinstance(x.headers, odict.ODictCaseless)
         assert x.code == 407
         assert x.headers == headers
-        print(x.headers.keys())
         assert "foo" in x.headers.keys()
 
     def test_header_conversion(self):

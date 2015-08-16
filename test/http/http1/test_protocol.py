@@ -485,7 +485,6 @@ class TestAssembleResponse(object):
     def test_simple(self):
         resp = tutils.tresp()
         b = HTTP1Protocol().assemble_response(resp)
-        print(b)
         assert b == match_http_string("""
             HTTP/1.1 200 OK
             header_response: svalue
