@@ -5,7 +5,7 @@ from ..proxy import ProxyError, Socks5ProxyMode
 from .layer import Layer, ServerConnectionMixin
 
 
-class Socks5Proxy(Layer, ServerConnectionMixin):
+class Socks5Proxy(ServerConnectionMixin, Layer):
     def __call__(self):
         try:
             s5mode = Socks5ProxyMode(self.config.ssl_ports)
@@ -14,7 +14,7 @@ class Socks5Proxy(Layer, ServerConnectionMixin):
             # TODO: Unmonkeypatch
             raise ProtocolException(str(e), e)
 
-        self.server_address = address
+        self.server_conn.address = address
 
         layer = self.ctx.next_layer(self)
         for message in layer():

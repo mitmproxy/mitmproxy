@@ -2,20 +2,20 @@ from __future__ import (absolute_import, print_function, division)
 
 from .. import version
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
-from .layer import Layer, ServerConnectionMixin
+from .layer import Layer
 from libmproxy import utils
+from libmproxy.proxy.connection import ServerConnection
 from .messages import SetServer, Connect, Reconnect, Kill
 from libmproxy.protocol import KILL
 
 from libmproxy.protocol.http import HTTPFlow
 from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 from libmproxy.protocol2.http_protocol_mock import HTTP1
-from libmproxy.protocol2.tls import TlsLayer
 from netlib import tcp
 from netlib.http import status_codes, http1, HttpErrorConnClosed
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
-from netlib.tcp import NetLibError
+from netlib.tcp import NetLibError, Address
 
 
 def make_error_response(status_code, message, headers=None):
@@ -46,6 +46,7 @@ def make_error_response(status_code, message, headers=None):
 
 
 def make_connect_request(address):
+    address = Address.wrap(address)
     return HTTPRequest(
         "authority", "CONNECT", None, address.host, address.port, None, (1, 1),
         odict.ODictCaseless(), ""
@@ -64,6 +65,22 @@ def make_connect_response(httpversion):
         headers,
         "",
     )
+
+
+class ConnectServerConnection(object):
+    """
+    "Fake" ServerConnection to represent state after a CONNECT request to an upstream proxy.
+    """
+    def __init__(self, address, ctx):
+        self.address = tcp.Address.wrap(address)
+        self._ctx = ctx
+
+    @property
+    def via(self):
+        return self._ctx.server_conn
+
+    def __getattr__(self, item):
+        return getattr(self.via, item)
 
 
 class HttpLayer(Layer):
@@ -95,12 +112,8 @@ class HttpLayer(Layer):
 
                 # Regular Proxy Mode: Handle CONNECT
                 if self.mode == "regular" and request.form_in == "authority":
-                    yield SetServer((request.host, request.port), False, None)
-                    self.send_to_client(make_connect_response(request.httpversion))
-                    layer = self.ctx.next_layer(self)
-                    for message in layer():
-                        if not self._handle_server_message(message):
-                            yield message
+                    for message in self.handle_regular_mode_connect(request):
+                        yield message
                     return
 
                 # Make sure that the incoming request matches our expectations
@@ -122,11 +135,49 @@ class HttpLayer(Layer):
                 if self.check_close_connection(flow):
                     return
 
+                # Upstream Proxy Mode: Handle CONNECT
                 if flow.request.form_in == "authority" and flow.response.code == 200:
-                    raise NotImplementedError("Upstream mode CONNECT not implemented")
+                    for message in self.handle_upstream_mode_connect(flow.request.copy()):
+                        yield message
+                    return
+
             except (HttpErrorConnClosed, NetLibError) as e:
                 make_error_response(502, repr(e))
                 raise ProtocolException(repr(e), e)
+
+    def handle_regular_mode_connect(self, request):
+        yield SetServer((request.host, request.port), False, None)
+        self.send_to_client(make_connect_response(request.httpversion))
+        layer = self.ctx.next_layer(self)
+        for message in layer():
+            yield message
+
+    def handle_upstream_mode_connect(self, connect_request):
+        layer = self.ctx.next_layer(self)
+        self.server_conn = ConnectServerConnection((connect_request.host, connect_request.port), self.ctx)
+
+        for message in layer():
+            if message == Connect:
+                if not self.server_conn:
+                    yield message
+                    self.send_to_server(connect_request)
+                else:
+                    pass  # swallow the message
+            elif message == Reconnect:
+                yield message
+                self.send_to_server(connect_request)
+            elif message == SetServer:
+                if message.depth == 1:
+                    if self.ctx.server_conn:
+                        yield Reconnect()
+                    connect_request.host = message.address.host
+                    connect_request.port = message.address.port
+                    self.server_conn.address = message.address
+                else:
+                    message.depth -= 1
+                    yield message
+            else:
+                yield message
 
     def check_close_connection(self, flow):
         """
@@ -247,11 +298,11 @@ class HttpLayer(Layer):
             if flow.request.form_in == "authority":
                 flow.request.scheme = "http"  # pseudo value
         else:
-            flow.request.host = self.ctx.server_address.host
-            flow.request.port = self.ctx.server_address.port
+            flow.request.host = self.ctx.server_conn.address.host
+            flow.request.port = self.ctx.server_conn.address.port
             flow.request.scheme = "https" if self.server_conn.tls_established else "http"
 
-        # TODO: Expose ChangeServer functionality to inline scripts somehow? (yield_from_callback?)
+        # TODO: Expose SetServer functionality to inline scripts somehow? (yield_from_callback?)
         request_reply = self.channel.ask("request", flow)
         if request_reply is None or request_reply == KILL:
             yield Kill()
@@ -265,25 +316,26 @@ class HttpLayer(Layer):
         tls = (flow.request.scheme == "https")
         if self.mode == "regular" or self.mode == "transparent":
             # If there's an existing connection that doesn't match our expectations, kill it.
-            if self.server_address != address or tls != self.server_conn.ssl_established:
+            if address != self.server_conn.address or tls != self.server_conn.ssl_established:
                 yield SetServer(address, tls, address.host)
             # Establish connection is neccessary.
             if not self.server_conn:
                 yield Connect()
 
-            # ChangeServer is not guaranteed to work with TLS:
+            # SetServer is not guaranteed to work with TLS:
             # If there's not TlsLayer below which could catch the exception,
             # TLS will not be established.
             if tls and not self.server_conn.tls_established:
                 raise ProtocolException("Cannot upgrade to SSL, no TLS layer on the protocol stack.")
 
         else:
+            if not self.server_conn:
+                yield Connect()
             if tls:
                 raise HttpException("Cannot change scheme in upstream proxy mode.")
             """
             # This is a very ugly (untested) workaround to solve a very ugly problem.
-            # FIXME: Check if connected first.
-            if self.server_conn.tls_established and not ssl:
+            if self.server_conn and self.server_conn.tls_established and not ssl:
                 yield Reconnect()
             elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
                 if self.server_conn.tls_established:

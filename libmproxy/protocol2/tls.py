@@ -220,7 +220,7 @@ class TlsLayer(Layer):
         host = self.server_conn.address.host
         sans = set()
         # Incorporate upstream certificate
-        if self.server_conn.tls_established and (not self.config.no_upstream_cert):
+        if self.server_conn and self.server_conn.tls_established and (not self.config.no_upstream_cert):
             upstream_cert = self.server_conn.cert
             sans.update(upstream_cert.altnames)
             if upstream_cert.cn:
@@ -232,4 +232,5 @@ class TlsLayer(Layer):
         if self._sni_from_server_change:
             sans.add(self._sni_from_server_change)
 
+        sans.discard(host)
         return self.config.certstore.get_cert(host, list(sans))

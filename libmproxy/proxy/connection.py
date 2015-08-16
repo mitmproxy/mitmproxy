@@ -96,6 +96,9 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_ssl_setup = None
         self.protocol = None
 
+    def __nonzero__(self):
+        return bool(self.connection)
+
     def __repr__(self):
         if self.ssl_established and self.sni:
             ssl = "[ssl: {0}] ".format(self.sni)
@@ -132,8 +135,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         d.update(
             address={"address": self.address(),
                      "use_ipv6": self.address.use_ipv6},
-            source_address= ({"address": self.source_address(),
-                              "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
+            source_address=({"address": self.source_address(),
+                             "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
             cert=self.cert.to_pem() if self.cert else None
         )
         return d

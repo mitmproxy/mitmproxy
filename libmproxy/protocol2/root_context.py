@@ -1,8 +1,10 @@
 from __future__ import (absolute_import, print_function, division)
 
+from .messages import Kill
 from .rawtcp import RawTcpLayer
 from .tls import TlsLayer
 from .http import HttpLayer
+
 
 class RootContext(object):
     """
@@ -35,7 +37,7 @@ class RootContext(object):
         )
 
         if not d:
-            return
+            return iter([])
 
         if is_tls_client_hello:
             return TlsLayer(top_layer, True, True)
@@ -43,7 +45,6 @@ class RootContext(object):
             return HttpLayer(top_layer, "transparent")
         else:
             return RawTcpLayer(top_layer)
-
 
     @property
     def layers(self):

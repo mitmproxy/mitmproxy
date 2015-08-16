@@ -7,8 +7,7 @@ from .tls import TlsLayer
 class ReverseProxy(Layer, ServerConnectionMixin):
 
     def __init__(self, ctx, server_address, client_tls, server_tls):
-        super(ReverseProxy, self).__init__(ctx)
-        self.server_address = server_address
+        super(ReverseProxy, self).__init__(ctx, server_address=server_address)
         self._client_tls = client_tls
         self._server_tls = server_tls
 

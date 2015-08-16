@@ -13,7 +13,7 @@ class TransparentProxy(Layer, ServerConnectionMixin):
 
     def __call__(self):
         try:
-            self.server_address = self.resolver.original_addr(self.client_conn.connection)
+            self.server_conn.address = self.resolver.original_addr(self.client_conn.connection)
         except Exception as e:
             raise ProtocolException("Transparent mode failure: %s" % repr(e), e)
 

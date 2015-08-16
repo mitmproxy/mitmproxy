@@ -80,7 +80,12 @@ class ConnectionHandler2:
             self.config,
             self.channel
         )
-        root_layer = protocol2.HttpProxy(root_context)
+
+        # FIXME: properly parse config
+        if self.config.mode == "upstream":
+            root_layer = protocol2.HttpUpstreamProxy(root_context, ("localhost", 8081))
+        else:
+            root_layer = protocol2.HttpProxy(root_context)
 
         try:
             for message in root_layer():
@@ -302,7 +307,7 @@ class ConnectionHandler:
                 if ssl_cert_err is not None:
                     self.log(
                         "SSL verification failed for upstream server at depth %s with error: %s" %
-                            (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                        (ssl_cert_err['depth'], ssl_cert_err['errno']),
                         "error")
                     self.log("Ignoring server verification error, continuing with connection", "error")
             except tcp.NetLibError as v:
@@ -318,7 +323,7 @@ class ConnectionHandler:
                     if ssl_cert_err is not None:
                         self.log(
                             "SSL verification failed for upstream server at depth %s with error: %s" %
-                                (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                            (ssl_cert_err['depth'], ssl_cert_err['errno']),
                             "error")
                         self.log("Aborting connection attempt", "error")
                     raise e

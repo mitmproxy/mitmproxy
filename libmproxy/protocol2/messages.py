@@ -2,6 +2,7 @@
 This module contains all valid messages layers can send to the underlying layers.
 """
 from __future__ import (absolute_import, print_function, division)
+from netlib.tcp import Address
 
 
 class _Message(object):
@@ -33,7 +34,7 @@ class SetServer(_Message):
     """
 
     def __init__(self, address, server_tls, sni, depth=1):
-        self.address = address
+        self.address = Address.wrap(address)
         self.server_tls = server_tls
         self.sni = sni
 
