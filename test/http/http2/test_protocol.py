@@ -289,7 +289,6 @@ class TestCreateBody():
 
 class TestReadRequest(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
-
         def handle(self):
             self.wfile.write(
                 b'000003010400000001828487'.decode('hex'))
@@ -306,11 +305,83 @@ class TestReadRequest(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c, is_server=True)
         protocol.connection_preface_performed = True
 
-        resp = protocol.read_request()
+        req = protocol.read_request()
 
-        assert resp.stream_id
-        assert resp.headers.lst == [[u':method', u'GET'], [u':path', u'/'], [u':scheme', u'https']]
-        assert resp.body == b'foobar'
+        assert req.stream_id
+        assert req.headers.lst == [[u':method', u'GET'], [u':path', u'/'], [u':scheme', u'https']]
+        assert req.body == b'foobar'
+
+
+class TestReadRequestRelative(tservers.ServerTestBase):
+    class handler(tcp.BaseHandler):
+        def handle(self):
+            self.wfile.write(
+                b'00000c0105000000014287d5af7e4d5a777f4481f9'.decode('hex'))
+            self.wfile.flush()
+
+    ssl = True
+
+    def test_asterisk_form_in(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        c.convert_to_ssl()
+        protocol = HTTP2Protocol(c, is_server=True)
+        protocol.connection_preface_performed = True
+
+        "OPTIONS *"
+        req = protocol.read_request()
+
+        assert req.form_in == "relative"
+        assert req.method == "OPTIONS"
+        assert req.path == "*"
+
+
+class TestReadRequestAbsolute(tservers.ServerTestBase):
+    class handler(tcp.BaseHandler):
+        def handle(self):
+            self.wfile.write(
+                b'00001901050000000182448d9d29aee30c0e492c2a1170426366871c92585422e085'.decode('hex'))
+            self.wfile.flush()
+
+    ssl = True
+
+    def test_absolute_form_in(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        c.convert_to_ssl()
+        protocol = HTTP2Protocol(c, is_server=True)
+        protocol.connection_preface_performed = True
+
+        req = protocol.read_request()
+
+        assert req.form_in == "absolute"
+        assert req.scheme == "http"
+        assert req.host == "address"
+        assert req.port == 22
+
+
+class TestReadRequestConnect(tservers.ServerTestBase):
+    class handler(tcp.BaseHandler):
+        def handle(self):
+            self.wfile.write(
+                b'00001b0105000000014287bdab4e9c17b7ff44871c92585422e08541871c92585422e085'.decode('hex'))
+            self.wfile.flush()
+
+    ssl = True
+
+    def test_connect(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        c.connect()
+        c.convert_to_ssl()
+        protocol = HTTP2Protocol(c, is_server=True)
+        protocol.connection_preface_performed = True
+
+        req = protocol.read_request()
+
+        assert req.form_in == "authority"
+        assert req.method == "CONNECT"
+        assert req.host == "address"
+        assert req.port == 22
 
 
 class TestReadResponse(tservers.ServerTestBase):

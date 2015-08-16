@@ -80,13 +80,39 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         timestamp_end = time.time()
 
+        authority = headers.get_first(':authority', '')
+        method = headers.get_first(':method', 'GET')
+        scheme = headers.get_first(':scheme', 'https')
+        path = headers.get_first(':path', '/')
+        host = None
+        port = None
+
+        if path == '*' or path.startswith("/"):
+            form_in = "relative"
+        elif method == 'CONNECT':
+            form_in = "authority"
+            if ":" in authority:
+                host, port = authority.split(":", 1)
+            else:
+                host = authority
+        else:
+            form_in = "absolute"
+            # FIXME: verify if path or :host contains what we need
+            scheme, host, port, _ = utils.parse_url(path)
+
+        if host is None:
+            host = 'localhost'
+        if port is None:
+            port = 80 if scheme == 'http' else 443
+        port = int(port)
+
         request = http.Request(
-            "relative",  # TODO: use the correct value
-            headers.get_first(':method', 'GET'),
-            headers.get_first(':scheme', 'https'),
-            headers.get_first(':host', 'localhost'),
-            443,  # TODO: parse port number from host?
-            headers.get_first(':path', '/'),
+            form_in,
+            method,
+            scheme,
+            host,
+            port,
+            path,
             (2, 0),
             headers,
             body,
@@ -324,6 +350,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         return [frm.to_bytes() for frm in frms]
 
     def _receive_transmission(self, include_body=True):
+        # TODO: include_body is not respected
         body_expected = True
 
         stream_id = 0
