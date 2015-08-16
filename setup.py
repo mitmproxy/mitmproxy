@@ -38,8 +38,6 @@ dev_deps = {
     "nose>=1.3.0",
     "nose-cov>=1.6",
     "coveralls>=0.4.1",
-    "click>=4.1",
-    "twine>=1.5.0",
     "pathod>=%s, <%s" % (version.MINORVERSION, version.NEXT_MINORVERSION),
     "countershape"
 }
