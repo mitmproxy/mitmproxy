@@ -2,31 +2,36 @@
 
 from glob import glob
 
-a = Analysis(['./mitmweb'],
+VENV = "../release/venv"
+
+a = Analysis(['../mitmproxy/mitmweb'],
              hiddenimports=[],
              hookspath=None,
              runtime_hooks=None,
              excludes=None,
           )
 a.datas = Tree(
-  "./libmproxy/onboarding/templates",
+  "../mitmproxy/libmproxy/onboarding/templates",
   prefix="libmproxy/onboarding/templates"
 )
 a.datas += Tree(
-  "./libmproxy/onboarding/static",
+  "../mitmproxy/libmproxy/onboarding/static",
   prefix="libmproxy/onboarding/static"
 )
 a.datas += Tree(
-  "./libmproxy/web/templates",
+  "../mitmproxy/libmproxy/web/templates",
   prefix="libmproxy/web/templates"
 )
 a.datas += Tree(
-  "./libmproxy/web/static",
+  "../mitmproxy/libmproxy/web/static",
   prefix="libmproxy/web/static"
 )
 a.datas += Tree(
-    "../venv.mitmproxy/lib/python2.7/site-packages/cryptography/hazmat/bindings/openssl/src",
-    prefix = "cryptography/hazmat/bindings/openssl/src"
+    os.path.join(
+        VENV,
+        "lib/python2.7/site-packages/certifi",
+    ),
+    prefix = "certifi"
 )
 pyz = PYZ(a.pure)
 exe = EXE(pyz,
