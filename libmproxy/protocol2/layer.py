@@ -64,6 +64,7 @@ class Layer(_LayerCodeCompletion):
         """
         super(Layer, self).__init__()
         self.ctx = ctx
+        print("%s -> %s" % (repr(ctx), repr(self)))
 
     def __call__(self):
         """

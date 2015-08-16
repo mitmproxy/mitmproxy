@@ -1,12 +1,12 @@
 from __future__ import (absolute_import, print_function, division)
 
 from .layer import Layer, ServerConnectionMixin
-from .http import HttpLayer
+from .http import Http1Layer, HttpLayer
 
 
 class HttpProxy(Layer, ServerConnectionMixin):
     def __call__(self):
-        layer = HttpLayer(self, "regular")
+        layer = Http1Layer(self, "regular")
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
@@ -18,7 +18,7 @@ class HttpUpstreamProxy(Layer, ServerConnectionMixin):
         self.server_address = server_address
 
     def __call__(self):
-        layer = HttpLayer(self, "upstream")
+        layer = Http1Layer(self, "upstream")
         for message in layer():
             if not self._handle_server_message(message):
                 yield message

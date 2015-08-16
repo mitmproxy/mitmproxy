@@ -157,7 +157,6 @@ class TlsLayer(Layer):
                 self.yield_from_callback(Reconnect())
 
         self.client_alpn_protos = options
-        print("foo: %s" % options)
 
         if alpn_preference in options:
             return bytes(alpn_preference)
