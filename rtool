@@ -12,6 +12,7 @@ import glob
 import re
 import shlex
 import runpy
+import pprint
 
 import click
 
@@ -42,15 +43,21 @@ VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 PROJECTS = {
     "netlib": {
         "tools": [],
-        "vfile": join(ROOT_DIR, "netlib/netlib/version.py")
+        "vfile": join(ROOT_DIR, "netlib/netlib/version.py"),
+        "version": None,
+        "dir": None
     },
     "pathod": {
         "tools": ["pathod", "pathoc"],
-        "vfile": join(ROOT_DIR, "pathod/libpathod/version.py")
+        "vfile": join(ROOT_DIR, "pathod/libpathod/version.py"),
+        "version": None,
+        "dir": None
     },
     "mitmproxy": {
         "tools": ["mitmproxy", "mitmdump", "mitmweb"],
-        "vfile": join(ROOT_DIR, "mitmproxy/libmproxy/version.py")
+        "vfile": join(ROOT_DIR, "mitmproxy/libmproxy/version.py"),
+        "version": None,
+        "dir": None
     }
 }
 if os.name == "nt":
@@ -201,42 +208,53 @@ def sdist(projects):
 @cli.command("osxbin")
 @click.option(
     '--project', '-p', 'projects',
-    multiple=True, type=click.Choice(PROJECTS.keys()), default=PROJECTS.keys()
+    multiple=True,
+    type=click.Choice(PROJECTS.keys()),
+    default=PROJECTS.keys()
 )
 @click.pass_context
 def osxbin(ctx, projects):
     if not os.path.exists(VENV_PYINSTALLER):
-            subprocess.check_call(
-                [
-                    VENV_PIP,
-                    "install",
-                    PYINSTALLER_URL
-                ]
-            )
+        print("Instaling PyInstaller...")
+        subprocess.check_call(
+            [
+                VENV_PIP,
+                "install",
+                PYINSTALLER_URL
+            ]
+        )
 
     shutil.rmtree(PYINSTALLER_CACHE, ignore_errors=True)
     shutil.rmtree("./build", ignore_errors=True)
     shutil.rmtree(PYINSTALLER_DIST, ignore_errors=True)
     for p, conf in proj(projects):
         specs = glob.glob(os.path.join(conf["dir"], "release/*.spec"))
-        for spec in specs:
-            subprocess.check_call(
-                [
-                    VENV_PYINSTALLER,
-                    "--distpath", PYINSTALLER_DIST,
-                    spec
-                ]
-            )
-        if specs and os.path.exists(PYINSTALLER_DIST):
-            bins = os.listdir(PYINSTALLER_DIST)
-            for bin in bins:
+        if specs:
+            for spec in specs:
                 subprocess.check_call(
                     [
-                        os.path.join(PYINSTALLER_DIST, bin),
-                        "--version"
+                        VENV_PYINSTALLER,
+                        "--distpath", PYINSTALLER_DIST,
+                        spec
                     ]
                 )
+            bins = os.listdir(PYINSTALLER_DIST)
 
+            base = os.path.join(DIST_DIR, "osx-" + p + "-" + conf["version"])
+            shutil.rmtree(base, ignore_errors=True)
+            os.makedirs(base)
+            for bin in bins:
+                bin = os.path.join(PYINSTALLER_DIST, bin)
+                subprocess.check_call([bin, "--version"])
+                shutil.move(bin, base)
+            subprocess.check_call(
+                [
+                    "tar",
+                    "-czvf",
+                    base + ".tgz",
+                    base
+                ]
+            )
 
 
 @cli.command("mkvenv")
