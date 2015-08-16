@@ -2,8 +2,9 @@
 from __future__ import (
     absolute_import, print_function, division, unicode_literals
 )
-from contextlib import contextmanager
-from os.path import dirname, realpath, join, exists, normpath
+from os.path import join
+import contextlib
+import os.path
 import os
 import shutil
 import subprocess
@@ -19,10 +20,10 @@ if os.name == "nt":
 else:
     VENV_BIN = "bin"
 
-RELEASE_DIR = join(dirname(realpath(__file__)))
+RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
+DIST_DIR = join(RELEASE_DIR, "release")
 ROOT_DIR = join(RELEASE_DIR, "..")
 MITMPROXY_DIR = join(ROOT_DIR, "mitmproxy")
-DIST_DIR = join(MITMPROXY_DIR, "dist")
 TEST_VENV_DIR = join(RELEASE_DIR, "venv")
 
 PROJECTS = ("netlib", "pathod", "mitmproxy")
@@ -34,13 +35,13 @@ TOOLS = {
 if os.name == "nt":
     TOOLS["mitmproxy"].remove("mitmproxy")
 VERSION_FILES = {
-    "mitmproxy": normpath(join(ROOT_DIR, "mitmproxy/libmproxy/version.py")),
-    "pathod": normpath(join(ROOT_DIR, "pathod/libpathod/version.py")),
-    "netlib": normpath(join(ROOT_DIR, "netlib/netlib/version.py")),
+    "mitmproxy": join(ROOT_DIR, "mitmproxy/libmproxy/version.py"),
+    "pathod": join(ROOT_DIR, "pathod/libpathod/version.py"),
+    "netlib": join(ROOT_DIR, "netlib/netlib/version.py"),
 }
 
 
-@contextmanager
+@contextlib.contextmanager
 def empty_pythonpath():
     """
     Make sure that the regular python installation is not on the python path,
@@ -52,7 +53,7 @@ def empty_pythonpath():
     os.environ["PYTHONPATH"] = pythonpath
 
 
-@contextmanager
+@contextlib.contextmanager
 def chdir(path):
     old_dir = os.getcwd()
     os.chdir(path)
@@ -158,7 +159,7 @@ def sdist(projects):
     """
     with empty_pythonpath():
         print("Building release...")
-        if exists(DIST_DIR):
+        if os.path.exists(DIST_DIR):
             shutil.rmtree(DIST_DIR)
         for project in projects:
             print("Creating %s source distribution..." % project)
@@ -171,22 +172,20 @@ def sdist(projects):
             )
 
 
-@cli.command("test")
+@cli.command("mkvenv")
 @click.option(
     '--project', '-p', 'projects',
     multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
 )
 @click.pass_context
-def test(ctx, projects):
+def mkvenv(ctx, projects):
     """
-    Test the source distribution
+    make a venv and test the source distribution
     """
-    if not exists(DIST_DIR):
-        ctx.invoke(sdist)
-
+    ctx.invoke(sdist)
     with empty_pythonpath():
         print("Creating virtualenv for test install...")
-        if exists(TEST_VENV_DIR):
+        if os.path.exists(TEST_VENV_DIR):
             shutil.rmtree(TEST_VENV_DIR)
         subprocess.check_call(["virtualenv", "-q", TEST_VENV_DIR])
 
@@ -206,7 +205,7 @@ def test(ctx, projects):
 
             print("Virtualenv available for further testing:")
             print(
-                "source %s" % normpath(
+                "source %s" % os.path.normpath(
                     join(TEST_VENV_DIR, VENV_BIN, "activate")
                 )
             )

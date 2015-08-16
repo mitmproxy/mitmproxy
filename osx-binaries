@@ -7,10 +7,11 @@
 #   https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Setuptools-Entry-Point
 # Once this is fixed, we can ditch the redundant command scripts.
 
-VENV=../venv.mitmproxy
+VENV=./venv
 PYINST_CMD="$VENV/bin/pyinstaller -F --clean"
 TMPDIR=./tmp
 CACHE="~/Library/Application Support/pyinstaller"
+MITMPROXY="../mitmproxy"
 
 
 if [ ! -d $VENV ]
@@ -44,23 +45,23 @@ rm -f dist/*
 rm -rf $TMPDIR
 rm -rf $CACHE
 
-$PYINST_CMD ./release/mitmdump.spec
-echo "Running mitmdump..."
-./dist/mitmdump --version || exit 1
+# $PYINST_CMD $MITMPROXY/release/mitmdump.spec
+# echo "Running mitmdump..."
+# ./dist/mitmdump --version || exit 1
 
-$PYINST_CMD ./release/mitmproxy.spec
+$PYINST_CMD $MITMPROXY/release/mitmproxy.spec
 echo "Running mitmproxy..."
 ./dist/mitmproxy --version || exit 1
 
-$PYINST_CMD ./release/mitmweb.spec
-echo "Running mitmweb..."
-./dist/mitmweb --version || exit 1
+# $PYINST_CMD $MITMPROXY/release/mitmweb.spec
+# echo "Running mitmweb..."
+# ./dist/mitmweb --version || exit 1
 
-DST=osx-mitmproxy-`./dist/mitmdump --shortversion 2>&1`
-mkdir -p $TMPDIR/$DST
-cp ./dist/mitmproxy $TMPDIR/$DST
-cp ./dist/mitmdump $TMPDIR/$DST
-cshape ./doc-src $TMPDIR/$DST/doc
-
-cd $TMPDIR
-tar -czvf $DST.tar.gz $DST
+# DST=osx-mitmproxy-`./dist/mitmdump --shortversion 2>&1`
+# mkdir -p $TMPDIR/$DST
+# cp ./dist/mitmproxy $TMPDIR/$DST
+# cp ./dist/mitmdump $TMPDIR/$DST
+# cshape ./doc-src $TMPDIR/$DST/doc
+#
+# cd $TMPDIR
+# tar -czvf $DST.tar.gz $DST
