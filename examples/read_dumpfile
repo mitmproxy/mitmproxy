@@ -7,7 +7,7 @@ from libmproxy import flow
 import json
 import sys
 
-with open("logfile", "rb") as logfile:
+with open(sys.argv[1], "rb") as logfile:
     freader = flow.FlowReader(logfile)
     try:
         for f in freader.stream():
