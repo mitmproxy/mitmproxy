@@ -33,13 +33,6 @@ if [ ! -f $VENV/bin/pyinstaller ]
     $VENV/bin/pip install --upgrade macholib
 fi
 
-# readline.so is actually a symlink to a Python file, which breaks PyInstaller
-# (and readline itself). Why? Who knows. Re-address this when this stupidity
-# ceases to be.
-echo "Removing broken readline..."
-rm -f $VENV/lib/python2.7/readline.so
-
-
 echo "Clearing caches..."
 rm -f dist/*
 rm -rf $TMPDIR

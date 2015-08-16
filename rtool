@@ -20,11 +20,23 @@ if os.name == "nt":
 else:
     VENV_BIN = "bin"
 
+
+
 RELEASE_DIR = join(os.path.dirname(os.path.realpath(__file__)))
 DIST_DIR = join(RELEASE_DIR, "release")
 ROOT_DIR = join(RELEASE_DIR, "..")
 MITMPROXY_DIR = join(ROOT_DIR, "mitmproxy")
-TEST_VENV_DIR = join(RELEASE_DIR, "venv")
+
+PYINSTALLER_URL =\
+    "https://github.com/pyinstaller/pyinstaller/archive/develop.zip"
+PYINSTALLER_CACHE = os.path.expanduser(
+    "~/Library/Application Support/pyinstaller"
+)
+PYINSTALLER_DIST = join(RELEASE_DIR, "pyinstallerdist")
+
+VENV_DIR = join(RELEASE_DIR, "venv")
+VENV_PIP = join(VENV_DIR, VENV_BIN, "pip")
+VENV_PYINSTALLER = join(VENV_DIR, VENV_BIN, "pyinstaller")
 
 PROJECTS = ("netlib", "pathod", "mitmproxy")
 TOOLS = {
@@ -172,6 +184,49 @@ def sdist(projects):
             )
 
 
+@cli.command("osxbin")
+@click.option(
+    '--project', '-p', 'projects',
+    multiple=True, type=click.Choice(PROJECTS), default=PROJECTS
+)
+@click.pass_context
+def osxbin(ctx, projects):
+    if not os.path.exists(VENV_PYINSTALLER):
+            subprocess.check_call(
+                [
+                    VENV_PIP,
+                    "install",
+                    PYINSTALLER_URL
+                ]
+            )
+
+    shutil.rmtree(PYINSTALLER_CACHE, ignore_errors=True)
+    shutil.rmtree("./build", ignore_errors=True)
+    shutil.rmtree(PYINSTALLER_DIST, ignore_errors=True)
+    for p in projects:
+        specs = glob.glob(os.path.join(ROOT_DIR, p, "release/*.spec"))
+        for spec in specs:
+            subprocess.check_call(
+                [
+                    VENV_PYINSTALLER,
+                    "--distpath", PYINSTALLER_DIST,
+                    spec
+                ]
+            )
+        if specs and os.path.exists(PYINSTALLER_DIST):
+            bins = os.listdir(PYINSTALLER_DIST)
+            for bin in bins:
+                subprocess.check_call(
+                    [
+                        os.path.join(PYINSTALLER_DIST, bin),
+                        "--version"
+                    ]
+                )
+
+
+
+
+
 @cli.command("mkvenv")
 @click.option(
     '--project', '-p', 'projects',
@@ -185,28 +240,27 @@ def mkvenv(ctx, projects):
     ctx.invoke(sdist)
     with empty_pythonpath():
         print("Creating virtualenv for test install...")
-        if os.path.exists(TEST_VENV_DIR):
-            shutil.rmtree(TEST_VENV_DIR)
-        subprocess.check_call(["virtualenv", "-q", TEST_VENV_DIR])
+        if os.path.exists(VENV_DIR):
+            shutil.rmtree(VENV_DIR)
+        subprocess.check_call(["virtualenv", "-q", VENV_DIR])
 
-        pip = join(TEST_VENV_DIR, VENV_BIN, "pip")
         with chdir(DIST_DIR):
             for project in projects:
                 print("Installing %s..." % project)
                 dist = join(ROOT_DIR, project)
-                subprocess.check_call([pip, "install", "-q", dist])
+                subprocess.check_call([VENV_PIP, "install", "-q", dist])
 
             print("Running binaries...")
             for project in projects:
                 for tool in TOOLS[project]:
-                    tool = join(TEST_VENV_DIR, VENV_BIN, tool)
+                    tool = join(VENV_DIR, VENV_BIN, tool)
                     print(tool)
                     print(subprocess.check_output([tool, "--version"]))
 
             print("Virtualenv available for further testing:")
             print(
                 "source %s" % os.path.normpath(
-                    join(TEST_VENV_DIR, VENV_BIN, "activate")
+                    join(VENV_DIR, VENV_BIN, "activate")
                 )
             )
 
