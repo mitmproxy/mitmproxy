@@ -283,7 +283,6 @@ class Reader(_FileLike):
                 raise NetLibSSLError(str(e))
 
 
-
 class Address(object):
 
     """
@@ -498,6 +497,29 @@ class TCPClient(_Connection):
     rbufsize = -1
     wbufsize = -1
 
+    def __init__(self, address, source_address=None):
+        self.connection, self.rfile, self.wfile = None, None, None
+        self.address = address
+        self.source_address = Address.wrap(
+            source_address) if source_address else None
+        self.cert = None
+        self.ssl_established = False
+        self.ssl_verification_error = None
+        self.sni = None
+
+    @property
+    def address(self):
+        return self.__address
+
+    @address.setter
+    def address(self, address):
+        if self.connection:
+            raise RuntimeError("Cannot change server address after establishing connection")
+        if address:
+            self.__address = Address.wrap(address)
+        else:
+            self.__address = None
+
     def close(self):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
@@ -506,16 +528,6 @@ class TCPClient(_Connection):
             close_socket(self.connection._socket)
         else:
             close_socket(self.connection)
-
-    def __init__(self, address, source_address=None):
-        self.address = Address.wrap(address)
-        self.source_address = Address.wrap(
-            source_address) if source_address else None
-        self.connection, self.rfile, self.wfile = None, None, None
-        self.cert = None
-        self.ssl_established = False
-        self.ssl_verification_error = None
-        self.sni = None
 
     def create_ssl_context(self, cert=None, alpn_protos=None, **sslctx_kwargs):
         context = self._create_ssl_context(

@@ -397,7 +397,8 @@ class Response(object):
             size = utils.pretty_size(len(self.body))
         else:
             size = "content missing"
-        return "<HTTPResponse: {status_code} {msg} ({contenttype}, {size})>".format(
+        # TODO: Remove "(unknown content type, content missing)" edge-case
+        return "<Response: {status_code} {msg} ({contenttype}, {size})>".format(
             status_code=self.status_code,
             msg=self.msg,
             contenttype=self.headers.get_first(
