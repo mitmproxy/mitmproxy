@@ -403,6 +403,7 @@ class _Connection(object):
                             cipher_list=None,
                             alpn_protos=None,
                             alpn_select=None,
+                            alpn_select_callback=None,
                             ):
         """
         Creates an SSL Context.
@@ -457,7 +458,7 @@ class _Connection(object):
             if alpn_protos is not None:
                 # advertise application layer protocols
                 context.set_alpn_protos(alpn_protos)
-            elif alpn_select is not None:
+            elif alpn_select is not None and alpn_select_callback is None:
                 # select application layer protocol
                 def alpn_select_callback(conn_, options):
                     if alpn_select in options:
@@ -465,6 +466,10 @@ class _Connection(object):
                     else:  # pragma no cover
                         return options[0]
                 context.set_alpn_select_callback(alpn_select_callback)
+            elif alpn_select_callback is not None and alpn_select is None:
+                context.set_alpn_select_callback(alpn_select_callback)
+            elif alpn_select_callback is not None and alpn_select is not None:
+                raise NetLibError("ALPN error: only define alpn_select (string) OR alpn_select_callback (method).")
 
         return context
 
