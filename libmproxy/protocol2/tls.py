@@ -124,7 +124,7 @@ class TlsLayer(Layer):
 
             if old_upstream_sni != self.sni_for_upstream_connection:
                 # Perform reconnect
-                if self._server_tls:
+                if self.server_conn and self._server_tls:
                     self.yield_from_callback(Reconnect())
 
             if self.client_sni:
@@ -151,13 +151,14 @@ class TlsLayer(Layer):
         alpn_preference = netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2
         ###
 
+        # TODO: Not
         if self.client_alpn_protos != options:
             # Perform reconnect
-            if self._server_tls:
+            # TODO: Avoid double reconnect.
+            if self.server_conn and self._server_tls:
                 self.yield_from_callback(Reconnect())
 
         self.client_alpn_protos = options
-        print("foo: %s" % options)
 
         if alpn_preference in options:
             return bytes(alpn_preference)

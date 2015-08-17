@@ -3,7 +3,7 @@ from __future__ import (absolute_import, print_function, division)
 from .messages import Kill
 from .rawtcp import RawTcpLayer
 from .tls import TlsLayer
-from .http import HttpLayer
+from .http import Http1Layer, Http2Layer, HttpLayer
 
 
 class RootContext(object):
@@ -36,13 +36,17 @@ class RootContext(object):
             d[2] in ('\x00', '\x01', '\x02', '\x03')
         )
 
+        # TODO: build is_http2_magic check here, maybe this is an easy way to detect h2c
+
         if not d:
             return iter([])
 
         if is_tls_client_hello:
             return TlsLayer(top_layer, True, True)
-        elif isinstance(top_layer, TlsLayer) and isinstance(top_layer.ctx, HttpLayer):
-            return HttpLayer(top_layer, "transparent")
+        elif isinstance(top_layer, TlsLayer) and top_layer.client_conn.get_alpn_proto_negotiated() == 'h2':
+                return Http2Layer(top_layer, 'transparent')
+        elif isinstance(top_layer, TlsLayer) and isinstance(top_layer.ctx, Http1Layer):
+            return Http1Layer(top_layer, "transparent")
         else:
             return RawTcpLayer(top_layer)
 

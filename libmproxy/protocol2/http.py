@@ -4,18 +4,47 @@ from .. import version
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
 from .layer import Layer
 from libmproxy import utils
-from libmproxy.proxy.connection import ServerConnection
 from .messages import SetServer, Connect, Reconnect, Kill
 from libmproxy.protocol import KILL
 
 from libmproxy.protocol.http import HTTPFlow
 from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
-from libmproxy.protocol2.http_protocol_mock import HTTP1
 from netlib import tcp
 from netlib.http import status_codes, http1, HttpErrorConnClosed
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
 from netlib.tcp import NetLibError, Address
+from netlib.http.http1 import HTTP1Protocol
+from netlib.http.http2 import HTTP2Protocol
+
+# TODO: The HTTP2 layer is missing multiplexing, which requires a major rewrite.
+
+
+class Http1Layer(Layer):
+    def __init__(self, ctx, mode):
+        super(Http1Layer, self).__init__(ctx)
+        self.mode = mode
+        self.client_protocol = HTTP1Protocol(self.client_conn)
+        self.server_protocol = HTTP1Protocol(self.server_conn)
+
+    def __call__(self):
+        layer = HttpLayer(self, self.mode)
+        for message in layer():
+            yield message
+
+
+class Http2Layer(Layer):
+    def __init__(self, ctx, mode):
+        super(Http2Layer, self).__init__(ctx)
+        self.mode = mode
+        self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
+
+    def __call__(self):
+        # FIXME: Handle Reconnect etc.
+        layer = HttpLayer(self, self.mode)
+        for message in layer():
+            yield message
 
 
 def make_error_response(status_code, message, headers=None):
@@ -96,8 +125,8 @@ class HttpLayer(Layer):
         while True:
             try:
                 try:
-                    request = HTTP1.read_request(
-                        self.client_conn,
+                    request = HTTPRequest.from_protocol(
+                        self.client_protocol,
                         body_size_limit=self.config.body_size_limit
                     )
                 except tcp.NetLibError:
@@ -219,12 +248,12 @@ class HttpLayer(Layer):
             # streaming:
             # First send the headers and then transfer the response
             # incrementally:
-            h = HTTP1._assemble_response_first_line(flow.response)
+            h = self.client_protocol._assemble_response_first_line(flow.response)
             self.send_to_client(h + "\r\n")
-            h = HTTP1._assemble_response_headers(flow.response, preserve_transfer_encoding=True)
+            h = self.client_protocol._assemble_response_headers(flow.response, preserve_transfer_encoding=True)
             self.send_to_client(h + "\r\n")
 
-            chunks = HTTP1.read_http_body_chunked(
+            chunks = self.client_protocol.read_http_body_chunked(
                 flow.response.headers,
                 self.config.body_size_limit,
                 flow.request.method,
@@ -247,8 +276,8 @@ class HttpLayer(Layer):
         # TODO: Add second attempt.
         self.send_to_server(flow.request)
 
-        flow.response = HTTP1.read_response(
-            self.server_conn,
+        flow.response = HTTPResponse.from_protocol(
+            self.server_protocol,
             flow.request.method,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
@@ -260,10 +289,10 @@ class HttpLayer(Layer):
         if flow is None or flow == KILL:
             yield Kill()
 
-        if flow.response.stream:
+        if flow.response.stream and isinstance(self.server_protocol, http1.HTTP1Protocol):
             flow.response.content = CONTENT_MISSING
         else:
-            flow.response.content = HTTP1.read_http_body(
+            flow.response.content = self.server_protocol.read_http_body(
                 self.server_conn,
                 flow.response.headers,
                 self.config.body_size_limit,
@@ -381,9 +410,9 @@ class HttpLayer(Layer):
                 raise InvalidCredentials("Proxy Authentication Required")
 
     def send_to_server(self, message):
-        self.server_conn.send(HTTP1.assemble(message))
+        self.server_conn.send(self.server_protocol.assemble(message))
 
     def send_to_client(self, message):
         # FIXME
         # - possibly do some http2 stuff here
-        self.client_conn.send(HTTP1.assemble(message))
+        self.client_conn.send(self.client_protocol.assemble(message))
