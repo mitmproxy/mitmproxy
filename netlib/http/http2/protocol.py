@@ -297,19 +297,22 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         if body is None or len(body) == 0:
             return b''
 
-        # TODO: implement max frame size checks and sending in chunks
+        chunk_size = self.http2_settings[frame.SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        chunks = range(0, len(body), chunk_size)
+        frms = [frame.DataFrame(
+            state=self,
+            flags=frame.Frame.FLAG_NO_FLAGS,
+            stream_id=stream_id,
+            payload=body[i:i+chunk_size]) for i in chunks]
+        frms[-1].flags = frame.Frame.FLAG_END_STREAM
+
         # TODO: implement flow-control window
 
-        frm = frame.DataFrame(
-            state=self,
-            flags=frame.Frame.FLAG_END_STREAM,
-            stream_id=stream_id,
-            payload=body)
-
         if self.dump_frames:  # pragma no cover
-            print(frm.human_readable(">>"))
+            for frm in frms:
+                print(frm.human_readable(">>"))
 
-        return [frm.to_bytes()]
+        return [frm.to_bytes() for frm in frms]
 
     def _receive_transmission(self, include_body=True):
         body_expected = True

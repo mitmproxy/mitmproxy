@@ -252,20 +252,25 @@ class TestCreateHeaders():
 
 class TestCreateBody():
     c = tcp.TCPClient(("127.0.0.1", 0))
-    protocol = HTTP2Protocol(c)
 
     def test_create_body_empty(self):
-        bytes = self.protocol._create_body(b'', 1)
+        protocol = HTTP2Protocol(self.c)
+        bytes = protocol._create_body(b'', 1)
         assert b''.join(bytes) == ''.decode('hex')
 
     def test_create_body_single_frame(self):
-        bytes = self.protocol._create_body('foobar', 1)
+        protocol = HTTP2Protocol(self.c)
+        bytes = protocol._create_body('foobar', 1)
         assert b''.join(bytes) == '000006000100000001666f6f626172'.decode('hex')
 
     def test_create_body_multiple_frames(self):
-        pass
-        # bytes = self.protocol._create_body('foobar' * 3000, 1)
-        # TODO: add test for too large frames
+        protocol = HTTP2Protocol(self.c)
+        protocol.http2_settings[SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE] = 5
+        bytes = protocol._create_body('foobarmehm42', 1)
+        assert len(bytes) == 3
+        assert bytes[0] == '000005000000000001666f6f6261'.decode('hex')
+        assert bytes[1] == '000005000000000001726d65686d'.decode('hex')
+        assert bytes[2] == '0000020001000000013432'.decode('hex')
 
 
 class TestReadRequest(tservers.ServerTestBase):
