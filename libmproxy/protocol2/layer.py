@@ -109,7 +109,9 @@ class ServerConnectionMixin(object):
 
     def _handle_server_message(self, message):
         if message == Reconnect:
+            address = self.server_conn.address
             self._disconnect()
+            self.server_conn.address = address
             self._connect()
             return True
         elif message == Connect:

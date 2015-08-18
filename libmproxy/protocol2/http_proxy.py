@@ -10,7 +10,8 @@ class HttpProxy(Layer, ServerConnectionMixin):
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
-
+        if self.server_conn:
+            self._disconnect()
 
 class HttpUpstreamProxy(Layer, ServerConnectionMixin):
     def __init__(self, ctx, server_address):
@@ -21,3 +22,5 @@ class HttpUpstreamProxy(Layer, ServerConnectionMixin):
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
+        if self.server_conn:
+            self._disconnect()

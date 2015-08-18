@@ -10,12 +10,13 @@ from libmproxy.protocol import KILL
 from libmproxy.protocol.http import HTTPFlow
 from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 from netlib import tcp
-from netlib.http import status_codes, http1, HttpErrorConnClosed
+from netlib.http import status_codes, http1, HttpErrorConnClosed, HttpError
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
 from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
+
 
 # TODO: The HTTP2 layer is missing multiplexing, which requires a major rewrite.
 
@@ -31,6 +32,7 @@ class Http1Layer(Layer):
         layer = HttpLayer(self, self.mode)
         for message in layer():
             yield message
+            self.server_protocol = HTTP1Protocol(self.server_conn)
 
 
 class Http2Layer(Layer):
@@ -41,10 +43,10 @@ class Http2Layer(Layer):
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
 
     def __call__(self):
-        # FIXME: Handle Reconnect etc.
         layer = HttpLayer(self, self.mode)
         for message in layer():
             yield message
+            self.server_protocol = HTTP1Protocol(self.server_conn)
 
 
 def make_error_response(status_code, message, headers=None):
@@ -100,6 +102,7 @@ class ConnectServerConnection(object):
     """
     "Fake" ServerConnection to represent state after a CONNECT request to an upstream proxy.
     """
+
     def __init__(self, address, ctx):
         self.address = tcp.Address.wrap(address)
         self._ctx = ctx
@@ -124,6 +127,8 @@ class HttpLayer(Layer):
     def __call__(self):
         while True:
             try:
+                flow = HTTPFlow(self.client_conn, self.server_conn, live=True)
+
                 try:
                     request = HTTPRequest.from_protocol(
                         self.client_protocol,
@@ -148,7 +153,6 @@ class HttpLayer(Layer):
                 # Make sure that the incoming request matches our expectations
                 self.validate_request(request)
 
-                flow = HTTPFlow(self.client_conn, self.server_conn)
                 flow.request = request
                 for message in self.process_request_hook(flow):
                     yield message
@@ -164,15 +168,22 @@ class HttpLayer(Layer):
                 if self.check_close_connection(flow):
                     return
 
+                # TODO: Implement HTTP Upgrade
+
                 # Upstream Proxy Mode: Handle CONNECT
                 if flow.request.form_in == "authority" and flow.response.code == 200:
                     for message in self.handle_upstream_mode_connect(flow.request.copy()):
                         yield message
                     return
 
-            except (HttpErrorConnClosed, NetLibError) as e:
-                make_error_response(502, repr(e))
+            except (HttpErrorConnClosed, NetLibError, HttpError) as e:
+                self.send_to_client(make_error_response(
+                    getattr(e, "code", 502),
+                    repr(e)
+                ))
                 raise ProtocolException(repr(e), e)
+            finally:
+                flow.live = False
 
     def handle_regular_mode_connect(self, request):
         yield SetServer((request.host, request.port), False, None)
@@ -267,21 +278,43 @@ class HttpLayer(Layer):
 
             for chunk in chunks:
                 for part in chunk:
+                    # TODO: That's going to fail.
                     self.send_to_client(part)
                 self.client_conn.wfile.flush()
 
             flow.response.timestamp_end = utils.timestamp()
 
     def get_response_from_server(self, flow):
-        # TODO: Add second attempt.
-        self.send_to_server(flow.request)
+        def get_response():
+            self.send_to_server(flow.request)
+            # Only get the headers at first...
+            flow.response = HTTPResponse.from_protocol(
+                self.server_protocol,
+                flow.request.method,
+                body_size_limit=self.config.body_size_limit,
+                include_body=False,
+            )
 
-        flow.response = HTTPResponse.from_protocol(
-            self.server_protocol,
-            flow.request.method,
-            body_size_limit=self.config.body_size_limit,
-            include_body=False,
-        )
+        try:
+            get_response()
+        except (tcp.NetLibError, HttpErrorConnClosed) as v:
+            self.log(
+                "server communication error: %s" % repr(v),
+                level="debug"
+            )
+            # In any case, we try to reconnect at least once. This is
+            # necessary because it might be possible that we already
+            # initiated an upstream connection after clientconnect that
+            # has already been expired, e.g consider the following event
+            # log:
+            # > clientconnect (transparent mode destination known)
+            # > serverconnect (required for client tls handshake)
+            # > read n% of large request
+            # > server detects timeout, disconnects
+            # > read (100-n)% of large request
+            # > send large request upstream
+            yield Reconnect()
+            get_response()
 
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
@@ -293,7 +326,6 @@ class HttpLayer(Layer):
             flow.response.content = CONTENT_MISSING
         else:
             flow.response.content = self.server_protocol.read_http_body(
-                self.server_conn,
                 flow.response.headers,
                 self.config.body_size_limit,
                 flow.request.method,
@@ -405,7 +437,7 @@ class HttpLayer(Layer):
                 self.send_to_client(make_error_response(
                     407,
                     "Proxy Authentication Required",
-                    self.config.authenticator.auth_challenge_headers()
+                    odict.ODictCaseless([[k,v] for k, v in self.config.authenticator.auth_challenge_headers().items()])
                 ))
                 raise InvalidCredentials("Proxy Authentication Required")
 

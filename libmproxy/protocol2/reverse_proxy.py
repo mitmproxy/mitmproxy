@@ -19,3 +19,5 @@ class ReverseProxy(Layer, ServerConnectionMixin):
         for message in layer():
             if not self._handle_server_message(message):
                 yield message
+        if self.server_conn:
+            self._disconnect()

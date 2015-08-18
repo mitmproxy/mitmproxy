@@ -1,4 +1,5 @@
 from __future__ import (absolute_import, print_function, division)
+import string
 
 from .messages import Kill
 from .rawtcp import RawTcpLayer
@@ -36,6 +37,8 @@ class RootContext(object):
             d[2] in ('\x00', '\x01', '\x02', '\x03')
         )
 
+        is_ascii = all(x in string.ascii_uppercase for x in d)
+
         # TODO: build is_http2_magic check here, maybe this is an easy way to detect h2c
 
         if not d:
@@ -43,10 +46,11 @@ class RootContext(object):
 
         if is_tls_client_hello:
             return TlsLayer(top_layer, True, True)
-        elif isinstance(top_layer, TlsLayer) and top_layer.client_conn.get_alpn_proto_negotiated() == 'h2':
+        elif isinstance(top_layer, TlsLayer) and is_ascii:
+            if top_layer.client_conn.get_alpn_proto_negotiated() == 'h2':
                 return Http2Layer(top_layer, 'transparent')
-        elif isinstance(top_layer, TlsLayer) and isinstance(top_layer.ctx, Http1Layer):
-            return Http1Layer(top_layer, "transparent")
+            else:
+                return Http1Layer(top_layer, "transparent")
         else:
             return RawTcpLayer(top_layer)
 

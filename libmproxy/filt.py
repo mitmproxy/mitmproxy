@@ -246,14 +246,14 @@ class FSrc(_Rex):
     help = "Match source address"
 
     def __call__(self, f):
-        return f.client_conn and re.search(self.expr, repr(f.client_conn.address))
+        return f.client_conn.address and re.search(self.expr, repr(f.client_conn.address))
 
 class FDst(_Rex):
     code = "dst"
     help = "Match destination address"
 
     def __call__(self, f):
-        return f.server_conn and re.search(self.expr, repr(f.server_conn.address))
+        return f.server_conn.address and re.search(self.expr, repr(f.server_conn.address))
 
 class _Int(_Action):
     def __init__(self, num):

@@ -729,6 +729,7 @@ class RequestReplayThread(threading.Thread):
             if not self.flow.response:
                 # In all modes, we directly connect to the server displayed
                 if self.config.mode == "upstream":
+                    # FIXME
                     server_address = self.config.mode.get_upstream_server(
                         self.flow.client_conn
                     )[2:]

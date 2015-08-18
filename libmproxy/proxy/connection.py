@@ -27,6 +27,9 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         self.timestamp_ssl_setup = None
         self.protocol = None
 
+    def __nonzero__(self):
+        return bool(self.connection) and not self.finished
+
     def __repr__(self):
         return "<ClientConnection: {ssl}{host}:{port}>".format(
             ssl="[ssl] " if self.ssl_established else "",
@@ -89,7 +92,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def __init__(self, address):
         tcp.TCPClient.__init__(self, address)
 
-        self.state = []  # a list containing (conntype, state) tuples
+        self.via = None
         self.timestamp_start = None
         self.timestamp_end = None
         self.timestamp_tcp_setup = None
@@ -97,7 +100,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.protocol = None
 
     def __nonzero__(self):
-        return bool(self.connection)
+        return bool(self.connection) and not self.finished
 
     def __repr__(self):
         if self.ssl_established and self.sni:
@@ -117,7 +120,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         return self.ssl_established
 
     _stateobject_attributes = dict(
-        state=list,
         timestamp_start=float,
         timestamp_end=float,
         timestamp_tcp_setup=float,
@@ -187,3 +189,5 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def finish(self):
         tcp.TCPClient.finish(self)
         self.timestamp_end = utils.timestamp()
+
+ServerConnection._stateobject_attributes["via"] = ServerConnection
