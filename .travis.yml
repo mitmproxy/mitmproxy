@@ -18,16 +18,16 @@ matrix:
             - debian-sid
           packages:
             - libssl-dev
-    - python: pypy
-      env: OPENSSL=1.0.2
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.0.2
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
+    # - python: pypy
+    #   env: OPENSSL=1.0.2
+    #   addons:
+    #     apt:
+    #       sources:
+    #         # Debian sid currently holds OpenSSL 1.0.2
+    #         # change this with future releases!
+    #         - debian-sid
+    #       packages:
+    #         - libssl-dev
 
 install:
   - "pip install --src . -r requirements.txt"
