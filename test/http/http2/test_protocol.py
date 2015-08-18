@@ -247,7 +247,21 @@ class TestCreateHeaders():
             '000014010400000001824488355217caf3a69a3f87408294e7838c767f'\
             .decode('hex')
 
-    # TODO: add test for too large header_block_fragments
+    def test_create_headers_multiple_frames(self):
+        headers = [
+            (b':method', b'GET'),
+            (b':path', b'/'),
+            (b':scheme', b'https'),
+            (b'foo', b'bar'),
+            (b'server', b'version')]
+
+        protocol = HTTP2Protocol(self.c)
+        protocol.http2_settings[SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE] = 8
+        bytes = protocol._create_headers(headers, 1, end_stream=True)
+        assert len(bytes) == 3
+        assert bytes[0] == '000008010000000001828487408294e783'.decode('hex')
+        assert bytes[1] == '0000080900000000018c767f7685ee5b10'.decode('hex')
+        assert bytes[2] == '00000209050000000163d5'.decode('hex')
 
 
 class TestCreateBody():

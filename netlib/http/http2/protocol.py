@@ -274,24 +274,33 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         # to be more strict use: self._read_settings_ack(hide)
 
     def _create_headers(self, headers, stream_id, end_stream=True):
-        # TODO: implement max frame size checks and sending in chunks
-
-        flags = frame.Frame.FLAG_END_HEADERS
-        if end_stream:
-            flags |= frame.Frame.FLAG_END_STREAM
+        def frame_cls(chunks):
+            for i in chunks:
+                if i == 0:
+                    yield frame.HeadersFrame, i
+                else:
+                    yield frame.ContinuationFrame, i
 
         header_block_fragment = self.encoder.encode(headers)
 
-        frm = frame.HeadersFrame(
+        chunk_size = self.http2_settings[frame.SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        chunks = range(0, len(header_block_fragment), chunk_size)
+        frms = [frm_cls(
             state=self,
-            flags=flags,
+            flags=frame.Frame.FLAG_NO_FLAGS,
             stream_id=stream_id,
-            header_block_fragment=header_block_fragment)
+            header_block_fragment=header_block_fragment[i:i+chunk_size]) for frm_cls, i in frame_cls(chunks)]
+
+        last_flags = frame.Frame.FLAG_END_HEADERS
+        if end_stream:
+            last_flags |= frame.Frame.FLAG_END_STREAM
+        frms[-1].flags = last_flags
 
         if self.dump_frames:  # pragma no cover
-            print(frm.human_readable(">>"))
+            for frm in frms:
+                print(frm.human_readable(">>"))
 
-        return [frm.to_bytes()]
+        return [frm.to_bytes() for frm in frms]
 
     def _create_body(self, body, stream_id):
         if body is None or len(body) == 0:
