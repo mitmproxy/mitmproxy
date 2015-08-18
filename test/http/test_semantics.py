@@ -69,17 +69,10 @@ class TestRequest(object):
     def test_legacy_first_line(self):
         req = tutils.treq()
 
-        req.form_in = 'relative'
-        assert req.legacy_first_line() == "GET /path HTTP/1.1"
-
-        req.form_in = 'authority'
-        assert req.legacy_first_line() == "GET address:22 HTTP/1.1"
-
-        req.form_in = 'absolute'
-        assert req.legacy_first_line() == "GET http://address:22/path HTTP/1.1"
-
-        req.form_in = 'foobar'
-        tutils.raises(http.HttpError, req.legacy_first_line)
+        assert req.legacy_first_line('relative') == "GET /path HTTP/1.1"
+        assert req.legacy_first_line('authority') == "GET address:22 HTTP/1.1"
+        assert req.legacy_first_line('absolute') == "GET http://address:22/path HTTP/1.1"
+        tutils.raises(http.HttpError, req.legacy_first_line, 'foobar')
 
     def test_anticache(self):
         req = tutils.treq()
