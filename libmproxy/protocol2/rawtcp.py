@@ -4,12 +4,11 @@ import OpenSSL
 from ..exceptions import ProtocolException
 from ..protocol.tcp import TCPHandler
 from .layer import Layer
-from .messages import Connect
 
 
 class RawTcpLayer(Layer):
     def __call__(self):
-        yield Connect()
+        self.connect()
         tcp_handler = TCPHandler(self)
         try:
             tcp_handler.handle_messages()

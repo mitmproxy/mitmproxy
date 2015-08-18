@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, print_function, division)
 import string
 
-from .messages import Kill
+from libmproxy.protocol2.layer import Kill
 from .rawtcp import RawTcpLayer
 from .tls import TlsLayer
 from .http import Http1Layer, Http2Layer, HttpLayer

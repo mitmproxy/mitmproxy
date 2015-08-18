@@ -18,8 +18,8 @@ class TransparentProxy(Layer, ServerConnectionMixin):
             raise ProtocolException("Transparent mode failure: %s" % repr(e), e)
 
         layer = self.ctx.next_layer(self)
-        for message in layer():
-            if not self._handle_server_message(message):
-                yield message
-        if self.server_conn:
-            self._disconnect()
+        try:
+            layer()
+        finally:
+            if self.server_conn:
+                self._disconnect()

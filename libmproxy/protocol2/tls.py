@@ -6,8 +6,7 @@ from netlib import tcp
 import netlib.http.http2
 
 from ..exceptions import ProtocolException
-from .layer import Layer, yield_from_callback
-from .messages import Connect, Reconnect, SetServer
+from .layer import Layer
 
 
 class TlsLayer(Layer):
@@ -50,34 +49,33 @@ class TlsLayer(Layer):
         )
 
         if client_tls_requires_server_cert:
-            for m in self._establish_tls_with_client_and_server():
-                yield m
+            self._establish_tls_with_client_and_server()
         elif self._client_tls:
-            for m in self._establish_tls_with_client():
-                yield m
+            self._establish_tls_with_client()
 
         layer = self.ctx.next_layer(self)
+        layer()
 
-        for message in layer():
-            self.log("TlsLayer: %s" % message,"debug")
-            if not (message == Connect and self._connected):
-                yield message
+    def connect(self):
+        if not self.server_conn:
+            self.ctx.connect()
+        if self._server_tls and not self._server_tls_established:
+            self._establish_tls_with_server()
 
-            if message == Connect or message == Reconnect:
-                if self._server_tls and not self._server_tls_established:
-                    self._establish_tls_with_server()
-            if message == SetServer and message.depth == 1:
-                if message.server_tls is not None:
-                    self._sni_from_server_change = message.sni
-                    self._server_tls = message.server_tls
+    def reconnect(self):
+        self.ctx.reconnect()
+        if self._server_tls and not self._server_tls_established:
+            self._establish_tls_with_server()
+
+    def set_server(self, address, server_tls, sni, depth=1):
+        self.ctx.set_server(address, server_tls, sni, depth)
+        if server_tls is not None:
+            self._sni_from_server_change = sni
+            self._server_tls = server_tls
 
     @property
     def _server_tls_established(self):
         return self.server_conn and self.server_conn.tls_established
-
-    @property
-    def _connected(self):
-        return bool(self.server_conn)
 
     @property
     def sni_for_upstream_connection(self):
@@ -92,19 +90,14 @@ class TlsLayer(Layer):
         """
 
         # First, try to connect to the server.
-        yield Connect()
+        self.ctx.connect()
         server_err = None
         try:
             self._establish_tls_with_server()
         except ProtocolException as e:
             server_err = e
 
-        for message in self._establish_tls_with_client():
-            if message == Reconnect:
-                yield message
-                self._establish_tls_with_server()
-            else:
-                raise RuntimeError("Unexpected Message: %s" % message)
+        self._establish_tls_with_client()
 
         if server_err and not self.client_sni:
             raise server_err
@@ -125,7 +118,7 @@ class TlsLayer(Layer):
             if old_upstream_sni != self.sni_for_upstream_connection:
                 # Perform reconnect
                 if self.server_conn and self._server_tls:
-                    self.yield_from_callback(Reconnect())
+                    self.reconnect()
 
             if self.client_sni:
                 # Now, change client context to reflect possibly changed certificate:
@@ -156,7 +149,7 @@ class TlsLayer(Layer):
             # Perform reconnect
             # TODO: Avoid double reconnect.
             if self.server_conn and self._server_tls:
-                self.yield_from_callback(Reconnect())
+                self.reconnect()
 
         self.client_alpn_protos = options
 
@@ -165,7 +158,6 @@ class TlsLayer(Layer):
         else:  # pragma no cover
             return options[0]
 
-    @yield_from_callback
     def _establish_tls_with_client(self):
         self.log("Establish TLS with client", "debug")
         cert, key, chain_file = self._find_cert()

@@ -21,7 +21,7 @@ Automated protocol detection by peeking into the buffer:
 
 Communication between layers is done as follows:
     - lower layers provide context information to higher layers
-    - higher layers can "yield" commands to lower layers,
+    - higher layers can call functions provided by lower layers,
       which are propagated until they reach a suitable layer.
 
 Further goals:
@@ -35,7 +35,6 @@ import threading
 from netlib import tcp
 from ..proxy import Log
 from ..proxy.connection import ServerConnection
-from .messages import Connect, Reconnect, SetServer, Kill
 from ..exceptions import ProtocolException
 
 
@@ -69,7 +68,7 @@ class Layer(_LayerCodeCompletion):
         """
         Logic of the layer.
         Raises:
-            ProxyError2 in case of protocol exceptions.
+            ProtocolException in case of protocol exceptions.
         """
         raise NotImplementedError
 
@@ -107,29 +106,20 @@ class ServerConnectionMixin(object):
         super(ServerConnectionMixin, self).__init__()
         self.server_conn = ServerConnection(server_address)
 
-    def _handle_server_message(self, message):
-        if message == Reconnect:
-            address = self.server_conn.address
-            self._disconnect()
-            self.server_conn.address = address
-            self._connect()
-            return True
-        elif message == Connect:
-            self._connect()
-            return True
-        elif message == SetServer:
-            if message.depth == 1:
-                if self.server_conn:
-                    self._disconnect()
-                self.log("Set new server address: " + repr(message.address), "debug")
-                self.server_conn.address = message.address
-                return True
-            else:
-                message.depth -= 1
-        elif message == Kill:
-            self._disconnect()
+    def reconnect(self):
+        address = self.server_conn.address
+        self._disconnect()
+        self.server_conn.address = address
+        self.connect()
 
-        return False
+    def set_server(self, address, server_tls, sni, depth=1):
+        if depth == 1:
+            if self.server_conn:
+                self._disconnect()
+            self.log("Set new server address: " + repr(address), "debug")
+            self.server_conn.address = address
+        else:
+            self.ctx.set_server(address, server_tls, sni, depth-1)
 
     def _disconnect(self):
         """
@@ -141,7 +131,7 @@ class ServerConnectionMixin(object):
         # self.channel.tell("serverdisconnect", self)
         self.server_conn = ServerConnection(None)
 
-    def _connect(self):
+    def connect(self):
         if not self.server_conn.address:
             raise ProtocolException("Cannot connect to server, no server address given.")
         self.log("serverconnect", "debug", [repr(self.server_conn.address)])
@@ -151,55 +141,7 @@ class ServerConnectionMixin(object):
             raise ProtocolException("Server connection to '%s' failed: %s" % (self.server_conn.address, e), e)
 
 
-def yield_from_callback(fun):
+class Kill(Exception):
     """
-    Decorator which makes it possible to yield from callbacks in the original thread.
-    As a use case, take the pyOpenSSL handle_sni callback: If we receive a new SNI from the client,
-    we need to reconnect to the server with the new SNI. Reconnecting would normally be done using "yield Reconnect()",
-    but we're in a pyOpenSSL callback here, outside of the main program flow. With this decorator, it looks as follows:
-
-    def handle_sni(self):
-        # ...
-        self.yield_from_callback(Reconnect())
-
-    @yield_from_callback
-    def establish_ssl_with_client():
-        self.client_conn.convert_to_ssl(...)
-
-    for message in self.establish_ssl_with_client():  # will yield Reconnect at some point
-        yield message
-
-
-    Limitations:
-        - You cannot yield True.
+    Kill a connection.
     """
-    yield_queue = Queue.Queue()
-
-    def do_yield(msg):
-        yield_queue.put(msg)
-        yield_queue.get()
-
-    def wrapper(self, *args, **kwargs):
-        self.yield_from_callback = do_yield
-
-        def run():
-            try:
-                fun(self, *args, **kwargs)
-                yield_queue.put(True)
-            except Exception as e:
-                yield_queue.put(e)
-
-        threading.Thread(target=run, name="YieldFromCallbackThread").start()
-        while True:
-            msg = yield_queue.get()
-            if msg is True:
-                break
-            elif isinstance(msg, Exception):
-                raise ProtocolException("Error in %s: %s" % (fun.__name__, repr(msg)), msg)
-            else:
-                yield msg
-                yield_queue.put(None)
-
-        self.yield_from_callback = None
-
-    return wrapper

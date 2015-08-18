@@ -3,6 +3,7 @@ from __future__ import absolute_import, print_function
 import traceback
 import sys
 import socket
+from libmproxy.protocol2.layer import Kill
 from netlib import tcp
 
 from ..protocol.handle import protocol_handler
@@ -88,12 +89,9 @@ class ConnectionHandler2:
             root_layer = protocol2.HttpProxy(root_context)
 
         try:
-            for message in root_layer():
-                if message == protocol2.messages.Kill:
-                    self.log("Connection killed", "info")
-                    break
-
-                print("Root layer receveived: %s" % message)
+            root_layer()
+        except Kill as e:
+            self.log("Connection killed", "info")
         except ProtocolException as e:
             self.log(e, "info")
         except Exception:

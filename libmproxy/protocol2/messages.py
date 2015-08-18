@@ -44,7 +44,3 @@ class SetServer(_Message):
         self.depth = depth
 
 
-class Kill(_Message):
-    """
-    Kill a connection.
-    """

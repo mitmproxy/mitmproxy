@@ -5,7 +5,7 @@ from ..proxy import ProxyError, Socks5ProxyMode
 from .layer import Layer, ServerConnectionMixin
 
 
-class Socks5Proxy(ServerConnectionMixin, Layer):
+class Socks5Proxy(Layer, ServerConnectionMixin):
     def __call__(self):
         try:
             s5mode = Socks5ProxyMode(self.config.ssl_ports)
@@ -16,9 +16,12 @@ class Socks5Proxy(ServerConnectionMixin, Layer):
 
         self.server_conn.address = address
 
+        # TODO: Kill event
+
         layer = self.ctx.next_layer(self)
-        for message in layer():
-            if not self._handle_server_message(message):
-                yield message
-        if self.server_conn:
-            self._disconnect()
+
+        try:
+            layer()
+        finally:
+            if self.server_conn:
+                self._disconnect()

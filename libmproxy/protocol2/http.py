@@ -4,7 +4,7 @@ from .. import version
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
 from .layer import Layer
 from libmproxy import utils
-from .messages import SetServer, Connect, Reconnect, Kill
+from libmproxy.protocol2.layer import Kill
 from libmproxy.protocol import KILL
 
 from libmproxy.protocol.http import HTTPFlow
@@ -28,12 +28,21 @@ class Http1Layer(Layer):
         self.client_protocol = HTTP1Protocol(self.client_conn)
         self.server_protocol = HTTP1Protocol(self.server_conn)
 
+    def connect(self):
+        self.ctx.connect()
+        self.server_protocol = HTTP1Protocol(self.server_conn)
+
+    def reconnect(self):
+        self.ctx.reconnect()
+        self.server_protocol = HTTP1Protocol(self.server_conn)
+
+    def set_server(self, *args, **kwargs):
+        self.ctx.set_server(*args, **kwargs)
+        self.server_protocol = HTTP1Protocol(self.server_conn)
+
     def __call__(self):
         layer = HttpLayer(self, self.mode)
-        for message in layer():
-            yield message
-            self.server_protocol = HTTP1Protocol(self.server_conn)
-
+        layer()
 
 class Http2Layer(Layer):
     def __init__(self, ctx, mode):
@@ -42,11 +51,21 @@ class Http2Layer(Layer):
         self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True)
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
 
+    def connect(self):
+        self.ctx.connect()
+        self.server_protocol = HTTP2Protocol(self.server_conn)
+
+    def reconnect(self):
+        self.ctx.reconnect()
+        self.server_protocol = HTTP2Protocol(self.server_conn)
+
+    def set_server(self, *args, **kwargs):
+        self.ctx.set_server(*args, **kwargs)
+        self.server_protocol = HTTP2Protocol(self.server_conn)
+
     def __call__(self):
         layer = HttpLayer(self, self.mode)
-        for message in layer():
-            yield message
-            self.server_protocol = HTTP1Protocol(self.server_conn)
+        layer()
 
 
 def make_error_response(status_code, message, headers=None):
@@ -115,6 +134,37 @@ class ConnectServerConnection(object):
         return getattr(self.via, item)
 
 
+class UpstreamConnectLayer(Layer):
+    def __init__(self, ctx, connect_request):
+        super(UpstreamConnectLayer, self).__init__(ctx)
+        self.connect_request = connect_request
+        self.server_conn = ConnectServerConnection((connect_request.host, connect_request.port), self.ctx)
+
+    def __call__(self):
+        layer = self.ctx.next_layer(self)
+        layer()
+
+    def connect(self):
+        if not self.server_conn:
+            self.ctx.connect()
+            self.send_to_server(self.connect_request)
+        else:
+            pass  # swallow the message
+
+    def reconnect(self):
+        self.ctx.reconnect()
+        self.send_to_server(self.connect_request)
+
+    def set_server(self, address, server_tls, sni, depth=1):
+        if depth == 1:
+            if self.ctx.server_conn:
+                self.ctx.reconnect()
+            self.connect_request.host = address.host
+            self.connect_request.port = address.port
+            self.server_conn.address = address
+        else:
+            self.ctx.set_server(address, server_tls, sni, depth-1)
+
 class HttpLayer(Layer):
     """
     HTTP 1 Layer
@@ -146,22 +196,18 @@ class HttpLayer(Layer):
 
                 # Regular Proxy Mode: Handle CONNECT
                 if self.mode == "regular" and request.form_in == "authority":
-                    for message in self.handle_regular_mode_connect(request):
-                        yield message
+                    self.handle_regular_mode_connect(request)
                     return
 
                 # Make sure that the incoming request matches our expectations
                 self.validate_request(request)
 
                 flow.request = request
-                for message in self.process_request_hook(flow):
-                    yield message
+                self.process_request_hook(flow)
 
                 if not flow.response:
-                    for message in self.establish_server_connection(flow):
-                        yield message
-                    for message in self.get_response_from_server(flow):
-                        yield message
+                    self.establish_server_connection(flow)
+                    self.get_response_from_server(flow)
 
                 self.send_response_to_client(flow)
 
@@ -172,8 +218,7 @@ class HttpLayer(Layer):
 
                 # Upstream Proxy Mode: Handle CONNECT
                 if flow.request.form_in == "authority" and flow.response.code == 200:
-                    for message in self.handle_upstream_mode_connect(flow.request.copy()):
-                        yield message
+                    self.handle_upstream_mode_connect(flow.request.copy())
                     return
 
             except (HttpErrorConnClosed, NetLibError, HttpError) as e:
@@ -186,38 +231,14 @@ class HttpLayer(Layer):
                 flow.live = False
 
     def handle_regular_mode_connect(self, request):
-        yield SetServer((request.host, request.port), False, None)
+        self.set_server((request.host, request.port), False, None)
         self.send_to_client(make_connect_response(request.httpversion))
         layer = self.ctx.next_layer(self)
-        for message in layer():
-            yield message
+        layer()
 
     def handle_upstream_mode_connect(self, connect_request):
-        layer = self.ctx.next_layer(self)
-        self.server_conn = ConnectServerConnection((connect_request.host, connect_request.port), self.ctx)
-
-        for message in layer():
-            if message == Connect:
-                if not self.server_conn:
-                    yield message
-                    self.send_to_server(connect_request)
-                else:
-                    pass  # swallow the message
-            elif message == Reconnect:
-                yield message
-                self.send_to_server(connect_request)
-            elif message == SetServer:
-                if message.depth == 1:
-                    if self.ctx.server_conn:
-                        yield Reconnect()
-                    connect_request.host = message.address.host
-                    connect_request.port = message.address.port
-                    self.server_conn.address = message.address
-                else:
-                    message.depth -= 1
-                    yield message
-            else:
-                yield message
+        layer = UpstreamConnectLayer(self, connect_request)
+        layer()
 
     def check_close_connection(self, flow):
         """
@@ -313,14 +334,14 @@ class HttpLayer(Layer):
             # > server detects timeout, disconnects
             # > read (100-n)% of large request
             # > send large request upstream
-            yield Reconnect()
+            self.reconnect()
             get_response()
 
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
         flow = self.channel.ask("responseheaders", flow)
         if flow is None or flow == KILL:
-            yield Kill()
+            raise Kill()
 
         if flow.response.stream and isinstance(self.server_protocol, http1.HTTP1Protocol):
             flow.response.content = CONTENT_MISSING
@@ -345,7 +366,7 @@ class HttpLayer(Layer):
         )
         response_reply = self.channel.ask("response", flow)
         if response_reply is None or response_reply == KILL:
-            yield Kill()
+            raise Kill()
 
     def process_request_hook(self, flow):
         # Determine .scheme, .host and .port attributes for inline scripts.
@@ -363,10 +384,10 @@ class HttpLayer(Layer):
             flow.request.port = self.ctx.server_conn.address.port
             flow.request.scheme = "https" if self.server_conn.tls_established else "http"
 
-        # TODO: Expose SetServer functionality to inline scripts somehow? (yield_from_callback?)
+        # TODO: Expose .set_server functionality to inline scripts
         request_reply = self.channel.ask("request", flow)
         if request_reply is None or request_reply == KILL:
-            yield Kill()
+            raise Kill()
         if isinstance(request_reply, HTTPResponse):
             flow.response = request_reply
             return
@@ -378,10 +399,10 @@ class HttpLayer(Layer):
         if self.mode == "regular" or self.mode == "transparent":
             # If there's an existing connection that doesn't match our expectations, kill it.
             if address != self.server_conn.address or tls != self.server_conn.ssl_established:
-                yield SetServer(address, tls, address.host)
+                self.set_server(address, tls, address.host)
             # Establish connection is neccessary.
             if not self.server_conn:
-                yield Connect()
+                self.connect()
 
             # SetServer is not guaranteed to work with TLS:
             # If there's not TlsLayer below which could catch the exception,
@@ -391,16 +412,16 @@ class HttpLayer(Layer):
 
         else:
             if not self.server_conn:
-                yield Connect()
+                self.connect()
             if tls:
                 raise HttpException("Cannot change scheme in upstream proxy mode.")
             """
             # This is a very ugly (untested) workaround to solve a very ugly problem.
             if self.server_conn and self.server_conn.tls_established and not ssl:
-                yield Reconnect()
+                self.reconnect()
             elif ssl and not hasattr(self, "connected_to") or self.connected_to != address:
                 if self.server_conn.tls_established:
-                    yield Reconnect()
+                    self.reconnect()
 
                 self.send_to_server(make_connect_request(address))
                 tls_layer = TlsLayer(self, False, True)
