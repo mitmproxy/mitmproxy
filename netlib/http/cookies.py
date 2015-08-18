@@ -23,8 +23,7 @@ variants. Serialization follows RFC6265.
     http://tools.ietf.org/html/rfc2965
 """
 
-# TODO
-# - Disallow LHS-only Cookie values
+# TODO: Disallow LHS-only Cookie values
 
 
 def _read_until(s, start, term):

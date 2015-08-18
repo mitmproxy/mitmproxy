@@ -80,13 +80,39 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         timestamp_end = time.time()
 
+        authority = headers.get_first(':authority', '')
+        method = headers.get_first(':method', 'GET')
+        scheme = headers.get_first(':scheme', 'https')
+        path = headers.get_first(':path', '/')
+        host = None
+        port = None
+
+        if path == '*' or path.startswith("/"):
+            form_in = "relative"
+        elif method == 'CONNECT':
+            form_in = "authority"
+            if ":" in authority:
+                host, port = authority.split(":", 1)
+            else:
+                host = authority
+        else:
+            form_in = "absolute"
+            # FIXME: verify if path or :host contains what we need
+            scheme, host, port, _ = utils.parse_url(path)
+
+        if host is None:
+            host = 'localhost'
+        if port is None:
+            port = 80 if scheme == 'http' else 443
+        port = int(port)
+
         request = http.Request(
-            "relative",  # TODO: use the correct value
-            headers.get_first(':method', 'GET'),
-            headers.get_first(':scheme', 'https'),
-            headers.get_first(':host', 'localhost'),
-            443,  # TODO: parse port number from host?
-            headers.get_first(':path', '/'),
+            form_in,
+            method,
+            scheme,
+            host,
+            port,
+            path,
             (2, 0),
             headers,
             body,
@@ -274,44 +300,57 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         # to be more strict use: self._read_settings_ack(hide)
 
     def _create_headers(self, headers, stream_id, end_stream=True):
-        # TODO: implement max frame size checks and sending in chunks
-
-        flags = frame.Frame.FLAG_END_HEADERS
-        if end_stream:
-            flags |= frame.Frame.FLAG_END_STREAM
+        def frame_cls(chunks):
+            for i in chunks:
+                if i == 0:
+                    yield frame.HeadersFrame, i
+                else:
+                    yield frame.ContinuationFrame, i
 
         header_block_fragment = self.encoder.encode(headers)
 
-        frm = frame.HeadersFrame(
+        chunk_size = self.http2_settings[frame.SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        chunks = range(0, len(header_block_fragment), chunk_size)
+        frms = [frm_cls(
             state=self,
-            flags=flags,
+            flags=frame.Frame.FLAG_NO_FLAGS,
             stream_id=stream_id,
-            header_block_fragment=header_block_fragment)
+            header_block_fragment=header_block_fragment[i:i+chunk_size]) for frm_cls, i in frame_cls(chunks)]
+
+        last_flags = frame.Frame.FLAG_END_HEADERS
+        if end_stream:
+            last_flags |= frame.Frame.FLAG_END_STREAM
+        frms[-1].flags = last_flags
 
         if self.dump_frames:  # pragma no cover
-            print(frm.human_readable(">>"))
+            for frm in frms:
+                print(frm.human_readable(">>"))
 
-        return [frm.to_bytes()]
+        return [frm.to_bytes() for frm in frms]
 
     def _create_body(self, body, stream_id):
         if body is None or len(body) == 0:
             return b''
 
-        # TODO: implement max frame size checks and sending in chunks
+        chunk_size = self.http2_settings[frame.SettingsFrame.SETTINGS.SETTINGS_MAX_FRAME_SIZE]
+        chunks = range(0, len(body), chunk_size)
+        frms = [frame.DataFrame(
+            state=self,
+            flags=frame.Frame.FLAG_NO_FLAGS,
+            stream_id=stream_id,
+            payload=body[i:i+chunk_size]) for i in chunks]
+        frms[-1].flags = frame.Frame.FLAG_END_STREAM
+
         # TODO: implement flow-control window
 
-        frm = frame.DataFrame(
-            state=self,
-            flags=frame.Frame.FLAG_END_STREAM,
-            stream_id=stream_id,
-            payload=body)
-
         if self.dump_frames:  # pragma no cover
-            print(frm.human_readable(">>"))
+            for frm in frms:
+                print(frm.human_readable(">>"))
 
-        return [frm.to_bytes()]
+        return [frm.to_bytes() for frm in frms]
 
     def _receive_transmission(self, include_body=True):
+        # TODO: include_body is not respected
         body_expected = True
 
         stream_id = 0
