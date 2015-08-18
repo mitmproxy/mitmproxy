@@ -247,24 +247,11 @@ class HTTPRequest(MessageMixin, semantics.Request):
             include_body = include_body,
             body_size_limit = body_size_limit,
         )
-
-        return HTTPRequest(
-            req.form_in,
-            req.method,
-            req.scheme,
-            req.host,
-            req.port,
-            req.path,
-            req.httpversion,
-            req.headers,
-            req.body,
-            req.timestamp_start,
-            req.timestamp_end,
-        )
+        return self.wrap(req)
 
     @classmethod
     def wrap(self, request):
-        return HTTPRequest(
+        req = HTTPRequest(
             form_in=request.form_in,
             method=request.method,
             scheme=request.scheme,
@@ -278,6 +265,9 @@ class HTTPRequest(MessageMixin, semantics.Request):
             timestamp_end=request.timestamp_end,
             form_out=(request.form_out if hasattr(request, 'form_out') else None),
         )
+        if hasattr(request, 'stream_id'):
+            req.stream_id = request.stream_id
+        return req
 
     def __hash__(self):
         return id(self)
@@ -371,20 +361,11 @@ class HTTPResponse(MessageMixin, semantics.Response):
             body_size_limit,
             include_body=include_body
         )
-
-        return HTTPResponse(
-            resp.httpversion,
-            resp.status_code,
-            resp.msg,
-            resp.headers,
-            resp.body,
-            resp.timestamp_start,
-            resp.timestamp_end,
-        )
+        return self.wrap(resp)
 
     @classmethod
     def wrap(self, response):
-        return HTTPResponse(
+        resp = HTTPResponse(
             httpversion=response.httpversion,
             status_code=response.status_code,
             msg=response.msg,
@@ -393,6 +374,9 @@ class HTTPResponse(MessageMixin, semantics.Response):
             timestamp_start=response.timestamp_start,
             timestamp_end=response.timestamp_end,
         )
+        if hasattr(response, 'stream_id'):
+            resp.stream_id = response.stream_id
+        return resp
 
     def _refresh_cookie(self, c, delta):
         """

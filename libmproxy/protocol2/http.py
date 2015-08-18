@@ -10,7 +10,7 @@ from libmproxy.protocol import KILL
 from libmproxy.protocol.http import HTTPFlow
 from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 from netlib import tcp
-from netlib.http import status_codes, http1, HttpErrorConnClosed
+from netlib.http import status_codes, http1, http2, HttpErrorConnClosed
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
 from netlib.tcp import NetLibError, Address
@@ -42,6 +42,7 @@ class Http2Layer(Layer):
 
     def __call__(self):
         # FIXME: Handle Reconnect etc.
+        self.server_protocol.perform_connection_preface()
         layer = HttpLayer(self, self.mode)
         for message in layer():
             yield message
@@ -113,10 +114,6 @@ class ConnectServerConnection(object):
 
 
 class HttpLayer(Layer):
-    """
-    HTTP 1 Layer
-    """
-
     def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)
         self.mode = mode
@@ -283,15 +280,18 @@ class HttpLayer(Layer):
             include_body=False,
         )
 
+        if isinstance(self.server_protocol, http2.HTTP2Protocol):
+            flow.response.stream_id = flow.request.stream_id
+
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
         flow = self.channel.ask("responseheaders", flow)
         if flow is None or flow == KILL:
             yield Kill()
 
-        if flow.response.stream and isinstance(self.server_protocol, http1.HTTP1Protocol):
+        if flow.response.stream:
             flow.response.content = CONTENT_MISSING
-        else:
+        elif isinstance(self.server_protocol, http1.HTTP1Protocol):
             flow.response.content = self.server_protocol.read_http_body(
                 self.server_conn,
                 flow.response.headers,
@@ -413,6 +413,4 @@ class HttpLayer(Layer):
         self.server_conn.send(self.server_protocol.assemble(message))
 
     def send_to_client(self, message):
-        # FIXME
-        # - possibly do some http2 stuff here
         self.client_conn.send(self.client_protocol.assemble(message))
