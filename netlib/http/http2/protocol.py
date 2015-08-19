@@ -49,12 +49,14 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         dump_frames=False,
         encoder=None,
         decoder=None,
+        unhandled_frame_cb=None,
     ):
         self.tcp_handler = tcp_handler or TCPHandler(rfile, wfile)
         self.is_server = is_server
         self.dump_frames = dump_frames
         self.encoder = encoder or Encoder()
         self.decoder = decoder or Decoder()
+        self.unhandled_frame_cb = unhandled_frame_cb
 
         self.http2_settings = frame.HTTP2_DEFAULT_SETTINGS.copy()
         self.current_stream_id = None
@@ -258,11 +260,17 @@ class HTTP2Protocol(semantics.ProtocolMixin):
                 "HTTP2Protocol can not handle unknown ALP: %s" % alp)
         return True
 
+    def _handle_unexpected_frame(self, frm):
+        if self.unhandled_frame_cb is not None:
+            self.unhandled_frame_cb(frm)
+
     def _receive_settings(self, hide=False):
         while True:
             frm = self.read_frame(hide)
             if isinstance(frm, frame.SettingsFrame):
                 break
+            else:
+                self._handle_unexpected_frame(frm)
 
     def _read_settings_ack(self, hide=False):  # pragma no cover
         while True:
@@ -271,6 +279,8 @@ class HTTP2Protocol(semantics.ProtocolMixin):
                 assert frm.flags & frame.Frame.FLAG_ACK
                 assert len(frm.settings) == 0
                 break
+            else:
+                self._handle_unexpected_frame(frm)
 
     def _next_stream_id(self):
         if self.current_stream_id is None:
@@ -367,6 +377,8 @@ class HTTP2Protocol(semantics.ProtocolMixin):
                     body_expected = False
                 if frm.flags & frame.Frame.FLAG_END_HEADERS:
                     break
+            else:
+                self._handle_unexpected_frame(frm)
 
         while body_expected:
             frm = self.read_frame()
@@ -374,6 +386,9 @@ class HTTP2Protocol(semantics.ProtocolMixin):
                 body += frm.payload
                 if frm.flags & frame.Frame.FLAG_END_STREAM:
                     break
+            else:
+                self._handle_unexpected_frame(frm)
+
             # TODO: implement window update & flow
 
         headers = odict.ODictCaseless()
