@@ -28,6 +28,12 @@ class Http1Layer(Layer):
         self.client_protocol = HTTP1Protocol(self.client_conn)
         self.server_protocol = HTTP1Protocol(self.server_conn)
 
+    def send_to_client(self, message):
+        self.client_conn.send(self.client_protocol.assemble(message))
+
+    def send_to_server(self, message):
+        self.server_conn.send(self.server_protocol.assemble(message))
+
     def connect(self):
         self.ctx.connect()
         self.server_protocol = HTTP1Protocol(self.server_conn)
@@ -50,6 +56,14 @@ class Http2Layer(Layer):
         self.mode = mode
         self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True)
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
+
+    def send_to_client(self, message):
+        # TODO: implement flow control and WINDOW_UPDATE frames
+        self.client_conn.send(self.client_protocol.assemble(message))
+
+    def send_to_server(self, message):
+        # TODO: implement flow control and WINDOW_UPDATE frames
+        self.server_conn.send(self.server_protocol.assemble(message))
 
     def connect(self):
         self.ctx.connect()
@@ -165,6 +179,7 @@ class UpstreamConnectLayer(Layer):
             self.server_conn.address = address
         else:
             self.ctx.set_server(address, server_tls, sni, depth-1)
+
 
 class HttpLayer(Layer):
     def __init__(self, ctx, mode):
@@ -461,9 +476,3 @@ class HttpLayer(Layer):
                     odict.ODictCaseless([[k,v] for k, v in self.config.authenticator.auth_challenge_headers().items()])
                 ))
                 raise InvalidCredentials("Proxy Authentication Required")
-
-    def send_to_server(self, message):
-        self.server_conn.send(self.server_protocol.assemble(message))
-
-    def send_to_client(self, message):
-        self.client_conn.send(self.client_protocol.assemble(message))
