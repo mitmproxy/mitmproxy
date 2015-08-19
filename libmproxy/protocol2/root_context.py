@@ -6,6 +6,7 @@ from .rawtcp import RawTcpLayer
 from .tls import TlsLayer
 from .http import Http1Layer, Http2Layer, HttpLayer
 
+from netlib.http.http2 import HTTP2Protocol
 
 class RootContext(object):
     """
@@ -25,11 +26,11 @@ class RootContext(object):
         :return: The next layer.
         """
 
-        d = top_layer.client_conn.rfile.peek(3)
-
         # TODO: Handle ignore and tcp passthrough
 
-        # TLS ClientHello magic, see http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
+        # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
+        # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
+        d = top_layer.client_conn.rfile.peek(3)
         is_tls_client_hello = (
             len(d) == 3 and
             d[0] == '\x16' and
@@ -37,20 +38,26 @@ class RootContext(object):
             d[2] in ('\x00', '\x01', '\x02', '\x03')
         )
 
-        is_ascii = all(x in string.ascii_uppercase for x in d)
+        d = top_layer.client_conn.rfile.peek(3)
+        is_ascii = (
+            len(d) == 3 and
+            all(x in string.ascii_uppercase for x in d)
+        )
 
-        # TODO: build is_http2_magic check here, maybe this is an easy way to detect h2c
+        d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))
+        is_http2_magic = (d == HTTP2Protocol.CLIENT_CONNECTION_PREFACE)
 
-        if not d:
-            return iter([])
+        is_alpn_h2_negotiated = (
+            isinstance(top_layer, TlsLayer) and
+            top_layer.client_conn.get_alpn_proto_negotiated() == HTTP2Protocol.ALPN_PROTO_H2
+        )
 
         if is_tls_client_hello:
             return TlsLayer(top_layer, True, True)
-        elif isinstance(top_layer, TlsLayer) and is_ascii:
-            if top_layer.client_conn.get_alpn_proto_negotiated() == 'h2':
-                return Http2Layer(top_layer, 'transparent')
-            else:
-                return Http1Layer(top_layer, "transparent")
+        elif is_alpn_h2_negotiated or is_http2_magic:
+            return Http2Layer(top_layer, 'transparent')
+        elif is_ascii:
+            return Http1Layer(top_layer, 'transparent')
         else:
             return RawTcpLayer(top_layer)
 
