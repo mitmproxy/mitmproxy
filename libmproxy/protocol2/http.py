@@ -10,7 +10,7 @@ from libmproxy.protocol import KILL
 from libmproxy.protocol.http import HTTPFlow
 from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 from netlib import tcp
-from netlib.http import status_codes, http1, HttpErrorConnClosed, HttpError
+from netlib.http import status_codes, http1, http2, HttpErrorConnClosed, HttpError
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
 from netlib.tcp import NetLibError, Address
@@ -27,6 +27,12 @@ class Http1Layer(Layer):
         self.mode = mode
         self.client_protocol = HTTP1Protocol(self.client_conn)
         self.server_protocol = HTTP1Protocol(self.server_conn)
+
+    def send_to_client(self, message):
+        self.client_conn.send(self.client_protocol.assemble(message))
+
+    def send_to_server(self, message):
+        self.server_conn.send(self.server_protocol.assemble(message))
 
     def connect(self):
         self.ctx.connect()
@@ -51,6 +57,14 @@ class Http2Layer(Layer):
         self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True)
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
 
+    def send_to_client(self, message):
+        # TODO: implement flow control and WINDOW_UPDATE frames
+        self.client_conn.send(self.client_protocol.assemble(message))
+
+    def send_to_server(self, message):
+        # TODO: implement flow control and WINDOW_UPDATE frames
+        self.server_conn.send(self.server_protocol.assemble(message))
+
     def connect(self):
         self.ctx.connect()
         self.server_protocol = HTTP2Protocol(self.server_conn)
@@ -64,6 +78,7 @@ class Http2Layer(Layer):
         self.server_protocol = HTTP2Protocol(self.server_conn)
 
     def __call__(self):
+        self.server_protocol.perform_connection_preface()
         layer = HttpLayer(self, self.mode)
         layer()
 
@@ -165,11 +180,8 @@ class UpstreamConnectLayer(Layer):
         else:
             self.ctx.set_server(address, server_tls, sni, depth-1)
 
-class HttpLayer(Layer):
-    """
-    HTTP 1 Layer
-    """
 
+class HttpLayer(Layer):
     def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)
         self.mode = mode
@@ -337,15 +349,18 @@ class HttpLayer(Layer):
             self.reconnect()
             get_response()
 
+        if isinstance(self.server_protocol, http2.HTTP2Protocol):
+            flow.response.stream_id = flow.request.stream_id
+
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
         flow = self.channel.ask("responseheaders", flow)
         if flow is None or flow == KILL:
             raise Kill()
 
-        if flow.response.stream and isinstance(self.server_protocol, http1.HTTP1Protocol):
+        if flow.response.stream:
             flow.response.content = CONTENT_MISSING
-        else:
+        elif isinstance(self.server_protocol, http1.HTTP1Protocol):
             flow.response.content = self.server_protocol.read_http_body(
                 flow.response.headers,
                 self.config.body_size_limit,
@@ -461,11 +476,3 @@ class HttpLayer(Layer):
                     odict.ODictCaseless([[k,v] for k, v in self.config.authenticator.auth_challenge_headers().items()])
                 ))
                 raise InvalidCredentials("Proxy Authentication Required")
-
-    def send_to_server(self, message):
-        self.server_conn.send(self.server_protocol.assemble(message))
-
-    def send_to_client(self, message):
-        # FIXME
-        # - possibly do some http2 stuff here
-        self.client_conn.send(self.client_protocol.assemble(message))
