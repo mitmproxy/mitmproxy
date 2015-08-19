@@ -68,8 +68,8 @@ class Http2Layer(Layer):
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
-        self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True)
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
+        self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True, unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
 
     def read_from_client(self):
         return HTTPRequest.from_protocol(
@@ -95,23 +95,26 @@ class Http2Layer(Layer):
 
     def connect(self):
         self.ctx.connect()
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
         self.server_protocol.perform_connection_preface()
 
     def reconnect(self):
         self.ctx.reconnect()
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
         self.server_protocol.perform_connection_preface()
 
     def set_server(self, *args, **kwargs):
         self.ctx.set_server(*args, **kwargs)
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
         self.server_protocol.perform_connection_preface()
 
     def __call__(self):
         self.server_protocol.perform_connection_preface()
         layer = HttpLayer(self, self.mode)
         layer()
+
+    def handle_unexpected_frame(self, frm):
+        print(frm.human_readable())
 
 
 def make_error_response(status_code, message, headers=None):
