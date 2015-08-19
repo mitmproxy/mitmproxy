@@ -399,6 +399,22 @@ def close_socket(sock):
 
 class _Connection(object):
 
+    rbufsize = -1
+    wbufsize = -1
+
+    def __init__(self, connection):
+        if connection:
+            self.connection = connection
+            self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
+            self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
+        else:
+            self.connection = None
+            self.rfile = None
+            self.wfile = None
+
+        self.ssl_established = False
+        self.finished = False
+
     def get_current_cipher(self):
         if not self.ssl_established:
             return None
@@ -510,16 +526,13 @@ class _Connection(object):
 
 
 class TCPClient(_Connection):
-    rbufsize = -1
-    wbufsize = -1
 
     def __init__(self, address, source_address=None):
-        self.connection, self.rfile, self.wfile = None, None, None
+        super(TCPClient, self).__init__(None)
         self.address = address
         self.source_address = Address.wrap(
             source_address) if source_address else None
         self.cert = None
-        self.ssl_established = False
         self.ssl_verification_error = None
         self.sni = None
 
@@ -627,20 +640,12 @@ class BaseHandler(_Connection):
 
     """
         The instantiator is expected to call the handle() and finish() methods.
-
     """
-    rbufsize = -1
-    wbufsize = -1
 
     def __init__(self, connection, address, server):
-        self.connection = connection
+        super(BaseHandler, self).__init__(connection)
         self.address = Address.wrap(address)
         self.server = server
-        self.rfile = Reader(self.connection.makefile('rb', self.rbufsize))
-        self.wfile = Writer(self.connection.makefile('wb', self.wbufsize))
-
-        self.finished = False
-        self.ssl_established = False
         self.clientcert = None
 
     def create_ssl_context(self,
