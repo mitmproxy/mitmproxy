@@ -53,11 +53,11 @@ installation instructions for virtualenv
 following:
 
 ```
-$ git clone https://github.com/mitmproxy/mitmproxy.git
-$ git clone https://github.com/mitmproxy/netlib.git
-$ git clone https://github.com/mitmproxy/pathod.git
-$ cd mitmproxy
-$ source ./dev
+git clone https://github.com/mitmproxy/mitmproxy.git
+git clone https://github.com/mitmproxy/netlib.git
+git clone https://github.com/mitmproxy/pathod.git
+cd mitmproxy
+source ./dev
 ```
 
 The *dev* script will create a virtualenv environment in a directory called
@@ -70,7 +70,7 @@ To confirm that you're up and running, activate the virtualenv, and run the
 mitmproxy test suite:
 
 ```shell
-$ source ../venv.mitmproxy/bin/activate # ..\venv.mitmproxy\Scripts\activate.bat on Windows
+$ . ../venv.mitmproxy/bin/activate # ..\venv.mitmproxy\Scripts\activate.bat on Windows
 $ nosetests ./test
 ```
 Note that the main executables for the project - **mitmdump**, **mitmproxy** and
