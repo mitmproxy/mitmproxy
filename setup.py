@@ -43,7 +43,7 @@ setup(
     install_requires=[
         "pyasn1>=0.1.7",
         "pyOpenSSL>=0.15.1",
-        "cryptography>=0.9",
+        "cryptography>=1.0",
         "passlib>=1.6.2",
         "hpack>=1.0.1",
         "certifi"

@@ -271,16 +271,32 @@ class Reader(_FileLike):
 
         Returns:
             Up to the next N bytes if peeking is successful.
-            None, otherwise.
 
         Raises:
+            NetLibError if there was an error with the socket
             NetLibSSLError if there was an error with pyOpenSSL.
+            NotImplementedError if the underlying file object is not a (pyOpenSSL) socket
         """
-        if isinstance(self.o, SSL.Connection) or isinstance(self.o, socket._fileobject):
+        if isinstance(self.o, socket._fileobject):
             try:
                 return self.o._sock.recv(length, socket.MSG_PEEK)
+            except socket.error as e:
+                raise NetLibError(str(e))
+        elif isinstance(self.o, SSL.Connection):
+            try:
+                if tuple(int(x) for x in OpenSSL.__version__.split(".")[:2]) > (0, 15):
+                    return self.o.recv(length, socket.MSG_PEEK)
+                else:
+                    # Polyfill for pyOpenSSL <= 0.15.1
+                    # Taken from https://github.com/pyca/pyopenssl/commit/1d95dea7fea03c7c0df345a5ea30c12d8a0378d2
+                    buf = SSL._ffi.new("char[]", length)
+                    result = SSL._lib.SSL_peek(self.o._ssl, buf, length)
+                    self.o._raise_ssl_error(self.o._ssl, result)
+                    return SSL._ffi.buffer(buf, result)[:]
             except SSL.Error as e:
                 raise NetLibSSLError(str(e))
+        else:
+            raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
 
 class Address(object):
