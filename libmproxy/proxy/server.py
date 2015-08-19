@@ -1,13 +1,15 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
+import traceback
+import sys
 import socket
-from OpenSSL import SSL
-
 from netlib import tcp
+
+from ..protocol.handle import protocol_handler
+from .. import protocol2
+from ..exceptions import ProtocolException
 from .primitives import ProxyServerError, Log, ProxyError
 from .connection import ClientConnection, ServerConnection
-from ..protocol.handle import protocol_handler
-from .. import version
 
 
 class DummyServer:
@@ -46,7 +48,7 @@ class ProxyServer(tcp.TCPServer):
         self.channel = channel
 
     def handle_client_connection(self, conn, client_address):
-        h = ConnectionHandler(
+        h = ConnectionHandler2(
             self.config,
             conn,
             client_address,
@@ -54,6 +56,66 @@ class ProxyServer(tcp.TCPServer):
             self.channel)
         h.handle()
         h.finish()
+
+
+class ConnectionHandler2:
+    # FIXME: parameter ordering
+    # FIXME: remove server attribute
+    def __init__(self, config, client_conn, client_address, server, channel):
+        self.config = config
+        """@type: libmproxy.proxy.config.ProxyConfig"""
+        self.client_conn = ClientConnection(
+            client_conn,
+            client_address,
+            server)
+        """@type: libmproxy.proxy.connection.ClientConnection"""
+        self.channel = channel
+        """@type: libmproxy.controller.Channel"""
+
+    def handle(self):
+        self.log("clientconnect", "info")
+
+        root_context = protocol2.RootContext(
+            self.client_conn,
+            self.config,
+            self.channel
+        )
+
+        # FIXME: properly parse config
+        if self.config.mode == "upstream":
+            root_layer = protocol2.HttpUpstreamProxy(root_context, ("localhost", 8081))
+        else:
+            root_layer = protocol2.HttpProxy(root_context)
+
+        try:
+            for message in root_layer():
+                if message == protocol2.messages.Kill:
+                    self.log("Connection killed", "info")
+                    break
+
+                print("Root layer receveived: %s" % message)
+        except ProtocolException as e:
+            self.log(e, "info")
+        except Exception:
+            self.log(traceback.format_exc(), "error")
+            print(traceback.format_exc(), file=sys.stderr)
+            print("mitmproxy has crashed!", file=sys.stderr)
+            print("Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy", file=sys.stderr)
+
+    def finish(self):
+        self.client_conn.finish()
+
+    def log(self, msg, level, subs=()):
+        # FIXME: Duplicate code
+        full_msg = [
+            "%s:%s: %s" %
+            (self.client_conn.address.host,
+             self.client_conn.address.port,
+             msg)]
+        for i in subs:
+            full_msg.append("  -> " + i)
+        full_msg = "\n".join(full_msg)
+        self.channel.tell("log", Log(full_msg, level))
 
 
 class ConnectionHandler:
@@ -74,6 +136,7 @@ class ConnectionHandler:
         self.server_conn = None
         """@type: libmproxy.proxy.connection.ServerConnection"""
         self.channel = channel
+        """@type: libmproxy.controller.Channel"""
 
         self.conntype = "http"
 
@@ -144,9 +207,9 @@ class ConnectionHandler:
             import sys
 
             self.log(traceback.format_exc(), "error")
-            print >> sys.stderr, traceback.format_exc()
-            print >> sys.stderr, "mitmproxy has crashed!"
-            print >> sys.stderr, "Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy"
+            print(traceback.format_exc(), file=sys.stderr)
+            print("mitmproxy has crashed!", file=sys.stderr)
+            print("Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy", file=sys.stderr)
         finally:
             # Make sure that we close the server connection in any case.
             # The client connection is closed by the ProxyServer and does not
@@ -201,7 +264,7 @@ class ConnectionHandler:
             "serverconnect", "debug", [
                 "%s:%s" %
                 self.server_conn.address()[
-                    :2]])
+                :2]])
         if ask:
             self.channel.ask("serverconnect", self)
         try:
@@ -244,7 +307,7 @@ class ConnectionHandler:
                 if ssl_cert_err is not None:
                     self.log(
                         "SSL verification failed for upstream server at depth %s with error: %s" %
-                            (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                        (ssl_cert_err['depth'], ssl_cert_err['errno']),
                         "error")
                     self.log("Ignoring server verification error, continuing with connection", "error")
             except tcp.NetLibError as v:
@@ -260,7 +323,7 @@ class ConnectionHandler:
                     if ssl_cert_err is not None:
                         self.log(
                             "SSL verification failed for upstream server at depth %s with error: %s" %
-                                (ssl_cert_err['depth'], ssl_cert_err['errno']),
+                            (ssl_cert_err['depth'], ssl_cert_err['errno']),
                             "error")
                         self.log("Aborting connection attempt", "error")
                     raise e

@@ -1,6 +1,8 @@
 from __future__ import absolute_import
+
 import copy
 import os
+
 from netlib import tcp, certutils
 from .. import stateobject, utils
 
@@ -31,6 +33,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             host=self.address.host,
             port=self.address.port
         )
+
+    @property
+    def tls_established(self):
+        return self.ssl_established
 
     _stateobject_attributes = dict(
         ssl_established=bool,
@@ -71,15 +77,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return f
 
     def convert_to_ssl(self, *args, **kwargs):
-        # TODO: read ALPN from server and select same proto for client conn
-        # alpn_select = 'h2'
-        # def alpn_select_callback(conn_, options):
-        #     if alpn_select in options:
-        #         return bytes(alpn_select)
-        #     else:  # pragma no cover
-        #         return options[0]
-        # tcp.BaseHandler.convert_to_ssl(self, alpn_select=alpn_select_callback, *args, **kwargs)
-
         tcp.BaseHandler.convert_to_ssl(self, *args, **kwargs)
         self.timestamp_ssl_setup = utils.timestamp()
 
@@ -99,6 +96,9 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.timestamp_ssl_setup = None
         self.protocol = None
 
+    def __nonzero__(self):
+        return bool(self.connection)
+
     def __repr__(self):
         if self.ssl_established and self.sni:
             ssl = "[ssl: {0}] ".format(self.sni)
@@ -111,6 +111,10 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             host=self.address.host,
             port=self.address.port
         )
+
+    @property
+    def tls_established(self):
+        return self.ssl_established
 
     _stateobject_attributes = dict(
         state=list,
@@ -131,8 +135,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         d.update(
             address={"address": self.address(),
                      "use_ipv6": self.address.use_ipv6},
-            source_address= ({"address": self.source_address(),
-                              "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
+            source_address=({"address": self.source_address(),
+                             "use_ipv6": self.source_address.use_ipv6} if self.source_address else None),
             cert=self.cert.to_pem() if self.cert else None
         )
         return d
@@ -175,9 +179,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
                 self.address.host.encode("idna")) + ".pem"
             if os.path.exists(path):
                 clientcert = path
-
-        # TODO: read ALPN from client and use same list for server conn
-        # self.convert_to_ssl(cert=clientcert, sni=sni, alpn_protos=[netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2], **kwargs)
 
         self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni

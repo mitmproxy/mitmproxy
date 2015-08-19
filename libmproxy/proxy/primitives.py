@@ -151,7 +151,7 @@ class Socks5ProxyMode(ProxyMode):
             return ssl, ssl, connect_request.addr.host, connect_request.addr.port
 
         except (socks.SocksError, tcp.NetLibError) as e:
-            raise ProxyError(502, "SOCKS5 mode failure: %s" % str(e))
+            raise ProxyError(502, "SOCKS5 mode failure: %s" % repr(e))
 
 
 class _ConstDestinationProxyMode(ProxyMode):
