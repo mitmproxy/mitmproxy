@@ -225,7 +225,11 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             magic = self.tcp_handler.rfile.safe_read(magic_length)
             assert magic == self.CLIENT_CONNECTION_PREFACE
 
-            self.send_frame(frame.SettingsFrame(state=self), hide=True)
+            frm = frame.SettingsFrame(state=self, settings={
+                frame.SettingsFrame.SETTINGS.SETTINGS_ENABLE_PUSH: 0,
+                frame.SettingsFrame.SETTINGS.SETTINGS_MAX_CONCURRENT_STREAMS: 1,
+            })
+            self.send_frame(frm, hide=True)
             self._receive_settings(hide=True)
 
     def perform_client_connection_preface(self, force=False):
