@@ -251,6 +251,9 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         if isinstance(frm, frame.SettingsFrame) and not frm.flags & frame.Frame.FLAG_ACK:
             self._apply_settings(frm.settings, hide)
 
+        if isinstance(frm, frame.DataFrame) and frm.length > 0:
+            self._update_flow_control_window(frm.stream_id, frm.length)
+
         return frm
 
     def check_alpn(self):
@@ -309,6 +312,12 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         # be liberal in what we expect from the other end
         # to be more strict use: self._read_settings_ack(hide)
 
+    def _update_flow_control_window(self, stream_id, increment):
+        frm = frame.WindowUpdateFrame(stream_id=0, window_size_increment=increment)
+        self.send_frame(frm)
+        frm = frame.WindowUpdateFrame(stream_id=stream_id, window_size_increment=increment)
+        self.send_frame(frm)
+
     def _create_headers(self, headers, stream_id, end_stream=True):
         def frame_cls(chunks):
             for i in chunks:
@@ -351,8 +360,6 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             payload=body[i:i+chunk_size]) for i in chunks]
         frms[-1].flags = frame.Frame.FLAG_END_STREAM
 
-        # TODO: implement flow-control window
-
         if self.dump_frames:  # pragma no cover
             for frm in frms:
                 print(frm.human_readable(">>"))
@@ -369,8 +376,10 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         while True:
             frm = self.read_frame()
-            if isinstance(frm, frame.HeadersFrame)\
-                    or isinstance(frm, frame.ContinuationFrame):
+            if (
+                (isinstance(frm, frame.HeadersFrame) or isinstance(frm, frame.ContinuationFrame)) and
+                (stream_id == 0 or frm.stream_id == stream_id)
+            ):
                 stream_id = frm.stream_id
                 header_block_fragment += frm.header_block_fragment
                 if frm.flags & frame.Frame.FLAG_END_STREAM:
@@ -382,14 +391,12 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         while body_expected:
             frm = self.read_frame()
-            if isinstance(frm, frame.DataFrame):
+            if isinstance(frm, frame.DataFrame) and frm.stream_id == stream_id:
                 body += frm.payload
                 if frm.flags & frame.Frame.FLAG_END_STREAM:
                     break
             else:
                 self._handle_unexpected_frame(frm)
-
-            # TODO: implement window update & flow
 
         headers = odict.ODictCaseless()
         for header, value in self.decoder.decode(header_block_fragment):
