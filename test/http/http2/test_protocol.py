@@ -328,7 +328,6 @@ class TestReadRequestRelative(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c, is_server=True)
         protocol.connection_preface_performed = True
 
-        "OPTIONS *"
         req = protocol.read_request()
 
         assert req.form_in == "relative"
