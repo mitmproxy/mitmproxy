@@ -569,7 +569,7 @@ class WindowUpdateFrame(Frame):
     def payload_bytes(self):
         if self.window_size_increment <= 0 or self.window_size_increment >= 2 ** 31:
             raise ValueError(
-                'Window Szie Increment MUST be greater than 0 and less than 2^31.')
+                'Window Size Increment MUST be greater than 0 and less than 2^31.')
 
         return struct.pack('!L', self.window_size_increment & 0x7FFFFFFF)
 
