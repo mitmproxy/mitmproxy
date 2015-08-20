@@ -98,7 +98,7 @@ class Frame(object):
 
         self._check_frame_size(self.length, self.state)
 
-        b = struct.pack('!HB', self.length & 0xFFFF00, self.length & 0x0000FF)
+        b = struct.pack('!HB', (self.length & 0xFFFF00) >> 8, self.length & 0x0000FF)
         b += struct.pack('!B', self.TYPE)
         b += struct.pack('!B', self.flags)
         b += struct.pack('!L', self.stream_id & 0x7FFFFFFF)
