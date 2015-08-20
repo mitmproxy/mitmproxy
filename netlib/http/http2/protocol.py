@@ -239,7 +239,8 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             self.tcp_handler.wfile.write(self.CLIENT_CONNECTION_PREFACE)
 
             self.send_frame(frame.SettingsFrame(state=self), hide=True)
-            self._receive_settings(hide=True)
+            self._receive_settings(hide=True)  # server announces own settings
+            self._receive_settings(hide=True)  # server acks my settings
 
     def send_frame(self, frm, hide=False):
         raw_bytes = frm.to_bytes()
@@ -279,16 +280,6 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             else:
                 self._handle_unexpected_frame(frm)
 
-    def _read_settings_ack(self, hide=False):  # pragma no cover
-        while True:
-            frm = self.read_frame(hide)
-            if isinstance(frm, frame.SettingsFrame):
-                assert frm.flags & frame.Frame.FLAG_ACK
-                assert len(frm.settings) == 0
-                break
-            else:
-                self._handle_unexpected_frame(frm)
-
     def _next_stream_id(self):
         if self.current_stream_id is None:
             if self.is_server:
@@ -312,9 +303,6 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             state=self,
             flags=frame.Frame.FLAG_ACK)
         self.send_frame(frm, hide)
-
-        # be liberal in what we expect from the other end
-        # to be more strict use: self._read_settings_ack(hide)
 
     def _update_flow_control_window(self, stream_id, increment):
         frm = frame.WindowUpdateFrame(stream_id=0, window_size_increment=increment)
