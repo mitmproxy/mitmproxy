@@ -469,7 +469,7 @@ class HttpLayer(Layer):
 
     def validate_request(self, request):
         if request.form_in == "absolute" and request.scheme != "http":
-            self.send_resplonse(make_error_response(400, "Invalid request scheme: %s" % request.scheme))
+            self.send_response(make_error_response(400, "Invalid request scheme: %s" % request.scheme))
             raise HttpException("Invalid request scheme: %s" % request.scheme)
 
         expected_request_forms = {
