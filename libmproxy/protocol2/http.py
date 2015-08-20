@@ -34,10 +34,10 @@ class Http1Layer(Layer):
             body_size_limit=self.config.body_size_limit
         )
 
-    def read_from_server(self, method):
+    def read_from_server(self, request):
         return HTTPResponse.from_protocol(
             self.server_protocol,
-            method,
+            request.method,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
         )
@@ -77,13 +77,15 @@ class Http2Layer(Layer):
             body_size_limit=self.config.body_size_limit
         )
 
-    def read_from_server(self, method):
-        return HTTPResponse.from_protocol(
+    def read_from_server(self, request):
+        response = HTTPResponse.from_protocol(
             self.server_protocol,
-            method,
+            request.method,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
         )
+        response.stream_id = request.stream_id
+        return response
 
     def send_to_client(self, message):
         # TODO: implement flow control and WINDOW_UPDATE frames
@@ -351,7 +353,7 @@ class HttpLayer(Layer):
     def get_response_from_server(self, flow):
         def get_response():
             self.send_to_server(flow.request)
-            flow.response = self.read_from_server(flow.request.method)
+            flow.response = self.read_from_server(flow.request)
 
         try:
             get_response()
@@ -373,9 +375,6 @@ class HttpLayer(Layer):
             # > send large request upstream
             self.reconnect()
             get_response()
-
-        if isinstance(self.server_protocol, http2.HTTP2Protocol):
-            flow.response.stream_id = flow.request.stream_id
 
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
