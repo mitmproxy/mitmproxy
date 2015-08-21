@@ -127,7 +127,7 @@ class TestPerformServerConnectionPreface(tservers.ServerTestBase):
         protocol.perform_server_connection_preface()
         assert protocol.connection_preface_performed
 
-        tutils.raises(tcp.NetLibIncomplete, protocol.perform_server_connection_preface, force=True)
+        tutils.raises(tcp.NetLibDisconnect, protocol.perform_server_connection_preface, force=True)
 
 
 class TestPerformClientConnectionPreface(tservers.ServerTestBase):
@@ -194,12 +194,12 @@ class TestServerStreamIds():
 
 class TestApplySettings(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
-
         def handle(self):
             # check settings acknowledgement
             assert self.rfile.read(9) == '000000040100000000'.decode('hex')
             self.wfile.write("OK")
             self.wfile.flush()
+            self.rfile.safe_read(9)  # just to keep the connection alive a bit longer
 
     ssl = True
 
@@ -295,6 +295,7 @@ class TestReadRequest(tservers.ServerTestBase):
             self.wfile.write(
                 b'000006000100000001666f6f626172'.decode('hex'))
             self.wfile.flush()
+            self.rfile.safe_read(9)  # just to keep the connection alive a bit longer
 
     ssl = True
 
@@ -385,13 +386,13 @@ class TestReadRequestConnect(tservers.ServerTestBase):
 
 class TestReadResponse(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
-
         def handle(self):
             self.wfile.write(
                 b'00000801040000000188628594e78c767f'.decode('hex'))
             self.wfile.write(
                 b'000006000100000001666f6f626172'.decode('hex'))
             self.wfile.flush()
+            self.rfile.safe_read(9)  # just to keep the connection alive a bit longer
 
     ssl = True
 
