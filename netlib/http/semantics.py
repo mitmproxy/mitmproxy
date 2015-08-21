@@ -337,18 +337,32 @@ class Request(object):
 
 class EmptyRequest(Request):
 
-    def __init__(self):
+    def __init__(
+        self,
+        form_in="",
+        method="",
+        scheme="",
+        host="",
+        port="",
+        path="",
+        httpversion=None,
+        headers=None,
+        body="",
+        stream_id=None
+    ):
         super(EmptyRequest, self).__init__(
-            form_in="",
-            method="",
-            scheme="",
-            host="",
-            port="",
-            path="",
-            httpversion=(0, 0),
-            headers=odict.ODictCaseless(),
-            body="",
+            form_in=form_in,
+            method=method,
+            scheme=scheme,
+            host=host,
+            port=port,
+            path=path,
+            httpversion=(httpversion or (0, 0)),
+            headers=(headers or odict.ODictCaseless()),
+            body=body,
         )
+        if stream_id:
+            self.stream_id = stream_id
 
 
 class Response(object):

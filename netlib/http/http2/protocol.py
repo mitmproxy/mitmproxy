@@ -74,7 +74,9 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
             self.tcp_handler.rfile.reset_timestamps()
 
-        stream_id, headers, body = self._receive_transmission(include_body)
+        stream_id, headers, body = self._receive_transmission(
+            include_body=include_body,
+        )
 
         if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
             # more accurate timestamp_start
@@ -127,7 +129,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
     def read_response(
         self,
-        request_method='',
+        request='',
         body_size_limit=None,
         include_body=True,
     ):
@@ -137,7 +139,10 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         if hasattr(self.tcp_handler.rfile, "reset_timestamps"):
             self.tcp_handler.rfile.reset_timestamps()
 
-        stream_id, headers, body = self._receive_transmission(include_body)
+        stream_id, headers, body = self._receive_transmission(
+            stream_id=request.stream_id,
+            include_body=include_body,
+        )
 
         if hasattr(self.tcp_handler.rfile, "first_byte_timestamp"):
             # more accurate timestamp_start
@@ -145,7 +150,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         if include_body:
             timestamp_end = time.time()
-        else:
+        else:  # pragma: no cover
             timestamp_end = None
 
         response = http.Response(
@@ -358,11 +363,10 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         return [frm.to_bytes() for frm in frms]
 
-    def _receive_transmission(self, include_body=True):
+    def _receive_transmission(self, stream_id=None, include_body=True):
         # TODO: include_body is not respected
         body_expected = True
 
-        stream_id = 0
         header_block_fragment = b''
         body = b''
 
@@ -370,7 +374,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             frm = self.read_frame()
             if (
                 (isinstance(frm, frame.HeadersFrame) or isinstance(frm, frame.ContinuationFrame)) and
-                (stream_id == 0 or frm.stream_id == stream_id)
+                (stream_id is None or frm.stream_id == stream_id)
             ):
                 stream_id = frm.stream_id
                 header_block_fragment += frm.header_block_fragment

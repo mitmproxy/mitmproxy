@@ -136,7 +136,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
 
     def read_response(
         self,
-        request_method,
+        request,
         body_size_limit,
         include_body=True,
     ):
@@ -175,7 +175,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             body = self.read_http_body(
                 headers,
                 body_size_limit,
-                request_method,
+                request.method,
                 code,
                 False
             )

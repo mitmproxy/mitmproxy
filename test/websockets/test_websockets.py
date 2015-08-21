@@ -2,9 +2,7 @@ import os
 
 from nose.tools import raises
 
-from netlib import tcp
-from netlib import tutils
-from netlib import websockets
+from netlib import tcp, tutils, websockets, http
 from netlib.http import status_codes
 from netlib.http.exceptions import *
 from netlib.http.http1 import HTTP1Protocol
@@ -72,7 +70,7 @@ class WebSocketsClient(tcp.TCPClient):
         self.wfile.write(headers.format() + "\r\n")
         self.wfile.flush()
 
-        resp = http1_protocol.read_response("get", None)
+        resp = http1_protocol.read_response(http.EmptyRequest(method="GET"), None)
         server_nonce = self.protocol.check_server_handshake(resp.headers)
 
         if not server_nonce == self.protocol.create_server_nonce(

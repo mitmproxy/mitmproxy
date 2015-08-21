@@ -365,6 +365,8 @@ class TestReadRequestConnect(tservers.ServerTestBase):
         def handle(self):
             self.wfile.write(
                 b'00001b0105000000014287bdab4e9c17b7ff44871c92585422e08541871c92585422e085'.decode('hex'))
+            self.wfile.write(
+                b'00001d0105000000014287bdab4e9c17b7ff44882f91d35d055c87a741882f91d35d055c87a7'.decode('hex'))
             self.wfile.flush()
 
     ssl = True
@@ -377,20 +379,25 @@ class TestReadRequestConnect(tservers.ServerTestBase):
         protocol.connection_preface_performed = True
 
         req = protocol.read_request()
-
         assert req.form_in == "authority"
         assert req.method == "CONNECT"
         assert req.host == "address"
         assert req.port == 22
+
+        req = protocol.read_request()
+        assert req.form_in == "authority"
+        assert req.method == "CONNECT"
+        assert req.host == "example.com"
+        assert req.port == 443
 
 
 class TestReadResponse(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
         def handle(self):
             self.wfile.write(
-                b'00000801040000000188628594e78c767f'.decode('hex'))
+                b'00000801040000002a88628594e78c767f'.decode('hex'))
             self.wfile.write(
-                b'000006000100000001666f6f626172'.decode('hex'))
+                b'00000600010000002a666f6f626172'.decode('hex'))
             self.wfile.flush()
             self.rfile.safe_read(9)  # just to keep the connection alive a bit longer
 
@@ -403,8 +410,9 @@ class TestReadResponse(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
         protocol.connection_preface_performed = True
 
-        resp = protocol.read_response()
+        resp = protocol.read_response(http.EmptyRequest(stream_id=42))
 
+        assert resp.stream_id == 42
         assert resp.httpversion == (2, 0)
         assert resp.status_code == 200
         assert resp.msg == ""
@@ -412,29 +420,12 @@ class TestReadResponse(tservers.ServerTestBase):
         assert resp.body == b'foobar'
         assert resp.timestamp_end
 
-    def test_read_response_no_body(self):
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        c.connect()
-        c.convert_to_ssl()
-        protocol = HTTP2Protocol(c)
-        protocol.connection_preface_performed = True
-
-        resp = protocol.read_response(include_body=False)
-
-        assert resp.httpversion == (2, 0)
-        assert resp.status_code == 200
-        assert resp.msg == ""
-        assert resp.headers.lst == [[':status', '200'], ['etag', 'foobar']]
-        assert resp.body == b'foobar'  # TODO: this should be true: assert resp.body == http.CONTENT_MISSING
-        assert not resp.timestamp_end
-
 
 class TestReadEmptyResponse(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
-
         def handle(self):
             self.wfile.write(
-                b'00000801050000000188628594e78c767f'.decode('hex'))
+                b'00000801050000002a88628594e78c767f'.decode('hex'))
             self.wfile.flush()
 
     ssl = True
@@ -446,9 +437,9 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
         protocol.connection_preface_performed = True
 
-        resp = protocol.read_response()
+        resp = protocol.read_response(http.EmptyRequest(stream_id=42))
 
-        assert resp.stream_id
+        assert resp.stream_id == 42
         assert resp.httpversion == (2, 0)
         assert resp.status_code == 200
         assert resp.msg == ""
