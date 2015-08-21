@@ -37,7 +37,7 @@ class Http1Layer(Layer):
     def read_from_server(self, request):
         return HTTPResponse.from_protocol(
             self.server_protocol,
-            request.method,
+            request,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
         )
@@ -80,7 +80,7 @@ class Http2Layer(Layer):
     def read_from_server(self, request):
         response = HTTPResponse.from_protocol(
             self.server_protocol,
-            request.method,
+            request,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
         )

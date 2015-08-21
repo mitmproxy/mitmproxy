@@ -4,6 +4,7 @@ from cStringIO import StringIO
 from mock import MagicMock
 
 from libmproxy.protocol.http import *
+import netlib.http
 from netlib import odict
 from netlib.http import http1
 from netlib.http.semantics import CONTENT_MISSING
@@ -27,19 +28,19 @@ class TestHTTPResponse:
              "\r\n"
 
         protocol = mock_protocol(s)
-        r = HTTPResponse.from_protocol(protocol, "GET")
+        r = HTTPResponse.from_protocol(protocol, netlib.http.EmptyRequest(method="GET"))
         assert r.status_code == 200
         assert r.content == "content"
-        assert HTTPResponse.from_protocol(protocol, "GET").status_code == 204
+        assert HTTPResponse.from_protocol(protocol, netlib.http.EmptyRequest(method="GET")).status_code == 204
 
         protocol = mock_protocol(s)
         # HEAD must not have content by spec. We should leave it on the pipe.
-        r = HTTPResponse.from_protocol(protocol, "HEAD")
+        r = HTTPResponse.from_protocol(protocol, netlib.http.EmptyRequest(method="HEAD"))
         assert r.status_code == 200
         assert r.content == ""
         tutils.raises(
             "Invalid server response: 'content",
-            HTTPResponse.from_protocol, protocol, "GET"
+            HTTPResponse.from_protocol, protocol, netlib.http.EmptyRequest(method="GET")
         )
 
 

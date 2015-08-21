@@ -352,12 +352,12 @@ class HTTPResponse(MessageMixin, semantics.Response):
     def from_protocol(
             self,
             protocol,
-            request_method,
+            request,
             include_body=True,
             body_size_limit=None
     ):
         resp = protocol.read_response(
-            request_method,
+            request,
             body_size_limit,
             include_body=include_body
         )

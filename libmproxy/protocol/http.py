@@ -41,7 +41,7 @@ def send_connect_request(conn, host, port, update_state=True):
     protocol = http1.HTTP1Protocol(conn)
 
     conn.send(protocol.assemble(upstream_request))
-    resp = HTTPResponse.from_protocol(protocol, upstream_request.method)
+    resp = HTTPResponse.from_protocol(protocol, upstream_request)
     if resp.status_code != 200:
         raise proxy.ProxyError(resp.status_code,
                                "Cannot establish SSL " +
@@ -177,7 +177,7 @@ class HTTPHandler(ProtocolHandler):
                 # Only get the headers at first...
                 flow.response = HTTPResponse.from_protocol(
                     self.c.server_conn.protocol,
-                    flow.request.method,
+                    flow.request,
                     body_size_limit=self.c.config.body_size_limit,
                     include_body=False,
                 )
@@ -760,7 +760,7 @@ class RequestReplayThread(threading.Thread):
                 self.flow.server_conn.protocol = http1.HTTP1Protocol(self.flow.server_conn)
                 self.flow.response = HTTPResponse.from_protocol(
                     self.flow.server_conn.protocol,
-                    r.method,
+                    r,
                     body_size_limit=self.config.body_size_limit,
                 )
             if self.channel:
