@@ -410,9 +410,8 @@ class TestReadResponse(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
         protocol.connection_preface_performed = True
 
-        resp = protocol.read_response(http.EmptyRequest(stream_id=42))
+        resp = protocol.read_response(stream_id=42)
 
-        assert resp.stream_id == 42
         assert resp.httpversion == (2, 0)
         assert resp.status_code == 200
         assert resp.msg == ""
@@ -437,7 +436,7 @@ class TestReadEmptyResponse(tservers.ServerTestBase):
         protocol = HTTP2Protocol(c)
         protocol.connection_preface_performed = True
 
-        resp = protocol.read_response(http.EmptyRequest(stream_id=42))
+        resp = protocol.read_response(stream_id=42)
 
         assert resp.stream_id == 42
         assert resp.httpversion == (2, 0)

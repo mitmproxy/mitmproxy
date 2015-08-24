@@ -345,10 +345,9 @@ class EmptyRequest(Request):
         host="",
         port="",
         path="",
-        httpversion=None,
+        httpversion=(0, 0),
         headers=None,
-        body="",
-        stream_id=None
+        body=""
     ):
         super(EmptyRequest, self).__init__(
             form_in=form_in,
@@ -357,12 +356,10 @@ class EmptyRequest(Request):
             host=host,
             port=port,
             path=path,
-            httpversion=(httpversion or (0, 0)),
+            httpversion=httpversion,
             headers=(headers or odict.ODictCaseless()),
             body=body,
         )
-        if stream_id:
-            self.stream_id = stream_id
 
 
 class Response(object):

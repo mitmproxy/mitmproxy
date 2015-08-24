@@ -376,9 +376,8 @@ class TestReadRequest(object):
 class TestReadResponse(object):
     def tst(self, data, method, body_size_limit, include_body=True):
         data = textwrap.dedent(data)
-        request = http.EmptyRequest(method=method)
         return mock_protocol(data).read_response(
-            request, body_size_limit, include_body=include_body
+            method, body_size_limit, include_body=include_body
         )
 
     def test_errors(self):
@@ -458,7 +457,7 @@ class TestReadResponseNoContentLength(tservers.ServerTestBase):
     def test_no_content_length(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         c.connect()
-        resp = HTTP1Protocol(c).read_response(http.EmptyRequest(method="GET"), None)
+        resp = HTTP1Protocol(c).read_response("GET", None)
         assert resp.body == "bar\r\n\r\n"
 
 

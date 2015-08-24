@@ -68,6 +68,9 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         body_size_limit=None,
         allow_empty=False,
     ):
+        if body_size_limit is not None:
+            raise NotImplementedError()
+
         self.perform_connection_preface()
 
         timestamp_start = time.time()
@@ -130,10 +133,14 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
     def read_response(
         self,
-        request='',
+        request_method='',
         body_size_limit=None,
         include_body=True,
+        stream_id=None,
     ):
+        if body_size_limit is not None:
+            raise NotImplementedError()
+
         self.perform_connection_preface()
 
         timestamp_start = time.time()
@@ -141,7 +148,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             self.tcp_handler.rfile.reset_timestamps()
 
         stream_id, headers, body = self._receive_transmission(
-            stream_id=request.stream_id,
+            stream_id=stream_id,
             include_body=include_body,
         )
 
