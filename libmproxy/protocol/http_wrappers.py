@@ -240,13 +240,10 @@ class HTTPRequest(MessageMixin, semantics.Request):
     def from_protocol(
             self,
             protocol,
-            include_body=True,
-            body_size_limit=None,
+            *args,
+            **kwargs
     ):
-        req = protocol.read_request(
-            include_body = include_body,
-            body_size_limit = body_size_limit,
-        )
+        req = protocol.read_request(*args, **kwargs)
         return self.wrap(req)
 
     @classmethod
@@ -352,15 +349,10 @@ class HTTPResponse(MessageMixin, semantics.Response):
     def from_protocol(
             self,
             protocol,
-            request,
-            include_body=True,
-            body_size_limit=None
+            *args,
+            **kwargs
     ):
-        resp = protocol.read_response(
-            request,
-            body_size_limit,
-            include_body=include_body
-        )
+        resp = protocol.read_response(*args, **kwargs)
         return self.wrap(resp)
 
     @classmethod

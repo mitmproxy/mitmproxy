@@ -34,10 +34,10 @@ class Http1Layer(Layer):
             body_size_limit=self.config.body_size_limit
         )
 
-    def read_from_server(self, request):
+    def read_from_server(self, request_method):
         return HTTPResponse.from_protocol(
             self.server_protocol,
-            request,
+            request_method,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
         )
@@ -64,6 +64,7 @@ class Http1Layer(Layer):
         layer = HttpLayer(self, self.mode)
         layer()
 
+
 class Http2Layer(Layer):
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
@@ -72,20 +73,20 @@ class Http2Layer(Layer):
         self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
 
     def read_from_client(self):
-        return HTTPRequest.from_protocol(
+        request = HTTPRequest.from_protocol(
             self.client_protocol,
             body_size_limit=self.config.body_size_limit
         )
+        self._stream_id = request.stream_id
 
-    def read_from_server(self, request):
-        response = HTTPResponse.from_protocol(
+    def read_from_server(self, request_method):
+        return HTTPResponse.from_protocol(
             self.server_protocol,
-            request,
+            request_method,
             body_size_limit=self.config.body_size_limit,
             include_body=False,
+            stream_id=self._stream_id
         )
-        response.stream_id = request.stream_id
-        return response
 
     def send_to_client(self, message):
         # TODO: implement flow control and WINDOW_UPDATE frames
@@ -356,7 +357,7 @@ class HttpLayer(Layer):
     def get_response_from_server(self, flow):
         def get_response():
             self.send_to_server(flow.request)
-            flow.response = self.read_from_server(flow.request)
+            flow.response = self.read_from_server(flow.request.method)
 
         try:
             get_response()

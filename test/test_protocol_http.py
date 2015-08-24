@@ -28,19 +28,19 @@ class TestHTTPResponse:
              "\r\n"
 
         protocol = mock_protocol(s)
-        r = HTTPResponse.from_protocol(protocol, netlib.http.EmptyRequest(method="GET"))
+        r = HTTPResponse.from_protocol(protocol, "GET")
         assert r.status_code == 200
         assert r.content == "content"
-        assert HTTPResponse.from_protocol(protocol, netlib.http.EmptyRequest(method="GET")).status_code == 204
+        assert HTTPResponse.from_protocol(protocol, "GET").status_code == 204
 
         protocol = mock_protocol(s)
         # HEAD must not have content by spec. We should leave it on the pipe.
-        r = HTTPResponse.from_protocol(protocol, netlib.http.EmptyRequest(method="HEAD"))
+        r = HTTPResponse.from_protocol(protocol, "HEAD")
         assert r.status_code == 200
         assert r.content == ""
         tutils.raises(
             "Invalid server response: 'content",
-            HTTPResponse.from_protocol, protocol, netlib.http.EmptyRequest(method="GET")
+            HTTPResponse.from_protocol, protocol, "GET"
         )
 
 

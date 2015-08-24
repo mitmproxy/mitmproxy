@@ -36,7 +36,7 @@ class TestServerConnection:
         sc.send(protocol.assemble(f.request))
 
         protocol = http.http1.HTTP1Protocol(rfile=sc.rfile)
-        assert protocol.read_response(f.request, 1000)
+        assert protocol.read_response(f.request.method, 1000)
         assert self.d.last_log()
 
         sc.finish()
