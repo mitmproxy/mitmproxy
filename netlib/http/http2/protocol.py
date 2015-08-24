@@ -123,6 +123,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
             timestamp_start,
             timestamp_end,
         )
+        # FIXME: We should not do this.
         request.stream_id = stream_id
 
         return request
@@ -150,7 +151,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
 
         if include_body:
             timestamp_end = time.time()
-        else:  # pragma: no cover
+        else:
             timestamp_end = None
 
         response = http.Response(
@@ -274,7 +275,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         return True
 
     def _handle_unexpected_frame(self, frm):
-        if self.unhandled_frame_cb is not None:
+        if self.unhandled_frame_cb:
             self.unhandled_frame_cb(frm)
 
     def _receive_settings(self, hide=False):
@@ -364,7 +365,9 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         return [frm.to_bytes() for frm in frms]
 
     def _receive_transmission(self, stream_id=None, include_body=True):
-        # TODO: include_body is not respected
+        if not include_body:
+            raise NotImplementedError()
+
         body_expected = True
 
         header_block_fragment = b''
