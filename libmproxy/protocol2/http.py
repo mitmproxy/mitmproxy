@@ -266,12 +266,15 @@ class HttpLayer(Layer):
                     self.handle_upstream_mode_connect(flow.request.copy())
                     return
 
-            except (HttpErrorConnClosed, NetLibError, HttpError) as e:
+            except (HttpErrorConnClosed, NetLibError, HttpError, ProtocolException) as e:
                 self.send_to_client(make_error_response(
                     getattr(e, "code", 502),
                     repr(e)
                 ))
-                raise ProtocolException(repr(e), e)
+                if isinstance(e, ProtocolException):
+                    raise e
+                else:
+                    raise ProtocolException(repr(e), e)
             finally:
                 flow.live = False
 
@@ -468,7 +471,7 @@ class HttpLayer(Layer):
 
     def validate_request(self, request):
         if request.form_in == "absolute" and request.scheme != "http":
-            self.send_response(make_error_response(400, "Invalid request scheme: %s" % request.scheme))
+            self.send_to_client(make_error_response(400, "Invalid request scheme: %s" % request.scheme))
             raise HttpException("Invalid request scheme: %s" % request.scheme)
 
         expected_request_forms = {

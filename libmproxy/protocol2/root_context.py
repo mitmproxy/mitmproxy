@@ -41,7 +41,7 @@ class RootContext(object):
         d = top_layer.client_conn.rfile.peek(3)
         is_ascii = (
             len(d) == 3 and
-            all(x in string.ascii_uppercase for x in d)
+            all(x in string.ascii_letters for x in d) # better be safe here and don't expect uppercase...
         )
 
         d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))

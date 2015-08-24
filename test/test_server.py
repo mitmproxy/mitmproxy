@@ -319,17 +319,6 @@ class TestHTTPAuth(tservers.HTTPProxTest):
         assert ret.status_code == 202
 
 
-class TestHTTPConnectSSLError(tservers.HTTPProxTest):
-    certfile = True
-
-    def test_go(self):
-        self.config.ssl_ports.append(self.proxy.port)
-        p = self.pathoc_raw()
-        dst = ("localhost", self.proxy.port)
-        p.connect(connect_to=dst)
-        tutils.raises("502 - Bad Gateway", p.http_connect, dst)
-
-
 class TestHTTPS(tservers.HTTPProxTest, CommonMixin, TcpMixin):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
@@ -390,26 +379,31 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxTest):
             ("untrusted-cert", tutils.test_data.path("data/untrusted-server.crt"))
         ])
 
+    def _request(self):
+        p = self.pathoc()
+        # We need to make an actual request because the upstream connection is lazy-loaded.
+        return p.request("get:/p/242")
+
     def test_default_verification_w_bad_cert(self):
         """Should use no verification."""
         self.config.openssl_trusted_ca_server = tutils.test_data.path(
             "data/trusted-cadir/trusted-ca.pem")
 
-        self.pathoc()
+        assert self._request().status_code == 242
 
     def test_no_verification_w_bad_cert(self):
         self.config.openssl_verification_mode_server = SSL.VERIFY_NONE
         self.config.openssl_trusted_ca_server = tutils.test_data.path(
             "data/trusted-cadir/trusted-ca.pem")
 
-        self.pathoc()
+        assert self._request().status_code == 242
 
     def test_verification_w_bad_cert(self):
         self.config.openssl_verification_mode_server = SSL.VERIFY_PEER
         self.config.openssl_trusted_ca_server = tutils.test_data.path(
             "data/trusted-cadir/trusted-ca.pem")
 
-        tutils.raises("SSL handshake error", self.pathoc)
+        assert self._request().status_code == 502
 
 
 class TestHTTPSNoCommonName(tservers.HTTPProxTest):

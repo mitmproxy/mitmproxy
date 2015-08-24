@@ -17,6 +17,7 @@ class TlsLayer(Layer):
         self.client_sni = None
         self._sni_from_server_change = None
         self.client_alpn_protos = None
+        self.__server_tls_exception = None
 
         # foo alpn protos = [netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1, netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2],  # TODO: read this from client_conn first
 
@@ -107,49 +108,48 @@ class TlsLayer(Layer):
         This callback gets called during the TLS handshake with the client.
         The client has just sent the Sever Name Indication (SNI).
         """
-        try:
-            old_upstream_sni = self.sni_for_upstream_connection
+        old_upstream_sni = self.sni_for_upstream_connection
 
-            sn = connection.get_servername()
-            if not sn:
-                return
-            self.client_sni = sn.decode("utf8").encode("idna")
+        sn = connection.get_servername()
+        if not sn:
+            return
 
-            if old_upstream_sni != self.sni_for_upstream_connection:
-                # Perform reconnect
-                if self.server_conn and self._server_tls:
-                    self.reconnect()
+        self.client_sni = sn.decode("utf8").encode("idna")
 
-            if self.client_sni:
-                # Now, change client context to reflect possibly changed certificate:
-                cert, key, chain_file = self._find_cert()
-                new_context = self.client_conn.create_ssl_context(
-                    cert, key,
-                    method=self.config.openssl_method_client,
-                    options=self.config.openssl_options_client,
-                    cipher_list=self.config.ciphers_client,
-                    dhparams=self.config.certstore.dhparams,
-                    chain_file=chain_file,
-                    alpn_select_callback=self.__handle_alpn_select,
-                )
-                connection.set_context(new_context)
-        # An unhandled exception in this method will core dump PyOpenSSL, so
-        # make dang sure it doesn't happen.
-        except:  # pragma: no cover
-            self.log("Error in handle_sni:\r\n" + traceback.format_exc(), "error")
+        server_sni_changed = (old_upstream_sni != self.sni_for_upstream_connection)
+        server_conn_with_tls_exists = (self.server_conn and self._server_tls)
+        if server_sni_changed and server_conn_with_tls_exists:
+            try:
+                self.reconnect()
+            except Exception as e:
+                self.__server_tls_exception = e
+
+        # Now, change client context to reflect possibly changed certificate:
+        cert, key, chain_file = self._find_cert()
+        new_context = self.client_conn.create_ssl_context(
+            cert, key,
+            method=self.config.openssl_method_client,
+            options=self.config.openssl_options_client,
+            cipher_list=self.config.ciphers_client,
+            dhparams=self.config.certstore.dhparams,
+            chain_file=chain_file,
+            alpn_select_callback=self.__handle_alpn_select,
+        )
+        connection.set_context(new_context)
 
     def __handle_alpn_select(self, conn_, options):
         # TODO: change to something meaningful?
-        alpn_preference = netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1
+        # alpn_preference = netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1
         alpn_preference = netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2
-        ###
 
-        # TODO: Not
-        if self.client_alpn_protos != options:
-            # Perform reconnect
-            # TODO: Avoid double reconnect.
-            if self.server_conn and self._server_tls:
+        # TODO: Don't reconnect twice?
+        upstream_alpn_changed = (self.client_alpn_protos != options)
+        server_conn_with_tls_exists = (self.server_conn and self._server_tls)
+        if upstream_alpn_changed and server_conn_with_tls_exists:
+            try:
                 self.reconnect()
+            except Exception as e:
+                self.__server_tls_exception = e
 
         self.client_alpn_protos = options
 
@@ -176,6 +176,11 @@ class TlsLayer(Layer):
         except tcp.NetLibError as e:
             print("alpn: %s" % self.client_alpn_protos)
             raise ProtocolException(repr(e), e)
+
+        # Do not raise server tls exceptions immediately.
+        # We want to try to finish the client handshake so that other layers can send error messages over it.
+        if self.__server_tls_exception:
+            raise self.__server_tls_exception
 
     def _establish_tls_with_server(self):
         self.log("Establish TLS with server", "debug")
