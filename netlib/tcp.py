@@ -281,7 +281,7 @@ class Reader(_FileLike):
             try:
                 return self.o._sock.recv(length, socket.MSG_PEEK)
             except socket.error as e:
-                raise NetLibError(str(e))
+                raise NetLibError(repr(e))
         elif isinstance(self.o, SSL.Connection):
             try:
                 if tuple(int(x) for x in OpenSSL.__version__.split(".")[:2]) > (0, 15):
@@ -294,7 +294,7 @@ class Reader(_FileLike):
                     self.o._raise_ssl_error(self.o._ssl, result)
                     return SSL._ffi.buffer(buf, result)[:]
             except SSL.Error as e:
-                raise NetLibSSLError(str(e))
+                raise NetLibSSLError(repr(e))
         else:
             raise NotImplementedError("Can only peek into (pyOpenSSL) sockets")
 
