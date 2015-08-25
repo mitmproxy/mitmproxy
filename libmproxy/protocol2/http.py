@@ -268,10 +268,13 @@ class HttpLayer(Layer):
                     return
 
             except (HttpErrorConnClosed, NetLibError, HttpError, ProtocolException) as e:
-                self.send_to_client(make_error_response(
-                    getattr(e, "code", 502),
-                    repr(e)
-                ))
+                try:
+                    self.send_to_client(make_error_response(
+                        getattr(e, "code", 502),
+                        repr(e)
+                    ))
+                except NetLibError:
+                    pass
                 if isinstance(e, ProtocolException):
                     raise e
                 else:

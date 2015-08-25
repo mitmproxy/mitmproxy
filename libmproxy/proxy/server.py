@@ -100,6 +100,8 @@ class ConnectionHandler2:
             print("mitmproxy has crashed!", file=sys.stderr)
             print("Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy", file=sys.stderr)
 
+        self.log("clientdisconnect", "info")
+
     def finish(self):
         self.client_conn.finish()
 
