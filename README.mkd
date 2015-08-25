@@ -20,8 +20,7 @@ mitmproxy.org website:
 Installation Instructions are available at [mitmproxy.org/doc/install.html](http://mitmproxy.org/doc/install.html).
 
 You can join our developer chat on Slack:  
-[![Slack](https://mitmproxy-slack.herokuapp.com/badge.svg)](https://mitmproxy-slack.herokuapp.com/)
-
+[![Slack](http://slack.mitmproxy.org/badge.svg)](http://slack.mitmproxy.org/)
 
 
 Features
