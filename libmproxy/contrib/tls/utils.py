@@ -24,29 +24,3 @@ class _UBInt24(construct.Adapter):
 
 def UBInt24(name):  # noqa
     return _UBInt24(construct.Bytes(name, 3))
-
-
-def LengthPrefixedArray(subcon, length_field=construct.UBInt8("length")):
-    """
-    An array prefixed by a byte length field.
-
-    In contrast to construct.macros.PrefixedArray,
-    the length field signifies the number of bytes, not the number of elements.
-    """
-    subcon_with_pos = construct.Struct(
-        subcon.name,
-        construct.Embed(subcon),
-        construct.Anchor("__current_pos")
-    )
-
-    return construct.Embed(
-        construct.Struct(
-            "",
-            length_field,
-            construct.Anchor("__start_pos"),
-            construct.RepeatUntil(
-                lambda obj, ctx: obj.__current_pos == ctx.__start_pos + getattr(ctx, length_field.name),
-                subcon_with_pos
-            ),
-        )
-    )

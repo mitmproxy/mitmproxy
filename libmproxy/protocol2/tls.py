@@ -61,7 +61,12 @@ class TlsLayer(Layer):
         layer()
 
     def _get_client_hello(self):
-        # Read all records that contain the initial Client Hello message.
+        """
+        Peek into the socket and read all records that contain the initial client hello message.
+
+        Returns:
+            The raw handshake packet bytes, without TLS record header(s).
+        """
         client_hello = ""
         client_hello_size = 1
         offset = 0
@@ -75,10 +80,15 @@ class TlsLayer(Layer):
         return client_hello
 
     def _parse_client_hello(self):
+        """
+        Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
+        """
+        raw_client_hello = self._get_client_hello()[4:]  # exclude handshake header.
         try:
-            client_hello = ClientHello.parse(self._get_client_hello()[4:])
+            client_hello = ClientHello.parse(raw_client_hello)
         except ConstructError as e:
             self.log("Cannot parse Client Hello: %s" % repr(e), "error")
+            self.log("Raw Client Hello:\r\n:%s" % raw_client_hello.encode("hex"), "debug")
             return
 
         for extension in client_hello.extensions:
