@@ -55,6 +55,7 @@ def mitmproxy(args=None):  # pragma: nocover
     console_options.eventlog = options.eventlog
     console_options.intercept = options.intercept
     console_options.limit = options.limit
+    console_options.no_mouse = options.no_mouse
 
     server = get_server(console_options.no_server, proxy_config)
 

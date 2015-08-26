@@ -154,7 +154,8 @@ class Options(object):
         "wfile",
         "nopop",
         "palette",
-        "palette_transparent"
+        "palette_transparent",
+        "no_mouse"
     ]
 
     def __init__(self, **kwargs):
@@ -455,12 +456,12 @@ class ConsoleMaster(flow.FlowMaster):
 
     def run(self):
         self.ui = urwid.raw_display.Screen()
-        self.ui.set_mouse_tracking()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.palette)
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             screen = self.ui,
+            handle_mouse = not self.options.no_mouse,
         )
 
         self.server.start_slave(
