@@ -78,6 +78,7 @@ class Http2Layer(Layer):
             body_size_limit=self.config.body_size_limit
         )
         self._stream_id = request.stream_id
+        return request
 
     def read_from_server(self, request_method):
         return HTTPResponse.from_protocol(
