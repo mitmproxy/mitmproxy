@@ -162,7 +162,10 @@ class TlsLayer(Layer):
             # If the server only supports spdy (next to http/1.1), it may select that
             # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
             deprecated_http2_variant = lambda x: x.startswith("h2-") or x.startswith("spdy")
-            alpn = filter(lambda x: not deprecated_http2_variant(x), self.client_alpn_protocols)
+            if self.client_alpn_protocols:
+                alpn = filter(lambda x: not deprecated_http2_variant(x), self.client_alpn_protocols)
+            else:
+                alpn = None
 
             self.server_conn.establish_ssl(
                 self.config.clientcerts,
