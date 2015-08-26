@@ -101,7 +101,7 @@ Extension = Struct(
     UBInt16("type"),
     Embed(
         Switch(
-            "data", lambda ctx: ctx.type,
+            "", lambda ctx: ctx.type,
             {
                 0x00: SNIExtension,
                 0x10: ALPNExtension
@@ -202,7 +202,7 @@ Certificate = Struct(
 Handshake = Struct(
     "Handshake",
     UBInt8("msg_type"),
-    UBInt24("length"),  # TODO: Reject packets with length > 2 ** 24
+    UBInt24("length"),
     Bytes("body", lambda ctx: ctx.length),
 )
 

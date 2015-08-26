@@ -47,9 +47,10 @@ class RootContext(object):
         d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))
         is_http2_magic = (d == HTTP2Protocol.CLIENT_CONNECTION_PREFACE)
 
+        alpn_proto_negotiated = top_layer.client_conn.get_alpn_proto_negotiated()
         is_alpn_h2_negotiated = (
             isinstance(top_layer, TlsLayer) and
-            top_layer.client_conn.get_alpn_proto_negotiated() == HTTP2Protocol.ALPN_PROTO_H2
+            alpn_proto_negotiated == HTTP2Protocol.ALPN_PROTO_H2
         )
 
         if is_tls_client_hello:
