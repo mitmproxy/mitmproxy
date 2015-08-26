@@ -87,10 +87,9 @@ class TlsLayer(Layer):
                     self.log("Unknown Server Name Indication: %s" % extension.server_names, "error")
                 self.client_sni = extension.server_names[0].name
             elif extension.type == 0x10:
-                self.client_alpn_protocols = extension.alpn_protocols
+                self.client_alpn_protocols = list(extension.alpn_protocols)
 
-        print("sni: %s" % self.client_sni)
-        print("alpn: %s" % self.client_alpn_protocols)
+        self.log("Parsed Client Hello: sni=%s, alpn=%s" % (self.client_sni, self.client_alpn_protocols), "debug")
 
     def connect(self):
         if not self.server_conn:
@@ -131,10 +130,13 @@ class TlsLayer(Layer):
         # alpn_preference = netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2
 
         if self.alpn_for_client_connection in options:
-            return bytes(self.alpn_for_client_connection)
-        if default_alpn in options:
-            return bytes(default_alpn)
-        return options[0]
+            choice = bytes(self.alpn_for_client_connection)
+        elif default_alpn in options:
+            choice = bytes(default_alpn)
+        else:
+            choice = options[0]
+        self.log("ALPN for client: %s" % choice, "debug")
+        return choice
 
     def _establish_tls_with_client(self):
         self.log("Establish TLS with client", "debug")
@@ -156,6 +158,12 @@ class TlsLayer(Layer):
     def _establish_tls_with_server(self):
         self.log("Establish TLS with server", "debug")
         try:
+            # We only support http/1.1 and h2.
+            # If the server only supports spdy (next to http/1.1), it may select that
+            # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
+            deprecated_http2_variant = lambda x: x.startswith("h2-") or x.startswith("spdy")
+            alpn = filter(lambda x: not deprecated_http2_variant(x), self.client_alpn_protocols)
+
             self.server_conn.establish_ssl(
                 self.config.clientcerts,
                 self.sni_for_server_connection,
@@ -165,7 +173,7 @@ class TlsLayer(Layer):
                 ca_path=self.config.openssl_trusted_cadir_server,
                 ca_pemfile=self.config.openssl_trusted_ca_server,
                 cipher_list=self.config.ciphers_server,
-                alpn_protos=self.client_alpn_protocols,
+                alpn_protos=alpn,
             )
             tls_cert_err = self.server_conn.ssl_verification_error
             if tls_cert_err is not None:
@@ -184,6 +192,8 @@ class TlsLayer(Layer):
             raise ProtocolException(repr(e), e)
         except tcp.NetLibError as e:
             raise ProtocolException(repr(e), e)
+
+        self.log("ALPN selected by server: %s" % self.alpn_for_client_connection, "debug")
 
     def _find_cert(self):
         host = self.server_conn.address.host

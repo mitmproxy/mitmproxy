@@ -78,13 +78,14 @@ class Http2Layer(Layer):
             body_size_limit=self.config.body_size_limit
         )
         self._stream_id = request.stream_id
+        return request
 
     def read_from_server(self, request_method):
         return HTTPResponse.from_protocol(
             self.server_protocol,
             request_method,
             body_size_limit=self.config.body_size_limit,
-            include_body=False,
+            include_body=True,
             stream_id=self._stream_id
         )
 
@@ -389,9 +390,11 @@ class HttpLayer(Layer):
         if flow is None or flow == KILL:
             raise Kill()
 
-        if flow.response.stream:
+        if isinstance(self.ctx, Http2Layer):
+            pass  # streaming is not implemented for http2 yet.
+        elif flow.response.stream:
             flow.response.content = CONTENT_MISSING
-        elif isinstance(self.server_protocol, http1.HTTP1Protocol):
+        else:
             flow.response.content = self.server_protocol.read_http_body(
                 flow.response.headers,
                 self.config.body_size_limit,
