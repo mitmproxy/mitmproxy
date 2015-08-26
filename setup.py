@@ -20,7 +20,9 @@ deps = {
     "pyperclip>=1.5.8",
     "blinker>=1.3",
     "pyparsing>=1.5.2",
-    "html2text>=2015.4.14"
+    "html2text>=2015.4.14",
+    "construct>=2.5.2",
+    "six>=1.9.0",
 }
 # A script -> additional dependencies dict.
 scripts = {

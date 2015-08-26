@@ -1,6 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
-import traceback
+from ..contrib.tls._constructs import ClientHello
 
 from netlib import tcp
 import netlib.http.http2
@@ -11,15 +11,15 @@ from .layer import Layer
 
 class TlsLayer(Layer):
     def __init__(self, ctx, client_tls, server_tls):
+        self.client_sni = None
+        self.client_alpn_protos = None
+
         super(TlsLayer, self).__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
-        self.client_sni = None
-        self._sni_from_server_change = None
-        self.client_alpn_protos = None
-        self.__server_tls_exception = None
 
-        # foo alpn protos = [netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1, netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2],  # TODO: read this from client_conn first
+        self._sni_from_server_change = None
+        self.__server_tls_exception = None
 
     def __call__(self):
         """
@@ -45,6 +45,28 @@ class TlsLayer(Layer):
               https://www.openssl.org/docs/ssl/SSL_CTX_set_cert_cb.html
             - The original mitmproxy issue is https://github.com/mitmproxy/mitmproxy/issues/427
         """
+        import struct
+
+        # Read all records that contain the initial Client Hello message.
+        client_hello = ""
+        client_hello_size = 1
+        offset = 0
+        while len(client_hello) < client_hello_size:
+            record_header = self.client_conn.rfile.peek(offset+5)[offset:]
+            record_size = struct.unpack("!H", record_header[3:])[0] + 5
+            record_body = self.client_conn.rfile.peek(offset+record_size)[offset+5:]
+            client_hello += record_body
+            offset += record_size
+            client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
+
+        client_hello = ClientHello.parse(client_hello[4:])
+
+        for extension in client_hello.extensions:
+            if extension.type == 0x00:
+                host = extension.server_names[0].name
+            if extension.type == 0x10:
+                alpn = extension.alpn_protocols
+
         client_tls_requires_server_cert = (
             self._client_tls and self._server_tls and not self.config.no_upstream_cert
         )
@@ -60,12 +82,12 @@ class TlsLayer(Layer):
     def connect(self):
         if not self.server_conn:
             self.ctx.connect()
-        if self._server_tls and not self._server_tls_established:
+        if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()
 
     def reconnect(self):
         self.ctx.reconnect()
-        if self._server_tls and not self._server_tls_established:
+        if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()
 
     def set_server(self, address, server_tls, sni, depth=1):
@@ -73,10 +95,6 @@ class TlsLayer(Layer):
         if server_tls is not None:
             self._sni_from_server_change = sni
             self._server_tls = server_tls
-
-    @property
-    def _server_tls_established(self):
-        return self.server_conn and self.server_conn.tls_established
 
     @property
     def sni_for_upstream_connection(self):
@@ -138,6 +156,10 @@ class TlsLayer(Layer):
         connection.set_context(new_context)
 
     def __handle_alpn_select(self, conn_, options):
+        """
+        Once the client signals the alternate protocols it supports,
+        we reconnect upstream with the same list and pass the server's choice down to the client.
+        """
         # TODO: change to something meaningful?
         # alpn_preference = netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1
         alpn_preference = netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2

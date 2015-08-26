@@ -1,0 +1,2 @@
+class UnsupportedCipherException(Exception):
+    pass
