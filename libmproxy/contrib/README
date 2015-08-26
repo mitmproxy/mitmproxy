@@ -10,5 +10,5 @@ wbxml
     - https://github.com/davidpshaw/PyWBXMLDecoder
 
 tls, BSD license
-    - https://github.com/mhils/tls/tree/extension-parsing
+    - https://github.com/mhils/tls/tree/mitmproxy
     - limited to required files.
