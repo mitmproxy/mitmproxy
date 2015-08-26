@@ -153,7 +153,7 @@ class TlsLayer(Layer):
                 alpn_select_callback=self.__alpn_select_callback,
             )
         except tcp.NetLibError as e:
-            raise ProtocolException(repr(e), e)
+            raise ProtocolException("Cannot establish TLS with client: %s" % repr(e), e)
 
     def _establish_tls_with_server(self):
         self.log("Establish TLS with server", "debug")
@@ -189,9 +189,9 @@ class TlsLayer(Layer):
                 (tls_cert_err['depth'], tls_cert_err['errno']),
                 "error")
             self.log("Aborting connection attempt", "error")
-            raise ProtocolException(repr(e), e)
+            raise ProtocolException("Cannot establish TLS with server: %s" % repr(e), e)
         except tcp.NetLibError as e:
-            raise ProtocolException(repr(e), e)
+            raise ProtocolException("Cannot establish TLS with server: %s" % repr(e), e)
 
         self.log("ALPN selected by server: %s" % self.alpn_for_client_connection, "debug")
 

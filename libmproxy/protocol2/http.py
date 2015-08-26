@@ -279,7 +279,7 @@ class HttpLayer(Layer):
                 if isinstance(e, ProtocolException):
                     raise e
                 else:
-                    raise ProtocolException(repr(e), e)
+                    raise ProtocolException("Error in HTTP connection: %s" % repr(e), e)
             finally:
                 flow.live = False
 
