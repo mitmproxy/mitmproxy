@@ -290,9 +290,6 @@ class PriorityFrame(Frame):
             raise ValueError(
                 'PRIORITY frames MUST be associated with a stream.')
 
-        if self.stream_dependency == 0x0:
-            raise ValueError('stream dependency is invalid.')
-
         return struct.pack(
             '!LB',
             (int(
