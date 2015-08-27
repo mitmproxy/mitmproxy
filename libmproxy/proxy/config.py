@@ -3,14 +3,11 @@ import os
 import re
 from OpenSSL import SSL
 
-import netlib
-from netlib import http, certutils, tcp
+from netlib import certutils, tcp
 from netlib.http import authentication
 
-from .. import utils, platform, version
-from .primitives import RegularProxyMode, SpoofMode, SSLSpoofMode, TransparentProxyMode, UpstreamProxyMode, ReverseProxyMode, Socks5ProxyMode
+from .. import utils, platform
 
-TRANSPARENT_SSL_PORTS = [443, 8443]
 CONF_BASENAME = "mitmproxy"
 CA_DIR = "~/.mitmproxy"
 
@@ -40,15 +37,12 @@ class ProxyConfig:
             self,
             host='',
             port=8080,
-            server_version=version.NAMEVERSION,
             cadir=CA_DIR,
             clientcerts=None,
             no_upstream_cert=False,
             body_size_limit=None,
             mode=None,
             upstream_server=None,
-            http_form_in=None,
-            http_form_out=None,
             authenticator=None,
             ignore_hosts=[],
             tcp_hosts=[],
@@ -57,39 +51,19 @@ class ProxyConfig:
             certs=[],
             ssl_version_client=tcp.SSL_DEFAULT_METHOD,
             ssl_version_server=tcp.SSL_DEFAULT_METHOD,
-            ssl_ports=TRANSPARENT_SSL_PORTS,
-            spoofed_ssl_port=None,
             ssl_verify_upstream_cert=False,
             ssl_upstream_trusted_cadir=None,
             ssl_upstream_trusted_ca=None
     ):
         self.host = host
         self.port = port
-        self.server_version = server_version
         self.ciphers_client = ciphers_client
         self.ciphers_server = ciphers_server
         self.clientcerts = clientcerts
         self.no_upstream_cert = no_upstream_cert
         self.body_size_limit = body_size_limit
-
-        if mode == "transparent":
-            self.mode = TransparentProxyMode(platform.resolver(), ssl_ports)
-        elif mode == "socks5":
-            self.mode = Socks5ProxyMode(ssl_ports)
-        elif mode == "reverse":
-            self.mode = ReverseProxyMode(upstream_server)
-        elif mode == "upstream":
-            self.mode = UpstreamProxyMode(upstream_server)
-        elif mode == "spoof":
-            self.mode = SpoofMode()
-        elif mode == "sslspoof":
-            self.mode = SSLSpoofMode(spoofed_ssl_port)
-        else:
-            self.mode = RegularProxyMode()
-
-        # Handle manual overrides of the http forms
-        self.mode.http_form_in = http_form_in or self.mode.http_form_in
-        self.mode.http_form_out = http_form_out or self.mode.http_form_out
+        self.mode = mode
+        self.upstream_server = upstream_server
 
         self.check_ignore = HostMatcher(ignore_hosts)
         self.check_tcp = HostMatcher(tcp_hosts)
@@ -97,10 +71,10 @@ class ProxyConfig:
         self.cadir = os.path.expanduser(cadir)
         self.certstore = certutils.CertStore.from_store(
             self.cadir,
-            CONF_BASENAME)
+            CONF_BASENAME
+        )
         for spec, cert in certs:
             self.certstore.add_cert_file(spec, cert)
-        self.ssl_ports = ssl_ports
 
         if isinstance(ssl_version_client, int):
             self.openssl_method_client = ssl_version_client
@@ -279,16 +253,6 @@ def ssl_option_group(parser):
         dest="ssl_upstream_trusted_ca",
         help="Path to a PEM formatted trusted CA certificate."
     )
-    group.add_argument(
-        "--ssl-port",
-        action="append",
-        type=int,
-        dest="ssl_ports",
-        default=list(TRANSPARENT_SSL_PORTS),
-        metavar="PORT",
-        help="Can be passed multiple times. Specify destination ports which are assumed to be SSL. "
-        "Defaults to %s." %
-        str(TRANSPARENT_SSL_PORTS))
     group.add_argument(
         "--ssl-version-client", dest="ssl_version_client", type=str, default=tcp.SSL_DEFAULT_VERSION,
         choices=tcp.SSL_VERSIONS.keys(),
