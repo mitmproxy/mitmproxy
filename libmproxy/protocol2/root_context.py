@@ -7,8 +7,7 @@ from .rawtcp import RawTcpLayer
 from .tls import TlsLayer, is_tls_record_magic
 from .http import Http1Layer, Http2Layer
 from .layer import ServerConnectionMixin
-from .http_proxy import HttpProxy, HttpUpstreamProxy
-from .reverse_proxy import ReverseProxy
+from ..proxy_modes import HttpProxy, HttpUpstreamProxy, ReverseProxy
 
 class RootContext(object):
     """

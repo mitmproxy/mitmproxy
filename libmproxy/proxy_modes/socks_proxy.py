@@ -3,7 +3,7 @@ from __future__ import (absolute_import, print_function, division)
 from netlib import socks
 from netlib.tcp import NetLibError
 from ..exceptions import Socks5Exception
-from .layer import Layer, ServerConnectionMixin
+from ..protocol2.layer import Layer, ServerConnectionMixin
 
 
 class Socks5Proxy(Layer, ServerConnectionMixin):

@@ -8,6 +8,7 @@ from netlib.http.http1 import HTTP1Protocol
 from netlib.tcp import NetLibError
 
 from .. import protocol2
+from .. import proxy_modes
 from ..exceptions import ProtocolException, ServerException
 from .primitives import Log, Kill
 from .connection import ClientConnection
@@ -79,23 +80,23 @@ class ConnectionHandler(object):
 
         mode = self.config.mode
         if mode == "upstream":
-            return protocol2.HttpUpstreamProxy(
+            return proxy_modes.HttpUpstreamProxy(
                 root_context,
                 self.config.upstream_server.address
             )
         elif mode == "transparent":
-            return protocol2.TransparentProxy(root_context)
+            return proxy_modes.TransparentProxy(root_context)
         elif mode == "reverse":
             server_tls = self.config.upstream_server.scheme == "https"
-            return protocol2.ReverseProxy(
+            return proxy_modes.ReverseProxy(
                 root_context,
                 self.config.upstream_server.address,
                 server_tls
             )
         elif mode == "socks5":
-            return protocol2.Socks5Proxy(root_context)
+            return proxy_modes.Socks5Proxy(root_context)
         elif mode == "regular":
-            return protocol2.HttpProxy(root_context)
+            return proxy_modes.HttpProxy(root_context)
         elif callable(mode):  # pragma: nocover
             return mode(root_context)
         else:  # pragma: nocover
