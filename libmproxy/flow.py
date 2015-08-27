@@ -860,9 +860,9 @@ class FlowMaster(controller.Master):
         """
 
         if self.server and self.server.config.mode == "reverse":
-            f.request.host, f.request.port = self.server.config.mode.dst[2:]
-            f.request.scheme = "https" if self.server.config.mode.dst[
-                1] else "http"
+            f.request.host = self.server.config.upstream_server.address.host
+            f.request.port = self.server.config.upstream_server.address.port
+            f.request.scheme = re.sub("^https?2", "", self.server.config.upstream_server.scheme)
 
         f.reply = controller.DummyReply()
         if f.request:

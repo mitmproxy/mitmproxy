@@ -4,6 +4,7 @@ import os.path
 from cStringIO import StringIO
 import email.utils
 import mock
+from libmproxy.cmdline import parse_server_spec
 
 import netlib.utils
 from netlib import odict
@@ -672,11 +673,8 @@ class TestSerialize:
         s = flow.State()
         conf = ProxyConfig(
             mode="reverse",
-            upstream_server=[
-                True,
-                True,
-                "use-this-domain",
-                80])
+            upstream_server=("https", ("use-this-domain", 80))
+        )
         fm = flow.FlowMaster(DummyServer(conf), s)
         fm.load_flows(r)
         assert s.flows[0].request.host == "use-this-domain"

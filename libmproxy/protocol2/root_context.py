@@ -4,7 +4,7 @@ from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
 
 from .rawtcp import RawTcpLayer
-from .tls import TlsLayer
+from .tls import TlsLayer, is_tls_record_magic
 from .http import Http1Layer, Http2Layer
 
 
@@ -38,13 +38,7 @@ class RootContext(object):
         # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
         # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
         d = top_layer.client_conn.rfile.peek(3)
-        is_tls_client_hello = (
-            len(d) == 3 and
-            d[0] == '\x16' and
-            d[1] == '\x03' and
-            d[2] in ('\x00', '\x01', '\x02', '\x03')
-        )
-        if is_tls_client_hello:
+        if is_tls_record_magic(d):
             return TlsLayer(top_layer, True, True)
 
         # 3. Check for --tcp

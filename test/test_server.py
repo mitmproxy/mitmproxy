@@ -464,60 +464,11 @@ class TestSocks5(tservers.SocksModeTest):
         assert "SOCKS5 mode failure" in f.content
 
 
-class TestSpoof(tservers.SpoofModeTest):
-    def test_http(self):
-        alist = (
-            ("localhost", self.server.port),
-            ("127.0.0.1", self.server.port)
-        )
-        for a in alist:
-            self.server.clear_log()
-            p = self.pathoc()
-            f = p.request("get:/p/304:h'Host'='%s:%s'" % a)
-            assert self.server.last_log()
-            assert f.status_code == 304
-            l = self.master.state.view[-1]
-            assert l.server_conn.address
-            assert l.server_conn.address.host == a[0]
-            assert l.server_conn.address.port == a[1]
-
-    def test_http_without_host(self):
-        p = self.pathoc()
-        f = p.request("get:/p/304:r")
-        assert f.status_code == 400
-
-
-class TestSSLSpoof(tservers.SSLSpoofModeTest):
-    def test_https(self):
-        alist = (
-            ("localhost", self.server.port),
-            ("127.0.0.1", self.server.port)
-        )
-        for a in alist:
-            self.server.clear_log()
-            self.config.mode.sslport = a[1]
-            p = self.pathoc(sni=a[0])
-            f = p.request("get:/p/304")
-            assert self.server.last_log()
-            assert f.status_code == 304
-            l = self.master.state.view[-1]
-            assert l.server_conn.address
-            assert l.server_conn.address.host == a[0]
-            assert l.server_conn.address.port == a[1]
-
-    def test_https_without_sni(self):
-        a = ("localhost", self.server.port)
-        self.config.mode.sslport = a[1]
-        p = self.pathoc(sni=None)
-        f = p.request("get:/p/304")
-        assert f.status_code == 400
-
-
 class TestHttps2Http(tservers.ReverseProxTest):
     @classmethod
     def get_proxy_config(cls):
         d = super(TestHttps2Http, cls).get_proxy_config()
-        d["upstream_server"][0] = True
+        d["upstream_server"] = ("https2http", d["upstream_server"][1])
         return d
 
     def pathoc(self, ssl, sni=None):
@@ -541,7 +492,7 @@ class TestHttps2Http(tservers.ReverseProxTest):
 
     def test_http(self):
         p = self.pathoc(ssl=False)
-        assert p.request("get:'/p/200'").status_code == 400
+        assert p.request("get:'/p/200'").status_code == 502
 
 
 class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):

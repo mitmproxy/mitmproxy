@@ -10,6 +10,7 @@ from email.utils import parsedate_tz, formatdate, mktime_tz
 import netlib
 from netlib import http, tcp, odict, utils, encoding
 from netlib.http import cookies, http1, http2
+from netlib.http.http1 import HTTP1Protocol
 from netlib.http.semantics import CONTENT_MISSING
 
 from .tcp import TCPHandler
@@ -757,7 +758,6 @@ class RequestReplayThread(threading.Thread):
 
                 server.send(self.flow.server_conn.protocol.assemble(r))
                 self.flow.server_conn = server
-                self.flow.server_conn.protocol = http1.HTTP1Protocol(self.flow.server_conn)
                 self.flow.response = HTTPResponse.from_protocol(
                     self.flow.server_conn.protocol,
                     r.method,

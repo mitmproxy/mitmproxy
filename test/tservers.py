@@ -1,6 +1,5 @@
 import os.path
 import threading
-import Queue
 import shutil
 import tempfile
 import flask
@@ -130,7 +129,6 @@ class ProxTestBase(object):
             no_upstream_cert = cls.no_upstream_cert,
             cadir = cls.cadir,
             authenticator = cls.authenticator,
-            ssl_ports=([cls.server.port, cls.server2.port] if cls.ssl else []),
             clientcerts = tutils.test_data.path("data/clientcert") if cls.clientcerts else None
         )
 
@@ -235,12 +233,10 @@ class ReverseProxTest(ProxTestBase):
     @classmethod
     def get_proxy_config(cls):
         d = ProxTestBase.get_proxy_config()
-        d["upstream_server"] = [
-            True if cls.ssl else False,
-            True if cls.ssl else False,
-            "127.0.0.1",
-            cls.server.port
-        ]
+        d["upstream_server"] = (
+            "https" if cls.ssl else "http",
+            ("127.0.0.1", cls.server.port)
+        )
         d["mode"] = "reverse"
         return d
 
@@ -360,7 +356,7 @@ class ChainProxTest(ProxTestBase):
         if cls.chain:  # First proxy is in normal mode.
             d.update(
                 mode="upstream",
-                upstream_server=(False, False, "127.0.0.1", cls.chain[0].port)
+                upstream_server=("http", ("127.0.0.1", cls.chain[0].port))
             )
         return d
 

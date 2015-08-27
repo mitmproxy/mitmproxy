@@ -12,10 +12,7 @@ class ReverseProxy(Layer, ServerConnectionMixin):
         self._server_tls = server_tls
 
     def __call__(self):
-        if self._client_tls or self._server_tls:
-            layer = TlsLayer(self, self._client_tls, self._server_tls)
-        else:
-            layer = self.ctx.next_layer(self)
+        layer = TlsLayer(self, self._client_tls, self._server_tls)
 
         try:
             layer()

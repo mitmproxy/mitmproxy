@@ -5,6 +5,8 @@ import sys
 import socket
 from libmproxy.protocol2.layer import Kill
 from netlib import tcp
+from netlib.http.http1 import HTTP1Protocol
+from netlib.tcp import NetLibError
 
 from ..protocol.handle import protocol_handler
 from .. import protocol2
@@ -82,11 +84,31 @@ class ConnectionHandler2:
             self.channel
         )
 
-        # FIXME: properly parse config
-        if self.config.mode == "upstream":
-            root_layer = protocol2.HttpUpstreamProxy(root_context, ("localhost", 8081))
-        else:
+        mode = self.config.mode
+        if mode == "upstream":
+            root_layer = protocol2.HttpUpstreamProxy(
+                root_context,
+                self.config.upstream_server.address
+            )
+        elif mode == "transparent":
+            root_layer = protocol2.TransparentProxy(root_context)
+        elif mode == "reverse":
+            client_tls = self.config.upstream_server.scheme.startswith("https")
+            server_tls = self.config.upstream_server.scheme.endswith("https")
+            root_layer = protocol2.ReverseProxy(
+                root_context,
+                self.config.upstream_server.address,
+                client_tls,
+                server_tls
+            )
+        elif mode == "socks5":
+            root_layer = protocol2.Socks5Proxy(root_context)
+        elif mode == "regular":
             root_layer = protocol2.HttpProxy(root_context)
+        elif callable(mode):  # pragma: nocover
+            root_layer = mode(root_context)
+        else:  # pragma: nocover
+            raise ValueError("Unknown proxy mode: %s" % mode)
 
         try:
             root_layer()
@@ -94,6 +116,14 @@ class ConnectionHandler2:
             self.log("Connection killed", "info")
         except ProtocolException as e:
             self.log(e, "info")
+            # If an error propagates to the topmost level,
+            # we send an HTTP error response, which is both
+            # understandable by HTTP clients and humans.
+            try:
+                error_response = protocol2.make_error_response(502, repr(e))
+                self.client_conn.send(HTTP1Protocol().assemble(error_response))
+            except NetLibError:
+                pass
         except Exception:
             self.log(traceback.format_exc(), "error")
             print(traceback.format_exc(), file=sys.stderr)

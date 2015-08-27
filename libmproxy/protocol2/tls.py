@@ -11,6 +11,21 @@ from ..exceptions import ProtocolException
 from .layer import Layer
 
 
+def is_tls_record_magic(d):
+    """
+    Returns:
+        True, if the passed bytes start with the TLS record magic bytes.
+        False, otherwise.
+    """
+    d = d[:3]
+    return (
+        len(d) == 3 and
+        d[0] == '\x16' and
+        d[1] == '\x03' and
+        d[2] in ('\x00', '\x01', '\x02', '\x03')
+    )
+
+
 class TlsLayer(Layer):
     def __init__(self, ctx, client_tls, server_tls):
         self.client_sni = None
@@ -69,9 +84,13 @@ class TlsLayer(Layer):
         client_hello_size = 1
         offset = 0
         while len(client_hello) < client_hello_size:
-            record_header = self.client_conn.rfile.peek(offset+5)[offset:]
+            record_header = self.client_conn.rfile.peek(offset + 5)[offset:]
+            if not is_tls_record_magic(record_header) or len(record_header) != 5:
+                raise ProtocolException('Expected TLS record, got "%s" instead.' % record_header)
             record_size = struct.unpack("!H", record_header[3:])[0] + 5
-            record_body = self.client_conn.rfile.peek(offset+record_size)[offset+5:]
+            record_body = self.client_conn.rfile.peek(offset + record_size)[offset + 5:]
+            if len(record_body) != record_size - 5:
+                raise ProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
             client_hello += record_body
             offset += record_size
             client_hello_size = struct.unpack("!I", '\x00' + client_hello[1:4])[0] + 4
@@ -81,7 +100,12 @@ class TlsLayer(Layer):
         """
         Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
         """
-        raw_client_hello = self._get_client_hello()[4:]  # exclude handshake header.
+        try:
+            raw_client_hello = self._get_client_hello()[4:]  # exclude handshake header.
+        except ProtocolException as e:
+            self.log("Cannot parse Client Hello: %s" % repr(e), "error")
+            return
+
         try:
             client_hello = ClientHello.parse(raw_client_hello)
         except ConstructError as e:
@@ -97,7 +121,10 @@ class TlsLayer(Layer):
             elif extension.type == 0x10:
                 self.client_alpn_protocols = list(extension.alpn_protocols)
 
-        self.log("Parsed Client Hello: sni=%s, alpn=%s" % (self.client_sni, self.client_alpn_protocols), "debug")
+        self.log(
+            "Parsed Client Hello: sni=%s, alpn=%s" % (self.client_sni, self.client_alpn_protocols),
+            "debug"
+        )
 
     def connect(self):
         if not self.server_conn:
@@ -226,7 +253,8 @@ class TlsLayer(Layer):
         host = self.server_conn.address.host
         sans = set()
         # Incorporate upstream certificate
-        if self.server_conn and self.server_conn.tls_established and (not self.config.no_upstream_cert):
+        if self.server_conn and self.server_conn.tls_established and (
+        not self.config.no_upstream_cert):
             upstream_cert = self.server_conn.cert
             sans.update(upstream_cert.altnames)
             if upstream_cert.cn:

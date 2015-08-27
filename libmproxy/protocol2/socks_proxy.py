@@ -8,7 +8,7 @@ from .layer import Layer, ServerConnectionMixin
 class Socks5Proxy(Layer, ServerConnectionMixin):
     def __call__(self):
         try:
-            s5mode = Socks5ProxyMode(self.config.ssl_ports)
+            s5mode = Socks5ProxyMode([])
             address = s5mode.get_upstream_server(self.client_conn)[2:]
         except ProxyError as e:
             # TODO: Unmonkeypatch
