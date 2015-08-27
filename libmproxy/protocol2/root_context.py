@@ -1,12 +1,12 @@
 from __future__ import (absolute_import, print_function, division)
-import string
 
-from libmproxy.protocol2.layer import Kill
+from netlib.http.http1 import HTTP1Protocol
+from netlib.http.http2 import HTTP2Protocol
+
 from .rawtcp import RawTcpLayer
 from .tls import TlsLayer
-from .http import Http1Layer, Http2Layer, HttpLayer
+from .http import Http1Layer, Http2Layer
 
-from netlib.http.http2 import HTTP2Protocol
 
 class RootContext(object):
     """
@@ -22,12 +22,19 @@ class RootContext(object):
     def next_layer(self, top_layer):
         """
         This function determines the next layer in the protocol stack.
-        :param top_layer: the current top layer
-        :return: The next layer.
+
+        Arguments:
+            top_layer: the current top layer.
+
+        Returns:
+            The next layer
         """
 
-        # TODO: Handle ignore and tcp passthrough
+        # 1. Check for --ignore.
+        if self.config.check_ignore(top_layer.server_conn.address):
+            return RawTcpLayer(top_layer)
 
+        # 2. Check for TLS
         # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
         # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
         d = top_layer.client_conn.rfile.peek(3)
@@ -37,30 +44,35 @@ class RootContext(object):
             d[1] == '\x03' and
             d[2] in ('\x00', '\x01', '\x02', '\x03')
         )
-
-        d = top_layer.client_conn.rfile.peek(3)
-        is_ascii = (
-            len(d) == 3 and
-            all(x in string.ascii_letters for x in d) # better be safe here and don't expect uppercase...
-        )
-
-        d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))
-        is_http2_magic = (d == HTTP2Protocol.CLIENT_CONNECTION_PREFACE)
-
-        alpn_proto_negotiated = top_layer.client_conn.get_alpn_proto_negotiated()
-        is_alpn_h2_negotiated = (
-            isinstance(top_layer, TlsLayer) and
-            alpn_proto_negotiated == HTTP2Protocol.ALPN_PROTO_H2
-        )
-
         if is_tls_client_hello:
             return TlsLayer(top_layer, True, True)
-        elif is_alpn_h2_negotiated or is_http2_magic:
-            return Http2Layer(top_layer, 'transparent')
-        elif is_ascii:
-            return Http1Layer(top_layer, 'transparent')
-        else:
+
+        # 3. Check for --tcp
+        if self.config.check_tcp(top_layer.server_conn.address):
             return RawTcpLayer(top_layer)
+
+        # 4. Check for TLS ALPN (HTTP1/HTTP2)
+        if isinstance(top_layer, TlsLayer):
+            alpn = top_layer.client_conn.get_alpn_proto_negotiated()
+            if alpn == HTTP2Protocol.ALPN_PROTO_H2:
+                return Http2Layer(top_layer, 'transparent')
+            if alpn == HTTP1Protocol.ALPN_PROTO_HTTP1:
+                return Http1Layer(top_layer, 'transparent')
+
+        # 5. Assume HTTP1 by default
+        return Http1Layer(top_layer, 'transparent')
+
+        # In a future version, we want to implement TCP passthrough as the last fallback,
+        # but we don't have the UI part ready for that.
+        #
+        # d = top_layer.client_conn.rfile.peek(3)
+        # is_ascii = (
+        #     len(d) == 3 and
+        #     all(x in string.ascii_letters for x in d)  # better be safe here and don't expect uppercase...
+        # )
+        # # TODO: This could block if there are not enough bytes available?
+        # d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))
+        # is_http2_magic = (d == HTTP2Protocol.CLIENT_CONNECTION_PREFACE)
 
     @property
     def layers(self):
