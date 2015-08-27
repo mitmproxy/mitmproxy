@@ -112,7 +112,7 @@ class ServerConnectionMixin(object):
         self.server_conn.address = address
         self.connect()
 
-    def set_server(self, address, server_tls, sni, depth=1):
+    def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1:
             if self.server_conn:
                 self._disconnect()

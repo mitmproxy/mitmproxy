@@ -212,10 +212,11 @@ class UpstreamConnectLayer(Layer):
         self.ctx.reconnect()
         self.send_to_server(self.connect_request)
 
-    def set_server(self, address, server_tls, sni, depth=1):
+    def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1:
             if self.ctx.server_conn:
                 self.ctx.reconnect()
+            address = Address.wrap(address)
             self.connect_request.host = address.host
             self.connect_request.port = address.port
             self.server_conn.address = address
@@ -227,11 +228,16 @@ class HttpLayer(Layer):
     def __init__(self, ctx, mode):
         super(HttpLayer, self).__init__(ctx)
         self.mode = mode
+        self.__original_server_conn = None
+        "Contains the original destination in transparent mode, which needs to be restored"
+        "if an inline script modified the target server for a single http request"
 
     def __call__(self):
+        if self.mode == "transparent":
+            self.__original_server_conn = self.server_conn
         while True:
             try:
-                flow = HTTPFlow(self.client_conn, self.server_conn, live=True)
+                flow = HTTPFlow(self.client_conn, self.server_conn, live=self)
 
                 try:
                     request = self.read_from_client()
@@ -288,7 +294,7 @@ class HttpLayer(Layer):
                 flow.live = False
 
     def handle_regular_mode_connect(self, request):
-        self.set_server((request.host, request.port), False, None)
+        self.set_server((request.host, request.port))
         self.send_to_client(make_connect_response(request.httpversion))
         layer = self.ctx.next_layer(self)
         layer()
@@ -433,11 +439,10 @@ class HttpLayer(Layer):
             if flow.request.form_in == "authority":
                 flow.request.scheme = "http"  # pseudo value
         else:
-            flow.request.host = self.ctx.server_conn.address.host
-            flow.request.port = self.ctx.server_conn.address.port
-            flow.request.scheme = "https" if self.server_conn.tls_established else "http"
+            flow.request.host = self.__original_server_conn.address.host
+            flow.request.port = self.__original_server_conn.address.port
+            flow.request.scheme = "https" if self.__original_server_conn.tls_established else "http"
 
-        # TODO: Expose .set_server functionality to inline scripts
         request_reply = self.channel.ask("request", flow)
         if request_reply is None or request_reply == KILL:
             raise Kill()

@@ -110,9 +110,9 @@ class TlsLayer(Layer):
         if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()
 
-    def set_server(self, address, server_tls, sni, depth=1):
+    def set_server(self, address, server_tls=None, sni=None, depth=1):
         self.ctx.set_server(address, server_tls, sni, depth)
-        if server_tls is not None:
+        if depth == 1 and server_tls is not None:
             self._sni_from_server_change = sni
             self._server_tls = server_tls
 

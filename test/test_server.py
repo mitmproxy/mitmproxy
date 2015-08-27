@@ -1,6 +1,7 @@
 import socket
 import time
 from OpenSSL import SSL
+from netlib.tcp import Address
 
 import netlib.tutils
 from netlib import tcp, http, socks
@@ -655,63 +656,67 @@ class MasterRedirectRequest(tservers.TestMaster):
     redirect_port = None  # Set by TestRedirectRequest
 
     def handle_request(self, f):
-        request = f.request
-        if request.path == "/p/201":
-            addr = f.live.c.server_conn.address
-            assert f.live.change_server(
-                ("127.0.0.1", self.redirect_port), ssl=False)
-            assert not f.live.change_server(
-                ("127.0.0.1", self.redirect_port), ssl=False)
-            tutils.raises(
-                "SSL handshake error",
-                f.live.change_server,
-                ("127.0.0.1",
-                 self.redirect_port),
-                ssl=True)
-            assert f.live.change_server(addr, ssl=False)
-            request.url = "http://127.0.0.1:%s/p/201" % self.redirect_port
-        tservers.TestMaster.handle_request(self, f)
+        if f.request.path == "/p/201":
+
+            # This part should have no impact, but it should not cause any exceptions.
+            addr = f.live.server_conn.address
+            addr2 = Address(("127.0.0.1", self.redirect_port))
+            f.live.set_server(addr2)
+            f.live.connect()
+            f.live.set_server(addr)
+            f.live.connect()
+
+            # This is the actual redirection.
+            f.request.port = self.redirect_port
+        super(MasterRedirectRequest, self).handle_request(f)
 
     def handle_response(self, f):
         f.response.content = str(f.client_conn.address.port)
         f.response.headers[
             "server-conn-id"] = [str(f.server_conn.source_address.port)]
-        tservers.TestMaster.handle_response(self, f)
+        super(MasterRedirectRequest, self).handle_response(f)
 
 
 class TestRedirectRequest(tservers.HTTPProxTest):
     masterclass = MasterRedirectRequest
+    ssl = True
 
     def test_redirect(self):
+        """
+        Imagine a single HTTPS connection with three requests:
+
+        1. First request should pass through unmodified
+        2. Second request will be redirected to a different host by an inline script
+        3. Third request should pass through unmodified
+
+        This test verifies that the original destination is restored for the third request.
+        """
         self.master.redirect_port = self.server2.port
 
         p = self.pathoc()
 
         self.server.clear_log()
         self.server2.clear_log()
-        r1 = p.request("get:'%s/p/200'" % self.server.urlbase)
+        r1 = p.request("get:'/p/200'")
         assert r1.status_code == 200
         assert self.server.last_log()
         assert not self.server2.last_log()
 
         self.server.clear_log()
         self.server2.clear_log()
-        r2 = p.request("get:'%s/p/201'" % self.server.urlbase)
+        r2 = p.request("get:'/p/201'")
         assert r2.status_code == 201
         assert not self.server.last_log()
         assert self.server2.last_log()
 
         self.server.clear_log()
         self.server2.clear_log()
-        r3 = p.request("get:'%s/p/202'" % self.server.urlbase)
+        r3 = p.request("get:'/p/202'")
         assert r3.status_code == 202
         assert self.server.last_log()
         assert not self.server2.last_log()
 
         assert r1.content == r2.content == r3.content
-        assert r1.headers.get_first(
-            "server-conn-id") == r3.headers.get_first("server-conn-id")
-        # Make sure that we actually use the same connection in this test case
 
 
 class MasterStreamRequest(tservers.TestMaster):

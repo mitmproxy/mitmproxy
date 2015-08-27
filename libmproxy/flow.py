@@ -8,6 +8,7 @@ import Cookie
 import cookielib
 import os
 import re
+from libmproxy.protocol2.http import RequestReplayThread
 
 from netlib import odict, wsgi, tcp
 from netlib.http.semantics import CONTENT_MISSING
@@ -934,7 +935,7 @@ class FlowMaster(controller.Master):
             f.response = None
             f.error = None
             self.process_new_request(f)
-            rt = http.RequestReplayThread(
+            rt = RequestReplayThread(
                 self.server.config,
                 f,
                 self.masterq if run_scripthooks else False,
