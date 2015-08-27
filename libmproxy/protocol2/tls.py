@@ -51,9 +51,7 @@ class TlsLayer(Layer):
         self._parse_client_hello()
 
         if client_tls_requires_server_cert:
-            self.ctx.connect()
-            self._establish_tls_with_server()
-            self._establish_tls_with_client()
+            self._establish_tls_with_client_and_server()
         elif self._client_tls:
             self._establish_tls_with_client()
 
@@ -147,6 +145,22 @@ class TlsLayer(Layer):
             choice = options[0]
         self.log("ALPN for client: %s" % choice, "debug")
         return choice
+
+    def _establish_tls_with_client_and_server(self):
+        self.ctx.connect()
+
+        # If establishing TLS with the server fails, we try to establish TLS with the client nonetheless
+        # to send an error message over TLS.
+        try:
+            self._establish_tls_with_server()
+        except Exception as e:
+            try:
+                self._establish_tls_with_client()
+            except:
+                pass
+            raise e
+
+        self._establish_tls_with_client()
 
     def _establish_tls_with_client(self):
         self.log("Establish TLS with client", "debug")
