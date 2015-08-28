@@ -19,6 +19,8 @@ import language.websockets
 from . import utils, log
 
 import logging
+from netlib.http.http1 import HTTP1Protocol
+
 logging.getLogger("hpack").setLevel(logging.WARNING)
 
 
@@ -284,7 +286,7 @@ class Pathoc(tcp.TCPClient):
         self.sslinfo = None
         if self.ssl:
             try:
-                alpn_protos = [b'http1.1']  # TODO: move to a new HTTP1 protocol
+                alpn_protos = [HTTP1Protocol.ALPN_PROTO_HTTP1]
                 if self.use_http2:
                     alpn_protos.append(http2.HTTP2Protocol.ALPN_PROTO_H2)
 

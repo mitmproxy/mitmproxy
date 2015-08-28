@@ -290,7 +290,7 @@ class TestDaemonHTTP2(_TestDaemon):
             c.connect()
 
             _, kwargs = c.convert_to_ssl.call_args
-            assert set(kwargs['alpn_protos']) == set([b'http1.1', b'h2'])
+            assert set(kwargs['alpn_protos']) == set([b'http/1.1', b'h2'])
 
         def test_request(self):
             c = pathoc.Pathoc(
