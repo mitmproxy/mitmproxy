@@ -34,9 +34,7 @@ class HTTP2Protocol(semantics.ProtocolMixin):
         HTTP_1_1_REQUIRED=0xd
     )
 
-    # "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
-    CLIENT_CONNECTION_PREFACE =\
-        '505249202a20485454502f322e300d0a0d0a534d0d0a0d0a'.decode('hex')
+    CLIENT_CONNECTION_PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n"
 
     ALPN_PROTO_H2 = 'h2'
 

@@ -182,7 +182,7 @@ def parse_url(url):
             return None
     else:
         host = netloc
-        if scheme == "https":
+        if scheme.endswith("https"):
             port = 443
         else:
             port = 80

@@ -23,28 +23,12 @@ EINTR = 4
 # To enable all SSL methods use: SSLv23
 # then add options to disable certain methods
 # https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
-
-# Use ONLY for parsing of CLI arguments!
-# All code internals should use OpenSSL constants directly!
-SSL_VERSIONS = {
-    'TLSv1.2': SSL.TLSv1_2_METHOD,
-    'TLSv1.1': SSL.TLSv1_1_METHOD,
-    'TLSv1': SSL.TLSv1_METHOD,
-    'SSLv3': SSL.SSLv3_METHOD,
-    'SSLv2': SSL.SSLv2_METHOD,
-    'SSLv23': SSL.SSLv23_METHOD,
-}
-
-SSL_DEFAULT_VERSION = 'SSLv23'
-
-SSL_DEFAULT_METHOD = SSL_VERSIONS[SSL_DEFAULT_VERSION]
-
+SSL_DEFAULT_METHOD = SSL.SSLv23_METHOD
 SSL_DEFAULT_OPTIONS = (
     SSL.OP_NO_SSLv2 |
     SSL.OP_NO_SSLv3 |
     SSL.OP_CIPHER_SERVER_PREFERENCE
 )
-
 if hasattr(SSL, "OP_NO_COMPRESSION"):
     SSL_DEFAULT_OPTIONS |= SSL.OP_NO_COMPRESSION
 
