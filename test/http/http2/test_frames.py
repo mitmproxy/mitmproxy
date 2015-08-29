@@ -246,9 +246,9 @@ def test_priority_frame_to_bytes():
         flags=(Frame.FLAG_NO_FLAGS),
         stream_id=0x1234567,
         exclusive=True,
-        stream_dependency=0x7654321,
+        stream_dependency=0x0,
         weight=42)
-    assert_equal(f.to_bytes().encode('hex'), '000005020001234567876543212a')
+    assert_equal(f.to_bytes().encode('hex'), '000005020001234567800000002a')
 
     f = PriorityFrame(
         length=5,
@@ -264,13 +264,6 @@ def test_priority_frame_to_bytes():
         flags=Frame.FLAG_NO_FLAGS,
         stream_id=0x0,
         stream_dependency=0x1234567)
-    tutils.raises(ValueError, f.to_bytes)
-
-    f = PriorityFrame(
-        length=5,
-        flags=Frame.FLAG_NO_FLAGS,
-        stream_id=0x1234567,
-        stream_dependency=0x0)
     tutils.raises(ValueError, f.to_bytes)
 
 
