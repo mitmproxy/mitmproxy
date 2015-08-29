@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import os
 import re
 import configargparse
-from netlib.tcp import Address
+from netlib.tcp import Address, sslversion_choices
 
 import netlib.utils
 
@@ -423,15 +423,15 @@ def proxy_ssl_options(parser):
     group.add_argument(
         "--ssl-version-client", dest="ssl_version_client",
         default="secure", action="store",
-        choices=config.sslversion_choices.keys(),
-        help="Set supported SSL/TLS version for client connections. "
+        choices=sslversion_choices.keys(),
+        help="Set supported SSL/TLS versions for client connections. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
     )
     group.add_argument(
         "--ssl-version-server", dest="ssl_version_server",
         default="secure", action="store",
-        choices=config.sslversion_choices.keys(),
-        help="Set supported SSL/TLS version for server connections. "
+        choices=sslversion_choices.keys(),
+        help="Set supported SSL/TLS versions for server connections. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
     )
 

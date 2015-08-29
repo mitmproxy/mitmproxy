@@ -8,7 +8,7 @@ from netlib import certutils, tcp
 from netlib.http import authentication
 
 from .. import utils, platform
-from netlib.tcp import Address
+from netlib.tcp import Address, sslversion_choices
 
 CONF_BASENAME = "mitmproxy"
 CA_DIR = "~/.mitmproxy"
@@ -96,24 +96,6 @@ class ProxyConfig:
             self.openssl_verification_mode_server = SSL.VERIFY_NONE
         self.openssl_trusted_cadir_server = ssl_verify_upstream_trusted_cadir
         self.openssl_trusted_ca_server = ssl_verify_upstream_trusted_ca
-
-
-"""
-Map a reasonable SSL version specification into the format OpenSSL expects.
-Don't ask...
-https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
-"""
-sslversion_choices = {
-    "all": (SSL.SSLv23_METHOD, 0),
-    # SSLv23_METHOD + NO_SSLv2 + NO_SSLv3 == TLS 1.0+
-    # TLSv1_METHOD would be TLS 1.0 only
-    "secure": (SSL.SSLv23_METHOD, (SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3)),
-    "SSLv2": (SSL.SSLv2_METHOD, 0),
-    "SSLv3": (SSL.SSLv3_METHOD, 0),
-    "TLSv1": (SSL.TLSv1_METHOD, 0),
-    "TLSv1_1": (SSL.TLSv1_1_METHOD, 0),
-    "TLSv1_2": (SSL.TLSv1_2_METHOD, 0),
-}
 
 
 def process_proxy_options(parser, options):
