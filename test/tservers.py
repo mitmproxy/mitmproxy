@@ -181,22 +181,24 @@ class TResolver:
     def original_addr(self, sock):
         return ("127.0.0.1", self.port)
 
-
 class TransparentProxTest(ProxTestBase):
     ssl = None
     resolver = TResolver
 
     @classmethod
-    @mock.patch("libmproxy.platform.resolver")
-    def setupAll(cls, _):
+    def setupAll(cls):
         super(TransparentProxTest, cls).setupAll()
-        if cls.ssl:
-            ports = [cls.server.port, cls.server2.port]
-        else:
-            ports = []
-        cls.config.mode = TransparentProxyMode(
-            cls.resolver(cls.server.port),
-            ports)
+
+        cls._resolver = mock.patch(
+            "libmproxy.platform.resolver",
+            new=lambda: cls.resolver(cls.server.port)
+        )
+        cls._resolver.start()
+
+    @classmethod
+    def teardownAll(cls):
+        cls._resolver.stop()
+        super(TransparentProxTest, cls).teardownAll()
 
     @classmethod
     def get_proxy_config(cls):
@@ -269,48 +271,6 @@ class SocksModeTest(HTTPProxTest):
         d = ProxTestBase.get_proxy_config()
         d["mode"] = "socks5"
         return d
-
-class SpoofModeTest(ProxTestBase):
-    ssl = None
-
-    @classmethod
-    def get_proxy_config(cls):
-        d = ProxTestBase.get_proxy_config()
-        d["upstream_server"] = None
-        d["mode"] = "spoof"
-        return d
-
-    def pathoc(self, sni=None):
-        """
-            Returns a connected Pathoc instance.
-        """
-        p = libpathod.pathoc.Pathoc(
-            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
-        )
-        p.connect()
-        return p
-
-
-class SSLSpoofModeTest(ProxTestBase):
-    ssl = True
-
-    @classmethod
-    def get_proxy_config(cls):
-        d = ProxTestBase.get_proxy_config()
-        d["upstream_server"] = None
-        d["mode"] = "sslspoof"
-        d["spoofed_ssl_port"] = 443
-        return d
-
-    def pathoc(self, sni=None):
-        """
-            Returns a connected Pathoc instance.
-        """
-        p = libpathod.pathoc.Pathoc(
-            ("localhost", self.proxy.port), ssl=self.ssl, sni=sni, fp=None
-        )
-        p.connect()
-        return p
 
 
 class ChainProxTest(ProxTestBase):

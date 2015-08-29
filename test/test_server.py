@@ -68,7 +68,7 @@ class CommonMixin:
         # SSL with the upstream proxy.
         rt = self.master.replay_request(l, block=True)
         assert not rt
-        if isinstance(self, tservers.HTTPUpstreamProxTest) and not self.ssl:
+        if isinstance(self, tservers.HTTPUpstreamProxTest):
             assert l.response.code == 502
         else:
             assert l.error
@@ -506,7 +506,7 @@ class TestTransparentSSL(tservers.TransparentProxTest, CommonMixin, TcpMixin):
         p = pathoc.Pathoc(("localhost", self.proxy.port), fp=None)
         p.connect()
         r = p.request("get:/")
-        assert r.status_code == 400
+        assert r.status_code == 502
 
 
 class TestProxy(tservers.HTTPProxTest):
@@ -724,9 +724,9 @@ class TestStreamRequest(tservers.HTTPProxTest):
         assert resp.headers["Transfer-Encoding"][0] == 'chunked'
         assert resp.status_code == 200
 
-        chunks = list(
-            content for _, content, _ in protocol.read_http_body_chunked(
-                resp.headers, None, "GET", 200, False))
+        chunks = list(protocol.read_http_body_chunked(
+            resp.headers, None, "GET", 200, False
+        ))
         assert chunks == ["this", "isatest", ""]
 
         connection.close()
@@ -959,6 +959,9 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
 
         p = self.pathoc()
         req = p.request("get:'/p/418:b\"content\"'")
+        assert req.content == "content"
+        assert req.status_code == 418
+
         assert self.proxy.tmaster.state.flow_count() == 2  # CONNECT and request
         # CONNECT, failing request,
         assert self.chain[0].tmaster.state.flow_count() == 4
@@ -967,8 +970,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
         assert self.chain[1].tmaster.state.flow_count() == 2
         # (doesn't store (repeated) CONNECTs from chain[0]
         #  as it is a regular proxy)
-        assert req.content == "content"
-        assert req.status_code == 418
+
 
         assert not self.chain[1].tmaster.state.flows[0].response  # killed
         assert self.chain[1].tmaster.state.flows[1].response

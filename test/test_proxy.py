@@ -1,9 +1,8 @@
-import argparse
 from libmproxy import cmdline
 from libmproxy.proxy import ProxyConfig, process_proxy_options
 from libmproxy.proxy.connection import ServerConnection
 from libmproxy.proxy.primitives import ProxyError
-from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
+from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler2
 import tutils
 from libpathod import test
 from netlib import http, tcp
@@ -175,8 +174,10 @@ class TestDummyServer:
 class TestConnectionHandler:
     def test_fatal_error(self):
         config = mock.Mock()
-        config.mode.get_upstream_server.side_effect = RuntimeError
-        c = ConnectionHandler(
+        root_layer = mock.Mock()
+        root_layer.side_effect = RuntimeError
+        config.mode.return_value = root_layer
+        c = ConnectionHandler2(
             config,
             mock.MagicMock(),
             ("127.0.0.1",

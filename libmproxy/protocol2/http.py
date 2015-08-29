@@ -40,6 +40,7 @@ class _HttpLayer(Layer):
     def send_response(self, response):
         raise NotImplementedError()
 
+
 class _StreamingHttpLayer(_HttpLayer):
     supports_streaming = True
 
@@ -58,7 +59,6 @@ class _StreamingHttpLayer(_HttpLayer):
 
 
 class Http1Layer(_StreamingHttpLayer):
-
     def __init__(self, ctx, mode):
         super(Http1Layer, self).__init__(ctx)
         self.mode = mode
@@ -105,12 +105,12 @@ class Http1Layer(_StreamingHttpLayer):
 
     def send_response_headers(self, response):
         h = self.client_protocol._assemble_response_first_line(response)
-        self.client_conn.wfile.write(h+"\r\n")
+        self.client_conn.wfile.write(h + "\r\n")
         h = self.client_protocol._assemble_response_headers(
             response,
             preserve_transfer_encoding=True
         )
-        self.client_conn.send(h+"\r\n")
+        self.client_conn.send(h + "\r\n")
 
     def send_response_body(self, response, chunks):
         if self.client_protocol.has_chunked_encoding(response.headers):
@@ -142,8 +142,10 @@ class Http2Layer(_HttpLayer):
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
         self.mode = mode
-        self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True, unhandled_frame_cb=self.handle_unexpected_frame)
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
+        self.client_protocol = HTTP2Protocol(self.client_conn, is_server=True,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
 
     def read_request(self):
         request = HTTPRequest.from_protocol(
@@ -172,17 +174,20 @@ class Http2Layer(_HttpLayer):
 
     def connect(self):
         self.ctx.connect()
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
         self.server_protocol.perform_connection_preface()
 
     def reconnect(self):
         self.ctx.reconnect()
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
         self.server_protocol.perform_connection_preface()
 
     def set_server(self, *args, **kwargs):
         self.ctx.set_server(*args, **kwargs)
-        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False, unhandled_frame_cb=self.handle_unexpected_frame)
+        self.server_protocol = HTTP2Protocol(self.server_conn, is_server=False,
+                                             unhandled_frame_cb=self.handle_unexpected_frame)
         self.server_protocol.perform_connection_preface()
 
     def __call__(self):
@@ -264,7 +269,10 @@ class UpstreamConnectLayer(Layer):
     def __init__(self, ctx, connect_request):
         super(UpstreamConnectLayer, self).__init__(ctx)
         self.connect_request = connect_request
-        self.server_conn = ConnectServerConnection((connect_request.host, connect_request.port), self.ctx)
+        self.server_conn = ConnectServerConnection(
+            (connect_request.host, connect_request.port),
+            self.ctx
+        )
 
     def __call__(self):
         layer = self.ctx.next_layer(self)
@@ -280,6 +288,9 @@ class UpstreamConnectLayer(Layer):
     def reconnect(self):
         self.ctx.reconnect()
         self.send_request(self.connect_request)
+        resp = self.read_response("CONNECT")
+        if resp.code != 200:
+            raise ProtocolException("Reconnect: Upstream server refuses CONNECT request")
 
     def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1:
@@ -290,7 +301,7 @@ class UpstreamConnectLayer(Layer):
             self.connect_request.port = address.port
             self.server_conn.address = address
         else:
-            self.ctx.set_server(address, server_tls, sni, depth-1)
+            self.ctx.set_server(address, server_tls, sni, depth - 1)
 
 
 class HttpLayer(Layer):
@@ -413,10 +424,10 @@ class HttpLayer(Layer):
             # First send the headers and then transfer the response incrementally
             self.send_response_headers(flow.response)
             chunks = self.read_response_body(
-                    flow.response.headers,
-                    flow.request.method,
-                    flow.response.code,
-                    max_chunk_size=4096
+                flow.response.headers,
+                flow.request.method,
+                flow.response.code,
+                max_chunk_size=4096
             )
             if callable(flow.response.stream):
                 chunks = flow.response.stream(chunks)
@@ -521,7 +532,8 @@ class HttpLayer(Layer):
             # If there's not TlsLayer below which could catch the exception,
             # TLS will not be established.
             if tls and not self.server_conn.tls_established:
-                raise ProtocolException("Cannot upgrade to SSL, no TLS layer on the protocol stack.")
+                raise ProtocolException(
+                    "Cannot upgrade to SSL, no TLS layer on the protocol stack.")
         else:
             if not self.server_conn:
                 self.connect()
@@ -542,7 +554,8 @@ class HttpLayer(Layer):
 
     def validate_request(self, request):
         if request.form_in == "absolute" and request.scheme != "http":
-            self.send_response(make_error_response(400, "Invalid request scheme: %s" % request.scheme))
+            self.send_response(
+                make_error_response(400, "Invalid request scheme: %s" % request.scheme))
             raise HttpException("Invalid request scheme: %s" % request.scheme)
 
         expected_request_forms = {
@@ -570,7 +583,11 @@ class HttpLayer(Layer):
                 self.send_response(make_error_response(
                     407,
                     "Proxy Authentication Required",
-                    odict.ODictCaseless([[k,v] for k, v in self.config.authenticator.auth_challenge_headers().items()])
+                    odict.ODictCaseless(
+                        [
+                            [k, v] for k, v in
+                            self.config.authenticator.auth_challenge_headers().items()
+                            ])
                 ))
                 raise InvalidCredentials("Proxy Authentication Required")
 
@@ -614,6 +631,9 @@ class RequestReplayThread(threading.Thread):
                     if r.scheme == "https":
                         connect_request = make_connect_request((r.host, r.port))
                         server.send(protocol.assemble(connect_request))
+                        resp = protocol.read_response("CONNECT")
+                        if resp.code != 200:
+                            raise HttpError(502, "Upstream server refuses CONNECT request")
                         server.establish_ssl(
                             self.config.clientcerts,
                             sni=self.flow.server_conn.sni
