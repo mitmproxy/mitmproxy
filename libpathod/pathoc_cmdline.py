@@ -109,12 +109,10 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
         help="SSL cipher specification"
     )
     group.add_argument(
-        "--ssl-version", dest="ssl_version", type=str, default=tcp.SSL_DEFAULT_VERSION,
-        choices=tcp.SSL_VERSIONS.keys(),
-        help=""""
-            Use a specified protocol:
-            TLSv1.2, TLSv1.1, TLSv1, SSLv3, SSLv2, SSLv23.
-            Default to SSLv23."""
+        "--ssl-version", dest="ssl_version", type=str, default="secure",
+        choices=tcp.sslversion_choices.keys(),
+        help="Set supported SSL/TLS versions. "
+             "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
     )
 
     group = parser.add_argument_group(
@@ -163,7 +161,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
 
     args = parser.parse_args(argv[1:])
 
-    args.ssl_version = tcp.SSL_VERSIONS[args.ssl_version]
+    args.ssl_version, args.ssl_options = tcp.sslversion_choices[args.ssl_version]
 
     args.port = None
     if ":" in args.host:

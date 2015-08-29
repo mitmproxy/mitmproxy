@@ -38,6 +38,7 @@ class SSLOptions(object):
         not_after_connect=None,
         request_client_cert=False,
         ssl_version=tcp.SSL_DEFAULT_METHOD,
+        ssl_options=tcp.SSL_DEFAULT_OPTIONS,
         ciphers=None,
         certs=None,
         alpn_select=http2.HTTP2Protocol.ALPN_PROTO_H2,
@@ -48,6 +49,7 @@ class SSLOptions(object):
         self.not_after_connect = not_after_connect
         self.request_client_cert = request_client_cert
         self.ssl_version = ssl_version
+        self.ssl_options = ssl_options
         self.ciphers = ciphers
         self.alpn_select = alpn_select
         self.certstore = certutils.CertStore.from_store(
@@ -243,6 +245,7 @@ class PathodHandler(tcp.BaseHandler):
                     request_client_cert=self.server.ssloptions.request_client_cert,
                     cipher_list=self.server.ssloptions.ciphers,
                     method=self.server.ssloptions.ssl_version,
+                    options=self.server.ssloptions.ssl_options,
                     alpn_select=self.server.ssloptions.alpn_select,
                 )
             except tcp.NetLibError as v:
@@ -435,6 +438,7 @@ def main(args):  # pragma: nocover
         not_after_connect=args.ssl_not_after_connect,
         ciphers=args.ciphers,
         ssl_version=args.ssl_version,
+        ssl_options=args.ssl_options,
         certs=args.ssl_certs,
         sans=args.sans,
     )

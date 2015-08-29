@@ -60,6 +60,7 @@ class HTTPProtocol:
                     request_client_cert=self.pathod_handler.server.ssloptions.request_client_cert,
                     cipher_list=self.pathod_handler.server.ssloptions.ciphers,
                     method=self.pathod_handler.server.ssloptions.ssl_version,
+                    options=self.pathod_handler.server.ssloptions.ssl_options,
                     alpn_select=self.pathod_handler.server.ssloptions.alpn_select,
                 )
             except tcp.NetLibError as v:

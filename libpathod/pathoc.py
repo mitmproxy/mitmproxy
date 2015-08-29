@@ -140,6 +140,7 @@ class Pathoc(tcp.TCPClient):
             ssl=None,
             sni=None,
             ssl_version=tcp.SSL_DEFAULT_METHOD,
+            ssl_options=tcp.SSL_DEFAULT_OPTIONS,
             clientcert=None,
             ciphers=None,
 
@@ -179,6 +180,7 @@ class Pathoc(tcp.TCPClient):
         self.ssl, self.sni = ssl, sni
         self.clientcert = clientcert
         self.ssl_version = ssl_version
+        self.ssl_options = ssl_options
         self.ciphers = ciphers
         self.sslinfo = None
 
@@ -294,6 +296,7 @@ class Pathoc(tcp.TCPClient):
                     sni=self.sni,
                     cert=self.clientcert,
                     method=self.ssl_version,
+                    options=self.ssl_options,
                     cipher_list=self.ciphers,
                     alpn_protos=alpn_protos
                 )
@@ -473,6 +476,7 @@ def main(args):  # pragma: nocover
                 ssl=args.ssl,
                 sni=args.sni,
                 ssl_version=args.ssl_version,
+                ssl_options=args.ssl_options,
                 clientcert=args.clientcert,
                 ciphers=args.ciphers,
                 use_http2=args.use_http2,
