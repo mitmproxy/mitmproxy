@@ -7,7 +7,6 @@ import mock
 
 from libmproxy.proxy.config import ProxyConfig
 from libmproxy.proxy.server import ProxyServer
-from libmproxy.proxy.primitives import TransparentProxyMode
 import libpathod.test
 import libpathod.pathoc
 from libmproxy import flow, controller

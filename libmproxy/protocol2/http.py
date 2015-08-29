@@ -1,28 +1,20 @@
 from __future__ import (absolute_import, print_function, division)
 
-from .. import version
-import threading
-from ..exceptions import InvalidCredentials, HttpException, ProtocolException
-from .layer import Layer
-from libmproxy import utils
-from libmproxy.controller import Channel
-from libmproxy.protocol2.layer import Kill
-from libmproxy.protocol import KILL, Error
-
-from libmproxy.protocol.http import HTTPFlow
-from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
-from libmproxy.proxy import Log
-from libmproxy.proxy.connection import ServerConnection
 from netlib import tcp
-from netlib.http import status_codes, http1, http2, HttpErrorConnClosed, HttpError
+from netlib.http import status_codes, http1, HttpErrorConnClosed, HttpError
 from netlib.http.semantics import CONTENT_MISSING
 from netlib import odict
 from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
 
-
-# TODO: The HTTP2 layer is missing multiplexing, which requires a major rewrite.
+from .. import version, utils
+from ..exceptions import InvalidCredentials, HttpException, ProtocolException
+from .layer import Layer
+from ..proxy import Kill
+from libmproxy.protocol import KILL, Error
+from libmproxy.protocol.http import HTTPFlow
+from libmproxy.protocol.http_wrappers import HTTPResponse, HTTPRequest
 
 
 class _HttpLayer(Layer):
@@ -138,6 +130,7 @@ class Http1Layer(_StreamingHttpLayer):
         layer()
 
 
+# TODO: The HTTP2 layer is missing multiplexing, which requires a major rewrite.
 class Http2Layer(_HttpLayer):
     def __init__(self, ctx, mode):
         super(Http2Layer, self).__init__(ctx)
@@ -359,6 +352,9 @@ class HttpLayer(Layer):
                     return
 
             except (HttpErrorConnClosed, NetLibError, HttpError, ProtocolException) as e:
+                if flow.request and not flow.response:
+                    flow.error = Error(repr(e))
+                    self.channel.ask("error", flow)
                 try:
                     self.send_response(make_error_response(
                         getattr(e, "code", 502),
@@ -590,87 +586,3 @@ class HttpLayer(Layer):
                             ])
                 ))
                 raise InvalidCredentials("Proxy Authentication Required")
-
-
-class RequestReplayThread(threading.Thread):
-    name = "RequestReplayThread"
-
-    def __init__(self, config, flow, masterq, should_exit):
-        """
-            masterqueue can be a queue or None, if no scripthooks should be
-            processed.
-        """
-        self.config, self.flow = config, flow
-        if masterq:
-            self.channel = Channel(masterq, should_exit)
-        else:
-            self.channel = None
-        super(RequestReplayThread, self).__init__()
-
-    def run(self):
-        r = self.flow.request
-        form_out_backup = r.form_out
-        try:
-            self.flow.response = None
-
-            # If we have a channel, run script hooks.
-            if self.channel:
-                request_reply = self.channel.ask("request", self.flow)
-                if request_reply is None or request_reply == KILL:
-                    raise Kill()
-                elif isinstance(request_reply, HTTPResponse):
-                    self.flow.response = request_reply
-
-            if not self.flow.response:
-                # In all modes, we directly connect to the server displayed
-                if self.config.mode == "upstream":
-                    server_address = self.config.upstream_server.address
-                    server = ServerConnection(server_address)
-                    server.connect()
-                    protocol = HTTP1Protocol(server)
-                    if r.scheme == "https":
-                        connect_request = make_connect_request((r.host, r.port))
-                        server.send(protocol.assemble(connect_request))
-                        resp = protocol.read_response("CONNECT")
-                        if resp.code != 200:
-                            raise HttpError(502, "Upstream server refuses CONNECT request")
-                        server.establish_ssl(
-                            self.config.clientcerts,
-                            sni=self.flow.server_conn.sni
-                        )
-                        r.form_out = "relative"
-                    else:
-                        r.form_out = "absolute"
-                else:
-                    server_address = (r.host, r.port)
-                    server = ServerConnection(server_address)
-                    server.connect()
-                    protocol = HTTP1Protocol(server)
-                    if r.scheme == "https":
-                        server.establish_ssl(
-                            self.config.clientcerts,
-                            sni=self.flow.server_conn.sni
-                        )
-                    r.form_out = "relative"
-
-                server.send(protocol.assemble(r))
-                self.flow.server_conn = server
-                self.flow.response = HTTPResponse.from_protocol(
-                    protocol,
-                    r.method,
-                    body_size_limit=self.config.body_size_limit,
-                )
-            if self.channel:
-                response_reply = self.channel.ask("response", self.flow)
-                if response_reply is None or response_reply == KILL:
-                    raise Kill()
-        except (HttpError, tcp.NetLibError) as v:
-            self.flow.error = Error(repr(v))
-            if self.channel:
-                self.channel.ask("error", self.flow)
-        except Kill:
-            # KillSignal should only be raised if there's a channel in the
-            # first place.
-            self.channel.tell("log", Log("Connection killed", "info"))
-        finally:
-            r.form_out = form_out_backup

@@ -5,8 +5,8 @@ import netlib.tutils
 from netlib.http.semantics import CONTENT_MISSING
 
 from libmproxy import dump, flow
-from libmproxy.protocol import http, http_wrappers
-from libmproxy.proxy.primitives import Log
+from libmproxy.protocol import http_wrappers
+from libmproxy.proxy import Log
 import tutils
 import mock
 

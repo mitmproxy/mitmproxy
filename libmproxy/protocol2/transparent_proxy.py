@@ -6,7 +6,6 @@ from .layer import Layer, ServerConnectionMixin
 
 
 class TransparentProxy(Layer, ServerConnectionMixin):
-
     def __init__(self, ctx):
         super(TransparentProxy, self).__init__(ctx)
         self.resolver = platform.resolver()

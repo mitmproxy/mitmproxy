@@ -1,11 +1,11 @@
 from __future__ import (absolute_import, print_function, division)
 
 import struct
+
 from construct import ConstructError
 
-from netlib import tcp
-import netlib.http.http2
-
+from netlib.tcp import NetLibError, NetLibInvalidCertificateError
+from netlib.http.http1 import HTTP1Protocol
 from ..contrib.tls._constructs import ClientHello
 from ..exceptions import ProtocolException
 from .layer import Layer
@@ -161,7 +161,7 @@ class TlsLayer(Layer):
         """
 
         # This gets triggered if we haven't established an upstream connection yet.
-        default_alpn = netlib.http.http1.HTTP1Protocol.ALPN_PROTO_HTTP1
+        default_alpn = HTTP1Protocol.ALPN_PROTO_HTTP1
         # alpn_preference = netlib.http.http2.HTTP2Protocol.ALPN_PROTO_H2
 
         if self.alpn_for_client_connection in options:
@@ -203,7 +203,7 @@ class TlsLayer(Layer):
                 chain_file=chain_file,
                 alpn_select_callback=self.__alpn_select_callback,
             )
-        except tcp.NetLibError as e:
+        except NetLibError as e:
             raise ProtocolException("Cannot establish TLS with client: %s" % repr(e), e)
 
     def _establish_tls_with_server(self):
@@ -236,7 +236,7 @@ class TlsLayer(Layer):
                     (tls_cert_err['depth'], tls_cert_err['errno']),
                     "error")
                 self.log("Ignoring server verification error, continuing with connection", "error")
-        except tcp.NetLibInvalidCertificateError as e:
+        except NetLibInvalidCertificateError as e:
             tls_cert_err = self.server_conn.ssl_verification_error
             self.log(
                 "TLS verification failed for upstream server at depth %s with error: %s" %
@@ -244,7 +244,7 @@ class TlsLayer(Layer):
                 "error")
             self.log("Aborting connection attempt", "error")
             raise ProtocolException("Cannot establish TLS with server: %s" % repr(e), e)
-        except tcp.NetLibError as e:
+        except NetLibError as e:
             raise ProtocolException("Cannot establish TLS with server: %s" % repr(e), e)
 
         self.log("ALPN selected by server: %s" % self.alpn_for_client_connection, "debug")
@@ -253,8 +253,12 @@ class TlsLayer(Layer):
         host = self.server_conn.address.host
         sans = set()
         # Incorporate upstream certificate
-        if self.server_conn and self.server_conn.tls_established and (
-        not self.config.no_upstream_cert):
+        use_upstream_cert = (
+            self.server_conn and
+            self.server_conn.tls_established and
+            (not self.config.no_upstream_cert)
+        )
+        if use_upstream_cert:
             upstream_cert = self.server_conn.cert
             sans.update(upstream_cert.altnames)
             if upstream_cert.cn:

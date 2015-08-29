@@ -18,6 +18,10 @@ class ProtocolException(ProxyException):
     pass
 
 
+class Socks5Exception(ProtocolException):
+    pass
+
+
 class HttpException(ProtocolException):
     pass
 

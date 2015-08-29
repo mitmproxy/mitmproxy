@@ -32,7 +32,7 @@ class RootContext(object):
 
         # 1. Check for --ignore.
         if self.config.check_ignore(top_layer.server_conn.address):
-            return RawTcpLayer(top_layer)
+            return RawTcpLayer(top_layer, logging=False)
 
         # 2. Check for TLS
         # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
@@ -62,7 +62,8 @@ class RootContext(object):
         # d = top_layer.client_conn.rfile.peek(3)
         # is_ascii = (
         #     len(d) == 3 and
-        #     all(x in string.ascii_letters for x in d)  # better be safe here and don't expect uppercase...
+        #     # better be safe here and don't expect uppercase...
+        #     all(x in string.ascii_letters for x in d)
         # )
         # # TODO: This could block if there are not enough bytes available?
         # d = top_layer.client_conn.rfile.peek(len(HTTP2Protocol.CLIENT_CONNECTION_PREFACE))

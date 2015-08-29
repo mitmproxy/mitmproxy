@@ -8,7 +8,7 @@ import Cookie
 import cookielib
 import os
 import re
-from libmproxy.protocol2.http import RequestReplayThread
+from libmproxy.protocol2.http_replay import RequestReplayThread
 
 from netlib import odict, wsgi, tcp
 from netlib.http.semantics import CONTENT_MISSING

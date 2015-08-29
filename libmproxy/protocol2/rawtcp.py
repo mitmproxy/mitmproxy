@@ -4,10 +4,9 @@ import select
 
 from OpenSSL import SSL
 
-from ..exceptions import ProtocolException
 from netlib.tcp import NetLibError
 from netlib.utils import cleanBin
-from ..protocol.tcp import TCPHandler
+from ..exceptions import ProtocolException
 from .layer import Layer
 
 
@@ -31,6 +30,7 @@ class RawTcpLayer(Layer):
             while True:
                 r, _, _ = select.select(conns, [], [], 10)
                 for conn in r:
+                    dst = server if conn == client else client
 
                     size = conn.recv_into(buf, self.chunk_size)
                     if not size:
@@ -41,22 +41,21 @@ class RawTcpLayer(Layer):
                             # Sockets will be cleaned up on a higher level.
                             return
                         else:
-                            conn.shutdown(socket.SHUT_WR)
+                            dst.shutdown(socket.SHUT_WR)
 
                         if len(conns) == 0:
                             return
                         continue
 
-                    dst = server if conn == client else client
                     dst.sendall(buf[:size])
 
                     if self.logging:
                         # log messages are prepended with the client address,
                         # hence the "weird" direction string.
                         if dst == server:
-                            direction = "-> tcp -> {!r}".format(self.server_conn.address)
+                            direction = "-> tcp -> {}".format(repr(self.server_conn.address))
                         else:
-                            direction = "<- tcp <- {!r}".format(self.server_conn.address)
+                            direction = "<- tcp <- {}".format(repr(self.server_conn.address))
                         data = cleanBin(buf[:size].tobytes())
                         self.log(
                             "{}\r\n{}".format(direction, data),

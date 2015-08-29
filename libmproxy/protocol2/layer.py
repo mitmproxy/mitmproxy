@@ -30,8 +30,6 @@ Further goals:
     inline scripts shall have a chance to handle everything locally.
 """
 from __future__ import (absolute_import, print_function, division)
-import Queue
-import threading
 from netlib import tcp
 from ..proxy import Log
 from ..proxy.connection import ServerConnection
@@ -80,10 +78,8 @@ class Layer(_LayerCodeCompletion):
 
     def log(self, msg, level, subs=()):
         full_msg = [
-            "%s:%s: %s" %
-            (self.client_conn.address.host,
-             self.client_conn.address.port,
-             msg)]
+            "{}: {}".format(repr(self.client_conn.address), msg)
+        ]
         for i in subs:
             full_msg.append("  -> " + i)
         full_msg = "\n".join(full_msg)
@@ -119,7 +115,7 @@ class ServerConnectionMixin(object):
             self.log("Set new server address: " + repr(address), "debug")
             self.server_conn.address = address
         else:
-            self.ctx.set_server(address, server_tls, sni, depth-1)
+            self.ctx.set_server(address, server_tls, sni, depth - 1)
 
     def _disconnect(self):
         """
@@ -138,10 +134,5 @@ class ServerConnectionMixin(object):
         try:
             self.server_conn.connect()
         except tcp.NetLibError as e:
-            raise ProtocolException("Server connection to '%s' failed: %s" % (self.server_conn.address, e), e)
-
-
-class Kill(Exception):
-    """
-    Kill a connection.
-    """
+            raise ProtocolException(
+                "Server connection to '%s' failed: %s" % (self.server_conn.address, e), e)

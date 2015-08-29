@@ -1,19 +1,14 @@
 from libmproxy import cmdline
-from libmproxy.proxy import ProxyConfig, process_proxy_options
+from libmproxy.proxy import ProxyConfig
+from libmproxy.proxy.config import process_proxy_options
 from libmproxy.proxy.connection import ServerConnection
-from libmproxy.proxy.primitives import ProxyError
-from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler2
+from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 import tutils
 from libpathod import test
 from netlib import http, tcp
 import mock
 
 from OpenSSL import SSL
-
-
-def test_proxy_error():
-    p = ProxyError(111, "msg")
-    assert str(p)
 
 
 class TestServerConnection:
@@ -177,12 +172,11 @@ class TestConnectionHandler:
         root_layer = mock.Mock()
         root_layer.side_effect = RuntimeError
         config.mode.return_value = root_layer
-        c = ConnectionHandler2(
-            config,
+        c = ConnectionHandler(
             mock.MagicMock(),
-            ("127.0.0.1",
-             8080),
-            None,
-            mock.MagicMock())
+            ("127.0.0.1", 8080),
+            config,
+            mock.MagicMock()
+        )
         with tutils.capture_stderr(c.handle) as output:
             assert "mitmproxy has crashed" in output

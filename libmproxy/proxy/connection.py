@@ -12,7 +12,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         # Eventually, this object is restored from state. We don't have a
         # connection then.
         if client_connection:
-            tcp.BaseHandler.__init__(self, client_connection, address, server)
+            super(ClientConnection, self).__init__(client_connection, address, server)
         else:
             self.connection = None
             self.server = None
@@ -80,11 +80,11 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return f
 
     def convert_to_ssl(self, *args, **kwargs):
-        tcp.BaseHandler.convert_to_ssl(self, *args, **kwargs)
+        super(ClientConnection, self).convert_to_ssl(*args, **kwargs)
         self.timestamp_ssl_setup = utils.timestamp()
 
     def finish(self):
-        tcp.BaseHandler.finish(self)
+        super(ClientConnection, self).finish()
         self.timestamp_end = utils.timestamp()
 
 

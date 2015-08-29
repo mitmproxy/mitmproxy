@@ -13,6 +13,7 @@ class HttpProxy(Layer, ServerConnectionMixin):
             if self.server_conn:
                 self._disconnect()
 
+
 class HttpUpstreamProxy(Layer, ServerConnectionMixin):
     def __init__(self, ctx, server_address):
         super(HttpUpstreamProxy, self).__init__(ctx, server_address=server_address)
