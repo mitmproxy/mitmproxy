@@ -258,9 +258,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
 
 
     def read_http_body(self, *args, **kwargs):
-        return "".join(
-            content for _, content, _ in self.read_http_body_chunked(*args, **kwargs)
-        )
+        return "".join(self.read_http_body_chunked(*args, **kwargs))
 
 
     def read_http_body_chunked(
@@ -308,7 +306,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
             while bytes_left:
                 chunk_size = min(bytes_left, max_chunk_size)
                 content = self.tcp_handler.rfile.read(chunk_size)
-                yield "", content, ""
+                yield content
                 bytes_left -= chunk_size
         else:
             bytes_left = limit or -1
@@ -317,7 +315,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
                 content = self.tcp_handler.rfile.read(chunk_size)
                 if not content:
                     return
-                yield "", content, ""
+                yield content
                 bytes_left -= chunk_size
             not_done = self.tcp_handler.rfile.read(1)
             if not_done:
@@ -418,7 +416,7 @@ class HTTP1Protocol(semantics.ProtocolMixin):
                 suffix = self.tcp_handler.rfile.readline(5)
                 if suffix != '\r\n':
                     raise HttpError(code, "Malformed chunked body")
-                yield line, chunk, '\r\n'
+                yield chunk
                 if length == 0:
                     return
 
