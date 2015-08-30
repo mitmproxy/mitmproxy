@@ -190,4 +190,5 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         tcp.TCPClient.finish(self)
         self.timestamp_end = utils.timestamp()
 
+
 ServerConnection._stateobject_attributes["via"] = ServerConnection

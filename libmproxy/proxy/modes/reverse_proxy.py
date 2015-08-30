@@ -1,6 +1,6 @@
 from __future__ import (absolute_import, print_function, division)
 
-from .layer import Layer, ServerConnectionMixin
+from ...protocol import Layer, ServerConnectionMixin
 
 
 class ReverseProxy(Layer, ServerConnectionMixin):

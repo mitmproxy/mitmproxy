@@ -3,22 +3,19 @@ import shutil
 import tempfile
 import argparse
 import sys
-import mock_urwid
 from cStringIO import StringIO
 from contextlib import contextmanager
+
 from nose.plugins.skip import SkipTest
 from mock import Mock
-from time import time
 
-from netlib import certutils, odict
 import netlib.tutils
-
-from libmproxy import flow, utils, controller
-from libmproxy.protocol import http, http_wrappers
-from libmproxy.proxy.connection import ClientConnection, ServerConnection
+from libmproxy import utils, controller
+from libmproxy.models import (
+    ClientConnection, ServerConnection, Error, HTTPRequest, HTTPResponse, HTTPFlow
+)
 from libmproxy.console.flowview import FlowView
 from libmproxy.console import ConsoleState
-from libmproxy.protocol.primitives import Error
 
 
 def _SkipWindows():
@@ -53,11 +50,11 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
         err = terr()
 
     if req:
-        req = http_wrappers.HTTPRequest.wrap(req)
+        req = HTTPRequest.wrap(req)
     if resp:
-        resp = http_wrappers.HTTPResponse.wrap(resp)
+        resp = HTTPResponse.wrap(resp)
 
-    f = http.HTTPFlow(client_conn, server_conn)
+    f = HTTPFlow(client_conn, server_conn)
     f.request = req
     f.response = resp
     f.error = err
@@ -91,7 +88,6 @@ def tserver_conn():
     return c
 
 
-
 def terr(content="error"):
     """
     @return: libmproxy.protocol.primitives.Error
@@ -106,7 +102,7 @@ def tflowview(request_contents=None):
     if request_contents is None:
         flow = tflow()
     else:
-        flow = tflow(req=treq(request_contents))
+        flow = tflow(req=netlib.tutils.treq(request_contents))
 
     fv = FlowView(m, cs, flow)
     return fv
@@ -183,5 +179,6 @@ def capture_stderr(command, *args, **kwargs):
     command(*args, **kwargs)
     yield sys.stderr.getvalue()
     sys.stderr = out
+
 
 test_data = utils.Data(__name__)

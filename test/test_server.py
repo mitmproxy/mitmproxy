@@ -11,7 +11,9 @@ from netlib.http.semantics import CONTENT_MISSING
 from libpathod import pathoc, pathod
 
 from libmproxy.proxy.config import HostMatcher
-from libmproxy.protocol import KILL, Error, http_wrappers
+from libmproxy.protocol import Kill
+from libmproxy.models import Error, HTTPResponse
+
 import tutils
 import tservers
 
@@ -734,7 +736,7 @@ class TestStreamRequest(tservers.HTTPProxTest):
 
 class MasterFakeResponse(tservers.TestMaster):
     def handle_request(self, f):
-        resp = http_wrappers.HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = HTTPResponse.wrap(netlib.tutils.tresp())
         f.reply(resp)
 
 
@@ -759,7 +761,7 @@ class TestServerConnect(tservers.HTTPProxTest):
 
 class MasterKillRequest(tservers.TestMaster):
     def handle_request(self, f):
-        f.reply(KILL)
+        f.reply(Kill)
 
 
 class TestKillRequest(tservers.HTTPProxTest):
@@ -773,7 +775,7 @@ class TestKillRequest(tservers.HTTPProxTest):
 
 class MasterKillResponse(tservers.TestMaster):
     def handle_response(self, f):
-        f.reply(KILL)
+        f.reply(Kill)
 
 
 class TestKillResponse(tservers.HTTPProxTest):
@@ -799,7 +801,7 @@ class TestTransparentResolveError(tservers.TransparentProxTest):
 
 class MasterIncomplete(tservers.TestMaster):
     def handle_request(self, f):
-        resp = http_wrappers.HTTPResponse.wrap(netlib.tutils.tresp())
+        resp = HTTPResponse.wrap(netlib.tutils.tresp())
         resp.content = CONTENT_MISSING
         f.reply(resp)
 
@@ -938,7 +940,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxTest):
                 if not (k[0] in exclude):
                     f.client_conn.finish()
                     f.error = Error("terminated")
-                    f.reply(KILL)
+                    f.reply(Kill)
                 return _func(f)
 
             setattr(master, attr, handler)

@@ -8,19 +8,18 @@ import Cookie
 import cookielib
 import os
 import re
-from libmproxy.protocol.http import HTTPFlow
-from libmproxy.protocol2.http_replay import RequestReplayThread
+import urlparse
+
 
 from netlib import odict, wsgi
 from netlib.http.semantics import CONTENT_MISSING
 import netlib.http
-
-from . import controller, protocol, tnetstring, filt, script, version
+from . import controller, tnetstring, filt, script, version
 from .onboarding import app
-from .protocol import http
 from .proxy.config import HostMatcher
-from .proxy.connection import ClientConnection, ServerConnection
-import urlparse
+from .protocol.http_replay import RequestReplayThread
+from .protocol import Kill
+from .models import ClientConnection, ServerConnection, HTTPResponse, HTTPFlow, HTTPRequest
 
 
 class AppRegistry:
@@ -790,7 +789,7 @@ class FlowMaster(controller.Master):
             rflow = self.server_playback.next_flow(flow)
             if not rflow:
                 return None
-            response = http.HTTPResponse.from_state(rflow.response.get_state())
+            response = HTTPResponse.from_state(rflow.response.get_state())
             response.is_replay = True
             if self.refresh_server_playback:
                 response.refresh()
@@ -836,10 +835,10 @@ class FlowMaster(controller.Master):
             sni=host,
             ssl_established=True
         ))
-        f = http.HTTPFlow(c, s)
+        f = HTTPFlow(c, s)
         headers = odict.ODictCaseless()
 
-        req = http.HTTPRequest(
+        req = HTTPRequest(
             "absolute",
             method,
             scheme,
@@ -981,7 +980,7 @@ class FlowMaster(controller.Master):
                 )
                 if err:
                     self.add_event("Error in wsgi app. %s" % err, "error")
-                f.reply(protocol.KILL)
+                f.reply(Kill)
                 return
         if f not in self.state.flows:  # don't add again on replay
             self.state.add_flow(f)
@@ -998,7 +997,7 @@ class FlowMaster(controller.Master):
             if self.stream_large_bodies:
                 self.stream_large_bodies.run(f, False)
         except netlib.http.HttpError:
-            f.reply(protocol.KILL)
+            f.reply(Kill)
             return
 
         f.reply()

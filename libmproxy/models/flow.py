@@ -3,9 +3,7 @@ import copy
 import uuid
 
 from .. import stateobject, utils, version
-from ..proxy.connection import ClientConnection, ServerConnection
-
-KILL = 0  # const for killed requests
+from .connections import ClientConnection, ServerConnection
 
 
 class Error(stateobject.StateObject):
@@ -140,9 +138,11 @@ class Flow(stateobject.StateObject):
         """
             Kill this request.
         """
+        from ..protocol import Kill
+
         self.error = Error("Connection killed")
         self.intercepted = False
-        self.reply(KILL)
+        self.reply(Kill)
         master.handle_error(self)
 
     def intercept(self, master):

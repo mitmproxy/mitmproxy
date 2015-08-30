@@ -1,14 +1,14 @@
 import threading
+
 from netlib.http import HttpError
 from netlib.http.http1 import HTTP1Protocol
 from netlib.tcp import NetLibError
-
 from ..controller import Channel
-from ..protocol import KILL, Error
-from ..protocol.http_wrappers import HTTPResponse
-from ..proxy import Log, Kill
-from ..proxy.connection import ServerConnection
-from .http import make_connect_request
+from ..models import Error, HTTPResponse, ServerConnection, make_connect_request
+from .base import Log, Kill
+
+
+# TODO: Doesn't really belong into libmproxy.protocol...
 
 
 class RequestReplayThread(threading.Thread):
@@ -35,7 +35,7 @@ class RequestReplayThread(threading.Thread):
             # If we have a channel, run script hooks.
             if self.channel:
                 request_reply = self.channel.ask("request", self.flow)
-                if request_reply is None or request_reply == KILL:
+                if request_reply is None or request_reply == Kill:
                     raise Kill()
                 elif isinstance(request_reply, HTTPResponse):
                     self.flow.response = request_reply
@@ -81,7 +81,7 @@ class RequestReplayThread(threading.Thread):
                 )
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)
-                if response_reply is None or response_reply == KILL:
+                if response_reply is None or response_reply == Kill:
                     raise Kill()
         except (HttpError, NetLibError) as v:
             self.flow.error = Error(repr(v))

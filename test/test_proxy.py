@@ -1,14 +1,14 @@
+import mock
+from OpenSSL import SSL
+
 from libmproxy import cmdline
 from libmproxy.proxy import ProxyConfig
 from libmproxy.proxy.config import process_proxy_options
-from libmproxy.proxy.connection import ServerConnection
+from libmproxy.models.connections import ServerConnection
 from libmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 import tutils
 from libpathod import test
 from netlib import http, tcp
-import mock
-
-from OpenSSL import SSL
 
 
 class TestServerConnection:

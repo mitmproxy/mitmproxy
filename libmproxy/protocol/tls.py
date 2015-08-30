@@ -8,7 +8,7 @@ from netlib.tcp import NetLibError, NetLibInvalidCertificateError
 from netlib.http.http1 import HTTP1Protocol
 from ..contrib.tls._constructs import ClientHello
 from ..exceptions import ProtocolException
-from .layer import Layer
+from .base import Layer
 
 
 def is_tls_record_magic(d):

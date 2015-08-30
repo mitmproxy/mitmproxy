@@ -9,7 +9,7 @@ from netlib.http.semantics import CONTENT_MISSING
 from . import common, grideditor, contentview, signals, searchable, tabs
 from . import flowdetailview
 from .. import utils, controller
-from ..protocol.http import HTTPRequest, HTTPResponse, decoded
+from ..models import HTTPRequest, HTTPResponse, decoded
 
 
 class SearchError(Exception):

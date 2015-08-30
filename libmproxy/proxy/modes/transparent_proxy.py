@@ -1,8 +1,8 @@
 from __future__ import (absolute_import, print_function, division)
 
-from ..exceptions import ProtocolException
-from .. import platform
-from .layer import Layer, ServerConnectionMixin
+from ... import platform
+from ...exceptions import ProtocolException
+from ...protocol import Layer, ServerConnectionMixin
 
 
 class TransparentProxy(Layer, ServerConnectionMixin):

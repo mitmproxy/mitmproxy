@@ -6,9 +6,9 @@ from OpenSSL import SSL
 
 from netlib import certutils, tcp
 from netlib.http import authentication
+from netlib.tcp import Address, sslversion_choices
 
 from .. import utils, platform
-from netlib.tcp import Address, sslversion_choices
 
 CONF_BASENAME = "mitmproxy"
 CA_DIR = "~/.mitmproxy"

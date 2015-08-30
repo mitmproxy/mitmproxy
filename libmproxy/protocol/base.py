@@ -2,22 +2,25 @@
 mitmproxy protocol architecture
 
 In mitmproxy, protocols are implemented as a set of layers, which are composed on top each other.
-For example, the following scenarios depict possible scenarios (lowest layer first):
+For example, the following scenarios depict possible settings (lowest layer first):
 
 Transparent HTTP proxy, no SSL:
-    TransparentModeLayer
+    TransparentProxy
+    Http1Layer
     HttpLayer
 
 Regular proxy, CONNECT request with WebSockets over SSL:
-    RegularModeLayer
+    HttpProxy
+    Http1Layer
     HttpLayer
     SslLayer
     WebsocketLayer (or TcpLayer)
 
 Automated protocol detection by peeking into the buffer:
-    TransparentModeLayer
-    SslLayer
+    TransparentProxy
+    TLSLayer
     Http2Layer
+    HttpLayer
 
 Communication between layers is done as follows:
     - lower layers provide context information to higher layers
@@ -31,8 +34,7 @@ Further goals:
 """
 from __future__ import (absolute_import, print_function, division)
 from netlib import tcp
-from ..proxy import Log
-from ..proxy.connection import ServerConnection
+from ..models import ServerConnection
 from ..exceptions import ProtocolException
 
 
@@ -136,3 +138,15 @@ class ServerConnectionMixin(object):
         except tcp.NetLibError as e:
             raise ProtocolException(
                 "Server connection to '%s' failed: %s" % (self.server_conn.address, e), e)
+
+
+class Log(object):
+    def __init__(self, msg, level="info"):
+        self.msg = msg
+        self.level = level
+
+
+class Kill(Exception):
+    """
+    Kill a connection.
+    """

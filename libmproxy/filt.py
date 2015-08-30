@@ -35,7 +35,7 @@ from __future__ import absolute_import
 import re
 import sys
 import pyparsing as pp
-from .protocol.http import decoded
+from .models import decoded
 
 
 class _Token:

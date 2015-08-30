@@ -7,15 +7,15 @@ from OpenSSL import SSL
 from netlib.tcp import NetLibError
 from netlib.utils import cleanBin
 from ..exceptions import ProtocolException
-from .layer import Layer
+from .base import Layer
 
 
-class RawTcpLayer(Layer):
+class RawTCPLayer(Layer):
     chunk_size = 4096
 
     def __init__(self, ctx, logging=True):
         self.logging = logging
-        super(RawTcpLayer, self).__init__(ctx)
+        super(RawTCPLayer, self).__init__(ctx)
 
     def __call__(self):
         self.connect()

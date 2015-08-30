@@ -1,11 +1,9 @@
 from __future__ import (absolute_import, print_function, division)
 
-from .primitives import Log, Kill
+from .server import ProxyServer, DummyServer
 from .config import ProxyConfig
-from .connection import ClientConnection, ServerConnection
 
 __all__ = [
-    "Log", "Kill",
+    "ProxyServer", "DummyServer",
     "ProxyConfig",
-    "ClientConnection", "ServerConnection"
 ]

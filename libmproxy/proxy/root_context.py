@@ -3,12 +3,10 @@ from __future__ import (absolute_import, print_function, division)
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
 
-from .rawtcp import RawTcpLayer
-from .tls import TlsLayer, is_tls_record_magic
-from .http import Http1Layer, Http2Layer
-from .layer import ServerConnectionMixin
-from .http_proxy import HttpProxy, HttpUpstreamProxy
-from .reverse_proxy import ReverseProxy
+from ..protocol import (
+    RawTCPLayer, TlsLayer, Http1Layer, Http2Layer, is_tls_record_magic, ServerConnectionMixin
+)
+from .modes import HttpProxy, HttpUpstreamProxy, ReverseProxy
 
 
 class RootContext(object):
@@ -35,7 +33,7 @@ class RootContext(object):
 
         # 1. Check for --ignore.
         if self.config.check_ignore(top_layer.server_conn.address):
-            return RawTcpLayer(top_layer, logging=False)
+            return RawTCPLayer(top_layer, logging=False)
 
         d = top_layer.client_conn.rfile.peek(3)
         client_tls = is_tls_record_magic(d)
@@ -61,7 +59,7 @@ class RootContext(object):
 
         # 4. Check for --tcp
         if self.config.check_tcp(top_layer.server_conn.address):
-            return RawTcpLayer(top_layer)
+            return RawTCPLayer(top_layer)
 
         # 5. Check for TLS ALPN (HTTP1/HTTP2)
         if isinstance(top_layer, TlsLayer):

@@ -3,14 +3,15 @@ from __future__ import absolute_import, print_function
 import traceback
 import sys
 import socket
+
 from netlib import tcp
 from netlib.http.http1 import HTTP1Protocol
 from netlib.tcp import NetLibError
-
-from .. import protocol2
 from ..exceptions import ProtocolException, ServerException
-from .primitives import Log, Kill
-from .connection import ClientConnection
+from ..protocol import Log, Kill
+from ..models import ClientConnection, make_error_response
+from .modes import HttpUpstreamProxy, HttpProxy, ReverseProxy, TransparentProxy, Socks5Proxy
+from .root_context import RootContext
 
 
 class DummyServer:
@@ -71,7 +72,7 @@ class ConnectionHandler(object):
         """@type: libmproxy.controller.Channel"""
 
     def _create_root_layer(self):
-        root_context = protocol2.RootContext(
+        root_context = RootContext(
             self.client_conn,
             self.config,
             self.channel
@@ -79,23 +80,23 @@ class ConnectionHandler(object):
 
         mode = self.config.mode
         if mode == "upstream":
-            return protocol2.HttpUpstreamProxy(
+            return HttpUpstreamProxy(
                 root_context,
                 self.config.upstream_server.address
             )
         elif mode == "transparent":
-            return protocol2.TransparentProxy(root_context)
+            return TransparentProxy(root_context)
         elif mode == "reverse":
             server_tls = self.config.upstream_server.scheme == "https"
-            return protocol2.ReverseProxy(
+            return ReverseProxy(
                 root_context,
                 self.config.upstream_server.address,
                 server_tls
             )
         elif mode == "socks5":
-            return protocol2.Socks5Proxy(root_context)
+            return Socks5Proxy(root_context)
         elif mode == "regular":
-            return protocol2.HttpProxy(root_context)
+            return HttpProxy(root_context)
         elif callable(mode):  # pragma: nocover
             return mode(root_context)
         else:  # pragma: nocover
@@ -116,7 +117,7 @@ class ConnectionHandler(object):
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.
             try:
-                error_response = protocol2.make_error_response(502, repr(e))
+                error_response = make_error_response(502, repr(e))
                 self.client_conn.send(HTTP1Protocol().assemble(error_response))
             except NetLibError:
                 pass
