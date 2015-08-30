@@ -490,10 +490,6 @@ class TestHttps2Http(tservers.ReverseProxTest):
         assert p.request("get:'/p/200'").status_code == 200
         assert all("Error in handle_sni" not in msg for msg in self.proxy.log)
 
-    def test_http(self):
-        p = self.pathoc(ssl=False)
-        assert p.request("get:'/p/200'").status_code == 502
-
 
 class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):
     ssl = False

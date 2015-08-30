@@ -43,10 +43,6 @@ def test_parse_server_spec():
         "http://foo.com") == ("http", ("foo.com", 80))
     assert cmdline.parse_server_spec(
         "https://foo.com") == ("https", ("foo.com", 443))
-    assert cmdline.parse_server_spec_special(
-        "https2http://foo.com") == ("https2http", ("foo.com", 80))
-    assert cmdline.parse_server_spec_special(
-        "http2https://foo.com") == ("http2https", ("foo.com", 443))
     tutils.raises(
         "Invalid server specification",
         cmdline.parse_server_spec,

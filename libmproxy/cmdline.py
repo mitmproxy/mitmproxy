@@ -102,22 +102,15 @@ def parse_setheader(s):
     return _parse_hook(s)
 
 
-def parse_server_spec(url, allowed_schemes=("http", "https")):
+def parse_server_spec(url):
     p = netlib.utils.parse_url(url)
-    if not p or not p[1] or p[0] not in allowed_schemes:
+    if not p or not p[1] or p[0] not in ("http", "https"):
         raise configargparse.ArgumentTypeError(
             "Invalid server specification: %s" % url
         )
     address = Address(p[1:3])
     scheme = p[0].lower()
     return config.ServerSpec(scheme, address)
-
-
-def parse_server_spec_special(url):
-    """
-    Provides additional support for http2https and https2http schemes.
-    """
-    return parse_server_spec(url, allowed_schemes=("http", "https", "http2https", "https2http"))
 
 
 def get_common_options(options):
@@ -297,7 +290,7 @@ def proxy_modes(parser):
     group.add_argument(
         "-R", "--reverse",
         action="store",
-        type=parse_server_spec_special,
+        type=parse_server_spec,
         dest="reverse_proxy",
         default=None,
         help="""

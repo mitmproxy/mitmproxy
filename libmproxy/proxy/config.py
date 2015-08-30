@@ -24,6 +24,8 @@ class HostMatcher(object):
         self.regexes = [re.compile(p, re.IGNORECASE) for p in self.patterns]
 
     def __call__(self, address):
+        if not address:
+            return False
         address = tcp.Address.wrap(address)
         host = "%s:%s" % (address.host, address.port)
         if any(rex.search(host) for rex in self.regexes):

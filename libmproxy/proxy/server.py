@@ -86,12 +86,10 @@ class ConnectionHandler(object):
         elif mode == "transparent":
             return protocol2.TransparentProxy(root_context)
         elif mode == "reverse":
-            client_tls = self.config.upstream_server.scheme.startswith("https")
-            server_tls = self.config.upstream_server.scheme.endswith("https")
+            server_tls = self.config.upstream_server.scheme == "https"
             return protocol2.ReverseProxy(
                 root_context,
                 self.config.upstream_server.address,
-                client_tls,
                 server_tls
             )
         elif mode == "socks5":

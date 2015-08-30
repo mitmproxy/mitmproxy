@@ -6,7 +6,9 @@ from netlib.http.http2 import HTTP2Protocol
 from .rawtcp import RawTcpLayer
 from .tls import TlsLayer, is_tls_record_magic
 from .http import Http1Layer, Http2Layer
-
+from .layer import ServerConnectionMixin
+from .http_proxy import HttpProxy, HttpUpstreamProxy
+from .reverse_proxy import ReverseProxy
 
 class RootContext(object):
     """
@@ -34,18 +36,33 @@ class RootContext(object):
         if self.config.check_ignore(top_layer.server_conn.address):
             return RawTcpLayer(top_layer, logging=False)
 
-        # 2. Check for TLS
-        # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
-        # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
         d = top_layer.client_conn.rfile.peek(3)
-        if is_tls_record_magic(d):
+        client_tls = is_tls_record_magic(d)
+
+        # 2. Always insert a TLS layer, even if there's neither client nor server tls.
+        # An inline script may upgrade from http to https,
+        # in which case we need some form of TLS layer.
+        if isinstance(top_layer, ReverseProxy):
+            return TlsLayer(top_layer, client_tls, top_layer.server_tls)
+        if isinstance(top_layer, ServerConnectionMixin):
+            return TlsLayer(top_layer, client_tls, client_tls)
+
+        # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
+        if isinstance(top_layer, TlsLayer):
+            if isinstance(top_layer.ctx, HttpProxy):
+                return Http1Layer(top_layer, "regular")
+            if isinstance(top_layer.ctx, HttpUpstreamProxy):
+                return Http1Layer(top_layer, "upstream")
+
+        # 4. Check for other TLS cases (e.g. after CONNECT).
+        if client_tls:
             return TlsLayer(top_layer, True, True)
 
-        # 3. Check for --tcp
+        # 4. Check for --tcp
         if self.config.check_tcp(top_layer.server_conn.address):
             return RawTcpLayer(top_layer)
 
-        # 4. Check for TLS ALPN (HTTP1/HTTP2)
+        # 5. Check for TLS ALPN (HTTP1/HTTP2)
         if isinstance(top_layer, TlsLayer):
             alpn = top_layer.client_conn.get_alpn_proto_negotiated()
             if alpn == HTTP2Protocol.ALPN_PROTO_H2:
@@ -53,7 +70,7 @@ class RootContext(object):
             if alpn == HTTP1Protocol.ALPN_PROTO_HTTP1:
                 return Http1Layer(top_layer, 'transparent')
 
-        # 5. Assume HTTP1 by default
+        # 6. Assume HTTP1 by default
         return Http1Layer(top_layer, 'transparent')
 
         # In a future version, we want to implement TCP passthrough as the last fallback,

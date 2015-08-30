@@ -1,12 +1,11 @@
 from __future__ import (absolute_import, print_function, division)
 
 from .layer import Layer, ServerConnectionMixin
-from .http import Http1Layer
 
 
 class HttpProxy(Layer, ServerConnectionMixin):
     def __call__(self):
-        layer = Http1Layer(self, "regular")
+        layer = self.ctx.next_layer(self)
         try:
             layer()
         finally:
@@ -19,7 +18,7 @@ class HttpUpstreamProxy(Layer, ServerConnectionMixin):
         super(HttpUpstreamProxy, self).__init__(ctx, server_address=server_address)
 
     def __call__(self):
-        layer = Http1Layer(self, "upstream")
+        layer = self.ctx.next_layer(self)
         try:
             layer()
         finally:

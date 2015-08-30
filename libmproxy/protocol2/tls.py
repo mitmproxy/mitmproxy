@@ -18,6 +18,9 @@ def is_tls_record_magic(d):
         False, otherwise.
     """
     d = d[:3]
+
+    # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
+    # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
     return (
         len(d) == 3 and
         d[0] == '\x16' and
@@ -72,6 +75,16 @@ class TlsLayer(Layer):
 
         layer = self.ctx.next_layer(self)
         layer()
+
+    def __repr__(self):
+        if self._client_tls and self._server_tls:
+            return "TlsLayer(client and server)"
+        elif self._client_tls:
+            return "TlsLayer(client)"
+        elif self._server_tls:
+            return "TlsLayer(server)"
+        else:
+            return "TlsLayer(inactive)"
 
     def _get_client_hello(self):
         """
