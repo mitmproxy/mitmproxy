@@ -43,7 +43,7 @@ class _LayerCodeCompletion(object):
     Dummy class that provides type hinting in PyCharm, which simplifies development a lot.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # pragma: nocover
         super(_LayerCodeCompletion, self).__init__(*args, **kwargs)
         if True:
             return
@@ -70,7 +70,7 @@ class Layer(_LayerCodeCompletion):
         Raises:
             ProtocolException in case of protocol exceptions.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def __getattr__(self, name):
         """

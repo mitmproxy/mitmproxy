@@ -40,7 +40,7 @@ class _StreamingHttpLayer(_HttpLayer):
 
     def read_response_body(self, headers, request_method, response_code, max_chunk_size=None):
         raise NotImplementedError()
-        yield "this is a generator"
+        yield "this is a generator"  # pragma: no cover
 
     def send_response_headers(self, response):
         raise NotImplementedError

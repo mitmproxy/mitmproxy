@@ -8,8 +8,8 @@ from .connections import ClientConnection, ServerConnection
 from .flow import Flow, Error
 
 __all__ = [
-    "HTTPFlow", "HTTPRequest", "HTTPResponse", "decoded"
-                                               "make_error_response", "make_connect_request",
+    "HTTPFlow", "HTTPRequest", "HTTPResponse", "decoded",
+    "make_error_response", "make_connect_request",
     "make_connect_response",
     "ClientConnection", "ServerConnection",
     "Flow", "Error",
