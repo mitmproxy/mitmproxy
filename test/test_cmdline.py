@@ -51,10 +51,6 @@ def test_parse_server_spec():
         "Invalid server specification",
         cmdline.parse_server_spec,
         "http://")
-    tutils.raises(
-        "Invalid server specification",
-        cmdline.parse_server_spec,
-        "https2http://foo.com")
 
 
 def test_parse_setheaders():

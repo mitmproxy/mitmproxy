@@ -468,7 +468,7 @@ class TestHttps2Http(tservers.ReverseProxTest):
     @classmethod
     def get_proxy_config(cls):
         d = super(TestHttps2Http, cls).get_proxy_config()
-        d["upstream_server"] = ("https2http", d["upstream_server"][1])
+        d["upstream_server"] = ("http", d["upstream_server"][1])
         return d
 
     def pathoc(self, ssl, sni=None):
@@ -476,7 +476,7 @@ class TestHttps2Http(tservers.ReverseProxTest):
             Returns a connected Pathoc instance.
         """
         p = pathoc.Pathoc(
-            ("localhost", self.proxy.port), ssl=ssl, sni=sni, fp=None
+            ("localhost", self.proxy.port), ssl=True, sni=sni, fp=None
         )
         p.connect()
         return p
@@ -489,6 +489,10 @@ class TestHttps2Http(tservers.ReverseProxTest):
         p = self.pathoc(ssl=True, sni="example.com")
         assert p.request("get:'/p/200'").status_code == 200
         assert all("Error in handle_sni" not in msg for msg in self.proxy.log)
+
+    def test_http(self):
+        p = self.pathoc(ssl=False)
+        assert p.request("get:'/p/200'").status_code == 200
 
 
 class TestTransparent(tservers.TransparentProxTest, CommonMixin, TcpMixin):
