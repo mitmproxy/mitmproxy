@@ -650,6 +650,11 @@ def mitmproxy():
         action="store_true", dest="eventlog",
         help="Show event log."
     )
+    parser.add_argument(
+        "--no-mouse",
+        action="store_true", dest="no_mouse",
+        help="Disable mouse interaction."
+    )
     group = parser.add_argument_group(
         "Filters",
         "See help in mitmproxy for filter expression syntax."
