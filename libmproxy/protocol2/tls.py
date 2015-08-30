@@ -66,7 +66,8 @@ class TlsLayer(Layer):
             self._client_tls and self._server_tls and not self.config.no_upstream_cert
         )
 
-        self._parse_client_hello()
+        if self._client_tls:
+            self._parse_client_hello()
 
         if client_tls_requires_server_cert:
             self._establish_tls_with_client_and_server()

@@ -2,11 +2,11 @@ from __future__ import print_function, absolute_import
 import os
 import signal
 import sys
-import netlib.version
 from netlib.version_check import check_pyopenssl_version, check_mitmproxy_version
 from . import version, cmdline
-from .proxy import process_proxy_options, ProxyServerError
+from .exceptions import ServerException
 from .proxy.server import DummyServer, ProxyServer
+from .proxy.config import process_proxy_options
 
 
 def assert_utf8_env():
@@ -31,7 +31,7 @@ def get_server(dummy_server, options):
     else:
         try:
             return ProxyServer(options)
-        except ProxyServerError as v:
+        except ServerException as v:
             print(str(v), file=sys.stderr)
             sys.exit(1)
 
