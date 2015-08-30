@@ -116,6 +116,10 @@ class ServerConnectionMixin(object):
                 self._disconnect()
             self.log("Set new server address: " + repr(address), "debug")
             self.server_conn.address = address
+            if server_tls:
+                raise ProtocolException(
+                    "Cannot upgrade to TLS, no TLS layer on the protocol stack."
+                )
         else:
             self.ctx.set_server(address, server_tls, sni, depth - 1)
 

@@ -207,6 +207,9 @@ class ConnectServerConnection(object):
     def __getattr__(self, item):
         return getattr(self.via, item)
 
+    def __nonzero__(self):
+        return bool(self.via)
+
 
 class UpstreamConnectLayer(Layer):
     def __init__(self, ctx, connect_request):
@@ -221,19 +224,22 @@ class UpstreamConnectLayer(Layer):
         layer = self.ctx.next_layer(self)
         layer()
 
+    def _send_connect_request(self):
+        self.send_request(self.connect_request)
+        resp = self.read_response("CONNECT")
+        if resp.code != 200:
+            raise ProtocolException("Reconnect: Upstream server refuses CONNECT request")
+
     def connect(self):
         if not self.server_conn:
             self.ctx.connect()
-            self.send_request(self.connect_request)
+            self._send_connect_request()
         else:
             pass  # swallow the message
 
     def reconnect(self):
         self.ctx.reconnect()
-        self.send_request(self.connect_request)
-        resp = self.read_response("CONNECT")
-        if resp.code != 200:
-            raise ProtocolException("Reconnect: Upstream server refuses CONNECT request")
+        self._send_connect_request()
 
     def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1:
@@ -386,7 +392,7 @@ class HttpLayer(Layer):
             if self.supports_streaming:
                 flow.response = self.read_response_headers()
             else:
-                flow.response = self.read_response()
+                flow.response = self.read_response(flow.request.method)
 
         try:
             get_response()
@@ -473,13 +479,6 @@ class HttpLayer(Layer):
             # Establish connection is neccessary.
             if not self.server_conn:
                 self.connect()
-
-            # SetServer is not guaranteed to work with TLS:
-            # If there's not TlsLayer below which could catch the exception,
-            # TLS will not be established.
-            if tls and not self.server_conn.tls_established:
-                raise ProtocolException(
-                    "Cannot upgrade to SSL, no TLS layer on the protocol stack.")
         else:
             if not self.server_conn:
                 self.connect()
