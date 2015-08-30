@@ -8,15 +8,16 @@ import Cookie
 import cookielib
 import os
 import re
+from libmproxy.protocol.http import HTTPFlow
 from libmproxy.protocol2.http_replay import RequestReplayThread
 
-from netlib import odict, wsgi, tcp
+from netlib import odict, wsgi
 from netlib.http.semantics import CONTENT_MISSING
 import netlib.http
 
 from . import controller, protocol, tnetstring, filt, script, version
 from .onboarding import app
-from .protocol import http, handle
+from .protocol import http
 from .proxy.config import HostMatcher
 from .proxy.connection import ClientConnection, ServerConnection
 import urlparse
@@ -1090,7 +1091,7 @@ class FlowReader:
                         "Incompatible serialized data version: %s" % v
                     )
                 off = self.fo.tell()
-                yield handle.protocols[data["type"]]["flow"].from_state(data)
+                yield HTTPFlow.from_state(data)
         except ValueError as v:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':

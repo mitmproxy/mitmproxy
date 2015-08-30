@@ -1,20 +1,12 @@
 from __future__ import absolute_import
 import Cookie
 import copy
-import threading
 import time
-import urllib
-import urlparse
 from email.utils import parsedate_tz, formatdate, mktime_tz
 
-import netlib
-from netlib import http, tcp, odict, utils, encoding
-from netlib.http import cookies, semantics, http1
-
-from .tcp import TCPHandler
-from .primitives import KILL, ProtocolHandler, Flow, Error
-from ..proxy.connection import ServerConnection
-from .. import utils, controller, stateobject, proxy
+from netlib import odict, encoding
+from netlib.http import semantics, CONTENT_MISSING
+from .. import utils, stateobject
 
 
 class decoded(object):
@@ -170,19 +162,19 @@ class HTTPRequest(MessageMixin, semantics.Request):
     """
 
     def __init__(
-        self,
-        form_in,
-        method,
-        scheme,
-        host,
-        port,
-        path,
-        httpversion,
-        headers,
-        body,
-        timestamp_start=None,
-        timestamp_end=None,
-        form_out=None,
+            self,
+            form_in,
+            method,
+            scheme,
+            host,
+            port,
+            path,
+            httpversion,
+            headers,
+            body,
+            timestamp_start=None,
+            timestamp_end=None,
+            form_out=None,
     ):
         semantics.Request.__init__(
             self,
