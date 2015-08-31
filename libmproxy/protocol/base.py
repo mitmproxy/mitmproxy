@@ -61,8 +61,8 @@ class Layer(_LayerCodeCompletion):
         Args:
             ctx: The (read-only) higher layer.
         """
-        super(Layer, self).__init__(*args, **kwargs)
         self.ctx = ctx
+        super(Layer, self).__init__(*args, **kwargs)
 
     def __call__(self):
         """
