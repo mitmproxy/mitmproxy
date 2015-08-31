@@ -36,7 +36,7 @@ class RequestReplayThread(threading.Thread):
             # If we have a channel, run script hooks.
             if self.channel:
                 request_reply = self.channel.ask("request", self.flow)
-                if request_reply is None or request_reply == Kill:
+                if request_reply == Kill:
                     raise Kill()
                 elif isinstance(request_reply, HTTPResponse):
                     self.flow.response = request_reply
@@ -82,7 +82,7 @@ class RequestReplayThread(threading.Thread):
                 )
             if self.channel:
                 response_reply = self.channel.ask("response", self.flow)
-                if response_reply is None or response_reply == Kill:
+                if response_reply == Kill:
                     raise Kill()
         except (HttpError, NetLibError) as v:
             self.flow.error = Error(repr(v))

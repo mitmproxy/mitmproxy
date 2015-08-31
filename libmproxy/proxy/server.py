@@ -106,6 +106,10 @@ class ConnectionHandler(object):
         self.log("clientconnect", "info")
 
         root_layer = self._create_root_layer()
+        root_layer = self.channel.ask("clientconnect", root_layer)
+        if root_layer == Kill:
+            def root_layer():
+                raise Kill()
 
         try:
             root_layer()
@@ -128,6 +132,7 @@ class ConnectionHandler(object):
             print("Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy", file=sys.stderr)
 
         self.log("clientdisconnect", "info")
+        self.channel.tell("clientdisconnect", root_layer)
         self.client_conn.finish()
 
     def log(self, msg, level):

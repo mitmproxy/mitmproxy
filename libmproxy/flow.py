@@ -961,6 +961,10 @@ class FlowMaster(controller.Master):
         self.run_script_hook("serverconnect", sc)
         sc.reply()
 
+    def handle_serverdisconnect(self, sc):
+        self.run_script_hook("serverdisconnect", sc)
+        sc.reply()
+
     def handle_error(self, f):
         self.state.update_flow(f)
         self.run_script_hook("error", f)

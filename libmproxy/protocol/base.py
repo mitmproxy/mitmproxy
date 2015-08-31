@@ -48,9 +48,11 @@ class _LayerCodeCompletion(object):
         if True:
             return
         self.config = None
-        """@type: libmproxy.proxy.config.ProxyConfig"""
+        """@type: libmproxy.proxy.ProxyConfig"""
         self.client_conn = None
-        """@type: libmproxy.proxy.connection.ClientConnection"""
+        """@type: libmproxy.models.ClientConnection"""
+        self.server_conn = None
+        """@type: libmproxy.models.ServerConnection"""
         self.channel = None
         """@type: libmproxy.controller.Channel"""
 
@@ -62,6 +64,7 @@ class Layer(_LayerCodeCompletion):
             ctx: The (read-only) higher layer.
         """
         self.ctx = ctx
+        """@type: libmproxy.protocol.Layer"""
         super(Layer, self).__init__(*args, **kwargs)
 
     def __call__(self):
@@ -149,13 +152,14 @@ class ServerConnectionMixin(object):
         self.log("serverdisconnect", "debug", [repr(self.server_conn.address)])
         self.server_conn.finish()
         self.server_conn.close()
-        # self.channel.tell("serverdisconnect", self)
+        self.channel.tell("serverdisconnect", self.server_conn)
         self.server_conn = ServerConnection(None)
 
     def connect(self):
         if not self.server_conn.address:
             raise ProtocolException("Cannot connect to server, no server address given.")
         self.log("serverconnect", "debug", [repr(self.server_conn.address)])
+        self.channel.ask("serverconnect", self.server_conn)
         try:
             self.server_conn.connect()
         except tcp.NetLibError as e:

@@ -611,13 +611,11 @@ class MasterRedirectRequest(tservers.TestMaster):
     def handle_request(self, f):
         if f.request.path == "/p/201":
 
-            # This part should have no impact, but it should not cause any exceptions.
+            # This part should have no impact, but it should also not cause any exceptions.
             addr = f.live.server_conn.address
             addr2 = Address(("127.0.0.1", self.redirect_port))
             f.live.set_server(addr2)
-            f.live.connect()
             f.live.set_server(addr)
-            f.live.connect()
 
             # This is the actual redirection.
             f.request.port = self.redirect_port

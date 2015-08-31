@@ -172,11 +172,16 @@ class TestConnectionHandler:
         root_layer = mock.Mock()
         root_layer.side_effect = RuntimeError
         config.mode.return_value = root_layer
+        channel = mock.Mock()
+
+        def ask(_, x):
+            return x
+        channel.ask = ask
         c = ConnectionHandler(
             mock.MagicMock(),
             ("127.0.0.1", 8080),
             config,
-            mock.MagicMock()
+            channel
         )
         with tutils.capture_stderr(c.handle) as output:
             assert "mitmproxy has crashed" in output

@@ -418,7 +418,7 @@ class HttpLayer(Layer):
         # call the appropriate script hook - this is an opportunity for an
         # inline script to set flow.stream = True
         flow = self.channel.ask("responseheaders", flow)
-        if flow is None or flow == Kill:
+        if flow == Kill:
             raise Kill()
 
         if self.supports_streaming:
@@ -442,7 +442,7 @@ class HttpLayer(Layer):
             [repr(flow.response)]
         )
         response_reply = self.channel.ask("response", flow)
-        if response_reply is None or response_reply == Kill:
+        if response_reply == Kill:
             raise Kill()
 
     def process_request_hook(self, flow):
@@ -462,7 +462,7 @@ class HttpLayer(Layer):
             flow.request.scheme = "https" if self.__original_server_conn.tls_established else "http"
 
         request_reply = self.channel.ask("request", flow)
-        if request_reply is None or request_reply == Kill:
+        if request_reply == Kill:
             raise Kill()
         if isinstance(request_reply, HTTPResponse):
             flow.response = request_reply
