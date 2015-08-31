@@ -103,6 +103,7 @@ class ServerConnectionMixin(object):
     def __init__(self, server_address=None):
         super(ServerConnectionMixin, self).__init__()
         self.server_conn = ServerConnection(server_address)
+        self._check_self_connect()
 
     def reconnect(self):
         address = self.server_conn.address
@@ -110,12 +111,30 @@ class ServerConnectionMixin(object):
         self.server_conn.address = address
         self.connect()
 
+    def _check_self_connect(self):
+        """
+        We try to protect the proxy from _accidentally_ connecting to itself,
+        e.g. because of a failed transparent lookup or an invalid configuration.
+        """
+        address = self.server_conn.address
+        if address:
+            self_connect = (
+                address.port == self.config.port and
+                address.host in ("localhost", "127.0.0.1", "::1")
+            )
+            if self_connect:
+                raise ProtocolException(
+                    "Invalid server address: {}\r\n"
+                    "The proxy shall not connect to itself.".format(repr(address))
+                )
+
     def set_server(self, address, server_tls=None, sni=None, depth=1):
         if depth == 1:
             if self.server_conn:
                 self._disconnect()
             self.log("Set new server address: " + repr(address), "debug")
             self.server_conn.address = address
+            self._check_self_connect()
             if server_tls:
                 raise ProtocolException(
                     "Cannot upgrade to TLS, no TLS layer on the protocol stack."
@@ -141,7 +160,7 @@ class ServerConnectionMixin(object):
             self.server_conn.connect()
         except tcp.NetLibError as e:
             raise ProtocolException(
-                "Server connection to '%s' failed: %s" % (self.server_conn.address, e), e)
+                "Server connection to %s failed: %s" % (repr(self.server_conn.address), e), e)
 
 
 class Log(object):
