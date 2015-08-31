@@ -93,6 +93,9 @@ class TestProcessProxyOptions:
 
         self.assert_err("not allowed with", "-R", "http://localhost", "-T")
 
+    def test_socks_auth(self):
+        self.assert_err("Proxy Authentication not supported in SOCKS mode.", "--socks", "--nonanonymous")
+
     def test_client_certs(self):
         with tutils.tmpdir() as cadir:
             self.assert_noerr("--client-certs", cadir)

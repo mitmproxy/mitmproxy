@@ -136,6 +136,13 @@ def process_proxy_options(parser, options):
             )
 
     if options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd:
+
+        if options.socks_proxy:
+            return parser.error(
+                "Proxy Authentication not supported in SOCKS mode. "
+                "https://github.com/mitmproxy/mitmproxy/issues/738"
+            )
+
         if options.auth_singleuser:
             if len(options.auth_singleuser.split(':')) != 2:
                 return parser.error(
