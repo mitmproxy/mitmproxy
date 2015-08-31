@@ -7,6 +7,7 @@ from netlib import odict
 from netlib.tcp import NetLibError, Address
 from netlib.http.http1 import HTTP1Protocol
 from netlib.http.http2 import HTTP2Protocol
+from netlib.http.http2.frame import WindowUpdateFrame
 
 from .. import utils
 from ..exceptions import InvalidCredentials, HttpException, ProtocolException
@@ -187,8 +188,15 @@ class Http2Layer(_HttpLayer):
         layer = HttpLayer(self, self.mode)
         layer()
 
-    def handle_unexpected_frame(self, frm):
-        self.log("Unexpected HTTP2 Frame: %s" % frm.human_readable(), "info")
+    def handle_unexpected_frame(self, frame):
+        if isinstance(frame, WindowUpdateFrame):
+            # Clients are sending WindowUpdate frames depending on their flow control algorithm.
+            # Since we cannot predict these frames, and we do not need to respond to them,
+            # simply accept them, and hide them from the log.
+            # Ideally we should keep track of our own flow control window and
+            # stall transmission if the outgoing flow control buffer is full.
+            return
+        self.log("Unexpected HTTP2 Frame: %s" % frame.human_readable(), "info")
 
 
 class ConnectServerConnection(object):
